@@ -55,6 +55,8 @@ public:
     bool is_begin() const;
     bool is_end() const;
 
+    const Buffer& buffer() const;
+
 private:
     const Buffer* m_buffer;
     BufferPos     m_position;

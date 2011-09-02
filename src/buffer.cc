@@ -19,6 +19,12 @@ BufferIterator::BufferIterator(const Buffer& buffer, BufferPos position) : m_buf
 {
 }
 
+const Buffer& BufferIterator::buffer() const
+{
+    assert(m_buffer);
+    return *m_buffer;
+}
+
 BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
 {
     m_buffer == iterator.m_buffer;
