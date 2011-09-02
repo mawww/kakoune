@@ -165,11 +165,14 @@ std::string prompt(const std::string& text)
         case '\r':
             return result;
         case 7:
-            move(max_y - 1, text.length() + result.length() - 1);
-            addch(' ');
-            result.resize(result.length() - 1);
-            move(max_y - 1, text.length() + result.length());
-            refresh;
+            if (not result.empty())
+            {
+                move(max_y - 1, text.length() + result.length() - 1);
+                addch(' ');
+                result.resize(result.length() - 1);
+                move(max_y - 1, text.length() + result.length());
+                refresh();
+            }
             break;
         case 27:
             throw prompt_aborted();
