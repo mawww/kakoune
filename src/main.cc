@@ -132,8 +132,11 @@ void print_status(const std::string& status)
 
 void do_insert(Window& window)
 {
+    print_status("-- INSERT --");
     std::string inserted;
     LineAndColumn pos = window.cursor_position();
+    move(pos.line, pos.column);
+    refresh();
     while(true)
     {
         char c = getch();
@@ -143,6 +146,7 @@ void do_insert(Window& window)
         window.insert(std::string() + c);
         draw_window(window);
     }
+    print_status("");
 }
 
 std::shared_ptr<Window> current_window;
