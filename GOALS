@@ -1,0 +1,11 @@
+* Goals (by priority) :
+    - edition commands should be as fast, or faster (as in less keystroke) than vi
+    - consistency
+    - ability tu run background tasks, for exemple :vimgrep equivalent should run while displaying results
+    - syntax highlighting
+    - completion framework
+    - inotify support
+
+* Non goals :
+    - No window management, this should be handled by a window manager or screen/tmux,
+      but the editor should accept multiple heads
