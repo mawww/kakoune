@@ -82,70 +82,6 @@ void deinit_ncurses()
     endwin();
 }
 
-void do_insert(Window& window)
-{
-    std::string inserted;
-    LineAndColumn pos = window.cursor_position();
-    while(true)
-    {
-        char c = getch();
-        if (c == 27)
-            break;
-
-        window.insert(std::string() + c);
-        draw_window(window);
-    }
-}
-
-std::shared_ptr<Window> current_window;
-
-void edit(const std::string& filename)
-{
-    try
-    {
-        Buffer* buffer = create_buffer_from_file(filename);
-        if (buffer)
-            current_window = std::make_shared<Window>(std::shared_ptr<Buffer>(buffer));
-    }
-    catch (open_file_error& what)
-    {
-        assert(false);
-    }
-}
-
-void write_buffer(const std::string& filename)
-{
-    try
-    {
-        write_buffer_to_file(*current_window->buffer(), filename);
-    }
-    catch(open_file_error& what)
-    {
-        assert(false);
-    }
-    catch(write_file_error& what)
-    {
-        assert(false);
-    }
-}
-
-bool quit_requested = false;
-
-void quit(const std::string&)
-{
-    quit_requested = true;
-}
-
-std::unordered_map<std::string, std::function<void (const std::string& param)>> cmdmap =
-{
-    { "e", edit },
-    { "edit", edit },
-    { "q", quit },
-    { "quit", quit },
-    { "w", write_buffer },
-    { "write", write_buffer },
-};
-
 struct prompt_aborted {};
 
 std::string prompt(const std::string& text)
@@ -193,6 +129,76 @@ void print_status(const std::string& status)
     clrtoeol();
     addstr(status.c_str());
 }
+
+void do_insert(Window& window)
+{
+    std::string inserted;
+    LineAndColumn pos = window.cursor_position();
+    while(true)
+    {
+        char c = getch();
+        if (c == 27)
+            break;
+
+        window.insert(std::string() + c);
+        draw_window(window);
+    }
+}
+
+std::shared_ptr<Window> current_window;
+
+void edit(const std::string& filename)
+{
+    try
+    {
+        std::shared_ptr<Buffer> buffer(create_buffer_from_file(filename));
+        if (buffer)
+            current_window = std::make_shared<Window>(buffer);
+    }
+    catch (file_not_found& what)
+    {
+        current_window = std::make_shared<Window>(std::make_shared<Buffer>(filename));
+    }
+    catch (open_file_error& what)
+    {
+        print_status("error opening '" + filename + "' (" + what.what() + ")");
+    }
+}
+
+void write_buffer(const std::string& filename)
+{
+    try
+    {
+        Buffer& buffer = *current_window->buffer();
+        write_buffer_to_file(buffer,
+                             filename.empty() ? buffer.name() : filename);
+    }
+    catch(open_file_error& what)
+    {
+        print_status("error opening " + filename + "(" + what.what() + ")");
+    }
+    catch(write_file_error& what)
+    {
+        print_status("error writing " + filename + "(" + what.what() + ")");
+    }
+}
+
+bool quit_requested = false;
+
+void quit(const std::string&)
+{
+    quit_requested = true;
+}
+
+std::unordered_map<std::string, std::function<void (const std::string& param)>> cmdmap =
+{
+    { "e", edit },
+    { "edit", edit },
+    { "q", quit },
+    { "quit", quit },
+    { "w", write_buffer },
+    { "write", write_buffer },
+};
 
 void do_command()
 {
