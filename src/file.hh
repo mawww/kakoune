@@ -13,6 +13,12 @@ struct open_file_error : public std::runtime_error
         : std::runtime_error(what) {}
 };
 
+struct file_not_found : public open_file_error
+{
+    file_not_found(const std::string& what)
+        : open_file_error(what) {}
+};
+
 struct write_file_error : public std::runtime_error
 {
     write_file_error(const std::string& what)

@@ -14,7 +14,12 @@ Buffer* create_buffer_from_file(const std::string& filename)
 {
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
+    {
+        if (errno == ENOENT)
+            throw file_not_found(strerror(errno));
+
         throw open_file_error(strerror(errno));
+    }
 
     std::string content;
     char buf[256];
