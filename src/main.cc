@@ -312,12 +312,10 @@ int main()
         }
         deinit_ncurses();
     }
-    catch (std::runtime_error& error)
+    catch (...)
     {
         deinit_ncurses();
-        puts("unhandled exception : ");
-        puts(error.what());
-        return -1;
+        throw;
     }
     return 0;
 }
