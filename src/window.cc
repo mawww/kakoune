@@ -28,9 +28,9 @@ void Window::erase()
     }
 }
 
-static LineAndColumn measure_string(const Window::String& string)
+static WindowCoord measure_string(const Window::String& string)
 {
-    LineAndColumn result(0, 0);
+    WindowCoord result(0, 0);
     for (size_t i = 0; i < string.length(); ++i)
     {
         if (string[i] == '\n')
@@ -64,7 +64,7 @@ void Window::append(const String& string)
 {
     if (m_selections.empty())
     {
-        move_cursor(LineAndColumn(0 , 1));
+        move_cursor(WindowCoord(0 , 1));
         insert(string);
     }
 
@@ -74,24 +74,24 @@ void Window::append(const String& string)
     }
 }
 
-LineAndColumn Window::window_to_buffer(const LineAndColumn& window_pos) const
+BufferCoord Window::window_to_buffer(const WindowCoord& window_pos) const
 {
-    return LineAndColumn(m_position.line + window_pos.line,
-                         m_position.column + window_pos.column);
+    return BufferCoord(m_position.line + window_pos.line,
+                       m_position.column + window_pos.column);
 }
 
-LineAndColumn Window::buffer_to_window(const LineAndColumn& buffer_pos) const
+WindowCoord Window::buffer_to_window(const BufferCoord& buffer_pos) const
 {
-    return LineAndColumn(buffer_pos.line - m_position.line,
-                         buffer_pos.column - m_position.column);
+    return WindowCoord(buffer_pos.line - m_position.line,
+                       buffer_pos.column - m_position.column);
 }
 
-BufferIterator Window::iterator_at(const LineAndColumn& window_pos) const
+BufferIterator Window::iterator_at(const WindowCoord& window_pos) const
 {
     return m_buffer->iterator_at(window_to_buffer(window_pos));
 }
 
-LineAndColumn Window::line_and_column_at(const BufferIterator& iterator) const
+WindowCoord Window::line_and_column_at(const BufferIterator& iterator) const
 {
     return buffer_to_window(m_buffer->line_and_column_at(iterator));
 }
@@ -119,11 +119,11 @@ void Window::select(bool append, const Selector& selector)
     scroll_to_keep_cursor_visible_ifn();
 }
 
-void Window::move_cursor(const LineAndColumn& offset)
+void Window::move_cursor(const WindowCoord& offset)
 {
-    LineAndColumn target_position =
-        window_to_buffer(LineAndColumn(m_cursor.line + offset.line,
-                                       m_cursor.column + offset.column));
+    BufferCoord target_position =
+        window_to_buffer(WindowCoord(m_cursor.line + offset.line,
+                                     m_cursor.column + offset.column));
 
     m_cursor = buffer_to_window(m_buffer->clamp(target_position));
 
@@ -165,7 +165,7 @@ void Window::update_display_buffer()
     }
 }
 
-void Window::set_dimensions(const LineAndColumn& dimensions)
+void Window::set_dimensions(const WindowCoord& dimensions)
 {
     m_dimensions = dimensions;
 }

@@ -135,7 +135,7 @@ void Buffer::insert(const BufferIterator& position, const BufferString& string)
     compute_lines();
 }
 
-BufferIterator Buffer::iterator_at(const LineAndColumn& line_and_column) const
+BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
 {
     if (m_lines.empty())
         return begin();
@@ -145,9 +145,9 @@ BufferIterator Buffer::iterator_at(const LineAndColumn& line_and_column) const
     return BufferIterator(*this, m_lines[line] + column);
 }
 
-LineAndColumn Buffer::line_and_column_at(const BufferIterator& iterator) const
+BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
 {
-    LineAndColumn result;
+    BufferCoord result;
     if (not m_lines.empty())
     {
         result.line = line_at(iterator);
@@ -174,12 +174,12 @@ BufferSize Buffer::line_length(BufferPos line) const
     return end - m_lines[line];
 }
 
-LineAndColumn Buffer::clamp(const LineAndColumn& line_and_column) const
+BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
 {
     if (m_lines.empty())
-        return LineAndColumn();
+        return BufferCoord();
 
-    LineAndColumn result(line_and_column.line, line_and_column.column);
+    BufferCoord result(line_and_column.line, line_and_column.column);
     result.line = Kakoune::clamp<int>(0, m_lines.size() - 1, result.line);
     result.column = Kakoune::clamp<int>(0, line_length(result.line), result.column);
     return result;

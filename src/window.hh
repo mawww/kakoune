@@ -3,11 +3,20 @@
 
 #include <memory>
 #include <functional>
+
+#include "utils.hh"
+
 #include "buffer.hh"
 #include "display_buffer.hh"
 
 namespace Kakoune
 {
+
+struct WindowCoord : LineAndColumn
+{
+    WindowCoord(int line = 0, int column = 0)
+        : LineAndColumn(line, column) {}
+};
 
 struct Selection
 {
@@ -33,24 +42,25 @@ public:
     void insert(const String& string);
     void append(const String& string);
 
-    const LineAndColumn& position() const { return m_position; }
-    const LineAndColumn& cursor_position() const { return m_cursor; }
+    const BufferCoord& position() const { return m_position; }
+    const WindowCoord& cursor_position() const { return m_cursor; }
 
     const std::shared_ptr<Buffer>& buffer() const { return m_buffer; }
-    LineAndColumn  window_to_buffer(const LineAndColumn& window_pos) const;
-    LineAndColumn  buffer_to_window(const LineAndColumn& buffer_pos) const;
 
-    BufferIterator iterator_at(const LineAndColumn& window_pos) const;
-    LineAndColumn  line_and_column_at(const BufferIterator& iterator) const;
+    BufferCoord window_to_buffer(const WindowCoord& window_pos) const;
+    WindowCoord buffer_to_window(const BufferCoord& buffer_pos) const;
 
-    void move_cursor(const LineAndColumn& offset);
+    BufferIterator iterator_at(const WindowCoord& window_pos) const;
+    WindowCoord    line_and_column_at(const BufferIterator& iterator) const;
+
+    void move_cursor(const WindowCoord& offset);
 
     const SelectionList& selections() const { return m_selections; }
 
     void empty_selections();
     void select(bool append, const Selector& selector);
 
-    void set_dimensions(const LineAndColumn& dimensions);
+    void set_dimensions(const WindowCoord& dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
@@ -60,9 +70,9 @@ private:
     void scroll_to_keep_cursor_visible_ifn();
 
     std::shared_ptr<Buffer> m_buffer;
-    LineAndColumn           m_position;
-    LineAndColumn           m_cursor;
-    LineAndColumn           m_dimensions;
+    BufferCoord             m_position;
+    WindowCoord             m_cursor;
+    WindowCoord             m_dimensions;
     SelectionList           m_selections;
     DisplayBuffer           m_display_buffer;
 };

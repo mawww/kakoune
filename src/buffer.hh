@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "utils.hh"
+
 namespace Kakoune
 {
 
@@ -13,13 +15,10 @@ typedef int      BufferSize;
 typedef char     BufferChar;
 typedef std::basic_string<BufferChar> BufferString;
 
-struct LineAndColumn
+struct BufferCoord : LineAndColumn
 {
-    BufferPos line;
-    BufferPos column;
-
-    LineAndColumn(BufferPos line = 0, BufferPos column = 0)
-        : line(line), column(column) {}
+    BufferCoord(int line = 0, int column = 0)
+        : LineAndColumn(line, column) {}
 };
 
 class BufferIterator
@@ -82,10 +81,10 @@ public:
 
     BufferSize     length() const;
 
-    BufferIterator iterator_at(const LineAndColumn& line_and_column) const;
-    LineAndColumn  line_and_column_at(const BufferIterator& iterator) const;
+    BufferIterator iterator_at(const BufferCoord& line_and_column) const;
+    BufferCoord    line_and_column_at(const BufferIterator& iterator) const;
 
-    LineAndColumn  clamp(const LineAndColumn& line_and_column) const;
+    BufferCoord     clamp(const BufferCoord& line_and_column) const;
 
     const std::string& name() const { return m_name; }
 

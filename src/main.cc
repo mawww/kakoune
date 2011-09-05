@@ -15,11 +15,11 @@ void draw_window(Window& window)
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
 
-    window.set_dimensions(LineAndColumn(max_y, max_x));
+    window.set_dimensions(WindowCoord(max_y, max_x));
     window.update_display_buffer();
 
 
-    LineAndColumn position;
+    WindowCoord position;
     for (const DisplayAtom& atom : window.display_buffer())
     {
         const std::string& content = atom.content;
@@ -64,7 +64,7 @@ void draw_window(Window& window)
         addch('~');
     }
 
-    const LineAndColumn& cursor_position = window.cursor_position();
+    const WindowCoord& cursor_position = window.cursor_position();
     move(cursor_position.line, cursor_position.column);
 }
 
@@ -136,7 +136,7 @@ void do_insert(Window& window)
 {
     print_status("-- INSERT --");
     std::string inserted;
-    LineAndColumn pos = window.cursor_position();
+    WindowCoord pos = window.cursor_position();
     move(pos.line, pos.column);
     refresh();
     while(true)
@@ -281,10 +281,10 @@ void do_search(Window& window)
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
 {
-    { 'h', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(LineAndColumn(0, -count)); window.empty_selections(); } },
-    { 'j', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(LineAndColumn(count,  0)); window.empty_selections(); } },
-    { 'k', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(LineAndColumn(-count, 0)); window.empty_selections(); } },
-    { 'l', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(LineAndColumn(0,  count)); window.empty_selections(); } },
+    { 'h', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(0, -count)); window.empty_selections(); } },
+    { 'j', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(count,  0)); window.empty_selections(); } },
+    { 'k', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(-count, 0)); window.empty_selections(); } },
+    { 'l', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(0,  count)); window.empty_selections(); } },
     { 'd', [](Window& window, int count) { window.erase(); window.empty_selections(); } },
     { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
     { 'i', [](Window& window, int count) { do_insert(window); } },
