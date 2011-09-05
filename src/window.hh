@@ -35,18 +35,27 @@ public:
 
     const LineAndColumn& position() const { return m_position; }
     const LineAndColumn& cursor_position() const { return m_cursor; }
+
     const std::shared_ptr<Buffer>& buffer() const { return m_buffer; }
+    LineAndColumn  window_to_buffer(const LineAndColumn& window_pos) const;
+    LineAndColumn  buffer_to_window(const LineAndColumn& buffer_pos) const;
+
+    BufferIterator iterator_at(const LineAndColumn& window_pos) const;
+    LineAndColumn  line_and_column_at(const BufferIterator& iterator) const;
 
     void move_cursor(const LineAndColumn& offset);
 
     const SelectionList& selections() const { return m_selections; }
 
-    void  empty_selections();
-    void  select(bool append, const Selector& selector);
+    void empty_selections();
+    void select(bool append, const Selector& selector);
+
+    void set_dimensions(const LineAndColumn& dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
     void update_display_buffer();
+
 private:
 
     std::shared_ptr<Buffer> m_buffer;
