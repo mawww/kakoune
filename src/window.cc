@@ -170,4 +170,29 @@ void Window::set_dimensions(const LineAndColumn& dimensions)
     m_dimensions = dimensions;
 }
 
+void Window::scroll_to_keep_cursor_visible_ifn()
+{
+    if (m_cursor.line < 0)
+    {
+        m_position.line = std::max(m_position.line + m_cursor.line, 0);
+        m_cursor.line = 0;
+    }
+    else if (m_cursor.line >= m_dimensions.line)
+    {
+        m_position.line += m_cursor.line - (m_dimensions.line - 1);
+        m_cursor.line = m_dimensions.line - 1;
+    }
+
+    if (m_cursor.column < 0)
+    {
+        m_position.column = std::max(m_position.column + m_cursor.column, 0);
+        m_cursor.column = 0;
+    }
+    else if (m_cursor.column >= m_dimensions.column)
+    {
+        m_position.column += m_cursor.column - (m_dimensions.column - 1);
+        m_cursor.column = m_dimensions.column - 1;
+    }
+}
+
 }

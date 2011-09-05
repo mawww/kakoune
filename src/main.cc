@@ -11,11 +11,13 @@ using namespace Kakoune;
 
 void draw_window(Window& window)
 {
-    window.update_display_buffer();
-
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
+
+    window.set_dimensions(LineAndColumn(max_y, max_x));
+    window.update_display_buffer();
+
 
     LineAndColumn position;
     for (const DisplayAtom& atom : window.display_buffer())

@@ -57,6 +57,7 @@ public:
     void update_display_buffer();
 
 private:
+    void scroll_to_keep_cursor_visible_ifn();
 
     std::shared_ptr<Buffer> m_buffer;
     LineAndColumn           m_position;
