@@ -13,6 +13,24 @@ struct LineAndColumn
         : line(line), column(column) {}
 };
 
+template<typename Container>
+struct ReversedContainer
+{
+    ReversedContainer(Container& container) : container(container) {}
+    Container& container;
+
+    decltype(container.rbegin()) begin() { return container.rbegin(); }
+    decltype(container.rend())   end()   { return container.rend(); }
+};
+
+template<typename Container>
+ReversedContainer<Container> reversed(Container& container)
+{
+    return ReversedContainer<Container>(container);
+}
+
+
+
 }
 
 #endif // utils_hh_INCLUDED
