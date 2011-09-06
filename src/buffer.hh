@@ -68,6 +68,12 @@ public:
     Buffer(const std::string& name,
            const BufferString& initial_content = "");
 
+    void           begin_undo_group();
+    void           end_undo_group();
+
+    bool           undo();
+    bool           redo();
+
     void           erase(const BufferIterator& begin,
                          const BufferIterator& end);
 
@@ -92,6 +98,13 @@ public:
 
 private:
     BufferChar at(BufferPos position) const;
+
+    void       do_erase(const BufferIterator& begin,
+                        const BufferIterator& end);
+
+    void       do_insert(const BufferIterator& position,
+                         const BufferString& string);
+
     friend class BufferIterator;
 
     std::vector<BufferPos> m_lines;
@@ -103,6 +116,30 @@ private:
     BufferString m_content;
 
     std::string  m_name;
+
+    struct Modification
+    {
+        enum Type { Insert, Erase };
+
+        Type           type;
+        BufferIterator position;
+        BufferString   content;
+
+        Modification(Type type, BufferIterator position, BufferString content)
+            : type(type), position(position), content(content) {}
+
+        Modification inverse() const;
+    };
+    typedef std::vector<Modification> UndoGroup;
+
+    std::vector<UndoGroup>           m_history;
+    std::vector<UndoGroup>::iterator m_history_cursor;
+    UndoGroup                              m_current_undo_group;
+
+    void replay_modification(const Modification& modification);
+    void revert_modification(const Modification& modification);
+
+    void append_modification(Modification&& modification);
 };
 
 }
