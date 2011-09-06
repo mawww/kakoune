@@ -15,6 +15,7 @@ Window::Window(const std::shared_ptr<Buffer> buffer)
 
 void Window::erase()
 {
+    m_buffer->begin_undo_group();
     if (m_selections.empty())
     {
         BufferIterator cursor = iterator_at(m_cursor);
@@ -26,6 +27,7 @@ void Window::erase()
         m_buffer->erase(sel->begin, sel->end);
         sel->end = sel->begin;
     }
+    m_buffer->end_undo_group();
 }
 
 static WindowCoord measure_string(const Window::String& string)
@@ -46,6 +48,7 @@ static WindowCoord measure_string(const Window::String& string)
 
 void Window::insert(const String& string)
 {
+    m_buffer->begin_undo_group();
     if (m_selections.empty())
     {
         m_buffer->insert(iterator_at(m_cursor), string);
@@ -58,10 +61,12 @@ void Window::insert(const String& string)
         sel->begin += string.length();
         sel->end += string.length();
     }
+    m_buffer->end_undo_group();
 }
 
 void Window::append(const String& string)
 {
+    m_buffer->begin_undo_group();
     if (m_selections.empty())
     {
         move_cursor(WindowCoord(0 , 1));
@@ -72,6 +77,17 @@ void Window::append(const String& string)
     {
         m_buffer->insert(sel->end, string);
     }
+    m_buffer->end_undo_group();
+}
+
+bool Window::undo()
+{
+    return m_buffer->undo();
+}
+
+bool Window::redo()
+{
+    return m_buffer->redo();
 }
 
 BufferCoord Window::window_to_buffer(const WindowCoord& window_pos) const
