@@ -32,9 +32,7 @@ Buffer* create_buffer_from_file(const std::string& filename)
         content += std::string(buf, size);
     }
     close(fd);
-    Buffer* buffer = new Buffer(filename);
-    buffer->insert(buffer->begin(), content);
-    return buffer;
+    return new Buffer(filename, content);
 }
 
 void write_buffer_to_file(const Buffer& buffer, const std::string& filename)

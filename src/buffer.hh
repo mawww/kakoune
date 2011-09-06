@@ -65,7 +65,8 @@ private:
 class Buffer
 {
 public:
-    Buffer(const std::string& name);
+    Buffer(const std::string& name,
+           const BufferString& initial_content = "");
 
     void           erase(const BufferIterator& begin,
                          const BufferIterator& end);
@@ -78,7 +79,6 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-
     BufferSize     length() const;
 
     BufferIterator iterator_at(const BufferCoord& line_and_column) const;
