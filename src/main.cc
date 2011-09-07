@@ -3,6 +3,7 @@
 #include "buffer.hh"
 #include "file.hh"
 #include "regex_selector.hh"
+#include "command_manager.hh"
 
 #include <unordered_map>
 #include <cassert>
@@ -153,8 +154,12 @@ void do_insert(Window& window)
 
 std::shared_ptr<Window> current_window;
 
-void edit(const std::string& filename)
+void edit(const CommandParameters& params)
 {
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    std::string filename = params[0];
     try
     {
         std::shared_ptr<Buffer> buffer(create_buffer_from_file(filename));
@@ -163,68 +168,45 @@ void edit(const std::string& filename)
     }
     catch (file_not_found& what)
     {
+        print_status("new file " + filename);
         current_window = std::make_shared<Window>(std::make_shared<Buffer>(filename));
-    }
-    catch (open_file_error& what)
-    {
-        print_status("error opening '" + filename + "' (" + what.what() + ")");
     }
 }
 
-void write_buffer(const std::string& filename)
+void write_buffer(const CommandParameters& params)
 {
-    try
-    {
-        Buffer& buffer = *current_window->buffer();
-        write_buffer_to_file(buffer,
-                             filename.empty() ? buffer.name() : filename);
-    }
-    catch(open_file_error& what)
-    {
-        print_status("error opening " + filename + "(" + what.what() + ")");
-    }
-    catch(write_file_error& what)
-    {
-        print_status("error writing " + filename + "(" + what.what() + ")");
-    }
+    if (params.size() > 1)
+        throw wrong_argument_count();
+
+    Buffer& buffer = *current_window->buffer();
+    std::string filename = params.empty() ? buffer.name() : params[0];
+
+    write_buffer_to_file(buffer, filename);
 }
 
 bool quit_requested = false;
 
-void quit(const std::string&)
+void quit(const CommandParameters& params)
 {
+    if (params.size() != 0)
+        throw wrong_argument_count();
+
     quit_requested = true;
 }
 
-std::unordered_map<std::string, std::function<void (const std::string& param)>> cmdmap =
-{
-    { "e", edit },
-    { "edit", edit },
-    { "q", quit },
-    { "quit", quit },
-    { "w", write_buffer },
-    { "write", write_buffer },
-};
+CommandManager command_manager;
 
 void do_command()
 {
     try
     {
-        std::string cmd = prompt(":");
-
-        size_t cmd_end = cmd.find_first_of(' ');
-        std::string cmd_name = cmd.substr(0, cmd_end);
-        size_t param_start = cmd.find_first_not_of(' ', cmd_end);
-        std::string param;
-        if (param_start != std::string::npos)
-            param = cmd.substr(param_start, cmd.length() - param_start);
-
-        if (cmdmap.find(cmd_name) != cmdmap.end())
-            cmdmap[cmd_name](param);
-        else
-            print_status(cmd_name + ": no such command");
+        command_manager.execute(prompt(":"));
     }
     catch (prompt_aborted&) {}
+    catch (std::runtime_error& err)
+    {
+        print_status(err.what());
+    }
 }
 
 bool is_blank(char c)
@@ -303,6 +285,10 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 int main()
 {
     init_ncurses();
+
+    command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit);
+    command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit);
+    command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer);
 
     try
     {
