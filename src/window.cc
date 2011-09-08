@@ -11,7 +11,6 @@ Window::Window(Buffer& buffer)
       m_cursor(0, 0),
       m_dimensions(0, 0)
 {
-    m_buffer.register_window(this);
 }
 
 void Window::erase()

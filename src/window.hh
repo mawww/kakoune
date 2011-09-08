@@ -34,9 +34,6 @@ public:
     typedef BufferString String;
     typedef std::function<Selection (const BufferIterator&)> Selector;
 
-    Window(Buffer& buffer);
-    Window(const Window&) = delete;
-
     void erase();
     void insert(const String& string);
     void append(const String& string);
@@ -69,6 +66,11 @@ public:
     bool redo();
 
 private:
+    friend class Buffer;
+
+    Window(Buffer& buffer);
+    Window(const Window&) = delete;
+
     void scroll_to_keep_cursor_visible_ifn();
 
     Buffer&       m_buffer;

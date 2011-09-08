@@ -4,6 +4,7 @@
 #include "file.hh"
 #include "regex_selector.hh"
 #include "command_manager.hh"
+#include "buffer_manager.hh"
 
 #include <unordered_map>
 #include <cassert>
@@ -160,17 +161,17 @@ void edit(const CommandParameters& params)
         throw wrong_argument_count();
 
     std::string filename = params[0];
+    Buffer* buffer = NULL;
     try
     {
-        Buffer* buffer = create_buffer_from_file(filename);
-        if (buffer)
-            current_window = new Window(*buffer);
+        buffer = create_buffer_from_file(filename);
     }
     catch (file_not_found& what)
     {
         print_status("new file " + filename);
-        current_window = new Window(*new Buffer(filename));
+        buffer = new Buffer(filename);
     }
+    current_window = buffer->get_or_create_window();
 }
 
 void write_buffer(const CommandParameters& params)
@@ -293,7 +294,7 @@ int main()
     try
     {
         auto buffer = new Buffer("<scratch>");
-        current_window = new Window(*buffer);
+        current_window = buffer->get_or_create_window();
 
         draw_window(*current_window);
         int count = 0;

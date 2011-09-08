@@ -316,14 +316,12 @@ void Buffer::append_modification(Modification&& modification)
     m_current_undo_group.push_back(modification);
 }
 
-struct window_already_registered {};
-
-void Buffer::register_window(Window* window)
+Window* Buffer::get_or_create_window()
 {
-    if (std::find(m_windows.begin(), m_windows.end(), window) != m_windows.end())
-        throw window_already_registered();
+    if (m_windows.empty())
+        m_windows.push_front(std::unique_ptr<Window>(new Window(*this)));
 
-    m_windows.push_front(std::unique_ptr<Window>(window));
+    return m_windows.front().get();
 }
 
 void Buffer::delete_window(Window* window)

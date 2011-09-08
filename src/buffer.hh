@@ -100,7 +100,7 @@ public:
 
     const BufferString& content() const { return m_content; }
 
-    void register_window(Window* window);
+    Window* get_or_create_window();
     void delete_window(Window* window);
 
 private:
