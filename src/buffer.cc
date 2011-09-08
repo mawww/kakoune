@@ -1,8 +1,10 @@
 #include "buffer.hh"
 
 #include "buffer_manager.hh"
+#include "window.hh"
 
 #include <cassert>
+#include <algorithm>
 
 namespace Kakoune
 {
@@ -312,6 +314,24 @@ void Buffer::replay_modification(const Modification& modification)
 void Buffer::append_modification(Modification&& modification)
 {
     m_current_undo_group.push_back(modification);
+}
+
+struct window_already_registered {};
+
+void Buffer::register_window(Window* window)
+{
+    if (std::find(m_windows.begin(), m_windows.end(), window) != m_windows.end())
+        throw window_already_registered();
+
+    m_windows.push_front(std::unique_ptr<Window>(window));
+}
+
+void Buffer::delete_window(Window* window)
+{
+    assert(&window->buffer() == this);
+    auto window_it = std::find(m_windows.begin(), m_windows.end(), window);
+    assert(window_it != m_windows.end());
+    m_windows.erase(window_it);
 }
 
 }

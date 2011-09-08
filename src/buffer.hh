@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <list>
+#include <memory>
 
 #include "utils.hh"
 
@@ -10,6 +12,8 @@ namespace Kakoune
 {
 
 class Buffer;
+class Window;
+
 typedef int      BufferPos;
 typedef int      BufferSize;
 typedef char     BufferChar;
@@ -96,6 +100,9 @@ public:
 
     const BufferString& content() const { return m_content; }
 
+    void register_window(Window* window);
+    void delete_window(Window* window);
+
 private:
     BufferChar at(BufferPos position) const;
 
@@ -140,6 +147,8 @@ private:
     void revert_modification(const Modification& modification);
 
     void append_modification(Modification&& modification);
+
+    std::list<std::unique_ptr<Window>> m_windows;
 };
 
 }

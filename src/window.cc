@@ -5,29 +5,30 @@
 namespace Kakoune
 {
 
-Window::Window(const std::shared_ptr<Buffer> buffer)
+Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
       m_cursor(0, 0),
       m_dimensions(0, 0)
 {
+    m_buffer.register_window(this);
 }
 
 void Window::erase()
 {
-    m_buffer->begin_undo_group();
+    m_buffer.begin_undo_group();
     if (m_selections.empty())
     {
         BufferIterator cursor = iterator_at(m_cursor);
-        m_buffer->erase(cursor, cursor+1);
+        m_buffer.erase(cursor, cursor+1);
     }
 
     for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
     {
-        m_buffer->erase(sel->begin, sel->end);
+        m_buffer.erase(sel->begin, sel->end);
         sel->end = sel->begin;
     }
-    m_buffer->end_undo_group();
+    m_buffer.end_undo_group();
 }
 
 static WindowCoord measure_string(const Window::String& string)
@@ -48,25 +49,25 @@ static WindowCoord measure_string(const Window::String& string)
 
 void Window::insert(const String& string)
 {
-    m_buffer->begin_undo_group();
+    m_buffer.begin_undo_group();
     if (m_selections.empty())
     {
-        m_buffer->insert(iterator_at(m_cursor), string);
+        m_buffer.insert(iterator_at(m_cursor), string);
         move_cursor(measure_string(string));
     }
 
     for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
     {
-        m_buffer->insert(sel->begin, string);
+        m_buffer.insert(sel->begin, string);
         sel->begin += string.length();
         sel->end += string.length();
     }
-    m_buffer->end_undo_group();
+    m_buffer.end_undo_group();
 }
 
 void Window::append(const String& string)
 {
-    m_buffer->begin_undo_group();
+    m_buffer.begin_undo_group();
     if (m_selections.empty())
     {
         move_cursor(WindowCoord(0 , 1));
@@ -75,19 +76,19 @@ void Window::append(const String& string)
 
     for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
     {
-        m_buffer->insert(sel->end, string);
+        m_buffer.insert(sel->end, string);
     }
-    m_buffer->end_undo_group();
+    m_buffer.end_undo_group();
 }
 
 bool Window::undo()
 {
-    return m_buffer->undo();
+    return m_buffer.undo();
 }
 
 bool Window::redo()
 {
-    return m_buffer->redo();
+    return m_buffer.redo();
 }
 
 BufferCoord Window::window_to_buffer(const WindowCoord& window_pos) const
@@ -104,12 +105,12 @@ WindowCoord Window::buffer_to_window(const BufferCoord& buffer_pos) const
 
 BufferIterator Window::iterator_at(const WindowCoord& window_pos) const
 {
-    return m_buffer->iterator_at(window_to_buffer(window_pos));
+    return m_buffer.iterator_at(window_to_buffer(window_pos));
 }
 
 WindowCoord Window::line_and_column_at(const BufferIterator& iterator) const
 {
-    return buffer_to_window(m_buffer->line_and_column_at(iterator));
+    return buffer_to_window(m_buffer.line_and_column_at(iterator));
 }
 
 void Window::empty_selections()
@@ -141,7 +142,7 @@ void Window::move_cursor(const WindowCoord& offset)
         window_to_buffer(WindowCoord(m_cursor.line + offset.line,
                                      m_cursor.column + offset.column));
 
-    m_cursor = buffer_to_window(m_buffer->clamp(target_position));
+    m_cursor = buffer_to_window(m_buffer.clamp(target_position));
 
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -154,29 +155,29 @@ void Window::update_display_buffer()
     std::sort(sorted_selections.begin(), sorted_selections.end(),
               [](const Selection& lhs, const Selection& rhs) { return lhs.begin < rhs.begin; });
 
-    BufferIterator current_position = m_buffer->iterator_at(m_position);
+    BufferIterator current_position = m_buffer.iterator_at(m_position);
 
     for (Selection& sel : sorted_selections)
     {
         if (current_position != sel.begin)
         {
             DisplayAtom atom;
-            atom.content = m_buffer->string(current_position, sel.begin);
+            atom.content = m_buffer.string(current_position, sel.begin);
             m_display_buffer.append(atom);
         }
         if (sel.begin != sel.end)
         {
             DisplayAtom atom;
-            atom.content = m_buffer->string(sel.begin, sel.end);
+            atom.content = m_buffer.string(sel.begin, sel.end);
             atom.attribute = UNDERLINE;
             m_display_buffer.append(atom);
         }
         current_position = sel.end;
     }
-    if (current_position != m_buffer->end())
+    if (current_position != m_buffer.end())
     {
         DisplayAtom atom;
-        atom.content = m_buffer->string(current_position, m_buffer->end());
+        atom.content = m_buffer.string(current_position, m_buffer.end());
         m_display_buffer.append(atom);
     }
 }

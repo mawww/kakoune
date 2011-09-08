@@ -1,7 +1,6 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
-#include <memory>
 #include <functional>
 
 #include "utils.hh"
@@ -35,7 +34,7 @@ public:
     typedef BufferString String;
     typedef std::function<Selection (const BufferIterator&)> Selector;
 
-    Window(const std::shared_ptr<Buffer> buffer);
+    Window(Buffer& buffer);
     Window(const Window&) = delete;
 
     void erase();
@@ -45,7 +44,7 @@ public:
     const BufferCoord& position() const { return m_position; }
     const WindowCoord& cursor_position() const { return m_cursor; }
 
-    const std::shared_ptr<Buffer>& buffer() const { return m_buffer; }
+    Buffer& buffer() const { return m_buffer; }
 
     BufferCoord window_to_buffer(const WindowCoord& window_pos) const;
     WindowCoord buffer_to_window(const BufferCoord& buffer_pos) const;
@@ -72,12 +71,12 @@ public:
 private:
     void scroll_to_keep_cursor_visible_ifn();
 
-    std::shared_ptr<Buffer> m_buffer;
-    BufferCoord             m_position;
-    WindowCoord             m_cursor;
-    WindowCoord             m_dimensions;
-    SelectionList           m_selections;
-    DisplayBuffer           m_display_buffer;
+    Buffer&       m_buffer;
+    BufferCoord   m_position;
+    WindowCoord   m_cursor;
+    WindowCoord   m_dimensions;
+    SelectionList m_selections;
+    DisplayBuffer m_display_buffer;
 };
 
 }

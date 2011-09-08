@@ -152,7 +152,7 @@ void do_insert(Window& window)
     print_status("");
 }
 
-std::shared_ptr<Window> current_window;
+Window* current_window;
 
 void edit(const CommandParameters& params)
 {
@@ -162,14 +162,14 @@ void edit(const CommandParameters& params)
     std::string filename = params[0];
     try
     {
-        std::shared_ptr<Buffer> buffer(create_buffer_from_file(filename));
+        Buffer* buffer = create_buffer_from_file(filename);
         if (buffer)
-            current_window = std::make_shared<Window>(buffer);
+            current_window = new Window(*buffer);
     }
     catch (file_not_found& what)
     {
         print_status("new file " + filename);
-        current_window = std::make_shared<Window>(std::make_shared<Buffer>(filename));
+        current_window = new Window(*new Buffer(filename));
     }
 }
 
@@ -178,7 +178,7 @@ void write_buffer(const CommandParameters& params)
     if (params.size() > 1)
         throw wrong_argument_count();
 
-    Buffer& buffer = *current_window->buffer();
+    Buffer& buffer = current_window->buffer();
     std::string filename = params.empty() ? buffer.name() : params[0];
 
     write_buffer_to_file(buffer, filename);
@@ -292,8 +292,8 @@ int main()
 
     try
     {
-        auto buffer = std::make_shared<Buffer>("<scratch>");
-        current_window = std::make_shared<Window>(buffer);
+        auto buffer = new Buffer("<scratch>");
+        current_window = new Window(*buffer);
 
         draw_window(*current_window);
         int count = 0;
