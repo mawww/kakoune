@@ -13,5 +13,8 @@ include $(deps)
 .%.d: %.cc
 	$(CXX) $(CXXFLAGS) -MM $< -o $@
 
+tags:
+	ctags -R
+
 clean :
 	rm -f *.o .*.d kak tags
