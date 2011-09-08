@@ -1,6 +1,8 @@
 #ifndef utils_hh_INCLUDED
 #define utils_hh_INCLUDED
 
+#include <memory>
+
 namespace Kakoune
 {
 
@@ -29,6 +31,11 @@ ReversedContainer<Container> reversed(Container& container)
     return ReversedContainer<Container>(container);
 }
 
+template<typename T>
+bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
+{
+    return lhs.get() == rhs;
+}
 
 
 }
