@@ -1,4 +1,7 @@
 #include "buffer.hh"
+
+#include "buffer_manager.hh"
+
 #include <cassert>
 
 namespace Kakoune
@@ -122,6 +125,8 @@ Buffer::Buffer(const std::string& name, const BufferString& initial_content)
     : m_name(name), m_history(1), m_history_cursor(m_history.begin()),
       m_content(initial_content)
 {
+    BufferManager::instance().register_buffer(this);
+
     compute_lines();
 }
 
