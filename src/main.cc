@@ -195,6 +195,18 @@ void quit(const CommandParameters& params)
     quit_requested = true;
 }
 
+void show_buffer(const CommandParameters& params)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    Buffer* buffer = BufferManager::instance().get_buffer(params[0]);
+    if (not buffer)
+        print_status("buffer " + params[0] + " does not exists");
+    else
+        current_window = buffer->get_or_create_window();
+}
+
 CommandManager command_manager;
 
 void do_command()
@@ -290,6 +302,7 @@ int main()
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit);
     command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit);
     command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer);
+    command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer);
 
     try
     {
