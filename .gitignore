@@ -1,3 +1,4 @@
 *.o
 .*.d
 src/kak
+tags
