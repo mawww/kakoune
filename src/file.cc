@@ -2,12 +2,13 @@
 
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "assert.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cstring>
-#include <cassert>
+
 
 namespace Kakoune
 {

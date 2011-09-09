@@ -1,7 +1,6 @@
 #include "buffer_manager.hh"
 
-#include <cassert>
-
+#include "assert.hh"
 #include "buffer.hh"
 #include "window.hh"
 #include "exception.hh"

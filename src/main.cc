@@ -1,13 +1,13 @@
-#include <ncurses.h>
 #include "window.hh"
 #include "buffer.hh"
 #include "file.hh"
 #include "regex_selector.hh"
 #include "command_manager.hh"
 #include "buffer_manager.hh"
+#include "assert.hh"
 
 #include <unordered_map>
-#include <cassert>
+#include <ncurses.h>
 
 using namespace Kakoune;
 
@@ -330,6 +330,13 @@ int main()
             }
         }
         deinit_ncurses();
+    }
+    catch (Kakoune::exception& error)
+    {
+        deinit_ncurses();
+        puts("uncaught exception:\n");
+        puts(error.description().c_str());
+        return -1;
     }
     catch (...)
     {

@@ -1,6 +1,8 @@
 #ifndef utils_hh_INCLUDED
 #define utils_hh_INCLUDED
 
+#include "exception.hh"
+
 #include <memory>
 
 namespace Kakoune
@@ -36,7 +38,6 @@ bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
 {
     return lhs.get() == rhs;
 }
-
 
 }
 

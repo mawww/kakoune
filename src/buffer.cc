@@ -2,8 +2,8 @@
 
 #include "buffer_manager.hh"
 #include "window.hh"
+#include "assert.hh"
 
-#include <cassert>
 #include <algorithm>
 
 namespace Kakoune
