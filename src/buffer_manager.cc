@@ -1,14 +1,15 @@
 #include "buffer_manager.hh"
 
+#include <cassert>
+
 #include "buffer.hh"
 #include "window.hh"
-#include <cassert>
+#include "exception.hh"
 
 namespace Kakoune
 {
 
-struct name_not_unique {};
-
+struct name_not_unique : logic_error {};
 
 BufferManager* BufferManager::ms_instance = nullptr;
 

@@ -1,6 +1,5 @@
 #include "regex_selector.hh"
-
-void print_status(const std::string&);
+#include "exception.hh"
 
 namespace Kakoune
 {
@@ -21,7 +20,7 @@ Selection RegexSelector::operator()(const BufferIterator& cursor) const
     }
     catch (boost::regex_error& err)
     {
-        print_status("regex error");
+        throw runtime_error("regex error");
     }
 
     return Selection(cursor, cursor);

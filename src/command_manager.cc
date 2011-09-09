@@ -37,10 +37,10 @@ static std::vector<std::string> split(const std::string& line)
     return result;
 }
 
-struct command_not_found : public std::runtime_error
+struct command_not_found : runtime_error
 {
-    command_not_found(const std::string& what)
-        : std::runtime_error("command not found: " + what) {}
+    command_not_found(const std::string& command)
+        : runtime_error(command + " : no such command") {}
 };
 
 void CommandManager::execute(const std::string& command_line)

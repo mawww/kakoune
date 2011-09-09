@@ -4,17 +4,17 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <stdexcept>
 #include <functional>
+
+#include "exception.hh"
 
 
 namespace Kakoune
 {
 
-struct wrong_argument_count : public std::runtime_error
+struct wrong_argument_count : runtime_error
 {
-    wrong_argument_count()
-        : std::runtime_error("wrong argument count") {}
+    wrong_argument_count() : runtime_error("wrong argument count") {}
 };
 
 typedef std::vector<std::string> CommandParameters;

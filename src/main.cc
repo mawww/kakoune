@@ -216,10 +216,6 @@ void do_command()
         command_manager.execute(prompt(":"));
     }
     catch (prompt_aborted&) {}
-    catch (std::runtime_error& err)
-    {
-        print_status(err.what());
-    }
 }
 
 bool is_blank(char c)
@@ -270,7 +266,6 @@ void do_search(Window& window)
         std::string ex = prompt("/");
         window.select(false, RegexSelector(ex));
     }
-    catch (boost::regex_error&) {}
     catch (prompt_aborted&) {}
 }
 
@@ -313,18 +308,25 @@ int main()
         int count = 0;
         while(not quit_requested)
         {
-            char c = getch();
-
-            if (isdigit(c))
-                count = count * 10 + c - '0';
-            else
+            try
             {
-                if (keymap.find(c) != keymap.end())
+                char c = getch();
+
+                if (isdigit(c))
+                    count = count * 10 + c - '0';
+                else
                 {
-                    keymap[c](*current_window, count);
-                    draw_window(*current_window);
+                    if (keymap.find(c) != keymap.end())
+                    {
+                        keymap[c](*current_window, count);
+                        draw_window(*current_window);
+                    }
+                    count = 0;
                 }
-                count = 0;
+            }
+            catch (Kakoune::runtime_error& error)
+            {
+                print_status(error.description());
             }
         }
         deinit_ncurses();

@@ -1,5 +1,7 @@
 #include "file.hh"
+
 #include "buffer.hh"
+#include "buffer_manager.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -16,9 +18,9 @@ Buffer* create_buffer_from_file(const std::string& filename)
     if (fd == -1)
     {
         if (errno == ENOENT)
-            throw file_not_found(strerror(errno));
+            throw file_not_found(filename);
 
-        throw open_file_error(strerror(errno));
+        throw file_access_error(filename, strerror(errno));
     }
 
     std::string content;
@@ -32,6 +34,10 @@ Buffer* create_buffer_from_file(const std::string& filename)
         content += std::string(buf, size);
     }
     close(fd);
+
+    if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
+        BufferManager::instance().delete_buffer(buffer);
+
     return new Buffer(filename, content);
 }
 
@@ -39,7 +45,7 @@ void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
 {
     int fd = open(filename.c_str(), O_CREAT | O_WRONLY, 0644);
     if (fd == -1)
-        throw open_file_error(strerror(errno));
+        throw file_access_error(filename, strerror(errno));
 
     const BufferString& content = buffer.content();
     ssize_t count = content.length() * sizeof(BufferChar);
@@ -52,7 +58,7 @@ void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
         count -= written;
 
         if (written == -1)
-            throw write_file_error(strerror(errno));
+            throw file_access_error(filename, strerror(errno));
     }
     close(fd);
 }

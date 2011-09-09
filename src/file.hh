@@ -2,27 +2,24 @@
 #define file_hh_INCLUDED
 
 #include <string>
-#include <stdexcept>
+
+#include "exception.hh"
 
 namespace Kakoune
 {
 
-struct open_file_error : public std::runtime_error
+struct file_access_error : runtime_error
 {
-    open_file_error(const std::string& what)
-        : std::runtime_error(what) {}
+public:
+    file_access_error(const std::string& filename,
+                      const std::string& error_desc)
+        : runtime_error(filename + ": " + error_desc) {}
 };
 
-struct file_not_found : public open_file_error
+struct file_not_found : file_access_error
 {
-    file_not_found(const std::string& what)
-        : open_file_error(what) {}
-};
-
-struct write_file_error : public std::runtime_error
-{
-    write_file_error(const std::string& what)
-        : std::runtime_error(what) {}
+    file_not_found(const std::string& filename)
+        : file_access_error(filename, "file not found") {}
 };
 
 class Buffer;
