@@ -88,7 +88,16 @@ void deinit_ncurses()
 
 struct prompt_aborted {};
 
-std::string prompt(const std::string& text)
+struct NullCompletion
+{
+    Completions operator() (const std::string&, size_t cursor_pos)
+    {
+        return Completions(cursor_pos, cursor_pos);
+    }
+};
+
+std::string prompt(const std::string& text,
+                   std::function<Completions (const std::string&, size_t)> completer = NullCompletion())
 {
     int max_x, max_y;
     getmaxyx(stdscr, max_y, max_x);
@@ -116,6 +125,19 @@ std::string prompt(const std::string& text)
             break;
         case 27:
             throw prompt_aborted();
+        case '\t':
+        {
+            Completions completions = completer(result, result.length());
+            if (not completions.candidates.empty())
+            {
+                const std::string& completion = completions.candidates[0];
+                move(max_y-1, text.length());
+                result = result.substr(0, completions.start) + completion;
+                addstr(result.c_str());
+                refresh();
+            }
+            break;
+        }
         default:
             result += c;
             addch(c);
@@ -213,7 +235,10 @@ void do_command()
 {
     try
     {
-        command_manager.execute(prompt(":"));
+        command_manager.execute(prompt(":", std::bind(&CommandManager::complete,
+                                                      &command_manager,
+                                                      std::placeholders::_1,
+                                                      std::placeholders::_2)));
     }
     catch (prompt_aborted&) {}
 }

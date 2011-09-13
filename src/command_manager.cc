@@ -17,9 +17,10 @@ void CommandManager::register_command(const std::vector<std::string>& command_na
         register_command(command_name, command);
 }
 
-static std::vector<std::string> split(const std::string& line)
+typedef std::vector<std::pair<size_t, size_t>> TokenList;
+static TokenList split(const std::string& line)
 {
-    std::vector<std::string> result;
+    TokenList result;
 
     size_t pos = 0;
     while (pos != line.length())
@@ -32,7 +33,7 @@ static std::vector<std::string> split(const std::string& line)
         while((line[pos] != ' ' or line[pos-1] == '\\') and pos != line.length())
             ++pos;
 
-        result.push_back(line.substr(token_start, pos - token_start));
+        result.push_back(std::make_pair(token_start, pos));
     }
     return result;
 }
@@ -45,16 +46,57 @@ struct command_not_found : runtime_error
 
 void CommandManager::execute(const std::string& command_line)
 {
-    std::vector<std::string> tokens = split(command_line);
+    TokenList tokens = split(command_line);
     if (tokens.empty())
         return;
 
-    auto command_it = m_commands.find(tokens[0]);
-    if (command_it == m_commands.end())
-        throw command_not_found(tokens[0]);
+    std::string command_name =
+        command_line.substr(tokens[0].first,
+                            tokens[0].second - tokens[0].first);
 
-    CommandParameters params(tokens.begin() + 1, tokens.end());
+    auto command_it = m_commands.find(command_name);
+    if (command_it == m_commands.end())
+        throw command_not_found(command_name);
+
+    CommandParameters params;
+    for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
+    {
+        params.push_back(command_line.substr(it->first,
+                                             it->second - it->first));
+    }
+
     command_it->second(params);
+}
+
+Completions CommandManager::complete(const std::string& command_line, size_t cursor_pos)
+{
+    TokenList tokens = split(command_line);
+
+    size_t token_to_complete = -1;
+    for (size_t i = 0; i < tokens.size(); ++i)
+    {
+        if (tokens[i].first < cursor_pos and tokens[i].second >= cursor_pos)
+        {
+            token_to_complete = i;
+            break;
+        }
+    }
+
+    if (token_to_complete == 0) // command name completion
+    {
+        Completions result(tokens[0].first, cursor_pos);
+        std::string prefix = command_line.substr(tokens[0].first,
+                                                 cursor_pos - tokens[0].first);
+
+        for (auto& command : m_commands)
+        {
+            if (command.first.substr(0, prefix.length()) == prefix)
+                result.candidates.push_back(command.first);
+        }
+
+        return result;
+    }
+    return Completions(cursor_pos, cursor_pos);
 }
 
 }
