@@ -15,6 +15,9 @@ struct Completions
     size_t start;
     size_t end;
 
+    Completions()
+        : start(0), end(0) {}
+
     Completions(size_t start, size_t end)
         : start(start), end(end) {}
 };

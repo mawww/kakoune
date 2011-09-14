@@ -106,6 +106,12 @@ std::string prompt(const std::string& text,
     clrtoeol();
 
     std::string result;
+    size_t cursor_pos = 0;
+
+    Completions completions;
+    int current_completion = -1;
+    std::string text_before_completion;
+
     while(true)
     {
         char c = getch();
@@ -113,36 +119,71 @@ std::string prompt(const std::string& text,
         {
         case '\r':
             return result;
+        case 4:
+            if (cursor_pos > 0)
+                --cursor_pos;
+            break;
+        case 5:
+            if (cursor_pos < result.length())
+                ++cursor_pos;
+            break;
         case 7:
-            if (not result.empty())
+            if (cursor_pos != 0)
             {
-                move(max_y - 1, text.length() + result.length() - 1);
-                addch(' ');
-                result.resize(result.length() - 1);
-                move(max_y - 1, text.length() + result.length());
-                refresh();
+                result = result.substr(0, cursor_pos - 1)
+                       + result.substr(cursor_pos, std::string::npos);
+
+                --cursor_pos;
             }
+
+            current_completion = -1;
             break;
         case 27:
             throw prompt_aborted();
         case '\t':
         {
-            Completions completions = completer(result, result.length());
-            if (not completions.candidates.empty())
+            if (current_completion == -1)
             {
-                const std::string& completion = completions.candidates[0];
-                move(max_y-1, text.length());
-                result = result.substr(0, completions.start) + completion;
-                addstr(result.c_str());
-                refresh();
+                completions = completer(result, result.length());
+                if (completions.candidates.empty())
+                    break;
+
+                text_before_completion = result.substr(completions.start,
+                                                       completions.end - completions.start);
             }
+            ++current_completion;
+
+            std::string completion;
+            if (current_completion >= completions.candidates.size())
+            {
+                if (current_completion == completions.candidates.size() and
+                    std::find(completions.candidates.begin(), completions.candidates.end(), text_before_completion) == completions.candidates.end())
+                    completion = text_before_completion;
+                else
+                {
+                    current_completion = 0;
+                    completion = completions.candidates[0];
+                }
+            }
+            else
+                completion = completions.candidates[current_completion];
+
+            move(max_y-1, text.length());
+            result = result.substr(0, completions.start) + completion;
+            cursor_pos = completions.start + completion.length();
             break;
         }
         default:
-            result += c;
-            addch(c);
-            refresh();
+            current_completion = -1;
+            result = result.substr(0, cursor_pos) + c + result.substr(cursor_pos, std::string::npos);
+            ++cursor_pos;
         }
+
+        move(max_y - 1, text.length());
+        clrtoeol();
+        addstr(result.c_str());
+        move(max_y - 1, text.length() + cursor_pos);
+        refresh();
     }
     return result;
 }
