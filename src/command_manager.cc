@@ -96,6 +96,13 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
 
         return result;
     }
+    if (token_to_complete == 1) // filename completion
+    {
+        Completions result(tokens[1].first, cursor_pos);
+        std::string prefix = command_line.substr(tokens[1].first, cursor_pos);
+        result.candidates = complete_filename(prefix);
+        return result;
+    }
     return Completions(cursor_pos, cursor_pos);
 }
 

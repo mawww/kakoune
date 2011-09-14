@@ -7,7 +7,7 @@
 #include <functional>
 
 #include "exception.hh"
-
+#include "completion.hh"
 
 namespace Kakoune
 {
@@ -19,16 +19,6 @@ struct wrong_argument_count : runtime_error
 
 typedef std::vector<std::string> CommandParameters;
 typedef std::function<void (const CommandParameters&)> Command;
-
-struct Completions
-{
-    CommandParameters candidates;
-    size_t start;
-    size_t end;
-
-    Completions(size_t start, size_t end)
-        : start(start), end(end) {}
-};
 
 class CommandManager
 {
