@@ -1,20 +1,24 @@
 #include "command_manager.hh"
 
 #include "utils.hh"
+#include "assert.hh"
+
 #include <algorithm>
 
 namespace Kakoune
 {
 
-void CommandManager::register_command(const std::string& command_name, Command command)
+void CommandManager::register_command(const std::string& command_name, Command command,
+                                      const CommandCompleter& completer)
 {
-    m_commands[command_name] = command;
+    m_commands[command_name] = CommandAndCompleter { command, completer };
 }
 
-void CommandManager::register_command(const std::vector<std::string>& command_names, Command command)
+void CommandManager::register_command(const std::vector<std::string>& command_names, Command command,
+                                      const CommandCompleter& completer)
 {
     for (auto command_name : command_names)
-        register_command(command_name, command);
+        register_command(command_name, command, completer);
 }
 
 typedef std::vector<std::pair<size_t, size_t>> TokenList;
@@ -65,7 +69,7 @@ void CommandManager::execute(const std::string& command_line)
                                              it->second - it->first));
     }
 
-    command_it->second(params);
+    command_it->second.command(params);
 }
 
 Completions CommandManager::complete(const std::string& command_line, size_t cursor_pos)
@@ -96,14 +100,44 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
 
         return result;
     }
-    if (token_to_complete == 1) // filename completion
+
+    assert(not tokens.empty());
+    std::string command_name =
+        command_line.substr(tokens[0].first,
+                            tokens[0].second - tokens[0].first);
+
+    auto command_it = m_commands.find(command_name);
+    if (command_it == m_commands.end() or not command_it->second.completer)
+        return Completions();
+
+    CommandParameters params;
+    for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
     {
-        Completions result(tokens[1].first, cursor_pos);
-        std::string prefix = command_line.substr(tokens[1].first, cursor_pos);
-        result.candidates = complete_filename(prefix);
-        return result;
+        params.push_back(command_line.substr(it->first,
+                                             it->second - it->first));
     }
-    return Completions(cursor_pos, cursor_pos);
+    Completions result(tokens[token_to_complete].first, cursor_pos);
+    size_t cursor_pos_in_token = cursor_pos - tokens[token_to_complete].first;
+
+    result.candidates = command_it->second.completer(params,
+                                                     token_to_complete - 1,
+                                                     cursor_pos_in_token);
+    return result;
+}
+
+CandidateList PerArgumentCommandCompleter::operator()(const CommandParameters& params,
+                                                      size_t token_to_complete,
+                                                      size_t pos_in_token) const
+{
+    if (token_to_complete >= m_completers.size())
+        return CandidateList();
+
+    // it is possible to try to complete a new argument
+    assert(token_to_complete <= params.size());
+
+    const std::string& argument = token_to_complete < params.size() ?
+                                  params[token_to_complete] : std::string();
+    return m_completers[token_to_complete](argument, pos_in_token);
 }
 
 }
