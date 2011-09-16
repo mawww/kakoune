@@ -289,13 +289,24 @@ bool is_blank(char c)
     return c == ' ' or c == '\t' or c == '\n';
 }
 
+bool is_word(char c)
+{
+    if (c >= '0' and c <= '9')
+        return true;
+    if (c >= 'a' and c <= 'z')
+        return true;
+    if (c >= 'A' and c <= 'Z')
+        return true;
+    return false;
+}
+
 Selection select_to_next_word(const BufferIterator& cursor)
 {
     BufferIterator end = cursor;
-    while (not end.is_end() and not is_blank(*end))
+    while (not end.is_end() and is_word(*end))
         ++end;
 
-    while (not end.is_end() and is_blank(*end))
+    while (not end.is_end() and not is_word(*end))
         ++end;
 
     return Selection(cursor, end);
@@ -304,10 +315,10 @@ Selection select_to_next_word(const BufferIterator& cursor)
 Selection select_to_next_word_end(const BufferIterator& cursor)
 {
     BufferIterator end = cursor;
-    while (not end.is_end() and is_blank(*end))
+    while (not end.is_end() and not is_word(*end))
         ++end;
 
-    while (not end.is_end() and not is_blank(*end))
+    while (not end.is_end() and is_word(*end))
         ++end;
 
     return Selection(cursor, end);
