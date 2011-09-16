@@ -22,7 +22,8 @@ struct Completions
         : start(start), end(end) {}
 };
 
-CandidateList complete_filename(const std::string& prefix);
+CandidateList complete_filename(const std::string& prefix,
+                                size_t cursor_pos = std::string::npos);
 
 }
 #endif // completion_hh_INCLUDED
