@@ -144,7 +144,7 @@ std::string prompt(const std::string& text,
         {
             if (current_completion == -1)
             {
-                completions = completer(result, result.length());
+                completions = completer(result, cursor_pos);
                 if (completions.candidates.empty())
                     break;
 
@@ -359,10 +359,11 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 int main()
 {
     init_ncurses();
-
-    command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit);
+    command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
+                                     PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit);
-    command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer);
+    command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer,
+                                     PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer);
 
     try
