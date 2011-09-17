@@ -22,10 +22,10 @@ void Window::erase()
         m_buffer.erase(cursor, cursor+1);
     }
 
-    for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
+    for (auto& sel : m_selections)
     {
-        m_buffer.erase(sel->begin, sel->end);
-        sel->end = sel->begin;
+        m_buffer.erase(sel.begin(), sel.end());
+        sel = Selection(sel.begin(), sel.begin());
     }
     m_buffer.end_undo_group();
 }
@@ -55,11 +55,10 @@ void Window::insert(const String& string)
         move_cursor(measure_string(string));
     }
 
-    for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
+    for (auto& sel : m_selections)
     {
-        m_buffer.insert(sel->begin, string);
-        sel->begin += string.length();
-        sel->end += string.length();
+        m_buffer.insert(sel.begin(), string);
+        sel.offset(string.length());
     }
     m_buffer.end_undo_group();
 }
@@ -73,9 +72,9 @@ void Window::append(const String& string)
         insert(string);
     }
 
-    for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
+    for (auto& sel : m_selections)
     {
-        m_buffer.insert(sel->end, string);
+        m_buffer.insert(sel.end(), string);
     }
     m_buffer.end_undo_group();
 }
@@ -126,12 +125,12 @@ void Window::select(bool append, const Selector& selector)
     }
     else
     {
-        for (auto sel = m_selections.begin(); sel != m_selections.end(); ++sel)
+        for (auto& sel : m_selections)
         {
-            sel->end = selector(sel->end).end;
+            sel = Selection(sel.begin(), selector(sel.end()).end());
         }
     }
-    m_cursor = line_and_column_at(m_selections.back().end);
+    m_cursor = line_and_column_at(m_selections.back().end());
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -149,27 +148,31 @@ void Window::update_display_buffer()
     m_display_buffer.clear();
 
     SelectionList sorted_selections = m_selections;
+
+    for (auto& sel : sorted_selections)
+        sel.canonicalize();
+
     std::sort(sorted_selections.begin(), sorted_selections.end(),
-              [](const Selection& lhs, const Selection& rhs) { return lhs.begin < rhs.begin; });
+              [](const Selection& lhs, const Selection& rhs) { return lhs.begin() < rhs.begin(); });
 
     BufferIterator current_position = m_buffer.iterator_at(m_position);
 
     for (Selection& sel : sorted_selections)
     {
-        if (current_position != sel.begin)
+        if (current_position != sel.begin())
         {
             DisplayAtom atom;
-            atom.content = m_buffer.string(current_position, sel.begin);
+            atom.content = m_buffer.string(current_position, sel.begin());
             m_display_buffer.append(atom);
         }
-        if (sel.begin != sel.end)
+        if (sel.begin() != sel.end())
         {
             DisplayAtom atom;
-            atom.content = m_buffer.string(sel.begin, sel.end);
+            atom.content = m_buffer.string(sel.begin(), sel.end());
             atom.attribute = UNDERLINE;
             m_display_buffer.append(atom);
         }
-        current_position = sel.end;
+        current_position = sel.end();
     }
     if (current_position != m_buffer.end())
     {
