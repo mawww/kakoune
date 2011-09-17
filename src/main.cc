@@ -346,12 +346,30 @@ void do_search(Window& window)
     catch (prompt_aborted&) {}
 }
 
+Selection move_select(Window& window, const BufferIterator& cursor, const WindowCoord& offset)
+{
+    WindowCoord cursor_pos = window.line_and_column_at(cursor);
+    WindowCoord new_pos = cursor_pos + offset;
+
+    return Selection(cursor, window.iterator_at(new_pos));
+}
+
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
 {
-    { 'h', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(0, -count)); window.empty_selections(); } },
-    { 'j', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(count,  0)); window.empty_selections(); } },
-    { 'k', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(-count, 0)); window.empty_selections(); } },
-    { 'l', [](Window& window, int count) { if (count == 0) count = 1; window.move_cursor(WindowCoord(0,  count)); window.empty_selections(); } },
+    { 'h', [](Window& window, int count) { window.move_cursor(WindowCoord(0, -std::max(count,1))); window.empty_selections(); } },
+    { 'j', [](Window& window, int count) { window.move_cursor(WindowCoord( std::max(count,1), 0)); window.empty_selections(); } },
+    { 'k', [](Window& window, int count) { window.move_cursor(WindowCoord(-std::max(count,1), 0)); window.empty_selections(); } },
+    { 'l', [](Window& window, int count) { window.move_cursor(WindowCoord(0,  std::max(count,1))); window.empty_selections(); } },
+
+    { 'H', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+                                                                         WindowCoord(0, -std::max(count,1)))); } },
+    { 'J', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+                                                                         WindowCoord( std::max(count,1), 0))); } },
+    { 'K', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+                                                                         WindowCoord(-std::max(count,1), 0))); } },
+    { 'L', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+                                                                         WindowCoord(0,  std::max(count,1)))); } },
+
     { 'd', [](Window& window, int count) { window.erase(); window.empty_selections(); } },
     { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
     { 'i', [](Window& window, int count) { do_insert(window); } },

@@ -137,9 +137,7 @@ void Window::select(bool append, const Selector& selector)
 
 void Window::move_cursor(const WindowCoord& offset)
 {
-    BufferCoord target_position =
-        window_to_buffer(WindowCoord(m_cursor.line + offset.line,
-                                     m_cursor.column + offset.column));
+    BufferCoord target_position = window_to_buffer(m_cursor + offset);
 
     m_cursor = buffer_to_window(m_buffer.clamp(target_position));
 
