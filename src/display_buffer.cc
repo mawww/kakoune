@@ -7,9 +7,4 @@ DisplayBuffer::DisplayBuffer()
 {
 }
 
-LineAndColumn DisplayBuffer::dimensions() const
-{
-    return LineAndColumn();
-}
-
 }

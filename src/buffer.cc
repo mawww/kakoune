@@ -3,6 +3,7 @@
 #include "buffer_manager.hh"
 #include "window.hh"
 #include "assert.hh"
+#include "utils.hh"
 
 #include <algorithm>
 

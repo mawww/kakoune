@@ -8,15 +8,6 @@
 namespace Kakoune
 {
 
-struct LineAndColumn
-{
-    int line;
-    int column;
-
-    LineAndColumn(int line = 0, int column = 0)
-        : line(line), column(column) {}
-};
-
 template<typename Container>
 struct ReversedContainer
 {

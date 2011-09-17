@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "buffer.hh"
-
 namespace Kakoune
 {
 
@@ -35,8 +33,6 @@ public:
     typedef AtomList::const_iterator const_iterator;
 
     DisplayBuffer();
-
-    LineAndColumn dimensions() const;
 
     void clear() { m_atoms.clear(); }
     void append(const DisplayAtom& atom) { m_atoms.push_back(atom); }

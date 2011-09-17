@@ -6,7 +6,7 @@
 #include <list>
 #include <memory>
 
-#include "utils.hh"
+#include "line_and_column.hh"
 
 namespace Kakoune
 {
@@ -19,7 +19,7 @@ typedef int      BufferSize;
 typedef char     BufferChar;
 typedef std::basic_string<BufferChar> BufferString;
 
-struct BufferCoord : LineAndColumn
+struct BufferCoord : LineAndColumn<BufferCoord>
 {
     BufferCoord(int line = 0, int column = 0)
         : LineAndColumn(line, column) {}

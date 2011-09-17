@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include "utils.hh"
+#include "line_and_column.hh"
 
 #include "buffer.hh"
 #include "display_buffer.hh"
@@ -11,7 +11,7 @@
 namespace Kakoune
 {
 
-struct WindowCoord : LineAndColumn
+struct WindowCoord : LineAndColumn<WindowCoord>
 {
     WindowCoord(int line = 0, int column = 0)
         : LineAndColumn(line, column) {}
