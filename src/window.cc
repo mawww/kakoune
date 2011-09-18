@@ -24,9 +24,12 @@ void Window::erase()
 
     for (auto& sel : m_selections)
     {
+        sel.canonicalize();
         m_buffer.erase(sel.begin(), sel.end());
         sel = Selection(sel.begin(), sel.begin());
     }
+    if (not m_selections.empty())
+        m_cursor = line_and_column_at(m_selections.back().end());
     m_buffer.end_undo_group();
 }
 
