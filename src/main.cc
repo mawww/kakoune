@@ -197,23 +197,53 @@ void print_status(const std::string& status)
     addstr(status.c_str());
 }
 
-void do_insert(Window& window)
+struct scoped_status
 {
-    print_status("-- INSERT --");
-    std::string inserted;
-    WindowCoord pos = window.cursor_position();
-    move(pos.line, pos.column);
-    refresh();
+    scoped_status(const std::string& status)
+    {
+        print_status(status);
+        refresh();
+    }
+    ~scoped_status()
+    {
+        print_status("");
+        refresh();
+    }
+};
+
+void do_insert(Window& window, bool append = false)
+{
+    scoped_status("-- INSERT --");
+    Kakoune::IncrementalInserter inserter(window, append);
     while(true)
     {
+        const WindowCoord& pos = inserter.cursors().back();
+        move(pos.line, pos.column);
+
         char c = getch();
-        if (c == 27)
+        switch (c)
+        {
+        case 27:
+            return;
+
+        case 4:
+            inserter.move_cursor({0, -1});
+            break;
+        case 5:
+            inserter.move_cursor({0,  1});
             break;
 
-        window.insert(std::string() + c);
+        case 7:
+            inserter.erase();
+            break;
+
+        case '\r':
+            c = '\n';
+        default:
+            inserter.insert(std::string() + c);
+        }
         draw_window(window);
     }
-    print_status("");
 }
 
 Window* current_window;
@@ -373,6 +403,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'd', [](Window& window, int count) { window.erase(); window.empty_selections(); } },
     { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
     { 'i', [](Window& window, int count) { do_insert(window); } },
+    { 'a', [](Window& window, int count) { do_insert(window, true); } },
     { ':', [](Window& window, int count) { do_command(); } },
     { ' ', [](Window& window, int count) { window.empty_selections(); } },
     { 'w', [](Window& window, int count) { do { window.select(false, select_to_next_word); } while(--count > 0); } },
