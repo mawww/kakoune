@@ -44,6 +44,8 @@ private:
 
 typedef std::vector<Selection> SelectionList;
 
+class IncrementalInserter;
+
 class Window
 {
 public:
@@ -67,8 +69,6 @@ public:
 
     void move_cursor(const WindowCoord& offset);
 
-    const SelectionList& selections() const { return m_selections; }
-
     void empty_selections();
     void select(bool append, const Selector& selector);
 
@@ -89,12 +89,34 @@ private:
 
     void scroll_to_keep_cursor_visible_ifn();
 
+    friend class IncrementalInserter;
+    IncrementalInserter* m_current_inserter;
+
     Buffer&       m_buffer;
     BufferCoord   m_position;
     WindowCoord   m_cursor;
     WindowCoord   m_dimensions;
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
+};
+
+class IncrementalInserter
+{
+public:
+    typedef std::vector<WindowCoord> CursorList;
+
+    IncrementalInserter(Window& window, bool append = false);
+    ~IncrementalInserter();
+
+    void insert(const Window::String& string);
+    void erase();
+    void move_cursor(const WindowCoord& offset);
+
+    const CursorList& cursors() const { return m_cursors; }
+
+private:
+    Window&                     m_window;
+    std::vector<WindowCoord>    m_cursors;
 };
 
 }

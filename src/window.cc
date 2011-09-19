@@ -1,5 +1,7 @@
 #include "window.hh"
 
+#include "assert.hh"
+
 #include <algorithm>
 
 namespace Kakoune
@@ -9,7 +11,8 @@ Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
       m_cursor(0, 0),
-      m_dimensions(0, 0)
+      m_dimensions(0, 0),
+      m_current_inserter(nullptr)
 {
 }
 
@@ -212,6 +215,66 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     {
         m_position.column += m_cursor.column - (m_dimensions.column - 1);
         m_cursor.column = m_dimensions.column - 1;
+    }
+}
+
+IncrementalInserter::IncrementalInserter(Window& window, bool append)
+    : m_window(window)
+{
+    assert(not m_window.m_current_inserter);
+    m_window.m_current_inserter = this;
+
+    if (m_window.m_selections.empty())
+    {
+        WindowCoord pos = m_window.m_cursor;
+        if (append)
+            pos += WindowCoord(0, 1);
+        m_cursors.push_back(pos);
+    }
+    else
+    {
+        for (auto& sel : m_window.m_selections)
+        {
+            const BufferIterator& pos = append ? sel.end() : sel.begin();
+            m_cursors.push_back(m_window.line_and_column_at(pos));
+        }
+    }
+    m_window.m_buffer.begin_undo_group();
+}
+
+IncrementalInserter::~IncrementalInserter()
+{
+    assert(m_window.m_current_inserter == this);
+    m_window.m_current_inserter = nullptr;
+
+    m_window.m_buffer.end_undo_group();
+}
+
+void IncrementalInserter::insert(const Window::String& string)
+{
+    for (auto& cursor : m_cursors)
+    {
+        m_window.m_buffer.insert(m_window.iterator_at(cursor), string);
+        move_cursor(measure_string(string));
+    }
+}
+
+void IncrementalInserter::erase()
+{
+    for (auto& cursor : m_cursors)
+    {
+        BufferIterator pos = m_window.iterator_at(cursor);
+        m_window.m_buffer.erase(pos - 1, pos);
+        move_cursor(WindowCoord(0, -1));
+    }
+}
+
+void IncrementalInserter::move_cursor(const WindowCoord& offset)
+{
+    for (auto& cursor : m_cursors)
+    {
+        BufferCoord target = m_window.window_to_buffer(cursor + offset);
+        cursor = m_window.buffer_to_window(m_window.m_buffer.clamp(target));
     }
 }
 
