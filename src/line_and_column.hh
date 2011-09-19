@@ -22,7 +22,7 @@ struct LineAndColumn
     {
         line   += other.line;
         column += other.column;
-        return *this;
+        return *static_cast<EffectiveType*>(this);
     }
 
     EffectiveType operator-(const EffectiveType& other) const
@@ -34,7 +34,7 @@ struct LineAndColumn
     {
         line   += other.line;
         column += other.column;
-        return *this;
+        return *static_cast<EffectiveType*>(this);
     }
 };
 
