@@ -354,6 +354,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'b', [](Window& window, int count) { do { window.select(false, select_to_previous_word); } while(--count > 0); } },
     { 'B', [](Window& window, int count) { do { window.select(true, select_to_previous_word); } while(--count > 0); } },
     { '.', [](Window& window, int count) { do { window.select(false, select_line); } while(--count > 0); } },
+    { 'm', [](Window& window, int count) { window.select(false, select_matching); } },
+    { 'M', [](Window& window, int count) { window.select(true, select_matching); } },
     { '/', [](Window& window, int count) { do_search(window); } },
     { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },

@@ -1,7 +1,14 @@
 #include "selectors.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
+
+static bool is_eol(char c)
+{
+    return c == '\n';
+}
 
 static bool is_blank(char c)
 {
@@ -73,6 +80,55 @@ Selection move_select(Window& window, const BufferIterator& cursor, const Window
     WindowCoord new_pos = cursor_pos + offset;
 
     return Selection(cursor, window.iterator_at(new_pos));
+}
+
+Selection select_matching(const BufferIterator& cursor)
+{
+    std::vector<char> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
+    BufferIterator it = cursor;
+    std::vector<char>::iterator match = matching_pairs.end();
+    while (not is_eol(*it))
+    {
+        match = std::find(matching_pairs.begin(), matching_pairs.end(), *it);
+        if (match != matching_pairs.end())
+            break;
+        ++it;
+    }
+    if (match == matching_pairs.end())
+        return Selection(cursor, cursor);
+
+    BufferIterator begin = it;
+
+    if (((match - matching_pairs.begin()) % 2) == 0)
+    {
+        int level = 0;
+        const char opening = *match;
+        const char closing = *(match+1);
+        while (not it.is_end())
+        {
+            if (*it == opening)
+                ++level;
+            else if (*it == closing and --level == 0)
+                return Selection(begin, it+1);
+
+            ++it;
+        }
+    }
+    else
+    {
+        int level = 0;
+        const char opening = *(match-1);
+        const char closing = *match;
+        while (not it.is_begin())
+        {
+            if (*it == closing)
+                ++level;
+            else if (*it == opening and --level == 0)
+                return Selection(begin, it);
+            --it;
+        }
+    }
+    return Selection(cursor, cursor);
 }
 
 }
