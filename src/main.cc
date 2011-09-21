@@ -4,6 +4,7 @@
 #include "regex_selector.hh"
 #include "command_manager.hh"
 #include "buffer_manager.hh"
+#include "selectors.hh"
 #include "assert.hh"
 
 #include <unordered_map>
@@ -314,58 +315,6 @@ void do_command()
     catch (prompt_aborted&) {}
 }
 
-bool is_blank(char c)
-{
-    return c == ' ' or c == '\t' or c == '\n';
-}
-
-bool is_word(char c)
-{
-    if (c >= '0' and c <= '9')
-        return true;
-    if (c >= 'a' and c <= 'z')
-        return true;
-    if (c >= 'A' and c <= 'Z')
-        return true;
-    return false;
-}
-
-Selection select_to_next_word(const BufferIterator& cursor)
-{
-    BufferIterator end = cursor;
-    while (not end.is_end() and is_word(*end))
-        ++end;
-
-    while (not end.is_end() and not is_word(*end))
-        ++end;
-
-    return Selection(cursor, end);
-}
-
-Selection select_to_next_word_end(const BufferIterator& cursor)
-{
-    BufferIterator end = cursor;
-    while (not end.is_end() and not is_word(*end))
-        ++end;
-
-    while (not end.is_end() and is_word(*end))
-        ++end;
-
-    return Selection(cursor, end);
-}
-
-Selection select_line(const BufferIterator& cursor)
-{
-    BufferIterator begin = cursor;
-    while (not begin.is_begin() and *(begin -1) != '\n')
-        --begin;
-
-    BufferIterator end = cursor;
-    while (not end.is_end() and *end != '\n')
-        ++end;
-    return Selection(begin, end + 1);
-}
-
 void do_search(Window& window)
 {
     try
@@ -374,14 +323,6 @@ void do_search(Window& window)
         window.select(false, RegexSelector(ex));
     }
     catch (prompt_aborted&) {}
-}
-
-Selection move_select(Window& window, const BufferIterator& cursor, const WindowCoord& offset)
-{
-    WindowCoord cursor_pos = window.line_and_column_at(cursor);
-    WindowCoord new_pos = cursor_pos + offset;
-
-    return Selection(cursor, window.iterator_at(new_pos));
 }
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
@@ -410,13 +351,15 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'W', [](Window& window, int count) { do { window.select(true, select_to_next_word); } while(--count > 0); } },
     { 'e', [](Window& window, int count) { do { window.select(false, select_to_next_word_end); } while(--count > 0); } },
     { 'E', [](Window& window, int count) { do { window.select(true, select_to_next_word_end); } while(--count > 0); } },
+    { 'b', [](Window& window, int count) { do { window.select(false, select_to_previous_word); } while(--count > 0); } },
+    { 'B', [](Window& window, int count) { do { window.select(true, select_to_previous_word); } while(--count > 0); } },
     { '.', [](Window& window, int count) { do { window.select(false, select_line); } while(--count > 0); } },
     { '/', [](Window& window, int count) { do_search(window); } },
     { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
 };
 
-int main()
+int main(int argc, char* argv[])
 {
     init_ncurses();
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
@@ -428,7 +371,7 @@ int main()
 
     try
     {
-        auto buffer = new Buffer("<scratch>");
+        auto buffer = (argc > 1) ? create_buffer_from_file(argv[1]) : new Buffer("<scratch>");
         current_window = buffer->get_or_create_window();
 
         draw_window(*current_window);
