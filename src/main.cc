@@ -248,6 +248,32 @@ void do_insert(Window& window, bool append = false)
     }
 }
 
+void do_go(Window& window, int count)
+{
+    BufferCoord target;
+    if (count != 0)
+    {
+        target.line = count;
+    }
+    else
+    {
+        char c = getch();
+        switch (c)
+        {
+        case 'g':
+        case 't':
+            target.line = 0;
+            break;
+        case 'b':
+            target.line = window.buffer().line_count() - 1;
+            break;
+        }
+    }
+
+    BufferIterator target_it = window.buffer().iterator_at(target);
+    window.move_cursor_to(window.line_and_column_at(target_it));
+}
+
 Window* current_window;
 
 void edit(const CommandParameters& params)
@@ -348,6 +374,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'a', [](Window& window, int count) { do_insert(window, true); } },
     { 'o', [](Window& window, int count) { window.select(true, select_line); window.append("\n"); do_insert(window, true); } },
 
+    { 'g', do_go },
 
     { ':', [](Window& window, int count) { do_command(); } },
     { ' ', [](Window& window, int count) { window.empty_selections(); } },
