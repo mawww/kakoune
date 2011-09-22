@@ -12,6 +12,21 @@ namespace Kakoune
 class BufferManager
 {
 public:
+    typedef std::unordered_map<std::string, std::unique_ptr<Buffer>> BufferMap;
+
+    struct iterator : public BufferMap::const_iterator
+    {
+        typedef BufferMap::const_iterator parent_type;
+
+        iterator() {}
+        iterator(const parent_type& other) : parent_type(other) {}
+        Buffer& operator*()  const { return *(parent_type::operator*().second); }
+        Buffer* operator->() const { return parent_type::operator*().second.get(); }
+    };
+
+    iterator begin() const { return iterator(m_buffers.begin()); }
+    iterator end() const { return iterator(m_buffers.end()); }
+
     void register_buffer(Buffer* buffer);
     void delete_buffer(Buffer* buffer);
 
@@ -23,8 +38,7 @@ public:
 private:
     BufferManager();
     static BufferManager* ms_instance;
-
-    std::unordered_map<std::string, std::unique_ptr<Buffer>> m_buffers;
+    BufferMap m_buffers;
 };
 
 }
