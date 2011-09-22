@@ -151,7 +151,7 @@ Selection select_matching(const BufferIterator& cursor)
             if (*it == closing)
                 ++level;
             else if (*it == opening and --level == 0)
-                return Selection(begin, it);
+                return Selection(begin, it-1);
             --it;
         }
     }
