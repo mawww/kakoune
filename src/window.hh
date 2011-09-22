@@ -28,7 +28,7 @@ struct Selection
     void canonicalize()
     {
         if (m_end < m_begin)
-            std::swap(m_begin, m_end);
+            std::swap(++m_begin, ++m_end);
     }
 
     void offset(int offset)
