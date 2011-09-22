@@ -233,6 +233,11 @@ BufferSize Buffer::length() const
     return m_content.size();
 }
 
+BufferSize Buffer::line_count() const
+{
+    return m_lines.size();
+}
+
 BufferString Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
 {
     return m_content.substr(begin.m_position, end - begin);

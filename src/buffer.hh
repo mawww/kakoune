@@ -90,6 +90,7 @@ public:
     BufferIterator begin() const;
     BufferIterator end() const;
     BufferSize     length() const;
+    BufferSize     line_count() const;
 
     BufferIterator iterator_at(const BufferCoord& line_and_column) const;
     BufferCoord    line_and_column_at(const BufferIterator& iterator) const;
