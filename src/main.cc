@@ -216,6 +216,7 @@ void do_insert(Window& window, bool append = false)
 {
     scoped_status("-- INSERT --");
     Kakoune::IncrementalInserter inserter(window, append);
+    draw_window(window);
     while(true)
     {
         const WindowCoord& pos = inserter.cursors().back();
@@ -345,6 +346,9 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
     { 'i', [](Window& window, int count) { do_insert(window); } },
     { 'a', [](Window& window, int count) { do_insert(window, true); } },
+    { 'o', [](Window& window, int count) { window.select(true, select_line); window.append("\n"); do_insert(window, true); } },
+
+
     { ':', [](Window& window, int count) { do_command(); } },
     { ' ', [](Window& window, int count) { window.empty_selections(); } },
     { 'w', [](Window& window, int count) { do { window.select(false, select_to_next_word); } while(--count > 0); } },
