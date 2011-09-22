@@ -402,7 +402,8 @@ int main(int argc, char* argv[])
     command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit);
     command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer,
                                      PerArgumentCommandCompleter{ complete_filename });
-    command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer);
+    command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
+                                     PerArgumentCommandCompleter { complete_buffername });
 
     try
     {

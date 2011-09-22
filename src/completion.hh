@@ -25,5 +25,8 @@ struct Completions
 CandidateList complete_filename(const std::string& prefix,
                                 size_t cursor_pos = std::string::npos);
 
+CandidateList complete_buffername(const std::string& prefix,
+                                  size_t cursor_pos = std::string::npos);
+
 }
 #endif // completion_hh_INCLUDED

@@ -1,5 +1,6 @@
 #include "completion.hh"
 
+#include "buffer_manager.hh"
 #include "utils.hh"
 
 #include <dirent.h>
@@ -32,5 +33,19 @@ CandidateList complete_filename(const std::string& prefix,
     }
     return result;
 }
+
+CandidateList complete_buffername(const std::string& prefix,
+                                size_t cursor_pos)
+{
+    std::string real_prefix = prefix.substr(0, cursor_pos);
+    CandidateList result;
+    for (auto& buffer : BufferManager::instance())
+    {
+        if (buffer.name().substr(0, real_prefix.length()) == real_prefix)
+            result.push_back(buffer.name());
+    }
+    return result;
+}
+
 
 }
