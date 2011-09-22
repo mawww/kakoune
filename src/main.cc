@@ -368,6 +368,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'L', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
                                                                          WindowCoord(0,  std::max(count,1)))); } },
 
+    { 't', [](Window& window, int count) { window.select(false, std::bind(select_to, std::placeholders::_1, getch())); } },
+
     { 'd', [](Window& window, int count) { window.erase(); window.empty_selections(); } },
     { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
     { 'i', [](Window& window, int count) { do_insert(window); } },
