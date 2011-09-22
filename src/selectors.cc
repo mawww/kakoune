@@ -23,17 +23,41 @@ static bool is_word(char c)
         return true;
     if (c >= 'A' and c <= 'Z')
         return true;
+    if (c == '_')
+        return true;
     return false;
 }
+
+static bool is_punctuation(char c)
+{
+    return not (is_word(c) or is_blank(c));
+}
+
+template<typename T>
+void skip_while(BufferIterator& it, T condition)
+{
+    while (not it.is_end() and condition(*it))
+        ++it;
+}
+
+template<typename T>
+void skip_while_reverse(BufferIterator& it, T condition)
+{
+    while (not it.is_begin() and condition(*it))
+        --it;
+}
+
 
 Selection select_to_next_word(const BufferIterator& cursor)
 {
     BufferIterator end = cursor;
-    while (not end.is_end() and is_word(*end))
-        ++end;
 
-    while (not end.is_end() and not is_word(*end))
-        ++end;
+    if (is_word(*end))
+        skip_while(end, is_word);
+    else if (is_punctuation(*end))
+        skip_while(end, is_punctuation);
+
+    skip_while(end, is_blank);
 
     return Selection(cursor, end);
 }
@@ -41,11 +65,13 @@ Selection select_to_next_word(const BufferIterator& cursor)
 Selection select_to_next_word_end(const BufferIterator& cursor)
 {
     BufferIterator end = cursor;
-    while (not end.is_end() and not is_word(*end))
-        ++end;
 
-    while (not end.is_end() and is_word(*end))
-        ++end;
+    skip_while(end, is_blank);
+
+    if (is_word(*end))
+        skip_while(end, is_word);
+    else if (is_punctuation(*end))
+        skip_while(end, is_punctuation);
 
     return Selection(cursor, end);
 }
@@ -53,11 +79,12 @@ Selection select_to_next_word_end(const BufferIterator& cursor)
 Selection select_to_previous_word(const BufferIterator& cursor)
 {
     BufferIterator end = cursor;
-    while (not end.is_end() and not is_word(*end))
-        --end;
 
-    while (not end.is_end() and is_word(*end))
-        --end;
+    skip_while_reverse(end, is_blank);
+    if (is_word(*end))
+        skip_while_reverse(end, is_word);
+    else if (is_punctuation(*end))
+        skip_while_reverse(end, is_punctuation);
 
     return Selection(cursor, end);
 }
