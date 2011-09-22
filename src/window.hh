@@ -68,6 +68,7 @@ public:
     WindowCoord    line_and_column_at(const BufferIterator& iterator) const;
 
     void move_cursor(const WindowCoord& offset);
+    void move_cursor_to(const WindowCoord& new_pos);
 
     void empty_selections();
     void select(bool append, const Selector& selector);

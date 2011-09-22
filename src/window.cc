@@ -142,7 +142,12 @@ void Window::select(bool append, const Selector& selector)
 
 void Window::move_cursor(const WindowCoord& offset)
 {
-    BufferCoord target_position = window_to_buffer(m_cursor + offset);
+    move_cursor_to(m_cursor + offset);
+}
+
+void Window::move_cursor_to(const WindowCoord& new_pos)
+{
+    BufferCoord target_position = window_to_buffer(new_pos);
 
     m_cursor = buffer_to_window(m_buffer.clamp(target_position));
 
