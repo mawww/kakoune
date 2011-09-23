@@ -12,7 +12,7 @@ Selection select_to_previous_word(const BufferIterator& cursor);
 Selection select_line(const BufferIterator& cursor);
 Selection move_select(Window& window, const BufferIterator& cursor, const WindowCoord& offset);
 Selection select_matching(const BufferIterator& cursor);
-Selection select_to(const BufferIterator& cursor, char c);
+Selection select_to(const BufferIterator& cursor, char c, bool inclusive);
 
 }
 
