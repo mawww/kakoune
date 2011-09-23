@@ -155,6 +155,18 @@ void Window::select(bool append, const Selector& selector)
     scroll_to_keep_cursor_visible_ifn();
 }
 
+BufferString Window::selection_content() const
+{
+    if (m_selections.empty())
+    {
+        BufferIterator it = iterator_at(m_cursor);
+        return m_buffer.string(it, it+1);
+    }
+    else
+        return m_buffer.string(m_selections.back().begin(),
+                               m_selections.back().end());
+}
+
 void Window::move_cursor(const WindowCoord& offset)
 {
     move_cursor_to(m_cursor + offset);

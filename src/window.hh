@@ -65,6 +65,7 @@ public:
 
     void empty_selections();
     void select(bool append, const Selector& selector);
+    BufferString selection_content() const;
 
     void set_dimensions(const WindowCoord& dimensions);
 
