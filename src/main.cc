@@ -11,6 +11,7 @@
 #include <ncurses.h>
 
 using namespace Kakoune;
+using namespace std::placeholders;
 
 void draw_window(Window& window)
 {
@@ -360,17 +361,17 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'k', [](Window& window, int count) { window.move_cursor(WindowCoord(-std::max(count,1), 0)); window.empty_selections(); } },
     { 'l', [](Window& window, int count) { window.move_cursor(WindowCoord(0,  std::max(count,1))); window.empty_selections(); } },
 
-    { 'H', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+    { 'H', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), _1,
                                                                          WindowCoord(0, -std::max(count,1)))); } },
-    { 'J', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+    { 'J', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), _1,
                                                                          WindowCoord( std::max(count,1), 0))); } },
-    { 'K', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+    { 'K', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), _1,
                                                                          WindowCoord(-std::max(count,1), 0))); } },
-    { 'L', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), std::placeholders::_1,
+    { 'L', [](Window& window, int count) { window.select(true, std::bind(move_select, std::ref(window), _1,
                                                                          WindowCoord(0,  std::max(count,1)))); } },
 
-    { 't', [](Window& window, int count) { window.select(false, std::bind(select_to, std::placeholders::_1, getch(), false)); } },
-    { 'f', [](Window& window, int count) { window.select(false, std::bind(select_to, std::placeholders::_1, getch(), true)); } },
+    { 't', [](Window& window, int count) { window.select(false, std::bind(select_to, _1, getch(), false)); } },
+    { 'f', [](Window& window, int count) { window.select(false, std::bind(select_to, _1, getch(), true)); } },
 
     { 'd', [](Window& window, int count) { window.erase(); window.empty_selections(); } },
     { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
