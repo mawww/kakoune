@@ -4,6 +4,7 @@
 #include "regex_selector.hh"
 #include "command_manager.hh"
 #include "buffer_manager.hh"
+#include "register_manager.hh"
 #include "selectors.hh"
 #include "assert.hh"
 
@@ -352,6 +353,16 @@ void do_search(Window& window)
     catch (prompt_aborted&) {}
 }
 
+void do_yank(Window& window, int count)
+{
+    RegisterManager::instance()['"'] = window.selection_content();
+}
+
+void do_paste(Window& window, int count)
+{
+    window.append(RegisterManager::instance()['"']);
+}
+
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
 {
     { 'h', [](Window& window, int count) { window.move_cursor(WindowCoord(0, -std::max(count,1))); window.empty_selections(); } },
@@ -379,6 +390,9 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 
     { 'g', do_go },
 
+    { 'y', do_yank },
+    { 'p', do_paste },
+
     { ':', [](Window& window, int count) { do_command(); } },
     { ' ', [](Window& window, int count) { window.empty_selections(); } },
     { 'w', [](Window& window, int count) { do { window.select(false, select_to_next_word); } while(--count > 0); } },
@@ -401,6 +415,7 @@ int main(int argc, char* argv[])
 
     CommandManager  command_manager;
     BufferManager   buffer_manager;
+    RegisterManager register_manager;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      PerArgumentCommandCompleter{ complete_filename });
