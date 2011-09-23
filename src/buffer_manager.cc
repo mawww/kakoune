@@ -10,26 +10,6 @@ namespace Kakoune
 
 struct name_not_unique : logic_error {};
 
-BufferManager* BufferManager::ms_instance = nullptr;
-
-BufferManager& BufferManager::instance()
-{
-    if (not ms_instance)
-        ms_instance = new BufferManager();
-
-    return *ms_instance;
-}
-
-void BufferManager::delete_instance()
-{
-    delete ms_instance;
-    ms_instance = nullptr;
-}
-
-BufferManager::BufferManager()
-{
-}
-
 void BufferManager::register_buffer(Buffer* buffer)
 {
     assert(buffer);

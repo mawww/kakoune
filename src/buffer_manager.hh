@@ -2,6 +2,7 @@
 #define buffer_manager_hh_INCLUDED
 
 #include "buffer.hh"
+#include "utils.hh"
 
 #include <unordered_map>
 #include <memory>
@@ -9,7 +10,7 @@
 namespace Kakoune
 {
 
-class BufferManager
+class BufferManager : public Singleton<BufferManager>
 {
 public:
     typedef std::unordered_map<std::string, std::unique_ptr<Buffer>> BufferMap;
@@ -32,12 +33,7 @@ public:
 
     Buffer* get_buffer(const std::string& name);
 
-    static BufferManager& instance();
-    static void delete_instance();
-
 private:
-    BufferManager();
-    static BufferManager* ms_instance;
     BufferMap m_buffers;
 };
 

@@ -2,6 +2,7 @@
 #define utils_hh_INCLUDED
 
 #include "exception.hh"
+#include "assert.hh"
 
 #include <memory>
 
@@ -58,6 +59,45 @@ AutoRaii<T, F> auto_raii(T* resource, F cleanup)
 {
     return AutoRaii<T, F>(resource, cleanup);
 }
+
+template<typename T>
+class Singleton
+{
+public:
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+    static T& instance()
+    {
+        assert (ms_instance);
+        return *ms_instance;
+    }
+
+    static void delete_instance()
+    {
+        if (ms_instance)
+            delete ms_instance;
+    }
+
+protected:
+    Singleton()
+    {
+        assert(not ms_instance);
+        ms_instance = static_cast<T*>(this);
+    }
+
+    ~Singleton()
+    {
+        assert(ms_instance == this);
+        ms_instance = nullptr;
+    }
+
+private:
+    static T* ms_instance;
+};
+
+template<typename T>
+T* Singleton<T>::ms_instance = nullptr;
 
 }
 

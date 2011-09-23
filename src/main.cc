@@ -329,6 +329,7 @@ void show_buffer(const CommandParameters& params)
 }
 
 CommandManager command_manager;
+BufferManager  buffer_manager;
 
 void do_command()
 {
