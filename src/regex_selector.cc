@@ -16,9 +16,9 @@ Selection RegexSelector::operator()(const BufferIterator& cursor) const
         boost::match_results<BufferIterator> matches;
 
         if (boost::regex_search(cursor, cursor.buffer().end(), matches, m_regex, boost::match_nosubs))
-            return Selection(matches.begin()->first, matches.begin()->second);
+            return Selection(matches.begin()->first, matches.begin()->second-1);
         else if (boost::regex_search(cursor.buffer().begin(), cursor, matches, m_regex, boost::match_nosubs))
-            return Selection(matches.begin()->first, matches.begin()->second);
+            return Selection(matches.begin()->first, matches.begin()->second-1);
     }
     catch (boost::regex_error& err)
     {

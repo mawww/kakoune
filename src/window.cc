@@ -7,6 +7,22 @@
 namespace Kakoune
 {
 
+BufferIterator Selection::begin() const
+{
+    return std::min(m_first, m_last);
+}
+
+BufferIterator Selection::end() const
+{
+    return std::max(m_first, m_last) + 1;
+}
+
+void Selection::offset(int offset)
+{
+    m_first += offset;
+    m_last += offset;
+}
+
 Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
@@ -27,12 +43,11 @@ void Window::erase()
 
     for (auto& sel : m_selections)
     {
-        sel.canonicalize();
         m_buffer.erase(sel.begin(), sel.end());
         sel = Selection(sel.begin(), sel.begin());
     }
     if (not m_selections.empty())
-        m_cursor = line_and_column_at(m_selections.back().end());
+        m_cursor = line_and_column_at(m_selections.back().last());
     m_buffer.end_undo_group();
 }
 
@@ -133,10 +148,10 @@ void Window::select(bool append, const Selector& selector)
     {
         for (auto& sel : m_selections)
         {
-            sel = Selection(sel.begin(), selector(sel.end()).end());
+            sel = Selection(sel.first(), selector(sel.last()).last());
         }
     }
-    m_cursor = line_and_column_at(m_selections.back().end());
+    m_cursor = line_and_column_at(m_selections.back().last());
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -159,9 +174,6 @@ void Window::update_display_buffer()
     m_display_buffer.clear();
 
     SelectionList sorted_selections = m_selections;
-
-    for (auto& sel : sorted_selections)
-        sel.canonicalize();
 
     std::sort(sorted_selections.begin(), sorted_selections.end(),
               [](const Selection& lhs, const Selection& rhs) { return lhs.begin() < rhs.begin(); });

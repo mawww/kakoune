@@ -33,6 +33,22 @@ static bool is_punctuation(char c)
     return not (is_word(c) or is_blank(c));
 }
 
+enum class CharCategories
+{
+    Blank,
+    Word,
+    Punctuation,
+};
+
+static CharCategories categorize(char c)
+{
+    if (is_word(c))
+        return CharCategories::Word;
+    if (is_blank(c))
+        return CharCategories::Blank;
+    return CharCategories::Punctuation;
+}
+
 template<typename T>
 void skip_while(BufferIterator& it, T condition)
 {
@@ -50,55 +66,72 @@ void skip_while_reverse(BufferIterator& it, T condition)
 
 Selection select_to_next_word(const BufferIterator& cursor)
 {
-    BufferIterator end = cursor;
+    BufferIterator begin = cursor;
+    BufferIterator end = cursor+1;
 
-    if (is_word(*end))
-        skip_while(end, is_word);
-    else if (is_punctuation(*end))
+    if (categorize(*begin) != categorize(*end))
+    {
+        ++begin;
+        ++end;
+    }
+
+    if (is_punctuation(*begin))
         skip_while(end, is_punctuation);
+
+    if (is_word(*begin))
+        skip_while(end, is_word);
 
     skip_while(end, is_blank);
 
-    return Selection(cursor, end);
+    return Selection(begin, end-1);
 }
 
 Selection select_to_next_word_end(const BufferIterator& cursor)
 {
-    BufferIterator end = cursor;
+    BufferIterator begin = cursor;
+    BufferIterator end = cursor+1;
+
+    if (categorize(*begin) != categorize(*end))
+        ++begin;
 
     skip_while(end, is_blank);
 
-    if (is_word(*end))
-        skip_while(end, is_word);
-    else if (is_punctuation(*end))
+    if (is_punctuation(*end))
         skip_while(end, is_punctuation);
+    else if (is_word(*end))
+        skip_while(end, is_word);
 
-    return Selection(cursor, end);
+    return Selection(begin, end-1);
 }
 
 Selection select_to_previous_word(const BufferIterator& cursor)
 {
-    BufferIterator end = cursor;
+    BufferIterator begin = cursor;
+    BufferIterator end = cursor-1;
+
+    if (categorize(*begin) != categorize(*end))
+        --begin;
 
     skip_while_reverse(end, is_blank);
-    if (is_word(*end))
-        skip_while_reverse(end, is_word);
-    else if (is_punctuation(*end))
-        skip_while_reverse(end, is_punctuation);
 
-    return Selection(cursor, end);
+    if (is_punctuation(*end))
+        skip_while_reverse(end, is_punctuation);
+    else if (is_word(*end))
+        skip_while_reverse(end, is_word);
+
+    return Selection(begin, end+1);
 }
 
 Selection select_line(const BufferIterator& cursor)
 {
-    BufferIterator begin = cursor;
-    while (not begin.is_begin() and *(begin -1) != '\n')
-        --begin;
+    BufferIterator first = cursor;
+    while (not first.is_begin() and *(first - 1) != '\n')
+        --first;
 
-    BufferIterator end = cursor;
-    while (not end.is_end() and *end != '\n')
-        ++end;
-    return Selection(begin, end + 1);
+    BufferIterator last = cursor;
+    while (not (last + 1).is_end() and *last != '\n')
+        ++last;
+    return Selection(first, last);
 }
 
 Selection move_select(Window& window, const BufferIterator& cursor, const WindowCoord& offset)
@@ -136,7 +169,7 @@ Selection select_matching(const BufferIterator& cursor)
             if (*it == opening)
                 ++level;
             else if (*it == closing and --level == 0)
-                return Selection(begin, it+1);
+                return Selection(begin, it);
 
             ++it;
         }
@@ -151,7 +184,7 @@ Selection select_matching(const BufferIterator& cursor)
             if (*it == closing)
                 ++level;
             else if (*it == opening and --level == 0)
-                return Selection(begin, it-1);
+                return Selection(begin, it);
             --it;
         }
     }
@@ -163,7 +196,7 @@ Selection select_to(const BufferIterator& cursor, char c)
     BufferIterator end = cursor + 1;
     skip_while(end, [c](char cur) { return not is_eol(cur) and cur != c; });
     if (not is_eol(*end))
-        return Selection(cursor, end);
+        return Selection(cursor, end-1);
     return Selection(cursor, cursor);
 }
 

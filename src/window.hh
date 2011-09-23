@@ -19,27 +19,20 @@ struct WindowCoord : LineAndColumn<WindowCoord>
 
 struct Selection
 {
-    Selection(const BufferIterator& begin, const BufferIterator& end)
-        : m_begin(begin), m_end(end) {}
+    Selection(const BufferIterator& first, const BufferIterator& last)
+        : m_first(first), m_last(last) {}
 
-    const BufferIterator& begin() const { return m_begin; }
-    const BufferIterator& end() const   { return m_end; }
+    BufferIterator begin() const;
+    BufferIterator end() const;
 
-    void canonicalize()
-    {
-        if (m_end < m_begin)
-            std::swap(++m_begin, ++m_end);
-    }
+    const BufferIterator& first() const { return m_first; }
+    const BufferIterator& last()  const { return m_last; }
 
-    void offset(int offset)
-    {
-        m_begin += offset;
-        m_end += offset;
-    }
+    void offset(int offset);
 
 private:
-    BufferIterator m_begin;
-    BufferIterator m_end;
+    BufferIterator m_first;
+    BufferIterator m_last;
 };
 
 typedef std::vector<Selection> SelectionList;
