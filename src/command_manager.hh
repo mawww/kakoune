@@ -7,7 +7,7 @@
 #include <functional>
 #include <initializer_list>
 
-#include "exception.hh"
+#include "utils.hh"
 #include "completion.hh"
 
 namespace Kakoune
@@ -47,7 +47,7 @@ private:
     ArgumentCompleterList m_completers;
 };
 
-class CommandManager
+class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(const std::string& command_line);

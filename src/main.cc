@@ -329,17 +329,15 @@ void show_buffer(const CommandParameters& params)
         current_window = buffer->get_or_create_window();
 }
 
-CommandManager command_manager;
-BufferManager  buffer_manager;
-
 void do_command()
 {
     try
     {
-        command_manager.execute(prompt(":", std::bind(&CommandManager::complete,
-                                                      &command_manager,
-                                                      std::placeholders::_1,
-                                                      std::placeholders::_2)));
+        auto cmdline = prompt(":", std::bind(&CommandManager::complete,
+                                             &CommandManager::instance(),
+                                             _1, _2));
+
+        CommandManager::instance().execute(cmdline);
     }
     catch (prompt_aborted&) {}
 }
@@ -400,6 +398,10 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 int main(int argc, char* argv[])
 {
     init_ncurses();
+
+    CommandManager  command_manager;
+    BufferManager   buffer_manager;
+
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit);
