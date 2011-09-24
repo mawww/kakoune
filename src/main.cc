@@ -348,9 +348,23 @@ void do_search(Window& window)
     try
     {
         std::string ex = prompt("/");
+        if (ex.empty())
+            ex = RegisterManager::instance()['/'];
+        else
+            RegisterManager::instance()['/'] = ex;
+
         window.select(false, RegexSelector(ex));
     }
     catch (prompt_aborted&) {}
+}
+
+void do_search_next(Window& window)
+{
+    std::string& ex = RegisterManager::instance()['/'];
+    if (not ex.empty())
+        window.select(false, RegexSelector(ex));
+    else
+        print_status("no search pattern");
 }
 
 void do_yank(Window& window, int count)
@@ -405,6 +419,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'm', [](Window& window, int count) { window.select(false, select_matching); } },
     { 'M', [](Window& window, int count) { window.select(true, select_matching); } },
     { '/', [](Window& window, int count) { do_search(window); } },
+    { 'n', [](Window& window, int count) { do_search_next(window); } },
     { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
 };
