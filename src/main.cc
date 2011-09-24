@@ -417,6 +417,9 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'y', do_yank },
     { 'p', do_paste },
 
+    { '%', [](Window& window, int count) { window.select(false, [](const BufferIterator& cursor)
+                                                         { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
+
     { ':', [](Window& window, int count) { do_command(); } },
     { ' ', [](Window& window, int count) { window.empty_selections(); } },
     { 'w', [](Window& window, int count) { do { window.select(false, select_to_next_word); } while(--count > 0); } },
