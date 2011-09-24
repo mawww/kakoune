@@ -252,11 +252,9 @@ void do_insert(Window& window, bool append = false)
 
 void do_go(Window& window, int count)
 {
-    BufferCoord target;
+    BufferIterator target;
     if (count != 0)
-    {
-        target.line = count;
-    }
+        target = window.buffer().iterator_at({count, 0});
     else
     {
         char c = getch();
@@ -264,16 +262,28 @@ void do_go(Window& window, int count)
         {
         case 'g':
         case 't':
-            target.line = 0;
+            target = window.buffer().iterator_at({0,0});
+            break;
+        case 'l':
+            target = window.iterator_at(window.cursor_position());
+            while (not target.is_end() and *target != '\n')
+                ++target;
+            --target;
+            break;
+        case 'h':
+            target = window.iterator_at(window.cursor_position());
+            while (not target.is_begin() and *target != '\n')
+                --target;
+            ++target;
             break;
         case 'b':
-            target.line = window.buffer().line_count() - 1;
+            target = window.buffer().iterator_at(
+                {window.buffer().line_count() - 1, 0});
+            break;
             break;
         }
     }
-
-    BufferIterator target_it = window.buffer().iterator_at(target);
-    window.move_cursor_to(window.line_and_column_at(target_it));
+    window.move_cursor_to(window.line_and_column_at(target));
 }
 
 Window* current_window;
