@@ -33,7 +33,7 @@ const Buffer& BufferIterator::buffer() const
 
 BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
 {
-    m_buffer == iterator.m_buffer;
+    m_buffer = iterator.m_buffer;
     m_position = iterator.m_position;
 }
 
