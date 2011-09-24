@@ -23,6 +23,16 @@ void Selection::offset(int offset)
     m_last += offset;
 }
 
+struct scoped_undo_group
+{
+    scoped_undo_group(Buffer& buffer)
+        : m_buffer(buffer) { m_buffer.begin_undo_group(); }
+
+    ~scoped_undo_group()   { m_buffer.end_undo_group(); }
+private:
+    Buffer& m_buffer;
+};
+
 Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
@@ -34,7 +44,7 @@ Window::Window(Buffer& buffer)
 
 void Window::erase()
 {
-    m_buffer.begin_undo_group();
+    scoped_undo_group undo_group(m_buffer);
     if (m_selections.empty())
     {
         BufferIterator cursor = iterator_at(m_cursor);
@@ -48,7 +58,6 @@ void Window::erase()
     }
     if (not m_selections.empty())
         m_cursor = line_and_column_at(m_selections.back().last());
-    m_buffer.end_undo_group();
 }
 
 static WindowCoord measure_string(const Window::String& string)
@@ -69,7 +78,8 @@ static WindowCoord measure_string(const Window::String& string)
 
 void Window::insert(const String& string)
 {
-    m_buffer.begin_undo_group();
+    scoped_undo_group undo_group(m_buffer);
+
     if (m_selections.empty())
     {
         m_buffer.insert(iterator_at(m_cursor), string);
@@ -81,23 +91,23 @@ void Window::insert(const String& string)
         m_buffer.insert(sel.begin(), string);
         sel.offset(string.length());
     }
-    m_buffer.end_undo_group();
 }
 
 void Window::append(const String& string)
 {
-    m_buffer.begin_undo_group();
     if (m_selections.empty())
     {
         move_cursor(WindowCoord(0 , 1));
         insert(string);
     }
-
-    for (auto& sel : m_selections)
+    else
     {
-        m_buffer.insert(sel.end(), string);
+        scoped_undo_group undo_group(m_buffer);
+        for (auto& sel : m_selections)
+        {
+            m_buffer.insert(sel.end(), string);
+        }
     }
-    m_buffer.end_undo_group();
 }
 
 bool Window::undo()
