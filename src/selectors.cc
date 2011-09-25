@@ -12,7 +12,7 @@ static bool is_eol(char c)
 
 static bool is_blank(char c)
 {
-    return c == ' ' or c == '\t' or c == '\n';
+    return c == ' ' or c == '\t';
 }
 
 static bool is_word(char c)
@@ -30,12 +30,13 @@ static bool is_word(char c)
 
 static bool is_punctuation(char c)
 {
-    return not (is_word(c) or is_blank(c));
+    return not (is_word(c) or is_blank(c) or is_eol(c));
 }
 
 enum class CharCategories
 {
     Blank,
+    EndOfLine,
     Word,
     Punctuation,
 };
@@ -44,6 +45,8 @@ static CharCategories categorize(char c)
 {
     if (is_word(c))
         return CharCategories::Word;
+    if (is_eol(c))
+        return CharCategories::EndOfLine;
     if (is_blank(c))
         return CharCategories::Blank;
     return CharCategories::Punctuation;
@@ -67,18 +70,16 @@ void skip_while_reverse(BufferIterator& it, T condition)
 Selection select_to_next_word(const BufferIterator& cursor)
 {
     BufferIterator begin = cursor;
-    BufferIterator end = cursor+1;
-
-    if (categorize(*begin) != categorize(*end))
-    {
+    if (categorize(*begin) != categorize(*(begin+1)))
         ++begin;
-        ++end;
-    }
+
+    skip_while(begin, is_eol);
+
+    BufferIterator end = begin+1;
 
     if (is_punctuation(*begin))
         skip_while(end, is_punctuation);
-
-    if (is_word(*begin))
+    else if (is_word(*begin))
         skip_while(end, is_word);
 
     skip_while(end, is_blank);
@@ -89,11 +90,11 @@ Selection select_to_next_word(const BufferIterator& cursor)
 Selection select_to_next_word_end(const BufferIterator& cursor)
 {
     BufferIterator begin = cursor;
-    BufferIterator end = cursor+1;
-
-    if (categorize(*begin) != categorize(*end))
+    if (categorize(*begin) != categorize(*(begin+1)))
         ++begin;
 
+    skip_while(begin, is_eol);
+    BufferIterator end = begin;
     skip_while(end, is_blank);
 
     if (is_punctuation(*end))
@@ -107,11 +108,12 @@ Selection select_to_next_word_end(const BufferIterator& cursor)
 Selection select_to_previous_word(const BufferIterator& cursor)
 {
     BufferIterator begin = cursor;
-    BufferIterator end = cursor-1;
 
-    if (categorize(*begin) != categorize(*end))
+    if (categorize(*begin) != categorize(*(begin-1)))
         --begin;
 
+    skip_while_reverse(begin, is_eol);
+    BufferIterator end = begin;
     skip_while_reverse(end, is_blank);
 
     if (is_punctuation(*end))
