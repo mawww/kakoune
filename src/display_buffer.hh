@@ -7,12 +7,28 @@
 namespace Kakoune
 {
 
-typedef int Color;
 typedef int Attribute;
 
 enum Attributes
 {
-    UNDERLINE = 1
+    Normal = 0,
+    Underline = 1,
+    Reverse = 2,
+    Blink = 4,
+    Bold = 8,
+};
+
+enum class Color
+{
+    Default,
+    Black,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Magenta,
+    Cyan,
+    White
 };
 
 struct DisplayAtom
@@ -22,7 +38,11 @@ struct DisplayAtom
     Color       bg_color;
     Attribute   attribute;
 
-    DisplayAtom() : fg_color(0), bg_color(0), attribute(0) {}
+    DisplayAtom()
+        : fg_color(Color::Default),
+          bg_color(Color::Default),
+          attribute(Attributes::Normal)
+    {}
 };
 
 class DisplayBuffer

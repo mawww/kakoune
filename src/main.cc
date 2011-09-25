@@ -14,6 +14,14 @@
 using namespace Kakoune;
 using namespace std::placeholders;
 
+void set_attribute(int attribute, bool on)
+{
+    if (on)
+        attron(attribute);
+    else
+        attroff(attribute);
+}
+
 void draw_window(Window& window)
 {
     int max_x,max_y;
@@ -23,16 +31,15 @@ void draw_window(Window& window)
     window.set_dimensions(WindowCoord(max_y, max_x));
     window.update_display_buffer();
 
-
     WindowCoord position;
     for (const DisplayAtom& atom : window.display_buffer())
     {
         const std::string& content = atom.content;
 
-        if (atom.attribute & UNDERLINE)
-            attron(A_UNDERLINE);
-        else
-            attroff(A_UNDERLINE);
+        set_attribute(A_UNDERLINE, atom.attribute & Underline);
+        set_attribute(A_REVERSE, atom.attribute & Reverse);
+        set_attribute(A_BLINK, atom.attribute & Blink);
+        set_attribute(A_BOLD, atom.attribute & Bold);
 
         size_t pos = 0;
         size_t end;

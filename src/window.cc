@@ -214,7 +214,7 @@ void Window::update_display_buffer()
         {
             DisplayAtom atom;
             atom.content = m_buffer.string(sel.begin(), sel.end());
-            atom.attribute = UNDERLINE;
+            atom.attribute = Underline;
             m_display_buffer.append(atom);
         }
         current_position = sel.end();
