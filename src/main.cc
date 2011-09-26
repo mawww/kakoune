@@ -389,6 +389,20 @@ void do_yank(Window& window, int count)
     RegisterManager::instance()['"'] = window.selection_content();
 }
 
+void do_erase(Window& window, int count)
+{
+    do_yank(window, 0);
+    window.erase();
+    window.empty_selections();
+}
+
+void do_change(Window& window, int count)
+{
+    do_yank(window, 0);
+    window.erase();
+    do_insert(window);
+}
+
 void do_paste(Window& window, int count)
 {
     window.append(RegisterManager::instance()['"']);
@@ -413,8 +427,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 't', [](Window& window, int count) { window.select(false, std::bind(select_to, _1, getch(), false)); } },
     { 'f', [](Window& window, int count) { window.select(false, std::bind(select_to, _1, getch(), true)); } },
 
-    { 'd', [](Window& window, int count) { window.erase(); window.empty_selections(); } },
-    { 'c', [](Window& window, int count) { window.erase(); do_insert(window); } },
+    { 'd', do_erase },
+    { 'c', do_change },
     { 'i', [](Window& window, int count) { do_insert(window); } },
     { 'a', [](Window& window, int count) { do_insert(window, true); } },
     { 'o', [](Window& window, int count) { window.select(true, select_line); window.append("\n"); do_insert(window, true); } },
