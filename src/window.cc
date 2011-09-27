@@ -36,28 +36,37 @@ private:
 Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
-      m_cursor(0, 0),
       m_dimensions(0, 0),
       m_current_inserter(nullptr)
 {
+    m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
+}
+
+void Window::check_invariant() const
+{
+    assert(not m_selections.empty());
+}
+
+WindowCoord Window::cursor_position() const
+{
+    check_invariant();
+    return line_and_column_at(m_selections.back().last());
 }
 
 void Window::erase()
 {
     scoped_undo_group undo_group(m_buffer);
-    if (m_selections.empty())
-    {
-        BufferIterator cursor = iterator_at(m_cursor);
-        m_buffer.erase(cursor, cursor+1);
-    }
+    erase_noundo();
+}
 
+void Window::erase_noundo()
+{
+    check_invariant();
     for (auto& sel : m_selections)
     {
         m_buffer.erase(sel.begin(), sel.end());
         sel = Selection(sel.begin(), sel.begin());
     }
-    if (not m_selections.empty())
-        m_cursor = line_and_column_at(m_selections.back().last());
 }
 
 static WindowCoord measure_string(const Window::String& string)
@@ -79,13 +88,11 @@ static WindowCoord measure_string(const Window::String& string)
 void Window::insert(const String& string)
 {
     scoped_undo_group undo_group(m_buffer);
+    insert_noundo(string);
+}
 
-    if (m_selections.empty())
-    {
-        m_buffer.insert(iterator_at(m_cursor), string);
-        move_cursor(measure_string(string));
-    }
-
+void Window::insert_noundo(const String& string)
+{
     for (auto& sel : m_selections)
     {
         m_buffer.insert(sel.begin(), string);
@@ -95,19 +102,14 @@ void Window::insert(const String& string)
 
 void Window::append(const String& string)
 {
-    if (m_selections.empty())
-    {
-        move_cursor(WindowCoord(0 , 1));
-        insert(string);
-    }
-    else
-    {
-        scoped_undo_group undo_group(m_buffer);
-        for (auto& sel : m_selections)
-        {
-            m_buffer.insert(sel.end(), string);
-        }
-    }
+    scoped_undo_group undo_group(m_buffer);
+    append_noundo(string);
+}
+
+void Window::append_noundo(const String& string)
+{
+    for (auto& sel : m_selections)
+        m_buffer.insert(sel.end(), string);
 }
 
 bool Window::undo()
@@ -144,15 +146,22 @@ WindowCoord Window::line_and_column_at(const BufferIterator& iterator) const
 
 void Window::empty_selections()
 {
+    check_invariant();
+    Selection sel = Selection(m_selections.back().last(),
+                              m_selections.back().last());
     m_selections.clear();
+    m_selections.push_back(std::move(sel));
 }
 
 void Window::select(bool append, const Selector& selector)
 {
-    if (not append or m_selections.empty())
+    check_invariant();
+
+    if (not append)
     {
-        empty_selections();
-        m_selections.push_back(selector(iterator_at(m_cursor)));
+        Selection sel = selector(m_selections.back().last());
+        m_selections.clear();
+        m_selections.push_back(std::move(sel));
     }
     else
     {
@@ -161,32 +170,27 @@ void Window::select(bool append, const Selector& selector)
             sel = Selection(sel.first(), selector(sel.last()).last());
         }
     }
-    m_cursor = line_and_column_at(m_selections.back().last());
     scroll_to_keep_cursor_visible_ifn();
 }
 
 BufferString Window::selection_content() const
 {
-    if (m_selections.empty())
-    {
-        BufferIterator it = iterator_at(m_cursor);
-        return m_buffer.string(it, it+1);
-    }
-    else
-        return m_buffer.string(m_selections.back().begin(),
-                               m_selections.back().end());
+    check_invariant();
+
+    return m_buffer.string(m_selections.back().begin(),
+                           m_selections.back().end());
 }
 
 void Window::move_cursor(const WindowCoord& offset)
 {
-    move_cursor_to(m_cursor + offset);
+    move_cursor_to(cursor_position() + offset);
 }
 
 void Window::move_cursor_to(const WindowCoord& new_pos)
 {
-    BufferCoord target_position = window_to_buffer(new_pos);
-
-    m_cursor = buffer_to_window(m_buffer.clamp(target_position));
+    BufferIterator target = iterator_at(new_pos);
+    m_selections.clear();
+    m_selections.push_back(Selection(target, target));
 
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -234,26 +238,25 @@ void Window::set_dimensions(const WindowCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    if (m_cursor.line < 0)
+    check_invariant();
+
+    WindowCoord cursor = line_and_column_at(m_selections.back().last());
+    if (cursor.line < 0)
     {
-        m_position.line = std::max(m_position.line + m_cursor.line, 0);
-        m_cursor.line = 0;
+        m_position.line = std::max(m_position.line + cursor.line, 0);
     }
-    else if (m_cursor.line >= m_dimensions.line)
+    else if (cursor.line >= m_dimensions.line)
     {
-        m_position.line += m_cursor.line - (m_dimensions.line - 1);
-        m_cursor.line = m_dimensions.line - 1;
+        m_position.line += cursor.line - (m_dimensions.line - 1);
     }
 
-    if (m_cursor.column < 0)
+    if (cursor.column < 0)
     {
-        m_position.column = std::max(m_position.column + m_cursor.column, 0);
-        m_cursor.column = 0;
+        m_position.column = std::max(m_position.column + cursor.column, 0);
     }
-    else if (m_cursor.column >= m_dimensions.column)
+    else if (cursor.column >= m_dimensions.column)
     {
-        m_position.column += m_cursor.column - (m_dimensions.column - 1);
-        m_cursor.column = m_dimensions.column - 1;
+        m_position.column += cursor.column - (m_dimensions.column - 1);
     }
 }
 
@@ -262,21 +265,12 @@ IncrementalInserter::IncrementalInserter(Window& window, bool append)
 {
     assert(not m_window.m_current_inserter);
     m_window.m_current_inserter = this;
+    m_window.check_invariant();
 
-    if (m_window.m_selections.empty())
+    for (auto& sel : m_window.m_selections)
     {
-        WindowCoord pos = m_window.m_cursor;
-        if (append)
-            pos += WindowCoord(0, 1);
-        m_cursors.push_back(pos);
-    }
-    else
-    {
-        for (auto& sel : m_window.m_selections)
-        {
-            const BufferIterator& pos = append ? sel.end() : sel.begin();
-            m_cursors.push_back(m_window.line_and_column_at(pos));
-        }
+        const BufferIterator& pos = append ? sel.end() : sel.begin();
+        sel = Selection(pos, pos);
     }
     m_window.m_buffer.begin_undo_group();
 }
@@ -291,29 +285,22 @@ IncrementalInserter::~IncrementalInserter()
 
 void IncrementalInserter::insert(const Window::String& string)
 {
-    for (auto& cursor : m_cursors)
-    {
-        m_window.m_buffer.insert(m_window.iterator_at(cursor), string);
-        move_cursor(measure_string(string));
-    }
+    m_window.insert_noundo(string);
 }
 
 void IncrementalInserter::erase()
 {
-    for (auto& cursor : m_cursors)
-    {
-        BufferIterator pos = m_window.iterator_at(cursor);
-        m_window.m_buffer.erase(pos - 1, pos);
-        move_cursor(WindowCoord(0, -1));
-    }
+    move_cursor(WindowCoord(0, -1));
+    m_window.erase_noundo();
 }
 
 void IncrementalInserter::move_cursor(const WindowCoord& offset)
 {
-    for (auto& cursor : m_cursors)
+    for (auto& sel : m_window.m_selections)
     {
-        BufferCoord target = m_window.window_to_buffer(cursor + offset);
-        cursor = m_window.buffer_to_window(m_window.m_buffer.clamp(target));
+        WindowCoord pos = m_window.line_and_column_at(sel.last());
+        BufferIterator it = m_window.iterator_at(pos + offset);
+        sel = Selection(it, it);
     }
 }
 

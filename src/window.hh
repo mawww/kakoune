@@ -50,7 +50,7 @@ public:
     void append(const String& string);
 
     const BufferCoord& position() const { return m_position; }
-    const WindowCoord& cursor_position() const { return m_cursor; }
+    WindowCoord cursor_position() const;
 
     Buffer& buffer() const { return m_buffer; }
 
@@ -82,14 +82,18 @@ private:
     Window(Buffer& buffer);
     Window(const Window&) = delete;
 
+    void check_invariant() const;
     void scroll_to_keep_cursor_visible_ifn();
+
+    void erase_noundo();
+    void insert_noundo(const String& string);
+    void append_noundo(const String& string);
 
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
 
     Buffer&       m_buffer;
     BufferCoord   m_position;
-    WindowCoord   m_cursor;
     WindowCoord   m_dimensions;
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
@@ -98,8 +102,6 @@ private:
 class IncrementalInserter
 {
 public:
-    typedef std::vector<WindowCoord> CursorList;
-
     IncrementalInserter(Window& window, bool append = false);
     ~IncrementalInserter();
 
@@ -107,11 +109,8 @@ public:
     void erase();
     void move_cursor(const WindowCoord& offset);
 
-    const CursorList& cursors() const { return m_cursors; }
-
 private:
     Window&                     m_window;
-    std::vector<WindowCoord>    m_cursors;
 };
 
 }

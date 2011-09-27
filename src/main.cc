@@ -228,7 +228,7 @@ void do_insert(Window& window, bool append = false)
     draw_window(window);
     while(true)
     {
-        const WindowCoord& pos = inserter.cursors().back();
+        const WindowCoord& pos = window.cursor_position();
         move(pos.line, pos.column);
 
         char c = getch();
