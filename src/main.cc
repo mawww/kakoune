@@ -403,9 +403,13 @@ void do_change(Window& window, int count)
     do_insert(window);
 }
 
+template<bool append>
 void do_paste(Window& window, int count)
 {
-    window.append(RegisterManager::instance()['"']);
+    if (append)
+        window.append(RegisterManager::instance()['"']);
+    else
+        window.insert(RegisterManager::instance()['"']);
 }
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
@@ -436,7 +440,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'g', do_go },
 
     { 'y', do_yank },
-    { 'p', do_paste },
+    { 'p', do_paste<true> },
+    { 'P', do_paste<false> },
 
     { '%', [](Window& window, int count) { window.select(false, [](const BufferIterator& cursor)
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
