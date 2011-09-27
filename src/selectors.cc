@@ -193,13 +193,19 @@ Selection select_matching(const BufferIterator& cursor)
     return Selection(cursor, cursor);
 }
 
-Selection select_to(const BufferIterator& cursor, char c, bool inclusive)
+Selection select_to(const BufferIterator& cursor, char c, int count, bool inclusive)
 {
-    BufferIterator end = cursor + 1;
-    skip_while(end, [c](char cur) { return not is_eol(cur) and cur != c; });
-    if (not is_eol(*end))
-        return Selection(cursor, inclusive ? end : end-1);
-    return Selection(cursor, cursor);
+    BufferIterator end = cursor;
+    do
+    {
+        ++end;
+        skip_while(end, [c](char cur) { return not is_eol(cur) and cur != c; });
+        if (end.is_end() or is_eol(*end))
+            return Selection(cursor, cursor);
+    }
+    while (--count > 0);
+
+    return Selection(cursor, inclusive ? end : end-1);
 }
 
 }
