@@ -37,6 +37,7 @@ Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
       m_dimensions(0, 0),
+      m_select_mode(SelectMode::Normal),
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
@@ -153,11 +154,11 @@ void Window::empty_selections()
     m_selections.push_back(std::move(sel));
 }
 
-void Window::select(bool append, const Selector& selector)
+void Window::select(const Selector& selector)
 {
     check_invariant();
 
-    if (not append)
+    if (m_select_mode == SelectMode::Normal)
     {
         Selection sel = selector(m_selections.back().last());
         m_selections.clear();
@@ -183,7 +184,16 @@ BufferString Window::selection_content() const
 
 void Window::move_cursor(const WindowCoord& offset)
 {
-    move_cursor_to(cursor_position() + offset);
+    if (m_select_mode == SelectMode::Normal)
+        move_cursor_to(cursor_position() + offset);
+    else
+    {
+        for (auto& sel : m_selections)
+        {
+            WindowCoord pos = line_and_column_at(sel.last());
+            sel = Selection(sel.first(), iterator_at(pos + offset));
+        }
+    }
 }
 
 void Window::move_cursor_to(const WindowCoord& new_pos)

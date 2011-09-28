@@ -45,6 +45,13 @@ public:
     typedef BufferString String;
     typedef std::function<Selection (const BufferIterator&)> Selector;
 
+    enum class SelectMode
+    {
+        Normal,
+        Append,
+        LineAppend,
+    };
+
     void erase();
     void insert(const String& string);
     void append(const String& string);
@@ -64,7 +71,7 @@ public:
     void move_cursor_to(const WindowCoord& new_pos);
 
     void empty_selections();
-    void select(bool append, const Selector& selector);
+    void select(const Selector& selector);
     BufferString selection_content() const;
 
     void set_dimensions(const WindowCoord& dimensions);
@@ -75,6 +82,9 @@ public:
 
     bool undo();
     bool redo();
+
+    SelectMode select_mode() const { return m_select_mode; }
+    void set_select_mode(SelectMode select_mode) { m_select_mode = select_mode; }
 
 private:
     friend class Buffer;
@@ -92,6 +102,7 @@ private:
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
 
+    SelectMode    m_select_mode;
     Buffer&       m_buffer;
     BufferCoord   m_position;
     WindowCoord   m_dimensions;
