@@ -193,6 +193,7 @@ void Window::move_cursor(const WindowCoord& offset)
             WindowCoord pos = line_and_column_at(sel.last());
             sel = Selection(sel.first(), iterator_at(pos + offset));
         }
+        scroll_to_keep_cursor_visible_ifn();
     }
 }
 
