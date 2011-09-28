@@ -33,6 +33,90 @@ private:
     Buffer& m_buffer;
 };
 
+class HighlightSelections
+{
+public:
+    HighlightSelections(Window& window)
+        : m_window(window)
+    {
+    }
+
+    void operator()(DisplayBuffer& display_buffer)
+    {
+        SelectionList sorted_selections = m_window.m_selections;
+
+        std::sort(sorted_selections.begin(), sorted_selections.end(),
+                  [](const Selection& lhs, const Selection& rhs) { return lhs.begin() < rhs.begin(); });
+
+        auto atom_it = display_buffer.begin();
+        auto sel_it = sorted_selections.begin();
+
+        while (atom_it != display_buffer.end()
+               and sel_it != sorted_selections.end())
+        {
+            Selection& sel = *sel_it;
+            DisplayAtom& atom = *atom_it;
+
+            // [###------]
+            if (atom.begin >= sel.begin() and atom.begin < sel.end() and atom.end > sel.end())
+            {
+                size_t length = sel.end() - atom.begin;
+                DisplayAtom selected(atom.begin, sel.end(),
+                                     atom.content.substr(0, length));
+                selected.attribute = Attributes::Underline;
+                atom.content = atom.content.substr(length);
+                atom.begin = sel.end();
+                atom_it = display_buffer.insert(atom_it, selected) + 1;
+                ++sel_it;
+            }
+            // [---###---]
+            else if (atom.begin < sel.begin() and atom.end > sel.end())
+            {
+                size_t prefix_length = sel.begin() - atom.begin;
+                DisplayAtom prefix(atom.begin, sel.begin(),
+                                   atom.content.substr(0, prefix_length));
+                size_t sel_length = sel.end() - sel.begin();
+                DisplayAtom selected(sel.begin(), sel.end(),
+                                     atom.content.substr(prefix_length, sel_length));
+                selected.attribute = Attributes::Underline;
+                atom.content = atom.content.substr(prefix_length + sel_length);
+                atom_it = display_buffer.insert(atom_it, selected);
+                atom_it = display_buffer.insert(atom_it, prefix);
+                atom_it += 2;
+                ++sel_it;
+            }
+            // [------###]
+            else if (atom.begin < sel.begin() and atom.end > sel.begin())
+            {
+                size_t length = sel.end() - atom.begin;
+                DisplayAtom prefix(atom.begin, sel.end(),
+                                   atom.content.substr(0, length));
+                atom.content = atom.content.substr(length);
+                atom.begin = sel.end();
+                atom.attribute = Attributes::Underline;
+                atom_it = display_buffer.insert(atom_it, prefix) + 2;
+            }
+            // [#########]
+            else if (atom.begin >= sel.begin() and atom.end <= sel.end())
+            {
+                atom.attribute = Attributes::Underline;
+                ++atom_it;
+            }
+            // [---------]
+            else if (atom.begin >= sel.end())
+                ++sel_it;
+            // [---------]
+            else if (atom.end <= sel.begin())
+                ++atom_it;
+            else
+                assert(false);
+        }
+    }
+
+private:
+    const Window& m_window;
+};
+
 Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
@@ -41,6 +125,7 @@ Window::Window(Buffer& buffer)
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
+    m_filters.push_back(HighlightSelections(*this));
 }
 
 void Window::check_invariant() const
@@ -210,36 +295,13 @@ void Window::update_display_buffer()
 {
     m_display_buffer.clear();
 
-    SelectionList sorted_selections = m_selections;
+    BufferIterator begin = m_buffer.iterator_at(m_position);
+    BufferIterator end = m_buffer.iterator_at(m_position +
+                                              BufferCoord(m_dimensions.line, m_dimensions.column+1));
+    m_display_buffer.append(DisplayAtom(begin, end, m_buffer.string(begin, end)));
 
-    std::sort(sorted_selections.begin(), sorted_selections.end(),
-              [](const Selection& lhs, const Selection& rhs) { return lhs.begin() < rhs.begin(); });
-
-    BufferIterator current_position = m_buffer.iterator_at(m_position);
-
-    for (Selection& sel : sorted_selections)
-    {
-        if (current_position != sel.begin())
-        {
-            DisplayAtom atom;
-            atom.content = m_buffer.string(current_position, sel.begin());
-            m_display_buffer.append(atom);
-        }
-        if (sel.begin() != sel.end())
-        {
-            DisplayAtom atom;
-            atom.content = m_buffer.string(sel.begin(), sel.end());
-            atom.attribute = Underline;
-            m_display_buffer.append(atom);
-        }
-        current_position = sel.end();
-    }
-    if (current_position != m_buffer.end())
-    {
-        DisplayAtom atom;
-        atom.content = m_buffer.string(current_position, m_buffer.end());
-        m_display_buffer.append(atom);
-    }
+    for (auto& filter : m_filters)
+        filter(m_display_buffer);
 }
 
 void Window::set_dimensions(const WindowCoord& dimensions)

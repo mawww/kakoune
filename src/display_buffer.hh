@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "buffer.hh"
+
 namespace Kakoune
 {
 
@@ -33,13 +35,19 @@ enum class Color
 
 struct DisplayAtom
 {
-    std::string content;
-    Color       fg_color;
-    Color       bg_color;
-    Attribute   attribute;
+    std::string    content;
+    BufferIterator begin;
+    BufferIterator end;
+    Color          fg_color;
+    Color          bg_color;
+    Attribute      attribute;
 
-    DisplayAtom()
-        : fg_color(Color::Default),
+    DisplayAtom(BufferIterator begin, BufferIterator end,
+                const std::string& content)
+        : content(content),
+          begin(begin),
+          end(end),
+          fg_color(Color::Default),
           bg_color(Color::Default),
           attribute(Attributes::Normal)
     {}
@@ -48,7 +56,7 @@ struct DisplayAtom
 class DisplayBuffer
 {
 public:
-    typedef std::vector<DisplayAtom> AtomList; 
+    typedef std::vector<DisplayAtom> AtomList;
     typedef AtomList::iterator iterator;
     typedef AtomList::const_iterator const_iterator;
 
@@ -56,6 +64,7 @@ public:
 
     void clear() { m_atoms.clear(); }
     void append(const DisplayAtom& atom) { m_atoms.push_back(atom); }
+    iterator insert(iterator where, const DisplayAtom& atom) { return m_atoms.insert(where, atom); }
 
     iterator begin() { return m_atoms.begin(); }
     iterator end()   { return m_atoms.end(); }

@@ -102,12 +102,17 @@ private:
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
 
+    friend class HighlightSelections;
+
     SelectMode    m_select_mode;
     Buffer&       m_buffer;
     BufferCoord   m_position;
     WindowCoord   m_dimensions;
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
+
+    typedef std::vector<std::function<void (DisplayBuffer&)>> FilterList;
+    FilterList m_filters;
 };
 
 class IncrementalInserter
