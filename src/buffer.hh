@@ -42,6 +42,8 @@ public:
     bool operator!= (const BufferIterator& iterator) const;
     bool operator<  (const BufferIterator& iterator) const;
     bool operator<= (const BufferIterator& iterator) const;
+    bool operator>  (const BufferIterator& iterator) const;
+    bool operator>= (const BufferIterator& iterator) const;
 
     BufferChar operator* () const;
     BufferSize operator- (const BufferIterator& iterator) const;

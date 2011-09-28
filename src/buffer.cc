@@ -61,6 +61,18 @@ bool BufferIterator::operator<=(const BufferIterator& iterator) const
     return (m_position <= iterator.m_position);
 }
 
+bool BufferIterator::operator>(const BufferIterator& iterator) const
+{
+    assert(m_buffer == iterator.m_buffer);
+    return (m_position > iterator.m_position);
+}
+
+bool BufferIterator::operator>=(const BufferIterator& iterator) const
+{
+    assert(m_buffer == iterator.m_buffer);
+    return (m_position >= iterator.m_position);
+}
+
 BufferChar BufferIterator::operator*() const
 {
     assert(m_buffer);
