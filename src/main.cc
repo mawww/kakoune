@@ -221,10 +221,10 @@ struct scoped_status
     }
 };
 
-void do_insert(Window& window, bool append = false)
+void do_insert(Window& window, IncrementalInserter::Mode mode)
 {
     scoped_status("-- INSERT --");
-    Kakoune::IncrementalInserter inserter(window, append);
+    Kakoune::IncrementalInserter inserter(window, mode);
     draw_window(window);
     while(true)
     {
@@ -399,8 +399,7 @@ void do_erase(Window& window, int count)
 void do_change(Window& window, int count)
 {
     do_yank(window, 0);
-    window.erase();
-    do_insert(window);
+    do_insert(window, IncrementalInserter::Mode::Change);
 }
 
 template<bool append>
@@ -424,8 +423,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 
     { 'd', do_erase },
     { 'c', do_change },
-    { 'i', [](Window& window, int count) { do_insert(window); } },
-    { 'a', [](Window& window, int count) { do_insert(window, true); } },
+    { 'i', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Insert); } },
+    { 'a', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Append); } },
 
     { 'g', do_go },
 

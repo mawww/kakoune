@@ -270,19 +270,23 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     }
 }
 
-IncrementalInserter::IncrementalInserter(Window& window, bool append)
+IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
     : m_window(window)
 {
     assert(not m_window.m_current_inserter);
     m_window.m_current_inserter = this;
     m_window.check_invariant();
 
+    m_window.m_buffer.begin_undo_group();
+
+    if (mode == Mode::Change)
+        window.erase_noundo();
+
     for (auto& sel : m_window.m_selections)
     {
-        const BufferIterator& pos = append ? sel.end() : sel.begin();
+        const BufferIterator& pos = mode == Mode::Append ? sel.end() : sel.begin();
         sel = Selection(pos, pos);
     }
-    m_window.m_buffer.begin_undo_group();
 }
 
 IncrementalInserter::~IncrementalInserter()

@@ -113,7 +113,14 @@ private:
 class IncrementalInserter
 {
 public:
-    IncrementalInserter(Window& window, bool append = false);
+    enum class Mode
+    {
+        Insert,
+        Append,
+        Change
+    };
+
+    IncrementalInserter(Window& window, Mode mode = Mode::Insert);
     ~IncrementalInserter();
 
     void insert(const Window::String& string);
