@@ -309,7 +309,10 @@ void Window::update_display_buffer()
     m_display_buffer.append(DisplayAtom(begin, end, m_buffer.string(begin, end)));
 
     for (auto& filter : m_filters)
+    {
         filter(m_display_buffer);
+        m_display_buffer.check_invariant();
+    }
 }
 
 void Window::set_dimensions(const WindowCoord& dimensions)

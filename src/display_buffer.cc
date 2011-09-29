@@ -1,6 +1,6 @@
 #include "display_buffer.hh"
 
-#include "assert.h"
+#include "assert.hh"
 
 namespace Kakoune
 {
@@ -20,6 +20,16 @@ DisplayBuffer::iterator DisplayBuffer::split(iterator atom, size_t pos_in_atom)
     atom->begin = atom->begin + pos_in_atom;
     atom->content = atom->content.substr(pos_in_atom);
     return insert(atom, std::move(new_atom));
+}
+
+void DisplayBuffer::check_invariant() const
+{
+    for (size_t i = 0; i < m_atoms.size(); ++i)
+    {
+        assert(m_atoms[i].end > m_atoms[i].begin);
+        if (i > 0)
+            assert(m_atoms[i-1].end == m_atoms[i].begin);
+    }
 }
 
 }

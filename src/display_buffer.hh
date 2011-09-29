@@ -75,6 +75,8 @@ public:
 
     const_iterator begin() const { return m_atoms.begin(); }
     const_iterator end()   const { return m_atoms.end(); }
+
+    void check_invariant() const;
 private:
     AtomList m_atoms;
 };
