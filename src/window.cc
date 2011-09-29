@@ -114,7 +114,9 @@ static void blink_void(DisplayBuffer& display_buffer)
         size_t pos = atom_it->content.find("void");
         if (pos != std::string::npos)
         {
-            atom_it = display_buffer.split(atom_it, pos) + 1;
+            if (pos != 0)
+                atom_it = display_buffer.split(atom_it, pos) + 1;
+
             atom_it = display_buffer.split(atom_it, 4);
             atom_it->attribute |= Attributes::Blink;
             ++atom_it;
