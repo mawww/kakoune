@@ -61,45 +61,34 @@ public:
             if (atom.begin >= sel.begin() and atom.begin < sel.end() and atom.end > sel.end())
             {
                 size_t length = sel.end() - atom.begin;
-                DisplayAtom selected(atom.begin, sel.end(),
-                                     atom.content.substr(0, length));
-                selected.attribute = Attributes::Underline;
-                atom.content = atom.content.substr(length);
-                atom.begin = sel.end();
-                atom_it = display_buffer.insert(atom_it, selected) + 1;
+                atom_it = display_buffer.split(atom_it, length);
+                atom_it->attribute |= Attributes::Underline;
+                ++atom_it;
                 ++sel_it;
             }
             // [---###---]
             else if (atom.begin < sel.begin() and atom.end > sel.end())
             {
                 size_t prefix_length = sel.begin() - atom.begin;
-                DisplayAtom prefix(atom.begin, sel.begin(),
-                                   atom.content.substr(0, prefix_length));
+                atom_it = display_buffer.split(atom_it, prefix_length);
                 size_t sel_length = sel.end() - sel.begin();
-                DisplayAtom selected(sel.begin(), sel.end(),
-                                     atom.content.substr(prefix_length, sel_length));
-                selected.attribute = Attributes::Underline;
-                atom.content = atom.content.substr(prefix_length + sel_length);
-                atom_it = display_buffer.insert(atom_it, selected);
-                atom_it = display_buffer.insert(atom_it, prefix);
-                atom_it += 2;
+                atom_it = display_buffer.split(atom_it + 1, sel_length);
+                atom_it->attribute |= Attributes::Underline;
+                ++atom_it;
                 ++sel_it;
             }
             // [------###]
             else if (atom.begin < sel.begin() and atom.end > sel.begin())
             {
-                size_t length = sel.end() - atom.begin;
-                DisplayAtom prefix(atom.begin, sel.end(),
-                                   atom.content.substr(0, length));
-                atom.content = atom.content.substr(length);
-                atom.begin = sel.end();
-                atom.attribute = Attributes::Underline;
-                atom_it = display_buffer.insert(atom_it, prefix) + 2;
+                size_t length = sel.begin() - atom.begin;
+                atom_it = display_buffer.split(atom_it, length) + 1;
+                atom_it->attribute |= Attributes::Underline;
+                ++atom_it;
             }
             // [#########]
             else if (atom.begin >= sel.begin() and atom.end <= sel.end())
             {
-                atom.attribute = Attributes::Underline;
+                atom_it->attribute |= Attributes::Underline;
                 ++atom_it;
             }
             // [---------]
@@ -122,19 +111,13 @@ static void blink_void(DisplayBuffer& display_buffer)
     for (auto atom_it = display_buffer.begin();
          atom_it != display_buffer.end();)
     {
-        DisplayAtom& atom = *atom_it;
-        size_t pos = atom.content.find("void");
+        size_t pos = atom_it->content.find("void");
         if (pos != std::string::npos)
         {
-            DisplayAtom prefix(atom.begin, atom.begin + pos,
-                               atom.content.substr(0, pos));
-            prefix.attribute = atom.attribute;
-            DisplayAtom match(prefix.end, prefix.end + 4, "void");
-            match.attribute = atom.attribute | Attributes::Blink;
-            atom.begin = prefix.end + 4;
-            atom.content = atom.content.substr(pos + 4);
-            atom_it = display_buffer.insert(atom_it, match);
-            atom_it = display_buffer.insert(atom_it, prefix) + 2;
+            atom_it = display_buffer.split(atom_it, pos) + 1;
+            atom_it = display_buffer.split(atom_it, 4);
+            atom_it->attribute |= Attributes::Blink;
+            ++atom_it;
         }
         else
             ++atom_it;
