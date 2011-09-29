@@ -117,6 +117,30 @@ private:
     const Window& m_window;
 };
 
+static void blink_void(DisplayBuffer& display_buffer)
+{
+    for (auto atom_it = display_buffer.begin();
+         atom_it != display_buffer.end();)
+    {
+        DisplayAtom& atom = *atom_it;
+        size_t pos = atom.content.find("void");
+        if (pos != std::string::npos)
+        {
+            DisplayAtom prefix(atom.begin, atom.begin + pos,
+                               atom.content.substr(0, pos));
+            prefix.attribute = atom.attribute;
+            DisplayAtom match(prefix.end, prefix.end + 4, "void");
+            match.attribute = atom.attribute | Attributes::Blink;
+            atom.begin = prefix.end + 4;
+            atom.content = atom.content.substr(pos + 4);
+            atom_it = display_buffer.insert(atom_it, match);
+            atom_it = display_buffer.insert(atom_it, prefix) + 2;
+        }
+        else
+            ++atom_it;
+    }
+}
+
 Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
@@ -125,6 +149,7 @@ Window::Window(Buffer& buffer)
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
+    m_filters.push_back(blink_void);
     m_filters.push_back(HighlightSelections(*this));
 }
 
