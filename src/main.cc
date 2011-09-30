@@ -9,6 +9,7 @@
 #include "assert.hh"
 
 #include <unordered_map>
+#include <map>
 #include <ncurses.h>
 
 using namespace Kakoune;
@@ -20,6 +21,51 @@ void set_attribute(int attribute, bool on)
         attron(attribute);
     else
         attroff(attribute);
+}
+
+int nc_color(Color color)
+{
+    switch (color)
+    {
+    case Color::Black:   return COLOR_BLACK;
+    case Color::Red:     return COLOR_RED;
+    case Color::Green:   return COLOR_GREEN;
+    case Color::Yellow:  return COLOR_YELLOW;
+    case Color::Blue:    return COLOR_BLUE;
+    case Color::Magenta: return COLOR_MAGENTA;
+    case Color::Cyan:    return COLOR_CYAN;
+    case Color::White:   return COLOR_WHITE;
+
+    case Color::Default:
+    default:
+        return COLOR_BLACK;
+    }
+}
+
+void set_color(Color fg_color, Color bg_color)
+{
+    static std::map<std::pair<Color, Color>, int> colorpairs;
+    static int current_pair = -1;
+    static int next_pair = 0;
+
+    if (current_pair != -1)
+        attroff(COLOR_PAIR(current_pair));
+
+    std::pair<Color, Color> colorpair(fg_color, bg_color);
+    auto it = colorpairs.find(colorpair);
+    if (it != colorpairs.end())
+    {
+        current_pair = it->second;
+        attron(COLOR_PAIR(it->second));
+    }
+    else
+    {
+        init_pair(next_pair, nc_color(fg_color), nc_color(bg_color));
+        colorpairs[colorpair] = next_pair;
+        current_pair = next_pair;
+        attron(COLOR_PAIR(next_pair));
+        ++next_pair;
+    }
 }
 
 void draw_window(Window& window)
@@ -40,6 +86,8 @@ void draw_window(Window& window)
         set_attribute(A_REVERSE, atom.attribute & Reverse);
         set_attribute(A_BLINK, atom.attribute & Blink);
         set_attribute(A_BOLD, atom.attribute & Bold);
+
+        set_color(atom.fg_color, atom.bg_color);
 
         size_t pos = 0;
         size_t end;
@@ -89,6 +137,7 @@ void init_ncurses()
     intrflush(stdscr, false);
     keypad(stdscr, true);
     curs_set(2);
+    start_color();
 }
 
 void deinit_ncurses()
