@@ -1,6 +1,7 @@
 #include "window.hh"
 
 #include "assert.hh"
+#include "filters.hh"
 
 #include <algorithm>
 
@@ -106,26 +107,6 @@ private:
     const Window& m_window;
 };
 
-static void blink_void(DisplayBuffer& display_buffer)
-{
-    for (auto atom_it = display_buffer.begin();
-         atom_it != display_buffer.end();)
-    {
-        size_t pos = atom_it->content.find("void");
-        if (pos != std::string::npos)
-        {
-            if (pos != 0)
-                atom_it = display_buffer.split(atom_it, pos) + 1;
-
-            atom_it = display_buffer.split(atom_it, 4);
-            atom_it->attribute |= Attributes::Blink;
-            ++atom_it;
-        }
-        else
-            ++atom_it;
-    }
-}
-
 Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
@@ -134,7 +115,17 @@ Window::Window(Buffer& buffer)
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
-    m_filters.push_back(blink_void);
+    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
+                                  boost::regex("\\<(void|int|float|size_t)\\>"), Color::Yellow));
+    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
+                                  boost::regex("\\<(while|for|if|else|do|switch|case|default|goto|return|using|namespace|try|catch|throw|class|struct|enum|union)\\>"), Color::Blue));
+    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
+                                  boost::regex("\\<(const|auto|static|volatile)\\>"), Color::Green));
+    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
+                                  boost::regex("\\<(true|false|NULL|nullptr|\\d+[fdiu]?)\\>"), Color::Red));
+    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
+                                  boost::regex("//.*$"), Color::Cyan));
+    //m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1, boost::regex("^\\h*.\\w+"), Color::Yellow));
     m_filters.push_back(HighlightSelections(*this));
 }
 
