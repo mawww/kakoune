@@ -469,6 +469,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 
     { 't', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
     { 'f', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },
+    { 'T', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
+    { 'F', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
 
     { 'd', do_erase },
     { 'c', do_change },
