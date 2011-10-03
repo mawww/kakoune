@@ -10,6 +10,8 @@ namespace Kakoune
 void colorize_regex(DisplayBuffer& display_buffer,
                     const boost::regex& ex, Color color);
 
+void colorize_cplusplus(DisplayBuffer& display_buffer);
+
 }
 
 #endif // filters_hh_INCLUDED

@@ -115,17 +115,7 @@ Window::Window(Buffer& buffer)
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
-    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
-                                  boost::regex("\\<(void|int|float|size_t)\\>"), Color::Yellow));
-    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
-                                  boost::regex("\\<(while|for|if|else|do|switch|case|default|goto|return|using|namespace|try|catch|throw|class|struct|enum|union)\\>"), Color::Blue));
-    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
-                                  boost::regex("\\<(const|auto|static|volatile)\\>"), Color::Green));
-    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
-                                  boost::regex("\\<(true|false|NULL|nullptr|\\d+[fdiu]?)\\>"), Color::Red));
-    m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1,
-                                  boost::regex("//.*$"), Color::Cyan));
-    //m_filters.push_back(std::bind(colorize_regex, std::placeholders::_1, boost::regex("^\\h*.\\w+"), Color::Yellow));
+    m_filters.push_back(colorize_cplusplus);
     m_filters.push_back(HighlightSelections(*this));
 }
 
