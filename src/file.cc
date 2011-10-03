@@ -44,7 +44,7 @@ Buffer* create_buffer_from_file(const std::string& filename)
 
 void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
 {
-    int fd = open(filename.c_str(), O_CREAT | O_WRONLY, 0644);
+    int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
