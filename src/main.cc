@@ -485,6 +485,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
 
     { 'v', [](Window& window, int count) { window.set_select_mode(window.select_mode() == Window::SelectMode::Append ?
                                                                   Window::SelectMode::Normal : Window::SelectMode::Append); } },
+    { 27,  [](Window& window, int count) { window.set_select_mode(Window::SelectMode::Normal); } },
 
     { '%', [](Window& window, int count) { window.select([](const BufferIterator& cursor)
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
