@@ -4,6 +4,7 @@
 #include "filters.hh"
 
 #include <algorithm>
+#include <sstream>
 
 namespace Kakoune
 {
@@ -325,6 +326,26 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     {
         m_position.column += cursor.column - (m_dimensions.column - 1);
     }
+}
+
+std::string Window::status_line() const
+{
+    BufferCoord cursor = window_to_buffer(cursor_position());
+    std::ostringstream oss;
+    oss << m_buffer.name() << " -- " << cursor.line << "," << cursor.column
+        << " -- " << m_selections.size() << " sel -- ";
+    switch (m_select_mode)
+    {
+    case SelectMode::Normal:
+        oss << "[Normal]";
+        break;
+    case SelectMode::Append:
+        oss << "[Append]";
+        break;
+    default:
+        assert(false);
+    }
+    return oss.str();
 }
 
 IncrementalInserter::IncrementalInserter(Window& window, Mode mode)

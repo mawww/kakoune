@@ -86,6 +86,8 @@ public:
     SelectMode select_mode() const { return m_select_mode; }
     void set_select_mode(SelectMode select_mode) { m_select_mode = select_mode; }
 
+    std::string status_line() const;
+
 private:
     friend class Buffer;
 

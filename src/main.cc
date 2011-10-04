@@ -123,6 +123,16 @@ void draw_window(Window& window)
         clrtoeol();
         addch('~');
     }
+    move(max_y, 0);
+
+    set_attribute(A_UNDERLINE, 0);
+    set_attribute(A_REVERSE, 0);
+    set_attribute(A_BLINK, 0);
+    set_attribute(A_BOLD, 0);
+    set_color(Color::Cyan, Color::Black);
+
+    clrtoeol();
+    addstr(window.status_line().c_str());
 
     const WindowCoord& cursor_position = window.cursor_position();
     move(cursor_position.line, cursor_position.column);
