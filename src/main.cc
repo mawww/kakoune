@@ -15,7 +15,7 @@
 using namespace Kakoune;
 using namespace std::placeholders;
 
-void set_attribute(int attribute, bool on)
+ void set_attribute(int attribute, bool on)
 {
     if (on)
         attron(attribute);
@@ -53,7 +53,7 @@ void set_color(Color fg_color, Color bg_color)
 
     std::pair<Color, Color> colorpair(fg_color, bg_color);
     auto it = colorpairs.find(colorpair);
-    if (it != colorpairs.end())
+      if (it != colorpairs.end())
     {
         current_pair = it->second;
         attron(COLOR_PAIR(it->second));
@@ -124,7 +124,6 @@ void draw_window(Window& window)
         clrtoeol();
         addch('~');
     }
-    move(max_y, 0);
 
     set_attribute(A_UNDERLINE, 0);
     set_attribute(A_REVERSE, 0);
@@ -132,8 +131,10 @@ void draw_window(Window& window)
     set_attribute(A_BOLD, 0);
     set_color(Color::Cyan, Color::Black);
 
+    std::string status_line = window.status_line();
+    move(max_y, max_x - status_line.length());
     clrtoeol();
-    addstr(window.status_line().c_str());
+    addstr(status_line.c_str());
 
     const WindowCoord& cursor_position = window.cursor_position();
     move(cursor_position.line, cursor_position.column);
@@ -389,11 +390,23 @@ void write_buffer(const CommandParameters& params)
 
 bool quit_requested = false;
 
+template<bool force>
 void quit(const CommandParameters& params)
 {
     if (params.size() != 0)
         throw wrong_argument_count();
 
+    if (not force)
+    {
+        for (auto& buffer : BufferManager::instance())
+        {
+            if (buffer.is_modified())
+            {
+                print_status("modified buffer remaining");
+                return;
+            }
+        }
+    }
     quit_requested = true;
 }
 
@@ -528,7 +541,8 @@ int main(int argc, char* argv[])
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      PerArgumentCommandCompleter{ complete_filename });
-    command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit);
+    command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit<false>);
+    command_manager.register_command(std::vector<std::string>{ "q!", "quit!" }, quit<true>);
     command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer,
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
