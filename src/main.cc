@@ -382,6 +382,7 @@ void write_buffer(const CommandParameters& params)
     std::string filename = params.empty() ? buffer.name() : params[0];
 
     write_buffer_to_file(buffer, filename);
+    buffer.notify_saved();
 }
 
 bool quit_requested = false;

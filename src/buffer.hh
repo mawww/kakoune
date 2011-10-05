@@ -106,6 +106,9 @@ public:
     Window* get_or_create_window();
     void delete_window(Window* window);
 
+    bool is_modified() const;
+    void notify_saved();
+
 private:
     BufferChar at(BufferPos position) const;
 
@@ -144,7 +147,7 @@ private:
 
     std::vector<UndoGroup>           m_history;
     std::vector<UndoGroup>::iterator m_history_cursor;
-    UndoGroup                              m_current_undo_group;
+    UndoGroup                        m_current_undo_group;
 
     void replay_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
@@ -152,6 +155,8 @@ private:
     void append_modification(Modification&& modification);
 
     std::list<std::unique_ptr<Window>> m_windows;
+
+    std::vector<UndoGroup>::iterator m_last_save_undo_group;
 };
 
 }

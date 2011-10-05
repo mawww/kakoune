@@ -138,7 +138,7 @@ bool BufferIterator::is_end() const
 
 Buffer::Buffer(const std::string& name, const BufferString& initial_content)
     : m_name(name), m_history(1), m_history_cursor(m_history.begin()),
-      m_content(initial_content)
+      m_content(initial_content), m_last_save_undo_group(m_history.begin())
 {
     BufferManager::instance().register_buffer(this);
 
@@ -348,6 +348,17 @@ void Buffer::delete_window(Window* window)
     auto window_it = std::find(m_windows.begin(), m_windows.end(), window);
     assert(window_it != m_windows.end());
     m_windows.erase(window_it);
+}
+
+bool Buffer::is_modified() const
+{
+    return m_last_save_undo_group != m_history_cursor
+           or not m_current_undo_group.empty();
+}
+
+void Buffer::notify_saved()
+{
+    m_last_save_undo_group = m_history_cursor;
 }
 
 }

@@ -332,18 +332,26 @@ std::string Window::status_line() const
 {
     BufferCoord cursor = window_to_buffer(cursor_position());
     std::ostringstream oss;
-    oss << m_buffer.name() << " -- " << cursor.line << "," << cursor.column
+    oss << m_buffer.name();
+    if (m_buffer.is_modified())
+        oss << " [+]";
+    oss << " -- " << cursor.line << "," << cursor.column
         << " -- " << m_selections.size() << " sel -- ";
-    switch (m_select_mode)
+    if (m_current_inserter)
+        oss << "[Insert]";
+    else
     {
-    case SelectMode::Normal:
-        oss << "[Normal]";
-        break;
-    case SelectMode::Append:
-        oss << "[Append]";
-        break;
-    default:
-        assert(false);
+        switch (m_select_mode)
+        {
+        case SelectMode::Normal:
+            oss << "[Normal]";
+            break;
+        case SelectMode::Append:
+            oss << "[Append]";
+            break;
+        default:
+            assert(false);
+        }
     }
     return oss.str();
 }
