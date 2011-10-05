@@ -101,6 +101,7 @@ void draw_window(Window& window)
 
             if (end != std::string::npos)
             {
+                addch(' ');
                 position.line = position.line + 1;
                 position.column = 0;
                 pos = end + 1;
