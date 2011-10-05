@@ -314,6 +314,7 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
         }
         draw_window(window);
     }
+    window.clear_selections();
 }
 
 void do_go(Window& window, int count)
@@ -447,18 +448,19 @@ void do_search_next(Window& window)
 void do_yank(Window& window, int count)
 {
     RegisterManager::instance()['"'] = window.selection_content();
+    window.clear_selections();
 }
 
 void do_erase(Window& window, int count)
 {
-    do_yank(window, 0);
+    RegisterManager::instance()['"'] = window.selection_content();
     window.erase();
-    window.empty_selections();
+    window.clear_selections();
 }
 
 void do_change(Window& window, int count)
 {
-    do_yank(window, 0);
+    RegisterManager::instance()['"'] = window.selection_content();
     do_insert(window, IncrementalInserter::Mode::Change);
 }
 
@@ -469,6 +471,7 @@ void do_paste(Window& window, int count)
         window.append(RegisterManager::instance()['"']);
     else
         window.insert(RegisterManager::instance()['"']);
+    window.clear_selections();
 }
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
@@ -502,7 +505,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
 
     { ':', [](Window& window, int count) { do_command(); } },
-    { ' ', [](Window& window, int count) { window.empty_selections(); } },
+    { ' ', [](Window& window, int count) { window.clear_selections(); } },
     { 'w', [](Window& window, int count) { do { window.select(select_to_next_word); } while(--count > 0); } },
     { 'e', [](Window& window, int count) { do { window.select(select_to_next_word_end); } while(--count > 0); } },
     { 'b', [](Window& window, int count) { do { window.select(select_to_previous_word); } while(--count > 0); } },

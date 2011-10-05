@@ -222,13 +222,14 @@ WindowCoord Window::line_and_column_at(const BufferIterator& iterator) const
     return buffer_to_window(m_buffer.line_and_column_at(iterator));
 }
 
-void Window::empty_selections()
+void Window::clear_selections()
 {
     check_invariant();
     Selection sel = Selection(m_selections.back().last(),
                               m_selections.back().last());
     m_selections.clear();
     m_selections.push_back(std::move(sel));
+    m_select_mode = SelectMode::Normal;
 }
 
 void Window::select(const Selector& selector)

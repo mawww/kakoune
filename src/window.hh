@@ -70,7 +70,7 @@ public:
     void move_cursor(const WindowCoord& offset);
     void move_cursor_to(const WindowCoord& new_pos);
 
-    void empty_selections();
+    void clear_selections();
     void select(const Selector& selector);
     BufferString selection_content() const;
 
