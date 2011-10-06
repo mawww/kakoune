@@ -476,6 +476,7 @@ void do_change(Window& window, int count)
 {
     RegisterManager::instance()['"'] = window.selection_content();
     do_insert(window, IncrementalInserter::Mode::Change);
+    window.clear_selections();
 }
 
 template<bool append>
