@@ -504,6 +504,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'c', do_change },
     { 'i', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Insert); } },
     { 'a', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Append); } },
+    { 'o', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineBelow); } },
+    { 'O', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineAbove); } },
 
     { 'g', do_go },
 

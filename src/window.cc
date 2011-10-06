@@ -371,7 +371,29 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
 
     for (auto& sel : m_window.m_selections)
     {
-        const BufferIterator& pos = mode == Mode::Append ? sel.end() : sel.begin();
+        BufferIterator pos;
+        switch (mode)
+        {
+        case Mode::Insert: pos = sel.begin(); break;
+        case Mode::Append: pos = sel.end(); break;
+        case Mode::Change: pos = sel.begin(); break;
+
+        case Mode::OpenLineBelow:
+            pos = sel.end();
+            while (not pos.is_end() and *pos != '\n')
+                ++pos;
+            ++pos;
+            window.m_buffer.insert(pos, "\n");
+            break;
+
+        case Mode::OpenLineAbove:
+            pos = sel.begin();
+            while (not pos.is_begin() and *pos != '\n')
+                --pos;
+            window.m_buffer.insert(pos, "\n");
+            ++pos;
+            break;
+        }
         sel = Selection(pos, pos);
     }
 }

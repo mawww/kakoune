@@ -124,7 +124,9 @@ public:
     {
         Insert,
         Append,
-        Change
+        Change,
+        OpenLineBelow,
+        OpenLineAbove
     };
 
     IncrementalInserter(Window& window, Mode mode = Mode::Insert);
