@@ -15,7 +15,7 @@
 using namespace Kakoune;
 using namespace std::placeholders;
 
- void set_attribute(int attribute, bool on)
+void set_attribute(int attribute, bool on)
 {
     if (on)
         attron(attribute);
