@@ -48,7 +48,7 @@ void colorize_cplusplus(DisplayBuffer& display_buffer)
     //static boost::regex operators("->|\\+|\\-|\\*|/|\\\\|\\&|\\|\\^|[<>=!+-]=|=|\\(|\\)|\\[|\\]|\\{|\\}|\\<(not|and|or|xor)\\>");
     //colorize_regex(display_buffer, operators, Color::Green);
 
-    static boost::regex types_keywords("\\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private)\\>");
+    static boost::regex types_keywords("\\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template)\\>");
     colorize_regex(display_buffer, types_keywords, Color::Green);
 }
 
