@@ -7,6 +7,7 @@
 #include "register_manager.hh"
 #include "selectors.hh"
 #include "assert.hh"
+#include "debug.hh"
 
 #include <unordered_map>
 #include <map>
@@ -568,6 +569,7 @@ int main(int argc, char* argv[])
             try
             {
                 char c = getch();
+                write_debug(std::string("key ") + c + '\n');
 
                 if (isdigit(c))
                     count = count * 10 + c - '0';
