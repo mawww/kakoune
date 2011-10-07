@@ -136,8 +136,10 @@ bool BufferIterator::is_end() const
     return m_position == m_buffer->length();
 }
 
-Buffer::Buffer(const std::string& name, const BufferString& initial_content)
-    : m_name(name), m_history(1), m_history_cursor(m_history.begin()),
+Buffer::Buffer(const std::string& name, Type type,
+               const BufferString& initial_content)
+    : m_name(name), m_type(type),
+      m_history(1), m_history_cursor(m_history.begin()),
       m_content(initial_content), m_last_save_undo_group(m_history.begin())
 {
     BufferManager::instance().register_buffer(this);

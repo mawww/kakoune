@@ -71,7 +71,13 @@ private:
 class Buffer
 {
 public:
-    Buffer(const std::string& name,
+    enum class Type
+    {
+        File,
+        Scratch
+    };
+
+    Buffer(const std::string& name, Type type,
            const BufferString& initial_content = "");
 
     void           begin_undo_group();
@@ -107,6 +113,7 @@ public:
     void delete_window(Window* window);
 
     bool is_modified() const;
+    Type type() const { return m_type; }
     void notify_saved();
 
 private:
@@ -129,6 +136,7 @@ private:
     BufferString m_content;
 
     std::string  m_name;
+    const Type   m_type;
 
     struct Modification
     {

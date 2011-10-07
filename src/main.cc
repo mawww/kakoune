@@ -371,7 +371,7 @@ void edit(const CommandParameters& params)
     catch (file_not_found& what)
     {
         print_status("new file " + filename);
-        buffer = new Buffer(filename);
+        buffer = new Buffer(filename, Buffer::Type::File);
     }
     current_window = buffer->get_or_create_window();
 }
@@ -400,7 +400,7 @@ void quit(const CommandParameters& params)
     {
         for (auto& buffer : BufferManager::instance())
         {
-            if (buffer.is_modified())
+            if (buffer.type() == Buffer::Type::File and buffer.is_modified())
             {
                 print_status("modified buffer remaining");
                 return;
@@ -558,7 +558,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto buffer = (argc > 1) ? create_buffer_from_file(argv[1]) : new Buffer("<scratch>");
+        auto buffer = (argc > 1) ? create_buffer_from_file(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
         current_window = buffer->get_or_create_window();
 
         draw_window(*current_window);

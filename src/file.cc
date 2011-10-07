@@ -39,7 +39,7 @@ Buffer* create_buffer_from_file(const std::string& filename)
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         BufferManager::instance().delete_buffer(buffer);
 
-    return new Buffer(filename, content);
+    return new Buffer(filename, Buffer::Type::File, content);
 }
 
 void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
