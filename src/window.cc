@@ -62,8 +62,7 @@ public:
             // [###------]
             if (atom.begin >= sel.begin() and atom.begin < sel.end() and atom.end > sel.end())
             {
-                size_t length = sel.end() - atom.begin;
-                atom_it = display_buffer.split(atom_it, length);
+                atom_it = display_buffer.split(atom_it, sel.end());
                 atom_it->attribute |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
@@ -71,10 +70,8 @@ public:
             // [---###---]
             else if (atom.begin < sel.begin() and atom.end > sel.end())
             {
-                size_t prefix_length = sel.begin() - atom.begin;
-                atom_it = display_buffer.split(atom_it, prefix_length);
-                size_t sel_length = sel.end() - sel.begin();
-                atom_it = display_buffer.split(atom_it + 1, sel_length);
+                atom_it = display_buffer.split(atom_it, sel.begin());
+                atom_it = display_buffer.split(atom_it + 1, sel.end());
                 atom_it->attribute |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
@@ -82,8 +79,7 @@ public:
             // [------###]
             else if (atom.begin < sel.begin() and atom.end > sel.begin())
             {
-                size_t length = sel.begin() - atom.begin;
-                atom_it = display_buffer.split(atom_it, length) + 1;
+                atom_it = display_buffer.split(atom_it, sel.begin()) + 1;
                 atom_it->attribute |= Attributes::Underline;
                 ++atom_it;
             }
@@ -289,7 +285,10 @@ void Window::update_display_buffer()
     BufferIterator begin = m_buffer.iterator_at(m_position);
     BufferIterator end = m_buffer.iterator_at(m_position +
                                               BufferCoord(m_dimensions.line, m_dimensions.column+1));
-    m_display_buffer.append(DisplayAtom(begin, end, m_buffer.string(begin, end)));
+    if (begin == end)
+        return;
+
+    m_display_buffer.append(DisplayAtom(begin, end));
 
     for (auto& filter : m_filters)
     {

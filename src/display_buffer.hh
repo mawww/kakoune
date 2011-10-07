@@ -35,7 +35,6 @@ enum class Color
 
 struct DisplayAtom
 {
-    std::string    content;
     BufferIterator begin;
     BufferIterator end;
     Color          fg_color;
@@ -43,12 +42,10 @@ struct DisplayAtom
     Attribute      attribute;
 
     DisplayAtom(BufferIterator begin, BufferIterator end,
-                const std::string& content,
                 Color fg_color = Color::Default,
                 Color bg_color = Color::Default,
                 Attribute attribute = Attributes::Normal)
-        : content(content),
-          begin(begin),
+        : begin(begin),
           end(end),
           fg_color(fg_color),
           bg_color(bg_color),
@@ -68,7 +65,7 @@ public:
     void clear() { m_atoms.clear(); }
     void append(const DisplayAtom& atom) { m_atoms.push_back(atom); }
     iterator insert(iterator where, const DisplayAtom& atom) { return m_atoms.insert(where, atom); }
-    iterator split(iterator atom, size_t pos_in_atom);
+    iterator split(iterator atom, const BufferIterator& pos);
 
     iterator begin() { return m_atoms.begin(); }
     iterator end()   { return m_atoms.end(); }

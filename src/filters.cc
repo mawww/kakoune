@@ -9,16 +9,16 @@ void colorize_regex(DisplayBuffer& display_buffer,
     for (auto atom_it = display_buffer.begin();
          atom_it != display_buffer.end(); ++atom_it)
     {
-        boost::smatch matches;
-        if (boost::regex_search(atom_it->content, matches, ex, boost::match_nosubs))
+        boost::match_results<BufferIterator> matches;
+        if (boost::regex_search(atom_it->begin, atom_it->end, matches, ex, boost::match_nosubs))
         {
-            size_t pos = matches.begin()->first - atom_it->content.begin();
-            if (pos != 0)
-                atom_it = display_buffer.split(atom_it, pos) + 1;
+            const BufferIterator& begin = matches.begin()->first;
+            if (begin != atom_it->begin)
+                atom_it = display_buffer.split(atom_it, begin) + 1;
 
-            pos = matches.begin()->second - matches.begin()->first;
-            if (pos != atom_it->content.length())
-                atom_it = display_buffer.split(atom_it, pos);
+            const BufferIterator& end = matches.begin()->second;
+            if (end != atom_it->end)
+                atom_it = display_buffer.split(atom_it, end);
 
             atom_it->fg_color = color;
         }
