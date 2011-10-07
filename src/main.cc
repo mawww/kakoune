@@ -47,10 +47,13 @@ void set_color(Color fg_color, Color bg_color)
 {
     static std::map<std::pair<Color, Color>, int> colorpairs;
     static int current_pair = -1;
-    static int next_pair = 0;
+    static int next_pair = 1;
 
     if (current_pair != -1)
         attroff(COLOR_PAIR(current_pair));
+
+    if (fg_color == Color::Default and bg_color == Color::Default)
+        return;
 
     std::pair<Color, Color> colorpair(fg_color, bg_color);
     auto it = colorpairs.find(colorpair);
