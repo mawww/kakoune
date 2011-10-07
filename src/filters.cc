@@ -27,7 +27,7 @@ void colorize_regex(DisplayBuffer& display_buffer,
 
 void colorize_cplusplus(DisplayBuffer& display_buffer)
 {
-    static boost::regex preprocessor("(?<=\\n)\\h*#\\h*[^\\n]*(?=\\n)");
+    static boost::regex preprocessor("(\\`|(?<=\\n))\\h*#\\h*[^\\n]*(?=\\n)");
     colorize_regex(display_buffer, preprocessor, Color::Magenta);
 
     static boost::regex comments("//[^\\n]*\\n");
@@ -36,7 +36,7 @@ void colorize_cplusplus(DisplayBuffer& display_buffer)
     static boost::regex strings("(?<!')\"(\\\\\"|[^\"])*\"");
     colorize_regex(display_buffer, strings, Color::Magenta);
 
-    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|-?\\d+[fdiu]?|'[^']?'");
+    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|-?\\d+[fdiu]?|'\\\\?[^']?'");
     colorize_regex(display_buffer, values, Color::Red);
 
     static boost::regex builtin_types("\\<(void|int|float|bool|size_t)\\>");
