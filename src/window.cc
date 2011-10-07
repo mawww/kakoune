@@ -112,7 +112,6 @@ Window::Window(Buffer& buffer)
     : m_buffer(buffer),
       m_position(0, 0),
       m_dimensions(0, 0),
-      m_select_mode(SelectMode::Normal),
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
@@ -229,14 +228,13 @@ void Window::clear_selections()
                               m_selections.back().last());
     m_selections.clear();
     m_selections.push_back(std::move(sel));
-    m_select_mode = SelectMode::Normal;
 }
 
-void Window::select(const Selector& selector)
+void Window::select(const Selector& selector, bool append)
 {
     check_invariant();
 
-    if (m_select_mode == SelectMode::Normal)
+    if (not append)
     {
         Selection sel = selector(m_selections.back().last());
         m_selections.clear();
@@ -260,9 +258,9 @@ BufferString Window::selection_content() const
                            m_selections.back().end());
 }
 
-void Window::move_cursor(const WindowCoord& offset)
+void Window::move_cursor(const WindowCoord& offset, bool append)
 {
-    if (m_select_mode == SelectMode::Normal)
+    if (not append)
         move_cursor_to(cursor_position() + offset);
     else
     {
@@ -340,20 +338,6 @@ std::string Window::status_line() const
         << " -- " << m_selections.size() << " sel -- ";
     if (m_current_inserter)
         oss << "[Insert]";
-    else
-    {
-        switch (m_select_mode)
-        {
-        case SelectMode::Normal:
-            oss << "[Normal]";
-            break;
-        case SelectMode::Append:
-            oss << "[Append]";
-            break;
-        default:
-            assert(false);
-        }
-    }
     return oss.str();
 }
 

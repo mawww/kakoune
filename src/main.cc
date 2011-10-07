@@ -496,10 +496,15 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'k', [](Window& window, int count) { window.move_cursor(WindowCoord(-std::max(count,1), 0)); } },
     { 'l', [](Window& window, int count) { window.move_cursor(WindowCoord(0,  std::max(count,1))); } },
 
+    { 'H', [](Window& window, int count) { window.move_cursor(WindowCoord(0, -std::max(count,1)), true); } },
+    { 'J', [](Window& window, int count) { window.move_cursor(WindowCoord( std::max(count,1), 0), true); } },
+    { 'K', [](Window& window, int count) { window.move_cursor(WindowCoord(-std::max(count,1), 0), true); } },
+    { 'L', [](Window& window, int count) { window.move_cursor(WindowCoord(0,  std::max(count,1)), true); } },
+
     { 't', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
     { 'f', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },
-    { 'T', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
-    { 'F', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
+    { 'T', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false), true); } },
+    { 'F', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true), true); } },
 
     { 'd', do_erase },
     { 'c', do_change },
@@ -514,10 +519,6 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'p', do_paste<true> },
     { 'P', do_paste<false> },
 
-    { 'v', [](Window& window, int count) { window.set_select_mode(window.select_mode() == Window::SelectMode::Append ?
-                                                                  Window::SelectMode::Normal : Window::SelectMode::Append); } },
-    { 27,  [](Window& window, int count) { window.set_select_mode(Window::SelectMode::Normal); } },
-
     { '%', [](Window& window, int count) { window.select([](const BufferIterator& cursor)
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
 
@@ -526,8 +527,12 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'w', [](Window& window, int count) { do { window.select(select_to_next_word); } while(--count > 0); } },
     { 'e', [](Window& window, int count) { do { window.select(select_to_next_word_end); } while(--count > 0); } },
     { 'b', [](Window& window, int count) { do { window.select(select_to_previous_word); } while(--count > 0); } },
+    { 'W', [](Window& window, int count) { do { window.select(select_to_next_word, true); } while(--count > 0); } },
+    { 'E', [](Window& window, int count) { do { window.select(select_to_next_word_end, true); } while(--count > 0); } },
+    { 'B', [](Window& window, int count) { do { window.select(select_to_previous_word, true); } while(--count > 0); } },
     { '.', [](Window& window, int count) { do { window.select(select_line); } while(--count > 0); } },
     { 'm', [](Window& window, int count) { window.select(select_matching); } },
+    { 'M', [](Window& window, int count) { window.select(select_matching, true); } },
     { '/', [](Window& window, int count) { do_search(window); } },
     { 'n', [](Window& window, int count) { do_search_next(window); } },
     { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
