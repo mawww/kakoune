@@ -288,7 +288,6 @@ struct scoped_status
 
 void do_insert(Window& window, IncrementalInserter::Mode mode)
 {
-    scoped_status("-- INSERT --");
     Kakoune::IncrementalInserter inserter(window, mode);
     draw_window(window);
     while(true)
