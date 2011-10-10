@@ -11,6 +11,7 @@
 
 #include <unordered_map>
 #include <map>
+#include <sstream>
 #include <ncurses.h>
 
 using namespace Kakoune;
@@ -569,7 +570,9 @@ int main(int argc, char* argv[])
             try
             {
                 char c = getch();
-                write_debug(std::string("key ") + c + '\n');
+                std::ostringstream oss;
+                oss << "key " << int(c) << " (" << c << ")\n";
+                write_debug(oss.str());
 
                 if (isdigit(c))
                     count = count * 10 + c - '0';
