@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace Kakoune
 {
@@ -27,6 +28,16 @@ CandidateList complete_filename(const std::string& prefix,
 
 CandidateList complete_buffername(const std::string& prefix,
                                   size_t cursor_pos = std::string::npos);
+
+typedef std::function<Completions (const std::string&, size_t)> Completer;
+
+struct NullCompletion
+{
+    Completions operator() (const std::string&, size_t cursor_pos)
+    {
+        return Completions(cursor_pos, cursor_pos);
+    }
+};
 
 }
 #endif // completion_hh_INCLUDED

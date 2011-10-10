@@ -163,16 +163,7 @@ void deinit_ncurses()
 
 struct prompt_aborted {};
 
-struct NullCompletion
-{
-    Completions operator() (const std::string&, size_t cursor_pos)
-    {
-        return Completions(cursor_pos, cursor_pos);
-    }
-};
-
-std::string prompt(const std::string& text,
-                   std::function<Completions (const std::string&, size_t)> completer = NullCompletion())
+std::string prompt(const std::string& text, Completer completer = NullCompletion())
 {
     int max_x, max_y;
     getmaxyx(stdscr, max_y, max_x);
