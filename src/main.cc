@@ -322,11 +322,16 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
     window.clear_selections();
 }
 
+template<bool append>
 void do_go(Window& window, int count)
 {
-    BufferIterator target;
     if (count != 0)
-        target = window.buffer().iterator_at({count, 0});
+    {
+        BufferIterator target =
+            window.buffer().iterator_at(BufferCoord(count, 0));
+
+        window.move_cursor_to(window.line_and_column_at(target));
+    }
     else
     {
         char c = getch();
@@ -334,28 +339,29 @@ void do_go(Window& window, int count)
         {
         case 'g':
         case 't':
-            target = window.buffer().iterator_at({0,0});
-            break;
-        case 'l':
-            target = window.iterator_at(window.cursor_position());
-            while (not target.is_end() and *target != '\n')
-                ++target;
-            --target;
-            break;
-        case 'h':
-            target = window.iterator_at(window.cursor_position());
-            while (not target.is_begin() and *target != '\n')
-                --target;
-            ++target;
-            break;
-        case 'b':
-            target = window.buffer().iterator_at(
-                {window.buffer().line_count() - 1, 0});
-            break;
+        {
+            BufferIterator target =
+                window.buffer().iterator_at(BufferCoord(0,0));
+            window.move_cursor_to(window.line_and_column_at(target));
             break;
         }
+        case 'l':
+        case 'L':
+            window.select(select_to_eol, append);
+            break;
+        case 'h':
+        case 'H':
+            window.select(select_to_eol_reverse, append);
+            break;
+        case 'b':
+        {
+            BufferIterator target = window.buffer().iterator_at(
+                BufferCoord(window.buffer().line_count() - 1, 0));
+            window.move_cursor_to(window.line_and_column_at(target));
+            break;
+        }
+        }
     }
-    window.move_cursor_to(window.line_and_column_at(target));
 }
 
 Window* current_window;
@@ -516,7 +522,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'o', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineBelow); } },
     { 'O', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineAbove); } },
 
-    { 'g', do_go },
+    { 'g', do_go<false> },
+    { 'G', do_go<true> },
 
     { 'y', do_yank },
     { 'p', do_paste<true> },

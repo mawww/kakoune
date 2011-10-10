@@ -223,4 +223,18 @@ Selection select_to_reverse(const BufferIterator& cursor, char c, int count, boo
     return Selection(cursor, inclusive ? end : end+1);
 }
 
+Selection select_to_eol(const BufferIterator& cursor)
+{
+    BufferIterator end = cursor + 1;
+    skip_while(end, [](char cur) { return not is_eol(cur); });
+    return Selection(cursor, end-1);
+}
+
+Selection select_to_eol_reverse(const BufferIterator& cursor)
+{
+    BufferIterator end = cursor - 1;
+    skip_while_reverse(end, [](char cur) { return not is_eol(cur); });
+    return Selection(cursor, end.is_begin() ? end : end+1);
+}
+
 }
