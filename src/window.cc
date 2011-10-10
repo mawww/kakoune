@@ -140,6 +140,7 @@ void Window::erase_noundo()
         m_buffer.erase(sel.begin(), sel.end());
         sel = Selection(sel.begin(), sel.begin());
     }
+    scroll_to_keep_cursor_visible_ifn();
 }
 
 static WindowCoord measure_string(const Window::String& string)
@@ -171,6 +172,7 @@ void Window::insert_noundo(const String& string)
         m_buffer.insert(sel.begin(), string);
         sel.offset(string.length());
     }
+    scroll_to_keep_cursor_visible_ifn();
 }
 
 void Window::append(const String& string)
@@ -183,6 +185,7 @@ void Window::append_noundo(const String& string)
 {
     for (auto& sel : m_selections)
         m_buffer.insert(sel.end(), string);
+    scroll_to_keep_cursor_visible_ifn();
 }
 
 bool Window::undo()
