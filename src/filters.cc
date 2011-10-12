@@ -52,4 +52,28 @@ void colorize_cplusplus(DisplayBuffer& display_buffer)
     colorize_regex(display_buffer, types_keywords, Color::Green);
 }
 
+void expand_tabulations(DisplayBuffer& display_buffer)
+{
+    const int tabstop = 8;
+    for (auto atom_it = display_buffer.begin();
+         atom_it != display_buffer.end(); ++atom_it)
+    {
+        for (BufferIterator it = atom_it->begin; it != atom_it->end; ++it)
+        {
+            if (*it == '\t')
+            {
+                if (it != atom_it->begin)
+                    atom_it = display_buffer.split(atom_it, it) + 1;
+
+                if (it+1 != atom_it->end)
+                    atom_it = display_buffer.split(atom_it, it+1);
+
+                BufferCoord pos = it.buffer().line_and_column_at(it);
+                int count = tabstop - (pos.column % tabstop);
+                atom_it->replacement_text = std::string(count, ' ');
+            }
+        }
+    }
+}
+
 }

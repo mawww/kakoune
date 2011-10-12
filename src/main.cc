@@ -85,7 +85,8 @@ void draw_window(Window& window)
     WindowCoord position;
     for (const DisplayAtom& atom : window.display_buffer())
     {
-        const std::string content = window.buffer().string(atom.begin, atom.end);
+        const std::string content = atom.replacement_text.empty() ?
+            window.buffer().string(atom.begin, atom.end) : atom.replacement_text;
 
         set_attribute(A_UNDERLINE, atom.attribute & Underline);
         set_attribute(A_REVERSE, atom.attribute & Reverse);

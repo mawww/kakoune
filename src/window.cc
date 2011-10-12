@@ -112,6 +112,7 @@ Window::Window(Buffer& buffer)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
     m_filters.push_back(colorize_cplusplus);
+    m_filters.push_back(expand_tabulations);
     m_filters.push_back(HighlightSelections(*this));
 }
 

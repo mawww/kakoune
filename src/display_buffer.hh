@@ -40,6 +40,7 @@ struct DisplayAtom
     Color          fg_color;
     Color          bg_color;
     Attribute      attribute;
+    BufferString   replacement_text;
 
     DisplayAtom(BufferIterator begin, BufferIterator end,
                 Color fg_color = Color::Default,
