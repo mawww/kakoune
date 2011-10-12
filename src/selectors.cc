@@ -136,14 +136,6 @@ Selection select_line(const BufferIterator& cursor)
     return Selection(first, last);
 }
 
-Selection move_select(Window& window, const BufferIterator& cursor, const WindowCoord& offset)
-{
-    WindowCoord cursor_pos = window.line_and_column_at(cursor);
-    WindowCoord new_pos = cursor_pos + offset;
-
-    return Selection(cursor, window.iterator_at(new_pos));
-}
-
 Selection select_matching(const BufferIterator& cursor)
 {
     std::vector<char> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
