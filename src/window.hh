@@ -54,9 +54,6 @@ public:
 
     Buffer& buffer() const { return m_buffer; }
 
-    BufferCoord window_to_buffer(const WindowCoord& window_pos) const;
-    WindowCoord buffer_to_window(const BufferCoord& buffer_pos) const;
-
     BufferIterator iterator_at(const WindowCoord& window_pos) const;
     WindowCoord    line_and_column_at(const BufferIterator& iterator) const;
 
@@ -90,6 +87,9 @@ private:
     void erase_noundo();
     void insert_noundo(const String& string);
     void append_noundo(const String& string);
+
+    BufferCoord window_to_buffer(const WindowCoord& window_pos) const;
+    WindowCoord buffer_to_window(const BufferCoord& buffer_pos) const;
 
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
