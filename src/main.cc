@@ -323,7 +323,7 @@ void do_go(Window& window, int count)
         BufferIterator target =
             window.buffer().iterator_at(BufferCoord(count, 0));
 
-        window.move_cursor_to(window.line_and_column_at(target));
+        window.move_cursor_to(target);
     }
     else
     {
@@ -335,7 +335,7 @@ void do_go(Window& window, int count)
         {
             BufferIterator target =
                 window.buffer().iterator_at(BufferCoord(0,0));
-            window.move_cursor_to(window.line_and_column_at(target));
+            window.move_cursor_to(target);
             break;
         }
         case 'l':
@@ -350,7 +350,7 @@ void do_go(Window& window, int count)
         {
             BufferIterator target = window.buffer().iterator_at(
                 BufferCoord(window.buffer().line_count() - 1, 0));
-            window.move_cursor_to(window.line_and_column_at(target));
+            window.move_cursor_to(target);
             break;
         }
         }

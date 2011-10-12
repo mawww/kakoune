@@ -261,7 +261,7 @@ BufferString Window::selection_content() const
 void Window::move_cursor(const WindowCoord& offset, bool append)
 {
     if (not append)
-        move_cursor_to(cursor_position() + offset);
+        move_cursor_to(iterator_at(cursor_position() + offset));
     else
     {
         for (auto& sel : m_selections)
@@ -273,11 +273,10 @@ void Window::move_cursor(const WindowCoord& offset, bool append)
     }
 }
 
-void Window::move_cursor_to(const WindowCoord& new_pos)
+void Window::move_cursor_to(const BufferIterator& iterator)
 {
-    BufferIterator target = iterator_at(new_pos);
     m_selections.clear();
-    m_selections.push_back(Selection(target, target));
+    m_selections.push_back(Selection(iterator, iterator));
 
     scroll_to_keep_cursor_visible_ifn();
 }
