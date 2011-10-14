@@ -4,10 +4,18 @@
 #include <string>
 #include <vector>
 
+#include "line_and_column.hh"
+
 #include "buffer.hh"
 
 namespace Kakoune
 {
+
+struct DisplayCoord : LineAndColumn<DisplayCoord>
+{
+    DisplayCoord(int line = 0, int column = 0)
+        : LineAndColumn(line, column) {}
+};
 
 typedef int Attribute;
 

@@ -79,10 +79,10 @@ void draw_window(Window& window)
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
 
-    window.set_dimensions(WindowCoord(max_y, max_x));
+    window.set_dimensions(DisplayCoord(max_y, max_x));
     window.update_display_buffer();
 
-    WindowCoord position;
+    DisplayCoord position;
     for (const DisplayAtom& atom : window.display_buffer())
     {
         const std::string content = atom.replacement_text.empty() ?
@@ -142,7 +142,7 @@ void draw_window(Window& window)
     clrtoeol();
     addstr(status_line.c_str());
 
-    const WindowCoord& cursor_position = window.cursor_position();
+    const DisplayCoord& cursor_position = window.cursor_position();
     move(cursor_position.line, cursor_position.column);
 }
 
@@ -285,7 +285,7 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
     draw_window(window);
     while(true)
     {
-        const WindowCoord& pos = window.cursor_position();
+        const DisplayCoord& pos = window.cursor_position();
         move(pos.line, pos.column);
 
         char c = getch();
@@ -493,15 +493,15 @@ void do_paste(Window& window, int count)
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
 {
-    { 'h', [](Window& window, int count) { window.move_cursor(WindowCoord(0, -std::max(count,1))); } },
-    { 'j', [](Window& window, int count) { window.move_cursor(WindowCoord( std::max(count,1), 0)); } },
-    { 'k', [](Window& window, int count) { window.move_cursor(WindowCoord(-std::max(count,1), 0)); } },
-    { 'l', [](Window& window, int count) { window.move_cursor(WindowCoord(0,  std::max(count,1))); } },
+    { 'h', [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
+    { 'j', [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0)); } },
+    { 'k', [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0)); } },
+    { 'l', [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1))); } },
 
-    { 'H', [](Window& window, int count) { window.move_cursor(WindowCoord(0, -std::max(count,1)), true); } },
-    { 'J', [](Window& window, int count) { window.move_cursor(WindowCoord( std::max(count,1), 0), true); } },
-    { 'K', [](Window& window, int count) { window.move_cursor(WindowCoord(-std::max(count,1), 0), true); } },
-    { 'L', [](Window& window, int count) { window.move_cursor(WindowCoord(0,  std::max(count,1)), true); } },
+    { 'H', [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1)), true); } },
+    { 'J', [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0), true); } },
+    { 'K', [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0), true); } },
+    { 'L', [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1)), true); } },
 
     { 't', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
     { 'f', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },

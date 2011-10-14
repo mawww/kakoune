@@ -121,7 +121,7 @@ void Window::check_invariant() const
     assert(not m_selections.empty());
 }
 
-WindowCoord Window::cursor_position() const
+DisplayCoord Window::cursor_position() const
 {
     check_invariant();
     return line_and_column_at(m_selections.back().last());
@@ -144,20 +144,27 @@ void Window::erase_noundo()
     scroll_to_keep_cursor_visible_ifn();
 }
 
-static WindowCoord measure_string(const Window::String& string)
+template<typename Iterator>
+static DisplayCoord measure_string(Iterator begin, Iterator end)
 {
-    WindowCoord result(0, 0);
-    for (size_t i = 0; i < string.length(); ++i)
+    DisplayCoord result(0, 0);
+    while (begin != end)
     {
-        if (string[i] == '\n')
+        if (*begin == '\n')
         {
             ++result.line;
             result.column = 0;
         }
         else
             ++result.column;
+        ++begin;
     }
     return result;
+}
+
+static DisplayCoord measure_string(const Window::String& string)
+{
+    return measure_string(string.begin(), string.end());
 }
 
 void Window::insert(const String& string)
@@ -199,24 +206,24 @@ bool Window::redo()
     return m_buffer.redo();
 }
 
-BufferCoord Window::window_to_buffer(const WindowCoord& window_pos) const
+BufferCoord Window::window_to_buffer(const DisplayCoord& window_pos) const
 {
     return BufferCoord(m_position.line + window_pos.line,
                        m_position.column + window_pos.column);
 }
 
-WindowCoord Window::buffer_to_window(const BufferCoord& buffer_pos) const
+DisplayCoord Window::buffer_to_window(const BufferCoord& buffer_pos) const
 {
-    return WindowCoord(buffer_pos.line - m_position.line,
+    return DisplayCoord(buffer_pos.line - m_position.line,
                        buffer_pos.column - m_position.column);
 }
 
-BufferIterator Window::iterator_at(const WindowCoord& window_pos) const
+BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
 {
     return m_buffer.iterator_at(window_to_buffer(window_pos));
 }
 
-WindowCoord Window::line_and_column_at(const BufferIterator& iterator) const
+DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
 {
     return buffer_to_window(m_buffer.line_and_column_at(iterator));
 }
@@ -258,7 +265,7 @@ BufferString Window::selection_content() const
                            m_selections.back().end());
 }
 
-void Window::move_cursor(const WindowCoord& offset, bool append)
+void Window::move_cursor(const DisplayCoord& offset, bool append)
 {
     if (not append)
         move_cursor_to(iterator_at(cursor_position() + offset));
@@ -266,7 +273,7 @@ void Window::move_cursor(const WindowCoord& offset, bool append)
     {
         for (auto& sel : m_selections)
         {
-            WindowCoord pos = line_and_column_at(sel.last());
+            DisplayCoord pos = line_and_column_at(sel.last());
             sel = Selection(sel.first(), iterator_at(pos + offset));
         }
         scroll_to_keep_cursor_visible_ifn();
@@ -300,7 +307,7 @@ void Window::update_display_buffer()
     }
 }
 
-void Window::set_dimensions(const WindowCoord& dimensions)
+void Window::set_dimensions(const DisplayCoord& dimensions)
 {
     m_dimensions = dimensions;
 }
@@ -309,7 +316,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 {
     check_invariant();
 
-    WindowCoord cursor = line_and_column_at(m_selections.back().last());
+    DisplayCoord cursor = line_and_column_at(m_selections.back().last());
     if (cursor.line < 0)
     {
         m_position.line = std::max(m_position.line + cursor.line, 0);
@@ -399,15 +406,15 @@ void IncrementalInserter::insert(const Window::String& string)
 
 void IncrementalInserter::erase()
 {
-    move_cursor(WindowCoord(0, -1));
+    move_cursor(DisplayCoord(0, -1));
     m_window.erase_noundo();
 }
 
-void IncrementalInserter::move_cursor(const WindowCoord& offset)
+void IncrementalInserter::move_cursor(const DisplayCoord& offset)
 {
     for (auto& sel : m_window.m_selections)
     {
-        WindowCoord pos = m_window.line_and_column_at(sel.last());
+        DisplayCoord pos = m_window.line_and_column_at(sel.last());
         BufferIterator it = m_window.iterator_at(pos + offset);
         sel = Selection(it, it);
     }

@@ -3,19 +3,11 @@
 
 #include <functional>
 
-#include "line_and_column.hh"
-
 #include "buffer.hh"
 #include "display_buffer.hh"
 
 namespace Kakoune
 {
-
-struct WindowCoord : LineAndColumn<WindowCoord>
-{
-    WindowCoord(int line = 0, int column = 0)
-        : LineAndColumn(line, column) {}
-};
 
 struct Selection
 {
@@ -50,21 +42,21 @@ public:
     void append(const String& string);
 
     const BufferCoord& position() const { return m_position; }
-    WindowCoord cursor_position() const;
+    DisplayCoord cursor_position() const;
 
     Buffer& buffer() const { return m_buffer; }
 
-    BufferIterator iterator_at(const WindowCoord& window_pos) const;
-    WindowCoord    line_and_column_at(const BufferIterator& iterator) const;
+    BufferIterator iterator_at(const DisplayCoord& window_pos) const;
+    DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
 
-    void move_cursor(const WindowCoord& offset, bool append = false);
+    void move_cursor(const DisplayCoord& offset, bool append = false);
     void move_cursor_to(const BufferIterator& iterator);
 
     void clear_selections();
     void select(const Selector& selector, bool append = false);
     BufferString selection_content() const;
 
-    void set_dimensions(const WindowCoord& dimensions);
+    void set_dimensions(const DisplayCoord& dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
@@ -88,8 +80,8 @@ private:
     void insert_noundo(const String& string);
     void append_noundo(const String& string);
 
-    BufferCoord window_to_buffer(const WindowCoord& window_pos) const;
-    WindowCoord buffer_to_window(const BufferCoord& buffer_pos) const;
+    BufferCoord  window_to_buffer(const DisplayCoord& window_pos) const;
+    DisplayCoord buffer_to_window(const BufferCoord& buffer_pos) const;
 
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
@@ -98,7 +90,7 @@ private:
 
     Buffer&       m_buffer;
     BufferCoord   m_position;
-    WindowCoord   m_dimensions;
+    DisplayCoord  m_dimensions;
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
 
@@ -123,7 +115,7 @@ public:
 
     void insert(const Window::String& string);
     void erase();
-    void move_cursor(const WindowCoord& offset);
+    void move_cursor(const DisplayCoord& offset);
 
 private:
     Window&                     m_window;
