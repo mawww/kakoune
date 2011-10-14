@@ -23,6 +23,12 @@ struct BufferCoord : LineAndColumn<BufferCoord>
 {
     BufferCoord(int line = 0, int column = 0)
         : LineAndColumn(line, column) {}
+
+    template<typename T>
+    explicit BufferCoord(const LineAndColumn<T>& other)
+        : LineAndColumn(other.line, other.column)
+    {
+    }
 };
 
 class BufferIterator
