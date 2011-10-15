@@ -15,6 +15,10 @@ struct DisplayCoord : LineAndColumn<DisplayCoord>
 {
     DisplayCoord(int line = 0, int column = 0)
         : LineAndColumn(line, column) {}
+
+    template<typename T>
+    explicit DisplayCoord(const LineAndColumn<T>& other)
+        : LineAndColumn(other.line, other.column) {}
 };
 
 typedef int Attribute;
@@ -43,23 +47,45 @@ enum class Color
 
 struct DisplayAtom
 {
-    BufferIterator begin;
-    BufferIterator end;
-    Color          fg_color;
-    Color          bg_color;
-    Attribute      attribute;
-    BufferString   replacement_text;
-
-    DisplayAtom(BufferIterator begin, BufferIterator end,
+    DisplayAtom(const DisplayCoord& coord,
+                const BufferIterator& begin, const BufferIterator& end,
                 Color fg_color = Color::Default,
                 Color bg_color = Color::Default,
                 Attribute attribute = Attributes::Normal)
-        : begin(begin),
-          end(end),
-          fg_color(fg_color),
-          bg_color(bg_color),
-          attribute(attribute)
+        : m_coord(coord),
+          m_begin(begin), m_end(end),
+          m_fg_color(fg_color),
+          m_bg_color(bg_color),
+          m_attribute(attribute)
     {}
+
+    const DisplayCoord&   coord()     const { return m_coord; }
+    const BufferIterator& begin()     const { return m_begin; }
+    const BufferIterator& end()       const { return m_end; }
+    const Color&          fg_color()  const { return m_fg_color; }
+    const Color&          bg_color()  const { return m_bg_color; }
+    const Attribute&      attribute() const { return m_attribute; }
+
+
+    Color&         fg_color()  { return m_fg_color; }
+    Color&         bg_color()  { return m_bg_color; }
+    Attribute&     attribute() { return m_attribute; }
+
+    BufferString   content()    const;
+    DisplayCoord   end_coord()  const;
+    BufferIterator iterator_at(const DisplayCoord& coord) const;
+    DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
+
+private:
+    friend class DisplayBuffer;
+
+    DisplayCoord   m_coord;
+    BufferIterator m_begin;
+    BufferIterator m_end;
+    Color          m_fg_color;
+    Color          m_bg_color;
+    Attribute      m_attribute;
+    BufferString   m_replacement_text;
 };
 
 class DisplayBuffer
@@ -76,11 +102,16 @@ public:
     iterator insert(iterator where, const DisplayAtom& atom) { return m_atoms.insert(where, atom); }
     iterator split(iterator atom, const BufferIterator& pos);
 
+    void replace_atom_content(iterator atom, const BufferString& replacement);
+
     iterator begin() { return m_atoms.begin(); }
     iterator end()   { return m_atoms.end(); }
 
     const_iterator begin() const { return m_atoms.begin(); }
     const_iterator end()   const { return m_atoms.end(); }
+
+    const DisplayAtom& front() const { return m_atoms.front(); }
+    const DisplayAtom& back()  const { return m_atoms.back(); }
 
     void check_invariant() const;
 private:

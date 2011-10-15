@@ -85,15 +85,15 @@ void draw_window(Window& window)
     DisplayCoord position;
     for (const DisplayAtom& atom : window.display_buffer())
     {
-        const std::string content = atom.replacement_text.empty() ?
-            window.buffer().string(atom.begin, atom.end) : atom.replacement_text;
+        assert(position == atom.coord());
+        const std::string content = atom.content();
 
-        set_attribute(A_UNDERLINE, atom.attribute & Underline);
-        set_attribute(A_REVERSE, atom.attribute & Reverse);
-        set_attribute(A_BLINK, atom.attribute & Blink);
-        set_attribute(A_BOLD, atom.attribute & Bold);
+        set_attribute(A_UNDERLINE, atom.attribute() & Underline);
+        set_attribute(A_REVERSE, atom.attribute() & Reverse);
+        set_attribute(A_BLINK, atom.attribute() & Blink);
+        set_attribute(A_BOLD, atom.attribute() & Bold);
 
-        set_color(atom.fg_color, atom.bg_color);
+        set_color(atom.fg_color(), atom.bg_color());
 
         size_t pos = 0;
         size_t end;

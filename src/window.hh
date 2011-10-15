@@ -42,7 +42,8 @@ public:
     void append(const String& string);
 
     const BufferCoord& position() const { return m_position; }
-    DisplayCoord cursor_position() const;
+    DisplayCoord   cursor_position() const;
+    BufferIterator cursor_iterator() const;
 
     Buffer& buffer() const { return m_buffer; }
 
@@ -79,9 +80,6 @@ private:
     void erase_noundo();
     void insert_noundo(const String& string);
     void append_noundo(const String& string);
-
-    BufferCoord  window_to_buffer(const DisplayCoord& window_pos) const;
-    DisplayCoord buffer_to_window(const BufferCoord& buffer_pos) const;
 
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;

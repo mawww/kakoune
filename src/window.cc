@@ -60,40 +60,40 @@ public:
             DisplayAtom& atom = *atom_it;
 
             // [###------]
-            if (atom.begin >= sel.begin() and atom.begin < sel.end() and atom.end > sel.end())
+            if (atom.begin() >= sel.begin() and atom.begin() < sel.end() and atom.end() > sel.end())
             {
                 atom_it = display_buffer.split(atom_it, sel.end());
-                atom_it->attribute |= Attributes::Underline;
+                atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
             }
             // [---###---]
-            else if (atom.begin < sel.begin() and atom.end > sel.end())
+            else if (atom.begin() < sel.begin() and atom.end() > sel.end())
             {
                 atom_it = display_buffer.split(atom_it, sel.begin());
                 atom_it = display_buffer.split(atom_it + 1, sel.end());
-                atom_it->attribute |= Attributes::Underline;
+                atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
             }
             // [------###]
-            else if (atom.begin < sel.begin() and atom.end > sel.begin())
+            else if (atom.begin() < sel.begin() and atom.end() > sel.begin())
             {
                 atom_it = display_buffer.split(atom_it, sel.begin()) + 1;
-                atom_it->attribute |= Attributes::Underline;
+                atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
             }
             // [#########]
-            else if (atom.begin >= sel.begin() and atom.end <= sel.end())
+            else if (atom.begin() >= sel.begin() and atom.end() <= sel.end())
             {
-                atom_it->attribute |= Attributes::Underline;
+                atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
             }
             // [---------]
-            else if (atom.begin >= sel.end())
+            else if (atom.begin() >= sel.end())
                 ++sel_it;
             // [---------]
-            else if (atom.end <= sel.begin())
+            else if (atom.end() <= sel.begin())
                 ++atom_it;
             else
                 assert(false);
@@ -124,7 +124,13 @@ void Window::check_invariant() const
 DisplayCoord Window::cursor_position() const
 {
     check_invariant();
-    return line_and_column_at(m_selections.back().last());
+    return line_and_column_at(cursor_iterator());
+}
+
+BufferIterator Window::cursor_iterator() const
+{
+    check_invariant();
+    return m_selections.back().last();
 }
 
 void Window::erase()
@@ -206,26 +212,47 @@ bool Window::redo()
     return m_buffer.redo();
 }
 
-BufferCoord Window::window_to_buffer(const DisplayCoord& window_pos) const
-{
-    return BufferCoord(m_position.line + window_pos.line,
-                       m_position.column + window_pos.column);
-}
-
-DisplayCoord Window::buffer_to_window(const BufferCoord& buffer_pos) const
-{
-    return DisplayCoord(buffer_pos.line - m_position.line,
-                       buffer_pos.column - m_position.column);
-}
-
 BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
 {
-    return m_buffer.iterator_at(window_to_buffer(window_pos));
+    if (m_display_buffer.begin() == m_display_buffer.end())
+        return m_buffer.begin();
+
+    if (DisplayCoord(0,0) <= window_pos)
+    {
+        for (auto atom_it = m_display_buffer.begin();
+             atom_it != m_display_buffer.end(); ++atom_it)
+        {
+            if (window_pos < atom_it->coord())
+            {
+                const DisplayAtom& atom = *(atom_it - 1);
+                return atom.iterator_at(window_pos);
+            }
+        }
+    }
+
+    return m_buffer.iterator_at(m_position + BufferCoord(window_pos));
 }
 
 DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
 {
-    return buffer_to_window(m_buffer.line_and_column_at(iterator));
+    if (m_display_buffer.begin() == m_display_buffer.end())
+        return DisplayCoord(0, 0);
+
+    if (iterator >= m_display_buffer.front().begin() and
+        iterator <  m_display_buffer.back().end())
+    {
+        for (auto& atom : m_display_buffer)
+        {
+            if (atom.end() > iterator)
+            {
+                assert(atom.begin() <= iterator);
+                return atom.line_and_column_at(iterator);
+            }
+        }
+    }
+    BufferCoord coord = m_buffer.line_and_column_at(iterator);
+    return DisplayCoord(coord.line - m_position.line,
+                        coord.column - m_position.column);
 }
 
 void Window::clear_selections()
@@ -268,13 +295,16 @@ BufferString Window::selection_content() const
 void Window::move_cursor(const DisplayCoord& offset, bool append)
 {
     if (not append)
-        move_cursor_to(iterator_at(cursor_position() + offset));
+    {
+        BufferCoord pos = m_buffer.line_and_column_at(cursor_iterator());
+        move_cursor_to(m_buffer.iterator_at(pos + BufferCoord(offset)));
+    }
     else
     {
         for (auto& sel : m_selections)
         {
-            DisplayCoord pos = line_and_column_at(sel.last());
-            sel = Selection(sel.first(), iterator_at(pos + offset));
+            BufferCoord pos = m_buffer.line_and_column_at(sel.last());
+            sel = Selection(sel.first(), m_buffer.iterator_at(pos + BufferCoord(offset)));
         }
         scroll_to_keep_cursor_visible_ifn();
     }
@@ -298,7 +328,7 @@ void Window::update_display_buffer()
     if (begin == end)
         return;
 
-    m_display_buffer.append(DisplayAtom(begin, end));
+    m_display_buffer.append(DisplayAtom(DisplayCoord(0,0), begin, end));
 
     for (auto& filter : m_filters)
     {
@@ -338,7 +368,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 
 std::string Window::status_line() const
 {
-    BufferCoord cursor = window_to_buffer(cursor_position());
+    BufferCoord cursor = m_buffer.line_and_column_at(m_selections.back().end());
     std::ostringstream oss;
     oss << m_buffer.name();
     if (m_buffer.is_modified())

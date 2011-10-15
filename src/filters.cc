@@ -10,17 +10,18 @@ void colorize_regex(DisplayBuffer& display_buffer,
          atom_it != display_buffer.end(); ++atom_it)
     {
         boost::match_results<BufferIterator> matches;
-        if (boost::regex_search(atom_it->begin, atom_it->end, matches, ex, boost::match_nosubs))
+        if (boost::regex_search(atom_it->begin(), atom_it->end(),
+                                matches, ex, boost::match_nosubs))
         {
             const BufferIterator& begin = matches.begin()->first;
-            if (begin != atom_it->begin)
+            if (begin != atom_it->begin())
                 atom_it = display_buffer.split(atom_it, begin) + 1;
 
             const BufferIterator& end = matches.begin()->second;
-            if (end != atom_it->end)
+            if (end != atom_it->end())
                 atom_it = display_buffer.split(atom_it, end);
 
-            atom_it->fg_color = color;
+            atom_it->fg_color() = color;
         }
     }
 }
@@ -58,19 +59,32 @@ void expand_tabulations(DisplayBuffer& display_buffer)
     for (auto atom_it = display_buffer.begin();
          atom_it != display_buffer.end(); ++atom_it)
     {
-        for (BufferIterator it = atom_it->begin; it != atom_it->end; ++it)
+        for (BufferIterator it = atom_it->begin(); it != atom_it->end(); ++it)
         {
             if (*it == '\t')
             {
-                if (it != atom_it->begin)
+                if (it != atom_it->begin())
                     atom_it = display_buffer.split(atom_it, it) + 1;
 
-                if (it+1 != atom_it->end)
+                if (it+1 != atom_it->end())
                     atom_it = display_buffer.split(atom_it, it+1);
 
                 BufferCoord pos = it.buffer().line_and_column_at(it);
-                int count = tabstop - (pos.column % tabstop);
-                atom_it->replacement_text = std::string(count, ' ');
+                
+                int column = 0;
+                for (auto line_it = it.buffer().iterator_at({pos.line, 0});
+                     line_it != it; ++line_it)
+                {
+                    assert(*line_it != '\n');
+                    if (*line_it == '\t')
+                        column += tabstop - (column % tabstop);
+                    else
+                       ++column;
+                }
+
+                int count = tabstop - (column % tabstop);
+                display_buffer.replace_atom_content(atom_it,
+                                                    std::string(count, ' '));
             }
         }
     }
