@@ -27,14 +27,33 @@ struct LineAndColumn
 
     EffectiveType operator-(const EffectiveType& other) const
     {
-        return EffectiveType(line + other.line, column + other.column);
+        return EffectiveType(line - other.line, column - other.column);
     }
 
     EffectiveType& operator-=(const EffectiveType& other)
     {
-        line   += other.line;
-        column += other.column;
+        line   -= other.line;
+        column -= other.column;
         return *static_cast<EffectiveType*>(this);
+    }
+
+    bool operator< (const EffectiveType& other) const
+    {
+        if (line != other.line)
+            return line < other.line;
+        return column < other.column;
+    }
+
+    bool operator<= (const EffectiveType& other) const
+    {
+        if (line != other.line)
+            return line < other.line;
+        return column <= other.column;
+    }
+
+    bool operator== (const EffectiveType& other) const
+    {
+        return line == other.line and column == other.column;
     }
 };
 
