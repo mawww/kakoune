@@ -76,6 +76,8 @@ struct DisplayAtom
     BufferIterator iterator_at(const DisplayCoord& coord) const;
     DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
 
+    bool           splitable() const { return m_replacement_text.empty(); }
+
 private:
     friend class DisplayBuffer;
 
