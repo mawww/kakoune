@@ -72,6 +72,21 @@ private:
     friend class Buffer;
 };
 
+struct BufferModification
+{
+    enum Type { Insert, Erase };
+
+    Type           type;
+    BufferIterator position;
+    BufferString   content;
+
+    BufferModification(Type type, BufferIterator position,
+                       BufferString content)
+        : type(type), position(position), content(content) {}
+
+    BufferModification inverse() const;
+};
+
 class Buffer
 {
 public:
@@ -142,29 +157,16 @@ private:
     std::string  m_name;
     const Type   m_type;
 
-    struct Modification
-    {
-        enum Type { Insert, Erase };
-
-        Type           type;
-        BufferIterator position;
-        BufferString   content;
-
-        Modification(Type type, BufferIterator position, BufferString content)
-            : type(type), position(position), content(content) {}
-
-        Modification inverse() const;
-    };
-    typedef std::vector<Modification> UndoGroup;
+    typedef std::vector<BufferModification> UndoGroup;
 
     std::vector<UndoGroup>           m_history;
     std::vector<UndoGroup>::iterator m_history_cursor;
     UndoGroup                        m_current_undo_group;
 
-    void replay_modification(const Modification& modification);
-    void revert_modification(const Modification& modification);
+    void replay_modification(const BufferModification& modification);
+    void revert_modification(const BufferModification& modification);
 
-    void append_modification(Modification&& modification);
+    void append_modification(BufferModification&& modification);
 
     std::list<std::unique_ptr<Window>> m_windows;
 

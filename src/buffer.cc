@@ -149,13 +149,14 @@ Buffer::Buffer(const std::string& name, Type type,
 
 void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
 {
-    append_modification(Modification(Modification::Erase, begin, string(begin, end)));
+    append_modification(BufferModification(BufferModification::Erase,
+                                           begin, string(begin, end)));
     do_erase(begin, end);
 }
 
 void Buffer::insert(const BufferIterator& position, const BufferString& string)
 {
-    append_modification(Modification(Modification::Insert, position, string));
+    append_modification(BufferModification(BufferModification::Insert, position, string));
     do_insert(position, string);
 }
 
@@ -277,16 +278,16 @@ void Buffer::end_undo_group()
     m_current_undo_group.clear();
 }
 
-Buffer::Modification Buffer::Modification::inverse() const
+BufferModification BufferModification::inverse() const
 {
-    Modification::Type inverse_type;
+    Type inverse_type;
     switch (type)
     {
-    case Modification::Insert: inverse_type = Erase;  break;
-    case Modification::Erase:  inverse_type = Insert; break;
+    case Insert: inverse_type = Erase;  break;
+    case Erase:  inverse_type = Insert; break;
     default: assert(false);
     }
-    return Modification(inverse_type, position, content);
+    return BufferModification(inverse_type, position, content);
 }
 
 bool Buffer::undo()
@@ -296,7 +297,7 @@ bool Buffer::undo()
 
     --m_history_cursor;
 
-    for (const Modification& modification : reversed(*m_history_cursor))
+    for (const BufferModification& modification : reversed(*m_history_cursor))
         replay_modification(modification.inverse());
 }
 
@@ -305,20 +306,20 @@ bool Buffer::redo()
     if (m_history_cursor == m_history.end())
         return false;
 
-    for (const Modification& modification : *m_history_cursor)
+    for (const BufferModification& modification : *m_history_cursor)
         replay_modification(modification);
 
     ++m_history_cursor;
 }
 
-void Buffer::replay_modification(const Modification& modification)
+void Buffer::replay_modification(const BufferModification& modification)
 {
     switch (modification.type)
     {
-    case Modification::Insert:
+    case BufferModification::Insert:
         do_insert(modification.position, modification.content);
         break;
-    case Modification::Erase:
+    case BufferModification::Erase:
     {
         BufferIterator begin = modification.position;
         BufferIterator end   = begin + modification.content.size();
@@ -331,9 +332,9 @@ void Buffer::replay_modification(const Modification& modification)
     }
 }
 
-void Buffer::append_modification(Modification&& modification)
+void Buffer::append_modification(BufferModification&& modification)
 {
-    m_current_undo_group.push_back(modification);
+    m_current_undo_group.push_back(std::move(modification));
 }
 
 Window* Buffer::get_or_create_window()
