@@ -5,6 +5,7 @@
 #include "assert.hh"
 
 #include <memory>
+#include <algorithm>
 
 namespace Kakoune
 {
@@ -98,6 +99,13 @@ private:
 
 template<typename T>
 T* Singleton<T>::ms_instance = nullptr;
+
+template<typename Container, typename T>
+bool contains(const Container& container, const T& value)
+{
+    return std::find(container.begin(), container.end(), value)
+           != container.end();
+}
 
 }
 
