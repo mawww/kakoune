@@ -98,7 +98,7 @@ void DisplayBuffer::check_invariant() const
 {
     for (size_t i = 0; i < m_atoms.size(); ++i)
     {
-        assert(m_atoms[i].end() > m_atoms[i].begin());
+        assert(m_atoms[i].end() >= m_atoms[i].begin());
         if (i > 0)
         {
             assert(m_atoms[i-1].end() == m_atoms[i].begin());
