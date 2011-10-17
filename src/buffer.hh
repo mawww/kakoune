@@ -171,8 +171,12 @@ private:
     std::list<std::unique_ptr<Window>> m_windows;
 
     std::vector<UndoGroup>::iterator m_last_save_undo_group;
+
+    std::vector<BufferModificationListener*> m_modification_listeners;
 };
 
 }
+
+#include "buffer_iterator.inl.h"
 
 #endif // buffer_hh_INCLUDED
