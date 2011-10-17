@@ -79,17 +79,36 @@ DisplayBuffer::DisplayBuffer()
 {
 }
 
+DisplayBuffer::iterator DisplayBuffer::insert(iterator where, const DisplayAtom& atom)
+{
+    check_invariant();
+    iterator res = m_atoms.insert(where, atom);
+    check_invariant();
+    return res;
+}
+
+DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& where)
+{
+    for (iterator it = m_atoms.begin(); it != m_atoms.end(); ++it)
+    {
+        if (it->end() > where)
+            return it;
+    }
+    return end();
+}
+
 DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator& pos)
 {
     assert(atom < end());
     assert(pos > atom->begin());
     assert(pos < atom->end());
+    check_invariant();
     DisplayAtom new_atom(atom->coord(), atom->begin(), pos,
                          atom->fg_color(), atom->bg_color(), atom->attribute());
 
     atom->m_begin = pos;
     atom->m_coord = new_atom.end_coord();
-    iterator res = insert(atom, std::move(new_atom));
+    iterator res = m_atoms.insert(atom, std::move(new_atom));
     check_invariant();
     return res;
 }

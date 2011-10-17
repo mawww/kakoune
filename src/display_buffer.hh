@@ -99,7 +99,7 @@ public:
 
     void clear() { m_atoms.clear(); }
     void append(const DisplayAtom& atom) { m_atoms.push_back(atom); }
-    iterator insert(iterator where, const DisplayAtom& atom) { return m_atoms.insert(where, atom); }
+    iterator insert(iterator where, const DisplayAtom& atom);
     iterator split(iterator atom, const BufferIterator& pos);
 
     void replace_atom_content(iterator atom, const BufferString& replacement);
@@ -109,6 +109,8 @@ public:
 
     const_iterator begin() const { return m_atoms.begin(); }
     const_iterator end()   const { return m_atoms.end(); }
+
+    iterator atom_containing(const BufferIterator& where);
 
     const DisplayAtom& front() const { return m_atoms.front(); }
     const DisplayAtom& back()  const { return m_atoms.back(); }
