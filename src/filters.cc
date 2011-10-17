@@ -70,7 +70,7 @@ void expand_tabulations(DisplayBuffer& display_buffer)
                     atom_it = display_buffer.split(atom_it, it+1);
 
                 BufferCoord pos = it.buffer().line_and_column_at(it);
-                
+
                 int column = 0;
                 for (auto line_it = it.buffer().iterator_at({pos.line, 0});
                      line_it != it; ++line_it)
@@ -86,6 +86,39 @@ void expand_tabulations(DisplayBuffer& display_buffer)
                 display_buffer.replace_atom_content(atom_it,
                                                     std::string(count, ' '));
             }
+        }
+    }
+}
+
+void show_line_numbers(DisplayBuffer& display_buffer)
+{
+    const Buffer& buffer = display_buffer.front().begin().buffer();
+    BufferCoord coord = buffer.line_and_column_at(display_buffer.begin()->begin());
+
+    int last_line = buffer.line_and_column_at(display_buffer.back().end()-1).line;
+
+    for (; coord.line <= last_line; ++coord.line)
+    {
+        BufferIterator line_start = buffer.iterator_at(coord);
+        DisplayBuffer::iterator atom_it = display_buffer.atom_containing(line_start);
+        if (atom_it != display_buffer.end())
+        {
+            if (atom_it->begin() != line_start)
+            {
+                if (not atom_it->splitable())
+                    continue;
+
+                atom_it = display_buffer.split(atom_it, line_start) + 1;
+            }
+            atom_it = display_buffer.insert(
+                atom_it,
+                DisplayAtom(atom_it->coord(),
+                            atom_it->begin(), atom_it->begin(),
+                            Color::Black, Color::White));
+
+            char buffer[6];
+            snprintf(buffer, 6, "%3d ", coord.line);
+            display_buffer.replace_atom_content(atom_it, buffer);
         }
     }
 }

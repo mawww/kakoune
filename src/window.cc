@@ -114,6 +114,7 @@ Window::Window(Buffer& buffer)
     m_filters.push_back(colorize_cplusplus);
     m_filters.push_back(expand_tabulations);
     m_filters.push_back(HighlightSelections(*this));
+    m_filters.push_back(show_line_numbers);
 }
 
 void Window::check_invariant() const

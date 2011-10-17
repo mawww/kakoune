@@ -13,6 +13,7 @@ void colorize_regex(DisplayBuffer& display_buffer,
 void colorize_cplusplus(DisplayBuffer& display_buffer);
 void colorize_cplusplus(DisplayBuffer& display_buffer);
 void expand_tabulations(DisplayBuffer& display_buffer);
+void show_line_numbers(DisplayBuffer& display_buffer);
 
 }
 
