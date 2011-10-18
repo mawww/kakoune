@@ -369,7 +369,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 
 std::string Window::status_line() const
 {
-    BufferCoord cursor = m_buffer.line_and_column_at(m_selections.back().end());
+    BufferCoord cursor = m_buffer.line_and_column_at(m_selections.back().last());
     std::ostringstream oss;
     oss << m_buffer.name();
     if (m_buffer.is_modified())
