@@ -71,7 +71,7 @@ public:
             else if (atom.begin() < sel.begin() and atom.end() > sel.end())
             {
                 atom_it = display_buffer.split(atom_it, sel.begin());
-                atom_it = display_buffer.split(atom_it + 1, sel.end());
+                atom_it = display_buffer.split(++atom_it, sel.end());
                 atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
@@ -79,7 +79,7 @@ public:
             // [------###]
             else if (atom.begin() < sel.begin() and atom.end() > sel.begin())
             {
-                atom_it = display_buffer.split(atom_it, sel.begin()) + 1;
+                atom_it = ++display_buffer.split(atom_it, sel.begin());
                 atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
             }
@@ -225,8 +225,7 @@ BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
         {
             if (window_pos < atom_it->coord())
             {
-                const DisplayAtom& atom = *(atom_it - 1);
-                return atom.iterator_at(window_pos);
+                return (--atom_it)->iterator_at(window_pos);
             }
         }
     }

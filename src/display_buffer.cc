@@ -98,7 +98,6 @@ DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& whe
 
 DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator& pos)
 {
-    assert(atom < end());
     assert(pos > atom->begin());
     assert(pos < atom->end());
     DisplayAtom new_atom(atom->coord(), atom->begin(), pos,
@@ -113,21 +112,22 @@ DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator
 
 void DisplayBuffer::check_invariant() const
 {
-    for (size_t i = 0; i < m_atoms.size(); ++i)
+    const_iterator prev_it;
+    for (const_iterator it = begin(); it != end(); ++it)
     {
-        assert(m_atoms[i].end() >= m_atoms[i].begin());
-        if (i > 0)
+        assert(it->end() >= it->begin());
+        if (it != begin())
         {
-            assert(m_atoms[i-1].end() == m_atoms[i].begin());
-            assert(m_atoms[i-1].end_coord() == m_atoms[i].coord());
+            assert(prev_it->end() == it->begin());
+            assert(prev_it->end_coord() == it->coord());
         }
+        prev_it = it;
     }
 }
 
 void DisplayBuffer::replace_atom_content(iterator atom,
                                          const BufferString& replacement)
 {
-    assert(atom < end());
     atom->m_replacement_text = replacement;
 
     // update coordinates of subsequents atoms

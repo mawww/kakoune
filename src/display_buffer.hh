@@ -93,7 +93,7 @@ private:
 class DisplayBuffer
 {
 public:
-    typedef std::vector<DisplayAtom> AtomList;
+    typedef std::list<DisplayAtom> AtomList;
     typedef AtomList::iterator iterator;
     typedef AtomList::const_iterator const_iterator;
 

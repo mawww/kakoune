@@ -15,7 +15,7 @@ void colorize_regex(DisplayBuffer& display_buffer,
         {
             const BufferIterator& begin = matches.begin()->first;
             if (begin != atom_it->begin())
-                atom_it = display_buffer.split(atom_it, begin) + 1;
+                atom_it = ++display_buffer.split(atom_it, begin);
 
             const BufferIterator& end = matches.begin()->second;
             if (end != atom_it->end())
@@ -64,7 +64,7 @@ void expand_tabulations(DisplayBuffer& display_buffer)
             if (*it == '\t')
             {
                 if (it != atom_it->begin())
-                    atom_it = display_buffer.split(atom_it, it) + 1;
+                    atom_it = ++display_buffer.split(atom_it, it);
 
                 if (it+1 != atom_it->end())
                     atom_it = display_buffer.split(atom_it, it+1);
@@ -108,7 +108,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
                 if (not atom_it->splitable())
                     continue;
 
-                atom_it = display_buffer.split(atom_it, line_start) + 1;
+                atom_it = ++display_buffer.split(atom_it, line_start);
             }
             atom_it = display_buffer.insert(
                 atom_it,
