@@ -5,8 +5,6 @@
 #include "assert.hh"
 #include "utils.hh"
 
-#include <algorithm>
-
 namespace Kakoune
 {
 
@@ -35,13 +33,11 @@ void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
 {
     append_modification(BufferModification(BufferModification::Erase,
                                            begin, string(begin, end)));
-    do_erase(begin, end);
 }
 
 void Buffer::insert(const BufferIterator& position, const BufferString& string)
 {
     append_modification(BufferModification(BufferModification::Insert, position, string));
-    do_insert(position, string);
 }
 
 void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
@@ -182,7 +178,7 @@ bool Buffer::undo()
     --m_history_cursor;
 
     for (const BufferModification& modification : reversed(*m_history_cursor))
-        replay_modification(modification.inverse());
+        apply_modification(modification.inverse());
 }
 
 bool Buffer::redo()
@@ -191,12 +187,12 @@ bool Buffer::redo()
         return false;
 
     for (const BufferModification& modification : *m_history_cursor)
-        replay_modification(modification);
+        apply_modification(modification);
 
     ++m_history_cursor;
 }
 
-void Buffer::replay_modification(const BufferModification& modification)
+void Buffer::apply_modification(const BufferModification& modification)
 {
     switch (modification.type)
     {
@@ -214,10 +210,13 @@ void Buffer::replay_modification(const BufferModification& modification)
     default:
         assert(false);
     }
+    for (auto listener : m_modification_listeners)
+        listener->on_modification(modification);
 }
 
 void Buffer::append_modification(BufferModification&& modification)
 {
+    apply_modification(modification);
     m_current_undo_group.push_back(std::move(modification));
 }
 
@@ -246,6 +245,23 @@ bool Buffer::is_modified() const
 void Buffer::notify_saved()
 {
     m_last_save_undo_group = m_history_cursor;
+}
+
+void Buffer::register_modification_listener(BufferModificationListener* listener)
+{
+    assert(listener);
+    assert(not contains(m_modification_listeners, listener));
+    m_modification_listeners.push_back(listener);
+}
+
+void Buffer::unregister_modification_listener(BufferModificationListener* listener)
+{
+    assert(listener);
+    auto it = std::find(m_modification_listeners.begin(),
+                        m_modification_listeners.end(),
+                        listener);
+    assert(it != m_modification_listeners.end());
+    m_modification_listeners.erase(it);
 }
 
 }

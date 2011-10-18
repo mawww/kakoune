@@ -87,6 +87,12 @@ struct BufferModification
     BufferModification inverse() const;
 };
 
+class BufferModificationListener
+{
+public:
+    virtual void on_modification(const BufferModification& modification) = 0;
+};
+
 class Buffer
 {
 public:
@@ -135,6 +141,9 @@ public:
     Type type() const { return m_type; }
     void notify_saved();
 
+    void register_modification_listener(BufferModificationListener* listener);
+    void unregister_modification_listener(BufferModificationListener* listener);
+
 private:
     BufferChar at(BufferPos position) const;
 
@@ -163,7 +172,7 @@ private:
     std::vector<UndoGroup>::iterator m_history_cursor;
     UndoGroup                        m_current_undo_group;
 
-    void replay_modification(const BufferModification& modification);
+    void apply_modification(const BufferModification& modification);
     void revert_modification(const BufferModification& modification);
 
     void append_modification(BufferModification&& modification);
