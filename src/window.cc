@@ -402,7 +402,7 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
         case Mode::Change: pos = sel.begin(); break;
 
         case Mode::OpenLineBelow:
-            pos = sel.end();
+            pos = sel.last();
             while (not pos.is_end() and *pos != '\n')
                 ++pos;
             ++pos;
