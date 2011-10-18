@@ -81,7 +81,6 @@ DisplayBuffer::DisplayBuffer()
 
 DisplayBuffer::iterator DisplayBuffer::insert(iterator where, const DisplayAtom& atom)
 {
-    check_invariant();
     iterator res = m_atoms.insert(where, atom);
     check_invariant();
     return res;
@@ -102,7 +101,6 @@ DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator
     assert(atom < end());
     assert(pos > atom->begin());
     assert(pos < atom->end());
-    check_invariant();
     DisplayAtom new_atom(atom->coord(), atom->begin(), pos,
                          atom->fg_color(), atom->bg_color(), atom->attribute());
 
