@@ -57,8 +57,9 @@ BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
     if (m_lines.empty())
         return begin();
 
-    BufferPos line   = Kakoune::clamp<int>(0, m_lines.size() - 1, line_and_column.line);
-    BufferPos column = Kakoune::clamp<int>(0, line_length(line),  line_and_column.column);
+    BufferPos line = Kakoune::clamp<int>(0, m_lines.size() - 1, line_and_column.line);
+    int col_max = std::max(0, line_length(line) - 1);
+    BufferPos column = Kakoune::clamp<int>(0,  col_max, line_and_column.column);
     return BufferIterator(*this, m_lines[line] + column);
 }
 
