@@ -79,18 +79,19 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
     size_t token_to_complete = -1;
     for (size_t i = 0; i < tokens.size(); ++i)
     {
-        if (tokens[i].first < cursor_pos and tokens[i].second >= cursor_pos)
+        if (tokens[i].first <= cursor_pos and tokens[i].second >= cursor_pos)
         {
             token_to_complete = i;
             break;
         }
     }
 
-    if (token_to_complete == 0) // command name completion
+    if (token_to_complete == 0 or tokens.empty()) // command name completion
     {
-        Completions result(tokens[0].first, cursor_pos);
-        std::string prefix = command_line.substr(tokens[0].first,
-                                                 cursor_pos - tokens[0].first);
+        size_t cmd_start = tokens.empty() ? 0 : tokens[0].first;
+        Completions result(cmd_start, cursor_pos);
+        std::string prefix = command_line.substr(cmd_start,
+                                                 cursor_pos - cmd_start);
 
         for (auto& command : m_commands)
         {
