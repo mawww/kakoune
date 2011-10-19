@@ -180,7 +180,7 @@ std::string prompt(const std::string& text, Completer completer = NullCompletion
     int current_completion = -1;
     std::string text_before_completion;
 
-    while(true)
+    while (true)
     {
         char c = getch();
         switch (c)
