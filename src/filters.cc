@@ -6,23 +6,29 @@ namespace Kakoune
 void colorize_regex(DisplayBuffer& display_buffer,
                     const boost::regex& ex, Color color)
 {
-    for (auto atom_it = display_buffer.begin();
-         atom_it != display_buffer.end(); ++atom_it)
+    BufferIterator display_begin = display_buffer.begin()->begin();
+    BufferIterator display_end   = display_buffer.back().end();
+
+    boost::regex_iterator<BufferIterator> re_it(display_begin, display_end,
+                                                ex, boost::match_nosubs);
+    boost::regex_iterator<BufferIterator> re_end;
+    DisplayBuffer::iterator atom_it = display_buffer.begin();
+    for (; re_it != re_end; ++re_it)
     {
-        boost::match_results<BufferIterator> matches;
-        if (boost::regex_search(atom_it->begin(), atom_it->end(),
-                                matches, ex, boost::match_nosubs))
+        BufferIterator begin = (*re_it)[0].first;
+        BufferIterator end   = (*re_it)[0].second;
+        auto begin_atom_it = display_buffer.atom_containing(begin, atom_it);
+        auto end_atom_it   = display_buffer.atom_containing(end, atom_it);
+        if (begin_atom_it == end_atom_it)
         {
-            const BufferIterator& begin = matches.begin()->first;
-            if (begin != atom_it->begin())
-                atom_it = ++display_buffer.split(atom_it, begin);
+            if (begin_atom_it->begin() != begin)
+                begin_atom_it = ++display_buffer.split(begin_atom_it, begin);
+            if (begin_atom_it->end() != end)
+                begin_atom_it = display_buffer.split(begin_atom_it, end);
 
-            const BufferIterator& end = matches.begin()->second;
-            if (end != atom_it->end())
-                atom_it = display_buffer.split(atom_it, end);
-
-            atom_it->fg_color() = color;
+            begin_atom_it->fg_color() = color;
         }
+        atom_it = begin_atom_it;
     }
 }
 
