@@ -113,6 +113,7 @@ public:
     const_iterator end()   const { return m_atoms.end(); }
 
     iterator atom_containing(const BufferIterator& where);
+    iterator atom_containing(const BufferIterator& where, iterator start);
 
     const DisplayAtom& front() const { return m_atoms.front(); }
     const DisplayAtom& back()  const { return m_atoms.back(); }

@@ -88,10 +88,16 @@ DisplayBuffer::iterator DisplayBuffer::insert(iterator where, const DisplayAtom&
 
 DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& where)
 {
-    for (iterator it = m_atoms.begin(); it != m_atoms.end(); ++it)
+    return atom_containing(where, m_atoms.begin());
+}
+
+DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& where,
+                                                       iterator start)
+{
+    for (iterator it = start; it != m_atoms.end(); ++it)
     {
         if (it->end() > where)
-            return it;
+            return it->begin() <= where ? it : end();
     }
     return end();
 }
