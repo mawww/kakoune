@@ -123,10 +123,7 @@ void DisplayBuffer::check_invariant() const
     {
         assert(it->end() >= it->begin());
         if (it != begin())
-        {
             assert(prev_it->end() == it->begin());
-            assert(prev_it->end_coord() == it->coord());
-        }
         prev_it = it;
     }
 }
