@@ -104,6 +104,10 @@ public:
 
     Buffer(const std::string& name, Type type,
            const BufferString& initial_content = "");
+    Buffer(const Buffer&) = delete;
+    Buffer(Buffer&&) = delete;
+    Buffer& operator= (const Buffer&) = delete;
+    ~Buffer();
 
     void           begin_undo_group();
     void           end_undo_group();

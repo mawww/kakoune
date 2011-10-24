@@ -29,6 +29,12 @@ Buffer::Buffer(const std::string& name, Type type,
     compute_lines();
 }
 
+Buffer::~Buffer()
+{
+    m_windows.clear();
+    assert(m_modification_listeners.empty());
+}
+
 void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
 {
     append_modification(BufferModification(BufferModification::Erase,
