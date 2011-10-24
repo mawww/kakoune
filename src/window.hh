@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "buffer.hh"
+#include "dynamic_buffer_iterator.hh"
 #include "display_buffer.hh"
 
 namespace Kakoune
@@ -23,8 +24,8 @@ struct Selection
     void offset(int offset);
 
 private:
-    BufferIterator m_first;
-    BufferIterator m_last;
+    DynamicBufferIterator m_first;
+    DynamicBufferIterator m_last;
 };
 
 typedef std::vector<Selection> SelectionList;

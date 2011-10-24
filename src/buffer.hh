@@ -63,6 +63,7 @@ public:
 
     bool is_begin() const;
     bool is_end() const;
+    bool is_valid() const;
 
     const Buffer& buffer() const;
 
@@ -145,8 +146,8 @@ public:
     Type type() const { return m_type; }
     void notify_saved();
 
-    void register_modification_listener(BufferModificationListener* listener);
-    void unregister_modification_listener(BufferModificationListener* listener);
+    void register_modification_listener(BufferModificationListener* listener) const;
+    void unregister_modification_listener(BufferModificationListener* listener) const;
 
 private:
     BufferChar at(BufferPos position) const;
@@ -185,7 +186,7 @@ private:
 
     std::vector<UndoGroup>::iterator m_last_save_undo_group;
 
-    std::vector<BufferModificationListener*> m_modification_listeners;
+    mutable std::vector<BufferModificationListener*> m_modification_listeners;
 };
 
 }

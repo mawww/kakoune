@@ -18,6 +18,11 @@ inline const Buffer& BufferIterator::buffer() const
     return *m_buffer;
 }
 
+inline bool BufferIterator::is_valid() const
+{
+    return m_buffer;
+}
+
 inline BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
 {
     m_buffer = iterator.m_buffer;

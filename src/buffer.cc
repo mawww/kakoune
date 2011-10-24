@@ -254,14 +254,14 @@ void Buffer::notify_saved()
     m_last_save_undo_group = m_history_cursor;
 }
 
-void Buffer::register_modification_listener(BufferModificationListener* listener)
+void Buffer::register_modification_listener(BufferModificationListener* listener) const
 {
     assert(listener);
     assert(not contains(m_modification_listeners, listener));
     m_modification_listeners.push_back(listener);
 }
 
-void Buffer::unregister_modification_listener(BufferModificationListener* listener)
+void Buffer::unregister_modification_listener(BufferModificationListener* listener) const
 {
     assert(listener);
     auto it = std::find(m_modification_listeners.begin(),

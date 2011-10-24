@@ -144,10 +144,7 @@ void Window::erase_noundo()
 {
     check_invariant();
     for (auto& sel : m_selections)
-    {
         m_buffer.erase(sel.begin(), sel.end());
-        sel = Selection(sel.begin(), sel.begin());
-    }
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -183,10 +180,7 @@ void Window::insert(const String& string)
 void Window::insert_noundo(const String& string)
 {
     for (auto& sel : m_selections)
-    {
         m_buffer.insert(sel.begin(), string);
-        sel.offset(string.length());
-    }
     scroll_to_keep_cursor_visible_ifn();
 }
 
