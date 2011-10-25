@@ -41,6 +41,7 @@ enum class CharCategories
     Punctuation,
 };
 
+template<bool punctuation_is_not_word = true>
 static CharCategories categorize(char c)
 {
     if (is_word(c))
@@ -49,7 +50,8 @@ static CharCategories categorize(char c)
         return CharCategories::EndOfLine;
     if (is_blank(c))
         return CharCategories::Blank;
-    return CharCategories::Punctuation;
+    return punctuation_is_not_word ? CharCategories::Punctuation
+                                   : CharCategories::Word;
 }
 
 template<typename T>
@@ -65,7 +67,6 @@ void skip_while_reverse(BufferIterator& it, T condition)
     while (not it.is_begin() and condition(*it))
         --it;
 }
-
 
 Selection select_to_next_word(const BufferIterator& cursor)
 {
@@ -120,6 +121,54 @@ Selection select_to_previous_word(const BufferIterator& cursor)
         skip_while_reverse(end, is_punctuation);
     else if (is_word(*end))
         skip_while_reverse(end, is_word);
+
+    return Selection(begin, end+1);
+}
+
+Selection select_to_next_WORD(const BufferIterator& cursor)
+{
+    BufferIterator begin = cursor;
+    if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
+        ++begin;
+
+    skip_while(begin, is_eol);
+
+    BufferIterator end = begin+1;
+
+    skip_while(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
+    skip_while(end, is_blank);
+
+    return Selection(begin, end-1);
+}
+
+Selection select_to_next_WORD_end(const BufferIterator& cursor)
+{
+    BufferIterator begin = cursor;
+    if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
+        ++begin;
+
+    skip_while(begin, is_eol);
+
+    BufferIterator end = begin+1;
+
+    skip_while(end, is_blank);
+    skip_while(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
+
+    return Selection(begin, end-1);
+}
+
+Selection select_to_previous_WORD(const BufferIterator& cursor)
+{
+    BufferIterator begin = cursor;
+    if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
+        ++begin;
+
+    skip_while_reverse(begin, is_eol);
+
+    BufferIterator end = begin+1;
+
+    skip_while_reverse(end, is_blank);
+    skip_while_reverse(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
 
     return Selection(begin, end+1);
 }

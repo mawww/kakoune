@@ -9,6 +9,9 @@ namespace Kakoune
 Selection select_to_next_word(const BufferIterator& cursor);
 Selection select_to_next_word_end(const BufferIterator& cursor);
 Selection select_to_previous_word(const BufferIterator& cursor);
+Selection select_to_next_WORD(const BufferIterator& cursor);
+Selection select_to_next_WORD_end(const BufferIterator& cursor);
+Selection select_to_previous_WORD(const BufferIterator& cursor);
 Selection select_line(const BufferIterator& cursor);
 Selection select_matching(const BufferIterator& cursor);
 

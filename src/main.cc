@@ -548,6 +548,12 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> alt_ke
     { 'f', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
     { 'T', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false), true); } },
     { 'F', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true), true); } },
+    { 'w', [](Window& window, int count) { do { window.select(select_to_next_WORD); } while(--count > 0); } },
+    { 'e', [](Window& window, int count) { do { window.select(select_to_next_WORD_end); } while(--count > 0); } },
+    { 'b', [](Window& window, int count) { do { window.select(select_to_previous_WORD); } while(--count > 0); } },
+    { 'W', [](Window& window, int count) { do { window.select(select_to_next_WORD, true); } while(--count > 0); } },
+    { 'E', [](Window& window, int count) { do { window.select(select_to_next_WORD_end, true); } while(--count > 0); } },
+    { 'B', [](Window& window, int count) { do { window.select(select_to_previous_WORD, true); } while(--count > 0); } },
 };
 
 int main(int argc, char* argv[])
