@@ -542,6 +542,14 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
 };
 
+std::unordered_map<char, std::function<void (Window& window, int count)>> alt_keymap =
+{
+    { 't', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
+    { 'f', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
+    { 'T', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false), true); } },
+    { 'F', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true), true); } },
+};
+
 int main(int argc, char* argv[])
 {
     init_ncurses();
@@ -571,6 +579,7 @@ int main(int argc, char* argv[])
             try
             {
                 char c = getch();
+
                 std::ostringstream oss;
                 oss << "key " << int(c) << " (" << c << ")\n";
                 write_debug(oss.str());
@@ -579,9 +588,23 @@ int main(int argc, char* argv[])
                     count = count * 10 + c - '0';
                 else
                 {
-                    if (keymap.find(c) != keymap.end())
+                    bool is_alt = false;
+                    if (c == 27)
                     {
-                        keymap[c](*current_window, count);
+                        timeout(0);
+                        char new_c = getch();
+                        timeout(-1);
+                        if (new_c != ERR)
+                        {
+                            c = new_c;
+                            is_alt = true;
+                        }
+                    }
+                    auto& active_keymap = is_alt ? alt_keymap : keymap;
+
+                    if (active_keymap.find(c) != active_keymap.end())
+                    {
+                        active_keymap[c](*current_window, count);
                         draw_window(*current_window);
                     }
                     count = 0;
