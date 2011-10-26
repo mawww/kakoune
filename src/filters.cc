@@ -43,10 +43,10 @@ void colorize_cplusplus(DisplayBuffer& display_buffer)
     static boost::regex strings("(?<!')\"(\\\\\"|[^\"])*\"");
     colorize_regex(display_buffer, strings, Color::Magenta);
 
-    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|-?\\d+[fdiu]?|'\\\\?[^']?'");
+    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|\\<-?\\d+[fdiu]?|'\\\\?[^']?'");
     colorize_regex(display_buffer, values, Color::Red);
 
-    static boost::regex builtin_types("\\<(void|int|float|bool|size_t)\\>");
+    static boost::regex builtin_types("\\<(void|int|char|unsigned|float|bool|size_t)\\>");
     colorize_regex(display_buffer, builtin_types, Color::Yellow);
 
     static boost::regex control_keywords("\\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw)\\>");
@@ -55,7 +55,7 @@ void colorize_cplusplus(DisplayBuffer& display_buffer)
     //static boost::regex operators("->|\\+|\\-|\\*|/|\\\\|\\&|\\|\\^|[<>=!+-]=|=|\\(|\\)|\\[|\\]|\\{|\\}|\\<(not|and|or|xor)\\>");
     //colorize_regex(display_buffer, operators, Color::Green);
 
-    static boost::regex types_keywords("\\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template)\\>");
+    static boost::regex types_keywords("\\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template|typedef)\\>");
     colorize_regex(display_buffer, types_keywords, Color::Green);
 }
 
