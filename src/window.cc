@@ -370,7 +370,7 @@ std::string Window::status_line() const
     oss << m_buffer.name();
     if (m_buffer.is_modified())
         oss << " [+]";
-    oss << " -- " << cursor.line << "," << cursor.column
+    oss << " -- " << cursor.line+1 << "," << cursor.column+1
         << " -- " << m_selections.size() << " sel -- ";
     if (m_current_inserter)
         oss << "[Insert]";

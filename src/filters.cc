@@ -123,7 +123,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
                             Color::Black, Color::White));
 
             char buffer[6];
-            snprintf(buffer, 6, "%3d ", coord.line);
+            snprintf(buffer, 6, "%3d ", coord.line + 1);
             display_buffer.replace_atom_content(atom_it, buffer);
         }
     }

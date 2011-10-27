@@ -321,7 +321,7 @@ void do_go(Window& window, int count)
     if (count != 0)
     {
         BufferIterator target =
-            window.buffer().iterator_at(BufferCoord(count, 0));
+            window.buffer().iterator_at(BufferCoord(count-1, 0));
 
         window.move_cursor_to(target);
     }
