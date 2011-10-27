@@ -191,6 +191,6 @@ private:
 
 }
 
-#include "buffer_iterator.inl.h"
+#include "buffer_iterator.inl.hh"
 
 #endif // buffer_hh_INCLUDED
