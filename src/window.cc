@@ -19,10 +19,13 @@ BufferIterator Selection::end() const
     return std::max(m_first, m_last) + 1;
 }
 
-void Selection::offset(int offset)
+void Selection::merge_with(const Selection& selection)
 {
-    m_first += offset;
-    m_last += offset;
+    if (m_first <= m_last)
+        m_first = std::min(m_first, selection.m_first);
+    else
+        m_first = std::max(m_first, selection.m_first);
+    m_last = selection.m_last;
 }
 
 struct scoped_undo_group
@@ -272,7 +275,7 @@ void Window::select(const Selector& selector, bool append)
     {
         for (auto& sel : m_selections)
         {
-            sel = Selection(sel.first(), selector(sel.last()).last());
+            sel.merge_with(selector(sel.last()));
         }
     }
     scroll_to_keep_cursor_visible_ifn();

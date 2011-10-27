@@ -21,7 +21,7 @@ struct Selection
     const BufferIterator& first() const { return m_first; }
     const BufferIterator& last()  const { return m_last; }
 
-    void offset(int offset);
+    void merge_with(const Selection& selection);
 
 private:
     DynamicBufferIterator m_first;
