@@ -160,13 +160,11 @@ Selection select_to_next_WORD_end(const BufferIterator& cursor)
 Selection select_to_previous_WORD(const BufferIterator& cursor)
 {
     BufferIterator begin = cursor;
-    if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
-        ++begin;
+    if (categorize<false>(*begin) != categorize<false>(*(begin-1)))
+        --begin;
 
     skip_while_reverse(begin, is_eol);
-
-    BufferIterator end = begin+1;
-
+    BufferIterator end = begin;
     skip_while_reverse(end, is_blank);
     skip_while_reverse(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
 
