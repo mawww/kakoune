@@ -105,6 +105,8 @@ public:
         Insert,
         Append,
         Change,
+        InsertAtLineBegin,
+        AppendAtLineEnd,
         OpenLineBelow,
         OpenLineAbove
     };

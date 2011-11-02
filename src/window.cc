@@ -399,18 +399,24 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
         case Mode::Change: pos = sel.begin(); break;
 
         case Mode::OpenLineBelow:
-            pos = sel.last();
+        case Mode::AppendAtLineEnd:
+            pos = sel.end() - 1;
             while (not pos.is_end() and *pos != '\n')
                 ++pos;
-            ++pos;
-            window.m_buffer.insert(pos, "\n");
+            if (mode == Mode::OpenLineBelow)
+            {
+                ++pos;
+                window.m_buffer.insert(pos, "\n");
+            }
             break;
 
         case Mode::OpenLineAbove:
+        case Mode::InsertAtLineBegin:
             pos = sel.begin();
             while (not pos.is_begin() and *pos != '\n')
                 --pos;
-            window.m_buffer.insert(pos, "\n");
+            if (mode == Mode::OpenLineAbove)
+                window.m_buffer.insert(pos, "\n");
             ++pos;
             break;
         }
