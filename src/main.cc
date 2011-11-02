@@ -124,6 +124,12 @@ void draw_window(Window& window)
         if (position.line >= max_y)
             break;
     }
+
+    set_attribute(A_UNDERLINE, 0);
+    set_attribute(A_REVERSE, 0);
+    set_attribute(A_BLINK, 0);
+    set_attribute(A_BOLD, 0);
+    set_color(Color::Blue, Color::Black);
     while (++position.line < max_y)
     {
         move(position.line, 0);
@@ -131,12 +137,7 @@ void draw_window(Window& window)
         addch('~');
     }
 
-    set_attribute(A_UNDERLINE, 0);
-    set_attribute(A_REVERSE, 0);
-    set_attribute(A_BLINK, 0);
-    set_attribute(A_BOLD, 0);
     set_color(Color::Cyan, Color::Black);
-
     std::string status_line = window.status_line();
     move(max_y, max_x - status_line.length());
     clrtoeol();
