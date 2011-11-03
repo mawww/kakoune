@@ -184,7 +184,7 @@ private:
 
     std::list<std::unique_ptr<Window>> m_windows;
 
-    std::vector<UndoGroup>::iterator m_last_save_undo_group;
+    size_t m_last_save_undo_index;
 
     mutable std::vector<BufferModificationListener*> m_modification_listeners;
 };

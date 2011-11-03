@@ -22,7 +22,7 @@ Buffer::Buffer(const std::string& name, Type type,
                const BufferString& initial_content)
     : m_name(name), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
-      m_content(initial_content), m_last_save_undo_group(m_history.begin())
+      m_content(initial_content), m_last_save_undo_index(0)
 {
     BufferManager::instance().register_buffer(this);
 
@@ -154,6 +154,10 @@ void Buffer::begin_undo_group()
 {
     assert(m_current_undo_group.empty());
     m_history.erase(m_history_cursor, m_history.end());
+
+    if (m_history.size() < m_last_save_undo_index)
+        m_last_save_undo_index = -1;
+
     m_history_cursor = m_history.end();
 }
 
@@ -245,13 +249,15 @@ void Buffer::delete_window(Window* window)
 
 bool Buffer::is_modified() const
 {
-    return m_last_save_undo_group != m_history_cursor
+    size_t history_cursor_index = m_history_cursor - m_history.begin();
+    return m_last_save_undo_index != history_cursor_index
            or not m_current_undo_group.empty();
 }
 
 void Buffer::notify_saved()
 {
-    m_last_save_undo_group = m_history_cursor;
+    size_t history_cursor_index = m_history_cursor - m_history.begin();
+    m_last_save_undo_index = history_cursor_index;
 }
 
 void Buffer::register_modification_listener(BufferModificationListener* listener) const
