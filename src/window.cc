@@ -426,6 +426,7 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
 
 IncrementalInserter::~IncrementalInserter()
 {
+    move_cursor(DisplayCoord(0, -1));
     assert(m_window.m_current_inserter == this);
     m_window.m_current_inserter = nullptr;
 
