@@ -104,7 +104,7 @@ public:
     };
 
     Buffer(const std::string& name, Type type,
-           const BufferString& initial_content = "");
+           const BufferString& initial_content = "\n");
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = delete;
     Buffer& operator= (const Buffer&) = delete;
