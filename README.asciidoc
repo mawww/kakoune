@@ -1,0 +1,68 @@
+Kakoune
+=======
+
+Introduction:
+-------------
+
+    Kakoune is a code editor heavily inspired by vim, as such most of it's
+commands are similar to vi's ones.
+
+Kakoune can operate in two modes, normal and insertion. In insertion mode,
+keys are directly inserted into the current buffer. In normal mode, keys
+are used to manipulate the current selection and to enter insertion mode.
+
+There is no concept of cursor in kakoune, only selections, a single character
+selection can be seen as a cursor but there is no difference internally. 
+
+
+Basic Movement
+--------------
+
+ * _space_: select the character under selection end
+
+ * _h_: select the character on the right of selection end
+ * _j_: select the character below the selection end
+ * _k_: select the character above the selection end
+ * _l_: select the character on the left of selection end
+
+ * _w_: select the word and following whitespaces  on the right of selection end 
+ * _b_: select preceding whitespaces and the word on the left of selection end
+ * _e_: select preceding whitespaces and the word on the right of selection end
+
+ * _x_: select line on which selection end lies
+ * _%_: select whole buffer
+
+ * _alt-H_: select to line begin
+ * _alt-L_: select to line end
+
+Appending
+---------
+
+for most selection commands, using shift permits to add to current selection
+instead of replacing it. for example, _wWW_ selects 3 consecutive words
+
+Using Counts
+------------
+
+Most selection commands also support counts, which are entered before the
+command itself.
+
+for example, _3W_ selects 3 consecutive words and _3w_ select the third word on
+the right of selection end.
+
+Changes
+-------
+
+ * _i_: insert before current selection
+ * _a_: insert after current selection
+ * _d_: yank and delete current selection
+ * _c_: yank and delete current selection and insert
+
+ * _I_: insert at current selection begin line start
+ * _A_: insert at current selection end line end
+ * _o_: insert in a new line below current selection end
+ * _O_: insert in a new line above current selection begin
+
+ * _p_: paste after current selection end
+ * _P_: paste before current selection begin
+
