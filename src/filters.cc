@@ -1,5 +1,7 @@
 #include "filters.hh"
 
+#include "filter_registry.hh"
+
 namespace Kakoune
 {
 
@@ -127,6 +129,28 @@ void show_line_numbers(DisplayBuffer& display_buffer)
             display_buffer.replace_atom_content(atom_it, buffer);
         }
     }
+}
+
+template<void (*filter_func)(DisplayBuffer&)>
+class SimpleFilterFactory
+{
+public:
+    SimpleFilterFactory(const std::string& id) : m_id(id) {}
+
+    FilterAndId operator()(const FilterParameters& params) const
+    {
+        return FilterAndId(m_id, FilterFunc(filter_func));
+    }
+private:
+    std::string m_id;
+};
+
+void register_filters()
+{
+    FilterRegistry& registry = FilterRegistry::instance();
+    
+    registry.register_factory("line_numbers", SimpleFilterFactory<show_line_numbers>("line_numbers"));
+    registry.register_factory("hlcpp", SimpleFilterFactory<colorize_cplusplus>("hlcpp"));
 }
 
 }

@@ -8,6 +8,8 @@
 #include "selectors.hh"
 #include "assert.hh"
 #include "debug.hh"
+#include "filters.hh"
+#include "filter_registry.hh"
 
 #include <unordered_map>
 #include <map>
@@ -573,6 +575,7 @@ int main(int argc, char* argv[])
     CommandManager  command_manager;
     BufferManager   buffer_manager;
     RegisterManager register_manager;
+    FilterRegistry  filter_registry;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      PerArgumentCommandCompleter{ complete_filename });
@@ -582,6 +585,8 @@ int main(int argc, char* argv[])
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
                                      PerArgumentCommandCompleter { complete_buffername });
+
+    register_filters();
 
     try
     {

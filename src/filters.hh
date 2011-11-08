@@ -15,6 +15,8 @@ void colorize_cplusplus(DisplayBuffer& display_buffer);
 void expand_tabulations(DisplayBuffer& display_buffer);
 void show_line_numbers(DisplayBuffer& display_buffer);
 
+void register_filters();
+
 }
 
 #endif // filters_hh_INCLUDED
