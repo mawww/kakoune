@@ -114,10 +114,8 @@ Window::Window(Buffer& buffer)
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
-    m_filters.push_back(colorize_cplusplus);
-    m_filters.push_back(expand_tabulations);
-    m_filters.push_back(HighlightSelections(*this));
-    m_filters.push_back(show_line_numbers);
+    m_filters.push_back(FilterAndId("show_tabs", expand_tabulations));
+    m_filters.push_back(FilterAndId("show_selection", HighlightSelections(*this)));
 }
 
 void Window::check_invariant() const
@@ -329,7 +327,7 @@ void Window::update_display_buffer()
 
     for (auto& filter : m_filters)
     {
-        filter(m_display_buffer);
+        filter.second(m_display_buffer);
         m_display_buffer.check_invariant();
     }
 }
@@ -375,6 +373,28 @@ std::string Window::status_line() const
     if (m_current_inserter)
         oss << "[Insert]";
     return oss.str();
+}
+
+void Window::add_filter(FilterAndId&& filter)
+{
+    for (auto it = m_filters.begin(); it != m_filters.end(); ++it)
+    {
+        if (it->first == filter.first)
+            throw filter_id_not_unique(filter.first);
+    }
+    m_filters.push_back(filter);
+}
+
+void Window::remove_filter(const std::string& id)
+{
+    for (auto it = m_filters.begin(); it != m_filters.end(); ++it)
+    {
+        if (it->first == id)
+        {
+            m_filters.erase(it);
+            return;
+        }
+    }
 }
 
 IncrementalInserter::IncrementalInserter(Window& window, Mode mode)

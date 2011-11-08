@@ -6,6 +6,7 @@
 #include "buffer.hh"
 #include "dynamic_buffer_iterator.hh"
 #include "display_buffer.hh"
+#include "filter.hh"
 
 namespace Kakoune
 {
@@ -69,6 +70,15 @@ public:
 
     std::string status_line() const;
 
+    struct filter_id_not_unique : public runtime_error
+    {
+        filter_id_not_unique(const std::string& id)
+            : runtime_error("filter id not unique: " + id) {}
+    };
+
+    void add_filter(FilterAndId&& filter);
+    void remove_filter(const std::string& id);
+
 private:
     friend class Buffer;
 
@@ -93,7 +103,7 @@ private:
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
 
-    typedef std::vector<std::function<void (DisplayBuffer&)>> FilterList;
+    typedef std::vector<FilterAndId> FilterList;
     FilterList m_filters;
 };
 

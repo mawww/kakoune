@@ -427,6 +427,32 @@ void show_buffer(const CommandParameters& params)
         current_window = buffer->get_or_create_window();
 }
 
+void add_filter(const CommandParameters& params)
+{
+    if (params.size() < 1)
+        throw wrong_argument_count();
+
+    try
+    {
+        FilterRegistry& registry = FilterRegistry::instance();
+        FilterParameters filter_params(params.begin()+1, params.end());
+        FilterAndId filter_and_id = registry.get_filter(params[0], filter_params);
+        current_window->add_filter(std::move(filter_and_id));
+    }
+    catch (runtime_error& err)
+    {
+        print_status("error: " + err.description());
+    }
+}
+
+void rm_filter(const CommandParameters& params)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    current_window->remove_filter(params[0]);
+}
+
 void do_command()
 {
     try
@@ -585,6 +611,8 @@ int main(int argc, char* argv[])
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
                                      PerArgumentCommandCompleter { complete_buffername });
+    command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter);
+    command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter);
 
     register_filters();
 
