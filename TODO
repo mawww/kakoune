@@ -1,0 +1,25 @@
+High Priority
+-------------
+
+* Hooks: most configurability should come from hooks (and not options). for
+         example syntax highlighting should be implemented with a hook like
+         ':hook WindowCreate /.*\.cpp/ addfilter hlcpp'
+
+* Options: They should be typed, and scoped. An option should be global,
+           buffer local, or window local. there should be a way to specify
+           which locality an option support.
+
+* Init File: read and execute commands from a file at startup
+
+Medium Priority
+---------------
+
+* tweak editing model, some behaviours are not intuitive, maybe a line
+  wise mode will be needed after all.
+
+Low Priority
+------------
+
+* Data driven syntax highlighter.
+* client server separation
+* write a real BufferContent backend. Currently it's std::string...
