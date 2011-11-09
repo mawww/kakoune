@@ -1,6 +1,8 @@
 #include "filters.hh"
 
+#include "display_buffer.hh"
 #include "filter_registry.hh"
+#include <boost/regex.hpp>
 
 namespace Kakoune
 {
@@ -149,6 +151,7 @@ void register_filters()
 {
     FilterRegistry& registry = FilterRegistry::instance();
     
+    registry.register_factory("expand_tabs", SimpleFilterFactory<expand_tabulations>("expand_tabs"));
     registry.register_factory("line_numbers", SimpleFilterFactory<show_line_numbers>("line_numbers"));
     registry.register_factory("hlcpp", SimpleFilterFactory<colorize_cplusplus>("hlcpp"));
 }

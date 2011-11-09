@@ -1,7 +1,7 @@
 #include "window.hh"
 
 #include "assert.hh"
-#include "filters.hh"
+#include "filter_registry.hh"
 
 #include <algorithm>
 #include <sstream>
@@ -114,8 +114,11 @@ Window::Window(Buffer& buffer)
       m_current_inserter(nullptr)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
-    m_filters.push_back(FilterAndId("show_tabs", expand_tabulations));
-    m_filters.push_back(FilterAndId("show_selection", HighlightSelections(*this)));
+
+    FilterRegistry& registry = FilterRegistry::instance();
+    add_filter(registry.get_filter("expand_tabs", FilterParameters()));
+    add_filter(FilterAndId("show_selections", HighlightSelections(*this)));
+    add_filter(registry.get_filter("hlcpp", FilterParameters()));
 }
 
 void Window::check_invariant() const
