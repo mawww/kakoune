@@ -441,8 +441,8 @@ void add_filter(const CommandParameters& params)
     {
         FilterRegistry& registry = FilterRegistry::instance();
         FilterParameters filter_params(params.begin()+1, params.end());
-        FilterAndId filter_and_id = registry.get_filter(params[0], filter_params);
-        current_window->add_filter(std::move(filter_and_id));
+        registry.add_filter_to_window(*current_window, params[0],
+                                      filter_params);
     }
     catch (runtime_error& err)
     {

@@ -1,6 +1,7 @@
 #include "filter_registry.hh"
 
 #include "exception.hh"
+#include "window.hh"
 
 namespace Kakoune
 {
@@ -17,14 +18,15 @@ void FilterRegistry::register_factory(const std::string& name,
     m_factories[name] = factory;
 }
 
-FilterAndId FilterRegistry::get_filter(const std::string& name,
-                                       const FilterParameters& parameters)
+void FilterRegistry::add_filter_to_window(Window& window,
+                                          const std::string& name,
+                                          const FilterParameters& parameters)
 {
     auto it = m_factories.find(name);
     if (it == m_factories.end())
         throw factory_not_found();
 
-    return it->second(parameters);
+    window.add_filter(it->second(window, parameters));
 }
 
 }

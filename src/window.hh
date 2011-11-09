@@ -58,6 +58,7 @@ public:
     void clear_selections();
     void select(const Selector& selector, bool append = false);
     BufferString selection_content() const;
+    const SelectionList selections() const { return m_selections; }
 
     void set_dimensions(const DisplayCoord& dimensions);
 
@@ -94,8 +95,6 @@ private:
 
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
-
-    friend class HighlightSelections;
 
     Buffer&       m_buffer;
     BufferCoord   m_position;

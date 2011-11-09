@@ -10,9 +10,12 @@
 namespace Kakoune
 {
 
+class Window;
+
 typedef std::vector<std::string> FilterParameters;
 
-typedef std::function<FilterAndId (const FilterParameters& params)> FilterFactory;
+typedef std::function<FilterAndId (Window& window,
+                                   const FilterParameters& params)> FilterFactory;
 
 class FilterRegistry : public Singleton<FilterRegistry>
 {
@@ -20,8 +23,9 @@ public:
     void register_factory(const std::string& name,
                           const FilterFactory& factory);
 
-    FilterAndId get_filter(const std::string& factory_name,
-                           const FilterParameters& parameters);
+    void add_filter_to_window(Window& window,
+                              const std::string& factory_name,
+                              const FilterParameters& parameters);
 
 private:
     std::unordered_map<std::string, FilterFactory> m_factories;
