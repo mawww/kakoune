@@ -362,12 +362,8 @@ void do_go(Window& window, int count)
 
 Window* current_window;
 
-void edit(const CommandParameters& params)
+Buffer* open_or_create(const std::string& filename)
 {
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    std::string filename = params[0];
     Buffer* buffer = NULL;
     try
     {
@@ -378,7 +374,16 @@ void edit(const CommandParameters& params)
         print_status("new file " + filename);
         buffer = new Buffer(filename, Buffer::Type::File);
     }
-    current_window = buffer->get_or_create_window();
+    return buffer;
+}
+
+void edit(const CommandParameters& params)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    std::string filename = params[0];
+    current_window = open_or_create(filename)->get_or_create_window();
 }
 
 void write_buffer(const CommandParameters& params)
@@ -618,7 +623,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        auto buffer = (argc > 1) ? create_buffer_from_file(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
+        auto buffer = (argc > 1) ? open_or_create(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
         current_window = buffer->get_or_create_window();
 
         draw_window(*current_window);
