@@ -31,13 +31,11 @@ CandidateList complete_buffername(const std::string& prefix,
 
 typedef std::function<Completions (const std::string&, size_t)> Completer;
 
-struct NullCompletion
+
+inline Completions complete_nothing(const std::string&, size_t cursor_pos)
 {
-    Completions operator() (const std::string&, size_t cursor_pos)
-    {
-        return Completions(cursor_pos, cursor_pos);
-    }
-};
+    return Completions(cursor_pos, cursor_pos);
+}
 
 }
 #endif // completion_hh_INCLUDED

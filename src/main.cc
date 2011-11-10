@@ -168,7 +168,7 @@ void deinit_ncurses()
 
 struct prompt_aborted {};
 
-std::string prompt(const std::string& text, Completer completer = NullCompletion())
+std::string prompt(const std::string& text, Completer completer = complete_nothing)
 {
     int max_x, max_y;
     getmaxyx(stdscr, max_y, max_x);
