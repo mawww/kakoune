@@ -9,7 +9,8 @@ namespace Kakoune
 {
 
 void colorize_regex(DisplayBuffer& display_buffer,
-                    const boost::regex& ex, Color color)
+                    const boost::regex& ex,
+                    Color fg_color, Color bg_color = Color::Default)
 {
     BufferIterator display_begin = display_buffer.begin()->begin();
     BufferIterator display_end   = display_buffer.back().end();
@@ -31,10 +32,42 @@ void colorize_regex(DisplayBuffer& display_buffer,
             if (begin_atom_it->end() != end)
                 begin_atom_it = display_buffer.split(begin_atom_it, end);
 
-            begin_atom_it->fg_color() = color;
+            begin_atom_it->fg_color() = fg_color;
+            begin_atom_it->bg_color() = bg_color;
         }
         atom_it = begin_atom_it;
     }
+}
+
+Color parse_color(const std::string& color)
+{
+    if (color == "default") return Color::Default;
+    if (color == "black")   return Color::Black;
+    if (color == "red")     return Color::Red;
+    if (color == "green")   return Color::Green;
+    if (color == "yellow")  return Color::Yellow;
+    if (color == "blue")    return Color::Blue;
+    if (color == "magenta") return Color::Magenta;
+    if (color == "cyan")    return Color::Cyan;
+    if (color == "white")   return Color::White;
+    return Color::Default;
+}
+
+FilterAndId colorize_regex_factory(Window& window,
+                                   const FilterParameters params)
+{
+    if (params.size() != 3)
+        throw runtime_error("wrong parameter count");
+
+    boost::regex ex(params[0]);
+
+    Color fg_color = parse_color(params[1]);
+    Color bg_color = parse_color(params[2]);
+
+    std::string id = "colre'" + params[0] + "'";   
+   
+    return FilterAndId(id, std::bind(colorize_regex, std::placeholders::_1,
+                                     ex, fg_color, bg_color));
 }
 
 void colorize_cplusplus(DisplayBuffer& display_buffer)
@@ -233,6 +266,7 @@ void register_filters()
     registry.register_factory("expand_tabs", SimpleFilterFactory<expand_tabulations>("expand_tabs"));
     registry.register_factory("number_lines", SimpleFilterFactory<show_line_numbers>("number_lines"));
     registry.register_factory("hlcpp", SimpleFilterFactory<colorize_cplusplus>("hlcpp"));
+    registry.register_factory("regex", colorize_regex_factory);
 }
 
 }
