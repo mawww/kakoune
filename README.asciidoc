@@ -79,16 +79,13 @@ Changes
 Filters
 -------
 
-Manipulation of the displayed text is done through filters, which can be added or
-removed with the command :addfilter <filter_name> <filter_parameters...>
+Manipulation of the displayed text is done through filters, which can be added
+or removed with the command :addfilter <filter_name> <filter_parameters...>
 
 existing filters are:
 
-* *hlcpp*: takes no parameters, highlight c++ code
-* *line_numbers*: takes no parameters, display line numbers on the left of the window
-
-Windows also contains two filters by default, which are not currently addable
-(but they are removable)
-
-* *show_tabs*: which expand tabs to next 8 multiple column
-* *show_selection*: which underlines the current selections
+* *highlight_selections*: used to make current selection visible
+* *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
+* *hlcpp*: quick'n'dirty c++ code highlighter
+* *number_lines*: show line numbers 
+* *regex*: highlight a regex, takes 3 parameters <regex> <fg_color> <bg_color>
