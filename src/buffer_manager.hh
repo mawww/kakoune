@@ -2,6 +2,7 @@
 #define buffer_manager_hh_INCLUDED
 
 #include "buffer.hh"
+#include "completion.hh"
 #include "utils.hh"
 
 #include <unordered_map>
@@ -25,13 +26,16 @@ public:
         Buffer* operator->() const { return parent_type::operator*().second.get(); }
     };
 
-    iterator begin() const { return iterator(m_buffers.begin()); }
-    iterator end() const { return iterator(m_buffers.end()); }
-
     void register_buffer(Buffer* buffer);
     void delete_buffer(Buffer* buffer);
 
+    iterator begin() const { return iterator(m_buffers.begin()); }
+    iterator end() const { return iterator(m_buffers.end()); }
+
     Buffer* get_buffer(const std::string& name);
+
+    CandidateList complete_buffername(const std::string& prefix,
+                                      size_t cursor_pos = std::string::npos);
 
 private:
     BufferMap m_buffers;

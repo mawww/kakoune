@@ -26,11 +26,7 @@ struct Completions
 CandidateList complete_filename(const std::string& prefix,
                                 size_t cursor_pos = std::string::npos);
 
-CandidateList complete_buffername(const std::string& prefix,
-                                  size_t cursor_pos = std::string::npos);
-
 typedef std::function<Completions (const std::string&, size_t)> Completer;
-
 
 inline Completions complete_nothing(const std::string&, size_t cursor_pos)
 {

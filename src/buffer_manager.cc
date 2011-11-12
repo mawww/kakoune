@@ -36,5 +36,17 @@ Buffer* BufferManager::get_buffer(const std::string& name)
     return m_buffers[name].get();
 }
 
+CandidateList BufferManager::complete_buffername(const std::string& prefix,
+                                                 size_t cursor_pos)
+{
+    std::string real_prefix = prefix.substr(0, cursor_pos);
+    CandidateList result;
+    for (auto& buffer : m_buffers)
+    {
+        if (buffer.first.substr(0, real_prefix.length()) == real_prefix)
+            result.push_back(buffer.first);
+    }
+    return result;
+}
 
 }

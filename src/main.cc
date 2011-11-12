@@ -615,7 +615,9 @@ int main(int argc, char* argv[])
     command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer,
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
-                                     PerArgumentCommandCompleter { complete_buffername });
+                                     PerArgumentCommandCompleter {
+                                         std::bind(&BufferManager::complete_buffername, &buffer_manager, _1, _2)
+                                      });
     command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter);
     command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter);
 
