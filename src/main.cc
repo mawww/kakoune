@@ -622,7 +622,11 @@ int main(int argc, char* argv[])
                                      PerArgumentCommandCompleter {
                                          std::bind(&FilterRegistry::complete_filter, &filter_registry, _1, _2)
                                      });
-    command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter);
+    command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter,
+                                     PerArgumentCommandCompleter {
+                                         [&](const std::string& prefix, size_t cursor_pos)
+                                         { return current_window->complete_filterid(prefix, cursor_pos); }
+                                     });
 
     register_filters();
 

@@ -6,6 +6,7 @@
 #include "buffer.hh"
 #include "dynamic_buffer_iterator.hh"
 #include "display_buffer.hh"
+#include "completion.hh"
 #include "filter.hh"
 
 namespace Kakoune
@@ -79,6 +80,9 @@ public:
 
     void add_filter(FilterAndId&& filter);
     void remove_filter(const std::string& id);
+
+    CandidateList complete_filterid(const std::string& prefix,
+                                    size_t cursor_pos = std::string::npos);
 
 private:
     friend class Buffer;
