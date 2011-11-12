@@ -29,4 +29,17 @@ void FilterRegistry::add_filter_to_window(Window& window,
     window.add_filter(it->second(window, parameters));
 }
 
+CandidateList FilterRegistry::complete_filter(const std::string& prefix,
+                                              size_t cursor_pos)
+{
+    std::string real_prefix = prefix.substr(0, cursor_pos);
+    CandidateList result;
+    for (auto& filter : m_factories)
+    {
+        if (filter.first.substr(0, real_prefix.length()) == real_prefix)
+            result.push_back(filter.first);
+    }
+    return result;
+}
+
 }

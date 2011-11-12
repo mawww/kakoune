@@ -618,7 +618,10 @@ int main(int argc, char* argv[])
                                      PerArgumentCommandCompleter {
                                          std::bind(&BufferManager::complete_buffername, &buffer_manager, _1, _2)
                                       });
-    command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter);
+    command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
+                                     PerArgumentCommandCompleter {
+                                         std::bind(&FilterRegistry::complete_filter, &filter_registry, _1, _2)
+                                     });
     command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter);
 
     register_filters();

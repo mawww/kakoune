@@ -6,6 +6,7 @@
 
 #include "filter.hh"
 #include "utils.hh"
+#include "completion.hh"
 
 namespace Kakoune
 {
@@ -26,6 +27,9 @@ public:
     void add_filter_to_window(Window& window,
                               const std::string& factory_name,
                               const FilterParameters& parameters);
+
+    CandidateList complete_filter(const std::string& prefix,
+                                  size_t cursor_pos);
 
 private:
     std::unordered_map<std::string, FilterFactory> m_factories;
