@@ -106,14 +106,18 @@ DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator
 {
     assert(pos > atom->begin());
     assert(pos < atom->end());
-    DisplayAtom new_atom(atom->coord(), atom->begin(), pos,
+
+    BufferIterator end = atom->m_end;
+    atom->m_end = pos;
+
+    DisplayAtom new_atom(atom->end_coord(), pos, end,
                          atom->fg_color(), atom->bg_color(), atom->attribute());
 
-    atom->m_begin = pos;
-    atom->m_coord = new_atom.end_coord();
-    iterator res = m_atoms.insert(atom, std::move(new_atom));
+    iterator insert_pos = atom;
+    ++insert_pos;
+    m_atoms.insert(insert_pos, std::move(new_atom));
     check_invariant();
-    return res;
+    return atom;
 }
 
 void DisplayBuffer::check_invariant() const
