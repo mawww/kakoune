@@ -268,20 +268,6 @@ void print_status(const std::string& status)
     addstr(status.c_str());
 }
 
-struct scoped_status
-{
-    scoped_status(const std::string& status)
-    {
-        print_status(status);
-        refresh();
-    }
-    ~scoped_status()
-    {
-        print_status("");
-        refresh();
-    }
-};
-
 void do_insert(Window& window, IncrementalInserter::Mode mode)
 {
     Kakoune::IncrementalInserter inserter(window, mode);
