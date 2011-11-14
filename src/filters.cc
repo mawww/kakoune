@@ -1,5 +1,6 @@
 #include "filters.hh"
 
+#include "assert.hh"
 #include "window.hh"
 #include "display_buffer.hh"
 #include "filter_registry.hh"
@@ -23,19 +24,27 @@ void colorize_regex(DisplayBuffer& display_buffer,
     {
         BufferIterator begin = (*re_it)[0].first;
         BufferIterator end   = (*re_it)[0].second;
-        auto begin_atom_it = display_buffer.atom_containing(begin, atom_it);
-        auto end_atom_it   = display_buffer.atom_containing(end, atom_it);
-        if (begin_atom_it == end_atom_it)
-        {
-            if (begin_atom_it->begin() != begin)
-                begin_atom_it = ++display_buffer.split(begin_atom_it, begin);
-            if (begin_atom_it->end() != end)
-                begin_atom_it = display_buffer.split(begin_atom_it, end);
+        assert(begin != end);
 
-            begin_atom_it->fg_color() = fg_color;
-            begin_atom_it->bg_color() = bg_color;
+        auto begin_atom_it = display_buffer.atom_containing(begin, atom_it);
+        assert(begin_atom_it != display_buffer.end());
+        if (begin_atom_it->begin() != begin)
+            begin_atom_it = ++display_buffer.split(begin_atom_it, begin);
+
+        auto end_atom_it = display_buffer.atom_containing(end, begin_atom_it);
+        if (end_atom_it != display_buffer.end() and
+            end_atom_it->begin() != end)
+            end_atom_it = ++display_buffer.split(end_atom_it, end);
+
+        assert(begin_atom_it != end_atom_it);
+
+        for (auto it = begin_atom_it; it != end_atom_it; ++it)
+        {
+            it->fg_color() = fg_color;
+            it->bg_color() = bg_color;
         }
-        atom_it = begin_atom_it;
+
+        atom_it = end_atom_it;
     }
 }
 
