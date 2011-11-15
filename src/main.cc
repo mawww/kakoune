@@ -159,6 +159,7 @@ void init_ncurses()
     keypad(stdscr, true);
     curs_set(2);
     start_color();
+    ESCDELAY=25;
 }
 
 void deinit_ncurses()
