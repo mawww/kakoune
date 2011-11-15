@@ -73,8 +73,8 @@ FilterAndId colorize_regex_factory(Window& window,
     Color fg_color = parse_color(params[1]);
     Color bg_color = parse_color(params[2]);
 
-    std::string id = "colre'" + params[0] + "'";   
-   
+    std::string id = "colre'" + params[0] + "'";
+
     return FilterAndId(id, std::bind(colorize_regex, std::placeholders::_1,
                                      ex, fg_color, bg_color));
 }
@@ -270,7 +270,7 @@ private:
 void register_filters()
 {
     FilterRegistry& registry = FilterRegistry::instance();
-    
+
     registry.register_factory("highlight_selections", SelectionsHighlighter::create);
     registry.register_factory("expand_tabs", SimpleFilterFactory<expand_tabulations>("expand_tabs"));
     registry.register_factory("number_lines", SimpleFilterFactory<show_line_numbers>("number_lines"));
