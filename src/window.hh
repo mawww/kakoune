@@ -39,6 +39,7 @@ class Window
 public:
     typedef BufferString String;
     typedef std::function<Selection (const BufferIterator&)> Selector;
+    typedef std::function<SelectionList (const Selection&)>  MultiSelector;
 
     void erase();
     void insert(const String& string);
@@ -58,6 +59,7 @@ public:
 
     void clear_selections();
     void select(const Selector& selector, bool append = false);
+    void multi_select(const MultiSelector& selector);
     BufferString selection_content() const;
     const SelectionList selections() const { return m_selections; }
 

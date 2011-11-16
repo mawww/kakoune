@@ -213,6 +213,21 @@ void Window::select(const Selector& selector, bool append)
     scroll_to_keep_cursor_visible_ifn();
 }
 
+void Window::multi_select(const MultiSelector& selector)
+{
+    check_invariant();
+
+    SelectionList new_selections;
+    for (auto& sel : m_selections)
+    {
+        SelectionList selections = selector(sel);
+        std::copy(selections.begin(), selections.end(),
+                  std::back_inserter(new_selections));
+    }
+    m_selections = std::move(new_selections);
+    scroll_to_keep_cursor_visible_ifn();
+}
+
 BufferString Window::selection_content() const
 {
     check_invariant();
