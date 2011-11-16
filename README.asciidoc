@@ -89,6 +89,15 @@ select the paragraph with enough _x_. press _s_ and enter roger then enter.
 now paragraph selection was replaced with multiselection of each roger in
 the paragraph. press _c_ and marcel<esc> to replace rogers with marcels.
 
+Captures
+--------
+
+Selections can have associated captures. When selections were made from a
+regex search (like _/_ key of _s_ key), the regex capture groups are available
+from the selection.
+
+While inserting, _^B_ key followed by a digit inserts the designated capture.
+
 Filters
 -------
 
