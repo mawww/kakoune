@@ -142,6 +142,7 @@ public:
     ~IncrementalInserter();
 
     void insert(const Window::String& string);
+    void insert_capture(size_t index);
     void erase();
     void move_cursor(const DisplayCoord& offset);
 

@@ -410,7 +410,7 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
             ++pos;
             break;
         }
-        sel = Selection(pos, pos);
+        sel = Selection(pos, pos, sel.captures());
     }
 }
 
@@ -426,6 +426,13 @@ IncrementalInserter::~IncrementalInserter()
 void IncrementalInserter::insert(const Window::String& string)
 {
     m_window.insert_noundo(string);
+}
+
+void IncrementalInserter::insert_capture(size_t index)
+{
+    for (auto& sel : m_window.m_selections)
+        m_window.m_buffer.insert(sel.begin(), sel.capture(index));
+    m_window.scroll_to_keep_cursor_visible_ifn();
 }
 
 void IncrementalInserter::erase()

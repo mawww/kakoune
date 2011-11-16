@@ -284,6 +284,12 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
         case 27:
             return;
 
+        case 2:
+            c = getch();
+            if (c >= '0' and c <= '9')
+                inserter.insert_capture(c - '0');
+            break;
+
         case 4:
             inserter.move_cursor({0, -1});
             break;
