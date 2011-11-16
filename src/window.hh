@@ -14,8 +14,15 @@ namespace Kakoune
 
 struct Selection
 {
-    Selection(const BufferIterator& first, const BufferIterator& last)
-        : m_first(first), m_last(last) {}
+    typedef std::vector<BufferString> CaptureList;
+
+    Selection(const BufferIterator& first, const BufferIterator& last,
+              const CaptureList& captures = CaptureList())
+        : m_first(first), m_last(last), m_captures(captures) {}
+
+    Selection(const BufferIterator& first, const BufferIterator& last,
+              CaptureList&& captures)
+        : m_first(first), m_last(last), m_captures(captures) {}
 
     BufferIterator begin() const;
     BufferIterator end() const;
@@ -25,9 +32,14 @@ struct Selection
 
     void merge_with(const Selection& selection);
 
+    BufferString capture(size_t index) const;
+    const CaptureList& captures() const { return m_captures; }
+
 private:
     DynamicBufferIterator m_first;
     DynamicBufferIterator m_last;
+
+    CaptureList m_captures;
 };
 
 typedef std::vector<Selection> SelectionList;

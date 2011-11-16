@@ -28,6 +28,13 @@ void Selection::merge_with(const Selection& selection)
     m_last = selection.m_last;
 }
 
+BufferString Selection::capture(size_t index) const
+{
+    if (index < m_captures.size())
+        return m_captures[index];
+    return "";
+}
+
 struct scoped_undo_group
 {
     scoped_undo_group(Buffer& buffer)
