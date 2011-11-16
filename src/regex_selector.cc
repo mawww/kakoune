@@ -9,8 +9,6 @@ RegexSelector::RegexSelector(const std::string& exp)
 
 Selection RegexSelector::operator()(const BufferIterator& cursor) const
 {
-    BufferIterator line_end = cursor + 1;
-
     try
     {
         boost::match_results<BufferIterator> matches;
@@ -26,6 +24,25 @@ Selection RegexSelector::operator()(const BufferIterator& cursor) const
     }
 
     return Selection(cursor, cursor);
+}
+
+SelectionList RegexSelector::operator()(const Selection& selection) const
+{
+    boost::regex_iterator<BufferIterator> re_it(selection.begin(),
+                                                selection.end(),
+                                                m_regex, boost::match_nosubs);
+    boost::regex_iterator<BufferIterator> re_end;
+
+    SelectionList result;
+    for (; re_it != re_end; ++re_it)
+    {
+        BufferIterator begin = (*re_it)[0].first;
+        BufferIterator end   = (*re_it)[0].second;
+        assert(begin != end);
+
+        result.push_back(Selection(begin, end-1));
+    }
+    return result;
 }
 
 }

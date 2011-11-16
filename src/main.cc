@@ -512,6 +512,16 @@ void do_paste(Window& window, int count)
     window.clear_selections();
 }
 
+void do_select_regex(Window& window, int count)
+{
+    try
+    {
+        RegexSelector selector(prompt("select: "));
+        window.multi_select(selector);
+    }
+    catch (prompt_aborted&) {}
+}
+
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
 {
     { 'h', [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
@@ -544,6 +554,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'y', do_yank },
     { 'p', do_paste<true> },
     { 'P', do_paste<false> },
+
+    { 's', do_select_regex },
 
     { '%', [](Window& window, int count) { window.select([](const BufferIterator& cursor)
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },

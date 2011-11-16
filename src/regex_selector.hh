@@ -15,6 +15,7 @@ public:
     RegexSelector(const std::string& exp);
 
     Selection operator()(const BufferIterator& cursor) const;
+    SelectionList operator()(const Selection& selection) const;
 
 private:
     boost::regex m_regex;
