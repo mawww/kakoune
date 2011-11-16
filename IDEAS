@@ -1,3 +1,0 @@
-* Syntax Highlighting and Folding should be implemented through a 'display filter' concept
-  A window should have a stack of display filters, that can change the representation of the buffer (adding colors, suppressing lines...)
-  -> Filters should be used to map window coordinates to buffer coordinates
