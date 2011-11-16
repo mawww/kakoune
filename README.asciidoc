@@ -76,6 +76,19 @@ Changes
  * _p_: paste after current selection end
  * _P_: paste before current selection begin
 
+Multi Selection
+---------------
+
+Kak was designed from the start to handle multiple selections.
+On way to get a multiselection is via the _s_ key.
+
+For example, to change all occurences of word 'roger' to word 'marcel'
+in a paragraph, here is what can be done:
+
+select the paragraph with enough _x_. press _s_ and enter roger then enter.
+now paragraph selection was replaced with multiselection of each roger in
+the paragraph. press _c_ and marcel<esc> to replace rogers with marcels.
+
 Filters
 -------
 
