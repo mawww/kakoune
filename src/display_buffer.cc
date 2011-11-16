@@ -57,10 +57,8 @@ BufferIterator DisplayAtom::iterator_at(const DisplayCoord& coord) const
         else
             ++pos.column;
 
-        if (coord == pos)
+        if (coord <= pos)
             return it+1;
-        else if (coord < pos)
-            return it;
     }
     return m_end;
 }
