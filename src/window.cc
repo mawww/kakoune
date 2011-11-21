@@ -437,8 +437,10 @@ void IncrementalInserter::insert_capture(size_t index)
 
 void IncrementalInserter::erase()
 {
-    move_cursor(DisplayCoord(0, -1));
+    for (auto& sel : m_window.m_selections)
+        sel = Selection(sel.first() - 1, sel.last() - 1);
     m_window.erase_noundo();
+    m_window.scroll_to_keep_cursor_visible_ifn();
 }
 
 void IncrementalInserter::move_cursor(const DisplayCoord& offset)
