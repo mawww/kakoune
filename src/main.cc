@@ -574,7 +574,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'W', [](Window& window, int count) { do { window.select(select_to_next_word, true); } while(--count > 0); } },
     { 'E', [](Window& window, int count) { do { window.select(select_to_next_word_end, true); } while(--count > 0); } },
     { 'B', [](Window& window, int count) { do { window.select(select_to_previous_word, true); } while(--count > 0); } },
-    { 'x', [](Window& window, int count) { do { window.select(select_line); } while(--count > 0); } },
+    { 'x', [](Window& window, int count) { do { window.select(select_line, false); } while(--count > 0); } },
     { 'X', [](Window& window, int count) { do { window.select(select_line, true); } while(--count > 0); } },
     { 'm', [](Window& window, int count) { window.select(select_matching); } },
     { 'M', [](Window& window, int count) { window.select(select_matching, true); } },
@@ -582,6 +582,7 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'n', [](Window& window, int count) { do_search_next(window); } },
     { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
+    { ',', [](Window& window, int count) { window.multi_select(select_whole_lines); } },
 };
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> alt_keymap =

@@ -279,4 +279,22 @@ Selection select_to_eol_reverse(const BufferIterator& cursor)
     return Selection(cursor, end.is_begin() ? end : end+1);
 }
 
+SelectionList select_whole_lines(const Selection& selection)
+{
+     BufferIterator first = selection.first();
+     BufferIterator last =  selection.last();
+     BufferIterator& to_line_start = first <= last ? first : last;
+     BufferIterator& to_line_end = first <= last ? last : first;
+
+     skip_while_reverse(to_line_start, [](char cur) { return not is_eol(cur); });
+     skip_while(to_line_end, [](char cur) { return not is_eol(cur); });
+
+     if (to_line_start != to_line_end)
+         ++to_line_start;
+
+     SelectionList result;
+     result.push_back(Selection(first, last));
+     return result;
+}
+
 }

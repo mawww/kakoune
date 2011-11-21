@@ -20,6 +20,9 @@ Selection select_to_reverse(const BufferIterator& cursor, char c, int count, boo
 
 Selection select_to_eol(const BufferIterator& cursor);
 Selection select_to_eol_reverse(const BufferIterator& cursor);
+
+SelectionList select_whole_lines(const Selection& selection);
+
 }
 
 #endif // selectors_hh_INCLUDED
