@@ -527,6 +527,16 @@ void do_select_regex(Window& window, int count)
     catch (prompt_aborted&) {}
 }
 
+void do_split_regex(Window& window, int count)
+{
+    try
+    {
+        std::string ex = prompt("split: ");
+        window.multi_select(std::bind(split_selection, _1, ex));
+    }
+    catch (prompt_aborted&) {}
+}
+
 std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
 {
     { 'h', [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
@@ -602,6 +612,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> alt_ke
     { 'L', [](Window& window, int count) { do { window.select(select_to_eol, true); } while(--count > 0); } },
     { 'h', [](Window& window, int count) { do { window.select(select_to_eol_reverse, false); } while(--count > 0); } },
     { 'H', [](Window& window, int count) { do { window.select(select_to_eol_reverse, true); } while(--count > 0); } },
+
+    { 's', do_split_regex },
 };
 
 int main(int argc, char* argv[])

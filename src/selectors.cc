@@ -340,14 +340,14 @@ Selection select_next_match(const BufferIterator& cursor,
     return Selection(begin, end - 1, std::move(captures));
 }
 
+typedef boost::regex_iterator<BufferIterator> RegexIterator;
+
 SelectionList select_all_matches(const Selection& selection,
                                  const std::string& regex)
 {
     boost::regex ex(regex);
-    boost::regex_iterator<BufferIterator> re_it(selection.begin(),
-                                                selection.end(),
-                                                ex);
-    boost::regex_iterator<BufferIterator> re_end;
+    RegexIterator re_it(selection.begin(), selection.end(), ex);
+    RegexIterator re_end;
 
     SelectionList result;
     for (; re_it != re_end; ++re_it)
@@ -355,12 +355,32 @@ SelectionList select_all_matches(const Selection& selection,
         BufferIterator begin = (*re_it)[0].first;
         BufferIterator end   = (*re_it)[0].second;
 
-        if (begin == end)
-           ++end;
-
         Selection::CaptureList captures(re_it->begin(), re_it->end());
-        result.push_back(Selection(begin, end-1, std::move(captures)));
+
+        result.push_back(Selection(begin, begin == end ? end : end-1,
+                                   std::move(captures)));
     }
+    return result;
+}
+
+SelectionList split_selection(const Selection& selection,
+                              const std::string& separator_regex)
+{
+    boost::regex ex(separator_regex);
+    RegexIterator re_it(selection.begin(), selection.end(), ex,
+                        boost::regex_constants::match_nosubs);
+    RegexIterator re_end;
+
+    SelectionList result;
+    BufferIterator begin = selection.begin();
+    for (; re_it != re_end; ++re_it)
+    {
+        BufferIterator end = (*re_it)[0].first;
+
+        result.push_back(Selection(begin, (begin == end) ? end : end-1));
+        begin = (*re_it)[0].second;
+    }
+    result.push_back(Selection(begin, selection.last()));
     return result;
 }
 

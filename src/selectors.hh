@@ -29,6 +29,9 @@ Selection select_next_match(const BufferIterator& cursor,
 SelectionList select_all_matches(const Selection& selection,
                                  const std::string& regex);
 
+SelectionList split_selection(const Selection& selection,
+                              const std::string& separator_regex);
+
 }
 
 #endif // selectors_hh_INCLUDED
