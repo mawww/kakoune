@@ -1,5 +1,6 @@
 #include "selectors.hh"
 
+#include <boost/regex.hpp>
 #include <algorithm>
 
 namespace Kakoune
@@ -295,6 +296,72 @@ SelectionList select_whole_lines(const Selection& selection)
      SelectionList result;
      result.push_back(Selection(first, last));
      return result;
+}
+
+Selection select_next_match(const BufferIterator& cursor,
+                            const std::string& regex)
+{
+    boost::regex ex(regex);
+
+    BufferIterator begin = cursor;
+    BufferIterator end = cursor;
+    Selection::CaptureList captures;
+
+    try
+    {
+        boost::match_results<BufferIterator> matches;
+
+        if (boost::regex_search(cursor, cursor.buffer().end(), matches,
+                                ex))
+        {
+            begin = matches[0].first;
+            end   = matches[0].second;
+            std::copy(matches.begin(), matches.end(),
+                      std::back_inserter(captures));
+        }
+        else if (boost::regex_search(cursor.buffer().begin(), cursor, matches,
+                                     ex))
+        {
+            begin = matches[0].first;
+            end   = matches[0].second;
+            std::copy(matches.begin(), matches.end(),
+                      std::back_inserter(captures));
+        }
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error("regex error");
+    }
+
+
+    if (begin == end)
+        ++end;
+
+    return Selection(begin, end - 1, std::move(captures));
+}
+
+SelectionList select_all_matches(const Selection& selection,
+                                 const std::string& regex)
+{
+    boost::regex ex(regex);
+    boost::regex_iterator<BufferIterator> re_it(selection.begin(),
+                                                selection.end(),
+                                                ex);
+    boost::regex_iterator<BufferIterator> re_end;
+
+    SelectionList result;
+    for (; re_it != re_end; ++re_it)
+    {
+        BufferIterator begin = (*re_it)[0].first;
+        BufferIterator end   = (*re_it)[0].second;
+
+        if (begin == end)
+           ++end;
+
+        Selection::CaptureList captures(re_it->begin(), re_it->end());
+        result.push_back(Selection(begin, end-1, std::move(captures)));
+    }
+    return result;
 }
 
 }

@@ -1,7 +1,6 @@
 #include "window.hh"
 #include "buffer.hh"
 #include "file.hh"
-#include "regex_selector.hh"
 #include "command_manager.hh"
 #include "buffer_manager.hh"
 #include "register_manager.hh"
@@ -474,7 +473,7 @@ void do_search(Window& window)
         else
             RegisterManager::instance()['/'] = ex;
 
-        window.select(RegexSelector(ex));
+        window.select(std::bind(select_next_match, _1, ex));
     }
     catch (prompt_aborted&) {}
 }
@@ -483,7 +482,7 @@ void do_search_next(Window& window)
 {
     std::string& ex = RegisterManager::instance()['/'];
     if (not ex.empty())
-        window.select(RegexSelector(ex));
+        window.select(std::bind(select_next_match, _1, ex));
     else
         print_status("no search pattern");
 }
@@ -522,8 +521,8 @@ void do_select_regex(Window& window, int count)
 {
     try
     {
-        RegexSelector selector(prompt("select: "));
-        window.multi_select(selector);
+        std::string ex = prompt("select: ");
+        window.multi_select(std::bind(select_all_matches, _1, ex));
     }
     catch (prompt_aborted&) {}
 }
