@@ -139,6 +139,14 @@ void Window::append_noundo(const String& string)
     scroll_to_keep_cursor_visible_ifn();
 }
 
+void Window::replace(const std::string& string)
+{
+    scoped_undo_group undo_group(m_buffer);
+    erase_noundo();
+    insert_noundo(string);
+}
+
+
 bool Window::undo()
 {
     return m_buffer.undo();

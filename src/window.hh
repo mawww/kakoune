@@ -56,6 +56,7 @@ public:
     void erase();
     void insert(const String& string);
     void append(const String& string);
+    void replace(const String& string);
 
     const BufferCoord& position() const { return m_position; }
     DisplayCoord   cursor_position() const;
