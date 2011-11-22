@@ -287,11 +287,12 @@ SelectionList select_whole_lines(const Selection& selection)
      BufferIterator& to_line_start = first <= last ? first : last;
      BufferIterator& to_line_end = first <= last ? last : first;
 
+     --to_line_start;
      skip_while_reverse(to_line_start, [](char cur) { return not is_eol(cur); });
+     ++to_line_start;
+
      skip_while(to_line_end, [](char cur) { return not is_eol(cur); });
 
-     if (to_line_start != to_line_end)
-         ++to_line_start;
 
      SelectionList result;
      result.push_back(Selection(first, last));
