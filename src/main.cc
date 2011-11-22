@@ -601,7 +601,6 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'n', [](Window& window, int count) { do_search_next(window); } },
     { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
-    { ',', [](Window& window, int count) { window.multi_select(select_whole_lines); } },
 };
 
 std::unordered_map<char, std::function<void (Window& window, int count)>> alt_keymap =
@@ -626,6 +625,8 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> alt_ke
     { 's', do_split_regex },
 
     { 'j', do_join },
+
+    { 'x', [](Window& window, int count) { window.multi_select(select_whole_lines); } },
 };
 
 int main(int argc, char* argv[])
