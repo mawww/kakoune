@@ -39,7 +39,10 @@ Basic Movement
  * _b_: select preceding whitespaces and the word on the left of selection end
  * _e_: select preceding whitespaces and the word on the right of selection end
 
- * _x_: select line on which selection end lies
+ * _x_: select line on which selection end lies (or next line when end lies on
+        an end-of-line)
+ * _alt-x_: expand selections to contain full lines (including end-of-lines)
+
  * _%_: select whole buffer
 
  * _alt-H_: select to line begin
@@ -76,6 +79,8 @@ Changes
  * _p_: paste after current selection end
  * _P_: paste before current selection begin
 
+ * _alt-j_: join selected lines
+
 Multi Selection
 ---------------
 
@@ -107,6 +112,7 @@ Filters
 
 Manipulation of the displayed text is done through filters, which can be added
 or removed with the command :addfilter <filter_name> <filter_parameters...>
+and :rmfilter <filter_id>
 
 existing filters are:
 
