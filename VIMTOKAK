@@ -1,0 +1,34 @@
+Vi(m) to Kakoune:
+=================
+
+delete a word:
+ * vim: dw
+ * kak: wd
+
+delete a character:
+ * vim: x
+ * kak: d or <space>d
+
+copy a line:
+ * vim: yy
+ * kak: xy
+
+paste a line (linewise):
+ * vim: p or P
+ * kak: xp or xP
+
+paste a line (not linewise):
+ * vim: no supported
+ * kak: p or P
+
+global replace:
+ * vim: :%s/word/replacement
+ * kak: %sword<ret>creplacement
+
+join line with next:
+ * vim: J
+ * kak: alt-J
+
+delete to line end:
+ * vim: d$
+ * kak: alt-ld or gldt
