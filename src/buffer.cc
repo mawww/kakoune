@@ -63,10 +63,8 @@ BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
     if (m_lines.empty())
         return begin();
 
-    BufferPos line = Kakoune::clamp<int>(0, m_lines.size() - 1, line_and_column.line);
-    int col_max = std::max(0, line_length(line) - 1);
-    BufferPos column = Kakoune::clamp<int>(0,  col_max, line_and_column.column);
-    return BufferIterator(*this, m_lines[line] + column);
+    BufferCoord clamped = clamp(line_and_column);
+    return BufferIterator(*this, m_lines[clamped.line] + clamped.column);
 }
 
 BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
@@ -82,19 +80,19 @@ BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
 
 BufferPos Buffer::line_at(const BufferIterator& iterator) const
 {
-    for (unsigned i = 0; i < m_lines.size(); ++i)
+    for (unsigned i = 0; i < line_count(); ++i)
     {
         if (m_lines[i] > iterator.m_position)
             return i - 1;
     }
-    return m_lines.size() - 1;
+    return line_count() - 1;
 }
 
 BufferSize Buffer::line_length(BufferPos line) const
 {
     assert(not m_lines.empty());
-    BufferPos end = (line >= m_lines.size() - 1) ?
-                    m_content.size() : m_lines[line + 1] - 1;
+    BufferPos end = (line >= line_count() - 1) ?
+                    m_content.size() - 1 : m_lines[line + 1] - 1;
     return end - m_lines[line];
 }
 
@@ -104,8 +102,9 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
         return BufferCoord();
 
     BufferCoord result(line_and_column.line, line_and_column.column);
-    result.line = Kakoune::clamp<int>(0, m_lines.size() - 1, result.line);
-    result.column = Kakoune::clamp<int>(0, line_length(result.line), result.column);
+    result.line = Kakoune::clamp<int>(0, line_count() - 1, result.line);
+    int max_col = std::max(0, line_length(result.line)-1);
+    result.column = Kakoune::clamp<int>(0, max_col, result.column);
     return result;
 }
 
@@ -113,7 +112,7 @@ void Buffer::compute_lines()
 {
     m_lines.clear();
     m_lines.push_back(0);
-    for (BufferPos i = 0; i < m_content.size(); ++i)
+    for (BufferPos i = 0; i < m_content.size()-1; ++i)
     {
         if (m_content[i] == '\n')
             m_lines.push_back(i + 1);
