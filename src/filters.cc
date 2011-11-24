@@ -9,12 +9,16 @@
 namespace Kakoune
 {
 
-void colorize_regex(DisplayBuffer& display_buffer,
-                    const boost::regex& ex,
-                    Color fg_color, Color bg_color = Color::Default)
+void colorize_regex_range(DisplayBuffer& display_buffer,
+                          const BufferIterator& range_begin,
+                          const BufferIterator& range_end,
+                          const boost::regex& ex,
+                          Color fg_color, Color bg_color = Color::Default)
 {
-    BufferIterator display_begin = display_buffer.begin()->begin();
-    BufferIterator display_end   = display_buffer.back().end();
+    BufferIterator display_begin = std::max(range_begin,
+                                            display_buffer.front().begin());
+    BufferIterator display_end   = std::min(range_end,
+                                            display_buffer.back().end());
 
     boost::regex_iterator<BufferIterator> re_it(display_begin, display_end,
                                                 ex, boost::match_nosubs);
@@ -46,6 +50,14 @@ void colorize_regex(DisplayBuffer& display_buffer,
 
         atom_it = end_atom_it;
     }
+}
+
+void colorize_regex(DisplayBuffer& display_buffer,
+                    const boost::regex& ex,
+                    Color fg_color, Color bg_color = Color::Default)
+{
+    colorize_regex_range(display_buffer, display_buffer.front().begin(),
+                         display_buffer.back().end(), ex, fg_color, bg_color);
 }
 
 Color parse_color(const std::string& color)
