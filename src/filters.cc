@@ -93,7 +93,7 @@ FilterAndId colorize_regex_factory(Window& window,
 
 void colorize_cplusplus(DisplayBuffer& display_buffer)
 {
-    static boost::regex preprocessor("(\\`|(?<=\\n))\\h*#\\h*[^\\n]*(?=\\n)");
+    static boost::regex preprocessor("(\\`|(?<=\\n))\\h*#\\h*[^\\n]*");
     colorize_regex(display_buffer, preprocessor, Color::Magenta);
 
     static boost::regex comments("//[^\\n]*\\n");
