@@ -56,17 +56,19 @@ static CharCategories categorize(char c)
 }
 
 template<typename T>
-void skip_while(BufferIterator& it, T condition)
+bool skip_while(BufferIterator& it, T condition)
 {
     while (not it.is_end() and condition(*it))
         ++it;
+    return condition(*it);
 }
 
 template<typename T>
-void skip_while_reverse(BufferIterator& it, T condition)
+bool skip_while_reverse(BufferIterator& it, T condition)
 {
     while (not it.is_begin() and condition(*it))
         --it;
+    return condition(*it);
 }
 
 Selection select_to_next_word(const BufferIterator& cursor)
@@ -84,9 +86,9 @@ Selection select_to_next_word(const BufferIterator& cursor)
     else if (is_word(*begin))
         skip_while(end, is_word);
 
-    skip_while(end, is_blank);
+    bool with_end = skip_while(end, is_blank);
 
-    return Selection(begin, end-1);
+    return Selection(begin, with_end ? end : end-1);
 }
 
 Selection select_to_next_word_end(const BufferIterator& cursor)
@@ -99,12 +101,13 @@ Selection select_to_next_word_end(const BufferIterator& cursor)
     BufferIterator end = begin;
     skip_while(end, is_blank);
 
+    bool with_end = false;
     if (is_punctuation(*end))
-        skip_while(end, is_punctuation);
+        with_end = skip_while(end, is_punctuation);
     else if (is_word(*end))
-        skip_while(end, is_word);
+        with_end = skip_while(end, is_word);
 
-    return Selection(begin, end-1);
+    return Selection(begin, with_end ? end : end-1);
 }
 
 Selection select_to_previous_word(const BufferIterator& cursor)
@@ -118,12 +121,13 @@ Selection select_to_previous_word(const BufferIterator& cursor)
     BufferIterator end = begin;
     skip_while_reverse(end, is_blank);
 
+    bool with_end = false;
     if (is_punctuation(*end))
-        skip_while_reverse(end, is_punctuation);
+        with_end = skip_while_reverse(end, is_punctuation);
     else if (is_word(*end))
-        skip_while_reverse(end, is_word);
+        with_end = skip_while_reverse(end, is_word);
 
-    return Selection(begin, end+1);
+    return Selection(begin, with_end ? end : end+1);
 }
 
 Selection select_to_next_WORD(const BufferIterator& cursor)
@@ -137,9 +141,9 @@ Selection select_to_next_WORD(const BufferIterator& cursor)
     BufferIterator end = begin+1;
 
     skip_while(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
-    skip_while(end, is_blank);
+    bool with_end = skip_while(end, is_blank);
 
-    return Selection(begin, end-1);
+    return Selection(begin, with_end ? end : end-1);
 }
 
 Selection select_to_next_WORD_end(const BufferIterator& cursor)
@@ -153,9 +157,10 @@ Selection select_to_next_WORD_end(const BufferIterator& cursor)
     BufferIterator end = begin+1;
 
     skip_while(end, is_blank);
-    skip_while(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
+    bool with_end = skip_while(end, [] (char c) { return !is_blank(c)
+                                                     and !is_eol(c); });
 
-    return Selection(begin, end-1);
+    return Selection(begin, with_end ? end : end-1);
 }
 
 Selection select_to_previous_WORD(const BufferIterator& cursor)
@@ -167,9 +172,10 @@ Selection select_to_previous_WORD(const BufferIterator& cursor)
     skip_while_reverse(begin, is_eol);
     BufferIterator end = begin;
     skip_while_reverse(end, is_blank);
-    skip_while_reverse(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
+    bool with_end = skip_while_reverse(end, [] (char c) { return !is_blank(c)
+                                                             and !is_eol(c); });
 
-    return Selection(begin, end+1);
+    return Selection(begin, with_end ? end : end+1);
 }
 
 Selection select_line(const BufferIterator& cursor)
