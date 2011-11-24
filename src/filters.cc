@@ -266,6 +266,12 @@ public:
             else
                 assert(false);
         }
+
+        boost::regex ex("\n");
+        for (auto& sel : sorted_selections)
+             colorize_regex_range(display_buffer, sel.begin(), sel.end(),
+                                  ex, Color::Default, Color::Yellow);
+
     }
 
     static FilterAndId create(Window& window,
