@@ -9,6 +9,7 @@
 #include "debug.hh"
 #include "filters.hh"
 #include "filter_registry.hh"
+#include "hooks_manager.hh"
 
 #include <unordered_map>
 #include <map>
@@ -637,6 +638,7 @@ int main(int argc, char* argv[])
     BufferManager   buffer_manager;
     RegisterManager register_manager;
     FilterRegistry  filter_registry;
+    HooksManager    hooks_manager;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      PerArgumentCommandCompleter{ complete_filename });
