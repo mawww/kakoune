@@ -27,17 +27,26 @@ static TokenList split(const std::string& line)
     TokenList result;
 
     size_t pos = 0;
-    while (pos != line.length())
+    while (pos < line.length())
     {
         while(line[pos] == ' ' and pos != line.length())
             ++pos;
 
+        char delimiter = ' ';
+        if (line[pos] == '"' or line[pos] == '\'')
+        {
+            delimiter = line[pos];
+            ++pos;
+        }
+
         size_t token_start = pos;
 
-        while((line[pos] != ' ' or line[pos-1] == '\\') and pos != line.length())
+        while((line[pos] != delimiter or line[pos-1] == '\\') and pos != line.length())
             ++pos;
 
         result.push_back(std::make_pair(token_start, pos));
+
+        ++pos;
     }
     return result;
 }
