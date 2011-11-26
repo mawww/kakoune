@@ -121,3 +121,16 @@ existing filters are:
 * *hlcpp*: quick'n'dirty c++ code highlighter
 * *number_lines*: show line numbers 
 * *regex*: highlight a regex, takes 3 parameters <regex> <fg_color> <bg_color>
+
+Hooks
+-----
+
+commands can be registred to be executed when certain events arise.
+to register a hook, use the hook command.
+
+:hook <hook_name> <filtering_regex> <command> <command_args>...
+
+for example, to automatically use cplusplus highlighting with .cc files,
+use the following command:
+
+:hook WinCreate .*\.cc addfilter hlcpp
