@@ -57,7 +57,8 @@ struct command_not_found : runtime_error
         : runtime_error(command + " : no such command") {}
 };
 
-void CommandManager::execute(const std::string& command_line)
+void CommandManager::execute(const std::string& command_line,
+                             const Context& context)
 {
     TokenList tokens = split(command_line);
     if (tokens.empty())
@@ -78,7 +79,18 @@ void CommandManager::execute(const std::string& command_line)
                                              it->second - it->first));
     }
 
-    command_it->second.command(params);
+    command_it->second.command(params, context);
+}
+
+void CommandManager::execute(const std::string& command,
+                             const CommandParameters& params,
+                             const Context& context)
+{
+    auto command_it = m_commands.find(command);
+    if (command_it == m_commands.end())
+        throw command_not_found(command);
+
+    command_it->second.command(params, context);
 }
 
 Completions CommandManager::complete(const std::string& command_line, size_t cursor_pos)

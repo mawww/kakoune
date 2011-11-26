@@ -353,7 +353,7 @@ void do_go(Window& window, int count)
     }
 }
 
-Window* current_window;
+Context main_context;
 
 Buffer* open_or_create(const std::string& filename)
 {
@@ -370,21 +370,21 @@ Buffer* open_or_create(const std::string& filename)
     return buffer;
 }
 
-void edit(const CommandParameters& params)
+void edit(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
 
     std::string filename = params[0];
-    current_window = open_or_create(filename)->get_or_create_window();
+    main_context = Context(*open_or_create(filename)->get_or_create_window());
 }
 
-void write_buffer(const CommandParameters& params)
+void write_buffer(const CommandParameters& params, const Context& context)
 {
     if (params.size() > 1)
         throw wrong_argument_count();
 
-    Buffer& buffer = current_window->buffer();
+    Buffer& buffer = context.window->buffer();
     std::string filename = params.empty() ? buffer.name() : params[0];
 
     write_buffer_to_file(buffer, filename);
@@ -394,7 +394,7 @@ void write_buffer(const CommandParameters& params)
 bool quit_requested = false;
 
 template<bool force>
-void quit(const CommandParameters& params)
+void quit(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 0)
         throw wrong_argument_count();
@@ -413,7 +413,7 @@ void quit(const CommandParameters& params)
     quit_requested = true;
 }
 
-void show_buffer(const CommandParameters& params)
+void show_buffer(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -422,10 +422,10 @@ void show_buffer(const CommandParameters& params)
     if (not buffer)
         print_status("buffer " + params[0] + " does not exists");
     else
-        current_window = buffer->get_or_create_window();
+        main_context = Context(*buffer->get_or_create_window());
 }
 
-void add_filter(const CommandParameters& params)
+void add_filter(const CommandParameters& params, const Context& context)
 {
     if (params.size() < 1)
         throw wrong_argument_count();
@@ -434,7 +434,7 @@ void add_filter(const CommandParameters& params)
     {
         FilterRegistry& registry = FilterRegistry::instance();
         FilterParameters filter_params(params.begin()+1, params.end());
-        registry.add_filter_to_window(*current_window, params[0],
+        registry.add_filter_to_window(*context.window, params[0],
                                       filter_params);
     }
     catch (runtime_error& err)
@@ -443,12 +443,12 @@ void add_filter(const CommandParameters& params)
     }
 }
 
-void rm_filter(const CommandParameters& params)
+void rm_filter(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    current_window->remove_filter(params[0]);
+    context.window->remove_filter(params[0]);
 }
 
 void do_command()
@@ -459,7 +459,7 @@ void do_command()
                                              &CommandManager::instance(),
                                              _1, _2));
 
-        CommandManager::instance().execute(cmdline);
+        CommandManager::instance().execute(cmdline, main_context);
     }
     catch (prompt_aborted&) {}
 }
@@ -657,7 +657,7 @@ int main(int argc, char* argv[])
     command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return current_window->complete_filterid(prefix, cursor_pos); }
+                                         { return main_context.window->complete_filterid(prefix, cursor_pos); }
                                      });
 
     register_filters();
@@ -665,9 +665,9 @@ int main(int argc, char* argv[])
     try
     {
         auto buffer = (argc > 1) ? open_or_create(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
-        current_window = buffer->get_or_create_window();
+        main_context = Context(*buffer->get_or_create_window());
 
-        draw_window(*current_window);
+        draw_window(*main_context.window);
         int count = 0;
         while(not quit_requested)
         {
@@ -699,8 +699,8 @@ int main(int argc, char* argv[])
 
                     if (active_keymap.find(c) != active_keymap.end())
                     {
-                        active_keymap[c](*current_window, count);
-                        draw_window(*current_window);
+                        active_keymap[c](*main_context.window, count);
+                        draw_window(*main_context.window);
                     }
                     count = 0;
                 }

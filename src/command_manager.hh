@@ -13,13 +13,16 @@
 namespace Kakoune
 {
 
+struct Context;
+
 struct wrong_argument_count : runtime_error
 {
     wrong_argument_count() : runtime_error("wrong argument count") {}
 };
 
 typedef std::vector<std::string> CommandParameters;
-typedef std::function<void (const CommandParameters&)> Command;
+typedef std::function<void (const CommandParameters&,
+                            const Context& context)> Command;
 
 typedef std::function<CandidateList (const CommandParameters&,
                                      size_t, size_t)> CommandCompleter;
@@ -50,7 +53,10 @@ private:
 class CommandManager : public Singleton<CommandManager>
 {
 public:
-    void execute(const std::string& command_line);
+    void execute(const std::string& command_line, const Context& context);
+    void execute(const std::string& command, const CommandParameters& params,
+                 const Context& context);
+
     Completions complete(const std::string& command_line, size_t cursor_pos);
 
     void register_command(const std::string& command_name,
