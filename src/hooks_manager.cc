@@ -9,14 +9,15 @@ void HooksManager::add_hook(const std::string& hook_name, HookFunc hook)
 }
 
 void HooksManager::run_hook(const std::string& hook_name,
-                            const HookContext& context) const
+                            const std::string& param,
+                            const Context& context) const
 {
     auto hook_list_it = m_hooks.find(hook_name);
     if (hook_list_it == m_hooks.end())
         return;
 
     for (auto& hook : hook_list_it->second)
-         hook(context);
+         hook(param, context);
 }
 
 }
