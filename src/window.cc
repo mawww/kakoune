@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "filter_registry.hh"
+#include "hooks_manager.hh"
 
 #include <algorithm>
 #include <sstream>
@@ -54,9 +55,12 @@ Window::Window(Buffer& buffer)
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
 
     FilterRegistry& registry = FilterRegistry::instance();
+
+    HooksManager::instance().run_hook("WinCreate", buffer.name(),
+                                      Context(*this));
+
     registry.add_filter_to_window(*this, "expand_tabs", FilterParameters());
     registry.add_filter_to_window(*this, "highlight_selections", FilterParameters());
-    registry.add_filter_to_window(*this, "hlcpp", FilterParameters());
 }
 
 void Window::check_invariant() const
