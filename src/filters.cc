@@ -15,6 +15,12 @@ void colorize_regex_range(DisplayBuffer& display_buffer,
                           const boost::regex& ex,
                           Color fg_color, Color bg_color = Color::Default)
 {
+    assert(range_begin <= range_end);
+
+    if (range_begin >= display_buffer.back().end() or
+        range_end <= display_buffer.front().begin())
+        return;
+
     BufferIterator display_begin = std::max(range_begin,
                                             display_buffer.front().begin());
     BufferIterator display_end   = std::min(range_end,
