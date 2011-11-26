@@ -414,6 +414,13 @@ void quit(const CommandParameters& params, const Context& context)
     quit_requested = true;
 }
 
+template<bool force>
+void write_and_quit(const CommandParameters& params, const Context& context)
+{
+    write_buffer(params, context);
+    quit<force>(CommandParameters(), context);
+}
+
 void show_buffer(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 1)
@@ -664,6 +671,8 @@ int main(int argc, char* argv[])
     command_manager.register_command(std::vector<std::string>{ "q!", "quit!" }, quit<true>);
     command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer,
                                      PerArgumentCommandCompleter{ complete_filename });
+    command_manager.register_command(std::vector<std::string>{ "wq" }, write_and_quit<false>);
+    command_manager.register_command(std::vector<std::string>{ "wq!" }, write_and_quit<true>);
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
                                      PerArgumentCommandCompleter {
                                          std::bind(&BufferManager::complete_buffername, &buffer_manager, _1, _2)
