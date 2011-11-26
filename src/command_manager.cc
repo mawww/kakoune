@@ -41,7 +41,8 @@ static TokenList split(const std::string& line)
 
         size_t token_start = pos;
 
-        while((line[pos] != delimiter or line[pos-1] == '\\') and pos != line.length())
+        while ((line[pos] != delimiter or line[pos-1] == '\\') and
+               pos != line.length())
             ++pos;
 
         result.push_back(std::make_pair(token_start, pos));
@@ -97,7 +98,7 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
 {
     TokenList tokens = split(command_line);
 
-    size_t token_to_complete = -1;
+    size_t token_to_complete = tokens.size();
     for (size_t i = 0; i < tokens.size(); ++i)
     {
         if (tokens[i].first <= cursor_pos and tokens[i].second >= cursor_pos)
@@ -138,8 +139,11 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
         params.push_back(command_line.substr(it->first,
                                              it->second - it->first));
     }
-    Completions result(tokens[token_to_complete].first, cursor_pos);
-    size_t cursor_pos_in_token = cursor_pos - tokens[token_to_complete].first;
+
+    size_t start = token_to_complete < tokens.size() ?
+                   tokens[token_to_complete].first : cursor_pos;
+    Completions result(start , cursor_pos);
+    size_t cursor_pos_in_token = cursor_pos - start;
 
     result.candidates = command_it->second.completer(params,
                                                      token_to_complete - 1,
