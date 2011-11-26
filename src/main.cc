@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <map>
 #include <sstream>
+#include <boost/regex.hpp>
 #include <ncurses.h>
 
 using namespace Kakoune;
@@ -451,6 +452,23 @@ void rm_filter(const CommandParameters& params, const Context& context)
     context.window->remove_filter(params[0]);
 }
 
+void add_hook(const CommandParameters& params, const Context& context)
+{
+    if (params.size() < 3)
+        throw wrong_argument_count();
+
+    std::string command = params[2];
+    CommandParameters hook_params(params.begin()+3, params.end());
+
+    HooksManager::instance().add_hook(
+       params[0],
+       [=](const std::string& param, const Context& context) {
+           if (boost::regex_match(param, boost::regex(params[1])))
+               CommandManager::instance().execute(command, hook_params,
+                                                  context);
+       });
+}
+
 void do_command()
 {
     try
@@ -659,6 +677,7 @@ int main(int argc, char* argv[])
                                          [&](const std::string& prefix, size_t cursor_pos)
                                          { return main_context.window->complete_filterid(prefix, cursor_pos); }
                                      });
+    command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook);
 
     register_filters();
 
