@@ -13,9 +13,9 @@
 namespace Kakoune
 {
 
-Buffer* create_buffer_from_file(const std::string& filename)
-{
-    int fd = open(filename.c_str(), O_RDONLY);
+std::string read_file(const std::string& filename)
+{ 
+   int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
         if (errno == ENOENT)
@@ -35,6 +35,12 @@ Buffer* create_buffer_from_file(const std::string& filename)
         content += std::string(buf, size);
     }
     close(fd);
+    return content;
+}
+
+Buffer* create_buffer_from_file(const std::string& filename)
+{
+    std::string content = read_file(filename);
 
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         BufferManager::instance().delete_buffer(buffer);
