@@ -152,12 +152,6 @@ public:
 private:
     BufferChar at(BufferPos position) const;
 
-    void       do_erase(const BufferIterator& begin,
-                        const BufferIterator& end);
-
-    void       do_insert(const BufferIterator& position,
-                         const BufferString& string);
-
     friend class BufferIterator;
 
     std::vector<BufferPos> m_lines;

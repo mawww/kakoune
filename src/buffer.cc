@@ -46,18 +46,6 @@ void Buffer::insert(const BufferIterator& position, const BufferString& string)
     append_modification(BufferModification(BufferModification::Insert, position, string));
 }
 
-void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
-{
-    m_content.erase(begin.m_position, end - begin);
-    compute_lines();
-}
-
-void Buffer::do_insert(const BufferIterator& position, const BufferString& string)
-{
-    m_content.insert(position.m_position, string);
-    compute_lines();
-}
-
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
 {
     if (m_lines.empty())
@@ -207,19 +195,21 @@ void Buffer::apply_modification(const BufferModification& modification)
     switch (modification.type)
     {
     case BufferModification::Insert:
-        do_insert(modification.position, modification.content);
+        m_content.insert(modification.position.m_position,
+                         modification.content);
         break;
     case BufferModification::Erase:
     {
-        BufferIterator begin = modification.position;
-        BufferIterator end   = begin + modification.content.size();
-        assert(string(begin, end) == modification.content);
-        do_erase(begin, end);
+        size_t size = modification.content.size();
+        assert(string(modification.position, modification.position + size)
+               == modification.content);
+        m_content.erase(modification.position.m_position, size);
         break;
     }
     default:
         assert(false);
     }
+    compute_lines();
     for (auto listener : m_modification_listeners)
         listener->on_modification(modification);
 }
