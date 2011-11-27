@@ -476,6 +476,26 @@ void add_hook(const CommandParameters& params, const Context& context)
        });
 }
 
+void exec_commands_in_file(const CommandParameters& params,
+                           const Context& context)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    std::string file_content = read_file(params[0]);
+    CommandManager& cmd_manager = CommandManager::instance();
+
+    size_t pos = 0;
+    while (true)
+    {
+         size_t end_pos = file_content.find_first_of('\n', pos);
+ 	 cmd_manager.execute(file_content.substr(pos, end_pos), context);
+         if (end_pos == std::string::npos)
+             break;
+         pos = end_pos + 1;
+    }
+}
+
 void do_command()
 {
     try
@@ -688,7 +708,19 @@ int main(int argc, char* argv[])
                                      });
     command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook);
 
+    command_manager.register_command(std::vector<std::string>{ "source" }, exec_commands_in_file,
+                                     PerArgumentCommandCompleter{ complete_filename });
+
     register_filters();
+
+    try
+    {
+        exec_commands_in_file({ "kakrc" }, main_context);
+    }
+     catch (Kakoune::runtime_error& error)
+    {
+        print_status(error.description());
+    }
 
     try
     {
