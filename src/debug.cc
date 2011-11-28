@@ -12,7 +12,7 @@ static Buffer& get_or_create_debug_buffer()
     Buffer* buffer = BufferManager::instance().get_buffer(debug_buffer_name);
 
     if (not buffer)
-        buffer = new Buffer(debug_buffer_name, Buffer::Type::Scratch);
+        buffer = new Buffer(debug_buffer_name, Buffer::Type::Scratch, "\n");
 
     assert(buffer);
     return *buffer;
@@ -21,7 +21,7 @@ static Buffer& get_or_create_debug_buffer()
 void write_debug(const std::string& str)
 {
     Buffer& debug_buffer = get_or_create_debug_buffer();
-    debug_buffer.insert(debug_buffer.end(), str);
+    debug_buffer.insert(debug_buffer.end()-1, str);
 }
 
 }

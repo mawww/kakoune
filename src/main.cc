@@ -724,6 +724,8 @@ int main(int argc, char* argv[])
 
     try
     {
+        write_debug("*** This is the debug buffer, where debug info will be written ***\n");
+
         auto buffer = (argc > 1) ? open_or_create(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
         main_context = Context(*buffer->get_or_create_window());
 
@@ -734,10 +736,6 @@ int main(int argc, char* argv[])
             try
             {
                 char c = getch();
-
-                std::ostringstream oss;
-                oss << "key " << int(c) << " (" << c << ")\n";
-                write_debug(oss.str());
 
                 if (isdigit(c))
                     count = count * 10 + c - '0';
