@@ -96,6 +96,17 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
     return result;
 }
 
+BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) const
+{
+    return BufferIterator(*this, m_lines[line_at(iterator)]);
+}
+
+BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
+{
+    BufferPos line = line_at(iterator) + 1;
+    return line < m_lines.size() ? BufferIterator(*this, m_lines[line]) : end();
+}
+
 void Buffer::compute_lines()
 {
     m_lines.clear();

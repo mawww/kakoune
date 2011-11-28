@@ -149,6 +149,15 @@ public:
     void register_modification_listener(BufferModificationListener* listener);
     void unregister_modification_listener(BufferModificationListener* listener);
 
+    // returns an iterator pointing to the first character of the line
+    // iterator is on
+    BufferIterator iterator_at_line_begin(const BufferIterator& iterator) const;
+
+    // returns an iterator pointing to the character after the last of the
+    // line iterator is on (which is the first of the next line if iterator is
+    // not on the last one)
+    BufferIterator iterator_at_line_end(const BufferIterator& iterator) const;
+
 private:
     BufferChar at(BufferPos position) const;
 
