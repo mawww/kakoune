@@ -59,13 +59,13 @@ void DynamicBufferIterator::on_modification(const BufferModification& modificati
 void DynamicBufferIterator::register_ifp()
 {
     if (is_valid())
-        buffer().register_modification_listener(this);
+        const_cast<Buffer&>(buffer()).register_modification_listener(this);
 }
 
 void DynamicBufferIterator::unregister_ifn()
 {
     if (is_valid())
-        buffer().unregister_modification_listener(this);
+        const_cast<Buffer&>(buffer()).unregister_modification_listener(this);
 }
 
 }
