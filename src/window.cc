@@ -393,7 +393,7 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
 
     for (auto& sel : m_window.m_selections)
     {
-        BufferIterator pos;
+        DynamicBufferIterator pos;
         switch (mode)
         {
         case Mode::Insert: pos = sel.begin(); break;
@@ -402,24 +402,16 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
 
         case Mode::OpenLineBelow:
         case Mode::AppendAtLineEnd:
-            pos = sel.end() - 1;
-            while (not pos.is_end() and *pos != '\n')
-                ++pos;
+            pos = m_window.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
             if (mode == Mode::OpenLineBelow)
-            {
-                ++pos;
                 window.m_buffer.insert(pos, "\n");
-            }
             break;
 
         case Mode::OpenLineAbove:
         case Mode::InsertAtLineBegin:
-            pos = sel.begin();
-            while (not pos.is_begin() and *pos != '\n')
-                --pos;
+            pos = m_window.m_buffer.iterator_at_line_begin(sel.begin());
             if (mode == Mode::OpenLineAbove)
-                window.m_buffer.insert(pos, "\n");
-            ++pos;
+                window.m_buffer.insert(--pos, "\n");
             break;
         }
         sel = Selection(pos, pos, sel.captures());
