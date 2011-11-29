@@ -7,8 +7,8 @@
 #include "selectors.hh"
 #include "assert.hh"
 #include "debug.hh"
-#include "filters.hh"
-#include "filter_registry.hh"
+#include "highlighters.hh"
+#include "highlighter_registry.hh"
 #include "hooks_manager.hh"
 
 #include <unordered_map>
@@ -433,17 +433,17 @@ void show_buffer(const CommandParameters& params, const Context& context)
         main_context = Context(*buffer->get_or_create_window());
 }
 
-void add_filter(const CommandParameters& params, const Context& context)
+void add_highlighter(const CommandParameters& params, const Context& context)
 {
     if (params.size() < 1)
         throw wrong_argument_count();
 
     try
     {
-        FilterRegistry& registry = FilterRegistry::instance();
-        FilterParameters filter_params(params.begin()+1, params.end());
-        registry.add_filter_to_window(*context.window, params[0],
-                                      filter_params);
+        HighlighterRegistry& registry = HighlighterRegistry::instance();
+        HighlighterParameters highlighter_params(params.begin()+1, params.end());
+        registry.add_highlighter_to_window(*context.window, params[0],
+                                           highlighter_params);
     }
     catch (runtime_error& err)
     {
@@ -451,12 +451,12 @@ void add_filter(const CommandParameters& params, const Context& context)
     }
 }
 
-void rm_filter(const CommandParameters& params, const Context& context)
+void rm_highlighter(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    context.window->remove_filter(params[0]);
+    context.window->remove_highlighter(params[0]);
 }
 
 void add_hook(const CommandParameters& params, const Context& context)
@@ -679,11 +679,11 @@ int main(int argc, char* argv[])
 {
     init_ncurses();
 
-    CommandManager  command_manager;
-    BufferManager   buffer_manager;
-    RegisterManager register_manager;
-    FilterRegistry  filter_registry;
-    HooksManager    hooks_manager;
+    CommandManager      command_manager;
+    BufferManager       buffer_manager;
+    RegisterManager     register_manager;
+    HighlighterRegistry highlighter_registry;
+    HooksManager        hooks_manager;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      PerArgumentCommandCompleter{ complete_filename });
@@ -697,21 +697,21 @@ int main(int argc, char* argv[])
                                      PerArgumentCommandCompleter {
                                          std::bind(&BufferManager::complete_buffername, &buffer_manager, _1, _2)
                                       });
-    command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
+    command_manager.register_command(std::vector<std::string>{ "ah", "addhl" }, add_highlighter,
                                      PerArgumentCommandCompleter {
-                                         std::bind(&FilterRegistry::complete_filter, &filter_registry, _1, _2)
+                                         std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
                                      });
-    command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter,
+    command_manager.register_command(std::vector<std::string>{ "rh", "rmhl" }, rm_highlighter,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return main_context.window->complete_filterid(prefix, cursor_pos); }
+                                         { return main_context.window->complete_highlighterid(prefix, cursor_pos); }
                                      });
     command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook);
 
     command_manager.register_command(std::vector<std::string>{ "source" }, exec_commands_in_file,
                                      PerArgumentCommandCompleter{ complete_filename });
 
-    register_filters();
+    register_highlighters();
 
     try
     {

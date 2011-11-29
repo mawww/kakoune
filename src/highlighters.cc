@@ -1,9 +1,9 @@
-#include "filters.hh"
+#include "highlighters.hh"
 
 #include "assert.hh"
 #include "window.hh"
 #include "display_buffer.hh"
-#include "filter_registry.hh"
+#include "highlighter_registry.hh"
 #include <boost/regex.hpp>
 
 namespace Kakoune
@@ -80,8 +80,8 @@ Color parse_color(const std::string& color)
     return Color::Default;
 }
 
-FilterAndId colorize_regex_factory(Window& window,
-                                   const FilterParameters params)
+HighlighterAndId colorize_regex_factory(Window& window,
+                                   const HighlighterParameters params)
 {
     if (params.size() != 3)
         throw runtime_error("wrong parameter count");
@@ -93,7 +93,7 @@ FilterAndId colorize_regex_factory(Window& window,
 
     std::string id = "colre'" + params[0] + "'";
 
-    return FilterAndId(id, std::bind(colorize_regex, std::placeholders::_1,
+    return HighlighterAndId(id, std::bind(colorize_regex, std::placeholders::_1,
                                      ex, fg_color, bg_color));
 }
 
@@ -194,16 +194,16 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     }
 }
 
-template<void (*filter_func)(DisplayBuffer&)>
-class SimpleFilterFactory
+template<void (*highlighter_func)(DisplayBuffer&)>
+class SimpleHighlighterFactory
 {
 public:
-    SimpleFilterFactory(const std::string& id) : m_id(id) {}
+    SimpleHighlighterFactory(const std::string& id) : m_id(id) {}
 
-    FilterAndId operator()(Window& window,
-                           const FilterParameters& params) const
+    HighlighterAndId operator()(Window& window,
+                                const HighlighterParameters& params) const
     {
-        return FilterAndId(m_id, FilterFunc(filter_func));
+        return HighlighterAndId(m_id, HighlighterFunc(highlighter_func));
     }
 private:
     std::string m_id;
@@ -280,10 +280,10 @@ public:
 
     }
 
-    static FilterAndId create(Window& window,
-                              const FilterParameters& params)
+    static HighlighterAndId create(Window& window,
+                              const HighlighterParameters& params)
     {
-        return FilterAndId("highlight_selections",
+        return HighlighterAndId("highlight_selections",
                             SelectionsHighlighter(window));
     }
 
@@ -291,14 +291,14 @@ private:
     const Window& m_window;
 };
 
-void register_filters()
+void register_highlighters()
 {
-    FilterRegistry& registry = FilterRegistry::instance();
+    HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     registry.register_factory("highlight_selections", SelectionsHighlighter::create);
-    registry.register_factory("expand_tabs", SimpleFilterFactory<expand_tabulations>("expand_tabs"));
-    registry.register_factory("number_lines", SimpleFilterFactory<show_line_numbers>("number_lines"));
-    registry.register_factory("hlcpp", SimpleFilterFactory<colorize_cplusplus>("hlcpp"));
+    registry.register_factory("expand_tabs", SimpleHighlighterFactory<expand_tabulations>("expand_tabs"));
+    registry.register_factory("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
+    registry.register_factory("hlcpp", SimpleHighlighterFactory<colorize_cplusplus>("hlcpp"));
     registry.register_factory("regex", colorize_regex_factory);
 }
 

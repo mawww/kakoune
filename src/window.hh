@@ -7,7 +7,7 @@
 #include "dynamic_buffer_iterator.hh"
 #include "display_buffer.hh"
 #include "completion.hh"
-#include "filter.hh"
+#include "highlighter.hh"
 
 namespace Kakoune
 {
@@ -87,17 +87,17 @@ public:
 
     std::string status_line() const;
 
-    struct filter_id_not_unique : public runtime_error
+    struct highlighter_id_not_unique : public runtime_error
     {
-        filter_id_not_unique(const std::string& id)
-            : runtime_error("filter id not unique: " + id) {}
+        highlighter_id_not_unique(const std::string& id)
+            : runtime_error("highlighter id not unique: " + id) {}
     };
 
-    void add_filter(FilterAndId&& filter);
-    void remove_filter(const std::string& id);
+    void add_highlighter(HighlighterAndId&& highlighter);
+    void remove_highlighter(const std::string& id);
 
-    CandidateList complete_filterid(const std::string& prefix,
-                                    size_t cursor_pos = std::string::npos);
+    CandidateList complete_highlighterid(const std::string& prefix,
+                                         size_t cursor_pos = std::string::npos);
 
 private:
     friend class Buffer;
@@ -121,8 +121,8 @@ private:
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
 
-    typedef std::vector<FilterAndId> FilterList;
-    FilterList m_filters;
+    typedef std::vector<HighlighterAndId> HighlighterList;
+    HighlighterList m_highlighters;
 };
 
 class IncrementalInserter

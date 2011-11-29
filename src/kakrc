@@ -1,2 +1,2 @@
-hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addfilter hlcpp
+hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addhl hlcpp
 

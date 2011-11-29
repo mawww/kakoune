@@ -1,7 +1,7 @@
 #include "window.hh"
 
 #include "assert.hh"
-#include "filter_registry.hh"
+#include "highlighter_registry.hh"
 #include "hooks_manager.hh"
 
 #include <algorithm>
@@ -54,13 +54,13 @@ Window::Window(Buffer& buffer)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
 
-    FilterRegistry& registry = FilterRegistry::instance();
+    HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     HooksManager::instance().run_hook("WinCreate", buffer.name(),
                                       Context(*this));
 
-    registry.add_filter_to_window(*this, "expand_tabs", FilterParameters());
-    registry.add_filter_to_window(*this, "highlight_selections", FilterParameters());
+    registry.add_highlighter_to_window(*this, "expand_tabs", HighlighterParameters());
+    registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());
 }
 
 void Window::check_invariant() const
@@ -293,9 +293,9 @@ void Window::update_display_buffer()
 
     m_display_buffer.append(DisplayAtom(DisplayCoord(0,0), begin, end));
 
-    for (auto& filter : m_filters)
+    for (auto& highlighter : m_highlighters)
     {
-        filter.second(m_display_buffer);
+        highlighter.second(m_display_buffer);
         m_display_buffer.check_invariant();
     }
 }
@@ -343,37 +343,37 @@ std::string Window::status_line() const
     return oss.str();
 }
 
-void Window::add_filter(FilterAndId&& filter)
+void Window::add_highlighter(HighlighterAndId&& highlighter)
 {
-    for (auto it = m_filters.begin(); it != m_filters.end(); ++it)
+    for (auto it = m_highlighters.begin(); it != m_highlighters.end(); ++it)
     {
-        if (it->first == filter.first)
-            throw filter_id_not_unique(filter.first);
+        if (it->first == highlighter.first)
+            throw highlighter_id_not_unique(highlighter.first);
     }
-    m_filters.push_back(filter);
+    m_highlighters.push_back(highlighter);
 }
 
-void Window::remove_filter(const std::string& id)
+void Window::remove_highlighter(const std::string& id)
 {
-    for (auto it = m_filters.begin(); it != m_filters.end(); ++it)
+    for (auto it = m_highlighters.begin(); it != m_highlighters.end(); ++it)
     {
         if (it->first == id)
         {
-            m_filters.erase(it);
+            m_highlighters.erase(it);
             return;
         }
     }
 }
 
-CandidateList Window::complete_filterid(const std::string& prefix,
+CandidateList Window::complete_highlighterid(const std::string& prefix,
                                         size_t cursor_pos)
 {
     std::string real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;
-    for (auto& filter : m_filters)
+    for (auto& highlighter : m_highlighters)
     {
-        if (filter.first.substr(0, real_prefix.length()) == real_prefix)
-            result.push_back(filter.first);
+        if (highlighter.first.substr(0, real_prefix.length()) == real_prefix)
+            result.push_back(highlighter.first);
     }
     return result;
 }

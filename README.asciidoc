@@ -107,14 +107,14 @@ from the selection.
 
 While inserting, _^B_ key followed by a digit inserts the designated capture.
 
-Filters
--------
+Highlighters
+------------
 
-Manipulation of the displayed text is done through filters, which can be added
-or removed with the command :addfilter <filter_name> <filter_parameters...>
-and :rmfilter <filter_id>
+Manipulation of the displayed text is done through highlighters, which can be added
+or removed with the command :addhl <highlighter_name> <highlighter_parameters...>
+and :rmhl <highlighter_id>
 
-existing filters are:
+existing highlighters are:
 
 * *highlight_selections*: used to make current selection visible
 * *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
