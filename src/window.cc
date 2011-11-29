@@ -206,8 +206,12 @@ DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
 void Window::clear_selections()
 {
     check_invariant();
-    Selection sel = Selection(m_selections.back().last(),
-                              m_selections.back().last());
+    BufferIterator pos = m_selections.back().last();
+    
+    if (*pos == '\n' and not pos.is_begin() and *(pos-1) != '\n')
+        --pos;
+        
+    Selection sel = Selection(pos, pos);
     m_selections.clear();
     m_selections.push_back(std::move(sel));
 }
