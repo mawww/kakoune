@@ -81,7 +81,7 @@ Color parse_color(const std::string& color)
 }
 
 HighlighterAndId colorize_regex_factory(Window& window,
-                                   const HighlighterParameters params)
+                                        const HighlighterParameters params)
 {
     if (params.size() != 3)
         throw runtime_error("wrong parameter count");
@@ -281,7 +281,7 @@ public:
     }
 
     static HighlighterAndId create(Window& window,
-                              const HighlighterParameters& params)
+                                   const HighlighterParameters& params)
     {
         return HighlighterAndId("highlight_selections",
                             SelectionsHighlighter(window));
