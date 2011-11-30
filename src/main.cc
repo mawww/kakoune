@@ -309,7 +309,6 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
         }
         draw_window(window);
     }
-    window.clear_selections();
 }
 
 template<bool append>
@@ -536,21 +535,18 @@ void do_search_next(Window& window)
 void do_yank(Window& window, int count)
 {
     RegisterManager::instance()['"'] = window.selection_content();
-    window.clear_selections();
 }
 
 void do_erase(Window& window, int count)
 {
     RegisterManager::instance()['"'] = window.selection_content();
     window.erase();
-    window.clear_selections();
 }
 
 void do_change(Window& window, int count)
 {
     RegisterManager::instance()['"'] = window.selection_content();
     do_insert(window, IncrementalInserter::Mode::Change);
-    window.clear_selections();
 }
 
 template<bool append>
@@ -560,7 +556,6 @@ void do_paste(Window& window, int count)
         window.append(RegisterManager::instance()['"']);
     else
         window.insert(RegisterManager::instance()['"']);
-    window.clear_selections();
 }
 
 void do_select_regex(Window& window, int count)
