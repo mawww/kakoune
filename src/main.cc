@@ -516,7 +516,7 @@ void exec_commands_in_file(const CommandParameters& params,
     while (true)
     {
          size_t end_pos = file_content.find_first_of('\n', pos);
- 	 cmd_manager.execute(file_content.substr(pos, end_pos), context);
+ 	 cmd_manager.execute(file_content.substr(pos, end_pos - pos), context);
          if (end_pos == std::string::npos)
              break;
          pos = end_pos + 1;
