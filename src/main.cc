@@ -9,6 +9,8 @@
 #include "debug.hh"
 #include "highlighters.hh"
 #include "highlighter_registry.hh"
+#include "filters.hh"
+#include "filter_registry.hh"
 #include "hooks_manager.hh"
 
 #include <unordered_map>
@@ -458,6 +460,32 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
     context.window->remove_highlighter(params[0]);
 }
 
+void add_filter(const CommandParameters& params, const Context& context)
+{
+    if (params.size() < 1)
+        throw wrong_argument_count();
+
+    try
+    {
+        FilterRegistry& registry = FilterRegistry::instance();
+        FilterParameters filter_params(params.begin()+1, params.end());
+        registry.add_filter_to_buffer(*context.buffer, params[0],
+                                      filter_params);
+    }
+    catch (runtime_error& err)
+    {
+        print_status("error: " + err.description());
+    }
+}
+
+void rm_filter(const CommandParameters& params, const Context& context)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    context.buffer->remove_filter(params[0]);
+}
+
 void add_hook(const CommandParameters& params, const Context& context)
 {
     if (params.size() < 3)
@@ -678,6 +706,7 @@ int main(int argc, char* argv[])
     BufferManager       buffer_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
+    FilterRegistry      filter_registry;
     HooksManager        hooks_manager;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
@@ -701,12 +730,22 @@ int main(int argc, char* argv[])
                                          [&](const std::string& prefix, size_t cursor_pos)
                                          { return main_context.window->complete_highlighterid(prefix, cursor_pos); }
                                      });
+    command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
+                                     PerArgumentCommandCompleter {
+                                         std::bind(&FilterRegistry::complete_filter, &filter_registry, _1, _2)
+                                     });
+    command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter,
+                                     PerArgumentCommandCompleter {
+                                         [&](const std::string& prefix, size_t cursor_pos)
+                                         { return main_context.buffer->complete_filterid(prefix, cursor_pos); }
+                                     });
     command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook);
 
     command_manager.register_command(std::vector<std::string>{ "source" }, exec_commands_in_file,
                                      PerArgumentCommandCompleter{ complete_filename });
 
     register_highlighters();
+    register_filters();
 
     try
     {
