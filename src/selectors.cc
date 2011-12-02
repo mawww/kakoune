@@ -181,7 +181,7 @@ Selection select_to_previous_WORD(const BufferIterator& cursor)
 Selection select_line(const BufferIterator& cursor)
 {
     BufferIterator first = cursor;
-    if (*first == '\n' and not first.is_end())
+    if (*first == '\n' and not (first + 1).is_end())
         ++first;
 
     while (not first.is_begin() and *(first - 1) != '\n')
