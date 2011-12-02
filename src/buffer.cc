@@ -4,6 +4,7 @@
 #include "window.hh"
 #include "assert.hh"
 #include "utils.hh"
+#include "hooks_manager.hh"
 
 namespace Kakoune
 {
@@ -26,6 +27,7 @@ Buffer::Buffer(const std::string& name, Type type,
 {
     BufferManager::instance().register_buffer(this);
 
+    HooksManager::instance().run_hook("BufCreate", name, Context(*this));
     compute_lines();
 }
 
