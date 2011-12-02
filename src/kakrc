@@ -1,2 +1,3 @@
 hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addhl hlcpp
-
+hook BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addfilter preserve_indent
+hook WinCreate .* addhl regex \h+\n default red
