@@ -8,6 +8,7 @@
 #include "display_buffer.hh"
 #include "completion.hh"
 #include "highlighter.hh"
+#include "idvaluemap.hh"
 
 namespace Kakoune
 {
@@ -121,8 +122,7 @@ private:
     SelectionList m_selections;
     DisplayBuffer m_display_buffer;
 
-    typedef std::vector<HighlighterAndId> HighlighterList;
-    HighlighterList m_highlighters;
+    idvaluemap<std::string, HighlighterFunc> m_highlighters;
 };
 
 class IncrementalInserter

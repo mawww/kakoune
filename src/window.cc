@@ -349,37 +349,20 @@ std::string Window::status_line() const
 
 void Window::add_highlighter(HighlighterAndId&& highlighter)
 {
-    for (auto it = m_highlighters.begin(); it != m_highlighters.end(); ++it)
-    {
-        if (it->first == highlighter.first)
-            throw highlighter_id_not_unique(highlighter.first);
-    }
-    m_highlighters.push_back(highlighter);
+    if (m_highlighters.contains(highlighter.first))
+        throw highlighter_id_not_unique(highlighter.first);
+    m_highlighters.append(highlighter);
 }
 
 void Window::remove_highlighter(const std::string& id)
 {
-    for (auto it = m_highlighters.begin(); it != m_highlighters.end(); ++it)
-    {
-        if (it->first == id)
-        {
-            m_highlighters.erase(it);
-            return;
-        }
-    }
+    m_highlighters.remove(id);
 }
 
 CandidateList Window::complete_highlighterid(const std::string& prefix,
-                                        size_t cursor_pos)
+                                             size_t cursor_pos)
 {
-    std::string real_prefix = prefix.substr(0, cursor_pos);
-    CandidateList result;
-    for (auto& highlighter : m_highlighters)
-    {
-        if (highlighter.first.substr(0, real_prefix.length()) == real_prefix)
-            result.push_back(highlighter.first);
-    }
-    return result;
+    return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
 
