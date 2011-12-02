@@ -44,7 +44,9 @@ void DynamicBufferIterator::on_modification(const BufferModification& modificati
     size_t length = modification.content.length();
     if (modification.type == BufferModification::Erase)
     {
-        if (*this <= modification.position + length)
+        // do not move length on the other side of the inequality,
+        // as modification.position + length may be after buffer end
+        if (*this - length <= modification.position)
             BufferIterator::operator=(modification.position);
         else
             *this -= length;
