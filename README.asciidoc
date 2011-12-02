@@ -122,6 +122,17 @@ existing highlighters are:
 * *number_lines*: show line numbers 
 * *regex*: highlight a regex, takes 3 parameters <regex> <fg_color> <bg_color>
 
+Filters
+-------
+
+Filters can be installed to interact with buffer modifications. They can be
+added or removed with :addfilter <filter_name> <filter_parameters...> and
+:rmfilter <filter_id>
+
+exisiting filters are:
+
+* *preserve_indent*: insert previous line indent when inserting a newline
+
 Hooks
 -----
 
