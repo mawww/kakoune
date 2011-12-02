@@ -8,7 +8,8 @@ namespace Kakoune
 
 struct factory_not_found : public runtime_error
 {
-    factory_not_found() : runtime_error("filter factory not found") {}
+    factory_not_found(const std::string& name)
+        : runtime_error("filter factory not found '" + name + "'") {}
 };
 
 void FilterRegistry::register_factory(const std::string& name,
@@ -24,7 +25,7 @@ void FilterRegistry::add_filter_to_buffer(Buffer& buffer,
 {
     auto it = m_factories.find(name);
     if (it == m_factories.end())
-        throw factory_not_found();
+        throw factory_not_found(name);
 
     buffer.add_filter(it->second(buffer, parameters));
 }

@@ -8,7 +8,8 @@ namespace Kakoune
 
 struct factory_not_found : public runtime_error
 {
-    factory_not_found() : runtime_error("factory not found") {}
+    factory_not_found(const std::string& name)
+        : runtime_error("highlighter factory not found '" + name + "'") {}
 };
 
 void HighlighterRegistry::register_factory(const std::string& name,
@@ -24,7 +25,7 @@ void HighlighterRegistry::add_highlighter_to_window(Window& window,
 {
     auto it = m_factories.find(name);
     if (it == m_factories.end())
-        throw factory_not_found();
+        throw factory_not_found(name);
 
     window.add_highlighter(it->second(window, parameters));
 }
