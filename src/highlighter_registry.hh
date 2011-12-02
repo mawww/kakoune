@@ -7,6 +7,7 @@
 #include "highlighter.hh"
 #include "utils.hh"
 #include "completion.hh"
+#include "idvaluemap.hh"
 
 namespace Kakoune
 {
@@ -32,7 +33,7 @@ public:
                                       size_t cursor_pos);
 
 private:
-    std::unordered_map<std::string, HighlighterFactory> m_factories;
+    idvaluemap<std::string, HighlighterFactory> m_factories;
 };
 
 }

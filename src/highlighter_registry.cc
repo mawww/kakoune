@@ -14,8 +14,8 @@ struct factory_not_found : public runtime_error
 void HighlighterRegistry::register_factory(const std::string& name,
                                            const HighlighterFactory& factory)
 {
-    assert(m_factories.find(name) == m_factories.end());
-    m_factories[name] = factory;
+    assert(not m_factories.contains(name));
+    m_factories.append(std::make_pair(name, factory));
 }
 
 void HighlighterRegistry::add_highlighter_to_window(Window& window,
@@ -32,14 +32,7 @@ void HighlighterRegistry::add_highlighter_to_window(Window& window,
 CandidateList HighlighterRegistry::complete_highlighter(const std::string& prefix,
                                                         size_t cursor_pos)
 {
-    std::string real_prefix = prefix.substr(0, cursor_pos);
-    CandidateList result;
-    for (auto& highlighter : m_factories)
-    {
-        if (highlighter.first.substr(0, real_prefix.length()) == real_prefix)
-            result.push_back(highlighter.first);
-    }
-    return result;
+    return m_factories.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
 }
