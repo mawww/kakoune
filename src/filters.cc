@@ -20,6 +20,29 @@ void preserve_indent(Buffer& buffer, BufferModification& modification)
     }
 }
 
+void expand_tabulations(Buffer& buffer, BufferModification& modification)
+{
+    const int tabstop = 8;
+    if (modification.type == BufferModification::Insert and
+        modification.content == "\t")
+    {
+        int column = 0;
+        BufferCoord pos = buffer.line_and_column_at(modification.position);
+        for (auto line_it = buffer.iterator_at({pos.line, 0});
+             line_it != modification.position; ++line_it)
+        {
+            assert(*line_it != '\n');
+            if (*line_it == '\t')
+                column += tabstop - (column % tabstop);
+            else
+               ++column;
+        }
+
+        int count = tabstop - (column % tabstop);
+        modification.content = std::string(count, ' ');
+    }
+}
+
 template<void (*filter_func)(Buffer&, BufferModification&)>
 class SimpleFilterFactory
 {
@@ -40,6 +63,7 @@ void register_filters()
     FilterRegistry& registry = FilterRegistry::instance();
 
     registry.register_factory("preserve_indent", SimpleFilterFactory<preserve_indent>("preserve_indent"));
+    registry.register_factory("expand_tabulations", SimpleFilterFactory<expand_tabulations>("expand_tabulations"));
 }
 
 }
