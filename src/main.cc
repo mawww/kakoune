@@ -272,46 +272,76 @@ void print_status(const std::string& status)
     addstr(status.c_str());
 }
 
+struct InsertSequence
+{
+    IncrementalInserter::Mode mode;
+    std::string               keys;
+
+    InsertSequence() : mode(IncrementalInserter::Mode::Insert) {}
+};
+
+InsertSequence last_insert_sequence;
+
+bool insert_char(IncrementalInserter& inserter, char c)
+{
+    switch (c)
+    {
+    case 27:
+        return false;
+
+    case 2:
+        c = getch();
+        if (c >= '0' and c <= '9')
+            inserter.insert_capture(c - '0');
+        break;
+
+    case 4:
+        inserter.move_cursor({0, -1});
+        break;
+    case 5:
+        inserter.move_cursor({0,  1});
+        break;
+
+    case 7:
+        inserter.erase();
+        break;
+
+    case '\r':
+        c = '\n';
+    default:
+        inserter.insert(std::string() + c);
+    }
+    return true;
+}
+
 void do_insert(Window& window, IncrementalInserter::Mode mode)
 {
-    Kakoune::IncrementalInserter inserter(window, mode);
+    last_insert_sequence.mode = mode;
+    last_insert_sequence.keys.clear();
+    IncrementalInserter inserter(window, mode);
     draw_window(window);
     while(true)
     {
-        const DisplayCoord& pos = window.cursor_position();
-        move(pos.line, pos.column);
-
         char c = getch();
-        switch (c)
-        {
-        case 27:
+
+        if (not insert_char(inserter, c))
             return;
 
-        case 2:
-            c = getch();
-            if (c >= '0' and c <= '9')
-                inserter.insert_capture(c - '0');
-            break;
-
-        case 4:
-            inserter.move_cursor({0, -1});
-            break;
-        case 5:
-            inserter.move_cursor({0,  1});
-            break;
-
-        case 7:
-            inserter.erase();
-            break;
-
-        case '\r':
-            c = '\n';
-        default:
-            inserter.insert(std::string() + c);
-        }
+        last_insert_sequence.keys += c;
         draw_window(window);
     }
 }
+
+void do_repeat_insert(Window& window, int count)
+{
+    IncrementalInserter inserter(window, last_insert_sequence.mode);
+    for (char c : last_insert_sequence.keys)
+    {
+        insert_char(inserter, c);
+    }
+    draw_window(window);
+}
+
 
 template<bool append>
 void do_go(Window& window, int count)
@@ -650,6 +680,9 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> keymap
     { 'P', do_paste<false> },
 
     { 's', do_select_regex },
+
+
+    { '.', do_repeat_insert },
 
     { '%', [](Window& window, int count) { window.select([](const BufferIterator& cursor)
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
