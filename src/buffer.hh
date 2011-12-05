@@ -137,7 +137,8 @@ public:
     BufferIterator iterator_at(const BufferCoord& line_and_column) const;
     BufferCoord    line_and_column_at(const BufferIterator& iterator) const;
 
-    BufferCoord     clamp(const BufferCoord& line_and_column) const;
+    // returns nearest valid coordinates from given ones
+    BufferCoord    clamp(const BufferCoord& line_and_column) const;
 
     const std::string& name() const { return m_name; }
 
