@@ -207,10 +207,10 @@ void Window::clear_selections()
 {
     check_invariant();
     BufferIterator pos = m_selections.back().last();
-    
+
     if (*pos == '\n' and not pos.is_begin() and *(pos-1) != '\n')
         --pos;
-        
+
     Selection sel = Selection(pos, pos);
     m_selections.clear();
     m_selections.push_back(std::move(sel));
