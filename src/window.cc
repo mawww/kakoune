@@ -247,8 +247,11 @@ void Window::multi_select(const MultiSelector& selector)
         std::copy(selections.begin(), selections.end(),
                   std::back_inserter(new_selections));
     }
-    m_selections = std::move(new_selections);
-    scroll_to_keep_cursor_visible_ifn();
+    if (not new_selections.empty())
+    {
+        m_selections = std::move(new_selections);
+        scroll_to_keep_cursor_visible_ifn();
+    }
 }
 
 BufferString Window::selection_content() const
