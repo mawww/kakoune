@@ -77,7 +77,7 @@ private:
     friend class Buffer;
 };
 
-struct BufferModification
+struct Modification
 {
     enum Type { Insert, Erase };
 
@@ -85,17 +85,17 @@ struct BufferModification
     BufferIterator position;
     BufferString   content;
 
-    BufferModification(Type type, BufferIterator position,
+    Modification(Type type, BufferIterator position,
                        BufferString content)
         : type(type), position(position), content(content) {}
 
-    BufferModification inverse() const;
+    Modification inverse() const;
 };
 
-class BufferModificationListener
+class ModificationListener
 {
 public:
-    virtual void on_modification(const BufferModification& modification) = 0;
+    virtual void on_modification(const Modification& modification) = 0;
 };
 
 class Buffer
@@ -151,8 +151,8 @@ public:
     Type type() const { return m_type; }
     void notify_saved();
 
-    void register_modification_listener(BufferModificationListener* listener);
-    void unregister_modification_listener(BufferModificationListener* listener);
+    void register_modification_listener(ModificationListener* listener);
+    void unregister_modification_listener(ModificationListener* listener);
 
     struct filter_id_not_unique : public runtime_error
     {
@@ -191,22 +191,22 @@ private:
     std::string  m_name;
     const Type   m_type;
 
-    typedef std::vector<BufferModification> UndoGroup;
+    typedef std::vector<Modification> UndoGroup;
 
     std::vector<UndoGroup>           m_history;
     std::vector<UndoGroup>::iterator m_history_cursor;
     UndoGroup                        m_current_undo_group;
 
-    void apply_modification(const BufferModification& modification);
-    void revert_modification(const BufferModification& modification);
+    void apply_modification(const Modification& modification);
+    void revert_modification(const Modification& modification);
 
-    void append_modification(BufferModification&& modification);
+    void append_modification(Modification&& modification);
 
     std::list<std::unique_ptr<Window>> m_windows;
 
     size_t m_last_save_undo_index;
 
-    std::vector<BufferModificationListener*> m_modification_listeners;
+    std::vector<ModificationListener*> m_modification_listeners;
 
     idvaluemap<std::string, FilterFunc> m_filters;
 };

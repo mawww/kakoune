@@ -39,13 +39,13 @@ Buffer::~Buffer()
 
 void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
 {
-    append_modification(BufferModification(BufferModification::Erase,
-                                           begin, string(begin, end)));
+    append_modification(Modification(Modification::Erase, begin,
+                                     string(begin, end)));
 }
 
 void Buffer::insert(const BufferIterator& position, const BufferString& string)
 {
-    append_modification(BufferModification(BufferModification::Insert, position, string));
+    append_modification(Modification(Modification::Insert, position, string));
 }
 
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
@@ -169,7 +169,7 @@ void Buffer::end_undo_group()
     m_current_undo_group.clear();
 }
 
-BufferModification BufferModification::inverse() const
+Modification Modification::inverse() const
 {
     Type inverse_type;
     switch (type)
@@ -178,7 +178,7 @@ BufferModification BufferModification::inverse() const
     case Erase:  inverse_type = Insert; break;
     default: assert(false);
     }
-    return BufferModification(inverse_type, position, content);
+    return Modification(inverse_type, position, content);
 }
 
 bool Buffer::undo()
@@ -188,7 +188,7 @@ bool Buffer::undo()
 
     --m_history_cursor;
 
-    for (const BufferModification& modification : reversed(*m_history_cursor))
+    for (const Modification& modification : reversed(*m_history_cursor))
         apply_modification(modification.inverse());
 }
 
@@ -197,21 +197,21 @@ bool Buffer::redo()
     if (m_history_cursor == m_history.end())
         return false;
 
-    for (const BufferModification& modification : *m_history_cursor)
+    for (const Modification& modification : *m_history_cursor)
         apply_modification(modification);
 
     ++m_history_cursor;
 }
 
-void Buffer::apply_modification(const BufferModification& modification)
+void Buffer::apply_modification(const Modification& modification)
 {
     switch (modification.type)
     {
-    case BufferModification::Insert:
+    case Modification::Insert:
         m_content.insert(modification.position.m_position,
                          modification.content);
         break;
-    case BufferModification::Erase:
+    case Modification::Erase:
     {
         size_t size = modification.content.size();
         assert(string(modification.position, modification.position + size)
@@ -227,7 +227,7 @@ void Buffer::apply_modification(const BufferModification& modification)
         listener->on_modification(modification);
 }
 
-void Buffer::append_modification(BufferModification&& modification)
+void Buffer::append_modification(Modification&& modification)
 {
     for (auto filter : m_filters)
         filter.second(*this, modification);
@@ -265,14 +265,14 @@ void Buffer::notify_saved()
     m_last_save_undo_index = history_cursor_index;
 }
 
-void Buffer::register_modification_listener(BufferModificationListener* listener)
+void Buffer::register_modification_listener(ModificationListener* listener)
 {
     assert(listener);
     assert(not contains(m_modification_listeners, listener));
     m_modification_listeners.push_back(listener);
 }
 
-void Buffer::unregister_modification_listener(BufferModificationListener* listener)
+void Buffer::unregister_modification_listener(ModificationListener* listener)
 {
     assert(listener);
     auto it = std::find(m_modification_listeners.begin(),

@@ -36,13 +36,13 @@ DynamicBufferIterator::~DynamicBufferIterator()
     unregister_ifn();
 }
 
-void DynamicBufferIterator::on_modification(const BufferModification& modification)
+void DynamicBufferIterator::on_modification(const Modification& modification)
 {
     if (*this < modification.position)
         return;
 
     size_t length = modification.content.length();
-    if (modification.type == BufferModification::Erase)
+    if (modification.type == Modification::Erase)
     {
         // do not move length on the other side of the inequality,
         // as modification.position + length may be after buffer end
@@ -53,7 +53,7 @@ void DynamicBufferIterator::on_modification(const BufferModification& modificati
     }
     else
     {
-        assert(modification.type == BufferModification::Insert);
+        assert(modification.type == Modification::Insert);
         *this += length;
     }
 }

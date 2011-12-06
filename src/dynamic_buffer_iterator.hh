@@ -7,7 +7,7 @@ namespace Kakoune
 {
 
 class DynamicBufferIterator : public BufferIterator,
-                              public BufferModificationListener
+                              public ModificationListener
 {
 public:
     DynamicBufferIterator() : BufferIterator() {}
@@ -22,7 +22,7 @@ public:
     { return this->operator= (static_cast<const BufferIterator&>(other)); }
     ~DynamicBufferIterator();
 
-   void on_modification(const BufferModification& modification);
+   void on_modification(const Modification& modification);
 
 private:
    void register_ifp();

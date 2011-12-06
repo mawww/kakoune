@@ -5,9 +5,9 @@
 namespace Kakoune
 {
 
-void preserve_indent(Buffer& buffer, BufferModification& modification)
+void preserve_indent(Buffer& buffer, Modification& modification)
 {
-    if (modification.type == BufferModification::Insert and
+    if (modification.type == Modification::Insert and
         modification.content == "\n")
     {
          BufferIterator line_begin = buffer.iterator_at_line_begin(modification.position - 1);
@@ -20,10 +20,10 @@ void preserve_indent(Buffer& buffer, BufferModification& modification)
     }
 }
 
-void expand_tabulations(Buffer& buffer, BufferModification& modification)
+void expand_tabulations(Buffer& buffer, Modification& modification)
 {
     const int tabstop = 8;
-    if (modification.type == BufferModification::Insert and
+    if (modification.type == Modification::Insert and
         modification.content == "\t")
     {
         int column = 0;
@@ -43,7 +43,7 @@ void expand_tabulations(Buffer& buffer, BufferModification& modification)
     }
 }
 
-template<void (*filter_func)(Buffer&, BufferModification&)>
+template<void (*filter_func)(Buffer&, Modification&)>
 class SimpleFilterFactory
 {
 public:

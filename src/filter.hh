@@ -8,9 +8,9 @@ namespace Kakoune
 {
 
 class Buffer;
-class BufferModification;
+class Modification;
 
-typedef std::function<void (Buffer& buffer, BufferModification& modification)> FilterFunc;
+typedef std::function<void (Buffer& buffer, Modification& modification)> FilterFunc;
 typedef std::pair<std::string, FilterFunc> FilterAndId;
 
 }
