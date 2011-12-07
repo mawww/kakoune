@@ -21,7 +21,7 @@ static Buffer& get_or_create_debug_buffer()
 void write_debug(const std::string& str)
 {
     Buffer& debug_buffer = get_or_create_debug_buffer();
-    debug_buffer.insert(debug_buffer.end()-1, str);
+    debug_buffer.modify(Modification::make_insert(debug_buffer.end()-1, str));
 }
 
 }

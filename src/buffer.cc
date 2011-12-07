@@ -37,17 +37,6 @@ Buffer::~Buffer()
     assert(m_modification_listeners.empty());
 }
 
-void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
-{
-    append_modification(Modification(Modification::Erase, begin,
-                                     string(begin, end)));
-}
-
-void Buffer::insert(const BufferIterator& position, const BufferString& string)
-{
-    append_modification(Modification(Modification::Insert, position, string));
-}
-
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
 {
     if (m_lines.empty())
@@ -227,7 +216,7 @@ void Buffer::apply_modification(const Modification& modification)
         listener->on_modification(modification);
 }
 
-void Buffer::append_modification(Modification&& modification)
+void Buffer::modify(Modification&& modification)
 {
     for (auto filter : m_filters)
         filter.second(*this, modification);

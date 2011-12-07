@@ -86,10 +86,14 @@ struct Modification
     BufferString   content;
 
     Modification(Type type, BufferIterator position,
-                       BufferString content)
+                 const BufferString& content)
         : type(type), position(position), content(content) {}
 
     Modification inverse() const;
+
+    static Modification make_erase(BufferIterator begin, BufferIterator end);
+    static Modification make_insert(BufferIterator position,
+                                    const BufferString& content);
 };
 
 class ModificationListener
@@ -117,14 +121,10 @@ public:
     void           begin_undo_group();
     void           end_undo_group();
 
+    void           modify(Modification&& modification);
+
     bool           undo();
     bool           redo();
-
-    void           erase(const BufferIterator& begin,
-                         const BufferIterator& end);
-
-    void           insert(const BufferIterator& position,
-                          const BufferString& string);
 
     BufferString   string(const BufferIterator& begin,
                           const BufferIterator& end) const;
@@ -200,8 +200,6 @@ private:
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
 
-    void append_modification(Modification&& modification);
-
     std::list<std::unique_ptr<Window>> m_windows;
 
     size_t m_last_save_undo_index;
@@ -210,6 +208,18 @@ private:
 
     idvaluemap<std::string, FilterFunc> m_filters;
 };
+
+inline Modification Modification::make_erase(BufferIterator begin,
+                                             BufferIterator end)
+{
+    return Modification(Erase, begin, begin.buffer().string(begin, end));
+}
+
+inline Modification Modification::make_insert(BufferIterator position,
+                                              const BufferString& content)
+{
+    return Modification(Insert, position, content);
+}
 
 }
 

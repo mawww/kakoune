@@ -90,7 +90,7 @@ void Window::erase_noundo()
 {
     check_invariant();
     for (auto& sel : m_selections)
-        m_buffer.erase(sel.begin(), sel.end());
+        m_buffer.modify(Modification::make_erase(sel.begin(), sel.end()));
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -126,7 +126,7 @@ void Window::insert(const String& string)
 void Window::insert_noundo(const String& string)
 {
     for (auto& sel : m_selections)
-        m_buffer.insert(sel.begin(), string);
+        m_buffer.modify(Modification::make_insert(sel.begin(), string));
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -139,7 +139,7 @@ void Window::append(const String& string)
 void Window::append_noundo(const String& string)
 {
     for (auto& sel : m_selections)
-        m_buffer.insert(sel.end(), string);
+        m_buffer.modify(Modification::make_insert(sel.end(), string));
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -394,14 +394,14 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
         case Mode::AppendAtLineEnd:
             pos = m_window.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
             if (mode == Mode::OpenLineBelow)
-                window.m_buffer.insert(pos, "\n");
+                window.m_buffer.modify(Modification::make_insert(pos, "\n"));
             break;
 
         case Mode::OpenLineAbove:
         case Mode::InsertAtLineBegin:
             pos = m_window.m_buffer.iterator_at_line_begin(sel.begin());
             if (mode == Mode::OpenLineAbove)
-                window.m_buffer.insert(--pos, "\n");
+                window.m_buffer.modify(Modification::make_insert(--pos, "\n"));
             break;
         }
         sel = Selection(pos, pos, sel.captures());
@@ -425,7 +425,8 @@ void IncrementalInserter::insert(const Window::String& string)
 void IncrementalInserter::insert_capture(size_t index)
 {
     for (auto& sel : m_window.m_selections)
-        m_window.m_buffer.insert(sel.begin(), sel.capture(index));
+        m_window.m_buffer.modify(Modification::make_insert(sel.begin(),
+                                                           sel.capture(index)));
     m_window.scroll_to_keep_cursor_visible_ifn();
 }
 
