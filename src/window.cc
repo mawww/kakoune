@@ -354,7 +354,7 @@ void Window::add_highlighter(HighlighterAndId&& highlighter)
 {
     if (m_highlighters.contains(highlighter.first))
         throw id_not_unique(highlighter.first);
-    m_highlighters.append(highlighter);
+    m_highlighters.append(std::forward<HighlighterAndId>(highlighter));
 }
 
 void Window::remove_highlighter(const std::string& id)
@@ -372,7 +372,7 @@ void Window::add_filter(FilterAndId&& filter)
 {
     if (m_filters.contains(filter.first))
         throw id_not_unique(filter.first);
-    m_filters.append(filter);
+    m_filters.append(std::forward<FilterAndId>(filter));
 }
 
 void Window::remove_filter(const std::string& id)

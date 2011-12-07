@@ -20,7 +20,7 @@ public:
 
     void append(value_type&& value)
     {
-        m_content.push_back(value);
+        m_content.push_back(std::forward<value_type>(value));
     }
 
     iterator find(const _Id& id)
