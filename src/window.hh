@@ -8,6 +8,7 @@
 #include "display_buffer.hh"
 #include "completion.hh"
 #include "highlighter.hh"
+#include "filter.hh"
 #include "idvaluemap.hh"
 
 namespace Kakoune
@@ -88,10 +89,10 @@ public:
 
     std::string status_line() const;
 
-    struct highlighter_id_not_unique : public runtime_error
+    struct id_not_unique : public runtime_error
     {
-        highlighter_id_not_unique(const std::string& id)
-            : runtime_error("highlighter id not unique: " + id) {}
+        id_not_unique(const std::string& id)
+            : runtime_error("id not unique: " + id) {}
     };
 
     void add_highlighter(HighlighterAndId&& highlighter);
@@ -99,6 +100,13 @@ public:
 
     CandidateList complete_highlighterid(const std::string& prefix,
                                          size_t cursor_pos = std::string::npos);
+
+    void add_filter(FilterAndId&& filter);
+    void remove_filter(const std::string& id);
+
+    CandidateList complete_filterid(const std::string& prefix,
+                                    size_t cursor_pos = std::string::npos);
+
 
 private:
     friend class Buffer;
@@ -123,6 +131,7 @@ private:
     DisplayBuffer m_display_buffer;
 
     idvaluemap<std::string, HighlighterFunc> m_highlighters;
+    idvaluemap<std::string, FilterFunc> m_filters;
 };
 
 class IncrementalInserter
@@ -148,7 +157,9 @@ public:
     void move_cursor(const DisplayCoord& offset);
 
 private:
-    Window&                     m_window;
+    void apply(Modification&& modification) const;
+
+    Window& m_window;
 };
 
 }

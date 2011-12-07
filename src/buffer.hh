@@ -7,10 +7,6 @@
 #include <memory>
 
 #include "line_and_column.hh"
-#include "filter.hh"
-#include "exception.hh"
-#include "completion.hh"
-#include "idvaluemap.hh"
 
 namespace Kakoune
 {
@@ -154,18 +150,6 @@ public:
     void register_modification_listener(ModificationListener* listener);
     void unregister_modification_listener(ModificationListener* listener);
 
-    struct filter_id_not_unique : public runtime_error
-    {
-        filter_id_not_unique(const std::string& id)
-            : runtime_error("filter id not unique: " + id) {}
-    };
-
-    void add_filter(FilterAndId&& filter);
-    void remove_filter(const std::string& id);
-
-    CandidateList complete_filterid(const std::string& prefix,
-                                    size_t cursor_pos = std::string::npos);
-
     // returns an iterator pointing to the first character of the line
     // iterator is on
     BufferIterator iterator_at_line_begin(const BufferIterator& iterator) const;
@@ -205,8 +189,6 @@ private:
     size_t m_last_save_undo_index;
 
     std::vector<ModificationListener*> m_modification_listeners;
-
-    idvaluemap<std::string, FilterFunc> m_filters;
 };
 
 inline Modification Modification::make_erase(BufferIterator begin,

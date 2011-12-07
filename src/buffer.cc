@@ -218,9 +218,6 @@ void Buffer::apply_modification(const Modification& modification)
 
 void Buffer::modify(Modification&& modification)
 {
-    for (auto filter : m_filters)
-        filter.second(*this, modification);
-
     apply_modification(modification);
     m_current_undo_group.push_back(std::move(modification));
 }
@@ -269,24 +266,6 @@ void Buffer::unregister_modification_listener(ModificationListener* listener)
                         listener);
     assert(it != m_modification_listeners.end());
     m_modification_listeners.erase(it);
-}
-
-void Buffer::add_filter(FilterAndId&& filter)
-{
-    if (m_filters.contains(filter.first))
-        throw filter_id_not_unique(filter.first);
-    m_filters.append(filter);
-}
-
-void Buffer::remove_filter(const std::string& id)
-{
-    m_filters.remove(id);
-}
-
-CandidateList Buffer::complete_filterid(const std::string& prefix,
-                                        size_t cursor_pos)
-{
-    return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
 }

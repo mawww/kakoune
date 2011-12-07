@@ -1,7 +1,7 @@
 #include "filter_registry.hh"
 
 #include "exception.hh"
-#include "buffer.hh"
+#include "window.hh"
 
 namespace Kakoune
 {
@@ -19,7 +19,7 @@ void FilterRegistry::register_factory(const std::string& name,
     m_factories.append(std::make_pair(name, factory));
 }
 
-void FilterRegistry::add_filter_to_buffer(Buffer& buffer,
+void FilterRegistry::add_filter_to_window(Window& window,
                                           const std::string& name,
                                           const FilterParameters& parameters)
 {
@@ -27,7 +27,7 @@ void FilterRegistry::add_filter_to_buffer(Buffer& buffer,
     if (it == m_factories.end())
         throw factory_not_found(name);
 
-    buffer.add_filter(it->second(buffer, parameters));
+    window.add_filter(it->second(window, parameters));
 }
 
 CandidateList FilterRegistry::complete_filter(const std::string& prefix,

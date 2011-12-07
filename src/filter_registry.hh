@@ -16,7 +16,7 @@ class Window;
 
 typedef std::vector<std::string> FilterParameters;
 
-typedef std::function<FilterAndId (Buffer& buffer,
+typedef std::function<FilterAndId (Window& window,
                                    const FilterParameters& params)> FilterFactory;
 
 class FilterRegistry : public Singleton<FilterRegistry>
@@ -25,7 +25,7 @@ public:
     void register_factory(const std::string& name,
                           const FilterFactory& factory);
 
-    void add_filter_to_buffer(Buffer& window,
+    void add_filter_to_window(Window& window,
                               const std::string& factory_name,
                               const FilterParameters& parameters);
 

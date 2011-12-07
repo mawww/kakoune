@@ -49,7 +49,7 @@ class SimpleFilterFactory
 public:
     SimpleFilterFactory(const std::string& id) : m_id(id) {}
 
-    FilterAndId operator()(Buffer& buffer,
+    FilterAndId operator()(Window& window,
                            const FilterParameters& params) const
     {
         return FilterAndId(m_id, FilterFunc(filter_func));

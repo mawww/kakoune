@@ -499,7 +499,7 @@ void add_filter(const CommandParameters& params, const Context& context)
     {
         FilterRegistry& registry = FilterRegistry::instance();
         FilterParameters filter_params(params.begin()+1, params.end());
-        registry.add_filter_to_buffer(*context.buffer, params[0],
+        registry.add_filter_to_window(*context.window, params[0],
                                       filter_params);
     }
     catch (runtime_error& err)
@@ -513,7 +513,7 @@ void rm_filter(const CommandParameters& params, const Context& context)
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    context.buffer->remove_filter(params[0]);
+    context.window->remove_filter(params[0]);
 }
 
 void add_hook(const CommandParameters& params, const Context& context)
@@ -770,7 +770,7 @@ int main(int argc, char* argv[])
     command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return main_context.buffer->complete_filterid(prefix, cursor_pos); }
+                                         { return main_context.window->complete_filterid(prefix, cursor_pos); }
                                      });
     command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook);
 

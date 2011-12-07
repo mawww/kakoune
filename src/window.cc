@@ -353,7 +353,7 @@ std::string Window::status_line() const
 void Window::add_highlighter(HighlighterAndId&& highlighter)
 {
     if (m_highlighters.contains(highlighter.first))
-        throw highlighter_id_not_unique(highlighter.first);
+        throw id_not_unique(highlighter.first);
     m_highlighters.append(highlighter);
 }
 
@@ -366,6 +366,24 @@ CandidateList Window::complete_highlighterid(const std::string& prefix,
                                              size_t cursor_pos)
 {
     return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
+}
+
+void Window::add_filter(FilterAndId&& filter)
+{
+    if (m_filters.contains(filter.first))
+        throw id_not_unique(filter.first);
+    m_filters.append(filter);
+}
+
+void Window::remove_filter(const std::string& id)
+{
+    m_filters.remove(id);
+}
+
+CandidateList Window::complete_filterid(const std::string& prefix,
+                                        size_t cursor_pos)
+{
+    return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
 
@@ -394,14 +412,14 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
         case Mode::AppendAtLineEnd:
             pos = m_window.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
             if (mode == Mode::OpenLineBelow)
-                window.m_buffer.modify(Modification::make_insert(pos, "\n"));
+                apply(Modification::make_insert(pos, "\n"));
             break;
 
         case Mode::OpenLineAbove:
         case Mode::InsertAtLineBegin:
             pos = m_window.m_buffer.iterator_at_line_begin(sel.begin());
             if (mode == Mode::OpenLineAbove)
-                window.m_buffer.modify(Modification::make_insert(--pos, "\n"));
+                apply(Modification::make_insert(--pos, "\n"));
             break;
         }
         sel = Selection(pos, pos, sel.captures());
@@ -417,9 +435,18 @@ IncrementalInserter::~IncrementalInserter()
     m_window.m_buffer.end_undo_group();
 }
 
+void IncrementalInserter::apply(Modification&& modification) const
+{
+    for (auto filter : m_window.m_filters)
+        filter.second(m_window.buffer(), modification);
+    m_window.buffer().modify(std::move(modification));
+}
+
+
 void IncrementalInserter::insert(const Window::String& string)
 {
-    m_window.insert_noundo(string);
+    for (auto& sel : m_window.m_selections)
+        apply(Modification::make_insert(sel.begin(), string));
 }
 
 void IncrementalInserter::insert_capture(size_t index)
@@ -433,8 +460,11 @@ void IncrementalInserter::insert_capture(size_t index)
 void IncrementalInserter::erase()
 {
     for (auto& sel : m_window.m_selections)
+    {
         sel = Selection(sel.first() - 1, sel.last() - 1);
-    m_window.erase_noundo();
+        apply(Modification::make_erase(sel.begin(), sel.end()));
+    }
+
     m_window.scroll_to_keep_cursor_visible_ifn();
 }
 
