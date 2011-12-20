@@ -112,6 +112,21 @@ inline std::string str_to_str(const std::string& str)
     return str;
 }
 
+template<typename T>
+class OnScopeEnd
+{
+public:
+    OnScopeEnd(T func) : m_func(func) {}
+    ~OnScopeEnd() { m_func(); }
+private:
+    T m_func;
+};
+
+template<typename T>
+OnScopeEnd<T> on_scope_end(T t)
+{
+    return OnScopeEnd<T>(t);
+}
 
 }
 
