@@ -20,6 +20,23 @@ void preserve_indent(Buffer& buffer, Modification& modification)
     }
 }
 
+void cleanup_whitespaces(Buffer& buffer, Modification& modification)
+{
+    if (modification.type == Modification::Insert and
+        modification.content[0] == '\n' and not modification.position.is_begin())
+    {
+        BufferIterator position = modification.position-1;
+        while (*position == ' ' or *position == '\t' and not position.is_begin())
+            --position;
+        ++position;
+        if (position != modification.position)
+        {
+            buffer.modify(Modification::make_erase(position, modification.position));
+            modification.position = position;
+        }
+    }
+}
+
 void expand_tabulations(Buffer& buffer, Modification& modification)
 {
     const int tabstop = 8;
@@ -63,6 +80,7 @@ void register_filters()
     FilterRegistry& registry = FilterRegistry::instance();
 
     registry.register_factory("preserve_indent", SimpleFilterFactory<preserve_indent>("preserve_indent"));
+    registry.register_factory("cleanup_whitespaces", SimpleFilterFactory<cleanup_whitespaces>("cleanup_whitespaces"));
     registry.register_factory("expand_tabulations", SimpleFilterFactory<expand_tabulations>("expand_tabulations"));
 }
 
