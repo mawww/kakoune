@@ -236,6 +236,11 @@ void Window::select(const Selector& selector, bool append)
     scroll_to_keep_cursor_visible_ifn();
 }
 
+struct nothing_selected : public runtime_error
+{
+    nothing_selected() : runtime_error("nothing was selected") {}
+};
+
 void Window::multi_select(const MultiSelector& selector)
 {
     check_invariant();
@@ -247,11 +252,11 @@ void Window::multi_select(const MultiSelector& selector)
         std::copy(selections.begin(), selections.end(),
                   std::back_inserter(new_selections));
     }
-    if (not new_selections.empty())
-    {
-        m_selections = std::move(new_selections);
-        scroll_to_keep_cursor_visible_ifn();
-    }
+    if (new_selections.empty())
+        throw nothing_selected();
+
+    m_selections = std::move(new_selections);
+    scroll_to_keep_cursor_visible_ifn();
 }
 
 BufferString Window::selection_content() const
