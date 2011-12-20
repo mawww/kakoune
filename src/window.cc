@@ -433,6 +433,8 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
 
 IncrementalInserter::~IncrementalInserter()
 {
+    HooksManager::instance().run_hook("WinInsertEnd", "", Context(m_window));
+
     move_cursor(DisplayCoord(0, -1));
     assert(m_window.m_current_inserter == this);
     m_window.m_current_inserter = nullptr;

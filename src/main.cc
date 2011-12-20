@@ -12,6 +12,7 @@
 #include "filters.hh"
 #include "filter_registry.hh"
 #include "hooks_manager.hh"
+#include "keys.hh"
 
 #include <unordered_map>
 #include <map>
@@ -172,7 +173,7 @@ void deinit_ncurses()
 
 struct prompt_aborted {};
 
-std::string prompt(const std::string& text, Completer completer = complete_nothing)
+std::string ncurses_prompt(const std::string& text, Completer completer = complete_nothing)
 {
     int max_x, max_y;
     getmaxyx(stdscr, max_y, max_x);
@@ -261,6 +262,13 @@ std::string prompt(const std::string& text, Completer completer = complete_nothi
         refresh();
     }
     return result;
+}
+
+static std::function<std::string (const std::string&, Completer)> prompt_func = ncurses_prompt;
+
+std::string prompt(const std::string& text, Completer completer = complete_nothing)
+{
+    return prompt_func(text, completer);
 }
 
 void print_status(const std::string& status)
@@ -731,6 +739,47 @@ std::unordered_map<char, std::function<void (Window& window, int count)>> alt_ke
     { 'x', [](Window& window, int count) { window.multi_select(select_whole_lines); } },
 };
 
+void exec_string(const CommandParameters& params,
+                 const Context& context)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    size_t pos = 0;
+
+    KeyList keys = parse_keys(params[0]);
+
+    prompt_func = [&](const std::string&, Completer) {
+        size_t begin = pos;
+        while (pos < keys.size() and keys[pos].key != '\n')
+            ++pos;
+
+        std::string result;
+        for (size_t i = begin; i < pos; ++i)
+            result += keys[i].key;
+        ++pos;
+
+        return result;
+    };
+
+    auto restore_prompt = on_scope_end([&]() { prompt_func = ncurses_prompt; });
+
+    int count = 0;
+    while(pos < keys.size())
+    {
+        const Key& key = keys[pos++];
+
+        if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
+            count = count * 10 + key.key - '0';
+        else
+        {
+            if (keymap.find(key.key) != keymap.end())
+                keymap[key.key](*context.window, count);
+            count = 0;
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     init_ncurses();
@@ -776,6 +825,8 @@ int main(int argc, char* argv[])
 
     command_manager.register_command(std::vector<std::string>{ "source" }, exec_commands_in_file,
                                      PerArgumentCommandCompleter{ complete_filename });
+
+    command_manager.register_command(std::vector<std::string>{ "exec" }, exec_string);
 
     register_highlighters();
     register_filters();
