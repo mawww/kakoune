@@ -654,89 +654,86 @@ void do_join(Window& window, int count)
     window.move_cursor({0, -1});
 }
 
-std::unordered_map<char, std::function<void (Window& window, int count)>> keymap =
+std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap =
 {
-    { 'h', [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
-    { 'j', [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0)); } },
-    { 'k', [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0)); } },
-    { 'l', [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1))); } },
+    { { Key::Modifiers::None, 'h' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
+    { { Key::Modifiers::None, 'j' }, [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0)); } },
+    { { Key::Modifiers::None, 'k' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0)); } },
+    { { Key::Modifiers::None, 'l' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1))); } },
 
-    { 'H', [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1)), true); } },
-    { 'J', [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0), true); } },
-    { 'K', [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0), true); } },
-    { 'L', [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1)), true); } },
+    { { Key::Modifiers::None, 'H' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1)), true); } },
+    { { Key::Modifiers::None, 'J' }, [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0), true); } },
+    { { Key::Modifiers::None, 'K' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0), true); } },
+    { { Key::Modifiers::None, 'L' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1)), true); } },
 
-    { 't', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
-    { 'f', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },
-    { 'T', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false), true); } },
-    { 'F', [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true), true); } },
+    { { Key::Modifiers::None, 't' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
+    { { Key::Modifiers::None, 'f' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },
+    { { Key::Modifiers::None, 'T' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false), true); } },
+    { { Key::Modifiers::None, 'F' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true), true); } },
 
-    { 'd', do_erase },
-    { 'c', do_change },
-    { 'i', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Insert); } },
-    { 'I', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::InsertAtLineBegin); } },
-    { 'a', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Append); } },
-    { 'A', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::AppendAtLineEnd); } },
-    { 'o', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineBelow); } },
-    { 'O', [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineAbove); } },
+    { { Key::Modifiers::None, 'd' }, do_erase },
+    { { Key::Modifiers::None, 'c' }, do_change },
+    { { Key::Modifiers::None, 'i' }, [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Insert); } },
+    { { Key::Modifiers::None, 'I' }, [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::InsertAtLineBegin); } },
+    { { Key::Modifiers::None, 'a' }, [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::Append); } },
+    { { Key::Modifiers::None, 'A' }, [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::AppendAtLineEnd); } },
+    { { Key::Modifiers::None, 'o' }, [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineBelow); } },
+    { { Key::Modifiers::None, 'O' }, [](Window& window, int count) { do_insert(window, IncrementalInserter::Mode::OpenLineAbove); } },
 
-    { 'g', do_go<false> },
-    { 'G', do_go<true> },
+    { { Key::Modifiers::None, 'g' }, do_go<false> },
+    { { Key::Modifiers::None, 'G' }, do_go<true> },
 
-    { 'y', do_yank },
-    { 'p', do_paste<true> },
-    { 'P', do_paste<false> },
+    { { Key::Modifiers::None, 'y' }, do_yank },
+    { { Key::Modifiers::None, 'p' }, do_paste<true> },
+    { { Key::Modifiers::None, 'P' }, do_paste<false> },
 
-    { 's', do_select_regex },
+    { { Key::Modifiers::None, 's' }, do_select_regex },
 
 
-    { '.', do_repeat_insert },
+    { { Key::Modifiers::None, '.' }, do_repeat_insert },
 
-    { '%', [](Window& window, int count) { window.select([](const BufferIterator& cursor)
+    { { Key::Modifiers::None, '%' }, [](Window& window, int count) { window.select([](const BufferIterator& cursor)
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
 
-    { ':', [](Window& window, int count) { do_command(); } },
-    { ' ', [](Window& window, int count) { window.clear_selections(); } },
-    { 'w', [](Window& window, int count) { do { window.select(select_to_next_word); } while(--count > 0); } },
-    { 'e', [](Window& window, int count) { do { window.select(select_to_next_word_end); } while(--count > 0); } },
-    { 'b', [](Window& window, int count) { do { window.select(select_to_previous_word); } while(--count > 0); } },
-    { 'W', [](Window& window, int count) { do { window.select(select_to_next_word, true); } while(--count > 0); } },
-    { 'E', [](Window& window, int count) { do { window.select(select_to_next_word_end, true); } while(--count > 0); } },
-    { 'B', [](Window& window, int count) { do { window.select(select_to_previous_word, true); } while(--count > 0); } },
-    { 'x', [](Window& window, int count) { do { window.select(select_line, false); } while(--count > 0); } },
-    { 'X', [](Window& window, int count) { do { window.select(select_line, true); } while(--count > 0); } },
-    { 'm', [](Window& window, int count) { window.select(select_matching); } },
-    { 'M', [](Window& window, int count) { window.select(select_matching, true); } },
-    { '/', [](Window& window, int count) { do_search(window); } },
-    { 'n', [](Window& window, int count) { do_search_next(window); } },
-    { 'u', [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
-    { 'U', [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
-};
+    { { Key::Modifiers::None, ':' }, [](Window& window, int count) { do_command(); } },
+    { { Key::Modifiers::None, ' ' }, [](Window& window, int count) { window.clear_selections(); } },
+    { { Key::Modifiers::None, 'w' }, [](Window& window, int count) { do { window.select(select_to_next_word); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'e' }, [](Window& window, int count) { do { window.select(select_to_next_word_end); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'b' }, [](Window& window, int count) { do { window.select(select_to_previous_word); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'W' }, [](Window& window, int count) { do { window.select(select_to_next_word, true); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'E' }, [](Window& window, int count) { do { window.select(select_to_next_word_end, true); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'B' }, [](Window& window, int count) { do { window.select(select_to_previous_word, true); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'x' }, [](Window& window, int count) { do { window.select(select_line, false); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'X' }, [](Window& window, int count) { do { window.select(select_line, true); } while(--count > 0); } },
+    { { Key::Modifiers::None, 'm' }, [](Window& window, int count) { window.select(select_matching); } },
+    { { Key::Modifiers::None, 'M' }, [](Window& window, int count) { window.select(select_matching, true); } },
+    { { Key::Modifiers::None, '/' }, [](Window& window, int count) { do_search(window); } },
+    { { Key::Modifiers::None, 'n' }, [](Window& window, int count) { do_search_next(window); } },
+    { { Key::Modifiers::None, 'u' }, [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
+    { { Key::Modifiers::None, 'U' }, [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
 
-std::unordered_map<char, std::function<void (Window& window, int count)>> alt_keymap =
-{
-    { 't', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
-    { 'f', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
-    { 'T', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false), true); } },
-    { 'F', [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true), true); } },
+    { { Key::Modifiers::Alt, 't' }, [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
+    { { Key::Modifiers::Alt, 'f' }, [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
+    { { Key::Modifiers::Alt, 'T' }, [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false), true); } },
+    { { Key::Modifiers::Alt, 'F' }, [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true), true); } },
 
-    { 'w', [](Window& window, int count) { do { window.select(select_to_next_WORD); } while(--count > 0); } },
-    { 'e', [](Window& window, int count) { do { window.select(select_to_next_WORD_end); } while(--count > 0); } },
-    { 'b', [](Window& window, int count) { do { window.select(select_to_previous_WORD); } while(--count > 0); } },
-    { 'W', [](Window& window, int count) { do { window.select(select_to_next_WORD, true); } while(--count > 0); } },
-    { 'E', [](Window& window, int count) { do { window.select(select_to_next_WORD_end, true); } while(--count > 0); } },
-    { 'B', [](Window& window, int count) { do { window.select(select_to_previous_WORD, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'w' }, [](Window& window, int count) { do { window.select(select_to_next_WORD); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'e' }, [](Window& window, int count) { do { window.select(select_to_next_WORD_end); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'b' }, [](Window& window, int count) { do { window.select(select_to_previous_WORD); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'W' }, [](Window& window, int count) { do { window.select(select_to_next_WORD, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'E' }, [](Window& window, int count) { do { window.select(select_to_next_WORD_end, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'B' }, [](Window& window, int count) { do { window.select(select_to_previous_WORD, true); } while(--count > 0); } },
 
-    { 'l', [](Window& window, int count) { do { window.select(select_to_eol, false); } while(--count > 0); } },
-    { 'L', [](Window& window, int count) { do { window.select(select_to_eol, true); } while(--count > 0); } },
-    { 'h', [](Window& window, int count) { do { window.select(select_to_eol_reverse, false); } while(--count > 0); } },
-    { 'H', [](Window& window, int count) { do { window.select(select_to_eol_reverse, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'l' }, [](Window& window, int count) { do { window.select(select_to_eol, false); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'L' }, [](Window& window, int count) { do { window.select(select_to_eol, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'h' }, [](Window& window, int count) { do { window.select(select_to_eol_reverse, false); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'H' }, [](Window& window, int count) { do { window.select(select_to_eol_reverse, true); } while(--count > 0); } },
 
-    { 's', do_split_regex },
+    { { Key::Modifiers::Alt, 's' }, do_split_regex },
 
-    { 'j', do_join },
+    { { Key::Modifiers::Alt, 'j' }, do_join },
 
-    { 'x', [](Window& window, int count) { window.multi_select(select_whole_lines); } },
+    { { Key::Modifiers::Alt, 'x' }, [](Window& window, int count) { window.multi_select(select_whole_lines); } },
 };
 
 void exec_string(const CommandParameters& params,
@@ -773,8 +770,9 @@ void exec_string(const CommandParameters& params,
             count = count * 10 + key.key - '0';
         else
         {
-            if (keymap.find(key.key) != keymap.end())
-                keymap[key.key](*context.window, count);
+            auto it = keymap.find(key);
+            if (it != keymap.end())
+                it->second(*context.window, count);
             count = 0;
         }
     }
@@ -859,7 +857,7 @@ int main(int argc, char* argv[])
                     count = count * 10 + c - '0';
                 else
                 {
-                    bool is_alt = false;
+                    Key::Modifiers modifiers = Key::Modifiers::None;
                     if (c == 27)
                     {
                         timeout(0);
@@ -868,14 +866,15 @@ int main(int argc, char* argv[])
                         if (new_c != ERR)
                         {
                             c = new_c;
-                            is_alt = true;
+                            modifiers = Key::Modifiers::Alt;
                         }
                     }
-                    auto& active_keymap = is_alt ? alt_keymap : keymap;
+                    Key key(modifiers, c);
 
-                    if (active_keymap.find(c) != active_keymap.end())
+                    auto it = keymap.find(key);
+                    if (it != keymap.end())
                     {
-                        active_keymap[c](*main_context.window, count);
+                        it->second(*main_context.window, count);
                         draw_window(*main_context.window);
                     }
                     count = 0;
