@@ -82,8 +82,13 @@ BufferIterator Window::cursor_iterator() const
 
 void Window::erase()
 {
-    scoped_undo_group undo_group(m_buffer);
-    erase_noundo();
+    if (m_current_inserter == nullptr)
+    {
+        scoped_undo_group undo_group(m_buffer);
+        erase_noundo();
+    }
+    else
+        erase_noundo();
 }
 
 void Window::erase_noundo()
@@ -119,8 +124,13 @@ static DisplayCoord measure_string(const Window::String& string)
 
 void Window::insert(const String& string)
 {
-    scoped_undo_group undo_group(m_buffer);
-    insert_noundo(string);
+    if (m_current_inserter == nullptr)
+    {
+        scoped_undo_group undo_group(m_buffer);
+        insert_noundo(string);
+    }
+    else
+        insert_noundo(string);
 }
 
 void Window::insert_noundo(const String& string)
@@ -132,8 +142,13 @@ void Window::insert_noundo(const String& string)
 
 void Window::append(const String& string)
 {
-    scoped_undo_group undo_group(m_buffer);
-    append_noundo(string);
+    if (m_current_inserter == nullptr)
+    {
+        scoped_undo_group undo_group(m_buffer);
+        append_noundo(string);
+    }
+    else
+        append_noundo(string);
 }
 
 void Window::append_noundo(const String& string)
@@ -145,11 +160,18 @@ void Window::append_noundo(const String& string)
 
 void Window::replace(const std::string& string)
 {
-    scoped_undo_group undo_group(m_buffer);
-    erase_noundo();
-    insert_noundo(string);
+    if (m_current_inserter == nullptr)
+    {
+        scoped_undo_group undo_group(m_buffer);
+        erase_noundo();
+        insert_noundo(string);
+    }
+    else
+    {
+        erase_noundo();
+        insert_noundo(string);
+    }
 }
-
 
 bool Window::undo()
 {
