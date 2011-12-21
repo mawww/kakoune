@@ -52,7 +52,8 @@ Window::Window(Buffer& buffer)
       m_dimensions(0, 0),
       m_current_inserter(nullptr)
 {
-    m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
+    m_selections.push_back(SelectionList());
+    selections().push_back(Selection(buffer.begin(), buffer.begin()));
 
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
@@ -65,7 +66,7 @@ Window::Window(Buffer& buffer)
 
 void Window::check_invariant() const
 {
-    assert(not m_selections.empty());
+    assert(not selections().empty());
 }
 
 DisplayCoord Window::cursor_position() const
@@ -77,7 +78,7 @@ DisplayCoord Window::cursor_position() const
 BufferIterator Window::cursor_iterator() const
 {
     check_invariant();
-    return m_selections.back().last();
+    return selections().back().last();
 }
 
 void Window::erase()
@@ -94,7 +95,7 @@ void Window::erase()
 void Window::erase_noundo()
 {
     check_invariant();
-    for (auto& sel : m_selections)
+    for (auto& sel : selections())
         m_buffer.modify(Modification::make_erase(sel.begin(), sel.end()));
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -135,7 +136,7 @@ void Window::insert(const String& string)
 
 void Window::insert_noundo(const String& string)
 {
-    for (auto& sel : m_selections)
+    for (auto& sel : selections())
         m_buffer.modify(Modification::make_insert(sel.begin(), string));
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -153,7 +154,7 @@ void Window::append(const String& string)
 
 void Window::append_noundo(const String& string)
 {
-    for (auto& sel : m_selections)
+    for (auto& sel : selections())
         m_buffer.modify(Modification::make_insert(sel.end(), string));
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -228,14 +229,14 @@ DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
 void Window::clear_selections()
 {
     check_invariant();
-    BufferIterator pos = m_selections.back().last();
+    BufferIterator pos = selections().back().last();
 
     if (*pos == '\n' and not pos.is_begin() and *(pos-1) != '\n')
         --pos;
 
     Selection sel = Selection(pos, pos);
-    m_selections.clear();
-    m_selections.push_back(std::move(sel));
+    selections().clear();
+    selections().push_back(std::move(sel));
 }
 
 void Window::select(const Selector& selector, bool append)
@@ -244,13 +245,13 @@ void Window::select(const Selector& selector, bool append)
 
     if (not append)
     {
-        Selection sel = selector(m_selections.back().last());
-        m_selections.clear();
-        m_selections.push_back(std::move(sel));
+        Selection sel = selector(selections().back().last());
+        selections().clear();
+        selections().push_back(std::move(sel));
     }
     else
     {
-        for (auto& sel : m_selections)
+        for (auto& sel : selections())
         {
             sel.merge_with(selector(sel.last()));
         }
@@ -268,7 +269,7 @@ void Window::multi_select(const MultiSelector& selector)
     check_invariant();
 
     SelectionList new_selections;
-    for (auto& sel : m_selections)
+    for (auto& sel : selections())
     {
         SelectionList selections = selector(sel);
         std::copy(selections.begin(), selections.end(),
@@ -277,7 +278,7 @@ void Window::multi_select(const MultiSelector& selector)
     if (new_selections.empty())
         throw nothing_selected();
 
-    m_selections = std::move(new_selections);
+    selections() = std::move(new_selections);
     scroll_to_keep_cursor_visible_ifn();
 }
 
@@ -285,8 +286,8 @@ BufferString Window::selection_content() const
 {
     check_invariant();
 
-    return m_buffer.string(m_selections.back().begin(),
-                           m_selections.back().end());
+    return m_buffer.string(selections().back().begin(),
+                           selections().back().end());
 }
 
 void Window::move_cursor(const DisplayCoord& offset, bool append)
@@ -298,7 +299,7 @@ void Window::move_cursor(const DisplayCoord& offset, bool append)
     }
     else
     {
-        for (auto& sel : m_selections)
+        for (auto& sel : selections())
         {
             BufferCoord pos = m_buffer.line_and_column_at(sel.last());
             sel = Selection(sel.first(), m_buffer.iterator_at(pos + BufferCoord(offset)));
@@ -309,8 +310,8 @@ void Window::move_cursor(const DisplayCoord& offset, bool append)
 
 void Window::move_cursor_to(const BufferIterator& iterator)
 {
-    m_selections.clear();
-    m_selections.push_back(Selection(iterator, iterator));
+    selections().clear();
+    selections().push_back(Selection(iterator, iterator));
 
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -343,7 +344,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 {
     check_invariant();
 
-    DisplayCoord cursor = line_and_column_at(m_selections.back().last());
+    DisplayCoord cursor = line_and_column_at(selections().back().last());
     if (cursor.line < 0)
     {
         m_position.line = std::max(m_position.line + cursor.line, 0);
@@ -365,13 +366,13 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 
 std::string Window::status_line() const
 {
-    BufferCoord cursor = m_buffer.line_and_column_at(m_selections.back().last());
+    BufferCoord cursor = m_buffer.line_and_column_at(selections().back().last());
     std::ostringstream oss;
     oss << m_buffer.name();
     if (m_buffer.is_modified())
         oss << " [+]";
     oss << " -- " << cursor.line+1 << "," << cursor.column+1
-        << " -- " << m_selections.size() << " sel -- ";
+        << " -- " << selections().size() << " sel -- ";
     if (m_current_inserter)
         oss << "[Insert]";
     return oss.str();
@@ -413,6 +414,19 @@ CandidateList Window::complete_filterid(const std::string& prefix,
     return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
+void Window::push_selections()
+{
+    SelectionList current_selections = selections();
+    m_selections.push_back(std::move(current_selections));
+}
+
+void Window::pop_selections()
+{
+    if (m_selections.size() > 1)
+        m_selections.pop_back();
+    else
+        throw runtime_error("no more selections on stack");
+}
 
 IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
     : m_window(window)
@@ -426,7 +440,7 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
     if (mode == Mode::Change)
         window.erase_noundo();
 
-    for (auto& sel : m_window.m_selections)
+    for (auto& sel : m_window.selections())
     {
         DynamicBufferIterator pos;
         switch (mode)
@@ -478,13 +492,13 @@ void IncrementalInserter::apply(Modification&& modification) const
 
 void IncrementalInserter::insert(const Window::String& string)
 {
-    for (auto& sel : m_window.m_selections)
+    for (auto& sel : m_window.selections())
         apply(Modification::make_insert(sel.begin(), string));
 }
 
 void IncrementalInserter::insert_capture(size_t index)
 {
-    for (auto& sel : m_window.m_selections)
+    for (auto& sel : m_window.selections())
         m_window.m_buffer.modify(Modification::make_insert(sel.begin(),
                                                            sel.capture(index)));
     m_window.scroll_to_keep_cursor_visible_ifn();
@@ -492,7 +506,7 @@ void IncrementalInserter::insert_capture(size_t index)
 
 void IncrementalInserter::erase()
 {
-    for (auto& sel : m_window.m_selections)
+    for (auto& sel : m_window.selections())
     {
         sel = Selection(sel.first() - 1, sel.last() - 1);
         apply(Modification::make_erase(sel.begin(), sel.end()));
@@ -503,7 +517,7 @@ void IncrementalInserter::erase()
 
 void IncrementalInserter::move_cursor(const DisplayCoord& offset)
 {
-    for (auto& sel : m_window.m_selections)
+    for (auto& sel : m_window.selections())
     {
         DisplayCoord pos = m_window.line_and_column_at(sel.last());
         BufferIterator it = m_window.iterator_at(pos + offset);

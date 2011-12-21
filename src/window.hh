@@ -76,7 +76,7 @@ public:
     void select(const Selector& selector, bool append = false);
     void multi_select(const MultiSelector& selector);
     BufferString selection_content() const;
-    const SelectionList selections() const { return m_selections; }
+    const SelectionList& selections() const { return m_selections.back(); }
 
     void set_dimensions(const DisplayCoord& dimensions);
 
@@ -107,6 +107,8 @@ public:
     CandidateList complete_filterid(const std::string& prefix,
                                     size_t cursor_pos = std::string::npos);
 
+    void push_selections();
+    void pop_selections();
 
 private:
     friend class Buffer;
@@ -121,13 +123,15 @@ private:
     void insert_noundo(const String& string);
     void append_noundo(const String& string);
 
+    SelectionList& selections() { return m_selections.back(); }
+
     friend class IncrementalInserter;
     IncrementalInserter* m_current_inserter;
 
     Buffer&       m_buffer;
     BufferCoord   m_position;
     DisplayCoord  m_dimensions;
-    SelectionList m_selections;
+    std::vector<SelectionList> m_selections;
     DisplayBuffer m_display_buffer;
 
     idvaluemap<std::string, HighlighterFunc> m_highlighters;
