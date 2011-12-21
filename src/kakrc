@@ -1,4 +1,5 @@
 hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addhl hlcpp
 hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addfilter preserve_indent
 hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addfilter cleanup_whitespaces
+hook WinInsertEnd .* exec xs\h+(?=\n)<ret>d
 hook WinCreate .* addhl regex \h+(?=\n) default red
