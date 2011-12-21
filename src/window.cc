@@ -471,11 +471,13 @@ IncrementalInserter::~IncrementalInserter()
 {
     move_cursor(DisplayCoord(0, -1));
 
+    m_window.push_selections();
     try
     {
         HooksManager::instance().run_hook("WinInsertEnd", "", Context(m_window));
     }
     catch (runtime_error& e) {}
+    m_window.pop_selections();
 
     assert(m_window.m_current_inserter == this);
     m_window.m_current_inserter = nullptr;
