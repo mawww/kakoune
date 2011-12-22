@@ -14,11 +14,13 @@ CandidateList complete_filename(const std::string& prefix,
     std::string real_prefix = prefix.substr(0, cursor_pos);
     size_t dir_end = real_prefix.find_last_of('/');
     std::string dirname = "./";
+    std::string dirprefix;
     std::string fileprefix = real_prefix;
 
     if (dir_end != std::string::npos)
     {
         dirname = real_prefix.substr(0, dir_end + 1);
+        dirprefix = dirname;
         fileprefix = real_prefix.substr(dir_end + 1, std::string::npos);
     }
 
@@ -29,7 +31,12 @@ CandidateList complete_filename(const std::string& prefix,
     {
         std::string filename = entry->d_name;
         if (filename.substr(0, fileprefix.length()) == fileprefix)
-            result.push_back(filename);
+        {
+            std::string name = dirprefix + filename;
+            if (entry->d_type == DT_DIR)
+                name += '/';
+            result.push_back(name);
+        }
     }
     return result;
 }
