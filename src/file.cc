@@ -14,7 +14,7 @@ namespace Kakoune
 {
 
 std::string read_file(const std::string& filename)
-{ 
+{
    int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
