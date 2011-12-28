@@ -886,7 +886,15 @@ int main(int argc, char* argv[])
 
     try
     {
-        exec_commands_in_file({ "kakrc" }, main_context);
+        const char* kakrc = "kakrc";
+        char buffer[2048];
+        readlink("/proc/self/exe", buffer, 2048 - strlen(kakrc));
+        char* ptr = strrchr(buffer, '/');
+        if (ptr)
+        {
+            strcpy(ptr+1, kakrc);
+            exec_commands_in_file({ buffer }, main_context);
+        }
     }
      catch (Kakoune::runtime_error& error)
     {
