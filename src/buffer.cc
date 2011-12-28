@@ -102,7 +102,7 @@ void Buffer::compute_lines()
 {
     m_lines.clear();
     m_lines.push_back(0);
-    for (BufferPos i = 0; i < m_content.size()-1; ++i)
+    for (BufferPos i = 0; i + 1 < m_content.size(); ++i)
     {
         if (m_content[i] == '\n')
             m_lines.push_back(i + 1);
