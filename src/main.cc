@@ -19,6 +19,8 @@
 #include <sstream>
 #include <boost/regex.hpp>
 #include <ncurses.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 using namespace Kakoune;
 using namespace std::placeholders;
@@ -574,6 +576,58 @@ void do_command()
     catch (prompt_aborted&) {}
 }
 
+void do_pipe(Window& window, int count)
+{
+    try
+    {
+        auto cmdline = prompt("|", complete_nothing);
+
+        window.buffer().begin_undo_group();
+        for (auto& sel : const_cast<const Window&>(window).selections())
+        {
+            int write_pipe[2];
+            int read_pipe[2];
+
+            pipe(write_pipe);
+            pipe(read_pipe);
+
+            if (pid_t pid = fork())
+            {
+                close(write_pipe[0]);
+                close(read_pipe[1]);
+
+                std::string content = window.buffer().string(sel.begin(), sel.end());
+                write(write_pipe[1], content.c_str(), content.size());
+                close(write_pipe[1]);
+
+                std::string new_content;
+                char buffer[1024];
+                while (size_t size = read(read_pipe[0], buffer, 1024))
+                {
+                    new_content += std::string(buffer, buffer+size);
+                }
+                close(read_pipe[0]);
+                waitpid(pid, NULL, 0);
+
+                window.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
+                window.buffer().modify(Modification::make_insert(sel.begin(), new_content));
+            }
+            else
+            {
+                close(write_pipe[1]);
+                close(read_pipe[0]);
+
+                dup2(read_pipe[1], 1);
+                dup2(write_pipe[0], 0);
+
+                execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
+            }
+        }
+        window.buffer().end_undo_group();
+    }
+    catch (prompt_aborted&) {}
+}
+
 void do_search(Window& window)
 {
     try
@@ -696,6 +750,7 @@ std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap 
                                                          { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
 
     { { Key::Modifiers::None, ':' }, [](Window& window, int count) { do_command(); } },
+    { { Key::Modifiers::None, '|' }, do_pipe },
     { { Key::Modifiers::None, ' ' }, [](Window& window, int count) { window.clear_selections(); } },
     { { Key::Modifiers::None, 'w' }, [](Window& window, int count) { do { window.select(select_to_next_word); } while(--count > 0); } },
     { { Key::Modifiers::None, 'e' }, [](Window& window, int count) { do { window.select(select_to_next_word_end); } while(--count > 0); } },
