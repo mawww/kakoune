@@ -12,7 +12,7 @@ keys are directly inserted into the current buffer. In normal mode, keys
 are used to manipulate the current selection and to enter insertion mode.
 
 There is no concept of cursor in kakoune, only selections, a single character
-selection can be seen as a cursor but there is no difference internally. 
+selection can be seen as a cursor but there is no difference internally.
 
 Building
 --------
@@ -35,7 +35,7 @@ Basic Movement
  * _k_: select the character above the selection end
  * _l_: select the character on the left of selection end
 
- * _w_: select the word and following whitespaces  on the right of selection end 
+ * _w_: select the word and following whitespaces  on the right of selection end
  * _b_: select preceding whitespaces and the word on the left of selection end
  * _e_: select preceding whitespaces and the word on the right of selection end
 
@@ -119,7 +119,7 @@ existing highlighters are:
 * *highlight_selections*: used to make current selection visible
 * *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
 * *hlcpp*: quick'n'dirty c++ code highlighter
-* *number_lines*: show line numbers 
+* *number_lines*: show line numbers
 * *regex*: highlight a regex, takes 3 parameters <regex> <fg_color> <bg_color>
 
 Filters
