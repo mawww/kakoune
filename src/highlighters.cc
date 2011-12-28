@@ -99,15 +99,6 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
 void colorize_cplusplus(DisplayBuffer& display_buffer)
 {
-    static boost::regex preprocessor("(\\`|(?<=\\n))\\h*#\\h*[^\\n]*");
-    colorize_regex(display_buffer, preprocessor, Color::Magenta);
-
-    static boost::regex comments("//[^\\n]*\\n");
-    colorize_regex(display_buffer, comments, Color::Cyan);
-
-    static boost::regex strings("(?<!')\"(\\\\\"|[^\"])*\"");
-    colorize_regex(display_buffer, strings, Color::Magenta);
-
     static boost::regex values("\\<(true|false|NULL|nullptr)\\>|\\<-?\\d+[fdiu]?|'\\\\?[^']?'");
     colorize_regex(display_buffer, values, Color::Red);
 
@@ -122,6 +113,16 @@ void colorize_cplusplus(DisplayBuffer& display_buffer)
 
     static boost::regex types_keywords("\\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual)\\>");
     colorize_regex(display_buffer, types_keywords, Color::Green);
+
+    static boost::regex strings("(?<!')\"(\\\\\"|[^\"])*\"");
+    colorize_regex(display_buffer, strings, Color::Magenta);
+
+    static boost::regex preprocessor("(\\`|(?<=\\n))\\h*#\\h*[^\\n]*");
+    colorize_regex(display_buffer, preprocessor, Color::Magenta);
+
+    static boost::regex comments("(//[^\\n]*\\n)|(/\\*.*?(\\*/|\\'))");
+    colorize_regex(display_buffer, comments, Color::Cyan);
+
 }
 
 void expand_tabulations(DisplayBuffer& display_buffer)
