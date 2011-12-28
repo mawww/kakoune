@@ -81,6 +81,9 @@ Changes
 
  * _alt-j_: join selected lines
 
+ * _|_: pipe each selections through the given external filter program
+        and replace with it's output.
+
 Multi Selection
 ---------------
 
@@ -132,6 +135,9 @@ added or removed with :addfilter <filter_name> <filter_parameters...> and
 exisiting filters are:
 
 * *preserve_indent*: insert previous line indent when inserting a newline
+* *cleanup_whitespaces*: remove trailing whitespaces on the previous line
+                         when inserting an end-of-line.
+* *expand_tabulations*: insert spaces instead of tab characters
 
 Hooks
 -----
