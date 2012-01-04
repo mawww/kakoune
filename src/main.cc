@@ -708,6 +708,30 @@ void do_join(Window& window, int count)
     window.move_cursor({0, -1});
 }
 
+template<bool inside>
+void do_select_surrounding(Window& window, int count)
+{
+    char id = getch();
+
+    static const std::unordered_map<char, std::pair<char, char>> id_to_matching =
+    {
+       { '(', { '(', ')' } },
+       { ')', { '(', ')' } },
+       { 'b', { '(', ')' } },
+       { '{', { '{', '}' } },
+       { '}', { '{', '}' } },
+       { 'B', { '{', '}' } },
+       { '[', { '[', ']' } },
+       { ']', { '[', ']' } },
+       { '<', { '<', '>' } },
+       { '>', { '<', '>' } }
+    };
+
+    auto matching = id_to_matching.find(id);
+    if (matching != id_to_matching.end())
+        window.select(std::bind(select_surrounding, _1, matching->second, inside));
+}
+
 std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap =
 {
     { { Key::Modifiers::None, 'h' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
@@ -766,6 +790,9 @@ std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap 
     { { Key::Modifiers::None, 'n' }, [](Window& window, int count) { do_search_next(window); } },
     { { Key::Modifiers::None, 'u' }, [](Window& window, int count) { do { if (not window.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { { Key::Modifiers::None, 'U' }, [](Window& window, int count) { do { if (not window.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
+
+    { { Key::Modifiers::Alt,  'i' }, do_select_surrounding<true> },
+    { { Key::Modifiers::Alt,  'a' }, do_select_surrounding<false> },
 
     { { Key::Modifiers::Alt, 't' }, [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
     { { Key::Modifiers::Alt, 'f' }, [](Window& window, int count) { window.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },

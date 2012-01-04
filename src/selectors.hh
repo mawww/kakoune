@@ -14,6 +14,9 @@ Selection select_to_next_WORD_end(const BufferIterator& cursor);
 Selection select_to_previous_WORD(const BufferIterator& cursor);
 Selection select_line(const BufferIterator& cursor);
 Selection select_matching(const BufferIterator& cursor);
+Selection select_surrounding(const BufferIterator& cursor,
+                             const std::pair<char, char>& matching,
+                              bool inside);
 
 Selection select_to(const BufferIterator& cursor, char c, int count, bool inclusive);
 Selection select_to_reverse(const BufferIterator& cursor, char c, int count, bool inclusive);

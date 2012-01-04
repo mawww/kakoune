@@ -242,6 +242,55 @@ Selection select_matching(const BufferIterator& cursor)
     return Selection(cursor, cursor);
 }
 
+Selection select_surrounding(const BufferIterator& cursor,
+                             const std::pair<char, char>& matching,
+                             bool inside)
+{
+    int level = 0;
+    BufferIterator first = cursor;
+    while (not first.is_begin())
+    {
+        if (*first == matching.second)
+            ++level;
+        else if (*first == matching.first)
+        {
+            if (level == 0)
+                break;
+            else
+                --level;
+        }
+        --first;
+    }
+    if (level != 0 or *first != matching.first)
+        return Selection(cursor, cursor);
+
+    level = 0;
+    BufferIterator last = first + 1;
+    while (not last.is_end())
+    {
+        if (*last == matching.first)
+            ++level;
+        else if (*last == matching.second)
+        {
+            if (level == 0)
+                break;
+            else
+                --level;
+        }
+        ++last;
+    }
+    if (level != 0 or *last != matching.second)
+        return Selection(cursor, cursor);
+
+    if (inside)
+    {
+        ++first;
+        if (first != last)
+            --last;
+    }
+    return Selection(first, last);
+}
+
 Selection select_to(const BufferIterator& cursor, char c, int count, bool inclusive)
 {
     BufferIterator end = cursor;
