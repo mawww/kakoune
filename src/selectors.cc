@@ -367,7 +367,7 @@ Selection select_next_match(const BufferIterator& cursor,
     {
         boost::match_results<BufferIterator> matches;
 
-        if (boost::regex_search(cursor, cursor.buffer().end(), matches,
+        if (boost::regex_search(cursor+1, cursor.buffer().end(), matches,
                                 ex))
         {
             begin = matches[0].first;
@@ -375,7 +375,7 @@ Selection select_next_match(const BufferIterator& cursor,
             std::copy(matches.begin(), matches.end(),
                       std::back_inserter(captures));
         }
-        else if (boost::regex_search(cursor.buffer().begin(), cursor, matches,
+        else if (boost::regex_search(cursor.buffer().begin(), cursor+1, matches,
                                      ex))
         {
             begin = matches[0].first;
