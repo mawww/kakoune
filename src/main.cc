@@ -775,7 +775,8 @@ std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap 
 
     { { Key::Modifiers::None, ':' }, [](Window& window, int count) { do_command(); } },
     { { Key::Modifiers::None, '|' }, do_pipe },
-    { { Key::Modifiers::None, ' ' }, [](Window& window, int count) { window.clear_selections(); } },
+    { { Key::Modifiers::None, ' ' }, [](Window& window, int count) { if (count == 0) window.clear_selections();
+                                                                     else window.keep_selection(count-1); } },
     { { Key::Modifiers::None, 'w' }, [](Window& window, int count) { do { window.select(select_to_next_word); } while(--count > 0); } },
     { { Key::Modifiers::None, 'e' }, [](Window& window, int count) { do { window.select(select_to_next_word_end); } while(--count > 0); } },
     { { Key::Modifiers::None, 'b' }, [](Window& window, int count) { do { window.select(select_to_previous_word); } while(--count > 0); } },

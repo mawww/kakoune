@@ -73,6 +73,7 @@ public:
     void move_cursor_to(const BufferIterator& iterator);
 
     void clear_selections();
+    void keep_selection(int index);
     void select(const Selector& selector, bool append = false);
     void multi_select(const MultiSelector& selector);
     BufferString selection_content() const;

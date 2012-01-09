@@ -239,6 +239,18 @@ void Window::clear_selections()
     selections().push_back(std::move(sel));
 }
 
+void Window::keep_selection(int index)
+{
+    check_invariant();
+
+    if (index < selections().size())
+    {
+        Selection sel = selections()[index];
+        selections().clear();
+        selections().push_back(std::move(sel));
+    }
+}
+
 void Window::select(const Selector& selector, bool append)
 {
     check_invariant();
