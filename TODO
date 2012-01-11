@@ -5,6 +5,9 @@ High Priority
            buffer local, or window local. there should be a way to specify
            which locality an option support.
 
+* Encoding: Support different encoding, decide how to store buffer content
+            implement encoding conversions.
+
 Medium Priority
 ---------------
 
