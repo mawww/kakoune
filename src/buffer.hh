@@ -29,6 +29,7 @@ struct BufferCoord : LineAndColumn<BufferCoord>
         : LineAndColumn(other.line, other.column) {}
 };
 
+// A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
 {
 public:
@@ -73,6 +74,7 @@ private:
     friend class Buffer;
 };
 
+// A Modification holds a single atomic modification to Buffer
 struct Modification
 {
     enum Type { Insert, Erase };
@@ -98,6 +100,11 @@ public:
     virtual void on_modification(const Modification& modification) = 0;
 };
 
+// A Buffer is a in-memory representation of a file
+//
+// The Buffer class permits to read and mutate this file
+// representation. It also manage modifications undo/redo and
+// provides tools to deal with the line/column nature of text.
 class Buffer
 {
 public:

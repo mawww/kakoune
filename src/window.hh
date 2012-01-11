@@ -48,6 +48,11 @@ typedef std::vector<Selection> SelectionList;
 
 class IncrementalInserter;
 
+// A Window is an editing view onto a Buffer
+//
+// The Window class manage a set of selections and provides means to modify
+// both the selections and the buffer. It also handle the display of the
+// buffer with it's highlighters.
 class Window
 {
 public:

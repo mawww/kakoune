@@ -45,6 +45,11 @@ enum class Color
     White
 };
 
+// A DisplayAtom is a string of text with it's display style.
+//
+// The DisplayAtom class references the buffer string it represents
+// with it's begin/end iterators and may replace it with another
+// text stored in the replacement_string field.
 struct DisplayAtom
 {
     DisplayAtom(const DisplayCoord& coord,
@@ -90,6 +95,10 @@ private:
     BufferString   m_replacement_text;
 };
 
+// A DisplayBuffer is the visual content of a Window as a DisplayAtom list
+//
+// The DisplayBuffer class provides means to mutate and iterator on it's
+// DisplayAtoms.
 class DisplayBuffer
 {
 public:
