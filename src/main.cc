@@ -553,12 +553,33 @@ void exec_commands_in_file(const CommandParameters& params,
     CommandManager& cmd_manager = CommandManager::instance();
 
     size_t pos = 0;
+    bool   cat_with_previous = false;
+    std::string command_line;
     while (true)
     {
+         if (not cat_with_previous)
+             command_line.clear();
+
          size_t end_pos = file_content.find_first_of('\n', pos);
- 	 cmd_manager.execute(file_content.substr(pos, end_pos - pos), context);
+         if (end_pos != pos and end_pos != std::string::npos and
+             file_content[end_pos - 1] == '\\')
+         {
+ 	     command_line += file_content.substr(pos, end_pos - pos - 1);
+             cat_with_previous = true;
+         }
+         else
+         {
+ 	     command_line += file_content.substr(pos, end_pos - pos);
+ 	     cmd_manager.execute(command_line, context);
+             cat_with_previous = false;
+ 	 }
          if (end_pos == std::string::npos)
+         {
+             if (cat_with_previous)
+                 print_status("while executing commands in \"" + params[0] +
+                              "\": last command not complete");
              break;
+         }
          pos = end_pos + 1;
     }
 }
