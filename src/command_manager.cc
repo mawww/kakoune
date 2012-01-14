@@ -65,33 +65,27 @@ void CommandManager::execute(const std::string& command_line,
     if (tokens.empty())
         return;
 
-    std::string command_name =
-        command_line.substr(tokens[0].first,
-                            tokens[0].second - tokens[0].first);
-
-    auto command_it = m_commands.find(command_name);
-    if (command_it == m_commands.end())
-        throw command_not_found(command_name);
-
     CommandParameters params;
-    for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
+    for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
         params.push_back(command_line.substr(it->first,
                                              it->second - it->first));
     }
 
-    command_it->second.command(params, context);
+    execute(params, context);
 }
 
-void CommandManager::execute(const std::string& command,
-                             const CommandParameters& params,
+void CommandManager::execute(const CommandParameters& params,
                              const Context& context)
 {
-    auto command_it = m_commands.find(command);
-    if (command_it == m_commands.end())
-        throw command_not_found(command);
+    if (params.empty())
+        return;
 
-    command_it->second.command(params, context);
+    auto command_it = m_commands.find(params[0]);
+    if (command_it == m_commands.end())
+        throw command_not_found(params[0]);
+
+    command_it->second.command(CommandParameters(params.begin() + 1, params.end()), context);
 }
 
 Completions CommandManager::complete(const std::string& command_line, size_t cursor_pos)

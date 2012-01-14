@@ -54,8 +54,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(const std::string& command_line, const Context& context);
-    void execute(const std::string& command, const CommandParameters& params,
-                 const Context& context);
+    void execute(const CommandParameters& params, const Context& context);
 
     Completions complete(const std::string& command_line, size_t cursor_pos);
 

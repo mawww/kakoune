@@ -531,15 +531,13 @@ void add_hook(const CommandParameters& params, const Context& context)
     if (params.size() < 3)
         throw wrong_argument_count();
 
-    std::string command = params[2];
-    CommandParameters hook_params(params.begin()+3, params.end());
+    CommandParameters hook_params(params.begin()+2, params.end());
 
     HooksManager::instance().add_hook(
        params[0],
        [=](const std::string& param, const Context& context) {
            if (boost::regex_match(param, boost::regex(params[1])))
-               CommandManager::instance().execute(command, hook_params,
-                                                  context);
+               CommandManager::instance().execute(hook_params, context);
        });
 }
 
