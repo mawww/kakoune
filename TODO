@@ -14,6 +14,9 @@ Medium Priority
 * tweak editing model, some behaviours are not intuitive, maybe a line
   wise mode will be needed after all.
 
+* highlighters and filters groups. So that many different highlighters
+  (for example syntax highlighting for a language) can be handled as one.
+
 Low Priority
 ------------
 
