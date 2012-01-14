@@ -99,7 +99,7 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
 void colorize_cplusplus(DisplayBuffer& display_buffer)
 {
-    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|\\<-?\\d+[fdiu]?|'\\\\?[^']?'");
+    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|\\<-?\\d+[fdiu]?|'((\\\\.)?|[^'\\\\])'");
     colorize_regex(display_buffer, values, Color::Red);
 
     static boost::regex builtin_types("\\<(void|int|char|unsigned|float|bool|size_t)\\>");
