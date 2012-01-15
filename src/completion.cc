@@ -30,12 +30,16 @@ CandidateList complete_filename(const std::string& prefix,
     while (dirent* entry = readdir(dir))
     {
         std::string filename = entry->d_name;
+        if (filename.empty())
+            continue;
+
         if (filename.substr(0, fileprefix.length()) == fileprefix)
         {
             std::string name = dirprefix + filename;
             if (entry->d_type == DT_DIR)
                 name += '/';
-            result.push_back(name);
+            if (fileprefix.length() or filename[0] != '.')
+                result.push_back(name);
         }
     }
     return result;
