@@ -1,13 +1,5 @@
-hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) \
-    addhl hlcpp; \
-    addfilter preserve_indent; \
-    addfilter cleanup_whitespaces
-
 hook WinInsertEnd .* exec xs\h+(?=\n)<ret>d
 hook WinCreate .* addhl regex \h+(?=\n) default red
 
-hook WinCreate (.*/)?kakrc \
-    addhl group hlkakrc; \
-    addhl -group hlkakrc regex (hook|addhl|rmhl|addfilter|rmfilter|exec) green default; \
-    addhl -group hlkakrc regex (?<=hook)\h+\w+\h+\H+ magenta default; \
-    addhl -group hlkakrc regex (?<=hook)\h+\w+ cyan default
+runtime rc/cpp.kak
+runtime rc/kakrc.kak

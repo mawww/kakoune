@@ -97,34 +97,6 @@ HighlighterAndId colorize_regex_factory(Window& window,
                                      ex, fg_color, bg_color));
 }
 
-void colorize_cplusplus(DisplayBuffer& display_buffer)
-{
-    static boost::regex values("\\<(true|false|NULL|nullptr)\\>|\\<-?\\d+[fdiu]?|'((\\\\.)?|[^'\\\\])'");
-    colorize_regex(display_buffer, values, Color::Red);
-
-    static boost::regex builtin_types("\\<(void|int|char|unsigned|float|bool|size_t)\\>");
-    colorize_regex(display_buffer, builtin_types, Color::Yellow);
-
-    static boost::regex control_keywords("\\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw)\\>");
-    colorize_regex(display_buffer, control_keywords, Color::Blue);
-
-    //static boost::regex operators("->|\\+|\\-|\\*|/|\\\\|\\&|\\|\\^|[<>=!+-]=|=|\\(|\\)|\\[|\\]|\\{|\\}|\\<(not|and|or|xor)\\>");
-    //colorize_regex(display_buffer, operators, Color::Green);
-
-    static boost::regex types_keywords("\\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual)\\>");
-    colorize_regex(display_buffer, types_keywords, Color::Green);
-
-    static boost::regex strings("(?<!')\"(\\\\\"|[^\"])*\"");
-    colorize_regex(display_buffer, strings, Color::Magenta);
-
-    static boost::regex preprocessor("(\\`|(?<=\\n))\\h*#\\h*[^\\n]*");
-    colorize_regex(display_buffer, preprocessor, Color::Magenta);
-
-    static boost::regex comments("(//[^\\n]*\\n)|(/\\*.*?(\\*/|\\'))");
-    colorize_regex(display_buffer, comments, Color::Cyan);
-
-}
-
 void expand_tabulations(DisplayBuffer& display_buffer)
 {
     const int tabstop = 8;
@@ -326,7 +298,6 @@ void register_highlighters()
     registry.register_factory("highlight_selections", SelectionsHighlighter::create);
     registry.register_factory("expand_tabs", SimpleHighlighterFactory<expand_tabulations>("expand_tabs"));
     registry.register_factory("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
-    registry.register_factory("hlcpp", SimpleHighlighterFactory<colorize_cplusplus>("hlcpp"));
     registry.register_factory("regex", colorize_regex_factory);
     registry.register_factory("group", HighlighterGroup::create);
 }
