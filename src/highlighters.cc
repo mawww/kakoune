@@ -292,6 +292,33 @@ private:
     const Window& m_window;
 };
 
+void HighlighterGroup::operator()(DisplayBuffer& display_buffer)
+{
+    for (auto& highlighter : m_highlighters)
+       highlighter.second(display_buffer);
+}
+
+void HighlighterGroup::add_highlighter(HighlighterAndId&& highlighter)
+{
+    if (m_highlighters.contains(highlighter.first))
+        throw runtime_error("highlighter id not found " + highlighter.first);
+    m_highlighters.append(std::forward<HighlighterAndId>(highlighter));
+}
+
+void HighlighterGroup::remove_highlighter(const std::string& id)
+{
+    m_highlighters.remove(id);
+}
+
+HighlighterAndId HighlighterGroup::create(Window& window,
+                                          const HighlighterParameters& params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+
+    return HighlighterAndId(params[0], HighlighterGroup());
+}
+
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -301,6 +328,7 @@ void register_highlighters()
     registry.register_factory("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_factory("hlcpp", SimpleHighlighterFactory<colorize_cplusplus>("hlcpp"));
     registry.register_factory("regex", colorize_regex_factory);
+    registry.register_factory("group", HighlighterGroup::create);
 }
 
 }
