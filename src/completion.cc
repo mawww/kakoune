@@ -4,6 +4,7 @@
 #include "utils.hh"
 
 #include <dirent.h>
+#include <algorithm>
 
 namespace Kakoune
 {
@@ -42,6 +43,7 @@ CandidateList complete_filename(const std::string& prefix,
                 result.push_back(name);
         }
     }
+    std::sort(result.begin(), result.end());
     return result;
 }
 
