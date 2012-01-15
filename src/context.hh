@@ -8,15 +8,29 @@ namespace Kakoune
 
 struct Context
 {
-    Window* window;
-    Buffer* buffer;
-
     Context()
-        : window(nullptr), buffer(nullptr) {}
+        : m_window(nullptr), m_buffer(nullptr) {}
     Context(Window& window)
-        : window(&window), buffer(&window.buffer()) {}
+        : m_window(&window), m_buffer(&window.buffer()) {}
     Context(Buffer& buffer)
-        : window(nullptr), buffer(&buffer) {}
+        : m_window(nullptr), m_buffer(&buffer) {}
+
+    Buffer& buffer() const
+    {
+        if (not m_buffer)
+            throw runtime_error("no buffer in context");
+        return *m_buffer;
+    }
+    Window& window() const
+    {
+        if (not m_window)
+            throw runtime_error("no window in context");
+        return *m_window;
+    }
+public:
+    Window* m_window;
+    Buffer* m_buffer;
+
 };
 
 }

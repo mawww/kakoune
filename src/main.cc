@@ -429,7 +429,7 @@ void write_buffer(const CommandParameters& params, const Context& context)
     if (params.size() > 1)
         throw wrong_argument_count();
 
-    Buffer& buffer = context.window->buffer();
+    Buffer& buffer = context.window().buffer();
     std::string filename = params.empty() ? buffer.name() : params[0];
 
     write_buffer_to_file(buffer, filename);
@@ -490,15 +490,15 @@ void add_highlighter(const CommandParameters& params, const Context& context)
             if (params.size() < 3)
                 throw wrong_argument_count();
 
-            HighlighterGroup& group = context.window->get_highlighter_group(params[1]);
+            HighlighterGroup& group = context.window().get_highlighter_group(params[1]);
             HighlighterParameters highlighter_params(params.begin()+3, params.end());
-            registry.add_highlighter_to_group(*context.window, group,
+            registry.add_highlighter_to_group(context.window(), group,
                                               params[2], highlighter_params);
         }
         else
         {
             HighlighterParameters highlighter_params(params.begin()+1, params.end());
-            registry.add_highlighter_to_window(*context.window, params[0],
+            registry.add_highlighter_to_window(context.window(), params[0],
                                                highlighter_params);
         }
     }
@@ -513,7 +513,7 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    context.window->remove_highlighter(params[0]);
+    context.window().remove_highlighter(params[0]);
 }
 
 void add_filter(const CommandParameters& params, const Context& context)
@@ -525,7 +525,7 @@ void add_filter(const CommandParameters& params, const Context& context)
     {
         FilterRegistry& registry = FilterRegistry::instance();
         FilterParameters filter_params(params.begin()+1, params.end());
-        registry.add_filter_to_window(*context.window, params[0],
+        registry.add_filter_to_window(context.window(), params[0],
                                       filter_params);
     }
     catch (runtime_error& err)
@@ -539,7 +539,7 @@ void rm_filter(const CommandParameters& params, const Context& context)
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    context.window->remove_filter(params[0]);
+    context.window().remove_filter(params[0]);
 }
 
 void add_hook(const CommandParameters& params, const Context& context)
@@ -907,7 +907,7 @@ void exec_string(const CommandParameters& params,
         {
             auto it = keymap.find(key);
             if (it != keymap.end())
-                it->second(*context.window, count);
+                it->second(context.window(), count);
             count = 0;
         }
     }
@@ -948,7 +948,7 @@ int main(int argc, char* argv[])
                                      CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return main_context.window->complete_highlighterid(prefix, cursor_pos); }
+                                         { return main_context.window().complete_highlighterid(prefix, cursor_pos); }
                                      });
     command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
                                      CommandManager::None,
@@ -959,7 +959,7 @@ int main(int argc, char* argv[])
                                      CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return main_context.window->complete_filterid(prefix, cursor_pos); }
+                                         { return main_context.window().complete_filterid(prefix, cursor_pos); }
                                      });
     command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook, CommandManager::IgnoreSemiColons);
 
@@ -989,7 +989,7 @@ int main(int argc, char* argv[])
         auto buffer = (argc > 1) ? open_or_create(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
         main_context = Context(*buffer->get_or_create_window());
 
-        draw_window(*main_context.window);
+        draw_window(main_context.window());
         int count = 0;
         while(not quit_requested)
         {
@@ -1018,8 +1018,8 @@ int main(int argc, char* argv[])
                     auto it = keymap.find(key);
                     if (it != keymap.end())
                     {
-                        it->second(*main_context.window, count);
-                        draw_window(*main_context.window);
+                        it->second(main_context.window(), count);
+                        draw_window(main_context.window());
                     }
                     count = 0;
                 }
