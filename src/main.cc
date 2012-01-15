@@ -895,38 +895,46 @@ int main(int argc, char* argv[])
     HooksManager        hooks_manager;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "q", "quit" }, quit<false>);
     command_manager.register_command(std::vector<std::string>{ "q!", "quit!" }, quit<true>);
     command_manager.register_command(std::vector<std::string>{ "w", "write" }, write_buffer,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter{ complete_filename });
     command_manager.register_command(std::vector<std::string>{ "wq" }, write_and_quit<false>);
     command_manager.register_command(std::vector<std::string>{ "wq!" }, write_and_quit<true>);
     command_manager.register_command(std::vector<std::string>{ "b", "buffer" }, show_buffer,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          std::bind(&BufferManager::complete_buffername, &buffer_manager, _1, _2)
                                       });
     command_manager.register_command(std::vector<std::string>{ "ah", "addhl" }, add_highlighter,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
                                      });
     command_manager.register_command(std::vector<std::string>{ "rh", "rmhl" }, rm_highlighter,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
                                          { return main_context.window->complete_highlighterid(prefix, cursor_pos); }
                                      });
     command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          std::bind(&FilterRegistry::complete_filter, &filter_registry, _1, _2)
                                      });
     command_manager.register_command(std::vector<std::string>{ "rf", "rmfilter" }, rm_filter,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
                                          { return main_context.window->complete_filterid(prefix, cursor_pos); }
                                      });
-    command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook);
+    command_manager.register_command(std::vector<std::string>{ "hook" }, add_hook, CommandManager::IgnoreSemiColons);
 
     command_manager.register_command(std::vector<std::string>{ "source" }, exec_commands_in_file,
+                                     CommandManager::None,
                                      PerArgumentCommandCompleter{ complete_filename });
 
     command_manager.register_command(std::vector<std::string>{ "exec" }, exec_string);

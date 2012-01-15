@@ -9,16 +9,18 @@ namespace Kakoune
 {
 
 void CommandManager::register_command(const std::string& command_name, Command command,
+                                      unsigned flags,
                                       const CommandCompleter& completer)
 {
-    m_commands[command_name] = CommandAndCompleter { command, completer };
+    m_commands[command_name] = CommandDescriptor { command, flags, completer };
 }
 
 void CommandManager::register_command(const std::vector<std::string>& command_names, Command command,
+                                      unsigned flags,
                                       const CommandCompleter& completer)
 {
     for (auto command_name : command_names)
-        register_command(command_name, command, completer);
+        register_command(command_name, command, flags, completer);
 }
 
 typedef std::vector<std::pair<size_t, size_t>> TokenList;
@@ -96,6 +98,9 @@ void CommandManager::execute(const CommandParameters& params,
             auto command_it = m_commands.find(*begin);
             if (command_it == m_commands.end())
                 throw command_not_found(*begin);
+
+            if (command_it->second.flags & IgnoreSemiColons)
+                end = params.end();
 
             command_it->second.command(CommandParameters(begin + 1, end), context);
         }

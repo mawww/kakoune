@@ -53,6 +53,12 @@ private:
 class CommandManager : public Singleton<CommandManager>
 {
 public:
+    enum Flags
+    {
+        None = 0,
+        IgnoreSemiColons = 1,
+    };
+
     void execute(const std::string& command_line, const Context& context);
     void execute(const CommandParameters& params, const Context& context);
 
@@ -60,19 +66,22 @@ public:
 
     void register_command(const std::string& command_name,
                           Command command,
+                          unsigned flags = None,
                           const CommandCompleter& completer = CommandCompleter());
 
     void register_command(const std::vector<std::string>& command_names,
                           Command command,
+                          unsigned flags = None,
                           const CommandCompleter& completer = CommandCompleter());
 
 private:
-    struct CommandAndCompleter
+    struct CommandDescriptor
     {
         Command command;
+        unsigned flags;
         CommandCompleter completer;
     };
-    std::unordered_map<std::string, CommandAndCompleter> m_commands;
+    std::unordered_map<std::string, CommandDescriptor> m_commands;
 };
 
 }
