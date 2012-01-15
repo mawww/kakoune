@@ -41,11 +41,14 @@ static TokenList split(const std::string& line)
 
         size_t token_start = pos;
 
-        while ((line[pos] != delimiter or line[pos-1] == '\\') and
-               pos != line.length())
+        while (((line[pos] != delimiter and line[pos] != ';') or
+                line[pos-1] == '\\') and pos != line.length())
             ++pos;
 
         result.push_back(std::make_pair(token_start, pos));
+
+        if (line[pos] == ';')
+           result.push_back(std::make_pair(pos, pos+1));
 
         ++pos;
     }
@@ -81,11 +84,28 @@ void CommandManager::execute(const CommandParameters& params,
     if (params.empty())
         return;
 
-    auto command_it = m_commands.find(params[0]);
-    if (command_it == m_commands.end())
-        throw command_not_found(params[0]);
+    auto begin = params.begin();
+    auto end = begin;
+    while (true)
+    {
+        while (end != params.end() and *end != ";")
+            ++end;
 
-    command_it->second.command(CommandParameters(params.begin() + 1, params.end()), context);
+        if (end != begin)
+        {
+            auto command_it = m_commands.find(*begin);
+            if (command_it == m_commands.end())
+                throw command_not_found(*begin);
+
+            command_it->second.command(CommandParameters(begin + 1, end), context);
+        }
+
+        if (end == params.end())
+            break;
+
+        begin = end+1;
+        end   = begin;
+    }
 }
 
 Completions CommandManager::complete(const std::string& command_line, size_t cursor_pos)
