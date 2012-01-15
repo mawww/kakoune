@@ -147,9 +147,12 @@ void draw_window(Window& window)
 
     set_color(Color::Cyan, Color::Black);
     std::string status_line = window.status_line();
-    move(max_y, max_x - status_line.length());
+    static int last_status_length = 0;
+    move(max_y, max_x - last_status_length);
     clrtoeol();
+    move(max_y, max_x - status_line.length());
     addstr(status_line.c_str());
+    last_status_length = status_line.length();
 
     const DisplayCoord& cursor_position = window.cursor_position();
     move(cursor_position.line, cursor_position.column);
