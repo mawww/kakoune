@@ -485,9 +485,22 @@ void add_highlighter(const CommandParameters& params, const Context& context)
     try
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
-        HighlighterParameters highlighter_params(params.begin()+1, params.end());
-        registry.add_highlighter_to_window(*context.window, params[0],
-                                           highlighter_params);
+        if (params[0] == "-group")
+        {
+            if (params.size() < 3)
+                throw wrong_argument_count();
+
+            HighlighterGroup& group = context.window->get_highlighter_group(params[1]);
+            HighlighterParameters highlighter_params(params.begin()+3, params.end());
+            registry.add_highlighter_to_group(*context.window, group,
+                                              params[2], highlighter_params);
+        }
+        else
+        {
+            HighlighterParameters highlighter_params(params.begin()+1, params.end());
+            registry.add_highlighter_to_window(*context.window, params[0],
+                                               highlighter_params);
+        }
     }
     catch (runtime_error& err)
     {
