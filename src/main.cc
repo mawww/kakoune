@@ -598,6 +598,23 @@ void exec_commands_in_file(const CommandParameters& params,
     }
 }
 
+void exec_commands_in_runtime_file(const CommandParameters& params,
+                                   const Context& context)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    const std::string& filename = params[0];
+    char buffer[2048];
+    readlink("/proc/self/exe", buffer, 2048 - filename.length());
+    char* ptr = strrchr(buffer, '/');
+    if (ptr)
+    {
+        strcpy(ptr+1, filename.c_str());
+        exec_commands_in_file({ buffer }, main_context);
+    }
+}
+
 void do_command()
 {
     try
@@ -949,6 +966,7 @@ int main(int argc, char* argv[])
     command_manager.register_command(std::vector<std::string>{ "source" }, exec_commands_in_file,
                                      CommandManager::None,
                                      PerArgumentCommandCompleter{ complete_filename });
+    command_manager.register_command(std::vector<std::string>{ "runtime" }, exec_commands_in_runtime_file);
 
     command_manager.register_command(std::vector<std::string>{ "exec" }, exec_string);
 
@@ -957,15 +975,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        const char* kakrc = "kakrc";
-        char buffer[2048];
-        readlink("/proc/self/exe", buffer, 2048 - strlen(kakrc));
-        char* ptr = strrchr(buffer, '/');
-        if (ptr)
-        {
-            strcpy(ptr+1, kakrc);
-            exec_commands_in_file({ buffer }, main_context);
-        }
+        exec_commands_in_runtime_file({ "kakrc" }, main_context);
     }
      catch (Kakoune::runtime_error& error)
     {
