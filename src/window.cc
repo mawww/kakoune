@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "highlighter_registry.hh"
+#include "highlighters.hh"
 #include "hooks_manager.hh"
 
 #include <algorithm>
@@ -400,6 +401,21 @@ void Window::add_highlighter(HighlighterAndId&& highlighter)
 void Window::remove_highlighter(const std::string& id)
 {
     m_highlighters.remove(id);
+}
+
+HighlighterGroup& Window::get_highlighter_group(const std::string& id)
+{
+    auto group_it = m_highlighters.find(id);
+
+    if (group_it == m_highlighters.end())
+        throw runtime_error("no such group id " + id);
+
+    HighlighterGroup* group = group_it->second.target<HighlighterGroup>();
+
+    if (not group)
+        throw runtime_error("not a group " + id);
+
+    return *group;
 }
 
 CandidateList Window::complete_highlighterid(const std::string& prefix,

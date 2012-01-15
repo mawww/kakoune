@@ -47,6 +47,7 @@ private:
 typedef std::vector<Selection> SelectionList;
 
 class IncrementalInserter;
+class HighlighterGroup;
 
 // A Window is an editing view onto a Buffer
 //
@@ -103,6 +104,7 @@ public:
 
     void add_highlighter(HighlighterAndId&& highlighter);
     void remove_highlighter(const std::string& id);
+    HighlighterGroup& get_highlighter_group(const std::string& id);
 
     CandidateList complete_highlighterid(const std::string& prefix,
                                          size_t cursor_pos = std::string::npos);
