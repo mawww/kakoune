@@ -13,6 +13,7 @@ namespace Kakoune
 {
 
 class Window;
+class HighlighterGroup;
 
 typedef std::function<HighlighterAndId (Window& window,
                                         const HighlighterParameters& params)> HighlighterFactory;
@@ -24,6 +25,11 @@ public:
                           const HighlighterFactory& factory);
 
     void add_highlighter_to_window(Window& window,
+                                  const std::string& factory_name,
+                                  const HighlighterParameters& parameters);
+
+    void add_highlighter_to_group(Window& window,
+                                  HighlighterGroup& group,
                                   const std::string& factory_name,
                                   const HighlighterParameters& parameters);
 

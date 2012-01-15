@@ -2,6 +2,7 @@
 
 #include "exception.hh"
 #include "window.hh"
+#include "highlighters.hh"
 
 namespace Kakoune
 {
@@ -28,6 +29,18 @@ void HighlighterRegistry::add_highlighter_to_window(Window& window,
         throw factory_not_found(name);
 
     window.add_highlighter(it->second(window, parameters));
+}
+
+void HighlighterRegistry::add_highlighter_to_group(Window& window,
+                                                   HighlighterGroup& group,
+                                                   const std::string& name,
+                                                   const HighlighterParameters& parameters)
+{
+    auto it = m_factories.find(name);
+    if (it == m_factories.end())
+        throw factory_not_found(name);
+
+    group.add_highlighter(it->second(window, parameters));
 }
 
 CandidateList HighlighterRegistry::complete_highlighter(const std::string& prefix,
