@@ -1,9 +1,12 @@
-hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addhl hlcpp
-hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addfilter preserve_indent
-hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) addfilter cleanup_whitespaces
+hook WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) \
+    addhl hlcpp; \
+    addfilter preserve_indent; \
+    addfilter cleanup_whitespaces
+
 hook WinInsertEnd .* exec xs\h+(?=\n)<ret>d
 hook WinCreate .* addhl regex \h+(?=\n) default red
 
-hook WinCreate (.*/)?kakrc addhl regex (hook|addhl|rmhl|addfilter|rmfilter|exec) green default
-hook WinCreate (.*/)?kakrc addhl regex (?<=hook)\h+\w+\h+\H+ magenta default
-hook WinCreate (.*/)?kakrc addhl regex (?<=hook)\h+\w+ cyan default
+hook WinCreate (.*/)?kakrc \
+    addhl regex (hook|addhl|rmhl|addfilter|rmfilter|exec) green default; \
+    addhl regex (?<=hook)\h+\w+\h+\H+ magenta default; \
+    addhl regex (?<=hook)\h+\w+ cyan default
