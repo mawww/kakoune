@@ -1,6 +1,9 @@
 #ifndef idvaluemap_hh_INCLUDED
 #define idvaluemap_hh_INCLUDED
 
+#include <vector>
+#include "completion.hh"
+
 namespace Kakoune
 {
 
