@@ -1,7 +1,9 @@
 #ifndef highlighter_hh_INCLUDED
 #define highlighter_hh_INCLUDED
 
+#include <string>
 #include <functional>
+#include <vector>
 
 namespace Kakoune
 {
@@ -15,6 +17,8 @@ class DisplayBuffer;
 
 typedef std::function<void (DisplayBuffer& display_buffer)> HighlighterFunc;
 typedef std::pair<std::string, HighlighterFunc> HighlighterAndId;
+typedef std::vector<std::string> HighlighterParameters;
+
 
 }
 

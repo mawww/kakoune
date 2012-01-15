@@ -14,8 +14,6 @@ namespace Kakoune
 
 class Window;
 
-typedef std::vector<std::string> HighlighterParameters;
-
 typedef std::function<HighlighterAndId (Window& window,
                                         const HighlighterParameters& params)> HighlighterFactory;
 
