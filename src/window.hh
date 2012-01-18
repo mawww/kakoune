@@ -107,7 +107,9 @@ public:
     HighlighterGroup& get_highlighter_group(const std::string& id);
 
     CandidateList complete_highlighterid(const std::string& prefix,
-                                         size_t cursor_pos = std::string::npos);
+                                         size_t cursor_pos);
+    CandidateList complete_highlighter_groupid(const std::string& prefix,
+                                               size_t cursor_pos);
 
     void add_filter(FilterAndId&& filter);
     void remove_filter(const std::string& id);

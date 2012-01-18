@@ -966,14 +966,31 @@ int main(int argc, char* argv[])
                                      PerArgumentCommandCompleter {
                                          std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
                                      });
-    command_manager.register_command(std::vector<std::string>{ "agh", "addgrouphl" }, add_group_highlighter);
+    command_manager.register_command(std::vector<std::string>{ "agh", "addgrouphl" }, add_group_highlighter,
+                                     CommandManager::None,
+                                     PerArgumentCommandCompleter {
+                                         [&](const std::string& prefix, size_t cursor_pos)
+                                         { return main_context.window().complete_highlighter_groupid(prefix, cursor_pos); },
+                                         std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
+                                     });
     command_manager.register_command(std::vector<std::string>{ "rh", "rmhl" }, rm_highlighter,
                                      CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
                                          { return main_context.window().complete_highlighterid(prefix, cursor_pos); }
                                      });
-    command_manager.register_command(std::vector<std::string>{ "rgh", "rmgrouphl" }, rm_group_highlighter);
+    command_manager.register_command(std::vector<std::string>{ "rgh", "rmgrouphl" }, rm_group_highlighter,
+                                     CommandManager::None,
+                                     [&](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                                     {
+                                         Window& w = main_context.window();
+                                         const std::string& arg = token_to_complete < params.size() ?
+                                                                  params[token_to_complete] : std::string();
+                                         if (token_to_complete == 0)
+                                             return w.complete_highlighter_groupid(arg, pos_in_token);
+                                         else if (token_to_complete == 1)
+                                             return w.get_highlighter_group(params[0]).complete_highlighterid(arg, pos_in_token);
+                                     });
     command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
                                      CommandManager::None,
                                      PerArgumentCommandCompleter {

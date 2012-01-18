@@ -20,6 +20,9 @@ public:
     void add_highlighter(HighlighterAndId&& highlighter);
     void remove_highlighter(const std::string& id);
 
+    CandidateList complete_highlighterid(const std::string& prefix,
+                                         size_t cursor_pos);
+
     static HighlighterAndId create(Window& window,
                                    const HighlighterParameters& params);
 private:

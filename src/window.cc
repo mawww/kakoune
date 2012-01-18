@@ -424,6 +424,21 @@ CandidateList Window::complete_highlighterid(const std::string& prefix,
     return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
+CandidateList Window::complete_highlighter_groupid(const std::string& prefix,
+                                                   size_t cursor_pos)
+{
+    CandidateList all = m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
+    CandidateList result;
+    for (auto& id : all)
+    {
+        auto group_it = m_highlighters.find(id);
+        if (group_it != m_highlighters.end() and
+            group_it->second.target<HighlighterGroup>())
+            result.push_back(id);
+    }
+    return result;
+}
+
 void Window::add_filter(FilterAndId&& filter)
 {
     if (m_filters.contains(filter.first))

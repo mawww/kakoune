@@ -282,6 +282,12 @@ void HighlighterGroup::remove_highlighter(const std::string& id)
     m_highlighters.remove(id);
 }
 
+CandidateList HighlighterGroup::complete_highlighterid(const std::string& prefix,
+                                                       size_t cursor_pos)
+{
+    return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
+}
+
 HighlighterAndId HighlighterGroup::create(Window& window,
                                           const HighlighterParameters& params)
 {
