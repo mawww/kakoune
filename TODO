@@ -20,6 +20,8 @@ Medium Priority
 * Write a MemoryView class and port const vectors parameters to memory
   views in order to avoid useless memory copies.
 
+* History support for commands, search pattern...
+
 Low Priority
 ------------
 
