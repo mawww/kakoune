@@ -21,18 +21,7 @@ public:
     HighlighterGroup& get_group(const std::string& id);
 
     CandidateList complete_id(const std::string& prefix, size_t cursor_pos);
-
-    CandidateList complete_group_id(const std::string& prefix, size_t cursor_pos)
-    {
-        CandidateList all = complete_id(prefix, cursor_pos);
-        CandidateList res;
-        for (auto& id : all)
-        {
-            if (m_highlighters.find(id)->second.target<HighlighterGroup>())
-                res.push_back(id);
-        }
-        return res;
-    }
+    CandidateList complete_group_id(const std::string& prefix, size_t cursor_pos);
 
 private:
     idvaluemap<std::string, HighlighterFunc> m_highlighters;

@@ -44,4 +44,13 @@ CandidateList HighlighterGroup::complete_id(const std::string& prefix,
     return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
+CandidateList HighlighterGroup::complete_group_id(const std::string& prefix,
+                                                  size_t cursor_pos)
+{
+    return m_highlighters.complete_id_if<str_to_str>(
+        prefix, cursor_pos,
+        [](std::pair<std::string, HighlighterFunc>& func)
+        { return func.second.target<HighlighterGroup>() != nullptr; });
+}
+
 }
