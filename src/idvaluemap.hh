@@ -63,19 +63,32 @@ public:
         }
     }
 
-    template<std::string (*id_to_string)(const _Id&)>
-    CandidateList complete_id(const std::string& prefix,
-                              size_t cursor_pos)
+    template<std::string (*id_to_string)(const _Id&),
+             typename _Condition>
+    CandidateList complete_id_if(const std::string& prefix,
+                                 size_t cursor_pos,
+                                 _Condition condition)
     {
         std::string real_prefix = prefix.substr(0, cursor_pos);
         CandidateList result;
         for (auto& value : m_content)
         {
+            if (not condition(value))
+                continue;
+
             std::string id_str = id_to_string(value.first);
             if (id_str.substr(0, real_prefix.length()) == real_prefix)
                 result.push_back(std::move(id_str));
         }
         return result;
+    }
+
+    template<std::string (*id_to_string)(const _Id&)>
+    CandidateList complete_id(const std::string& prefix,
+                              size_t cursor_pos)
+    {
+        return complete_id_if<id_to_string>(
+            prefix, cursor_pos, [](const value_type&) { return true; });
     }
 
     iterator       begin()       { return m_content.begin(); }
