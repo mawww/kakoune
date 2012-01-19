@@ -8,6 +8,7 @@
 #include "display_buffer.hh"
 #include "completion.hh"
 #include "highlighter.hh"
+#include "highlighter_group.hh"
 #include "filter.hh"
 #include "idvaluemap.hh"
 
@@ -102,14 +103,7 @@ public:
             : runtime_error("id not unique: " + id) {}
     };
 
-    void add_highlighter(HighlighterAndId&& highlighter);
-    void remove_highlighter(const std::string& id);
-    HighlighterGroup& get_highlighter_group(const std::string& id);
-
-    CandidateList complete_highlighterid(const std::string& prefix,
-                                         size_t cursor_pos);
-    CandidateList complete_highlighter_groupid(const std::string& prefix,
-                                               size_t cursor_pos);
+    HighlighterGroup& highlighters() { return m_highlighters; }
 
     void add_filter(FilterAndId&& filter);
     void remove_filter(const std::string& id);
@@ -144,7 +138,7 @@ private:
     std::vector<SelectionList> m_selections;
     DisplayBuffer m_display_buffer;
 
-    idvaluemap<std::string, HighlighterFunc> m_highlighters;
+    HighlighterGroup m_highlighters;
     idvaluemap<std::string, FilterFunc> m_filters;
 };
 

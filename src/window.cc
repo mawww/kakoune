@@ -2,7 +2,6 @@
 
 #include "assert.hh"
 #include "highlighter_registry.hh"
-#include "highlighters.hh"
 #include "hooks_manager.hh"
 
 #include <algorithm>
@@ -341,11 +340,8 @@ void Window::update_display_buffer()
 
     m_display_buffer.append(DisplayAtom(DisplayCoord(0,0), begin, end));
 
-    for (auto& highlighter : m_highlighters)
-    {
-        highlighter.second(m_display_buffer);
-        m_display_buffer.check_invariant();
-    }
+    m_highlighters(m_display_buffer);
+    m_display_buffer.check_invariant();
 }
 
 void Window::set_dimensions(const DisplayCoord& dimensions)
@@ -389,54 +385,6 @@ std::string Window::status_line() const
     if (m_current_inserter)
         oss << "[Insert]";
     return oss.str();
-}
-
-void Window::add_highlighter(HighlighterAndId&& highlighter)
-{
-    if (m_highlighters.contains(highlighter.first))
-        throw id_not_unique(highlighter.first);
-    m_highlighters.append(std::forward<HighlighterAndId>(highlighter));
-}
-
-void Window::remove_highlighter(const std::string& id)
-{
-    m_highlighters.remove(id);
-}
-
-HighlighterGroup& Window::get_highlighter_group(const std::string& id)
-{
-    auto group_it = m_highlighters.find(id);
-
-    if (group_it == m_highlighters.end())
-        throw runtime_error("no such group id " + id);
-
-    HighlighterGroup* group = group_it->second.target<HighlighterGroup>();
-
-    if (not group)
-        throw runtime_error("not a group " + id);
-
-    return *group;
-}
-
-CandidateList Window::complete_highlighterid(const std::string& prefix,
-                                             size_t cursor_pos)
-{
-    return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
-}
-
-CandidateList Window::complete_highlighter_groupid(const std::string& prefix,
-                                                   size_t cursor_pos)
-{
-    CandidateList all = m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
-    CandidateList result;
-    for (auto& id : all)
-    {
-        auto group_it = m_highlighters.find(id);
-        if (group_it != m_highlighters.end() and
-            group_it->second.target<HighlighterGroup>())
-            result.push_back(id);
-    }
-    return result;
 }
 
 void Window::add_filter(FilterAndId&& filter)

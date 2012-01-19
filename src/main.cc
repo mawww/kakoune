@@ -504,7 +504,7 @@ void add_group_highlighter(const CommandParameters& params, const Context& conte
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-        HighlighterGroup& group = context.window().get_highlighter_group(params[0]);
+        HighlighterGroup& group = context.window().highlighters().get_group(params[0]);
         HighlighterParameters highlighter_params(params.begin()+2, params.end());
         registry.add_highlighter_to_group(context.window(), group,
                                           params[1], highlighter_params);
@@ -520,7 +520,7 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    context.window().remove_highlighter(params[0]);
+    context.window().highlighters().remove(params[0]);
 }
 
 void rm_group_highlighter(const CommandParameters& params, const Context& context)
@@ -530,8 +530,8 @@ void rm_group_highlighter(const CommandParameters& params, const Context& contex
 
     try
     {
-        HighlighterGroup& group = context.window().get_highlighter_group(params[0]);
-        group.remove_highlighter(params[1]);
+        HighlighterGroup& group = context.window().highlighters().get_group(params[0]);
+        group.remove(params[1]);
     }
     catch (runtime_error& err)
     {
@@ -970,14 +970,14 @@ int main(int argc, char* argv[])
                                      CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return main_context.window().complete_highlighter_groupid(prefix, cursor_pos); },
+                                         { return main_context.window().highlighters().complete_group_id(prefix, cursor_pos); },
                                          std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
                                      });
     command_manager.register_command(std::vector<std::string>{ "rh", "rmhl" }, rm_highlighter,
                                      CommandManager::None,
                                      PerArgumentCommandCompleter {
                                          [&](const std::string& prefix, size_t cursor_pos)
-                                         { return main_context.window().complete_highlighterid(prefix, cursor_pos); }
+                                         { return main_context.window().highlighters().complete_group_id(prefix, cursor_pos); }
                                      });
     command_manager.register_command(std::vector<std::string>{ "rgh", "rmgrouphl" }, rm_group_highlighter,
                                      CommandManager::None,
@@ -987,9 +987,9 @@ int main(int argc, char* argv[])
                                          const std::string& arg = token_to_complete < params.size() ?
                                                                   params[token_to_complete] : std::string();
                                          if (token_to_complete == 0)
-                                             return w.complete_highlighter_groupid(arg, pos_in_token);
+                                             return w.highlighters().complete_group_id(arg, pos_in_token);
                                          else if (token_to_complete == 1)
-                                             return w.get_highlighter_group(params[0]).complete_highlighterid(arg, pos_in_token);
+                                             return w.highlighters().get_group(params[0]).complete_id(arg, pos_in_token);
                                      });
     command_manager.register_command(std::vector<std::string>{ "af", "addfilter" }, add_filter,
                                      CommandManager::None,

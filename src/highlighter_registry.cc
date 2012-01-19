@@ -28,7 +28,7 @@ void HighlighterRegistry::add_highlighter_to_window(Window& window,
     if (it == m_factories.end())
         throw factory_not_found(name);
 
-    window.add_highlighter(it->second(window, parameters));
+    window.highlighters().append(it->second(window, parameters));
 }
 
 void HighlighterRegistry::add_highlighter_to_group(Window& window,
@@ -40,7 +40,7 @@ void HighlighterRegistry::add_highlighter_to_group(Window& window,
     if (it == m_factories.end())
         throw factory_not_found(name);
 
-    group.add_highlighter(it->second(window, parameters));
+    group.append(it->second(window, parameters));
 }
 
 CandidateList HighlighterRegistry::complete_highlighter(const std::string& prefix,
