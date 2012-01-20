@@ -22,6 +22,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
+
 using namespace Kakoune;
 using namespace std::placeholders;
 
@@ -628,7 +632,14 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
 
     const std::string& filename = params[0];
     char buffer[2048];
+#if defined(__linux__)
     readlink("/proc/self/exe", buffer, 2048 - filename.length());
+#elif defined(__APPLE__)
+    uint32_t bufsize = 2048 - filename.length();
+    _NSGetExecutablePath(buffer, &bufsize);
+#else
+# error "finding executable path is not implemented on this platform"
+#endif
     char* ptr = strrchr(buffer, '/');
     if (ptr)
     {
