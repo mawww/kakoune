@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "highlighter_registry.hh"
 #include "hooks_manager.hh"
+#include "context.hh"
 
 #include <algorithm>
 #include <sstream>

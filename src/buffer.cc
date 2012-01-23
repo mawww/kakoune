@@ -5,6 +5,7 @@
 #include "assert.hh"
 #include "utils.hh"
 #include "hooks_manager.hh"
+#include "context.hh"
 
 namespace Kakoune
 {

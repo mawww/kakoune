@@ -12,6 +12,7 @@
 #include "filters.hh"
 #include "filter_registry.hh"
 #include "hooks_manager.hh"
+#include "context.hh"
 #include "keys.hh"
 
 #include <unordered_map>
