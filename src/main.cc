@@ -571,17 +571,22 @@ void rm_filter(const CommandParameters& params, const Context& context)
 
 void add_hook(const CommandParameters& params, const Context& context)
 {
-    if (params.size() < 3)
+    if (params.size() < 4)
         throw wrong_argument_count();
 
-    CommandParameters hook_params(params.begin()+2, params.end());
+    CommandParameters hook_params(params.begin()+3, params.end());
 
-    GlobalHooksManager::instance().add_hook(
-       params[0],
-       [=](const std::string& param, const Context& context) {
-           if (boost::regex_match(param, boost::regex(params[1])))
-               CommandManager::instance().execute(hook_params, context);
-       });
+    auto hook_func = [=](const std::string& param, const Context& context) {
+        if (boost::regex_match(param, boost::regex(params[2])))
+            CommandManager::instance().execute(hook_params, context);
+    };
+
+    if (params[0] == "global")
+        GlobalHooksManager::instance().add_hook(params[1], hook_func);
+    else if (params[0] == "window")
+        context.window().hooks_manager().add_hook(params[1], hook_func);
+    else
+        print_status("error: no such hook container " + params[0]);
 }
 
 void exec_commands_in_file(const CommandParameters& params,
