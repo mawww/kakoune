@@ -466,7 +466,7 @@ IncrementalInserter::~IncrementalInserter()
     m_window.push_selections();
     try
     {
-        GlobalHooksManager::instance().run_hook("WinInsertEnd", "", Context(m_window));
+        m_window.hooks_manager().run_hook("InsertEnd", "", Context(m_window));
     }
     catch (runtime_error& e) {}
     m_window.pop_selections();

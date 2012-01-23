@@ -11,6 +11,7 @@
 #include "highlighter_group.hh"
 #include "filter.hh"
 #include "idvaluemap.hh"
+#include "hooks_manager.hh"
 
 namespace Kakoune
 {
@@ -114,6 +115,8 @@ public:
     void push_selections();
     void pop_selections();
 
+    HooksManager& hooks_manager() { return m_hooks_manager; }
+
 private:
     friend class Buffer;
 
@@ -140,6 +143,8 @@ private:
 
     HighlighterGroup m_highlighters;
     idvaluemap<std::string, FilterFunc> m_filters;
+
+    HooksManager     m_hooks_manager;
 };
 
 class IncrementalInserter
