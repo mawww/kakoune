@@ -57,8 +57,8 @@ Window::Window(Buffer& buffer)
 
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    HooksManager::instance().run_hook("WinCreate", buffer.name(),
-                                      Context(*this));
+    GlobalHooksManager::instance().run_hook("WinCreate", buffer.name(),
+                                            Context(*this));
 
     registry.add_highlighter_to_window(*this, "expand_tabs", HighlighterParameters());
     registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());
@@ -465,7 +465,7 @@ IncrementalInserter::~IncrementalInserter()
     m_window.push_selections();
     try
     {
-        HooksManager::instance().run_hook("WinInsertEnd", "", Context(m_window));
+        GlobalHooksManager::instance().run_hook("WinInsertEnd", "", Context(m_window));
     }
     catch (runtime_error& e) {}
     m_window.pop_selections();

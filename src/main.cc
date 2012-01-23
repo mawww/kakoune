@@ -575,7 +575,7 @@ void add_hook(const CommandParameters& params, const Context& context)
 
     CommandParameters hook_params(params.begin()+2, params.end());
 
-    HooksManager::instance().add_hook(
+    GlobalHooksManager::instance().add_hook(
        params[0],
        [=](const std::string& param, const Context& context) {
            if (boost::regex_match(param, boost::regex(params[1])))
@@ -955,7 +955,7 @@ int main(int argc, char* argv[])
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
-    HooksManager        hooks_manager;
+    GlobalHooksManager  hooks_manager;
 
     command_manager.register_command(std::vector<std::string>{ "e", "edit" }, edit,
                                      CommandManager::None,

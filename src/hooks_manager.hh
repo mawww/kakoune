@@ -11,7 +11,7 @@ namespace Kakoune
 
 typedef std::function<void (const std::string&, const Context&)> HookFunc;
 
-class HooksManager : public Singleton<HooksManager>
+class HooksManager
 {
 public:
     void add_hook(const std::string& hook_name, HookFunc hook);
@@ -20,6 +20,11 @@ public:
 
 private:
     std::unordered_map<std::string, std::vector<HookFunc>> m_hooks;
+};
+
+class GlobalHooksManager : public HooksManager,
+                           public Singleton<GlobalHooksManager>
+{
 };
 
 }

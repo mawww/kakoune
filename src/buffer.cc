@@ -27,7 +27,7 @@ Buffer::Buffer(const std::string& name, Type type,
 {
     BufferManager::instance().register_buffer(this);
 
-    HooksManager::instance().run_hook("BufCreate", name, Context(*this));
+    GlobalHooksManager::instance().run_hook("BufCreate", name, Context(*this));
     compute_lines();
 }
 
