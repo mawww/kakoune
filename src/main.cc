@@ -163,6 +163,30 @@ void draw_window(Window& window)
     move(cursor_position.line, cursor_position.column);
 }
 
+Key get_key()
+{
+    char c = getch();
+
+    Key::Modifiers modifiers = Key::Modifiers::None;
+    if (c > 0 and c < 27)
+    {
+        modifiers = Key::Modifiers::Control;
+        c = c - 1 + 'a';
+    }
+    else if (c == 27)
+    {
+        timeout(0);
+        char new_c = getch();
+        timeout(-1);
+        if (new_c != ERR)
+        {
+            c = new_c;
+            modifiers = Key::Modifiers::Alt;
+        }
+    }
+    return Key(modifiers, c);
+}
+
 void init_ncurses()
 {
     initscr();
@@ -293,41 +317,53 @@ void print_status(const std::string& status)
 struct InsertSequence
 {
     IncrementalInserter::Mode mode;
-    std::string               keys;
+    std::vector<Key>          keys;
 
     InsertSequence() : mode(IncrementalInserter::Mode::Insert) {}
 };
 
 InsertSequence last_insert_sequence;
 
-bool insert_char(IncrementalInserter& inserter, char c)
+bool insert_char(IncrementalInserter& inserter, const Key& key)
 {
-    switch (c)
+    switch (key.modifiers)
     {
-    case 27:
-        return false;
+    case Key::Modifiers::None:
+        switch (key.key)
+        {
+        case 27:
+            return false;
 
-    case 2:
-        c = getch();
-        if (c >= '0' and c <= '9')
-            inserter.insert_capture(c - '0');
+        case '\r':
+            inserter.insert(std::string() + '\n');
+            break;
+        default:
+            inserter.insert(std::string() + key.key);
+        }
         break;
-
-    case 4:
-        inserter.move_cursor({0, -1});
+    case Key::Modifiers::Control:
+        switch (key.key)
+        {
+        case 'b':
+        {
+            Key next_key = get_key();
+            last_insert_sequence.keys.push_back(next_key);
+            if (next_key.modifiers == Key::Modifiers::None and
+                next_key.key >= '0' and next_key.key <= '9')
+                inserter.insert_capture(next_key.key - '0');
+            break;
+        }
+        case 'd':
+            inserter.move_cursor({0, -1});
+            break;
+        case 'e':
+            inserter.move_cursor({0,  1});
+            break;
+        case 'g':
+            inserter.erase();
+            break;
+        }
         break;
-    case 5:
-        inserter.move_cursor({0,  1});
-        break;
-
-    case 7:
-        inserter.erase();
-        break;
-
-    case '\r':
-        c = '\n';
-    default:
-        inserter.insert(std::string() + c);
     }
     return true;
 }
@@ -340,12 +376,12 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
     draw_window(window);
     while(true)
     {
-        char c = getch();
+        Key key = get_key();
 
-        if (not insert_char(inserter, c))
+        if (not insert_char(inserter, key))
             return;
 
-        last_insert_sequence.keys += c;
+        last_insert_sequence.keys.push_back(key);
         draw_window(window);
     }
 }
@@ -353,9 +389,9 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
 void do_repeat_insert(Window& window, int count)
 {
     IncrementalInserter inserter(window, last_insert_sequence.mode);
-    for (char c : last_insert_sequence.keys)
+    for (const Key& key : last_insert_sequence.keys)
     {
-        insert_char(inserter, c);
+        insert_char(inserter, key);
     }
     draw_window(window);
 }
@@ -1053,26 +1089,11 @@ int main(int argc, char* argv[])
         {
             try
             {
-                char c = getch();
-
-                if (isdigit(c))
-                    count = count * 10 + c - '0';
+                Key key = get_key();
+                if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
+                    count = count * 10 + key.key - '0';
                 else
                 {
-                    Key::Modifiers modifiers = Key::Modifiers::None;
-                    if (c == 27)
-                    {
-                        timeout(0);
-                        char new_c = getch();
-                        timeout(-1);
-                        if (new_c != ERR)
-                        {
-                            c = new_c;
-                            modifiers = Key::Modifiers::Alt;
-                        }
-                    }
-                    Key key(modifiers, c);
-
                     auto it = keymap.find(key);
                     if (it != keymap.end())
                     {
