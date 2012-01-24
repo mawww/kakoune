@@ -324,7 +324,7 @@ struct InsertSequence
 
 InsertSequence last_insert_sequence;
 
-bool insert_char(IncrementalInserter& inserter, const Key& key)
+bool insert_char(Window& window, IncrementalInserter& inserter, const Key& key)
 {
     switch (key.modifiers)
     {
@@ -353,6 +353,23 @@ bool insert_char(IncrementalInserter& inserter, const Key& key)
                 inserter.insert_capture(next_key.key - '0');
             break;
         }
+        case 'r':
+        {
+            Key next_key = get_key();
+            last_insert_sequence.keys.push_back(next_key);
+            if (next_key.modifiers == Key::Modifiers::None)
+            {
+                switch (next_key.key)
+                {
+                case '%':
+                    inserter.insert(window.buffer().name());
+                    break;
+                default:
+                    inserter.insert(RegisterManager::instance()[next_key.key]);
+                }
+            }
+            break;
+        }
         case 'd':
             inserter.move_cursor({0, -1});
             break;
@@ -378,7 +395,7 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
     {
         Key key = get_key();
 
-        if (not insert_char(inserter, key))
+        if (not insert_char(window, inserter, key))
             return;
 
         last_insert_sequence.keys.push_back(key);
@@ -391,7 +408,7 @@ void do_repeat_insert(Window& window, int count)
     IncrementalInserter inserter(window, last_insert_sequence.mode);
     for (const Key& key : last_insert_sequence.keys)
     {
-        insert_char(inserter, key);
+        insert_char(window, inserter, key);
     }
     draw_window(window);
 }
