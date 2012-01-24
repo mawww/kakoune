@@ -163,7 +163,7 @@ void draw_window(Window& window)
     move(cursor_position.line, cursor_position.column);
 }
 
-Key get_key()
+Key ncurses_get_key()
 {
     char c = getch();
 
@@ -298,12 +298,20 @@ std::string ncurses_prompt(const std::string& text, Completer completer = comple
     return result;
 }
 
-static std::function<std::string (const std::string&, Completer)> prompt_func = ncurses_prompt;
+static std::function<std::string (const std::string&, Completer)> prompt_func  = ncurses_prompt;
 
 std::string prompt(const std::string& text, Completer completer = complete_nothing)
 {
     return prompt_func(text, completer);
 }
+
+static std::function<Key ()> get_key_func = ncurses_get_key;
+
+Key get_key()
+{
+    return get_key_func();
+}
+
 
 void print_status(const std::string& status)
 {
@@ -426,8 +434,11 @@ void do_go(Window& window, int count)
     }
     else
     {
-        char c = getch();
-        switch (c)
+        Key key = get_key();
+        if (key.modifiers != Key::Modifiers::None)
+            return;
+
+        switch (key.key)
         {
         case 'g':
         case 't':
@@ -973,6 +984,14 @@ void exec_string(const CommandParameters& params,
 
     KeyList keys = parse_keys(params[0]);
 
+    auto prompt_save = prompt_func;
+    auto get_key_save = get_key_func;
+
+    auto restore_funcs = on_scope_end([&]() {
+        prompt_func = prompt_save;
+        get_key_func = get_key_save;
+    });
+
     prompt_func = [&](const std::string&, Completer) {
         size_t begin = pos;
         while (pos < keys.size() and keys[pos].key != '\n')
@@ -986,7 +1005,11 @@ void exec_string(const CommandParameters& params,
         return result;
     };
 
-    auto restore_prompt = on_scope_end([&]() { prompt_func = ncurses_prompt; });
+    get_key_func = [&]() {
+        if (pos >= keys.size())
+            throw runtime_error("no more characters");
+        return keys[pos++];
+    };
 
     int count = 0;
     while(pos < keys.size())
