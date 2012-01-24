@@ -17,7 +17,13 @@ void HooksManager::run_hook(const std::string& hook_name,
         return;
 
     for (auto& hook : hook_list_it->second)
-         hook(param, context);
+    {
+        try
+        {
+            hook(param, context);
+        }
+        catch (runtime_error&) {}
+    }
 }
 
 }

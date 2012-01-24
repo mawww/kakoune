@@ -464,11 +464,7 @@ IncrementalInserter::~IncrementalInserter()
     move_cursor(DisplayCoord(0, -1));
 
     m_window.push_selections();
-    try
-    {
-        m_window.hooks_manager().run_hook("InsertEnd", "", Context(m_window));
-    }
-    catch (runtime_error& e) {}
+    m_window.hooks_manager().run_hook("InsertEnd", "", Context(m_window));
     m_window.pop_selections();
 
     assert(m_window.m_current_inserter == this);
