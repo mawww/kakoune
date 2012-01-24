@@ -341,10 +341,6 @@ bool insert_char(Window& window, IncrementalInserter& inserter, const Key& key)
         {
         case 27:
             return false;
-
-        case '\r':
-            inserter.insert(std::string() + '\n');
-            break;
         default:
             inserter.insert(std::string() + key.key);
         }
@@ -378,6 +374,9 @@ bool insert_char(Window& window, IncrementalInserter& inserter, const Key& key)
             }
             break;
         }
+        case 'm':
+            inserter.insert(std::string() + '\n');
+            break;
         case 'd':
             inserter.move_cursor({0, -1});
             break;
