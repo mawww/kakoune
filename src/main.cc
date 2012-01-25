@@ -218,29 +218,63 @@ std::string ncurses_prompt(const std::string& text, Completer completer = comple
     addstr(text.c_str());
     clrtoeol();
 
-    std::string result;
     size_t cursor_pos = 0;
 
     Completions completions;
     int current_completion = -1;
     std::string text_before_completion;
 
+    std::string result;
+    std::string saved_result;
+
+    static std::unordered_map<std::string, std::vector<std::string>> history_per_prompt;
+    std::vector<std::string>& history = history_per_prompt[text];
+    auto history_it = history.end();
+
     while (true)
     {
-        char c = getch();
+        int c = getch();
         switch (c)
         {
         case '\r':
+        {
+            std::vector<std::string>::iterator it;
+            while ((it = find(history, result)) != history.end())
+                history.erase(it);
+
+            history.push_back(result);
             return result;
-        case 4:
+        }
+        case KEY_UP:
+            if (history_it != history.begin())
+            {
+                if (history_it == history.end())
+                   saved_result = result;
+                --history_it;
+                result = *history_it;
+                cursor_pos = result.length();
+            }
+            break;
+        case KEY_DOWN:
+            if (history_it != history.end())
+            {
+                ++history_it;
+                if (history_it != history.end())
+                    result = *history_it;
+                else
+                    result = saved_result;
+                cursor_pos = result.length();
+            }
+            break;
+        case KEY_LEFT:
             if (cursor_pos > 0)
                 --cursor_pos;
             break;
-        case 5:
+        case KEY_RIGHT:
             if (cursor_pos < result.length())
                 ++cursor_pos;
             break;
-        case 7:
+        case KEY_BACKSPACE:
             if (cursor_pos != 0)
             {
                 result = result.substr(0, cursor_pos - 1)
@@ -288,7 +322,7 @@ std::string ncurses_prompt(const std::string& text, Completer completer = comple
         }
         default:
             current_completion = -1;
-            result = result.substr(0, cursor_pos) + c + result.substr(cursor_pos, std::string::npos);
+            result = result.substr(0, cursor_pos) + (char)c + result.substr(cursor_pos, std::string::npos);
             ++cursor_pos;
         }
 
