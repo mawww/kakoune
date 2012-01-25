@@ -101,6 +101,8 @@ A multiselection can also be obtained with _Alt-s_, which splits the current
 selection according to the regex entered. To split a comma separated list,
 use _alt-s_ then ', *'
 
+To clear multiple selections, use _space_.
+
 Captures
 --------
 
@@ -145,9 +147,13 @@ Hooks
 commands can be registred to be executed when certain events arise.
 to register a hook, use the hook command.
 
-:hook <hook_name> <filtering_regex> <command> <command_args>...
+:hook <scope> <hook_name> <filtering_regex> <command> <command_args>...
 
-for example, to automatically use cplusplus highlighting with .cc files,
+<scope> can be either global or window, as hooks can be registered per
+window.
+
+for example, to automatically use line numbering with .cc files,
 use the following command:
 
-:hook WinCreate .*\.cc addfilter hlcpp
+:hook global WinCreate .*\.cc addhl number_lines
+
