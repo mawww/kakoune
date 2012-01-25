@@ -4,7 +4,6 @@
 #include <functional>
 
 #include "buffer.hh"
-#include "dynamic_buffer_iterator.hh"
 #include "display_buffer.hh"
 #include "completion.hh"
 #include "highlighter.hh"
@@ -16,17 +15,22 @@
 namespace Kakoune
 {
 
-struct Selection
+struct Selection : public ModificationListener
 {
     typedef std::vector<BufferString> CaptureList;
 
     Selection(const BufferIterator& first, const BufferIterator& last,
-              const CaptureList& captures = CaptureList())
-        : m_first(first), m_last(last), m_captures(captures) {}
+              const CaptureList& captures = CaptureList());
 
     Selection(const BufferIterator& first, const BufferIterator& last,
-              CaptureList&& captures)
-        : m_first(first), m_last(last), m_captures(captures) {}
+              CaptureList&& captures);
+
+    Selection(const Selection& other);
+    Selection(Selection&& other);
+
+    ~Selection();
+
+    Selection& operator=(const Selection& other);
 
     BufferIterator begin() const;
     BufferIterator end() const;
@@ -40,10 +44,17 @@ struct Selection
     const CaptureList& captures() const { return m_captures; }
 
 private:
-    DynamicBufferIterator m_first;
-    DynamicBufferIterator m_last;
+    BufferIterator m_first;
+    BufferIterator m_last;
 
     CaptureList m_captures;
+
+    void on_modification(const Modification& modification);
+
+    void register_with_buffer();
+    void unregister_with_buffer();
+
+    void check_invariant();
 };
 
 typedef std::vector<Selection> SelectionList;
