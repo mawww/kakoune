@@ -258,16 +258,13 @@ void Window::select(const Selector& selector, bool append)
 
     if (not append)
     {
-        Selection sel = selector(selections().back().last());
-        selections().clear();
-        selections().push_back(std::move(sel));
+        for (auto& sel : selections())
+            sel = selector(sel.last());
     }
     else
     {
         for (auto& sel : selections())
-        {
             sel.merge_with(selector(sel.last()));
-        }
     }
     scroll_to_keep_cursor_visible_ifn();
 }
@@ -303,22 +300,15 @@ BufferString Window::selection_content() const
                            selections().back().end());
 }
 
-void Window::move_cursor(const DisplayCoord& offset, bool append)
+void Window::move_selections(const DisplayCoord& offset, bool append)
 {
-    if (not append)
+    for (auto& sel : selections())
     {
-        BufferCoord pos = m_buffer.line_and_column_at(cursor_iterator());
-        move_cursor_to(m_buffer.iterator_at(pos + BufferCoord(offset)));
+        BufferCoord pos = m_buffer.line_and_column_at(sel.last());
+        BufferIterator last = m_buffer.iterator_at(pos + BufferCoord(offset));
+        sel = Selection(append ? sel.first() : last, last);
     }
-    else
-    {
-        for (auto& sel : selections())
-        {
-            BufferCoord pos = m_buffer.line_and_column_at(sel.last());
-            sel = Selection(sel.first(), m_buffer.iterator_at(pos + BufferCoord(offset)));
-        }
-        scroll_to_keep_cursor_visible_ifn();
-    }
+    scroll_to_keep_cursor_visible_ifn();
 }
 
 void Window::move_cursor_to(const BufferIterator& iterator)
@@ -461,7 +451,7 @@ IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
 
 IncrementalInserter::~IncrementalInserter()
 {
-    move_cursor(DisplayCoord(0, -1));
+    move_cursors(DisplayCoord(0, -1));
 
     m_window.push_selections();
     m_window.hooks_manager().run_hook("InsertEnd", "", Context(m_window));
@@ -505,7 +495,7 @@ void IncrementalInserter::erase()
     m_window.scroll_to_keep_cursor_visible_ifn();
 }
 
-void IncrementalInserter::move_cursor(const DisplayCoord& offset)
+void IncrementalInserter::move_cursors(const DisplayCoord& offset)
 {
     for (auto& sel : m_window.selections())
     {

@@ -77,7 +77,7 @@ public:
     BufferIterator iterator_at(const DisplayCoord& window_pos) const;
     DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
 
-    void move_cursor(const DisplayCoord& offset, bool append = false);
+    void move_selections(const DisplayCoord& offset, bool append = false);
     void move_cursor_to(const BufferIterator& iterator);
 
     void clear_selections();
@@ -167,7 +167,7 @@ public:
     void insert(const Window::String& string);
     void insert_capture(size_t index);
     void erase();
-    void move_cursor(const DisplayCoord& offset);
+    void move_cursors(const DisplayCoord& offset);
 
 private:
     void apply(Modification&& modification) const;

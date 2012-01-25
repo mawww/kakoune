@@ -378,10 +378,10 @@ bool insert_char(Window& window, IncrementalInserter& inserter, const Key& key)
             inserter.insert(std::string() + '\n');
             break;
         case 'd':
-            inserter.move_cursor({0, -1});
+            inserter.move_cursors({0, -1});
             break;
         case 'e':
-            inserter.move_cursor({0,  1});
+            inserter.move_cursors({0,  1});
             break;
         case 'g':
             inserter.erase();
@@ -859,7 +859,7 @@ void do_join(Window& window, int count)
     window.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
     window.replace(" ");
     window.clear_selections();
-    window.move_cursor({0, -1});
+    window.move_selections({0, -1});
 }
 
 template<bool inside>
@@ -888,15 +888,15 @@ void do_select_surrounding(Window& window, int count)
 
 std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap =
 {
-    { { Key::Modifiers::None, 'h' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1))); } },
-    { { Key::Modifiers::None, 'j' }, [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0)); } },
-    { { Key::Modifiers::None, 'k' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0)); } },
-    { { Key::Modifiers::None, 'l' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1))); } },
+    { { Key::Modifiers::None, 'h' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0, -std::max(count,1))); } },
+    { { Key::Modifiers::None, 'j' }, [](Window& window, int count) { window.move_selections(DisplayCoord( std::max(count,1), 0)); } },
+    { { Key::Modifiers::None, 'k' }, [](Window& window, int count) { window.move_selections(DisplayCoord(-std::max(count,1), 0)); } },
+    { { Key::Modifiers::None, 'l' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0,  std::max(count,1))); } },
 
-    { { Key::Modifiers::None, 'H' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0, -std::max(count,1)), true); } },
-    { { Key::Modifiers::None, 'J' }, [](Window& window, int count) { window.move_cursor(DisplayCoord( std::max(count,1), 0), true); } },
-    { { Key::Modifiers::None, 'K' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(-std::max(count,1), 0), true); } },
-    { { Key::Modifiers::None, 'L' }, [](Window& window, int count) { window.move_cursor(DisplayCoord(0,  std::max(count,1)), true); } },
+    { { Key::Modifiers::None, 'H' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0, -std::max(count,1)), true); } },
+    { { Key::Modifiers::None, 'J' }, [](Window& window, int count) { window.move_selections(DisplayCoord( std::max(count,1), 0), true); } },
+    { { Key::Modifiers::None, 'K' }, [](Window& window, int count) { window.move_selections(DisplayCoord(-std::max(count,1), 0), true); } },
+    { { Key::Modifiers::None, 'L' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0,  std::max(count,1)), true); } },
 
     { { Key::Modifiers::None, 't' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
     { { Key::Modifiers::None, 'f' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },
