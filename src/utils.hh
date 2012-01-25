@@ -101,10 +101,15 @@ template<typename T>
 T* Singleton<T>::ms_instance = nullptr;
 
 template<typename Container, typename T>
+auto find(Container& container, const T& value) -> decltype(container.begin())
+{
+    return std::find(container.begin(), container.end(), value);
+}
+
+template<typename Container, typename T>
 bool contains(const Container& container, const T& value)
 {
-    return std::find(container.begin(), container.end(), value)
-           != container.end();
+    return find(container, value) != container.end();
 }
 
 inline std::string str_to_str(const std::string& str)
