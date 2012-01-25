@@ -193,63 +193,69 @@ public:
 
     void operator()(DisplayBuffer& display_buffer)
     {
-        SelectionList sorted_selections = m_window.selections();
+        typedef std::pair<BufferIterator, BufferIterator> BufferRange;
 
-        std::sort(sorted_selections.begin(), sorted_selections.end(),
-                  [](const Selection& lhs, const Selection& rhs) { return lhs.begin() < rhs.begin(); });
+        std::vector<BufferRange> selections;
+        for (auto& sel : m_window.selections())
+            selections.push_back(BufferRange(sel.begin(), sel.end()));
+
+        std::sort(selections.begin(), selections.end(),
+                  [](const BufferRange& lhs, const BufferRange& rhs)
+                  { return lhs.first < rhs.first; });
 
         auto atom_it = display_buffer.begin();
-        auto sel_it = sorted_selections.begin();
+        auto sel_it = selections.begin();
 
         while (atom_it != display_buffer.end()
-               and sel_it != sorted_selections.end())
+               and sel_it != selections.end())
         {
-            Selection& sel = *sel_it;
+            BufferRange& sel = *sel_it;
             DisplayAtom& atom = *atom_it;
 
             // [###------]
-            if (atom.begin() >= sel.begin() and atom.begin() < sel.end() and atom.end() > sel.end())
+            if (atom.begin() >= sel.first and atom.begin() < sel.second and
+                atom.end() > sel.second)
             {
-                atom_it = display_buffer.split(atom_it, sel.end());
+                atom_it = display_buffer.split(atom_it, sel.second);
                 atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
             }
             // [---###---]
-            else if (atom.begin() < sel.begin() and atom.end() > sel.end())
+            else if (atom.begin() < sel.first and atom.end() > sel.second)
             {
-                atom_it = display_buffer.split(atom_it, sel.begin());
-                atom_it = display_buffer.split(++atom_it, sel.end());
+                atom_it = display_buffer.split(atom_it, sel.first);
+                atom_it = display_buffer.split(++atom_it, sel.second);
                 atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
                 ++sel_it;
             }
             // [------###]
-            else if (atom.begin() < sel.begin() and atom.end() > sel.begin())
+            else if (atom.begin() < sel.first and atom.end() > sel.first)
             {
-                atom_it = ++display_buffer.split(atom_it, sel.begin());
+                atom_it = ++display_buffer.split(atom_it, sel.first);
                 atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
             }
             // [#########]
-            else if (atom.begin() >= sel.begin() and atom.end() <= sel.end())
+            else if (atom.begin() >= sel.first and atom.end() <= sel.second)
             {
                 atom_it->attribute() |= Attributes::Underline;
                 ++atom_it;
             }
             // [---------]
-            else if (atom.begin() >= sel.end())
+            else if (atom.begin() >= sel.second)
                 ++sel_it;
             // [---------]
-            else if (atom.end() <= sel.begin())
+            else if (atom.end() <= sel.first)
                 ++atom_it;
             else
                 assert(false);
         }
 
         boost::regex ex("\n");
-        for (auto& sel : sorted_selections)
-             colorize_regex_range(display_buffer, sel.begin(), sel.end(),
+        for (auto& sel : selections)
+             colorize_regex_range(display_buffer, sel.first, sel.second,
                                   ex, Color::Default, Color::Yellow);
 
     }
