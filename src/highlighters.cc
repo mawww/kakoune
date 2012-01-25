@@ -206,6 +206,7 @@ public:
         auto atom_it = display_buffer.begin();
         auto sel_it = selections.begin();
 
+        // underline each selections
         while (atom_it != display_buffer.end()
                and sel_it != selections.end())
         {
@@ -253,10 +254,22 @@ public:
                 assert(false);
         }
 
-        boost::regex ex("\n");
-        for (auto& sel : selections)
-             colorize_regex_range(display_buffer, sel.first, sel.second,
-                                  ex, Color::Default, Color::Yellow);
+        // invert selection last char
+        for (auto& sel : m_window.selections())
+        {
+            const BufferIterator& last = sel.last();
+
+            DisplayBuffer::iterator atom_it = display_buffer.atom_containing(last);
+            if (atom_it == display_buffer.end())
+                continue;
+
+            if (atom_it->begin() < last)
+                atom_it = ++display_buffer.split(atom_it, last);
+            if (atom_it->end() > last + 1)
+                atom_it = display_buffer.split(atom_it, last + 1);
+
+            atom_it->attribute() |= Attributes::Reverse;
+        }
 
     }
 

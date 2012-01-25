@@ -195,7 +195,7 @@ void init_ncurses()
     nonl();
     intrflush(stdscr, false);
     keypad(stdscr, true);
-    curs_set(2);
+    curs_set(0);
     start_color();
     ESCDELAY=25;
 }
@@ -209,6 +209,9 @@ struct prompt_aborted {};
 
 std::string ncurses_prompt(const std::string& text, Completer completer = complete_nothing)
 {
+    curs_set(2);
+    auto restore_cursor = on_scope_end([]() { curs_set(0); });
+
     int max_x, max_y;
     getmaxyx(stdscr, max_y, max_x);
     move(max_y-1, 0);
