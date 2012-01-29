@@ -23,6 +23,10 @@ struct file_not_found : file_access_error
 };
 
 class Buffer;
+
+// parse ~/ and $env values in filename and returns the translated filename
+std::string parse_filename(const std::string& filename);
+
 std::string read_file(const std::string& filename);
 Buffer* create_buffer_from_file(const std::string& filename);
 void write_buffer_to_file(const Buffer& buffer, const std::string& filename);

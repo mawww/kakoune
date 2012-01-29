@@ -535,7 +535,8 @@ void write_buffer(const CommandParameters& params, const Context& context)
         throw wrong_argument_count();
 
     Buffer& buffer = context.window().buffer();
-    std::string filename = params.empty() ? buffer.name() : params[0];
+    std::string filename = params.empty() ? buffer.name()
+                                          : parse_filename(params[0]);
 
     write_buffer_to_file(buffer, filename);
     buffer.notify_saved();
@@ -695,7 +696,7 @@ void exec_commands_in_file(const CommandParameters& params,
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    std::string file_content = read_file(params[0]);
+    std::string file_content = read_file(parse_filename(params[0]));
     CommandManager& cmd_manager = CommandManager::instance();
 
     size_t pos = 0;

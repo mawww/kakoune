@@ -13,6 +13,40 @@
 namespace Kakoune
 {
 
+bool isidentifier(char c)
+{
+    return std::isalnum(c) or c == '_';
+}
+
+std::string parse_filename(const std::string& filename)
+{
+    if (filename.length() > 2 and filename[0] == '~' and filename[1] == '/')
+        return parse_filename("$HOME/" + filename.substr(2));
+
+    size_t pos = 0;
+    std::string result;
+    for (size_t i = 0; i < filename.length(); ++i)
+    {
+        if (filename[i] == '$' and (i == 0 or filename[i-1] != '\\'))
+        {
+            result += filename.substr(pos, i - pos);
+            size_t end = i+1;
+            while (end != filename.length() and isidentifier(filename[end]))
+                ++end;
+            std::string var_name = filename.substr(i+1, end - i - 1);
+            const char* var_value = getenv(var_name.c_str());
+            if (var_value)
+                result += var_value;
+
+            pos = end;
+        }
+    }
+    if (pos != filename.length())
+        result += filename.substr(pos);
+
+    return result;
+}
+
 std::string read_file(const std::string& filename)
 {
    int fd = open(filename.c_str(), O_RDONLY);
