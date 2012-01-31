@@ -111,6 +111,7 @@ public:
     enum class Type
     {
         File,
+        NewFile,
         Scratch
     };
 

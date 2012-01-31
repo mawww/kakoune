@@ -28,7 +28,11 @@ Buffer::Buffer(const std::string& name, Type type,
 {
     BufferManager::instance().register_buffer(this);
 
-    GlobalHooksManager::instance().run_hook("BufCreate", name, Context(*this));
+    if (type == Type::NewFile)
+        GlobalHooksManager::instance().run_hook("BufCreate", name, Context(*this));
+    else if (type == Type::File)
+        GlobalHooksManager::instance().run_hook("BufOpen", name, Context(*this));
+
     compute_lines();
 }
 

@@ -515,7 +515,7 @@ Buffer* open_or_create(const std::string& filename)
     catch (file_not_found& what)
     {
         print_status("new file " + filename);
-        buffer = new Buffer(filename, Buffer::Type::File);
+        buffer = new Buffer(filename, Buffer::Type::NewFile);
     }
     return buffer;
 }
@@ -554,7 +554,7 @@ void quit(const CommandParameters& params, const Context& context)
     {
         for (auto& buffer : BufferManager::instance())
         {
-            if (buffer.type() == Buffer::Type::File and buffer.is_modified())
+            if (buffer.type() != Buffer::Type::Scratch and buffer.is_modified())
             {
                 print_status("modified buffer remaining");
                 return;
