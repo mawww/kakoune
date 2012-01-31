@@ -1,10 +1,11 @@
 #ifndef context_hh_INCLUDED
 #define context_hh_INCLUDED
 
-#include "window.hh"
-
 namespace Kakoune
 {
+
+class Buffer;
+class Window;
 
 struct Context
 {
@@ -21,12 +22,15 @@ struct Context
             throw runtime_error("no buffer in context");
         return *m_buffer;
     }
+    bool has_buffer() const { return m_buffer; }
+
     Window& window() const
     {
         if (not m_window)
             throw runtime_error("no window in context");
         return *m_window;
     }
+    bool has_window() const { return m_window; }
 public:
     Window* m_window;
     Buffer* m_buffer;
