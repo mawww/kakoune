@@ -11,3 +11,6 @@ hook global WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) \
     addfilter cleanup_whitespaces; \
     hook window InsertEnd .* exec xs\h+(?=\n)<ret>d
 
+hook global BufCreate .*\.(h|hh|hpp|hxx|H) \
+    exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>xyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
+
