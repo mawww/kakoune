@@ -243,6 +243,11 @@ void Buffer::delete_window(Window* window)
     m_windows.erase(window_it);
 }
 
+std::unique_ptr<Window> Buffer::create_temporary_window()
+{
+    return std::unique_ptr<Window>(new Window(*this));
+}
+
 bool Buffer::is_modified() const
 {
     size_t history_cursor_index = m_history_cursor - m_history.begin();

@@ -151,6 +151,8 @@ public:
     Window* get_or_create_window();
     void delete_window(Window* window);
 
+    std::unique_ptr<Window> create_temporary_window();
+
     bool is_modified() const;
     Type type() const { return m_type; }
     void notify_saved();

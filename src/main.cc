@@ -1048,6 +1048,12 @@ void exec_string(const CommandParameters& params,
         return keys[pos++];
     };
 
+    std::unique_ptr<Window> temp_window;
+    if (not context.has_window())
+       temp_window = context.buffer().create_temporary_window();
+
+    Window& window = context.has_window() ? context.window() : *temp_window;
+
     int count = 0;
     while(pos < keys.size())
     {
@@ -1059,7 +1065,7 @@ void exec_string(const CommandParameters& params,
         {
             auto it = keymap.find(key);
             if (it != keymap.end())
-                it->second(context.window(), count);
+                it->second(window, count);
             count = 0;
         }
     }
