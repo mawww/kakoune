@@ -440,7 +440,7 @@ void do_insert(Window& window, IncrementalInserter::Mode mode)
         Key key = get_key();
 
         if (not insert_char(window, inserter, key))
-            return;
+            break;
 
         last_insert_sequence.keys.push_back(key);
         draw_window(window);
@@ -466,7 +466,7 @@ void do_go(Window& window, int count)
         BufferIterator target =
             window.buffer().iterator_at(BufferCoord(count-1, 0));
 
-        window.move_cursor_to(target);
+        window.select(target);
     }
     else
     {
@@ -481,7 +481,7 @@ void do_go(Window& window, int count)
         {
             BufferIterator target =
                 window.buffer().iterator_at(BufferCoord(0,0));
-            window.move_cursor_to(target);
+            window.select(target);
             break;
         }
         case 'l':
@@ -496,7 +496,7 @@ void do_go(Window& window, int count)
         {
             BufferIterator target = window.buffer().iterator_at(
                 BufferCoord(window.buffer().line_count() - 1, 0));
-            window.move_cursor_to(target);
+            window.select(target);
             break;
         }
         }
@@ -926,15 +926,15 @@ void do_select_surrounding(Window& window, int count)
 
 std::unordered_map<Key, std::function<void (Window& window, int count)>> keymap =
 {
-    { { Key::Modifiers::None, 'h' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0, -std::max(count,1))); } },
-    { { Key::Modifiers::None, 'j' }, [](Window& window, int count) { window.move_selections(DisplayCoord( std::max(count,1), 0)); } },
-    { { Key::Modifiers::None, 'k' }, [](Window& window, int count) { window.move_selections(DisplayCoord(-std::max(count,1), 0)); } },
-    { { Key::Modifiers::None, 'l' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0,  std::max(count,1))); } },
+    { { Key::Modifiers::None, 'h' }, [](Window& window, int count) { window.move_selections(BufferCoord(0, -std::max(count,1))); } },
+    { { Key::Modifiers::None, 'j' }, [](Window& window, int count) { window.move_selections(BufferCoord( std::max(count,1), 0)); } },
+    { { Key::Modifiers::None, 'k' }, [](Window& window, int count) { window.move_selections(BufferCoord(-std::max(count,1), 0)); } },
+    { { Key::Modifiers::None, 'l' }, [](Window& window, int count) { window.move_selections(BufferCoord(0,  std::max(count,1))); } },
 
-    { { Key::Modifiers::None, 'H' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0, -std::max(count,1)), true); } },
-    { { Key::Modifiers::None, 'J' }, [](Window& window, int count) { window.move_selections(DisplayCoord( std::max(count,1), 0), true); } },
-    { { Key::Modifiers::None, 'K' }, [](Window& window, int count) { window.move_selections(DisplayCoord(-std::max(count,1), 0), true); } },
-    { { Key::Modifiers::None, 'L' }, [](Window& window, int count) { window.move_selections(DisplayCoord(0,  std::max(count,1)), true); } },
+    { { Key::Modifiers::None, 'H' }, [](Window& window, int count) { window.move_selections(BufferCoord(0, -std::max(count,1)), true); } },
+    { { Key::Modifiers::None, 'J' }, [](Window& window, int count) { window.move_selections(BufferCoord( std::max(count,1), 0), true); } },
+    { { Key::Modifiers::None, 'K' }, [](Window& window, int count) { window.move_selections(BufferCoord(-std::max(count,1), 0), true); } },
+    { { Key::Modifiers::None, 'L' }, [](Window& window, int count) { window.move_selections(BufferCoord(0,  std::max(count,1)), true); } },
 
     { { Key::Modifiers::None, 't' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, false)); } },
     { { Key::Modifiers::None, 'f' }, [](Window& window, int count) { window.select(std::bind(select_to, _1, getch(), count, true)); } },

@@ -11,139 +11,11 @@
 namespace Kakoune
 {
 
-Selection::Selection(const BufferIterator& first, const BufferIterator& last,
-                     const CaptureList& captures)
-    : m_first(first), m_last(last), m_captures(captures)
-{
-   register_with_buffer();
-}
-
-Selection::Selection(const BufferIterator& first, const BufferIterator& last,
-                     CaptureList&& captures)
-    : m_first(first), m_last(last), m_captures(captures)
-{
-   register_with_buffer();
-}
-
-Selection::Selection(const Selection& other)
-    : m_first(other.m_first), m_last(other.m_last),
-      m_captures(other.m_captures)
-{
-   register_with_buffer();
-}
-
-Selection::Selection(Selection&& other)
-    : m_first(other.m_first), m_last(other.m_last),
-      m_captures(other.m_captures)
-{
-   register_with_buffer();
-}
-
-Selection::~Selection()
-{
-   unregister_with_buffer();
-}
-
-Selection& Selection::operator=(const Selection& other)
-{
-   const bool new_buffer = &m_first.buffer() != &other.m_first.buffer();
-   if (new_buffer)
-       unregister_with_buffer();
-
-   m_first    = other.m_first;
-   m_last     = other.m_last;
-   m_captures = other.m_captures;
-
-   if (new_buffer)
-       register_with_buffer();
-
-   return *this;
-}
-
-BufferIterator Selection::begin() const
-{
-    return std::min(m_first, m_last);
-}
-
-BufferIterator Selection::end() const
-{
-    return std::max(m_first, m_last) + 1;
-}
-
-void Selection::merge_with(const Selection& selection)
-{
-    if (m_first <= m_last)
-        m_first = std::min(m_first, selection.m_first);
-    else
-        m_first = std::max(m_first, selection.m_first);
-    m_last = selection.m_last;
-}
-
-BufferString Selection::capture(size_t index) const
-{
-    if (index < m_captures.size())
-        return m_captures[index];
-    return "";
-}
-
-static void update_iterator(const Modification& modification,
-                            BufferIterator& iterator)
-{
-    if (iterator < modification.position)
-        return;
-
-    size_t length = modification.content.length();
-    if (modification.type == Modification::Erase)
-    {
-        // do not move length on the other side of the inequality,
-        // as modification.position + length may be after buffer end
-        if (iterator - length <= modification.position)
-            iterator = modification.position;
-        else
-            iterator -= length;
-    }
-    else
-    {
-        assert(modification.type == Modification::Insert);
-        iterator += length;
-    }
-}
-
-void Selection::on_modification(const Modification& modification)
-{
-    update_iterator(modification, m_first);
-    update_iterator(modification, m_last);
-}
-
-void Selection::register_with_buffer()
-{
-    const_cast<Buffer&>(m_first.buffer()).register_modification_listener(this);
-}
-
-void Selection::unregister_with_buffer()
-{
-    const_cast<Buffer&>(m_first.buffer()).unregister_modification_listener(this);
-}
-
-struct scoped_undo_group
-{
-    scoped_undo_group(Buffer& buffer)
-        : m_buffer(buffer) { m_buffer.begin_undo_group(); }
-
-    ~scoped_undo_group()   { m_buffer.end_undo_group(); }
-private:
-    Buffer& m_buffer;
-};
-
 Window::Window(Buffer& buffer)
-    : m_buffer(buffer),
+    : Editor(buffer),
       m_position(0, 0),
-      m_dimensions(0, 0),
-      m_current_inserter(nullptr)
+      m_dimensions(0, 0)
 {
-    m_selections.push_back(SelectionList());
-    selections().push_back(Selection(buffer.begin(), buffer.begin()));
-
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     GlobalHooksManager::instance().run_hook("WinCreate", buffer.name(),
@@ -153,40 +25,14 @@ Window::Window(Buffer& buffer)
     registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());
 }
 
-void Window::check_invariant() const
-{
-    assert(not selections().empty());
-}
-
 DisplayCoord Window::cursor_position() const
 {
-    check_invariant();
     return line_and_column_at(cursor_iterator());
 }
 
 BufferIterator Window::cursor_iterator() const
 {
-    check_invariant();
     return selections().back().last();
-}
-
-void Window::erase()
-{
-    if (m_current_inserter == nullptr)
-    {
-        scoped_undo_group undo_group(m_buffer);
-        erase_noundo();
-    }
-    else
-        erase_noundo();
-}
-
-void Window::erase_noundo()
-{
-    check_invariant();
-    for (auto& sel : selections())
-        m_buffer.modify(Modification::make_erase(sel.begin(), sel.end()));
-    scroll_to_keep_cursor_visible_ifn();
 }
 
 template<typename Iterator>
@@ -207,76 +53,15 @@ static DisplayCoord measure_string(Iterator begin, Iterator end)
     return result;
 }
 
-static DisplayCoord measure_string(const Window::String& string)
+static DisplayCoord measure_string(const Editor::String& string)
 {
     return measure_string(string.begin(), string.end());
-}
-
-void Window::insert(const String& string)
-{
-    if (m_current_inserter == nullptr)
-    {
-        scoped_undo_group undo_group(m_buffer);
-        insert_noundo(string);
-    }
-    else
-        insert_noundo(string);
-}
-
-void Window::insert_noundo(const String& string)
-{
-    for (auto& sel : selections())
-        m_buffer.modify(Modification::make_insert(sel.begin(), string));
-    scroll_to_keep_cursor_visible_ifn();
-}
-
-void Window::append(const String& string)
-{
-    if (m_current_inserter == nullptr)
-    {
-        scoped_undo_group undo_group(m_buffer);
-        append_noundo(string);
-    }
-    else
-        append_noundo(string);
-}
-
-void Window::append_noundo(const String& string)
-{
-    for (auto& sel : selections())
-        m_buffer.modify(Modification::make_insert(sel.end(), string));
-    scroll_to_keep_cursor_visible_ifn();
-}
-
-void Window::replace(const std::string& string)
-{
-    if (m_current_inserter == nullptr)
-    {
-        scoped_undo_group undo_group(m_buffer);
-        erase_noundo();
-        insert_noundo(string);
-    }
-    else
-    {
-        erase_noundo();
-        insert_noundo(string);
-    }
-}
-
-bool Window::undo()
-{
-    return m_buffer.undo();
-}
-
-bool Window::redo()
-{
-    return m_buffer.redo();
 }
 
 BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
 {
     if (m_display_buffer.begin() == m_display_buffer.end())
-        return m_buffer.begin();
+        return buffer().begin();
 
     if (DisplayCoord(0,0) <= window_pos)
     {
@@ -290,7 +75,7 @@ BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
         }
     }
 
-    return m_buffer.iterator_at(m_position + BufferCoord(window_pos));
+    return buffer().iterator_at(m_position + BufferCoord(window_pos));
 }
 
 DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
@@ -310,109 +95,19 @@ DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
             }
         }
     }
-    BufferCoord coord = m_buffer.line_and_column_at(iterator);
+    BufferCoord coord = buffer().line_and_column_at(iterator);
     return DisplayCoord(coord.line - m_position.line,
                         coord.column - m_position.column);
 }
 
-void Window::clear_selections()
-{
-    check_invariant();
-    BufferIterator pos = selections().back().last();
-
-    if (*pos == '\n' and not pos.is_begin() and *(pos-1) != '\n')
-        --pos;
-
-    Selection sel = Selection(pos, pos);
-    selections().clear();
-    selections().push_back(std::move(sel));
-}
-
-void Window::keep_selection(int index)
-{
-    check_invariant();
-
-    if (index < selections().size())
-    {
-        Selection sel = selections()[index];
-        selections().clear();
-        selections().push_back(std::move(sel));
-    }
-}
-
-void Window::select(const Selector& selector, bool append)
-{
-    check_invariant();
-
-    if (not append)
-    {
-        for (auto& sel : selections())
-            sel = selector(sel.last());
-    }
-    else
-    {
-        for (auto& sel : selections())
-            sel.merge_with(selector(sel.last()));
-    }
-    scroll_to_keep_cursor_visible_ifn();
-}
-
-struct nothing_selected : public runtime_error
-{
-    nothing_selected() : runtime_error("nothing was selected") {}
-};
-
-void Window::multi_select(const MultiSelector& selector)
-{
-    check_invariant();
-
-    SelectionList new_selections;
-    for (auto& sel : selections())
-    {
-        SelectionList selections = selector(sel);
-        std::copy(selections.begin(), selections.end(),
-                  std::back_inserter(new_selections));
-    }
-    if (new_selections.empty())
-        throw nothing_selected();
-
-    selections() = std::move(new_selections);
-    scroll_to_keep_cursor_visible_ifn();
-}
-
-BufferString Window::selection_content() const
-{
-    check_invariant();
-
-    return m_buffer.string(selections().back().begin(),
-                           selections().back().end());
-}
-
-void Window::move_selections(const DisplayCoord& offset, bool append)
-{
-    for (auto& sel : selections())
-    {
-        BufferCoord pos = m_buffer.line_and_column_at(sel.last());
-        BufferIterator last = m_buffer.iterator_at(pos + BufferCoord(offset));
-        sel = Selection(append ? sel.first() : last, last);
-    }
-    scroll_to_keep_cursor_visible_ifn();
-}
-
-void Window::move_cursor_to(const BufferIterator& iterator)
-{
-    selections().clear();
-    selections().push_back(Selection(iterator, iterator));
-
-    scroll_to_keep_cursor_visible_ifn();
-}
-
 void Window::update_display_buffer()
 {
+    scroll_to_keep_cursor_visible_ifn();
+
     m_display_buffer.clear();
 
-    BufferIterator begin = m_buffer.iterator_at(m_position);
-    BufferIterator end = m_buffer.iterator_at(m_position +
+    BufferIterator begin = buffer().iterator_at(m_position);
+    BufferIterator end = buffer().iterator_at(m_position +
                                               BufferCoord(m_dimensions.line, m_dimensions.column))+1;
     if (begin == end)
         return;
@@ -430,8 +125,6 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    check_invariant();
-
     DisplayCoord cursor = line_and_column_at(selections().back().last());
     if (cursor.line < 0)
     {
@@ -454,144 +147,23 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 
 std::string Window::status_line() const
 {
-    BufferCoord cursor = m_buffer.line_and_column_at(selections().back().last());
+    BufferCoord cursor = buffer().line_and_column_at(selections().back().last());
     std::ostringstream oss;
-    oss << m_buffer.name();
-    if (m_buffer.is_modified())
+    oss << buffer().name();
+    if (buffer().is_modified())
         oss << " [+]";
     oss << " -- " << cursor.line+1 << "," << cursor.column+1
         << " -- " << selections().size() << " sel -- ";
-    if (m_current_inserter)
+    if (is_inserting())
         oss << "[Insert]";
     return oss.str();
 }
 
-void Window::add_filter(FilterAndId&& filter)
+void Window::on_end_incremental_insert()
 {
-    if (m_filters.contains(filter.first))
-        throw id_not_unique(filter.first);
-    m_filters.append(std::forward<FilterAndId>(filter));
-}
-
-void Window::remove_filter(const std::string& id)
-{
-    m_filters.remove(id);
-}
-
-CandidateList Window::complete_filterid(const std::string& prefix,
-                                        size_t cursor_pos)
-{
-    return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
-}
-
-void Window::push_selections()
-{
-    SelectionList current_selections = selections();
-    m_selections.push_back(std::move(current_selections));
-}
-
-void Window::pop_selections()
-{
-    if (m_selections.size() > 1)
-        m_selections.pop_back();
-    else
-        throw runtime_error("no more selections on stack");
-}
-
-IncrementalInserter::IncrementalInserter(Window& window, Mode mode)
-    : m_window(window)
-{
-    assert(not m_window.m_current_inserter);
-    m_window.m_current_inserter = this;
-    m_window.check_invariant();
-
-    m_window.m_buffer.begin_undo_group();
-
-    if (mode == Mode::Change)
-        window.erase_noundo();
-
-    for (auto& sel : m_window.selections())
-    {
-        BufferIterator pos;
-        switch (mode)
-        {
-        case Mode::Insert: pos = sel.begin(); break;
-        case Mode::Append: pos = sel.end(); break;
-        case Mode::Change: pos = sel.begin(); break;
-
-        case Mode::OpenLineBelow:
-        case Mode::AppendAtLineEnd:
-            pos = m_window.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
-            break;
-
-        case Mode::OpenLineAbove:
-        case Mode::InsertAtLineBegin:
-            pos = m_window.m_buffer.iterator_at_line_begin(sel.begin());
-            if (mode == Mode::OpenLineAbove)
-                --pos;
-            break;
-        }
-        sel = Selection(pos, pos, sel.captures());
-
-        if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
-            apply(Modification::make_insert(pos, "\n"));
-    }
-}
-
-IncrementalInserter::~IncrementalInserter()
-{
-    move_cursors(DisplayCoord(0, -1));
-
-    m_window.push_selections();
-    m_window.hooks_manager().run_hook("InsertEnd", "", Context(m_window));
-    m_window.pop_selections();
-
-    assert(m_window.m_current_inserter == this);
-    m_window.m_current_inserter = nullptr;
-    m_window.m_buffer.end_undo_group();
-}
-
-void IncrementalInserter::apply(Modification&& modification) const
-{
-    for (auto filter : m_window.m_filters)
-        filter.second(m_window.buffer(), modification);
-    m_window.buffer().modify(std::move(modification));
-}
-
-
-void IncrementalInserter::insert(const Window::String& string)
-{
-    for (auto& sel : m_window.selections())
-        apply(Modification::make_insert(sel.begin(), string));
-}
-
-void IncrementalInserter::insert_capture(size_t index)
-{
-    for (auto& sel : m_window.selections())
-        m_window.m_buffer.modify(Modification::make_insert(sel.begin(),
-                                                           sel.capture(index)));
-    m_window.scroll_to_keep_cursor_visible_ifn();
-}
-
-void IncrementalInserter::erase()
-{
-    for (auto& sel : m_window.selections())
-    {
-        sel = Selection(sel.first() - 1, sel.last() - 1);
-        apply(Modification::make_erase(sel.begin(), sel.end()));
-    }
-
-    m_window.scroll_to_keep_cursor_visible_ifn();
-}
-
-void IncrementalInserter::move_cursors(const DisplayCoord& offset)
-{
-    for (auto& sel : m_window.selections())
-    {
-        DisplayCoord pos = m_window.line_and_column_at(sel.last());
-        BufferIterator it = m_window.iterator_at(pos + offset);
-        sel = Selection(it, it);
-    }
+    push_selections();
+    hooks_manager().run_hook("InsertEnd", "", Context(*this));
+    pop_selections();
 }
 
 }
