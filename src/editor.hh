@@ -103,6 +103,8 @@ public:
     void erase();
     void move_cursors(const BufferCoord& offset);
 
+    Buffer& buffer() const { return m_editor.buffer(); }
+
 private:
     void apply(Modification&& modification) const;
 
