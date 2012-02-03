@@ -50,7 +50,7 @@ private:
     Window(Buffer& buffer);
     Window(const Window&) = delete;
 
-    void on_end_incremental_insert();
+    void on_end_batch();
 
     void scroll_to_keep_cursor_visible_ifn();
 

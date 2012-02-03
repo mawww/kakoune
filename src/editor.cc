@@ -23,7 +23,7 @@ private:
 
 Editor::Editor(Buffer& buffer)
     : m_buffer(buffer),
-      m_current_inserter(nullptr)
+      m_batch_level(0)
 {
     m_selections.push_back(SelectionList());
     selections().push_back(Selection(buffer.begin(), buffer.begin()));
@@ -31,7 +31,7 @@ Editor::Editor(Buffer& buffer)
 
 void Editor::erase()
 {
-    if (m_current_inserter == nullptr)
+    if (not is_in_batch())
     {
         scoped_undo_group undo_group(m_buffer);
         erase_noundo();
@@ -49,7 +49,7 @@ void Editor::erase_noundo()
 
 void Editor::insert(const String& string)
 {
-    if (m_current_inserter == nullptr)
+    if (not is_in_batch())
     {
         scoped_undo_group undo_group(m_buffer);
         insert_noundo(string);
@@ -66,7 +66,7 @@ void Editor::insert_noundo(const String& string)
 
 void Editor::append(const String& string)
 {
-    if (m_current_inserter == nullptr)
+    if (not is_in_batch())
     {
         scoped_undo_group undo_group(m_buffer);
         append_noundo(string);
@@ -83,7 +83,7 @@ void Editor::append_noundo(const String& string)
 
 void Editor::replace(const std::string& string)
 {
-    if (m_current_inserter == nullptr)
+    if (not is_in_batch())
     {
         scoped_undo_group undo_group(m_buffer);
         erase_noundo();
@@ -237,28 +237,32 @@ CandidateList Editor::complete_filterid(const std::string& prefix,
     return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
-void Editor::begin_incremental_insert(IncrementalInserter* inserter)
+void Editor::begin_batch()
 {
-    assert(not m_current_inserter);
-    m_current_inserter = inserter;
-    m_buffer.begin_undo_group();
+    ++m_batch_level;
 
-    on_begin_incremental_insert();
+    if (m_batch_level == 1)
+    {
+        m_buffer.begin_undo_group();
+        on_begin_batch();
+    }
 }
 
-void Editor::end_incremental_insert(IncrementalInserter* inserter)
+void Editor::end_batch()
 {
-    on_end_incremental_insert();
-
-    assert(m_current_inserter and m_current_inserter == inserter);
-    m_current_inserter = nullptr;
-    m_buffer.end_undo_group();
+    assert(m_batch_level > 0);
+    if (m_batch_level == 1)
+    {
+        on_end_batch();
+        m_buffer.end_undo_group();
+    }
+    --m_batch_level;
 }
 
 IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
     : m_editor(editor)
 {
-    m_editor.begin_incremental_insert(this);
+    m_editor.begin_batch();
 
     if (mode == Mode::Change)
         editor.erase_noundo();
@@ -294,7 +298,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 IncrementalInserter::~IncrementalInserter()
 {
     move_cursors(BufferCoord(0, -1));
-    m_editor.end_incremental_insert(this);
+    m_editor.end_batch();
 }
 
 void IncrementalInserter::apply(Modification&& modification) const

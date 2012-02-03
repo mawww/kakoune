@@ -55,7 +55,9 @@ public:
     CandidateList complete_filterid(const std::string& prefix,
                                     size_t cursor_pos = std::string::npos);
 
-    bool is_inserting() const { return m_current_inserter != nullptr; }
+    void begin_batch();
+    void end_batch();
+    bool is_in_batch() const { return m_batch_level != 0; }
 
 private:
     void erase_noundo();
@@ -67,12 +69,10 @@ private:
     void check_invariant() const;
 
     friend class IncrementalInserter;
-    IncrementalInserter* m_current_inserter;
+    int m_batch_level;
 
-    void begin_incremental_insert(IncrementalInserter* inserter);
-    void end_incremental_insert(IncrementalInserter* inserter);
-    virtual void on_begin_incremental_insert() {}
-    virtual void on_end_incremental_insert() {}
+    virtual void on_begin_batch() {}
+    virtual void on_end_batch() {}
 
 
     Buffer&                             m_buffer;

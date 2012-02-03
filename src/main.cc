@@ -1055,8 +1055,12 @@ void exec_string(const CommandParameters& params,
         return keys[pos++];
     };
 
-    Editor standalone_editor(context.buffer());
-    Editor& editor = context.has_window() ? context.window() : standalone_editor;
+    Editor batch_editor(context.buffer());
+    Editor& editor = context.has_window() ? static_cast<Editor&>(context.window())
+                                          : static_cast<Editor&>(batch_editor);
+
+    editor.begin_batch();
+    auto end_batch = on_scope_end([&]() { editor.end_batch(); });
 
     int count = 0;
     while(pos < keys.size())
