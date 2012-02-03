@@ -15,9 +15,9 @@ void CommandManager::register_command(const std::string& command_name, Command c
     m_commands[command_name] = CommandDescriptor { command, flags, completer };
 }
 
-void CommandManager::register_command(const std::vector<std::string>& command_names, Command command,
-                                      unsigned flags,
-                                      const CommandCompleter& completer)
+void CommandManager::register_commands(const memoryview<std::string>& command_names, Command command,
+                                       unsigned flags,
+                                       const CommandCompleter& completer)
 {
     for (auto command_name : command_names)
         register_command(command_name, command, flags, completer);
@@ -70,7 +70,7 @@ void CommandManager::execute(const std::string& command_line,
     if (tokens.empty())
         return;
 
-    CommandParameters params;
+    std::vector<std::string> params;
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
         params.push_back(command_line.substr(it->first,
@@ -152,7 +152,7 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
     if (command_it == m_commands.end() or not command_it->second.completer)
         return Completions();
 
-    CommandParameters params;
+    std::vector<std::string> params;
     for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
     {
         params.push_back(command_line.substr(it->first,

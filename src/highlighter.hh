@@ -3,7 +3,7 @@
 
 #include <string>
 #include <functional>
-#include <vector>
+#include "memoryview.hh"
 
 namespace Kakoune
 {
@@ -17,7 +17,7 @@ class DisplayBuffer;
 
 typedef std::function<void (DisplayBuffer& display_buffer)> HighlighterFunc;
 typedef std::pair<std::string, HighlighterFunc> HighlighterAndId;
-typedef std::vector<std::string> HighlighterParameters;
+typedef memoryview<std::string> HighlighterParameters;
 
 
 }

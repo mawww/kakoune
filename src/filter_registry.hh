@@ -7,6 +7,7 @@
 #include "filter.hh"
 #include "utils.hh"
 #include "completion.hh"
+#include "memoryview.hh"
 #include "idvaluemap.hh"
 
 namespace Kakoune
@@ -14,7 +15,7 @@ namespace Kakoune
 
 class Window;
 
-typedef std::vector<std::string> FilterParameters;
+typedef memoryview<std::string> FilterParameters;
 
 typedef std::function<FilterAndId (Window& window,
                                    const FilterParameters& params)> FilterFactory;
