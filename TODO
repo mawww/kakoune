@@ -17,11 +17,6 @@ Medium Priority
 * highlighters and filters groups. So that many different highlighters
   (for example syntax highlighting for a language) can be handled as one.
 
-* Write a MemoryView class and port const vectors parameters to memory
-  views in order to avoid useless memory copies.
-
-* History support for commands, search pattern...
-
 Low Priority
 ------------
 
