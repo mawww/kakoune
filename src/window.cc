@@ -154,12 +154,12 @@ std::string Window::status_line() const
         oss << " [+]";
     oss << " -- " << cursor.line+1 << "," << cursor.column+1
         << " -- " << selections().size() << " sel -- ";
-    if (is_in_batch())
+    if (is_editing())
         oss << "[Insert]";
     return oss.str();
 }
 
-void Window::on_end_batch()
+void Window::on_incremental_insertion_end()
 {
     push_selections();
     hooks_manager().run_hook("InsertEnd", "", Context(*this));

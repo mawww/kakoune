@@ -55,29 +55,38 @@ public:
     CandidateList complete_filterid(const std::string& prefix,
                                     size_t cursor_pos = std::string::npos);
 
-    void begin_batch();
-    void end_batch();
-    bool is_in_batch() const { return m_batch_level != 0; }
+    bool is_editing() const { return m_edition_level!= 0; }
 
 private:
-    void erase_noundo();
-    void insert_noundo(const String& string);
-    void append_noundo(const String& string);
+    friend class scoped_edition;
+    void begin_edition();
+    void end_edition();
+
+    int m_edition_level;
 
     SelectionList& selections() { return m_selections.back(); }
 
     void check_invariant() const;
 
     friend class IncrementalInserter;
-    int m_batch_level;
-
-    virtual void on_begin_batch() {}
-    virtual void on_end_batch() {}
-
+    virtual void on_incremental_insertion_begin() {}
+    virtual void on_incremental_insertion_end() {}
 
     Buffer&                             m_buffer;
     std::vector<SelectionList>          m_selections;
     idvaluemap<std::string, FilterFunc> m_filters;
+};
+
+struct scoped_edition
+{
+    scoped_edition(Editor& editor)
+        : m_editor(editor)
+    { m_editor.begin_edition(); }
+
+    ~scoped_edition()
+    { m_editor.end_edition(); }
+private:
+    Editor& m_editor;
 };
 
 // An IncrementalInserter manage insert mode
@@ -109,6 +118,7 @@ private:
     void apply(Modification&& modification) const;
 
     Editor& m_editor;
+    scoped_edition m_edition;
 };
 
 }

@@ -6,24 +6,9 @@
 namespace Kakoune
 {
 
-namespace
-{
-
-struct scoped_undo_group
-{
-    scoped_undo_group(Buffer& buffer)
-        : m_buffer(buffer) { m_buffer.begin_undo_group(); }
-
-    ~scoped_undo_group()   { m_buffer.end_undo_group(); }
-private:
-    Buffer& m_buffer;
-};
-
-}
-
 Editor::Editor(Buffer& buffer)
     : m_buffer(buffer),
-      m_batch_level(0)
+      m_edition_level(0)
 {
     m_selections.push_back(SelectionList());
     selections().push_back(Selection(buffer.begin(), buffer.begin()));
@@ -31,69 +16,30 @@ Editor::Editor(Buffer& buffer)
 
 void Editor::erase()
 {
-    if (not is_in_batch())
-    {
-        scoped_undo_group undo_group(m_buffer);
-        erase_noundo();
-    }
-    else
-        erase_noundo();
-}
-
-void Editor::erase_noundo()
-{
-    check_invariant();
+    scoped_edition edition(*this);
     for (auto& sel : selections())
         m_buffer.modify(Modification::make_erase(sel.begin(), sel.end()));
 }
 
 void Editor::insert(const String& string)
 {
-    if (not is_in_batch())
-    {
-        scoped_undo_group undo_group(m_buffer);
-        insert_noundo(string);
-    }
-    else
-        insert_noundo(string);
-}
-
-void Editor::insert_noundo(const String& string)
-{
+    scoped_edition edition(*this);
     for (auto& sel : selections())
         m_buffer.modify(Modification::make_insert(sel.begin(), string));
 }
 
 void Editor::append(const String& string)
 {
-    if (not is_in_batch())
-    {
-        scoped_undo_group undo_group(m_buffer);
-        append_noundo(string);
-    }
-    else
-        append_noundo(string);
-}
-
-void Editor::append_noundo(const String& string)
-{
+    scoped_edition edition(*this);
     for (auto& sel : selections())
         m_buffer.modify(Modification::make_insert(sel.end(), string));
 }
 
 void Editor::replace(const std::string& string)
 {
-    if (not is_in_batch())
-    {
-        scoped_undo_group undo_group(m_buffer);
-        erase_noundo();
-        insert_noundo(string);
-    }
-    else
-    {
-        erase_noundo();
-        insert_noundo(string);
-    }
+    scoped_edition edition(*this);
+    erase();
+    insert(string);
 }
 
 void Editor::push_selections()
@@ -236,35 +182,30 @@ CandidateList Editor::complete_filterid(const std::string& prefix,
     return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
-void Editor::begin_batch()
+void Editor::begin_edition()
 {
-    ++m_batch_level;
+    ++m_edition_level;
 
-    if (m_batch_level == 1)
-    {
+    if (m_edition_level == 1)
         m_buffer.begin_undo_group();
-        on_begin_batch();
-    }
 }
 
-void Editor::end_batch()
+void Editor::end_edition()
 {
-    assert(m_batch_level > 0);
-    if (m_batch_level == 1)
-    {
-        on_end_batch();
+    assert(m_edition_level > 0);
+    if (m_edition_level == 1)
         m_buffer.end_undo_group();
-    }
-    --m_batch_level;
+
+    --m_edition_level;
 }
 
 IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
-    : m_editor(editor)
+    : m_editor(editor), m_edition(editor)
 {
-    m_editor.begin_batch();
+    m_editor.on_incremental_insertion_begin();
 
     if (mode == Mode::Change)
-        editor.erase_noundo();
+        editor.erase();
 
     for (auto& sel : m_editor.selections())
     {
@@ -297,7 +238,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 IncrementalInserter::~IncrementalInserter()
 {
     move_cursors(BufferCoord(0, -1));
-    m_editor.end_batch();
+    m_editor.on_incremental_insertion_end();
 }
 
 void IncrementalInserter::apply(Modification&& modification) const

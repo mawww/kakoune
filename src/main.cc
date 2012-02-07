@@ -1054,8 +1054,8 @@ void exec_keys(const KeyList& keys,
     Editor& editor = context.has_window() ? static_cast<Editor&>(context.window())
                                           : static_cast<Editor&>(batch_editor);
 
-    editor.begin_batch();
-    auto end_batch = on_scope_end([&]() { editor.end_batch(); });
+
+    scoped_edition edition(editor);
 
     int count = 0;
     while(pos < keys.size())
