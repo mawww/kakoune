@@ -1019,16 +1019,9 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::Alt, 'x' }, [](Editor& editor, int count) { editor.multi_select(select_whole_lines); } },
 };
 
-void exec_string(const CommandParameters& params,
-                 const Context& context)
+void exec_keys(const KeyList& keys,
+               const Context& context)
 {
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    size_t pos = 0;
-
-    KeyList keys = parse_keys(params[0]);
-
     auto prompt_save = prompt_func;
     auto get_key_save = get_key_func;
 
@@ -1036,6 +1029,8 @@ void exec_string(const CommandParameters& params,
         prompt_func = prompt_save;
         get_key_func = get_key_save;
     });
+
+    size_t pos = 0;
 
     prompt_func = [&](const std::string&, Completer) {
         size_t begin = pos;
@@ -1078,6 +1073,17 @@ void exec_string(const CommandParameters& params,
             count = 0;
         }
     }
+}
+
+void exec_string(const CommandParameters& params,
+                 const Context& context)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    KeyList keys = parse_keys(params[0]);
+
+    exec_keys(keys, context);
 }
 
 int main(int argc, char* argv[])
