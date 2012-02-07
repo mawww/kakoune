@@ -1,6 +1,7 @@
 #ifndef register_manager_hh_INCLUDED
 #define register_manager_hh_INCLUDED
 
+#include "register.hh"
 #include "utils.hh"
 
 namespace Kakoune
@@ -9,10 +10,10 @@ namespace Kakoune
 class RegisterManager : public Singleton<RegisterManager>
 {
 public:
-    std::string& operator[](char reg) { return m_registers[reg]; }
+    Register& operator[](char reg) { return m_registers[reg]; }
 
 protected:
-    std::unordered_map<char, std::string> m_registers;
+    std::unordered_map<char, Register> m_registers;
 };
 
 }

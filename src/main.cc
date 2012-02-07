@@ -413,7 +413,7 @@ bool insert_char(IncrementalInserter& inserter, const Key& key)
                     inserter.insert(inserter.buffer().name());
                     break;
                 default:
-                    inserter.insert(RegisterManager::instance()[next_key.key]);
+                    inserter.insert(RegisterManager::instance()[next_key.key].get());
                 }
             }
             break;
@@ -834,9 +834,9 @@ void do_search(Editor& editor)
     {
         std::string ex = prompt("/");
         if (ex.empty())
-            ex = RegisterManager::instance()['/'];
+            ex = RegisterManager::instance()['/'].get();
         else
-            RegisterManager::instance()['/'] = ex;
+            RegisterManager::instance()['/'].set(ex);
 
         editor.select(std::bind(select_next_match, _1, ex));
     }
@@ -845,7 +845,7 @@ void do_search(Editor& editor)
 
 void do_search_next(Editor& editor)
 {
-    std::string& ex = RegisterManager::instance()['/'];
+    const std::string& ex = RegisterManager::instance()['/'].get();
     if (not ex.empty())
         editor.select(std::bind(select_next_match, _1, ex));
     else
@@ -854,18 +854,18 @@ void do_search_next(Editor& editor)
 
 void do_yank(Editor& editor, int count)
 {
-    RegisterManager::instance()['"'] = editor.selection_content();
+    RegisterManager::instance()['"'].set(editor.selection_content());
 }
 
 void do_erase(Editor& editor, int count)
 {
-    RegisterManager::instance()['"'] = editor.selection_content();
+    RegisterManager::instance()['"'].set(editor.selection_content());
     editor.erase();
 }
 
 void do_change(Editor& editor, int count)
 {
-    RegisterManager::instance()['"'] = editor.selection_content();
+    RegisterManager::instance()['"'].set(editor.selection_content());
     do_insert(editor, IncrementalInserter::Mode::Change);
 }
 
@@ -873,9 +873,9 @@ template<bool append>
 void do_paste(Editor& editor, int count)
 {
     if (append)
-        editor.append(RegisterManager::instance()['"']);
+        editor.append(RegisterManager::instance()['"'].get());
     else
-        editor.insert(RegisterManager::instance()['"']);
+        editor.insert(RegisterManager::instance()['"'].get());
 }
 
 void do_select_regex(Editor& editor, int count)
