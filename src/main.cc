@@ -900,7 +900,7 @@ void do_split_regex(Editor& editor, int count)
 
 void do_join(Editor& editor, int count)
 {
-    editor.multi_select(select_whole_lines);
+    editor.select(select_whole_lines);
     editor.select(select_to_eol, true);
     editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
     editor.replace(" ");
@@ -970,8 +970,7 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
 
     { { Key::Modifiers::None, '.' }, do_repeat_insert },
 
-    { { Key::Modifiers::None, '%' }, [](Editor& editor, int count) { editor.select([](const BufferIterator& cursor)
-                                                         { return Selection(cursor.buffer().begin(), cursor.buffer().end()-1); }); } },
+    { { Key::Modifiers::None, '%' }, [](Editor& editor, int count) { editor.clear_selections(); editor.select(select_whole_buffer); } },
 
     { { Key::Modifiers::None, ':' }, [](Editor& editor, int count) { do_command(); } },
     { { Key::Modifiers::None, '|' }, do_pipe },
@@ -1016,7 +1015,7 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
 
     { { Key::Modifiers::Alt, 'j' }, do_join },
 
-    { { Key::Modifiers::Alt, 'x' }, [](Editor& editor, int count) { editor.multi_select(select_whole_lines); } },
+    { { Key::Modifiers::Alt, 'x' }, [](Editor& editor, int count) { editor.select(select_whole_lines); } },
 };
 
 void exec_keys(const KeyList& keys,

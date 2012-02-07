@@ -149,7 +149,6 @@ void Editor::select(const BufferIterator& iterator)
 {
     selections().clear();
     selections().push_back(Selection(iterator, iterator));
-
 }
 
 void Editor::select(const Selector& selector, bool append)
@@ -159,12 +158,12 @@ void Editor::select(const Selector& selector, bool append)
     if (not append)
     {
         for (auto& sel : selections())
-            sel = selector(sel.last());
+            sel = selector(sel);
     }
     else
     {
         for (auto& sel : selections())
-            sel.merge_with(selector(sel.last()));
+            sel.merge_with(selector(sel));
     }
 }
 

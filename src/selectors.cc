@@ -71,9 +71,9 @@ bool skip_while_reverse(BufferIterator& it, T condition)
     return condition(*it);
 }
 
-Selection select_to_next_word(const BufferIterator& cursor)
+Selection select_to_next_word(const Selection& selection)
 {
-    BufferIterator begin = cursor;
+    BufferIterator begin = selection.last();
     if (categorize(*begin) != categorize(*(begin+1)))
         ++begin;
 
@@ -91,9 +91,9 @@ Selection select_to_next_word(const BufferIterator& cursor)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_next_word_end(const BufferIterator& cursor)
+Selection select_to_next_word_end(const Selection& selection)
 {
-    BufferIterator begin = cursor;
+    BufferIterator begin = selection.last();
     if (categorize(*begin) != categorize(*(begin+1)))
         ++begin;
 
@@ -110,9 +110,9 @@ Selection select_to_next_word_end(const BufferIterator& cursor)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_previous_word(const BufferIterator& cursor)
+Selection select_to_previous_word(const Selection& selection)
 {
-    BufferIterator begin = cursor;
+    BufferIterator begin = selection.last();
 
     if (categorize(*begin) != categorize(*(begin-1)))
         --begin;
@@ -130,9 +130,9 @@ Selection select_to_previous_word(const BufferIterator& cursor)
     return Selection(begin, with_end ? end : end+1);
 }
 
-Selection select_to_next_WORD(const BufferIterator& cursor)
+Selection select_to_next_WORD(const Selection& selection)
 {
-    BufferIterator begin = cursor;
+    BufferIterator begin = selection.last();
     if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
         ++begin;
 
@@ -146,9 +146,9 @@ Selection select_to_next_WORD(const BufferIterator& cursor)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_next_WORD_end(const BufferIterator& cursor)
+Selection select_to_next_WORD_end(const Selection& selection)
 {
-    BufferIterator begin = cursor;
+    BufferIterator begin = selection.last();
     if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
         ++begin;
 
@@ -163,9 +163,9 @@ Selection select_to_next_WORD_end(const BufferIterator& cursor)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_previous_WORD(const BufferIterator& cursor)
+Selection select_to_previous_WORD(const Selection& selection)
 {
-    BufferIterator begin = cursor;
+    BufferIterator begin = selection.last();
     if (categorize<false>(*begin) != categorize<false>(*(begin-1)))
         --begin;
 
@@ -178,9 +178,9 @@ Selection select_to_previous_WORD(const BufferIterator& cursor)
     return Selection(begin, with_end ? end : end+1);
 }
 
-Selection select_line(const BufferIterator& cursor)
+Selection select_line(const Selection& selection)
 {
-    BufferIterator first = cursor;
+    BufferIterator first = selection.last();
     if (*first == '\n' and not (first + 1).is_end())
         ++first;
 
@@ -193,10 +193,10 @@ Selection select_line(const BufferIterator& cursor)
     return Selection(first, last);
 }
 
-Selection select_matching(const BufferIterator& cursor)
+Selection select_matching(const Selection& selection)
 {
     std::vector<char> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
-    BufferIterator it = cursor;
+    BufferIterator it = selection.last();
     std::vector<char>::iterator match = matching_pairs.end();
     while (not is_eol(*it))
     {
@@ -206,7 +206,7 @@ Selection select_matching(const BufferIterator& cursor)
         ++it;
     }
     if (match == matching_pairs.end())
-        return Selection(cursor, cursor);
+        return selection;
 
     BufferIterator begin = it;
 
@@ -239,15 +239,15 @@ Selection select_matching(const BufferIterator& cursor)
             --it;
         }
     }
-    return Selection(cursor, cursor);
+    return selection;
 }
 
-Selection select_surrounding(const BufferIterator& cursor,
+Selection select_surrounding(const Selection& selection,
                              const std::pair<char, char>& matching,
                              bool inside)
 {
     int level = 0;
-    BufferIterator first = cursor;
+    BufferIterator first = selection.last();
     while (not first.is_begin())
     {
         if (*first == matching.second)
@@ -262,7 +262,7 @@ Selection select_surrounding(const BufferIterator& cursor,
         --first;
     }
     if (level != 0 or *first != matching.first)
-        return Selection(cursor, cursor);
+        return selection;
 
     level = 0;
     BufferIterator last = first + 1;
@@ -280,7 +280,7 @@ Selection select_surrounding(const BufferIterator& cursor,
         ++last;
     }
     if (level != 0 or *last != matching.second)
-        return Selection(cursor, cursor);
+        return selection;
 
     if (inside)
     {
@@ -291,51 +291,57 @@ Selection select_surrounding(const BufferIterator& cursor,
     return Selection(first, last);
 }
 
-Selection select_to(const BufferIterator& cursor, char c, int count, bool inclusive)
+Selection select_to(const Selection& selection,
+                    char c, int count, bool inclusive)
 {
-    BufferIterator end = cursor;
+    BufferIterator begin = selection.last();
+    BufferIterator end = begin;
     do
     {
         ++end;
         skip_while(end, [c](char cur) { return not is_eol(cur) and cur != c; });
         if (end.is_end() or is_eol(*end))
-            return Selection(cursor, cursor);
+            return selection;
     }
     while (--count > 0);
 
-    return Selection(cursor, inclusive ? end : end-1);
+    return Selection(begin, inclusive ? end : end-1);
 }
 
-Selection select_to_reverse(const BufferIterator& cursor, char c, int count, bool inclusive)
+Selection select_to_reverse(const Selection& selection,
+                            char c, int count, bool inclusive)
 {
-    BufferIterator end = cursor;
+    BufferIterator begin = selection.last();
+    BufferIterator end = begin;
     do
     {
         --end;
         skip_while_reverse(end, [c](char cur) { return not is_eol(cur) and cur != c; });
         if (end.is_begin() or is_eol(*end))
-            return Selection(cursor, cursor);
+            return selection;
     }
     while (--count > 0);
 
-    return Selection(cursor, inclusive ? end : end+1);
+    return Selection(begin, inclusive ? end : end+1);
 }
 
-Selection select_to_eol(const BufferIterator& cursor)
+Selection select_to_eol(const Selection& selection)
 {
-    BufferIterator end = cursor + 1;
+    BufferIterator begin = selection.last();
+    BufferIterator end = begin + 1;
     skip_while(end, [](char cur) { return not is_eol(cur); });
-    return Selection(cursor, end-1);
+    return Selection(begin, end-1);
 }
 
-Selection select_to_eol_reverse(const BufferIterator& cursor)
+Selection select_to_eol_reverse(const Selection& selection)
 {
-    BufferIterator end = cursor - 1;
+    BufferIterator begin = selection.last();
+    BufferIterator end = begin - 1;
     skip_while_reverse(end, [](char cur) { return not is_eol(cur); });
-    return Selection(cursor, end.is_begin() ? end : end+1);
+    return Selection(begin, end.is_begin() ? end : end+1);
 }
 
-SelectionList select_whole_lines(const Selection& selection)
+Selection select_whole_lines(const Selection& selection)
 {
      BufferIterator first = selection.first();
      BufferIterator last =  selection.last();
@@ -349,25 +355,29 @@ SelectionList select_whole_lines(const Selection& selection)
      skip_while(to_line_end, [](char cur) { return not is_eol(cur); });
 
 
-     SelectionList result;
-     result.push_back(Selection(first, last));
-     return result;
+     return Selection(first, last);
 }
 
-Selection select_next_match(const BufferIterator& cursor,
+Selection select_whole_buffer(const Selection& selection)
+{
+    const Buffer& buffer = selection.first().buffer();
+    return Selection(buffer.begin(), buffer.end()-1);
+}
+
+Selection select_next_match(const Selection& selection,
                             const std::string& regex)
 {
     boost::regex ex(regex);
 
-    BufferIterator begin = cursor;
-    BufferIterator end = cursor;
+    BufferIterator begin = selection.last();
+    BufferIterator end = begin;
     Selection::CaptureList captures;
 
     try
     {
         boost::match_results<BufferIterator> matches;
 
-        if (boost::regex_search(cursor+1, cursor.buffer().end(), matches,
+        if (boost::regex_search(begin+1, begin.buffer().end(), matches,
                                 ex))
         {
             begin = matches[0].first;
@@ -375,7 +385,7 @@ Selection select_next_match(const BufferIterator& cursor,
             std::copy(matches.begin(), matches.end(),
                       std::back_inserter(captures));
         }
-        else if (boost::regex_search(cursor.buffer().begin(), cursor+1, matches,
+        else if (boost::regex_search(begin.buffer().begin(), begin+1, matches,
                                      ex))
         {
             begin = matches[0].first;

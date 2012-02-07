@@ -20,7 +20,7 @@ class Editor
 {
 public:
     typedef BufferString String;
-    typedef std::function<Selection (const BufferIterator&)> Selector;
+    typedef std::function<Selection (const Selection&)> Selector;
     typedef std::function<SelectionList (const Selection&)>  MultiSelector;
 
     Editor(Buffer& buffer);
