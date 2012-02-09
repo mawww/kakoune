@@ -12,10 +12,14 @@ namespace Kakoune
 class Register
 {
 public:
-    void set(const std::string& value);
-    void set(const memoryview<std::string>& values);
+    Register& operator=(const std::string& value);
+    Register& operator=(const memoryview<std::string>& values);
+
     const std::string& get() const;
     const std::string& get(size_t index) const;
+
+    operator memoryview<std::string>() const
+    { return memoryview<std::string>(m_content); }
 
 private:
     std::vector<std::string> m_content;

@@ -3,30 +3,14 @@
 namespace Kakoune
 {
 
-Selection::Selection(const BufferIterator& first, const BufferIterator& last,
-                     const CaptureList& captures)
-    : m_first(first), m_last(last), m_captures(captures)
-{
-   register_with_buffer();
-}
-
-Selection::Selection(const BufferIterator& first, const BufferIterator& last,
-                     CaptureList&& captures)
-    : m_first(first), m_last(last), m_captures(captures)
+Selection::Selection(const BufferIterator& first, const BufferIterator& last)
+    : m_first(first), m_last(last)
 {
    register_with_buffer();
 }
 
 Selection::Selection(const Selection& other)
-    : m_first(other.m_first), m_last(other.m_last),
-      m_captures(other.m_captures)
-{
-   register_with_buffer();
-}
-
-Selection::Selection(Selection&& other)
-    : m_first(other.m_first), m_last(other.m_last),
-      m_captures(other.m_captures)
+    : m_first(other.m_first), m_last(other.m_last)
 {
    register_with_buffer();
 }
@@ -44,7 +28,6 @@ Selection& Selection::operator=(const Selection& other)
 
    m_first    = other.m_first;
    m_last     = other.m_last;
-   m_captures = other.m_captures;
 
    if (new_buffer)
        register_with_buffer();
@@ -69,13 +52,6 @@ void Selection::merge_with(const Selection& selection)
     else
         m_first = std::max(m_first, selection.m_first);
     m_last = selection.m_last;
-}
-
-BufferString Selection::capture(size_t index) const
-{
-    if (index < m_captures.size())
-        return m_captures[index];
-    return "";
 }
 
 static void update_iterator(const Modification& modification,

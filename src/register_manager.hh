@@ -4,6 +4,8 @@
 #include "register.hh"
 #include "utils.hh"
 
+#include <unordered_map>
+
 namespace Kakoune
 {
 

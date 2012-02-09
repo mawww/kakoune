@@ -2,6 +2,8 @@
 
 #include "exception.hh"
 #include "utils.hh"
+#include "register.hh"
+#include "register_manager.hh"
 
 namespace Kakoune
 {
@@ -11,7 +13,7 @@ Editor::Editor(Buffer& buffer)
       m_edition_level(0)
 {
     m_selections.push_back(SelectionList());
-    selections().push_back(Selection(buffer.begin(), buffer.begin()));
+    m_selections.back().push_back(Selection(buffer.begin(), buffer.begin()));
 }
 
 void Editor::erase()
@@ -21,18 +23,51 @@ void Editor::erase()
         m_buffer.modify(Modification::make_erase(sel.begin(), sel.end()));
 }
 
+template<bool append>
+static void do_insert(Editor& editor, const Editor::String& string)
+{
+    scoped_edition edition(editor);
+    for (auto& sel : editor.selections())
+    {
+        BufferIterator pos = append ? sel.end() : sel.begin();
+        editor.buffer().modify(Modification::make_insert(pos, string));
+    }
+}
+
+template<bool append>
+static void do_insert(Editor& editor, const memoryview<Editor::String>& strings)
+{
+    if (strings.empty())
+        return;
+
+    scoped_edition edition(editor);
+    for (size_t i = 0; i < editor.selections().size(); ++i)
+    {
+        BufferIterator pos = append ? editor.selections()[i].end()
+                                    : editor.selections()[i].begin();
+        size_t index = std::min(i, strings.size()-1);
+        editor.buffer().modify(Modification::make_insert(pos, strings[index]));
+    }
+}
+
 void Editor::insert(const String& string)
 {
-    scoped_edition edition(*this);
-    for (auto& sel : selections())
-        m_buffer.modify(Modification::make_insert(sel.begin(), string));
+    do_insert<false>(*this, string);
+}
+
+void Editor::insert(const memoryview<String>& strings)
+{
+    do_insert<false>(*this, strings);
 }
 
 void Editor::append(const String& string)
 {
-    scoped_edition edition(*this);
-    for (auto& sel : selections())
-        m_buffer.modify(Modification::make_insert(sel.end(), string));
+    do_insert<true>(*this, string);
+}
+
+void Editor::append(const memoryview<String>& strings)
+{
+    do_insert<true>(*this, strings);
 }
 
 void Editor::replace(const std::string& string)
@@ -42,9 +77,17 @@ void Editor::replace(const std::string& string)
     insert(string);
 }
 
+std::vector<Editor::String> Editor::selections_content() const
+{
+    std::vector<String> contents;
+    for (auto& sel : selections())
+        contents.push_back(m_buffer.string(sel.begin(), sel.end()));
+    return contents;
+}
+
 void Editor::push_selections()
 {
-    SelectionList current_selections = selections();
+    SelectionList current_selections = m_selections.back();
     m_selections.push_back(std::move(current_selections));
 }
 
@@ -58,7 +101,7 @@ void Editor::pop_selections()
 
 void Editor::move_selections(const BufferCoord& offset, bool append)
 {
-    for (auto& sel : selections())
+    for (auto& sel : m_selections.back())
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
         BufferIterator last = m_buffer.iterator_at(pos + BufferCoord(offset));
@@ -75,8 +118,8 @@ void Editor::clear_selections()
         --pos;
 
     Selection sel = Selection(pos, pos);
-    selections().clear();
-    selections().push_back(std::move(sel));
+    m_selections.back().clear();
+    m_selections.back().push_back(std::move(sel));
 }
 
 void Editor::keep_selection(int index)
@@ -86,30 +129,42 @@ void Editor::keep_selection(int index)
     if (index < selections().size())
     {
         Selection sel = selections()[index];
-        selections().clear();
-        selections().push_back(std::move(sel));
+        m_selections.back().clear();
+        m_selections.back().push_back(std::move(sel));
     }
 }
 
 void Editor::select(const BufferIterator& iterator)
 {
-    selections().clear();
-    selections().push_back(Selection(iterator, iterator));
+    m_selections.back().clear();
+    m_selections.back().push_back(Selection(iterator, iterator));
 }
 
 void Editor::select(const Selector& selector, bool append)
 {
     check_invariant();
 
-    if (not append)
+    std::vector<std::vector<String>> captures;
+
+    for (auto& sel : m_selections.back())
     {
-        for (auto& sel : selections())
-            sel = selector(sel);
+        SelectionAndCaptures res = selector(sel);
+        if (append)
+            sel.merge_with(res.selection);
+        else
+            sel = std::move(res.selection);
+
+        assert(captures.empty() or captures.size() == res.captures.size());
+        captures.resize(res.captures.size());
+
+        for (size_t i = 0; i < res.captures.size(); ++i)
+            captures[i].push_back(res.captures[i]);
     }
-    else
+
+    if (not captures.empty())
     {
-        for (auto& sel : selections())
-            sel.merge_with(selector(sel));
+        for (size_t i = 0; i < captures.size(); ++i)
+            RegisterManager::instance()['0' + i] = std::move(captures[i]);
     }
 }
 
@@ -122,25 +177,33 @@ void Editor::multi_select(const MultiSelector& selector)
 {
     check_invariant();
 
+    std::vector<std::vector<String>> captures;
+
     SelectionList new_selections;
-    for (auto& sel : selections())
+    for (auto& sel : m_selections.back())
     {
-        SelectionList selections = selector(sel);
-        std::copy(selections.begin(), selections.end(),
-                  std::back_inserter(new_selections));
+        SelectionAndCapturesList res = selector(sel);
+        for (auto& sel_and_cap : res)
+        {
+            new_selections.push_back(sel_and_cap.selection);
+
+            assert(captures.empty() or captures.size() == sel_and_cap.captures.size());
+            captures.resize(sel_and_cap.captures.size());
+
+            for (size_t i = 0; i < sel_and_cap.captures.size(); ++i)
+                captures[i].push_back(sel_and_cap.captures[i]);
+        }
     }
     if (new_selections.empty())
         throw nothing_selected();
 
-    selections() = std::move(new_selections);
-}
+    m_selections.back() = std::move(new_selections);
 
-BufferString Editor::selection_content() const
-{
-    check_invariant();
-
-    return m_buffer.string(selections().back().begin(),
-                           selections().back().end());
+    if (not captures.empty())
+    {
+        for (size_t i = 0; i < captures.size(); ++i)
+            RegisterManager::instance()['0' + i] = std::move(captures[i]);
+    }
 }
 
 bool Editor::undo()
@@ -207,7 +270,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
     if (mode == Mode::Change)
         editor.erase();
 
-    for (auto& sel : m_editor.selections())
+    for (auto& sel : m_editor.m_selections.back())
     {
         BufferIterator pos;
         switch (mode)
@@ -228,7 +291,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
                 --pos;
             break;
         }
-        sel = Selection(pos, pos, sel.captures());
+        sel = Selection(pos, pos);
 
         if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
             apply(Modification::make_insert(pos, "\n"));
@@ -248,23 +311,20 @@ void IncrementalInserter::apply(Modification&& modification) const
     m_editor.buffer().modify(std::move(modification));
 }
 
-
 void IncrementalInserter::insert(const Editor::String& string)
 {
     for (auto& sel : m_editor.selections())
         apply(Modification::make_insert(sel.begin(), string));
 }
 
-void IncrementalInserter::insert_capture(size_t index)
+void IncrementalInserter::insert(const Register& reg)
 {
-    for (auto& sel : m_editor.selections())
-        m_editor.m_buffer.modify(Modification::make_insert(sel.begin(),
-                                                           sel.capture(index)));
+    m_editor.insert(reg);
 }
 
 void IncrementalInserter::erase()
 {
-    for (auto& sel : m_editor.selections())
+    for (auto& sel : m_editor.m_selections.back())
     {
         sel = Selection(sel.first() - 1, sel.last() - 1);
         apply(Modification::make_erase(sel.begin(), sel.end()));
@@ -273,7 +333,7 @@ void IncrementalInserter::erase()
 
 void IncrementalInserter::move_cursors(const BufferCoord& offset)
 {
-    for (auto& sel : m_editor.selections())
+    for (auto& sel : m_editor.m_selections.back())
     {
         BufferCoord pos = m_editor.m_buffer.line_and_column_at(sel.last());
         BufferIterator it = m_editor.m_buffer.iterator_at(pos + offset);

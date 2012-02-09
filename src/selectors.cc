@@ -71,7 +71,7 @@ bool skip_while_reverse(BufferIterator& it, T condition)
     return condition(*it);
 }
 
-Selection select_to_next_word(const Selection& selection)
+SelectionAndCaptures select_to_next_word(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     if (categorize(*begin) != categorize(*(begin+1)))
@@ -91,7 +91,7 @@ Selection select_to_next_word(const Selection& selection)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_next_word_end(const Selection& selection)
+SelectionAndCaptures select_to_next_word_end(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     if (categorize(*begin) != categorize(*(begin+1)))
@@ -110,7 +110,7 @@ Selection select_to_next_word_end(const Selection& selection)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_previous_word(const Selection& selection)
+SelectionAndCaptures select_to_previous_word(const Selection& selection)
 {
     BufferIterator begin = selection.last();
 
@@ -130,7 +130,7 @@ Selection select_to_previous_word(const Selection& selection)
     return Selection(begin, with_end ? end : end+1);
 }
 
-Selection select_to_next_WORD(const Selection& selection)
+SelectionAndCaptures select_to_next_WORD(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
@@ -146,7 +146,7 @@ Selection select_to_next_WORD(const Selection& selection)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_next_WORD_end(const Selection& selection)
+SelectionAndCaptures select_to_next_WORD_end(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
@@ -163,7 +163,7 @@ Selection select_to_next_WORD_end(const Selection& selection)
     return Selection(begin, with_end ? end : end-1);
 }
 
-Selection select_to_previous_WORD(const Selection& selection)
+SelectionAndCaptures select_to_previous_WORD(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     if (categorize<false>(*begin) != categorize<false>(*(begin-1)))
@@ -178,7 +178,7 @@ Selection select_to_previous_WORD(const Selection& selection)
     return Selection(begin, with_end ? end : end+1);
 }
 
-Selection select_line(const Selection& selection)
+SelectionAndCaptures select_line(const Selection& selection)
 {
     BufferIterator first = selection.last();
     if (*first == '\n' and not (first + 1).is_end())
@@ -193,7 +193,7 @@ Selection select_line(const Selection& selection)
     return Selection(first, last);
 }
 
-Selection select_matching(const Selection& selection)
+SelectionAndCaptures select_matching(const Selection& selection)
 {
     std::vector<char> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     BufferIterator it = selection.last();
@@ -242,7 +242,7 @@ Selection select_matching(const Selection& selection)
     return selection;
 }
 
-Selection select_surrounding(const Selection& selection,
+SelectionAndCaptures select_surrounding(const Selection& selection,
                              const std::pair<char, char>& matching,
                              bool inside)
 {
@@ -291,8 +291,8 @@ Selection select_surrounding(const Selection& selection,
     return Selection(first, last);
 }
 
-Selection select_to(const Selection& selection,
-                    char c, int count, bool inclusive)
+SelectionAndCaptures select_to(const Selection& selection,
+                               char c, int count, bool inclusive)
 {
     BufferIterator begin = selection.last();
     BufferIterator end = begin;
@@ -308,8 +308,8 @@ Selection select_to(const Selection& selection,
     return Selection(begin, inclusive ? end : end-1);
 }
 
-Selection select_to_reverse(const Selection& selection,
-                            char c, int count, bool inclusive)
+SelectionAndCaptures select_to_reverse(const Selection& selection,
+                                       char c, int count, bool inclusive)
 {
     BufferIterator begin = selection.last();
     BufferIterator end = begin;
@@ -325,7 +325,7 @@ Selection select_to_reverse(const Selection& selection,
     return Selection(begin, inclusive ? end : end+1);
 }
 
-Selection select_to_eol(const Selection& selection)
+SelectionAndCaptures select_to_eol(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     BufferIterator end = begin + 1;
@@ -333,7 +333,7 @@ Selection select_to_eol(const Selection& selection)
     return Selection(begin, end-1);
 }
 
-Selection select_to_eol_reverse(const Selection& selection)
+SelectionAndCaptures select_to_eol_reverse(const Selection& selection)
 {
     BufferIterator begin = selection.last();
     BufferIterator end = begin - 1;
@@ -341,7 +341,7 @@ Selection select_to_eol_reverse(const Selection& selection)
     return Selection(begin, end.is_begin() ? end : end+1);
 }
 
-Selection select_whole_lines(const Selection& selection)
+SelectionAndCaptures select_whole_lines(const Selection& selection)
 {
      BufferIterator first = selection.first();
      BufferIterator last =  selection.last();
@@ -358,20 +358,20 @@ Selection select_whole_lines(const Selection& selection)
      return Selection(first, last);
 }
 
-Selection select_whole_buffer(const Selection& selection)
+SelectionAndCaptures select_whole_buffer(const Selection& selection)
 {
     const Buffer& buffer = selection.first().buffer();
     return Selection(buffer.begin(), buffer.end()-1);
 }
 
-Selection select_next_match(const Selection& selection,
-                            const std::string& regex)
+SelectionAndCaptures select_next_match(const Selection& selection,
+                                       const std::string& regex)
 {
     boost::regex ex(regex);
 
     BufferIterator begin = selection.last();
     BufferIterator end = begin;
-    Selection::CaptureList captures;
+    CaptureList captures;
 
     try
     {
@@ -403,41 +403,41 @@ Selection select_next_match(const Selection& selection,
     if (begin == end)
         ++end;
 
-    return Selection(begin, end - 1, std::move(captures));
+    return SelectionAndCaptures(begin, end - 1, std::move(captures));
 }
 
 typedef boost::regex_iterator<BufferIterator> RegexIterator;
 
-SelectionList select_all_matches(const Selection& selection,
-                                 const std::string& regex)
+SelectionAndCapturesList select_all_matches(const Selection& selection,
+                                            const std::string& regex)
 {
     boost::regex ex(regex);
     RegexIterator re_it(selection.begin(), selection.end(), ex);
     RegexIterator re_end;
 
-    SelectionList result;
+    SelectionAndCapturesList result;
     for (; re_it != re_end; ++re_it)
     {
         BufferIterator begin = (*re_it)[0].first;
         BufferIterator end   = (*re_it)[0].second;
 
-        Selection::CaptureList captures(re_it->begin(), re_it->end());
+        CaptureList captures(re_it->begin(), re_it->end());
 
-        result.push_back(Selection(begin, begin == end ? end : end-1,
-                                   std::move(captures)));
+        result.push_back(SelectionAndCaptures(begin, begin == end ? end : end-1,
+                                              std::move(captures)));
     }
     return result;
 }
 
-SelectionList split_selection(const Selection& selection,
-                              const std::string& separator_regex)
+SelectionAndCapturesList split_selection(const Selection& selection,
+                                         const std::string& separator_regex)
 {
     boost::regex ex(separator_regex);
     RegexIterator re_it(selection.begin(), selection.end(), ex,
                         boost::regex_constants::match_nosubs);
     RegexIterator re_end;
 
-    SelectionList result;
+    SelectionAndCapturesList result;
     BufferIterator begin = selection.begin();
     for (; re_it != re_end; ++re_it)
     {

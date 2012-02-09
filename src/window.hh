@@ -8,6 +8,7 @@
 #include "completion.hh"
 #include "highlighter.hh"
 #include "highlighter_group.hh"
+#include "hooks_manager.hh"
 
 namespace Kakoune
 {
@@ -35,8 +36,6 @@ public:
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
     void update_display_buffer();
-
-    const SelectionList& selections() const { return Editor::selections(); }
 
     std::string status_line() const;
 

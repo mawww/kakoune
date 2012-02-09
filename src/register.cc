@@ -5,15 +5,17 @@ namespace Kakoune
 
 const std::string Register::ms_empty;
 
-void Register::set(const std::string& value)
+Register& Register::operator=(const std::string& value)
 {
     m_content.clear();
     m_content.push_back(value);
+    return *this;
 }
 
-void Register::set(const memoryview<std::string>& values)
+Register& Register::operator=(const memoryview<std::string>& values)
 {
     m_content = std::vector<std::string>(values.begin(), values.end());
+    return *this;
 }
 
 const std::string& Register::get() const

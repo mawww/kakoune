@@ -5,12 +5,12 @@
 #include "selection.hh"
 #include "filter.hh"
 #include "idvaluemap.hh"
-#include "hooks_manager.hh"
+#include "memoryview.hh"
 
 namespace Kakoune
 {
 
-class IncrementalInserter;
+class Register;
 
 // An Editor is a buffer mutator
 //
@@ -20,8 +20,8 @@ class Editor
 {
 public:
     typedef BufferString String;
-    typedef std::function<Selection (const Selection&)> Selector;
-    typedef std::function<SelectionList (const Selection&)>  MultiSelector;
+    typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
+    typedef std::function<SelectionAndCapturesList (const Selection&)>  MultiSelector;
 
     Editor(Buffer& buffer);
     virtual ~Editor() {}
@@ -29,8 +29,13 @@ public:
     Buffer& buffer() const { return m_buffer; }
 
     void erase();
+
     void insert(const String& string);
+    void insert(const memoryview<String>& strings);
+
     void append(const String& string);
+    void append(const memoryview<String>& strings);
+
     void replace(const String& string);
 
     void push_selections();
@@ -43,8 +48,8 @@ public:
     void select(const Selector& selector, bool append = false);
     void multi_select(const MultiSelector& selector);
 
-    BufferString selection_content() const;
     const SelectionList& selections() const { return m_selections.back(); }
+    std::vector<String>  selections_content() const;
 
     bool undo();
     bool redo();
@@ -63,8 +68,6 @@ private:
     void end_edition();
 
     int m_edition_level;
-
-    SelectionList& selections() { return m_selections.back(); }
 
     void check_invariant() const;
 
@@ -108,7 +111,7 @@ public:
     ~IncrementalInserter();
 
     void insert(const Editor::String& string);
-    void insert_capture(size_t index);
+    void insert(const Register& reg);
     void erase();
     void move_cursors(const BufferCoord& offset);
 
