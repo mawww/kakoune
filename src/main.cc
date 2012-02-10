@@ -863,10 +863,21 @@ void do_change(Editor& editor, int count)
 template<bool append>
 void do_paste(Editor& editor, int count)
 {
-    if (append)
-        editor.append(RegisterManager::instance()['"']);
+    Register& reg = RegisterManager::instance()['"'];
+    if (count == 0)
+    {
+        if (append)
+            editor.append(reg);
+        else
+            editor.insert(reg);
+    }
     else
-        editor.insert(RegisterManager::instance()['"']);
+    {
+        if (append)
+            editor.append(reg.get(count-1));
+        else
+            editor.insert(reg.get(count-1));
+    }
 }
 
 void do_select_regex(Editor& editor, int count)
