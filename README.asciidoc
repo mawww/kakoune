@@ -103,14 +103,22 @@ use _alt-s_ then ', *'
 
 To clear multiple selections, use _space_.
 
-Captures
---------
+Registers
+---------
 
-Selections can have associated captures. When selections were made from a
-regex search (like _/_ key of _s_ key), the regex capture groups are available
-from the selection.
+registers are named list of text. They are used for various purpose, like
+storing the last yanked test, or the captures groups associated with the
+last selection.
 
-While inserting, _^B_ key followed by a digit inserts the designated capture.
+While in insert mode, ctrl-r followed by a register name (one character)
+inserts it.
+
+For example, ctrl-r followed by " will insert the currently yanked text.
+ctrl-r followed by 2 will insert the second capture group from the last regex
+selection.
+
+Registers are lists, instead of simply text in order to interact well with
+multiselection. Each selection have it's own captures, or yank buffer.
 
 Highlighters
 ------------
@@ -123,9 +131,14 @@ existing highlighters are:
 
 * *highlight_selections*: used to make current selection visible
 * *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
-* *hlcpp*: quick'n'dirty c++ code highlighter
 * *number_lines*: show line numbers
 * *regex*: highlight a regex, takes 3 parameters <regex> <fg_color> <bg_color>
+* *group*: highlighter group, containing other highlighters. takes one
+           parameter, <group_name>. useful when multiple highlighters work
+           together and need to be removed as one. Adding and removing from
+           a group can be done using
+           :addgrouphl <group> <highlighter_name> <highlighter_parameters...>
+           :rmgrouphl <group> <highlighter_name>
 
 Filters
 -------
