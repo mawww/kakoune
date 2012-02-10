@@ -5,6 +5,8 @@
 #include "register.hh"
 #include "register_manager.hh"
 
+#include <array>
+
 namespace Kakoune
 {
 
@@ -144,8 +146,9 @@ void Editor::select(const Selector& selector, bool append)
 {
     check_invariant();
 
-    std::vector<std::vector<String>> captures;
+    std::array<std::vector<String>, 10> captures;
 
+    size_t capture_count = -1;
     for (auto& sel : m_selections.back())
     {
         SelectionAndCaptures res = selector(sel);
@@ -154,14 +157,14 @@ void Editor::select(const Selector& selector, bool append)
         else
             sel = std::move(res.selection);
 
-        assert(captures.empty() or captures.size() == res.captures.size());
-        captures.resize(res.captures.size());
+        assert(capture_count == -1 or capture_count == res.captures.size());
+        capture_count = res.captures.size();
 
         for (size_t i = 0; i < res.captures.size(); ++i)
             captures[i].push_back(res.captures[i]);
     }
 
-    if (not captures.empty())
+    if (not captures[0].empty())
     {
         for (size_t i = 0; i < captures.size(); ++i)
             RegisterManager::instance()['0' + i] = std::move(captures[i]);
@@ -177,8 +180,9 @@ void Editor::multi_select(const MultiSelector& selector)
 {
     check_invariant();
 
-    std::vector<std::vector<String>> captures;
+    std::array<std::vector<String>, 10> captures;
 
+    size_t capture_count = -1;
     SelectionList new_selections;
     for (auto& sel : m_selections.back())
     {
@@ -187,8 +191,9 @@ void Editor::multi_select(const MultiSelector& selector)
         {
             new_selections.push_back(sel_and_cap.selection);
 
-            assert(captures.empty() or captures.size() == sel_and_cap.captures.size());
-            captures.resize(sel_and_cap.captures.size());
+            assert(capture_count == -1 or
+                   capture_count == sel_and_cap.captures.size());
+            capture_count = sel_and_cap.captures.size();
 
             for (size_t i = 0; i < sel_and_cap.captures.size(); ++i)
                 captures[i].push_back(sel_and_cap.captures[i]);
@@ -199,7 +204,7 @@ void Editor::multi_select(const MultiSelector& selector)
 
     m_selections.back() = std::move(new_selections);
 
-    if (not captures.empty())
+    if (not captures[0].empty())
     {
         for (size_t i = 0; i < captures.size(); ++i)
             RegisterManager::instance()['0' + i] = std::move(captures[i]);
