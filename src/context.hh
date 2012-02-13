@@ -1,11 +1,12 @@
 #ifndef context_hh_INCLUDED
 #define context_hh_INCLUDED
 
+#include "window.hh"
+
 namespace Kakoune
 {
 
 class Buffer;
-class Window;
 
 struct Context
 {
