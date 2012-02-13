@@ -700,6 +700,18 @@ void add_hook(const CommandParameters& params, const Context& context)
         print_status("error: no such hook container " + params[0]);
 }
 
+void define_command(const CommandParameters& params, const Context& context)
+{
+    if (params.size() < 2)
+        throw wrong_argument_count();
+
+    std::vector<std::string> cmd_params(params.begin()+1, params.end());
+    auto func = [=](const CommandParameters& params, const Context& context) {
+        CommandManager::instance().execute(cmd_params, context);
+    };
+    CommandManager::instance().register_command(params[0], func);
+}
+
 void exec_commands_in_file(const CommandParameters& params,
                            const Context& context)
 {
@@ -1197,6 +1209,8 @@ int main(int argc, char* argv[])
     command_manager.register_command("runtime", exec_commands_in_runtime_file);
 
     command_manager.register_command("exec", exec_string);
+
+    command_manager.register_command("def",   define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
 
     register_highlighters();
     register_filters();
