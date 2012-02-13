@@ -529,13 +529,21 @@ Buffer* open_or_create(const std::string& filename)
     return buffer;
 }
 
+template<bool force_reload>
 void edit(const CommandParameters& params, const Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
 
     std::string filename = params[0];
-    main_context = Context(*open_or_create(filename)->get_or_create_window());
+
+    Buffer* buffer = nullptr;
+    if (not force_reload)
+        buffer = BufferManager::instance().get_buffer(filename);
+    if (not buffer)
+        buffer = open_or_create(filename);
+
+    main_context = Context(*buffer->get_or_create_window());
 }
 
 void write_buffer(const CommandParameters& params, const Context& context)
@@ -1145,7 +1153,10 @@ int main(int argc, char* argv[])
     FilterRegistry      filter_registry;
     GlobalHooksManager  hooks_manager;
 
-    command_manager.register_commands({ "e", "edit" }, edit,
+    command_manager.register_commands({ "e", "edit" }, edit<false>,
+                                     CommandManager::None,
+                                     PerArgumentCommandCompleter({ complete_filename }));
+    command_manager.register_commands({ "e!", "edit!" }, edit<true>,
                                      CommandManager::None,
                                      PerArgumentCommandCompleter({ complete_filename }));
     command_manager.register_commands({ "q", "quit" }, quit<false>);
