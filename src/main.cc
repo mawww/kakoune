@@ -27,6 +27,8 @@
 #include <mach-o/dyld.h>
 #endif
 
+#define CTRL(x) x - 'a' + 1
+
 using namespace Kakoune;
 using namespace std::placeholders;
 
@@ -291,6 +293,15 @@ std::string ncurses_prompt(const std::string& text, Completer completer = comple
             }
 
             current_completion = -1;
+            break;
+        case CTRL('r'):
+            {
+                c = getch();
+                std::string reg = RegisterManager::instance()[c].get();
+                current_completion = -1;
+                result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, std::string::npos);
+                cursor_pos += reg.length();
+            }
             break;
         case 27:
             throw prompt_aborted();
