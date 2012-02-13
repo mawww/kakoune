@@ -1165,7 +1165,7 @@ int main(int argc, char* argv[])
                                          [&](const std::string& prefix, size_t cursor_pos)
                                          { return main_context.window().complete_filterid(prefix, cursor_pos); }
                                      }));
-    command_manager.register_command("hook", add_hook, CommandManager::IgnoreSemiColons);
+    command_manager.register_command("hook", add_hook, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
 
     command_manager.register_command("source", exec_commands_in_file,
                                      CommandManager::None,

@@ -2,8 +2,12 @@
 
 #include "utils.hh"
 #include "assert.hh"
+#include "context.hh"
 
 #include <algorithm>
+#include <cstring>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 namespace Kakoune
 {
@@ -23,6 +27,11 @@ void CommandManager::register_commands(const memoryview<std::string>& command_na
         register_command(command_name, command, flags, completer);
 }
 
+static bool is_blank(char c)
+{
+   return c == ' ' or c == '\t' or c == '\n';
+}
+
 typedef std::vector<std::pair<size_t, size_t>> TokenList;
 static TokenList split(const std::string& line)
 {
@@ -31,23 +40,31 @@ static TokenList split(const std::string& line)
     size_t pos = 0;
     while (pos < line.length())
     {
-        while(line[pos] == ' ' and pos != line.length())
+        while(is_blank(line[pos]) and pos != line.length())
             ++pos;
-
-        char delimiter = ' ';
-        if (line[pos] == '"' or line[pos] == '\'')
-        {
-            delimiter = line[pos];
-            ++pos;
-        }
 
         size_t token_start = pos;
 
-        while (((line[pos] != delimiter and line[pos] != ';') or
-                line[pos-1] == '\\') and pos != line.length())
+        if (line[pos] == '"' or line[pos] == '\'' or line[pos] == '`')
+        {
+            char delimiter = line[pos];
             ++pos;
+            token_start = delimiter == '`' ? pos - 1 : pos;
 
-        result.push_back(std::make_pair(token_start, pos));
+            while ((line[pos] != delimiter or line[pos-1] == '\\') and
+                    pos != line.length())
+                ++pos;
+
+            if (delimiter == '`' and line[pos] == '`')
+                ++pos;
+        }
+        else
+            while (not is_blank(line[pos]) and pos != line.length() and
+                   (line[pos] != ';' or line[pos-1] == '\\'))
+                ++pos;
+
+        if (token_start != pos)
+            result.push_back(std::make_pair(token_start, pos));
 
         if (line[pos] == ';')
            result.push_back(std::make_pair(pos, pos+1));
@@ -80,6 +97,50 @@ void CommandManager::execute(const std::string& command_line,
     execute(params, context);
 }
 
+static void shell_eval(std::vector<std::string>& params,
+                       const std::string& cmdline,
+                       const Context& context)
+{
+    int write_pipe[2];
+    int read_pipe[2];
+
+    pipe(write_pipe);
+    pipe(read_pipe);
+
+    if (pid_t pid = fork())
+    {
+        close(write_pipe[0]);
+        close(read_pipe[1]);
+        close(write_pipe[1]);
+
+        std::string output;
+        char buffer[1024];
+        while (size_t size = read(read_pipe[0], buffer, 1024))
+            output += std::string(buffer, buffer+size);
+        close(read_pipe[0]);
+        waitpid(pid, NULL, 0);
+
+        TokenList tokens = split(output);
+
+        for (auto it = tokens.begin(); it != tokens.end(); ++it)
+        {
+            params.push_back(output.substr(it->first,
+                                           it->second - it->first));
+        }
+    }
+    else
+    {
+        close(write_pipe[1]);
+        close(read_pipe[0]);
+
+        dup2(read_pipe[1], 1);
+        dup2(write_pipe[0], 0);
+
+        setenv("kak_bufname", context.buffer().name().c_str(), 1);
+        execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
+    }
+}
+
 void CommandManager::execute(const CommandParameters& params,
                              const Context& context)
 {
@@ -102,7 +163,23 @@ void CommandManager::execute(const CommandParameters& params,
             if (command_it->second.flags & IgnoreSemiColons)
                 end = params.end();
 
-            command_it->second.command(CommandParameters(begin + 1, end), context);
+            if (command_it->second.flags & DeferredShellEval)
+                command_it->second.command(CommandParameters(begin + 1, end), context);
+            else
+            {
+                std::vector<std::string> expanded_params;
+                for (auto param = begin+1; param != end; ++param)
+                {
+                    if (param->front() == '`' and param->back() == '`')
+                        shell_eval(expanded_params,
+                                   param->substr(1, param->length() - 2),
+                                   context);
+                    else
+                        expanded_params.push_back(*param);
+                }
+                command_it->second.command(expanded_params, context);
+            }
+
         }
 
         if (end == params.end())

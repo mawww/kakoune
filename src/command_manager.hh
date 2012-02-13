@@ -51,6 +51,7 @@ public:
     {
         None = 0,
         IgnoreSemiColons = 1,
+        DeferredShellEval = 2,
     };
 
     void execute(const std::string& command_line, const Context& context);
