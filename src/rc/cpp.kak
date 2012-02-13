@@ -14,3 +14,16 @@ hook global WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) \
 hook global BufCreate .*\.(h|hh|hpp|hxx|H) \
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>xyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 
+def alt edit \
+    `case ${kak_bufname} in
+         *.c) echo ${kak_bufname/%c/h} ;;
+         *.cc) echo ${kak_bufname/%cc/hh} ;;
+         *.cpp) echo ${kak_bufname/%cpp/hpp} ;;
+         *.cxx) echo ${kak_bufname/%cxx/hxx} ;;
+         *.C) echo ${kak_bufname/%C/H} ;;
+         *.h) echo ${kak_bufname/%h/c} ;;
+         *.hh) echo ${kak_bufname/%hh/cc} ;;
+         *.hpp) echo ${kak_bufname/%hpp/cpp} ;;
+         *.hxx) echo ${kak_bufname/%hxx/cxx} ;;
+         *.H) echo ${kak_bufname/%H/C} ;;
+    esac` 
