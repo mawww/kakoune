@@ -25,6 +25,10 @@ public:
     memoryview(const T* begin, const T* end)
         : m_pointer(begin), m_size(end - begin) {}
 
+    template<typename Iterator>
+    memoryview(const Iterator& begin, const Iterator& end)
+        : m_pointer(&(*begin)), m_size(end - begin) {}
+
     memoryview(const std::vector<T>& v)
         : m_pointer(&v[0]), m_size(v.size()) {}
 
