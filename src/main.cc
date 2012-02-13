@@ -710,6 +710,7 @@ void exec_commands_in_file(const CommandParameters& params,
     CommandManager& cmd_manager = CommandManager::instance();
 
     size_t pos = 0;
+    size_t length = file_content.length();
     bool   cat_with_previous = false;
     std::string command_line;
     while (true)
@@ -717,8 +718,31 @@ void exec_commands_in_file(const CommandParameters& params,
          if (not cat_with_previous)
              command_line.clear();
 
-         size_t end_pos = file_content.find_first_of('\n', pos);
-         if (end_pos != pos and end_pos != std::string::npos and
+         size_t end_pos = pos;
+
+         while (file_content[end_pos] != '\n' and end_pos != length)
+         {
+             if (file_content[end_pos] == '"' or file_content[end_pos] == '\'' or
+                 file_content[end_pos] == '`')
+             {
+                 char delimiter = file_content[end_pos];
+                 ++end_pos;
+                 while (file_content[end_pos] != delimiter or
+                        file_content[end_pos-1] == '\\' and end_pos != length)
+                     ++end_pos;
+
+                 if (end_pos == length)
+                 {
+                     print_status(std::string("unterminated '") + delimiter + "' string");
+                     return;
+                 }
+
+                 ++end_pos;
+             }
+
+             ++end_pos;
+         }
+         if (end_pos != pos and end_pos != length and
              file_content[end_pos - 1] == '\\')
          {
  	     command_line += file_content.substr(pos, end_pos - pos - 1);
@@ -730,7 +754,7 @@ void exec_commands_in_file(const CommandParameters& params,
  	     cmd_manager.execute(command_line, context);
              cat_with_previous = false;
  	 }
-         if (end_pos == std::string::npos)
+         if (end_pos == length)
          {
              if (cat_with_previous)
                  print_status("while executing commands in \"" + params[0] +
