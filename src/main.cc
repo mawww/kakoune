@@ -532,7 +532,7 @@ Buffer* open_or_create(const std::string& filename)
 template<bool force_reload>
 void edit(const CommandParameters& params, const Context& context)
 {
-    if (params.size() != 1)
+    if (params.size() == 0 or params.size() > 3)
         throw wrong_argument_count();
 
     std::string filename = params[0];
@@ -543,7 +543,18 @@ void edit(const CommandParameters& params, const Context& context)
     if (not buffer)
         buffer = open_or_create(filename);
 
-    main_context = Context(*buffer->get_or_create_window());
+    Window& window = *buffer->get_or_create_window();
+
+    if (params.size() > 1)
+    {
+        int line = std::max(0, atoi(params[1].c_str()) - 1);
+        int column = params.size() > 2 ?
+                         std::max(0, atoi(params[2].c_str()) - 1) : 0;
+
+        window.select(window.buffer().iterator_at({line, column}));
+    }
+
+    main_context = Context(window);
 }
 
 void write_buffer(const CommandParameters& params, const Context& context)
