@@ -724,11 +724,44 @@ void define_command(const CommandParameters& params, const Context& context)
     if (params.size() < 2)
         throw wrong_argument_count();
 
-    std::vector<std::string> cmd_params(params.begin()+1, params.end());
-    auto func = [=](const CommandParameters& params, const Context& context) {
-        CommandManager::instance().execute(cmd_params, context);
-    };
-    CommandManager::instance().register_command(params[0], func);
+    if (params[0] == "-env-params")
+    {
+        std::vector<std::string> cmd_params(params.begin() + 2, params.end());
+        CommandManager::instance().register_command(params[1],
+             [=](const CommandParameters& params, const Context& context) {
+                char param_name[] = "kak_param0";
+                for (size_t i = 0; i < 10; ++i)
+                {
+                    param_name[sizeof(param_name) - 2] = '0' + i;
+                    if (params.size() > i)
+                        setenv(param_name, params[i].c_str(), 1);
+                    else
+                        unsetenv(param_name);
+                }
+                CommandManager::instance().execute(cmd_params, context);
+            });
+    }
+    else if (params[0] == "-append-params")
+    {
+        std::vector<std::string> cmd_params(params.begin() + 2, params.end());
+        CommandManager::instance().register_command(params[1],
+             [=](const CommandParameters& params, const Context& context) {
+                std::vector<std::string> merged_params = cmd_params;
+                for (auto& param : params)
+                    merged_params.push_back(param);
+                CommandManager::instance().execute(merged_params, context);
+            });
+    }
+    else
+    {
+        std::vector<std::string> cmd_params(params.begin() + 1, params.end());
+        CommandManager::instance().register_command(params[0],
+             [=](const CommandParameters& params, const Context& context) {
+                 if (not params.empty())
+                     throw wrong_argument_count();
+                CommandManager::instance().execute(cmd_params, context);
+            });
+    }
 }
 
 void exec_commands_in_file(const CommandParameters& params,
