@@ -764,6 +764,14 @@ void define_command(const CommandParameters& params, const Context& context)
     }
 }
 
+void echo_message(const CommandParameters& params, const Context& context)
+{
+    std::string message;
+    for (auto& param : params)
+        message += param + " ";
+    print_status(message);
+}
+
 void exec_commands_in_file(const CommandParameters& params,
                            const Context& context)
 {
@@ -1266,6 +1274,7 @@ int main(int argc, char* argv[])
     command_manager.register_command("exec", exec_string);
 
     command_manager.register_command("def",   define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
+    command_manager.register_command("echo", echo_message);
 
     register_highlighters();
     register_filters();
