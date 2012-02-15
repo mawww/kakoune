@@ -156,7 +156,22 @@ void CommandManager::execute(const CommandParameters& params,
 
         if (end != begin)
         {
+            std::vector<std::string> expanded_params;
             auto command_it = m_commands.find(*begin);
+
+            if (command_it == m_commands.end() and
+                begin->front() == '`' and begin->back() == '`')
+            {
+                shell_eval(expanded_params,
+                           begin->substr(1, begin->length() - 2),
+                           context);
+                if (not expanded_params.empty())
+                {
+                    command_it = m_commands.find(expanded_params[0]);
+                    expanded_params.erase(expanded_params.begin());
+                }
+            }
+
             if (command_it == m_commands.end())
                 throw command_not_found(*begin);
 
@@ -167,7 +182,6 @@ void CommandManager::execute(const CommandParameters& params,
                 command_it->second.command(CommandParameters(begin + 1, end), context);
             else
             {
-                std::vector<std::string> expanded_params;
                 for (auto param = begin+1; param != end; ++param)
                 {
                     if (param->front() == '`' and param->back() == '`')
