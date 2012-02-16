@@ -13,13 +13,10 @@
 #include "filter_registry.hh"
 #include "hooks_manager.hh"
 #include "context.hh"
-#include "keys.hh"
+#include "ncurses.hh"
 
 #include <unordered_map>
-#include <map>
-#include <sstream>
 #include <boost/regex.hpp>
-#include <ncurses.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -27,354 +24,26 @@
 #include <mach-o/dyld.h>
 #endif
 
-#define CTRL(x) x - 'a' + 1
-
 using namespace Kakoune;
 using namespace std::placeholders;
-
-void set_attribute(int attribute, bool on)
-{
-    if (on)
-        attron(attribute);
-    else
-        attroff(attribute);
-}
-
-int nc_color(Color color)
-{
-    switch (color)
-    {
-    case Color::Black:   return COLOR_BLACK;
-    case Color::Red:     return COLOR_RED;
-    case Color::Green:   return COLOR_GREEN;
-    case Color::Yellow:  return COLOR_YELLOW;
-    case Color::Blue:    return COLOR_BLUE;
-    case Color::Magenta: return COLOR_MAGENTA;
-    case Color::Cyan:    return COLOR_CYAN;
-    case Color::White:   return COLOR_WHITE;
-
-    case Color::Default:
-    default:
-        return COLOR_BLACK;
-    }
-}
-
-void set_color(Color fg_color, Color bg_color)
-{
-    static std::map<std::pair<Color, Color>, int> colorpairs;
-    static int current_pair = -1;
-    static int next_pair = 1;
-
-    if (current_pair != -1)
-        attroff(COLOR_PAIR(current_pair));
-
-    if (fg_color == Color::Default and bg_color == Color::Default)
-        return;
-
-    std::pair<Color, Color> colorpair(fg_color, bg_color);
-    auto it = colorpairs.find(colorpair);
-      if (it != colorpairs.end())
-    {
-        current_pair = it->second;
-        attron(COLOR_PAIR(it->second));
-    }
-    else
-    {
-        init_pair(next_pair, nc_color(fg_color), nc_color(bg_color));
-        colorpairs[colorpair] = next_pair;
-        current_pair = next_pair;
-        attron(COLOR_PAIR(next_pair));
-        ++next_pair;
-    }
-}
-
-void draw_window(Window& window)
-{
-    int max_x,max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    max_y -= 1;
-
-    window.set_dimensions(DisplayCoord(max_y, max_x));
-    window.update_display_buffer();
-
-    DisplayCoord position;
-    for (const DisplayAtom& atom : window.display_buffer())
-    {
-        assert(position == atom.coord());
-        const std::string content = atom.content();
-
-        set_attribute(A_UNDERLINE, atom.attribute() & Underline);
-        set_attribute(A_REVERSE, atom.attribute() & Reverse);
-        set_attribute(A_BLINK, atom.attribute() & Blink);
-        set_attribute(A_BOLD, atom.attribute() & Bold);
-
-        set_color(atom.fg_color(), atom.bg_color());
-
-        size_t pos = 0;
-        size_t end;
-        while (true)
-        {
-            move(position.line, position.column);
-            clrtoeol();
-            end = content.find_first_of('\n', pos);
-            std::string line = content.substr(pos, end - pos);
-            addstr(line.c_str());
-
-            if (end != std::string::npos)
-            {
-                addch(' ');
-                position.line = position.line + 1;
-                position.column = 0;
-                pos = end + 1;
-
-                if (position.line >= max_y)
-                    break;
-            }
-            else
-            {
-                position.column += line.length();
-                break;
-            }
-        }
-        if (position.line >= max_y)
-            break;
-    }
-
-    set_attribute(A_UNDERLINE, 0);
-    set_attribute(A_REVERSE, 0);
-    set_attribute(A_BLINK, 0);
-    set_attribute(A_BOLD, 0);
-    set_color(Color::Blue, Color::Black);
-    while (++position.line < max_y)
-    {
-        move(position.line, 0);
-        clrtoeol();
-        addch('~');
-    }
-
-    set_color(Color::Cyan, Color::Black);
-    std::string status_line = window.status_line();
-    static int last_status_length = 0;
-    move(max_y, max_x - last_status_length);
-    clrtoeol();
-    move(max_y, max_x - status_line.length());
-    addstr(status_line.c_str());
-    last_status_length = status_line.length();
-
-    const DisplayCoord& cursor_position = window.cursor_position();
-    move(cursor_position.line, cursor_position.column);
-}
 
 void draw_editor_ifn(Editor& editor)
 {
     Window* window = dynamic_cast<Window*>(&editor);
     if (window)
-        draw_window(*window);
+        NCurses::draw_window(*window);
 }
 
-Key ncurses_get_key()
-{
-    char c = getch();
-
-    Key::Modifiers modifiers = Key::Modifiers::None;
-    if (c > 0 and c < 27)
-    {
-        modifiers = Key::Modifiers::Control;
-        c = c - 1 + 'a';
-    }
-    else if (c == 27)
-    {
-        timeout(0);
-        char new_c = getch();
-        timeout(-1);
-        if (new_c != ERR)
-        {
-            c = new_c;
-            modifiers = Key::Modifiers::Alt;
-        }
-    }
-    return Key(modifiers, c);
-}
-
-void init_ncurses()
-{
-    initscr();
-    cbreak();
-    noecho();
-    nonl();
-    intrflush(stdscr, false);
-    keypad(stdscr, true);
-    curs_set(0);
-    start_color();
-    ESCDELAY=25;
-}
-
-void deinit_ncurses()
-{
-    endwin();
-}
-
-struct prompt_aborted {};
-
-std::string ncurses_prompt(const std::string& text, Completer completer = complete_nothing)
-{
-    curs_set(2);
-    auto restore_cursor = on_scope_end([]() { curs_set(0); });
-
-    int max_x, max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    move(max_y-1, 0);
-    addstr(text.c_str());
-    clrtoeol();
-
-    size_t cursor_pos = 0;
-
-    Completions completions;
-    int current_completion = -1;
-    std::string text_before_completion;
-
-    std::string result;
-    std::string saved_result;
-
-    static std::unordered_map<std::string, std::vector<std::string>> history_per_prompt;
-    std::vector<std::string>& history = history_per_prompt[text];
-    auto history_it = history.end();
-
-    while (true)
-    {
-        int c = getch();
-        switch (c)
-        {
-        case '\r':
-        {
-            std::vector<std::string>::iterator it;
-            while ((it = find(history, result)) != history.end())
-                history.erase(it);
-
-            history.push_back(result);
-            return result;
-        }
-        case KEY_UP:
-            if (history_it != history.begin())
-            {
-                if (history_it == history.end())
-                   saved_result = result;
-                --history_it;
-                result = *history_it;
-                cursor_pos = result.length();
-            }
-            break;
-        case KEY_DOWN:
-            if (history_it != history.end())
-            {
-                ++history_it;
-                if (history_it != history.end())
-                    result = *history_it;
-                else
-                    result = saved_result;
-                cursor_pos = result.length();
-            }
-            break;
-        case KEY_LEFT:
-            if (cursor_pos > 0)
-                --cursor_pos;
-            break;
-        case KEY_RIGHT:
-            if (cursor_pos < result.length())
-                ++cursor_pos;
-            break;
-        case KEY_BACKSPACE:
-            if (cursor_pos != 0)
-            {
-                result = result.substr(0, cursor_pos - 1)
-                       + result.substr(cursor_pos, std::string::npos);
-
-                --cursor_pos;
-            }
-
-            current_completion = -1;
-            break;
-        case CTRL('r'):
-            {
-                c = getch();
-                std::string reg = RegisterManager::instance()[c].get();
-                current_completion = -1;
-                result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, std::string::npos);
-                cursor_pos += reg.length();
-            }
-            break;
-        case 27:
-            throw prompt_aborted();
-        case '\t':
-        {
-            if (current_completion == -1)
-            {
-                completions = completer(result, cursor_pos);
-                if (completions.candidates.empty())
-                    break;
-
-                text_before_completion = result.substr(completions.start,
-                                                       completions.end - completions.start);
-            }
-            ++current_completion;
-
-            std::string completion;
-            if (current_completion >= completions.candidates.size())
-            {
-                if (current_completion == completions.candidates.size() and
-                    std::find(completions.candidates.begin(), completions.candidates.end(), text_before_completion) == completions.candidates.end())
-                    completion = text_before_completion;
-                else
-                {
-                    current_completion = 0;
-                    completion = completions.candidates[0];
-                }
-            }
-            else
-                completion = completions.candidates[current_completion];
-
-            move(max_y-1, text.length());
-            result = result.substr(0, completions.start) + completion;
-            cursor_pos = completions.start + completion.length();
-            break;
-        }
-        default:
-            current_completion = -1;
-            result = result.substr(0, cursor_pos) + (char)c + result.substr(cursor_pos, std::string::npos);
-            ++cursor_pos;
-        }
-
-        move(max_y - 1, text.length());
-        clrtoeol();
-        addstr(result.c_str());
-        move(max_y - 1, text.length() + cursor_pos);
-        refresh();
-    }
-    return result;
-}
-
-static std::function<std::string (const std::string&, Completer)> prompt_func  = ncurses_prompt;
-
+PromptFunc prompt_func;
 std::string prompt(const std::string& text, Completer completer = complete_nothing)
 {
     return prompt_func(text, completer);
 }
 
-static std::function<Key ()> get_key_func = ncurses_get_key;
-
+GetKeyFunc get_key_func;
 Key get_key()
 {
     return get_key_func();
-}
-
-
-void print_status(const std::string& status)
-{
-    int x,y;
-    getmaxyx(stdscr, y, x);
-    move(y-1, 0);
-    clrtoeol();
-    addstr(status.c_str());
 }
 
 struct InsertSequence
@@ -523,7 +192,7 @@ Buffer* open_or_create(const std::string& filename)
     }
     catch (file_not_found& what)
     {
-        print_status("new file " + filename);
+        NCurses::print_status("new file " + filename);
         buffer = new Buffer(filename, Buffer::Type::NewFile);
     }
     return buffer;
@@ -584,7 +253,7 @@ void quit(const CommandParameters& params, const Context& context)
         {
             if (buffer.type() != Buffer::Type::Scratch and buffer.is_modified())
             {
-                print_status("modified buffer remaining");
+                NCurses::print_status("modified buffer remaining");
                 return;
             }
         }
@@ -606,7 +275,7 @@ void show_buffer(const CommandParameters& params, const Context& context)
 
     Buffer* buffer = BufferManager::instance().get_buffer(params[0]);
     if (not buffer)
-        print_status("buffer " + params[0] + " does not exists");
+        NCurses::print_status("buffer " + params[0] + " does not exists");
     else
         main_context = Context(*buffer->get_or_create_window());
 }
@@ -625,7 +294,7 @@ void add_highlighter(const CommandParameters& params, const Context& context)
     }
     catch (runtime_error& err)
     {
-        print_status("error: " + err.description());
+        NCurses::print_status("error: " + err.description());
     }
 }
 
@@ -645,7 +314,7 @@ void add_group_highlighter(const CommandParameters& params, const Context& conte
     }
     catch (runtime_error& err)
     {
-        print_status("error: " + err.description());
+        NCurses::print_status("error: " + err.description());
     }
 }
 
@@ -669,7 +338,7 @@ void rm_group_highlighter(const CommandParameters& params, const Context& contex
     }
     catch (runtime_error& err)
     {
-        print_status("error: " + err.description());
+        NCurses::print_status("error: " + err.description());
     }
 }
 void add_filter(const CommandParameters& params, const Context& context)
@@ -686,7 +355,7 @@ void add_filter(const CommandParameters& params, const Context& context)
     }
     catch (runtime_error& err)
     {
-        print_status("error: " + err.description());
+        NCurses::print_status("error: " + err.description());
     }
 }
 
@@ -716,7 +385,7 @@ void add_hook(const CommandParameters& params, const Context& context)
     else if (params[0] == "window")
         context.window().hooks_manager().add_hook(params[1], hook_func);
     else
-        print_status("error: no such hook container " + params[0]);
+        NCurses::print_status("error: no such hook container " + params[0]);
 }
 
 void define_command(const CommandParameters& params, const Context& context)
@@ -769,7 +438,7 @@ void echo_message(const CommandParameters& params, const Context& context)
     std::string message;
     for (auto& param : params)
         message += param + " ";
-    print_status(message);
+    NCurses::print_status(message);
 }
 
 void exec_commands_in_file(const CommandParameters& params,
@@ -805,7 +474,7 @@ void exec_commands_in_file(const CommandParameters& params,
 
                  if (end_pos == length)
                  {
-                     print_status(std::string("unterminated '") + delimiter + "' string");
+                     NCurses::print_status(std::string("unterminated '") + delimiter + "' string");
                      return;
                  }
 
@@ -829,7 +498,7 @@ void exec_commands_in_file(const CommandParameters& params,
          if (end_pos == length)
          {
              if (cat_with_previous)
-                 print_status("while executing commands in \"" + params[0] +
+                 NCurses::print_status("while executing commands in \"" + params[0] +
                               "\": last command not complete");
              break;
          }
@@ -947,7 +616,7 @@ void do_search_next(Editor& editor)
     if (not ex.empty())
         editor.select(std::bind(select_next_match, _1, ex));
     else
-        print_status("no search pattern");
+        NCurses::print_status("no search pattern");
 }
 
 void do_yank(Editor& editor, int count)
@@ -1020,7 +689,8 @@ void do_join(Editor& editor, int count)
 template<bool inside>
 void do_select_surrounding(Editor& editor, int count)
 {
-    char id = getch();
+    Key key = get_key();
+    const char id = key.key;
 
     static const std::unordered_map<char, std::pair<char, char>> id_to_matching =
     {
@@ -1053,10 +723,10 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, 'K' }, [](Editor& editor, int count) { editor.move_selections(BufferCoord(-std::max(count,1), 0), true); } },
     { { Key::Modifiers::None, 'L' }, [](Editor& editor, int count) { editor.move_selections(BufferCoord(0,  std::max(count,1)), true); } },
 
-    { { Key::Modifiers::None, 't' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, getch(), count, false)); } },
-    { { Key::Modifiers::None, 'f' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, getch(), count, true)); } },
-    { { Key::Modifiers::None, 'T' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, getch(), count, false), true); } },
-    { { Key::Modifiers::None, 'F' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, getch(), count, true), true); } },
+    { { Key::Modifiers::None, 't' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, get_key().key, count, false)); } },
+    { { Key::Modifiers::None, 'f' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, get_key().key, count, true)); } },
+    { { Key::Modifiers::None, 'T' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, get_key().key, count, false), true); } },
+    { { Key::Modifiers::None, 'F' }, [](Editor& editor, int count) { editor.select(std::bind(select_to, _1, get_key().key, count, true), true); } },
 
     { { Key::Modifiers::None, 'd' }, do_erase },
     { { Key::Modifiers::None, 'c' }, do_change },
@@ -1097,16 +767,16 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, 'M' }, [](Editor& editor, int count) { editor.select(select_matching, true); } },
     { { Key::Modifiers::None, '/' }, [](Editor& editor, int count) { do_search(editor); } },
     { { Key::Modifiers::None, 'n' }, [](Editor& editor, int count) { do_search_next(editor); } },
-    { { Key::Modifiers::None, 'u' }, [](Editor& editor, int count) { do { if (not editor.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
-    { { Key::Modifiers::None, 'U' }, [](Editor& editor, int count) { do { if (not editor.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
+    { { Key::Modifiers::None, 'u' }, [](Editor& editor, int count) { do { if (not editor.undo()) { NCurses::print_status("nothing left to undo"); break; } } while(--count > 0); } },
+    { { Key::Modifiers::None, 'U' }, [](Editor& editor, int count) { do { if (not editor.redo()) { NCurses::print_status("nothing left to redo"); break; } } while(--count > 0); } },
 
     { { Key::Modifiers::Alt,  'i' }, do_select_surrounding<true> },
     { { Key::Modifiers::Alt,  'a' }, do_select_surrounding<false> },
 
-    { { Key::Modifiers::Alt, 't' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, getch(), count, false)); } },
-    { { Key::Modifiers::Alt, 'f' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, getch(), count, true)); } },
-    { { Key::Modifiers::Alt, 'T' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, getch(), count, false), true); } },
-    { { Key::Modifiers::Alt, 'F' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, getch(), count, true), true); } },
+    { { Key::Modifiers::Alt, 't' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, get_key().key, count, false)); } },
+    { { Key::Modifiers::Alt, 'f' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, get_key().key, count, true)); } },
+    { { Key::Modifiers::Alt, 'T' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, get_key().key, count, false), true); } },
+    { { Key::Modifiers::Alt, 'F' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, get_key().key, count, true), true); } },
 
     { { Key::Modifiers::Alt, 'w' }, [](Editor& editor, int count) { do { editor.select(select_to_next_WORD); } while(--count > 0); } },
     { { Key::Modifiers::Alt, 'e' }, [](Editor& editor, int count) { do { editor.select(select_to_next_WORD_end); } while(--count > 0); } },
@@ -1196,7 +866,7 @@ void exec_string(const CommandParameters& params,
 
 int main(int argc, char* argv[])
 {
-    init_ncurses();
+    NCurses::init(prompt_func, get_key_func);
 
     CommandManager      command_manager;
     BufferManager       buffer_manager;
@@ -1285,7 +955,7 @@ int main(int argc, char* argv[])
     }
      catch (Kakoune::runtime_error& error)
     {
-        print_status(error.description());
+        NCurses::print_status(error.description());
     }
 
     try
@@ -1295,7 +965,7 @@ int main(int argc, char* argv[])
         auto buffer = (argc > 1) ? open_or_create(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
         main_context = Context(*buffer->get_or_create_window());
 
-        draw_window(main_context.window());
+        NCurses::draw_window(main_context.window());
         int count = 0;
         while(not quit_requested)
         {
@@ -1310,28 +980,28 @@ int main(int argc, char* argv[])
                     if (it != keymap.end())
                     {
                         it->second(main_context.window(), count);
-                        draw_window(main_context.window());
+                        NCurses::draw_window(main_context.window());
                     }
                     count = 0;
                 }
             }
             catch (Kakoune::runtime_error& error)
             {
-                print_status(error.description());
+                NCurses::print_status(error.description());
             }
         }
-        deinit_ncurses();
+        NCurses::deinit();
     }
     catch (Kakoune::exception& error)
     {
-        deinit_ncurses();
+        NCurses::deinit();
         puts("uncaught exception:\n");
         puts(error.description().c_str());
         return -1;
     }
     catch (...)
     {
-        deinit_ncurses();
+        NCurses::deinit();
         throw;
     }
     return 0;
