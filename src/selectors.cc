@@ -60,7 +60,7 @@ bool skip_while(BufferIterator& it, T condition)
 {
     while (not it.is_end() and condition(*it))
         ++it;
-    return condition(*it);
+    return not it.is_end() and condition(*it);
 }
 
 template<typename T>
@@ -68,7 +68,7 @@ bool skip_while_reverse(BufferIterator& it, T condition)
 {
     while (not it.is_begin() and condition(*it))
         --it;
-    return condition(*it);
+    return not it.is_end() and condition(*it);
 }
 
 SelectionAndCaptures select_to_next_word(const Selection& selection)
