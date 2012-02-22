@@ -121,7 +121,10 @@ BufferSize Buffer::length() const
 
 BufferSize Buffer::line_count() const
 {
-    return m_lines.size();
+    if (m_lines.back() == m_content.size())
+        return m_lines.size() - 1;
+    else
+        return m_lines.size();
 }
 
 BufferString Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
@@ -191,7 +194,7 @@ void Buffer::compute_lines()
 {
     m_lines.clear();
     m_lines.push_back(0);
-    for (BufferPos i = 0; i + 1 < m_content.size(); ++i)
+    for (BufferPos i = 0; i < m_content.size(); ++i)
     {
         if (m_content[i] == '\n')
             m_lines.push_back(i + 1);
