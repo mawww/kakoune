@@ -140,7 +140,13 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     const Buffer& buffer = display_buffer.front().begin().buffer();
     BufferCoord coord = buffer.line_and_column_at(display_buffer.begin()->begin());
 
-    int last_line = buffer.line_and_column_at(display_buffer.back().end()-1).line;
+    int last_line = buffer.line_count()-1;
+    int digit_count = 0;
+    for (int c = last_line; c > 0; c /= 10)
+        ++digit_count;
+
+    char format[] = "%?d ";
+    format[1] = '0' + digit_count;
 
     for (; coord.line <= last_line; ++coord.line)
     {
@@ -161,8 +167,8 @@ void show_line_numbers(DisplayBuffer& display_buffer)
                             atom_it->begin(), atom_it->begin(),
                             Color::Black, Color::White));
 
-            char buffer[6];
-            snprintf(buffer, 6, "%3d ", coord.line + 1);
+            char buffer[10];
+            snprintf(buffer, 10, format, coord.line + 1);
             display_buffer.replace_atom_content(atom_it, buffer);
         }
     }
