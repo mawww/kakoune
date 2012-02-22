@@ -69,6 +69,9 @@ static void update_iterator(const Modification& modification,
             iterator = modification.position;
         else
             iterator -= length;
+
+        if (iterator.is_end())
+            --iterator;
     }
     else
     {
