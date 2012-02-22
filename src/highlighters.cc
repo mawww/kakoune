@@ -51,6 +51,9 @@ void colorize_regex_range(DisplayBuffer& display_buffer,
 
         for (auto it = begin_atom_it; it != end_atom_it; ++it)
         {
+            if (it->attribute() & Attributes::Final)
+                continue;
+
             it->fg_color() = fg_color;
             it->bg_color() = bg_color;
         }
@@ -165,7 +168,8 @@ void show_line_numbers(DisplayBuffer& display_buffer)
                 atom_it,
                 DisplayAtom(atom_it->coord(),
                             atom_it->begin(), atom_it->begin(),
-                            Color::Black, Color::White));
+                            Color::Black, Color::White,
+                            Attributes::Final));
 
             char buffer[10];
             snprintf(buffer, 10, format, coord.line + 1);
@@ -219,6 +223,11 @@ public:
             BufferRange& sel = *sel_it;
             DisplayAtom& atom = *atom_it;
 
+            if (atom.attribute() & Attributes::Final)
+            {
+                ++atom_it;
+                continue;
+            }
             // [###------]
             if (atom.begin() >= sel.first and atom.begin() < sel.second and
                 atom.end() > sel.second)

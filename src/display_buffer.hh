@@ -30,6 +30,7 @@ enum Attributes
     Reverse = 2,
     Blink = 4,
     Bold = 8,
+    Final = 16
 };
 
 enum class Color
