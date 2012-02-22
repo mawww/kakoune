@@ -103,16 +103,6 @@ BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) cons
     return line < m_lines.size() ? BufferIterator(*this, m_lines[line]) : end();
 }
 
-void Buffer::compute_lines()
-{
-    m_lines.clear();
-    m_lines.push_back(0);
-    for (BufferPos i = 0; i + 1 < m_content.size(); ++i)
-    {
-        if (m_content[i] == '\n')
-            m_lines.push_back(i + 1);
-    }
-}
 
 BufferIterator Buffer::begin() const
 {
@@ -197,6 +187,59 @@ bool Buffer::redo()
     ++m_history_cursor;
 }
 
+void Buffer::compute_lines()
+{
+    m_lines.clear();
+    m_lines.push_back(0);
+    for (BufferPos i = 0; i + 1 < m_content.size(); ++i)
+    {
+        if (m_content[i] == '\n')
+            m_lines.push_back(i + 1);
+    }
+}
+
+void Buffer::update_lines(const Modification& modification)
+{
+    const BufferString& content = modification.content;
+    size_t length = content.length();
+
+    if (modification.type == Modification::Insert)
+    {
+        auto line_it = m_lines.begin() + line_at(modification.position) + 1;
+        for (auto it = line_it; it != m_lines.end(); ++it)
+            *it += length;
+
+        BufferPos pos = modification.position.m_position + 1;
+        std::vector<BufferPos> new_lines;
+        for (BufferPos i = 0; i < length; ++i)
+        {
+            if (content[i] == '\n')
+                new_lines.push_back(pos);
+             ++pos;
+        }
+        m_lines.insert(line_it, new_lines.begin(), new_lines.end());
+    }
+    else if (modification.type == Modification::Erase)
+    {
+        BufferPos line = line_at(modification.position) + 1;
+
+        auto begin = m_lines.begin() + line;
+        auto end = begin;
+        BufferPos pos = modification.position.m_position;
+        while (end != m_lines.end() and *end <= pos + length)
+            ++end;
+        m_lines.erase(begin, end);
+
+        for (BufferPos i = line; i != m_lines.size(); ++i)
+        {
+            m_lines[i] -= length;
+            assert(m_content[m_lines[i]-1] == '\n');
+        }
+    }
+    else
+        assert(false);
+}
+
 void Buffer::apply_modification(const Modification& modification)
 {
     switch (modification.type)
@@ -216,7 +259,7 @@ void Buffer::apply_modification(const Modification& modification)
     default:
         assert(false);
     }
-    compute_lines();
+    update_lines(modification);
     for (auto listener : m_modification_listeners)
         listener->on_modification(modification);
 }

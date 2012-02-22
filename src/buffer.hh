@@ -177,6 +177,7 @@ private:
     void compute_lines();
     BufferPos line_at(const BufferIterator& iterator) const;
     BufferSize line_length(BufferPos line) const;
+    void update_lines(const Modification& modification);
 
     BufferString m_content;
 
