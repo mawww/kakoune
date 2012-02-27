@@ -6,6 +6,12 @@
 namespace Kakoune
 {
 
+// A Selection holds a buffer range
+//
+// The Selection class manage a (first, last) buffer iterators pair.
+// Selections are oriented, first may be > last, and inclusive.
+// Selection updates it's iterators according to modifications made
+// in the buffer.
 struct Selection : public ModificationListener
 {
     Selection(const BufferIterator& first, const BufferIterator& last);
@@ -14,7 +20,9 @@ struct Selection : public ModificationListener
 
     Selection& operator=(const Selection& other);
 
+    // returns min(first, last)
     BufferIterator begin() const;
+    // returns max(first, last) + 1
     BufferIterator end() const;
 
     const BufferIterator& first() const { return m_first; }
@@ -35,6 +43,9 @@ private:
 typedef std::vector<Selection> SelectionList;
 typedef std::vector<BufferString> CaptureList;
 
+// Selections are often associated with a capture list
+// like when they are created from a regex match with
+// capture groups.
 struct SelectionAndCaptures
 {
     Selection   selection;
