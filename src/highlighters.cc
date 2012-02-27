@@ -143,7 +143,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     const Buffer& buffer = display_buffer.front().begin().buffer();
     BufferCoord coord = buffer.line_and_column_at(display_buffer.begin()->begin());
 
-    int last_line = buffer.line_count()-1;
+    int last_line = buffer.line_count();
     int digit_count = 0;
     for (int c = last_line; c > 0; c /= 10)
         ++digit_count;
@@ -151,7 +151,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     char format[] = "%?d ";
     format[1] = '0' + digit_count;
 
-    for (; coord.line <= last_line; ++coord.line)
+    for (; coord.line <= last_line-1; ++coord.line)
     {
         BufferIterator line_start = buffer.iterator_at(coord);
         DisplayBuffer::iterator atom_it = display_buffer.atom_containing(line_start);
