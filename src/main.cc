@@ -468,8 +468,8 @@ void exec_commands_in_file(const CommandParameters& params,
              {
                  char delimiter = file_content[end_pos];
                  ++end_pos;
-                 while (file_content[end_pos] != delimiter or
-                        file_content[end_pos-1] == '\\' and end_pos != length)
+                 while ((file_content[end_pos] != delimiter or
+                         file_content[end_pos-1] == '\\') and end_pos != length)
                      ++end_pos;
 
                  if (end_pos == length)
@@ -481,7 +481,8 @@ void exec_commands_in_file(const CommandParameters& params,
                  ++end_pos;
              }
 
-             ++end_pos;
+             if (end_pos != length)
+                 ++end_pos;
          }
          if (end_pos != pos and end_pos != length and
              file_content[end_pos - 1] == '\\')
