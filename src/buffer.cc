@@ -75,8 +75,8 @@ BufferPos Buffer::line_at(const BufferIterator& iterator) const
 BufferSize Buffer::line_length(BufferPos line) const
 {
     assert(not m_lines.empty());
-    BufferPos end = (line >= line_count() - 1) ?
-                    m_content.size() : m_lines[line + 1] - 1;
+    BufferPos end = (line < m_lines.size() - 1) ?
+                    m_lines[line + 1] - 1 : m_content.size();
     return end - m_lines[line];
 }
 
