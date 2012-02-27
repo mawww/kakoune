@@ -21,6 +21,7 @@ public:
     operator memoryview<std::string>() const
     { return memoryview<std::string>(m_content); }
 
+    const std::vector<std::string>& content() const { return m_content; }
 private:
     std::vector<std::string> m_content;
 

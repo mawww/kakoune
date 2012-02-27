@@ -798,6 +798,22 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::Alt, 'x' }, [](Editor& editor, int count) { editor.select(select_whole_lines); } },
 };
 
+class RegisterRestorer
+{
+public:
+    RegisterRestorer(char name)
+       : m_name(name),
+         m_save(RegisterManager::instance()[name].content())
+    {}
+
+    ~RegisterRestorer()
+    { RegisterManager::instance()[m_name] = m_save; }
+
+private:
+    std::vector<std::string> m_save;
+    char                     m_name;
+};
+
 void exec_keys(const KeyList& keys,
                const Context& context)
 {
@@ -830,10 +846,12 @@ void exec_keys(const KeyList& keys,
         return keys[pos++];
     };
 
+    RegisterRestorer quote('"');
+    RegisterRestorer slash('/');
+
     Editor batch_editor(context.buffer());
     Editor& editor = context.has_window() ? static_cast<Editor&>(context.window())
                                           : static_cast<Editor&>(batch_editor);
-
 
     scoped_edition edition(editor);
 
