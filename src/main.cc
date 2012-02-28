@@ -596,6 +596,7 @@ void do_pipe(Editor& editor, int count)
     catch (prompt_aborted&) {}
 }
 
+template<bool append>
 void do_search(Editor& editor)
 {
     try
@@ -606,16 +607,17 @@ void do_search(Editor& editor)
         else
             RegisterManager::instance()['/'] = ex;
 
-        editor.select(std::bind(select_next_match, _1, ex));
+        editor.select(std::bind(select_next_match, _1, ex), append);
     }
     catch (prompt_aborted&) {}
 }
 
+template<bool append>
 void do_search_next(Editor& editor)
 {
     const std::string& ex = RegisterManager::instance()['/'].get();
     if (not ex.empty())
-        editor.select(std::bind(select_next_match, _1, ex));
+        editor.select(std::bind(select_next_match, _1, ex), append);
     else
         NCurses::print_status("no search pattern");
 }
@@ -766,8 +768,12 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, 'X' }, [](Editor& editor, int count) { do { editor.select(select_line, true); } while(--count > 0); } },
     { { Key::Modifiers::None, 'm' }, [](Editor& editor, int count) { editor.select(select_matching); } },
     { { Key::Modifiers::None, 'M' }, [](Editor& editor, int count) { editor.select(select_matching, true); } },
-    { { Key::Modifiers::None, '/' }, [](Editor& editor, int count) { do_search(editor); } },
-    { { Key::Modifiers::None, 'n' }, [](Editor& editor, int count) { do_search_next(editor); } },
+
+    { { Key::Modifiers::None, '/' }, [](Editor& editor, int count) { do_search<false>(editor); } },
+    { { Key::Modifiers::None, '?' }, [](Editor& editor, int count) { do_search<true>(editor); } },
+    { { Key::Modifiers::None, 'n' }, [](Editor& editor, int count) { do_search_next<false>(editor); } },
+    { { Key::Modifiers::None, 'N' }, [](Editor& editor, int count) { do_search_next<true>(editor); } },
+
     { { Key::Modifiers::None, 'u' }, [](Editor& editor, int count) { do { if (not editor.undo()) { NCurses::print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { { Key::Modifiers::None, 'U' }, [](Editor& editor, int count) { do { if (not editor.redo()) { NCurses::print_status("nothing left to redo"); break; } } while(--count > 0); } },
 
