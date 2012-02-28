@@ -27,13 +27,12 @@ Buffer::Buffer(const std::string& name, Type type,
       m_content(initial_content), m_last_save_undo_index(0)
 {
     BufferManager::instance().register_buffer(this);
+    compute_lines();
 
     if (type == Type::NewFile)
         GlobalHooksManager::instance().run_hook("BufCreate", name, Context(*this));
     else if (type == Type::File)
         GlobalHooksManager::instance().run_hook("BufOpen", name, Context(*this));
-
-    compute_lines();
 }
 
 Buffer::~Buffer()
