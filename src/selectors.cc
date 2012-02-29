@@ -250,7 +250,7 @@ SelectionAndCaptures select_surrounding(const Selection& selection,
     BufferIterator first = selection.last();
     while (not first.is_begin())
     {
-        if (*first == matching.second)
+        if (first != selection.last() and *first == matching.second)
             ++level;
         else if (*first == matching.first)
         {
