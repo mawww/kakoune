@@ -136,7 +136,8 @@ static void shell_eval(std::vector<std::string>& params,
         dup2(read_pipe[1], 1);
         dup2(write_pipe[0], 0);
 
-        setenv("kak_bufname", context.buffer().name().c_str(), 1);
+        if (context.has_buffer())
+            setenv("kak_bufname", context.buffer().name().c_str(), 1);
         execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
     }
 }
