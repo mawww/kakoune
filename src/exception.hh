@@ -14,7 +14,7 @@ struct exception
 
 struct runtime_error : exception
 {
-    runtime_error(const std::string description)
+    runtime_error(const std::string& description)
         : m_description(description) {}
 
     std::string description() const { return m_description; }
