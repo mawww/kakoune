@@ -367,43 +367,40 @@ SelectionAndCaptures select_whole_buffer(const Selection& selection)
 SelectionAndCaptures select_next_match(const Selection& selection,
                                        const std::string& regex)
 {
-    boost::regex ex(regex);
-
-    BufferIterator begin = selection.last();
-    BufferIterator end = begin;
-    CaptureList captures;
-
     try
     {
+        BufferIterator begin = selection.last();
+        BufferIterator end = begin;
+        CaptureList captures;
+
+        boost::regex ex(regex);
         boost::match_results<BufferIterator> matches;
 
-        if (boost::regex_search(begin+1, begin.buffer().end(), matches,
-                                ex))
+        if (boost::regex_search(begin+1, begin.buffer().end(),
+                                matches, ex))
         {
             begin = matches[0].first;
             end   = matches[0].second;
             std::copy(matches.begin(), matches.end(),
                       std::back_inserter(captures));
         }
-        else if (boost::regex_search(begin.buffer().begin(), begin+1, matches,
-                                     ex))
+        else if (boost::regex_search(begin.buffer().begin(), begin+1,
+                                     matches, ex))
         {
             begin = matches[0].first;
             end   = matches[0].second;
             std::copy(matches.begin(), matches.end(),
                       std::back_inserter(captures));
         }
+        if (begin == end)
+            ++end;
+
+        return SelectionAndCaptures(begin, end - 1, std::move(captures));
     }
     catch (boost::regex_error& err)
     {
-        throw runtime_error("regex error");
+        throw runtime_error(std::string("regex error: ") + err.what());
     }
-
-
-    if (begin == end)
-        ++end;
-
-    return SelectionAndCaptures(begin, end - 1, std::move(captures));
 }
 
 typedef boost::regex_iterator<BufferIterator> RegexIterator;
@@ -411,43 +408,58 @@ typedef boost::regex_iterator<BufferIterator> RegexIterator;
 SelectionAndCapturesList select_all_matches(const Selection& selection,
                                             const std::string& regex)
 {
-    boost::regex ex(regex);
-    RegexIterator re_it(selection.begin(), selection.end(), ex);
-    RegexIterator re_end;
-
-    SelectionAndCapturesList result;
-    for (; re_it != re_end; ++re_it)
+    try
     {
-        BufferIterator begin = (*re_it)[0].first;
-        BufferIterator end   = (*re_it)[0].second;
+        boost::regex ex(regex);
+        RegexIterator re_it(selection.begin(), selection.end(), ex);
+        RegexIterator re_end;
 
-        CaptureList captures(re_it->begin(), re_it->end());
+        SelectionAndCapturesList result;
+        for (; re_it != re_end; ++re_it)
+        {
+            BufferIterator begin = (*re_it)[0].first;
+            BufferIterator end   = (*re_it)[0].second;
 
-        result.push_back(SelectionAndCaptures(begin, begin == end ? end : end-1,
-                                              std::move(captures)));
+            CaptureList captures(re_it->begin(), re_it->end());
+
+            result.push_back(SelectionAndCaptures(begin,
+                                                  begin == end ? end : end-1,
+                                                  std::move(captures)));
+        }
+        return result;
     }
-    return result;
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(std::string("regex error: ") + err.what());
+    }
 }
 
 SelectionAndCapturesList split_selection(const Selection& selection,
                                          const std::string& separator_regex)
 {
-    boost::regex ex(separator_regex);
-    RegexIterator re_it(selection.begin(), selection.end(), ex,
-                        boost::regex_constants::match_nosubs);
-    RegexIterator re_end;
-
-    SelectionAndCapturesList result;
-    BufferIterator begin = selection.begin();
-    for (; re_it != re_end; ++re_it)
+    try
     {
-        BufferIterator end = (*re_it)[0].first;
+        boost::regex ex(separator_regex);
+        RegexIterator re_it(selection.begin(), selection.end(), ex,
+                            boost::regex_constants::match_nosubs);
+        RegexIterator re_end;
 
-        result.push_back(Selection(begin, (begin == end) ? end : end-1));
-        begin = (*re_it)[0].second;
+        SelectionAndCapturesList result;
+        BufferIterator begin = selection.begin();
+        for (; re_it != re_end; ++re_it)
+        {
+            BufferIterator end = (*re_it)[0].first;
+
+            result.push_back(Selection(begin, (begin == end) ? end : end-1));
+            begin = (*re_it)[0].second;
+        }
+        result.push_back(Selection(begin, selection.last()));
+        return result;
     }
-    result.push_back(Selection(begin, selection.last()));
-    return result;
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(std::string("regex error: ") + err.what());
+    }
 }
 
 }
