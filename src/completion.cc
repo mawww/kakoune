@@ -28,6 +28,9 @@ CandidateList complete_filename(const std::string& prefix,
     auto dir = auto_raii(opendir(dirname.c_str()), closedir);
 
     CandidateList result;
+    if (not dir)
+        return result;
+
     while (dirent* entry = readdir(dir))
     {
         std::string filename = entry->d_name;
