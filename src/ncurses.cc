@@ -36,7 +36,7 @@ static int nc_color(Color color)
 
     case Color::Default:
     default:
-        return COLOR_BLACK;
+        return -1;
     }
 }
 
@@ -326,6 +326,7 @@ void init(PromptFunc& prompt_func, GetKeyFunc& get_key_func)
     keypad(stdscr, true);
     curs_set(0);
     start_color();
+    use_default_colors();
     ESCDELAY=25;
 
     prompt_func = prompt;
