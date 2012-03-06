@@ -108,7 +108,7 @@ void Window::update_display_buffer()
 
     BufferIterator begin = buffer().iterator_at(m_position);
     BufferIterator end = buffer().iterator_at(m_position +
-                                              BufferCoord(m_dimensions.line, m_dimensions.column))+1;
+                                              BufferCoord(m_dimensions.line, m_dimensions.column))+2;
     if (begin == end)
         return;
 
