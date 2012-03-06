@@ -7,6 +7,8 @@
 #include "hooks_manager.hh"
 #include "context.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
 
@@ -63,19 +65,16 @@ BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
 
 BufferPos Buffer::line_at(const BufferIterator& iterator) const
 {
-    for (unsigned i = 0; i < line_count(); ++i)
-    {
-        if (m_lines[i] > iterator.m_position)
-            return i - 1;
-    }
-    return line_count() - 1;
+    auto it = std::upper_bound(m_lines.begin(), m_lines.end(),
+                               iterator.m_position);
+    return it - m_lines.begin() - 1;
 }
 
 BufferSize Buffer::line_length(BufferPos line) const
 {
     assert(not m_lines.empty());
     BufferPos end = (line < m_lines.size() - 1) ?
-                    m_lines[line + 1] - 1 : m_content.size();
+                    m_lines[line + 1] : m_content.size();
     return end - m_lines[line];
 }
 
@@ -85,8 +84,8 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
         return BufferCoord();
 
     BufferCoord result(line_and_column.line, line_and_column.column);
-    result.line = Kakoune::clamp<int>(0, line_count() - 1, result.line);
-    int max_col = std::max(0, line_length(result.line)-1);
+    result.line = Kakoune::clamp<int>(0, m_lines.size() - 1, result.line);
+    int max_col = std::max(0, line_length(result.line)-2);
     result.column = Kakoune::clamp<int>(0, max_col, result.column);
     return result;
 }
@@ -120,10 +119,7 @@ BufferSize Buffer::length() const
 
 BufferSize Buffer::line_count() const
 {
-    if (m_lines.back() == m_content.size())
-        return m_lines.size() - 1;
-    else
-        return m_lines.size();
+    return m_lines.size();
 }
 
 BufferString Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
@@ -193,7 +189,7 @@ void Buffer::compute_lines()
 {
     m_lines.clear();
     m_lines.push_back(0);
-    for (BufferPos i = 0; i < m_content.size(); ++i)
+    for (BufferPos i = 0; i + 1 < m_content.size(); ++i)
     {
         if (m_content[i] == '\n')
             m_lines.push_back(i + 1);
@@ -202,41 +198,51 @@ void Buffer::compute_lines()
 
 void Buffer::update_lines(const Modification& modification)
 {
-    const BufferString& content = modification.content;
-    size_t length = content.length();
+    size_t length = modification.content.length();
+    const BufferPos pos = modification.position.m_position;
+    const BufferPos endpos = pos + length;
+
+    // find the first line beginning after modification position
+    auto line_it = std::upper_bound(m_lines.begin(), m_lines.end(), pos);
 
     if (modification.type == Modification::Insert)
     {
-        auto line_it = m_lines.begin() + line_at(modification.position) + 1;
+        // all following lines advanced by length
         for (auto it = line_it; it != m_lines.end(); ++it)
             *it += length;
 
-        BufferPos pos = modification.position.m_position + 1;
         std::vector<BufferPos> new_lines;
-        for (BufferPos i = 0; i < length; ++i)
+        // if we inserted at the end of the buffer, we may have created a new
+        // line without inserting a '\n'
+        if (endpos == m_content.size() and m_content[pos-1] == '\n')
+            new_lines.push_back(pos);
+
+        // every \n inserted that was not the last buffer character created a
+        // new line
+        for (BufferPos i = pos; i < endpos and i + 1 < m_content.size(); ++i)
         {
-            if (content[i] == '\n')
-                new_lines.push_back(pos);
-             ++pos;
+            if (m_content[i] == '\n')
+                new_lines.push_back(i + 1);
         }
         m_lines.insert(line_it, new_lines.begin(), new_lines.end());
     }
     else if (modification.type == Modification::Erase)
     {
-        BufferPos line = line_at(modification.position) + 1;
+        // find the first line beginning after endpos
+        auto end = std::upper_bound(line_it, m_lines.end(), endpos);
 
-        auto begin = m_lines.begin() + line;
-        auto end = begin;
-        BufferPos pos = modification.position.m_position;
-        while (end != m_lines.end() and *end <= pos + length)
-            ++end;
-        m_lines.erase(begin, end);
-
-        for (BufferPos i = line; i != m_lines.size(); ++i)
+        // all the lines until the end moved back by length
+        for (auto it = end; it != m_lines.end(); ++it)
         {
-            m_lines[i] -= length;
-            assert(m_content[m_lines[i]-1] == '\n');
+            *it -= length;
+            assert(m_content[(*it)-1] == '\n');
         }
+
+        // if we erased from the beginning of a line until the end of
+        // the buffer, that line also needs to be erased
+        if (pos == m_content.size() and *(line_it-1) == pos)
+            --line_it;
+        m_lines.erase(line_it, end);
     }
     else
         assert(false);
