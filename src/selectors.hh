@@ -6,12 +6,13 @@
 namespace Kakoune
 {
 
+template<bool punctuation_is_word>
 SelectionAndCaptures select_to_next_word(const Selection& selection);
+template<bool punctuation_is_word>
 SelectionAndCaptures select_to_next_word_end(const Selection& selection);
+template<bool punctuation_is_word>
 SelectionAndCaptures select_to_previous_word(const Selection& selection);
-SelectionAndCaptures select_to_next_WORD(const Selection& selection);
-SelectionAndCaptures select_to_next_WORD_end(const Selection& selection);
-SelectionAndCaptures select_to_previous_WORD(const Selection& selection);
+
 SelectionAndCaptures select_line(const Selection& selection);
 SelectionAndCaptures select_matching(const Selection& selection);
 SelectionAndCaptures select_surrounding(const Selection& selection,

@@ -6,17 +6,24 @@
 namespace Kakoune
 {
 
-static bool is_eol(char c)
+namespace
+{
+
+bool is_eol(char c)
 {
     return c == '\n';
 }
 
-static bool is_blank(char c)
+bool is_blank(char c)
 {
     return c == ' ' or c == '\t';
 }
 
-static bool is_word(char c)
+template<bool punctuation_is_word = false>
+bool is_word(char c);
+
+template<>
+bool is_word<false>(char c)
 {
     if (c >= '0' and c <= '9')
         return true;
@@ -27,6 +34,12 @@ static bool is_word(char c)
     if (c == '_')
         return true;
     return false;
+}
+
+template<>
+bool is_word<true>(char c)
+{
+    return !is_blank(c) and !is_eol(c);
 }
 
 static bool is_punctuation(char c)
@@ -42,8 +55,8 @@ enum class CharCategories
     Punctuation,
 };
 
-template<bool punctuation_is_not_word = true>
-static CharCategories categorize(char c)
+template<bool punctuation_is_word = false>
+CharCategories categorize(char c)
 {
     if (is_word(c))
         return CharCategories::Word;
@@ -51,8 +64,8 @@ static CharCategories categorize(char c)
         return CharCategories::EndOfLine;
     if (is_blank(c))
         return CharCategories::Blank;
-    return punctuation_is_not_word ? CharCategories::Punctuation
-                                   : CharCategories::Word;
+    return punctuation_is_word ? CharCategories::Word
+                               : CharCategories::Punctuation;
 }
 
 template<typename T>
@@ -71,30 +84,37 @@ bool skip_while_reverse(BufferIterator& it, T condition)
     return not it.is_end() and condition(*it);
 }
 
+}
+
+template<bool punctuation_is_word>
 SelectionAndCaptures select_to_next_word(const Selection& selection)
 {
     BufferIterator begin = selection.last();
-    if (categorize(*begin) != categorize(*(begin+1)))
+    if (categorize<punctuation_is_word>(*begin) !=
+        categorize<punctuation_is_word>(*(begin+1)))
         ++begin;
 
     skip_while(begin, is_eol);
-
     BufferIterator end = begin+1;
 
-    if (is_punctuation(*begin))
+    if (not punctuation_is_word and is_punctuation(*begin))
         skip_while(end, is_punctuation);
-    else if (is_word(*begin))
-        skip_while(end, is_word);
+    else if (is_word<punctuation_is_word>(*begin))
+        skip_while(end, is_word<punctuation_is_word>);
 
     bool with_end = skip_while(end, is_blank);
 
     return Selection(begin, with_end ? end : end-1);
 }
+template SelectionAndCaptures select_to_next_word<false>(const Selection&);
+template SelectionAndCaptures select_to_next_word<true>(const Selection&);
 
+template<bool punctuation_is_word>
 SelectionAndCaptures select_to_next_word_end(const Selection& selection)
 {
     BufferIterator begin = selection.last();
-    if (categorize(*begin) != categorize(*(begin+1)))
+    if (categorize<punctuation_is_word>(*begin) !=
+        categorize<punctuation_is_word>(*(begin+1)))
         ++begin;
 
     skip_while(begin, is_eol);
@@ -102,19 +122,23 @@ SelectionAndCaptures select_to_next_word_end(const Selection& selection)
     skip_while(end, is_blank);
 
     bool with_end = false;
-    if (is_punctuation(*end))
+    if (not punctuation_is_word and is_punctuation(*end))
         with_end = skip_while(end, is_punctuation);
-    else if (is_word(*end))
-        with_end = skip_while(end, is_word);
+    else if (is_word<punctuation_is_word>(*end))
+        with_end = skip_while(end, is_word<punctuation_is_word>);
 
     return Selection(begin, with_end ? end : end-1);
 }
+template SelectionAndCaptures select_to_next_word_end<false>(const Selection&);
+template SelectionAndCaptures select_to_next_word_end<true>(const Selection&);
 
+template<bool punctuation_is_word>
 SelectionAndCaptures select_to_previous_word(const Selection& selection)
 {
     BufferIterator begin = selection.last();
 
-    if (categorize(*begin) != categorize(*(begin-1)))
+    if (categorize<punctuation_is_word>(*begin) !=
+        categorize<punctuation_is_word>(*(begin-1)))
         --begin;
 
     skip_while_reverse(begin, is_eol);
@@ -122,61 +146,15 @@ SelectionAndCaptures select_to_previous_word(const Selection& selection)
     skip_while_reverse(end, is_blank);
 
     bool with_end = false;
-    if (is_punctuation(*end))
+    if (not punctuation_is_word and is_punctuation(*end))
         with_end = skip_while_reverse(end, is_punctuation);
-    else if (is_word(*end))
-        with_end = skip_while_reverse(end, is_word);
+    else if (is_word<punctuation_is_word>(*end))
+        with_end = skip_while_reverse(end, is_word<punctuation_is_word>);
 
     return Selection(begin, with_end ? end : end+1);
 }
-
-SelectionAndCaptures select_to_next_WORD(const Selection& selection)
-{
-    BufferIterator begin = selection.last();
-    if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
-        ++begin;
-
-    skip_while(begin, is_eol);
-
-    BufferIterator end = begin+1;
-
-    skip_while(end, [] (char c) { return !is_blank(c) and !is_eol(c); });
-    bool with_end = skip_while(end, is_blank);
-
-    return Selection(begin, with_end ? end : end-1);
-}
-
-SelectionAndCaptures select_to_next_WORD_end(const Selection& selection)
-{
-    BufferIterator begin = selection.last();
-    if (categorize<false>(*begin) != categorize<false>(*(begin+1)))
-        ++begin;
-
-    skip_while(begin, is_eol);
-
-    BufferIterator end = begin+1;
-
-    skip_while(end, is_blank);
-    bool with_end = skip_while(end, [] (char c) { return !is_blank(c)
-                                                     and !is_eol(c); });
-
-    return Selection(begin, with_end ? end : end-1);
-}
-
-SelectionAndCaptures select_to_previous_WORD(const Selection& selection)
-{
-    BufferIterator begin = selection.last();
-    if (categorize<false>(*begin) != categorize<false>(*(begin-1)))
-        --begin;
-
-    skip_while_reverse(begin, is_eol);
-    BufferIterator end = begin;
-    skip_while_reverse(end, is_blank);
-    bool with_end = skip_while_reverse(end, [] (char c) { return !is_blank(c)
-                                                             and !is_eol(c); });
-
-    return Selection(begin, with_end ? end : end+1);
-}
+template SelectionAndCaptures select_to_previous_word<false>(const Selection&);
+template SelectionAndCaptures select_to_previous_word<true>(const Selection&);
 
 SelectionAndCaptures select_line(const Selection& selection)
 {
