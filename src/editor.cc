@@ -294,6 +294,14 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
             pos = m_editor.m_buffer.iterator_at_line_begin(sel.begin());
             if (mode == Mode::OpenLineAbove)
                 --pos;
+            else
+            {
+                auto first_non_blank = pos;
+                while (*first_non_blank == ' ' or *first_non_blank == '\t')
+                    ++first_non_blank;
+                if (*first_non_blank != '\n')
+                    pos = first_non_blank;
+            }
             break;
         }
         sel = Selection(pos, pos);
