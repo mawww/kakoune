@@ -516,7 +516,9 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     const std::string& filename = params[0];
     char buffer[2048];
 #if defined(__linux__)
-    readlink("/proc/self/exe", buffer, 2048 - filename.length());
+    ssize_t res = readlink("/proc/self/exe", buffer, 2048 - filename.length());
+    assert(res != -1);
+    buffer[res] = '\0';
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048 - filename.length();
     _NSGetExecutablePath(buffer, &bufsize);
