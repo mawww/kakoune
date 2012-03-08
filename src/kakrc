@@ -2,3 +2,4 @@ hook global WinCreate .* addhl regex \h+(?=\n) default red
 
 runtime rc/cpp.kak
 runtime rc/kakrc.kak
+runtime rc/git.kak
