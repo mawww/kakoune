@@ -116,7 +116,11 @@ static void shell_eval(std::vector<std::string>& params,
         std::string output;
         char buffer[1024];
         while (size_t size = read(read_pipe[0], buffer, 1024))
+        {
+            if (size == -1)
+                break;
             output += std::string(buffer, buffer+size);
+        }
         close(read_pipe[0]);
         waitpid(pid, NULL, 0);
 
