@@ -26,7 +26,7 @@ void Editor::erase()
 }
 
 template<bool append>
-static void do_insert(Editor& editor, const Editor::String& string)
+static void do_insert(Editor& editor, const String& string)
 {
     scoped_edition edition(editor);
     for (auto& sel : editor.selections())
@@ -37,7 +37,7 @@ static void do_insert(Editor& editor, const Editor::String& string)
 }
 
 template<bool append>
-static void do_insert(Editor& editor, const memoryview<Editor::String>& strings)
+static void do_insert(Editor& editor, const memoryview<String>& strings)
 {
     if (strings.empty())
         return;
@@ -79,7 +79,7 @@ void Editor::replace(const std::string& string)
     insert(string);
 }
 
-std::vector<Editor::String> Editor::selections_content() const
+std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
     for (auto& sel : selections())
@@ -324,7 +324,7 @@ void IncrementalInserter::apply(Modification&& modification) const
     m_editor.buffer().modify(std::move(modification));
 }
 
-void IncrementalInserter::insert(const Editor::String& string)
+void IncrementalInserter::insert(const String& string)
 {
     for (auto& sel : m_editor.selections())
         apply(Modification::make_insert(sel.begin(), string));

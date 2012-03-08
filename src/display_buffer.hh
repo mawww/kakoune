@@ -77,7 +77,7 @@ struct DisplayAtom
     Color&         bg_color()  { return m_bg_color; }
     Attribute&     attribute() { return m_attribute; }
 
-    BufferString   content()    const;
+    String         content()    const;
     DisplayCoord   end_coord()  const;
     BufferIterator iterator_at(const DisplayCoord& coord) const;
     DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
@@ -93,7 +93,7 @@ private:
     Color          m_fg_color;
     Color          m_bg_color;
     Attribute      m_attribute;
-    BufferString   m_replacement_text;
+    String         m_replacement_text;
 };
 
 // A DisplayBuffer is the visual content of a Window as a DisplayAtom list
@@ -114,7 +114,7 @@ public:
     iterator insert(iterator where, const DisplayAtom& atom);
     iterator split(iterator atom, const BufferIterator& pos);
 
-    void replace_atom_content(iterator atom, const BufferString& replacement);
+    void replace_atom_content(iterator atom, const String& replacement);
 
     iterator begin() { return m_atoms.begin(); }
     iterator end()   { return m_atoms.end(); }

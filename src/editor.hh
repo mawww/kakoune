@@ -19,7 +19,6 @@ class Register;
 class Editor
 {
 public:
-    typedef BufferString String;
     typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
     typedef std::function<SelectionAndCapturesList (const Selection&)>  MultiSelector;
 
@@ -110,7 +109,7 @@ public:
     IncrementalInserter(Editor& editor, Mode mode = Mode::Insert);
     ~IncrementalInserter();
 
-    void insert(const Editor::String& string);
+    void insert(const String& string);
     void insert(const Register& reg);
     void erase();
     void move_cursors(const BufferCoord& offset);

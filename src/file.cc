@@ -88,7 +88,7 @@ void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
-    const BufferString& content = buffer.content();
+    const String& content = buffer.content();
     ssize_t count = content.length() * sizeof(BufferChar);
     const char* ptr = content.c_str();
 

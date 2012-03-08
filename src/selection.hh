@@ -41,7 +41,7 @@ private:
 };
 
 typedef std::vector<Selection> SelectionList;
-typedef std::vector<BufferString> CaptureList;
+typedef std::vector<String> CaptureList;
 
 // Selections are often associated with a capture list
 // like when they are created from a regex match with

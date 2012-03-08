@@ -5,7 +5,7 @@
 namespace Kakoune
 {
 
-BufferString DisplayAtom::content() const
+String DisplayAtom::content() const
 {
     if (m_replacement_text.empty())
         return m_begin.buffer().string(m_begin, m_end);
@@ -131,7 +131,7 @@ void DisplayBuffer::check_invariant() const
 }
 
 void DisplayBuffer::replace_atom_content(iterator atom,
-                                         const BufferString& replacement)
+                                         const String& replacement)
 {
     atom->m_replacement_text = replacement;
 

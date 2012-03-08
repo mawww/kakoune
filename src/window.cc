@@ -53,7 +53,7 @@ static DisplayCoord measure_string(Iterator begin, Iterator end)
     return result;
 }
 
-static DisplayCoord measure_string(const Editor::String& string)
+static DisplayCoord measure_string(const String& string)
 {
     return measure_string(string.begin(), string.end());
 }

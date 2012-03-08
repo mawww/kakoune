@@ -17,7 +17,7 @@ class Window;
 typedef int      BufferPos;
 typedef int      BufferSize;
 typedef char     BufferChar;
-typedef std::basic_string<BufferChar> BufferString;
+typedef std::basic_string<BufferChar> String;
 
 struct BufferCoord : LineAndColumn<BufferCoord>
 {
@@ -81,17 +81,16 @@ struct Modification
 
     Type           type;
     BufferIterator position;
-    BufferString   content;
+    String         content;
 
-    Modification(Type type, BufferIterator position,
-                 const BufferString& content)
+    Modification(Type type, BufferIterator position, const String& content)
         : type(type), position(position), content(content) {}
 
     Modification inverse() const;
 
     static Modification make_erase(BufferIterator begin, BufferIterator end);
     static Modification make_insert(BufferIterator position,
-                                    const BufferString& content);
+                                    const String& content);
 };
 
 class ModificationListener
@@ -116,7 +115,7 @@ public:
     };
 
     Buffer(const std::string& name, Type type,
-           const BufferString& initial_content = "\n");
+           const String& initial_content = "\n");
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -130,7 +129,7 @@ public:
     bool           undo();
     bool           redo();
 
-    BufferString   string(const BufferIterator& begin,
+    String         string(const BufferIterator& begin,
                           const BufferIterator& end) const;
 
     BufferIterator begin() const;
@@ -146,7 +145,7 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    const BufferString& content() const { return m_content; }
+    const String& content() const { return m_content; }
 
     Window* get_or_create_window();
     void delete_window(Window* window);
@@ -179,7 +178,7 @@ private:
     BufferSize line_length(BufferPos line) const;
     void update_lines(const Modification& modification);
 
-    BufferString m_content;
+    String m_content;
 
     std::string  m_name;
     const Type   m_type;
@@ -207,7 +206,7 @@ inline Modification Modification::make_erase(BufferIterator begin,
 }
 
 inline Modification Modification::make_insert(BufferIterator position,
-                                              const BufferString& content)
+                                              const String& content)
 {
     return Modification(Insert, position, content);
 }

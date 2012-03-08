@@ -23,7 +23,7 @@ T clamp(T min, T max, T val)
 }
 
 Buffer::Buffer(const std::string& name, Type type,
-               const BufferString& initial_content)
+               const String& initial_content)
     : m_name(name), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
       m_content(initial_content), m_last_save_undo_index(0)
@@ -122,7 +122,7 @@ BufferSize Buffer::line_count() const
     return m_lines.size();
 }
 
-BufferString Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
+String Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
 {
     return m_content.substr(begin.m_position, end - begin);
 }
