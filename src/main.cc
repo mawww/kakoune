@@ -691,29 +691,30 @@ void do_join(Editor& editor, int count)
     editor.move_selections({0, -1});
 }
 
-template<bool inside>
-void do_select_surrounding(Editor& editor, int count)
+template<bool inner>
+void do_select_object(Editor& editor, int count)
 {
-    Key key = get_key();
-    const char id = key.key;
-
-    static const std::unordered_map<char, std::pair<char, char>> id_to_matching =
+    typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
+    static const std::unordered_map<Key, Selector> key_to_selector =
     {
-       { '(', { '(', ')' } },
-       { ')', { '(', ')' } },
-       { 'b', { '(', ')' } },
-       { '{', { '{', '}' } },
-       { '}', { '{', '}' } },
-       { 'B', { '{', '}' } },
-       { '[', { '[', ']' } },
-       { ']', { '[', ']' } },
-       { '<', { '<', '>' } },
-       { '>', { '<', '>' } }
+        { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
+        { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
+        { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
+        { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
+        { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
+        { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
+        { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '[', ']' }, inner) },
+        { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '[', ']' }, inner) },
+        { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '<', '>' }, inner) },
+        { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '<', '>' }, inner) },
+        { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, inner) },
+        { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, inner) },
     };
 
-    auto matching = id_to_matching.find(id);
-    if (matching != id_to_matching.end())
-        editor.select(std::bind(select_surrounding, _1, matching->second, inside));
+    Key key = get_key();
+    auto it = key_to_selector.find(key);
+    if (it != key_to_selector.end())
+        editor.select(it->second);
 }
 
 std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap =
@@ -779,8 +780,8 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, 'u' }, [](Editor& editor, int count) { do { if (not editor.undo()) { NCurses::print_status("nothing left to undo"); break; } } while(--count > 0); } },
     { { Key::Modifiers::None, 'U' }, [](Editor& editor, int count) { do { if (not editor.redo()) { NCurses::print_status("nothing left to redo"); break; } } while(--count > 0); } },
 
-    { { Key::Modifiers::Alt,  'i' }, do_select_surrounding<true> },
-    { { Key::Modifiers::Alt,  'a' }, do_select_surrounding<false> },
+    { { Key::Modifiers::Alt,  'i' }, do_select_object<true> },
+    { { Key::Modifiers::Alt,  'a' }, do_select_object<false> },
 
     { { Key::Modifiers::Alt, 't' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, get_key().key, count, false)); } },
     { { Key::Modifiers::Alt, 'f' }, [](Editor& editor, int count) { editor.select(std::bind(select_to_reverse, _1, get_key().key, count, true)); } },

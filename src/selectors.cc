@@ -319,6 +319,34 @@ SelectionAndCaptures select_to_eol_reverse(const Selection& selection)
     return Selection(begin, end.is_begin() ? end : end+1);
 }
 
+template<bool punctuation_is_word>
+SelectionAndCaptures select_whole_word(const Selection& selection, bool inner)
+{
+    BufferIterator first = selection.last();
+    BufferIterator last = first;
+    if (is_word(*first))
+    {
+        if (not skip_while_reverse(first, is_word<punctuation_is_word>))
+            ++first;
+        skip_while(last, is_word<punctuation_is_word>);
+        if (not inner)
+            skip_while(last, is_blank);
+    }
+    else if (not inner)
+    {
+        if (not skip_while_reverse(first, is_blank))
+            ++first;
+        skip_while(last, is_blank);
+        if (not is_word<punctuation_is_word>(*last))
+            return selection;
+        skip_while(last, is_word<punctuation_is_word>);
+    }
+    --last;
+    return Selection(first, last);
+}
+template SelectionAndCaptures select_whole_word<false>(const Selection&, bool);
+template SelectionAndCaptures select_whole_word<true>(const Selection&, bool);
+
 SelectionAndCaptures select_whole_lines(const Selection& selection)
 {
      BufferIterator first = selection.first();

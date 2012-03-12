@@ -27,6 +27,8 @@ SelectionAndCaptures select_to_reverse(const Selection& selection,
 SelectionAndCaptures select_to_eol(const Selection& selection);
 SelectionAndCaptures select_to_eol_reverse(const Selection& selection);
 
+template<bool punctuation_is_word>
+SelectionAndCaptures select_whole_word(const Selection& selection, bool inner);
 SelectionAndCaptures select_whole_lines(const Selection& selection);
 SelectionAndCaptures select_whole_buffer(const Selection& selection);
 
