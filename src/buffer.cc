@@ -75,7 +75,7 @@ BufferSize Buffer::line_length(BufferPos line) const
 {
     assert(not m_lines.empty());
     BufferPos end = (line < m_lines.size() - 1) ?
-                    m_lines[line + 1] : m_content.size();
+                    m_lines[line + 1] : length();
     return end - m_lines[line];
 }
 
