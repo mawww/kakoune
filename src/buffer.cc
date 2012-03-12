@@ -214,7 +214,8 @@ void Buffer::update_lines(const Modification& modification)
         std::vector<BufferPos> new_lines;
         // if we inserted at the end of the buffer, we may have created a new
         // line without inserting a '\n'
-        if (endpos == m_content.size() and pos > 0 and m_content[pos-1] == '\n')
+        if (endpos == m_content.size() and
+            (pos == 0 or m_content[pos-1] == '\n'))
             new_lines.push_back(pos);
 
         // every \n inserted that was not the last buffer character created a
