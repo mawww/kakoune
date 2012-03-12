@@ -26,10 +26,11 @@ Buffer::Buffer(const std::string& name, Type type,
                const String& initial_content)
     : m_name(name), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
-      m_content(initial_content), m_last_save_undo_index(0)
+      m_last_save_undo_index(0)
 {
     BufferManager::instance().register_buffer(this);
-    compute_lines();
+    if (not initial_content.empty())
+        apply_modification(Modification::make_insert(begin(), initial_content));
 
     if (type == Type::NewFile)
         GlobalHooksManager::instance().run_hook("BufCreate", name, Context(*this));
@@ -185,17 +186,6 @@ bool Buffer::redo()
     ++m_history_cursor;
 }
 
-void Buffer::compute_lines()
-{
-    m_lines.clear();
-    m_lines.push_back(0);
-    for (BufferPos i = 0; i + 1 < m_content.size(); ++i)
-    {
-        if (m_content[i] == '\n')
-            m_lines.push_back(i + 1);
-    }
-}
-
 void Buffer::update_lines(const Modification& modification)
 {
     size_t length = modification.content.length();
@@ -275,6 +265,9 @@ void Buffer::apply_modification(const Modification& modification)
 
 void Buffer::modify(Modification&& modification)
 {
+    if (modification.content.empty())
+        return;
+
     apply_modification(modification);
     m_current_undo_group.push_back(std::move(modification));
 }

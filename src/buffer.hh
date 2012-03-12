@@ -172,11 +172,10 @@ private:
     friend class BufferIterator;
 
     std::vector<BufferPos> m_lines;
+    void update_lines(const Modification& modification);
 
-    void compute_lines();
     BufferPos line_at(const BufferIterator& iterator) const;
     BufferSize line_length(BufferPos line) const;
-    void update_lines(const Modification& modification);
 
     String m_content;
 
