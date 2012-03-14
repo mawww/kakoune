@@ -1,4 +1,8 @@
 *.o
 .*.d
+*.pyc
 src/kak
 tags
+GPATH
+GRTAGS
+GTAGS
