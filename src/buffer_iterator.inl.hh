@@ -69,7 +69,7 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
 inline BufferChar BufferIterator::operator*() const
 {
     assert(m_buffer);
-    return m_buffer->at(m_position);
+    return m_buffer->m_content[m_position];
 }
 
 inline BufferSize BufferIterator::operator-(const BufferIterator& iterator) const

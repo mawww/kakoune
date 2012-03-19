@@ -167,8 +167,6 @@ public:
     BufferIterator iterator_at_line_end(const BufferIterator& iterator) const;
 
 private:
-    BufferChar at(BufferPos position) const;
-
     friend class BufferIterator;
 
     std::vector<BufferPos> m_lines;

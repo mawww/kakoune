@@ -128,11 +128,6 @@ String Buffer::string(const BufferIterator& begin, const BufferIterator& end) co
     return m_content.substr(begin.m_position, end - begin);
 }
 
-BufferChar Buffer::at(BufferPos position) const
-{
-    return m_content[position];
-}
-
 void Buffer::begin_undo_group()
 {
     assert(m_current_undo_group.empty());
