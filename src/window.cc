@@ -25,16 +25,6 @@ Window::Window(Buffer& buffer)
     registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());
 }
 
-DisplayCoord Window::cursor_position() const
-{
-    return line_and_column_at(cursor_iterator());
-}
-
-BufferIterator Window::cursor_iterator() const
-{
-    return selections().back().last();
-}
-
 template<typename Iterator>
 static DisplayCoord measure_string(Iterator begin, Iterator end)
 {

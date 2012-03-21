@@ -25,9 +25,6 @@ class Window : public Editor
 public:
     const BufferCoord& position() const { return m_position; }
 
-    DisplayCoord   cursor_position() const;
-    BufferIterator cursor_iterator() const;
-
     BufferIterator iterator_at(const DisplayCoord& window_pos) const;
     DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
 

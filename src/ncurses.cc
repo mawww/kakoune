@@ -141,9 +141,6 @@ void draw_window(Window& window)
     move(max_y, max_x - status_line.length());
     addstr(status_line.c_str());
     last_status_length = status_line.length();
-
-    const DisplayCoord& cursor_position = window.cursor_position();
-    move(cursor_position.line, cursor_position.column);
 }
 
 static Key get_key()
