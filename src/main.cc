@@ -903,6 +903,8 @@ void exec_string(const CommandParameters& params,
     exec_keys(keys, context);
 }
 
+void run_unit_tests();
+
 int main(int argc, char* argv[])
 {
     NCurses::init(prompt_func, get_key_func);
@@ -913,6 +915,8 @@ int main(int argc, char* argv[])
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
     GlobalHooksManager  hooks_manager;
+
+    run_unit_tests();
 
     command_manager.register_commands({ "e", "edit" }, edit<false>,
                                      CommandManager::None,
