@@ -19,6 +19,7 @@ private:
 
 #define STRINGIFY(X) #X
 #define TOSTRING(X) STRINGIFY(X)
+#define COMMA ,
 
 #ifdef assert
 #undef assert
