@@ -249,13 +249,24 @@ void quit(const CommandParameters& params, const Context& context)
 
     if (not force)
     {
+        std::vector<std::string> names;
         for (auto& buffer : BufferManager::instance())
         {
             if (buffer.type() != Buffer::Type::Scratch and buffer.is_modified())
+                names.push_back(buffer.name());
+        }
+        if (not names.empty())
+        {
+            std::string message = "modified buffers remaining: [";
+            for (auto it = names.begin(); it != names.end(); ++it)
             {
-                NCurses::print_status("modified buffer remaining");
-                return;
+                if (it != names.begin())
+                    message += ", ";
+                message += *it;
             }
+            message += "]";
+            NCurses::print_status(message);
+            return;
         }
     }
     quit_requested = true;
