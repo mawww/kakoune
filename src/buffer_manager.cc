@@ -2,7 +2,6 @@
 
 #include "assert.hh"
 #include "buffer.hh"
-#include "window.hh"
 #include "exception.hh"
 
 namespace Kakoune
@@ -17,15 +16,18 @@ void BufferManager::register_buffer(Buffer* buffer)
     if (m_buffers.find(name) != m_buffers.end())
         throw name_not_unique();
 
-    m_buffers[name] = std::unique_ptr<Buffer>(buffer);
+    m_buffers[name] = buffer;
 }
 
-void BufferManager::delete_buffer(Buffer* buffer)
+void BufferManager::unregister_buffer(Buffer* buffer)
 {
     assert(buffer);
     auto buffer_it = m_buffers.find(buffer->name());
-    assert(buffer_it->second.get() == buffer);
-    m_buffers.erase(buffer_it);
+    if (buffer_it != m_buffers.end())
+    {
+        assert(buffer_it->second == buffer);
+        m_buffers.erase(buffer_it);
+    }
 }
 
 Buffer* BufferManager::get_buffer(const std::string& name)
@@ -33,7 +35,7 @@ Buffer* BufferManager::get_buffer(const std::string& name)
     if (m_buffers.find(name) == m_buffers.end())
         return nullptr;
 
-    return m_buffers[name].get();
+    return m_buffers[name];
 }
 
 CandidateList BufferManager::complete_buffername(const std::string& prefix,

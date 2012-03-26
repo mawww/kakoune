@@ -77,7 +77,7 @@ Buffer* create_buffer_from_file(const std::string& filename)
     std::string content = read_file(filename);
 
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
-        BufferManager::instance().delete_buffer(buffer);
+        delete buffer;
 
     return new Buffer(filename, Buffer::Type::File, content);
 }

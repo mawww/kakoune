@@ -41,6 +41,7 @@ Buffer::Buffer(const std::string& name, Type type,
 Buffer::~Buffer()
 {
     m_windows.clear();
+    BufferManager::instance().unregister_buffer(this);
     assert(m_modification_listeners.empty());
 }
 
