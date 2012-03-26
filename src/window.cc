@@ -25,29 +25,6 @@ Window::Window(Buffer& buffer)
     registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());
 }
 
-template<typename Iterator>
-static DisplayCoord measure_string(Iterator begin, Iterator end)
-{
-    DisplayCoord result(0, 0);
-    while (begin != end)
-    {
-        if (*begin == '\n')
-        {
-            ++result.line;
-            result.column = 0;
-        }
-        else
-            ++result.column;
-        ++begin;
-    }
-    return result;
-}
-
-static DisplayCoord measure_string(const String& string)
-{
-    return measure_string(string.begin(), string.end());
-}
-
 BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
 {
     if (m_display_buffer.begin() == m_display_buffer.end())
