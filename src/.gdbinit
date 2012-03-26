@@ -1,3 +1,5 @@
+catch throw
+
 python
 sys.path.insert(0, '../gdb/')
 import gdb.printing
