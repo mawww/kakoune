@@ -1,3 +1,4 @@
+set print pretty
 catch throw
 
 python
