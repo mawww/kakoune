@@ -88,18 +88,21 @@ void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
-    const String& content = buffer.content();
-    ssize_t count = content.length() * sizeof(BufferChar);
-    const char* ptr = content.c_str();
-
-    while (count)
+    for (size_t i = 0; i < buffer.line_count(); ++i)
     {
-        ssize_t written = write(fd, ptr, count);
-        ptr += written;
-        count -= written;
+        const String& content = buffer.line_content(i);
+        ssize_t count = content.length() * sizeof(BufferChar);
+        const char* ptr = content.c_str();
 
-        if (written == -1)
-            throw file_access_error(filename, strerror(errno));
+        while (count)
+        {
+            ssize_t written = write(fd, ptr, count);
+            ptr += written;
+            count -= written;
+
+            if (written == -1)
+                throw file_access_error(filename, strerror(errno));
+        }
     }
     close(fd);
 }

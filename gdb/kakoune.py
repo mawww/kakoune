@@ -51,9 +51,9 @@ class BufferIterator:
 
     def to_string(self):
         if self.val['m_buffer'] != 0:
-            return "buffer<%s>@%d" % (self.val['m_buffer'].dereference()['m_name'], self.val['m_position'])
+            return "buffer<%s>@(%d, %d)" % (self.val['m_buffer'].dereference()['m_name'], self.val['m_coord']['line'], self.val['m_coord']['column'])
         else:
-            return "buffer<none>@%s" % (self.val['m_position'])
+            return "buffer<none>@(%d, %d)" % (self.val['m_coord']['line'], self.val['m_coord']['column'])
 
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")

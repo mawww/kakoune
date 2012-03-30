@@ -47,37 +47,25 @@ Buffer::~Buffer()
 
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
 {
-    if (m_lines.empty())
-        return begin();
-
-    BufferCoord clamped = clamp(line_and_column);
-    return BufferIterator(*this, m_lines[clamped.line] + clamped.column);
+    return BufferIterator(*this, clamp(line_and_column));
 }
 
 BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
 {
-    BufferCoord result;
-    if (not m_lines.empty())
-    {
-        result.line = line_at(iterator);
-        result.column = iterator.m_position - m_lines[result.line];
-    }
-    return result;
+    return iterator.m_coord;
 }
 
 BufferPos Buffer::line_at(const BufferIterator& iterator) const
 {
-    auto it = std::upper_bound(m_lines.begin(), m_lines.end(),
-                               iterator.m_position);
-    return it - m_lines.begin() - 1;
+    return iterator.line();
 }
 
 BufferSize Buffer::line_length(BufferPos line) const
 {
-    assert(not m_lines.empty());
+    assert(line < line_count());
     BufferPos end = (line < m_lines.size() - 1) ?
-                    m_lines[line + 1] : length();
-    return end - m_lines[line];
+                    m_lines[line + 1].start : length();
+    return end - m_lines[line].start;
 }
 
 BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
@@ -87,36 +75,39 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
 
     BufferCoord result(line_and_column.line, line_and_column.column);
     result.line = Kakoune::clamp<int>(0, m_lines.size() - 1, result.line);
-    int max_col = std::max(0, line_length(result.line)-2);
+    int max_col = std::max(0, line_length(result.line) - 2);
     result.column = Kakoune::clamp<int>(0, max_col, result.column);
     return result;
 }
 
 BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) const
 {
-    return BufferIterator(*this, m_lines[line_at(iterator)]);
+    return BufferIterator(*this, { iterator.line(), 0 });
 }
 
 BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
 {
-    BufferPos line = line_at(iterator) + 1;
-    return line < m_lines.size() ? BufferIterator(*this, m_lines[line]) : end();
+    BufferPos line = iterator.line();
+    return ++BufferIterator(*this, { line, std::max(line_length(line) - 1, 0) });
 }
-
 
 BufferIterator Buffer::begin() const
 {
-    return BufferIterator(*this, 0);
+    return BufferIterator(*this, { 0, 0 });
 }
 
 BufferIterator Buffer::end() const
 {
-    return BufferIterator(*this, length());
+    if (m_lines.empty())
+        return BufferIterator(*this, { 0, 0 });
+    return BufferIterator(*this, { (int)line_count()-1, (int)m_lines.back().content.length() });
 }
 
 BufferSize Buffer::length() const
 {
-    return m_content.size();
+    if (m_lines.empty())
+        return 0;
+    return m_lines.back().start + m_lines.back().content.length();
 }
 
 BufferSize Buffer::line_count() const
@@ -126,7 +117,18 @@ BufferSize Buffer::line_count() const
 
 String Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
 {
-    return m_content.substr(begin.m_position, end - begin);
+    String res;
+    for (BufferPos line = begin.line(); line <= end.line(); ++line)
+    {
+       size_t start = 0;
+       if (line == begin.line())
+           start = begin.column();
+       size_t count = -1;
+       if (line == end.line())
+           count = end.column() - start;
+       res += m_lines[line].content.substr(start, count);
+    }
+    return res;
 }
 
 void Buffer::begin_undo_group()
@@ -182,79 +184,115 @@ bool Buffer::redo()
     ++m_history_cursor;
 }
 
-void Buffer::update_lines(const Modification& modification)
+void Buffer::check_invariant() const
 {
-    size_t length = modification.content.length();
-    const BufferPos pos = modification.position.m_position;
-    const BufferPos endpos = pos + length;
-
-    // find the first line beginning after modification position
-    auto line_it = std::upper_bound(m_lines.begin(), m_lines.end(), pos);
-
-    if (modification.type == Modification::Insert)
+    BufferSize start = 0;
+    for (auto& line : m_lines)
     {
-        // all following lines advanced by length
-        for (auto it = line_it; it != m_lines.end(); ++it)
-            *it += length;
-
-        std::vector<BufferPos> new_lines;
-        // if we inserted at the end of the buffer, we may have created a new
-        // line without inserting a '\n'
-        if (endpos == m_content.size() and
-            (pos == 0 or m_content[pos-1] == '\n'))
-            new_lines.push_back(pos);
-
-        // every \n inserted that was not the last buffer character created a
-        // new line
-        for (BufferPos i = pos; i < endpos and i + 1 < m_content.size(); ++i)
-        {
-            if (m_content[i] == '\n')
-                new_lines.push_back(i + 1);
-        }
-        m_lines.insert(line_it, new_lines.begin(), new_lines.end());
+        assert(line.start == start);
+        start += line.content.length();
     }
-    else if (modification.type == Modification::Erase)
+}
+
+void Buffer::insert(const BufferIterator& pos, const String& content)
+{
+    BufferSize offset = pos.offset();
+
+    // all following lines advanced by length
+    for (size_t i = pos.line()+1; i < line_count(); ++i)
+        m_lines[i].start += content.length();
+
+    // if we inserted at the end of the buffer, we may have created a new
+    // line without inserting a '\n'
+    if (pos == end() and (pos == begin() or *(pos-1) == '\n'))
     {
-        // find the first line beginning after endpos
-        auto end = std::upper_bound(line_it, m_lines.end(), endpos);
-
-        // all the lines until the end moved back by length
-        for (auto it = end; it != m_lines.end(); ++it)
+        int start = 0;
+        for (int i = 0; i < content.length(); ++i)
         {
-            *it -= length;
-            assert(m_content[(*it)-1] == '\n');
+            if (content[i] == '\n')
+            {
+                m_lines.push_back({ offset + start, content.substr(start, i + 1 - start) });
+                start = i + 1;
+            }
         }
-
-        // if we erased from the beginning of a line until the end of
-        // the buffer, that line also needs to be erased
-        if (pos == m_content.size() and *(line_it-1) == pos)
-            --line_it;
-        m_lines.erase(line_it, end);
+        if (start != content.length())
+            m_lines.push_back({ offset + start, content.substr(start) });
     }
     else
-        assert(false);
+    {
+        String prefix = m_lines[pos.line()].content.substr(0, pos.column());
+        String suffix = m_lines[pos.line()].content.substr(pos.column());
+
+        auto line_it = m_lines.begin() + pos.line();
+        line_it = m_lines.erase(line_it);
+
+        int start = 0;
+        for (int i = 0; i < content.length(); ++i)
+        {
+            if (content[i] == '\n')
+            {
+                String line_content = content.substr(start, i + 1 - start);
+                if (start == 0)
+                {
+                    line_content = prefix + line_content;
+                    line_it = m_lines.insert(line_it, { offset + start - (int)prefix.length(),
+                                                        std::move(line_content) });
+                }
+                else
+                    line_it = m_lines.insert(line_it, { offset + start,
+                                                        std::move(line_content) });
+
+                ++line_it;
+                start = i + 1;
+            }
+        }
+        if (start == 0)
+            m_lines.insert(line_it, { offset + start - (int)prefix.length(), prefix + content + suffix });
+        else
+            m_lines.insert(line_it, { offset + start, content.substr(start) + suffix });
+    }
+
+    check_invariant();
+}
+
+void Buffer::erase(const BufferIterator& pos, BufferSize length)
+{
+    BufferIterator end = pos + length;
+    String prefix = m_lines[pos.line()].content.substr(0, pos.column());
+    String suffix = m_lines[end.line()].content.substr(end.column());
+    Line new_line = { m_lines[pos.line()].start, prefix + suffix };
+
+    m_lines.erase(m_lines.begin() + pos.line(), m_lines.begin() + end.line() + 1);
+    m_lines.insert(m_lines.begin() + pos.line(), new_line);
+
+    for (size_t i = pos.line()+1; i < line_count(); ++i)
+        m_lines[i].start -= length;
+
+    check_invariant();
 }
 
 void Buffer::apply_modification(const Modification& modification)
 {
+    const String& content = modification.content;
+    const BufferIterator& pos = modification.position;
+
     switch (modification.type)
     {
     case Modification::Insert:
-        m_content.insert(modification.position.m_position,
-                         modification.content);
+        insert(modification.position, modification.content);
         break;
     case Modification::Erase:
     {
         size_t size = modification.content.size();
         assert(string(modification.position, modification.position + size)
                == modification.content);
-        m_content.erase(modification.position.m_position, size);
+        erase(modification.position, size);
         break;
     }
     default:
         assert(false);
     }
-    update_lines(modification);
+
     for (auto listener : m_modification_listeners)
         listener->on_modification(modification);
 }

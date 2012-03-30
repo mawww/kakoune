@@ -54,36 +54,10 @@ void Selection::merge_with(const Selection& selection)
     m_last = selection.m_last;
 }
 
-static void update_iterator(const Modification& modification,
-                            BufferIterator& iterator)
-{
-    if (iterator < modification.position)
-        return;
-
-    size_t length = modification.content.length();
-    if (modification.type == Modification::Erase)
-    {
-        // do not move length on the other side of the inequality,
-        // as modification.position + length may be after buffer end
-        if (iterator - length <= modification.position)
-            iterator = modification.position;
-        else
-            iterator -= length;
-
-        if (iterator.is_end())
-            --iterator;
-    }
-    else
-    {
-        assert(modification.type == Modification::Insert);
-        iterator += length;
-    }
-}
-
 void Selection::on_modification(const Modification& modification)
 {
-    update_iterator(modification, m_first);
-    update_iterator(modification, m_last);
+    m_first.update(modification);
+    m_last.update(modification);
 }
 
 void Selection::register_with_buffer()

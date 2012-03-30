@@ -12,6 +12,7 @@ namespace Kakoune
 {
 
 class Buffer;
+class Modification;
 class Window;
 
 typedef int      BufferPos;
@@ -39,8 +40,8 @@ public:
     typedef const value_type& reference;
     typedef std::bidirectional_iterator_tag iterator_category;
 
-    BufferIterator() : m_buffer(NULL), m_position(0) {}
-    BufferIterator(const Buffer& buffer, BufferPos position);
+    BufferIterator() : m_buffer(NULL) {}
+    BufferIterator(const Buffer& buffer, BufferCoord coord);
     BufferIterator& operator=(const BufferIterator& iterator);
 
     bool operator== (const BufferIterator& iterator) const;
@@ -66,11 +67,17 @@ public:
     bool is_end() const;
     bool is_valid() const;
 
+    void update(const Modification& modification);
+
     const Buffer& buffer() const;
 
 private:
+    BufferSize line() const { return m_coord.line; }
+    BufferSize column() const { return m_coord.column; }
+    BufferSize offset() const;
+
     const Buffer* m_buffer;
-    BufferPos     m_position;
+    BufferCoord   m_coord;
     friend class Buffer;
 };
 
@@ -145,8 +152,6 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    const String& content() const { return m_content; }
-
     Window* get_or_create_window();
     void delete_window(Window* window);
 
@@ -166,16 +171,25 @@ public:
     // not on the last one)
     BufferIterator iterator_at_line_end(const BufferIterator& iterator) const;
 
+    const String& line_content(size_t l) const { return m_lines[l].content; }
+
 private:
     friend class BufferIterator;
 
-    std::vector<BufferPos> m_lines;
-    void update_lines(const Modification& modification);
+    void check_invariant() const;
+
+    struct Line
+    {
+        BufferPos start;
+        String    content;
+    };
+    std::vector<Line> m_lines;
+
+    void insert(const BufferIterator& pos, const String& content);
+    void erase(const BufferIterator& pos, BufferSize length);
 
     BufferPos line_at(const BufferIterator& iterator) const;
     BufferSize line_length(BufferPos line) const;
-
-    String m_content;
 
     std::string  m_name;
     const Type   m_type;
