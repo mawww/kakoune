@@ -193,7 +193,15 @@ inline BufferIterator& BufferIterator::operator-=(BufferSize size)
 
 inline BufferIterator& BufferIterator::operator++()
 {
-    return (*this += 1);
+    if (column() < m_buffer->m_lines[line()].length() - 1)
+        ++m_coord.column;
+    else if (line() == m_buffer->line_count() - 1)
+        m_coord.column = m_buffer->m_lines.back().length();
+    else
+    {
+        ++m_coord.line;
+        m_coord.column = 0;
+    }
 }
 
 inline BufferIterator& BufferIterator::operator--()
