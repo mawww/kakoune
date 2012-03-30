@@ -22,4 +22,3 @@ Low Priority
 
 * Data driven syntax highlighter.
 * client server separation
-* write a real BufferContent backend. Currently it's std::string...
