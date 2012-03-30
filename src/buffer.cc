@@ -100,14 +100,14 @@ BufferIterator Buffer::end() const
 {
     if (m_lines.empty())
         return BufferIterator(*this, { 0, 0 });
-    return BufferIterator(*this, { (int)line_count()-1, (int)m_lines.back().content.length() });
+    return BufferIterator(*this, { (int)line_count()-1, (int)m_lines.back().length() });
 }
 
 BufferSize Buffer::length() const
 {
     if (m_lines.empty())
         return 0;
-    return m_lines.back().start + m_lines.back().content.length();
+    return m_lines.back().start + m_lines.back().length();
 }
 
 BufferSize Buffer::line_count() const
@@ -190,7 +190,7 @@ void Buffer::check_invariant() const
     for (auto& line : m_lines)
     {
         assert(line.start == start);
-        start += line.content.length();
+        start += line.length();
     }
 }
 

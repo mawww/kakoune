@@ -182,6 +182,8 @@ private:
     {
         BufferPos start;
         String    content;
+
+        size_t length() const { return content.length(); }
     };
     std::vector<Line> m_lines;
 

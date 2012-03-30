@@ -22,10 +22,10 @@ inline bool BufferIterator::is_valid() const
 {
     return m_buffer and
            ((line() < m_buffer->line_count() and
-             column() < m_buffer->m_lines[line()].content.length()) or
+             column() < m_buffer->m_lines[line()].length()) or
             ((line() == m_buffer->line_count() and column() == 0)) or
              (line() == m_buffer->line_count() - 1 and
-              column() == m_buffer->m_lines.back().content.length()));
+              column() == m_buffer->m_lines.back().length()));
 }
 
 inline BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
