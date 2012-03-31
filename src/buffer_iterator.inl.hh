@@ -202,11 +202,22 @@ inline BufferIterator& BufferIterator::operator++()
         ++m_coord.line;
         m_coord.column = 0;
     }
+    return *this;
 }
 
 inline BufferIterator& BufferIterator::operator--()
 {
-    return (*this -= 1);
+    if (column() == 0)
+    {
+        if (line() > 0)
+        {
+            --m_coord.line;
+            m_coord.column = m_buffer->m_lines[m_coord.line].length() - 1;
+        }
+    }
+    else
+       --m_coord.column;
+    return *this;
 }
 
 inline bool BufferIterator::is_begin() const
