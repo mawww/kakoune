@@ -110,6 +110,8 @@ inline void BufferIterator::update(const Modification& modification)
         else
         {
             m_coord.line -= measure.line;
+            if (measure.line > 0 and pos.line() == m_coord.line)
+                m_coord.column += pos.column();
             if (end.line == m_coord.line)
                 m_coord.column -= measure.column;
         }
