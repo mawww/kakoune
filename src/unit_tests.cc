@@ -1,9 +1,11 @@
 #include "buffer.hh"
 #include "assert.hh"
+#include "editor.hh"
+#include "selectors.hh"
 
 using namespace Kakoune;
 
-int test_buffer()
+void test_buffer()
 {
     Buffer buffer("test", Buffer::Type::Scratch, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     assert(buffer.line_count() == 4);
@@ -27,7 +29,24 @@ int test_buffer()
     assert(str == "youpi");
 }
 
+void test_editor()
+{
+    Buffer buffer("test", Buffer::Type::Scratch, "test\n\nyoupi\n");
+    Editor editor(buffer);
+
+    using namespace std::placeholders;
+
+    editor.select(select_whole_buffer);
+    editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
+    for (auto& sel : editor.selections())
+    {
+        assert(*sel.begin() == '\n');
+        editor.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
+    }
+}
+
 void run_unit_tests()
 {
     test_buffer();
+    test_editor();
 }
