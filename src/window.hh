@@ -9,6 +9,7 @@
 #include "highlighter.hh"
 #include "highlighter_group.hh"
 #include "hook_manager.hh"
+#include "option_manager.hh"
 
 namespace Kakoune
 {
@@ -38,7 +39,8 @@ public:
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 
-    HookManager& hook_manager() { return m_hook_manager; }
+    HookManager&   hook_manager()   { return m_hook_manager; }
+    OptionManager& option_manager() { return m_option_manager; }
 
 private:
     friend class Buffer;
@@ -57,6 +59,7 @@ private:
     HighlighterGroup m_highlighters;
 
     HookManager      m_hook_manager;
+    OptionManager    m_option_manager;
 };
 
 }

@@ -26,7 +26,8 @@ Buffer::Buffer(const std::string& name, Type type,
                const String& initial_content)
     : m_name(name), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
-      m_last_save_undo_index(0)
+      m_last_save_undo_index(0),
+      m_option_manager(GlobalOptionManager::instance())
 {
     BufferManager::instance().register_buffer(this);
     if (not initial_content.empty())

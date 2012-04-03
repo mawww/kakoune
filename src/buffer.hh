@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "line_and_column.hh"
+#include "option_manager.hh"
 
 namespace Kakoune
 {
@@ -173,6 +174,8 @@ public:
 
     const String& line_content(size_t l) const { return m_lines[l].content; }
 
+    OptionManager& option_manager() { return m_option_manager; }
+
 private:
     friend class BufferIterator;
 
@@ -210,6 +213,8 @@ private:
     size_t m_last_save_undo_index;
 
     std::vector<ModificationListener*> m_modification_listeners;
+
+    OptionManager m_option_manager;
 };
 
 inline Modification Modification::make_erase(BufferIterator begin,

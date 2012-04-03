@@ -39,7 +39,7 @@ void cleanup_whitespaces(Buffer& buffer, Modification& modification)
 
 void expand_tabulations(Buffer& buffer, Modification& modification)
 {
-    const int tabstop = 8;
+    const int tabstop = buffer.option_manager()["tabstop"];
     if (modification.type == Modification::Insert and
         modification.content == "\t")
     {

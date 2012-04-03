@@ -10,6 +10,8 @@
 namespace Kakoune
 {
 
+using namespace std::placeholders;
+
 void colorize_regex_range(DisplayBuffer& display_buffer,
                           const BufferIterator& range_begin,
                           const BufferIterator& range_end,
@@ -97,13 +99,13 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
     std::string id = "colre'" + params[0] + "'";
 
-    return HighlighterAndId(id, std::bind(colorize_regex, std::placeholders::_1,
+    return HighlighterAndId(id, std::bind(colorize_regex, _1,
                                           ex, fg_color, bg_color));
 }
 
-void expand_tabulations(DisplayBuffer& display_buffer)
+void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
 {
-    const int tabstop = 8;
+    const int tabstop = window.option_manager()["tabstop"];
     for (auto atom_it = display_buffer.begin();
          atom_it != display_buffer.end(); ++atom_it)
     {
@@ -289,7 +291,6 @@ public:
     HighlighterAndId operator()(Window& window,
                                 const HighlighterParameters& params) const
     {
-        using namespace std::placeholders;
         return HighlighterAndId(m_id, std::bind(highlighter_func, std::ref(window), _1));
     }
 private:
@@ -310,7 +311,7 @@ void register_highlighters()
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     registry.register_factory("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
-    registry.register_factory("expand_tabs", SimpleHighlighterFactory<expand_tabulations>("expand_tabs"));
+    registry.register_factory("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
     registry.register_factory("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_factory("regex", colorize_regex_factory);
     registry.register_factory("group", highlighter_group_factory);

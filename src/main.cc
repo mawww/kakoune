@@ -12,6 +12,7 @@
 #include "filters.hh"
 #include "filter_registry.hh"
 #include "hook_manager.hh"
+#include "option_manager.hh"
 #include "context.hh"
 #include "ncurses.hh"
 
@@ -918,6 +919,7 @@ int main(int argc, char* argv[])
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
     GlobalHookManager   hook_manager;
+    GlobalOptionManager option_manager;
 
     run_unit_tests();
 

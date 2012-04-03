@@ -14,7 +14,8 @@ namespace Kakoune
 Window::Window(Buffer& buffer)
     : Editor(buffer),
       m_position(0, 0),
-      m_dimensions(0, 0)
+      m_dimensions(0, 0),
+      m_option_manager(buffer.option_manager())
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
