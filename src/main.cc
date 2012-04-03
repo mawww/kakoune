@@ -1004,15 +1004,27 @@ int main(int argc, char* argv[])
 
     command_manager.register_commands({ "setg", "setglobal" },
                                      [&](const CommandParameters& params, const Context&) { set_option(option_manager, params); },
-                                     CommandManager::None);
+                                     CommandManager::None,
+                                     PerArgumentCommandCompleter({
+                                         [&](const std::string& prefix, size_t cursor_pos)
+                                         { return option_manager.complete_option_name(prefix, cursor_pos); }
+                                     }));
     command_manager.register_commands({ "setb", "setbuffer" },
                                      [&](const CommandParameters& params, const Context& context)
                                      { set_option(context.buffer().option_manager(), params); },
-                                     CommandManager::None);
+                                     CommandManager::None,
+                                     PerArgumentCommandCompleter({
+                                         [&](const std::string& prefix, size_t cursor_pos)
+                                         { return main_context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
+                                     }));
     command_manager.register_commands({ "setw", "setwindow" },
                                      [&](const CommandParameters& params, const Context& context)
                                      { set_option(context.window().option_manager(), params); },
-                                     CommandManager::None);
+                                     CommandManager::None,
+                                     PerArgumentCommandCompleter({
+                                         [&](const std::string& prefix, size_t cursor_pos)
+                                         { return main_context.window().option_manager().complete_option_name(prefix, cursor_pos); }
+                                     }));
 
     register_highlighters();
     register_filters();

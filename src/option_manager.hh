@@ -3,6 +3,7 @@
 
 #include "utils.hh"
 #include "exception.hh"
+#include "completion.hh"
 
 #include <unordered_map>
 
@@ -39,27 +40,11 @@ public:
     OptionManager(OptionManager& parent)
         : m_parent(&parent) {}
 
-    Option& operator[] (const std::string& name)
-    {
-        auto it = m_options.find(name);
-        if (it != m_options.end())
-            return it->second;
-        else if (m_parent)
-            return (*m_parent)[name];
-        else
-            return m_options[name];
-    }
+    Option& operator[] (const std::string& name);
+    const Option& operator[] (const std::string& name) const;
 
-    const Option& operator[] (const std::string& name) const
-    {
-        auto it = m_options.find(name);
-        if (it != m_options.end())
-            return it->second;
-        else if (m_parent)
-            return (*m_parent)[name];
-        else
-            throw option_not_found(name);
-    }
+    CandidateList complete_option_name(const std::string& prefix,
+                                       size_t cursor_pos);
 
 private:
     OptionManager()
