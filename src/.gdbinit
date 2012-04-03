@@ -1,5 +1,5 @@
 set print pretty
-catch throw
+break Kakoune::assert_failed::assert_failed
 
 python
 sys.path.insert(0, '../gdb/')
