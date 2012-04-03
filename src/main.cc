@@ -548,6 +548,14 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     }
 }
 
+void set_option(OptionManager& option_manager, const CommandParameters& params)
+{
+    if (params.size() != 2)
+        throw wrong_argument_count();
+
+    option_manager[params[0]] = params[1];
+}
+
 void do_command()
 {
     try
@@ -993,6 +1001,18 @@ int main(int argc, char* argv[])
 
     command_manager.register_command("def",   define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
     command_manager.register_command("echo", echo_message);
+
+    command_manager.register_commands({ "setg", "setglobal" },
+                                     [&](const CommandParameters& params, const Context&) { set_option(option_manager, params); },
+                                     CommandManager::None);
+    command_manager.register_commands({ "setb", "setbuffer" },
+                                     [&](const CommandParameters& params, const Context& context)
+                                     { set_option(context.buffer().option_manager(), params); },
+                                     CommandManager::None);
+    command_manager.register_commands({ "setw", "setwindow" },
+                                     [&](const CommandParameters& params, const Context& context)
+                                     { set_option(context.window().option_manager(), params); },
+                                     CommandManager::None);
 
     register_highlighters();
     register_filters();
