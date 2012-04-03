@@ -15,7 +15,7 @@ void HighlighterGroup::operator()(DisplayBuffer& display_buffer)
 void HighlighterGroup::append(HighlighterAndId&& highlighter)
 {
     if (m_highlighters.contains(highlighter.first))
-        throw runtime_error("highlighter id not found " + highlighter.first);
+        throw runtime_error("duplicate highlighter id: " + highlighter.first);
 
     m_highlighters.append(std::forward<HighlighterAndId>(highlighter));
 }
