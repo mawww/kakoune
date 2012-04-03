@@ -92,6 +92,9 @@ bool insert_char(IncrementalInserter& inserter, const Key& key)
         case 'm':
             inserter.insert(std::string() + '\n');
             break;
+        case 'i':
+            inserter.insert(std::string() + '\t');
+            break;
         case 'd':
             inserter.move_cursors({0, -1});
             break;
