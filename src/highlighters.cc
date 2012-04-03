@@ -98,7 +98,7 @@ HighlighterAndId colorize_regex_factory(Window& window,
     std::string id = "colre'" + params[0] + "'";
 
     return HighlighterAndId(id, std::bind(colorize_regex, std::placeholders::_1,
-                                     ex, fg_color, bg_color));
+                                          ex, fg_color, bg_color));
 }
 
 void expand_tabulations(DisplayBuffer& display_buffer)
@@ -178,6 +178,93 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     }
 }
 
+void highlight_selections(Window& window, DisplayBuffer& display_buffer)
+{
+    typedef std::pair<BufferIterator, BufferIterator> BufferRange;
+
+    std::vector<BufferRange> selections;
+    for (auto& sel : window.selections())
+        selections.push_back(BufferRange(sel.begin(), sel.end()));
+
+    std::sort(selections.begin(), selections.end(),
+              [](const BufferRange& lhs, const BufferRange& rhs)
+              { return lhs.first < rhs.first; });
+
+    auto atom_it = display_buffer.begin();
+    auto sel_it = selections.begin();
+
+    // underline each selections
+    while (atom_it != display_buffer.end()
+           and sel_it != selections.end())
+    {
+        BufferRange& sel = *sel_it;
+        DisplayAtom& atom = *atom_it;
+
+        if (atom.attribute() & Attributes::Final)
+        {
+            ++atom_it;
+            continue;
+        }
+        // [###------]
+        if (atom.begin() >= sel.first and atom.begin() < sel.second and
+            atom.end() > sel.second)
+        {
+            atom_it = display_buffer.split(atom_it, sel.second);
+            atom_it->attribute() |= Attributes::Underline;
+            ++atom_it;
+            ++sel_it;
+        }
+        // [---###---]
+        else if (atom.begin() < sel.first and atom.end() > sel.second)
+        {
+            atom_it = display_buffer.split(atom_it, sel.first);
+            atom_it = display_buffer.split(++atom_it, sel.second);
+            atom_it->attribute() |= Attributes::Underline;
+            ++atom_it;
+            ++sel_it;
+        }
+        // [------###]
+        else if (atom.begin() < sel.first and atom.end() > sel.first)
+        {
+            atom_it = ++display_buffer.split(atom_it, sel.first);
+            atom_it->attribute() |= Attributes::Underline;
+            ++atom_it;
+        }
+        // [#########]
+        else if (atom.begin() >= sel.first and atom.end() <= sel.second)
+        {
+            atom_it->attribute() |= Attributes::Underline;
+            ++atom_it;
+        }
+        // [---------]
+        else if (atom.begin() >= sel.second)
+            ++sel_it;
+        // [---------]
+        else if (atom.end() <= sel.first)
+            ++atom_it;
+        else
+            assert(false);
+    }
+
+    // invert selection last char
+    for (auto& sel : window.selections())
+    {
+        const BufferIterator& last = sel.last();
+
+        DisplayBuffer::iterator atom_it = display_buffer.atom_containing(last);
+        if (atom_it == display_buffer.end())
+            continue;
+
+        if (atom_it->begin() < last)
+            atom_it = ++display_buffer.split(atom_it, last);
+        if (atom_it->end() > last + 1)
+            atom_it = display_buffer.split(atom_it, last + 1);
+
+        atom_it->attribute() |= Attributes::Reverse;
+    }
+}
+
+
 template<void (*highlighter_func)(DisplayBuffer&)>
 class SimpleHighlighterFactory
 {
@@ -193,110 +280,20 @@ private:
     std::string m_id;
 };
 
-class SelectionsHighlighter
+template<void (*highlighter_func)(Window&, DisplayBuffer&)>
+class WindowHighlighterFactory
 {
 public:
-    SelectionsHighlighter(Window& window)
-        : m_window(window)
+    WindowHighlighterFactory(const std::string& id) : m_id(id) {}
+
+    HighlighterAndId operator()(Window& window,
+                                const HighlighterParameters& params) const
     {
+        using namespace std::placeholders;
+        return HighlighterAndId(m_id, std::bind(highlighter_func, std::ref(window), _1));
     }
-
-    void operator()(DisplayBuffer& display_buffer)
-    {
-        typedef std::pair<BufferIterator, BufferIterator> BufferRange;
-
-        std::vector<BufferRange> selections;
-        for (auto& sel : m_window.selections())
-            selections.push_back(BufferRange(sel.begin(), sel.end()));
-
-        std::sort(selections.begin(), selections.end(),
-                  [](const BufferRange& lhs, const BufferRange& rhs)
-                  { return lhs.first < rhs.first; });
-
-        auto atom_it = display_buffer.begin();
-        auto sel_it = selections.begin();
-
-        // underline each selections
-        while (atom_it != display_buffer.end()
-               and sel_it != selections.end())
-        {
-            BufferRange& sel = *sel_it;
-            DisplayAtom& atom = *atom_it;
-
-            if (atom.attribute() & Attributes::Final)
-            {
-                ++atom_it;
-                continue;
-            }
-            // [###------]
-            if (atom.begin() >= sel.first and atom.begin() < sel.second and
-                atom.end() > sel.second)
-            {
-                atom_it = display_buffer.split(atom_it, sel.second);
-                atom_it->attribute() |= Attributes::Underline;
-                ++atom_it;
-                ++sel_it;
-            }
-            // [---###---]
-            else if (atom.begin() < sel.first and atom.end() > sel.second)
-            {
-                atom_it = display_buffer.split(atom_it, sel.first);
-                atom_it = display_buffer.split(++atom_it, sel.second);
-                atom_it->attribute() |= Attributes::Underline;
-                ++atom_it;
-                ++sel_it;
-            }
-            // [------###]
-            else if (atom.begin() < sel.first and atom.end() > sel.first)
-            {
-                atom_it = ++display_buffer.split(atom_it, sel.first);
-                atom_it->attribute() |= Attributes::Underline;
-                ++atom_it;
-            }
-            // [#########]
-            else if (atom.begin() >= sel.first and atom.end() <= sel.second)
-            {
-                atom_it->attribute() |= Attributes::Underline;
-                ++atom_it;
-            }
-            // [---------]
-            else if (atom.begin() >= sel.second)
-                ++sel_it;
-            // [---------]
-            else if (atom.end() <= sel.first)
-                ++atom_it;
-            else
-                assert(false);
-        }
-
-        // invert selection last char
-        for (auto& sel : m_window.selections())
-        {
-            const BufferIterator& last = sel.last();
-
-            DisplayBuffer::iterator atom_it = display_buffer.atom_containing(last);
-            if (atom_it == display_buffer.end())
-                continue;
-
-            if (atom_it->begin() < last)
-                atom_it = ++display_buffer.split(atom_it, last);
-            if (atom_it->end() > last + 1)
-                atom_it = display_buffer.split(atom_it, last + 1);
-
-            atom_it->attribute() |= Attributes::Reverse;
-        }
-
-    }
-
-    static HighlighterAndId create(Window& window,
-                                   const HighlighterParameters& params)
-    {
-        return HighlighterAndId("highlight_selections",
-                            SelectionsHighlighter(window));
-    }
-
 private:
-    const Window& m_window;
+    std::string m_id;
 };
 
 HighlighterAndId highlighter_group_factory(Window& window,
@@ -312,7 +309,7 @@ void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.register_factory("highlight_selections", SelectionsHighlighter::create);
+    registry.register_factory("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
     registry.register_factory("expand_tabs", SimpleHighlighterFactory<expand_tabulations>("expand_tabs"));
     registry.register_factory("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_factory("regex", colorize_regex_factory);
