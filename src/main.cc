@@ -11,7 +11,7 @@
 #include "highlighter_registry.hh"
 #include "filters.hh"
 #include "filter_registry.hh"
-#include "hooks_manager.hh"
+#include "hook_manager.hh"
 #include "context.hh"
 #include "ncurses.hh"
 
@@ -392,9 +392,9 @@ void add_hook(const CommandParameters& params, const Context& context)
     };
 
     if (params[0] == "global")
-        GlobalHooksManager::instance().add_hook(params[1], hook_func);
+        GlobalHookManager::instance().add_hook(params[1], hook_func);
     else if (params[0] == "window")
-        context.window().hooks_manager().add_hook(params[1], hook_func);
+        context.window().hook_manager().add_hook(params[1], hook_func);
     else
         NCurses::print_status("error: no such hook container " + params[0]);
 }
@@ -914,7 +914,7 @@ int main(int argc, char* argv[])
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
-    GlobalHooksManager  hooks_manager;
+    GlobalHookManager   hook_manager;
 
     run_unit_tests();
 

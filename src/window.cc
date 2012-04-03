@@ -2,7 +2,7 @@
 
 #include "assert.hh"
 #include "highlighter_registry.hh"
-#include "hooks_manager.hh"
+#include "hook_manager.hh"
 #include "context.hh"
 
 #include <algorithm>
@@ -18,7 +18,7 @@ Window::Window(Buffer& buffer)
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    GlobalHooksManager::instance().run_hook("WinCreate", buffer.name(),
+    GlobalHookManager::instance().run_hook("WinCreate", buffer.name(),
                                             Context(*this));
 
     registry.add_highlighter_to_window(*this, "expand_tabs", HighlighterParameters());
@@ -129,7 +129,7 @@ std::string Window::status_line() const
 void Window::on_incremental_insertion_end()
 {
     push_selections();
-    hooks_manager().run_hook("InsertEnd", "", Context(*this));
+    hook_manager().run_hook("InsertEnd", "", Context(*this));
     pop_selections();
 }
 

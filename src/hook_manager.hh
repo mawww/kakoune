@@ -1,5 +1,5 @@
-#ifndef hooks_manager_hh_INCLUDED
-#define hooks_manager_hh_INCLUDED
+#ifndef hook_manager_hh_INCLUDED
+#define hook_manager_hh_INCLUDED
 
 #include "utils.hh"
 
@@ -11,7 +11,7 @@ namespace Kakoune
 class Context;
 typedef std::function<void (const std::string&, const Context&)> HookFunc;
 
-class HooksManager
+class HookManager
 {
 public:
     void add_hook(const std::string& hook_name, HookFunc hook);
@@ -19,15 +19,15 @@ public:
                   const Context& context) const;
 
 private:
-    std::unordered_map<std::string, std::vector<HookFunc>> m_hooks;
+    std::unordered_map<std::string, std::vector<HookFunc>> m_hook;
 };
 
-class GlobalHooksManager : public HooksManager,
-                           public Singleton<GlobalHooksManager>
+class GlobalHookManager : public HookManager,
+                          public Singleton<GlobalHookManager>
 {
 };
 
 }
 
-#endif // hooks_manager_hh_INCLUDED
+#endif // hook_manager_hh_INCLUDED
 

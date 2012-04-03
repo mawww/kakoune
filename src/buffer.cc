@@ -4,7 +4,7 @@
 #include "window.hh"
 #include "assert.hh"
 #include "utils.hh"
-#include "hooks_manager.hh"
+#include "hook_manager.hh"
 #include "context.hh"
 
 #include <algorithm>
@@ -33,9 +33,9 @@ Buffer::Buffer(const std::string& name, Type type,
         apply_modification(Modification::make_insert(begin(), initial_content));
 
     if (type == Type::NewFile)
-        GlobalHooksManager::instance().run_hook("BufCreate", name, Context(*this));
+        GlobalHookManager::instance().run_hook("BufCreate", name, Context(*this));
     else if (type == Type::File)
-        GlobalHooksManager::instance().run_hook("BufOpen", name, Context(*this));
+        GlobalHookManager::instance().run_hook("BufOpen", name, Context(*this));
 }
 
 Buffer::~Buffer()
