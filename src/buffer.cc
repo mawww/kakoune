@@ -191,6 +191,7 @@ void Buffer::check_invariant() const
     for (auto& line : m_lines)
     {
         assert(line.start == start);
+        assert(line.length() > 0);
         start += line.length();
     }
 }
@@ -264,7 +265,8 @@ void Buffer::erase(const BufferIterator& pos, BufferSize length)
     Line new_line = { m_lines[pos.line()].start, prefix + suffix };
 
     m_lines.erase(m_lines.begin() + pos.line(), m_lines.begin() + end.line() + 1);
-    m_lines.insert(m_lines.begin() + pos.line(), new_line);
+    if (new_line.length())
+        m_lines.insert(m_lines.begin() + pos.line(), std::move(new_line));
 
     for (size_t i = pos.line()+1; i < line_count(); ++i)
         m_lines[i].start -= length;
@@ -280,8 +282,12 @@ void Buffer::apply_modification(const Modification& modification)
     switch (modification.type)
     {
     case Modification::Insert:
-        insert(modification.position, modification.content);
+    {
+        BufferIterator pos = modification.position < end() ?
+                             modification.position : end();
+        insert(pos, modification.content);
         break;
+    }
     case Modification::Erase:
     {
         size_t size = modification.content.size();
