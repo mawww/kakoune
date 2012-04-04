@@ -71,66 +71,44 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
     return (m_coord >= iterator.m_coord);
 }
 
-inline BufferCoord measure_string(const String& string)
+inline void BufferIterator::on_insert(const BufferCoord& begin,
+                                      const BufferCoord& end)
 {
-    BufferCoord res;
-    for (auto c : string)
-    {
-        if (c == '\n')
-        {
-            ++res.line;
-            res.column = 0;
-        }
-        else
-           ++res.column;
-    }
-    return res;
-}
-
-inline BufferCoord advance(const BufferCoord& base, const BufferCoord& offset)
-{
-    if (offset.line == 0)
-        return BufferCoord{base.line, base.column + offset.column};
-    else
-        return BufferCoord{base.line + offset.line, offset.column};
-}
-
-inline void BufferIterator::update(const Modification& modification)
-{
-    const BufferIterator& pos = modification.position;
-    if (*this < pos)
+    if (m_coord < begin)
         return;
 
-    BufferCoord measure = measure_string(modification.content);
-    if (modification.type == Modification::Erase)
-    {
-        BufferCoord end = advance(pos.m_coord, measure);
-        if (m_coord <= end)
-            m_coord = pos.m_coord;
-        else
-        {
-            m_coord.line -= measure.line;
-            if (measure.line > 0 and pos.line() == m_coord.line)
-                m_coord.column += pos.column();
-            if (end.line == m_coord.line)
-                m_coord.column -= measure.column;
-        }
+    if (begin.line == line())
+        m_coord.column = end.column + m_coord.column - begin.column;
+    m_coord.line += end.line - begin.line;
 
-        if (is_end())
-            operator--();
-    }
-    else
-    {
-        assert(modification.type == Modification::Insert);
-        if (pos.line() == line())
-        {
-            BufferCoord end = advance(pos.m_coord, measure);
-            m_coord.column = end.column + column() - pos.column();
-        }
-        m_coord.line += measure.line;
-    }
     assert(is_valid());
 }
+
+inline void BufferIterator::on_erase(const BufferCoord& begin,
+                                     const BufferCoord& end)
+{
+    if (m_coord < begin)
+        return;
+
+    BufferCoord measure;
+    measure.line = end.line - begin.line;
+    measure.column = end.column - (measure.line == 0 ? begin.column : 0);
+    if (m_coord <= end)
+        m_coord = begin;
+    else
+    {
+        m_coord.line -= measure.line;
+        if (measure.line > 0 and begin.line == m_coord.line)
+            m_coord.column += begin.column;
+        if (end.line == m_coord.line)
+            m_coord.column -= measure.column;
+    }
+
+    if (is_end())
+        operator--();
+    assert(is_valid());
+}
+
 
 inline BufferChar BufferIterator::operator*() const
 {

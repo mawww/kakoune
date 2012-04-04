@@ -54,20 +54,18 @@ void Selection::merge_with(const Selection& selection)
     m_last = selection.m_last;
 }
 
-void Selection::on_modification(const Modification& modification)
-{
-    m_first.update(modification);
-    m_last.update(modification);
-}
-
 void Selection::register_with_buffer()
 {
-    const_cast<Buffer&>(m_first.buffer()).register_modification_listener(this);
+    Buffer& buffer = const_cast<Buffer&>(m_first.buffer());
+    buffer.add_iterator_to_update(m_first);
+    buffer.add_iterator_to_update(m_last);
 }
 
 void Selection::unregister_with_buffer()
 {
-    const_cast<Buffer&>(m_first.buffer()).unregister_modification_listener(this);
+    Buffer& buffer = const_cast<Buffer&>(m_first.buffer());
+    buffer.remove_iterator_from_update(m_first);
+    buffer.remove_iterator_from_update(m_last);
 }
 
 }

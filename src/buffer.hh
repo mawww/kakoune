@@ -41,7 +41,7 @@ public:
     typedef const value_type& reference;
     typedef std::bidirectional_iterator_tag iterator_category;
 
-    BufferIterator() : m_buffer(NULL) {}
+    BufferIterator() : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, BufferCoord coord);
     BufferIterator& operator=(const BufferIterator& iterator);
 
@@ -68,7 +68,8 @@ public:
     bool is_end() const;
     bool is_valid() const;
 
-    void update(const Modification& modification);
+    void on_insert(const BufferCoord& begin, const BufferCoord& end);
+    void on_erase(const BufferCoord& begin, const BufferCoord& end);
 
     const Buffer& buffer() const;
 
@@ -99,12 +100,6 @@ struct Modification
     static Modification make_erase(BufferIterator begin, BufferIterator end);
     static Modification make_insert(BufferIterator position,
                                     const String& content);
-};
-
-class ModificationListener
-{
-public:
-    virtual void on_modification(const Modification& modification) = 0;
 };
 
 // A Buffer is a in-memory representation of a file
@@ -160,8 +155,8 @@ public:
     Type type() const { return m_type; }
     void notify_saved();
 
-    void register_modification_listener(ModificationListener* listener);
-    void unregister_modification_listener(ModificationListener* listener);
+    void add_iterator_to_update(BufferIterator& iterator);
+    void remove_iterator_from_update(BufferIterator& iterator);
 
     // returns an iterator pointing to the first character of the line
     // iterator is on
@@ -212,7 +207,7 @@ private:
 
     size_t m_last_save_undo_index;
 
-    std::vector<ModificationListener*> m_modification_listeners;
+    std::vector<BufferIterator*> m_iterators_to_update;
 
     OptionManager m_option_manager;
 };
