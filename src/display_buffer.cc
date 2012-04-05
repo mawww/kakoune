@@ -1,6 +1,7 @@
 #include "display_buffer.hh"
 
 #include "assert.hh"
+#include <algorithm>
 
 namespace Kakoune
 {
@@ -92,12 +93,9 @@ DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& whe
 DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& where,
                                                        iterator start)
 {
-    for (iterator it = start; it != m_atoms.end(); ++it)
-    {
-        if (it->end() > where)
-            return it->begin() <= where ? it : end();
-    }
-    return end();
+    return std::upper_bound(start, end(), where,
+                            [](const BufferIterator& where, const DisplayAtom& atom)
+                            { return where < atom.end(); });
 }
 
 DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator& pos)
