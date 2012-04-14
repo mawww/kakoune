@@ -591,7 +591,8 @@ void do_pipe(Editor& editor, int count)
                 close(read_pipe[1]);
 
                 String content = editor.buffer().string(sel.begin(), sel.end());
-                write(write_pipe[1], content.c_str(), content.size());
+                memoryview<char> data = content.data();
+                write(write_pipe[1], data.pointer(), data.size());
                 close(write_pipe[1]);
 
                 String new_content;

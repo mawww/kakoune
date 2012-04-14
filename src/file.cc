@@ -91,8 +91,9 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
     for (size_t i = 0; i < buffer.line_count(); ++i)
     {
         const String& content = buffer.line_content(i);
-        const char* ptr = content.c_str();
-        ssize_t count   = content.size();
+        memoryview<char> data = content.data();
+        const char* ptr = data.pointer();
+        ssize_t count   = data.size();
 
         while (count)
         {
