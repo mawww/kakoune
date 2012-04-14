@@ -16,15 +16,15 @@ public:
     void operator()(DisplayBuffer& display_buffer);
 
     void append(HighlighterAndId&& highlighter);
-    void remove(const std::string& id);
+    void remove(const String& id);
 
-    HighlighterGroup& get_group(const std::string& id);
+    HighlighterGroup& get_group(const String& id);
 
-    CandidateList complete_id(const std::string& prefix, size_t cursor_pos);
-    CandidateList complete_group_id(const std::string& prefix, size_t cursor_pos);
+    CandidateList complete_id(const String& prefix, size_t cursor_pos);
+    CandidateList complete_group_id(const String& prefix, size_t cursor_pos);
 
 private:
-    idvaluemap<std::string, HighlighterFunc> m_highlighters;
+    idvaluemap<String, HighlighterFunc> m_highlighters;
 };
 
 }

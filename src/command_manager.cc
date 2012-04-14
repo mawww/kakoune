@@ -12,14 +12,14 @@
 namespace Kakoune
 {
 
-void CommandManager::register_command(const std::string& command_name, Command command,
+void CommandManager::register_command(const String& command_name, Command command,
                                       unsigned flags,
                                       const CommandCompleter& completer)
 {
     m_commands[command_name] = CommandDescriptor { command, flags, completer };
 }
 
-void CommandManager::register_commands(const memoryview<std::string>& command_names, Command command,
+void CommandManager::register_commands(const memoryview<String>& command_names, Command command,
                                        unsigned flags,
                                        const CommandCompleter& completer)
 {
@@ -33,7 +33,7 @@ static bool is_blank(char c)
 }
 
 typedef std::vector<std::pair<size_t, size_t>> TokenList;
-static TokenList split(const std::string& line)
+static TokenList split(const String& line)
 {
     TokenList result;
 
@@ -76,18 +76,18 @@ static TokenList split(const std::string& line)
 
 struct command_not_found : runtime_error
 {
-    command_not_found(const std::string& command)
+    command_not_found(const String& command)
         : runtime_error(command + " : no such command") {}
 };
 
-void CommandManager::execute(const std::string& command_line,
+void CommandManager::execute(const String& command_line,
                              const Context& context)
 {
     TokenList tokens = split(command_line);
     if (tokens.empty())
         return;
 
-    std::vector<std::string> params;
+    std::vector<String> params;
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
         params.push_back(command_line.substr(it->first,
@@ -97,8 +97,8 @@ void CommandManager::execute(const std::string& command_line,
     execute(params, context);
 }
 
-static void shell_eval(std::vector<std::string>& params,
-                       const std::string& cmdline,
+static void shell_eval(std::vector<String>& params,
+                       const String& cmdline,
                        const Context& context)
 {
     int write_pipe[2];
@@ -113,13 +113,13 @@ static void shell_eval(std::vector<std::string>& params,
         close(read_pipe[1]);
         close(write_pipe[1]);
 
-        std::string output;
+        String output;
         char buffer[1024];
         while (size_t size = read(read_pipe[0], buffer, 1024))
         {
             if (size == -1)
                 break;
-            output += std::string(buffer, buffer+size);
+            output += String(buffer, buffer+size);
         }
         close(read_pipe[0]);
         waitpid(pid, NULL, 0);
@@ -161,7 +161,7 @@ void CommandManager::execute(const CommandParameters& params,
 
         if (end != begin)
         {
-            std::vector<std::string> expanded_params;
+            std::vector<String> expanded_params;
             auto command_it = m_commands.find(*begin);
 
             if (command_it == m_commands.end() and
@@ -209,7 +209,7 @@ void CommandManager::execute(const CommandParameters& params,
     }
 }
 
-Completions CommandManager::complete(const std::string& command_line, size_t cursor_pos)
+Completions CommandManager::complete(const String& command_line, size_t cursor_pos)
 {
     TokenList tokens = split(command_line);
 
@@ -227,8 +227,8 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
     {
         size_t cmd_start = tokens.empty() ? 0 : tokens[0].first;
         Completions result(cmd_start, cursor_pos);
-        std::string prefix = command_line.substr(cmd_start,
-                                                 cursor_pos - cmd_start);
+        String prefix = command_line.substr(cmd_start,
+                                            cursor_pos - cmd_start);
 
         for (auto& command : m_commands)
         {
@@ -240,7 +240,7 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
     }
 
     assert(not tokens.empty());
-    std::string command_name =
+    String command_name =
         command_line.substr(tokens[0].first,
                             tokens[0].second - tokens[0].first);
 
@@ -248,7 +248,7 @@ Completions CommandManager::complete(const std::string& command_line, size_t cur
     if (command_it == m_commands.end() or not command_it->second.completer)
         return Completions();
 
-    std::vector<std::string> params;
+    std::vector<String> params;
     for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
     {
         params.push_back(command_line.substr(it->first,
@@ -276,8 +276,8 @@ CandidateList PerArgumentCommandCompleter::operator()(const CommandParameters& p
     // it is possible to try to complete a new argument
     assert(token_to_complete <= params.size());
 
-    const std::string& argument = token_to_complete < params.size() ?
-                                  params[token_to_complete] : std::string();
+    const String& argument = token_to_complete < params.size() ?
+                             params[token_to_complete] : String();
     return m_completers[token_to_complete](argument, pos_in_token);
 }
 

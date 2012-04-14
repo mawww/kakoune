@@ -1,11 +1,11 @@
 #ifndef command_manager_hh_INCLUDED
 #define command_manager_hh_INCLUDED
 
-#include <string>
 #include <unordered_map>
 #include <functional>
 #include <initializer_list>
 
+#include "string.hh"
 #include "utils.hh"
 #include "completion.hh"
 #include "memoryview.hh"
@@ -20,7 +20,7 @@ struct wrong_argument_count : runtime_error
     wrong_argument_count() : runtime_error("wrong argument count") {}
 };
 
-typedef memoryview<std::string> CommandParameters;
+typedef memoryview<String> CommandParameters;
 typedef std::function<void (const CommandParameters&,
                             const Context& context)> Command;
 
@@ -30,7 +30,7 @@ typedef std::function<CandidateList (const CommandParameters&,
 class PerArgumentCommandCompleter
 {
 public:
-    typedef std::function<CandidateList (const std::string&, size_t)> ArgumentCompleter;
+    typedef std::function<CandidateList (const String&, size_t)> ArgumentCompleter;
     typedef memoryview<ArgumentCompleter> ArgumentCompleterList;
 
     PerArgumentCommandCompleter(const ArgumentCompleterList& completers)
@@ -54,17 +54,17 @@ public:
         DeferredShellEval = 2,
     };
 
-    void execute(const std::string& command_line, const Context& context);
+    void execute(const String& command_line, const Context& context);
     void execute(const CommandParameters& params, const Context& context);
 
-    Completions complete(const std::string& command_line, size_t cursor_pos);
+    Completions complete(const String& command_line, size_t cursor_pos);
 
-    void register_command(const std::string& command_name,
+    void register_command(const String& command_name,
                           Command command,
                           unsigned flags = None,
                           const CommandCompleter& completer = CommandCompleter());
 
-    void register_commands(const memoryview<std::string>& command_names,
+    void register_commands(const memoryview<String>& command_names,
                            Command command,
                            unsigned flags = None,
                            const CommandCompleter& completer = CommandCompleter());
@@ -76,7 +76,7 @@ private:
         unsigned flags;
         CommandCompleter completer;
     };
-    std::unordered_map<std::string, CommandDescriptor> m_commands;
+    std::unordered_map<String, CommandDescriptor> m_commands;
 };
 
 }

@@ -72,7 +72,7 @@ void Editor::append(const memoryview<String>& strings)
     do_insert<true>(*this, strings);
 }
 
-void Editor::replace(const std::string& string)
+void Editor::replace(const String& string)
 {
     scoped_edition edition(*this);
     erase();
@@ -228,7 +228,7 @@ void Editor::check_invariant() const
 
 struct id_not_unique : public runtime_error
 {
-    id_not_unique(const std::string& id)
+    id_not_unique(const String& id)
         : runtime_error("id not unique: " + id) {}
 };
 
@@ -239,12 +239,12 @@ void Editor::add_filter(FilterAndId&& filter)
     m_filters.append(std::forward<FilterAndId>(filter));
 }
 
-void Editor::remove_filter(const std::string& id)
+void Editor::remove_filter(const String& id)
 {
     m_filters.remove(id);
 }
 
-CandidateList Editor::complete_filterid(const std::string& prefix,
+CandidateList Editor::complete_filterid(const String& prefix,
                                         size_t cursor_pos)
 {
     return m_filters.complete_id<str_to_str>(prefix, cursor_pos);

@@ -9,17 +9,17 @@ namespace Kakoune
 {
 
 class Context;
-typedef std::function<void (const std::string&, const Context&)> HookFunc;
+typedef std::function<void (const String&, const Context&)> HookFunc;
 
 class HookManager
 {
 public:
-    void add_hook(const std::string& hook_name, HookFunc hook);
-    void run_hook(const std::string& hook_name, const std::string& param,
+    void add_hook(const String& hook_name, HookFunc hook);
+    void run_hook(const String& hook_name, const String& param,
                   const Context& context) const;
 
 private:
-    std::unordered_map<std::string, std::vector<HookFunc>> m_hook;
+    std::unordered_map<String, std::vector<HookFunc>> m_hook;
 };
 
 class GlobalHookManager : public HookManager,

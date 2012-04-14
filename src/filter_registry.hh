@@ -1,9 +1,9 @@
 #ifndef filter_registry_h_INCLUDED
 #define filter_registry_h_INCLUDED
 
-#include <string>
 #include <unordered_map>
 
+#include "string.hh"
 #include "filter.hh"
 #include "utils.hh"
 #include "completion.hh"
@@ -15,7 +15,7 @@ namespace Kakoune
 
 class Window;
 
-typedef memoryview<std::string> FilterParameters;
+typedef memoryview<String> FilterParameters;
 
 typedef std::function<FilterAndId (Window& window,
                                    const FilterParameters& params)> FilterFactory;
@@ -23,18 +23,18 @@ typedef std::function<FilterAndId (Window& window,
 class FilterRegistry : public Singleton<FilterRegistry>
 {
 public:
-    void register_factory(const std::string& name,
+    void register_factory(const String& name,
                           const FilterFactory& factory);
 
     void add_filter_to_window(Window& window,
-                              const std::string& factory_name,
+                              const String& factory_name,
                               const FilterParameters& parameters);
 
-    CandidateList complete_filter(const std::string& prefix,
+    CandidateList complete_filter(const String& prefix,
                                   size_t cursor_pos);
 
 private:
-    idvaluemap<std::string, FilterFactory> m_factories;
+    idvaluemap<String, FilterFactory> m_factories;
 };
 
 }

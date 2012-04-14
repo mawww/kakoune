@@ -1,7 +1,7 @@
 #ifndef exception_hh_INCLUDED
 #define exception_hh_INCLUDED
 
-#include <string>
+#include "string.hh"
 
 namespace Kakoune
 {
@@ -9,18 +9,18 @@ namespace Kakoune
 struct exception
 {
     virtual ~exception() {}
-    virtual std::string description() const;
+    virtual String description() const;
 };
 
 struct runtime_error : exception
 {
-    runtime_error(const std::string& description)
+    runtime_error(const String& description)
         : m_description(description) {}
 
-    std::string description() const { return m_description; }
+    String description() const { return m_description; }
 
 private:
-    std::string m_description;
+    String m_description;
 };
 
 struct logic_error : exception

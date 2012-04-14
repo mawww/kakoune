@@ -35,6 +35,7 @@ public:
     memoryview(const std::initializer_list<T>& v)
         : m_pointer(v.begin()), m_size(v.size()) {}
 
+    const T* pointer() const { return m_pointer; }
     size_t size() const { return m_size; }
     const T& operator[](size_t n) const { return *(m_pointer + n); }
 

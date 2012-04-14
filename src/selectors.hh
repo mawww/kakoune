@@ -33,13 +33,13 @@ SelectionAndCaptures select_whole_lines(const Selection& selection);
 SelectionAndCaptures select_whole_buffer(const Selection& selection);
 
 SelectionAndCaptures select_next_match(const Selection& selection,
-                                       const std::string& regex);
+                                       const String& regex);
 
 SelectionAndCapturesList select_all_matches(const Selection& selection,
-                                            const std::string& regex);
+                                            const String& regex);
 
 SelectionAndCapturesList split_selection(const Selection& selection,
-                                         const std::string& separator_regex);
+                                         const String& separator_regex);
 
 }
 

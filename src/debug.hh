@@ -1,12 +1,12 @@
 #ifndef debug_hh_INCLUDED
 #define debug_hh_INCLUDED
 
-#include <string>
+#include "string.hh"
 
 namespace Kakoune
 {
 
-void write_debug(const std::string& str);
+void write_debug(const String& str);
 
 }
 

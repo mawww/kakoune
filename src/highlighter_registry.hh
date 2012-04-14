@@ -1,7 +1,7 @@
 #ifndef highlighter_registry_h_INCLUDED
 #define highlighter_registry_h_INCLUDED
 
-#include <string>
+#include "string.hh"
 #include <unordered_map>
 
 #include "highlighter.hh"
@@ -21,23 +21,23 @@ typedef std::function<HighlighterAndId (Window& window,
 class HighlighterRegistry : public Singleton<HighlighterRegistry>
 {
 public:
-    void register_factory(const std::string& name,
+    void register_factory(const String& name,
                           const HighlighterFactory& factory);
 
     void add_highlighter_to_window(Window& window,
-                                  const std::string& factory_name,
+                                  const String& factory_name,
                                   const HighlighterParameters& parameters);
 
     void add_highlighter_to_group(Window& window,
                                   HighlighterGroup& group,
-                                  const std::string& factory_name,
+                                  const String& factory_name,
                                   const HighlighterParameters& parameters);
 
-    CandidateList complete_highlighter(const std::string& prefix,
+    CandidateList complete_highlighter(const String& prefix,
                                       size_t cursor_pos);
 
 private:
-    idvaluemap<std::string, HighlighterFactory> m_factories;
+    idvaluemap<String, HighlighterFactory> m_factories;
 };
 
 }

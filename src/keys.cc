@@ -5,13 +5,13 @@
 namespace Kakoune
 {
 
-static std::unordered_map<std::string, char> keynamemap = {
+static std::unordered_map<String, Character> keynamemap = {
     { "ret", '\n' },
     { "space", ' ' },
     { "esc", 27 }
 };
 
-KeyList parse_keys(const std::string& str)
+KeyList parse_keys(const String& str)
 {
     KeyList result;
     for (size_t pos = 0; pos < str.length(); ++pos)
@@ -26,7 +26,7 @@ KeyList parse_keys(const std::string& str)
             {
                 Key::Modifiers modifier = Key::Modifiers::None;
 
-                std::string keyname = str.substr(pos+1, end_pos - pos - 1);
+                String keyname = str.substr(pos+1, end_pos - pos - 1);
                 if (keyname.length() > 2)
                 {
                     if (tolower(keyname[0]) == 'c' and keyname[1] == '-')

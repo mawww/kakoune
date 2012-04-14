@@ -110,7 +110,7 @@ inline void BufferIterator::on_erase(const BufferCoord& begin,
 }
 
 
-inline BufferChar BufferIterator::operator*() const
+inline Character BufferIterator::operator*() const
 {
     assert(m_buffer);
     return m_buffer->m_lines[line()].content[column()];

@@ -5,7 +5,7 @@
 #include "display_buffer.hh"
 #include "highlighter_registry.hh"
 #include "highlighter_group.hh"
-#include <boost/regex.hpp>
+#include "regex.hh"
 
 namespace Kakoune
 {
@@ -15,7 +15,7 @@ using namespace std::placeholders;
 void colorize_regex_range(DisplayBuffer& display_buffer,
                           const BufferIterator& range_begin,
                           const BufferIterator& range_end,
-                          const boost::regex& ex,
+                          const Regex& ex,
                           Color fg_color, Color bg_color = Color::Default)
 {
     assert(range_begin <= range_end);
@@ -29,9 +29,8 @@ void colorize_regex_range(DisplayBuffer& display_buffer,
     BufferIterator display_end   = std::min(range_end,
                                             display_buffer.back().end());
 
-    boost::regex_iterator<BufferIterator> re_it(display_begin, display_end,
-                                                ex, boost::match_nosubs);
-    boost::regex_iterator<BufferIterator> re_end;
+    RegexIterator re_it(display_begin, display_end, ex, boost::match_nosubs);
+    RegexIterator re_end;
     DisplayBuffer::iterator atom_it = display_buffer.begin();
     for (; re_it != re_end; ++re_it)
     {
@@ -65,14 +64,14 @@ void colorize_regex_range(DisplayBuffer& display_buffer,
 }
 
 void colorize_regex(DisplayBuffer& display_buffer,
-                    const boost::regex& ex,
+                    const Regex& ex,
                     Color fg_color, Color bg_color = Color::Default)
 {
     colorize_regex_range(display_buffer, display_buffer.front().begin(),
                          display_buffer.back().end(), ex, fg_color, bg_color);
 }
 
-Color parse_color(const std::string& color)
+Color parse_color(const String& color)
 {
     if (color == "default") return Color::Default;
     if (color == "black")   return Color::Black;
@@ -92,12 +91,12 @@ HighlighterAndId colorize_regex_factory(Window& window,
     if (params.size() != 3)
         throw runtime_error("wrong parameter count");
 
-    boost::regex ex(params[0]);
+    Regex ex(params[0].begin(), params[0].end());
 
     Color fg_color = parse_color(params[1]);
     Color bg_color = parse_color(params[2]);
 
-    std::string id = "colre'" + params[0] + "'";
+    String id = "colre'" + params[0] + "'";
 
     return HighlighterAndId(id, std::bind(colorize_regex, _1,
                                           ex, fg_color, bg_color));
@@ -133,8 +132,10 @@ void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
                 }
 
                 int count = tabstop - (column % tabstop);
-                display_buffer.replace_atom_content(atom_it,
-                                                    std::string(count, ' '));
+                String padding;
+                for (int i = 0; i < count; ++i)
+                    padding += ' ';
+                display_buffer.replace_atom_content(atom_it, padding);
             }
         }
     }
@@ -271,7 +272,7 @@ template<void (*highlighter_func)(DisplayBuffer&)>
 class SimpleHighlighterFactory
 {
 public:
-    SimpleHighlighterFactory(const std::string& id) : m_id(id) {}
+    SimpleHighlighterFactory(const String& id) : m_id(id) {}
 
     HighlighterAndId operator()(Window& window,
                                 const HighlighterParameters& params) const
@@ -279,14 +280,14 @@ public:
         return HighlighterAndId(m_id, HighlighterFunc(highlighter_func));
     }
 private:
-    std::string m_id;
+    String m_id;
 };
 
 template<void (*highlighter_func)(Window&, DisplayBuffer&)>
 class WindowHighlighterFactory
 {
 public:
-    WindowHighlighterFactory(const std::string& id) : m_id(id) {}
+    WindowHighlighterFactory(const String& id) : m_id(id) {}
 
     HighlighterAndId operator()(Window& window,
                                 const HighlighterParameters& params) const
@@ -294,7 +295,7 @@ public:
         return HighlighterAndId(m_id, std::bind(highlighter_func, std::ref(window), _1));
     }
 private:
-    std::string m_id;
+    String m_id;
 };
 
 HighlighterAndId highlighter_group_factory(Window& window,

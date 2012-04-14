@@ -2,7 +2,7 @@
 #define keys_hh_INCLUDED
 
 #include <vector>
-#include <string>
+#include "string.hh"
 
 namespace Kakoune
 {
@@ -18,9 +18,9 @@ struct Key
     };
 
     Modifiers modifiers;
-    char      key;
+    Character key;
 
-    Key(Modifiers modifiers, char key)
+    Key(Modifiers modifiers, Character key)
         : modifiers(modifiers), key(key) {}
 
     bool operator==(const Key& other) const
@@ -29,7 +29,7 @@ struct Key
 
 typedef std::vector<Key> KeyList;
 
-KeyList parse_keys(const std::string& str);
+KeyList parse_keys(const String& str);
 
 }
 

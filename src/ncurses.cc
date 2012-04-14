@@ -82,7 +82,7 @@ void draw_window(Window& window)
     for (const DisplayAtom& atom : window.display_buffer())
     {
         assert(position == atom.coord());
-        const std::string content = atom.content();
+        const String content = atom.content();
 
         set_attribute(A_UNDERLINE, atom.attribute() & Underline);
         set_attribute(A_REVERSE, atom.attribute() & Reverse);
@@ -91,17 +91,16 @@ void draw_window(Window& window)
 
         set_color(atom.fg_color(), atom.bg_color());
 
-        size_t pos = 0;
-        size_t end;
+        auto pos = content.begin();
         while (true)
         {
             move(position.line, position.column);
             clrtoeol();
-            end = content.find_first_of('\n', pos);
-            std::string line = content.substr(pos, end - pos);
+            auto end = std::find(pos, content.end(), '\n');
+            String line(pos, end);
             addstr(line.c_str());
 
-            if (end != std::string::npos)
+            if (end != content.end())
             {
                 addch(' ');
                 position.line = position.line + 1;
@@ -134,7 +133,7 @@ void draw_window(Window& window)
     }
 
     set_color(Color::Cyan, Color::Black);
-    std::string status_line = window.status_line();
+    String status_line = window.status_line();
     static int last_status_length = 0;
     move(max_y, max_x - last_status_length);
     clrtoeol();
@@ -167,7 +166,7 @@ static Key get_key()
     return Key(modifiers, c);
 }
 
-static std::string prompt(const std::string& text, Completer completer)
+static String prompt(const String& text, Completer completer)
 {
     curs_set(2);
     auto restore_cursor = on_scope_end([]() { curs_set(0); });
@@ -182,13 +181,13 @@ static std::string prompt(const std::string& text, Completer completer)
 
     Completions completions;
     int current_completion = -1;
-    std::string text_before_completion;
+    String text_before_completion;
 
-    std::string result;
-    std::string saved_result;
+    String result;
+    String saved_result;
 
-    static std::unordered_map<std::string, std::vector<std::string>> history_per_prompt;
-    std::vector<std::string>& history = history_per_prompt[text];
+    static std::unordered_map<String, std::vector<String>> history_per_prompt;
+    std::vector<String>& history = history_per_prompt[text];
     auto history_it = history.end();
 
     while (true)
@@ -198,7 +197,7 @@ static std::string prompt(const std::string& text, Completer completer)
         {
         case '\r':
         {
-            std::vector<std::string>::iterator it;
+            std::vector<String>::iterator it;
             while ((it = find(history, result)) != history.end())
                 history.erase(it);
 
@@ -238,7 +237,7 @@ static std::string prompt(const std::string& text, Completer completer)
             if (cursor_pos != 0)
             {
                 result = result.substr(0, cursor_pos - 1)
-                       + result.substr(cursor_pos, std::string::npos);
+                       + result.substr(cursor_pos, String::npos);
 
                 --cursor_pos;
             }
@@ -248,9 +247,9 @@ static std::string prompt(const std::string& text, Completer completer)
         case CTRL('r'):
             {
                 c = getch();
-                std::string reg = RegisterManager::instance()[c].get();
+                String reg = RegisterManager::instance()[c].get();
                 current_completion = -1;
-                result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, std::string::npos);
+                result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, String::npos);
                 cursor_pos += reg.length();
             }
             break;
@@ -269,7 +268,7 @@ static std::string prompt(const std::string& text, Completer completer)
             }
             ++current_completion;
 
-            std::string completion;
+            String completion;
             if (current_completion >= completions.candidates.size())
             {
                 if (current_completion == completions.candidates.size() and
@@ -291,7 +290,7 @@ static std::string prompt(const std::string& text, Completer completer)
         }
         default:
             current_completion = -1;
-            result = result.substr(0, cursor_pos) + (char)c + result.substr(cursor_pos, std::string::npos);
+            result = result.substr(0, cursor_pos) + (char)c + result.substr(cursor_pos, String::npos);
             ++cursor_pos;
         }
 
@@ -304,7 +303,7 @@ static std::string prompt(const std::string& text, Completer completer)
     return result;
 }
 
-void print_status(const std::string& status)
+void print_status(const String& status)
 {
     int x,y;
     getmaxyx(stdscr, y, x);
@@ -315,6 +314,7 @@ void print_status(const std::string& status)
 
 void init(PromptFunc& prompt_func, GetKeyFunc& get_key_func)
 {
+    // setlocale(LC_ALL, "");
     initscr();
     cbreak();
     noecho();

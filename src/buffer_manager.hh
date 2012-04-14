@@ -14,7 +14,7 @@ class Buffer;
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    typedef std::unordered_map<std::string, Buffer*> BufferMap;
+    typedef std::unordered_map<String, Buffer*> BufferMap;
 
     struct iterator : public BufferMap::const_iterator
     {
@@ -32,10 +32,10 @@ public:
     iterator begin() const { return iterator(m_buffers.begin()); }
     iterator end() const { return iterator(m_buffers.end()); }
 
-    Buffer* get_buffer(const std::string& name);
+    Buffer* get_buffer(const String& name);
 
-    CandidateList complete_buffername(const std::string& prefix,
-                                      size_t cursor_pos = std::string::npos);
+    CandidateList complete_buffername(const String& prefix,
+                                      size_t cursor_pos = String::npos);
 
 private:
     BufferMap m_buffers;

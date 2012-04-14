@@ -8,11 +8,11 @@ namespace Kakoune
 
 struct assert_failed : logic_error
 {
-    assert_failed(const std::string& message);
-    std::string description() const;
+    assert_failed(const String& message);
+    String description() const;
 
 private:
-    std::string m_message;
+    String m_message;
 };
 
 }

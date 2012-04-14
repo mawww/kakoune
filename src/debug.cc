@@ -9,7 +9,7 @@ namespace Kakoune
 
 static Buffer& get_or_create_debug_buffer()
 {
-    static const std::string debug_buffer_name("*debug*");
+    static const String debug_buffer_name("*debug*");
     Buffer* buffer = BufferManager::instance().get_buffer(debug_buffer_name);
 
     if (not buffer)
@@ -19,7 +19,7 @@ static Buffer& get_or_create_debug_buffer()
     return *buffer;
 }
 
-void write_debug(const std::string& str)
+void write_debug(const String& str)
 {
     Buffer& debug_buffer = get_or_create_debug_buffer();
     Editor editor(debug_buffer);

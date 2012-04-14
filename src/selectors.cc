@@ -1,6 +1,7 @@
 #include "selectors.hh"
 
-#include <boost/regex.hpp>
+#include "regex.hh"
+
 #include <algorithm>
 
 namespace Kakoune
@@ -371,7 +372,7 @@ SelectionAndCaptures select_whole_buffer(const Selection& selection)
 }
 
 SelectionAndCaptures select_next_match(const Selection& selection,
-                                       const std::string& regex)
+                                       const String& regex)
 {
     try
     {
@@ -379,7 +380,7 @@ SelectionAndCaptures select_next_match(const Selection& selection,
         BufferIterator end = begin;
         CaptureList captures;
 
-        boost::regex ex(regex);
+        Regex ex(regex.begin(), regex.end());
         boost::match_results<BufferIterator> matches;
 
         if (boost::regex_search(begin+1, begin.buffer().end(),
@@ -387,16 +388,16 @@ SelectionAndCaptures select_next_match(const Selection& selection,
         {
             begin = matches[0].first;
             end   = matches[0].second;
-            std::copy(matches.begin(), matches.end(),
-                      std::back_inserter(captures));
+            for (auto& match : matches)
+                captures.push_back(String(match.first, match.second));
         }
         else if (boost::regex_search(begin.buffer().begin(), begin+1,
                                      matches, ex))
         {
             begin = matches[0].first;
             end   = matches[0].second;
-            std::copy(matches.begin(), matches.end(),
-                      std::back_inserter(captures));
+            for (auto& match : matches)
+                captures.push_back(String(match.first, match.second));
         }
         if (begin == end)
             ++end;
@@ -405,18 +406,16 @@ SelectionAndCaptures select_next_match(const Selection& selection,
     }
     catch (boost::regex_error& err)
     {
-        throw runtime_error(std::string("regex error: ") + err.what());
+        throw runtime_error(String("regex error: ") + err.what());
     }
 }
 
-typedef boost::regex_iterator<BufferIterator> RegexIterator;
-
 SelectionAndCapturesList select_all_matches(const Selection& selection,
-                                            const std::string& regex)
+                                            const String& regex)
 {
     try
     {
-        boost::regex ex(regex);
+        Regex ex(regex.begin(), regex.end());
         RegexIterator re_it(selection.begin(), selection.end(), ex);
         RegexIterator re_end;
 
@@ -426,7 +425,9 @@ SelectionAndCapturesList select_all_matches(const Selection& selection,
             BufferIterator begin = (*re_it)[0].first;
             BufferIterator end   = (*re_it)[0].second;
 
-            CaptureList captures(re_it->begin(), re_it->end());
+            CaptureList captures;
+            for (auto& match : *re_it)
+                captures.push_back(String(match.first, match.second));
 
             result.push_back(SelectionAndCaptures(begin,
                                                   begin == end ? end : end-1,
@@ -436,16 +437,16 @@ SelectionAndCapturesList select_all_matches(const Selection& selection,
     }
     catch (boost::regex_error& err)
     {
-        throw runtime_error(std::string("regex error: ") + err.what());
+        throw runtime_error(String("regex error: ") + err.what());
     }
 }
 
 SelectionAndCapturesList split_selection(const Selection& selection,
-                                         const std::string& separator_regex)
+                                         const String& separator_regex)
 {
     try
     {
-        boost::regex ex(separator_regex);
+        Regex ex(separator_regex.begin(), separator_regex.end());
         RegexIterator re_it(selection.begin(), selection.end(), ex,
                             boost::regex_constants::match_nosubs);
         RegexIterator re_end;
@@ -464,7 +465,7 @@ SelectionAndCapturesList split_selection(const Selection& selection,
     }
     catch (boost::regex_error& err)
     {
-        throw runtime_error(std::string("regex error: ") + err.what());
+        throw runtime_error(String("regex error: ") + err.what());
     }
 }
 

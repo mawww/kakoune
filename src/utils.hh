@@ -112,7 +112,7 @@ bool contains(const Container& container, const T& value)
     return find(container, value) != container.end();
 }
 
-inline std::string str_to_str(const std::string& str)
+inline String str_to_str(const String& str)
 {
     return str;
 }

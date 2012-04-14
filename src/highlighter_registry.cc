@@ -9,11 +9,11 @@ namespace Kakoune
 
 struct factory_not_found : public runtime_error
 {
-    factory_not_found(const std::string& name)
+    factory_not_found(const String& name)
         : runtime_error("highlighter factory not found '" + name + "'") {}
 };
 
-void HighlighterRegistry::register_factory(const std::string& name,
+void HighlighterRegistry::register_factory(const String& name,
                                            const HighlighterFactory& factory)
 {
     assert(not m_factories.contains(name));
@@ -21,7 +21,7 @@ void HighlighterRegistry::register_factory(const std::string& name,
 }
 
 void HighlighterRegistry::add_highlighter_to_window(Window& window,
-                                                    const std::string& name,
+                                                    const String& name,
                                                     const HighlighterParameters& parameters)
 {
     auto it = m_factories.find(name);
@@ -33,7 +33,7 @@ void HighlighterRegistry::add_highlighter_to_window(Window& window,
 
 void HighlighterRegistry::add_highlighter_to_group(Window& window,
                                                    HighlighterGroup& group,
-                                                   const std::string& name,
+                                                   const String& name,
                                                    const HighlighterParameters& parameters)
 {
     auto it = m_factories.find(name);
@@ -43,7 +43,7 @@ void HighlighterRegistry::add_highlighter_to_group(Window& window,
     group.append(it->second(window, parameters));
 }
 
-CandidateList HighlighterRegistry::complete_highlighter(const std::string& prefix,
+CandidateList HighlighterRegistry::complete_highlighter(const String& prefix,
                                                         size_t cursor_pos)
 {
     return m_factories.complete_id<str_to_str>(prefix, cursor_pos);

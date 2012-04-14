@@ -1,13 +1,13 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
-#include <string>
 #include <vector>
 #include <list>
 #include <memory>
 
 #include "line_and_column.hh"
 #include "option_manager.hh"
+#include "string.hh"
 
 namespace Kakoune
 {
@@ -16,10 +16,8 @@ class Buffer;
 class Modification;
 class Window;
 
-typedef int      BufferPos;
-typedef int      BufferSize;
-typedef char     BufferChar;
-typedef std::basic_string<BufferChar> String;
+typedef int       BufferPos;
+typedef int       BufferSize;
 
 struct BufferCoord : LineAndColumn<BufferCoord>
 {
@@ -35,7 +33,7 @@ struct BufferCoord : LineAndColumn<BufferCoord>
 class BufferIterator
 {
 public:
-    typedef BufferChar value_type;
+    typedef Character  value_type;
     typedef BufferSize difference_type;
     typedef const value_type* pointer;
     typedef const value_type& reference;
@@ -52,7 +50,7 @@ public:
     bool operator>  (const BufferIterator& iterator) const;
     bool operator>= (const BufferIterator& iterator) const;
 
-    BufferChar operator* () const;
+    Character  operator* () const;
     BufferSize operator- (const BufferIterator& iterator) const;
 
     BufferIterator operator+ (BufferSize size) const;
@@ -117,7 +115,7 @@ public:
         Scratch
     };
 
-    Buffer(const std::string& name, Type type,
+    Buffer(const String& name, Type type,
            const String& initial_content = "\n");
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = delete;
@@ -146,7 +144,7 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord    clamp(const BufferCoord& line_and_column) const;
 
-    const std::string& name() const { return m_name; }
+    const String& name() const { return m_name; }
 
     Window* get_or_create_window();
     void delete_window(Window* window);
@@ -191,7 +189,7 @@ private:
     BufferPos line_at(const BufferIterator& iterator) const;
     BufferSize line_length(BufferPos line) const;
 
-    std::string  m_name;
+    String  m_name;
     const Type   m_type;
 
     typedef std::vector<Modification> UndoGroup;

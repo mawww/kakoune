@@ -5,14 +5,14 @@
 namespace Kakoune
 {
 
-std::string int_to_str(int value)
+String int_to_str(int value)
 {
     std::ostringstream oss;
     oss << value;
     return oss.str();
 }
 
-Option& OptionManager::operator[] (const std::string& name)
+Option& OptionManager::operator[] (const String& name)
 {
     auto it = m_options.find(name);
     if (it != m_options.end())
@@ -23,7 +23,7 @@ Option& OptionManager::operator[] (const std::string& name)
         return m_options[name];
 }
 
-const Option& OptionManager::operator[] (const std::string& name) const
+const Option& OptionManager::operator[] (const String& name) const
 {
     auto it = m_options.find(name);
     if (it != m_options.end())
@@ -34,10 +34,10 @@ const Option& OptionManager::operator[] (const std::string& name) const
         throw option_not_found(name);
 }
 
-CandidateList OptionManager::complete_option_name(const std::string& prefix,
+CandidateList OptionManager::complete_option_name(const String& prefix,
                                                   size_t cursor_pos)
 {
-    std::string real_prefix = prefix.substr(0, cursor_pos);
+    String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;
     if (m_parent)
         result = m_parent->complete_option_name(prefix, cursor_pos);

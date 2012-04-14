@@ -1,9 +1,9 @@
 #ifndef register_hh_INCLUDED
 #define register_hh_INCLUDED
 
-#include <string>
 #include <vector>
 
+#include "string.hh"
 #include "memoryview.hh"
 
 namespace Kakoune
@@ -12,20 +12,20 @@ namespace Kakoune
 class Register
 {
 public:
-    Register& operator=(const std::string& value);
-    Register& operator=(const memoryview<std::string>& values);
+    Register& operator=(const String& value);
+    Register& operator=(const memoryview<String>& values);
 
-    const std::string& get() const;
-    const std::string& get(size_t index) const;
+    const String& get() const;
+    const String& get(size_t index) const;
 
-    operator memoryview<std::string>() const
-    { return memoryview<std::string>(m_content); }
+    operator memoryview<String>() const
+    { return memoryview<String>(m_content); }
 
-    const std::vector<std::string>& content() const { return m_content; }
+    const std::vector<String>& content() const { return m_content; }
 private:
-    std::vector<std::string> m_content;
+    std::vector<String> m_content;
 
-    static const std::string ms_empty;
+    static const String ms_empty;
 };
 
 }

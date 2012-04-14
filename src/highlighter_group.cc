@@ -20,12 +20,12 @@ void HighlighterGroup::append(HighlighterAndId&& highlighter)
     m_highlighters.append(std::forward<HighlighterAndId>(highlighter));
 }
 
-void HighlighterGroup::remove(const std::string& id)
+void HighlighterGroup::remove(const String& id)
 {
     m_highlighters.remove(id);
 }
 
-HighlighterGroup& HighlighterGroup::get_group(const std::string& id)
+HighlighterGroup& HighlighterGroup::get_group(const String& id)
 {
     auto it = m_highlighters.find(id);
     if (it == m_highlighters.end())
@@ -38,18 +38,18 @@ HighlighterGroup& HighlighterGroup::get_group(const std::string& id)
 }
 
 
-CandidateList HighlighterGroup::complete_id(const std::string& prefix,
+CandidateList HighlighterGroup::complete_id(const String& prefix,
                                             size_t cursor_pos)
 {
     return m_highlighters.complete_id<str_to_str>(prefix, cursor_pos);
 }
 
-CandidateList HighlighterGroup::complete_group_id(const std::string& prefix,
+CandidateList HighlighterGroup::complete_group_id(const String& prefix,
                                                   size_t cursor_pos)
 {
     return m_highlighters.complete_id_if<str_to_str>(
         prefix, cursor_pos,
-        [](std::pair<std::string, HighlighterFunc>& func)
+        [](std::pair<String, HighlighterFunc>& func)
         { return func.second.target<HighlighterGroup>() != nullptr; });
 }
 

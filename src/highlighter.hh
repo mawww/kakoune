@@ -1,7 +1,7 @@
 #ifndef highlighter_hh_INCLUDED
 #define highlighter_hh_INCLUDED
 
-#include <string>
+#include "string.hh"
 #include <functional>
 #include "memoryview.hh"
 
@@ -16,8 +16,8 @@ class DisplayBuffer;
 // buffer content (folding for example)
 
 typedef std::function<void (DisplayBuffer& display_buffer)> HighlighterFunc;
-typedef std::pair<std::string, HighlighterFunc> HighlighterAndId;
-typedef memoryview<std::string> HighlighterParameters;
+typedef std::pair<String, HighlighterFunc> HighlighterAndId;
+typedef memoryview<String> HighlighterParameters;
 
 
 }

@@ -22,7 +22,7 @@ T clamp(T min, T max, T val)
     return val;
 }
 
-Buffer::Buffer(const std::string& name, Type type,
+Buffer::Buffer(const String& name, Type type,
                const String& initial_content)
     : m_name(name), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
@@ -301,10 +301,10 @@ void Buffer::apply_modification(const Modification& modification)
     }
     case Modification::Erase:
     {
-        size_t size = modification.content.size();
-        assert(string(modification.position, modification.position + size)
+        size_t count = modification.content.length();
+        assert(string(modification.position, modification.position + count)
                == modification.content);
-        erase(modification.position, size);
+        erase(modification.position, count);
         break;
     }
     default:

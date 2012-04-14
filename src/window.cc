@@ -113,7 +113,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     }
 }
 
-std::string Window::status_line() const
+String Window::status_line() const
 {
     BufferCoord cursor = buffer().line_and_column_at(selections().back().last());
     std::ostringstream oss;

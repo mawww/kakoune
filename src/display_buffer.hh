@@ -1,11 +1,10 @@
 #ifndef display_buffer_hh_INCLUDED
 #define display_buffer_hh_INCLUDED
 
-#include <string>
 #include <vector>
 
+#include "string.hh"
 #include "line_and_column.hh"
-
 #include "buffer.hh"
 
 namespace Kakoune

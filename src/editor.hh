@@ -54,10 +54,10 @@ public:
     bool redo();
 
     void add_filter(FilterAndId&& filter);
-    void remove_filter(const std::string& id);
+    void remove_filter(const String& id);
 
-    CandidateList complete_filterid(const std::string& prefix,
-                                    size_t cursor_pos = std::string::npos);
+    CandidateList complete_filterid(const String& prefix,
+                                    size_t cursor_pos = String::npos);
 
     bool is_editing() const { return m_edition_level!= 0; }
 
@@ -76,7 +76,7 @@ private:
 
     Buffer&                             m_buffer;
     std::vector<SelectionList>          m_selections;
-    idvaluemap<std::string, FilterFunc> m_filters;
+    idvaluemap<String, FilterFunc> m_filters;
 };
 
 struct scoped_edition

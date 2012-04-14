@@ -12,26 +12,26 @@ namespace Kakoune
 
 struct option_not_found : public runtime_error
 {
-    option_not_found(const std::string& name)
+    option_not_found(const String& name)
         : runtime_error("option not found: " + name) {}
 };
 
-std::string int_to_str(int value);
+String int_to_str(int value);
 
 class Option
 {
 public:
     Option() {}
     explicit Option(int value) : m_value(int_to_str(value)) {}
-    explicit Option(const std::string& value) : m_value(value) {}
+    explicit Option(const String& value) : m_value(value) {}
 
     Option& operator=(int value) { m_value = int_to_str(value); return *this; }
-    Option& operator=(const std::string& value) { m_value = value; return *this; }
+    Option& operator=(const String& value) { m_value = value; return *this; }
 
     operator int() const { return atoi(m_value.c_str()); }
-    operator std::string() const { return m_value; }
+    operator String() const { return m_value; }
 private:
-    std::string m_value;
+    String m_value;
 };
 
 class OptionManager
@@ -40,10 +40,10 @@ public:
     OptionManager(OptionManager& parent)
         : m_parent(&parent) {}
 
-    Option& operator[] (const std::string& name);
-    const Option& operator[] (const std::string& name) const;
+    Option& operator[] (const String& name);
+    const Option& operator[] (const String& name) const;
 
-    CandidateList complete_option_name(const std::string& prefix,
+    CandidateList complete_option_name(const String& prefix,
                                        size_t cursor_pos);
 
 private:
@@ -52,7 +52,7 @@ private:
     // the only one allowed to construct a root option manager
     friend class GlobalOptionManager;
 
-    std::unordered_map<std::string, Option> m_options;
+    std::unordered_map<String, Option> m_options;
     OptionManager* m_parent;
 };
 

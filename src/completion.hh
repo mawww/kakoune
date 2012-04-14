@@ -1,14 +1,15 @@
 #ifndef completion_hh_INCLUDED
 #define completion_hh_INCLUDED
 
-#include <string>
 #include <vector>
 #include <functional>
+
+#include "string.hh"
 
 namespace Kakoune
 {
 
-typedef std::vector<std::string> CandidateList;
+typedef std::vector<String> CandidateList;
 
 struct Completions
 {
@@ -23,12 +24,12 @@ struct Completions
         : start(start), end(end) {}
 };
 
-CandidateList complete_filename(const std::string& prefix,
-                                size_t cursor_pos = std::string::npos);
+CandidateList complete_filename(const String& prefix,
+                                size_t cursor_pos = -1);
 
-typedef std::function<Completions (const std::string&, size_t)> Completer;
+typedef std::function<Completions (const String&, size_t)> Completer;
 
-inline Completions complete_nothing(const std::string&, size_t cursor_pos)
+inline Completions complete_nothing(const String&, size_t cursor_pos)
 {
     return Completions(cursor_pos, cursor_pos);
 }

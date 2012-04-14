@@ -35,7 +35,7 @@ public:
 
     void update_display_buffer();
 
-    std::string status_line() const;
+    String status_line() const;
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 

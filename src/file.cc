@@ -18,13 +18,13 @@ bool isidentifier(char c)
     return std::isalnum(c) or c == '_';
 }
 
-std::string parse_filename(const std::string& filename)
+String parse_filename(const String& filename)
 {
     if (filename.length() > 2 and filename[0] == '~' and filename[1] == '/')
         return parse_filename("$HOME/" + filename.substr(2));
 
     size_t pos = 0;
-    std::string result;
+    String result;
     for (size_t i = 0; i < filename.length(); ++i)
     {
         if (filename[i] == '$' and (i == 0 or filename[i-1] != '\\'))
@@ -33,7 +33,7 @@ std::string parse_filename(const std::string& filename)
             size_t end = i+1;
             while (end != filename.length() and isidentifier(filename[end]))
                 ++end;
-            std::string var_name = filename.substr(i+1, end - i - 1);
+            String var_name = filename.substr(i+1, end - i - 1);
             const char* var_value = getenv(var_name.c_str());
             if (var_value)
                 result += var_value;
@@ -47,7 +47,7 @@ std::string parse_filename(const std::string& filename)
     return result;
 }
 
-std::string read_file(const std::string& filename)
+String read_file(const String& filename)
 {
    int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
@@ -58,7 +58,7 @@ std::string read_file(const std::string& filename)
         throw file_access_error(filename, strerror(errno));
     }
 
-    std::string content;
+    String content;
     char buf[256];
     while (true)
     {
@@ -66,15 +66,15 @@ std::string read_file(const std::string& filename)
         if (size == -1 or size == 0)
             break;
 
-        content += std::string(buf, size);
+        content += String(buf, buf + size);
     }
     close(fd);
     return content;
 }
 
-Buffer* create_buffer_from_file(const std::string& filename)
+Buffer* create_buffer_from_file(const String& filename)
 {
-    std::string content = read_file(filename);
+    String content = read_file(filename);
 
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         delete buffer;
@@ -82,7 +82,7 @@ Buffer* create_buffer_from_file(const std::string& filename)
     return new Buffer(filename, Buffer::Type::File, content);
 }
 
-void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
+void write_buffer_to_file(const Buffer& buffer, const String& filename)
 {
     int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
@@ -91,8 +91,8 @@ void write_buffer_to_file(const Buffer& buffer, const std::string& filename)
     for (size_t i = 0; i < buffer.line_count(); ++i)
     {
         const String& content = buffer.line_content(i);
-        ssize_t count = content.length() * sizeof(BufferChar);
         const char* ptr = content.c_str();
+        ssize_t count   = content.size();
 
         while (count)
         {

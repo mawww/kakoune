@@ -56,7 +56,9 @@ void expand_tabulations(Buffer& buffer, Modification& modification)
         }
 
         int count = tabstop - (column % tabstop);
-        modification.content = std::string(count, ' ');
+        modification.content.clear();
+        for (int i = 0; i < count; ++i)
+            modification.content += ' ';
     }
 }
 
@@ -64,7 +66,7 @@ template<void (*filter_func)(Buffer&, Modification&)>
 class SimpleFilterFactory
 {
 public:
-    SimpleFilterFactory(const std::string& id) : m_id(id) {}
+    SimpleFilterFactory(const String& id) : m_id(id) {}
 
     FilterAndId operator()(Window& window,
                            const FilterParameters& params) const
@@ -72,7 +74,7 @@ public:
         return FilterAndId(m_id, FilterFunc(filter_func));
     }
 private:
-    std::string m_id;
+    String m_id;
 };
 
 void register_filters()

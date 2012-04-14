@@ -12,7 +12,7 @@ struct name_not_unique : logic_error {};
 void BufferManager::register_buffer(Buffer* buffer)
 {
     assert(buffer);
-    const std::string& name = buffer->name();
+    const String& name = buffer->name();
     if (m_buffers.find(name) != m_buffers.end())
         throw name_not_unique();
 
@@ -30,7 +30,7 @@ void BufferManager::unregister_buffer(Buffer* buffer)
     }
 }
 
-Buffer* BufferManager::get_buffer(const std::string& name)
+Buffer* BufferManager::get_buffer(const String& name)
 {
     if (m_buffers.find(name) == m_buffers.end())
         return nullptr;
@@ -38,10 +38,10 @@ Buffer* BufferManager::get_buffer(const std::string& name)
     return m_buffers[name];
 }
 
-CandidateList BufferManager::complete_buffername(const std::string& prefix,
+CandidateList BufferManager::complete_buffername(const String& prefix,
                                                  size_t cursor_pos)
 {
-    std::string real_prefix = prefix.substr(0, cursor_pos);
+    String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;
     for (auto& buffer : m_buffers)
     {

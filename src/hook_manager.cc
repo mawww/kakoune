@@ -3,13 +3,13 @@
 namespace Kakoune
 {
 
-void HookManager::add_hook(const std::string& hook_name, HookFunc hook)
+void HookManager::add_hook(const String& hook_name, HookFunc hook)
 {
     m_hook[hook_name].push_back(hook);
 }
 
-void HookManager::run_hook(const std::string& hook_name,
-                           const std::string& param,
+void HookManager::run_hook(const String& hook_name,
+                           const String& param,
                            const Context& context) const
 {
     auto hook_list_it = m_hook.find(hook_name);
