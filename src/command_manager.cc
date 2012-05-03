@@ -3,11 +3,9 @@
 #include "utils.hh"
 #include "assert.hh"
 #include "context.hh"
+#include "shell_manager.hh"
 
 #include <algorithm>
-#include <cstring>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 namespace Kakoune
 {
@@ -101,29 +99,7 @@ static void shell_eval(std::vector<String>& params,
                        const String& cmdline,
                        const Context& context)
 {
-    int write_pipe[2];
-    int read_pipe[2];
-
-    pipe(write_pipe);
-    pipe(read_pipe);
-
-    if (pid_t pid = fork())
-    {
-        close(write_pipe[0]);
-        close(read_pipe[1]);
-        close(write_pipe[1]);
-
-        String output;
-        char buffer[1024];
-        while (size_t size = read(read_pipe[0], buffer, 1024))
-        {
-            if (size == -1)
-                break;
-            output += String(buffer, buffer+size);
-        }
-        close(read_pipe[0]);
-        waitpid(pid, NULL, 0);
-
+        String output = ShellManager::instance().eval(cmdline, context);
         TokenList tokens = split(output);
 
         for (auto it = tokens.begin(); it != tokens.end(); ++it)
@@ -131,19 +107,6 @@ static void shell_eval(std::vector<String>& params,
             params.push_back(output.substr(it->first,
                                            it->second - it->first));
         }
-    }
-    else
-    {
-        close(write_pipe[1]);
-        close(read_pipe[0]);
-
-        dup2(read_pipe[1], 1);
-        dup2(write_pipe[0], 0);
-
-        if (context.has_buffer())
-            setenv("kak_bufname", context.buffer().name().c_str(), 1);
-        execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
-    }
 }
 
 void CommandManager::execute(const CommandParameters& params,

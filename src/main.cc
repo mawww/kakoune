@@ -1,6 +1,7 @@
 #include "window.hh"
 #include "buffer.hh"
 #include "file.hh"
+#include "shell_manager.hh"
 #include "command_manager.hh"
 #include "buffer_manager.hh"
 #include "register_manager.hh"
@@ -929,6 +930,7 @@ int main(int argc, char* argv[])
 {
     NCurses::init(prompt_func, get_key_func);
 
+    ShellManager        shell_manager;
     CommandManager      command_manager;
     BufferManager       buffer_manager;
     RegisterManager     register_manager;
@@ -938,6 +940,11 @@ int main(int argc, char* argv[])
     GlobalOptionManager option_manager;
 
     run_unit_tests();
+
+    shell_manager.register_env_var("bufname",
+                                   [](const Context& context)
+                                   { return context.buffer().name(); });
+
 
     command_manager.register_commands({ "e", "edit" }, edit<false>,
                                      CommandManager::None,

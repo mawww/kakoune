@@ -8,7 +8,6 @@
 namespace Kakoune
 {
 
-typedef boost::regex_iterator<BufferIterator> RegexIterator;
 typedef boost::basic_regex<Character> Regex;
 
 }

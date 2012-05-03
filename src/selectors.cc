@@ -87,6 +87,8 @@ bool skip_while_reverse(BufferIterator& it, T condition)
 
 }
 
+typedef boost::regex_iterator<BufferIterator> RegexIterator;
+
 template<bool punctuation_is_word>
 SelectionAndCaptures select_to_next_word(const Selection& selection)
 {

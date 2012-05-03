@@ -12,6 +12,8 @@ namespace Kakoune
 
 using namespace std::placeholders;
 
+typedef boost::regex_iterator<BufferIterator> RegexIterator;
+
 void colorize_regex_range(DisplayBuffer& display_buffer,
                           const BufferIterator& range_begin,
                           const BufferIterator& range_end,
