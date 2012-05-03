@@ -917,6 +917,12 @@ void exec_string(const CommandParameters& params,
     exec_keys(keys, context);
 }
 
+void eval_string(const CommandParameters& params,
+                 const Context& context)
+{
+    CommandManager::instance().execute(params, context);
+}
+
 void run_unit_tests();
 
 int main(int argc, char* argv[])
@@ -1000,6 +1006,7 @@ int main(int argc, char* argv[])
     command_manager.register_command("runtime", exec_commands_in_runtime_file);
 
     command_manager.register_command("exec", exec_string);
+    command_manager.register_command("eval", eval_string);
 
     command_manager.register_command("def",   define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
     command_manager.register_command("echo", echo_message);
