@@ -580,44 +580,9 @@ void do_pipe(Editor& editor, int count)
         editor.buffer().begin_undo_group();
         for (auto& sel : const_cast<const Editor&>(editor).selections())
         {
-            int write_pipe[2];
-            int read_pipe[2];
-
-            pipe(write_pipe);
-            pipe(read_pipe);
-
-            if (pid_t pid = fork())
-            {
-                close(write_pipe[0]);
-                close(read_pipe[1]);
-
-                String content = editor.buffer().string(sel.begin(), sel.end());
-                memoryview<char> data = content.data();
-                write(write_pipe[1], data.pointer(), data.size());
-                close(write_pipe[1]);
-
-                String new_content;
-                char buffer[1024];
-                while (size_t size = read(read_pipe[0], buffer, 1024))
-                {
-                    new_content += String(buffer, buffer+size);
-                }
-                close(read_pipe[0]);
-                waitpid(pid, NULL, 0);
-
-                editor.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
-                editor.buffer().modify(Modification::make_insert(sel.begin(), new_content));
-            }
-            else
-            {
-                close(write_pipe[1]);
-                close(read_pipe[0]);
-
-                dup2(read_pipe[1], 1);
-                dup2(write_pipe[0], 0);
-
-                execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
-            }
+            String new_content = ShellManager::instance().eval(cmdline, main_context);
+            editor.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
+            editor.buffer().modify(Modification::make_insert(sel.begin(), new_content));
         }
         editor.buffer().end_undo_group();
     }
