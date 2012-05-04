@@ -300,33 +300,26 @@ void add_highlighter(const CommandParameters& params, const Context& context)
 {
     if (params.size() < 1)
         throw wrong_argument_count();
-
-    try
-    {
-        HighlighterRegistry& registry = HighlighterRegistry::instance();
-        HighlighterParameters highlighter_params(params.begin()+1, params.end());
-        registry.add_highlighter_to_window(context.window(), params[0],
-                                           highlighter_params);
-    }
-    catch (runtime_error& err)
-    {
-        NCurses::print_status("error: " + err.description());
-    }
-}
-
-void add_group_highlighter(const CommandParameters& params, const Context& context)
-{
-    if (params.size() < 2)
-        throw wrong_argument_count();
-
     try
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-        HighlighterGroup& group = context.window().highlighters().get_group(params[0]);
-        HighlighterParameters highlighter_params(params.begin()+2, params.end());
-        registry.add_highlighter_to_group(context.window(), group,
-                                          params[1], highlighter_params);
+        if (params[0] == "-group")
+        {
+            if (params.size() < 3)
+                throw wrong_argument_count();
+            HighlighterParameters highlighter_params(params.begin()+3, params.end());
+            HighlighterGroup& group = context.window().highlighters().get_group(params[1]);
+            registry.add_highlighter_to_group(context.window(), group,
+                                              params[2], highlighter_params);
+        }
+        else
+        {
+            HighlighterParameters highlighter_params(params.begin()+1, params.end());
+            registry.add_highlighter_to_window(context.window(),
+                                              params[0], highlighter_params);
+        }
+
     }
     catch (runtime_error& err)
     {
@@ -336,27 +329,30 @@ void add_group_highlighter(const CommandParameters& params, const Context& conte
 
 void rm_highlighter(const CommandParameters& params, const Context& context)
 {
-    if (params.size() != 1)
+    if (params.size() < 1)
         throw wrong_argument_count();
-
-    context.window().highlighters().remove(params[0]);
-}
-
-void rm_group_highlighter(const CommandParameters& params, const Context& context)
-{
-    if (params.size() != 2)
-        throw wrong_argument_count();
-
     try
     {
-        HighlighterGroup& group = context.window().highlighters().get_group(params[0]);
-        group.remove(params[1]);
+        if (params[0] == "-group")
+        {
+            if (params.size() != 3)
+                throw wrong_argument_count();
+            HighlighterGroup& group = context.window().highlighters().get_group(params[1]);
+            group.remove(params[2]);
+        }
+        else
+        {
+            if (params.size() != 1)
+                throw wrong_argument_count();
+            context.window().highlighters().remove(params[0]);
+        }
     }
     catch (runtime_error& err)
     {
         NCurses::print_status("error: " + err.description());
     }
 }
+
 void add_filter(const CommandParameters& params, const Context& context)
 {
     if (params.size() < 1)
@@ -931,33 +927,31 @@ int main(int argc, char* argv[])
                                       }));
     command_manager.register_commands({ "ah", "addhl" }, add_highlighter,
                                      CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
-                                     }));
-    command_manager.register_commands({ "agh", "addgrouphl" }, add_group_highlighter,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         [&](const String& prefix, size_t cursor_pos)
-                                         { return main_context.window().highlighters().complete_group_id(prefix, cursor_pos); },
-                                         std::bind(&HighlighterRegistry::complete_highlighter, &highlighter_registry, _1, _2)
-                                     }));
+                                     [&](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                                     {
+                                         Window& w = main_context.window();
+                                         const String& arg = token_to_complete < params.size() ?
+                                                                  params[token_to_complete] : String();
+                                         if (token_to_complete == 1 and params[0] == "-group")
+                                             return w.highlighters().complete_group_id(arg, pos_in_token);
+                                         else if (token_to_complete == 0 or token_to_complete == 2 and params[0] == "-group")
+                                             return highlighter_registry.complete_highlighter(arg, pos_in_token);
+                                         else
+                                             return CandidateList();
+                                     });
     command_manager.register_commands({ "rh", "rmhl" }, rm_highlighter,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         [&](const String& prefix, size_t cursor_pos)
-                                         { return main_context.window().highlighters().complete_group_id(prefix, cursor_pos); }
-                                     }));
-    command_manager.register_commands({ "rgh", "rmgrouphl" }, rm_group_highlighter,
                                      CommandManager::None,
                                      [&](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
                                      {
                                          Window& w = main_context.window();
                                          const String& arg = token_to_complete < params.size() ?
                                                                   params[token_to_complete] : String();
-                                         if (token_to_complete == 0)
+                                         if (token_to_complete == 1 and params[0] == "-group")
                                              return w.highlighters().complete_group_id(arg, pos_in_token);
-                                         else if (token_to_complete == 1)
-                                             return w.highlighters().get_group(params[0]).complete_id(arg, pos_in_token);
+                                         else if (token_to_complete == 2 and params[0] == "-group")
+                                             return w.highlighters().get_group(params[1]).complete_id(arg, pos_in_token);
+                                         else
+                                             return w.highlighters().complete_id(arg, pos_in_token);
                                      });
     command_manager.register_commands({ "af", "addfilter" }, add_filter,
                                      CommandManager::None,
