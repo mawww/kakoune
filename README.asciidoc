@@ -101,7 +101,8 @@ A multiselection can also be obtained with _Alt-s_, which splits the current
 selection according to the regex entered. To split a comma separated list,
 use _alt-s_ then ', *'
 
-To clear multiple selections, use _space_.
+To clear multiple selections, use _space_. To keep only the nth selection
+use _n_ followed by _space_.
 
 Registers
 ---------
@@ -137,8 +138,8 @@ existing highlighters are:
            parameter, <group_name>. useful when multiple highlighters work
            together and need to be removed as one. Adding and removing from
            a group can be done using
-           :addgrouphl <group> <highlighter_name> <highlighter_parameters...>
-           :rmgrouphl <group> <highlighter_name>
+           :addhl -group <group> <highlighter_name> <highlighter_parameters...>
+           :rmhl  -group <group> <highlighter_name>
 
 Filters
 -------
