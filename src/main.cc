@@ -1,7 +1,7 @@
 #include "window.hh"
 #include "buffer.hh"
-#include "file.hh"
 #include "shell_manager.hh"
+#include "commands.hh"
 #include "command_manager.hh"
 #include "buffer_manager.hh"
 #include "register_manager.hh"
@@ -28,6 +28,13 @@
 
 using namespace Kakoune;
 using namespace std::placeholders;
+
+
+namespace Kakoune
+{
+
+Context main_context;
+bool quit_requested = false;
 
 void draw_editor_ifn(Editor& editor)
 {
@@ -184,374 +191,6 @@ void do_go(Editor& editor, int count)
         }
         }
     }
-}
-
-Context main_context;
-
-Buffer* open_or_create(const String& filename)
-{
-    Buffer* buffer = NULL;
-    try
-    {
-        buffer = create_buffer_from_file(filename);
-    }
-    catch (file_not_found& what)
-    {
-        NCurses::print_status("new file " + filename);
-        buffer = new Buffer(filename, Buffer::Type::NewFile);
-    }
-    return buffer;
-}
-
-template<bool force_reload>
-void edit(const CommandParameters& params, const Context& context)
-{
-    if (params.size() == 0 or params.size() > 3)
-        throw wrong_argument_count();
-
-    String filename = params[0];
-
-    Buffer* buffer = nullptr;
-    if (not force_reload)
-        buffer = BufferManager::instance().get_buffer(filename);
-    if (not buffer)
-        buffer = open_or_create(filename);
-
-    Window& window = *buffer->get_or_create_window();
-
-    if (params.size() > 1)
-    {
-        int line = std::max(0, atoi(params[1].c_str()) - 1);
-        int column = params.size() > 2 ?
-                         std::max(0, atoi(params[2].c_str()) - 1) : 0;
-
-        window.select(window.buffer().iterator_at({line, column}));
-    }
-
-    main_context = Context(window);
-}
-
-void write_buffer(const CommandParameters& params, const Context& context)
-{
-    if (params.size() > 1)
-        throw wrong_argument_count();
-
-    Buffer& buffer = context.window().buffer();
-    String filename = params.empty() ? buffer.name()
-                                          : parse_filename(params[0]);
-
-    write_buffer_to_file(buffer, filename);
-    buffer.notify_saved();
-}
-
-bool quit_requested = false;
-
-template<bool force>
-void quit(const CommandParameters& params, const Context& context)
-{
-    if (params.size() != 0)
-        throw wrong_argument_count();
-
-    if (not force)
-    {
-        std::vector<String> names;
-        for (auto& buffer : BufferManager::instance())
-        {
-            if (buffer.type() != Buffer::Type::Scratch and buffer.is_modified())
-                names.push_back(buffer.name());
-        }
-        if (not names.empty())
-        {
-            String message = "modified buffers remaining: [";
-            for (auto it = names.begin(); it != names.end(); ++it)
-            {
-                if (it != names.begin())
-                    message += ", ";
-                message += *it;
-            }
-            message += "]";
-            NCurses::print_status(message);
-            return;
-        }
-    }
-    quit_requested = true;
-}
-
-template<bool force>
-void write_and_quit(const CommandParameters& params, const Context& context)
-{
-    write_buffer(params, context);
-    quit<force>(CommandParameters(), context);
-}
-
-void show_buffer(const CommandParameters& params, const Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    Buffer* buffer = BufferManager::instance().get_buffer(params[0]);
-    if (not buffer)
-        NCurses::print_status("buffer " + params[0] + " does not exists");
-    else
-        main_context = Context(*buffer->get_or_create_window());
-}
-
-void add_highlighter(const CommandParameters& params, const Context& context)
-{
-    if (params.size() < 1)
-        throw wrong_argument_count();
-    try
-    {
-        HighlighterRegistry& registry = HighlighterRegistry::instance();
-
-        if (params[0] == "-group")
-        {
-            if (params.size() < 3)
-                throw wrong_argument_count();
-            HighlighterParameters highlighter_params(params.begin()+3, params.end());
-            HighlighterGroup& group = context.window().highlighters().get_group(params[1]);
-            registry.add_highlighter_to_group(context.window(), group,
-                                              params[2], highlighter_params);
-        }
-        else
-        {
-            HighlighterParameters highlighter_params(params.begin()+1, params.end());
-            registry.add_highlighter_to_window(context.window(),
-                                              params[0], highlighter_params);
-        }
-
-    }
-    catch (runtime_error& err)
-    {
-        NCurses::print_status("error: " + err.description());
-    }
-}
-
-void rm_highlighter(const CommandParameters& params, const Context& context)
-{
-    if (params.size() < 1)
-        throw wrong_argument_count();
-    try
-    {
-        if (params[0] == "-group")
-        {
-            if (params.size() != 3)
-                throw wrong_argument_count();
-            HighlighterGroup& group = context.window().highlighters().get_group(params[1]);
-            group.remove(params[2]);
-        }
-        else
-        {
-            if (params.size() != 1)
-                throw wrong_argument_count();
-            context.window().highlighters().remove(params[0]);
-        }
-    }
-    catch (runtime_error& err)
-    {
-        NCurses::print_status("error: " + err.description());
-    }
-}
-
-void add_filter(const CommandParameters& params, const Context& context)
-{
-    if (params.size() < 1)
-        throw wrong_argument_count();
-
-    try
-    {
-        FilterRegistry& registry = FilterRegistry::instance();
-        FilterParameters filter_params(params.begin()+1, params.end());
-        registry.add_filter_to_window(context.window(), params[0],
-                                      filter_params);
-    }
-    catch (runtime_error& err)
-    {
-        NCurses::print_status("error: " + err.description());
-    }
-}
-
-void rm_filter(const CommandParameters& params, const Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    context.window().remove_filter(params[0]);
-}
-
-void add_hook(const CommandParameters& params, const Context& context)
-{
-    if (params.size() < 4)
-        throw wrong_argument_count();
-
-    String regex = params[2];
-    std::vector<String> hook_params(params.begin()+3, params.end());
-
-    auto hook_func = [=](const String& param, const Context& context) {
-        if (boost::regex_match(param.begin(), param.end(),
-                               Regex(regex.begin(), regex.end())))
-            CommandManager::instance().execute(hook_params, context);
-    };
-
-    if (params[0] == "global")
-        GlobalHookManager::instance().add_hook(params[1], hook_func);
-    else if (params[0] == "window")
-        context.window().hook_manager().add_hook(params[1], hook_func);
-    else
-        NCurses::print_status("error: no such hook container " + params[0]);
-}
-
-void define_command(const CommandParameters& params, const Context& context)
-{
-    if (params.size() < 2)
-        throw wrong_argument_count();
-
-    if (params[0] == "-env-params")
-    {
-        std::vector<String> cmd_params(params.begin() + 2, params.end());
-        CommandManager::instance().register_command(params[1],
-             [=](const CommandParameters& params, const Context& context) {
-                char param_name[] = "kak_param0";
-                for (size_t i = 0; i < 10; ++i)
-                {
-                    param_name[sizeof(param_name) - 2] = '0' + i;
-                    if (params.size() > i)
-                        setenv(param_name, params[i].c_str(), 1);
-                    else
-                        unsetenv(param_name);
-                }
-                CommandManager::instance().execute(cmd_params, context);
-            });
-    }
-    else if (params[0] == "-append-params")
-    {
-        std::vector<String> cmd_params(params.begin() + 2, params.end());
-        CommandManager::instance().register_command(params[1],
-             [=](const CommandParameters& params, const Context& context) {
-                std::vector<String> merged_params = cmd_params;
-                for (auto& param : params)
-                    merged_params.push_back(param);
-                CommandManager::instance().execute(merged_params, context);
-            });
-    }
-    else
-    {
-        std::vector<String> cmd_params(params.begin() + 1, params.end());
-        CommandManager::instance().register_command(params[0],
-             [=](const CommandParameters& params, const Context& context) {
-                 if (not params.empty())
-                     throw wrong_argument_count();
-                CommandManager::instance().execute(cmd_params, context);
-            });
-    }
-}
-
-void echo_message(const CommandParameters& params, const Context& context)
-{
-    String message;
-    for (auto& param : params)
-        message += param + " ";
-    NCurses::print_status(message);
-}
-
-void exec_commands_in_file(const CommandParameters& params,
-                           const Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    String file_content = read_file(parse_filename(params[0]));
-    CommandManager& cmd_manager = CommandManager::instance();
-
-    size_t pos = 0;
-    size_t length = file_content.length();
-    bool   cat_with_previous = false;
-    String command_line;
-    while (true)
-    {
-         if (not cat_with_previous)
-             command_line.clear();
-
-         size_t end_pos = pos;
-
-         while (file_content[end_pos] != '\n' and end_pos != length)
-         {
-             if (file_content[end_pos] == '"' or file_content[end_pos] == '\'' or
-                 file_content[end_pos] == '`')
-             {
-                 char delimiter = file_content[end_pos];
-                 ++end_pos;
-                 while ((file_content[end_pos] != delimiter or
-                         file_content[end_pos-1] == '\\') and end_pos != length)
-                     ++end_pos;
-
-                 if (end_pos == length)
-                 {
-                     NCurses::print_status(String("unterminated '") + delimiter + "' string");
-                     return;
-                 }
-
-                 ++end_pos;
-             }
-
-             if (end_pos != length)
-                 ++end_pos;
-         }
-         if (end_pos != pos and end_pos != length and
-             file_content[end_pos - 1] == '\\')
-         {
- 	     command_line += file_content.substr(pos, end_pos - pos - 1);
-             cat_with_previous = true;
-         }
-         else
-         {
- 	     command_line += file_content.substr(pos, end_pos - pos);
- 	     cmd_manager.execute(command_line, context);
-             cat_with_previous = false;
- 	 }
-         if (end_pos == length)
-         {
-             if (cat_with_previous)
-                 NCurses::print_status("while executing commands in \"" + params[0] +
-                              "\": last command not complete");
-             break;
-         }
-         pos = end_pos + 1;
-    }
-}
-
-void exec_commands_in_runtime_file(const CommandParameters& params,
-                                   const Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    const String& filename = params[0];
-    char buffer[2048];
-#if defined(__linux__)
-    ssize_t res = readlink("/proc/self/exe", buffer, 2048 - filename.length());
-    assert(res != -1);
-    buffer[res] = '\0';
-#elif defined(__APPLE__)
-    uint32_t bufsize = 2048 - filename.length();
-    _NSGetExecutablePath(buffer, &bufsize);
-#else
-# error "finding executable path is not implemented on this platform"
-#endif
-    char* ptr = strrchr(buffer, '/');
-    if (ptr)
-    {
-        strcpy(ptr+1, filename.c_str());
-        exec_commands_in_file(CommandParameters(buffer), main_context);
-    }
-}
-
-void set_option(OptionManager& option_manager, const CommandParameters& params)
-{
-    if (params.size() != 2)
-        throw wrong_argument_count();
-
-    option_manager[params[0]] = params[1];
 }
 
 void do_command()
@@ -794,95 +433,6 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::Alt, 'x' }, [](Editor& editor, int count) { editor.select(select_whole_lines); } },
 };
 
-class RegisterRestorer
-{
-public:
-    RegisterRestorer(char name)
-       : m_name(name),
-         m_save(RegisterManager::instance()[name].content())
-    {}
-
-    ~RegisterRestorer()
-    { RegisterManager::instance()[m_name] = m_save; }
-
-private:
-    std::vector<String> m_save;
-    char                m_name;
-};
-
-void exec_keys(const KeyList& keys,
-               const Context& context)
-{
-    auto prompt_save = prompt_func;
-    auto get_key_save = get_key_func;
-
-    auto restore_funcs = on_scope_end([&]() {
-        prompt_func = prompt_save;
-        get_key_func = get_key_save;
-    });
-
-    size_t pos = 0;
-
-    prompt_func = [&](const String&, Completer) {
-        size_t begin = pos;
-        while (pos < keys.size() and keys[pos].key != '\n')
-            ++pos;
-
-        String result;
-        for (size_t i = begin; i < pos; ++i)
-            result += String() + keys[i].key;
-        ++pos;
-
-        return result;
-    };
-
-    get_key_func = [&]() {
-        if (pos >= keys.size())
-            throw runtime_error("no more characters");
-        return keys[pos++];
-    };
-
-    RegisterRestorer quote('"');
-    RegisterRestorer slash('/');
-
-    Editor batch_editor(context.buffer());
-    Editor& editor = context.has_window() ? static_cast<Editor&>(context.window())
-                                          : static_cast<Editor&>(batch_editor);
-
-    scoped_edition edition(editor);
-
-    int count = 0;
-    while(pos < keys.size())
-    {
-        const Key& key = keys[pos++];
-
-        if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
-            count = count * 10 + key.key - '0';
-        else
-        {
-            auto it = keymap.find(key);
-            if (it != keymap.end())
-                it->second(editor, count);
-            count = 0;
-        }
-    }
-}
-
-void exec_string(const CommandParameters& params,
-                 const Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    KeyList keys = parse_keys(params[0]);
-
-    exec_keys(keys, context);
-}
-
-void eval_string(const CommandParameters& params,
-                 const Context& context)
-{
-    CommandManager::instance().execute(params, context);
 }
 
 void run_unit_tests();
@@ -905,108 +455,13 @@ int main(int argc, char* argv[])
     shell_manager.register_env_var("bufname",
                                    [](const Context& context)
                                    { return context.buffer().name(); });
-
-
-    command_manager.register_commands({ "e", "edit" }, edit<false>,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({ complete_filename }));
-    command_manager.register_commands({ "e!", "edit!" }, edit<true>,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({ complete_filename }));
-    command_manager.register_commands({ "q", "quit" }, quit<false>);
-    command_manager.register_commands({ "q!", "quit!" }, quit<true>);
-    command_manager.register_commands({ "w", "write" }, write_buffer,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({ complete_filename }));
-    command_manager.register_command("wq", write_and_quit<false>);
-    command_manager.register_command("wq!", write_and_quit<true>);
-    command_manager.register_commands({ "b", "buffer" }, show_buffer,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         std::bind(&BufferManager::complete_buffername, &buffer_manager, _1, _2)
-                                      }));
-    command_manager.register_commands({ "ah", "addhl" }, add_highlighter,
-                                     CommandManager::None,
-                                     [&](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
-                                     {
-                                         Window& w = main_context.window();
-                                         const String& arg = token_to_complete < params.size() ?
-                                                                  params[token_to_complete] : String();
-                                         if (token_to_complete == 1 and params[0] == "-group")
-                                             return w.highlighters().complete_group_id(arg, pos_in_token);
-                                         else if (token_to_complete == 0 or token_to_complete == 2 and params[0] == "-group")
-                                             return highlighter_registry.complete_highlighter(arg, pos_in_token);
-                                         else
-                                             return CandidateList();
-                                     });
-    command_manager.register_commands({ "rh", "rmhl" }, rm_highlighter,
-                                     CommandManager::None,
-                                     [&](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
-                                     {
-                                         Window& w = main_context.window();
-                                         const String& arg = token_to_complete < params.size() ?
-                                                                  params[token_to_complete] : String();
-                                         if (token_to_complete == 1 and params[0] == "-group")
-                                             return w.highlighters().complete_group_id(arg, pos_in_token);
-                                         else if (token_to_complete == 2 and params[0] == "-group")
-                                             return w.highlighters().get_group(params[1]).complete_id(arg, pos_in_token);
-                                         else
-                                             return w.highlighters().complete_id(arg, pos_in_token);
-                                     });
-    command_manager.register_commands({ "af", "addfilter" }, add_filter,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         std::bind(&FilterRegistry::complete_filter, &filter_registry, _1, _2)
-                                     }));
-    command_manager.register_commands({ "rf", "rmfilter" }, rm_filter,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         [&](const String& prefix, size_t cursor_pos)
-                                         { return main_context.window().complete_filterid(prefix, cursor_pos); }
-                                     }));
-    command_manager.register_command("hook", add_hook, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
-
-    command_manager.register_command("source", exec_commands_in_file,
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({ complete_filename }));
-    command_manager.register_command("runtime", exec_commands_in_runtime_file);
-
-    command_manager.register_command("exec", exec_string);
-    command_manager.register_command("eval", eval_string);
-
-    command_manager.register_command("def",   define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
-    command_manager.register_command("echo", echo_message);
-
-    command_manager.register_commands({ "setg", "setglobal" },
-                                     [&](const CommandParameters& params, const Context&) { set_option(option_manager, params); },
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         [&](const String& prefix, size_t cursor_pos)
-                                         { return option_manager.complete_option_name(prefix, cursor_pos); }
-                                     }));
-    command_manager.register_commands({ "setb", "setbuffer" },
-                                     [&](const CommandParameters& params, const Context& context)
-                                     { set_option(context.buffer().option_manager(), params); },
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         [&](const String& prefix, size_t cursor_pos)
-                                         { return main_context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
-                                     }));
-    command_manager.register_commands({ "setw", "setwindow" },
-                                     [&](const CommandParameters& params, const Context& context)
-                                     { set_option(context.window().option_manager(), params); },
-                                     CommandManager::None,
-                                     PerArgumentCommandCompleter({
-                                         [&](const String& prefix, size_t cursor_pos)
-                                         { return main_context.window().option_manager().complete_option_name(prefix, cursor_pos); }
-                                     }));
-
+    register_commands();
     register_highlighters();
     register_filters();
 
     try
     {
-        exec_commands_in_runtime_file({ "kakrc" }, main_context);
+        command_manager.execute("runtime kakrc", main_context);
     }
      catch (Kakoune::runtime_error& error)
     {
@@ -1018,8 +473,13 @@ int main(int argc, char* argv[])
         write_debug("*** This is the debug buffer, where debug info will be written ***\n");
         write_debug("utf-8 test: é á ï");
 
-        auto buffer = (argc > 1) ? open_or_create(argv[1]) : new Buffer("*scratch*", Buffer::Type::Scratch);
-        main_context = Context(*buffer->get_or_create_window());
+        if (argc > 1)
+            command_manager.execute(String("edit ") + argv[1], main_context);
+        else
+        {
+            auto buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
+            main_context = Context(*buffer->get_or_create_window());
+        }
 
         NCurses::draw_window(main_context.window());
         int count = 0;
