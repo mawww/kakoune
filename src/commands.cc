@@ -486,6 +486,26 @@ void eval_string(const CommandParameters& params,
     CommandManager::instance().execute(params, context);
 }
 
+void menu(const CommandParameters& params,
+          const Context& context)
+{
+    if (params.size() == 0 or (params.size() % 2) != 0)
+        throw wrong_argument_count();
+
+    std::ostringstream oss;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        oss << i/2 + 1 << "[" << params[i] << "] ";
+    }
+    oss << "(empty cancels): ";
+
+    String choice = prompt_func(oss.str(), complete_nothing);
+    int i = atoi(choice.c_str());
+
+    if (i > 0 and i < (params.size() / 2) + 1)
+        CommandManager::instance().execute(params[(i-1)*2+1], context);
+}
+
 }
 
 void register_commands()
@@ -558,6 +578,7 @@ void register_commands()
 
     cm.register_command("exec", exec_string);
     cm.register_command("eval", eval_string);
+    cm.register_command("menu", menu);
 
     cm.register_command("def",  define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
     cm.register_command("echo", echo_message);
