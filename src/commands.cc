@@ -31,6 +31,169 @@ extern GetKeyFunc get_key_func;
 namespace
 {
 
+struct unknown_option : public runtime_error
+{
+    unknown_option(const String& name)
+        : runtime_error("unknown option '" + name + "'") {}
+};
+
+struct missing_option_value: public runtime_error
+{
+    missing_option_value(const String& name)
+        : runtime_error("missing value for option '" + name + "'") {}
+};
+
+// ParameterParser provides tools to parse command parameters.
+// There are 3 types of parameters:
+//  * unnamed options, which are accessed by position (ignoring named ones)
+//  * named boolean options, which are enabled using '-name' syntax
+//  * named string options,  which are defined using '-name value' syntax
+struct ParametersParser
+{
+    // the options defines named options, if they map to true, then
+    // they are understood as string options, else they are understood as
+    // boolean option.
+    ParametersParser(const CommandParameters& params,
+                     std::unordered_map<String, bool> options)
+        : m_params(params), m_positional(params.size(), true), m_options(options)
+    {
+        for (size_t i = 0; i < params.size(); ++i)
+        {
+            if (params[i][0] == '-')
+            {
+                auto it = options.find(params[i].substr(1));
+                if (it == options.end())
+                    throw unknown_option(params[i]);
+
+                if (it->second)
+                {
+                    if (i + 1 == params.size() or params[i+1][0] == '-')
+                       throw missing_option_value(params[i]);
+
+                    m_positional[i+1] = false;
+                }
+                m_positional[i] = false;
+            }
+
+            // all options following -- are positional
+            if (params[i] == "--")
+                break;
+        }
+    }
+
+    // check if a named option (either string or boolean) is specified
+    bool has_option(const String& name) const
+    {
+        assert(m_options.find(name) != m_options.end());
+        for (auto param : m_params)
+        {
+            if (param[0] == '-' and param.substr(1) == name)
+                return true;
+
+            if (param == "--")
+                break;
+        }
+        return false;
+    }
+
+    // get a string option value, returns an empty string if the option
+    // is not defined
+    const String& option_value(const String& name) const
+    {
+        auto it = m_options.find(name);
+        assert(it != m_options.end());
+        assert(it->second == true);
+
+        for (size_t i = 0; i < m_params.size(); ++i)
+        {
+            if (m_params[i][0] == '-' and m_params[i].substr(1) == name)
+                return m_params[i+1];
+
+            if (m_params[i] == "--")
+                break;
+        }
+        static String empty;
+        return empty;
+    }
+
+    size_t positional_count() const
+    {
+        size_t res = 0;
+        for (bool positional : m_positional)
+        {
+           if (positional)
+               ++res;
+        }
+        return res;
+    }
+
+    struct iterator
+    {
+    public:
+        typedef String            value_type;
+        typedef const value_type* pointer;
+        typedef const value_type& reference;
+        typedef size_t            difference_type;
+        typedef std::forward_iterator_tag iterator_category;
+
+        iterator(const ParametersParser& parser, size_t index)
+            : m_parser(parser), m_index(index) {}
+
+        const String& operator*() const
+        {
+            assert(m_parser.m_positional[m_index]);
+            return m_parser.m_params[m_index];
+        }
+
+        iterator& operator++()
+        {
+           while (m_index < m_parser.m_positional.size() and
+                  not m_parser.m_positional[++m_index]) {}
+           return *this;
+        }
+
+        bool operator==(const iterator& other) const
+        {
+            return &m_parser == &other.m_parser and m_index == other.m_index;
+        }
+
+        bool operator!=(const iterator& other) const
+        {
+            return &m_parser != &other.m_parser or m_index != other.m_index;
+        }
+
+        bool operator<(const iterator& other) const
+        {
+            assert(&m_parser == &other.m_parser);
+            return m_index < other.m_index;
+        }
+
+    private:
+        const ParametersParser& m_parser;
+        size_t                  m_index;
+    };
+
+    // positional parameter begin
+    iterator begin() const
+    {
+        int index = 0;
+        while (index < m_positional.size() and not m_positional[index])
+            ++index;
+        return iterator(*this, index);
+    }
+
+    // positional parameter end
+    iterator end() const
+    {
+        return iterator(*this, m_params.size());
+    }
+
+private:
+    const CommandParameters& m_params;
+    std::vector<bool>        m_positional;
+    std::unordered_map<String, bool> m_options;
+};
+
 Buffer* open_or_create(const String& filename)
 {
     Buffer* buffer = NULL;
@@ -139,28 +302,24 @@ void show_buffer(const CommandParameters& params, const Context& context)
 
 void add_highlighter(const CommandParameters& params, const Context& context)
 {
-    if (params.size() < 1)
+    ParametersParser parser(params, { { "group", true } });
+    if (parser.positional_count() < 1)
         throw wrong_argument_count();
     try
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-        if (params[0] == "-group")
-        {
-            if (params.size() < 3)
-                throw wrong_argument_count();
-            HighlighterParameters highlighter_params(params.begin()+3, params.end());
-            HighlighterGroup& group = context.window().highlighters().get_group(params[1]);
-            registry.add_highlighter_to_group(context.window(), group,
-                                              params[2], highlighter_params);
-        }
-        else
-        {
-            HighlighterParameters highlighter_params(params.begin()+1, params.end());
-            registry.add_highlighter_to_window(context.window(),
-                                              params[0], highlighter_params);
-        }
+        auto begin = parser.begin();
+        const String& name = *begin;
+        std::vector<String> highlighter_params(++begin, parser.end());
 
+        Window& window = context.window();
+        HighlighterGroup& group = parser.has_option("group") ?
+           window.highlighters().get_group(parser.option_value("group"))
+         : window.highlighters();
+
+        registry.add_highlighter_to_group(window, group, name,
+                                          highlighter_params);
     }
     catch (runtime_error& err)
     {
@@ -170,23 +329,17 @@ void add_highlighter(const CommandParameters& params, const Context& context)
 
 void rm_highlighter(const CommandParameters& params, const Context& context)
 {
-    if (params.size() < 1)
+    ParametersParser parser(params, { { "group", true } });
+    if (parser.positional_count() != 1)
         throw wrong_argument_count();
     try
     {
-        if (params[0] == "-group")
-        {
-            if (params.size() != 3)
-                throw wrong_argument_count();
-            HighlighterGroup& group = context.window().highlighters().get_group(params[1]);
-            group.remove(params[2]);
-        }
-        else
-        {
-            if (params.size() != 1)
-                throw wrong_argument_count();
-            context.window().highlighters().remove(params[0]);
-        }
+        Window& window = context.window();
+        HighlighterGroup& group = parser.has_option("group") ?
+           window.highlighters().get_group(parser.option_value("group"))
+         : window.highlighters();
+
+        group.remove(*parser.begin());
     }
     catch (runtime_error& err)
     {
@@ -244,47 +397,50 @@ void add_hook(const CommandParameters& params, const Context& context)
 
 void define_command(const CommandParameters& params, const Context& context)
 {
-    if (params.size() < 2)
+    ParametersParser parser(params,
+                            { { "env-params", false },
+                              { "append-params", false } });
+
+    if (parser.positional_count() < 2)
         throw wrong_argument_count();
 
-    if (params[0] == "-env-params")
+    auto begin = parser.begin();
+    const String& cmd_name = *begin;
+    std::vector<String> cmd_params(++begin, parser.end());
+    Command cmd;
+    if (parser.has_option("env-params"))
     {
-        std::vector<String> cmd_params(params.begin() + 2, params.end());
-        CommandManager::instance().register_command(params[1],
-             [=](const CommandParameters& params, const Context& context) {
-                char param_name[] = "kak_param0";
-                for (size_t i = 0; i < 10; ++i)
-                {
-                    param_name[sizeof(param_name) - 2] = '0' + i;
-                    if (params.size() > i)
-                        setenv(param_name, params[i].c_str(), 1);
-                    else
-                        unsetenv(param_name);
-                }
-                CommandManager::instance().execute(cmd_params, context);
-            });
+        cmd = [=](const CommandParameters& params, const Context& context) {
+            char param_name[] = "kak_param0";
+            for (size_t i = 0; i < 10; ++i)
+            {
+                param_name[sizeof(param_name) - 2] = '0' + i;
+                if (params.size() > i)
+                    setenv(param_name, params[i].c_str(), 1);
+                else
+                    unsetenv(param_name);
+            }
+            CommandManager::instance().execute(cmd_params, context);
+        };
     }
-    else if (params[0] == "-append-params")
+    else if (parser.has_option("append-params"))
     {
-        std::vector<String> cmd_params(params.begin() + 2, params.end());
-        CommandManager::instance().register_command(params[1],
-             [=](const CommandParameters& params, const Context& context) {
-                std::vector<String> merged_params = cmd_params;
-                for (auto& param : params)
-                    merged_params.push_back(param);
-                CommandManager::instance().execute(merged_params, context);
-            });
+         cmd = [=](const CommandParameters& params, const Context& context) {
+            std::vector<String> merged_params = cmd_params;
+            for (auto& param : params)
+                merged_params.push_back(param);
+            CommandManager::instance().execute(merged_params, context);
+        };
     }
     else
     {
-        std::vector<String> cmd_params(params.begin() + 1, params.end());
-        CommandManager::instance().register_command(params[0],
-             [=](const CommandParameters& params, const Context& context) {
-                 if (not params.empty())
-                     throw wrong_argument_count();
-                CommandManager::instance().execute(cmd_params, context);
-            });
+         cmd = [=](const CommandParameters& params, const Context& context) {
+             if (not params.empty())
+                 throw wrong_argument_count();
+            CommandManager::instance().execute(cmd_params, context);
+        };
     }
+    CommandManager::instance().register_command(cmd_name, cmd);
 }
 
 void echo_message(const CommandParameters& params, const Context& context)
