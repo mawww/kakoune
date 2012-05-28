@@ -31,6 +31,7 @@ public:
 
     iterator begin() const { return iterator(m_buffers.begin()); }
     iterator end() const { return iterator(m_buffers.end()); }
+    size_t   count() const { return m_buffers.size(); }
 
     Buffer* get_buffer(const String& name);
 

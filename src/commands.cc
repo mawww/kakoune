@@ -295,9 +295,38 @@ void show_buffer(const CommandParameters& params, const Context& context)
 
     Buffer* buffer = BufferManager::instance().get_buffer(params[0]);
     if (not buffer)
-        NCurses::print_status("buffer " + params[0] + " does not exists");
-    else
-        main_context = Context(*buffer->get_or_create_window());
+        throw runtime_error("buffer " + params[0] + " does not exists");
+
+    main_context = Context(*buffer->get_or_create_window());
+}
+
+void delete_buffer(const CommandParameters& params, const Context& context)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    BufferManager& manager = BufferManager::instance();
+
+    Buffer* buffer = manager.get_buffer(params[0]);
+    if (not buffer)
+        throw runtime_error("buffer " + params[0] + " does not exists");
+    if (buffer->type()!= Buffer::Type::Scratch and buffer->is_modified())
+        throw runtime_error("buffer " + params[0] + " is modified");
+
+    if (&main_context.buffer() == buffer)
+    {
+        if (manager.count() == 1)
+            throw runtime_error("buffer " + params[0] + " is the last one");
+        for (Buffer& buf : manager)
+        {
+            if (&buf != buffer)
+            {
+               main_context = Context(*buf.get_or_create_window());
+               break;
+            }
+        }
+    }
+    delete buffer;
 }
 
 void add_highlighter(const CommandParameters& params, const Context& context)
@@ -680,6 +709,12 @@ void register_commands()
     cm.register_command("wq", write_and_quit<false>);
     cm.register_command("wq!", write_and_quit<true>);
     cm.register_commands({ "b", "buffer" }, show_buffer,
+                         CommandManager::None,
+                         PerArgumentCommandCompleter({
+                             [](const String& prefix, size_t cursor_pos)
+                             { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
+                          }));
+    cm.register_commands({ "db", "delbuf" }, delete_buffer,
                          CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
