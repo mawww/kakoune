@@ -6,7 +6,7 @@ def -env-params tag eval \
     fi
     params=$(global --result grep ${tagname} | sed 's/\([^:]*\):\([0-9]*\):\(.*\)/"\1:\2 \3" "edit \1 \2"/')
     if [[ ${params} != "" ]]; then
-       echo "menu $params"
+       echo "menu -auto-single $params"
     else
        echo echo tag ${tagname} not found
     fi`
