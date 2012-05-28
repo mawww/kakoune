@@ -188,6 +188,19 @@ struct ParametersParser
         return iterator(*this, m_params.size());
     }
 
+    // access positional parameter by index
+    const String& operator[] (size_t index) const
+    {
+        assert(index < positional_count());
+        iterator it = begin();
+        while (index)
+        {
+            ++it;
+            --index;
+        }
+        return *it;
+    }
+
 private:
     const CommandParameters& m_params;
     std::vector<bool>        m_positional;
@@ -674,21 +687,30 @@ void eval_string(const CommandParameters& params,
 void menu(const CommandParameters& params,
           const Context& context)
 {
-    if (params.size() == 0 or (params.size() % 2) != 0)
+    ParametersParser parser(params, { { "auto-single", false } });
+
+    size_t count = parser.positional_count();
+    if (count == 0 or (count % 2) != 0)
         throw wrong_argument_count();
 
-    std::ostringstream oss;
-    for (int i = 0; i < params.size(); i += 2)
+    if (count == 2 and parser.has_option("auto-single"))
     {
-        oss << i/2 + 1 << "[" << params[i] << "] ";
+        CommandManager::instance().execute(parser[1], context);
+        return;
+    }
+
+    std::ostringstream oss;
+    for (int i = 0; i < count; i += 2)
+    {
+        oss << i/2 + 1 << "[" << parser[i] << "] ";
     }
     oss << "(empty cancels): ";
 
     String choice = prompt_func(oss.str(), complete_nothing);
     int i = atoi(choice.c_str());
 
-    if (i > 0 and i < (params.size() / 2) + 1)
-        CommandManager::instance().execute(params[(i-1)*2+1], context);
+    if (i > 0 and i < (count / 2) + 1)
+        CommandManager::instance().execute(parser[(i-1)*2+1], context);
 }
 
 }
