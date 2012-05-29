@@ -99,7 +99,7 @@ static void shell_eval(std::vector<String>& params,
                        const String& cmdline,
                        const Context& context)
 {
-        String output = ShellManager::instance().eval(cmdline, context);
+        String output = ShellManager::instance().eval(cmdline, context, {});
         TokenList tokens = split(output);
 
         for (auto it = tokens.begin(); it != tokens.end(); ++it)

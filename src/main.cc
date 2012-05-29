@@ -215,7 +215,7 @@ void do_pipe(Editor& editor, int count)
         editor.buffer().begin_undo_group();
         for (auto& sel : const_cast<const Editor&>(editor).selections())
         {
-            String new_content = ShellManager::instance().eval(cmdline, main_context);
+            String new_content = ShellManager::instance().eval(cmdline, main_context, {});
             editor.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
             editor.buffer().modify(Modification::make_insert(sel.begin(), new_content));
         }

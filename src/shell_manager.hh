@@ -11,13 +11,15 @@ namespace Kakoune
 
 class Context;
 typedef std::function<String (const Context&)> EnvVarRetriever;
+typedef std::unordered_map<String, String>     EnvVarMap;
 
 class ShellManager : public Singleton<ShellManager>
 {
 public:
     ShellManager();
 
-    String eval(const String& cmdline, const Context& context);
+    String eval(const String& cmdline, const Context& context,
+                const EnvVarMap& env_vars);
 
     void register_env_var(const String& name, EnvVarRetriever retriever);
 

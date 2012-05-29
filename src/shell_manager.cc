@@ -12,7 +12,8 @@ ShellManager::ShellManager()
 {
 }
 
-String ShellManager::eval(const String& cmdline, const Context& context)
+String ShellManager::eval(const String& cmdline, const Context& context,
+                          const EnvVarMap& env_vars)
 {
     int write_pipe[2];
     int read_pipe[2];
@@ -61,11 +62,17 @@ String ShellManager::eval(const String& cmdline, const Context& context)
                 assert(false);
             assert(name.length() > 0);
 
-            auto env_var = m_env_vars.find(name);
-            if (env_var != m_env_vars.end())
+            auto local_var = env_vars.find(name);
+            if (local_var != env_vars.end())
+                setenv(("kak_" + name).c_str(), local_var->second.c_str(), 1);
+            else
             {
-                String value = env_var->second(context);
-                setenv(("kak_" + name).c_str(), value.c_str(), 1);
+                auto env_var = m_env_vars.find(name);
+                if (env_var != m_env_vars.end())
+                {
+                    String value = env_var->second(context);
+                    setenv(("kak_" + name).c_str(), value.c_str(), 1);
+                }
             }
 
             ++it;
