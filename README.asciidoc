@@ -45,8 +45,11 @@ Basic Movement
 
  * _%_: select whole buffer
 
- * _alt-H_: select to line begin
- * _alt-L_: select to line end
+ * _gh_, _alt-H_: select to line begin
+ * _gl_, _alt-L_: select to line end
+
+ * _gg_, _gt_: go to the first line
+ * _gb_: go to the last line
 
 Appending
 ---------
@@ -62,6 +65,9 @@ command itself.
 
 for example, _3W_ selects 3 consecutive words and _3w_ select the third word on
 the right of selection end.
+
+* _space_: when used with count, keep only the counth selection
+* _alt-space_: when used with count, remove the counth selection
 
 Changes
 -------
@@ -103,6 +109,22 @@ use _alt-s_ then ', *'
 
 To clear multiple selections, use _space_. To keep only the nth selection
 use _n_ followed by _space_.
+
+Object Selection
+----------------
+
+Using alt-i and alt-a, you can select some text object, the starting
+point is always the last character of the selection.
+
+* _b_, _(_ or _)_: select the enclosing parenthesis
+* _B_, _{_ or _}_: select the enclosing {} block
+* _[_ or _]_: select the enclosing [] block
+* _<_ or _>_: select the enclosing <> block
+* w: select the whole word
+* W: select the whole WORD
+
+When it makes sense, alt-i selects the inner object and alt-a the whole
+object. For example alt-i ( will only select the inside of the parenthesis.
 
 Registers
 ---------
@@ -170,4 +192,12 @@ for example, to automatically use line numbering with .cc files,
 use the following command:
 
 :hook global WinCreate .*\.cc addhl number_lines
+
+Shell expension
+---------------
+
+Commands support the shell backtick syntax, and kakoune internal state
+can be accessed through environment variable. For example, if you are
+editing the editor.cc file, typing ':edit `echo ${kak_bufname/%.cc/.hh}`'
+will edit the editor.hh file.
 
