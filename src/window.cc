@@ -93,24 +93,16 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    DisplayCoord cursor = line_and_column_at(selections().back().last());
-    if (cursor.line < 0)
-    {
-        m_position.line = std::max(m_position.line + cursor.line, 0);
-    }
-    else if (cursor.line >= m_dimensions.line)
-    {
-        m_position.line += cursor.line - (m_dimensions.line - 1);
-    }
+    BufferCoord cursor = buffer().line_and_column_at(selections().back().last());
+    if (cursor.line < m_position.line)
+        m_position.line = cursor.line;
+    else if (cursor.line >= m_position.line + m_dimensions.line)
+        m_position.line = cursor.line - (m_dimensions.line - 1);
 
-    if (cursor.column < 0)
-    {
-        m_position.column = std::max(m_position.column + cursor.column, 0);
-    }
-    else if (cursor.column >= m_dimensions.column)
-    {
-        m_position.column += cursor.column - (m_dimensions.column - 1);
-    }
+    if (cursor.column < m_position.column)
+        m_position.column = cursor.column;
+    else if (cursor.column >= m_position.column + m_dimensions.column)
+        m_position.column = cursor.column - (m_dimensions.column - 1);
 }
 
 String Window::status_line() const
