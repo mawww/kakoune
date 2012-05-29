@@ -13,6 +13,7 @@
 #include "filter_registry.hh"
 #include "register_manager.hh"
 #include "completion.hh"
+#include "shell_manager.hh"
 
 
 namespace Kakoune
@@ -441,7 +442,8 @@ void define_command(const CommandParameters& params, const Context& context)
 {
     ParametersParser parser(params,
                             { { "env-params", false },
-                              { "append-params", false } });
+                              { "append-params", false },
+                              { "shell-completion", true } });
 
     if (parser.positional_count() < 2)
         throw wrong_argument_count();
@@ -482,7 +484,32 @@ void define_command(const CommandParameters& params, const Context& context)
             CommandManager::instance().execute(cmd_params, context);
         };
     }
-    CommandManager::instance().register_command(cmd_name, cmd);
+
+    if (parser.has_option("shell-completion"))
+    {
+        String shell_cmd = parser.option_value("shell-completion");
+        auto completer = [=](const CommandParameters& params,
+                             size_t token_to_complete, size_t pos_in_token)
+        {
+           std::unordered_map<String, String> vars;
+           char param_name[] = "param0";
+           for (size_t i = 0; i < params.size(); ++i)
+           {
+                param_name[sizeof(param_name) - 2] = '0' + i;
+                vars[param_name] = params[i].c_str();
+           }
+           vars["token_to_complete"] = int_to_str(token_to_complete);
+           vars["pos_in_token"]      = int_to_str(pos_in_token);
+
+           String output = ShellManager::instance().eval(shell_cmd, context, vars);
+           return split(output, '\n');
+        };
+        CommandManager::instance().register_command(cmd_name, cmd,
+                                                    CommandManager::None,
+                                                    completer);
+    }
+    else
+        CommandManager::instance().register_command(cmd_name, cmd);
 }
 
 void echo_message(const CommandParameters& params, const Context& context)
