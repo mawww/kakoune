@@ -70,10 +70,10 @@ public:
     void on_erase(const BufferCoord& begin, const BufferCoord& end);
 
     const Buffer& buffer() const;
-
-private:
     BufferSize line() const { return m_coord.line; }
     BufferSize column() const { return m_coord.column; }
+
+private:
     BufferSize offset() const;
 
     const Buffer* m_buffer;

@@ -14,32 +14,38 @@ String DisplayAtom::content() const
         return m_replacement_text;
 }
 
-template<typename Iterator>
 static DisplayCoord advance_coord(const DisplayCoord& pos,
-                                  Iterator begin, Iterator end)
+                                  const BufferIterator& begin,
+                                  const BufferIterator& end)
+{
+    if (begin.line() == end.line())
+        return DisplayCoord(pos.line, pos.column + end.column() - begin.column());
+    else
+        return DisplayCoord(pos.line + end.line() - begin.line(), end.column());
+}
+
+static DisplayCoord advance_coord(const DisplayCoord& pos,
+                                  const String& str)
 {
     DisplayCoord res = pos;
-    while (begin != end)
+    for (auto c : str)
     {
-        if (*begin == '\n')
+        if (c == '\n')
         {
             ++res.line;
             res.column = 0;
         }
         else
             ++res.column;
-        ++begin;
     }
     return res;
 }
-
 DisplayCoord DisplayAtom::end_coord() const
 {
     if (m_replacement_text.empty())
         return advance_coord(m_coord, m_begin, m_end);
     else
-        return advance_coord(m_coord, m_replacement_text.begin(),
-                             m_replacement_text.end());
+        return advance_coord(m_coord, m_replacement_text);
 }
 
 BufferIterator DisplayAtom::iterator_at(const DisplayCoord& coord) const
@@ -81,7 +87,7 @@ DisplayBuffer::DisplayBuffer()
 DisplayBuffer::iterator DisplayBuffer::insert(iterator where, const DisplayAtom& atom)
 {
     iterator res = m_atoms.insert(where, atom);
-    check_invariant();
+    // check_invariant();
     return res;
 }
 
@@ -115,7 +121,7 @@ DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator
     iterator insert_pos = atom;
     ++insert_pos;
     m_atoms.insert(insert_pos, std::move(new_atom));
-    check_invariant();
+    // check_invariant();
     return atom;
 }
 
