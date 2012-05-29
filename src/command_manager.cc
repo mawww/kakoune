@@ -79,7 +79,8 @@ struct command_not_found : runtime_error
 };
 
 void CommandManager::execute(const String& command_line,
-                             const Context& context)
+                             const Context& context,
+                             const EnvVarMap& env_vars)
 {
     TokenList tokens = split(command_line);
     if (tokens.empty())
@@ -92,14 +93,15 @@ void CommandManager::execute(const String& command_line,
                                              it->second - it->first));
     }
 
-    execute(params, context);
+    execute(params, context, env_vars);
 }
 
 static void shell_eval(std::vector<String>& params,
                        const String& cmdline,
-                       const Context& context)
+                       const Context& context,
+                       const EnvVarMap& env_vars)
 {
-        String output = ShellManager::instance().eval(cmdline, context, {});
+        String output = ShellManager::instance().eval(cmdline, context, env_vars);
         TokenList tokens = split(output);
 
         for (auto it = tokens.begin(); it != tokens.end(); ++it)
@@ -110,7 +112,8 @@ static void shell_eval(std::vector<String>& params,
 }
 
 void CommandManager::execute(const CommandParameters& params,
-                             const Context& context)
+                             const Context& context,
+                             const EnvVarMap& env_vars)
 {
     if (params.empty())
         return;
@@ -132,7 +135,7 @@ void CommandManager::execute(const CommandParameters& params,
             {
                 shell_eval(expanded_params,
                            begin->substr(1, begin->length() - 2),
-                           context);
+                           context, env_vars);
                 if (not expanded_params.empty())
                 {
                     command_it = m_commands.find(expanded_params[0]);
@@ -155,7 +158,7 @@ void CommandManager::execute(const CommandParameters& params,
                     if (param->front() == '`' and param->back() == '`')
                         shell_eval(expanded_params,
                                    param->substr(1, param->length() - 2),
-                                   context);
+                                   context, env_vars);
                     else
                         expanded_params.push_back(*param);
                 }

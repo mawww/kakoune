@@ -9,6 +9,7 @@
 #include "utils.hh"
 #include "completion.hh"
 #include "memoryview.hh"
+#include "shell_manager.hh"
 
 namespace Kakoune
 {
@@ -54,8 +55,10 @@ public:
         DeferredShellEval = 2,
     };
 
-    void execute(const String& command_line, const Context& context);
-    void execute(const CommandParameters& params, const Context& context);
+    void execute(const String& command_line, const Context& context,
+                 const EnvVarMap& env_vars = EnvVarMap());
+    void execute(const CommandParameters& params, const Context& context,
+                 const EnvVarMap& env_vars = EnvVarMap());
 
     Completions complete(const String& command_line, size_t cursor_pos);
 
