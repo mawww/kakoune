@@ -136,6 +136,14 @@ void Editor::keep_selection(int index)
     }
 }
 
+void Editor::remove_selection(int index)
+{
+    check_invariant();
+
+    if (selections().size() > 1 and index < selections().size())
+        m_selections.back().erase(m_selections.back().begin() + index);
+}
+
 void Editor::select(const BufferIterator& iterator)
 {
     m_selections.back().clear();

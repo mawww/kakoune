@@ -388,6 +388,8 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, '|' }, do_pipe },
     { { Key::Modifiers::None, ' ' }, [](Editor& editor, int count) { if (count == 0) editor.clear_selections();
                                                                      else editor.keep_selection(count-1); } },
+    { { Key::Modifiers::Alt,  ' ' }, [](Editor& editor, int count) { if (count == 0) editor.clear_selections();
+                                                                     else editor.remove_selection(count-1); } },
     { { Key::Modifiers::None, 'w' }, [](Editor& editor, int count) { do { editor.select(select_to_next_word<false>); } while(--count > 0); } },
     { { Key::Modifiers::None, 'e' }, [](Editor& editor, int count) { do { editor.select(select_to_next_word_end<false>); } while(--count > 0); } },
     { { Key::Modifiers::None, 'b' }, [](Editor& editor, int count) { do { editor.select(select_to_previous_word<false>); } while(--count > 0); } },

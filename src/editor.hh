@@ -43,6 +43,7 @@ public:
     void move_selections(const BufferCoord& offset, bool append = false);
     void clear_selections();
     void keep_selection(int index);
+    void remove_selection(int index);
     void select(const BufferIterator& iterator);
     void select(const Selector& selector, bool append = false);
     void multi_select(const MultiSelector& selector);
