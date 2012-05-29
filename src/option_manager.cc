@@ -5,13 +5,6 @@
 namespace Kakoune
 {
 
-String int_to_str(int value)
-{
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
-}
-
 Option& OptionManager::operator[] (const String& name)
 {
     auto it = m_options.find(name);

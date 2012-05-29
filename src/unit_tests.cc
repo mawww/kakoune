@@ -45,8 +45,24 @@ void test_editor()
     }
 }
 
+void test_string()
+{
+   assert(int_to_str(124)  == "124");
+   assert(int_to_str(-129) == "-129");
+   assert(int_to_str(0)    == "0");
+
+   assert(String("youpi ") + "matin" == "youpi matin");
+
+   std::vector<String> splited = split("youpi:matin::tchou", ':');
+   assert(splited[0] == "youpi");
+   assert(splited[1] == "matin");
+   assert(splited[2] == "");
+   assert(splited[3] == "tchou");
+}
+
 void run_unit_tests()
 {
+    test_string();
     test_buffer();
     test_editor();
 }

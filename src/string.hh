@@ -109,6 +109,9 @@ inline String operator+(Character lhs, const String& rhs)
     return String(lhs) + rhs;
 }
 
+String int_to_str(int value);
+std::vector<String> split(const String& str, Character separator);
+
 }
 
 namespace std
