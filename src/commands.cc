@@ -438,6 +438,18 @@ void add_hook(const CommandParameters& params, const Context& context)
         NCurses::print_status("error: no such hook container " + params[0]);
 }
 
+EnvVarMap params_to_env_var_map(const CommandParameters& params)
+{
+    std::unordered_map<String, String> vars;
+    char param_name[] = "param0";
+    for (size_t i = 0; i < params.size(); ++i)
+    {
+         param_name[sizeof(param_name) - 2] = '0' + i;
+         vars[param_name] = params[i].c_str();
+    }
+    return vars;
+}
+
 void define_command(const CommandParameters& params, const Context& context)
 {
     ParametersParser parser(params,
@@ -455,16 +467,8 @@ void define_command(const CommandParameters& params, const Context& context)
     if (parser.has_option("env-params"))
     {
         cmd = [=](const CommandParameters& params, const Context& context) {
-            char param_name[] = "kak_param0";
-            for (size_t i = 0; i < 10; ++i)
-            {
-                param_name[sizeof(param_name) - 2] = '0' + i;
-                if (params.size() > i)
-                    setenv(param_name, params[i].c_str(), 1);
-                else
-                    unsetenv(param_name);
-            }
-            CommandManager::instance().execute(cmd_params, context);
+            CommandManager::instance().execute(cmd_params, context,
+                                               params_to_env_var_map(params));
         };
     }
     else if (parser.has_option("append-params"))
@@ -491,16 +495,9 @@ void define_command(const CommandParameters& params, const Context& context)
         auto completer = [=](const CommandParameters& params,
                              size_t token_to_complete, size_t pos_in_token)
         {
-           std::unordered_map<String, String> vars;
-           char param_name[] = "param0";
-           for (size_t i = 0; i < params.size(); ++i)
-           {
-                param_name[sizeof(param_name) - 2] = '0' + i;
-                vars[param_name] = params[i].c_str();
-           }
+           EnvVarMap vars = params_to_env_var_map(params);
            vars["token_to_complete"] = int_to_str(token_to_complete);
            vars["pos_in_token"]      = int_to_str(pos_in_token);
-
            String output = ShellManager::instance().eval(shell_cmd, context, vars);
            return split(output, '\n');
         };
