@@ -1,4 +1,6 @@
-def -env-params tag eval \
+def -env-params \
+    -shell-completion 'global -c ${kak_param0}' \
+    tag eval \
    `if [[ ${kak_param0} != "" ]]; then
        tagname=${kak_param0}
     else
