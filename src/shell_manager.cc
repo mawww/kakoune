@@ -6,26 +6,37 @@
 
 namespace Kakoune
 {
+String env_var_regex(R"(\$\{kak_([a-z0-9_]+)[^}]*\}|\$kak_([a-z0-9_]+))");
 
 ShellManager::ShellManager()
-   : m_regex(LR"(\$\{kak_([a-z0-9_]+)[^}]*\}|\$kak_([a-z0-9_]+))")
+   : m_regex(env_var_regex.begin(), env_var_regex.end())
 {
 }
 
 String ShellManager::eval(const String& cmdline, const Context& context,
                           const EnvVarMap& env_vars)
 {
+    return pipe("", cmdline, context, env_vars);
+}
+
+String ShellManager::pipe(const String& input,
+                          const String& cmdline, const Context& context,
+                          const EnvVarMap& env_vars)
+{
     int write_pipe[2];
     int read_pipe[2];
 
-    pipe(write_pipe);
-    pipe(read_pipe);
+    ::pipe(write_pipe);
+    ::pipe(read_pipe);
 
     String output;
     if (pid_t pid = fork())
     {
         close(write_pipe[0]);
         close(read_pipe[1]);
+
+        memoryview<char> data = input.data();
+        write(write_pipe[1], data.pointer(), data.size());
         close(write_pipe[1]);
 
         char buffer[1024];

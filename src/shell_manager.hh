@@ -21,6 +21,10 @@ public:
     String eval(const String& cmdline, const Context& context,
                 const EnvVarMap& env_vars);
 
+    String pipe(const String& input,
+                const String& cmdline, const Context& context,
+                const EnvVarMap& env_vars);
+
     void register_env_var(const String& name, EnvVarRetriever retriever);
 
 private:
