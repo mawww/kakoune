@@ -719,29 +719,27 @@ void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
 
-    cm.register_commands({ "e", "edit" }, edit<false>, CommandManager::None,
-                         PerArgumentCommandCompleter({ complete_filename }));
-    cm.register_commands({ "e!", "edit!" }, edit<true>, CommandManager::None,
-                         PerArgumentCommandCompleter({ complete_filename }));
+    PerArgumentCommandCompleter filename_completer({ complete_filename });
+    cm.register_commands({ "e", "edit" }, edit<false>,
+                         CommandManager::None, filename_completer);
+    cm.register_commands({ "e!", "edit!" }, edit<true>,
+                         CommandManager::None, filename_completer);
+    cm.register_commands({ "w", "write" }, write_buffer,
+                         CommandManager::None, filename_completer);
     cm.register_commands({ "q", "quit" }, quit<false>);
     cm.register_commands({ "q!", "quit!" }, quit<true>);
-    cm.register_commands({ "w", "write" }, write_buffer,
-                         CommandManager::None,
-                         PerArgumentCommandCompleter({ complete_filename }));
     cm.register_command("wq", write_and_quit<false>);
     cm.register_command("wq!", write_and_quit<true>);
+
+    PerArgumentCommandCompleter buffer_completer({
+        [](const String& prefix, size_t cursor_pos)
+        { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
+    });
     cm.register_commands({ "b", "buffer" }, show_buffer,
-                         CommandManager::None,
-                         PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
-                             { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
-                          }));
+                         CommandManager::None, buffer_completer);
     cm.register_commands({ "db", "delbuf" }, delete_buffer,
-                         CommandManager::None,
-                         PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
-                             { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
-                          }));
+                         CommandManager::None, buffer_completer);
+
     cm.register_commands({ "ah", "addhl" }, add_highlighter,
                          CommandManager::None,
                          [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
@@ -770,23 +768,20 @@ void register_commands()
                              else
                                  return w.highlighters().complete_id(arg, pos_in_token);
                          });
+
+    PerArgumentCommandCompleter filter_completer({
+        [](const String& prefix, size_t cursor_pos)
+        { return FilterRegistry::instance().complete_filter(prefix, cursor_pos); }
+    });
     cm.register_commands({ "af", "addfilter" }, add_filter,
-                         CommandManager::None,
-                         PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
-                             { return FilterRegistry::instance().complete_filter(prefix, cursor_pos); }
-                         }));
+                         CommandManager::None, filter_completer);
     cm.register_commands({ "rf", "rmfilter" }, rm_filter,
-                         CommandManager::None,
-                         PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
-                             { return main_context.window().complete_filterid(prefix, cursor_pos); }
-                         }));
+                         CommandManager::None, filter_completer);
+
     cm.register_command("hook", add_hook, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
 
     cm.register_command("source", exec_commands_in_file,
-                         CommandManager::None,
-                         PerArgumentCommandCompleter({ complete_filename }));
+                         CommandManager::None, filename_completer);
     cm.register_command("runtime", exec_commands_in_runtime_file);
 
     cm.register_command("exec", exec_string);
