@@ -116,15 +116,14 @@ std::vector<String> split(const String& str, Character separator);
 
 namespace std
 {
-template<>
-    inline size_t
-    hash<const Kakoune::String&>::operator()(const Kakoune::String& str) const
-    { return str.hash(); }
-
-template<>
-    inline size_t
-    hash<Kakoune::String>::operator()(Kakoune::String str) const
-    { return str.hash(); }
+    template<>
+    struct hash<Kakoune::String>
+    {
+        size_t operator()(const Kakoune::String& str) const
+        {
+            return str.hash();
+        }
+    };
 }
 
 #endif // string_hh_INCLUDED
