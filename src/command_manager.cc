@@ -10,14 +10,21 @@
 namespace Kakoune
 {
 
-void CommandManager::register_command(const String& command_name, Command command,
+bool CommandManager::command_defined(const String& command_name) const
+{
+    return m_commands.find(command_name) != m_commands.end();
+}
+
+void CommandManager::register_command(const String& command_name,
+                                      Command command,
                                       unsigned flags,
                                       const CommandCompleter& completer)
 {
     m_commands[command_name] = CommandDescriptor { command, flags, completer };
 }
 
-void CommandManager::register_commands(const memoryview<String>& command_names, Command command,
+void CommandManager::register_commands(const memoryview<String>& command_names,
+                                       Command command,
                                        unsigned flags,
                                        const CommandCompleter& completer)
 {

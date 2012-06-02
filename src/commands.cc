@@ -455,6 +455,7 @@ void define_command(const CommandParameters& params, const Context& context)
     ParametersParser parser(params,
                             { { "env-params", false },
                               { "append-params", false },
+                              { "allow-override", false },
                               { "shell-completion", true } });
 
     if (parser.positional_count() < 2)
@@ -462,6 +463,11 @@ void define_command(const CommandParameters& params, const Context& context)
 
     auto begin = parser.begin();
     const String& cmd_name = *begin;
+
+    if (CommandManager::instance().command_defined(cmd_name) and
+        not parser.has_option("allow-override"))
+        throw runtime_error("command '" + cmd_name + "' already defined");
+
     std::vector<String> cmd_params(++begin, parser.end());
     Command cmd;
     if (parser.has_option("env-params"))

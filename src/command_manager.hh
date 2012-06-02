@@ -62,6 +62,8 @@ public:
 
     Completions complete(const String& command_line, size_t cursor_pos);
 
+    bool command_defined(const String& command_name) const;
+
     void register_command(const String& command_name,
                           Command command,
                           unsigned flags = None,
