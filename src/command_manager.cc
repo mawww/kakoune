@@ -208,6 +208,7 @@ Completions CommandManager::complete(const String& command_line, size_t cursor_p
             if (command.first.substr(0, prefix.length()) == prefix)
                 result.candidates.push_back(command.first);
         }
+        std::sort(result.candidates.begin(), result.candidates.end());
 
         return result;
     }
