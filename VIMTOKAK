@@ -31,4 +31,4 @@ join line with next:
 
 delete to line end:
  * vim: d$
- * kak: alt-ld or gldt
+ * kak: alt-ld or gld
