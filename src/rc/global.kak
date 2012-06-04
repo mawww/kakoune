@@ -6,7 +6,7 @@ def -env-params \
     else
        tagname=${kak_selection}
     fi
-    params=$(global --result grep ${tagname} | sed 's/\([^:]*\):\([0-9]*\):\(.*\)/"\1:\2 \3" "edit \1 \2"/')
+    params=$(global --result grep ${tagname} | sed "s/\([^:]*\):\([0-9]*\):\(.*\)/'\1:\2 \3' 'edit \1 \2; try exec \"20k41Xs\3<ret>\" catch echo \"could not find [\3] near \1:\2\"; exec \2g'/")
     if [[ ${params} != "" ]]; then
        echo "menu -auto-single $params"
     else
