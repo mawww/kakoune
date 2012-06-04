@@ -1,8 +1,8 @@
 hook global WinCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) \
     addhl group hlcpp; \
-    addhl -group hlcpp regex "\<(this|true|false|NULL|nullptr)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" red default; \
+    addhl -group hlcpp regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" red default; \
     addhl -group hlcpp regex "\<(void|int|char|unsigned|float|bool|size_t)\>" yellow default; \
-    addhl -group hlcpp regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete)\>" blue default; \
+    addhl -group hlcpp regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not)\>" blue default; \
     addhl -group hlcpp regex "\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern)\>" green default; \
     addhl -group hlcpp regex "(?<!')\"(\\\"|[^\"])*\"" magenta default; \
     addhl -group hlcpp regex "(\`|(?<=\n))\h*#\h*[^\n]*" magenta default; \
