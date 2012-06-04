@@ -145,6 +145,9 @@ void Buffer::begin_undo_group()
 
 void Buffer::end_undo_group()
 {
+    if (m_current_undo_group.empty())
+        return;
+
     m_history.push_back(m_current_undo_group);
     m_history_cursor = m_history.end();
 
