@@ -743,6 +743,30 @@ void menu(const CommandParameters& params,
         CommandManager::instance().execute(parser[(i-1)*2+1], context);
 }
 
+void try_catch(const CommandParameters& params,
+               const Context& context)
+{
+    size_t i = 0;
+    for (; i < params.size(); ++i)
+    {
+        if (params[i] == "catch")
+            break;
+    }
+
+    if (i == 0 or i == params.size())
+        throw wrong_argument_count();
+
+    CommandManager& command_manager = CommandManager::instance();
+    try
+    {
+        command_manager.execute(params.subrange(0, i), context);
+    }
+    catch (Kakoune::runtime_error& e)
+    {
+        command_manager.execute(params.subrange(i+1, params.size() - i - 1), context);
+    }
+}
+
 }
 
 void register_commands()
@@ -817,6 +841,7 @@ void register_commands()
     cm.register_command("exec", exec_string);
     cm.register_command("eval", eval_string);
     cm.register_command("menu", menu);
+    cm.register_command("try",  try_catch, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
 
     cm.register_command("def",  define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
     cm.register_command("echo", echo_message);
