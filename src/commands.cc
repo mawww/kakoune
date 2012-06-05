@@ -15,6 +15,9 @@
 #include "completion.hh"
 #include "shell_manager.hh"
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
 
 namespace Kakoune
 {
