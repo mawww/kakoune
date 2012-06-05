@@ -607,6 +607,9 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048 - filename.length();
     _NSGetExecutablePath(buffer, &bufsize);
+    char* canonical_path = realpath(buffer, NULL);
+    strncpy(buffer, canonical_path, 2048 - filename.length());
+    free(canonical_path);
 #else
 # error "finding executable path is not implemented on this platform"
 #endif
