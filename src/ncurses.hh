@@ -1,30 +1,26 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
-#include <functional>
-
-#include "keys.hh"
-#include "completion.hh"
+#include "ui.hh"
 
 namespace Kakoune
 {
 
-class Window;
-
-typedef std::function<String (const String&, Completer)> PromptFunc;
-typedef std::function<Key ()> GetKeyFunc;
-
-struct prompt_aborted {};
-
-namespace NCurses
+class NCursesUI : public UI
 {
+public:
+    NCursesUI();
+    ~NCursesUI();
 
-void init(PromptFunc& prompt_func, GetKeyFunc& get_key_func);
-void deinit();
-void draw_window(Window& window);
-void print_status(const String& status);
+    NCursesUI(const NCursesUI&) = delete;
+    NCursesUI& operator=(const NCursesUI&) = delete;
 
-}
+    void draw_window(Window& window);
+    void print_status(const String& status);
+
+    String prompt(const String& prompt, Completer completer);
+    Key    get_key();
+};
 
 }
 

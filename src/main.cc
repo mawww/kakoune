@@ -31,24 +31,6 @@ namespace Kakoune
 Context main_context;
 bool quit_requested = false;
 
-void draw_editor_ifn(Editor& editor)
-{
-    Window* window = dynamic_cast<Window*>(&editor);
-    if (window)
-        NCurses::draw_window(*window);
-}
-
-PromptFunc prompt_func;
-String prompt(const String& text, Completer completer = complete_nothing)
-{
-    return prompt_func(text, completer);
-}
-
-GetKeyFunc get_key_func;
-Key get_key()
-{
-    return get_key_func();
-}
 
 struct InsertSequence
 {
@@ -243,7 +225,7 @@ void do_search_next(Editor& editor)
     if (not ex.empty())
         editor.select(std::bind(select_next_match, _1, ex), append);
     else
-        NCurses::print_status("no search pattern");
+        print_status("no search pattern");
 }
 
 void do_yank(Editor& editor, int count)
@@ -401,8 +383,8 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, 'n' }, [](Editor& editor, int count) { do_search_next<false>(editor); } },
     { { Key::Modifiers::None, 'N' }, [](Editor& editor, int count) { do_search_next<true>(editor); } },
 
-    { { Key::Modifiers::None, 'u' }, [](Editor& editor, int count) { do { if (not editor.undo()) { NCurses::print_status("nothing left to undo"); break; } } while(--count > 0); } },
-    { { Key::Modifiers::None, 'U' }, [](Editor& editor, int count) { do { if (not editor.redo()) { NCurses::print_status("nothing left to redo"); break; } } while(--count > 0); } },
+    { { Key::Modifiers::None, 'u' }, [](Editor& editor, int count) { do { if (not editor.undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
+    { { Key::Modifiers::None, 'U' }, [](Editor& editor, int count) { do { if (not editor.redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
 
     { { Key::Modifiers::Alt,  'i' }, do_select_object<true> },
     { { Key::Modifiers::Alt,  'a' }, do_select_object<false> },
@@ -437,8 +419,6 @@ void run_unit_tests();
 
 int main(int argc, char* argv[])
 {
-    NCurses::init(prompt_func, get_key_func);
-
     ShellManager        shell_manager;
     CommandManager      command_manager;
     BufferManager       buffer_manager;
@@ -466,11 +446,14 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::runtime_error& error)
     {
-        NCurses::print_status(error.description());
+        print_status(error.description());
     }
 
     try
     {
+        NCursesUI ui;
+        current_ui = &ui;
+
         write_debug("*** This is the debug buffer, where debug info will be written ***\n");
         write_debug("utf-8 test: é á ï");
 
@@ -482,7 +465,7 @@ int main(int argc, char* argv[])
             main_context = Context(*buffer->get_or_create_window());
         }
 
-        NCurses::draw_window(main_context.window());
+        current_ui->draw_window(main_context.window());
         int count = 0;
         while(not quit_requested)
         {
@@ -497,29 +480,22 @@ int main(int argc, char* argv[])
                     if (it != keymap.end())
                     {
                         it->second(main_context.window(), count);
-                        NCurses::draw_window(main_context.window());
+                        current_ui->draw_window(main_context.window());
                     }
                     count = 0;
                 }
             }
             catch (Kakoune::runtime_error& error)
             {
-                NCurses::print_status(error.description());
+                print_status(error.description());
             }
         }
-        NCurses::deinit();
     }
     catch (Kakoune::exception& error)
     {
-        NCurses::deinit();
         puts("uncaught exception:\n");
         puts(error.description().c_str());
         return -1;
-    }
-    catch (...)
-    {
-        NCurses::deinit();
-        throw;
     }
     return 0;
 }

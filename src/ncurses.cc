@@ -10,8 +10,26 @@
 
 namespace Kakoune
 {
-namespace NCurses
+
+NCursesUI::NCursesUI()
 {
+    // setlocale(LC_ALL, "");
+    initscr();
+    cbreak();
+    noecho();
+    nonl();
+    intrflush(stdscr, false);
+    keypad(stdscr, true);
+    curs_set(0);
+    start_color();
+    use_default_colors();
+    ESCDELAY=25;
+}
+
+NCursesUI::~NCursesUI()
+{
+    endwin();
+}
 
 static void set_attribute(int attribute, bool on)
 {
@@ -69,7 +87,7 @@ static void set_color(Color fg_color, Color bg_color)
     }
 }
 
-void draw_window(Window& window)
+void NCursesUI::draw_window(Window& window)
 {
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
@@ -142,7 +160,7 @@ void draw_window(Window& window)
     last_status_length = status_line.length();
 }
 
-static Key get_key()
+Key NCursesUI::get_key()
 {
     char c = getch();
 
@@ -166,7 +184,7 @@ static Key get_key()
     return Key(modifiers, c);
 }
 
-static String prompt(const String& text, Completer completer)
+String NCursesUI::prompt(const String& text, Completer completer)
 {
     curs_set(2);
     auto restore_cursor = on_scope_end([]() { curs_set(0); });
@@ -303,38 +321,13 @@ static String prompt(const String& text, Completer completer)
     return result;
 }
 
-void print_status(const String& status)
+void NCursesUI::print_status(const String& status)
 {
     int x,y;
     getmaxyx(stdscr, y, x);
     move(y-1, 0);
     clrtoeol();
     addstr(status.c_str());
-}
-
-void init(PromptFunc& prompt_func, GetKeyFunc& get_key_func)
-{
-    // setlocale(LC_ALL, "");
-    initscr();
-    cbreak();
-    noecho();
-    nonl();
-    intrflush(stdscr, false);
-    keypad(stdscr, true);
-    curs_set(0);
-    start_color();
-    use_default_colors();
-    ESCDELAY=25;
-
-    prompt_func = prompt;
-    get_key_func = get_key;
-}
-
-void deinit()
-{
-    endwin();
-}
-
 }
 
 }

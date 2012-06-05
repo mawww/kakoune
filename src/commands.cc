@@ -7,7 +7,7 @@
 #include "buffer.hh"
 #include "window.hh"
 #include "file.hh"
-#include "ncurses.hh"
+#include "ui.hh"
 #include "regex.hh"
 #include "highlighter_registry.hh"
 #include "filter_registry.hh"
@@ -29,8 +29,6 @@ extern Context main_context;
 extern bool    quit_requested;
 
 extern std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap;
-extern PromptFunc prompt_func;
-extern GetKeyFunc get_key_func;
 
 namespace
 {
@@ -220,7 +218,7 @@ Buffer* open_or_create(const String& filename)
     }
     catch (file_not_found& what)
     {
-        NCurses::print_status("new file " + filename);
+        print_status("new file " + filename);
         buffer = new Buffer(filename, Buffer::Type::NewFile);
     }
     return buffer;
@@ -291,7 +289,7 @@ void quit(const CommandParameters& params, const Context& context)
                 message += *it;
             }
             message += "]";
-            NCurses::print_status(message);
+            print_status(message);
             return;
         }
     }
@@ -369,7 +367,7 @@ void add_highlighter(const CommandParameters& params, const Context& context)
     }
     catch (runtime_error& err)
     {
-        NCurses::print_status("error: " + err.description());
+        print_status("error: " + err.description());
     }
 }
 
@@ -389,7 +387,7 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
     }
     catch (runtime_error& err)
     {
-        NCurses::print_status("error: " + err.description());
+        print_status("error: " + err.description());
     }
 }
 
@@ -407,7 +405,7 @@ void add_filter(const CommandParameters& params, const Context& context)
     }
     catch (runtime_error& err)
     {
-        NCurses::print_status("error: " + err.description());
+        print_status("error: " + err.description());
     }
 }
 
@@ -438,7 +436,7 @@ void add_hook(const CommandParameters& params, const Context& context)
     else if (params[0] == "window")
         context.window().hook_manager().add_hook(params[1], hook_func);
     else
-        NCurses::print_status("error: no such hook container " + params[0]);
+        print_status("error: no such hook container " + params[0]);
 }
 
 EnvVarMap params_to_env_var_map(const CommandParameters& params)
@@ -523,7 +521,7 @@ void echo_message(const CommandParameters& params, const Context& context)
     String message;
     for (auto& param : params)
         message += param + " ";
-    NCurses::print_status(message);
+    print_status(message);
 }
 
 void exec_commands_in_file(const CommandParameters& params,
@@ -559,7 +557,7 @@ void exec_commands_in_file(const CommandParameters& params,
 
                  if (end_pos == length)
                  {
-                     NCurses::print_status(String("unterminated '") + delimiter + "' string");
+                     print_status(String("unterminated '") + delimiter + "' string");
                      return;
                  }
 
@@ -584,7 +582,7 @@ void exec_commands_in_file(const CommandParameters& params,
          if (end_pos == length)
          {
              if (cat_with_previous)
-                 NCurses::print_status("while executing commands in \"" + params[0] +
+                 print_status("while executing commands in \"" + params[0] +
                               "\": last command not complete");
              break;
          }
@@ -645,37 +643,64 @@ private:
     char                m_name;
 };
 
+class BatchUI : public UI
+{
+public:
+    BatchUI(const KeyList& keys)
+        : m_keys(keys), m_pos(0)
+    {
+        m_previous_ui = current_ui;
+        current_ui = this;
+    }
+
+    ~BatchUI()
+    {
+        current_ui = m_previous_ui;
+    }
+
+    String prompt(const String&, Completer)
+    {
+        size_t begin = m_pos;
+        while (m_pos < m_keys.size() and m_keys[m_pos].key != '\n')
+            ++m_pos;
+
+        String result;
+        for (size_t i = begin; i < m_pos; ++i)
+            result += String() + m_keys[i].key;
+        ++m_pos;
+
+        return result;
+    }
+
+    Key get_key()
+    {
+        if (m_pos >= m_keys.size())
+            throw runtime_error("no more characters");
+        return m_keys[m_pos++];
+    }
+
+    void print_status(const String& status)
+    {
+        m_previous_ui->print_status(status);
+    }
+
+    void draw_window(Window& window)
+    {
+        m_previous_ui->draw_window(window);
+    }
+
+    bool has_key_left() const { return m_pos < m_keys.size(); }
+
+private:
+    const KeyList& m_keys;
+    size_t m_pos;
+    UI*    m_previous_ui;
+};
+
 void exec_keys(const KeyList& keys,
                const Context& context)
 {
-    auto prompt_save = prompt_func;
-    auto get_key_save = get_key_func;
-
-    auto restore_funcs = on_scope_end([&]() {
-        prompt_func = prompt_save;
-        get_key_func = get_key_save;
-    });
-
-    size_t pos = 0;
-
-    prompt_func = [&](const String&, Completer) {
-        size_t begin = pos;
-        while (pos < keys.size() and keys[pos].key != '\n')
-            ++pos;
-
-        String result;
-        for (size_t i = begin; i < pos; ++i)
-            result += String() + keys[i].key;
-        ++pos;
-
-        return result;
-    };
-
-    get_key_func = [&]() {
-        if (pos >= keys.size())
-            throw runtime_error("no more characters");
-        return keys[pos++];
-    };
+    BatchUI batch_ui(keys);
 
     RegisterRestorer quote('"');
     RegisterRestorer slash('/');
@@ -687,9 +712,9 @@ void exec_keys(const KeyList& keys,
     scoped_edition edition(editor);
 
     int count = 0;
-    while(pos < keys.size())
+    while (batch_ui.has_key_left())
     {
-        const Key& key = keys[pos++];
+        Key key = batch_ui.get_key();
 
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             count = count * 10 + key.key - '0';
@@ -742,7 +767,7 @@ void menu(const CommandParameters& params,
     }
     oss << "(empty cancels): ";
 
-    String choice = prompt_func(oss.str(), complete_nothing);
+    String choice = prompt(oss.str(), complete_nothing);
     int i = atoi(choice.c_str());
 
     if (i > 0 and i < (count / 2) + 1)
