@@ -92,6 +92,8 @@ bool insert_char(IncrementalInserter& inserter, const Key& key)
             break;
         }
         break;
+    default:
+        break;
     }
     return true;
 }

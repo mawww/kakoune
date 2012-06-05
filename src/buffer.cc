@@ -177,6 +177,7 @@ bool Buffer::undo()
 
     for (const Modification& modification : reversed(*m_history_cursor))
         apply_modification(modification.inverse());
+    return true;
 }
 
 bool Buffer::redo()
@@ -188,6 +189,7 @@ bool Buffer::redo()
         apply_modification(modification);
 
     ++m_history_cursor;
+    return true;
 }
 
 void Buffer::check_invariant() const

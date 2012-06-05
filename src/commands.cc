@@ -855,7 +855,7 @@ void register_commands()
                                                       params[token_to_complete] : String();
                              if (token_to_complete == 1 and params[0] == "-group")
                                  return w.highlighters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 0 or token_to_complete == 2 and params[0] == "-group")
+                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
                                  return HighlighterRegistry::instance().complete_highlighter(arg, pos_in_token);
                              else
                                  return CandidateList();
@@ -883,7 +883,7 @@ void register_commands()
                                                       params[token_to_complete] : String();
                              if (token_to_complete == 1 and params[0] == "-group")
                                  return w.filters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 0 or token_to_complete == 2 and params[0] == "-group")
+                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
                                  return FilterRegistry::instance().complete_filter(arg, pos_in_token);
                              else
                                  return CandidateList();

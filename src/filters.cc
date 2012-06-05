@@ -27,7 +27,7 @@ void cleanup_whitespaces(Buffer& buffer, Modification& modification)
         modification.content[0] == '\n' and not modification.position.is_begin())
     {
         BufferIterator position = modification.position-1;
-        while (*position == ' ' or *position == '\t' and not position.is_begin())
+        while ((*position == ' ' or *position == '\t') and not position.is_begin())
             --position;
         ++position;
         if (position != modification.position)
