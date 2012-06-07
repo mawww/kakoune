@@ -12,6 +12,9 @@ void HookManager::run_hook(const String& hook_name,
                            const String& param,
                            const Context& context) const
 {
+    if (m_parent)
+        m_parent->run_hook(hook_name, param, context);
+
     auto hook_list_it = m_hook.find(hook_name);
     if (hook_list_it == m_hook.end())
         return;

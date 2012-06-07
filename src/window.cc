@@ -15,12 +15,12 @@ Window::Window(Buffer& buffer)
     : Editor(buffer),
       m_position(0, 0),
       m_dimensions(0, 0),
+      m_hook_manager(buffer.hook_manager()),
       m_option_manager(buffer.option_manager())
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    GlobalHookManager::instance().run_hook("WinCreate", buffer.name(),
-                                            Context(*this));
+    m_hook_manager.run_hook("WinCreate", buffer.name(), Context(*this));
 
     registry.add_highlighter_to_window(*this, "expand_tabs", HighlighterParameters());
     registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());

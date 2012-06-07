@@ -4,7 +4,6 @@
 #include "window.hh"
 #include "assert.hh"
 #include "utils.hh"
-#include "hook_manager.hh"
 #include "context.hh"
 
 #include <algorithm>
@@ -27,6 +26,7 @@ Buffer::Buffer(const String& name, Type type,
     : m_name(name), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
+      m_hook_manager(GlobalHookManager::instance()),
       m_option_manager(GlobalOptionManager::instance())
 {
     BufferManager::instance().register_buffer(this);
@@ -34,9 +34,9 @@ Buffer::Buffer(const String& name, Type type,
         apply_modification(Modification::make_insert(begin(), initial_content));
 
     if (type == Type::NewFile)
-        GlobalHookManager::instance().run_hook("BufCreate", name, Context(*this));
+        m_hook_manager.run_hook("BufCreate", name, Context(*this));
     else if (type == Type::File)
-        GlobalHookManager::instance().run_hook("BufOpen", name, Context(*this));
+        m_hook_manager.run_hook("BufOpen", name, Context(*this));
 }
 
 Buffer::~Buffer()

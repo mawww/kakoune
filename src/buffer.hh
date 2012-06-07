@@ -7,6 +7,7 @@
 
 #include "line_and_column.hh"
 #include "option_manager.hh"
+#include "hook_manager.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -168,6 +169,7 @@ public:
     const String& line_content(size_t l) const { return m_lines[l].content; }
 
     OptionManager& option_manager() { return m_option_manager; }
+    HookManager&   hook_manager()   { return m_hook_manager; }
 
 private:
     friend class BufferIterator;
@@ -208,6 +210,7 @@ private:
     std::vector<BufferIterator*> m_iterators_to_update;
 
     OptionManager m_option_manager;
+    HookManager   m_hook_manager;
 };
 
 inline Modification Modification::make_erase(BufferIterator begin,
