@@ -442,17 +442,18 @@ int main(int argc, char* argv[])
 
     try
     {
-        command_manager.execute("runtime kakrc", main_context);
-    }
-    catch (Kakoune::runtime_error& error)
-    {
-        print_status(error.description());
-    }
-
-    try
-    {
         NCursesUI ui;
         current_ui = &ui;
+
+        try
+        {
+            command_manager.execute("runtime kakrc", main_context);
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+            print_status(error.description());
+        }
+
 
         write_debug("*** This is the debug buffer, where debug info will be written ***\n");
         write_debug("utf-8 test: é á ï");
