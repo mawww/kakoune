@@ -22,8 +22,8 @@ Window::Window(Buffer& buffer)
 
     m_hook_manager.run_hook("WinCreate", buffer.name(), Context(*this));
 
-    registry.add_highlighter_to_window(*this, "expand_tabs", HighlighterParameters());
-    registry.add_highlighter_to_window(*this, "highlight_selections", HighlighterParameters());
+    registry.add_highlighter_to_group(*this, m_highlighters, "expand_tabs", HighlighterParameters());
+    registry.add_highlighter_to_group(*this, m_highlighters, "highlight_selections", HighlighterParameters());
 }
 
 BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const

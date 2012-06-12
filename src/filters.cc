@@ -1,6 +1,7 @@
 #include "filters.hh"
 #include "filter_registry.hh"
 #include "buffer.hh"
+#include "filter_group.hh"
 
 namespace Kakoune
 {
@@ -68,14 +69,21 @@ class SimpleFilterFactory
 public:
     SimpleFilterFactory(const String& id) : m_id(id) {}
 
-    FilterAndId operator()(Window& window,
-                           const FilterParameters& params) const
+    FilterAndId operator()(const FilterParameters& params) const
     {
         return FilterAndId(m_id, FilterFunc(filter_func));
     }
 private:
     String m_id;
 };
+
+FilterAndId filter_group_factory(const FilterParameters& params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+
+    return FilterAndId(params[0], FilterGroup());
+}
 
 void register_filters()
 {
@@ -84,6 +92,7 @@ void register_filters()
     registry.register_factory("preserve_indent", SimpleFilterFactory<preserve_indent>("preserve_indent"));
     registry.register_factory("cleanup_whitespaces", SimpleFilterFactory<cleanup_whitespaces>("cleanup_whitespaces"));
     registry.register_factory("expand_tabulations", SimpleFilterFactory<expand_tabulations>("expand_tabulations"));
+    registry.register_factory("group", filter_group_factory);
 }
 
 }

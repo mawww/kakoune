@@ -6,6 +6,7 @@
 #include "filter.hh"
 #include "idvaluemap.hh"
 #include "memoryview.hh"
+#include "filter_group.hh"
 
 namespace Kakoune
 {
@@ -54,8 +55,7 @@ public:
     bool undo();
     bool redo();
 
-    void add_filter(FilterAndId&& filter);
-    void remove_filter(const String& id);
+    FilterGroup& filters() { return m_filters; }
 
     CandidateList complete_filterid(const String& prefix,
                                     size_t cursor_pos = String::npos);
@@ -77,7 +77,7 @@ private:
 
     Buffer&                             m_buffer;
     std::vector<SelectionList>          m_selections;
-    idvaluemap<String, FilterFunc> m_filters;
+    FilterGroup                         m_filters;
 };
 
 struct scoped_edition

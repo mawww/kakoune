@@ -393,15 +393,23 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
 
 void add_filter(const CommandParameters& params, const Context& context)
 {
-    if (params.size() < 1)
+    ParametersParser parser(params, { { "group", true } });
+    if (parser.positional_count() < 1)
         throw wrong_argument_count();
-
     try
     {
         FilterRegistry& registry = FilterRegistry::instance();
-        FilterParameters filter_params(params.begin()+1, params.end());
-        registry.add_filter_to_window(context.window(), params[0],
-                                      filter_params);
+
+        auto begin = parser.begin();
+        const String& name = *begin;
+        std::vector<String> filter_params(++begin, parser.end());
+
+        Window& window = context.window();
+        FilterGroup& group = parser.has_option("group") ?
+           window.filters().get_group(parser.option_value("group"))
+         : window.filters();
+
+        registry.add_filter_to_group(group, name, filter_params);
     }
     catch (runtime_error& err)
     {
@@ -411,10 +419,22 @@ void add_filter(const CommandParameters& params, const Context& context)
 
 void rm_filter(const CommandParameters& params, const Context& context)
 {
-    if (params.size() != 1)
+    ParametersParser parser(params, { { "group", true } });
+    if (parser.positional_count() != 1)
         throw wrong_argument_count();
+    try
+    {
+        Window& window = context.window();
+        FilterGroup& group = parser.has_option("group") ?
+           window.filters().get_group(parser.option_value("group"))
+         : window.filters();
 
-    context.window().remove_filter(params[0]);
+        group.remove(*parser.begin());
+    }
+    catch (runtime_error& err)
+    {
+        print_status("error: " + err.description());
+    }
 }
 
 void add_hook(const CommandParameters& params, const Context& context)
@@ -855,15 +875,34 @@ void register_commands()
                              else
                                  return w.highlighters().complete_id(arg, pos_in_token);
                          });
-
-    PerArgumentCommandCompleter filter_completer({
-        [](const String& prefix, size_t cursor_pos)
-        { return FilterRegistry::instance().complete_filter(prefix, cursor_pos); }
-    });
     cm.register_commands({ "af", "addfilter" }, add_filter,
-                         CommandManager::None, filter_completer);
+                         CommandManager::None,
+                         [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                         {
+                             Window& w = main_context.window();
+                             const String& arg = token_to_complete < params.size() ?
+                                                      params[token_to_complete] : String();
+                             if (token_to_complete == 1 and params[0] == "-group")
+                                 return w.filters().complete_group_id(arg, pos_in_token);
+                             else if (token_to_complete == 0 or token_to_complete == 2 and params[0] == "-group")
+                                 return FilterRegistry::instance().complete_filter(arg, pos_in_token);
+                             else
+                                 return CandidateList();
+                         });
     cm.register_commands({ "rf", "rmfilter" }, rm_filter,
-                         CommandManager::None, filter_completer);
+                         CommandManager::None,
+                         [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                         {
+                             Window& w = main_context.window();
+                             const String& arg = token_to_complete < params.size() ?
+                                                      params[token_to_complete] : String();
+                             if (token_to_complete == 1 and params[0] == "-group")
+                                 return w.filters().complete_group_id(arg, pos_in_token);
+                             else if (token_to_complete == 2 and params[0] == "-group")
+                                 return w.filters().get_group(params[1]).complete_id(arg, pos_in_token);
+                             else
+                                 return w.filters().complete_id(arg, pos_in_token);
+                         });
 
     cm.register_command("hook", add_hook, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
 

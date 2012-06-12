@@ -13,12 +13,11 @@
 namespace Kakoune
 {
 
-class Window;
+class FilterGroup;
 
 typedef memoryview<String> FilterParameters;
 
-typedef std::function<FilterAndId (Window& window,
-                                   const FilterParameters& params)> FilterFactory;
+typedef std::function<FilterAndId (const FilterParameters& params)> FilterFactory;
 
 class FilterRegistry : public Singleton<FilterRegistry>
 {
@@ -26,9 +25,9 @@ public:
     void register_factory(const String& name,
                           const FilterFactory& factory);
 
-    void add_filter_to_window(Window& window,
-                              const String& factory_name,
-                              const FilterParameters& parameters);
+    void add_filter_to_group(FilterGroup& group,
+                             const String& factory_name,
+                             const FilterParameters& parameters);
 
     CandidateList complete_filter(const String& prefix,
                                   size_t cursor_pos);

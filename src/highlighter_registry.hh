@@ -24,10 +24,6 @@ public:
     void register_factory(const String& name,
                           const HighlighterFactory& factory);
 
-    void add_highlighter_to_window(Window& window,
-                                  const String& factory_name,
-                                  const HighlighterParameters& parameters);
-
     void add_highlighter_to_group(Window& window,
                                   HighlighterGroup& group,
                                   const String& factory_name,

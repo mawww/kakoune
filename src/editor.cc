@@ -240,24 +240,6 @@ struct id_not_unique : public runtime_error
         : runtime_error("id not unique: " + id) {}
 };
 
-void Editor::add_filter(FilterAndId&& filter)
-{
-    if (m_filters.contains(filter.first))
-        throw id_not_unique(filter.first);
-    m_filters.append(std::forward<FilterAndId>(filter));
-}
-
-void Editor::remove_filter(const String& id)
-{
-    m_filters.remove(id);
-}
-
-CandidateList Editor::complete_filterid(const String& prefix,
-                                        size_t cursor_pos)
-{
-    return m_filters.complete_id<str_to_str>(prefix, cursor_pos);
-}
-
 void Editor::begin_edition()
 {
     ++m_edition_level;
@@ -327,8 +309,7 @@ IncrementalInserter::~IncrementalInserter()
 
 void IncrementalInserter::apply(Modification&& modification) const
 {
-    for (auto filter : m_editor.m_filters)
-        filter.second(m_editor.buffer(), modification);
+    m_editor.filters()(m_editor.buffer(), modification);
     m_editor.buffer().modify(std::move(modification));
 }
 

@@ -20,17 +20,6 @@ void HighlighterRegistry::register_factory(const String& name,
     m_factories.append(std::make_pair(name, factory));
 }
 
-void HighlighterRegistry::add_highlighter_to_window(Window& window,
-                                                    const String& name,
-                                                    const HighlighterParameters& parameters)
-{
-    auto it = m_factories.find(name);
-    if (it == m_factories.end())
-        throw factory_not_found(name);
-
-    window.highlighters().append(it->second(window, parameters));
-}
-
 void HighlighterRegistry::add_highlighter_to_group(Window& window,
                                                    HighlighterGroup& group,
                                                    const String& name,

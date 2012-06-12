@@ -10,6 +10,8 @@ namespace Kakoune
 class DisplayBuffer;
 class Window;
 
+// HighlighterGroup is an highlighter which delegate to multiple
+// other highlighters in order of insertion.
 class HighlighterGroup
 {
 public:
