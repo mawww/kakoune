@@ -25,7 +25,8 @@ CandidateList complete_filename(const String& prefix,
         fileprefix = String(dir_end + 1, real_prefix.end());
     }
 
-    auto dir = auto_raii(opendir(dirname.c_str()), closedir);
+    DIR* dir = opendir(dirname.c_str());
+    auto closeDir = on_scope_end([=](){ closedir(dir); });
 
     CandidateList result;
     if (not dir)

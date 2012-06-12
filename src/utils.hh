@@ -9,58 +9,10 @@
 
 namespace Kakoune
 {
-
-template<typename Container>
-struct ReversedContainer
-{
-    ReversedContainer(Container& container) : container(container) {}
-    Container& container;
-
-    decltype(container.rbegin()) begin() { return container.rbegin(); }
-    decltype(container.rend())   end()   { return container.rend(); }
-};
-
-template<typename Container>
-ReversedContainer<Container> reversed(Container& container)
-{
-    return ReversedContainer<Container>(container);
-}
-
-template<typename T>
-bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
-{
-    return lhs.get() == rhs;
-}
-
-template<typename T, typename F>
-class AutoRaii
-{
-public:
-    AutoRaii(T* resource, F cleanup)
-        : m_resource(resource), m_cleanup(cleanup) {}
-
-    AutoRaii(AutoRaii&& other) : m_resource(other.m_resource),
-                                 m_cleanup(other.m_cleanup)
-    { other.m_resource = nullptr; }
-
-    AutoRaii(const AutoRaii&) = delete;
-    AutoRaii& operator=(const AutoRaii&) = delete;
-
-    ~AutoRaii() { if (m_resource) m_cleanup(m_resource); }
-
-    operator T*() { return m_resource; }
-
-private:
-    T* m_resource;
-    F  m_cleanup;
-};
-
-template<typename T, typename F>
-AutoRaii<T, F> auto_raii(T* resource, F cleanup)
-{
-    return AutoRaii<T, F>(resource, cleanup);
-}
-
+// *** Singleton ***
+//
+// Singleton helper class, every singleton type T should inherit
+// from Singleton<T> to provide a consistent interface.
 template<typename T>
 class Singleton
 {
@@ -76,8 +28,8 @@ public:
 
     static void delete_instance()
     {
-        if (ms_instance)
-            delete ms_instance;
+        delete ms_instance;
+        ms_instance = nullptr;
     }
 
 protected:
@@ -100,6 +52,25 @@ private:
 template<typename T>
 T* Singleton<T>::ms_instance = nullptr;
 
+// *** Containers helpers ***
+
+template<typename Container>
+struct ReversedContainer
+{
+    ReversedContainer(Container& container) : container(container) {}
+    Container& container;
+
+    decltype(container.rbegin()) begin() { return container.rbegin(); }
+    decltype(container.rend())   end()   { return container.rend(); }
+};
+
+template<typename Container>
+ReversedContainer<Container> reversed(Container& container)
+{
+    return ReversedContainer<Container>(container);
+}
+
+
 template<typename Container, typename T>
 auto find(Container& container, const T& value) -> decltype(container.begin())
 {
@@ -112,11 +83,16 @@ bool contains(const Container& container, const T& value)
     return find(container, value) != container.end();
 }
 
-inline String str_to_str(const String& str)
-{
-    return str;
-}
-
+// *** On scope end ***
+//
+// on_scope_end provides a way to register some code to be
+// executed when current scope closes.
+//
+// usage:
+// auto cleaner = on_scope_end([]() { ... });
+//
+// This permits to cleanup c-style resources without implementing
+// a wrapping class
 template<typename T>
 class OnScopeEnd
 {
@@ -131,6 +107,19 @@ template<typename T>
 OnScopeEnd<T> on_scope_end(T t)
 {
     return OnScopeEnd<T>(t);
+}
+
+// *** Misc helper functions ***
+
+template<typename T>
+bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
+{
+    return lhs.get() == rhs;
+}
+
+inline String str_to_str(const String& str)
+{
+    return str;
 }
 
 }
