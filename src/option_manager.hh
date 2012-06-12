@@ -28,8 +28,8 @@ public:
     Option& operator=(int value) { m_value = int_to_str(value); return *this; }
     Option& operator=(const String& value) { m_value = value; return *this; }
 
-    operator int() const { return atoi(m_value.c_str()); }
-    operator String() const { return m_value; }
+    int    as_int()    const  { return atoi(m_value.c_str()); }
+    String as_string() const { return m_value; }
 private:
     String m_value;
 };
