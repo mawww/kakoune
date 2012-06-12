@@ -10,10 +10,23 @@ Option& OptionManager::operator[] (const String& name)
     auto it = m_options.find(name);
     if (it != m_options.end())
         return it->second;
-    else if (m_parent)
-        return (*m_parent)[name];
     else
-        return m_options[name];
+    {
+        Option& res = m_options[name];
+        OptionManager* parent = m_parent;
+        while (parent)
+        {
+            auto parent_it = parent->m_options.find(name);
+            if (parent_it != parent->m_options.end())
+            {
+                res = parent_it->second;
+                break;
+            }
+            else
+               parent = parent->m_parent;
+        }
+        return res;
+    }
 }
 
 const Option& OptionManager::operator[] (const String& name) const
