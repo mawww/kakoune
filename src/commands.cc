@@ -619,12 +619,14 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     }
 }
 
-void set_option(OptionManager& option_manager, const CommandParameters& params)
+void set_option(OptionManager& option_manager, const CommandParameters& params,
+                HookManager& hook_manager, const Context& context)
 {
     if (params.size() != 2)
         throw wrong_argument_count();
 
     option_manager[params[0]] = params[1];
+    hook_manager.run_hook("SetOption", params[0] + "=" + params[1], context);
 }
 
 class RegisterRestorer
@@ -878,8 +880,8 @@ void register_commands()
     cm.register_command("echo", echo_message);
 
     cm.register_commands({ "setg", "setglobal" },
-                         [](const CommandParameters& params, const Context&)
-                         { set_option(GlobalOptionManager::instance(), params); },
+                         [](const CommandParameters& params, const Context& context)
+                         { set_option(GlobalOptionManager::instance(), params, GlobalHookManager::instance(), context); },
                          CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
@@ -887,7 +889,7 @@ void register_commands()
                          }));
     cm.register_commands({ "setb", "setbuffer" },
                          [](const CommandParameters& params, const Context& context)
-                         { set_option(context.buffer().option_manager(), params); },
+                         { set_option(context.buffer().option_manager(), params, context.buffer().hook_manager(), context); },
                          CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
@@ -895,7 +897,7 @@ void register_commands()
                          }));
     cm.register_commands({ "setw", "setwindow" },
                          [](const CommandParameters& params, const Context& context)
-                         { set_option(context.window().option_manager(), params); },
+                         { set_option(context.window().option_manager(), params, context.window().hook_manager(), context); },
                          CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
