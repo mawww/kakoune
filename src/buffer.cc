@@ -34,9 +34,11 @@ Buffer::Buffer(const String& name, Type type,
         apply_modification(Modification::make_insert(begin(), initial_content));
 
     if (type == Type::NewFile)
-        m_hook_manager.run_hook("BufCreate", name, Context(*this));
+        m_hook_manager.run_hook("BufNew", name, Context(*this));
     else if (type == Type::File)
         m_hook_manager.run_hook("BufOpen", name, Context(*this));
+
+    m_hook_manager.run_hook("BufCreate", name, Context(*this));
 }
 
 Buffer::~Buffer()
