@@ -419,14 +419,14 @@ void run_unit_tests();
 
 int main(int argc, char* argv[])
 {
+    GlobalOptionManager option_manager;
+    GlobalHookManager   hook_manager;
     ShellManager        shell_manager;
     CommandManager      command_manager;
     BufferManager       buffer_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
-    GlobalHookManager   hook_manager;
-    GlobalOptionManager option_manager;
 
     run_unit_tests();
 
