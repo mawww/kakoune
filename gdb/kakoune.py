@@ -55,6 +55,24 @@ class BufferIterator:
         else:
             return "buffer<none>@(%d, %d)" % (self.val['m_coord']['line'], self.val['m_coord']['column'])
 
+class String:
+    """ Print a String"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val["m_content"]
+
+class Option:
+    """ Print a Option"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val["m_value"]
+
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
     pp.add_printer('memoryview',     '^Kakoune::memoryview<.*>$',    MemoryView)
@@ -62,5 +80,7 @@ def build_pretty_printer():
     pp.add_printer('BufferCoord',    '^Kakoune::BufferCoord$',       LineAndColumn)
     pp.add_printer('DisplayCoord',   '^Kakoune::DisplayCoord$',      LineAndColumn)
     pp.add_printer('BufferIterator', '^Kakoune::BufferIterator$',    BufferIterator)
+    pp.add_printer('String',         '^Kakoune::String$',            String)
+    pp.add_printer('Option',         '^Kakoune::Option$',            Option)
     return pp
 
