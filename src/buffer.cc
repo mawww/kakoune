@@ -46,6 +46,8 @@ Buffer::~Buffer()
     m_windows.clear();
     BufferManager::instance().unregister_buffer(this);
     assert(m_iterators_to_update.empty());
+
+    m_hook_manager.run_hook("BufClose", m_name, Context(*this));
 }
 
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
