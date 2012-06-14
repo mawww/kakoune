@@ -317,21 +317,26 @@ void show_buffer(const CommandParameters& params, const Context& context)
 
 void delete_buffer(const CommandParameters& params, const Context& context)
 {
-    if (params.size() != 1)
+    if (params.size() > 1)
         throw wrong_argument_count();
 
     BufferManager& manager = BufferManager::instance();
-
-    Buffer* buffer = manager.get_buffer(params[0]);
-    if (not buffer)
-        throw runtime_error("buffer " + params[0] + " does not exists");
+    Buffer* buffer = nullptr;
+    if (params.empty())
+        buffer = &context.buffer();
+    else
+    {
+        buffer = manager.get_buffer(params[0]);
+        if (not buffer)
+            throw runtime_error("buffer " + params[0] + " does not exists");
+    }
     if (buffer->type()!= Buffer::Type::Scratch and buffer->is_modified())
         throw runtime_error("buffer " + params[0] + " is modified");
 
     if (&main_context.buffer() == buffer)
     {
         if (manager.count() == 1)
-            throw runtime_error("buffer " + params[0] + " is the last one");
+            throw runtime_error("buffer " + buffer->name() + " is the last one");
         for (Buffer& buf : manager)
         {
             if (&buf != buffer)
