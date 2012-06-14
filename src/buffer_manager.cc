@@ -9,6 +9,13 @@ namespace Kakoune
 
 struct name_not_unique : logic_error {};
 
+BufferManager::~BufferManager()
+{
+    // delete remaining buffers
+    while (not m_buffers.empty())
+        delete m_buffers.begin()->second;
+}
+
 void BufferManager::register_buffer(Buffer* buffer)
 {
     assert(buffer);

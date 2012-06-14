@@ -26,6 +26,8 @@ public:
         Buffer* operator->() const { return parent_type::operator*().second; }
     };
 
+    ~BufferManager();
+
     void register_buffer(Buffer* buffer);
     void unregister_buffer(Buffer* buffer);
 
