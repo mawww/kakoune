@@ -21,9 +21,18 @@ Window::Window(Buffer& buffer)
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     m_hook_manager.run_hook("WinCreate", buffer.name(), Context(*this));
+    m_option_manager.register_watcher(*this);
 
     registry.add_highlighter_to_group(*this, m_highlighters, "expand_tabs", HighlighterParameters());
     registry.add_highlighter_to_group(*this, m_highlighters, "highlight_selections", HighlighterParameters());
+
+    for (auto& option : m_option_manager.flatten_options())
+        on_option_changed(option.first, option.second);
+}
+
+Window::~Window()
+{
+    m_option_manager.unregister_watcher(*this);
 }
 
 BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
@@ -125,5 +134,12 @@ void Window::on_incremental_insertion_end()
     hook_manager().run_hook("InsertEnd", "", Context(*this));
     pop_selections();
 }
+
+void Window::on_option_changed(const String& name, const Option& option)
+{
+    String desc = name + "=" + option.as_string();
+    m_hook_manager.run_hook("WinSetOption", desc, Context(*this));
+}
+
 
 }

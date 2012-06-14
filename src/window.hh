@@ -21,9 +21,11 @@ class HighlighterGroup;
 // to the editing ones already provided by the Editor class.
 // Display can be customized through the use of highlighters handled by
 // the window's HighlighterGroup
-class Window : public Editor
+class Window : public Editor, public OptionManagerWatcher
 {
 public:
+    ~Window();
+
     const BufferCoord& position() const { return m_position; }
 
     BufferIterator iterator_at(const DisplayCoord& window_pos) const;
@@ -49,6 +51,7 @@ private:
     Window(const Window&) = delete;
 
     void on_incremental_insertion_end();
+    void on_option_changed(const String& name, const Option& option);
 
     void scroll_to_keep_cursor_visible_ifn();
 
