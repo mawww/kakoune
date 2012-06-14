@@ -1,35 +1,51 @@
 #include "option_manager.hh"
+#include "assert.hh"
 
 #include <sstream>
 
 namespace Kakoune
 {
 
-Option& OptionManager::operator[] (const String& name)
+OptionManager::OptionManager(OptionManager& parent)
+    : m_parent(&parent)
 {
-    auto it = m_options.find(name);
-    if (it != m_options.end())
-        return it->second;
-    else
+    parent.register_watcher(*this);
+}
+
+OptionManager::~OptionManager()
+{
+    if (m_parent)
+        m_parent->unregister_watcher(*this);
+
+    assert(m_watchers.empty());
+}
+
+void OptionManager::register_watcher(OptionManagerWatcher& watcher)
+{
+    assert(not contains(m_watchers, &watcher));
+    m_watchers.push_back(&watcher);
+}
+
+void OptionManager::unregister_watcher(OptionManagerWatcher& watcher)
+{
+    auto it = find(m_watchers.begin(), m_watchers.end(), &watcher);
+    assert(it != m_watchers.end());
+    m_watchers.erase(it);
+}
+
+void OptionManager::set_option(const String& name, const Option& value)
+{
+    Option old_value = m_options[name];
+    m_options[name] = value;
+
+    if (old_value != value)
     {
-        Option& res = m_options[name];
-        OptionManager* parent = m_parent;
-        while (parent)
-        {
-            auto parent_it = parent->m_options.find(name);
-            if (parent_it != parent->m_options.end())
-            {
-                res = parent_it->second;
-                break;
-            }
-            else
-               parent = parent->m_parent;
-        }
-        return res;
+        for (auto watcher : m_watchers)
+            watcher->on_option_changed(name, value);
     }
 }
 
-const Option& OptionManager::operator[] (const String& name) const
+const Option& OptionManager::operator[](const String& name) const
 {
     auto it = m_options.find(name);
     if (it != m_options.end())
@@ -56,10 +72,28 @@ CandidateList OptionManager::complete_option_name(const String& prefix,
     return result;
 }
 
+OptionManager::OptionMap OptionManager::flatten_options() const
+{
+    OptionMap res = m_parent ? m_parent->flatten_options() : OptionMap();
+    for (auto& option : m_options)
+        res.insert(option);
+    return res;
+}
+
+void OptionManager::on_option_changed(const String& name, const Option& value)
+{
+    // if parent option changed, but we overrided it, it's like nothing happened
+    if (m_options.find(name) != m_options.end())
+        return;
+
+    for (auto watcher : m_watchers)
+        watcher->on_option_changed(name, value);
+}
+
 GlobalOptionManager::GlobalOptionManager()
     : OptionManager()
 {
-    (*this)["tabstop"] = 8;
+    set_option("tabstop", Option(8));
 }
 
 }

@@ -28,23 +28,42 @@ public:
     Option& operator=(int value) { m_value = int_to_str(value); return *this; }
     Option& operator=(const String& value) { m_value = value; return *this; }
 
+    bool operator==(const Option& other) const { return m_value == other.m_value; }
+    bool operator!=(const Option& other) const { return m_value != other.m_value; }
+
     int    as_int()    const  { return atoi(m_value.c_str()); }
     String as_string() const { return m_value; }
 private:
     String m_value;
 };
 
-class OptionManager
+class OptionManagerWatcher
 {
 public:
-    OptionManager(OptionManager& parent)
-        : m_parent(&parent) {}
+    virtual ~OptionManagerWatcher() {}
 
-    Option& operator[] (const String& name);
+    virtual void on_option_changed(const String& name,
+                                   const Option& option) = 0;
+};
+
+class OptionManager : private OptionManagerWatcher
+{
+public:
+    OptionManager(OptionManager& parent);
+    ~OptionManager();
+
     const Option& operator[] (const String& name) const;
+
+    void set_option(const String& name, const Option& value);
 
     CandidateList complete_option_name(const String& prefix,
                                        size_t cursor_pos);
+
+    typedef std::unordered_map<String, Option> OptionMap;
+    OptionMap flatten_options() const;
+
+    void register_watcher(OptionManagerWatcher& watcher);
+    void unregister_watcher(OptionManagerWatcher& watcher);
 
 private:
     OptionManager()
@@ -52,8 +71,13 @@ private:
     // the only one allowed to construct a root option manager
     friend class GlobalOptionManager;
 
-    std::unordered_map<String, Option> m_options;
+    OptionMap m_options;
     OptionManager* m_parent;
+
+    void on_option_changed(const String& name,
+                           const Option& value);
+
+    std::vector<OptionManagerWatcher*> m_watchers;
 };
 
 class GlobalOptionManager : public OptionManager,
