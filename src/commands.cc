@@ -458,6 +458,8 @@ void add_hook(const CommandParameters& params, const Context& context)
 
     if (params[0] == "global")
         GlobalHookManager::instance().add_hook(params[1], hook_func);
+    else if (params[0] == "buffer")
+        context.buffer().hook_manager().add_hook(params[1], hook_func);
     else if (params[0] == "window")
         context.window().hook_manager().add_hook(params[1], hook_func);
     else
