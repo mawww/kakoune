@@ -1,4 +1,7 @@
-hook global WinCreate (.*/)?(kakrc|.*.kak) \
+hook global BufCreate (.*/)?(kakrc|.*.kak) \
+    setb filetype kak
+
+hook global WinSetOption filetype=kak \
     addhl group hlkakrc; \
     addhl -group hlkakrc regex \<(hook|addhl|rmhl|addfilter|rmfilter|exec|source|runtime|def|echo|edit)\> green default; \
     addhl -group hlkakrc regex \<(default|black|red|green|yellow|blue|magenta|cyan|white)\> yellow default; \
@@ -7,3 +10,6 @@ hook global WinCreate (.*/)?(kakrc|.*.kak) \
     addhl -group hlkakrc regex (?<=\<hook)(\h+\w+) red default; \
     addhl -group hlkakrc regex (?<=\<hook)(\h+(global|window)) blue default; \
     addhl -group hlkakrc regex (?<=\<regex)\h+\H+ magenta default
+
+hook global WinSetOption filetype=(?!kak).* \
+    rmhl hlkakrc
