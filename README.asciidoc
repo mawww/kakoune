@@ -123,8 +123,10 @@ point is always the last character of the selection.
 * w: select the whole word
 * W: select the whole WORD
 
-When it makes sense, alt-i selects the inner object and alt-a the whole
-object. For example alt-i ( will only select the inside of the parenthesis.
+When it makes sense, _alt-i_ selects the inner object and alt-a the whole
+object. For example _alt-i_ ( will only select the inside of the parenthesis,
+for words, the difference between _alt-i_ and _alt-a_ is that _alt-a_ also
+selects the following blanks.
 
 Registers
 ---------
@@ -185,8 +187,9 @@ to register a hook, use the hook command.
 
 :hook <scope> <hook_name> <filtering_regex> <command> <command_args>...
 
-<scope> can be either global or window, as hooks can be registered per
-window.
+<scope> can be either global, buffer or window, the scope are hierarchical,
+meaning that a Window calling a hook will execute it's own, the buffer ones
+and the global ones.
 
 for example, to automatically use line numbering with .cc files,
 use the following command:
