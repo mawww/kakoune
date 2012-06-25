@@ -123,11 +123,13 @@ public:
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
 
-    void           begin_undo_group();
-    void           end_undo_group();
+    Type type() const { return m_type; }
 
+    // apply given modification to buffer.
     void           modify(Modification&& modification);
 
+    void           begin_undo_group();
+    void           end_undo_group();
     bool           undo();
     bool           redo();
 
@@ -136,7 +138,7 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    BufferSize     length() const;
+    BufferSize     character_count() const;
     BufferSize     line_count() const;
 
     BufferIterator iterator_at(const BufferCoord& line_and_column) const;
@@ -150,8 +152,11 @@ public:
     Window* get_or_create_window();
     void delete_window(Window* window);
 
+    // returns true if the buffer is in a different state than
+    // the last time it was saved
     bool is_modified() const;
-    Type type() const { return m_type; }
+
+    // notify the buffer that it was saved in the current state
     void notify_saved();
 
     void add_iterator_to_update(BufferIterator& iterator);

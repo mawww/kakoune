@@ -69,7 +69,7 @@ BufferSize Buffer::line_length(BufferPos line) const
 {
     assert(line < line_count());
     BufferPos end = (line < m_lines.size() - 1) ?
-                    m_lines[line + 1].start : length();
+                    m_lines[line + 1].start : character_count();
     return end - m_lines[line].start;
 }
 
@@ -108,7 +108,7 @@ BufferIterator Buffer::end() const
     return BufferIterator(*this, { (int)line_count()-1, (int)m_lines.back().length() });
 }
 
-BufferSize Buffer::length() const
+BufferSize Buffer::character_count() const
 {
     if (m_lines.empty())
         return 0;

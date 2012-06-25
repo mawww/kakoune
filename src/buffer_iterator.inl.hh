@@ -133,7 +133,7 @@ inline BufferIterator BufferIterator::operator+(BufferSize size) const
     assert(m_buffer);
     if (size >= 0)
     {
-        BufferSize o = std::min(m_buffer->length(), offset() + size);
+        BufferSize o = std::min(m_buffer->character_count(), offset() + size);
         for (int i = line() + 1; i < m_buffer->line_count(); ++i)
         {
             if (m_buffer->m_lines[i].start > o)
@@ -209,7 +209,7 @@ inline bool BufferIterator::is_begin() const
 inline bool BufferIterator::is_end() const
 {
     assert(m_buffer);
-    return offset() == m_buffer->length();
+    return offset() == m_buffer->character_count();
 }
 
 }
