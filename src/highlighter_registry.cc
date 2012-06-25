@@ -35,7 +35,7 @@ void HighlighterRegistry::add_highlighter_to_group(Window& window,
 CandidateList HighlighterRegistry::complete_highlighter(const String& prefix,
                                                         size_t cursor_pos)
 {
-    return m_factories.complete_id<str_to_str>(prefix, cursor_pos);
+    return m_factories.complete_id(prefix, cursor_pos);
 }
 
 }

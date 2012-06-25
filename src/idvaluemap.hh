@@ -63,8 +63,7 @@ public:
         }
     }
 
-    template<String (*id_to_string)(const _Id&),
-             typename _Condition>
+    template<typename _Condition>
     CandidateList complete_id_if(const String& prefix,
                                  size_t cursor_pos,
                                  _Condition condition)
@@ -76,18 +75,17 @@ public:
             if (not condition(value))
                 continue;
 
-            String id_str = id_to_string(value.first);
+            String id_str = value.first;
             if (id_str.substr(0, real_prefix.length()) == real_prefix)
                 result.push_back(std::move(id_str));
         }
         return result;
     }
 
-    template<String (*id_to_string)(const _Id&)>
     CandidateList complete_id(const String& prefix,
                               size_t cursor_pos)
     {
-        return complete_id_if<id_to_string>(
+        return complete_id_if(
             prefix, cursor_pos, [](const value_type&) { return true; });
     }
 

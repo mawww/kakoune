@@ -117,11 +117,6 @@ bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
     return lhs.get() == rhs;
 }
 
-inline String str_to_str(const String& str)
-{
-    return str;
-}
-
 }
 
 #endif // utils_hh_INCLUDED
