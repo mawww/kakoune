@@ -78,10 +78,15 @@ String ShellManager::pipe(const String& input,
                 setenv(("kak_" + name).c_str(), local_var->second.c_str(), 1);
             else
             {
-                auto env_var = m_env_vars.find(name);
+                auto env_var = std::find_if(
+                    m_env_vars.begin(), m_env_vars.end(),
+                    [&](const std::pair<Regex, EnvVarRetriever>& pair)
+                    { return boost::regex_match(name.begin(), name.end(),
+                                                pair.first); });
+
                 if (env_var != m_env_vars.end())
                 {
-                    String value = env_var->second(context);
+                    String value = env_var->second(name, context);
                     setenv(("kak_" + name).c_str(), value.c_str(), 1);
                 }
             }
@@ -94,10 +99,10 @@ String ShellManager::pipe(const String& input,
     return output;
 }
 
-void ShellManager::register_env_var(const String& name,
+void ShellManager::register_env_var(const String& regex,
                                     EnvVarRetriever retriever)
 {
-    m_env_vars[name] = std::move(retriever);
+    m_env_vars.push_back({ Regex(regex.begin(), regex.end()), std::move(retriever) });
 }
 
 }

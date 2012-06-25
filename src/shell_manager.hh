@@ -10,7 +10,7 @@ namespace Kakoune
 {
 
 class Context;
-typedef std::function<String (const Context&)> EnvVarRetriever;
+typedef std::function<String (const String& name, const Context&)> EnvVarRetriever;
 typedef std::unordered_map<String, String>     EnvVarMap;
 
 class ShellManager : public Singleton<ShellManager>
@@ -25,11 +25,11 @@ public:
                 const String& cmdline, const Context& context,
                 const EnvVarMap& env_vars);
 
-    void register_env_var(const String& name, EnvVarRetriever retriever);
+    void register_env_var(const String& regex, EnvVarRetriever retriever);
 
 private:
-    Regex                                       m_regex;
-    std::unordered_map<String, EnvVarRetriever> m_env_vars;
+    Regex                                          m_regex;
+    std::vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
 };
 
 }

@@ -433,10 +433,10 @@ int main(int argc, char* argv[])
     run_unit_tests();
 
     shell_manager.register_env_var("bufname",
-                                   [](const Context& context)
+                                   [](const String& name, const Context& context)
                                    { return context.buffer().name(); });
     shell_manager.register_env_var("selection",
-                                   [](const Context& context)
+                                   [](const String& name, const Context& context)
                                    { return context.window().selections_content().back(); });
     register_commands();
     register_highlighters();
