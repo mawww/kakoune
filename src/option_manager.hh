@@ -31,7 +31,7 @@ public:
     bool operator==(const Option& other) const { return m_value == other.m_value; }
     bool operator!=(const Option& other) const { return m_value != other.m_value; }
 
-    int    as_int()    const  { return atoi(m_value.c_str()); }
+    int    as_int()    const  { return str_to_int(m_value); }
     String as_string() const { return m_value; }
 private:
     String m_value;

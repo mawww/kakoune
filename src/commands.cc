@@ -242,9 +242,9 @@ void edit(const CommandParameters& params, const Context& context)
 
     if (params.size() > 1)
     {
-        int line = std::max(0, atoi(params[1].c_str()) - 1);
+        int line = std::max(0, str_to_int(params[1]) - 1);
         int column = params.size() > 2 ?
-                         std::max(0, atoi(params[2].c_str()) - 1) : 0;
+                         std::max(0, str_to_int(params[2]) - 1) : 0;
 
         window.select(window.buffer().iterator_at({line, column}));
     }
@@ -473,7 +473,7 @@ EnvVarMap params_to_env_var_map(const CommandParameters& params)
     for (size_t i = 0; i < params.size(); ++i)
     {
          param_name[sizeof(param_name) - 2] = '0' + i;
-         vars[param_name] = params[i].c_str();
+         vars[param_name] = params[i];
     }
     return vars;
 }
@@ -567,7 +567,7 @@ void exec_commands_in_file(const CommandParameters& params,
     while (true)
     {
          if (not cat_with_previous)
-             command_line.clear();
+             command_line = String();
 
          size_t end_pos = pos;
 
@@ -796,7 +796,7 @@ void menu(const CommandParameters& params,
     oss << "(empty cancels): ";
 
     String choice = prompt(oss.str(), complete_nothing);
-    int i = atoi(choice.c_str());
+    int i = str_to_int(choice);
 
     if (i > 0 and i < (count / 2) + 1)
         CommandManager::instance().execute(parser[(i-1)*2+1], context);

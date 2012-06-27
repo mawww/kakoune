@@ -25,6 +25,11 @@ String int_to_str(int value)
     return String(buffer + pos);
 }
 
+int str_to_int(const String& str)
+{
+    return atoi(str.c_str());
+}
+
 std::vector<String> split(const String& str, Character separator)
 {
     auto begin = str.begin();

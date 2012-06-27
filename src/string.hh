@@ -16,7 +16,9 @@ class String
 public:
    String() {}
    String(const char* content) : m_content(content) {}
-   String(const std::string& content) : m_content(content) {}
+   String(std::string content) : m_content(std::move(content)) {}
+   String(const String& string) = default;
+   String(String&& string) = default;
    explicit String(Character content) : m_content(std::string() + (char)content) {}
    template<typename Iterator>
    String(Iterator begin, Iterator end) : m_content(begin, end) {}
@@ -30,6 +32,7 @@ public:
    bool      operator<  (const String& other) const { return m_content < other.m_content;  }
 
    String&   operator=  (const String& other)       { m_content = other.m_content; return *this; }
+   String&   operator=  (String&& other)            { m_content = std::move(other.m_content); return *this; }
 
    String    operator+  (const String& other) const { return String(m_content + other.m_content); }
    String&   operator+= (const String& other)       { m_content += other.m_content; return *this; }
@@ -41,7 +44,6 @@ public:
    const char*      c_str() const { return m_content.c_str(); }
 
    String substr(size_t pos, size_t length = -1) const { return String(m_content.substr(pos, length)); }
-   void   clear() { m_content.clear(); }
 
    class iterator
    {
@@ -110,6 +112,7 @@ inline String operator+(Character lhs, const String& rhs)
 }
 
 String int_to_str(int value);
+int    str_to_int(const String& str);
 std::vector<String> split(const String& str, Character separator);
 
 }

@@ -57,7 +57,7 @@ void expand_tabulations(Buffer& buffer, Modification& modification)
         }
 
         int count = tabstop - (column % tabstop);
-        modification.content.clear();
+        modification.content = String();
         for (int i = 0; i < count; ++i)
             modification.content += ' ';
     }
