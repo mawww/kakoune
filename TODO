@@ -1,10 +1,6 @@
 High Priority
 -------------
 
-* Options: They should be typed, and scoped. An option should be global,
-           buffer local, or window local. there should be a way to specify
-           which locality an option support.
-
 * Encoding: Support different encoding, decide how to store buffer content
             implement encoding conversions.
 
@@ -13,9 +9,6 @@ Medium Priority
 
 * tweak editing model, some behaviours are not intuitive, maybe a line
   wise mode will be needed after all.
-
-* highlighters and filters groups. So that many different highlighters
-  (for example syntax highlighting for a language) can be handled as one.
 
 Low Priority
 ------------
