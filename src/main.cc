@@ -438,6 +438,9 @@ int main(int argc, char* argv[])
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
                                    { return context.window().selections_content().back(); });
+    shell_manager.register_env_var("opt_.+",
+                                   [](const String& name, const Context& context)
+                                   { return context.window().option_manager()[name.substr(4)].as_string(); });
     register_commands();
     register_highlighters();
     register_filters();
