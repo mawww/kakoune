@@ -33,8 +33,8 @@ struct Context
     }
     bool has_window() const { return m_window; }
 public:
-    Window* m_window;
-    Buffer* m_buffer;
+    safe_ptr<Window> m_window;
+    safe_ptr<Buffer> m_buffer;
 
 };
 

@@ -21,7 +21,7 @@ class HighlighterGroup;
 // to the editing ones already provided by the Editor class.
 // Display can be customized through the use of highlighters handled by
 // the window's HighlighterGroup
-class Window : public Editor, public OptionManagerWatcher
+class Window : public Editor, public OptionManagerWatcher, public SafeCountable
 {
 public:
     ~Window();

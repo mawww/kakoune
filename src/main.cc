@@ -503,5 +503,6 @@ int main(int argc, char* argv[])
         puts(error.description().c_str());
         return -1;
     }
+    main_context = Context();
     return 0;
 }
