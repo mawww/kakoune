@@ -52,6 +52,63 @@ private:
 template<typename T>
 T* Singleton<T>::ms_instance = nullptr;
 
+// *** safe_ptr: objects that assert nobody references them when they die ***
+
+typedef void* (*unspecified_bool_type)();
+
+template<typename T>
+class safe_ptr
+{
+public:
+    safe_ptr() : m_ptr(nullptr) {}
+    explicit safe_ptr(T* ptr) : m_ptr(ptr) { if (ptr) ptr->inc_safe_count(); }
+    safe_ptr(const safe_ptr& other) : safe_ptr(other.m_ptr) {}
+    safe_ptr(safe_ptr&& other) : m_ptr(other.m_ptr) { other.m_ptr = nullptr; }
+    ~safe_ptr() { if (m_ptr) m_ptr->dec_safe_count(); }
+
+    safe_ptr& operator=(const safe_ptr& other)
+    {
+        if (m_ptr != other.m_ptr)
+        {
+            if (m_ptr)
+                m_ptr->dec_safe_count();
+            m_ptr = other.m_ptr;
+            if (m_ptr)
+                m_ptr->inc_safe_count();
+        }
+
+        return *this;
+   }
+
+   bool operator== (const safe_ptr& other) const { return m_ptr == other.m_ptr; }
+   bool operator!= (const safe_ptr& other) const { return m_ptr != other.m_ptr; }
+   bool operator== (T* ptr) const { return m_ptr == ptr; }
+   bool operator!= (T* ptr) const { return m_ptr != ptr; }
+
+   T& operator*  () const { return *m_ptr; }
+   T* operator-> () const { return m_ptr; }
+
+   T* get() const { return m_ptr; }
+
+   operator unspecified_bool_type() const { return (unspecified_bool_type)(m_ptr); }
+
+private:
+   T* m_ptr;
+};
+
+class SafeCountable
+{
+public:
+   SafeCountable() : m_count(0) {}
+   ~SafeCountable() { assert(m_count == 0); }
+
+   void inc_safe_count() { ++m_count; }
+   void dec_safe_count() { --m_count; assert(m_count >= 0); }
+
+private:
+   int m_count;
+};
+
 // *** Containers helpers ***
 
 template<typename Container>
