@@ -32,6 +32,7 @@ inline BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
 {
     m_buffer = iterator.m_buffer;
     m_coord = iterator.m_coord;
+    assert(is_valid());
     return *this;
 }
 
@@ -90,18 +91,17 @@ inline void BufferIterator::on_erase(const BufferCoord& begin,
     if (m_coord < begin)
         return;
 
-    BufferCoord measure;
-    measure.line = end.line - begin.line;
-    measure.column = end.column - (measure.line == 0 ? begin.column : 0);
     if (m_coord <= end)
         m_coord = begin;
     else
     {
-        m_coord.line -= measure.line;
-        if (measure.line > 0 and begin.line == m_coord.line)
-            m_coord.column += begin.column;
         if (end.line == m_coord.line)
-            m_coord.column -= measure.column;
+        {
+            m_coord.line = begin.line;
+            m_coord.column = begin.column + m_coord.column - end.column;
+        }
+        else
+            m_coord.line -= end.line - begin.line;
     }
 
     if (is_end())

@@ -152,7 +152,7 @@ void Buffer::end_undo_group()
     if (m_current_undo_group.empty())
         return;
 
-    m_history.push_back(m_current_undo_group);
+    m_history.push_back(std::move(m_current_undo_group));
     m_history_cursor = m_history.end();
 
     m_current_undo_group.clear();
@@ -277,6 +277,7 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
 void Buffer::erase(const BufferIterator& pos, BufferSize length)
 {
     BufferIterator end = pos + length;
+    assert(end.is_valid());
     String prefix = m_lines[pos.line()].content.substr(0, pos.column());
     String suffix = m_lines[end.line()].content.substr(end.column());
     Line new_line = { m_lines[pos.line()].start, prefix + suffix };
