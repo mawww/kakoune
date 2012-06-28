@@ -106,7 +106,7 @@ struct Modification
 // The Buffer class permits to read and mutate this file
 // representation. It also manage modifications undo/redo and
 // provides tools to deal with the line/column nature of text.
-class Buffer
+class Buffer : public SafeCountable
 {
 public:
     enum class Type

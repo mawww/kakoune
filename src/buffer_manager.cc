@@ -13,7 +13,7 @@ BufferManager::~BufferManager()
 {
     // delete remaining buffers
     while (not m_buffers.empty())
-        delete m_buffers.begin()->second;
+        delete m_buffers.begin()->second.get();
 }
 
 void BufferManager::register_buffer(Buffer* buffer)
@@ -23,7 +23,7 @@ void BufferManager::register_buffer(Buffer* buffer)
     if (m_buffers.find(name) != m_buffers.end())
         throw name_not_unique();
 
-    m_buffers[name] = buffer;
+    m_buffers[name] = safe_ptr<Buffer>(buffer);
 }
 
 void BufferManager::unregister_buffer(Buffer* buffer)
@@ -42,7 +42,7 @@ Buffer* BufferManager::get_buffer(const String& name)
     if (m_buffers.find(name) == m_buffers.end())
         return nullptr;
 
-    return m_buffers[name];
+    return m_buffers[name].get();
 }
 
 CandidateList BufferManager::complete_buffername(const String& prefix,

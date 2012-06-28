@@ -14,7 +14,7 @@ class Buffer;
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    typedef std::unordered_map<String, Buffer*> BufferMap;
+    typedef std::unordered_map<String, safe_ptr<Buffer>> BufferMap;
 
     struct iterator : public BufferMap::const_iterator
     {
@@ -23,7 +23,7 @@ public:
         iterator() {}
         iterator(const parent_type& other) : parent_type(other) {}
         Buffer& operator*()  const { return *(parent_type::operator*().second); }
-        Buffer* operator->() const { return parent_type::operator*().second; }
+        Buffer* operator->() const { return parent_type::operator*().second.get(); }
     };
 
     ~BufferManager();
