@@ -11,7 +11,7 @@
 namespace Kakoune
 {
 
-NCursesUI::NCursesUI()
+NCursesClient::NCursesClient()
 {
     // setlocale(LC_ALL, "");
     initscr();
@@ -26,7 +26,7 @@ NCursesUI::NCursesUI()
     ESCDELAY=25;
 }
 
-NCursesUI::~NCursesUI()
+NCursesClient::~NCursesClient()
 {
     endwin();
 }
@@ -87,7 +87,7 @@ static void set_color(Color fg_color, Color bg_color)
     }
 }
 
-void NCursesUI::draw_window(Window& window)
+void NCursesClient::draw_window(Window& window)
 {
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
@@ -160,7 +160,7 @@ void NCursesUI::draw_window(Window& window)
     last_status_length = status_line.length();
 }
 
-Key NCursesUI::get_key()
+Key NCursesClient::get_key()
 {
     char c = getch();
 
@@ -184,7 +184,7 @@ Key NCursesUI::get_key()
     return Key(modifiers, c);
 }
 
-String NCursesUI::prompt(const String& text, Completer completer)
+String NCursesClient::prompt(const String& text, Completer completer)
 {
     curs_set(2);
     auto restore_cursor = on_scope_end([]() { curs_set(0); });
@@ -321,7 +321,7 @@ String NCursesUI::prompt(const String& text, Completer completer)
     return result;
 }
 
-void NCursesUI::print_status(const String& status)
+void NCursesClient::print_status(const String& status)
 {
     int x,y;
     getmaxyx(stdscr, y, x);

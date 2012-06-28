@@ -1,5 +1,5 @@
-#ifndef ui_hh_INCLUDED
-#define ui_hh_INCLUDED
+#ifndef client_hh_INCLUDED
+#define client_hh_INCLUDED
 
 #include "keys.hh"
 #include "completion.hh"
@@ -11,10 +11,10 @@ class Editor;
 class Window;
 class String;
 
-class UI
+class Client
 {
 public:
-    virtual ~UI() {}
+    virtual ~Client() {}
 
     virtual void   draw_window(Window& window) = 0;
     virtual void   print_status(const String& status) = 0;
@@ -24,7 +24,7 @@ public:
 
 struct prompt_aborted {};
 
-extern UI* current_ui;
+extern Client* current_client;
 
 void draw_editor_ifn(Editor& editor);
 String prompt(const String& text, Completer completer = complete_nothing);
@@ -33,5 +33,4 @@ void print_status(const String& status);
 
 }
 
-#endif // ui_hh_INCLUDED
-
+#endif // client_hh_INCLUDED

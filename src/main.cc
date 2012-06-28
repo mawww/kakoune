@@ -31,7 +31,6 @@ namespace Kakoune
 Context main_context;
 bool quit_requested = false;
 
-
 struct InsertSequence
 {
     IncrementalInserter::Mode mode;
@@ -447,8 +446,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        NCursesUI ui;
-        current_ui = &ui;
+        NCursesClient client;
+        current_client = &client;
 
         try
         {
@@ -471,7 +470,7 @@ int main(int argc, char* argv[])
             main_context = Context(*buffer->get_or_create_window());
         }
 
-        current_ui->draw_window(main_context.window());
+        current_client->draw_window(main_context.window());
         int count = 0;
         while(not quit_requested)
         {
@@ -486,7 +485,7 @@ int main(int argc, char* argv[])
                     if (it != keymap.end())
                     {
                         it->second(main_context.window(), count);
-                        current_ui->draw_window(main_context.window());
+                        current_client->draw_window(main_context.window());
                     }
                     count = 0;
                 }

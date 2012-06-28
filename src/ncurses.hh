@@ -1,19 +1,19 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
-#include "ui.hh"
+#include "client.hh"
 
 namespace Kakoune
 {
 
-class NCursesUI : public UI
+class NCursesClient : public Client
 {
 public:
-    NCursesUI();
-    ~NCursesUI();
+    NCursesClient();
+    ~NCursesClient();
 
-    NCursesUI(const NCursesUI&) = delete;
-    NCursesUI& operator=(const NCursesUI&) = delete;
+    NCursesClient(const NCursesClient&) = delete;
+    NCursesClient& operator=(const NCursesClient&) = delete;
 
     void draw_window(Window& window);
     void print_status(const String& status);

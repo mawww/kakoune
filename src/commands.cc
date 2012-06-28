@@ -7,7 +7,7 @@
 #include "buffer.hh"
 #include "window.hh"
 #include "file.hh"
-#include "ui.hh"
+#include "client.hh"
 #include "regex.hh"
 #include "highlighter_registry.hh"
 #include "filter_registry.hh"
@@ -671,19 +671,19 @@ private:
     char                m_name;
 };
 
-class BatchUI : public UI
+class BatchClient : public Client
 {
 public:
-    BatchUI(const KeyList& keys)
+    BatchClient(const KeyList& keys)
         : m_keys(keys), m_pos(0)
     {
-        m_previous_ui = current_ui;
-        current_ui = this;
+        m_previous_client = current_client;
+        current_client = this;
     }
 
-    ~BatchUI()
+    ~BatchClient()
     {
-        current_ui = m_previous_ui;
+        current_client = m_previous_client;
     }
 
     String prompt(const String&, Completer)
@@ -709,26 +709,26 @@ public:
 
     void print_status(const String& status)
     {
-        m_previous_ui->print_status(status);
+        m_previous_client->print_status(status);
     }
 
     void draw_window(Window& window)
     {
-        m_previous_ui->draw_window(window);
+        m_previous_client->draw_window(window);
     }
 
     bool has_key_left() const { return m_pos < m_keys.size(); }
 
 private:
     const KeyList& m_keys;
-    size_t m_pos;
-    UI*    m_previous_ui;
+    size_t         m_pos;
+    Client*        m_previous_client;
 };
 
 void exec_keys(const KeyList& keys,
                const Context& context)
 {
-    BatchUI batch_ui(keys);
+    BatchClient batch_client(keys);
 
     RegisterRestorer quote('"');
     RegisterRestorer slash('/');
@@ -740,9 +740,9 @@ void exec_keys(const KeyList& keys,
     scoped_edition edition(editor);
 
     int count = 0;
-    while (batch_ui.has_key_left())
+    while (batch_client.has_key_left())
     {
-        Key key = batch_ui.get_key();
+        Key key = batch_client.get_key();
 
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             count = count * 10 + key.key - '0';
