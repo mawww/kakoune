@@ -32,6 +32,16 @@ struct Context
         return *m_window;
     }
     bool has_window() const { return m_window; }
+
+    OptionManager& option_manager() const
+    {
+        if (m_window)
+            return m_window->option_manager();
+        if (m_buffer)
+            return m_buffer->option_manager();
+        return GlobalOptionManager::instance();
+    }
+
 public:
     safe_ptr<Window> m_window;
     safe_ptr<Buffer> m_buffer;
