@@ -319,9 +319,9 @@ void IncrementalInserter::insert(const String& string)
         apply(Modification::make_insert(sel.begin(), string));
 }
 
-void IncrementalInserter::insert(const Register& reg)
+void IncrementalInserter::insert(const memoryview<String>& strings)
 {
-    m_editor.insert(reg);
+    m_editor.insert(strings);
 }
 
 void IncrementalInserter::erase()

@@ -111,7 +111,7 @@ public:
     ~IncrementalInserter();
 
     void insert(const String& string);
-    void insert(const Register& reg);
+    void insert(const memoryview<String>& strings);
     void erase();
     void move_cursors(const BufferCoord& offset);
 
