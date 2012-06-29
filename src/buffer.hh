@@ -91,14 +91,13 @@ struct Modification
     BufferIterator position;
     String         content;
 
-    Modification(Type type, BufferIterator position, const String& content)
-        : type(type), position(position), content(content) {}
+    Modification(Type type, BufferIterator position, String content)
+        : type(type), position(position), content(std::move(content)) {}
 
     Modification inverse() const;
 
     static Modification make_erase(BufferIterator begin, BufferIterator end);
-    static Modification make_insert(BufferIterator position,
-                                    const String& content);
+    static Modification make_insert(BufferIterator position, String content);
 };
 
 // A Buffer is a in-memory representation of a file
@@ -116,8 +115,7 @@ public:
         Scratch
     };
 
-    Buffer(const String& name, Type type,
-           const String& initial_content = "\n");
+    Buffer(String name, Type type, String initial_content = "\n");
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -225,9 +223,9 @@ inline Modification Modification::make_erase(BufferIterator begin,
 }
 
 inline Modification Modification::make_insert(BufferIterator position,
-                                              const String& content)
+                                              String content)
 {
-    return Modification(Insert, position, content);
+    return Modification(Insert, position, std::move(content));
 }
 
 }

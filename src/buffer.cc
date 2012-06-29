@@ -21,9 +21,9 @@ T clamp(T min, T max, T val)
     return val;
 }
 
-Buffer::Buffer(const String& name, Type type,
-               const String& initial_content)
-    : m_name(name), m_type(type),
+Buffer::Buffer(String name, Type type,
+               String initial_content)
+    : m_name(std::move(name)), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_hook_manager(GlobalHookManager::instance()),
@@ -31,14 +31,14 @@ Buffer::Buffer(const String& name, Type type,
 {
     BufferManager::instance().register_buffer(this);
     if (not initial_content.empty())
-        apply_modification(Modification::make_insert(begin(), initial_content));
+        apply_modification(Modification::make_insert(begin(), std::move(initial_content)));
 
     if (type == Type::NewFile)
-        m_hook_manager.run_hook("BufNew", name, Context(*this));
+        m_hook_manager.run_hook("BufNew", m_name, Context(*this));
     else if (type == Type::File)
-        m_hook_manager.run_hook("BufOpen", name, Context(*this));
+        m_hook_manager.run_hook("BufOpen", m_name, Context(*this));
 
-    m_hook_manager.run_hook("BufCreate", name, Context(*this));
+    m_hook_manager.run_hook("BufCreate", m_name, Context(*this));
 }
 
 Buffer::~Buffer()
