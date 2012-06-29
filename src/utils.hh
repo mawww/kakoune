@@ -76,8 +76,24 @@ public:
             if (m_ptr)
                 m_ptr->inc_safe_count();
         }
-
         return *this;
+   }
+
+   safe_ptr& operator=(safe_ptr&& other)
+   {
+       if (m_ptr != other.m_ptr)
+       {
+           if (m_ptr)
+               m_ptr->dec_safe_count();
+           m_ptr = other.m_ptr;
+           other.m_ptr = nullptr;
+       }
+       return *this;
+   }
+
+   void reset(T* ptr)
+   {
+       *this = safe_ptr(ptr);
    }
 
    bool operator== (const safe_ptr& other) const { return m_ptr == other.m_ptr; }
