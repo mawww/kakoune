@@ -265,7 +265,7 @@ String NCursesClient::prompt(const String& text, Completer completer)
         case CTRL('r'):
             {
                 c = getch();
-                String reg = RegisterManager::instance()[c].get();
+                String reg = RegisterManager::instance()[c][0];
                 current_completion = -1;
                 result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, String::npos);
                 cursor_pos += reg.length();

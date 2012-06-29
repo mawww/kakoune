@@ -210,7 +210,7 @@ void do_search(Editor& editor)
     {
         String ex = prompt("/");
         if (ex.empty())
-            ex = RegisterManager::instance()['/'].get();
+            ex = RegisterManager::instance()['/'][0];
         else
             RegisterManager::instance()['/'] = ex;
 
@@ -222,7 +222,7 @@ void do_search(Editor& editor)
 template<bool append>
 void do_search_next(Editor& editor)
 {
-    const String& ex = RegisterManager::instance()['/'].get();
+    const String& ex = RegisterManager::instance()['/'][0];
     if (not ex.empty())
         editor.select(std::bind(select_next_match, _1, ex), append);
     else
@@ -260,9 +260,9 @@ void do_paste(Editor& editor, int count)
     else
     {
         if (append)
-            editor.append(reg.get(count-1));
+            editor.append(reg[count-1]);
         else
-            editor.insert(reg.get(count-1));
+            editor.insert(reg[count-1]);
     }
 }
 

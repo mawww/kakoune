@@ -659,9 +659,11 @@ class RegisterRestorer
 {
 public:
     RegisterRestorer(char name)
-       : m_name(name),
-         m_save(RegisterManager::instance()[name].content())
-    {}
+       : m_name(name)
+    {
+         memoryview<String> save = RegisterManager::instance()[name];
+         m_save = std::vector<String>(save.begin(), save.end());
+    }
 
     ~RegisterRestorer()
     { RegisterManager::instance()[m_name] = m_save; }
