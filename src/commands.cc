@@ -289,8 +289,7 @@ void quit(const CommandParameters& params, const Context& context)
                 message += *it;
             }
             message += "]";
-            print_status(message);
-            return;
+            throw runtime_error(message);
         }
     }
     quit_requested = true;
@@ -354,26 +353,20 @@ void add_highlighter(const CommandParameters& params, const Context& context)
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() < 1)
         throw wrong_argument_count();
-    try
-    {
-        HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-        auto begin = parser.begin();
-        const String& name = *begin;
-        std::vector<String> highlighter_params(++begin, parser.end());
+    HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-        Window& window = context.window();
-        HighlighterGroup& group = parser.has_option("group") ?
-           window.highlighters().get_group(parser.option_value("group"))
-         : window.highlighters();
+    auto begin = parser.begin();
+    const String& name = *begin;
+    std::vector<String> highlighter_params(++begin, parser.end());
 
-        registry.add_highlighter_to_group(window, group, name,
-                                          highlighter_params);
-    }
-    catch (runtime_error& err)
-    {
-        print_status("error: " + err.description());
-    }
+    Window& window = context.window();
+    HighlighterGroup& group = parser.has_option("group") ?
+       window.highlighters().get_group(parser.option_value("group"))
+     : window.highlighters();
+
+    registry.add_highlighter_to_group(window, group, name,
+                                      highlighter_params);
 }
 
 void rm_highlighter(const CommandParameters& params, const Context& context)
@@ -381,19 +374,13 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() != 1)
         throw wrong_argument_count();
-    try
-    {
-        Window& window = context.window();
-        HighlighterGroup& group = parser.has_option("group") ?
-           window.highlighters().get_group(parser.option_value("group"))
-         : window.highlighters();
 
-        group.remove(*parser.begin());
-    }
-    catch (runtime_error& err)
-    {
-        print_status("error: " + err.description());
-    }
+    Window& window = context.window();
+    HighlighterGroup& group = parser.has_option("group") ?
+       window.highlighters().get_group(parser.option_value("group"))
+     : window.highlighters();
+
+    group.remove(*parser.begin());
 }
 
 void add_filter(const CommandParameters& params, const Context& context)
@@ -401,25 +388,19 @@ void add_filter(const CommandParameters& params, const Context& context)
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() < 1)
         throw wrong_argument_count();
-    try
-    {
-        FilterRegistry& registry = FilterRegistry::instance();
 
-        auto begin = parser.begin();
-        const String& name = *begin;
-        std::vector<String> filter_params(++begin, parser.end());
+    FilterRegistry& registry = FilterRegistry::instance();
 
-        Window& window = context.window();
-        FilterGroup& group = parser.has_option("group") ?
-           window.filters().get_group(parser.option_value("group"))
-         : window.filters();
+    auto begin = parser.begin();
+    const String& name = *begin;
+    std::vector<String> filter_params(++begin, parser.end());
 
-        registry.add_filter_to_group(group, name, filter_params);
-    }
-    catch (runtime_error& err)
-    {
-        print_status("error: " + err.description());
-    }
+    Window& window = context.window();
+    FilterGroup& group = parser.has_option("group") ?
+       window.filters().get_group(parser.option_value("group"))
+     : window.filters();
+
+    registry.add_filter_to_group(group, name, filter_params);
 }
 
 void rm_filter(const CommandParameters& params, const Context& context)
@@ -427,19 +408,13 @@ void rm_filter(const CommandParameters& params, const Context& context)
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() != 1)
         throw wrong_argument_count();
-    try
-    {
-        Window& window = context.window();
-        FilterGroup& group = parser.has_option("group") ?
-           window.filters().get_group(parser.option_value("group"))
-         : window.filters();
 
-        group.remove(*parser.begin());
-    }
-    catch (runtime_error& err)
-    {
-        print_status("error: " + err.description());
-    }
+    Window& window = context.window();
+    FilterGroup& group = parser.has_option("group") ?
+       window.filters().get_group(parser.option_value("group"))
+     : window.filters();
+
+    group.remove(*parser.begin());
 }
 
 void add_hook(const CommandParameters& params, const Context& context)
@@ -463,7 +438,7 @@ void add_hook(const CommandParameters& params, const Context& context)
     else if (params[0] == "window")
         context.window().hook_manager().add_hook(params[1], hook_func);
     else
-        print_status("error: no such hook container " + params[0]);
+        throw runtime_error("error: no such hook container " + params[0]);
 }
 
 EnvVarMap params_to_env_var_map(const CommandParameters& params)
@@ -583,10 +558,7 @@ void exec_commands_in_file(const CommandParameters& params,
                      ++end_pos;
 
                  if (end_pos == length)
-                 {
-                     print_status(String("unterminated '") + delimiter + "' string");
-                     return;
-                 }
+                     throw(String("unterminated '") + delimiter + "' string");
 
                  ++end_pos;
              }
@@ -609,8 +581,9 @@ void exec_commands_in_file(const CommandParameters& params,
          if (end_pos == length)
          {
              if (cat_with_previous)
-                 print_status("while executing commands in \"" + params[0] +
-                              "\": last command not complete");
+                 throw runtime_error("while executing commands in \"" +
+                                     params[0] +
+                                     "\": last command not complete");
              break;
          }
          pos = end_pos + 1;
