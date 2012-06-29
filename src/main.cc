@@ -440,6 +440,10 @@ int main(int argc, char* argv[])
     shell_manager.register_env_var("opt_.+",
                                    [](const String& name, const Context& context)
                                    { return context.option_manager()[name.substr(4)].as_string(); });
+
+    register_manager.register_dynamic_register('%', [&]() { return std::vector<String>(1, main_context.buffer().name()); });
+    register_manager.register_dynamic_register('.', [&]() { return main_context.window().selections_content(); });
+
     register_commands();
     register_highlighters();
     register_filters();
