@@ -110,12 +110,16 @@ DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& whe
 DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& where,
                                                        iterator start)
 {
-    if (where < start->begin())
+    if (start == end() or where < start->begin())
         return end();
 
-    return std::upper_bound(start, end(), where,
-                            [](const BufferIterator& where, const DisplayAtom& atom)
-                            { return where < atom.end(); });
+    while (start != end())
+    {
+        if (start->end() > where)
+            break;
+        ++start;
+    }
+    return start;
 }
 
 DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator& pos)
