@@ -83,13 +83,22 @@ void Window::update_display_buffer()
 
     m_display_buffer.clear();
 
-    BufferIterator begin = buffer().iterator_at(m_position);
-    BufferIterator end = buffer().iterator_at(m_position +
-                                              BufferCoord(m_dimensions.line, m_dimensions.column))+2;
-    if (begin == end)
-        return;
+    for (auto line = 0; line < m_dimensions.line; ++line)
+    {
+        auto buffer_line = m_position.line + line;
+        if (buffer_line >= buffer().line_count())
+            break;
+        BufferIterator pos        = buffer().iterator_at({ buffer_line, m_position.column });
+        BufferIterator line_begin = buffer().iterator_at_line_begin(pos);
+        BufferIterator line_end   = buffer().iterator_at_line_end(pos);
 
-    m_display_buffer.append(DisplayAtom(DisplayCoord(0,0), begin, end));
+        if (line_begin != pos)
+        {
+            auto atom_it = m_display_buffer.append(line_begin, pos);
+            m_display_buffer.replace_atom_content(atom_it, "");
+        }
+        m_display_buffer.append(pos, line_end);
+    }
 
     m_highlighters(m_display_buffer);
     m_display_buffer.check_invariant();
@@ -140,6 +149,5 @@ void Window::on_option_changed(const String& name, const Option& option)
     String desc = name + "=" + option.as_string();
     m_hook_manager.run_hook("WinSetOption", desc, Context(*this));
 }
-
 
 }

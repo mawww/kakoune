@@ -52,19 +52,6 @@ enum class Color
 // text stored in the replacement_string field.
 struct DisplayAtom
 {
-    DisplayAtom(const DisplayCoord& coord,
-                const BufferIterator& begin, const BufferIterator& end,
-                Color fg_color = Color::Default,
-                Color bg_color = Color::Default,
-                Attribute attribute = Attributes::Normal)
-        : m_content_mode(BufferText),
-          m_coord(coord),
-          m_begin(begin), m_end(end),
-          m_fg_color(fg_color),
-          m_bg_color(bg_color),
-          m_attribute(attribute)
-    {}
-
     const DisplayCoord&   coord()     const { return m_coord; }
     const BufferIterator& begin()     const { return m_begin; }
     const BufferIterator& end()       const { return m_end; }
@@ -72,6 +59,12 @@ struct DisplayAtom
     const Color&          bg_color()  const { return m_bg_color; }
     const Attribute&      attribute() const { return m_attribute; }
 
+    enum ContentMode
+    {
+        BufferText,
+        ReplacementText
+    };
+    ContentMode    content_mode() const { return m_content_mode; }
 
     Color&         fg_color()  { return m_fg_color; }
     Color&         bg_color()  { return m_bg_color; }
@@ -82,16 +75,23 @@ struct DisplayAtom
     BufferIterator iterator_at(const DisplayCoord& coord) const;
     DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
 
-    bool           splitable() const { return m_replacement_text.empty(); }
+    bool           splitable() const { return m_content_mode != ReplacementText; }
 
 private:
     friend class DisplayBuffer;
+    DisplayAtom(DisplayCoord coord,
+                BufferIterator begin, BufferIterator end,
+                Color fg_color = Color::Default,
+                Color bg_color = Color::Default,
+                Attribute attribute = Attributes::Normal)
+        : m_content_mode(BufferText),
+          m_coord(std::move(coord)),
+          m_begin(std::move(begin)), m_end(std::move(end)),
+          m_fg_color(fg_color),
+          m_bg_color(bg_color),
+          m_attribute(attribute)
+    {}
 
-    enum ContentMode
-    {
-        BufferText,
-        ReplacementText
-    };
     ContentMode    m_content_mode;
 
     DisplayCoord   m_coord;
@@ -117,8 +117,8 @@ public:
     DisplayBuffer();
 
     void clear() { m_atoms.clear(); }
-    void append(const DisplayAtom& atom) { m_atoms.push_back(atom); }
-    iterator insert(iterator where, const DisplayAtom& atom);
+    iterator append(BufferIterator begin, BufferIterator end);
+    iterator insert_empty_atom_before(iterator where);
     iterator split(iterator atom, const BufferIterator& pos);
 
     void replace_atom_content(iterator atom, const String& replacement);

@@ -95,10 +95,20 @@ DisplayBuffer::DisplayBuffer()
 {
 }
 
-DisplayBuffer::iterator DisplayBuffer::insert(iterator where, const DisplayAtom& atom)
+DisplayBuffer::iterator DisplayBuffer::append(BufferIterator begin, BufferIterator end)
 {
-    iterator res = m_atoms.insert(where, atom);
-    // check_invariant();
+    DisplayCoord coord;
+    if (not m_atoms.empty())
+        coord = m_atoms.back().end_coord();
+    m_atoms.push_back(DisplayAtom(std::move(coord), std::move(begin), std::move(end)));
+    return --(this->end());
+}
+
+DisplayBuffer::iterator DisplayBuffer::insert_empty_atom_before(iterator where)
+{
+    assert(where != end());
+    iterator res = m_atoms.insert(
+        where, DisplayAtom(where->coord(), where->begin(), where->begin()));
     return res;
 }
 
@@ -124,6 +134,7 @@ DisplayBuffer::iterator DisplayBuffer::atom_containing(const BufferIterator& whe
 
 DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator& pos)
 {
+    assert(atom->splitable());
     assert(pos > atom->begin());
     assert(pos < atom->end());
 
@@ -136,7 +147,7 @@ DisplayBuffer::iterator DisplayBuffer::split(iterator atom, const BufferIterator
     iterator insert_pos = atom;
     ++insert_pos;
     m_atoms.insert(insert_pos, std::move(new_atom));
-    // check_invariant();
+    check_invariant();
     return atom;
 }
 
@@ -147,7 +158,10 @@ void DisplayBuffer::check_invariant() const
     {
         assert(it->end() >= it->begin());
         if (it != begin())
+        {
             assert(prev_it->end() == it->begin());
+            assert(prev_it->end_coord() == it->coord());
+        }
         prev_it = it;
     }
 }

@@ -43,14 +43,17 @@ void colorize_regex_range(DisplayBuffer& display_buffer,
         auto begin_atom_it = display_buffer.atom_containing(begin, atom_it);
         assert(begin_atom_it != display_buffer.end());
         if (begin_atom_it->begin() != begin)
-            begin_atom_it = ++display_buffer.split(begin_atom_it, begin);
+        {
+            if (begin_atom_it->splitable())
+                begin_atom_it = ++display_buffer.split(begin_atom_it, begin);
+            else
+                ++begin_atom_it;
+        }
 
         auto end_atom_it = display_buffer.atom_containing(end, begin_atom_it);
         if (end_atom_it != display_buffer.end() and
-            end_atom_it->begin() != end)
+            end_atom_it->begin() != end and end_atom_it->splitable())
             end_atom_it = ++display_buffer.split(end_atom_it, end);
-
-        assert(begin_atom_it != end_atom_it);
 
         for (auto it = begin_atom_it; it != end_atom_it; ++it)
         {
@@ -169,12 +172,10 @@ void show_line_numbers(DisplayBuffer& display_buffer)
 
                 atom_it = ++display_buffer.split(atom_it, line_start);
             }
-            atom_it = display_buffer.insert(
-                atom_it,
-                DisplayAtom(atom_it->coord(),
-                            atom_it->begin(), atom_it->begin(),
-                            Color::Black, Color::White,
-                            Attributes::Final));
+            atom_it = display_buffer.insert_empty_atom_before(atom_it);
+            atom_it->fg_color() = Color::Black;
+            atom_it->bg_color() = Color::White;
+            atom_it->attribute() = Attributes::Final;
 
             char buffer[10];
             snprintf(buffer, 10, format, coord.line + 1);
@@ -257,7 +258,7 @@ void highlight_selections(Window& window, DisplayBuffer& display_buffer)
         const BufferIterator& last = sel.last();
 
         DisplayBuffer::iterator atom_it = display_buffer.atom_containing(last);
-        if (atom_it == display_buffer.end())
+        if (atom_it == display_buffer.end() or not atom_it->splitable())
             continue;
 
         if (atom_it->begin() < last)
