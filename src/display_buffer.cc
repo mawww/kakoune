@@ -8,10 +8,15 @@ namespace Kakoune
 
 String DisplayAtom::content() const
 {
-    if (m_replacement_text.empty())
+    switch (m_content_mode)
+    {
+    case BufferText:
         return m_begin.buffer().string(m_begin, m_end);
-    else
+    case ReplacementText:
         return m_replacement_text;
+    }
+    assert(false);
+    return "";
 }
 
 static DisplayCoord advance_coord(const DisplayCoord& pos,
@@ -40,17 +45,23 @@ static DisplayCoord advance_coord(const DisplayCoord& pos,
     }
     return res;
 }
+
 DisplayCoord DisplayAtom::end_coord() const
 {
-    if (m_replacement_text.empty())
+    switch (m_content_mode)
+    {
+    case BufferText:
         return advance_coord(m_coord, m_begin, m_end);
-    else
+    case ReplacementText:
         return advance_coord(m_coord, m_replacement_text);
+    }
+    assert(false);
+    return { 0, 0 };
 }
 
 BufferIterator DisplayAtom::iterator_at(const DisplayCoord& coord) const
 {
-    if (not m_replacement_text.empty() or coord <= m_coord)
+    if (m_content_mode != BufferText or coord <= m_coord)
         return m_begin;
 
     DisplayCoord pos = m_coord;
@@ -74,7 +85,7 @@ DisplayCoord DisplayAtom::line_and_column_at(const BufferIterator& iterator) con
 {
     assert(iterator >= m_begin and iterator < m_end);
 
-    if (not m_replacement_text.empty())
+    if (m_content_mode != BufferText)
         return m_coord;
 
     return advance_coord(m_coord, m_begin, iterator);
@@ -140,6 +151,7 @@ void DisplayBuffer::check_invariant() const
 void DisplayBuffer::replace_atom_content(iterator atom,
                                          const String& replacement)
 {
+    atom->m_content_mode = DisplayAtom::ReplacementText;
     atom->m_replacement_text = replacement;
 
     // update coordinates of subsequents atoms

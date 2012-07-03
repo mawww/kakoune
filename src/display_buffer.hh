@@ -57,7 +57,8 @@ struct DisplayAtom
                 Color fg_color = Color::Default,
                 Color bg_color = Color::Default,
                 Attribute attribute = Attributes::Normal)
-        : m_coord(coord),
+        : m_content_mode(BufferText),
+          m_coord(coord),
           m_begin(begin), m_end(end),
           m_fg_color(fg_color),
           m_bg_color(bg_color),
@@ -85,6 +86,13 @@ struct DisplayAtom
 
 private:
     friend class DisplayBuffer;
+
+    enum ContentMode
+    {
+        BufferText,
+        ReplacementText
+    };
+    ContentMode    m_content_mode;
 
     DisplayCoord   m_coord;
     BufferIterator m_begin;
