@@ -37,6 +37,7 @@ public:
     void append(const memoryview<String>& strings);
 
     void replace(const String& string);
+    void replace(const memoryview<String>& strings);
 
     void push_selections();
     void pop_selections();

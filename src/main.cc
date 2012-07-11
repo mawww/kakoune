@@ -246,23 +246,34 @@ void do_change(Editor& editor, int count)
     do_insert(editor, IncrementalInserter::Mode::Change);
 }
 
-template<bool append>
+enum class PasteMode
+{
+    Before,
+    After,
+    Replace
+};
+
+template<PasteMode paste_mode>
 void do_paste(Editor& editor, int count)
 {
     Register& reg = RegisterManager::instance()['"'];
     if (count == 0)
     {
-        if (append)
-            editor.append(reg);
-        else
+        if (paste_mode == PasteMode::Before)
             editor.insert(reg);
+        else if (paste_mode == PasteMode::After)
+            editor.append(reg);
+        else if (paste_mode == PasteMode::Replace)
+            editor.replace(reg);
     }
     else
     {
-        if (append)
-            editor.append(reg[count-1]);
-        else
+        if (paste_mode == PasteMode::Before)
             editor.insert(reg[count-1]);
+        else if (paste_mode == PasteMode::After)
+            editor.append(reg[count-1]);
+        else if (paste_mode == PasteMode::Replace)
+            editor.replace(reg[count-1]);
     }
 }
 
@@ -352,8 +363,9 @@ std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap 
     { { Key::Modifiers::None, 'G' }, do_go<true> },
 
     { { Key::Modifiers::None, 'y' }, do_yank },
-    { { Key::Modifiers::None, 'p' }, do_paste<true> },
-    { { Key::Modifiers::None, 'P' }, do_paste<false> },
+    { { Key::Modifiers::None, 'p' }, do_paste<PasteMode::After> },
+    { { Key::Modifiers::None, 'P' }, do_paste<PasteMode::Before> },
+    { { Key::Modifiers::Alt,  'p' }, do_paste<PasteMode::Replace> },
 
     { { Key::Modifiers::None, 's' }, do_select_regex },
 

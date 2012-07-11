@@ -79,6 +79,13 @@ void Editor::replace(const String& string)
     insert(string);
 }
 
+void Editor::replace(const memoryview<String>& strings)
+{
+    scoped_edition edition(*this);
+    erase();
+    insert(strings);
+}
+
 std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
