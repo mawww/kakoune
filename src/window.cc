@@ -61,6 +61,7 @@ void Window::update_display_buffer()
         lines.back().push_back(DisplayAtom(AtomContent(pos,end)));
     }
 
+    m_display_buffer.compute_range();
     m_highlighters(m_display_buffer);
 }
 

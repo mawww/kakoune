@@ -18,6 +18,9 @@ void highlight_range(DisplayBuffer& display_buffer,
                      BufferIterator begin, BufferIterator end,
                      bool skip_replaced, T func)
 {
+    if (end <= display_buffer.range().first or begin >= display_buffer.range().second)
+        return;
+
     for (auto& line : display_buffer.lines())
     {
         if (line.buffer_line() >= begin.line() and line.buffer_line() <= end.line())
@@ -50,11 +53,11 @@ void highlight_range(DisplayBuffer& display_buffer,
 }
 
 void colorize_regex(DisplayBuffer& display_buffer,
-                    const Buffer& buffer,
                     const Regex& ex,
                     Color fg_color, Color bg_color = Color::Default)
 {
-    RegexIterator re_it(buffer.begin(), buffer.end(), ex, boost::match_nosubs);
+    const BufferRange& range = display_buffer.range();
+    RegexIterator re_it(range.first, range.second, ex, boost::match_nosubs);
     RegexIterator re_end;
     for (; re_it != re_end; ++re_it)
     {
@@ -94,8 +97,7 @@ HighlighterAndId colorize_regex_factory(Window& window,
     String id = "colre'" + params[0] + "'";
 
     return HighlighterAndId(id, std::bind(colorize_regex,
-                                          _1, std::ref(window.buffer()),
-                                          ex, fg_color, bg_color));
+                                          _1,  ex, fg_color, bg_color));
 }
 
 void expand_tabulations(Window& window, DisplayBuffer& display_buffer)

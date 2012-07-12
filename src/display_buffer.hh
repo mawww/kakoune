@@ -144,6 +144,8 @@ private:
     AtomList m_atoms;
 };
 
+using BufferRange = std::pair<BufferIterator, BufferIterator>;
+
 class DisplayBuffer
 {
 public:
@@ -152,8 +154,15 @@ public:
 
     LineList& lines() { return m_lines; }
     const LineList& lines() const { return m_lines; }
+
+    // returns the smallest BufferIterator range which contains every DisplayAtoms
+    const BufferRange& range() const { return m_range; }
+    void compute_range();
+
 private:
     LineList m_lines;
+
+    BufferRange m_range;
 };
 
 }
