@@ -127,7 +127,7 @@ void NCursesClient::draw_window(Window& window)
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
     set_color(Color::Blue, Color::Black);
-    while (++line_index < max_y)
+    for (;line_index < max_y; ++line_index)
     {
         move(line_index, 0);
         clrtoeol();
