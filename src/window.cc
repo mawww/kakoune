@@ -35,48 +35,6 @@ Window::~Window()
     m_option_manager.unregister_watcher(*this);
 }
 
-BufferIterator Window::iterator_at(const DisplayCoord& window_pos) const
-{
-    if (m_display_buffer.begin() == m_display_buffer.end())
-        return buffer().begin();
-
-    if (DisplayCoord(0,0) <= window_pos)
-    {
-        for (auto atom_it = m_display_buffer.begin();
-             atom_it != m_display_buffer.end(); ++atom_it)
-        {
-            if (window_pos < atom_it->coord())
-            {
-                return (--atom_it)->iterator_at(window_pos);
-            }
-        }
-    }
-
-    return buffer().iterator_at(m_position + BufferCoord(window_pos));
-}
-
-DisplayCoord Window::line_and_column_at(const BufferIterator& iterator) const
-{
-    if (m_display_buffer.begin() == m_display_buffer.end())
-        return DisplayCoord(0, 0);
-
-    if (iterator >= m_display_buffer.front().begin() and
-        iterator <  m_display_buffer.back().end())
-    {
-        for (auto& atom : m_display_buffer)
-        {
-            if (atom.end() > iterator)
-            {
-                assert(atom.begin() <= iterator);
-                return atom.line_and_column_at(iterator);
-            }
-        }
-    }
-    BufferCoord coord = buffer().line_and_column_at(iterator);
-    return DisplayCoord(coord.line - m_position.line,
-                        coord.column - m_position.column);
-}
-
 void Window::update_display_buffer()
 {
     scroll_to_keep_cursor_visible_ifn();

@@ -28,9 +28,6 @@ public:
 
     const BufferCoord& position() const { return m_position; }
 
-    BufferIterator iterator_at(const DisplayCoord& window_pos) const;
-    DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
-
     void set_dimensions(const DisplayCoord& dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
