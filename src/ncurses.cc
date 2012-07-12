@@ -96,46 +96,30 @@ void NCursesClient::draw_window(Window& window)
     window.set_dimensions(DisplayCoord(max_y, max_x));
     window.update_display_buffer();
 
-    DisplayCoord position;
-    for (const DisplayAtom& atom : window.display_buffer())
+    int line_index = 0;
+    for (const DisplayLine& line : window.display_buffer().lines())
     {
-        assert(position == atom.coord());
-        const String content = atom.content();
-
-        set_attribute(A_UNDERLINE, atom.attribute() & Underline);
-        set_attribute(A_REVERSE, atom.attribute() & Reverse);
-        set_attribute(A_BLINK, atom.attribute() & Blink);
-        set_attribute(A_BOLD, atom.attribute() & Bold);
-
-        set_color(atom.fg_color(), atom.bg_color());
-
-        auto pos = content.begin();
-        while (true)
+        move(line_index, 0);
+        clrtoeol();
+        for (const DisplayAtom& atom : line)
         {
-            move(position.line, position.column);
-            clrtoeol();
-            auto end = std::find(pos, content.end(), '\n');
-            String line(pos, end);
-            addstr(line.c_str());
+            set_attribute(A_UNDERLINE, atom.attribute & Underline);
+            set_attribute(A_REVERSE, atom.attribute & Reverse);
+            set_attribute(A_BLINK, atom.attribute & Blink);
+            set_attribute(A_BOLD, atom.attribute & Bold);
 
-            if (end != content.end())
+            set_color(atom.fg_color, atom.bg_color);
+
+            String content = atom.content.content();
+            if (content[content.length()-1] == '\n')
             {
+                addnstr(content.c_str(), content.length() - 1);
                 addch(' ');
-                position.line = position.line + 1;
-                position.column = 0;
-                pos = end + 1;
-
-                if (position.line >= max_y)
-                    break;
             }
             else
-            {
-                position.column += line.length();
-                break;
-            }
+                addstr(content.c_str());
         }
-        if (position.line >= max_y)
-            break;
+        ++line_index;
     }
 
     set_attribute(A_UNDERLINE, 0);
@@ -143,9 +127,9 @@ void NCursesClient::draw_window(Window& window)
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
     set_color(Color::Blue, Color::Black);
-    while (++position.line < max_y)
+    while (++line_index < max_y)
     {
-        move(position.line, 0);
+        move(line_index, 0);
         clrtoeol();
         addch('~');
     }

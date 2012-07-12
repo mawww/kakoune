@@ -28,8 +28,7 @@ enum Attributes
     Underline = 1,
     Reverse = 2,
     Blink = 4,
-    Bold = 8,
-    Final = 16
+    Bold = 8
 };
 
 enum class Color
@@ -45,99 +44,116 @@ enum class Color
     White
 };
 
-// A DisplayAtom is a string of text with it's display style.
-//
-// The DisplayAtom class references the buffer string it represents
-// with it's begin/end iterators and may replace it with another
-// text stored in the replacement_string field.
-struct DisplayAtom
+struct AtomContent
 {
-    const DisplayCoord&   coord()     const { return m_coord; }
-    const BufferIterator& begin()     const { return m_begin; }
-    const BufferIterator& end()       const { return m_end; }
-    const Color&          fg_color()  const { return m_fg_color; }
-    const Color&          bg_color()  const { return m_bg_color; }
-    const Attribute&      attribute() const { return m_attribute; }
+public:
+    enum Type { BufferRange, ReplacedBufferRange, Text };
 
-    enum ContentMode
+    AtomContent(BufferIterator begin, BufferIterator end)
+        : m_type(BufferRange),
+          m_begin(std::move(begin)),
+          m_end(std::move(end)) {}
+
+    AtomContent(String str)
+        : m_type(Text), m_text(std::move(str)) {}
+
+    String content() const
     {
-        BufferText,
-        ReplacementText
-    };
-    ContentMode    content_mode() const { return m_content_mode; }
+        switch (m_type)
+        {
+            case BufferRange:
+               return m_begin.buffer().string(m_begin, m_end);
+            case Text:
+            case ReplacedBufferRange:
+               return m_text;
+        }
+    }
 
-    Color&         fg_color()  { return m_fg_color; }
-    Color&         bg_color()  { return m_bg_color; }
-    Attribute&     attribute() { return m_attribute; }
+    BufferIterator& begin()
+    {
+        assert(has_buffer_range());
+        return m_begin;
+    }
 
-    String         content()    const;
-    DisplayCoord   end_coord()  const;
-    BufferIterator iterator_at(const DisplayCoord& coord) const;
-    DisplayCoord   line_and_column_at(const BufferIterator& iterator) const;
+    BufferIterator& end()
+    {
+        assert(has_buffer_range());
+        return m_end;
+    }
 
-    bool           splitable() const { return m_content_mode != ReplacementText; }
+    void replace(String text)
+    {
+        assert(m_type == BufferRange);
+        m_type = ReplacedBufferRange;
+        m_text = std::move(text);
+    }
+
+    bool has_buffer_range() const
+    {
+        return m_type == BufferRange or m_type == ReplacedBufferRange;
+    }
+
+    Type type() const { return m_type; }
 
 private:
-    friend class DisplayBuffer;
-    DisplayAtom(DisplayCoord coord,
-                BufferIterator begin, BufferIterator end,
-                Color fg_color = Color::Default,
-                Color bg_color = Color::Default,
-                Attribute attribute = Attributes::Normal)
-        : m_content_mode(BufferText),
-          m_coord(std::move(coord)),
-          m_begin(std::move(begin)), m_end(std::move(end)),
-          m_fg_color(fg_color),
-          m_bg_color(bg_color),
-          m_attribute(attribute)
-    {}
+    Type m_type;
 
-    ContentMode    m_content_mode;
-
-    DisplayCoord   m_coord;
     BufferIterator m_begin;
     BufferIterator m_end;
-    Color          m_fg_color;
-    Color          m_bg_color;
-    Attribute      m_attribute;
-    String         m_replacement_text;
+    String m_text;
 };
 
-// A DisplayBuffer is the visual content of a Window as a DisplayAtom list
-//
-// The DisplayBuffer class provides means to mutate and iterator on it's
-// DisplayAtoms.
+struct DisplayAtom
+{
+    Color          fg_color;
+    Color          bg_color;
+    Attribute      attribute;
+
+    AtomContent    content;
+
+    DisplayAtom(AtomContent content)
+       : content(std::move(content)), attribute(Normal),
+         fg_color(Color::Default), bg_color(Color::Default) {}
+};
+
+class DisplayLine
+{
+public:
+    using AtomList = std::vector<DisplayAtom>;
+    using iterator = AtomList::iterator;
+    using const_iterator = AtomList::const_iterator;
+
+    explicit DisplayLine(size_t buffer_line) : m_buffer_line(buffer_line) {}
+
+    size_t buffer_line() const { return m_buffer_line; }
+
+    iterator begin() { return m_atoms.begin(); }
+    iterator end() { return m_atoms.end(); }
+
+    const_iterator begin() const { return m_atoms.begin(); }
+    const_iterator end() const { return m_atoms.end(); }
+
+    // Split atom pointed by it at pos, returns an iterator to the first atom
+    iterator split(iterator it, BufferIterator pos);
+
+    iterator insert(iterator it, DisplayAtom atom) { return m_atoms.insert(it, std::move(atom)); }
+    void     push_back(DisplayAtom atom) { m_atoms.push_back(std::move(atom)); }
+
+private:
+    size_t   m_buffer_line;
+    AtomList m_atoms;
+};
+
 class DisplayBuffer
 {
 public:
-    typedef std::list<DisplayAtom> AtomList;
-    typedef AtomList::iterator iterator;
-    typedef AtomList::const_iterator const_iterator;
+    using LineList = std::list<DisplayLine>;
+    DisplayBuffer() {}
 
-    DisplayBuffer();
-
-    void clear() { m_atoms.clear(); }
-    iterator append(BufferIterator begin, BufferIterator end);
-    iterator insert_empty_atom_before(iterator where);
-    iterator split(iterator atom, const BufferIterator& pos);
-
-    void replace_atom_content(iterator atom, const String& replacement);
-
-    iterator begin() { return m_atoms.begin(); }
-    iterator end()   { return m_atoms.end(); }
-
-    const_iterator begin() const { return m_atoms.begin(); }
-    const_iterator end()   const { return m_atoms.end(); }
-
-    iterator atom_containing(const BufferIterator& where);
-    iterator atom_containing(const BufferIterator& where, iterator start);
-
-    const DisplayAtom& front() const { return m_atoms.front(); }
-    const DisplayAtom& back()  const { return m_atoms.back(); }
-
-    void check_invariant() const;
+    LineList& lines() { return m_lines; }
+    const LineList& lines() const { return m_lines; }
 private:
-    AtomList m_atoms;
+    LineList m_lines;
 };
 
 }

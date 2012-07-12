@@ -39,7 +39,8 @@ void Window::update_display_buffer()
 {
     scroll_to_keep_cursor_visible_ifn();
 
-    m_display_buffer.clear();
+    DisplayBuffer::LineList& lines = m_display_buffer.lines();
+    lines.clear();
 
     for (auto line = 0; line < m_dimensions.line; ++line)
     {
@@ -50,16 +51,17 @@ void Window::update_display_buffer()
         BufferIterator line_begin = buffer().iterator_at_line_begin(pos);
         BufferIterator line_end   = buffer().iterator_at_line_end(pos);
 
-        if (line_begin != pos)
-        {
-            auto atom_it = m_display_buffer.append(line_begin, pos);
-            m_display_buffer.replace_atom_content(atom_it, "");
-        }
-        m_display_buffer.append(pos, line_end);
+        BufferIterator end;
+        if (line_end - pos > m_dimensions.column)
+            end = pos + m_dimensions.column;
+        else
+            end = line_end;
+
+        lines.push_back(DisplayLine(buffer_line));
+        lines.back().push_back(DisplayAtom(AtomContent(pos,end)));
     }
 
     m_highlighters(m_display_buffer);
-    m_display_buffer.check_invariant();
 }
 
 void Window::set_dimensions(const DisplayCoord& dimensions)

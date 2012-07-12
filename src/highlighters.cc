@@ -2,7 +2,6 @@
 
 #include "assert.hh"
 #include "window.hh"
-#include "display_buffer.hh"
 #include "highlighter_registry.hh"
 #include "highlighter_group.hh"
 #include "regex.hh"
@@ -14,66 +13,57 @@ using namespace std::placeholders;
 
 typedef boost::regex_iterator<BufferIterator> RegexIterator;
 
-void colorize_regex_range(DisplayBuffer& display_buffer,
-                          const BufferIterator& range_begin,
-                          const BufferIterator& range_end,
-                          const Regex& ex,
-                          Color fg_color, Color bg_color = Color::Default)
+template<typename T>
+void highlight_range(DisplayBuffer& display_buffer,
+                     BufferIterator begin, BufferIterator end,
+                     bool skip_replaced, T func)
 {
-    assert(range_begin <= range_end);
-
-    if (range_begin >= display_buffer.back().end() or
-        range_end <= display_buffer.front().begin())
-        return;
-
-    BufferIterator display_begin = std::max(range_begin,
-                                            display_buffer.front().begin());
-    BufferIterator display_end   = std::min(range_end,
-                                            display_buffer.back().end());
-
-    RegexIterator re_it(display_begin, display_end, ex, boost::match_nosubs);
-    RegexIterator re_end;
-    DisplayBuffer::iterator atom_it = display_buffer.begin();
-    for (; re_it != re_end; ++re_it)
+    for (auto& line : display_buffer.lines())
     {
-        BufferIterator begin = (*re_it)[0].first;
-        BufferIterator end   = (*re_it)[0].second;
-        assert(begin != end);
-
-        auto begin_atom_it = display_buffer.atom_containing(begin, atom_it);
-        assert(begin_atom_it != display_buffer.end());
-        if (begin_atom_it->begin() != begin)
+        if (line.buffer_line() >= begin.line() and line.buffer_line() <= end.line())
         {
-            if (begin_atom_it->splitable())
-                begin_atom_it = ++display_buffer.split(begin_atom_it, begin);
-            else
-                ++begin_atom_it;
+            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+            {
+                bool is_replaced = atom_it->content.type() == AtomContent::ReplacedBufferRange;
+
+                if (not atom_it->content.has_buffer_range() or
+                    (skip_replaced and is_replaced))
+                    continue;
+
+                if (end <= atom_it->content.begin() or begin >= atom_it->content.end())
+                    continue;
+
+                if (not is_replaced and begin > atom_it->content.begin())
+                    atom_it = ++line.split(atom_it, begin);
+
+                if (not is_replaced and end < atom_it->content.end())
+                {
+                    atom_it = line.split(atom_it, end);
+                    func(*atom_it);
+                    ++atom_it;
+                }
+                else
+                    func(*atom_it);
+            }
         }
-
-        auto end_atom_it = display_buffer.atom_containing(end, begin_atom_it);
-        if (end_atom_it != display_buffer.end() and
-            end_atom_it->begin() != end and end_atom_it->splitable())
-            end_atom_it = ++display_buffer.split(end_atom_it, end);
-
-        for (auto it = begin_atom_it; it != end_atom_it; ++it)
-        {
-            if (it->attribute() & Attributes::Final)
-                continue;
-
-            it->fg_color() = fg_color;
-            it->bg_color() = bg_color;
-        }
-
-        atom_it = end_atom_it;
     }
 }
 
 void colorize_regex(DisplayBuffer& display_buffer,
+                    const Buffer& buffer,
                     const Regex& ex,
                     Color fg_color, Color bg_color = Color::Default)
 {
-    colorize_regex_range(display_buffer, display_buffer.front().begin(),
-                         display_buffer.back().end(), ex, fg_color, bg_color);
+    RegexIterator re_it(buffer.begin(), buffer.end(), ex, boost::match_nosubs);
+    RegexIterator re_end;
+    for (; re_it != re_end; ++re_it)
+    {
+        highlight_range(display_buffer, (*re_it)[0].first, (*re_it)[0].second, true,
+                        [&](DisplayAtom& atom) {
+                            atom.fg_color = fg_color;
+                            atom.bg_color = bg_color;
+                        });
+    }
 }
 
 Color parse_color(const String& color)
@@ -103,55 +93,60 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
     String id = "colre'" + params[0] + "'";
 
-    return HighlighterAndId(id, std::bind(colorize_regex, _1,
+    return HighlighterAndId(id, std::bind(colorize_regex,
+                                          _1, std::ref(window.buffer()),
                                           ex, fg_color, bg_color));
 }
 
 void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
 {
     const int tabstop = window.option_manager()["tabstop"].as_int();
-    for (auto atom_it = display_buffer.begin();
-         atom_it != display_buffer.end(); ++atom_it)
+    for (auto& line : display_buffer.lines())
     {
-        for (BufferIterator it = atom_it->begin(); it != atom_it->end(); ++it)
+        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (*it == '\t')
+            if (atom_it->content.type() != AtomContent::BufferRange)
+                continue;
+
+            auto begin = atom_it->content.begin();
+            auto end = atom_it->content.end();
+            for (BufferIterator it = begin; it != end; ++it)
             {
-                if (it != atom_it->begin())
-                    atom_it = ++display_buffer.split(atom_it, it);
-
-                if (it+1 != atom_it->end())
-                    atom_it = display_buffer.split(atom_it, it+1);
-
-                BufferCoord pos = it.buffer().line_and_column_at(it);
-
-                int column = 0;
-                for (auto line_it = it.buffer().iterator_at({pos.line, 0});
-                     line_it != it; ++line_it)
+                if (*it == '\t')
                 {
-                    assert(*line_it != '\n');
-                    if (*line_it == '\t')
-                        column += tabstop - (column % tabstop);
-                    else
-                       ++column;
-                }
+                    if (it != begin)
+                        atom_it = ++line.split(atom_it, it);
+                    if (it+1 != end)
+                        atom_it = line.split(atom_it, it+1);
 
-                int count = tabstop - (column % tabstop);
-                String padding;
-                for (int i = 0; i < count; ++i)
-                    padding += ' ';
-                display_buffer.replace_atom_content(atom_it, padding);
+                    BufferCoord pos = it.buffer().line_and_column_at(it);
+
+                    int column = 0;
+                    for (auto line_it = it.buffer().iterator_at({pos.line, 0});
+                         line_it != it; ++line_it)
+                    {
+                        assert(*line_it != '\n');
+                        if (*line_it == '\t')
+                            column += tabstop - (column % tabstop);
+                        else
+                           ++column;
+                    }
+
+                    int count = tabstop - (column % tabstop);
+                    String padding;
+                    for (int i = 0; i < count; ++i)
+                        padding += ' ';
+                    atom_it->content.replace(padding);
+                    break;
+                }
             }
         }
     }
 }
 
-void show_line_numbers(DisplayBuffer& display_buffer)
+void show_line_numbers(Window& window, DisplayBuffer& display_buffer)
 {
-    const Buffer& buffer = display_buffer.front().begin().buffer();
-    BufferCoord coord = buffer.line_and_column_at(display_buffer.begin()->begin());
-
-    int last_line = buffer.line_count();
+    int last_line = window.buffer().line_count();
     int digit_count = 0;
     for (int c = last_line; c > 0; c /= 10)
         ++digit_count;
@@ -159,117 +154,29 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     char format[] = "%?d ";
     format[1] = '0' + digit_count;
 
-    for (; coord.line <= last_line-1; ++coord.line)
+    for (auto& line : display_buffer.lines())
     {
-        BufferIterator line_start = buffer.iterator_at(coord);
-        DisplayBuffer::iterator atom_it = display_buffer.atom_containing(line_start);
-        if (atom_it != display_buffer.end())
-        {
-            if (atom_it->begin() != line_start)
-            {
-                if (not atom_it->splitable())
-                    continue;
-
-                atom_it = ++display_buffer.split(atom_it, line_start);
-            }
-            atom_it = display_buffer.insert_empty_atom_before(atom_it);
-            atom_it->fg_color() = Color::Black;
-            atom_it->bg_color() = Color::White;
-            atom_it->attribute() = Attributes::Final;
-
-            char buffer[10];
-            snprintf(buffer, 10, format, coord.line + 1);
-            display_buffer.replace_atom_content(atom_it, buffer);
-        }
+        char buffer[10];
+        snprintf(buffer, 10, format, line.buffer_line() + 1);
+        DisplayAtom atom = DisplayAtom(AtomContent(buffer));
+        atom.fg_color = Color::Black;
+        atom.bg_color = Color::White;
+        line.insert(line.begin(), std::move(atom));
     }
 }
 
 void highlight_selections(Window& window, DisplayBuffer& display_buffer)
 {
-    typedef std::pair<BufferIterator, BufferIterator> BufferRange;
-
-    std::vector<BufferRange> selections;
-    for (auto& sel : window.selections())
-        selections.push_back(BufferRange(sel.begin(), sel.end()));
-
-    std::sort(selections.begin(), selections.end(),
-              [](const BufferRange& lhs, const BufferRange& rhs)
-              { return lhs.first < rhs.first; });
-
-    auto atom_it = display_buffer.begin();
-    auto sel_it = selections.begin();
-
-    // underline each selections
-    while (atom_it != display_buffer.end()
-           and sel_it != selections.end())
-    {
-        BufferRange& sel = *sel_it;
-        DisplayAtom& atom = *atom_it;
-
-        if (atom.attribute() & Attributes::Final)
-        {
-            ++atom_it;
-            continue;
-        }
-        // [###------]
-        if (atom.begin() >= sel.first and atom.begin() < sel.second and
-            atom.end() > sel.second)
-        {
-            atom_it = display_buffer.split(atom_it, sel.second);
-            atom_it->attribute() |= Attributes::Underline;
-            ++atom_it;
-            ++sel_it;
-        }
-        // [---###---]
-        else if (atom.begin() < sel.first and atom.end() > sel.second)
-        {
-            atom_it = display_buffer.split(atom_it, sel.first);
-            atom_it = display_buffer.split(++atom_it, sel.second);
-            atom_it->attribute() |= Attributes::Underline;
-            ++atom_it;
-            ++sel_it;
-        }
-        // [------###]
-        else if (atom.begin() < sel.first and atom.end() > sel.first)
-        {
-            atom_it = ++display_buffer.split(atom_it, sel.first);
-            atom_it->attribute() |= Attributes::Underline;
-            ++atom_it;
-        }
-        // [#########]
-        else if (atom.begin() >= sel.first and atom.end() <= sel.second)
-        {
-            atom_it->attribute() |= Attributes::Underline;
-            ++atom_it;
-        }
-        // [---------]
-        else if (atom.begin() >= sel.second)
-            ++sel_it;
-        // [---------]
-        else if (atom.end() <= sel.first)
-            ++atom_it;
-        else
-            assert(false);
-    }
-
-    // invert selection last char
     for (auto& sel : window.selections())
     {
+        highlight_range(display_buffer, sel.begin(), sel.end(), false,
+                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Underline; });
+
         const BufferIterator& last = sel.last();
-
-        DisplayBuffer::iterator atom_it = display_buffer.atom_containing(last);
-        if (atom_it == display_buffer.end() or not atom_it->splitable())
-            continue;
-
-        if (atom_it->begin() < last)
-            atom_it = ++display_buffer.split(atom_it, last);
-        if (atom_it->end() > last + 1)
-            atom_it = display_buffer.split(atom_it, last + 1);
-
-        atom_it->attribute() |= Attributes::Reverse;
+        highlight_range(display_buffer, last, last+1, false,
+                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse; });
     }
 }
-
 
 template<void (*highlighter_func)(DisplayBuffer&)>
 class SimpleHighlighterFactory
@@ -316,7 +223,7 @@ void register_highlighters()
 
     registry.register_factory("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
     registry.register_factory("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
-    registry.register_factory("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
+    registry.register_factory("number_lines", WindowHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_factory("regex", colorize_regex_factory);
     registry.register_factory("group", highlighter_group_factory);
 }
