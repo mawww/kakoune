@@ -32,7 +32,6 @@ inline BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
 {
     m_buffer = iterator.m_buffer;
     m_coord = iterator.m_coord;
-    assert(is_valid());
     return *this;
 }
 
