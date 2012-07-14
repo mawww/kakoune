@@ -1,8 +1,6 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
-#include <functional>
-
 #include "editor.hh"
 #include "display_buffer.hh"
 #include "completion.hh"

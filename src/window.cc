@@ -72,16 +72,54 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    BufferCoord cursor = buffer().line_and_column_at(selections().back().last());
-    if (cursor.line < m_position.line)
-        m_position.line = cursor.line;
-    else if (cursor.line >= m_position.line + m_dimensions.line)
-        m_position.line = cursor.line - (m_dimensions.line - 1);
+    BufferIterator cursor = selections().back().last();
 
-    if (cursor.column < m_position.column)
-        m_position.column = cursor.column;
-    else if (cursor.column >= m_position.column + m_dimensions.column)
-        m_position.column = cursor.column - (m_dimensions.column - 1);
+    // scroll lines if needed
+    if (cursor.line() < m_position.line)
+        m_position.line = cursor.line();
+    else if (cursor.line() >= m_position.line + m_dimensions.line)
+        m_position.line = cursor.line() - (m_dimensions.line - 1);
+
+    // highlight only the line containing the cursor
+    DisplayBuffer display_buffer;
+    DisplayBuffer::LineList& lines = display_buffer.lines();
+    lines.push_back(DisplayLine(cursor.line()));
+
+    BufferIterator line_begin = buffer().iterator_at_line_begin(cursor);
+    BufferIterator line_end   = buffer().iterator_at_line_end(cursor);
+    lines.back().push_back(DisplayAtom(AtomContent(line_begin, line_end)));
+
+    display_buffer.compute_range();
+    m_highlighters(display_buffer);
+
+    // now we can compute where the cursor is in display columns
+    // (this is only valid if highlighting one line and multiple lines put
+    // the cursor in the same position, however I do not find any sane example
+    // of highlighters not doing that)
+    int column = 0;
+    for (auto& atom : lines.back())
+    {
+        if (atom.content.has_buffer_range() and
+            atom.content.begin() <= cursor and atom.content.end() > cursor)
+        {
+            if (atom.content.type() == AtomContent::BufferRange)
+                column += cursor - atom.content.begin();
+            else
+                column += atom.content.content().length();
+
+            // we could early out on this, but having scrolling left
+            // faster than not scrolling at all is not really useful.
+            if (cursor.column() < m_position.column)
+                m_position.column = cursor.column();
+            else if (column >= m_position.column + m_dimensions.column)
+                m_position.column = column - (m_dimensions.column - 1);
+
+            return;
+        }
+        column += atom.content.content().length();
+    }
+    // the cursor should always be visible.
+    assert(false);
 }
 
 String Window::status_line() const
