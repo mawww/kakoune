@@ -265,7 +265,7 @@ void Editor::end_edition()
 }
 
 IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
-    : m_editor(editor), m_edition(editor)
+    : m_editor(editor), m_edition(editor), m_mode(mode)
 {
     m_editor.on_incremental_insertion_begin();
 
@@ -274,43 +274,48 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 
     for (auto& sel : m_editor.m_selections.back())
     {
-        BufferIterator pos;
+        BufferIterator first, last;
         switch (mode)
         {
-        case Mode::Insert: pos = sel.begin(); break;
-        case Mode::Append: pos = sel.end(); break;
-        case Mode::Change: pos = sel.begin(); break;
+        case Mode::Insert: first = sel.end()-1; last = sel.begin(); break;
+        case Mode::Change: first = sel.end()-1; last = sel.begin(); break;
+        case Mode::Append: first = sel.begin(); last = sel.end(); break;
 
         case Mode::OpenLineBelow:
         case Mode::AppendAtLineEnd:
-            pos = m_editor.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
+            first = m_editor.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
+            last  = first;
             break;
 
         case Mode::OpenLineAbove:
         case Mode::InsertAtLineBegin:
-            pos = m_editor.m_buffer.iterator_at_line_begin(sel.begin());
+            first = m_editor.m_buffer.iterator_at_line_begin(sel.begin());
             if (mode == Mode::OpenLineAbove)
-                --pos;
+                --first;
             else
             {
-                auto first_non_blank = pos;
+                auto first_non_blank = first;
                 while (*first_non_blank == ' ' or *first_non_blank == '\t')
                     ++first_non_blank;
                 if (*first_non_blank != '\n')
-                    pos = first_non_blank;
+                    first = first_non_blank;
             }
+            last = first;
             break;
         }
-        sel = Selection(pos, pos);
+        sel = Selection(first, last);
 
         if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
-            apply(Modification::make_insert(pos, "\n"));
+            apply(Modification::make_insert(sel.last(), "\n"));
     }
 }
 
 IncrementalInserter::~IncrementalInserter()
 {
-    move_cursors(BufferCoord(0, -1));
+    if (m_mode == Mode::Append)
+        for (auto& sel : m_editor.m_selections.back())
+            sel = Selection(sel.first(), sel.last()-1);
+
     m_editor.on_incremental_insertion_end();
 }
 
@@ -323,7 +328,7 @@ void IncrementalInserter::apply(Modification&& modification) const
 void IncrementalInserter::insert(const String& string)
 {
     for (auto& sel : m_editor.selections())
-        apply(Modification::make_insert(sel.begin(), string));
+        apply(Modification::make_insert(sel.last(), string));
 }
 
 void IncrementalInserter::insert(const memoryview<String>& strings)
@@ -335,8 +340,8 @@ void IncrementalInserter::erase()
 {
     for (auto& sel : m_editor.m_selections.back())
     {
-        sel = Selection(sel.first() - 1, sel.last() - 1);
-        apply(Modification::make_erase(sel.begin(), sel.end()));
+        BufferIterator pos = sel.last();
+        apply(Modification::make_erase(pos-1, pos));
     }
 }
 

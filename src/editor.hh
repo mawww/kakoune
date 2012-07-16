@@ -121,6 +121,7 @@ public:
 private:
     void apply(Modification&& modification) const;
 
+    Mode    m_mode;
     Editor& m_editor;
     scoped_edition m_edition;
 };
