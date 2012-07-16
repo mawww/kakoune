@@ -37,7 +37,7 @@ void test_editor()
     using namespace std::placeholders;
 
     editor.select(select_whole_buffer);
-    editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
+    editor.multi_select(std::bind(select_all_matches, _1, "\\n\\h*"));
     for (auto& sel : editor.selections())
     {
         assert(*sel.begin() == '\n');
