@@ -12,7 +12,7 @@ namespace Kakoune
 // Selections are oriented, first may be > last, and inclusive.
 // Selection updates it's iterators according to modifications made
 // in the buffer.
-struct Selection
+struct Selection : public BufferChangeListener
 {
     Selection(const BufferIterator& first, const BufferIterator& last);
     Selection(const Selection& other);
@@ -29,6 +29,9 @@ struct Selection
     const BufferIterator& last()  const { return m_last; }
 
     void merge_with(const Selection& selection);
+
+    void on_insert(const BufferIterator& begin, const BufferIterator& end);
+    void on_erase(const BufferIterator& begin, const BufferIterator& end);
 
 private:
     BufferIterator m_first;

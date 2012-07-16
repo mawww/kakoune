@@ -45,7 +45,7 @@ Buffer::~Buffer()
 {
     m_windows.clear();
     BufferManager::instance().unregister_buffer(this);
-    assert(m_iterators_to_update.empty());
+    assert(m_change_listeners.empty());
 
     m_hook_manager.run_hook("BufClose", m_name, Context(*this));
 }
@@ -213,7 +213,8 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
     for (size_t i = pos.line()+1; i < line_count(); ++i)
         m_lines[i].start += content.length();
 
-    BufferCoord end_pos;
+    BufferIterator begin_it;
+    BufferIterator end_it;
     // if we inserted at the end of the buffer, we may have created a new
     // line without inserting a '\n'
     if (pos == end() and (pos == begin() or *(pos-1) == '\n'))
@@ -230,7 +231,8 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
         if (start != content.length())
             m_lines.push_back({ offset + start, content.substr(start) });
 
-        end_pos = end().m_coord;
+        begin_it = iterator_at({ pos.m_coord.line + 1, 0 });
+        end_it = end();
     }
     else
     {
@@ -265,13 +267,14 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
         else
             line_it = m_lines.insert(line_it, { offset + start, content.substr(start) + suffix });
 
-        end_pos = { int(line_it - m_lines.begin()), int(line_it->length() - suffix.length()) };
+        begin_it = pos;
+        end_it = iterator_at({ int(line_it - m_lines.begin()), int(line_it->length() - suffix.length()) });
     }
 
     check_invariant();
 
-    for (auto iterator : m_iterators_to_update)
-        iterator->on_insert(pos.m_coord, end_pos);
+    for (auto listener : m_change_listeners)
+        listener->on_insert(begin_it, end_it);
 }
 
 void Buffer::erase(const BufferIterator& pos, BufferSize length)
@@ -291,8 +294,8 @@ void Buffer::erase(const BufferIterator& pos, BufferSize length)
 
     check_invariant();
 
-    for (auto iterator : m_iterators_to_update)
-        iterator->on_erase(pos.m_coord, end.m_coord);
+    for (auto listener : m_change_listeners)
+        listener->on_erase(pos, end);
 }
 
 void Buffer::apply_modification(const Modification& modification)
@@ -360,19 +363,19 @@ void Buffer::notify_saved()
     m_last_save_undo_index = history_cursor_index;
 }
 
-void Buffer::add_iterator_to_update(BufferIterator& iterator)
+void Buffer::add_change_listener(BufferChangeListener& listener)
 {
-    assert(not contains(m_iterators_to_update, &iterator));
-    m_iterators_to_update.push_back(&iterator);
+    assert(not contains(m_change_listeners, &listener));
+    m_change_listeners.push_back(&listener);
 }
 
-void Buffer::remove_iterator_from_update(BufferIterator& iterator)
+void Buffer::remove_change_listener(BufferChangeListener& listener)
 {
-    auto it = std::find(m_iterators_to_update.begin(),
-                        m_iterators_to_update.end(),
-                        &iterator);
-    assert(it != m_iterators_to_update.end());
-    m_iterators_to_update.erase(it);
+    auto it = std::find(m_change_listeners.begin(),
+                        m_change_listeners.end(),
+                        &listener);
+    assert(it != m_change_listeners.end());
+    m_change_listeners.erase(it);
 }
 
 }

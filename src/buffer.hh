@@ -71,6 +71,7 @@ public:
     void on_erase(const BufferCoord& begin, const BufferCoord& end);
 
     const Buffer& buffer() const;
+    const BufferCoord& coord() const { return m_coord; }
     BufferSize line() const { return m_coord.line; }
     BufferSize column() const { return m_coord.column; }
 
@@ -98,6 +99,13 @@ struct Modification
 
     static Modification make_erase(BufferIterator begin, BufferIterator end);
     static Modification make_insert(BufferIterator position, String content);
+};
+
+class BufferChangeListener
+{
+public:
+    virtual void on_insert(const BufferIterator& begin, const BufferIterator& end) = 0;
+    virtual void on_erase(const BufferIterator& begin, const BufferIterator& end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file
@@ -157,8 +165,8 @@ public:
     // notify the buffer that it was saved in the current state
     void notify_saved();
 
-    void add_iterator_to_update(BufferIterator& iterator);
-    void remove_iterator_from_update(BufferIterator& iterator);
+    void add_change_listener(BufferChangeListener& listener);
+    void remove_change_listener(BufferChangeListener& listener);
 
     // returns an iterator pointing to the first character of the line
     // iterator is on
@@ -210,7 +218,7 @@ private:
 
     size_t m_last_save_undo_index;
 
-    std::vector<BufferIterator*> m_iterators_to_update;
+    std::vector<BufferChangeListener*> m_change_listeners;
 
     OptionManager m_option_manager;
     HookManager   m_hook_manager;
