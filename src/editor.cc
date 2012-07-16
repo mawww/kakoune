@@ -226,14 +226,63 @@ void Editor::multi_select(const MultiSelector& selector)
     }
 }
 
+class LastModifiedRangeListener : public BufferChangeListener
+{
+public:
+    LastModifiedRangeListener(Buffer& buffer)
+       : m_buffer(buffer)
+    { m_buffer.add_change_listener(*this); }
+
+    ~LastModifiedRangeListener()
+    { m_buffer.remove_change_listener(*this); }
+
+    void on_insert(const BufferIterator& begin, const BufferIterator& end)
+    {
+        m_first = begin;
+        m_last = end-1;
+    }
+
+    void on_erase(const BufferIterator& begin, const BufferIterator& end)
+    {
+        m_first = begin;
+        if (m_first >= m_buffer.end())
+            m_first = m_buffer.end() - 1;
+        m_last = m_first;
+    }
+
+    const BufferIterator& first() const { return m_first; }
+    const BufferIterator& last() const { return m_last; }
+
+private:
+    BufferIterator m_first;
+    BufferIterator m_last;
+    Buffer& m_buffer;
+};
+
 bool Editor::undo()
 {
-    return m_buffer.undo();
+    LastModifiedRangeListener listener(buffer());
+    bool res = m_buffer.undo();
+    if (res)
+    {
+        m_selections.back().clear();
+        m_selections.back().push_back(Selection(listener.first(),
+                                                listener.last()));
+    }
+    return res;
 }
 
 bool Editor::redo()
 {
-    return m_buffer.redo();
+    LastModifiedRangeListener listener(buffer());
+    bool res = m_buffer.redo();
+    if (res)
+    {
+        m_selections.back().clear();
+        m_selections.back().push_back(Selection(listener.first(),
+                                                listener.last()));
+    }
+    return res;
 }
 
 void Editor::check_invariant() const
