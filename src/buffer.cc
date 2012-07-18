@@ -268,7 +268,7 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
             line_it = m_lines.insert(line_it, { offset + start, content.substr(start) + suffix });
 
         begin_it = pos;
-        end_it = iterator_at({ int(line_it - m_lines.begin()), int(line_it->length() - suffix.length()) });
+        end_it = BufferIterator(*this, { int(line_it - m_lines.begin()), int(line_it->length() - suffix.length()) });
     }
 
     check_invariant();
