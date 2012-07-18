@@ -89,7 +89,8 @@ HighlighterAndId colorize_regex_factory(Window& window,
     if (params.size() != 3)
         throw runtime_error("wrong parameter count");
 
-    Regex ex(params[0].begin(), params[0].end());
+    Regex ex(params[0].begin(), params[0].end(),
+             boost::regex::perl | boost::regex::optimize);
 
     Color fg_color = parse_color(params[1]);
     Color bg_color = parse_color(params[2]);
