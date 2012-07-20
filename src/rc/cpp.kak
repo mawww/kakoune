@@ -6,7 +6,7 @@ hook global WinSetOption filetype=cpp \
     addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" red default; \
     addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" yellow default; \
     addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not)\>" blue default; \
-    addhl -group cpp-highlight regex "\<(const|auto|namespace|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename)\>" green default; \
+    addhl -group cpp-highlight regex "\<(const|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename)\>" green default; \
     addhl -group cpp-highlight regex "(?<!')\"(\\\"|[^\"])*\"" magenta default; \
     addhl -group cpp-highlight regex "(\`|(?<=\n))\h*#\h*[^\n]*" magenta default; \
     addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" cyan default; \
