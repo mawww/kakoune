@@ -1,4 +1,4 @@
-hook global BufCreate .*\.diff \
+hook global BufCreate .*\.(diff|patch) \
     setb filetype diff
 
 hook global WinSetOption filetype=diff \
