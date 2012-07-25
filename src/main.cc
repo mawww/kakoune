@@ -62,16 +62,7 @@ bool insert_char(IncrementalInserter& inserter, const Key& key)
             Key next_key = get_key();
             last_insert_sequence.keys.push_back(next_key);
             if (next_key.modifiers == Key::Modifiers::None)
-            {
-                switch (next_key.key)
-                {
-                case '%':
-                    inserter.insert(inserter.buffer().name());
-                    break;
-                default:
-                    inserter.insert(RegisterManager::instance()[next_key.key]);
-                }
-            }
+                inserter.insert(RegisterManager::instance()[next_key.key]);
             break;
         }
         case 'm':
