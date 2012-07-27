@@ -41,51 +41,54 @@ struct InsertSequence
 
 InsertSequence last_insert_sequence;
 
-bool insert_char(IncrementalInserter& inserter, const Key& key)
+template<typename GetKey, typename Redraw>
+void insert_sequence(IncrementalInserter& inserter,
+                     GetKey get_key, Redraw redraw)
 {
-    switch (key.modifiers)
+    while (true)
     {
-    case Key::Modifiers::None:
-        switch (key.key)
+        Key key = get_key();
+        switch (key.modifiers)
         {
-        case 27:
-            return false;
-        default:
-            inserter.insert(String() + key.key);
-        }
-        break;
-    case Key::Modifiers::Control:
-        switch (key.key)
-        {
-        case 'r':
-        {
-            Key next_key = get_key();
-            last_insert_sequence.keys.push_back(next_key);
-            if (next_key.modifiers == Key::Modifiers::None)
-                inserter.insert(RegisterManager::instance()[next_key.key]);
+        case Key::Modifiers::None:
+            switch (key.key)
+            {
+            case 27:
+                return;
+            default:
+                inserter.insert(String() + key.key);
+            }
+            break;
+        case Key::Modifiers::Control:
+            switch (key.key)
+            {
+            case 'r':
+            {
+                Key next_key = get_key();
+                if (next_key.modifiers == Key::Modifiers::None)
+                    inserter.insert(RegisterManager::instance()[next_key.key]);
+                break;
+            }
+            case 'm':
+                inserter.insert(String() + '\n');
+                break;
+            case 'i':
+                inserter.insert(String() + '\t');
+                break;
+            case 'd':
+                inserter.move_cursors({0, -1});
+                break;
+            case 'e':
+                inserter.move_cursors({0,  1});
+                break;
+            case 'g':
+                inserter.erase();
+                break;
+            }
             break;
         }
-        case 'm':
-            inserter.insert(String() + '\n');
-            break;
-        case 'i':
-            inserter.insert(String() + '\t');
-            break;
-        case 'd':
-            inserter.move_cursors({0, -1});
-            break;
-        case 'e':
-            inserter.move_cursors({0,  1});
-            break;
-        case 'g':
-            inserter.erase();
-            break;
-        }
-        break;
-    default:
-        break;
+        redraw();
     }
-    return true;
 }
 
 void do_insert(Editor& editor, IncrementalInserter::Mode mode)
@@ -94,28 +97,24 @@ void do_insert(Editor& editor, IncrementalInserter::Mode mode)
     last_insert_sequence.keys.clear();
     IncrementalInserter inserter(editor, mode);
     draw_editor_ifn(editor);
-    while(true)
-    {
-        Key key = get_key();
-
-        if (not insert_char(inserter, key))
-            break;
-
-        last_insert_sequence.keys.push_back(key);
-        draw_editor_ifn(editor);
-    }
+    insert_sequence(inserter,
+                    [&]() { Key key = get_key();
+                            last_insert_sequence.keys.push_back(key);
+                            return key; },
+                    [&]() { draw_editor_ifn(editor); });
 }
 
 void do_repeat_insert(Editor& editor, int count)
 {
-    IncrementalInserter inserter(editor, last_insert_sequence.mode);
-    for (const Key& key : last_insert_sequence.keys)
-    {
-        insert_char(inserter, key);
-    }
-    draw_editor_ifn(editor);
-}
+    if (last_insert_sequence.keys.empty())
+       return;
 
+    IncrementalInserter inserter(editor, last_insert_sequence.mode);
+    size_t index = 0;
+    insert_sequence(inserter,
+                    [&]() { return last_insert_sequence.keys[index++]; },
+                    [](){});
+}
 
 template<bool append>
 void do_go(Editor& editor, int count)
