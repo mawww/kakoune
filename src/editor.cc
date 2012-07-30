@@ -290,12 +290,6 @@ void Editor::check_invariant() const
     assert(not selections().empty());
 }
 
-struct id_not_unique : public runtime_error
-{
-    id_not_unique(const String& id)
-        : runtime_error("id not unique: " + id) {}
-};
-
 void Editor::begin_edition()
 {
     ++m_edition_level;
