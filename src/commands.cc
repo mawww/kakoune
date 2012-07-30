@@ -61,16 +61,19 @@ struct ParametersParser
     {
         for (size_t i = 0; i < params.size(); ++i)
         {
-            if (params[i][0] == '-')
+            if (params[i].type() != Token::Type::Raw)
+                continue;
+
+            if (params[i].content()[0] == '-')
             {
-                auto it = options.find(params[i].substr(1));
+                auto it = options.find(params[i].content().substr(1));
                 if (it == options.end())
-                    throw unknown_option(params[i]);
+                    throw unknown_option(params[i].content());
 
                 if (it->second)
                 {
-                    if (i + 1 == params.size() or params[i+1][0] == '-')
-                       throw missing_option_value(params[i]);
+                    if (i + 1 == params.size() or params[i+1].content()[0] == '-')
+                       throw missing_option_value(params[i].content());
 
                     m_positional[i+1] = false;
                 }
@@ -78,7 +81,7 @@ struct ParametersParser
             }
 
             // all options following -- are positional
-            if (params[i] == "--")
+            if (params[i].content() == "--")
                 break;
         }
     }
@@ -87,12 +90,15 @@ struct ParametersParser
     bool has_option(const String& name) const
     {
         assert(m_options.find(name) != m_options.end());
-        for (auto param : m_params)
+        for (auto& param : m_params)
         {
-            if (param[0] == '-' and param.substr(1) == name)
+            if (param.type() != Token::Type::Raw)
+                continue;
+
+            if (param.content()[0] == '-' and param.content().substr(1) == name)
                 return true;
 
-            if (param == "--")
+            if (param.content() == "--")
                 break;
         }
         return false;
@@ -108,10 +114,13 @@ struct ParametersParser
 
         for (size_t i = 0; i < m_params.size(); ++i)
         {
-            if (m_params[i][0] == '-' and m_params[i].substr(1) == name)
-                return m_params[i+1];
+            if (m_params[i].type() != Token::Type::Raw)
+                continue;
 
-            if (m_params[i] == "--")
+            if (m_params[i].content()[0] == '-' and m_params[i].content().substr(1) == name)
+                return m_params[i+1].content();
+
+            if (m_params[i].content() == "--")
                 break;
         }
         static String empty;
@@ -141,10 +150,16 @@ struct ParametersParser
         iterator(const ParametersParser& parser, size_t index)
             : m_parser(parser), m_index(index) {}
 
-        const String& operator*() const
+        const Token& operator*() const
         {
             assert(m_parser.m_positional[m_index]);
             return m_parser.m_params[m_index];
+        }
+
+        const Token* operator->() const
+        {
+            assert(m_parser.m_positional[m_index]);
+            return &m_parser.m_params[m_index];
         }
 
         iterator& operator++()
@@ -191,7 +206,7 @@ struct ParametersParser
     }
 
     // access positional parameter by index
-    const String& operator[] (size_t index) const
+    const Token& operator[] (size_t index) const
     {
         assert(index < positional_count());
         iterator it = begin();
@@ -230,7 +245,7 @@ void edit(const CommandParameters& params, const Context& context)
     if (params.size() == 0 or params.size() > 3)
         throw wrong_argument_count();
 
-    String filename = params[0];
+    const String& filename = params[0].content();
 
     Buffer* buffer = nullptr;
     if (not force_reload)
@@ -242,9 +257,9 @@ void edit(const CommandParameters& params, const Context& context)
 
     if (params.size() > 1)
     {
-        int line = std::max(0, str_to_int(params[1]) - 1);
+        int line = std::max(0, str_to_int(params[1].content()) - 1);
         int column = params.size() > 2 ?
-                         std::max(0, str_to_int(params[2]) - 1) : 0;
+                         std::max(0, str_to_int(params[2].content()) - 1) : 0;
 
         window.select(window.buffer().iterator_at({line, column}));
     }
@@ -259,7 +274,7 @@ void write_buffer(const CommandParameters& params, const Context& context)
 
     Buffer& buffer = context.window().buffer();
     String filename = params.empty() ? buffer.name()
-                                          : parse_filename(params[0]);
+                                     : parse_filename(params[0].content());
 
     write_buffer_to_file(buffer, filename);
     buffer.notify_saved();
@@ -307,9 +322,10 @@ void show_buffer(const CommandParameters& params, const Context& context)
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    Buffer* buffer = BufferManager::instance().get_buffer(params[0]);
+    const String& buffer_name = params[0].content();
+    Buffer* buffer = BufferManager::instance().get_buffer(buffer_name);
     if (not buffer)
-        throw runtime_error("buffer " + params[0] + " does not exists");
+        throw runtime_error("buffer " + buffer_name + " does not exists");
 
     main_context = Context(*buffer->get_or_create_window());
 }
@@ -325,12 +341,13 @@ void delete_buffer(const CommandParameters& params, const Context& context)
         buffer = &context.buffer();
     else
     {
-        buffer = manager.get_buffer(params[0]);
+        const String& buffer_name = params[0].content();
+        buffer = manager.get_buffer(buffer_name);
         if (not buffer)
-            throw runtime_error("buffer " + params[0] + " does not exists");
+            throw runtime_error("buffer " + buffer_name + " does not exists");
     }
     if (buffer->type()!= Buffer::Type::Scratch and buffer->is_modified())
-        throw runtime_error("buffer " + params[0] + " is modified");
+        throw runtime_error("buffer " + buffer->name() + " is modified");
 
     if (&main_context.buffer() == buffer)
     {
@@ -357,8 +374,10 @@ void add_highlighter(const CommandParameters& params, const Context& context)
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     auto begin = parser.begin();
-    const String& name = *begin;
-    std::vector<String> highlighter_params(++begin, parser.end());
+    const String& name = begin->content();
+    std::vector<String> highlighter_params;
+    for (++begin; begin != parser.end(); ++begin)
+        highlighter_params.push_back(begin->content());
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
@@ -380,7 +399,7 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
        window.highlighters().get_group(parser.option_value("group"))
      : window.highlighters();
 
-    group.remove(*parser.begin());
+    group.remove(parser.begin()->content());
 }
 
 void add_filter(const CommandParameters& params, const Context& context)
@@ -392,8 +411,10 @@ void add_filter(const CommandParameters& params, const Context& context)
     FilterRegistry& registry = FilterRegistry::instance();
 
     auto begin = parser.begin();
-    const String& name = *begin;
-    std::vector<String> filter_params(++begin, parser.end());
+    const String& name = begin->content();
+    std::vector<String> filter_params;
+    for (++begin; begin != parser.end(); ++begin)
+        filter_params.push_back(begin->content());
 
     Window& window = context.window();
     FilterGroup& group = parser.has_option("group") ?
@@ -414,7 +435,7 @@ void rm_filter(const CommandParameters& params, const Context& context)
        window.filters().get_group(parser.option_value("group"))
      : window.filters();
 
-    group.remove(*parser.begin());
+    group.remove(parser.begin()->content());
 }
 
 void add_hook(const CommandParameters& params, const Context& context)
@@ -422,8 +443,8 @@ void add_hook(const CommandParameters& params, const Context& context)
     if (params.size() < 4)
         throw wrong_argument_count();
 
-    String regex = params[2];
-    std::vector<String> hook_params(params.begin()+3, params.end());
+    String regex = params[2].content();
+    std::vector<Token> hook_params(params.begin()+3, params.end());
 
     auto hook_func = [=](const String& param, const Context& context) {
         if (boost::regex_match(param.begin(), param.end(),
@@ -431,14 +452,16 @@ void add_hook(const CommandParameters& params, const Context& context)
             CommandManager::instance().execute(hook_params, context);
     };
 
-    if (params[0] == "global")
-        GlobalHookManager::instance().add_hook(params[1], hook_func);
-    else if (params[0] == "buffer")
-        context.buffer().hook_manager().add_hook(params[1], hook_func);
-    else if (params[0] == "window")
-        context.window().hook_manager().add_hook(params[1], hook_func);
+    const String& scope = params[0].content();
+    const String& name = params[1].content();
+    if (scope == "global")
+        GlobalHookManager::instance().add_hook(name, hook_func);
+    else if (scope == "buffer")
+        context.buffer().hook_manager().add_hook(name, hook_func);
+    else if (scope == "window")
+        context.window().hook_manager().add_hook(name , hook_func);
     else
-        throw runtime_error("error: no such hook container " + params[0]);
+        throw runtime_error("error: no such hook container " + scope);
 }
 
 EnvVarMap params_to_env_var_map(const CommandParameters& params)
@@ -448,7 +471,7 @@ EnvVarMap params_to_env_var_map(const CommandParameters& params)
     for (size_t i = 0; i < params.size(); ++i)
     {
          param_name[sizeof(param_name) - 2] = '0' + i;
-         vars[param_name] = params[i];
+         vars[param_name] = params[i].content();
     }
     return vars;
 }
@@ -465,13 +488,13 @@ void define_command(const CommandParameters& params, const Context& context)
         throw wrong_argument_count();
 
     auto begin = parser.begin();
-    const String& cmd_name = *begin;
+    const String& cmd_name = begin->content();
 
     if (CommandManager::instance().command_defined(cmd_name) and
         not parser.has_option("allow-override"))
         throw runtime_error("command '" + cmd_name + "' already defined");
 
-    std::vector<String> cmd_params(++begin, parser.end());
+    std::vector<Token> cmd_params(++begin, parser.end());
     Command cmd;
     if (parser.has_option("env-params"))
     {
@@ -483,7 +506,7 @@ void define_command(const CommandParameters& params, const Context& context)
     else if (parser.has_option("append-params"))
     {
          cmd = [=](const CommandParameters& params, const Context& context) {
-            std::vector<String> merged_params = cmd_params;
+            std::vector<Token> merged_params = cmd_params;
             for (auto& param : params)
                 merged_params.push_back(param);
             CommandManager::instance().execute(merged_params, context);
@@ -522,7 +545,7 @@ void echo_message(const CommandParameters& params, const Context& context)
 {
     String message;
     for (auto& param : params)
-        message += param + " ";
+        message += param.content() + " ";
     print_status(message);
 }
 
@@ -532,7 +555,7 @@ void exec_commands_in_file(const CommandParameters& params,
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    String file_content = read_file(parse_filename(params[0]));
+    String file_content = read_file(parse_filename(params[0].content()));
     CommandManager& cmd_manager = CommandManager::instance();
 
     size_t pos = 0;
@@ -582,7 +605,7 @@ void exec_commands_in_file(const CommandParameters& params,
          {
              if (cat_with_previous)
                  throw runtime_error("while executing commands in \"" +
-                                     params[0] +
+                                     params[0].content() +
                                      "\": last command not complete");
              break;
          }
@@ -596,7 +619,7 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    const String& filename = params[0];
+    const String& filename = params[0].content();
     char buffer[2048];
 #if defined(__linux__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048 - filename.length());
@@ -615,7 +638,7 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     if (ptr)
     {
         strcpy(ptr+1, filename.c_str());
-        exec_commands_in_file(CommandParameters(buffer), main_context);
+        exec_commands_in_file(CommandParameters(Token(buffer)), main_context);
     }
 }
 
@@ -625,7 +648,7 @@ void set_option(OptionManager& option_manager, const CommandParameters& params,
     if (params.size() != 2)
         throw wrong_argument_count();
 
-    option_manager.set_option(params[0], Option(params[1]));
+    option_manager.set_option(params[0].content(), Option(params[1].content()));
 }
 
 class RegisterRestorer
@@ -737,7 +760,7 @@ void exec_string(const CommandParameters& params,
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    KeyList keys = parse_keys(params[0]);
+    KeyList keys = parse_keys(params[0].content());
 
     exec_keys(keys, context);
 }
@@ -759,14 +782,14 @@ void menu(const CommandParameters& params,
 
     if (count == 2 and parser.has_option("auto-single"))
     {
-        CommandManager::instance().execute(parser[1], context);
+        CommandManager::instance().execute(parser[1].content(), context);
         return;
     }
 
     std::ostringstream oss;
     for (int i = 0; i < count; i += 2)
     {
-        oss << i/2 + 1 << "[" << parser[i] << "] ";
+        oss << i/2 + 1 << "[" << parser[i].content() << "] ";
     }
     oss << "(empty cancels): ";
 
@@ -774,7 +797,7 @@ void menu(const CommandParameters& params,
     int i = str_to_int(choice);
 
     if (i > 0 and i < (count / 2) + 1)
-        CommandManager::instance().execute(parser[(i-1)*2+1], context);
+        CommandManager::instance().execute(parser[(i-1)*2+1].content(), context);
 }
 
 void try_catch(const CommandParameters& params,
@@ -783,7 +806,7 @@ void try_catch(const CommandParameters& params,
     size_t i = 0;
     for (; i < params.size(); ++i)
     {
-        if (params[i] == "catch")
+        if (params[i].content() == "catch")
             break;
     }
 
@@ -834,10 +857,10 @@ void register_commands()
                          {
                              Window& w = main_context.window();
                              const String& arg = token_to_complete < params.size() ?
-                                                      params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
+                                                 params[token_to_complete].content() : String();
+                             if (token_to_complete == 1 and params[0].content() == "-group")
                                  return w.highlighters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
+                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0].content() == "-group"))
                                  return HighlighterRegistry::instance().complete_highlighter(arg, pos_in_token);
                              else
                                  return CandidateList();
@@ -848,11 +871,11 @@ void register_commands()
                          {
                              Window& w = main_context.window();
                              const String& arg = token_to_complete < params.size() ?
-                                                      params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
+                                                 params[token_to_complete].content() : String();
+                             if (token_to_complete == 1 and params[0].content() == "-group")
                                  return w.highlighters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 2 and params[0] == "-group")
-                                 return w.highlighters().get_group(params[1]).complete_id(arg, pos_in_token);
+                             else if (token_to_complete == 2 and params[0].content() == "-group")
+                                 return w.highlighters().get_group(params[1].content()).complete_id(arg, pos_in_token);
                              else
                                  return w.highlighters().complete_id(arg, pos_in_token);
                          });
@@ -862,10 +885,10 @@ void register_commands()
                          {
                              Window& w = main_context.window();
                              const String& arg = token_to_complete < params.size() ?
-                                                      params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
+                                                 params[token_to_complete].content() : String();
+                             if (token_to_complete == 1 and params[0].content() == "-group")
                                  return w.filters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
+                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0].content() == "-group"))
                                  return FilterRegistry::instance().complete_filter(arg, pos_in_token);
                              else
                                  return CandidateList();
@@ -876,11 +899,11 @@ void register_commands()
                          {
                              Window& w = main_context.window();
                              const String& arg = token_to_complete < params.size() ?
-                                                      params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
+                                                 params[token_to_complete].content() : String();
+                             if (token_to_complete == 1 and params[0].content() == "-group")
                                  return w.filters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 2 and params[0] == "-group")
-                                 return w.filters().get_group(params[1]).complete_id(arg, pos_in_token);
+                             else if (token_to_complete == 2 and params[0].content() == "-group")
+                                 return w.filters().get_group(params[1].content()).complete_id(arg, pos_in_token);
                              else
                                  return w.filters().complete_id(arg, pos_in_token);
                          });

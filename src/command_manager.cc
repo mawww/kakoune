@@ -37,8 +37,11 @@ static bool is_blank(char c)
    return c == ' ' or c == '\t' or c == '\n';
 }
 
-typedef std::vector<std::pair<size_t, size_t>> TokenList;
-static TokenList split(const String& line)
+using TokenList = std::vector<Token>;
+using TokenPosList = std::vector<std::pair<size_t, size_t>>;
+
+static TokenList parse(const String& line,
+                       TokenPosList* opt_token_pos_info = NULL)
 {
     TokenList result;
 
@@ -50,18 +53,20 @@ static TokenList split(const String& line)
 
         size_t token_start = pos;
 
+        Token::Type type = Token::Type::Raw;
         if (line[pos] == '"' or line[pos] == '\'' or line[pos] == '`')
         {
             char delimiter = line[pos];
-            ++pos;
-            token_start = delimiter == '`' ? pos - 1 : pos;
+
+            if (delimiter == '`')
+                type = Token::Type::ShellExpand;
+
+            token_start = ++pos;
 
             while ((line[pos] != delimiter or line[pos-1] == '\\') and
                     pos != line.length())
                 ++pos;
 
-            if (delimiter == '`' and line[pos] == '`')
-                ++pos;
         }
         else
             while (not is_blank(line[pos]) and pos != line.length() and
@@ -69,10 +74,18 @@ static TokenList split(const String& line)
                 ++pos;
 
         if (token_start != pos)
-            result.push_back(std::make_pair(token_start, pos));
+        {
+            if (opt_token_pos_info)
+                opt_token_pos_info->push_back({token_start, pos});
+            result.push_back({type, line.substr(token_start, pos - token_start)});
+        }
 
         if (line[pos] == ';')
-           result.push_back(std::make_pair(pos, pos+1));
+        {
+            if (opt_token_pos_info)
+                opt_token_pos_info->push_back({pos, pos+1});
+            result.push_back(Token{ Token::Type::CommandSeparator });
+        }
 
         ++pos;
     }
@@ -89,33 +102,20 @@ void CommandManager::execute(const String& command_line,
                              const Context& context,
                              const EnvVarMap& env_vars)
 {
-    TokenList tokens = split(command_line);
-    if (tokens.empty())
-        return;
-
-    std::vector<String> params;
-    for (auto it = tokens.begin(); it != tokens.end(); ++it)
-    {
-        params.push_back(command_line.substr(it->first,
-                                             it->second - it->first));
-    }
-
-    execute(params, context, env_vars);
+    TokenList tokens = parse(command_line);
+    execute(tokens, context, env_vars);
 }
 
-static void shell_eval(std::vector<String>& params,
+static void shell_eval(TokenList& params,
                        const String& cmdline,
                        const Context& context,
                        const EnvVarMap& env_vars)
 {
         String output = ShellManager::instance().eval(cmdline, context, env_vars);
-        TokenList tokens = split(output);
+        TokenList tokens = parse(output);
 
-        for (auto it = tokens.begin(); it != tokens.end(); ++it)
-        {
-            params.push_back(output.substr(it->first,
-                                           it->second - it->first));
-        }
+        for (auto& token : tokens)
+            params.push_back(std::move(token));
 }
 
 void CommandManager::execute(const CommandParameters& params,
@@ -129,29 +129,16 @@ void CommandManager::execute(const CommandParameters& params,
     auto end = begin;
     while (true)
     {
-        while (end != params.end() and *end != ";")
+        while (end != params.end() and end->type() != Token::Type::CommandSeparator)
             ++end;
 
         if (end != begin)
         {
-            std::vector<String> expanded_params;
-            auto command_it = m_commands.find(*begin);
-
-            if (command_it == m_commands.end() and
-                begin->front() == '`' and begin->back() == '`')
-            {
-                shell_eval(expanded_params,
-                           begin->substr(1, begin->length() - 2),
-                           context, env_vars);
-                if (not expanded_params.empty())
-                {
-                    command_it = m_commands.find(expanded_params[0]);
-                    expanded_params.erase(expanded_params.begin());
-                }
-            }
-
+            if (begin->type() != Token::Type::Raw)
+                throw command_not_found("unable to parse command name");
+            auto command_it = m_commands.find(begin->content());
             if (command_it == m_commands.end())
-                throw command_not_found(*begin);
+                throw command_not_found(begin->content());
 
             if (command_it->second.flags & IgnoreSemiColons)
                 end = params.end();
@@ -160,18 +147,17 @@ void CommandManager::execute(const CommandParameters& params,
                 command_it->second.command(CommandParameters(begin + 1, end), context);
             else
             {
+                TokenList expanded_tokens;
                 for (auto param = begin+1; param != end; ++param)
                 {
-                    if (param->front() == '`' and param->back() == '`')
-                        shell_eval(expanded_params,
-                                   param->substr(1, param->length() - 2),
+                    if (param->type() == Token::Type::ShellExpand)
+                        shell_eval(expanded_tokens, param->content(),
                                    context, env_vars);
                     else
-                        expanded_params.push_back(*param);
+                        expanded_tokens.push_back(*param);
                 }
-                command_it->second.command(expanded_params, context);
+                command_it->second.command(expanded_tokens, context);
             }
-
         }
 
         if (end == params.end())
@@ -184,12 +170,13 @@ void CommandManager::execute(const CommandParameters& params,
 
 Completions CommandManager::complete(const String& command_line, size_t cursor_pos)
 {
-    TokenList tokens = split(command_line);
+    TokenPosList pos_info;
+    TokenList tokens = parse(command_line, &pos_info);
 
     size_t token_to_complete = tokens.size();
     for (size_t i = 0; i < tokens.size(); ++i)
     {
-        if (tokens[i].first <= cursor_pos and tokens[i].second >= cursor_pos)
+        if (pos_info[i].first <= cursor_pos and pos_info[i].second >= cursor_pos)
         {
             token_to_complete = i;
             break;
@@ -198,7 +185,7 @@ Completions CommandManager::complete(const String& command_line, size_t cursor_p
 
     if (token_to_complete == 0 or tokens.empty()) // command name completion
     {
-        size_t cmd_start = tokens.empty() ? 0 : tokens[0].first;
+        size_t cmd_start = tokens.empty() ? 0 : pos_info[0].first;
         Completions result(cmd_start, cursor_pos);
         String prefix = command_line.substr(cmd_start,
                                             cursor_pos - cmd_start);
@@ -214,26 +201,21 @@ Completions CommandManager::complete(const String& command_line, size_t cursor_p
     }
 
     assert(not tokens.empty());
-    String command_name =
-        command_line.substr(tokens[0].first,
-                            tokens[0].second - tokens[0].first);
+    if (tokens[0].type() != Token::Type::Raw)
+        return Completions();
+
+    const String& command_name = tokens[0].content();
 
     auto command_it = m_commands.find(command_name);
     if (command_it == m_commands.end() or not command_it->second.completer)
         return Completions();
 
-    std::vector<String> params;
-    for (auto it = tokens.begin() + 1; it != tokens.end(); ++it)
-    {
-        params.push_back(command_line.substr(it->first,
-                                             it->second - it->first));
-    }
-
     size_t start = token_to_complete < tokens.size() ?
-                   tokens[token_to_complete].first : cursor_pos;
+                   pos_info[token_to_complete].first : cursor_pos;
     Completions result(start , cursor_pos);
     size_t cursor_pos_in_token = cursor_pos - start;
 
+    CommandParameters params(tokens.begin()+1, tokens.end());
     result.candidates = command_it->second.completer(params,
                                                      token_to_complete - 1,
                                                      cursor_pos_in_token);
@@ -244,14 +226,16 @@ CandidateList PerArgumentCommandCompleter::operator()(const CommandParameters& p
                                                       size_t token_to_complete,
                                                       size_t pos_in_token) const
 {
-    if (token_to_complete >= m_completers.size())
+    if (token_to_complete >= m_completers.size() or
+        (token_to_complete < params.size() and
+         params[token_to_complete].type() != Token::Type::Raw))
         return CandidateList();
 
     // it is possible to try to complete a new argument
     assert(token_to_complete <= params.size());
 
     const String& argument = token_to_complete < params.size() ?
-                             params[token_to_complete] : String();
+                             params[token_to_complete].content() : String();
     return m_completers[token_to_complete](argument, pos_in_token);
 }
 
