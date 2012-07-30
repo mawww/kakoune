@@ -581,7 +581,7 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     assert(res != -1);
     buffer[res] = '\0';
 #elif defined(__APPLE__)
-    uint32_t bufsize = 2048 - filename.length();
+    uint32_t bufsize = 2048 - (int)filename.length();
     _NSGetExecutablePath(buffer, &bufsize);
     char* canonical_path = realpath(buffer, NULL);
     strncpy(buffer, canonical_path, 2048 - (int)filename.length());
