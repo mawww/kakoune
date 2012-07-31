@@ -72,13 +72,6 @@ private:
 class CommandManager : public Singleton<CommandManager>
 {
 public:
-    enum Flags
-    {
-        None = 0,
-        IgnoreSemiColons = 1,
-        DeferredShellEval = 2,
-    };
-
     void execute(const String& command_line, const Context& context,
                  const EnvVarMap& env_vars = EnvVarMap());
     void execute(const CommandParameters& params, const Context& context,
@@ -90,19 +83,16 @@ public:
 
     void register_command(const String& command_name,
                           Command command,
-                          unsigned flags = None,
                           const CommandCompleter& completer = CommandCompleter());
 
     void register_commands(const memoryview<String>& command_names,
                            Command command,
-                           unsigned flags = None,
                            const CommandCompleter& completer = CommandCompleter());
 
 private:
     struct CommandDescriptor
     {
         Command command;
-        unsigned flags;
         CommandCompleter completer;
     };
     std::unordered_map<String, CommandDescriptor> m_commands;

@@ -440,16 +440,16 @@ void rm_filter(const CommandParameters& params, const Context& context)
 
 void add_hook(const CommandParameters& params, const Context& context)
 {
-    if (params.size() < 4)
+    if (params.size() != 4)
         throw wrong_argument_count();
 
+    // copy so that the lambda gets a copy as well
     String regex = params[2].content();
-    std::vector<Token> hook_params(params.begin()+3, params.end());
-
+    String command = params[3].content();
     auto hook_func = [=](const String& param, const Context& context) {
         if (boost::regex_match(param.begin(), param.end(),
                                Regex(regex.begin(), regex.end())))
-            CommandManager::instance().execute(hook_params, context);
+            CommandManager::instance().execute(command, context);
     };
 
     const String& scope = params[0].content();
@@ -484,7 +484,7 @@ void define_command(const CommandParameters& params, const Context& context)
                               { "allow-override", false },
                               { "shell-completion", true } });
 
-    if (parser.positional_count() < 2)
+    if (parser.positional_count() != 2)
         throw wrong_argument_count();
 
     auto begin = parser.begin();
@@ -494,22 +494,13 @@ void define_command(const CommandParameters& params, const Context& context)
         not parser.has_option("allow-override"))
         throw runtime_error("command '" + cmd_name + "' already defined");
 
-    std::vector<Token> cmd_params(++begin, parser.end());
+    String commands = parser[1].content();
     Command cmd;
     if (parser.has_option("env-params"))
     {
         cmd = [=](const CommandParameters& params, const Context& context) {
-            CommandManager::instance().execute(cmd_params, context,
+            CommandManager::instance().execute(commands, context,
                                                params_to_env_var_map(params));
-        };
-    }
-    else if (parser.has_option("append-params"))
-    {
-         cmd = [=](const CommandParameters& params, const Context& context) {
-            std::vector<Token> merged_params = cmd_params;
-            for (auto& param : params)
-                merged_params.push_back(param);
-            CommandManager::instance().execute(merged_params, context);
         };
     }
     else
@@ -517,7 +508,7 @@ void define_command(const CommandParameters& params, const Context& context)
          cmd = [=](const CommandParameters& params, const Context& context) {
              if (not params.empty())
                  throw wrong_argument_count();
-            CommandManager::instance().execute(cmd_params, context);
+            CommandManager::instance().execute(commands, context);
         };
     }
 
@@ -533,9 +524,7 @@ void define_command(const CommandParameters& params, const Context& context)
            String output = ShellManager::instance().eval(shell_cmd, context, vars);
            return split(output, '\n');
         };
-        CommandManager::instance().register_command(cmd_name, cmd,
-                                                    CommandManager::None,
-                                                    completer);
+        CommandManager::instance().register_command(cmd_name, cmd, completer);
     }
     else
         CommandManager::instance().register_command(cmd_name, cmd);
@@ -556,61 +545,7 @@ void exec_commands_in_file(const CommandParameters& params,
         throw wrong_argument_count();
 
     String file_content = read_file(parse_filename(params[0].content()));
-    CommandManager& cmd_manager = CommandManager::instance();
-
-    size_t pos = 0;
-    size_t length = file_content.length();
-    bool   cat_with_previous = false;
-    String command_line;
-    while (true)
-    {
-         if (not cat_with_previous)
-             command_line = String();
-
-         size_t end_pos = pos;
-
-         while (file_content[end_pos] != '\n' and end_pos != length)
-         {
-             if (file_content[end_pos] == '"' or file_content[end_pos] == '\'' or
-                 file_content[end_pos] == '`')
-             {
-                 char delimiter = file_content[end_pos];
-                 ++end_pos;
-                 while ((file_content[end_pos] != delimiter or
-                         file_content[end_pos-1] == '\\') and end_pos != length)
-                     ++end_pos;
-
-                 if (end_pos == length)
-                     throw(String("unterminated '") + delimiter + "' string");
-
-                 ++end_pos;
-             }
-
-             if (end_pos != length)
-                 ++end_pos;
-         }
-         if (end_pos != pos and end_pos != length and
-             file_content[end_pos - 1] == '\\')
-         {
- 	     command_line += file_content.substr(pos, end_pos - pos - 1);
-             cat_with_previous = true;
-         }
-         else
-         {
- 	     command_line += file_content.substr(pos, end_pos - pos);
- 	     cmd_manager.execute(command_line, context);
-             cat_with_previous = false;
- 	 }
-         if (end_pos == length)
-         {
-             if (cat_with_previous)
-                 throw runtime_error("while executing commands in \"" +
-                                     params[0].content() +
-                                     "\": last command not complete");
-             break;
-         }
-         pos = end_pos + 1;
-    }
+    CommandManager::instance().execute(file_content, context);
 }
 
 void exec_commands_in_runtime_file(const CommandParameters& params,
@@ -803,24 +738,19 @@ void menu(const CommandParameters& params,
 void try_catch(const CommandParameters& params,
                const Context& context)
 {
-    size_t i = 0;
-    for (; i < params.size(); ++i)
-    {
-        if (params[i].content() == "catch")
-            break;
-    }
-
-    if (i == 0 or i == params.size())
+    if (params.size() != 3)
         throw wrong_argument_count();
+    if (params[1].content() != "catch")
+        throw runtime_error("try needs a catch");
 
     CommandManager& command_manager = CommandManager::instance();
     try
     {
-        command_manager.execute(params.subrange(0, i), context);
+        command_manager.execute(params[0].content(), context);
     }
     catch (Kakoune::runtime_error& e)
     {
-        command_manager.execute(params.subrange(i+1, params.size() - i - 1), context);
+        command_manager.execute(params[2].content(), context);
     }
 }
 
@@ -831,12 +761,9 @@ void register_commands()
     CommandManager& cm = CommandManager::instance();
 
     PerArgumentCommandCompleter filename_completer({ complete_filename });
-    cm.register_commands({ "e", "edit" }, edit<false>,
-                         CommandManager::None, filename_completer);
-    cm.register_commands({ "e!", "edit!" }, edit<true>,
-                         CommandManager::None, filename_completer);
-    cm.register_commands({ "w", "write" }, write_buffer,
-                         CommandManager::None, filename_completer);
+    cm.register_commands({ "e", "edit" }, edit<false>, filename_completer);
+    cm.register_commands({ "e!", "edit!" }, edit<true>, filename_completer);
+    cm.register_commands({ "w", "write" }, write_buffer, filename_completer);
     cm.register_commands({ "q", "quit" }, quit<false>);
     cm.register_commands({ "q!", "quit!" }, quit<true>);
     cm.register_command("wq", write_and_quit<false>);
@@ -846,13 +773,10 @@ void register_commands()
         [](const String& prefix, size_t cursor_pos)
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
-    cm.register_commands({ "b", "buffer" }, show_buffer,
-                         CommandManager::None, buffer_completer);
-    cm.register_commands({ "db", "delbuf" }, delete_buffer,
-                         CommandManager::None, buffer_completer);
+    cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
+    cm.register_commands({ "db", "delbuf" }, delete_buffer, buffer_completer);
 
     cm.register_commands({ "ah", "addhl" }, add_highlighter,
-                         CommandManager::None,
                          [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
                          {
                              Window& w = main_context.window();
@@ -866,7 +790,6 @@ void register_commands()
                                  return CandidateList();
                          });
     cm.register_commands({ "rh", "rmhl" }, rm_highlighter,
-                         CommandManager::None,
                          [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
                          {
                              Window& w = main_context.window();
@@ -880,7 +803,6 @@ void register_commands()
                                  return w.highlighters().complete_id(arg, pos_in_token);
                          });
     cm.register_commands({ "af", "addfilter" }, add_filter,
-                         CommandManager::None,
                          [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
                          {
                              Window& w = main_context.window();
@@ -894,7 +816,6 @@ void register_commands()
                                  return CandidateList();
                          });
     cm.register_commands({ "rf", "rmfilter" }, rm_filter,
-                         CommandManager::None,
                          [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
                          {
                              Window& w = main_context.window();
@@ -908,24 +829,22 @@ void register_commands()
                                  return w.filters().complete_id(arg, pos_in_token);
                          });
 
-    cm.register_command("hook", add_hook, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
+    cm.register_command("hook", add_hook);
 
-    cm.register_command("source", exec_commands_in_file,
-                         CommandManager::None, filename_completer);
+    cm.register_command("source", exec_commands_in_file, filename_completer);
     cm.register_command("runtime", exec_commands_in_runtime_file);
 
     cm.register_command("exec", exec_string);
     cm.register_command("eval", eval_string);
     cm.register_command("menu", menu);
-    cm.register_command("try",  try_catch, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
+    cm.register_command("try",  try_catch);
 
-    cm.register_command("def",  define_command, CommandManager::IgnoreSemiColons | CommandManager::DeferredShellEval);
+    cm.register_command("def",  define_command);
     cm.register_command("echo", echo_message);
 
     cm.register_commands({ "setg", "setglobal" },
                          [](const CommandParameters& params, const Context& context)
                          { set_option(GlobalOptionManager::instance(), params, context); },
-                         CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
                              { return GlobalOptionManager::instance().complete_option_name(prefix, cursor_pos); }
@@ -933,7 +852,6 @@ void register_commands()
     cm.register_commands({ "setb", "setbuffer" },
                          [](const CommandParameters& params, const Context& context)
                          { set_option(context.buffer().option_manager(), params, context); },
-                         CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
                              { return main_context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
@@ -941,7 +859,6 @@ void register_commands()
     cm.register_commands({ "setw", "setwindow" },
                          [](const CommandParameters& params, const Context& context)
                          { set_option(context.window().option_manager(), params, context); },
-                         CommandManager::None,
                          PerArgumentCommandCompleter({
                              [](const String& prefix, size_t cursor_pos)
                              { return main_context.window().option_manager().complete_option_name(prefix, cursor_pos); }

@@ -1,5 +1,5 @@
-hook global WinCreate .* addhl regex \h+(?=\n) default red
-hook global WinCreate .* addhl number_lines
+hook global WinCreate .* %{ addhl regex \h+(?=\n) default red }
+hook global WinCreate .* %{ addhl number_lines }
 
 runtime rc/cpp.kak
 runtime rc/kakrc.kak

@@ -17,60 +17,110 @@ bool CommandManager::command_defined(const String& command_name) const
 
 void CommandManager::register_command(const String& command_name,
                                       Command command,
-                                      unsigned flags,
                                       const CommandCompleter& completer)
 {
-    m_commands[command_name] = CommandDescriptor { command, flags, completer };
+    m_commands[command_name] = CommandDescriptor { command, completer };
 }
 
 void CommandManager::register_commands(const memoryview<String>& command_names,
                                        Command command,
-                                       unsigned flags,
                                        const CommandCompleter& completer)
 {
     for (auto command_name : command_names)
-        register_command(command_name, command, flags, completer);
+        register_command(command_name, command, completer);
 }
 
-static bool is_blank(char c)
+static bool is_horizontal_blank(char c)
 {
-   return c == ' ' or c == '\t' or c == '\n';
+   return c == ' ' or c == '\t';
 }
 
 using TokenList = std::vector<Token>;
 using TokenPosList = std::vector<std::pair<size_t, size_t>>;
+
+static bool is_command_separator(Character c)
+{
+    return c == ';' or c == '\n';
+}
 
 static TokenList parse(const String& line,
                        TokenPosList* opt_token_pos_info = NULL)
 {
     TokenList result;
 
+    size_t length = line.length();
     size_t pos = 0;
-    while (pos < line.length())
+    while (pos < length)
     {
-        while(is_blank(line[pos]) and pos != line.length())
-            ++pos;
+        while (pos != length)
+        {
+            if (is_horizontal_blank(line[pos]))
+                ++pos;
+            else if (line[pos] == '\\' and pos+1 < length and line[pos+1] == '\n')
+                pos += 2;
+            else
+                break;
+        }
 
         size_t token_start = pos;
 
         Token::Type type = Token::Type::Raw;
-        if (line[pos] == '"' or line[pos] == '\'' or line[pos] == '`')
+        if (line[pos] == '"' or line[pos] == '\'')
         {
             char delimiter = line[pos];
-
-            if (delimiter == '`')
-                type = Token::Type::ShellExpand;
 
             token_start = ++pos;
 
             while ((line[pos] != delimiter or line[pos-1] == '\\') and
-                    pos != line.length())
+                    pos != length)
                 ++pos;
+        }
+        else if (line[pos] == '%')
+        {
+            size_t type_start = ++pos;
+            while (isalpha(line[pos]))
+                ++pos;
+            String type_name = line.substr(type_start, pos - type_start);
 
+            if (type_name == "sh")
+                type = Token::Type::ShellExpand;
+
+            static const std::unordered_map<Character, Character> matching_delimiters = {
+                { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
+            };
+
+            Character opening_delimiter = line[pos];
+            token_start = ++pos;
+
+            auto delim_it = matching_delimiters.find(opening_delimiter);
+            if (delim_it != matching_delimiters.end())
+            {
+                Character closing_delimiter = delim_it->second;
+                int level = 0;
+                while (pos != length)
+                {
+                    if (line[pos-1] != '\\' and line[pos] == opening_delimiter)
+                        ++level;
+                    if (line[pos-1] != '\\' and line[pos] == closing_delimiter)
+                    {
+                        if (level > 0)
+                            --level;
+                        else
+                            break;
+                    }
+                    ++pos;
+                }
+            }
+            else
+            {
+                while ((line[pos] != opening_delimiter or line[pos-1] == '\\') and
+                        pos != length)
+                    ++pos;
+            }
         }
         else
-            while (not is_blank(line[pos]) and pos != line.length() and
-                   (line[pos] != ';' or line[pos-1] == '\\'))
+            while (pos != length and not is_horizontal_blank(line[pos]) and
+                   (not is_command_separator(line[pos]) or line[pos-1] == '\\'))
                 ++pos;
 
         if (token_start != pos)
@@ -80,7 +130,7 @@ static TokenList parse(const String& line,
             result.push_back({type, line.substr(token_start, pos - token_start)});
         }
 
-        if (line[pos] == ';')
+        if (is_command_separator(line[pos]))
         {
             if (opt_token_pos_info)
                 opt_token_pos_info->push_back({pos, pos+1});
@@ -140,24 +190,16 @@ void CommandManager::execute(const CommandParameters& params,
             if (command_it == m_commands.end())
                 throw command_not_found(begin->content());
 
-            if (command_it->second.flags & IgnoreSemiColons)
-                end = params.end();
-
-            if (command_it->second.flags & DeferredShellEval)
-                command_it->second.command(CommandParameters(begin + 1, end), context);
-            else
+            TokenList expanded_tokens;
+            for (auto param = begin+1; param != end; ++param)
             {
-                TokenList expanded_tokens;
-                for (auto param = begin+1; param != end; ++param)
-                {
-                    if (param->type() == Token::Type::ShellExpand)
-                        shell_eval(expanded_tokens, param->content(),
-                                   context, env_vars);
-                    else
-                        expanded_tokens.push_back(*param);
-                }
-                command_it->second.command(expanded_tokens, context);
+                if (param->type() == Token::Type::ShellExpand)
+                    shell_eval(expanded_tokens, param->content(),
+                               context, env_vars);
+                else
+                    expanded_tokens.push_back(*param);
             }
+            command_it->second.command(expanded_tokens, context);
         }
 
         if (end == params.end())
