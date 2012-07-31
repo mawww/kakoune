@@ -49,7 +49,7 @@ String ShellManager::pipe(const String& input,
         close(read_pipe[0]);
         waitpid(pid, NULL, 0);
     }
-    else
+    else try
     {
         close(write_pipe[1]);
         close(read_pipe[0]);
@@ -95,7 +95,9 @@ String ShellManager::pipe(const String& input,
         }
 
         execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
+        exit(-1);
     }
+    catch (...) { exit(-1); }
     return output;
 }
 
