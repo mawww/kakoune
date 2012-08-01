@@ -30,10 +30,29 @@ void CommandManager::register_commands(const memoryview<String>& command_names,
         register_command(command_name, command, completer);
 }
 
-static bool is_horizontal_blank(char c)
+struct Token
 {
-   return c == ' ' or c == '\t';
-}
+    enum class Type
+    {
+        Raw,
+        ShellExpand,
+        CommandSeparator
+    };
+    Token() : m_type(Type::Raw) {}
+
+    explicit Token(const String& string) : m_content(string), m_type(Type::Raw) {}
+    explicit Token(Type type) : m_type(type) {}
+    Token(Type type, String str) : m_content(str), m_type(type) {}
+
+    Type type() const { return m_type; }
+
+    const String& content() const { return m_content; }
+
+private:
+    Type   m_type;
+    String m_content;
+};
+
 
 using TokenList = std::vector<Token>;
 using TokenPosList = std::vector<std::pair<size_t, size_t>>;
@@ -41,6 +60,11 @@ using TokenPosList = std::vector<std::pair<size_t, size_t>>;
 static bool is_command_separator(Character c)
 {
     return c == ';' or c == '\n';
+}
+
+static bool is_horizontal_blank(char c)
+{
+   return c == ' ' or c == '\t';
 }
 
 static TokenList parse(const String& line,
@@ -139,7 +163,22 @@ static TokenList parse(const String& line,
 
         ++pos;
     }
+    if (not result.empty() and result.back().type() == Token::Type::CommandSeparator)
+        result.pop_back();
+
     return result;
+}
+
+static void shell_eval(TokenList& params,
+                       const String& cmdline,
+                       const Context& context,
+                       const EnvVarMap& env_vars)
+{
+    String output = ShellManager::instance().eval(cmdline, context, env_vars);
+    TokenList tokens = parse(output);
+
+    for (auto& token : tokens)
+        params.push_back(std::move(token));
 }
 
 struct command_not_found : runtime_error
@@ -153,56 +192,44 @@ void CommandManager::execute(const String& command_line,
                              const EnvVarMap& env_vars)
 {
     TokenList tokens = parse(command_line);
-    execute(tokens, context, env_vars);
-}
-
-static void shell_eval(TokenList& params,
-                       const String& cmdline,
-                       const Context& context,
-                       const EnvVarMap& env_vars)
-{
-        String output = ShellManager::instance().eval(cmdline, context, env_vars);
-        TokenList tokens = parse(output);
-
-        for (auto& token : tokens)
-            params.push_back(std::move(token));
-}
-
-void CommandManager::execute(const CommandParameters& params,
-                             const Context& context,
-                             const EnvVarMap& env_vars)
-{
-    if (params.empty())
+    if (tokens.empty())
         return;
 
-    auto begin = params.begin();
+    TokenList expanded_tokens;
+    for (auto& token : tokens)
+    {
+        if (token.type() == Token::Type::ShellExpand)
+            shell_eval(expanded_tokens, token.content(),
+                       context, env_vars);
+        else
+            expanded_tokens.push_back(token);
+    }
+
+    auto begin = expanded_tokens.begin();
     auto end = begin;
+
     while (true)
     {
-        while (end != params.end() and end->type() != Token::Type::CommandSeparator)
+        while (end != expanded_tokens.end() and
+               end->type() != Token::Type::CommandSeparator)
             ++end;
 
         if (end != begin)
         {
-            if (begin->type() != Token::Type::Raw)
-                throw command_not_found("unable to parse command name");
             auto command_it = m_commands.find(begin->content());
             if (command_it == m_commands.end())
                 throw command_not_found(begin->content());
 
-            TokenList expanded_tokens;
-            for (auto param = begin+1; param != end; ++param)
+            std::vector<String> params;
+            for (auto token_it = begin+1; token_it != end; ++token_it)
             {
-                if (param->type() == Token::Type::ShellExpand)
-                    shell_eval(expanded_tokens, param->content(),
-                               context, env_vars);
-                else
-                    expanded_tokens.push_back(*param);
+                assert(token_it->type() == Token::Type::Raw);
+                params.push_back(token_it->content());
             }
-            command_it->second.command(expanded_tokens, context);
+            command_it->second.command(params, context);
         }
 
-        if (end == params.end())
+        if (end == expanded_tokens.end())
             break;
 
         begin = end+1;
@@ -257,7 +284,9 @@ Completions CommandManager::complete(const String& command_line, size_t cursor_p
     Completions result(start , cursor_pos);
     size_t cursor_pos_in_token = cursor_pos - start;
 
-    CommandParameters params(tokens.begin()+1, tokens.end());
+    std::vector<String> params;
+    for (auto token_it = tokens.begin()+1; token_it != tokens.end(); ++token_it)
+        params.push_back(token_it->content());
     result.candidates = command_it->second.completer(params,
                                                      token_to_complete - 1,
                                                      cursor_pos_in_token);
@@ -268,16 +297,14 @@ CandidateList PerArgumentCommandCompleter::operator()(const CommandParameters& p
                                                       size_t token_to_complete,
                                                       size_t pos_in_token) const
 {
-    if (token_to_complete >= m_completers.size() or
-        (token_to_complete < params.size() and
-         params[token_to_complete].type() != Token::Type::Raw))
+    if (token_to_complete >= m_completers.size())
         return CandidateList();
 
     // it is possible to try to complete a new argument
     assert(token_to_complete <= params.size());
 
     const String& argument = token_to_complete < params.size() ?
-                             params[token_to_complete].content() : String();
+                             params[token_to_complete] : String();
     return m_completers[token_to_complete](argument, pos_in_token);
 }
 

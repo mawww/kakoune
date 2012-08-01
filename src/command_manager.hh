@@ -21,30 +21,7 @@ struct wrong_argument_count : runtime_error
     wrong_argument_count() : runtime_error("wrong argument count") {}
 };
 
-struct Token
-{
-    enum class Type
-    {
-        Raw,
-        ShellExpand,
-        CommandSeparator
-    };
-    Token() : m_type(Type::Raw) {}
-
-    explicit Token(const String& string) : m_content(string), m_type(Type::Raw) {}
-    explicit Token(Type type) : m_type(type) {}
-    Token(Type type, String str) : m_content(str), m_type(type) {}
-
-    Type type() const { return m_type; }
-
-    const String& content() const { return m_content; }
-
-private:
-    Type   m_type;
-    String m_content;
-};
-
-using CommandParameters = memoryview<Token>;
+using CommandParameters = memoryview<String>;
 
 typedef std::function<void (const CommandParameters&,
                             const Context& context)> Command;
@@ -73,8 +50,6 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(const String& command_line, const Context& context,
-                 const EnvVarMap& env_vars = EnvVarMap());
-    void execute(const CommandParameters& params, const Context& context,
                  const EnvVarMap& env_vars = EnvVarMap());
 
     Completions complete(const String& command_line, size_t cursor_pos);
