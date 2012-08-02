@@ -118,8 +118,11 @@ void Window::scroll_to_keep_cursor_visible_ifn()
         }
         column += atom.content.content().length();
     }
-    // the cursor should always be visible.
-    assert(false);
+    if (cursor != buffer().end())
+    {
+        // the cursor should always be visible.
+        assert(false);
+    }
 }
 
 String Window::status_line() const
