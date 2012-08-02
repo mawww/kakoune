@@ -30,6 +30,9 @@ void CommandManager::register_commands(const memoryview<String>& command_names,
         register_command(command_name, command, completer);
 }
 
+namespace
+{
+
 struct Token
 {
     enum class Type
@@ -57,18 +60,18 @@ private:
 using TokenList = std::vector<Token>;
 using TokenPosList = std::vector<std::pair<size_t, size_t>>;
 
-static bool is_command_separator(Character c)
+bool is_command_separator(Character c)
 {
     return c == ';' or c == '\n';
 }
 
-static bool is_horizontal_blank(char c)
+bool is_horizontal_blank(char c)
 {
    return c == ' ' or c == '\t';
 }
 
-static TokenList parse(const String& line,
-                       TokenPosList* opt_token_pos_info = NULL)
+TokenList parse(const String& line,
+                TokenPosList* opt_token_pos_info = NULL)
 {
     TokenList result;
 
@@ -169,16 +172,16 @@ static TokenList parse(const String& line,
     return result;
 }
 
-static void shell_eval(TokenList& params,
-                       const String& cmdline,
-                       const Context& context,
-                       const EnvVarMap& env_vars)
+void shell_eval(TokenList& params, const String& cmdline,
+                const Context& context, const EnvVarMap& env_vars)
 {
     String output = ShellManager::instance().eval(cmdline, context, env_vars);
     TokenList tokens = parse(output);
 
     for (auto& token : tokens)
         params.push_back(std::move(token));
+}
+
 }
 
 struct command_not_found : runtime_error
