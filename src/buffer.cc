@@ -231,7 +231,7 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
         if (start != content.length())
             m_lines.push_back({ offset + start, content.substr(start) });
 
-        begin_it = iterator_at({ pos.m_coord.line + 1, 0 });
+        begin_it = pos;
         end_it = end();
     }
     else
