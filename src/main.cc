@@ -329,6 +329,24 @@ void do_select_object(const Context& context)
         context.editor().select(it->second);
 }
 
+template<typename T>
+class Repeated
+{
+public:
+    Repeated(T t) : m_func(t) {}
+
+    void operator() (const Context& context)
+    {
+        int count = context.numeric_param();
+        do { m_func(context); } while(--count > 0);
+    }
+private:
+    T m_func;
+};
+
+template<typename T>
+Repeated<T> repeated(T func) { return Repeated<T>(func); }
+
 std::unordered_map<Key, std::function<void (const Context& context)>> keymap =
 {
     { { Key::Modifiers::None, 'h' }, [](const Context& context) { context.editor().move_selections(BufferCoord(0, -std::max(context.numeric_param(),1))); } },
@@ -372,28 +390,30 @@ std::unordered_map<Key, std::function<void (const Context& context)>> keymap =
 
     { { Key::Modifiers::None, ':' }, do_command },
     { { Key::Modifiers::None, '|' }, do_pipe },
-    { { Key::Modifiers::None, ' ' }, [](const Context& context) { int count = context.numeric_param(); if (count == 0) context.editor().clear_selections();
-                                                                     else context.editor().keep_selection(count-1); } },
-    { { Key::Modifiers::Alt,  ' ' }, [](const Context& context) { int count = context.numeric_param(); if (count == 0) context.editor().clear_selections();
-                                                                     else context.editor().remove_selection(count-1); } },
-    { { Key::Modifiers::None, 'w' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word<false>); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'e' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word_end<false>); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'b' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_previous_word<false>); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'W' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word<false>, true); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'E' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word_end<false>, true); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'B' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_previous_word<false>, true); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'x' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_line, false); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'X' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_line, true); } while(--count > 0); } },
-    { { Key::Modifiers::None, 'm' }, [](const Context& context) { int count = context.numeric_param(); context.editor().select(select_matching); } },
-    { { Key::Modifiers::None, 'M' }, [](const Context& context) { int count = context.numeric_param(); context.editor().select(select_matching, true); } },
+    { { Key::Modifiers::None, ' ' }, [](const Context& context) { int count = context.numeric_param();
+                                                                  if (count == 0) context.editor().clear_selections();
+                                                                  else context.editor().keep_selection(count-1); } },
+    { { Key::Modifiers::Alt,  ' ' }, [](const Context& context) { int count = context.numeric_param();
+                                                                  if (count == 0) context.editor().clear_selections();
+                                                                  else context.editor().remove_selection(count-1); } },
+    { { Key::Modifiers::None, 'w' }, repeated([](const Context& context) { context.editor().select(select_to_next_word<false>); }) },
+    { { Key::Modifiers::None, 'e' }, repeated([](const Context& context) { context.editor().select(select_to_next_word_end<false>); }) },
+    { { Key::Modifiers::None, 'b' }, repeated([](const Context& context) { context.editor().select(select_to_previous_word<false>); }) },
+    { { Key::Modifiers::None, 'W' }, repeated([](const Context& context) { context.editor().select(select_to_next_word<false>, true); }) },
+    { { Key::Modifiers::None, 'E' }, repeated([](const Context& context) { context.editor().select(select_to_next_word_end<false>, true); }) },
+    { { Key::Modifiers::None, 'B' }, repeated([](const Context& context) { context.editor().select(select_to_previous_word<false>, true); }) },
+    { { Key::Modifiers::None, 'x' }, repeated([](const Context& context) { context.editor().select(select_line, false); }) },
+    { { Key::Modifiers::None, 'X' }, repeated([](const Context& context) { context.editor().select(select_line, true); }) },
+    { { Key::Modifiers::None, 'm' }, [](const Context& context) { context.editor().select(select_matching); } },
+    { { Key::Modifiers::None, 'M' }, [](const Context& context) { context.editor().select(select_matching, true); } },
 
     { { Key::Modifiers::None, '/' }, do_search<false> },
     { { Key::Modifiers::None, '?' }, do_search<true> },
     { { Key::Modifiers::None, 'n' }, do_search_next<false> },
     { { Key::Modifiers::None, 'N' }, do_search_next<true> },
 
-    { { Key::Modifiers::None, 'u' }, [](const Context& context) { int count = context.numeric_param(); do { if (not context.editor().undo()) { print_status("nothing left to undo"); break; } } while(--count > 0); } },
-    { { Key::Modifiers::None, 'U' }, [](const Context& context) { int count = context.numeric_param(); do { if (not context.editor().redo()) { print_status("nothing left to redo"); break; } } while(--count > 0); } },
+    { { Key::Modifiers::None, 'u' }, repeated([](const Context& context) { if (not context.editor().undo()) { print_status("nothing left to undo"); } }) },
+    { { Key::Modifiers::None, 'U' }, repeated([](const Context& context) { if (not context.editor().redo()) { print_status("nothing left to redo"); } }) },
 
     { { Key::Modifiers::Alt,  'i' }, do_select_object<true> },
     { { Key::Modifiers::Alt,  'a' }, do_select_object<false> },
@@ -403,17 +423,17 @@ std::unordered_map<Key, std::function<void (const Context& context)>> keymap =
     { { Key::Modifiers::Alt, 'T' }, [](const Context& context) { context.editor().select(std::bind(select_to_reverse, _1, get_key().key, context.numeric_param(), false), true); } },
     { { Key::Modifiers::Alt, 'F' }, [](const Context& context) { context.editor().select(std::bind(select_to_reverse, _1, get_key().key, context.numeric_param(), true), true); } },
 
-    { { Key::Modifiers::Alt, 'w' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word<true>); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'e' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word_end<true>); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'b' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_previous_word<true>); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'W' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word<true>, true); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'E' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_next_word_end<true>, true); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'B' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_previous_word<true>, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'w' }, repeated([](const Context& context) { context.editor().select(select_to_next_word<true>); }) },
+    { { Key::Modifiers::Alt, 'e' }, repeated([](const Context& context) { context.editor().select(select_to_next_word_end<true>); }) },
+    { { Key::Modifiers::Alt, 'b' }, repeated([](const Context& context) { context.editor().select(select_to_previous_word<true>); }) },
+    { { Key::Modifiers::Alt, 'W' }, repeated([](const Context& context) { context.editor().select(select_to_next_word<true>, true); }) },
+    { { Key::Modifiers::Alt, 'E' }, repeated([](const Context& context) { context.editor().select(select_to_next_word_end<true>, true); }) },
+    { { Key::Modifiers::Alt, 'B' }, repeated([](const Context& context) { context.editor().select(select_to_previous_word<true>, true); }) },
 
-    { { Key::Modifiers::Alt, 'l' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_eol, false); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'L' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_eol, true); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'h' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_eol_reverse, false); } while(--count > 0); } },
-    { { Key::Modifiers::Alt, 'H' }, [](const Context& context) { int count = context.numeric_param(); do { context.editor().select(select_to_eol_reverse, true); } while(--count > 0); } },
+    { { Key::Modifiers::Alt, 'l' }, repeated([](const Context& context) { context.editor().select(select_to_eol, false); }) },
+    { { Key::Modifiers::Alt, 'L' }, repeated([](const Context& context) { context.editor().select(select_to_eol, true); }) },
+    { { Key::Modifiers::Alt, 'h' }, repeated([](const Context& context) { context.editor().select(select_to_eol_reverse, false); }) },
+    { { Key::Modifiers::Alt, 'H' }, repeated([](const Context& context) { context.editor().select(select_to_eol_reverse, true); }) },
 
     { { Key::Modifiers::Alt, 's' }, do_split_regex },
 
