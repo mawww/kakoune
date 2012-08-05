@@ -17,7 +17,7 @@ class Register;
 //
 // The Editor class provides methods to manipulate a set of selections
 // and to use these selections to mutate it's buffer.
-class Editor
+class Editor : public SafeCountable
 {
 public:
     typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
