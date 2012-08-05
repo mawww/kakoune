@@ -10,35 +10,42 @@ class Buffer;
 
 struct Context
 {
-    Context()
-        : m_window(nullptr), m_buffer(nullptr) {}
-    Context(Window& window)
-        : m_window(&window), m_buffer(&window.buffer()) {}
+    Context() {}
+    Context(Editor& editor)
+        : m_editor(&editor), m_buffer(&editor.buffer()) {}
     Context(Buffer& buffer)
-        : m_window(nullptr), m_buffer(&buffer) {}
+        : m_buffer(&buffer) {}
 
     Buffer& buffer() const
     {
-        if (not m_buffer)
+        if (not has_buffer())
             throw runtime_error("no buffer in context");
         return *m_buffer;
     }
     bool has_buffer() const { return m_buffer; }
 
+    Editor& editor() const
+    {
+        if (not has_editor())
+            throw runtime_error("no editor in context");
+        return *m_editor.get();
+    }
+    bool has_editor() const { return m_editor; }
+
     Window& window() const
     {
-        if (not m_window)
+        if (not has_window())
             throw runtime_error("no window in context");
-        return *m_window;
+        return *dynamic_cast<Window*>(m_editor.get());
     }
-    bool has_window() const { return m_window; }
+    bool has_window() const { return m_editor and dynamic_cast<Window*>(m_editor.get()); }
 
     OptionManager& option_manager() const
     {
-        if (m_window)
-            return m_window->option_manager();
-        if (m_buffer)
-            return m_buffer->option_manager();
+        if (has_window())
+            return window().option_manager();
+        if (has_buffer())
+            return buffer().option_manager();
         return GlobalOptionManager::instance();
     }
 
@@ -47,7 +54,7 @@ struct Context
 
 
 public:
-    safe_ptr<Window> m_window;
+    safe_ptr<Editor> m_editor;
     safe_ptr<Buffer> m_buffer;
 
     int m_numeric_param = 0;
