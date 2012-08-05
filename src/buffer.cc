@@ -33,21 +33,23 @@ Buffer::Buffer(String name, Type type,
     if (not initial_content.empty())
         apply_modification(Modification::make_insert(begin(), std::move(initial_content)));
 
+    Editor editor_for_hooks(*this);
+    Context context(editor_for_hooks);
     if (type == Type::NewFile)
-        m_hook_manager.run_hook("BufNew", m_name, Context(*this));
+        m_hook_manager.run_hook("BufNew", m_name, context);
     else if (type == Type::File)
-        m_hook_manager.run_hook("BufOpen", m_name, Context(*this));
+        m_hook_manager.run_hook("BufOpen", m_name, context);
 
-    m_hook_manager.run_hook("BufCreate", m_name, Context(*this));
+    m_hook_manager.run_hook("BufCreate", m_name, context);
 }
 
 Buffer::~Buffer()
 {
+    m_hook_manager.run_hook("BufClose", m_name, Context(Editor(*this)));
+
     m_windows.clear();
     BufferManager::instance().unregister_buffer(this);
     assert(m_change_listeners.empty());
-
-    m_hook_manager.run_hook("BufClose", m_name, Context(*this));
 }
 
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const

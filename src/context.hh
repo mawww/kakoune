@@ -13,8 +13,10 @@ struct Context
     Context() {}
     Context(Editor& editor)
         : m_editor(&editor), m_buffer(&editor.buffer()) {}
-    Context(Buffer& buffer)
-        : m_buffer(&buffer) {}
+
+    // to allow func(Context(Editor(...)))
+    Context(Editor&& editor)
+        : m_editor(&editor), m_buffer(&editor.buffer()) {}
 
     Buffer& buffer() const
     {
