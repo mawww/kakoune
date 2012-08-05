@@ -7,15 +7,15 @@
 namespace Kakoune
 {
 
+class Context;
+
 class Register
 {
 public:
     virtual ~Register() {}
     virtual Register& operator=(const memoryview<String>& values) = 0;
 
-    virtual const String& operator[](size_t index) = 0;
-
-    virtual operator memoryview<String>() = 0;
+    virtual memoryview<String> values(const Context& context) = 0;
 };
 
 }

@@ -43,6 +43,7 @@ InsertSequence last_insert_sequence;
 
 template<typename GetKey, typename Redraw>
 void insert_sequence(IncrementalInserter& inserter,
+                     const Context& context,
                      GetKey get_key, Redraw redraw)
 {
     while (true)
@@ -66,7 +67,7 @@ void insert_sequence(IncrementalInserter& inserter,
             {
                 Key next_key = get_key();
                 if (next_key.modifiers == Key::Modifiers::None)
-                    inserter.insert(RegisterManager::instance()[next_key.key]);
+                    inserter.insert(RegisterManager::instance()[next_key.key].values(context));
                 break;
             }
             case 'm':
@@ -98,7 +99,7 @@ void do_insert(const Context& context)
     last_insert_sequence.keys.clear();
     IncrementalInserter inserter(context.editor(), mode);
     draw_editor_ifn(context.editor());
-    insert_sequence(inserter,
+    insert_sequence(inserter, context,
                     [&]() { Key key = get_key();
                             last_insert_sequence.keys.push_back(key);
                             return key; },
@@ -112,7 +113,7 @@ void do_repeat_insert(const Context& context)
 
     IncrementalInserter inserter(context.editor(), last_insert_sequence.mode);
     size_t index = 0;
-    insert_sequence(inserter,
+    insert_sequence(inserter, context,
                     [&]() { return last_insert_sequence.keys[index++]; },
                     [](){});
 }
@@ -168,9 +169,10 @@ void do_command(const Context& context)
 {
     try
     {
-        auto cmdline = prompt(":", std::bind(&CommandManager::complete,
-                                             &CommandManager::instance(),
-                                             _1, _2));
+        auto cmdline = prompt(":", context,
+                              std::bind(&CommandManager::complete,
+                                        &CommandManager::instance(),
+                                        _1, _2));
 
         CommandManager::instance().execute(cmdline, context);
     }
@@ -181,7 +183,7 @@ void do_pipe(const Context& context)
 {
     try
     {
-        auto cmdline = prompt("|", complete_nothing);
+        auto cmdline = prompt("|", context, complete_nothing);
 
         context.buffer().begin_undo_group();
         for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
@@ -201,9 +203,9 @@ void do_search(const Context& context)
 {
     try
     {
-        String ex = prompt("/");
+        String ex = prompt("/", context);
         if (ex.empty())
-            ex = RegisterManager::instance()['/'][0];
+            ex = RegisterManager::instance()['/'].values(context)[0];
         else
             RegisterManager::instance()['/'] = ex;
 
@@ -215,7 +217,7 @@ void do_search(const Context& context)
 template<bool append>
 void do_search_next(const Context& context)
 {
-    const String& ex = RegisterManager::instance()['/'][0];
+    const String& ex = RegisterManager::instance()['/'].values(context)[0];
     if (not ex.empty())
         context.editor().select(std::bind(select_next_match, _1, ex), append);
     else
@@ -255,20 +257,20 @@ void do_paste(const Context& context)
     if (count == 0)
     {
         if (paste_mode == PasteMode::Before)
-            editor.insert(reg);
+            editor.insert(reg.values(context));
         else if (paste_mode == PasteMode::After)
-            editor.append(reg);
+            editor.append(reg.values(context));
         else if (paste_mode == PasteMode::Replace)
-            editor.replace(reg);
+            editor.replace(reg.values(context));
     }
     else
     {
         if (paste_mode == PasteMode::Before)
-            editor.insert(reg[count-1]);
+            editor.insert(reg.values(context)[count-1]);
         else if (paste_mode == PasteMode::After)
-            editor.append(reg[count-1]);
+            editor.append(reg.values(context)[count-1]);
         else if (paste_mode == PasteMode::Replace)
-            editor.replace(reg[count-1]);
+            editor.replace(reg.values(context)[count-1]);
     }
 }
 
@@ -276,7 +278,7 @@ void do_select_regex(const Context& context)
 {
     try
     {
-        String ex = prompt("select: ");
+        String ex = prompt("select: ", context);
         context.editor().multi_select(std::bind(select_all_matches, _1, ex));
     }
     catch (prompt_aborted&) {}
@@ -286,7 +288,7 @@ void do_split_regex(const Context& context)
 {
     try
     {
-        String ex = prompt("split: ");
+        String ex = prompt("split: ", context);
         context.editor().multi_select(std::bind(split_selection, _1, ex));
     }
     catch (prompt_aborted&) {}
@@ -468,9 +470,12 @@ int main(int argc, char* argv[])
     shell_manager.register_env_var("opt_.+",
                                    [](const String& name, const Context& context)
                                    { return context.option_manager()[name.substr(4)].as_string(); });
+    shell_manager.register_env_var("reg_.+",
+                                   [](const String& name, const Context& context)
+                                   { return RegisterManager::instance()[name[4]].values(context)[0]; });
 
-    register_manager.register_dynamic_register('%', [&]() { return std::vector<String>(1, main_context.buffer().name()); });
-    register_manager.register_dynamic_register('.', [&]() { return main_context.window().selections_content(); });
+    register_manager.register_dynamic_register('%', [&](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
+    register_manager.register_dynamic_register('.', [&](const Context& context) { return context.editor().selections_content(); });
 
     register_commands();
     register_highlighters();

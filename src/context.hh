@@ -54,7 +54,6 @@ struct Context
     int numeric_param() const { return m_numeric_param; }
     void numeric_param(int param) { m_numeric_param = param; }
 
-
 public:
     safe_ptr<Editor> m_editor;
     safe_ptr<Buffer> m_buffer;

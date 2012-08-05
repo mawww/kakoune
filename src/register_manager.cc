@@ -17,17 +17,12 @@ public:
         return *this;
     }
 
-    const String& operator[](size_t index)
+    memoryview<String> values(const Context&)
     {
-        if (m_content.size() > index)
-            return m_content[index];
+        if (m_content.empty())
+            return memoryview<String>(ms_empty);
         else
-            return ms_empty;
-    }
-
-    operator memoryview<String>()
-    {
-        return memoryview<String>(m_content);
+            return memoryview<String>(m_content);
     }
 protected:
     std::vector<String> m_content;
@@ -50,16 +45,10 @@ public:
         throw runtime_error("this register is not assignable");
     }
 
-    const String& operator[](size_t index)
+    memoryview<String> values(const Context& context)
     {
-        m_content = m_function();
-        return StaticRegister::operator[](index);
-    }
-
-    operator memoryview<String>()
-    {
-        m_content = m_function();
-        return StaticRegister::operator memoryview<String>();
+        m_content = m_function(context);
+        return StaticRegister::values(context);
     }
 
 private:

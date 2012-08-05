@@ -23,7 +23,7 @@ hook global WinSetOption filetype=(?!cpp).* %{
 }
 
 hook global BufNew .*\.(h|hh|hpp|hxx|H) %{
-    exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>xyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
+    exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 }
 
 def alt %{ edit %sh{

@@ -580,10 +580,10 @@ void set_option(OptionManager& option_manager, const CommandParameters& params,
 class RegisterRestorer
 {
 public:
-    RegisterRestorer(char name)
+    RegisterRestorer(char name, const Context& context)
        : m_name(name)
     {
-         memoryview<String> save = RegisterManager::instance()[name];
+         memoryview<String> save = RegisterManager::instance()[name].values(context);
          m_save = std::vector<String>(save.begin(), save.end());
     }
 
@@ -610,7 +610,7 @@ public:
         current_client = m_previous_client;
     }
 
-    String prompt(const String&, Completer)
+    String prompt(const String&, const Context&, Completer)
     {
         size_t begin = m_pos;
         while (m_pos < m_keys.size() and m_keys[m_pos].key != '\n')
@@ -654,8 +654,8 @@ void exec_keys(const KeyList& keys,
 {
     BatchClient batch_client(keys);
 
-    RegisterRestorer quote('"');
-    RegisterRestorer slash('/');
+    RegisterRestorer quote('"', context);
+    RegisterRestorer slash('/', context);
 
     Editor batch_editor(context.buffer());
     Editor& editor = context.has_window() ? static_cast<Editor&>(context.window())
@@ -717,7 +717,7 @@ void menu(const CommandParameters& params,
     }
     oss << "(empty cancels): ";
 
-    String choice = prompt(oss.str(), complete_nothing);
+    String choice = prompt(oss.str(), context, complete_nothing);
     int i = str_to_int(choice);
 
     if (i > 0 and i < (count / 2) + 1)

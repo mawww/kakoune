@@ -14,10 +14,10 @@ void draw_editor_ifn(Editor& editor)
         current_client->draw_window(*window);
 }
 
-String prompt(const String& text, Completer completer)
+String prompt(const String& text, const Context& context, Completer completer)
 {
     assert(current_client);
-    return current_client->prompt(text, completer);
+    return current_client->prompt(text, context, completer);
 }
 
 Key get_key()

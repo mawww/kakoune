@@ -168,7 +168,7 @@ Key NCursesClient::get_key()
     return Key(modifiers, c);
 }
 
-String NCursesClient::prompt(const String& text, Completer completer)
+String NCursesClient::prompt(const String& text, const Context& context, Completer completer)
 {
     curs_set(2);
     auto restore_cursor = on_scope_end([]() { curs_set(0); });
@@ -249,7 +249,7 @@ String NCursesClient::prompt(const String& text, Completer completer)
         case CTRL('r'):
             {
                 c = getch();
-                String reg = RegisterManager::instance()[c][0];
+                String reg = RegisterManager::instance()[c].values(context)[0];
                 current_completion = -1;
                 result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, String::npos);
                 cursor_pos += reg.length();

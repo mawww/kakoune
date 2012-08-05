@@ -18,7 +18,7 @@ public:
     void draw_window(Window& window);
     void print_status(const String& status);
 
-    String prompt(const String& prompt, Completer completer);
+    String prompt(const String& prompt, const Context& context, Completer completer);
     Key    get_key();
 };
 
