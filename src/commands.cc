@@ -28,7 +28,7 @@ using namespace std::placeholders;
 extern Context main_context;
 extern bool    quit_requested;
 
-extern std::unordered_map<Key, std::function<void (Editor& editor, int count)>> keymap;
+extern std::unordered_map<Key, std::function<void (const Context& context)>> keymap;
 
 namespace
 {
@@ -664,6 +664,7 @@ void exec_keys(const KeyList& keys,
     scoped_edition edition(editor);
 
     int count = 0;
+    Context new_context(context);
     while (batch_client.has_key_left())
     {
         Key key = batch_client.get_key();
@@ -674,7 +675,10 @@ void exec_keys(const KeyList& keys,
         {
             auto it = keymap.find(key);
             if (it != keymap.end())
-                it->second(editor, count);
+            {
+                new_context.numeric_param(count);
+                it->second(new_context);
+            }
             count = 0;
         }
     }
