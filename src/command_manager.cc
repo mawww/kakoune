@@ -181,7 +181,7 @@ struct command_not_found : runtime_error
 };
 
 void CommandManager::execute_single_command(const CommandParameters& params,
-                                            const Context& context) const
+                                            Context& context) const
 {
     if (params.empty())
         return;
@@ -194,7 +194,7 @@ void CommandManager::execute_single_command(const CommandParameters& params,
 }
 
 void CommandManager::execute(const String& command_line,
-                             const Context& context,
+                             Context& context,
                              const EnvVarMap& env_vars)
 {
     TokenList tokens = parse(command_line);

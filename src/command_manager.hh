@@ -24,7 +24,7 @@ struct wrong_argument_count : runtime_error
 using CommandParameters = memoryview<String>;
 
 typedef std::function<void (const CommandParameters&,
-                            const Context& context)> Command;
+                            Context& context)> Command;
 
 typedef std::function<CandidateList (const Context& context,
                                      const CommandParameters&,
@@ -52,7 +52,7 @@ private:
 class CommandManager : public Singleton<CommandManager>
 {
 public:
-    void execute(const String& command_line, const Context& context,
+    void execute(const String& command_line, Context& context,
                  const EnvVarMap& env_vars = EnvVarMap());
 
     Completions complete(const Context& context,
@@ -70,7 +70,7 @@ public:
 
 private:
     void execute_single_command(const CommandParameters& params,
-                                const Context& context) const;
+                                Context& context) const;
     struct CommandDescriptor
     {
         Command command;

@@ -25,10 +25,9 @@ namespace Kakoune
 using namespace std::placeholders;
 
 // berk
-extern Context main_context;
 extern bool    quit_requested;
 
-extern std::unordered_map<Key, std::function<void (const Context& context)>> keymap;
+extern std::unordered_map<Key, std::function<void (Context& context)>> keymap;
 
 namespace
 {
@@ -231,7 +230,7 @@ Buffer* open_or_create(const String& filename)
 }
 
 template<bool force_reload>
-void edit(const CommandParameters& params, const Context& context)
+void edit(const CommandParameters& params, Context& context)
 {
     if (params.size() == 0 or params.size() > 3)
         throw wrong_argument_count();
@@ -255,10 +254,10 @@ void edit(const CommandParameters& params, const Context& context)
         window.select(window.buffer().iterator_at({line, column}));
     }
 
-    main_context = Context(window);
+    context = Context(window);
 }
 
-void write_buffer(const CommandParameters& params, const Context& context)
+void write_buffer(const CommandParameters& params, Context& context)
 {
     if (params.size() > 1)
         throw wrong_argument_count();
@@ -272,7 +271,7 @@ void write_buffer(const CommandParameters& params, const Context& context)
 }
 
 template<bool force>
-void quit(const CommandParameters& params, const Context& context)
+void quit(const CommandParameters& params, Context& context)
 {
     if (params.size() != 0)
         throw wrong_argument_count();
@@ -302,13 +301,13 @@ void quit(const CommandParameters& params, const Context& context)
 }
 
 template<bool force>
-void write_and_quit(const CommandParameters& params, const Context& context)
+void write_and_quit(const CommandParameters& params, Context& context)
 {
     write_buffer(params, context);
     quit<force>(CommandParameters(), context);
 }
 
-void show_buffer(const CommandParameters& params, const Context& context)
+void show_buffer(const CommandParameters& params, Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -318,10 +317,10 @@ void show_buffer(const CommandParameters& params, const Context& context)
     if (not buffer)
         throw runtime_error("buffer " + buffer_name + " does not exists");
 
-    main_context = Context(*buffer->get_or_create_window());
+    context = Context(*buffer->get_or_create_window());
 }
 
-void delete_buffer(const CommandParameters& params, const Context& context)
+void delete_buffer(const CommandParameters& params, Context& context)
 {
     if (params.size() > 1)
         throw wrong_argument_count();
@@ -340,7 +339,7 @@ void delete_buffer(const CommandParameters& params, const Context& context)
     if (buffer->type()!= Buffer::Type::Scratch and buffer->is_modified())
         throw runtime_error("buffer " + buffer->name() + " is modified");
 
-    if (&main_context.buffer() == buffer)
+    if (&context.buffer() == buffer)
     {
         if (manager.count() == 1)
             throw runtime_error("buffer " + buffer->name() + " is the last one");
@@ -348,7 +347,7 @@ void delete_buffer(const CommandParameters& params, const Context& context)
         {
             if (&buf != buffer)
             {
-               main_context = Context(*buf.get_or_create_window());
+               context = Context(*buf.get_or_create_window());
                break;
             }
         }
@@ -356,7 +355,7 @@ void delete_buffer(const CommandParameters& params, const Context& context)
     delete buffer;
 }
 
-void add_highlighter(const CommandParameters& params, const Context& context)
+void add_highlighter(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() < 1)
@@ -379,7 +378,7 @@ void add_highlighter(const CommandParameters& params, const Context& context)
                                       highlighter_params);
 }
 
-void rm_highlighter(const CommandParameters& params, const Context& context)
+void rm_highlighter(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() != 1)
@@ -393,7 +392,7 @@ void rm_highlighter(const CommandParameters& params, const Context& context)
     group.remove(*parser.begin());
 }
 
-void add_filter(const CommandParameters& params, const Context& context)
+void add_filter(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() < 1)
@@ -415,7 +414,7 @@ void add_filter(const CommandParameters& params, const Context& context)
     registry.add_filter_to_group(group, name, filter_params);
 }
 
-void rm_filter(const CommandParameters& params, const Context& context)
+void rm_filter(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } });
     if (parser.positional_count() != 1)
@@ -429,7 +428,7 @@ void rm_filter(const CommandParameters& params, const Context& context)
     group.remove(*parser.begin());
 }
 
-void add_hook(const CommandParameters& params, const Context& context)
+void add_hook(const CommandParameters& params, Context& context)
 {
     if (params.size() != 4)
         throw wrong_argument_count();
@@ -440,7 +439,10 @@ void add_hook(const CommandParameters& params, const Context& context)
     auto hook_func = [=](const String& param, const Context& context) {
         if (boost::regex_match(param.begin(), param.end(),
                                Regex(regex.begin(), regex.end())))
-            CommandManager::instance().execute(command, context);
+        {
+            Context new_context(context);
+            CommandManager::instance().execute(command, new_context);
+        }
     };
 
     const String& scope = params[0];
@@ -467,7 +469,7 @@ EnvVarMap params_to_env_var_map(const CommandParameters& params)
     return vars;
 }
 
-void define_command(const CommandParameters& params, const Context& context)
+void define_command(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params,
                             { { "env-params", false },
@@ -489,14 +491,14 @@ void define_command(const CommandParameters& params, const Context& context)
     Command cmd;
     if (parser.has_option("env-params"))
     {
-        cmd = [=](const CommandParameters& params, const Context& context) {
+        cmd = [=](const CommandParameters& params, Context& context) {
             CommandManager::instance().execute(commands, context,
                                                params_to_env_var_map(params));
         };
     }
     else
     {
-         cmd = [=](const CommandParameters& params, const Context& context) {
+         cmd = [=](const CommandParameters& params, Context& context) {
              if (not params.empty())
                  throw wrong_argument_count();
             CommandManager::instance().execute(commands, context);
@@ -521,7 +523,7 @@ void define_command(const CommandParameters& params, const Context& context)
         CommandManager::instance().register_command(cmd_name, cmd);
 }
 
-void echo_message(const CommandParameters& params, const Context& context)
+void echo_message(const CommandParameters& params, Context& context)
 {
     String message;
     for (auto& param : params)
@@ -530,7 +532,7 @@ void echo_message(const CommandParameters& params, const Context& context)
 }
 
 void exec_commands_in_file(const CommandParameters& params,
-                           const Context& context)
+                           Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -540,7 +542,7 @@ void exec_commands_in_file(const CommandParameters& params,
 }
 
 void exec_commands_in_runtime_file(const CommandParameters& params,
-                                   const Context& context)
+                                   Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -564,12 +566,12 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     if (ptr)
     {
         strcpy(ptr+1, filename.c_str());
-        exec_commands_in_file(CommandParameters(buffer), main_context);
+        exec_commands_in_file(CommandParameters(buffer), context);
     }
 }
 
 void set_option(OptionManager& option_manager, const CommandParameters& params,
-                const Context& context)
+                Context& context)
 {
     if (params.size() != 2)
         throw wrong_argument_count();
@@ -649,8 +651,7 @@ private:
     Client*        m_previous_client;
 };
 
-void exec_keys(const KeyList& keys,
-               const Context& context)
+void exec_keys(const KeyList& keys, Context& context)
 {
     BatchClient batch_client(keys);
 
@@ -684,8 +685,7 @@ void exec_keys(const KeyList& keys,
     }
 }
 
-void exec_string(const CommandParameters& params,
-                 const Context& context)
+void exec_string(const CommandParameters& params, Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -695,8 +695,7 @@ void exec_string(const CommandParameters& params,
     exec_keys(keys, context);
 }
 
-void menu(const CommandParameters& params,
-          const Context& context)
+void menu(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "auto-single", false } });
 
@@ -724,8 +723,7 @@ void menu(const CommandParameters& params,
         CommandManager::instance().execute(parser[(i-1)*2+1], context);
 }
 
-void try_catch(const CommandParameters& params,
-               const Context& context)
+void try_catch(const CommandParameters& params, Context& context)
 {
     if (params.size() != 3)
         throw wrong_argument_count();
@@ -835,21 +833,21 @@ void register_commands()
     cm.register_command("echo", echo_message);
 
     cm.register_commands({ "setg", "setglobal" },
-                         [](const CommandParameters& params, const Context& context)
+                         [](const CommandParameters& params, Context& context)
                          { set_option(GlobalOptionManager::instance(), params, context); },
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, size_t cursor_pos)
                              { return GlobalOptionManager::instance().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setb", "setbuffer" },
-                         [](const CommandParameters& params, const Context& context)
+                         [](const CommandParameters& params, Context& context)
                          { set_option(context.buffer().option_manager(), params, context); },
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, size_t cursor_pos)
                              { return context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setw", "setwindow" },
-                         [](const CommandParameters& params, const Context& context)
+                         [](const CommandParameters& params, Context& context)
                          { set_option(context.window().option_manager(), params, context); },
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, size_t cursor_pos)
