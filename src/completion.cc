@@ -14,16 +14,21 @@ CandidateList complete_filename(const Context& context,
                                 size_t cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);
-    auto dir_end = std::find(real_prefix.begin(), real_prefix.end(), '/');
     String dirname = "./";
     String dirprefix;
     String fileprefix = real_prefix;
 
-    if (dir_end != real_prefix.end())
+    size_t dir_end = -1;
+    for (size_t i = 0; i < real_prefix.length(); ++i)
     {
-        dirname = String(real_prefix.begin(), dir_end + 1);
+        if (real_prefix[i] == '/')
+            dir_end = i;
+    }
+    if (dir_end != -1)
+    {
+        dirname = real_prefix.substr(0, dir_end + 1);
         dirprefix = dirname;
-        fileprefix = String(dir_end + 1, real_prefix.end());
+        fileprefix = real_prefix.substr(dir_end + 1);
     }
 
     DIR* dir = opendir(dirname.c_str());
