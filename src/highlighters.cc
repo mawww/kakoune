@@ -52,20 +52,27 @@ void highlight_range(DisplayBuffer& display_buffer,
     }
 }
 
+typedef std::unordered_map<size_t, std::pair<Color, Color>> ColorSpec;
 void colorize_regex(DisplayBuffer& display_buffer,
                     const Regex& ex,
-                    Color fg_color, Color bg_color = Color::Default)
+                    ColorSpec colors)
 {
     const BufferRange& range = display_buffer.range();
-    RegexIterator re_it(range.first, range.second, ex, boost::match_nosubs);
+    RegexIterator re_it(range.first, range.second, ex);
     RegexIterator re_end;
     for (; re_it != re_end; ++re_it)
     {
-        highlight_range(display_buffer, (*re_it)[0].first, (*re_it)[0].second, true,
-                        [&](DisplayAtom& atom) {
-                            atom.fg_color = fg_color;
-                            atom.bg_color = bg_color;
-                        });
+        for (size_t n = 0; n < re_it->size(); ++n)
+        {
+            if (colors.find(n) == colors.end())
+                continue;
+
+            highlight_range(display_buffer, (*re_it)[n].first, (*re_it)[n].second, true,
+                            [&](DisplayAtom& atom) {
+                                atom.fg_color = colors[n].first;
+                                atom.bg_color = colors[n].second;
+                            });
+        }
     }
 }
 
@@ -86,19 +93,33 @@ Color parse_color(const String& color)
 HighlighterAndId colorize_regex_factory(Window& window,
                                         const HighlighterParameters params)
 {
-    if (params.size() != 3)
+    if (params.size() < 2)
         throw runtime_error("wrong parameter count");
 
     Regex ex(params[0].begin(), params[0].end(),
              boost::regex::perl | boost::regex::optimize);
 
-    Color fg_color = parse_color(params[1]);
-    Color bg_color = parse_color(params[2]);
+    static Regex color_spec_ex(LR"((\d+):(\w+)(,(\w+))?)");
+    ColorSpec colors;
+    for (auto it = params.begin() + 1;  it != params.end(); ++it)
+    {
+        boost::match_results<String::iterator> res;
+        if (not boost::regex_match(it->begin(), it->end(), res, color_spec_ex))
+            throw runtime_error("wrong colorspec: '" + *it +
+                                 "' expected <capture>:<fgcolor>[,<bgcolor>]");
+
+        int capture = str_to_int(String(res[1].first, res[1].second));
+        Color fg_color = parse_color(String(res[2].first, res[2].second));
+        Color bg_color = res[4].matched ?
+                           parse_color(String(res[4].first, res[4].second))
+                         : Color::Default;
+        colors[capture] = { fg_color, bg_color };
+    }
 
     String id = "colre'" + params[0] + "'";
 
-    return HighlighterAndId(id, std::bind(colorize_regex,
-                                          _1,  ex, fg_color, bg_color));
+    return HighlighterAndId(id, std::bind(colorize_regex, _1,  ex,
+                                          std::move(colors)));
 }
 
 void expand_tabulations(Window& window, DisplayBuffer& display_buffer)

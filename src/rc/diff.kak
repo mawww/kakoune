@@ -4,9 +4,9 @@ hook global BufCreate .*\.(diff|patch) %{
 
 hook global WinSetOption filetype=diff %{
     addhl group diff-highlight
-    addhl -group diff-highlight regex "^\+[^\n]*\n" green default
-    addhl -group diff-highlight regex "^-[^\n]*\n" red default
-    addhl -group diff-highlight regex "^@@[^\n]*@@" cyan default
+    addhl -group diff-highlight regex "^\+[^\n]*\n" 0:green,default
+    addhl -group diff-highlight regex "^-[^\n]*\n" 0:red,default
+    addhl -group diff-highlight regex "^@@[^\n]*@@" 0:cyan,default
 }
 
 hook global WinSetOption filetype=(?!diff).* %{
