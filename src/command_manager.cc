@@ -172,16 +172,6 @@ TokenList parse(const String& line,
     return result;
 }
 
-void shell_eval(TokenList& params, const String& cmdline,
-                const Context& context, const EnvVarMap& env_vars)
-{
-    String output = ShellManager::instance().eval(cmdline, context, env_vars);
-    TokenList tokens = parse(output);
-
-    for (auto& token : tokens)
-        params.push_back(std::move(token));
-}
-
 }
 
 struct command_not_found : runtime_error
@@ -189,6 +179,19 @@ struct command_not_found : runtime_error
     command_not_found(const String& command)
         : runtime_error(command + " : no such command") {}
 };
+
+void CommandManager::execute_single_command(const CommandParameters& params,
+                                            const Context& context) const
+{
+    if (params.empty())
+        return;
+
+    auto command_it = m_commands.find(params[0]);
+    if (command_it == m_commands.end())
+        throw command_not_found(params[0]);
+    memoryview<String> param_view(params.begin()+1, params.end());
+    command_it->second.command(param_view, context);
+}
 
 void CommandManager::execute(const String& command_line,
                              const Context& context,
@@ -198,46 +201,32 @@ void CommandManager::execute(const String& command_line,
     if (tokens.empty())
         return;
 
-    TokenList expanded_tokens;
-    for (auto& token : tokens)
+    std::vector<String> params;
+    for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
-        if (token.type() == Token::Type::ShellExpand)
-            shell_eval(expanded_tokens, token.content(),
-                       context, env_vars);
-        else
-            expanded_tokens.push_back(token);
-    }
-
-    auto begin = expanded_tokens.begin();
-    auto end = begin;
-
-    while (true)
-    {
-        while (end != expanded_tokens.end() and
-               end->type() != Token::Type::CommandSeparator)
-            ++end;
-
-        if (end != begin)
+        if (it->type() == Token::Type::ShellExpand)
         {
-            auto command_it = m_commands.find(begin->content());
-            if (command_it == m_commands.end())
-                throw command_not_found(begin->content());
+            String output = ShellManager::instance().eval(it->content(),
+                                                          context, env_vars);
+            TokenList shell_tokens = parse(output);
+            it = tokens.erase(it);
+            for (auto& token : shell_tokens)
+                it = ++tokens.insert(it, std::move(token));
+            it -= shell_tokens.size();
 
-            std::vector<String> params;
-            for (auto token_it = begin+1; token_it != end; ++token_it)
-            {
-                assert(token_it->type() == Token::Type::Raw);
-                params.push_back(token_it->content());
-            }
-            command_it->second.command(params, context);
+            // when last token is a ShellExpand which produces no output
+            if (it == tokens.end())
+                break;
         }
-
-        if (end == expanded_tokens.end())
-            break;
-
-        begin = end+1;
-        end   = begin;
+        if (it->type() == Token::Type::CommandSeparator)
+        {
+            execute_single_command(params, context);
+            params.clear();
+        }
+        if (it->type() == Token::Type::Raw)
+            params.push_back(it->content());
     }
+    execute_single_command(params, context);
 }
 
 Completions CommandManager::complete(const String& command_line, size_t cursor_pos)

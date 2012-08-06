@@ -65,6 +65,8 @@ public:
                            const CommandCompleter& completer = CommandCompleter());
 
 private:
+    void execute_single_command(const CommandParameters& params,
+                                const Context& context) const;
     struct CommandDescriptor
     {
         Command command;
