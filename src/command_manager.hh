@@ -26,19 +26,22 @@ using CommandParameters = memoryview<String>;
 typedef std::function<void (const CommandParameters&,
                             const Context& context)> Command;
 
-typedef std::function<CandidateList (const CommandParameters&,
+typedef std::function<CandidateList (const Context& context,
+                                     const CommandParameters&,
                                      size_t, size_t)> CommandCompleter;
 
 class PerArgumentCommandCompleter
 {
 public:
-    typedef std::function<CandidateList (const String&, size_t)> ArgumentCompleter;
+    typedef std::function<CandidateList (const Context&,
+                                         const String&, size_t)> ArgumentCompleter;
     typedef memoryview<ArgumentCompleter> ArgumentCompleterList;
 
     PerArgumentCommandCompleter(const ArgumentCompleterList& completers)
         : m_completers(completers.begin(), completers.end()) {}
 
-    CandidateList operator()(const CommandParameters& params,
+    CandidateList operator()(const Context& context,
+                             const CommandParameters& params,
                              size_t token_to_complete,
                              size_t pos_in_token) const;
 
@@ -52,7 +55,8 @@ public:
     void execute(const String& command_line, const Context& context,
                  const EnvVarMap& env_vars = EnvVarMap());
 
-    Completions complete(const String& command_line, size_t cursor_pos);
+    Completions complete(const Context& context,
+                         const String& command_line, size_t cursor_pos);
 
     bool command_defined(const String& command_name) const;
 

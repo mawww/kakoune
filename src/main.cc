@@ -172,7 +172,7 @@ void do_command(const Context& context)
         auto cmdline = prompt(":", context,
                               std::bind(&CommandManager::complete,
                                         &CommandManager::instance(),
-                                        _1, _2));
+                                        _1, _2, _3));
 
         CommandManager::instance().execute(cmdline, context);
     }

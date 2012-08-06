@@ -9,7 +9,8 @@
 namespace Kakoune
 {
 
-CandidateList complete_filename(const String& prefix,
+CandidateList complete_filename(const Context& context,
+                                const String& prefix,
                                 size_t cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);

@@ -9,6 +9,8 @@
 namespace Kakoune
 {
 
+class Context;
+
 typedef std::vector<String> CandidateList;
 
 struct Completions
@@ -24,12 +26,15 @@ struct Completions
         : start(start), end(end) {}
 };
 
-CandidateList complete_filename(const String& prefix,
+CandidateList complete_filename(const Context& context,
+                                const String& prefix,
                                 size_t cursor_pos = -1);
 
-typedef std::function<Completions (const String&, size_t)> Completer;
+typedef std::function<Completions (const Context&,
+                                   const String&, size_t)> Completer;
 
-inline Completions complete_nothing(const String&, size_t cursor_pos)
+inline Completions complete_nothing(const Context& context,
+                                    const String&, size_t cursor_pos)
 {
     return Completions(cursor_pos, cursor_pos);
 }

@@ -506,7 +506,7 @@ void define_command(const CommandParameters& params, const Context& context)
     if (parser.has_option("shell-completion"))
     {
         String shell_cmd = parser.option_value("shell-completion");
-        auto completer = [=](const CommandParameters& params,
+        auto completer = [=](const Context& context, const CommandParameters& params,
                              size_t token_to_complete, size_t pos_in_token)
         {
            EnvVarMap vars = params_to_env_var_map(params);
@@ -759,16 +759,17 @@ void register_commands()
     cm.register_command("wq!", write_and_quit<true>);
 
     PerArgumentCommandCompleter buffer_completer({
-        [](const String& prefix, size_t cursor_pos)
+        [](const Context& context, const String& prefix, size_t cursor_pos)
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
     cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
     cm.register_commands({ "db", "delbuf" }, delete_buffer, buffer_completer);
 
     cm.register_commands({ "ah", "addhl" }, add_highlighter,
-                         [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                         [](const Context& context, const CommandParameters& params,
+                           size_t token_to_complete, size_t pos_in_token)
                          {
-                             Window& w = main_context.window();
+                             Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
                                                  params[token_to_complete] : String();
                              if (token_to_complete == 1 and params[0] == "-group")
@@ -779,9 +780,10 @@ void register_commands()
                                  return CandidateList();
                          });
     cm.register_commands({ "rh", "rmhl" }, rm_highlighter,
-                         [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                         [](const Context& context, const CommandParameters& params,
+                            size_t token_to_complete, size_t pos_in_token)
                          {
-                             Window& w = main_context.window();
+                             Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
                                                  params[token_to_complete] : String();
                              if (token_to_complete == 1 and params[0] == "-group")
@@ -792,9 +794,10 @@ void register_commands()
                                  return w.highlighters().complete_id(arg, pos_in_token);
                          });
     cm.register_commands({ "af", "addfilter" }, add_filter,
-                         [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                         [](const Context& context, const CommandParameters& params,
+                            size_t token_to_complete, size_t pos_in_token)
                          {
-                             Window& w = main_context.window();
+                             Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
                                                  params[token_to_complete] : String();
                              if (token_to_complete == 1 and params[0] == "-group")
@@ -805,9 +808,10 @@ void register_commands()
                                  return CandidateList();
                          });
     cm.register_commands({ "rf", "rmfilter" }, rm_filter,
-                         [](const CommandParameters& params, size_t token_to_complete, size_t pos_in_token)
+                         [](const Context& context, const CommandParameters& params,
+                            size_t token_to_complete, size_t pos_in_token)
                          {
-                             Window& w = main_context.window();
+                             Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
                                                  params[token_to_complete] : String();
                              if (token_to_complete == 1 and params[0] == "-group")
@@ -834,22 +838,22 @@ void register_commands()
                          [](const CommandParameters& params, const Context& context)
                          { set_option(GlobalOptionManager::instance(), params, context); },
                          PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
+                             [](const Context& context, const String& prefix, size_t cursor_pos)
                              { return GlobalOptionManager::instance().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setb", "setbuffer" },
                          [](const CommandParameters& params, const Context& context)
                          { set_option(context.buffer().option_manager(), params, context); },
                          PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
-                             { return main_context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
+                             [](const Context& context, const String& prefix, size_t cursor_pos)
+                             { return context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setw", "setwindow" },
                          [](const CommandParameters& params, const Context& context)
                          { set_option(context.window().option_manager(), params, context); },
                          PerArgumentCommandCompleter({
-                             [](const String& prefix, size_t cursor_pos)
-                             { return main_context.window().option_manager().complete_option_name(prefix, cursor_pos); }
+                             [](const Context& context, const String& prefix, size_t cursor_pos)
+                             { return context.window().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
 }
 

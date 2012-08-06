@@ -229,7 +229,8 @@ void CommandManager::execute(const String& command_line,
     execute_single_command(params, context);
 }
 
-Completions CommandManager::complete(const String& command_line, size_t cursor_pos)
+Completions CommandManager::complete(const Context& context,
+                                     const String& command_line, size_t cursor_pos)
 {
     TokenPosList pos_info;
     TokenList tokens = parse(command_line, &pos_info);
@@ -279,13 +280,14 @@ Completions CommandManager::complete(const String& command_line, size_t cursor_p
     std::vector<String> params;
     for (auto token_it = tokens.begin()+1; token_it != tokens.end(); ++token_it)
         params.push_back(token_it->content());
-    result.candidates = command_it->second.completer(params,
+    result.candidates = command_it->second.completer(context, params,
                                                      token_to_complete - 1,
                                                      cursor_pos_in_token);
     return result;
 }
 
-CandidateList PerArgumentCommandCompleter::operator()(const CommandParameters& params,
+CandidateList PerArgumentCommandCompleter::operator()(const Context& context,
+                                                      const CommandParameters& params,
                                                       size_t token_to_complete,
                                                       size_t pos_in_token) const
 {
@@ -297,7 +299,7 @@ CandidateList PerArgumentCommandCompleter::operator()(const CommandParameters& p
 
     const String& argument = token_to_complete < params.size() ?
                              params[token_to_complete] : String();
-    return m_completers[token_to_complete](argument, pos_in_token);
+    return m_completers[token_to_complete](context, argument, pos_in_token);
 }
 
 }

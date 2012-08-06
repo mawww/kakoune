@@ -261,7 +261,7 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
         {
             if (current_completion == -1)
             {
-                completions = completer(result, cursor_pos);
+                completions = completer(context, result, cursor_pos);
                 if (completions.candidates.empty())
                     break;
 
