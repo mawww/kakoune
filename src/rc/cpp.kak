@@ -4,13 +4,13 @@ hook global BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) %{
 
 hook global WinSetOption filetype=cpp %{
     addhl group cpp-highlight;
-    addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:red,default;
-    addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:yellow,default;
-    addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not)\>" 0:blue,default;
-    addhl -group cpp-highlight regex "\<(const|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename)\>" 0:green,default;
-    addhl -group cpp-highlight regex "(?<!')\"(\\\"|[^\"])*\"" 0:magenta,default;
-    addhl -group cpp-highlight regex "(\`|(?<=\n))\h*#\h*[^\n]*" 0:magenta,default;
-    addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:cyan,default;
+    addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:red
+    addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:yellow
+    addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not)\>" 0:blue
+    addhl -group cpp-highlight regex "\<(const|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename)\>" 0:green
+    addhl -group cpp-highlight regex "(?<!')\"(\\\"|[^\"])*\"" 0:magenta
+    addhl -group cpp-highlight regex "(\`|(?<=\n))\h*#\h*[^\n]*" 0:magenta
+    addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:cyan
     addfilter group cpp-filters;
     addfilter -group cpp-filters preserve_indent;
     addfilter -group cpp-filters cleanup_whitespaces;
