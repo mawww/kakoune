@@ -96,30 +96,37 @@ HighlighterAndId colorize_regex_factory(Window& window,
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
 
-    Regex ex(params[0].begin(), params[0].end(),
-             boost::regex::perl | boost::regex::optimize);
-
-    static Regex color_spec_ex(LR"((\d+):(\w+)(,(\w+))?)");
-    ColorSpec colors;
-    for (auto it = params.begin() + 1;  it != params.end(); ++it)
+    try
     {
-        boost::match_results<String::iterator> res;
-        if (not boost::regex_match(it->begin(), it->end(), res, color_spec_ex))
-            throw runtime_error("wrong colorspec: '" + *it +
-                                 "' expected <capture>:<fgcolor>[,<bgcolor>]");
+        static Regex color_spec_ex(LR"((\d+):(\w+)(,(\w+))?)");
+        ColorSpec colors;
+        for (auto it = params.begin() + 1;  it != params.end(); ++it)
+        {
+            boost::match_results<String::iterator> res;
+            if (not boost::regex_match(it->begin(), it->end(), res, color_spec_ex))
+                throw runtime_error("wrong colorspec: '" + *it +
+                                     "' expected <capture>:<fgcolor>[,<bgcolor>]");
 
-        int capture = str_to_int(String(res[1].first, res[1].second));
-        Color fg_color = parse_color(String(res[2].first, res[2].second));
-        Color bg_color = res[4].matched ?
-                           parse_color(String(res[4].first, res[4].second))
-                         : Color::Default;
-        colors[capture] = { fg_color, bg_color };
+            int capture = str_to_int(String(res[1].first, res[1].second));
+            Color fg_color = parse_color(String(res[2].first, res[2].second));
+            Color bg_color = res[4].matched ?
+                               parse_color(String(res[4].first, res[4].second))
+                             : Color::Default;
+            colors[capture] = { fg_color, bg_color };
+        }
+
+        String id = "colre'" + params[0] + "'";
+
+        Regex ex(params[0].begin(), params[0].end(),
+                 boost::regex::perl | boost::regex::optimize);
+
+        return HighlighterAndId(id, std::bind(colorize_regex, _1,  ex,
+                                              std::move(colors)));
+        }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(String("regex error: ") + err.what());
     }
-
-    String id = "colre'" + params[0] + "'";
-
-    return HighlighterAndId(id, std::bind(colorize_regex, _1,  ex,
-                                          std::move(colors)));
 }
 
 void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
