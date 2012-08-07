@@ -66,8 +66,8 @@ command itself.
 for example, _3W_ selects 3 consecutive words and _3w_ select the third word on
 the right of selection end.
 
-* _space_: when used with count, keep only the counth selection
-* _alt-space_: when used with count, remove the counth selection
+ * _space_: when used with count, keep only the counth selection
+ * _alt-space_: when used with count, remove the counth selection
 
 Changes
 -------
@@ -116,12 +116,12 @@ Object Selection
 Using alt-i and alt-a, you can select some text object, the starting
 point is always the last character of the selection.
 
-* _b_, _(_ or _)_: select the enclosing parenthesis
-* _B_, _{_ or _}_: select the enclosing {} block
-* _[_ or _]_: select the enclosing [] block
-* _<_ or _>_: select the enclosing <> block
-* w: select the whole word
-* W: select the whole WORD
+ * _b_, _(_ or _)_: select the enclosing parenthesis
+ * _B_, _{_ or _}_: select the enclosing {} block
+ * _[_ or _]_: select the enclosing [] block
+ * _<_ or _>_: select the enclosing <> block
+ * w: select the whole word
+ * W: select the whole WORD
 
 When it makes sense, _alt-i_ selects the inner object and alt-a the whole
 object. For example _alt-i_ ( will only select the inside of the parenthesis,
@@ -145,6 +145,48 @@ selection.
 Registers are lists, instead of simply text in order to interact well with
 multiselection. Each selection have it's own captures, or yank buffer.
 
+Basic Commands
+--------------
+
+Commands are entered using *:*.
+
+ * e[dit] <filename> [<line> [<column>]]: open buffer on file, go to given
+     line and column. If file is already opened, just switch to this file.
+     use edit! to force reloading.
+ * w[rite] [<filename>]: write buffer to <filename> or use it's name if
+      filename is not given.
+ * q[uit]: exit Kakoune, use quit! to force quitting even if there is some
+      unsaved buffers remaining.
+ * wq: write current buffer and quit
+ * b[uffer] <name>: switch to buffer <name>
+ * d[el]b[uf] [<name>]: delete the buffer <name>
+ * source <filename>: execute commands in <filename>
+ * runtime <filename>: execute commands in <filename>, <filename>
+      is relative to kak executable path.
+ * exec <keys>: execute <keys> as if pressed in normal mode.
+ * echo <text>: show <text> in status line
+ * set[bwg] <option> <value>: set <option> to <value> in *b*uffer, *w*indow
+      or *g*lobal scope.
+
+String syntax
+-------------
+
+When entering a command, parameters are separated by whitespace (shell like),
+if you want to give parameters with spaces, you should quote them.
+
+Kakoune support three string syntax:
+
+ * "strings" and 'strings': classic strings, use \' or \" to escape the
+                            separator.
+
+ * %{strings}: these strings are very usefull when entering commands, first the '{' and '}'
+               delimiter is configurable: you can use any non alphanumeric character.
+               like %[string], %<string>, %(string), %~string~ or %!string!...
+               if the character following the % is one of {[(<, then the closing one is
+               the matching }])>, and these delimiters in the string need not to be
+               escaped if the contained delimiters are balanced.
+               for example %{ roger {}; } is a valid string.
+
 Highlighters
 ------------
 
@@ -154,16 +196,22 @@ and :rmhl <highlighter_id>
 
 existing highlighters are:
 
-* *highlight_selections*: used to make current selection visible
-* *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
-* *number_lines*: show line numbers
-* *regex*: highlight a regex, takes 3 parameters <regex> <fg_color> <bg_color>
-* *group*: highlighter group, containing other highlighters. takes one
-           parameter, <group_name>. useful when multiple highlighters work
-           together and need to be removed as one. Adding and removing from
-           a group can be done using
-           :addhl -group <group> <highlighter_name> <highlighter_parameters...>
-           :rmhl  -group <group> <highlighter_name>
+ * *highlight_selections*: used to make current selection visible
+ * *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
+ * *number_lines*: show line numbers
+ * *group*: highlighter group, containing other highlighters. takes one
+            parameter, <group_name>. useful when multiple highlighters work
+            together and need to be removed as one. Adding and removing from
+            a group can be done using
+            :addhl -group <group> <highlighter_name> <highlighter_parameters...>
+            :rmhl  -group <group> <highlighter_name>
+ * *regex*: highlight a regex, takes the regex as first parameter, followed by
+            any number of color spec parameters.
+            color spec format is: <capture_id>:<fg_color>[,<bg_color>]
+            For example:
+            :addhl regex //(\h+TODO:)?[^\n]+ 0:cyan 1:yellow,red
+            will highlight C++ style comments in cyan, with an eventual
+            'TODO:' in yellow on red background.
 
 Filters
 -------
@@ -174,10 +222,11 @@ added or removed with :addfilter <filter_name> <filter_parameters...> and
 
 exisiting filters are:
 
-* *preserve_indent*: insert previous line indent when inserting a newline
-* *cleanup_whitespaces*: remove trailing whitespaces on the previous line
-                         when inserting an end-of-line.
-* *expand_tabulations*: insert spaces instead of tab characters
+ * *preserve_indent*: insert previous line indent when inserting a newline
+ * *cleanup_whitespaces*: remove trailing whitespaces on the previous line
+                          when inserting an end-of-line.
+ * *expand_tabulations*: insert spaces instead of tab characters
+ * *group*: same as highlighters group
 
 Hooks
 -----
@@ -185,22 +234,69 @@ Hooks
 commands can be registred to be executed when certain events arise.
 to register a hook, use the hook command.
 
-:hook <scope> <hook_name> <filtering_regex> <command> <command_args>...
+:hook <scope> <hook_name> <filtering_regex> <commands>
 
 <scope> can be either global, buffer or window, the scope are hierarchical,
 meaning that a Window calling a hook will execute it's own, the buffer ones
 and the global ones.
 
+<command> is a string containing the commands to execute when the hook is
+called.
+
 for example, to automatically use line numbering with .cc files,
 use the following command:
 
-:hook global WinCreate .*\.cc addhl number_lines
+:hook global WinCreate .*\.cc %{ addhl number_lines }
 
-Shell expension
+Shell expansion
 ---------------
 
-Commands support the shell backtick syntax, and kakoune internal state
-can be accessed through environment variable. For example, if you are
-editing the editor.cc file, typing ':edit `echo ${kak_bufname/%.cc/.hh}`'
-will edit the editor.hh file.
+A special string syntax is supported which replace it's content with the
+output of the shell commands in it, it is similar to the shell $(...)
+syntax and is evaluated only when needed.
+for example: %sh{ ls } is replaced with the output of the ls command.
 
+Some of kakoune state is available through environment variables:
+
+ * *kak_selection*: content of the last selection
+ * *kak_bufname*: name of the current buffer
+ * *kak_opt_name*: value of option name
+ * *kak_reg_x*: value of register x
+
+for example you can print informations on the current file in the status
+line using:
+:echo %sh{ ls -l $kak_bufname }
+
+Defining Commands
+-----------------
+
+new commands can be defined using the *def* command.
+
+:def <command_name> <commands>
+
+<commands> is a string containing the commands to execute
+
+def can also takes some flags:
+ * *-env-params*: pass parameters given to commands in the environement as
+                  kak_paramN with N the parameter number
+ * *-shell-completion*: following string is a shell command which takes
+                        parameters through the environemnt and output one
+                        completion candidate per line.
+ * *-allow-override*: allow the new command to replace an exisiting one
+                      with the same name.
+
+Using shell expansion permits to define complex commands or to access
+kakoune state:
+
+:def print_selection %{ echo %sh{ ${kak_selection} } }
+
+Some helper commands can be used to define composite commands:
+
+ * menu <label1> <commands1> <label2> <commands2>...: display a menu using
+     labels, the selected label's commands are executed.
+ * try <commands> catch <on_error_commands>: prevent an error in <commands>
+     from aborting the whole commands execution, execute <on_error_commands>
+     instead.
+
+Note that these commands are available in interactive command mode, but are
+not that useful in this context.
