@@ -473,7 +473,6 @@ void define_command(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params,
                             { { "env-params", false },
-                              { "append-params", false },
                               { "allow-override", false },
                               { "shell-completion", true } });
 
