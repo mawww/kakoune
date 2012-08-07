@@ -8,7 +8,7 @@ hook global WinSetOption filetype=kak %{
     addhl -group kak-highlight regex \<(default|black|red|green|yellow|blue|magenta|cyan|white)\> 0:yellow
     addhl -group kak-highlight regex (?<=\<hook)\h+((global|buffer|window)|(\S+))\h+(\S+)\h+(\H+) 2:blue 3:red 4:cyan 5:magenta
     addhl -group kak-highlight regex (?<=\<regex)\h+(\S+) 1:magenta
-    addhl -group kak-highlight regex \s(["'])(?:\\\1|.)*?\1\s 0:magenta
+    addhl -group kak-highlight regex (["'])(?:\\\1|.)*?\1 0:magenta
     addhl -group kak-highlight regex (?<=\<set[gbw])\h+(\S+)\h+(\S+) 1:magenta 2:red
 }
 
