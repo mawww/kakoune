@@ -138,7 +138,7 @@ inline BufferIterator BufferIterator::operator+(BufferSize size) const
             if (m_buffer->m_lines[i].start > o)
                 return BufferIterator(*m_buffer, { i-1, o - m_buffer->m_lines[i-1].start });
         }
-        int last_line = m_buffer->line_count() - 1;
+        int last_line = std::max(0, m_buffer->line_count() - 1);
         return BufferIterator(*m_buffer, { last_line, o - m_buffer->m_lines[last_line].start });
     }
     return operator-(-size);
