@@ -500,7 +500,12 @@ int main(int argc, char* argv[])
         write_debug("utf-8 test: é á ï");
 
         if (argc > 1)
-            command_manager.execute(String("edit ") + argv[1], context);
+        {
+            String cmd = "edit ";
+            for (int i = 1; i < argc; ++i)
+                cmd += String(" ") + argv[i];
+            command_manager.execute(cmd, context);
+        }
         else
         {
             auto buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
