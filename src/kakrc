@@ -7,3 +7,4 @@ runtime rc/git.kak
 runtime rc/global.kak
 runtime rc/diff.kak
 runtime rc/make.kak
+runtime rc/grep.kak
