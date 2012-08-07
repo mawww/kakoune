@@ -184,15 +184,12 @@ void do_pipe(Context& context)
     {
         auto cmdline = prompt("|", context, complete_nothing);
 
-        context.buffer().begin_undo_group();
+        Editor& editor = context.editor();
+        std::vector<String> strings;
         for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
-        {
-            String new_content = ShellManager::instance().pipe(String(sel.begin(), sel.end()),
-                                                               cmdline, context, {});
-            context.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
-            context.buffer().modify(Modification::make_insert(sel.begin(), new_content));
-        }
-        context.buffer().end_undo_group();
+            strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
+                                                            cmdline, context, {}));
+        editor.replace(strings);
     }
     catch (prompt_aborted&) {}
 }
