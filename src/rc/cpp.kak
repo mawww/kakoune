@@ -2,6 +2,13 @@ hook global BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) %{
     setb filetype cpp
 }
 
+hook global BufOpen .* %{ %sh{
+     mimetype="$(file -b --mime-type ${kak_bufname})"
+     if [[ "${mimetype}" == "text/x-c++" || "${mimetype}" == "text/x-c" ]]; then
+         echo setb filetype cpp;
+     fi
+} }
+
 hook global WinSetOption filetype=cpp %{
     addhl group cpp-highlight;
     addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:red
