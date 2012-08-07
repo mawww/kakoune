@@ -312,6 +312,7 @@ void NCursesClient::print_status(const String& status)
     move(y-1, 0);
     clrtoeol();
     addstr(status.c_str());
+    refresh();
 }
 
 }
