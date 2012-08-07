@@ -1,7 +1,12 @@
 def -env-params make %{ echo make in progress, please wait...; %sh{
      output=$(mktemp -t kak-make.XXXXXXXX)
      make ${kak_param_0} ${kak_param_1} ${kak_param_2} ${kak_param_3} ${kak_param_4} >& ${output}
-     echo "echo; edit ${output}; setb filetype make; hook buffer BufClose ${output} %{ %sh{rm ${output} } }"
+     echo "echo
+           try %{ db *make* } catch %{ }
+           edit -scratch %{*make*}
+           setb filetype make
+           exec %{|cat ${output}<ret>gg}
+           %sh{ rm ${output} }"
 }}
 
 hook global WinSetOption filetype=make %{

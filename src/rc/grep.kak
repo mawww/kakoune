@@ -1,7 +1,12 @@
 def -env-params grep %{ echo grep in progress, please wait...; %sh{
      output=$(mktemp -t kak-grep.XXXXXXXX)
      grep -Hn $kak_param0 $kak_param1 $kak_param2 $kak_param3 $kak_param4 >& ${output}
-     echo "echo; edit ${output}; setb filetype grep; hook buffer BufClose ${output} %{ %sh{rm ${output} } }"
+     echo "echo
+           try %{ db *grep* } catch %{ }
+           edit -scratch *grep*
+           setb filetype grep
+           exec %{|cat ${output}<ret>gg}
+           %sh{rm ${output} }"
 }}
 
 hook global WinSetOption filetype=grep %{
