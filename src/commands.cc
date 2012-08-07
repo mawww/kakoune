@@ -232,24 +232,32 @@ Buffer* open_or_create(const String& filename)
 template<bool force_reload>
 void edit(const CommandParameters& params, Context& context)
 {
-    if (params.size() == 0 or params.size() > 3)
+    ParametersParser parser(params, { { "scratch", false } });
+
+    const size_t param_count = parser.positional_count();
+    if (param_count == 0 or param_count > 3)
         throw wrong_argument_count();
 
-    const String& filename = params[0];
+    const String& filename = parser[0];
 
     Buffer* buffer = nullptr;
     if (not force_reload)
         buffer = BufferManager::instance().get_buffer(filename);
     if (not buffer)
-        buffer = open_or_create(filename);
+    {
+        if (parser.has_option("scratch"))
+            buffer = new Buffer(filename, Buffer::Type::Scratch);
+        else
+            buffer = open_or_create(filename);
+    }
 
     Window& window = *buffer->get_or_create_window();
 
-    if (params.size() > 1)
+    if (param_count > 1)
     {
-        int line = std::max(0, str_to_int(params[1]) - 1);
-        int column = params.size() > 2 ?
-                         std::max(0, str_to_int(params[2]) - 1) : 0;
+        int line = std::max(0, str_to_int(parser[1]) - 1);
+        int column = param_count > 2 ?
+                         std::max(0, str_to_int(parser[2]) - 1) : 0;
 
         window.select(window.buffer().iterator_at({line, column}));
     }
