@@ -271,6 +271,10 @@ void write_buffer(const CommandParameters& params, Context& context)
         throw wrong_argument_count();
 
     Buffer& buffer = context.window().buffer();
+
+    if (params.empty() and buffer.type() == Buffer::Type::Scratch)
+        throw runtime_error("cannot write scratch buffer without a filename");
+
     String filename = params.empty() ? buffer.name()
                                      : parse_filename(params[0]);
 
