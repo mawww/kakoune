@@ -8,10 +8,10 @@ LDFLAGS += -lncurses -lboost_regex
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) -o $@
 
-include $(deps)
+-include $(deps)
 
-.%.d: %.cc
-	$(CXX) $(CXXFLAGS) -MM $< -o $@
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
 
 tags:
 	ctags -R
