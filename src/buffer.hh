@@ -42,7 +42,6 @@ public:
 
     BufferIterator() : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, BufferCoord coord);
-    BufferIterator& operator=(const BufferIterator& iterator);
 
     bool operator== (const BufferIterator& iterator) const;
     bool operator!= (const BufferIterator& iterator) const;

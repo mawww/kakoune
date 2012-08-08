@@ -28,13 +28,6 @@ inline bool BufferIterator::is_valid() const
               column() == m_buffer->m_lines.back().length()));
 }
 
-inline BufferIterator& BufferIterator::operator=(const BufferIterator& iterator)
-{
-    m_buffer = iterator.m_buffer;
-    m_coord = iterator.m_coord;
-    return *this;
-}
-
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const
 {
     assert(m_buffer == iterator.m_buffer);
