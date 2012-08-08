@@ -669,11 +669,7 @@ void exec_keys(const KeyList& keys, Context& context)
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
 
-    Editor batch_editor(context.buffer());
-    Editor& editor = context.has_window() ? static_cast<Editor&>(context.window())
-                                          : static_cast<Editor&>(batch_editor);
-
-    scoped_edition edition(editor);
+    scoped_edition edition(context.editor());
 
     int count = 0;
     Context new_context(context);
