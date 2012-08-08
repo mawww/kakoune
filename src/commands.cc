@@ -293,8 +293,8 @@ void quit(const CommandParameters& params, Context& context)
         std::vector<String> names;
         for (auto& buffer : BufferManager::instance())
         {
-            if (buffer.type() != Buffer::Type::Scratch and buffer.is_modified())
-                names.push_back(buffer.name());
+            if (buffer->type() != Buffer::Type::Scratch and buffer->is_modified())
+                names.push_back(buffer->name());
         }
         if (not names.empty())
         {
@@ -355,11 +355,11 @@ void delete_buffer(const CommandParameters& params, Context& context)
     {
         if (manager.count() == 1)
             throw runtime_error("buffer " + buffer->name() + " is the last one");
-        for (Buffer& buf : manager)
+        for (auto& buf : manager)
         {
-            if (&buf != buffer)
+            if (buf != buffer)
             {
-               context = Context(*buf.get_or_create_window());
+               context = Context(*buf->get_or_create_window());
                break;
             }
         }

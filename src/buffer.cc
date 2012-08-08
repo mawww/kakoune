@@ -29,7 +29,7 @@ Buffer::Buffer(String name, Type type,
       m_hook_manager(GlobalHookManager::instance()),
       m_option_manager(GlobalOptionManager::instance())
 {
-    BufferManager::instance().register_buffer(this);
+    BufferManager::instance().register_buffer(*this);
     if (not initial_content.empty())
         apply_modification(Modification::make_insert(begin(), std::move(initial_content)));
 
@@ -48,7 +48,7 @@ Buffer::~Buffer()
     m_hook_manager.run_hook("BufClose", m_name, Context(Editor(*this)));
 
     m_windows.clear();
-    BufferManager::instance().unregister_buffer(this);
+    BufferManager::instance().unregister_buffer(*this);
     assert(m_change_listeners.empty());
 }
 

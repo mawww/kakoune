@@ -14,25 +14,16 @@ class Buffer;
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    typedef std::unordered_map<String, safe_ptr<Buffer>> BufferMap;
-
-    struct iterator : public BufferMap::const_iterator
-    {
-        typedef BufferMap::const_iterator parent_type;
-
-        iterator() {}
-        iterator(const parent_type& other) : parent_type(other) {}
-        Buffer& operator*()  const { return *(parent_type::operator*().second); }
-        Buffer* operator->() const { return parent_type::operator*().second.get(); }
-    };
+    using BufferList = std::vector<safe_ptr<Buffer>>;
+    using iterator = BufferList::const_iterator;
 
     ~BufferManager();
 
-    void register_buffer(Buffer* buffer);
-    void unregister_buffer(Buffer* buffer);
+    void register_buffer(Buffer& buffer);
+    void unregister_buffer(Buffer& buffer);
 
-    iterator begin() const { return iterator(m_buffers.begin()); }
-    iterator end() const { return iterator(m_buffers.end()); }
+    iterator begin() const { return m_buffers.cbegin(); }
+    iterator end() const { return m_buffers.cend(); }
     size_t   count() const { return m_buffers.size(); }
 
     Buffer* get_buffer(const String& name);
@@ -41,7 +32,7 @@ public:
                                       size_t cursor_pos = String::npos);
 
 private:
-    BufferMap m_buffers;
+    BufferList m_buffers;
 };
 
 }

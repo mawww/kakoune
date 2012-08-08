@@ -13,36 +13,42 @@ BufferManager::~BufferManager()
 {
     // delete remaining buffers
     while (not m_buffers.empty())
-        delete m_buffers.begin()->second.get();
+        delete m_buffers.front().get();
 }
 
-void BufferManager::register_buffer(Buffer* buffer)
+void BufferManager::register_buffer(Buffer& buffer)
 {
-    assert(buffer);
-    const String& name = buffer->name();
-    if (m_buffers.find(name) != m_buffers.end())
-        throw name_not_unique();
-
-    m_buffers[name] = safe_ptr<Buffer>(buffer);
-}
-
-void BufferManager::unregister_buffer(Buffer* buffer)
-{
-    assert(buffer);
-    auto buffer_it = m_buffers.find(buffer->name());
-    if (buffer_it != m_buffers.end())
+    const String& name = buffer.name();
+    for (auto& buf : m_buffers)
     {
-        assert(buffer_it->second == buffer);
-        m_buffers.erase(buffer_it);
+        if (buf->name() == name)
+            throw name_not_unique();
     }
+
+    m_buffers.push_back(safe_ptr<Buffer>(&buffer));
+}
+
+void BufferManager::unregister_buffer(Buffer& buffer)
+{
+    for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
+    {
+        if (*it == &buffer)
+        {
+            m_buffers.erase(it);
+            return;
+        }
+    }
+    assert(false);
 }
 
 Buffer* BufferManager::get_buffer(const String& name)
 {
-    if (m_buffers.find(name) == m_buffers.end())
-        return nullptr;
-
-    return m_buffers[name].get();
+    for (auto& buf : m_buffers)
+    {
+        if (buf->name() == name)
+            return buf.get();
+    }
+    return nullptr;
 }
 
 CandidateList BufferManager::complete_buffername(const String& prefix,
@@ -52,8 +58,9 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
     CandidateList result;
     for (auto& buffer : m_buffers)
     {
-        if (buffer.first.substr(0, real_prefix.length()) == real_prefix)
-            result.push_back(buffer.first);
+        const String& name = buffer->name();
+        if (name.substr(0, real_prefix.length()) == real_prefix)
+            result.push_back(name);
     }
     return result;
 }
