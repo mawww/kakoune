@@ -53,24 +53,28 @@ void highlight_range(DisplayBuffer& display_buffer,
 }
 
 typedef std::unordered_map<size_t, std::pair<Color, Color>> ColorSpec;
-void colorize_regex(DisplayBuffer& display_buffer,
-                    const Regex& ex,
-                    ColorSpec colors)
+void colorize_regex(DisplayBuffer& display_buffer, const Regex& ex,
+                    const ColorSpec& colors)
 {
-    const BufferRange& range = display_buffer.range();
+    BufferRange range = display_buffer.range();
+    const Buffer& buffer = range.first.buffer();
+    range.first  = buffer.iterator_at({ range.first.line()  - 10, 0 });
+    range.second = buffer.iterator_at({ range.second.line() + 10, 0 });
+
     RegexIterator re_it(range.first, range.second, ex);
     RegexIterator re_end;
     for (; re_it != re_end; ++re_it)
     {
         for (size_t n = 0; n < re_it->size(); ++n)
         {
-            if (colors.find(n) == colors.end())
+            auto col_it = colors.find(n);
+            if (col_it == colors.end())
                 continue;
 
             highlight_range(display_buffer, (*re_it)[n].first, (*re_it)[n].second, true,
                             [&](DisplayAtom& atom) {
-                                atom.fg_color = colors[n].first;
-                                atom.bg_color = colors[n].second;
+                                atom.fg_color = col_it->second.first;
+                                atom.bg_color = col_it->second.second;
                             });
         }
     }
@@ -120,9 +124,9 @@ HighlighterAndId colorize_regex_factory(Window& window,
         Regex ex(params[0].begin(), params[0].end(),
                  boost::regex::perl | boost::regex::optimize);
 
-        return HighlighterAndId(id, std::bind(colorize_regex, _1,  ex,
-                                              std::move(colors)));
-        }
+        return HighlighterAndId(id, [=](DisplayBuffer& db)
+                                    { colorize_regex(db, ex, colors); });
+    }
     catch (boost::regex_error& err)
     {
         throw runtime_error(String("regex error: ") + err.what());
