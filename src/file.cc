@@ -50,7 +50,7 @@ String parse_filename(const String& filename)
 
 String read_file(const String& filename)
 {
-   int fd = open(filename.c_str(), O_RDONLY);
+    int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
         if (errno == ENOENT)
@@ -75,36 +75,91 @@ String read_file(const String& filename)
 
 Buffer* create_buffer_from_file(const String& filename)
 {
-    String content = read_file(filename);
-
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         delete buffer;
 
-    return new Buffer(filename, Buffer::Type::File, content);
+    Buffer* buffer = new Buffer(filename, Buffer::Type::File, "");
+
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd == -1)
+    {
+        if (errno == ENOENT)
+            throw file_not_found(filename);
+
+        throw file_access_error(filename, strerror(errno));
+    }
+
+    String content;
+    char buf[256];
+    bool crlf = false;
+    while (true)
+    {
+        ssize_t size = read(fd, buf, 256);
+        if (size == -1 or size == 0)
+            break;
+
+        ssize_t start = 0;
+        for (ssize_t pos = 0; pos < size+1; ++pos)
+        {
+            if (buf[pos] == '\r' or pos == size)
+            {
+                if (buf[pos] == '\r')
+                    crlf = true;
+
+                buffer->modify(Modification::make_insert(buffer->end(), String(buf+start, buf+pos)));
+                start = pos+1;
+            }
+        }
+    }
+    close(fd);
+
+    if (crlf)
+        buffer->option_manager().set_option("eolformat", Option("crlf"));
+    else
+        buffer->option_manager().set_option("eolformat", Option("lf"));
+
+    // it never happened, buffer always was like that
+    buffer->reset_undo_data();
+
+    return buffer;
+}
+
+static void write(int fd, const memoryview<char>& data, const String& filename)
+{
+    const char* ptr = data.pointer();
+    ssize_t count   = data.size();
+
+    while (count)
+    {
+        ssize_t written = ::write(fd, ptr, count);
+        ptr += written;
+        count -= written;
+
+        if (written == -1)
+            throw file_access_error(filename, strerror(errno));
+    }
 }
 
 void write_buffer_to_file(const Buffer& buffer, const String& filename)
 {
+    String eolformat = buffer.option_manager()["eolformat"].as_string();
+    if (eolformat == "crlf")
+        eolformat = "\r\n";
+    else
+        eolformat = "\n";
+    auto eoldata = eolformat.data();
+
     int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
     for (size_t i = 0; i < buffer.line_count(); ++i)
     {
-        const String& content = buffer.line_content(i);
-        memoryview<char> data = content.data();
-        const char* ptr = data.pointer();
-        ssize_t count   = data.size();
-
-        while (count)
-        {
-            ssize_t written = write(fd, ptr, count);
-            ptr += written;
-            count -= written;
-
-            if (written == -1)
-                throw file_access_error(filename, strerror(errno));
-        }
+        // end of lines are written according to eolformat but always
+        // stored as \n
+        memoryview<char> linedata = buffer.line_content(i).data();
+        write(fd, linedata.subrange(0, linedata.size()-1), filename);
+        write(fd, eoldata, filename);
     }
     close(fd);
 }
