@@ -196,6 +196,13 @@ bool Buffer::redo()
     return true;
 }
 
+void Buffer::reset_undo_data()
+{
+   m_history.clear();
+   m_history_cursor = m_history.end();
+   m_current_undo_group.clear();
+}
+
 void Buffer::check_invariant() const
 {
     BufferSize start = 0;
