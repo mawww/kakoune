@@ -20,7 +20,7 @@ void test_buffer()
     assert(buffer.line_and_column_at(i) == BufferCoord{0 COMMA 6});
     ++i;
     assert(buffer.line_and_column_at(i) == BufferCoord{1 COMMA 0});
-    buffer.modify(Modification::make_insert(i, "tchou kanaky\n"));
+    buffer.insert(i, "tchou kanaky\n");
     assert(buffer.line_count() == 5);
 
     BufferIterator begin = buffer.iterator_at({ 4, 1 });
@@ -41,7 +41,7 @@ void test_editor()
     for (auto& sel : editor.selections())
     {
         assert(*sel.begin() == '\n');
-        editor.buffer().modify(Modification::make_erase(sel.begin(), sel.end()));
+        editor.buffer().erase(sel.begin(), sel.end());
     }
 }
 

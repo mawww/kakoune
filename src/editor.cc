@@ -22,7 +22,7 @@ void Editor::erase()
 {
     scoped_edition edition(*this);
     for (auto& sel : selections())
-        m_buffer.modify(Modification::make_erase(sel.begin(), sel.end()));
+        m_buffer.erase(sel.begin(), sel.end());
 }
 
 template<bool append>
@@ -32,7 +32,7 @@ static void do_insert(Editor& editor, const String& string)
     for (auto& sel : editor.selections())
     {
         BufferIterator pos = append ? sel.end() : sel.begin();
-        editor.buffer().modify(Modification::make_insert(pos, string));
+        editor.buffer().insert(pos, string);
     }
 }
 
@@ -48,7 +48,7 @@ static void do_insert(Editor& editor, const memoryview<String>& strings)
         BufferIterator pos = append ? editor.selections()[i].end()
                                     : editor.selections()[i].begin();
         size_t index = std::min(i, strings.size()-1);
-        editor.buffer().modify(Modification::make_insert(pos, strings[index]));
+        editor.buffer().insert(pos, strings[index]);
     }
 }
 
@@ -348,9 +348,9 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
         }
         sel = Selection(first, last);
 
-        if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
-            apply(Modification::make_insert(sel.last(), "\n"));
     }
+    if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
+        insert("\n");
 }
 
 IncrementalInserter::~IncrementalInserter()
@@ -362,16 +362,16 @@ IncrementalInserter::~IncrementalInserter()
     m_editor.on_incremental_insertion_end();
 }
 
-void IncrementalInserter::apply(Modification&& modification) const
-{
-    m_editor.filters()(m_editor.buffer(), modification);
-    m_editor.buffer().modify(std::move(modification));
-}
-
 void IncrementalInserter::insert(const String& string)
 {
+    Buffer& buffer = m_editor.buffer();
     for (auto& sel : m_editor.selections())
-        apply(Modification::make_insert(sel.last(), string));
+    {
+        BufferIterator position = sel.last();
+        String content = string;
+        m_editor.filters()(buffer, position, content);
+        m_editor.buffer().insert(position, content);
+    }
 }
 
 void IncrementalInserter::insert(const memoryview<String>& strings)
@@ -384,7 +384,7 @@ void IncrementalInserter::erase()
     for (auto& sel : m_editor.m_selections.back())
     {
         BufferIterator pos = sel.last();
-        apply(Modification::make_erase(pos-1, pos));
+        m_editor.buffer().erase(pos-1, pos);
     }
 }
 

@@ -14,7 +14,6 @@ namespace Kakoune
 {
 
 class Buffer;
-class Modification;
 class Window;
 
 typedef int       BufferPos;
@@ -82,24 +81,6 @@ private:
     friend class Buffer;
 };
 
-// A Modification holds a single atomic modification to Buffer
-struct Modification
-{
-    enum Type { Insert, Erase };
-
-    Type           type;
-    BufferIterator position;
-    String         content;
-
-    Modification(Type type, BufferIterator position, String content)
-        : type(type), position(position), content(std::move(content)) {}
-
-    Modification inverse() const;
-
-    static Modification make_erase(BufferIterator begin, BufferIterator end);
-    static Modification make_insert(BufferIterator position, String content);
-};
-
 class BufferChangeListener
 {
 public:
@@ -130,8 +111,8 @@ public:
 
     Type type() const { return m_type; }
 
-    // apply given modification to buffer.
-    void           modify(Modification&& modification);
+    void insert(const BufferIterator& pos, const String& content);
+    void erase(const BufferIterator& begin, const BufferIterator& end);
 
     void           begin_undo_group();
     void           end_undo_group();
@@ -198,8 +179,8 @@ private:
     };
     std::vector<Line> m_lines;
 
-    void insert(const BufferIterator& pos, const String& content);
-    void erase(const BufferIterator& pos, BufferSize length);
+    void do_insert(const BufferIterator& pos, const String& content);
+    void do_erase(const BufferIterator& pos, BufferSize length);
 
     BufferPos line_at(const BufferIterator& iterator) const;
     BufferSize line_length(BufferPos line) const;
@@ -207,6 +188,7 @@ private:
     String  m_name;
     const Type   m_type;
 
+    struct Modification;
     typedef std::vector<Modification> UndoGroup;
 
     std::vector<UndoGroup>           m_history;
@@ -225,18 +207,6 @@ private:
     OptionManager m_option_manager;
     HookManager   m_hook_manager;
 };
-
-inline Modification Modification::make_erase(BufferIterator begin,
-                                             BufferIterator end)
-{
-    return Modification(Erase, begin, begin.buffer().string(begin, end));
-}
-
-inline Modification Modification::make_insert(BufferIterator position,
-                                              String content)
-{
-    return Modification(Insert, position, std::move(content));
-}
 
 }
 

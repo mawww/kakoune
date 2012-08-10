@@ -117,7 +117,7 @@ Buffer* create_buffer_from_file(const String& filename)
                 if (buf[pos] == '\r')
                     crlf = true;
 
-                buffer->modify(Modification::make_insert(buffer->end(), String(buf+start, buf+pos)));
+                buffer->insert(buffer->end(), String(buf+start, buf+pos));
                 start = pos+1;
             }
             ++pos;

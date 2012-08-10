@@ -31,7 +31,7 @@ Buffer::Buffer(String name, Type type,
 {
     BufferManager::instance().register_buffer(*this);
     if (not initial_content.empty())
-        apply_modification(Modification::make_insert(begin(), std::move(initial_content)));
+        do_insert(begin(), std::move(initial_content));
 
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
@@ -160,17 +160,30 @@ void Buffer::end_undo_group()
     m_current_undo_group.clear();
 }
 
-Modification Modification::inverse() const
+// A Modification holds a single atomic modification to Buffer
+struct Buffer::Modification
 {
-    Type inverse_type;
-    switch (type)
+    enum Type { Insert, Erase };
+
+    Type           type;
+    BufferIterator position;
+    String         content;
+
+    Modification(Type type, BufferIterator position, String content)
+        : type(type), position(position), content(std::move(content)) {}
+
+    Modification inverse() const
     {
-    case Insert: inverse_type = Erase;  break;
-    case Erase:  inverse_type = Insert; break;
-    default: assert(false);
+        Type inverse_type;
+        switch (type)
+        {
+        case Insert: inverse_type = Erase;  break;
+        case Erase:  inverse_type = Insert; break;
+        default: assert(false);
+        }
+        return Modification(inverse_type, position, content);
     }
-    return Modification(inverse_type, position, content);
-}
+};
 
 bool Buffer::undo()
 {
@@ -214,7 +227,7 @@ void Buffer::check_invariant() const
     }
 }
 
-void Buffer::insert(const BufferIterator& pos, const String& content)
+void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
     BufferSize offset = pos.offset();
 
@@ -288,7 +301,7 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
         listener->on_insert(begin_it, end_it);
 }
 
-void Buffer::erase(const BufferIterator& pos, BufferSize length)
+void Buffer::do_erase(const BufferIterator& pos, BufferSize length)
 {
     BufferIterator end = pos + length;
     assert(end.is_valid());
@@ -320,7 +333,7 @@ void Buffer::apply_modification(const Modification& modification)
     {
         BufferIterator pos = modification.position < end() ?
                              modification.position : end();
-        insert(pos, modification.content);
+        do_insert(pos, modification.content);
         break;
     }
     case Modification::Erase:
@@ -328,7 +341,7 @@ void Buffer::apply_modification(const Modification& modification)
         size_t count = modification.content.length();
         assert(string(modification.position, modification.position + count)
                == modification.content);
-        erase(modification.position, count);
+        do_erase(modification.position, count);
         break;
     }
     default:
@@ -336,13 +349,22 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-void Buffer::modify(Modification&& modification)
+void Buffer::insert(const BufferIterator& pos, const String& content)
 {
-    if (modification.content.empty())
+    if (content.empty())
+        return;
+    m_current_undo_group.emplace_back(Modification::Insert, pos, content);
+    do_insert(pos, content);
+}
+
+void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
+{
+    if (begin == end)
         return;
 
-    apply_modification(modification);
-    m_current_undo_group.push_back(std::move(modification));
+    m_current_undo_group.emplace_back(Modification::Erase, begin,
+                                      string(begin, end));
+    do_erase(begin, end - begin);
 }
 
 Window* Buffer::get_or_create_window()

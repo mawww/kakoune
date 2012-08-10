@@ -8,13 +8,13 @@ namespace Kakoune
 {
 
 class Buffer;
-class Modification;
+class BufferIterator;
 
 // A Filter is a function which is applied to a Buffer and a pending
 // Modification in order to mutate the Buffer or the Modification
 // prior to it's application.
 
-typedef std::function<void (Buffer& buffer, Modification& modification)> FilterFunc;
+typedef std::function<void (Buffer& buffer, BufferIterator& position, String& content)> FilterFunc;
 typedef std::pair<String, FilterFunc> FilterAndId;
 
 }

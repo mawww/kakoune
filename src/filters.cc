@@ -6,48 +6,46 @@
 namespace Kakoune
 {
 
-void preserve_indent(Buffer& buffer, Modification& modification)
+void preserve_indent(Buffer& buffer, BufferIterator& position, String& content)
 {
-    if (modification.type == Modification::Insert and
-        modification.content == "\n")
+    if (content == "\n")
     {
-         BufferIterator line_begin = buffer.iterator_at_line_begin(modification.position - 1);
+         BufferIterator line_begin = buffer.iterator_at_line_begin(position - 1);
          BufferIterator first_non_white = line_begin;
          while ((*first_non_white == '\t' or *first_non_white == ' ') and
                 not first_non_white.is_end())
              ++first_non_white;
 
-         modification.content += buffer.string(line_begin, first_non_white);
+         content += buffer.string(line_begin, first_non_white);
     }
 }
 
-void cleanup_whitespaces(Buffer& buffer, Modification& modification)
+void cleanup_whitespaces(Buffer& buffer, BufferIterator& position, String& content)
 {
-    if (modification.type == Modification::Insert and
-        modification.content[0] == '\n' and not modification.position.is_begin())
+    if (content[0] == '\n' and not position.is_begin())
     {
-        BufferIterator position = modification.position-1;
-        while ((*position == ' ' or *position == '\t') and not position.is_begin())
-            --position;
-        ++position;
-        if (position != modification.position)
+        BufferIterator whitespace_start = position-1;
+        while ((*whitespace_start == ' ' or *whitespace_start == '\t') and
+               not whitespace_start .is_begin())
+            --whitespace_start;
+        ++whitespace_start;
+        if (whitespace_start!= position)
         {
-            buffer.modify(Modification::make_erase(position, modification.position));
-            modification.position = position;
+            buffer.erase(whitespace_start, position);
+            position = whitespace_start;
         }
     }
 }
 
-void expand_tabulations(Buffer& buffer, Modification& modification)
+void expand_tabulations(Buffer& buffer, BufferIterator& position, String& content)
 {
     const int tabstop = buffer.option_manager()["tabstop"].as_int();
-    if (modification.type == Modification::Insert and
-        modification.content == "\t")
+    if (content == "\t")
     {
         int column = 0;
-        BufferCoord pos = buffer.line_and_column_at(modification.position);
+        BufferCoord pos = buffer.line_and_column_at(position);
         for (auto line_it = buffer.iterator_at({pos.line, 0});
-             line_it != modification.position; ++line_it)
+             line_it != position; ++line_it)
         {
             assert(*line_it != '\n');
             if (*line_it == '\t')
@@ -57,13 +55,13 @@ void expand_tabulations(Buffer& buffer, Modification& modification)
         }
 
         int count = tabstop - (column % tabstop);
-        modification.content = String();
+        content = String();
         for (int i = 0; i < count; ++i)
-            modification.content += ' ';
+            content += ' ';
     }
 }
 
-template<void (*filter_func)(Buffer&, Modification&)>
+template<void (*filter_func)(Buffer&, BufferIterator&, String&)>
 class SimpleFilterFactory
 {
 public:
