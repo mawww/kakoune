@@ -92,14 +92,25 @@ Buffer* create_buffer_from_file(const String& filename)
     String content;
     char buf[256];
     bool crlf = false;
+    bool bom  = false;
+    bool at_file_begin = true;
     while (true)
     {
         ssize_t size = read(fd, buf, 256);
         if (size == -1 or size == 0)
             break;
 
-        ssize_t start = 0;
-        for (ssize_t pos = 0; pos < size+1; ++pos)
+        ssize_t pos = 0;
+        // detect utf-8 byte order mark
+        if (at_file_begin and size >= 3 and
+            buf[0] == '\xEF' and buf[1] == '\xBB' and buf[2] == '\xBF')
+        {
+            bom = true;
+            pos = 3;
+        }
+        ssize_t start = pos;
+
+        while (pos < size+1)
         {
             if (buf[pos] == '\r' or pos == size)
             {
@@ -109,14 +120,15 @@ Buffer* create_buffer_from_file(const String& filename)
                 buffer->modify(Modification::make_insert(buffer->end(), String(buf+start, buf+pos)));
                 start = pos+1;
             }
+            ++pos;
         }
+        at_file_begin = false;
     }
     close(fd);
 
-    if (crlf)
-        buffer->option_manager().set_option("eolformat", Option("crlf"));
-    else
-        buffer->option_manager().set_option("eolformat", Option("lf"));
+    OptionManager& option_manager = buffer->option_manager();
+    option_manager.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
+    option_manager.set_option("BOM", Option(bom ? "utf-8" : "no"));
 
     // it never happened, buffer always was like that
     buffer->reset_undo_data();
@@ -152,6 +164,9 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
     int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
+
+    if (buffer.option_manager()["BOM"].as_string() == "utf-8")
+        ::write(fd, "\xEF\xBB\xBF", 3);
 
     for (size_t i = 0; i < buffer.line_count(); ++i)
     {

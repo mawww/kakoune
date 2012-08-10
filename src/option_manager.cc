@@ -95,6 +95,7 @@ GlobalOptionManager::GlobalOptionManager()
 {
     set_option("tabstop", Option(8));
     set_option("eolformat", Option("lf"));
+    set_option("BOM", Option("no"));
 }
 
 }
