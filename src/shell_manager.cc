@@ -6,7 +6,7 @@
 
 namespace Kakoune
 {
-String env_var_regex(R"(\$\{kak_([a-z0-9_]+)[^}]*\}|\$kak_([a-z0-9_]+))");
+String env_var_regex(R"(\$\{kak_(\w+)[^}]*\}|\$kak_(\w+))");
 
 ShellManager::ShellManager()
    : m_regex(env_var_regex.begin(), env_var_regex.end())
