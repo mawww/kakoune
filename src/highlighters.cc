@@ -18,7 +18,8 @@ void highlight_range(DisplayBuffer& display_buffer,
                      BufferIterator begin, BufferIterator end,
                      bool skip_replaced, T func)
 {
-    if (end <= display_buffer.range().first or begin >= display_buffer.range().second)
+    if (begin == end or end <= display_buffer.range().first
+                     or begin >= display_buffer.range().second)
         return;
 
     for (auto& line : display_buffer.lines())
@@ -59,7 +60,8 @@ void colorize_regex(DisplayBuffer& display_buffer, const Regex& ex,
     BufferRange range = display_buffer.range();
     const Buffer& buffer = range.first.buffer();
     range.first  = buffer.iterator_at({ range.first.line()  - 10, 0 });
-    range.second = buffer.iterator_at({ range.second.line() + 10, 0 });
+    range.second = buffer.iterator_at({ range.second.line() + 10,
+                                        range.second.column() });
 
     RegexIterator re_it(range.first, range.second, ex);
     RegexIterator re_end;
