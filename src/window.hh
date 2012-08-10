@@ -36,8 +36,11 @@ public:
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 
-    HookManager&   hook_manager()   { return m_hook_manager; }
-    OptionManager& option_manager() { return m_option_manager; }
+    OptionManager&       option_manager()       { return m_option_manager; }
+    const OptionManager& option_manager() const { return m_option_manager; }
+    HookManager&         hook_manager()         { return m_hook_manager; }
+    const HookManager&   hook_manager()   const { return m_hook_manager; }
+
 
 private:
     friend class Buffer;
