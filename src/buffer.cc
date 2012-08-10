@@ -273,8 +273,10 @@ void Buffer::insert(const BufferIterator& pos, const String& content)
         }
         if (start == 0)
             line_it = m_lines.insert(line_it, { offset + start - (int)prefix.length(), prefix + content + suffix });
-        else
+        else if (start != content.length() or not suffix.empty())
             line_it = m_lines.insert(line_it, { offset + start, content.substr(start) + suffix });
+        else
+            --line_it;
 
         begin_it = pos;
         end_it = BufferIterator(*this, { int(line_it - m_lines.begin()), int(line_it->length() - suffix.length()) });
