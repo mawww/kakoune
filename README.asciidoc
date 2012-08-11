@@ -267,6 +267,15 @@ for example you can print informations on the current file in the status
 line using:
 :echo %sh{ ls -l $kak_bufname }
 
+Register and Option expansion
+-----------------------------
+
+Similar to shell expansion, register contents and options values can be
+accessed through %reg{<register>} and %opt{<option>} syntax.
+
+for example you can display last search pattern with
+:echo %reg{/}
+
 Defining Commands
 -----------------
 
