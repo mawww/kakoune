@@ -4,6 +4,7 @@
 #include "assert.hh"
 #include "context.hh"
 #include "shell_manager.hh"
+#include "register_manager.hh"
 
 #include <algorithm>
 
@@ -39,6 +40,8 @@ struct Token
     {
         Raw,
         ShellExpand,
+        RegisterExpand,
+        OptionExpand,
         CommandSeparator
     };
     Token() : m_type(Type::Raw) {}
@@ -111,6 +114,10 @@ TokenList parse(const String& line,
 
             if (type_name == "sh")
                 type = Token::Type::ShellExpand;
+            if (type_name == "reg")
+                type = Token::Type::RegisterExpand;
+            if (type_name == "opt")
+                type = Token::Type::OptionExpand;
 
             static const std::unordered_map<Character, Character> matching_delimiters = {
                 { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
@@ -217,6 +224,18 @@ void CommandManager::execute(const String& command_line,
             // when last token is a ShellExpand which produces no output
             if (it == tokens.end())
                 break;
+        }
+        if (it->type() == Token::Type::RegisterExpand)
+        {
+            if (it->content().length() != 1)
+                throw runtime_error("wrong register name: " + it->content());
+            Register& reg = RegisterManager::instance()[it->content()[0]];
+            params.push_back(reg.values(context)[0]);
+        }
+        if (it->type() == Token::Type::OptionExpand)
+        {
+            const Option& option = context.option_manager()[it->content()];
+            params.push_back(option.as_string());
         }
         if (it->type() == Token::Type::CommandSeparator)
         {
