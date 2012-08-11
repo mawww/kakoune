@@ -270,7 +270,7 @@ void write_buffer(const CommandParameters& params, Context& context)
     if (params.size() > 1)
         throw wrong_argument_count();
 
-    Buffer& buffer = context.window().buffer();
+    Buffer& buffer = context.buffer();
 
     if (params.empty() and buffer.type() == Buffer::Type::Scratch)
         throw runtime_error("cannot write scratch buffer without a filename");
@@ -401,7 +401,7 @@ void rm_highlighter(const CommandParameters& params, Context& context)
        window.highlighters().get_group(parser.option_value("group"))
      : window.highlighters();
 
-    group.remove(*parser.begin());
+    group.remove(parser[0]);
 }
 
 void add_filter(const CommandParameters& params, Context& context)
@@ -437,7 +437,7 @@ void rm_filter(const CommandParameters& params, Context& context)
        window.filters().get_group(parser.option_value("group"))
      : window.filters();
 
-    group.remove(*parser.begin());
+    group.remove(parser[0]);
 }
 
 void add_hook(const CommandParameters& params, Context& context)
