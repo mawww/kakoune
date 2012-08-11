@@ -16,4 +16,4 @@ hook global WinSetOption filetype=grep %{
 
 hook global WinSetOption filetype=(?!grep).* %{ rmhl grep-highlight; }
 
-def gjump %{ exec 'xs^([^:]+):(\d+)<ret>'; edit %sh{ echo ${kak_reg_1} ${kak_reg_2} } }
+def gjump %{ exec 'xs^([^:]+):(\d+)<ret>'; edit %reg{1} %reg{2} }
