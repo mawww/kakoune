@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "exception.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
@@ -61,6 +62,17 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
         const String& name = buffer->name();
         if (name.substr(0, real_prefix.length()) == real_prefix)
             result.push_back(name);
+    }
+    // no prefix completion found, check regex matching
+    if (result.empty())
+    {
+        Regex ex(real_prefix.begin(), real_prefix.end());
+        for (auto& buffer : m_buffers)
+        {
+            const String& name = buffer->name();
+            if (boost::regex_search(name.begin(), name.end(), ex))
+                result.push_back(name);
+        }
     }
     return result;
 }
