@@ -282,6 +282,21 @@ void write_buffer(const CommandParameters& params, Context& context)
     buffer.notify_saved();
 }
 
+void write_all_buffers(const CommandParameters& params, Context& context)
+{
+    if (params.size() != 0)
+        throw wrong_argument_count();
+
+    for (auto& buffer : BufferManager::instance())
+    {
+        if (buffer->type() != Buffer::Type::Scratch and buffer->is_modified())
+        {
+            write_buffer_to_file(*buffer, buffer->name());
+            buffer->notify_saved();
+        }
+    }
+}
+
 template<bool force>
 void quit(const CommandParameters& params, Context& context)
 {
@@ -758,6 +773,7 @@ void register_commands()
     cm.register_commands({ "e", "edit" }, edit<false>, filename_completer);
     cm.register_commands({ "e!", "edit!" }, edit<true>, filename_completer);
     cm.register_commands({ "w", "write" }, write_buffer, filename_completer);
+    cm.register_commands({ "wa", "writeall" }, write_all_buffers);
     cm.register_commands({ "q", "quit" }, quit<false>);
     cm.register_commands({ "q!", "quit!" }, quit<true>);
     cm.register_command("wq", write_and_quit<false>);
