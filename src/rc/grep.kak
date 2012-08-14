@@ -6,7 +6,7 @@ def -env-params grep %{ echo grep in progress, please wait...; %sh{
            edit -scratch *grep*
            setb filetype grep
            exec %{|cat ${output}<ret>gg}
-           %sh{rm ${output} }"
+           %sh{ rm ${output} }"
 }}
 
 hook global WinSetOption filetype=grep %{
