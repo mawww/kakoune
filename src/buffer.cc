@@ -30,8 +30,10 @@ Buffer::Buffer(String name, Type type,
       m_option_manager(GlobalOptionManager::instance())
 {
     BufferManager::instance().register_buffer(*this);
-    if (not initial_content.empty())
-        do_insert(begin(), std::move(initial_content));
+    if (initial_content.back() != '\n')
+        initial_content += '\n';
+    do_insert(begin(), std::move(initial_content));
+
 
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
@@ -219,10 +221,12 @@ void Buffer::reset_undo_data()
 void Buffer::check_invariant() const
 {
     BufferSize start = 0;
+    assert(not m_lines.empty());
     for (auto& line : m_lines)
     {
         assert(line.start == start);
         assert(line.length() > 0);
+        assert(line.content.back() == '\n');
         start += line.length();
     }
 }
@@ -349,16 +353,23 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-void Buffer::insert(const BufferIterator& pos, const String& content)
+void Buffer::insert(BufferIterator pos, const String& content)
 {
     if (content.empty())
         return;
+
+    if (pos.is_end())
+        --pos;
+
     m_current_undo_group.emplace_back(Modification::Insert, pos, content);
     do_insert(pos, content);
 }
 
-void Buffer::erase(const BufferIterator& begin, const BufferIterator& end)
+void Buffer::erase(BufferIterator begin, BufferIterator end)
 {
+    if (end.is_end() and (begin.column() != 0 or begin.is_begin()))
+        --end;
+
     if (begin == end)
         return;
 

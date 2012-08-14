@@ -130,6 +130,10 @@ Buffer* create_buffer_from_file(const String& filename)
     option_manager.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
     option_manager.set_option("BOM", Option(bom ? "utf-8" : "no"));
 
+    // if the file ended with a \n, remove the \n added by the buffer
+    if (*(buffer->end() - 2) == '\n')
+        buffer->erase(buffer->end() - 1, buffer->end());
+
     // it never happened, buffer always was like that
     buffer->reset_undo_data();
 

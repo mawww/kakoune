@@ -111,8 +111,8 @@ public:
 
     Type type() const { return m_type; }
 
-    void insert(const BufferIterator& pos, const String& content);
-    void erase(const BufferIterator& begin, const BufferIterator& end);
+    void insert(BufferIterator pos, const String& content);
+    void erase(BufferIterator begin, BufferIterator end);
 
     void           begin_undo_group();
     void           end_undo_group();
