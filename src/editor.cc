@@ -21,8 +21,11 @@ Editor::Editor(Buffer& buffer)
 void Editor::erase()
 {
     scoped_edition edition(*this);
-    for (auto& sel : selections())
+    for (auto& sel : m_selections.back())
+    {
         m_buffer.erase(sel.begin(), sel.end());
+        sel.avoid_eol();
+    }
 }
 
 template<bool append>

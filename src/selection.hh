@@ -29,6 +29,7 @@ struct Selection : public BufferChangeListener
     const BufferIterator& last()  const { return m_last; }
 
     void merge_with(const Selection& selection);
+    void avoid_eol();
 
     void on_insert(const BufferIterator& begin, const BufferIterator& end);
     void on_erase(const BufferIterator& begin, const BufferIterator& end);

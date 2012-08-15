@@ -54,6 +54,12 @@ void Selection::merge_with(const Selection& selection)
     m_last = selection.m_last;
 }
 
+void Selection::avoid_eol()
+{
+    m_first.clamp(true);
+    m_last.clamp(true);
+}
+
 void Selection::on_insert(const BufferIterator& begin, const BufferIterator& end)
 {
     m_first.on_insert(begin.coord(), end.coord());
