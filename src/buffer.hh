@@ -61,6 +61,8 @@ public:
     BufferIterator& operator++ ();
     BufferIterator& operator-- ();
 
+    void clamp(bool avoid_eol);
+
     bool is_begin() const;
     bool is_end() const;
     bool is_valid() const;

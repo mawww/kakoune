@@ -28,6 +28,12 @@ inline bool BufferIterator::is_valid() const
               column() == m_buffer->m_lines.back().length()));
 }
 
+inline void BufferIterator::clamp(bool avoid_eol)
+{
+    assert(m_buffer);
+    m_coord = m_buffer->clamp(m_coord, avoid_eol);
+}
+
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const
 {
     assert(m_buffer == iterator.m_buffer);
