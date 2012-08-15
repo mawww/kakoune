@@ -54,33 +54,60 @@ void highlight_range(DisplayBuffer& display_buffer,
 }
 
 typedef std::unordered_map<size_t, std::pair<Color, Color>> ColorSpec;
-void colorize_regex(DisplayBuffer& display_buffer, const Regex& ex,
-                    const ColorSpec& colors)
+
+class RegexColorizer
 {
-    BufferRange range = display_buffer.range();
-    const Buffer& buffer = range.first.buffer();
-    range.first  = buffer.iterator_at({ range.first.line()  - 10, 0 });
-    range.second = buffer.iterator_at({ range.second.line() + 10,
-                                        range.second.column() });
-
-    RegexIterator re_it(range.first, range.second, ex);
-    RegexIterator re_end;
-    for (; re_it != re_end; ++re_it)
+public:
+    RegexColorizer(Regex regex, ColorSpec colors)
+        : m_regex(std::move(regex)), m_colors(std::move(colors)),
+          m_cache_buffer(nullptr), m_cache_timestamp(0)
     {
-        for (size_t n = 0; n < re_it->size(); ++n)
-        {
-            auto col_it = colors.find(n);
-            if (col_it == colors.end())
-                continue;
+    }
 
-            highlight_range(display_buffer, (*re_it)[n].first, (*re_it)[n].second, true,
-                            [&](DisplayAtom& atom) {
-                                atom.fg_color = col_it->second.first;
-                                atom.bg_color = col_it->second.second;
-                            });
+    void operator()(DisplayBuffer& display_buffer)
+    {
+        update_cache_ifn(display_buffer.range().first.buffer());
+        for (auto& match : m_cache_matches)
+        {
+            for (size_t n = 0; n < match.size(); ++n)
+            {
+                auto col_it = m_colors.find(n);
+                if (col_it == m_colors.end())
+                    continue;
+
+                highlight_range(display_buffer, match[n].first, match[n].second, true,
+                                [&](DisplayAtom& atom) {
+                                    atom.fg_color = col_it->second.first;
+                                    atom.bg_color = col_it->second.second;
+                                });
+            }
         }
     }
-}
+
+private:
+    const Buffer* m_cache_buffer;
+    size_t        m_cache_timestamp;
+    std::vector<boost::match_results<BufferIterator>> m_cache_matches;
+
+    Regex     m_regex;
+    ColorSpec m_colors;
+
+    void update_cache_ifn(const Buffer& buffer)
+    {
+        if (&buffer == m_cache_buffer and
+            buffer.timestamp() == m_cache_timestamp)
+           return;
+
+        m_cache_matches.clear();
+        m_cache_buffer = &buffer;
+        m_cache_timestamp = buffer.timestamp();
+
+        RegexIterator re_it(buffer.begin(), buffer.end(), m_regex);
+        RegexIterator re_end;
+        for (; re_it != re_end; ++re_it)
+            m_cache_matches.push_back(*re_it);
+    }
+};
 
 Color parse_color(const String& color)
 {
@@ -126,8 +153,8 @@ HighlighterAndId colorize_regex_factory(Window& window,
         Regex ex(params[0].begin(), params[0].end(),
                  boost::regex::perl | boost::regex::optimize);
 
-        return HighlighterAndId(id, [=](DisplayBuffer& db)
-                                    { colorize_regex(db, ex, colors); });
+        return HighlighterAndId(id, RegexColorizer(std::move(ex),
+                                                   std::move(colors)));
     }
     catch (boost::regex_error& err)
     {
