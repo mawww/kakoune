@@ -130,11 +130,16 @@ public:
     BufferSize     character_count() const;
     BufferSize     line_count() const;
 
-    BufferIterator iterator_at(const BufferCoord& line_and_column) const;
+    // returns an iterator at given coordinates. line_and_column is
+    // clamped according to avoid_eol.
+    BufferIterator iterator_at(const BufferCoord& line_and_column,
+                               bool avoid_eol = false) const;
     BufferCoord    line_and_column_at(const BufferIterator& iterator) const;
 
     // returns nearest valid coordinates from given ones
-    BufferCoord    clamp(const BufferCoord& line_and_column) const;
+    // if avoid_eol, clamp to character before eol if line is not empty
+    BufferCoord    clamp(const BufferCoord& line_and_column,
+                         bool avoid_eol = false) const;
 
     const String& name() const { return m_name; }
 

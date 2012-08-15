@@ -55,9 +55,10 @@ Buffer::~Buffer()
     assert(m_change_listeners.empty());
 }
 
-BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column) const
+BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,
+                                   bool avoid_eol) const
 {
-    return BufferIterator(*this, clamp(line_and_column));
+    return BufferIterator(*this, clamp(line_and_column, avoid_eol));
 }
 
 BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
@@ -78,14 +79,15 @@ BufferSize Buffer::line_length(BufferPos line) const
     return end - m_lines[line].start;
 }
 
-BufferCoord Buffer::clamp(const BufferCoord& line_and_column) const
+BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
+                          bool avoid_eol) const
 {
     if (m_lines.empty())
         return BufferCoord();
 
     BufferCoord result(line_and_column.line, line_and_column.column);
     result.line = Kakoune::clamp<int>(0, m_lines.size() - 1, result.line);
-    int max_col = std::max(0, line_length(result.line) - 2);
+    int max_col = std::max(0, line_length(result.line) - (avoid_eol ? 2 : 1));
     result.column = Kakoune::clamp<int>(0, max_col, result.column);
     return result;
 }

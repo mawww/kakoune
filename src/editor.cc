@@ -113,7 +113,7 @@ void Editor::move_selections(const BufferCoord& offset, bool append)
     for (auto& sel : m_selections.back())
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
-        BufferIterator last = m_buffer.iterator_at(pos + BufferCoord(offset));
+        BufferIterator last = m_buffer.iterator_at(pos + offset, true);
         sel = Selection(append ? sel.first() : last, last);
     }
 }
