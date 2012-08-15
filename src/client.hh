@@ -3,6 +3,7 @@
 
 #include "keys.hh"
 #include "completion.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
@@ -12,25 +13,19 @@ class Window;
 class String;
 class Context;
 
-class Client
+class Client : public SafeCountable
 {
 public:
     virtual ~Client() {}
 
     virtual void   draw_window(Window& window) = 0;
     virtual void   print_status(const String& status) = 0;
-    virtual String prompt(const String& prompt, const Context& context, Completer completer) = 0;
+    virtual String prompt(const String& prompt, const Context& context,
+                          Completer completer = complete_nothing) = 0;
     virtual Key    get_key() = 0;
 };
 
 struct prompt_aborted {};
-
-extern Client* current_client;
-
-void draw_editor_ifn(Editor& editor);
-String prompt(const String& text, const Context& context, Completer completer = complete_nothing);
-Key get_key();
-void print_status(const String& status);
 
 }
 

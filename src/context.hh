@@ -2,11 +2,10 @@
 #define context_hh_INCLUDED
 
 #include "window.hh"
+#include "client.hh"
 
 namespace Kakoune
 {
-
-class Buffer;
 
 struct Context
 {
@@ -14,9 +13,14 @@ struct Context
     Context(Editor& editor)
         : m_editor(&editor) {}
 
+    Context(Client& client)
+        : m_client(&client) {}
+
     // to allow func(Context(Editor(...)))
     Context(Editor&& editor)
         : m_editor(&editor) {}
+
+    Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const
     {
@@ -42,6 +46,21 @@ struct Context
     }
     bool has_window() const { return m_editor and dynamic_cast<Window*>(m_editor.get()); }
 
+    Client& client() const
+    {
+        if (not has_client())
+            throw runtime_error("no client in context");
+        return *m_client;
+    }
+    bool has_client() const { return m_client; }
+
+    void change_editor(Editor& editor)
+    {
+        if (has_client() and not dynamic_cast<Window*>(&editor))
+            throw logic_error();
+        m_editor.reset(&editor);
+    }
+
     OptionManager& option_manager() const
     {
         if (has_window())
@@ -51,11 +70,24 @@ struct Context
         return GlobalOptionManager::instance();
     }
 
+    void draw_ifn() const
+    {
+        if (has_client())
+            client().draw_window(window());
+    }
+
+    void print_status(const String& status) const
+    {
+        if (has_client())
+            client().print_status(status);
+    }
+
     int numeric_param() const { return m_numeric_param; }
     void numeric_param(int param) { m_numeric_param = param; }
 
 public:
     safe_ptr<Editor> m_editor;
+    safe_ptr<Client> m_client;
     int m_numeric_param = 0;
 };
 

@@ -97,12 +97,12 @@ void do_insert(Context& context)
     last_insert_sequence.mode = mode;
     last_insert_sequence.keys.clear();
     IncrementalInserter inserter(context.editor(), mode);
-    draw_editor_ifn(context.editor());
+    context.draw_ifn();
     insert_sequence(inserter, context,
-                    [&]() { Key key = get_key();
+                    [&]() { Key key = context.client().get_key();
                             last_insert_sequence.keys.push_back(key);
                             return key; },
-                    [&]() { draw_editor_ifn(context.editor()); });
+                    [&]() { context.draw_ifn(); });
 }
 
 void do_repeat_insert(Context& context)
@@ -131,7 +131,7 @@ void do_go(Context& context)
     }
     else
     {
-        Key key = get_key();
+        Key key = context.client().get_key();
         if (key.modifiers != Key::Modifiers::None)
             return;
 
@@ -168,10 +168,10 @@ void do_command(Context& context)
 {
     try
     {
-        auto cmdline = prompt(":", context,
-                              std::bind(&CommandManager::complete,
-                                        &CommandManager::instance(),
-                                        _1, _2, _3));
+        auto cmdline = context.client().prompt(
+            ":", context, std::bind(&CommandManager::complete,
+                                    &CommandManager::instance(),
+                                    _1, _2, _3));
 
         CommandManager::instance().execute(cmdline, context);
     }
@@ -182,7 +182,7 @@ void do_pipe(Context& context)
 {
     try
     {
-        auto cmdline = prompt("|", context, complete_nothing);
+        auto cmdline = context.client().prompt("|", context, complete_nothing);
 
         Editor& editor = context.editor();
         std::vector<String> strings;
@@ -199,7 +199,7 @@ void do_search(Context& context)
 {
     try
     {
-        String ex = prompt("/", context);
+        String ex = context.client().prompt("/", context);
         if (ex.empty())
             ex = RegisterManager::instance()['/'].values(context)[0];
         else
@@ -217,7 +217,7 @@ void do_search_next(Context& context)
     if (not ex.empty())
         context.editor().select(std::bind(select_next_match, _1, ex), append);
     else
-        print_status("no search pattern");
+        context.print_status("no search pattern");
 }
 
 void do_yank(Context& context)
@@ -274,7 +274,7 @@ void do_select_regex(Context& context)
 {
     try
     {
-        String ex = prompt("select: ", context);
+        String ex = context.client().prompt("select: ", context);
         context.editor().multi_select(std::bind(select_all_matches, _1, ex));
     }
     catch (prompt_aborted&) {}
@@ -284,7 +284,7 @@ void do_split_regex(Context& context)
 {
     try
     {
-        String ex = prompt("split: ", context);
+        String ex = context.client().prompt("split: ", context);
         context.editor().multi_select(std::bind(split_selection, _1, ex));
     }
     catch (prompt_aborted&) {}
@@ -321,7 +321,7 @@ void do_select_object(Context& context)
         { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, inner) },
     };
 
-    Key key = get_key();
+    Key key = context.client().get_key();
     auto it = key_to_selector.find(key);
     if (it != key_to_selector.end())
         context.editor().select(it->second);
@@ -357,10 +357,10 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections(BufferCoord(-std::max(context.numeric_param(),1), 0), true); } },
     { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections(BufferCoord(0,  std::max(context.numeric_param(),1)), true); } },
 
-    { { Key::Modifiers::None, 't' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, get_key().key, context.numeric_param(), false)); } },
-    { { Key::Modifiers::None, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, get_key().key, context.numeric_param(), true)); } },
-    { { Key::Modifiers::None, 'T' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, get_key().key, context.numeric_param(), false), true); } },
-    { { Key::Modifiers::None, 'F' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, get_key().key, context.numeric_param(), true), true); } },
+    { { Key::Modifiers::None, 't' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), false)); } },
+    { { Key::Modifiers::None, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), true)); } },
+    { { Key::Modifiers::None, 'T' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), false), true); } },
+    { { Key::Modifiers::None, 'F' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), true), true); } },
 
     { { Key::Modifiers::None, 'd' }, do_erase },
     { { Key::Modifiers::None, 'c' }, do_change },
@@ -410,16 +410,16 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'n' }, do_search_next<false> },
     { { Key::Modifiers::None, 'N' }, do_search_next<true> },
 
-    { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { print_status("nothing left to undo"); } }) },
-    { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { print_status("nothing left to redo"); } }) },
+    { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
+    { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },
 
     { { Key::Modifiers::Alt,  'i' }, do_select_object<true> },
     { { Key::Modifiers::Alt,  'a' }, do_select_object<false> },
 
-    { { Key::Modifiers::Alt, 't' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, get_key().key, context.numeric_param(), false)); } },
-    { { Key::Modifiers::Alt, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, get_key().key, context.numeric_param(), true)); } },
-    { { Key::Modifiers::Alt, 'T' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, get_key().key, context.numeric_param(), false), true); } },
-    { { Key::Modifiers::Alt, 'F' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, get_key().key, context.numeric_param(), true), true); } },
+    { { Key::Modifiers::Alt, 't' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), false)); } },
+    { { Key::Modifiers::Alt, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), true)); } },
+    { { Key::Modifiers::Alt, 'T' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), false), true); } },
+    { { Key::Modifiers::Alt, 'F' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), true), true); } },
 
     { { Key::Modifiers::Alt, 'w' }, repeated([](Context& context) { context.editor().select(select_to_next_word<true>); }) },
     { { Key::Modifiers::Alt, 'e' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<true>); }) },
@@ -480,8 +480,7 @@ int main(int argc, char* argv[])
     try
     {
         NCursesClient client;
-        current_client = &client;
-        Context context;
+        Context context(client);
 
         try
         {
@@ -489,7 +488,7 @@ int main(int argc, char* argv[])
         }
         catch (Kakoune::runtime_error& error)
         {
-            print_status(error.description());
+            context.print_status(error.description());
         }
 
 
@@ -506,16 +505,16 @@ int main(int argc, char* argv[])
         else
         {
             auto buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
-            context = Context(*buffer->get_or_create_window());
+            context.change_editor(*buffer->get_or_create_window());
         }
 
-        current_client->draw_window(context.window());
+        context.draw_ifn();
         int count = 0;
         while(not quit_requested)
         {
             try
             {
-                Key key = get_key();
+                Key key = context.client().get_key();
                 if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
                     count = count * 10 + key.key - '0';
                 else
@@ -525,14 +524,14 @@ int main(int argc, char* argv[])
                     {
                         context.numeric_param(count);
                         it->second(context);
-                        current_client->draw_window(context.window());
+                        context.draw_ifn();
                     }
                     count = 0;
                 }
             }
             catch (Kakoune::runtime_error& error)
             {
-                print_status(error.description());
+                context.print_status(error.description());
             }
         }
     }

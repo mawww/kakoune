@@ -214,7 +214,7 @@ private:
     std::unordered_map<String, bool> m_options;
 };
 
-Buffer* open_or_create(const String& filename)
+Buffer* open_or_create(const String& filename, Context& context)
 {
     Buffer* buffer = NULL;
     try
@@ -223,7 +223,7 @@ Buffer* open_or_create(const String& filename)
     }
     catch (file_not_found& what)
     {
-        print_status("new file " + filename);
+        context.print_status("new file " + filename);
         buffer = new Buffer(filename, Buffer::Type::NewFile);
     }
     return buffer;
@@ -248,7 +248,7 @@ void edit(const CommandParameters& params, Context& context)
         if (parser.has_option("scratch"))
             buffer = new Buffer(filename, Buffer::Type::Scratch);
         else
-            buffer = open_or_create(filename);
+            buffer = open_or_create(filename, context);
     }
 
     Window& window = *buffer->get_or_create_window();
@@ -262,7 +262,7 @@ void edit(const CommandParameters& params, Context& context)
         window.select(window.buffer().iterator_at({line, column}));
     }
 
-    context = Context(window);
+    context.change_editor(window);
 }
 
 void write_buffer(const CommandParameters& params, Context& context)
@@ -344,7 +344,7 @@ void show_buffer(const CommandParameters& params, Context& context)
     if (not buffer)
         throw runtime_error("buffer " + buffer_name + " does not exists");
 
-    context = Context(*buffer->get_or_create_window());
+    context.change_editor(*buffer->get_or_create_window());
 }
 
 void delete_buffer(const CommandParameters& params, Context& context)
@@ -374,7 +374,7 @@ void delete_buffer(const CommandParameters& params, Context& context)
         {
             if (buf != buffer)
             {
-               context = Context(*buf->get_or_create_window());
+               context.change_editor(*buf->get_or_create_window());
                break;
             }
         }
@@ -554,7 +554,7 @@ void echo_message(const CommandParameters& params, Context& context)
     String message;
     for (auto& param : params)
         message += param + " ";
-    print_status(message);
+    context.print_status(message);
 }
 
 void exec_commands_in_file(const CommandParameters& params,
@@ -626,16 +626,10 @@ private:
 class BatchClient : public Client
 {
 public:
-    BatchClient(const KeyList& keys)
+    BatchClient(const KeyList& keys, Client* previous_client)
         : m_keys(keys), m_pos(0)
     {
-        m_previous_client = current_client;
-        current_client = this;
-    }
-
-    ~BatchClient()
-    {
-        current_client = m_previous_client;
+        m_previous_client = previous_client;
     }
 
     String prompt(const String&, const Context&, Completer)
@@ -679,7 +673,8 @@ private:
 
 void exec_keys(const KeyList& keys, Context& context)
 {
-    BatchClient batch_client(keys);
+    BatchClient batch_client(keys, context.has_client() ? &context.client()
+                                                       : nullptr);
 
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
@@ -687,7 +682,8 @@ void exec_keys(const KeyList& keys, Context& context)
     scoped_edition edition(context.editor());
 
     int count = 0;
-    Context new_context(context);
+    Context new_context(batch_client);
+    new_context.change_editor(context.window());
     while (batch_client.has_key_left())
     {
         Key key = batch_client.get_key();
@@ -738,7 +734,8 @@ void menu(const CommandParameters& params, Context& context)
     }
     oss << "(empty cancels): ";
 
-    String choice = prompt(oss.str(), context, complete_nothing);
+    String choice = context.client().prompt(oss.str(), context,
+                                            complete_nothing);
     int i = str_to_int(choice);
 
     if (i > 0 and i < (count / 2) + 1)
