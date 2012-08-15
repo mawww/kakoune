@@ -60,13 +60,13 @@ class RegexColorizer
 public:
     RegexColorizer(Regex regex, ColorSpec colors)
         : m_regex(std::move(regex)), m_colors(std::move(colors)),
-          m_cache_buffer(nullptr), m_cache_timestamp(0)
+          m_cache_timestamp(0)
     {
     }
 
     void operator()(DisplayBuffer& display_buffer)
     {
-        update_cache_ifn(display_buffer.range().first.buffer());
+        update_cache_ifn(display_buffer.range());
         for (auto& match : m_cache_matches)
         {
             for (size_t n = 0; n < match.size(); ++n)
@@ -85,24 +85,29 @@ public:
     }
 
 private:
-    const Buffer* m_cache_buffer;
-    size_t        m_cache_timestamp;
+    BufferRange m_cache_range;
+    size_t      m_cache_timestamp;
     std::vector<boost::match_results<BufferIterator>> m_cache_matches;
 
     Regex     m_regex;
     ColorSpec m_colors;
 
-    void update_cache_ifn(const Buffer& buffer)
+    void update_cache_ifn(const BufferRange& range)
     {
-        if (&buffer == m_cache_buffer and
-            buffer.timestamp() == m_cache_timestamp)
+        const Buffer* newbuf = &range.first.buffer();
+        if (m_cache_range.first.is_valid() and
+            &m_cache_range.first.buffer() == newbuf and
+            newbuf->timestamp() == m_cache_timestamp and
+            range.first >= m_cache_range.first and
+            range.second <= m_cache_range.second)
            return;
 
         m_cache_matches.clear();
-        m_cache_buffer = &buffer;
-        m_cache_timestamp = buffer.timestamp();
+        m_cache_range.first  = range.first  - 10;
+        m_cache_range.second = range.second + 10;
+        m_cache_timestamp = newbuf->timestamp();
 
-        RegexIterator re_it(buffer.begin(), buffer.end(), m_regex);
+        RegexIterator re_it(m_cache_range.first, m_cache_range.second, m_regex);
         RegexIterator re_end;
         for (; re_it != re_end; ++re_it)
             m_cache_matches.push_back(*re_it);
