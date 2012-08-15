@@ -114,6 +114,8 @@ public:
     void insert(BufferIterator pos, const String& content);
     void erase(BufferIterator begin, BufferIterator end);
 
+    size_t         timestamp() const { return m_timestamp; }
+
     void           begin_undo_group();
     void           end_undo_group();
     bool           undo();
@@ -201,6 +203,7 @@ private:
     std::list<std::unique_ptr<Window>> m_windows;
 
     size_t m_last_save_undo_index;
+    size_t m_timestamp;
 
     std::vector<BufferChangeListener*> m_change_listeners;
 

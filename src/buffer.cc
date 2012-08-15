@@ -26,6 +26,7 @@ Buffer::Buffer(String name, Type type,
     : m_name(std::move(name)), m_type(type),
       m_history(1), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
+      m_timestamp(0),
       m_hook_manager(GlobalHookManager::instance()),
       m_option_manager(GlobalOptionManager::instance())
 {
@@ -233,6 +234,7 @@ void Buffer::check_invariant() const
 
 void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
+    ++m_timestamp;
     BufferSize offset = pos.offset();
 
     // all following lines advanced by length
@@ -307,6 +309,7 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
 
 void Buffer::do_erase(const BufferIterator& pos, BufferSize length)
 {
+    ++m_timestamp;
     BufferIterator end = pos + length;
     assert(end.is_valid());
     String prefix = m_lines[pos.line()].content.substr(0, pos.column());
