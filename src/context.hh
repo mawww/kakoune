@@ -12,19 +12,19 @@ struct Context
 {
     Context() {}
     Context(Editor& editor)
-        : m_editor(&editor), m_buffer(&editor.buffer()) {}
+        : m_editor(&editor) {}
 
     // to allow func(Context(Editor(...)))
     Context(Editor&& editor)
-        : m_editor(&editor), m_buffer(&editor.buffer()) {}
+        : m_editor(&editor) {}
 
     Buffer& buffer() const
     {
         if (not has_buffer())
             throw runtime_error("no buffer in context");
-        return *m_buffer;
+        return m_editor->buffer();
     }
-    bool has_buffer() const { return m_buffer; }
+    bool has_buffer() const { return m_editor; }
 
     Editor& editor() const
     {
@@ -56,8 +56,6 @@ struct Context
 
 public:
     safe_ptr<Editor> m_editor;
-    safe_ptr<Buffer> m_buffer;
-
     int m_numeric_param = 0;
 };
 
