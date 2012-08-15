@@ -188,10 +188,8 @@ void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
                     if (it+1 != end)
                         atom_it = line.split(atom_it, it+1);
 
-                    BufferCoord pos = it.buffer().line_and_column_at(it);
-
                     int column = 0;
-                    for (auto line_it = it.buffer().iterator_at({pos.line, 0});
+                    for (auto line_it = it.buffer().iterator_at_line_begin(it);
                          line_it != it; ++line_it)
                     {
                         assert(*line_it != '\n');

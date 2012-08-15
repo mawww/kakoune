@@ -98,7 +98,8 @@ BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) co
 BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
 {
     BufferPos line = iterator.line();
-    return ++BufferIterator(*this, { line, std::max(line_length(line) - 1, 0) });
+    assert(line_length(line) > 0);
+    return ++BufferIterator(*this, { line, line_length(line) - 1 });
 }
 
 BufferIterator Buffer::begin() const
