@@ -147,14 +147,15 @@ TokenList parse(const String& line,
             }
             else
             {
-                while ((line[pos] != opening_delimiter or line[pos-1] == '\\') and
-                        pos != length)
+                while (pos != length and
+                       (line[pos] != opening_delimiter or line[pos-1] == '\\'))
                     ++pos;
             }
         }
         else
             while (pos != length and not is_horizontal_blank(line[pos]) and
-                   (not is_command_separator(line[pos]) or line[pos-1] == '\\'))
+                   (not is_command_separator(line[pos]) or
+                    (pos != 0 and line[pos-1] == '\\')))
                 ++pos;
 
         if (token_start != pos)
