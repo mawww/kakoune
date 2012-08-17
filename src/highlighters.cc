@@ -94,18 +94,18 @@ private:
 
     void update_cache_ifn(const BufferRange& range)
     {
-        const Buffer* newbuf = &range.first.buffer();
+        const Buffer& buf = range.first.buffer();
         if (m_cache_range.first.is_valid() and
-            &m_cache_range.first.buffer() == newbuf and
-            newbuf->timestamp() == m_cache_timestamp and
+            &m_cache_range.first.buffer() == &buf and
+            buf.timestamp() == m_cache_timestamp and
             range.first >= m_cache_range.first and
             range.second <= m_cache_range.second)
            return;
 
         m_cache_matches.clear();
-        m_cache_range.first  = range.first  - 10;
-        m_cache_range.second = range.second + 10;
-        m_cache_timestamp = newbuf->timestamp();
+        m_cache_range.first  = buf.iterator_at({range.first.line()  - 10, 0});
+        m_cache_range.second = buf.iterator_at({range.second.line() + 10, 0});
+        m_cache_timestamp = buf.timestamp();
 
         RegexIterator re_it(m_cache_range.first, m_cache_range.second, m_regex);
         RegexIterator re_end;
