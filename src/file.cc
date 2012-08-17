@@ -75,11 +75,6 @@ String read_file(const String& filename)
 
 Buffer* create_buffer_from_file(const String& filename)
 {
-    if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
-        delete buffer;
-
-    Buffer* buffer = new Buffer(filename, Buffer::Type::File, "");
-
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
@@ -88,6 +83,12 @@ Buffer* create_buffer_from_file(const String& filename)
 
         throw file_access_error(filename, strerror(errno));
     }
+
+    if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
+        delete buffer;
+
+    Buffer* buffer = new Buffer(filename, Buffer::Type::File, "");
+
 
     String content;
     char buf[256];
