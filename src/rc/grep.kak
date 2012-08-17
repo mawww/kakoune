@@ -1,6 +1,6 @@
 def -env-params grep %{ echo grep in progress, please wait...; %sh{
      output=$(mktemp -t kak-grep.XXXXXXXX)
-     grep -Hn $kak_param0 $kak_param1 $kak_param2 $kak_param3 $kak_param4 >& ${output}
+     grep -PHn "$kak_param0" "$kak_param1" "$kak_param2" "$kak_param3" "$kak_param4" >& ${output}
      echo "echo
            try %{ db *grep* } catch %{ }
            edit -scratch *grep*
