@@ -56,8 +56,6 @@ struct Context
 
     void change_editor(Editor& editor)
     {
-        if (has_client() and not dynamic_cast<Window*>(&editor))
-            throw logic_error();
         m_editor.reset(&editor);
     }
 
@@ -72,7 +70,7 @@ struct Context
 
     void draw_ifn() const
     {
-        if (has_client())
+        if (has_client() and has_window())
             client().draw_window(window());
     }
 

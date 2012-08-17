@@ -683,7 +683,7 @@ void exec_keys(const KeyList& keys, Context& context)
 
     int count = 0;
     Context new_context(batch_client);
-    new_context.change_editor(context.window());
+    new_context.change_editor(context.editor());
     while (batch_client.has_key_left())
     {
         Key key = batch_client.get_key();
