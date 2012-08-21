@@ -125,9 +125,11 @@ void do_go(Context& context)
     if (count != 0)
     {
         BufferIterator target =
-            editor.buffer().iterator_at(BufferCoord(count-1, 0));
+            editor.buffer().iterator_at_line_begin(count-1);
 
         editor.select(target);
+        if (context.has_window())
+            context.window().center_selection();
     }
     else
     {
@@ -139,12 +141,8 @@ void do_go(Context& context)
         {
         case 'g':
         case 't':
-        {
-            BufferIterator target =
-                editor.buffer().iterator_at(BufferCoord(0,0));
-            editor.select(target);
+            editor.select(editor.buffer().begin());
             break;
-        }
         case 'l':
         case 'L':
             editor.select(select_to_eol, append);
@@ -155,9 +153,8 @@ void do_go(Context& context)
             break;
         case 'b':
         {
-            BufferIterator target = editor.buffer().iterator_at(
-                BufferCoord(editor.buffer().line_count() - 1, 0));
-            editor.select(target);
+            const Buffer& buf = editor.buffer();
+            editor.select(buf.iterator_at_line_begin(buf.line_count() - 1));
             break;
         }
         }
