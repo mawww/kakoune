@@ -103,8 +103,8 @@ private:
            return;
 
         m_cache_matches.clear();
-        m_cache_range.first  = buf.iterator_at({range.first.line()  - 10, 0});
-        m_cache_range.second = buf.iterator_at({range.second.line() + 10, 0});
+        m_cache_range.first  = buf.iterator_at_line_begin(range.first.line() - 10);
+        m_cache_range.second = buf.iterator_at_line_end(range.second.line() + 10);
         m_cache_timestamp = buf.timestamp();
 
         RegexIterator re_it(m_cache_range.first, m_cache_range.second, m_regex);
