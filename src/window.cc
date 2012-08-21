@@ -35,6 +35,12 @@ Window::~Window()
     m_option_manager.unregister_watcher(*this);
 }
 
+void Window::center_selection()
+{
+    BufferIterator cursor = selections().back().last();
+    m_position.line = std::max(0, cursor.line() - m_dimensions.line/2);
+}
+
 void Window::update_display_buffer()
 {
     scroll_to_keep_cursor_visible_ifn();

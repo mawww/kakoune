@@ -30,6 +30,7 @@ public:
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
+    void center_selection();
     void update_display_buffer();
 
     String status_line() const;
