@@ -260,6 +260,7 @@ void edit(const CommandParameters& params, Context& context)
                          std::max(0, str_to_int(parser[2]) - 1) : 0;
 
         window.select(window.buffer().iterator_at({line, column}));
+        window.center_selection();
     }
 
     context.change_editor(window);
