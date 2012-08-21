@@ -161,11 +161,15 @@ public:
     // returns an iterator pointing to the first character of the line
     // iterator is on
     BufferIterator iterator_at_line_begin(const BufferIterator& iterator) const;
+    // the same but taking a line number instead of an iterator
+    BufferIterator iterator_at_line_begin(size_t line) const;
 
     // returns an iterator pointing to the character after the last of the
     // line iterator is on (which is the first of the next line if iterator is
     // not on the last one)
     BufferIterator iterator_at_line_end(const BufferIterator& iterator) const;
+    // the same but taking a line number instead of an iterator
+    BufferIterator iterator_at_line_end(size_t line) const;
 
     const String& line_content(size_t l) const { return m_lines[l].content; }
 

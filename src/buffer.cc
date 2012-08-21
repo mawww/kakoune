@@ -97,11 +97,23 @@ BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) co
     return BufferIterator(*this, { iterator.line(), 0 });
 }
 
+BufferIterator Buffer::iterator_at_line_begin(size_t line) const
+{
+    return BufferIterator(*this, clamp({ (int)line, 0 }));
+}
+
 BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
 {
     BufferPos line = iterator.line();
     assert(line_length(line) > 0);
     return ++BufferIterator(*this, { line, line_length(line) - 1 });
+}
+
+BufferIterator Buffer::iterator_at_line_end(size_t line) const
+{
+    line = std::min(line, (size_t)line_count()-1);
+    assert(line_length(line) > 0);
+    return ++BufferIterator(*this, { (int)line, line_length(line) - 1 });
 }
 
 BufferIterator Buffer::begin() const
