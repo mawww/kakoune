@@ -36,7 +36,7 @@ KeyList parse_keys(const String& str)
                     }
                     if (tolower(keyname[0]) == 'a' and keyname[1] == '-')
                     {
-                        modifier = Key::Modifiers::Control;
+                        modifier = Key::Modifiers::Alt;
                         keyname = keyname.substr(2);
                     }
                 }
