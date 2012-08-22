@@ -213,9 +213,9 @@ void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
 
 void show_line_numbers(Window& window, DisplayBuffer& display_buffer)
 {
-    int last_line = window.buffer().line_count();
+    LineCount last_line = window.buffer().line_count();
     int digit_count = 0;
-    for (int c = last_line; c > 0; c /= 10)
+    for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
 
     char format[] = "%?d ";
@@ -224,7 +224,7 @@ void show_line_numbers(Window& window, DisplayBuffer& display_buffer)
     for (auto& line : display_buffer.lines())
     {
         char buffer[10];
-        snprintf(buffer, 10, format, line.buffer_line() + 1);
+        snprintf(buffer, 10, format, (int)line.buffer_line() + 1);
         DisplayAtom atom = DisplayAtom(AtomContent(buffer));
         atom.fg_color = Color::Black;
         atom.bg_color = Color::White;

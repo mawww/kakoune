@@ -1,16 +1,18 @@
 #ifndef line_and_column_hh_INCLUDED
 #define line_and_column_hh_INCLUDED
 
+#include "units.hh"
+
 namespace Kakoune
 {
 
 template<typename EffectiveType>
 struct LineAndColumn
 {
-    int line;
+    LineCount line;
     int column;
 
-    LineAndColumn(int line = 0, int column = 0)
+    LineAndColumn(LineCount line = 0, int column = 0)
         : line(line), column(column) {}
 
     EffectiveType operator+(const EffectiveType& other) const

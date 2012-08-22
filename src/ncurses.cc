@@ -93,7 +93,7 @@ void NCursesClient::draw_window(Window& window)
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
 
-    window.set_dimensions(DisplayCoord(max_y, max_x));
+    window.set_dimensions(DisplayCoord(LineCount(max_y), max_x));
     window.update_display_buffer();
 
     int line_index = 0;

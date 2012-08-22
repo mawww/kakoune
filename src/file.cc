@@ -173,7 +173,7 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
     if (buffer.option_manager()["BOM"].as_string() == "utf-8")
         ::write(fd, "\xEF\xBB\xBF", 3);
 
-    for (size_t i = 0; i < buffer.line_count(); ++i)
+    for (LineCount i = 0; i < buffer.line_count(); ++i)
     {
         // end of lines are written according to eolformat but always
         // stored as \n

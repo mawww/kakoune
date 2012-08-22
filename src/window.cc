@@ -13,8 +13,6 @@ namespace Kakoune
 
 Window::Window(Buffer& buffer)
     : Editor(buffer),
-      m_position(0, 0),
-      m_dimensions(0, 0),
       m_hook_manager(buffer.hook_manager()),
       m_option_manager(buffer.option_manager())
 {
@@ -38,7 +36,7 @@ Window::~Window()
 void Window::center_selection()
 {
     BufferIterator cursor = selections().back().last();
-    m_position.line = std::max(0, cursor.line() - m_dimensions.line/2);
+    m_position.line = std::max(0_line, cursor.line() - m_dimensions.line/2_line);
 }
 
 void Window::update_display_buffer()
@@ -48,9 +46,9 @@ void Window::update_display_buffer()
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
-    for (auto line = 0; line < m_dimensions.line; ++line)
+    for (LineCount line = 0; line < m_dimensions.line; ++line)
     {
-        auto buffer_line = m_position.line + line;
+        LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
         BufferIterator pos        = buffer().iterator_at({ buffer_line, m_position.column });
@@ -138,7 +136,7 @@ String Window::status_line() const
     oss << buffer().name();
     if (buffer().is_modified())
         oss << " [+]";
-    oss << " -- " << cursor.line+1 << "," << cursor.column+1
+    oss << " -- " << (int)cursor.line+1 << "," << cursor.column+1
         << " -- " << selections().size() << " sel -- ";
     if (is_editing())
         oss << "[Insert]";

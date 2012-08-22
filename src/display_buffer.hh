@@ -12,7 +12,7 @@ namespace Kakoune
 
 struct DisplayCoord : LineAndColumn<DisplayCoord>
 {
-    DisplayCoord(int line = 0, int column = 0)
+    DisplayCoord(LineCount line = 0, int column = 0)
         : LineAndColumn(line, column) {}
 
     template<typename T>
@@ -123,9 +123,9 @@ public:
     using iterator = AtomList::iterator;
     using const_iterator = AtomList::const_iterator;
 
-    explicit DisplayLine(size_t buffer_line) : m_buffer_line(buffer_line) {}
+    explicit DisplayLine(LineCount buffer_line) : m_buffer_line(buffer_line) {}
 
-    size_t buffer_line() const { return m_buffer_line; }
+    LineCount buffer_line() const { return m_buffer_line; }
 
     iterator begin() { return m_atoms.begin(); }
     iterator end() { return m_atoms.end(); }
@@ -140,8 +140,8 @@ public:
     void     push_back(DisplayAtom atom) { m_atoms.push_back(std::move(atom)); }
 
 private:
-    size_t   m_buffer_line;
-    AtomList m_atoms;
+    LineCount m_buffer_line;
+    AtomList  m_atoms;
 };
 
 using BufferRange = std::pair<BufferIterator, BufferIterator>;

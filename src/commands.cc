@@ -259,7 +259,7 @@ void edit(const CommandParameters& params, Context& context)
         int column = param_count > 2 ?
                          std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        window.select(window.buffer().iterator_at({line, column}));
+        window.select(window.buffer().iterator_at({LineCount(line), column}));
         window.center_selection();
     }
 

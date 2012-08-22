@@ -9,6 +9,7 @@
 #include "option_manager.hh"
 #include "hook_manager.hh"
 #include "string.hh"
+#include "units.hh"
 
 namespace Kakoune
 {
@@ -21,7 +22,7 @@ typedef int       BufferSize;
 
 struct BufferCoord : LineAndColumn<BufferCoord>
 {
-    BufferCoord(int line = 0, int column = 0)
+    BufferCoord(LineCount line = 0, int column = 0)
         : LineAndColumn(line, column) {}
 
     template<typename T>
@@ -72,7 +73,7 @@ public:
 
     const Buffer& buffer() const;
     const BufferCoord& coord() const { return m_coord; }
-    BufferSize line() const { return m_coord.line; }
+    LineCount  line() const { return m_coord.line; }
     BufferSize column() const { return m_coord.column; }
 
 private:
@@ -130,7 +131,7 @@ public:
     BufferIterator begin() const;
     BufferIterator end() const;
     BufferSize     character_count() const;
-    BufferSize     line_count() const;
+    LineCount      line_count() const;
 
     // returns an iterator at given coordinates. line_and_column is
     // clamped according to avoid_eol.
@@ -162,16 +163,17 @@ public:
     // iterator is on
     BufferIterator iterator_at_line_begin(const BufferIterator& iterator) const;
     // the same but taking a line number instead of an iterator
-    BufferIterator iterator_at_line_begin(size_t line) const;
+    BufferIterator iterator_at_line_begin(LineCount line) const;
 
     // returns an iterator pointing to the character after the last of the
     // line iterator is on (which is the first of the next line if iterator is
     // not on the last one)
     BufferIterator iterator_at_line_end(const BufferIterator& iterator) const;
     // the same but taking a line number instead of an iterator
-    BufferIterator iterator_at_line_end(size_t line) const;
+    BufferIterator iterator_at_line_end(LineCount line) const;
 
-    const String& line_content(size_t l) const { return m_lines[l].content; }
+    const String& line_content(LineCount line) const
+    { return m_lines[line].content; }
 
     OptionManager&       option_manager()       { return m_option_manager; }
     const OptionManager& option_manager() const { return m_option_manager; }
@@ -190,13 +192,21 @@ private:
 
         size_t length() const { return content.length(); }
     };
-    std::vector<Line> m_lines;
+    struct LineList : std::vector<Line>
+    {
+    public:
+        Line& operator[](LineCount line)
+        { return std::vector<Line>::operator[]((int)line); }
+
+        const Line& operator[](LineCount line) const
+        { return std::vector<Line>::operator[]((int)line); }
+    };
+    LineList m_lines;
 
     void do_insert(const BufferIterator& pos, const String& content);
     void do_erase(const BufferIterator& pos, BufferSize length);
 
-    BufferPos line_at(const BufferIterator& iterator) const;
-    BufferSize line_length(BufferPos line) const;
+    BufferSize line_length(LineCount line) const;
 
     String  m_name;
     const Type   m_type;

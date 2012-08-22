@@ -344,15 +344,15 @@ Repeated<T> repeated(T func) { return Repeated<T>(func); }
 
 std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 {
-    { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections(BufferCoord(0, -std::max(context.numeric_param(),1))); } },
-    { { Key::Modifiers::None, 'j' }, [](Context& context) { context.editor().move_selections(BufferCoord( std::max(context.numeric_param(),1), 0)); } },
-    { { Key::Modifiers::None, 'k' }, [](Context& context) { context.editor().move_selections(BufferCoord(-std::max(context.numeric_param(),1), 0)); } },
-    { { Key::Modifiers::None, 'l' }, [](Context& context) { context.editor().move_selections(BufferCoord(0,  std::max(context.numeric_param(),1))); } },
+    { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }); } },
+    { { Key::Modifiers::None, 'j' }, [](Context& context) { context.editor().move_selections({  std::max(context.numeric_param(),1), 0  }); } },
+    { { Key::Modifiers::None, 'k' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }); } },
+    { { Key::Modifiers::None, 'l' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }); } },
 
-    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections(BufferCoord(0, -std::max(context.numeric_param(),1)), true); } },
-    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections(BufferCoord( std::max(context.numeric_param(),1), 0), true); } },
-    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections(BufferCoord(-std::max(context.numeric_param(),1), 0), true); } },
-    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections(BufferCoord(0,  std::max(context.numeric_param(),1)), true); } },
+    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }, true); } },
+    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections({  std::max(context.numeric_param(),1), 0 }, true); } },
+    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }, true); } },
+    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }, true); } },
 
     { { Key::Modifiers::None, 't' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), false)); } },
     { { Key::Modifiers::None, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), true)); } },
