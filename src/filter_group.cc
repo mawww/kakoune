@@ -40,13 +40,13 @@ FilterGroup& FilterGroup::get_group(const String& id)
 
 
 CandidateList FilterGroup::complete_id(const String& prefix,
-                                            size_t cursor_pos)
+                                       CharCount cursor_pos)
 {
     return m_filters.complete_id(prefix, cursor_pos);
 }
 
 CandidateList FilterGroup::complete_group_id(const String& prefix,
-                                                  size_t cursor_pos)
+                                             CharCount cursor_pos)
 {
     return m_filters.complete_id_if(
         prefix, cursor_pos,

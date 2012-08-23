@@ -5,6 +5,7 @@
 #include <iosfwd>
 
 #include "memoryview.hh"
+#include "units.hh"
 
 namespace Kakoune
 {
@@ -23,8 +24,8 @@ public:
    template<typename Iterator>
    String(Iterator begin, Iterator end) : m_content(begin, end) {}
 
-   Character operator[](size_t pos) const { return static_cast<Character>(m_content[pos]); }
-   size_t    length() const { return m_content.length(); }
+   Character operator[](CharCount pos) const { return static_cast<Character>(m_content[(int)pos]); }
+   CharCount length() const { return m_content.length(); }
    bool      empty()  const { return m_content.empty(); }
 
    bool      operator== (const String& other) const { return m_content == other.m_content; }
@@ -43,7 +44,7 @@ public:
    memoryview<char> data()  const { return memoryview<char>(m_content.data(), m_content.size()); }
    const char*      c_str() const { return m_content.c_str(); }
 
-   String substr(size_t pos, size_t length = -1) const { return String(m_content.substr(pos, length)); }
+   String substr(CharCount pos, CharCount length = -1) const { return String(m_content.substr((int)pos, (int)length)); }
 
    class iterator
    {

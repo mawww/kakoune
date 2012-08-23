@@ -67,6 +67,9 @@ public:
     bool operator>=(const RealType& other) const
     { return m_value >= other.m_value; }
 
+    bool operator!() const
+    { return !m_value; }
+
     explicit operator ValueType() const { return m_value; }
 private:
    ValueType m_value;
@@ -80,6 +83,16 @@ struct LineCount : public StronglyTypedInteger<LineCount, int>
 inline LineCount operator"" _line(unsigned long long int value)
 {
     return LineCount(value);
+}
+
+struct CharCount : public StronglyTypedInteger<CharCount, int>
+{
+    CharCount(int value) : StronglyTypedInteger<CharCount>(value) {}
+};
+
+inline CharCount operator"" _char(unsigned long long int value)
+{
+    return CharCount(value);
 }
 
 }

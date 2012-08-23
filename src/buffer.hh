@@ -17,12 +17,9 @@ namespace Kakoune
 class Buffer;
 class Window;
 
-typedef int       BufferPos;
-typedef int       BufferSize;
-
 struct BufferCoord : LineAndColumn<BufferCoord>
 {
-    BufferCoord(LineCount line = 0, int column = 0)
+    BufferCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
 
     template<typename T>
@@ -35,7 +32,7 @@ class BufferIterator
 {
 public:
     typedef Character  value_type;
-    typedef BufferSize difference_type;
+    typedef size_t difference_type;
     typedef const value_type* pointer;
     typedef const value_type& reference;
     typedef std::bidirectional_iterator_tag iterator_category;
@@ -51,13 +48,13 @@ public:
     bool operator>= (const BufferIterator& iterator) const;
 
     Character  operator* () const;
-    BufferSize operator- (const BufferIterator& iterator) const;
+    size_t operator- (const BufferIterator& iterator) const;
 
-    BufferIterator operator+ (BufferSize size) const;
-    BufferIterator operator- (BufferSize size) const;
+    BufferIterator operator+ (CharCount size) const;
+    BufferIterator operator- (CharCount size) const;
 
-    BufferIterator& operator+= (BufferSize size);
-    BufferIterator& operator-= (BufferSize size);
+    BufferIterator& operator+= (CharCount size);
+    BufferIterator& operator-= (CharCount size);
 
     BufferIterator& operator++ ();
     BufferIterator& operator-- ();
@@ -74,10 +71,10 @@ public:
     const Buffer& buffer() const;
     const BufferCoord& coord() const { return m_coord; }
     LineCount  line() const { return m_coord.line; }
-    BufferSize column() const { return m_coord.column; }
+    CharCount column() const { return m_coord.column; }
 
 private:
-    BufferSize offset() const;
+    CharCount offset() const;
 
     const Buffer* m_buffer;
     BufferCoord   m_coord;
@@ -130,7 +127,7 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    BufferSize     character_count() const;
+    CharCount      character_count() const;
     LineCount      line_count() const;
 
     // returns an iterator at given coordinates. line_and_column is
@@ -187,10 +184,10 @@ private:
 
     struct Line
     {
-        BufferPos start;
+        CharCount start;
         String    content;
 
-        size_t length() const { return content.length(); }
+        CharCount length() const { return content.length(); }
     };
     struct LineList : std::vector<Line>
     {
@@ -204,9 +201,9 @@ private:
     LineList m_lines;
 
     void do_insert(const BufferIterator& pos, const String& content);
-    void do_erase(const BufferIterator& pos, BufferSize length);
+    void do_erase(const BufferIterator& pos, CharCount length);
 
-    BufferSize line_length(LineCount line) const;
+    CharCount line_length(LineCount line) const;
 
     String  m_name;
     const Type   m_type;

@@ -259,7 +259,7 @@ void edit(const CommandParameters& params, Context& context)
         int column = param_count > 2 ?
                          std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        window.select(window.buffer().iterator_at({LineCount(line), column}));
+        window.select(window.buffer().iterator_at({ line,  column }));
         window.center_selection();
     }
 
@@ -536,11 +536,11 @@ void define_command(const CommandParameters& params, Context& context)
     {
         String shell_cmd = parser.option_value("shell-completion");
         auto completer = [=](const Context& context, const CommandParameters& params,
-                             size_t token_to_complete, size_t pos_in_token)
+                             size_t token_to_complete, CharCount pos_in_token)
         {
            EnvVarMap vars = params_to_env_var_map(params);
            vars["token_to_complete"] = int_to_str(token_to_complete);
-           vars["pos_in_token"]      = int_to_str(pos_in_token);
+           vars["pos_in_token"]      = int_to_str((int)pos_in_token);
            String output = ShellManager::instance().eval(shell_cmd, context, vars);
            return split(output, '\n');
         };
@@ -577,14 +577,14 @@ void exec_commands_in_runtime_file(const CommandParameters& params,
     const String& filename = params[0];
     char buffer[2048];
 #if defined(__linux__)
-    ssize_t res = readlink("/proc/self/exe", buffer, 2048 - filename.length());
+    ssize_t res = readlink("/proc/self/exe", buffer, 2048 - (int)filename.length());
     assert(res != -1);
     buffer[res] = '\0';
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048 - filename.length();
     _NSGetExecutablePath(buffer, &bufsize);
     char* canonical_path = realpath(buffer, NULL);
-    strncpy(buffer, canonical_path, 2048 - filename.length());
+    strncpy(buffer, canonical_path, 2048 - (int)filename.length());
     free(canonical_path);
 #else
 # error "finding executable path is not implemented on this platform"
@@ -778,7 +778,7 @@ void register_commands()
     cm.register_command("wq!", write_and_quit<true>);
 
     PerArgumentCommandCompleter buffer_completer({
-        [](const Context& context, const String& prefix, size_t cursor_pos)
+        [](const Context& context, const String& prefix, CharCount cursor_pos)
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
     cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
@@ -786,7 +786,7 @@ void register_commands()
 
     cm.register_commands({ "ah", "addhl" }, add_highlighter,
                          [](const Context& context, const CommandParameters& params,
-                           size_t token_to_complete, size_t pos_in_token)
+                           size_t token_to_complete, CharCount pos_in_token)
                          {
                              Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
@@ -800,7 +800,7 @@ void register_commands()
                          });
     cm.register_commands({ "rh", "rmhl" }, rm_highlighter,
                          [](const Context& context, const CommandParameters& params,
-                            size_t token_to_complete, size_t pos_in_token)
+                            size_t token_to_complete, CharCount pos_in_token)
                          {
                              Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
@@ -814,7 +814,7 @@ void register_commands()
                          });
     cm.register_commands({ "af", "addfilter" }, add_filter,
                          [](const Context& context, const CommandParameters& params,
-                            size_t token_to_complete, size_t pos_in_token)
+                            size_t token_to_complete, CharCount pos_in_token)
                          {
                              Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
@@ -828,7 +828,7 @@ void register_commands()
                          });
     cm.register_commands({ "rf", "rmfilter" }, rm_filter,
                          [](const Context& context, const CommandParameters& params,
-                            size_t token_to_complete, size_t pos_in_token)
+                            size_t token_to_complete, CharCount pos_in_token)
                          {
                              Window& w = context.window();
                              const String& arg = token_to_complete < params.size() ?
@@ -857,21 +857,21 @@ void register_commands()
                          [](const CommandParameters& params, Context& context)
                          { set_option(GlobalOptionManager::instance(), params, context); },
                          PerArgumentCommandCompleter({
-                             [](const Context& context, const String& prefix, size_t cursor_pos)
+                             [](const Context& context, const String& prefix, CharCount cursor_pos)
                              { return GlobalOptionManager::instance().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setb", "setbuffer" },
                          [](const CommandParameters& params, Context& context)
                          { set_option(context.buffer().option_manager(), params, context); },
                          PerArgumentCommandCompleter({
-                             [](const Context& context, const String& prefix, size_t cursor_pos)
+                             [](const Context& context, const String& prefix, CharCount cursor_pos)
                              { return context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setw", "setwindow" },
                          [](const CommandParameters& params, Context& context)
                          { set_option(context.window().option_manager(), params, context); },
                          PerArgumentCommandCompleter({
-                             [](const Context& context, const String& prefix, size_t cursor_pos)
+                             [](const Context& context, const String& prefix, CharCount cursor_pos)
                              { return context.window().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
 }

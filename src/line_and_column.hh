@@ -10,9 +10,9 @@ template<typename EffectiveType>
 struct LineAndColumn
 {
     LineCount line;
-    int column;
+    CharCount column;
 
-    LineAndColumn(LineCount line = 0, int column = 0)
+    LineAndColumn(LineCount line = 0, CharCount column = 0)
         : line(line), column(column) {}
 
     EffectiveType operator+(const EffectiveType& other) const

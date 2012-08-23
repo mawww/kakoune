@@ -24,14 +24,14 @@ String parse_filename(const String& filename)
     if (filename.length() > 2 and filename[0] == '~' and filename[1] == '/')
         return parse_filename("$HOME/" + filename.substr(2));
 
-    size_t pos = 0;
+    CharCount pos = 0;
     String result;
-    for (size_t i = 0; i < filename.length(); ++i)
+    for (CharCount i = 0; i < filename.length(); ++i)
     {
         if (filename[i] == '$' and (i == 0 or filename[i-1] != '\\'))
         {
             result += filename.substr(pos, i - pos);
-            size_t end = i+1;
+            CharCount end = i+1;
             while (end != filename.length() and isidentifier(filename[end]))
                 ++end;
             String var_name = filename.substr(i+1, end - i - 1);

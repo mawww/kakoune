@@ -12,7 +12,7 @@ namespace Kakoune
 
 struct DisplayCoord : LineAndColumn<DisplayCoord>
 {
-    DisplayCoord(LineCount line = 0, int column = 0)
+    DisplayCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
 
     template<typename T>

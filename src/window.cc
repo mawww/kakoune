@@ -56,7 +56,7 @@ void Window::update_display_buffer()
         BufferIterator line_end   = buffer().iterator_at_line_end(pos);
 
         BufferIterator end;
-        if (line_end - pos > m_dimensions.column)
+        if (CharCount(line_end - pos) > m_dimensions.column)
             end = pos + m_dimensions.column;
         else
             end = line_end;
@@ -100,7 +100,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // (this is only valid if highlighting one line and multiple lines put
     // the cursor in the same position, however I do not find any sane example
     // of highlighters not doing that)
-    int column = 0;
+    CharCount column = 0;
     for (auto& atom : lines.back())
     {
         if (atom.content.has_buffer_range() and
@@ -136,7 +136,7 @@ String Window::status_line() const
     oss << buffer().name();
     if (buffer().is_modified())
         oss << " [+]";
-    oss << " -- " << (int)cursor.line+1 << "," << cursor.column+1
+    oss << " -- " << (int)cursor.line+1 << "," << (int)cursor.column+1
         << " -- " << selections().size() << " sel -- ";
     if (is_editing())
         oss << "[Insert]";

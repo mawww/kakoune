@@ -114,25 +114,25 @@ inline Character BufferIterator::operator*() const
     return m_buffer->m_lines[line()].content[column()];
 }
 
-inline BufferSize BufferIterator::offset() const
+inline CharCount BufferIterator::offset() const
 {
     assert(m_buffer);
     return line() == 0 ? column()
-                            : m_buffer->m_lines[line()].start + column();
+                       : m_buffer->m_lines[line()].start + column();
 }
 
-inline BufferSize BufferIterator::operator-(const BufferIterator& iterator) const
+inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
     assert(m_buffer == iterator.m_buffer);
-    return offset() - iterator.offset();
+    return (size_t)(int)(offset() - iterator.offset());
 }
 
-inline BufferIterator BufferIterator::operator+(BufferSize size) const
+inline BufferIterator BufferIterator::operator+(CharCount size) const
 {
     assert(m_buffer);
     if (size >= 0)
     {
-        BufferSize o = std::min(m_buffer->character_count(), offset() + size);
+        CharCount o = std::min(m_buffer->character_count(), offset() + size);
         for (LineCount i = line() + 1; i < m_buffer->line_count(); ++i)
         {
             if (m_buffer->m_lines[i].start > o)
@@ -144,12 +144,12 @@ inline BufferIterator BufferIterator::operator+(BufferSize size) const
     return operator-(-size);
 }
 
-inline BufferIterator BufferIterator::operator-(BufferSize size) const
+inline BufferIterator BufferIterator::operator-(CharCount size) const
 {
     assert(m_buffer);
     if (size >= 0)
     {
-        BufferSize o = std::max(0, offset() - size);
+        CharCount o = std::max(0_char, offset() - size);
         for (LineCount i = line(); i >= 0; --i)
         {
             if (m_buffer->m_lines[i].start <= o)
@@ -160,12 +160,12 @@ inline BufferIterator BufferIterator::operator-(BufferSize size) const
     return operator+(-size);
 }
 
-inline BufferIterator& BufferIterator::operator+=(BufferSize size)
+inline BufferIterator& BufferIterator::operator+=(CharCount size)
 {
     return *this = (*this + size);
 }
 
-inline BufferIterator& BufferIterator::operator-=(BufferSize size)
+inline BufferIterator& BufferIterator::operator-=(CharCount size)
 {
     return *this = (*this - size);
 }

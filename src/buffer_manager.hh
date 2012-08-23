@@ -29,7 +29,7 @@ public:
     Buffer* get_buffer(const String& name);
 
     CandidateList complete_buffername(const String& prefix,
-                                      size_t cursor_pos = String::npos);
+                                      CharCount cursor_pos = -1);
 
 private:
     BufferList m_buffers;

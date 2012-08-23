@@ -14,11 +14,11 @@ static std::unordered_map<String, Character> keynamemap = {
 KeyList parse_keys(const String& str)
 {
     KeyList result;
-    for (size_t pos = 0; pos < str.length(); ++pos)
+    for (CharCount pos = 0; pos < str.length(); ++pos)
     {
         if (str[pos] == '<')
         {
-            size_t end_pos = pos;
+            CharCount end_pos = pos;
             while (end_pos < str.length() and str[end_pos] != '>')
                 ++end_pos;
 

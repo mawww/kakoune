@@ -65,7 +65,7 @@ public:
 
     template<typename _Condition>
     CandidateList complete_id_if(const String& prefix,
-                                 size_t cursor_pos,
+                                 CharCount cursor_pos,
                                  _Condition condition)
     {
         String real_prefix = prefix.substr(0, cursor_pos);
@@ -83,7 +83,7 @@ public:
     }
 
     CandidateList complete_id(const String& prefix,
-                              size_t cursor_pos)
+                              CharCount cursor_pos)
     {
         return complete_id_if(
             prefix, cursor_pos, [](const value_type&) { return true; });

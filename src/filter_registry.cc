@@ -31,7 +31,7 @@ void FilterRegistry::add_filter_to_group(FilterGroup& group,
 }
 
 CandidateList FilterRegistry::complete_filter(const String& prefix,
-                                              size_t cursor_pos)
+                                              CharCount cursor_pos)
 {
     return m_factories.complete_id(prefix, cursor_pos);
 }

@@ -53,7 +53,7 @@ Buffer* BufferManager::get_buffer(const String& name)
 }
 
 CandidateList BufferManager::complete_buffername(const String& prefix,
-                                                 size_t cursor_pos)
+                                                 CharCount cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;

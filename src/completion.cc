@@ -11,15 +11,15 @@ namespace Kakoune
 
 CandidateList complete_filename(const Context& context,
                                 const String& prefix,
-                                size_t cursor_pos)
+                                CharCount cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);
     String dirname = "./";
     String dirprefix;
     String fileprefix = real_prefix;
 
-    size_t dir_end = -1;
-    for (size_t i = 0; i < real_prefix.length(); ++i)
+    CharCount dir_end = -1;
+    for (CharCount i = 0; i < real_prefix.length(); ++i)
     {
         if (real_prefix[i] == '/')
             dir_end = i;
@@ -49,7 +49,7 @@ CandidateList complete_filename(const Context& context,
             String name = dirprefix + filename;
             if (entry->d_type == DT_DIR)
                 name += '/';
-            if (fileprefix.length() or filename[0] != '.')
+            if (fileprefix.length() != 0 and filename[0] != '.')
                 result.push_back(name);
         }
     }

@@ -113,7 +113,7 @@ void NCursesClient::draw_window(Window& window)
             String content = atom.content.content();
             if (content[content.length()-1] == '\n')
             {
-                addnstr(content.c_str(), content.length() - 1);
+                addnstr(content.c_str(), (int)content.length() - 1);
                 addch(' ');
             }
             else
@@ -139,9 +139,9 @@ void NCursesClient::draw_window(Window& window)
     static int last_status_length = 0;
     move(max_y, max_x - last_status_length);
     clrtoeol();
-    move(max_y, max_x - status_line.length());
+    move(max_y, max_x - (int)status_line.length());
     addstr(status_line.c_str());
-    last_status_length = status_line.length();
+    last_status_length = (int)status_line.length();
 }
 
 Key NCursesClient::get_key()
@@ -179,7 +179,7 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
     addstr(text.c_str());
     clrtoeol();
 
-    size_t cursor_pos = 0;
+    CharCount cursor_pos = 0;
 
     Completions completions;
     int current_completion = -1;
@@ -285,7 +285,7 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
             else
                 completion = completions.candidates[current_completion];
 
-            move(max_y-1, text.length());
+            move(max_y-1, (int)text.length());
             result = result.substr(0, completions.start) + completion;
             cursor_pos = completions.start + completion.length();
             break;
@@ -296,10 +296,10 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
             ++cursor_pos;
         }
 
-        move(max_y - 1, text.length());
+        move(max_y - 1, (int)text.length());
         clrtoeol();
         addstr(result.c_str());
-        move(max_y - 1, text.length() + cursor_pos);
+        move(max_y - 1, (int)(text.length() + cursor_pos));
         refresh();
     }
     return result;
