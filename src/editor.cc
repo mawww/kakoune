@@ -316,7 +316,10 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
     m_editor.on_incremental_insertion_begin();
 
     if (mode == Mode::Change)
-        editor.erase();
+    {
+        for (auto& sel : editor.m_selections.back())
+            editor.m_buffer.erase(sel.begin(), sel.end());
+    }
 
     for (auto& sel : m_editor.m_selections.back())
     {
@@ -358,9 +361,12 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 
 IncrementalInserter::~IncrementalInserter()
 {
-    if (m_mode == Mode::Append)
-        for (auto& sel : m_editor.m_selections.back())
+    for (auto& sel : m_editor.m_selections.back())
+    {
+        if (m_mode == Mode::Append)
             sel = Selection(sel.first(), sel.last()-1);
+         sel.avoid_eol();
+    }
 
     m_editor.on_incremental_insertion_end();
 }
