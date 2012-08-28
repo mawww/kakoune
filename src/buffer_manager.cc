@@ -66,13 +66,17 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
     // no prefix completion found, check regex matching
     if (result.empty())
     {
-        Regex ex(real_prefix.begin(), real_prefix.end());
-        for (auto& buffer : m_buffers)
+        try
         {
-            const String& name = buffer->name();
-            if (boost::regex_search(name.begin(), name.end(), ex))
-                result.push_back(name);
+            Regex ex(real_prefix.begin(), real_prefix.end());
+            for (auto& buffer : m_buffers)
+            {
+                const String& name = buffer->name();
+                if (boost::regex_search(name.begin(), name.end(), ex))
+                    result.push_back(name);
+            }
         }
+        catch (boost::regex_error& err) {}
     }
     return result;
 }
