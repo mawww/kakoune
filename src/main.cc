@@ -482,7 +482,8 @@ int main(int argc, char* argv[])
 
         try
         {
-            command_manager.execute("runtime kakrc", context);
+            Context initialisation_context;
+            command_manager.execute("runtime kakrc", initialisation_context);
         }
         catch (Kakoune::runtime_error& error)
         {
