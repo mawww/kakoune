@@ -49,7 +49,7 @@ CandidateList complete_filename(const Context& context,
             String name = dirprefix + filename;
             if (entry->d_type == DT_DIR)
                 name += '/';
-            if (fileprefix.length() != 0 and filename[0] != '.')
+            if (fileprefix.length() != 0 or filename[0] != '.')
                 result.push_back(name);
         }
     }
