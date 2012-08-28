@@ -14,6 +14,7 @@
 #include "filter_registry.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"
+#include "event_manager.hh"
 #include "context.hh"
 #include "ncurses.hh"
 #include "regex.hh"
@@ -442,6 +443,32 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
 void run_unit_tests();
 
+void manage_next_keypress(Context& context)
+{
+    static int count = 0;
+    try
+    {
+        Key key = context.client().get_key();
+        if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
+            count = count * 10 + key.key - '0';
+        else
+        {
+            auto it = keymap.find(key);
+            if (it != keymap.end())
+            {
+                context.numeric_param(count);
+                it->second(context);
+                context.draw_ifn();
+            }
+            count = 0;
+        }
+    }
+    catch (Kakoune::runtime_error& error)
+    {
+        context.print_status(error.description());
+    }
+}
+
 int main(int argc, char* argv[])
 {
     GlobalOptionManager option_manager;
@@ -452,6 +479,7 @@ int main(int argc, char* argv[])
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
+    EventManager        event_manager;
 
     run_unit_tests();
 
@@ -507,32 +535,11 @@ int main(int argc, char* argv[])
             context.change_editor(*buffer->get_or_create_window());
         }
 
+        event_manager.watch(0, [&](int) { manage_next_keypress(context); });
+
         context.draw_ifn();
-        int count = 0;
         while(not quit_requested)
-        {
-            try
-            {
-                Key key = context.client().get_key();
-                if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
-                    count = count * 10 + key.key - '0';
-                else
-                {
-                    auto it = keymap.find(key);
-                    if (it != keymap.end())
-                    {
-                        context.numeric_param(count);
-                        it->second(context);
-                        context.draw_ifn();
-                    }
-                    count = 0;
-                }
-            }
-            catch (Kakoune::runtime_error& error)
-            {
-                context.print_status(error.description());
-            }
-        }
+            event_manager.handle_next_events();
     }
     catch (Kakoune::exception& error)
     {
