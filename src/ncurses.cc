@@ -142,6 +142,7 @@ void NCursesClient::draw_window(Window& window)
     move(max_y, max_x - (int)status_line.length());
     addstr(status_line.c_str());
     last_status_length = (int)status_line.length();
+    refresh();
 }
 
 Key NCursesClient::get_key()
