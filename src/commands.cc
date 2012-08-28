@@ -14,10 +14,15 @@
 #include "register_manager.hh"
 #include "completion.hh"
 #include "shell_manager.hh"
+#include "event_manager.hh"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
 #endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace Kakoune
 {
@@ -229,26 +234,55 @@ Buffer* open_or_create(const String& filename, Context& context)
     return buffer;
 }
 
+Buffer* open_fifo(const String& name , const String& filename, Context& context)
+{
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd < 0)
+       throw runtime_error("unable to open " + filename);
+    Buffer* buffer = new Buffer(name, Buffer::Type::Scratch);
+
+    buffer->hook_manager().add_hook(
+        "BufClose", [=](const String&, const Context&)
+        { EventManager::instance().unwatch(fd); close(fd); }
+    );
+
+    EventManager::instance().watch(fd, [=, &context](int fd) {
+         char data[512];
+         ssize_t count = read(fd, data, 512);
+         if (count > 0)
+         {
+             buffer->insert(buffer->end(), String(data, data + count));
+             buffer->reset_undo_data();
+             context.draw_ifn();
+         }
+    });
+
+    return buffer;
+}
+
 template<bool force_reload>
 void edit(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "scratch", false } });
+    ParametersParser parser(params, { { "scratch", false },
+                                      { "fifo", true } });
 
     const size_t param_count = parser.positional_count();
     if (param_count == 0 or param_count > 3)
         throw wrong_argument_count();
 
-    const String& filename = parser[0];
+    const String& name = parser[0];
 
     Buffer* buffer = nullptr;
     if (not force_reload)
-        buffer = BufferManager::instance().get_buffer(filename);
+        buffer = BufferManager::instance().get_buffer(name);
     if (not buffer)
     {
         if (parser.has_option("scratch"))
-            buffer = new Buffer(filename, Buffer::Type::Scratch);
+            buffer = new Buffer(name, Buffer::Type::Scratch);
+        else if (parser.has_option("fifo"))
+            buffer = open_fifo(name, parser.option_value("fifo"), context);
         else
-            buffer = open_or_create(filename, context);
+            buffer = open_or_create(name, context);
     }
 
     Window& window = *buffer->get_or_create_window();
