@@ -26,6 +26,7 @@
 using namespace Kakoune;
 using namespace std::placeholders;
 
+
 namespace Kakoune
 {
 
@@ -471,6 +472,7 @@ void manage_next_keypress(Context& context)
 
 int main(int argc, char* argv[])
 {
+    EventManager        event_manager;
     GlobalOptionManager option_manager;
     GlobalHookManager   hook_manager;
     ShellManager        shell_manager;
@@ -479,7 +481,6 @@ int main(int argc, char* argv[])
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
-    EventManager        event_manager;
 
     run_unit_tests();
 
