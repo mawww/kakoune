@@ -54,8 +54,8 @@ String ShellManager::pipe(const String& input,
         close(write_pipe[1]);
         close(read_pipe[0]);
 
-        dup2(read_pipe[1], 1);
-        dup2(write_pipe[0], 0);
+        dup2(read_pipe[1], 1); close(read_pipe[1]);
+        dup2(write_pipe[0], 0); close(write_pipe[0]);
 
         boost::regex_iterator<String::iterator> it(cmdline.begin(), cmdline.end(), m_regex);
         boost::regex_iterator<String::iterator> end;
