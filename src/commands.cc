@@ -496,11 +496,10 @@ void add_hook(const CommandParameters& params, Context& context)
         throw wrong_argument_count();
 
     // copy so that the lambda gets a copy as well
-    String regex = params[2];
+    Regex regex(params[2].begin(), params[2].end());
     String command = params[3];
     auto hook_func = [=](const String& param, const Context& context) {
-        if (boost::regex_match(param.begin(), param.end(),
-                               Regex(regex.begin(), regex.end())))
+        if (boost::regex_match(param.begin(), param.end(), regex))
         {
             Context new_context(context);
             CommandManager::instance().execute(command, new_context);
