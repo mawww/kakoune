@@ -190,6 +190,11 @@ bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
     return lhs.get() == rhs;
 }
 
+inline String escape(const String& name)
+{
+    return name.replace("([ \\t;])", R"(\\\1)");
+}
+
 }
 
 #endif // utils_hh_INCLUDED

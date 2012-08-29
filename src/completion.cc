@@ -50,7 +50,7 @@ CandidateList complete_filename(const Context& context,
             if (entry->d_type == DT_DIR)
                 name += '/';
             if (fileprefix.length() != 0 or filename[0] != '.')
-                result.push_back(name);
+                result.push_back(escape(name));
         }
     }
     std::sort(result.begin(), result.end());

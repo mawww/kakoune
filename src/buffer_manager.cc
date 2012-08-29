@@ -61,7 +61,7 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
     {
         const String& name = buffer->name();
         if (name.substr(0, real_prefix.length()) == real_prefix)
-            result.push_back(name);
+            result.push_back(escape(name));
     }
     // no prefix completion found, check regex matching
     if (result.empty())
@@ -73,7 +73,7 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
             {
                 const String& name = buffer->name();
                 if (boost::regex_search(name.begin(), name.end(), ex))
-                    result.push_back(name);
+                    result.push_back(escape(name));
             }
         }
         catch (boost::regex_error& err) {}
