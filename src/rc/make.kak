@@ -1,6 +1,6 @@
 def -env-params make %{ echo make in progress, please wait...; %sh{
      output=$(mktemp -t kak-make.XXXXXXXX)
-     make $kak_param_0 $kak_param_1 $kak_param_2 $kak_param_3 $kak_param_4 >& ${output} < /dev/null &
+     make $kak_param0 $kak_param1 $kak_param2 $kak_param3 $kak_param4 >& ${output} < /dev/null &
      echo "echo
            try %{ db *make* } catch %{ }
            edit -fifo ${output} *make*
