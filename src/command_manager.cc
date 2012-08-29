@@ -153,16 +153,19 @@ TokenList parse(const String& line,
             }
         }
         else
-            while (pos != length and not is_horizontal_blank(line[pos]) and
-                   (not is_command_separator(line[pos]) or
-                    (pos != 0 and line[pos-1] == '\\')))
+            while (pos != length and
+                   ((not is_command_separator(line[pos]) and
+                     not is_horizontal_blank(line[pos]))
+                    or (pos != 0 and line[pos-1] == '\\')))
                 ++pos;
 
         if (token_start != pos)
         {
             if (opt_token_pos_info)
                 opt_token_pos_info->push_back({token_start, pos});
-            result.push_back({type, line.substr(token_start, pos - token_start)});
+            String token = line.substr(token_start, pos - token_start);
+            token = token.replace(R"(\\([ \t;\n]))", "\\1");
+            result.push_back({type, token});
         }
 
         if (is_command_separator(line[pos]))

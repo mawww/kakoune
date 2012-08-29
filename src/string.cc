@@ -48,4 +48,11 @@ std::vector<String> split(const String& str, Character separator)
     return res;
 }
 
+String String::replace(const String& expression,
+                       const String& replacement) const
+{
+   boost::regex re(expression.m_content);
+   return String(boost::regex_replace(m_content, re, replacement.m_content));
+}
+
 }

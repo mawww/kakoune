@@ -47,6 +47,7 @@ public:
    const char*      c_str() const { return m_content.c_str(); }
 
    String substr(CharCount pos, CharCount length = -1) const { return String(m_content.substr((int)pos, (int)length)); }
+   String replace(const String& expression, const String& replacement) const;
 
    class iterator
    {
