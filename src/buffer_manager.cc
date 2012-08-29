@@ -3,7 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "exception.hh"
-#include "regex.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

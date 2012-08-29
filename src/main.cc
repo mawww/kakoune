@@ -17,7 +17,7 @@
 #include "event_manager.hh"
 #include "context.hh"
 #include "ncurses.hh"
-#include "regex.hh"
+#include "string.hh"
 
 #include <unordered_map>
 #include <sys/types.h>

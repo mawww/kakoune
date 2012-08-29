@@ -1,6 +1,6 @@
 #include "selectors.hh"
 
-#include "regex.hh"
+#include "string.hh"
 
 #include <algorithm>
 

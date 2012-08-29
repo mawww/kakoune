@@ -8,7 +8,7 @@
 #include "window.hh"
 #include "file.hh"
 #include "client.hh"
-#include "regex.hh"
+#include "string.hh"
 #include "highlighter_registry.hh"
 #include "filter_registry.hh"
 #include "register_manager.hh"

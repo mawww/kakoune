@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iosfwd>
+#include <boost/regex.hpp>
 
 #include "memoryview.hh"
 #include "units.hh"
@@ -11,6 +12,7 @@ namespace Kakoune
 {
 
 typedef wchar_t Character;
+typedef boost::basic_regex<Character> Regex;
 
 class String
 {

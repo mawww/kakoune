@@ -1,10 +1,9 @@
 #include "highlighters.hh"
-
 #include "assert.hh"
 #include "window.hh"
 #include "highlighter_registry.hh"
 #include "highlighter_group.hh"
-#include "regex.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

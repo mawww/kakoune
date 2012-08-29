@@ -2,7 +2,7 @@
 #define shell_manager_hh_INCLUDED
 
 #include "utils.hh"
-#include "regex.hh"
+#include "string.hh"
 
 #include <unordered_map>
 
