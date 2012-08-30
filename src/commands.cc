@@ -699,7 +699,8 @@ public:
 
     bool has_key_left() const { return m_pos < m_keys.size(); }
 
-    int menu(const memoryview<String>& choices) { return 0; }
+    void show_menu(const memoryview<String>&) {}
+    void menu_ctrl(MenuCommand) {}
 
 private:
     const KeyList& m_keys;
@@ -749,6 +750,45 @@ void exec_string(const CommandParameters& params, Context& context)
     exec_keys(keys, context);
 }
 
+int menu_select(const memoryview<String>& choices, Client& client)
+{
+    int selected = 0;
+    client.show_menu(choices);
+    while (true)
+    {
+        Key key = client.get_key();
+        if (key == Key(Key::Modifiers::Control, 'n') or
+            key == Key(Key::Modifiers::None, 'j'))
+        {
+            client.menu_ctrl(MenuCommand::SelectNext);
+            selected = std::min(selected+1, (int)choices.size()-1);
+        }
+        if (key == Key(Key::Modifiers::Control, 'p') or
+            key == Key(Key::Modifiers::None, 'k'))
+        {
+            client.menu_ctrl(MenuCommand::SelectPrev);
+            selected = std::max(selected-1, 0);
+        }
+        if (key == Key(Key::Modifiers::Control, 'm'))
+        {
+            client.menu_ctrl(MenuCommand::Close);
+            return selected;
+        }
+        if (key == Key(Key::Modifiers::None, 27))
+        {
+            client.menu_ctrl(MenuCommand::Close);
+            return -1;
+        }
+        if (key.modifiers == Key::Modifiers::None and
+            key.key >= '0' and key.key <= '9')
+        {
+            client.menu_ctrl(MenuCommand::Close);
+            return key.key - '0' - 1;
+        }
+    }
+    return 0;
+}
+
 void menu(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "auto-single", false } });
@@ -767,8 +807,7 @@ void menu(const CommandParameters& params, Context& context)
     for (int i = 0; i < count; i += 2)
         choices.push_back(parser[i]);
 
-    int i = context.client().menu(choices);
-
+    int i = menu_select(choices, context.client()) + 1;
     if (i > 0 and i < (count / 2) + 1)
         CommandManager::instance().execute(parser[(i-1)*2+1], context);
 }

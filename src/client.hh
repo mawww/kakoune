@@ -13,6 +13,13 @@ class Window;
 class String;
 class Context;
 
+enum class MenuCommand
+{
+    SelectPrev,
+    SelectNext,
+    Close,
+};
+
 class Client : public SafeCountable
 {
 public:
@@ -23,7 +30,9 @@ public:
     virtual String prompt(const String& prompt, const Context& context,
                           Completer completer = complete_nothing) = 0;
     virtual Key    get_key() = 0;
-    virtual int    menu(const memoryview<String>& choices) = 0;
+
+    virtual void   show_menu(const memoryview<String>& choices) = 0;
+    virtual void   menu_ctrl(MenuCommand command) = 0;
 };
 
 struct prompt_aborted {};

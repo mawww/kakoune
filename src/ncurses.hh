@@ -1,6 +1,9 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
+#include <ncurses.h>
+#include <menu.h>
+
 #include "client.hh"
 
 namespace Kakoune
@@ -21,7 +24,13 @@ public:
     String prompt(const String& prompt, const Context& context, Completer completer);
     Key    get_key();
 
-    int    menu(const memoryview<String>& choices);
+    void show_menu(const memoryview<String>& choices);
+    void menu_ctrl(MenuCommand command);
+private:
+    MENU* m_menu;
+    std::vector<ITEM*> m_items;
+    std::vector<String> m_counts;
+    std::vector<String> m_choices;
 };
 
 }
