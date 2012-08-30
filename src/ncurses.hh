@@ -20,6 +20,8 @@ public:
 
     String prompt(const String& prompt, const Context& context, Completer completer);
     Key    get_key();
+
+    int    menu(const memoryview<String>& choices);
 };
 
 }

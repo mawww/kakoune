@@ -23,6 +23,7 @@ public:
     virtual String prompt(const String& prompt, const Context& context,
                           Completer completer = complete_nothing) = 0;
     virtual Key    get_key() = 0;
+    virtual int    menu(const memoryview<String>& choices) = 0;
 };
 
 struct prompt_aborted {};

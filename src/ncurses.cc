@@ -4,6 +4,7 @@
 #include "register_manager.hh"
 
 #include <ncurses.h>
+#include <menu.h>
 #include <map>
 
 #define CTRL(x) x - 'a' + 1
@@ -314,6 +315,52 @@ void NCursesClient::print_status(const String& status)
     clrtoeol();
     addstr(status.c_str());
     refresh();
+}
+
+int NCursesClient::menu(const memoryview<String>& choices)
+{
+    std::vector<ITEM*> items;
+    std::vector<String> counts;
+    for (int i = 0; i < choices.size(); ++i)
+        counts.push_back(int_to_str(i+1));
+    for (int i = 0; i < choices.size(); ++i)
+       items.push_back(new_item(counts[i].c_str(), choices[i].c_str()));
+    items.push_back(NULL);
+    MENU* menu = new_menu(&items[0]);
+    int max_x,max_y;
+    getmaxyx(stdscr, max_y, max_x);
+    int pos_y = max_y - std::min(10, (int)choices.size()) - 1;
+    set_menu_sub(menu, derwin(stdscr, max_y - pos_y - 1, max_x, pos_y, 0));
+    post_menu(menu);
+
+    int res = -1;
+    while (true)
+    {
+       int c = getch();
+       if ('0' <= c and c <= '9')
+       {
+           res = c - '0';
+           break;
+       }
+       if (c == KEY_DOWN or c == CTRL('n'))
+           menu_driver(menu, REQ_DOWN_ITEM);
+       if (c == KEY_UP or c == CTRL('p'))
+           menu_driver(menu, REQ_UP_ITEM);
+       if (c == 27)
+           break;
+       if (c == '\r')
+       {
+           res = item_index(current_item(menu)) + 1;
+           break;
+       }
+    }
+
+    unpost_menu(menu);
+    for (auto item : items)
+       if (item)
+           free_item(item);
+    free_menu(menu);
+    return res;
 }
 
 }

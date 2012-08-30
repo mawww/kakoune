@@ -699,6 +699,8 @@ public:
 
     bool has_key_left() const { return m_pos < m_keys.size(); }
 
+    int menu(const memoryview<String>& choices) { return 0; }
+
 private:
     const KeyList& m_keys;
     size_t         m_pos;
@@ -761,16 +763,11 @@ void menu(const CommandParameters& params, Context& context)
         return;
     }
 
-    std::ostringstream oss;
+    std::vector<String> choices;
     for (int i = 0; i < count; i += 2)
-    {
-        oss << i/2 + 1 << "[" << parser[i] << "] ";
-    }
-    oss << "(empty cancels): ";
+        choices.push_back(parser[i]);
 
-    String choice = context.client().prompt(oss.str(), context,
-                                            complete_nothing);
-    int i = str_to_int(choice);
+    int i = context.client().menu(choices);
 
     if (i > 0 and i < (count / 2) + 1)
         CommandManager::instance().execute(parser[(i-1)*2+1], context);
