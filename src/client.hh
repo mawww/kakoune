@@ -15,6 +15,7 @@ class Context;
 
 enum class MenuCommand
 {
+    SelectFirst,
     SelectPrev,
     SelectNext,
     Close,

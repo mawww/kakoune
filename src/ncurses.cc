@@ -245,12 +245,14 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
                 --cursor_pos;
             }
 
+            menu_ctrl(MenuCommand::Close);
             current_completion = -1;
             break;
         case CTRL('r'):
             {
                 c = getch();
                 String reg = RegisterManager::instance()[c].values(context)[0];
+                menu_ctrl(MenuCommand::Close);
                 current_completion = -1;
                 result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, String::npos);
                 cursor_pos += reg.length();
@@ -266,9 +268,13 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
                 if (completions.candidates.empty())
                     break;
 
+                menu_ctrl(MenuCommand::Close);
+                show_menu(completions.candidates);
                 text_before_completion = result.substr(completions.start,
                                                        completions.end - completions.start);
             }
+            else
+                menu_ctrl(MenuCommand::SelectNext);
             ++current_completion;
 
             String completion;
@@ -281,6 +287,7 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
                 {
                     current_completion = 0;
                     completion = completions.candidates[0];
+                    menu_ctrl(MenuCommand::SelectFirst);
                 }
             }
             else
@@ -292,6 +299,7 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
             break;
         }
         default:
+            menu_ctrl(MenuCommand::Close);
             current_completion = -1;
             result = result.substr(0, cursor_pos) + (char)c + result.substr(cursor_pos, String::npos);
             ++cursor_pos;
@@ -303,6 +311,7 @@ String NCursesClient::prompt(const String& text, const Context& context, Complet
         move(max_y - 1, (int)(text.length() + cursor_pos));
         refresh();
     }
+    menu_ctrl(MenuCommand::Close);
     return result;
 }
 
@@ -322,14 +331,25 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
     m_choices = std::vector<String>(choices.begin(), choices.end());
     for (int i = 0; i < m_choices.size(); ++i)
         m_counts.push_back(int_to_str(i+1));
+    CharCount longest = 0;
     for (int i = 0; i < m_choices.size(); ++i)
+    {
         m_items.push_back(new_item(m_counts[i].c_str(), m_choices[i].c_str()));
+        longest = std::max(longest, m_choices[i].length());
+    }
     m_items.push_back(NULL);
-    m_menu = new_menu(&m_items[0]);
+    longest += m_counts.back().length() + 2;
+
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
-    int pos_y = max_y - std::min(10, (int)m_choices.size()) - 1;
+
+    int columns = max_x / (int)longest;
+    int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
+
+    m_menu = new_menu(&m_items[0]);
+    int pos_y = max_y - lines - 1;
     set_menu_sub(m_menu, derwin(stdscr, max_y - pos_y - 1, max_x, pos_y, 0));
+    set_menu_format(m_menu, lines, columns);
     post_menu(m_menu);
 }
 
@@ -337,14 +357,19 @@ void NCursesClient::menu_ctrl(MenuCommand command)
 {
     switch(command)
     {
+        case MenuCommand::SelectFirst:
+            menu_driver(m_menu, REQ_FIRST_ITEM);
+            break;
         case MenuCommand::SelectNext:
-            menu_driver(m_menu, REQ_DOWN_ITEM);
+            menu_driver(m_menu, REQ_NEXT_ITEM);
             break;
         case MenuCommand::SelectPrev:
-            menu_driver(m_menu, REQ_UP_ITEM);
+            menu_driver(m_menu, REQ_PREV_ITEM);
             break;
         case MenuCommand::Close:
         {
+            if (not m_menu)
+                break;
             unpost_menu(m_menu);
             free_menu(m_menu);
             for (auto item : m_items)
