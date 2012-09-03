@@ -10,7 +10,7 @@ hook global BufOpen .* %{ %sh{
 } }
 
 hook global WinSetOption filetype=cpp %{
-    addhl group cpp-highlight;
+    addhl group cpp-highlight
     addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:red
     addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:yellow
     addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not)\>" 0:blue
