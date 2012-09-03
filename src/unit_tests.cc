@@ -45,6 +45,22 @@ void test_editor()
     }
 }
 
+void test_incremental_inserter()
+{
+    Buffer buffer("test", Buffer::Type::Scratch, "test\n\nyoupi\nmatin\n");
+    Editor editor(buffer);
+
+    editor.select(buffer.begin());
+    {
+        IncrementalInserter inserter(editor, IncrementalInserter::Mode::OpenLineAbove);
+        assert(editor.is_editing());
+        assert(editor.selections().size() == 1);
+        assert(editor.selections().front().first() == buffer.begin());
+        assert(editor.selections().front().last() == buffer.begin());
+        assert(*buffer.begin() == L'\n');
+    }
+    assert(not editor.is_editing());
+}
 void test_string()
 {
    assert(int_to_str(124)  == "124");
@@ -65,4 +81,5 @@ void run_unit_tests()
     test_string();
     test_buffer();
     test_editor();
+    test_incremental_inserter();
 }

@@ -356,7 +356,18 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 
     }
     if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
+    {
         insert("\n");
+        if (mode == Mode::OpenLineAbove)
+        {
+            for (auto& sel : m_editor.m_selections.back())
+            {
+                // special case, the --first line above did nothing, so we need to compensate now
+                if (sel.first() == buffer().begin() + 1)
+                    sel = Selection(buffer().begin(), buffer().begin());
+            }
+        }
+    }
 }
 
 IncrementalInserter::~IncrementalInserter()
