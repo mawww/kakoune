@@ -17,7 +17,7 @@ struct runtime_error : exception
     runtime_error(const String& description)
         : m_description(description) {}
 
-    String description() const { return m_description; }
+    String description() const override { return m_description; }
 
 private:
     String m_description;

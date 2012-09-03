@@ -9,7 +9,7 @@ namespace Kakoune
 struct assert_failed : logic_error
 {
     assert_failed(const String& message);
-    String description() const;
+    String description() const override;
 
 private:
     String m_message;
