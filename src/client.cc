@@ -61,6 +61,7 @@ public:
     void on_key(const Key& key, Context& context) override
     {
         if (key == Key(Key::Modifiers::Control, 'n') or
+            key == Key(Key::Modifiers::Control, 'i') or
             key == Key(Key::Modifiers::None, 'j'))
         {
             m_client.menu_ctrl(MenuCommand::SelectNext);
