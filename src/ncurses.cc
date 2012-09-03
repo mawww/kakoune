@@ -217,7 +217,7 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
         m_items.push_back(new_item(m_counts[i].c_str(), m_choices[i].c_str()));
         longest = std::max(longest, m_choices[i].length());
     }
-    m_items.push_back(NULL);
+    m_items.push_back(nullptr);
     longest += m_counts.back().length() + 2;
 
     int max_x,max_y;
@@ -230,6 +230,7 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
     int pos_y = max_y - lines - 1;
     set_menu_sub(m_menu, derwin(stdscr, max_y - pos_y - 1, max_x, pos_y, 0));
     set_menu_format(m_menu, lines, columns);
+    set_menu_mark(m_menu, nullptr);
     post_menu(m_menu);
     refresh();
 }
@@ -239,13 +240,19 @@ void NCursesClient::menu_ctrl(MenuCommand command)
     switch(command)
     {
         case MenuCommand::SelectFirst:
+            set_menu_fore(m_menu, A_STANDOUT);
             menu_driver(m_menu, REQ_FIRST_ITEM);
             break;
         case MenuCommand::SelectNext:
+            set_menu_fore(m_menu, A_STANDOUT);
             menu_driver(m_menu, REQ_NEXT_ITEM);
             break;
         case MenuCommand::SelectPrev:
+            set_menu_fore(m_menu, A_STANDOUT);
             menu_driver(m_menu, REQ_PREV_ITEM);
+            break;
+        case MenuCommand::SelectNone:
+            set_menu_fore(m_menu, A_NORMAL);
             break;
         case MenuCommand::Close:
         {

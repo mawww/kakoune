@@ -18,6 +18,7 @@ enum class MenuCommand
     SelectFirst,
     SelectPrev,
     SelectNext,
+    SelectNone,
     Close,
 };
 

@@ -218,7 +218,10 @@ public:
             {
                 if (m_current_completion == m_completions.candidates.size() and
                     std::find(m_completions.candidates.begin(), m_completions.candidates.end(), m_text_before_completion) == m_completions.candidates.end())
+                {
                     completion = m_text_before_completion;
+                    m_client.menu_ctrl(MenuCommand::SelectNone);
+                }
                 else
                 {
                     m_current_completion = 0;
