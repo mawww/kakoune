@@ -152,7 +152,8 @@ public:
             m_client.reset_normal_mode();
             return;
         }
-        else if (key == Key(Key::Modifiers::Control, 'p'))
+        else if (key == Key(Key::Modifiers::Control, 'p') or
+                 key == Key(Key::Modifiers::Control, 'c'))
         {
             if (m_history_it != history.begin())
             {
@@ -163,7 +164,8 @@ public:
                 m_cursor_pos = m_result.length();
             }
         }
-        else if (key == Key(Key::Modifiers::Control, 'n'))
+        else if (key == Key(Key::Modifiers::Control, 'n') or
+                 key == Key(Key::Modifiers::Control, 'b'))
         {
             if (m_history_it != history.end())
             {
@@ -175,12 +177,12 @@ public:
                 m_cursor_pos = m_result.length();
             }
         }
-        else if (key == Key(Key::Modifiers::Control, 'b'))
+        else if (key == Key(Key::Modifiers::Control, 'd'))
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key(Key::Modifiers::Control, 'f'))
+        else if (key == Key(Key::Modifiers::Control, 'e'))
         {
             if (m_cursor_pos < m_result.length())
                 ++m_cursor_pos;
