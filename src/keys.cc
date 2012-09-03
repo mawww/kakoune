@@ -5,8 +5,19 @@
 namespace Kakoune
 {
 
+Key canonicalize_ifn(Key key)
+{
+    if (key.key > 0 and key.key < 27)
+    {
+        assert(key.modifiers == Key::Modifiers::None);
+        key.modifiers = Key::Modifiers::Control;
+        key.key = key.key - 1 + 'a';
+    }
+    return key;
+}
+
 static std::unordered_map<String, Character> keynamemap = {
-    { "ret", '\n' },
+    { "ret", '\r' },
     { "space", ' ' },
     { "esc", 27 }
 };
@@ -49,7 +60,8 @@ KeyList parse_keys(const String& str)
                 auto it = keynamemap.find(keyname);
                 if (it != keynamemap.end())
                 {
-                    result.push_back(Key{ modifier, it->second });
+                    Key key = canonicalize_ifn(Key{ modifier, it->second });
+                    result.push_back(key);
                     pos = end_pos;
                     continue;
                 }
