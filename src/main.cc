@@ -165,48 +165,39 @@ void do_go(Context& context)
 
 void do_command(Context& context)
 {
-    try
-    {
-        auto cmdline = context.client().prompt(
-            ":", context, std::bind(&CommandManager::complete,
-                                    &CommandManager::instance(),
-                                    _1, _2, _3));
-
-        CommandManager::instance().execute(cmdline, context);
-    }
-    catch (prompt_aborted&) {}
+    context.client().prompt(
+        ":", std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
+        [](const String& cmdline, Context& context) { CommandManager::instance().execute(cmdline, context); });
 }
 
 void do_pipe(Context& context)
 {
-    try
-    {
-        auto cmdline = context.client().prompt("|", context, complete_nothing);
+    context.client().prompt("|", complete_nothing,
+        [](const String& cmdline, Context& context)
+        {
+            Editor& editor = context.editor();
+            std::vector<String> strings;
+            for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
+                strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
+                                                                cmdline, context, {}));
+            editor.replace(strings);
+        });
 
-        Editor& editor = context.editor();
-        std::vector<String> strings;
-        for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
-            strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
-                                                            cmdline, context, {}));
-        editor.replace(strings);
-    }
-    catch (prompt_aborted&) {}
 }
 
 template<bool append>
 void do_search(Context& context)
 {
-    try
-    {
-        String ex = context.client().prompt("/", context);
-        if (ex.empty())
-            ex = RegisterManager::instance()['/'].values(context)[0];
-        else
-            RegisterManager::instance()['/'] = ex;
+    context.client().prompt("/", complete_nothing,
+        [](const String& str, Context& context) {
+            String ex = str;
+            if (ex.empty())
+                ex = RegisterManager::instance()['/'].values(context)[0];
+            else
+                RegisterManager::instance()['/'] = ex;
 
-        context.editor().select(std::bind(select_next_match, _1, ex), append);
-    }
-    catch (prompt_aborted&) {}
+            context.editor().select(std::bind(select_next_match, _1, ex), append);
+        });
 }
 
 template<bool append>
@@ -271,22 +262,16 @@ void do_paste(Context& context)
 
 void do_select_regex(Context& context)
 {
-    try
-    {
-        String ex = context.client().prompt("select: ", context);
-        context.editor().multi_select(std::bind(select_all_matches, _1, ex));
-    }
-    catch (prompt_aborted&) {}
+    context.client().prompt("select: ", complete_nothing,
+        [](const String& ex, Context& context)
+        { context.editor().multi_select(std::bind(select_all_matches, _1, ex)); });
 }
 
 void do_split_regex(Context& context)
 {
-    try
-    {
-        String ex = context.client().prompt("split: ", context);
-        context.editor().multi_select(std::bind(split_selection, _1, ex));
-    }
-    catch (prompt_aborted&) {}
+    context.client().prompt("select: ", complete_nothing,
+        [](const String& ex, Context& context)
+        { context.editor().multi_select(std::bind(split_selection, _1, ex)); });
 }
 
 void do_join(Context& context)
@@ -444,32 +429,6 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
 void run_unit_tests();
 
-void manage_next_keypress(Context& context)
-{
-    static int count = 0;
-    try
-    {
-        Key key = context.client().get_key();
-        if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
-            count = count * 10 + key.key - '0';
-        else
-        {
-            auto it = keymap.find(key);
-            if (it != keymap.end())
-            {
-                context.numeric_param(count);
-                it->second(context);
-                context.draw_ifn();
-            }
-            count = 0;
-        }
-    }
-    catch (Kakoune::runtime_error& error)
-    {
-        context.print_status(error.description());
-    }
-}
-
 int main(int argc, char* argv[])
 {
     EventManager        event_manager;
@@ -536,11 +495,20 @@ int main(int argc, char* argv[])
             context.change_editor(*buffer->get_or_create_window());
         }
 
-        event_manager.watch(0, [&](int) { manage_next_keypress(context); });
+        event_manager.watch(0, [&](int) { client.handle_next_input(context); });
 
         context.draw_ifn();
         while(not quit_requested)
-            event_manager.handle_next_events();
+        {
+            try
+            {
+                event_manager.handle_next_events();
+            }
+            catch (Kakoune::runtime_error& error)
+            {
+                context.print_status(error.description());
+            }
+        }
     }
     catch (Kakoune::exception& error)
     {

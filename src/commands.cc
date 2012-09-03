@@ -660,84 +660,44 @@ private:
 class BatchClient : public Client
 {
 public:
-    BatchClient(const KeyList& keys, Client* previous_client)
+    BatchClient(const KeyList& keys)
         : m_keys(keys), m_pos(0)
     {
-        m_previous_client = previous_client;
     }
 
-    String prompt(const String&, const Context&, Completer)
-    {
-        size_t begin = m_pos;
-        while (m_pos < m_keys.size() and m_keys[m_pos].key != '\n')
-            ++m_pos;
-
-        String result;
-        for (size_t i = begin; i < m_pos; ++i)
-            result += String() + m_keys[i].key;
-        ++m_pos;
-
-        return result;
-    }
-
-    Key get_key()
+    Key get_key() override
     {
         if (m_pos >= m_keys.size())
             throw runtime_error("no more characters");
         return m_keys[m_pos++];
     }
 
-    void print_status(const String& status)
-    {
-        m_previous_client->print_status(status);
-    }
+    void print_status(const String& status, CharCount cursor_pos) override {}
+    void draw_window(Window& window) override {}
 
-    void draw_window(Window& window)
-    {
-        m_previous_client->draw_window(window);
-    }
+    void show_menu(const memoryview<String>&) override {}
+    void menu_ctrl(MenuCommand) override {}
 
     bool has_key_left() const { return m_pos < m_keys.size(); }
-
-    void show_menu(const memoryview<String>&) {}
-    void menu_ctrl(MenuCommand) {}
 
 private:
     const KeyList& m_keys;
     size_t         m_pos;
-    Client*        m_previous_client;
 };
 
 void exec_keys(const KeyList& keys, Context& context)
 {
-    BatchClient batch_client(keys, context.has_client() ? &context.client()
-                                                       : nullptr);
+    BatchClient batch_client(keys);
 
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
 
     scoped_edition edition(context.editor());
 
-    int count = 0;
     Context new_context(batch_client);
     new_context.change_editor(context.editor());
     while (batch_client.has_key_left())
-    {
-        Key key = batch_client.get_key();
-
-        if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
-            count = count * 10 + key.key - '0';
-        else
-        {
-            auto it = keymap.find(key);
-            if (it != keymap.end())
-            {
-                new_context.numeric_param(count);
-                it->second(new_context);
-            }
-            count = 0;
-        }
-    }
+        batch_client.handle_next_input(new_context);
 }
 
 void exec_string(const CommandParameters& params, Context& context)
@@ -748,45 +708,6 @@ void exec_string(const CommandParameters& params, Context& context)
     KeyList keys = parse_keys(params[0]);
 
     exec_keys(keys, context);
-}
-
-int menu_select(const memoryview<String>& choices, Client& client)
-{
-    int selected = 0;
-    client.show_menu(choices);
-    while (true)
-    {
-        Key key = client.get_key();
-        if (key == Key(Key::Modifiers::Control, 'n') or
-            key == Key(Key::Modifiers::None, 'j'))
-        {
-            client.menu_ctrl(MenuCommand::SelectNext);
-            selected = std::min(selected+1, (int)choices.size()-1);
-        }
-        if (key == Key(Key::Modifiers::Control, 'p') or
-            key == Key(Key::Modifiers::None, 'k'))
-        {
-            client.menu_ctrl(MenuCommand::SelectPrev);
-            selected = std::max(selected-1, 0);
-        }
-        if (key == Key(Key::Modifiers::Control, 'm'))
-        {
-            client.menu_ctrl(MenuCommand::Close);
-            return selected;
-        }
-        if (key == Key(Key::Modifiers::None, 27))
-        {
-            client.menu_ctrl(MenuCommand::Close);
-            return -1;
-        }
-        if (key.modifiers == Key::Modifiers::None and
-            key.key >= '0' and key.key <= '9')
-        {
-            client.menu_ctrl(MenuCommand::Close);
-            return key.key - '0' - 1;
-        }
-    }
-    return 0;
 }
 
 void menu(const CommandParameters& params, Context& context)
@@ -804,12 +725,18 @@ void menu(const CommandParameters& params, Context& context)
     }
 
     std::vector<String> choices;
+    std::vector<String> commands;
     for (int i = 0; i < count; i += 2)
+    {
         choices.push_back(parser[i]);
+        commands.push_back(parser[i+1]);
+    }
 
-    int i = menu_select(choices, context.client()) + 1;
-    if (i > 0 and i < (count / 2) + 1)
-        CommandManager::instance().execute(parser[(i-1)*2+1], context);
+    context.client().menu(choices,
+        [=](int choice, Context& context) {
+            if (choice >= 0 and choice < commands.size())
+              CommandManager::instance().execute(commands[choice], context);
+        });
 }
 
 void try_catch(const CommandParameters& params, Context& context)

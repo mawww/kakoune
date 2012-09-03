@@ -169,159 +169,29 @@ Key NCursesClient::get_key()
     return Key(modifiers, c);
 }
 
-String NCursesClient::prompt(const String& text, const Context& context, Completer completer)
-{
-    curs_set(2);
-    auto restore_cursor = on_scope_end([]() { curs_set(0); });
-
-    int max_x, max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    move(max_y-1, 0);
-    addstr(text.c_str());
-    clrtoeol();
-
-    CharCount cursor_pos = 0;
-
-    Completions completions;
-    int current_completion = -1;
-    String text_before_completion;
-
-    String result;
-    String saved_result;
-
-    static std::unordered_map<String, std::vector<String>> history_per_prompt;
-    std::vector<String>& history = history_per_prompt[text];
-    auto history_it = history.end();
-
-    while (true)
-    {
-        int c = getch();
-        switch (c)
-        {
-        case '\r':
-        {
-            std::vector<String>::iterator it;
-            while ((it = find(history, result)) != history.end())
-                history.erase(it);
-
-            history.push_back(result);
-            return result;
-        }
-        case KEY_UP:
-            if (history_it != history.begin())
-            {
-                if (history_it == history.end())
-                   saved_result = result;
-                --history_it;
-                result = *history_it;
-                cursor_pos = result.length();
-            }
-            break;
-        case KEY_DOWN:
-            if (history_it != history.end())
-            {
-                ++history_it;
-                if (history_it != history.end())
-                    result = *history_it;
-                else
-                    result = saved_result;
-                cursor_pos = result.length();
-            }
-            break;
-        case KEY_LEFT:
-            if (cursor_pos > 0)
-                --cursor_pos;
-            break;
-        case KEY_RIGHT:
-            if (cursor_pos < result.length())
-                ++cursor_pos;
-            break;
-        case KEY_BACKSPACE:
-            if (cursor_pos != 0)
-            {
-                result = result.substr(0, cursor_pos - 1)
-                       + result.substr(cursor_pos, String::npos);
-
-                --cursor_pos;
-            }
-
-            menu_ctrl(MenuCommand::Close);
-            current_completion = -1;
-            break;
-        case CTRL('r'):
-            {
-                c = getch();
-                String reg = RegisterManager::instance()[c].values(context)[0];
-                menu_ctrl(MenuCommand::Close);
-                current_completion = -1;
-                result = result.substr(0, cursor_pos) + reg + result.substr(cursor_pos, String::npos);
-                cursor_pos += reg.length();
-            }
-            break;
-        case 27:
-            throw prompt_aborted();
-        case '\t':
-        {
-            if (current_completion == -1)
-            {
-                completions = completer(context, result, cursor_pos);
-                if (completions.candidates.empty())
-                    break;
-
-                menu_ctrl(MenuCommand::Close);
-                show_menu(completions.candidates);
-                text_before_completion = result.substr(completions.start,
-                                                       completions.end - completions.start);
-            }
-            else
-                menu_ctrl(MenuCommand::SelectNext);
-            ++current_completion;
-
-            String completion;
-            if (current_completion >= completions.candidates.size())
-            {
-                if (current_completion == completions.candidates.size() and
-                    std::find(completions.candidates.begin(), completions.candidates.end(), text_before_completion) == completions.candidates.end())
-                    completion = text_before_completion;
-                else
-                {
-                    current_completion = 0;
-                    completion = completions.candidates[0];
-                    menu_ctrl(MenuCommand::SelectFirst);
-                }
-            }
-            else
-                completion = completions.candidates[current_completion];
-
-            move(max_y-1, (int)text.length());
-            result = result.substr(0, completions.start) + completion;
-            cursor_pos = completions.start + completion.length();
-            break;
-        }
-        default:
-            menu_ctrl(MenuCommand::Close);
-            current_completion = -1;
-            result = result.substr(0, cursor_pos) + (char)c + result.substr(cursor_pos, String::npos);
-            ++cursor_pos;
-        }
-
-        move(max_y - 1, (int)text.length());
-        clrtoeol();
-        addstr(result.c_str());
-        move(max_y - 1, (int)(text.length() + cursor_pos));
-        refresh();
-    }
-    menu_ctrl(MenuCommand::Close);
-    return result;
-}
-
-void NCursesClient::print_status(const String& status)
+void NCursesClient::print_status(const String& status, CharCount cursor_pos)
 {
     int x,y;
     getmaxyx(stdscr, y, x);
     move(y-1, 0);
     clrtoeol();
-    addstr(status.c_str());
+    if (cursor_pos == -1)
+       addstr(status.c_str());
+    else if (cursor_pos < status.length())
+    {
+       addstr(status.substr(0, cursor_pos).c_str());
+       set_attribute(A_REVERSE, 1);
+       addch(status[cursor_pos]);
+       set_attribute(A_REVERSE, 0);
+       addstr(status.substr(cursor_pos+1, -1).c_str());
+    }
+    else
+    {
+       addstr(status.c_str());
+       set_attribute(A_REVERSE, 1);
+       addch(' ');
+       set_attribute(A_REVERSE, 0);
+    }
     refresh();
 }
 

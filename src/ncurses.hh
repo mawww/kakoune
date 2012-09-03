@@ -18,14 +18,13 @@ public:
     NCursesClient(const NCursesClient&) = delete;
     NCursesClient& operator=(const NCursesClient&) = delete;
 
-    void draw_window(Window& window);
-    void print_status(const String& status);
+    void draw_window(Window& window) override;
+    void print_status(const String& status, CharCount cursor_pos) override;
 
-    String prompt(const String& prompt, const Context& context, Completer completer);
-    Key    get_key();
+    Key    get_key() override;
 
-    void show_menu(const memoryview<String>& choices);
-    void menu_ctrl(MenuCommand command);
+    void show_menu(const memoryview<String>& choices) override;
+    void menu_ctrl(MenuCommand command) override;
 private:
     MENU* m_menu;
     std::vector<ITEM*> m_items;
