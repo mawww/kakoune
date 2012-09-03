@@ -88,6 +88,11 @@ TokenList parse(const String& line,
                 ++pos;
             else if (line[pos] == '\\' and pos+1 < length and line[pos+1] == '\n')
                 pos += 2;
+            else if (line[pos] == '#')
+            {
+                while (pos != length and line[pos] != '\n')
+                    ++pos;
+            }
             else
                 break;
         }
