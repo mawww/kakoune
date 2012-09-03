@@ -243,6 +243,10 @@ void NCursesClient::menu_ctrl(MenuCommand command)
             set_menu_fore(m_menu, A_STANDOUT);
             menu_driver(m_menu, REQ_FIRST_ITEM);
             break;
+        case MenuCommand::SelectLast:
+            set_menu_fore(m_menu, A_STANDOUT);
+            menu_driver(m_menu, REQ_LAST_ITEM);
+            break;
         case MenuCommand::SelectNext:
             set_menu_fore(m_menu, A_STANDOUT);
             menu_driver(m_menu, REQ_NEXT_ITEM);

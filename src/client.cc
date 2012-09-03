@@ -64,14 +64,24 @@ public:
             key == Key(Key::Modifiers::Control, 'i') or
             key == Key(Key::Modifiers::None, 'j'))
         {
-            m_client.menu_ctrl(MenuCommand::SelectNext);
-            m_selected = std::min(m_selected+1, m_choice_count-1);
+            if (++m_selected >= m_choice_count)
+            {
+                m_client.menu_ctrl(MenuCommand::SelectFirst);
+                m_selected = 0;
+            }
+            else
+                m_client.menu_ctrl(MenuCommand::SelectNext);
         }
         if (key == Key(Key::Modifiers::Control, 'p') or
             key == Key(Key::Modifiers::None, 'k'))
         {
-            m_client.menu_ctrl(MenuCommand::SelectPrev);
-            m_selected = std::max(m_selected-1, 0);
+            if (--m_selected < 0)
+            {
+                m_client.menu_ctrl(MenuCommand::SelectLast);
+                m_selected = m_choice_count-1;
+            }
+            else
+                m_client.menu_ctrl(MenuCommand::SelectPrev);
         }
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
