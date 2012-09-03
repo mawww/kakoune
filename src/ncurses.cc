@@ -92,11 +92,21 @@ void NCursesClient::draw_window(Window& window)
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
+    int status_y = max_y;
+
+    if (m_menu)
+    {
+       int rows;
+       int cols;
+       menu_format(m_menu, &rows, &cols);
+       max_y -= rows;
+    }
 
     window.set_dimensions(DisplayCoord(LineCount(max_y), max_x));
     window.update_display_buffer();
 
     int line_index = 0;
+    int last_line = INT_MAX;
     for (const DisplayLine& line : window.display_buffer().lines())
     {
         move(line_index, 0);
@@ -137,9 +147,9 @@ void NCursesClient::draw_window(Window& window)
     set_color(Color::Cyan, Color::Black);
     String status_line = window.status_line();
     static int last_status_length = 0;
-    move(max_y, max_x - last_status_length);
+    move(status_y, max_x - last_status_length);
     clrtoeol();
-    move(max_y, max_x - (int)status_line.length());
+    move(status_y, max_x - (int)status_line.length());
     addstr(status_line.c_str());
     last_status_length = (int)status_line.length();
     refresh();
@@ -221,6 +231,7 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
     set_menu_sub(m_menu, derwin(stdscr, max_y - pos_y - 1, max_x, pos_y, 0));
     set_menu_format(m_menu, lines, columns);
     post_menu(m_menu);
+    refresh();
 }
 
 void NCursesClient::menu_ctrl(MenuCommand command)
@@ -248,9 +259,11 @@ void NCursesClient::menu_ctrl(MenuCommand command)
             m_menu = nullptr;
             m_items.clear();
             m_counts.clear();
+            m_counts.clear();
             break;
         }
     }
+    refresh();
 }
 
 }

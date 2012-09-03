@@ -53,6 +53,11 @@ public:
         client.show_menu(choices);
     }
 
+    ~MenuMode()
+    {
+        m_client.menu_ctrl(MenuCommand::Close);
+    }
+
     void on_key(const Key& key, Context& context) override
     {
         if (key == Key(Key::Modifiers::Control, 'n') or
@@ -105,6 +110,11 @@ public:
     {
         m_history_it = ms_history[m_prompt].end();
         m_client.print_status(m_prompt, m_prompt.length());
+    }
+
+    ~PromptMode()
+    {
+        m_client.menu_ctrl(MenuCommand::Close);
     }
 
     void on_key(const Key& key, Context& context) override
