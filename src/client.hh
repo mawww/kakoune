@@ -25,6 +25,7 @@ enum class MenuCommand
 
 using MenuCallback = std::function<void (int, Context&)>;
 using PromptCallback = std::function<void (const String&, Context&)>;
+using KeyCallback = std::function<void (const Key&, Context&)>;
 
 class Client : public SafeCountable
 {
@@ -41,11 +42,12 @@ public:
     void menu(const memoryview<String>& choices,
               MenuCallback callback);
 
+    void on_next_key(KeyCallback callback);
+
     void handle_next_input(Context& context);
     virtual Key    get_key() = 0;
 
 private:
-
     virtual void   show_menu(const memoryview<String>& choices) = 0;
     virtual void   menu_ctrl(MenuCommand command) = 0;
 
@@ -56,6 +58,9 @@ private:
     public:
         Mode(Client& client) : m_client(client) {}
         virtual ~Mode() {}
+        Mode(const Mode&) = delete;
+        Mode& operator=(const Mode&) = delete;
+
         virtual void on_key(const Key& key, Context& context) = 0;
     protected:
         Client& m_client;
@@ -65,6 +70,7 @@ private:
     class NormalMode;
     class MenuMode;
     class PromptMode;
+    class NextKeyMode;
 };
 
 struct prompt_aborted {};

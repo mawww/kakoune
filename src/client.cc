@@ -291,6 +291,24 @@ private:
 };
 std::unordered_map<String, std::vector<String>> Client::PromptMode::ms_history;
 
+class Client::NextKeyMode : public Client::Mode
+{
+public:
+    NextKeyMode(Client& client, KeyCallback callback)
+        : Client::Mode(client), m_callback(callback) {}
+
+    void on_key(const Key& key, Context& context) override
+    {
+        // save callback as reset_normal_mode will delete this
+        KeyCallback callback = std::move(m_callback);
+        m_client.reset_normal_mode();
+        callback(key, context);
+   }
+
+private:
+    KeyCallback m_callback;
+};
+
 Client::Client()
     : m_mode(new NormalMode(*this))
 {
@@ -306,6 +324,11 @@ void Client::menu(const memoryview<String>& choices,
                   MenuCallback callback)
 {
     m_mode.reset(new MenuMode(*this, choices, callback));
+}
+
+void Client::on_next_key(KeyCallback callback)
+{
+    m_mode.reset(new NextKeyMode(*this, callback));
 }
 
 void Client::handle_next_input(Context& context)
