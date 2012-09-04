@@ -12,11 +12,11 @@ namespace Kakoune
 
 struct DisplayCoord : LineAndColumn<DisplayCoord>
 {
-    DisplayCoord(LineCount line = 0, CharCount column = 0)
+    constexpr DisplayCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
 
     template<typename T>
-    explicit DisplayCoord(const LineAndColumn<T>& other)
+    explicit constexpr DisplayCoord(const LineAndColumn<T>& other)
         : LineAndColumn(other.line, other.column) {}
 };
 

@@ -19,11 +19,11 @@ class Window;
 
 struct BufferCoord : LineAndColumn<BufferCoord>
 {
-    BufferCoord(LineCount line = 0, CharCount column = 0)
+    constexpr BufferCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
 
     template<typename T>
-    explicit BufferCoord(const LineAndColumn<T>& other)
+    explicit constexpr BufferCoord(const LineAndColumn<T>& other)
         : LineAndColumn(other.line, other.column) {}
 };
 

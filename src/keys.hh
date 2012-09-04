@@ -20,10 +20,10 @@ struct Key
     Modifiers modifiers;
     Character key;
 
-    Key(Modifiers modifiers, Character key)
+    constexpr Key(Modifiers modifiers, Character key)
         : modifiers(modifiers), key(key) {}
 
-    bool operator==(const Key& other) const
+    constexpr bool operator==(const Key& other) const
     { return modifiers == other.modifiers and key == other.key; }
 };
 

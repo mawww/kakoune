@@ -8,19 +8,19 @@ template<typename RealType, typename ValueType = int>
 class StronglyTypedInteger
 {
 public:
-    explicit StronglyTypedInteger(ValueType value)
+    explicit constexpr StronglyTypedInteger(ValueType value)
          : m_value(value) {}
 
-    RealType operator+(const RealType& other) const
+    constexpr RealType operator+(const RealType& other) const
     { return RealType(m_value + other.m_value); }
 
-    RealType operator-(const RealType& other) const
+    constexpr RealType operator-(const RealType& other) const
     { return RealType(m_value - other.m_value); }
 
-    RealType operator*(const RealType& other) const
+    constexpr RealType operator*(const RealType& other) const
     { return RealType(m_value * other.m_value); }
 
-    RealType operator/(const RealType& other) const
+    constexpr RealType operator/(const RealType& other) const
     { return RealType(m_value / other.m_value); }
 
     RealType& operator+=(const RealType& other)
@@ -47,50 +47,50 @@ public:
     RealType operator--(int)
     { RealType backup(*this); --m_value; return backup; }
 
-    RealType operator-() { return RealType(-m_value); }
+    constexpr RealType operator-() { return RealType(-m_value); }
 
-    bool operator==(const RealType& other) const
+    constexpr bool operator==(const RealType& other) const
     { return m_value == other.m_value; }
 
-    bool operator!=(const RealType& other) const
+    constexpr bool operator!=(const RealType& other) const
     { return m_value != other.m_value; }
 
-    bool operator<(const RealType& other) const
+    constexpr bool operator<(const RealType& other) const
     { return m_value < other.m_value; }
 
-    bool operator<=(const RealType& other) const
+    constexpr bool operator<=(const RealType& other) const
     { return m_value <= other.m_value; }
 
-    bool operator>(const RealType& other) const
+    constexpr bool operator>(const RealType& other) const
     { return m_value > other.m_value; }
 
-    bool operator>=(const RealType& other) const
+    constexpr bool operator>=(const RealType& other) const
     { return m_value >= other.m_value; }
 
-    bool operator!() const
+    constexpr bool operator!() const
     { return !m_value; }
 
-    explicit operator ValueType() const { return m_value; }
+    explicit constexpr operator ValueType() const { return m_value; }
 private:
    ValueType m_value;
 };
 
 struct LineCount : public StronglyTypedInteger<LineCount, int>
 {
-    LineCount(int value) : StronglyTypedInteger<LineCount>(value) {}
+    constexpr LineCount(int value) : StronglyTypedInteger<LineCount>(value) {}
 };
 
-inline LineCount operator"" _line(unsigned long long int value)
+inline constexpr LineCount operator"" _line(unsigned long long int value)
 {
     return LineCount(value);
 }
 
 struct CharCount : public StronglyTypedInteger<CharCount, int>
 {
-    CharCount(int value) : StronglyTypedInteger<CharCount>(value) {}
+    constexpr CharCount(int value) : StronglyTypedInteger<CharCount>(value) {}
 };
 
-inline CharCount operator"" _char(unsigned long long int value)
+inline constexpr CharCount operator"" _char(unsigned long long int value)
 {
     return CharCount(value);
 }
