@@ -168,11 +168,11 @@ public:
                     if (it->substr(0, prefix_length) == m_saved_result)
                     {
                         m_history_it = it;
+                        m_result     = *it;
+                        m_cursor_pos = m_result.length();
                         break;
                     }
                 } while (it != history.begin());
-                m_result = *m_history_it;
-                m_cursor_pos = m_result.length();
             }
         }
         else if (key == Key(Key::Modifiers::Control, 'n') or // next
