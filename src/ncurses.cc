@@ -10,27 +10,6 @@
 namespace Kakoune
 {
 
-NCursesClient::NCursesClient()
-    : m_menu(nullptr)
-{
-    // setlocale(LC_ALL, "");
-    initscr();
-    cbreak();
-    noecho();
-    nonl();
-    intrflush(stdscr, false);
-    keypad(stdscr, true);
-    curs_set(0);
-    start_color();
-    use_default_colors();
-    ESCDELAY=25;
-}
-
-NCursesClient::~NCursesClient()
-{
-    endwin();
-}
-
 static void set_attribute(int attribute, bool on)
 {
     if (on)
@@ -58,33 +37,61 @@ static int nc_color(Color color)
     }
 }
 
-static void set_color(Color fg_color, Color bg_color)
+static int get_color_pair(Color fg_color, Color bg_color)
 {
     static std::map<std::pair<Color, Color>, int> colorpairs;
-    static int current_pair = -1;
     static int next_pair = 1;
 
-    if (current_pair != -1)
-        attroff(COLOR_PAIR(current_pair));
-
-    if (fg_color == Color::Default and bg_color == Color::Default)
-        return;
-
     std::pair<Color, Color> colorpair(fg_color, bg_color);
+
     auto it = colorpairs.find(colorpair);
-      if (it != colorpairs.end())
-    {
-        current_pair = it->second;
-        attron(COLOR_PAIR(it->second));
-    }
+    if (it != colorpairs.end())
+        return it->second;
     else
     {
         init_pair(next_pair, nc_color(fg_color), nc_color(bg_color));
         colorpairs[colorpair] = next_pair;
-        current_pair = next_pair;
-        attron(COLOR_PAIR(next_pair));
-        ++next_pair;
+        return next_pair++;
     }
+}
+
+static void set_color(Color fg_color, Color bg_color)
+{
+    static int current_pair = -1;
+
+    if (current_pair != -1)
+        attroff(COLOR_PAIR(current_pair));
+
+    if (fg_color != Color::Default or bg_color != Color::Default)
+    {
+        current_pair = get_color_pair(fg_color, bg_color);
+        attron(COLOR_PAIR(current_pair));
+    }
+}
+
+
+NCursesClient::NCursesClient()
+    : m_menu(nullptr)
+{
+    // setlocale(LC_ALL, "");
+    initscr();
+    cbreak();
+    noecho();
+    nonl();
+    intrflush(stdscr, false);
+    keypad(stdscr, true);
+    curs_set(0);
+    start_color();
+    use_default_colors();
+    ESCDELAY=25;
+
+    m_menu_fg = get_color_pair(Color::Blue, Color::Cyan);
+    m_menu_bg = get_color_pair(Color::Cyan, Color::Blue);
+}
+
+NCursesClient::~NCursesClient()
+{
+    endwin();
 }
 
 void NCursesClient::draw_window(Window& window)
@@ -231,6 +238,8 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
     set_menu_sub(m_menu, derwin(stdscr, max_y - pos_y - 1, max_x, pos_y, 0));
     set_menu_format(m_menu, lines, columns);
     set_menu_mark(m_menu, nullptr);
+    set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
+    set_menu_back(m_menu, COLOR_PAIR(m_menu_bg));
     post_menu(m_menu);
     refresh();
 }
@@ -240,23 +249,23 @@ void NCursesClient::menu_ctrl(MenuCommand command)
     switch(command)
     {
         case MenuCommand::SelectFirst:
-            set_menu_fore(m_menu, A_STANDOUT);
+            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
             menu_driver(m_menu, REQ_FIRST_ITEM);
             break;
         case MenuCommand::SelectLast:
-            set_menu_fore(m_menu, A_STANDOUT);
+            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
             menu_driver(m_menu, REQ_LAST_ITEM);
             break;
         case MenuCommand::SelectNext:
-            set_menu_fore(m_menu, A_STANDOUT);
+            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
             menu_driver(m_menu, REQ_NEXT_ITEM);
             break;
         case MenuCommand::SelectPrev:
-            set_menu_fore(m_menu, A_STANDOUT);
+            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
             menu_driver(m_menu, REQ_PREV_ITEM);
             break;
         case MenuCommand::SelectNone:
-            set_menu_fore(m_menu, A_NORMAL);
+            set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
             break;
         case MenuCommand::Close:
         {
