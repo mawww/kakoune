@@ -223,7 +223,7 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
 
-    int columns = max_x / (int)longest;
+    int columns = max_x / std::min(max_x, (int)longest);
     int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
 
     m_menu = new_menu(&m_items[0]);
