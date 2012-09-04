@@ -123,44 +123,43 @@ template<bool append>
 void do_go(Context& context)
 {
     int count = context.numeric_param();
-    Editor& editor = context.editor();
     if (count != 0)
     {
         BufferIterator target =
-            editor.buffer().iterator_at_line_begin(count-1);
+            context.editor().buffer().iterator_at_line_begin(count-1);
 
-        editor.select(target);
+        context.editor().select(target);
         if (context.has_window())
             context.window().center_selection();
     }
     else
-    {
-        Key key = context.client().get_key();
-        if (key.modifiers != Key::Modifiers::None)
-            return;
+        context.client().on_next_key([](const Key& key, Context& context) {
+            if (key.modifiers != Key::Modifiers::None)
+                return;
 
-        switch (key.key)
-        {
-        case 'g':
-        case 't':
-            editor.select(editor.buffer().begin());
-            break;
-        case 'l':
-        case 'L':
-            editor.select(select_to_eol, append);
-            break;
-        case 'h':
-        case 'H':
-            editor.select(select_to_eol_reverse, append);
-            break;
-        case 'b':
-        {
-            const Buffer& buf = editor.buffer();
-            editor.select(buf.iterator_at_line_begin(buf.line_count() - 1));
-            break;
-        }
-        }
-    }
+            Editor& editor = context.editor();
+            switch (key.key)
+            {
+            case 'g':
+            case 't':
+                editor.select(editor.buffer().begin());
+                break;
+            case 'l':
+            case 'L':
+                editor.select(select_to_eol, append);
+                break;
+            case 'h':
+            case 'H':
+                editor.select(select_to_eol_reverse, append);
+                break;
+            case 'b':
+            {
+                const Buffer& buf = editor.buffer();
+                editor.select(buf.iterator_at_line_begin(buf.line_count() - 1));
+                break;
+            }
+            }
+        });
 }
 
 void do_command(Context& context)
@@ -288,27 +287,29 @@ void do_join(Context& context)
 template<bool inner>
 void do_select_object(Context& context)
 {
-    typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
-    static const std::unordered_map<Key, Selector> key_to_selector =
-    {
-        { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
-        { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
-        { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
-        { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
-        { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
-        { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
-        { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '[', ']' }, inner) },
-        { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '[', ']' }, inner) },
-        { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '<', '>' }, inner) },
-        { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '<', '>' }, inner) },
-        { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, inner) },
-        { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, inner) },
-    };
+    context.client().on_next_key(
+    [](const Key& key, Context& context) {
+        typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
+        static const std::unordered_map<Key, Selector> key_to_selector =
+        {
+            { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
+            { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
+            { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
+            { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
+            { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
+            { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '{', '}' }, inner) },
+            { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '[', ']' }, inner) },
+            { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '[', ']' }, inner) },
+            { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '<', '>' }, inner) },
+            { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '<', '>' }, inner) },
+            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, inner) },
+            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, inner) },
+        };
 
-    Key key = context.client().get_key();
-    auto it = key_to_selector.find(key);
-    if (it != key_to_selector.end())
-        context.editor().select(it->second);
+        auto it = key_to_selector.find(key);
+        if (it != key_to_selector.end())
+            context.editor().select(it->second);
+    });
 }
 
 template<typename T>
