@@ -152,24 +152,41 @@ public:
             m_client.reset_normal_mode();
             return;
         }
-        else if (key == Key(Key::Modifiers::Control, 'p') or
+        else if (key == Key(Key::Modifiers::Control, 'p') or // previous
                  key == Key(Key::Modifiers::Control, 'c'))
         {
             if (m_history_it != history.begin())
             {
                 if (m_history_it == history.end())
                    m_saved_result = m_result;
-                --m_history_it;
+                auto it = m_history_it;
+                // search for the previous history entry matching typed prefix
+                CharCount prefix_length = m_saved_result.length();
+                do
+                {
+                    --it;
+                    if (it->substr(0, prefix_length) == m_saved_result)
+                    {
+                        m_history_it = it;
+                        break;
+                    }
+                } while (it != history.begin());
                 m_result = *m_history_it;
                 m_cursor_pos = m_result.length();
             }
         }
-        else if (key == Key(Key::Modifiers::Control, 'n') or
+        else if (key == Key(Key::Modifiers::Control, 'n') or // next
                  key == Key(Key::Modifiers::Control, 'b'))
         {
             if (m_history_it != history.end())
             {
+                CharCount prefix_length = m_saved_result.length();
+                // search for the next history entry matching typed prefix
                 ++m_history_it;
+                while (m_history_it != history.end() and
+                       m_history_it->substr(0, prefix_length) != m_saved_result)
+                    ++m_history_it;
+
                 if (m_history_it != history.end())
                     m_result = *m_history_it;
                 else
