@@ -330,6 +330,29 @@ private:
 template<typename T>
 Repeated<T> repeated(T func) { return Repeated<T>(func); }
 
+namespace SelectMode
+{
+    enum Flags
+    {
+        None = 0,
+        Reverse = 1,
+        Inclusive = 2,
+        Append = 4
+    };
+}
+
+template<int flags>
+void select_to_next_char(Context& context)
+{
+    int param = context.numeric_param();
+    context.client().on_next_key([param](const Key& key, Context& context) {
+        context.editor().select(
+            std::bind(flags & SelectMode::Reverse ? select_to_reverse : select_to,
+                      _1, key.key, param, flags & SelectMode::Inclusive),
+            flags & SelectMode::Append);
+   });
+}
+
 std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 {
     { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }); } },
@@ -342,10 +365,14 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }, true); } },
     { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }, true); } },
 
-    { { Key::Modifiers::None, 't' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), false)); } },
-    { { Key::Modifiers::None, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), true)); } },
-    { { Key::Modifiers::None, 'T' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), false), true); } },
-    { { Key::Modifiers::None, 'F' }, [](Context& context) { context.editor().select(std::bind(select_to, _1, context.client().get_key().key, context.numeric_param(), true), true); } },
+    { { Key::Modifiers::None, 't' }, select_to_next_char<SelectMode::None> },
+    { { Key::Modifiers::None, 'f' }, select_to_next_char<SelectMode::Inclusive> },
+    { { Key::Modifiers::None, 'T' }, select_to_next_char<SelectMode::Append> },
+    { { Key::Modifiers::None, 'F' }, select_to_next_char<SelectMode::Inclusive | SelectMode::Append> },
+    { { Key::Modifiers::Alt,  't' }, select_to_next_char<SelectMode::Reverse> },
+    { { Key::Modifiers::Alt,  'f' }, select_to_next_char<SelectMode::Inclusive | SelectMode::Reverse> },
+    { { Key::Modifiers::Alt,  'T' }, select_to_next_char<SelectMode::Append | SelectMode::Reverse> },
+    { { Key::Modifiers::Alt,  'F' }, select_to_next_char<SelectMode::Inclusive | SelectMode::Append | SelectMode::Reverse> },
 
     { { Key::Modifiers::None, 'd' }, do_erase },
     { { Key::Modifiers::None, 'c' }, do_change },
@@ -399,11 +426,6 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::Alt,  'i' }, do_select_object<true> },
     { { Key::Modifiers::Alt,  'a' }, do_select_object<false> },
-
-    { { Key::Modifiers::Alt, 't' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), false)); } },
-    { { Key::Modifiers::Alt, 'f' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), true)); } },
-    { { Key::Modifiers::Alt, 'T' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), false), true); } },
-    { { Key::Modifiers::Alt, 'F' }, [](Context& context) { context.editor().select(std::bind(select_to_reverse, _1, context.client().get_key().key, context.numeric_param(), true), true); } },
 
     { { Key::Modifiers::Alt, 'w' }, repeated([](Context& context) { context.editor().select(select_to_next_word<true>); }) },
     { { Key::Modifiers::Alt, 'e' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<true>); }) },
