@@ -309,9 +309,89 @@ private:
     KeyCallback m_callback;
 };
 
-Client::Client()
-    : m_mode(new NormalMode(*this))
+class Client::InsertMode : public Client::Mode
 {
+public:
+    InsertMode(Client& client, Editor& editor, IncrementalInserter::Mode mode)
+        : Client::Mode(client), m_inserter(editor, mode)
+    {
+        m_client.m_last_insert.first = mode;
+        m_client.m_last_insert.second.clear();
+    }
+
+    void on_key(const Key& key, Context& context) override
+    {
+        m_client.m_last_insert.second.push_back(key);
+        if (m_insert_reg)
+        {
+            if (key.modifiers == Key::Modifiers::None)
+                m_inserter.insert(RegisterManager::instance()[key.key].values(context));
+            m_insert_reg = false;
+            return;
+        }
+        switch (key.modifiers)
+        {
+        case Key::Modifiers::None:
+            switch (key.key)
+            {
+            case 27:
+                m_client.reset_normal_mode();
+                return;
+            default:
+                m_inserter.insert(String() + key.key);
+            }
+            break;
+        case Key::Modifiers::Control:
+            switch (key.key)
+            {
+            case 'r':
+                m_insert_reg = true;
+                break;
+            case 'm':
+                m_inserter.insert(String() + '\n');
+                break;
+            case 'i':
+                m_inserter.insert(String() + '\t');
+                break;
+            case 'd':
+                m_inserter.move_cursors({0, -1});
+                break;
+            case 'e':
+                m_inserter.move_cursors({0,  1});
+                break;
+            case 'g':
+                m_inserter.erase();
+                break;
+            }
+            break;
+        }
+    }
+private:
+    bool m_insert_reg = false;
+    IncrementalInserter m_inserter;
+};
+
+Client::Client()
+    : m_mode(new NormalMode(*this)),
+      m_last_insert(IncrementalInserter::Mode::Insert, {})
+{
+}
+
+void Client::insert(Editor& editor, IncrementalInserter::Mode mode)
+{
+    m_mode.reset(new InsertMode(*this, editor, mode));
+}
+
+void Client::repeat_last_insert(Editor& editor, Context& context)
+{
+    std::vector<Key> keys;
+    swap(keys, m_last_insert.second);
+    // m_last_insert will be refilled by the new InsertMode
+    // this is very inefficient.
+    m_mode.reset(new InsertMode(*this, editor, m_last_insert.first));
+    for (auto& key : keys)
+        m_mode->on_key(key, context);
+    assert(dynamic_cast<NormalMode*>(m_mode.get()) != nullptr);
 }
 
 void Client::prompt(const String& prompt, Completer completer,

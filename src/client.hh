@@ -5,6 +5,7 @@
 #include "completion.hh"
 #include "utils.hh"
 #include "string.hh"
+#include "editor.hh"
 
 namespace Kakoune
 {
@@ -36,6 +37,9 @@ public:
     virtual void print_status(const String& status,
                               CharCount cursor_pos = -1) = 0;
 
+    void insert(Editor& editor, IncrementalInserter::Mode mode);
+    void repeat_last_insert(Editor& editor, Context& context);
+
     void prompt(const String& prompt, Completer completer,
                 PromptCallback callback);
 
@@ -45,14 +49,15 @@ public:
     void on_next_key(KeyCallback callback);
 
     void handle_next_input(Context& context);
-    virtual Key    get_key() = 0;
 
 private:
     virtual void   show_menu(const memoryview<String>& choices) = 0;
     virtual void   menu_ctrl(MenuCommand command) = 0;
-
+    virtual Key    get_key() = 0;
 
     void reset_normal_mode();
+    std::pair<IncrementalInserter::Mode, std::vector<Key>> m_last_insert;
+
     class Mode
     {
     public:
@@ -71,6 +76,7 @@ private:
     class MenuMode;
     class PromptMode;
     class NextKeyMode;
+    class InsertMode;
 };
 
 struct prompt_aborted {};

@@ -32,91 +32,15 @@ namespace Kakoune
 
 bool quit_requested = false;
 
-struct InsertSequence
-{
-    IncrementalInserter::Mode mode;
-    std::vector<Key>          keys;
-
-    InsertSequence() : mode(IncrementalInserter::Mode::Insert) {}
-};
-
-InsertSequence last_insert_sequence;
-
-template<typename GetKey, typename Redraw>
-void insert_sequence(IncrementalInserter& inserter,
-                     const Context& context,
-                     GetKey get_key, Redraw redraw)
-{
-    while (true)
-    {
-        Key key = get_key();
-        switch (key.modifiers)
-        {
-        case Key::Modifiers::None:
-            switch (key.key)
-            {
-            case 27:
-                return;
-            default:
-                inserter.insert(String() + key.key);
-            }
-            break;
-        case Key::Modifiers::Control:
-            switch (key.key)
-            {
-            case 'r':
-            {
-                Key next_key = get_key();
-                if (next_key.modifiers == Key::Modifiers::None)
-                    inserter.insert(RegisterManager::instance()[next_key.key].values(context));
-                break;
-            }
-            case 'm':
-                inserter.insert(String() + '\n');
-                break;
-            case 'i':
-                inserter.insert(String() + '\t');
-                break;
-            case 'd':
-                inserter.move_cursors({0, -1});
-                break;
-            case 'e':
-                inserter.move_cursors({0,  1});
-                break;
-            case 'g':
-                inserter.erase();
-                break;
-            }
-            break;
-        }
-        redraw();
-    }
-}
-
 template<IncrementalInserter::Mode mode>
 void do_insert(Context& context)
 {
-    last_insert_sequence.mode = mode;
-    last_insert_sequence.keys.clear();
-    IncrementalInserter inserter(context.editor(), mode);
-    context.draw_ifn();
-    insert_sequence(inserter, context,
-                    [&]() { Key key = context.client().get_key();
-                            last_insert_sequence.keys.push_back(key);
-                            return key; },
-                    [&]() { context.draw_ifn(); });
+    context.client().insert(context.editor(), mode);
 }
 
 void do_repeat_insert(Context& context)
 {
-    if (last_insert_sequence.keys.empty())
-       return;
-
-    IncrementalInserter inserter(context.editor(), last_insert_sequence.mode);
-    size_t index = 0;
-    insert_sequence(inserter, context,
-                    [&]() { return last_insert_sequence.keys[index++]; },
-                    [](){});
+    context.client().repeat_last_insert(context.editor(), context);
 }
 
 template<bool append>
