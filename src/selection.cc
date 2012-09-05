@@ -47,9 +47,9 @@ BufferIterator Selection::end() const
 
 void Selection::merge_with(const Selection& selection)
 {
-    if (m_first <= m_last)
+    if (m_first < m_last)
         m_first = std::min(m_first, selection.m_first);
-    else
+    if (m_first > m_last)
         m_first = std::max(m_first, selection.m_first);
     m_last = selection.m_last;
 }
