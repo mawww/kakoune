@@ -41,7 +41,7 @@ class LineAndColumn:
 
     def to_string(self):
         value_type = self.val.type.unqualified()
-        return "%s(%d, %d)" % (value_type, self.val['line'], self.val['column'])
+        return "%s(%s, %s)" % (value_type, self.val['line'], self.val['column'])
 
 class BufferIterator:
     """ Print a BufferIterator"""
@@ -51,9 +51,9 @@ class BufferIterator:
 
     def to_string(self):
         if self.val['m_buffer'] != 0:
-            return "buffer<%s>@(%d, %d)" % (self.val['m_buffer'].dereference()['m_name'], self.val['m_coord']['line'], self.val['m_coord']['column'])
+            return "buffer<%s>@(%s, %s)" % (self.val['m_buffer'].dereference()['m_name'], self.val['m_coord']['line'], self.val['m_coord']['column'])
         else:
-            return "buffer<none>@(%d, %d)" % (self.val['m_coord']['line'], self.val['m_coord']['column'])
+            return "buffer<none>@(%s, %s)" % (self.val['m_coord']['line'], self.val['m_coord']['column'])
 
 class String:
     """ Print a String"""
@@ -73,6 +73,24 @@ class Option:
     def to_string(self):
         return self.val["m_value"]
 
+class CharCount:
+    """Print a CharCount"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val["m_value"]
+
+class LineCount:
+    """Print a LineCount"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val["m_value"]
+
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
     pp.add_printer('memoryview',     '^Kakoune::memoryview<.*>$',    MemoryView)
@@ -82,5 +100,7 @@ def build_pretty_printer():
     pp.add_printer('BufferIterator', '^Kakoune::BufferIterator$',    BufferIterator)
     pp.add_printer('String',         '^Kakoune::String$',            String)
     pp.add_printer('Option',         '^Kakoune::Option$',            Option)
+    pp.add_printer('LineCount',      '^Kakoune::LineCount$',         LineCount)
+    pp.add_printer('CharCount',      '^Kakoune::CharCount$',         CharCount)
     return pp
 
