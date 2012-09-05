@@ -14,16 +14,6 @@ class Editor;
 class Window;
 class Context;
 
-enum class MenuCommand
-{
-    SelectFirst,
-    SelectLast,
-    SelectPrev,
-    SelectNext,
-    SelectNone,
-    Close,
-};
-
 using MenuCallback = std::function<void (int, Context&)>;
 using PromptCallback = std::function<void (const String&, Context&)>;
 using KeyCallback = std::function<void (const Key&, Context&)>;
@@ -51,8 +41,9 @@ public:
     void handle_next_input(Context& context);
 
 private:
-    virtual void   show_menu(const memoryview<String>& choices) = 0;
-    virtual void   menu_ctrl(MenuCommand command) = 0;
+    virtual void   menu_show(const memoryview<String>& choices) = 0;
+    virtual void   menu_select(int selected) = 0;
+    virtual void   menu_hide() = 0;
     virtual Key    get_key() = 0;
 
     void reset_normal_mode();

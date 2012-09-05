@@ -246,7 +246,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         { EventManager::instance().unwatch(fd); close(fd); }
     );
 
-    EventManager::instance().watch(fd, [=, &context](int fd) {
+    EventManager::instance().watch(fd, [buffer, &context](int fd) {
          char data[512];
          ssize_t count = read(fd, data, 512);
          if (count > 0)
@@ -675,8 +675,9 @@ public:
     void print_status(const String& status, CharCount cursor_pos) override {}
     void draw_window(Window& window) override {}
 
-    void show_menu(const memoryview<String>&) override {}
-    void menu_ctrl(MenuCommand) override {}
+    void menu_show(const memoryview<String>&) override {}
+    void menu_select(int) override {}
+    void menu_hide() override {}
 
     bool has_key_left() const { return m_pos < m_keys.size(); }
 

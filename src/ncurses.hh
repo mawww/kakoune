@@ -23,8 +23,9 @@ public:
 
     Key    get_key() override;
 
-    void show_menu(const memoryview<String>& choices) override;
-    void menu_ctrl(MenuCommand command) override;
+    void menu_show(const memoryview<String>& choices) override;
+    void menu_select(int selected) override;
+    void menu_hide() override;
 private:
     MENU* m_menu;
     std::vector<ITEM*> m_items;

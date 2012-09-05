@@ -42,7 +42,6 @@ private:
     int m_count = 0;
 };
 
-
 class Client::MenuMode : public Client::Mode
 {
 public:
@@ -50,12 +49,12 @@ public:
         : Client::Mode(client),
           m_callback(callback), m_choice_count(choices.size()), m_selected(0)
     {
-        client.show_menu(choices);
+        client.menu_show(choices);
     }
 
     ~MenuMode()
     {
-        m_client.menu_ctrl(MenuCommand::Close);
+        m_client.menu_hide();
     }
 
     void on_key(const Key& key, Context& context) override
@@ -65,23 +64,15 @@ public:
             key == Key(Key::Modifiers::None, 'j'))
         {
             if (++m_selected >= m_choice_count)
-            {
-                m_client.menu_ctrl(MenuCommand::SelectFirst);
                 m_selected = 0;
-            }
-            else
-                m_client.menu_ctrl(MenuCommand::SelectNext);
+            m_client.menu_select(m_selected);
         }
         if (key == Key(Key::Modifiers::Control, 'p') or
             key == Key(Key::Modifiers::None, 'k'))
         {
             if (--m_selected < 0)
-            {
-                m_client.menu_ctrl(MenuCommand::SelectLast);
                 m_selected = m_choice_count-1;
-            }
-            else
-                m_client.menu_ctrl(MenuCommand::SelectPrev);
+            m_client.menu_select(m_selected);
         }
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
@@ -98,7 +89,7 @@ public:
         if (key.modifiers == Key::Modifiers::None and
             key.key >= '0' and key.key <= '9')
         {
-            m_client.menu_ctrl(MenuCommand::Close);
+            m_client.menu_hide();
             // save callback as reset_normal_mode will delete this
             MenuCallback callback = std::move(m_callback);
             m_client.reset_normal_mode();
@@ -125,7 +116,7 @@ public:
 
     ~PromptMode()
     {
-        m_client.menu_ctrl(MenuCommand::Close);
+        m_client.menu_hide();
     }
 
     void on_key(const Key& key, Context& context) override
@@ -214,14 +205,14 @@ public:
                 --m_cursor_pos;
             }
 
-            m_client.menu_ctrl(MenuCommand::Close);
+            m_client.menu_hide();
             m_current_completion = -1;
         }
         else if (key == Key(Key::Modifiers::Control, 'r'))
         {
             Key k = m_client.get_key();
             String reg = RegisterManager::instance()[k.key].values(context)[0];
-            m_client.menu_ctrl(MenuCommand::Close);
+            m_client.menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + reg + m_result.substr(m_cursor_pos, String::npos);
             m_cursor_pos += reg.length();
@@ -234,13 +225,11 @@ public:
                 if (m_completions.candidates.empty())
                     return;
 
-                m_client.menu_ctrl(MenuCommand::Close);
-                m_client.show_menu(m_completions.candidates);
+                m_client.menu_hide();
+                m_client.menu_show(m_completions.candidates);
                 m_text_before_completion = m_result.substr(m_completions.start,
                                                          m_completions.end - m_completions.start);
             }
-            else
-                m_client.menu_ctrl(MenuCommand::SelectNext);
             ++m_current_completion;
 
             String completion;
@@ -250,24 +239,23 @@ public:
                     std::find(m_completions.candidates.begin(), m_completions.candidates.end(), m_text_before_completion) == m_completions.candidates.end())
                 {
                     completion = m_text_before_completion;
-                    m_client.menu_ctrl(MenuCommand::SelectNone);
                 }
                 else
                 {
                     m_current_completion = 0;
                     completion = m_completions.candidates[0];
-                    m_client.menu_ctrl(MenuCommand::SelectFirst);
                 }
             }
             else
                 completion = m_completions.candidates[m_current_completion];
 
+            m_client.menu_select(m_current_completion);
             m_result = m_result.substr(0, m_completions.start) + completion;
             m_cursor_pos = m_completions.start + completion.length();
         }
         else
         {
-            m_client.menu_ctrl(MenuCommand::Close);
+            m_client.menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + key.key + m_result.substr(m_cursor_pos, String::npos);
             ++m_cursor_pos;

@@ -212,7 +212,7 @@ void NCursesClient::print_status(const String& status, CharCount cursor_pos)
     refresh();
 }
 
-void NCursesClient::show_menu(const memoryview<String>& choices)
+void NCursesClient::menu_show(const memoryview<String>& choices)
 {
     assert(m_menu == nullptr);
     m_choices = std::vector<String>(choices.begin(), choices.end());
@@ -244,45 +244,30 @@ void NCursesClient::show_menu(const memoryview<String>& choices)
     refresh();
 }
 
-void NCursesClient::menu_ctrl(MenuCommand command)
+void NCursesClient::menu_select(int selected)
 {
-    switch(command)
+    if (0 <= selected and selected < m_items.size())
     {
-        case MenuCommand::SelectFirst:
-            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
-            menu_driver(m_menu, REQ_FIRST_ITEM);
-            break;
-        case MenuCommand::SelectLast:
-            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
-            menu_driver(m_menu, REQ_LAST_ITEM);
-            break;
-        case MenuCommand::SelectNext:
-            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
-            menu_driver(m_menu, REQ_NEXT_ITEM);
-            break;
-        case MenuCommand::SelectPrev:
-            set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
-            menu_driver(m_menu, REQ_PREV_ITEM);
-            break;
-        case MenuCommand::SelectNone:
-            set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
-            break;
-        case MenuCommand::Close:
-        {
-            if (not m_menu)
-                break;
-            unpost_menu(m_menu);
-            free_menu(m_menu);
-            for (auto item : m_items)
-               if (item)
-                   free_item(item);
-            m_menu = nullptr;
-            m_items.clear();
-            m_counts.clear();
-            m_counts.clear();
-            break;
-        }
+        set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
+        set_current_item(m_menu, m_items[selected]);
     }
+    else
+        set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
+    refresh();
+}
+
+void NCursesClient::menu_hide()
+{
+    if (not m_menu)
+        return;
+    unpost_menu(m_menu);
+    free_menu(m_menu);
+    for (auto item : m_items)
+       if (item)
+           free_item(item);
+    m_menu = nullptr;
+    m_items.clear();
+    m_counts.clear();
     refresh();
 }
 
