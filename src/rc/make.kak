@@ -10,7 +10,7 @@ def -env-params make %{ echo make in progress, please wait...; %sh{
 
 hook global WinSetOption filetype=make %{
     addhl group make-highlight
-    addhl -group make-highlight regex "^([^:\n]+):(\d+):(\d+):\h+(?:(error)|(warning)|(note)|(required from(?: here)?))?[^\n]*" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+    addhl -group make-highlight regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?[^\n]*" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 }
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make-highlight; }
