@@ -10,7 +10,7 @@ hook global WinSetOption filetype=kak %{
     addhl -group kak-highlight regex (?<=\<regex)\h+(\S+) 1:magenta
     addhl -group kak-highlight regex (["'])(?:\\\1|.)*?\1 0:magenta
     addhl -group kak-highlight regex (?<=\<set[gbw])\h+(\S+)\h+(\S+) 1:magenta 2:red
-    addhl -group kak-highlight regex \#[^\n]*\n 0:cyan
+    addhl -group kak-highlight regex (^|\h)\#[^\n]*\n 0:cyan
 }
 
 hook global WinSetOption filetype=(?!kak).* %{
