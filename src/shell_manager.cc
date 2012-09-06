@@ -1,5 +1,7 @@
 #include "shell_manager.hh"
 
+#include "debug.hh"
+
 #include <cstring>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -23,17 +25,20 @@ String ShellManager::pipe(const String& input,
                           const String& cmdline, const Context& context,
                           const EnvVarMap& env_vars)
 {
-    int write_pipe[2];
-    int read_pipe[2];
+    int write_pipe[2]; // child stdin
+    int read_pipe[2];  // child stdout
+    int error_pipe[2]; // child stderr
 
     ::pipe(write_pipe);
     ::pipe(read_pipe);
+    ::pipe(error_pipe);
 
     String output;
     if (pid_t pid = fork())
     {
         close(write_pipe[0]);
         close(read_pipe[1]);
+        close(error_pipe[1]);
 
         memoryview<char> data = input.data();
         write(write_pipe[1], data.pointer(), data.size());
@@ -47,14 +52,30 @@ String ShellManager::pipe(const String& input,
             output += String(buffer, buffer+size);
         }
         close(read_pipe[0]);
+
+        String errorout;
+        while (size_t size = read(error_pipe[0], buffer, 1024))
+        {
+            if (size == -1)
+                break;
+            errorout += String(buffer, buffer+size);
+        }
+        close(error_pipe[0]);
+        if (not errorout.empty())
+        {
+            write_debug("\nshell stderr: <<<\n" + errorout + ">>>\n");
+        }
+
         waitpid(pid, NULL, 0);
     }
     else try
     {
         close(write_pipe[1]);
         close(read_pipe[0]);
+        close(error_pipe[0]);
 
         dup2(read_pipe[1], 1); close(read_pipe[1]);
+        dup2(error_pipe[1], 2); close(error_pipe[1]);
         dup2(write_pipe[0], 0); close(write_pipe[0]);
 
         boost::regex_iterator<String::iterator> it(cmdline.begin(), cmdline.end(), m_regex);
