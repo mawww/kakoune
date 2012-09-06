@@ -33,17 +33,19 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) %{
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 }
 
-def alt %{ edit %sh{
+def alt %{ %sh{
+    shopt -s extglob
     case ${kak_bufname} in
-         *.c) echo ${kak_bufname/%c/h} ;;
-         *.cc) echo ${kak_bufname/%cc/hh} ;;
-         *.cpp) echo ${kak_bufname/%cpp/hpp} ;;
-         *.cxx) echo ${kak_bufname/%cxx/hxx} ;;
-         *.C) echo ${kak_bufname/%C/H} ;;
-         *.h) echo ${kak_bufname/%h/c} ;;
-         *.hh) echo ${kak_bufname/%hh/cc} ;;
-         *.hpp) echo ${kak_bufname/%hpp/cpp} ;;
-         *.hxx) echo ${kak_bufname/%hxx/cxx} ;;
-         *.H) echo ${kak_bufname/%H/C} ;;
+         *.c|*.cc|*.cpp|*.cxx|*.C)
+             altname=$(ls -1 "${kak_bufname%.*}".@(h|hh|hpp|hxx|H) 2> /dev/null | head -n 1)
+         ;;
+         *.h|*.hh|*.hpp|*.hxx|*.H)
+             altname=$(ls -1 "${kak_bufname%.*}".@(c|cc|cpp|cxx|C) 2> /dev/null | head -n 1)
+         ;;
     esac
-}} 
+    if [[ -e ${altname} ]]; then
+       echo edit "'${altname}'"
+    else
+       echo echo "'alternative file not found'"
+    fi
+}}
