@@ -372,6 +372,9 @@ void Client::insert(Editor& editor, IncrementalInserter::Mode mode)
 
 void Client::repeat_last_insert(Editor& editor, Context& context)
 {
+    if (m_last_insert.second.empty())
+        return;
+
     std::vector<Key> keys;
     swap(keys, m_last_insert.second);
     // m_last_insert will be refilled by the new InsertMode
