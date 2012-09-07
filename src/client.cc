@@ -59,15 +59,16 @@ public:
 
     void on_key(const Key& key, Context& context) override
     {
-        if (key == Key(Key::Modifiers::Control, 'n') or
-            key == Key(Key::Modifiers::Control, 'i') or
+        if (key == Key::Down or
+            key == Key(Key::Modifiers::Control, 'n') or
             key == Key(Key::Modifiers::None, 'j'))
         {
             if (++m_selected >= m_choice_count)
                 m_selected = 0;
             m_client.menu_select(m_selected);
         }
-        if (key == Key(Key::Modifiers::Control, 'p') or
+        if (key == Key::Up or
+            key == Key(Key::Modifiers::Control, 'p') or
             key == Key(Key::Modifiers::None, 'k'))
         {
             if (--m_selected < 0)
@@ -82,7 +83,7 @@ public:
             m_client.reset_normal_mode();
             callback(selected, context);
         }
-        if (key == Key(Key::Modifiers::None, 27))
+        if (key == Key::Escape)
         {
             m_client.reset_normal_mode();
         }
@@ -122,7 +123,7 @@ public:
     void on_key(const Key& key, Context& context) override
     {
         std::vector<String>& history = ms_history[m_prompt];
-        if (key == Key(Key::Modifiers::Control, 'm')) // enter
+        if (key == Key{Key::Modifiers::Control, 'm'}) // enter
         {
             std::vector<String>::iterator it;
             while ((it = find(history, m_result)) != history.end())
@@ -137,14 +138,14 @@ public:
             callback(result, context);
             return;
         }
-        else if (key == Key(Key::Modifiers::None, 27))
+        else if (key == Key::Escape)
         {
             m_client.print_status("");
             m_client.reset_normal_mode();
             return;
         }
-        else if (key == Key(Key::Modifiers::Control, 'p') or // previous
-                 key == Key(Key::Modifiers::Control, 'c'))
+        else if (key == Key::Up or
+                 key == Key{Key::Modifiers::Control, 'p'})
         {
             if (m_history_it != history.begin())
             {
@@ -166,8 +167,8 @@ public:
                 } while (it != history.begin());
             }
         }
-        else if (key == Key(Key::Modifiers::Control, 'n') or // next
-                 key == Key(Key::Modifiers::Control, 'b'))
+        else if (key == Key::Down or // next
+                 key == Key{Key::Modifiers::Control, 'n'})
         {
             if (m_history_it != history.end())
             {
@@ -185,17 +186,19 @@ public:
                 m_cursor_pos = m_result.length();
             }
         }
-        else if (key == Key(Key::Modifiers::Control, 'd'))
+        else if (key == Key::Left or
+                 key == Key{Key::Modifiers::Control, 'b'})
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key(Key::Modifiers::Control, 'e'))
+        else if (key == Key::Right or
+                 key == Key{Key::Modifiers::Control, 'f'})
         {
             if (m_cursor_pos < m_result.length())
                 ++m_cursor_pos;
         }
-        else if (key == Key(Key::Modifiers::Control, 'g')) // backspace
+        else if (key == Key::Backspace)
         {
             if (m_cursor_pos != 0)
             {
@@ -322,9 +325,12 @@ public:
         case Key::Modifiers::None:
             switch (key.key)
             {
-            case 27:
+            case Key::Escape:
                 m_client.reset_normal_mode();
                 return;
+            case Key::Backspace:
+                m_inserter.erase();
+                break;
             default:
                 m_inserter.insert(String() + key.key);
             }
@@ -346,9 +352,6 @@ public:
                 break;
             case 'e':
                 m_inserter.move_cursors({0,  1});
-                break;
-            case 'g':
-                m_inserter.erase();
                 break;
             }
             break;

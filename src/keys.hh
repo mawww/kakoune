@@ -16,12 +16,24 @@ struct Key
         Alt     = 2,
         ControlAlt = 3
     };
+    enum NamedKeys : Character
+    {
+        Backspace = 256,
+        Escape,
+        Up,
+        Down,
+        Left,
+        Right,
+    };
 
     Modifiers modifiers;
     Character key;
 
     constexpr Key(Modifiers modifiers, Character key)
         : modifiers(modifiers), key(key) {}
+
+    constexpr Key(Character key)
+        : modifiers(Modifiers::None), key(key) {}
 
     constexpr bool operator==(const Key& other) const
     { return modifiers == other.modifiers and key == other.key; }

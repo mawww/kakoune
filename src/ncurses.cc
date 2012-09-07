@@ -164,26 +164,31 @@ void NCursesClient::draw_window(Window& window)
 
 Key NCursesClient::get_key()
 {
-    char c = getch();
+    const int c = getch();
 
-    Key::Modifiers modifiers = Key::Modifiers::None;
     if (c > 0 and c < 27)
     {
-        modifiers = Key::Modifiers::Control;
-        c = c - 1 + 'a';
+        return {Key::Modifiers::Control, c - 1 + 'a'};
     }
     else if (c == 27)
     {
         timeout(0);
-        char new_c = getch();
+        const int new_c = getch();
         timeout(-1);
         if (new_c != ERR)
-        {
-            c = new_c;
-            modifiers = Key::Modifiers::Alt;
-        }
+            return {Key::Modifiers::Alt, new_c};
+        else
+            return Key::Escape;
     }
-    return Key(modifiers, c);
+    else switch (c)
+    {
+    case KEY_BACKSPACE: return Key::Backspace;
+    case KEY_UP: return Key::Up;
+    case KEY_DOWN: return Key::Down;
+    case KEY_LEFT: return Key::Left;
+    case KEY_RIGHT: return Key::Right;
+    }
+    return c;
 }
 
 void NCursesClient::print_status(const String& status, CharCount cursor_pos)
