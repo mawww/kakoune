@@ -43,7 +43,7 @@ void do_repeat_insert(Context& context)
     context.client().repeat_last_insert(context.editor(), context);
 }
 
-template<bool append>
+template<SelectMode mode>
 void do_go(Context& context)
 {
     int count = context.numeric_param();
@@ -70,11 +70,11 @@ void do_go(Context& context)
                 break;
             case 'l':
             case 'L':
-                editor.select(select_to_eol, append);
+                editor.select(select_to_eol, mode);
                 break;
             case 'h':
             case 'H':
-                editor.select(select_to_eol_reverse, append);
+                editor.select(select_to_eol_reverse, mode);
                 break;
             case 'b':
             {
@@ -108,7 +108,7 @@ void do_pipe(Context& context)
 
 }
 
-template<bool append>
+template<SelectMode mode>
 void do_search(Context& context)
 {
     context.client().prompt("/", complete_nothing,
@@ -119,16 +119,16 @@ void do_search(Context& context)
             else
                 RegisterManager::instance()['/'] = ex;
 
-            context.editor().select(std::bind(select_next_match, _1, ex), append);
+            context.editor().select(std::bind(select_next_match, _1, ex), mode);
         });
 }
 
-template<bool append>
+template<SelectMode mode>
 void do_search_next(Context& context)
 {
     const String& ex = RegisterManager::instance()['/'].values(context)[0];
     if (not ex.empty())
-        context.editor().select(std::bind(select_next_match, _1, ex), append);
+        context.editor().select(std::bind(select_next_match, _1, ex), mode);
     else
         context.print_status("no search pattern");
 }
@@ -201,7 +201,7 @@ void do_join(Context& context)
 {
     Editor& editor = context.editor();
     editor.select(select_whole_lines);
-    editor.select(select_to_eol, true);
+    editor.select(select_to_eol, SelectMode::Extend);
     editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
     editor.replace(" ");
     editor.clear_selections();
@@ -254,14 +254,14 @@ private:
 template<typename T>
 Repeated<T> repeated(T func) { return Repeated<T>(func); }
 
-namespace SelectMode
+namespace SelectFlags
 {
-    enum Flags
+    enum Type
     {
         None = 0,
         Reverse = 1,
         Inclusive = 2,
-        Append = 4
+        Extend = 4
     };
 }
 
@@ -271,9 +271,9 @@ void select_to_next_char(Context& context)
     int param = context.numeric_param();
     context.client().on_next_key([param](const Key& key, Context& context) {
         context.editor().select(
-            std::bind(flags & SelectMode::Reverse ? select_to_reverse : select_to,
-                      _1, key.key, param, flags & SelectMode::Inclusive),
-            flags & SelectMode::Append);
+            std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
+                      _1, key.key, param, flags & SelectFlags::Inclusive),
+            flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace);
    });
 }
 
@@ -284,19 +284,19 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'k' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }); } },
     { { Key::Modifiers::None, 'l' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }); } },
 
-    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }, true); } },
-    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections({  std::max(context.numeric_param(),1), 0 }, true); } },
-    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }, true); } },
-    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }, true); } },
+    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }, SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections({  std::max(context.numeric_param(),1), 0 }, SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }, SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }, SelectMode::Extend); } },
 
-    { { Key::Modifiers::None, 't' }, select_to_next_char<SelectMode::None> },
-    { { Key::Modifiers::None, 'f' }, select_to_next_char<SelectMode::Inclusive> },
-    { { Key::Modifiers::None, 'T' }, select_to_next_char<SelectMode::Append> },
-    { { Key::Modifiers::None, 'F' }, select_to_next_char<SelectMode::Inclusive | SelectMode::Append> },
-    { { Key::Modifiers::Alt,  't' }, select_to_next_char<SelectMode::Reverse> },
-    { { Key::Modifiers::Alt,  'f' }, select_to_next_char<SelectMode::Inclusive | SelectMode::Reverse> },
-    { { Key::Modifiers::Alt,  'T' }, select_to_next_char<SelectMode::Append | SelectMode::Reverse> },
-    { { Key::Modifiers::Alt,  'F' }, select_to_next_char<SelectMode::Inclusive | SelectMode::Append | SelectMode::Reverse> },
+    { { Key::Modifiers::None, 't' }, select_to_next_char<SelectFlags::None> },
+    { { Key::Modifiers::None, 'f' }, select_to_next_char<SelectFlags::Inclusive> },
+    { { Key::Modifiers::None, 'T' }, select_to_next_char<SelectFlags::Extend> },
+    { { Key::Modifiers::None, 'F' }, select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend> },
+    { { Key::Modifiers::Alt,  't' }, select_to_next_char<SelectFlags::Reverse> },
+    { { Key::Modifiers::Alt,  'f' }, select_to_next_char<SelectFlags::Inclusive | SelectFlags::Reverse> },
+    { { Key::Modifiers::Alt,  'T' }, select_to_next_char<SelectFlags::Extend | SelectFlags::Reverse> },
+    { { Key::Modifiers::Alt,  'F' }, select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend | SelectFlags::Reverse> },
 
     { { Key::Modifiers::None, 'd' }, do_erase },
     { { Key::Modifiers::None, 'c' }, do_change },
@@ -307,8 +307,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'o' }, do_insert<IncrementalInserter::Mode::OpenLineBelow> },
     { { Key::Modifiers::None, 'O' }, do_insert<IncrementalInserter::Mode::OpenLineAbove> },
 
-    { { Key::Modifiers::None, 'g' }, do_go<false> },
-    { { Key::Modifiers::None, 'G' }, do_go<true> },
+    { { Key::Modifiers::None, 'g' }, do_go<SelectMode::Replace> },
+    { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
 
     { { Key::Modifiers::None, 'y' }, do_yank },
     { { Key::Modifiers::None, 'p' }, do_paste<PasteMode::After> },
@@ -332,18 +332,18 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'w' }, repeated([](Context& context) { context.editor().select(select_to_next_word<false>); }) },
     { { Key::Modifiers::None, 'e' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<false>); }) },
     { { Key::Modifiers::None, 'b' }, repeated([](Context& context) { context.editor().select(select_to_previous_word<false>); }) },
-    { { Key::Modifiers::None, 'W' }, repeated([](Context& context) { context.editor().select(select_to_next_word<false>, true); }) },
-    { { Key::Modifiers::None, 'E' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<false>, true); }) },
-    { { Key::Modifiers::None, 'B' }, repeated([](Context& context) { context.editor().select(select_to_previous_word<false>, true); }) },
-    { { Key::Modifiers::None, 'x' }, repeated([](Context& context) { context.editor().select(select_line, false); }) },
-    { { Key::Modifiers::None, 'X' }, repeated([](Context& context) { context.editor().select(select_line, true); }) },
+    { { Key::Modifiers::None, 'W' }, repeated([](Context& context) { context.editor().select(select_to_next_word<false>, SelectMode::Extend); }) },
+    { { Key::Modifiers::None, 'E' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<false>, SelectMode::Extend); }) },
+    { { Key::Modifiers::None, 'B' }, repeated([](Context& context) { context.editor().select(select_to_previous_word<false>, SelectMode::Extend); }) },
+    { { Key::Modifiers::None, 'x' }, repeated([](Context& context) { context.editor().select(select_line, SelectMode::Replace); }) },
+    { { Key::Modifiers::None, 'X' }, repeated([](Context& context) { context.editor().select(select_line, SelectMode::Extend); }) },
     { { Key::Modifiers::None, 'm' }, [](Context& context) { context.editor().select(select_matching); } },
-    { { Key::Modifiers::None, 'M' }, [](Context& context) { context.editor().select(select_matching, true); } },
+    { { Key::Modifiers::None, 'M' }, [](Context& context) { context.editor().select(select_matching, SelectMode::Extend); } },
 
-    { { Key::Modifiers::None, '/' }, do_search<false> },
-    { { Key::Modifiers::None, '?' }, do_search<true> },
-    { { Key::Modifiers::None, 'n' }, do_search_next<false> },
-    { { Key::Modifiers::None, 'N' }, do_search_next<true> },
+    { { Key::Modifiers::None, '/' }, do_search<SelectMode::Replace> },
+    { { Key::Modifiers::None, '?' }, do_search<SelectMode::Extend> },
+    { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace> },
+    { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Extend> },
 
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },
@@ -354,14 +354,14 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt, 'w' }, repeated([](Context& context) { context.editor().select(select_to_next_word<true>); }) },
     { { Key::Modifiers::Alt, 'e' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<true>); }) },
     { { Key::Modifiers::Alt, 'b' }, repeated([](Context& context) { context.editor().select(select_to_previous_word<true>); }) },
-    { { Key::Modifiers::Alt, 'W' }, repeated([](Context& context) { context.editor().select(select_to_next_word<true>, true); }) },
-    { { Key::Modifiers::Alt, 'E' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<true>, true); }) },
-    { { Key::Modifiers::Alt, 'B' }, repeated([](Context& context) { context.editor().select(select_to_previous_word<true>, true); }) },
+    { { Key::Modifiers::Alt, 'W' }, repeated([](Context& context) { context.editor().select(select_to_next_word<true>, SelectMode::Extend); }) },
+    { { Key::Modifiers::Alt, 'E' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<true>, SelectMode::Extend); }) },
+    { { Key::Modifiers::Alt, 'B' }, repeated([](Context& context) { context.editor().select(select_to_previous_word<true>, SelectMode::Extend); }) },
 
-    { { Key::Modifiers::Alt, 'l' }, repeated([](Context& context) { context.editor().select(select_to_eol, false); }) },
-    { { Key::Modifiers::Alt, 'L' }, repeated([](Context& context) { context.editor().select(select_to_eol, true); }) },
-    { { Key::Modifiers::Alt, 'h' }, repeated([](Context& context) { context.editor().select(select_to_eol_reverse, false); }) },
-    { { Key::Modifiers::Alt, 'H' }, repeated([](Context& context) { context.editor().select(select_to_eol_reverse, true); }) },
+    { { Key::Modifiers::Alt, 'l' }, repeated([](Context& context) { context.editor().select(select_to_eol, SelectMode::Replace); }) },
+    { { Key::Modifiers::Alt, 'L' }, repeated([](Context& context) { context.editor().select(select_to_eol, SelectMode::Extend); }) },
+    { { Key::Modifiers::Alt, 'h' }, repeated([](Context& context) { context.editor().select(select_to_eol_reverse, SelectMode::Replace); }) },
+    { { Key::Modifiers::Alt, 'H' }, repeated([](Context& context) { context.editor().select(select_to_eol_reverse, SelectMode::Extend); }) },
 
     { { Key::Modifiers::Alt, 's' }, do_split_regex },
 

@@ -111,13 +111,14 @@ void Editor::pop_selections()
         throw runtime_error("no more selections on stack");
 }
 
-void Editor::move_selections(const BufferCoord& offset, bool append)
+void Editor::move_selections(const BufferCoord& offset, SelectMode mode)
 {
+    assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections.back())
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
         BufferIterator last = m_buffer.iterator_at(pos + offset, true);
-        sel = Selection(append ? sel.first() : last, last);
+        sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
 }
 
@@ -160,7 +161,7 @@ void Editor::select(const BufferIterator& iterator)
     m_selections.back().push_back(Selection(iterator, iterator));
 }
 
-void Editor::select(const Selector& selector, bool append)
+void Editor::select(const Selector& selector, SelectMode mode)
 {
     check_invariant();
 
@@ -170,7 +171,7 @@ void Editor::select(const Selector& selector, bool append)
     for (auto& sel : m_selections.back())
     {
         SelectionAndCaptures res = selector(sel);
-        if (append)
+        if (mode == SelectMode::Extend)
             sel.merge_with(res.selection);
         else
             sel = std::move(res.selection);

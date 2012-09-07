@@ -13,6 +13,13 @@ namespace Kakoune
 
 class Register;
 
+enum class SelectMode
+{
+    Replace,
+    Extend,
+    Append,
+};
+
 // An Editor is a buffer mutator
 //
 // The Editor class provides methods to manipulate a set of selections
@@ -22,6 +29,7 @@ class Editor : public SafeCountable
 public:
     typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
     typedef std::function<SelectionAndCapturesList (const Selection&)>  MultiSelector;
+
 
     Editor(Buffer& buffer);
     virtual ~Editor() {}
@@ -42,12 +50,14 @@ public:
     void push_selections();
     void pop_selections();
 
-    void move_selections(const BufferCoord& offset, bool append = false);
+    void move_selections(const BufferCoord& offset,
+                         SelectMode mode = SelectMode::Replace);
     void clear_selections();
     void keep_selection(int index);
     void remove_selection(int index);
     void select(const BufferIterator& iterator);
-    void select(const Selector& selector, bool append = false);
+    void select(const Selector& selector,
+                SelectMode mode = SelectMode::Replace);
     void multi_select(const MultiSelector& selector);
 
     const SelectionList& selections() const { return m_selections.back(); }
