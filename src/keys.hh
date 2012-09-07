@@ -16,7 +16,7 @@ struct Key
         Alt     = 2,
         ControlAlt = 3
     };
-    enum NamedKeys : Character
+    enum NamedKey : Character
     {
         Backspace = 256,
         Escape,
@@ -24,6 +24,8 @@ struct Key
         Down,
         Left,
         Right,
+        PageUp,
+        PageDown,
     };
 
     Modifiers modifiers;

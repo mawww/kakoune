@@ -187,6 +187,8 @@ Key NCursesClient::get_key()
     case KEY_DOWN: return Key::Down;
     case KEY_LEFT: return Key::Left;
     case KEY_RIGHT: return Key::Right;
+    case KEY_PPAGE: return Key::PageUp;
+    case KEY_NPAGE: return Key::PageDown;
     }
     return c;
 }

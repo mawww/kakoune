@@ -236,6 +236,31 @@ void do_select_object(Context& context)
     });
 }
 
+template<Key::NamedKey key>
+void do_scroll(Context& context)
+{
+    static_assert(key == Key::PageUp or key == Key::PageDown,
+                  "do_scrool only implements PageUp and PageDown");
+    Window& window = context.window();
+    Buffer& buffer = context.buffer();
+    BufferCoord position = window.position();
+    BufferIterator cursor_pos;
+
+    if (key == Key::PageUp)
+    {
+        position.line -= (window.dimensions().line - 2);
+        cursor_pos = buffer.iterator_at(position);
+    }
+    else if (key == Key::PageDown)
+    {
+        position.line += (window.dimensions().line - 2);
+        cursor_pos = buffer.iterator_at(position + BufferCoord{window.dimensions().line - 1, 0});
+    }
+
+    window.select(cursor_pos);
+    window.set_position(position);
+}
+
 template<typename T>
 class Repeated
 {
@@ -370,6 +395,9 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt, 'x' }, [](Context& context) { context.editor().select(select_whole_lines); } },
 
     { { Key::Modifiers::Alt, 'c' }, [](Context& context) { if (context.has_window()) context.window().center_selection(); } },
+
+    { { Key::Modifiers::None, Key::PageUp }, do_scroll<Key::PageUp> },
+    { { Key::Modifiers::None, Key::PageDown }, do_scroll<Key::PageDown> },
 };
 
 }

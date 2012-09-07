@@ -25,7 +25,9 @@ public:
     ~Window();
 
     const BufferCoord& position() const { return m_position; }
+    void set_position(const BufferCoord& position) { m_position = buffer().clamp(position); }
 
+    const DisplayCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(const DisplayCoord& dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
