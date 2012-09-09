@@ -211,6 +211,7 @@ void CommandManager::execute_single_command(const CommandParameters& params,
 
 void CommandManager::execute(const String& command_line,
                              Context& context,
+                             const memoryview<String>& shell_params,
                              const EnvVarMap& env_vars)
 {
     TokenList tokens = parse(command_line);
@@ -223,7 +224,8 @@ void CommandManager::execute(const String& command_line,
         if (it->type() == Token::Type::ShellExpand)
         {
             String output = ShellManager::instance().eval(it->content(),
-                                                          context, env_vars);
+                                                          context, shell_params,
+                                                          env_vars);
             TokenList shell_tokens = parse(output);
             it = tokens.erase(it);
             for (auto& token : shell_tokens)

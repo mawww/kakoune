@@ -534,6 +534,7 @@ void define_command(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params,
                             { { "env-params", false },
+                              { "shell-params", false },
                               { "allow-override", false },
                               { "shell-completion", true } });
 
@@ -552,8 +553,14 @@ void define_command(const CommandParameters& params, Context& context)
     if (parser.has_option("env-params"))
     {
         cmd = [=](const CommandParameters& params, Context& context) {
-            CommandManager::instance().execute(commands, context,
+            CommandManager::instance().execute(commands, context, {},
                                                params_to_env_var_map(params));
+        };
+    }
+    if (parser.has_option("shell-params"))
+    {
+        cmd = [=](const CommandParameters& params, Context& context) {
+            CommandManager::instance().execute(commands, context, params, {});
         };
     }
     else
@@ -571,10 +578,11 @@ void define_command(const CommandParameters& params, Context& context)
         auto completer = [=](const Context& context, const CommandParameters& params,
                              size_t token_to_complete, CharCount pos_in_token)
         {
-           EnvVarMap vars = params_to_env_var_map(params);
-           vars["token_to_complete"] = int_to_str(token_to_complete);
-           vars["pos_in_token"]      = int_to_str((int)pos_in_token);
-           String output = ShellManager::instance().eval(shell_cmd, context, vars);
+           EnvVarMap vars = {
+               {"token_to_complete", int_to_str(token_to_complete) },
+               { "pos_in_token",     int_to_str((int)pos_in_token) }
+           };
+           String output = ShellManager::instance().eval(shell_cmd, context, params, vars);
            return split(output, '\n');
         };
         CommandManager::instance().register_command(cmd_name, cmd, completer);

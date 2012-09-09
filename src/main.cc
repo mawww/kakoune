@@ -102,7 +102,7 @@ void do_pipe(Context& context)
             std::vector<String> strings;
             for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
                 strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
-                                                                cmdline, context, {}));
+                                                                cmdline, context, {}, {}));
             editor.replace(strings);
         });
 

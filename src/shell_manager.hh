@@ -19,10 +19,12 @@ public:
     ShellManager();
 
     String eval(const String& cmdline, const Context& context,
+                const memoryview<String>& params,
                 const EnvVarMap& env_vars);
 
     String pipe(const String& input,
                 const String& cmdline, const Context& context,
+                const memoryview<String>& params,
                 const EnvVarMap& env_vars);
 
     void register_env_var(const String& regex, EnvVarRetriever retriever);

@@ -16,13 +16,15 @@ ShellManager::ShellManager()
 }
 
 String ShellManager::eval(const String& cmdline, const Context& context,
+                          const memoryview<String>& params,
                           const EnvVarMap& env_vars)
 {
-    return pipe("", cmdline, context, env_vars);
+    return pipe("", cmdline, context, params, env_vars);
 }
 
 String ShellManager::pipe(const String& input,
                           const String& cmdline, const Context& context,
+                          const memoryview<String>& params,
                           const EnvVarMap& env_vars)
 {
     int write_pipe[2]; // child stdin
@@ -114,8 +116,14 @@ String ShellManager::pipe(const String& input,
 
             ++it;
         }
+        std::vector<const char*> execparams = { "sh", "-c", cmdline.c_str() };
+        if (not params.empty())
+            execparams.push_back("sh");
+        for (auto& param : params)
+            execparams.push_back(param.c_str());
+        execparams.push_back(NULL);
 
-        execlp("sh", "sh", "-c", cmdline.c_str(), NULL);
+        execvp("sh", (char* const*)execparams.data());
         exit(-1);
     }
     catch (...) { exit(-1); }
