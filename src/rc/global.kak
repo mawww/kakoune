@@ -1,8 +1,8 @@
-def -env-params \
-    -shell-completion %{ global -c ${kak_param0} } \
+def -shell-params \
+    -shell-completion %{ global -c $1 } \
     tag %{ %sh{
-    if [[ ${kak_param0} != "" ]]; then
-       tagname=${kak_param0}
+    if [[ $1 != "" ]]; then
+       tagname=$1
     else
        tagname=${kak_selection}
     fi
