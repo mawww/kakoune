@@ -1,4 +1,22 @@
-hook global WinCreate .* %{ addhl regex \h+(?=\n) 0:default,red }
-hook global WinCreate .* %{ addhl number_lines }
+def -shell-params runtime %{ %sh{
+        while (( "$#" )); do
+            echo "source '${kak_runtime}/$1'"
+            shift
+        done
+}}
 
-%sh{ for rcfile in ${kak_runtime}/rc/*; do echo "try %{ source '${rcfile}' } catch %{ }"; done }
+%sh{
+    if [[ -n "${XDG_CONFIG_HOME}" ]]; then
+       localconfdir="${XDG_CONFIG_HOME}/kak"
+    else
+       localconfdir="$HOME/.config/kak"
+    fi
+    if [[ -f "${localconfdir}/kakrc" ]]; then
+        echo "source '${localconfdir}/kakrc'"
+    fi
+    if [[ -d "${localconfdir}/autoload" ]]; then
+        for rcfile in ${localconfdir}/autoload/*; do
+            echo "try %{ source '${rcfile}' } catch %{ }";
+        done
+    fi
+}
