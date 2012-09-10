@@ -609,35 +609,6 @@ void exec_commands_in_file(const CommandParameters& params,
     CommandManager::instance().execute(file_content, context);
 }
 
-void exec_commands_in_runtime_file(const CommandParameters& params,
-                                   Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    const String& filename = params[0];
-    char buffer[2048];
-#if defined(__linux__)
-    ssize_t res = readlink("/proc/self/exe", buffer, 2048 - (int)filename.length());
-    assert(res != -1);
-    buffer[res] = '\0';
-#elif defined(__APPLE__)
-    uint32_t bufsize = 2048 - (int)filename.length();
-    _NSGetExecutablePath(buffer, &bufsize);
-    char* canonical_path = realpath(buffer, NULL);
-    strncpy(buffer, canonical_path, 2048 - (int)filename.length());
-    free(canonical_path);
-#else
-# error "finding executable path is not implemented on this platform"
-#endif
-    char* ptr = strrchr(buffer, '/');
-    if (ptr)
-    {
-        strcpy(ptr+1, filename.c_str());
-        exec_commands_in_file(CommandParameters(buffer), context);
-    }
-}
-
 void set_option(OptionManager& option_manager, const CommandParameters& params,
                 Context& context)
 {
@@ -849,7 +820,6 @@ void register_commands()
     cm.register_command("hook", add_hook);
 
     cm.register_command("source", exec_commands_in_file, filename_completer);
-    cm.register_command("runtime", exec_commands_in_runtime_file);
 
     cm.register_command("exec", exec_string);
     cm.register_command("menu", menu);

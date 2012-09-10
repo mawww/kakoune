@@ -302,6 +302,28 @@ void select_to_next_char(Context& context)
    });
 }
 
+String runtime_directory()
+{
+    char buffer[2048];
+#if defined(__linux__)
+    ssize_t res = readlink("/proc/self/exe", buffer, 2048);
+    assert(res != -1);
+    buffer[res] = '\0';
+#elif defined(__APPLE__)
+    uint32_t bufsize = 2048;
+    _NSGetExecutablePath(buffer, &bufsize);
+    char* canonical_path = realpath(buffer, NULL);
+    strncpy(buffer, canonical_path, 2048);
+    free(canonical_path);
+#else
+# error "finding executable path is not implemented on this platform"
+#endif
+    char* ptr = strrchr(buffer, '/');
+    if (not ptr)
+        throw runtime_error("unable do determine runtime directory");
+    return String(buffer, ptr);
+}
+
 std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 {
     { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }); } },
@@ -424,6 +446,9 @@ int main(int argc, char* argv[])
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
                                    { return context.window().selections_content().back(); });
+    shell_manager.register_env_var("runtime",
+                                   [](const String& name, const Context& context)
+                                   { return runtime_directory(); });
     shell_manager.register_env_var("opt_.+",
                                    [](const String& name, const Context& context)
                                    { return context.option_manager()[name.substr(4)].as_string(); });
@@ -446,7 +471,8 @@ int main(int argc, char* argv[])
         try
         {
             Context initialisation_context;
-            command_manager.execute("runtime kakrc", initialisation_context);
+            command_manager.execute("source " + runtime_directory() + "/kakrc",
+                                    initialisation_context);
         }
         catch (Kakoune::runtime_error& error)
         {

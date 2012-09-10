@@ -1,11 +1,4 @@
 hook global WinCreate .* %{ addhl regex \h+(?=\n) 0:default,red }
 hook global WinCreate .* %{ addhl number_lines }
 
-runtime rc/cpp.kak
-runtime rc/kakrc.kak
-runtime rc/asciidoc.kak
-runtime rc/git.kak
-runtime rc/global.kak
-runtime rc/diff.kak
-runtime rc/make.kak
-runtime rc/grep.kak
+%sh{ for rcfile in ${kak_runtime}/rc/*; do echo "try %{ source '${rcfile}' } catch %{ }"; done }
