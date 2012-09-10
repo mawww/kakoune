@@ -27,6 +27,15 @@ void test_buffer()
     BufferIterator end = buffer.iterator_at({ 4, 5 }) + 1;
     String str = buffer.string(begin, end);
     assert(str == "youpi");
+
+    // check insert at end behaviour: auto add end of line if necessary
+    begin = buffer.end() - 1;
+    buffer.insert(buffer.end(), "tchou");
+    assert(buffer.string(begin+1, buffer.end()) == "tchou\n");
+
+    begin = buffer.end() - 1;
+    buffer.insert(buffer.end(), "kanaky\n");
+    assert(buffer.string(begin+1, buffer.end()) == "kanaky\n");
 }
 
 void test_editor()

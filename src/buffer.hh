@@ -111,7 +111,7 @@ public:
 
     Type type() const { return m_type; }
 
-    void insert(BufferIterator pos, const String& content);
+    void insert(BufferIterator pos, String content);
     void erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const { return m_timestamp; }

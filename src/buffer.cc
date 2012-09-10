@@ -367,16 +367,17 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-void Buffer::insert(BufferIterator pos, const String& content)
+void Buffer::insert(BufferIterator pos, String content)
 {
     if (content.empty())
         return;
 
-    if (pos.is_end())
-        --pos;
+    if (pos.is_end() and content.back() != '\n')
+        content += '\n';
 
-    m_current_undo_group.emplace_back(Modification::Insert, pos, content);
-    do_insert(pos, content);
+    m_current_undo_group.emplace_back(Modification::Insert, pos,
+                                      std::move(content));
+    do_insert(pos, m_current_undo_group.back().content);
 }
 
 void Buffer::erase(BufferIterator begin, BufferIterator end)

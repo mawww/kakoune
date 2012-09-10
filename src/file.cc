@@ -89,7 +89,6 @@ Buffer* create_buffer_from_file(const String& filename)
 
     Buffer* buffer = new Buffer(filename, Buffer::Type::File, "");
 
-
     String content;
     char buf[256];
     bool crlf = false;
@@ -118,7 +117,7 @@ Buffer* create_buffer_from_file(const String& filename)
                 if (buf[pos] == '\r')
                     crlf = true;
 
-                buffer->insert(buffer->end(), String(buf+start, buf+pos));
+                buffer->insert(buffer->end()-1, String(buf+start, buf+pos));
                 start = pos+1;
             }
             ++pos;

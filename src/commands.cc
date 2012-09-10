@@ -251,7 +251,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
          ssize_t count = read(fd, data, 512);
          if (count > 0)
          {
-             buffer->insert(buffer->end(), String(data, data + count));
+             buffer->insert(buffer->end()-1, String(data, data + count));
              buffer->reset_undo_data();
              context.draw_ifn();
          }

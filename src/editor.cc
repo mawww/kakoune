@@ -353,8 +353,11 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
             last = first;
             break;
         }
+        if (first.is_end())
+           --first;
+        if (last.is_end())
+           --last;
         sel = Selection(first, last);
-
     }
     if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
     {
