@@ -86,6 +86,13 @@ void do_go(Context& context)
         });
 }
 
+void do_replace_with_char(Context& context)
+{
+    context.client().on_next_key([](const Key& key, Context& context) {
+        context.editor().replace(String() + key.key);
+    });
+}
+
 void do_command(Context& context)
 {
     context.client().prompt(
@@ -353,6 +360,7 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'A' }, do_insert<IncrementalInserter::Mode::AppendAtLineEnd> },
     { { Key::Modifiers::None, 'o' }, do_insert<IncrementalInserter::Mode::OpenLineBelow> },
     { { Key::Modifiers::None, 'O' }, do_insert<IncrementalInserter::Mode::OpenLineAbove> },
+    { { Key::Modifiers::None, 'r' }, do_replace_with_char },
 
     { { Key::Modifiers::None, 'g' }, do_go<SelectMode::Replace> },
     { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
