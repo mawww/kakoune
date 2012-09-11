@@ -29,7 +29,6 @@ public:
 private:
     MENU* m_menu;
     std::vector<ITEM*> m_items;
-    std::vector<String> m_counts;
     std::vector<String> m_choices;
 
     int m_menu_fg;

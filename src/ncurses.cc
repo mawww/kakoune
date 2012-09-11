@@ -224,16 +224,14 @@ void NCursesClient::menu_show(const memoryview<String>& choices)
 {
     assert(m_menu == nullptr);
     m_choices = std::vector<String>(choices.begin(), choices.end());
-    for (int i = 0; i < m_choices.size(); ++i)
-        m_counts.push_back(int_to_str(i+1));
     CharCount longest = 0;
     for (int i = 0; i < m_choices.size(); ++i)
     {
-        m_items.push_back(new_item(m_counts[i].c_str(), m_choices[i].c_str()));
+        m_items.push_back(new_item(m_choices[i].c_str(), ""));
         longest = std::max(longest, m_choices[i].length());
     }
     m_items.push_back(nullptr);
-    longest += m_counts.back().length() + 2;
+    longest += 1;
 
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
@@ -276,7 +274,6 @@ void NCursesClient::menu_hide()
            free_item(item);
     m_menu = nullptr;
     m_items.clear();
-    m_counts.clear();
     refresh();
 }
 
