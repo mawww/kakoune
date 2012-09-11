@@ -254,7 +254,8 @@ void NCursesClient::menu_show(const memoryview<String>& choices)
 
 void NCursesClient::menu_select(int selected)
 {
-    if (0 <= selected and selected < m_items.size())
+    // last item in m_items is the nullptr, hence the - 1
+    if (selected >= 0 and selected < m_items.size() - 1)
     {
         set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
         set_current_item(m_menu, m_items[selected]);
