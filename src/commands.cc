@@ -32,8 +32,6 @@ using namespace std::placeholders;
 // berk
 extern bool    quit_requested;
 
-extern std::unordered_map<Key, std::function<void (Context& context)>> keymap;
-
 namespace
 {
 
