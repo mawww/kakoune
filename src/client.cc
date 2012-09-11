@@ -331,6 +331,18 @@ public:
             case Key::Backspace:
                 m_inserter.erase();
                 break;
+            case Key::Left:
+                m_inserter.move_cursors({0, -1});
+                break;
+            case Key::Right:
+                m_inserter.move_cursors({0,  1});
+                break;
+            case Key::Up:
+                m_inserter.move_cursors({-1, 0});
+                break;
+            case Key::Down:
+                m_inserter.move_cursors({ 1, 0});
+                break;
             default:
                 m_inserter.insert(String() + key.key);
             }
@@ -346,12 +358,6 @@ public:
                 break;
             case 'i':
                 m_inserter.insert(String() + '\t');
-                break;
-            case 'd':
-                m_inserter.move_cursors({0, -1});
-                break;
-            case 'e':
-                m_inserter.move_cursors({0,  1});
                 break;
             }
             break;
