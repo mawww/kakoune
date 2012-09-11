@@ -260,6 +260,7 @@ Some of kakoune state is available through environment variables:
 
  * *kak_selection*: content of the last selection
  * *kak_bufname*: name of the current buffer
+ * *kak_runtime*: directory containing the kak binary
  * *kak_opt_name*: value of option name
  * *kak_reg_x*: value of register x
 
@@ -288,8 +289,10 @@ new commands can be defined using the *def* command.
 def can also takes some flags:
  * *-env-params*: pass parameters given to commands in the environement as
                   kak_paramN with N the parameter number
+ * *-shell-params*: pass parameters given to commands as positional parameters
+                    to any shell expansions used in the command.
  * *-shell-completion*: following string is a shell command which takes
-                        parameters through the environemnt and output one
+                        parameters as positional params and output one
                         completion candidate per line.
  * *-allow-override*: allow the new command to replace an exisiting one
                       with the same name.
@@ -309,3 +312,14 @@ Some helper commands can be used to define composite commands:
 
 Note that these commands are available in interactive command mode, but are
 not that useful in this context.
+
+FIFO Buffer
+-----------
+
+the *edit* command can take a -fifo parameter:
+:edit -fifo <filename> <buffername>
+in this case, a buffer named <buffername> is created which reads its content
+from <filename>. When filename is appended to, the buffer is automatically
+updated.
+This is very useful for running some commands asynchronously while displaying
+their result in a buffer. See rc/make.kak and rc/grep.kak for examples.
