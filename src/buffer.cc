@@ -44,6 +44,8 @@ Buffer::Buffer(String name, Type type,
         m_hook_manager.run_hook("BufOpen", m_name, context);
 
     m_hook_manager.run_hook("BufCreate", m_name, context);
+
+    reset_undo_data();
 }
 
 Buffer::~Buffer()
