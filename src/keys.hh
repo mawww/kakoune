@@ -26,6 +26,7 @@ struct Key
         Right,
         PageUp,
         PageDown,
+        BackTab,
     };
 
     Modifiers modifiers;

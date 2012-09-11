@@ -189,6 +189,7 @@ Key NCursesClient::get_key()
     case KEY_RIGHT: return Key::Right;
     case KEY_PPAGE: return Key::PageUp;
     case KEY_NPAGE: return Key::PageDown;
+    case KEY_BTAB: return Key::BackTab;
     }
     return c;
 }

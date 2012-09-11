@@ -107,9 +107,10 @@ private:
 class Client::PromptMode : public Client::Mode
 {
 public:
-    PromptMode(Client& client, const String& prompt, Completer completer, PromptCallback callback)
-        : Client::Mode(client),
-          m_prompt(prompt), m_completer(completer), m_callback(callback), m_cursor_pos(0)
+    PromptMode(Client& client, const String& prompt,
+               Completer completer, PromptCallback callback)
+        : Client::Mode(client), m_prompt(prompt),
+          m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
         m_client.print_status(m_prompt, m_prompt.length());
@@ -135,6 +136,8 @@ public:
             PromptCallback callback = std::move(m_callback);
             String result = std::move(m_result);
             m_client.reset_normal_mode();
+            // call callback after reset_normal_mode so that callback
+            // may change the mode
             callback(result, context);
             return;
         }
@@ -217,40 +220,36 @@ public:
             String reg = RegisterManager::instance()[k.key].values(context)[0];
             m_client.menu_hide();
             m_current_completion = -1;
-            m_result = m_result.substr(0, m_cursor_pos) + reg + m_result.substr(m_cursor_pos, String::npos);
+            m_result = m_result.substr(0, m_cursor_pos) + reg
+                     + m_result.substr(m_cursor_pos, String::npos);
             m_cursor_pos += reg.length();
         }
-        else if (key == Key(Key::Modifiers::Control, 'i')) // tab
+        else if (key == Key(Key::Modifiers::Control, 'i') or // tab
+                 key == Key::BackTab)
         {
+            const bool reverse = (key == Key::BackTab);
+            const CandidateList& candidates = m_completions.candidates;
             if (m_current_completion == -1)
             {
                 m_completions = m_completer(context, m_result, m_cursor_pos);
-                if (m_completions.candidates.empty())
+                if (candidates.empty())
                     return;
 
                 m_client.menu_hide();
-                m_client.menu_show(m_completions.candidates);
-                m_text_before_completion = m_result.substr(m_completions.start,
-                                                         m_completions.end - m_completions.start);
+                m_client.menu_show(candidates);
+                m_completion_prefix = m_result.substr(m_completions.start,
+                                                      m_completions.end - m_completions.start);
+                m_completion_count = contains(candidates, m_completion_prefix) ?
+                                     (int)candidates.size() : (int)candidates.size() + 1;
             }
-            ++m_current_completion;
+            m_current_completion += reverse ? -1 : 1;
+            if (m_current_completion >= m_completion_count)
+                m_current_completion = 0;
+            else if (m_current_completion < 0)
+                m_current_completion = m_completion_count-1;
 
-            String completion;
-            if (m_current_completion >= m_completions.candidates.size())
-            {
-                if (m_current_completion == m_completions.candidates.size() and
-                    std::find(m_completions.candidates.begin(), m_completions.candidates.end(), m_text_before_completion) == m_completions.candidates.end())
-                {
-                    completion = m_text_before_completion;
-                }
-                else
-                {
-                    m_current_completion = 0;
-                    completion = m_completions.candidates[0];
-                }
-            }
-            else
-                completion = m_completions.candidates[m_current_completion];
+            String completion = (m_current_completion == candidates.size()) ?
+                                m_completion_prefix : candidates[m_current_completion];
 
             m_client.menu_select(m_current_completion);
             m_result = m_result.substr(0, m_completions.start) + completion;
@@ -270,10 +269,11 @@ private:
     PromptCallback m_callback;
     Completer      m_completer;
     const String   m_prompt;
-    CharCount      m_cursor_pos;
+    CharCount      m_cursor_pos = 0;
     Completions    m_completions;
+    int            m_completion_count = 0;
     int            m_current_completion = -1;
-    String         m_text_before_completion;
+    String         m_completion_prefix;
     String         m_result;
     String         m_saved_result;
 
