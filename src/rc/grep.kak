@@ -1,4 +1,5 @@
-def -shell-params grep %{ echo grep in progress, please wait...; %sh{
+def -shell-params -file-completion \
+    grep %{ echo grep in progress, please wait...; %sh{
      output=$(mktemp -t kak-grep.XXXXXXXX)
      grep -PHn $@ >& ${output} < /dev/null &
      echo "echo
