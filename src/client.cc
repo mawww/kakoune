@@ -226,11 +226,12 @@ public:
                      + m_result.substr(m_cursor_pos, String::npos);
             m_cursor_pos += reg.length();
         }
-        else if (key == Key(Key::Modifiers::Control, 'i') or // tab
+        else if (key == Key(Key::Modifiers::Control, 'i') or // tab completion
                  key == Key::BackTab)
         {
             const bool reverse = (key == Key::BackTab);
-            const CandidateList& candidates = m_completions.candidates;
+            CandidateList& candidates = m_completions.candidates;
+            // first try, we need to ask our completer for completions
             if (m_current_completion == -1)
             {
                 m_completions = m_completer(context, m_result, m_cursor_pos);
@@ -239,19 +240,17 @@ public:
 
                 m_client.menu_hide();
                 m_client.menu_show(candidates);
-                m_completion_prefix = m_result.substr(m_completions.start,
-                                                      m_completions.end - m_completions.start);
-                m_completion_count = contains(candidates, m_completion_prefix) ?
-                                     (int)candidates.size() : (int)candidates.size() + 1;
+                String prefix = m_result.substr(m_completions.start,
+                                                m_completions.end - m_completions.start);
+                if (not contains(candidates, prefix))
+                    candidates.push_back(std::move(prefix));
             }
-            if (not reverse and ++m_current_completion >= m_completion_count)
+            if (not reverse and ++m_current_completion >= candidates.size())
                 m_current_completion = 0;
             if (reverse and --m_current_completion < 0)
-                m_current_completion = m_completion_count-1;
+                m_current_completion = candidates.size()-1;
 
-            String completion = (m_current_completion == candidates.size()) ?
-                                m_completion_prefix : candidates[m_current_completion];
-
+            const String& completion = candidates[m_current_completion];
             m_client.menu_select(m_current_completion);
             m_result = m_result.substr(0, m_completions.start) + completion;
             m_cursor_pos = m_completions.start + completion.length();
@@ -272,9 +271,7 @@ private:
     const String   m_prompt;
     CharCount      m_cursor_pos = 0;
     Completions    m_completions;
-    int            m_completion_count = 0;
     int            m_current_completion = -1;
-    String         m_completion_prefix;
     String         m_result;
     String         m_saved_result;
 
