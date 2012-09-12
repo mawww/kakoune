@@ -60,6 +60,7 @@ public:
     void on_key(const Key& key, Context& context) override
     {
         if (key == Key::Down or
+            key == Key(Key::Modifiers::Control, 'i') or
             key == Key(Key::Modifiers::Control, 'n') or
             key == Key(Key::Modifiers::None, 'j'))
         {
@@ -68,6 +69,7 @@ public:
             m_client.menu_select(m_selected);
         }
         if (key == Key::Up or
+            key == Key::BackTab or
             key == Key(Key::Modifiers::Control, 'p') or
             key == Key(Key::Modifiers::None, 'k'))
         {
@@ -242,10 +244,9 @@ public:
                 m_completion_count = contains(candidates, m_completion_prefix) ?
                                      (int)candidates.size() : (int)candidates.size() + 1;
             }
-            m_current_completion += reverse ? -1 : 1;
-            if (m_current_completion >= m_completion_count)
+            if (not reverse and ++m_current_completion >= m_completion_count)
                 m_current_completion = 0;
-            else if (m_current_completion < 0)
+            if (reverse and --m_current_completion < 0)
                 m_current_completion = m_completion_count-1;
 
             String completion = (m_current_completion == candidates.size()) ?
