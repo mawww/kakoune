@@ -291,6 +291,8 @@ def can also takes some flags:
                   kak_paramN with N the parameter number
  * *-shell-params*: pass parameters given to commands as positional parameters
                     to any shell expansions used in the command.
+ * *-file-completion*: try file completion on any parameter passed
+                       to this command
  * *-shell-completion*: following string is a shell command which takes
                         parameters as positional params and output one
                         completion candidate per line.

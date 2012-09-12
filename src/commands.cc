@@ -534,6 +534,7 @@ void define_command(const CommandParameters& params, Context& context)
                             { { "env-params", false },
                               { "shell-params", false },
                               { "allow-override", false },
+                              { "file-completion", false },
                               { "shell-completion", true } });
 
     if (parser.positional_count() != 2)
@@ -570,11 +571,22 @@ void define_command(const CommandParameters& params, Context& context)
         };
     }
 
-    if (parser.has_option("shell-completion"))
+    CommandCompleter completer;
+    if (parser.has_option("file-completion"))
+    {
+        completer = [](const Context& context, const CommandParameters& params,
+                       size_t token_to_complete, CharCount pos_in_token)
+        {
+             const String& prefix = token_to_complete < params.size() ?
+                                    params[token_to_complete] : String();
+             return complete_filename(context, prefix, pos_in_token);
+        };
+    }
+    else if (parser.has_option("shell-completion"))
     {
         String shell_cmd = parser.option_value("shell-completion");
-        auto completer = [=](const Context& context, const CommandParameters& params,
-                             size_t token_to_complete, CharCount pos_in_token)
+        completer = [=](const Context& context, const CommandParameters& params,
+                        size_t token_to_complete, CharCount pos_in_token)
         {
            EnvVarMap vars = {
                {"token_to_complete", int_to_str(token_to_complete) },
@@ -583,10 +595,8 @@ void define_command(const CommandParameters& params, Context& context)
            String output = ShellManager::instance().eval(shell_cmd, context, params, vars);
            return split(output, '\n');
         };
-        CommandManager::instance().register_command(cmd_name, cmd, completer);
     }
-    else
-        CommandManager::instance().register_command(cmd_name, cmd);
+    CommandManager::instance().register_command(cmd_name, cmd, completer);
 }
 
 void echo_message(const CommandParameters& params, Context& context)
