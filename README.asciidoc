@@ -148,24 +148,24 @@ multiselection. Each selection have it's own captures, or yank buffer.
 Basic Commands
 --------------
 
-Commands are entered using *:*.
+Commands are entered using +:+.
 
- * e[dit] <filename> [<line> [<column>]]: open buffer on file, go to given
+ * +e[dit] <filename> [<line> [<column>]]+: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
      use edit! to force reloading.
- * w[rite] [<filename>]: write buffer to <filename> or use it's name if
+ * +w[rite] [<filename>]+: write buffer to <filename> or use it's name if
       filename is not given.
- * q[uit]: exit Kakoune, use quit! to force quitting even if there is some
+ * +q[uit]+: exit Kakoune, use quit! to force quitting even if there is some
       unsaved buffers remaining.
- * wq: write current buffer and quit
- * b[uffer] <name>: switch to buffer <name>
- * d[el]b[uf] [<name>]: delete the buffer <name>
- * source <filename>: execute commands in <filename>
- * runtime <filename>: execute commands in <filename>, <filename>
+ * +wq+: write current buffer and quit
+ * +b[uffer] <name>+: switch to buffer <name>
+ * +d[el]b[uf] [<name>]+: delete the buffer <name>
+ * +source <filename>+: execute commands in <filename>
+ * +runtime <filename>+: execute commands in <filename>, <filename>
       is relative to kak executable path.
- * exec <keys>: execute <keys> as if pressed in normal mode.
- * echo <text>: show <text> in status line
- * set[bwg] <option> <value>: set <option> to <value> in *b*uffer, *w*indow
+ * +exec <keys>+: execute <keys> as if pressed in normal mode.
+ * +echo <text>+: show <text> in status line
+ * +set[bwg] <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
       or *g*lobal scope.
 
 String syntax
@@ -176,40 +176,47 @@ if you want to give parameters with spaces, you should quote them.
 
 Kakoune support three string syntax:
 
- * "strings" and 'strings': classic strings, use \' or \" to escape the
-                            separator.
+ * +"strings" and \'strings\'+: classic strings, use \' or \" to escape the
+      separator.
 
- * %{strings}: these strings are very usefull when entering commands, first the '{' and '}'
-               delimiter is configurable: you can use any non alphanumeric character.
-               like %[string], %<string>, %(string), %~string~ or %!string!...
-               if the character following the % is one of {[(<, then the closing one is
-               the matching }])>, and these delimiters in the string need not to be
-               escaped if the contained delimiters are balanced.
-               for example %{ roger {}; } is a valid string.
+ * +%\{strings\}+: these strings are very usefull when entering commands
+
+   - the '{' and '}' delimiter are configurable: you can use any non
+     alphanumeric character. like %[string], %<string>, %(string), %~string~
+     or %!string!...
+   - if the character following the % is one of {[(<, then
+     the closing one is the matching }])>, and these delimiters in the string
+     need not to be escaped if the contained delimiters are balanced.
+     for example +%{ roger {}; }+ is a valid string.
 
 Highlighters
 ------------
 
 Manipulation of the displayed text is done through highlighters, which can be added
-or removed with the command :addhl <highlighter_name> <highlighter_parameters...>
-and :rmhl <highlighter_id>
+or removed with the command
+-----------------------------------------------------
+:addhl <highlighter_name> <highlighter_parameters...>
+-----------------------------------------------------
+and
+----------------------
+:rmhl <highlighter_id>
+----------------------
 
 existing highlighters are:
 
- * *highlight_selections*: used to make current selection visible
- * *expand_tabs*: expand tabs to next 8 multiple column (to make configurable)
- * *number_lines*: show line numbers
- * *group*: highlighter group, containing other highlighters. takes one
+ * +highlight_selections+: used to make current selection visible
+ * +expand_tabs+: expand tabs to next 8 multiple column (to make configurable)
+ * +number_lines+: show line numbers
+ * +group+: highlighter group, containing other highlighters. takes one
             parameter, <group_name>. useful when multiple highlighters work
             together and need to be removed as one. Adding and removing from
             a group can be done using
-            :addhl -group <group> <highlighter_name> <highlighter_parameters...>
-            :rmhl  -group <group> <highlighter_name>
- * *regex*: highlight a regex, takes the regex as first parameter, followed by
+            `:addhl -group <group> <highlighter_name> <highlighter_parameters...>`
+            `:rmhl  -group <group> <highlighter_name>`
+ * +regex+: highlight a regex, takes the regex as first parameter, followed by
             any number of color spec parameters.
             color spec format is: <capture_id>:<fg_color>[,<bg_color>]
-            For example:
-            :addhl regex //(\h+TODO:)?[^\n]+ 0:cyan 1:yellow,red
+            For example: `:addhl regex //(\h+TODO:)?[^\n]+ 0:cyan 1:yellow,red`
             will highlight C++ style comments in cyan, with an eventual
             'TODO:' in yellow on red background.
 
@@ -217,25 +224,31 @@ Filters
 -------
 
 Filters can be installed to interact with buffer modifications. They can be
-added or removed with :addfilter <filter_name> <filter_parameters...> and
+added or removed with
+-----------------------------------------------
+:addfilter <filter_name> <filter_parameters...>
+-----------------------------------------------
+and
+---------------------
 :rmfilter <filter_id>
+---------------------
 
 exisiting filters are:
 
- * *preserve_indent*: insert previous line indent when inserting a newline
- * *cleanup_whitespaces*: remove trailing whitespaces on the previous line
+ * +preserve_indent+: insert previous line indent when inserting a newline
+ * +cleanup_whitespaces+: remove trailing whitespaces on the previous line
                           when inserting an end-of-line.
- * *expand_tabulations*: insert spaces instead of tab characters
- * *group*: same as highlighters group
+ * +expand_tabulations+: insert spaces instead of tab characters
+ * +group+: same as highlighters group
 
 Hooks
 -----
 
 commands can be registred to be executed when certain events arise.
 to register a hook, use the hook command.
-
+------------------------------------------------------
 :hook <scope> <hook_name> <filtering_regex> <commands>
-
+------------------------------------------------------
 <scope> can be either global, buffer or window, the scope are hierarchical,
 meaning that a Window calling a hook will execute it's own, the buffer ones
 and the global ones.
@@ -245,8 +258,9 @@ called.
 
 for example, to automatically use line numbering with .cc files,
 use the following command:
-
+-----------------------------------------------------
 :hook global WinCreate .*\.cc %{ addhl number_lines }
+-----------------------------------------------------
 
 Shell expansion
 ---------------
@@ -258,15 +272,17 @@ for example: %sh{ ls } is replaced with the output of the ls command.
 
 Some of kakoune state is available through environment variables:
 
- * *kak_selection*: content of the last selection
- * *kak_bufname*: name of the current buffer
- * *kak_runtime*: directory containing the kak binary
- * *kak_opt_name*: value of option name
- * *kak_reg_x*: value of register x
+ * +kak_selection+: content of the last selection
+ * +kak_bufname+: name of the current buffer
+ * +kak_runtime+: directory containing the kak binary
+ * +kak_opt_name+: value of option name
+ * +kak_reg_x+: value of register x
 
 for example you can print informations on the current file in the status
 line using:
+-------------------------------
 :echo %sh{ ls -l $kak_bufname }
+-------------------------------
 
 Register and Option expansion
 -----------------------------
@@ -275,40 +291,43 @@ Similar to shell expansion, register contents and options values can be
 accessed through %reg{<register>} and %opt{<option>} syntax.
 
 for example you can display last search pattern with
+-------------
 :echo %reg{/}
+-------------
 
 Defining Commands
 -----------------
 
-new commands can be defined using the *def* command.
-
+new commands can be defined using the +def+ command.
+------------------------------
 :def <command_name> <commands>
-
+------------------------------
 <commands> is a string containing the commands to execute
 
 def can also takes some flags:
- * *-env-params*: pass parameters given to commands in the environement as
+
+ * +-env-params+: pass parameters given to commands in the environement as
                   kak_paramN with N the parameter number
- * *-shell-params*: pass parameters given to commands as positional parameters
+ * +-shell-params+: pass parameters given to commands as positional parameters
                     to any shell expansions used in the command.
- * *-file-completion*: try file completion on any parameter passed
+ * +-file-completion+: try file completion on any parameter passed
                        to this command
- * *-shell-completion*: following string is a shell command which takes
+ * +-shell-completion+: following string is a shell command which takes
                         parameters as positional params and output one
                         completion candidate per line.
- * *-allow-override*: allow the new command to replace an exisiting one
+ * +-allow-override+: allow the new command to replace an exisiting one
                       with the same name.
 
 Using shell expansion permits to define complex commands or to access
 kakoune state:
-
+------------------------------------------------------
 :def print_selection %{ echo %sh{ ${kak_selection} } }
-
+------------------------------------------------------
 Some helper commands can be used to define composite commands:
 
- * menu <label1> <commands1> <label2> <commands2>...: display a menu using
+ * +menu <label1> <commands1> <label2> <commands2>...+: display a menu using
      labels, the selected label's commands are executed.
- * try <commands> catch <on_error_commands>: prevent an error in <commands>
+ * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead.
 
@@ -318,10 +337,13 @@ not that useful in this context.
 FIFO Buffer
 -----------
 
-the *edit* command can take a -fifo parameter:
+the +edit+ command can take a -fifo parameter:
+
+-----------------------------------
 :edit -fifo <filename> <buffername>
-in this case, a buffer named <buffername> is created which reads its content
-from <filename>. When filename is appended to, the buffer is automatically
+-----------------------------------
+in this case, a buffer named +<buffername>+ is created which reads its content
+from +<filename>+. When filename is appended to, the buffer is automatically
 updated.
 This is very useful for running some commands asynchronously while displaying
 their result in a buffer. See rc/make.kak and rc/grep.kak for examples.
@@ -333,23 +355,25 @@ The kakrc file next to the kak binary (in the src directory for the moment)
 is a list of kak commands to be executed at startup.
 
 The current behaviour is to execute local user commands in the file
-~/.config/kak/kakrc and in all files in ~/.config/kak/autoload directory
+$HOME/.config/kak/kakrc and in all files in $HOME/.config/kak/autoload
+directory
 
 Place links to the files in src/rc/ in your autoload directory in order to
 execute them on startup, or use the runtime command (which sources relative
 to the kak binary) to load them on demand.
 
 Existing commands files are:
+
  * *rc/kakrc.kak*: provides kak commands files autodetection and highlighting
- * *rc/cpp.kak*: provides c/c++ files autodetection and highlighting and the :alt
+ * *rc/cpp.kak*: provides c/c++ files autodetection and highlighting and the +alt+
      command for switching from c/cpp file to h/hpp one.
  * *rc/asciidoc.kak*: provides asciidoc files autodetection and highlighting
  * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
  * *rc/git.kak*: provides various git format highlighting (commit message editing,
      interactive rebase)
- * *rc/make.kak*: provides the :make and :errjump commands along with highlighting
+ * *rc/make.kak*: provides the +make+ and +errjump+ commands along with highlighting
      for compiler output.
- * *rc/grep.kak*: provides the :grep and :gjump commands along with highlighting
+ * *rc/grep.kak*: provides the +grep+ and +gjump+ commands along with highlighting
      for grep output.
- * *rc/global.kak*: provides the :tag command to jump on a tag definition using
+ * *rc/global.kak*: provides the +tag+ command to jump on a tag definition using
      gnu global tagging system.
