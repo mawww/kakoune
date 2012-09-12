@@ -401,6 +401,9 @@ SelectionAndCaptures select_next_match(const Selection& selection,
             for (auto& match : matches)
                 captures.push_back(String(match.first, match.second));
         }
+        else
+            throw runtime_error("'" + regex + "': no matches found");
+
         if (begin == end)
             ++end;
 
