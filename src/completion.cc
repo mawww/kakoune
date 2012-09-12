@@ -2,6 +2,7 @@
 
 #include "buffer_manager.hh"
 #include "utils.hh"
+#include "file.hh"
 
 #include <dirent.h>
 #include <algorithm>
@@ -13,7 +14,7 @@ CandidateList complete_filename(const Context& context,
                                 const String& prefix,
                                 CharCount cursor_pos)
 {
-    String real_prefix = prefix.substr(0, cursor_pos);
+    String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     String dirname = "./";
     String dirprefix;
     String fileprefix = real_prefix;

@@ -21,7 +21,7 @@ bool isidentifier(char c)
 
 String parse_filename(const String& filename)
 {
-    if (filename.length() > 2 and filename[0] == '~' and filename[1] == '/')
+    if (filename.length() >= 2 and filename[0] == '~' and filename[1] == '/')
         return parse_filename("$HOME/" + filename.substr(2));
 
     CharCount pos = 0;
@@ -50,7 +50,7 @@ String parse_filename(const String& filename)
 
 String read_file(const String& filename)
 {
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     if (fd == -1)
     {
         if (errno == ENOENT)
@@ -75,7 +75,7 @@ String read_file(const String& filename)
 
 Buffer* create_buffer_from_file(const String& filename)
 {
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     if (fd == -1)
     {
         if (errno == ENOENT)
@@ -165,7 +165,8 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
         eolformat = "\n";
     auto eoldata = eolformat.data();
 
-    int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    int fd = open(parse_filename(filename).c_str(),
+                  O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
