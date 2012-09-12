@@ -323,3 +323,31 @@ from <filename>. When filename is appended to, the buffer is automatically
 updated.
 This is very useful for running some commands asynchronously while displaying
 their result in a buffer. See rc/make.kak and rc/grep.kak for examples.
+
+Kakrc
+-----
+
+The kakrc file next to the kak binary (in the src directory for the moment)
+is a list of kak commands to be executed at startup.
+
+The current behaviour is to execute local user commands in the file
+~/.config/kak/kakrc and in all files in ~/.config/kak/autoload directory
+
+Place links to the files in src/rc/ in your autoload directory in order to
+execute them on startup, or use the runtime command (which sources relative
+to the kak binary) to load them on demand.
+
+Existing commands files are:
+ * *rc/kakrc.kak*: provides kak commands files autodetection and highlighting
+ * *rc/cpp.kak*: provides c/c++ files autodetection and highlighting and the :alt
+     command for switching from c/cpp file to h/hpp one.
+ * *rc/asciidoc.kak*: provides asciidoc files autodetection and highlighting
+ * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
+ * *rc/git.kak*: provides various git format highlighting (commit message editing,
+     interactive rebase)
+ * *rc/make.kak*: provides the :make and :errjump commands along with highlighting
+     for compiler output.
+ * *rc/grep.kak*: provides the :grep and :gjump commands along with highlighting
+     for grep output.
+ * *rc/global.kak*: provides the :tag command to jump on a tag definition using
+     gnu global tagging system.
