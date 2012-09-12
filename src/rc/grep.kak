@@ -1,12 +1,13 @@
 def -shell-params -file-completion \
     grep %{ echo grep in progress, please wait...; %sh{
-     output=$(mktemp -t kak-grep.XXXXXXXX)
-     grep -PHn $@ >& ${output} < /dev/null &
+     output=$(mktemp -t -d kak-grep.XXXXXXXX)/fifo
+     mkfifo ${output}
+     ( grep -PHn "$@" >& ${output} ) >& /dev/null < /dev/null &
      echo "echo
            try %{ db *grep* } catch %{ }
            edit -fifo ${output} *grep*
            setb filetype grep
-           hook buffer BufClose .* %{ %sh{ rm ${output} } }"
+           hook buffer BufClose .* %{ %sh{ rm -r $(dirname ${output}) } }"
 }}
 
 hook global WinSetOption filetype=grep %{

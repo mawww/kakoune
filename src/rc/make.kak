@@ -1,11 +1,12 @@
 def -shell-params make %{ echo make in progress, please wait...; %sh{
-     output=$(mktemp -t kak-make.XXXXXXXX)
-     make $@ >& ${output} < /dev/null &
+     output=$(mktemp -t -d kak-make.XXXXXXXX)/fifo
+     mkfifo ${output}
+     ( make $@ >& ${output} ) >& /dev/null < /dev/null &
      echo "echo
            try %{ db *make* } catch %{ }
            edit -fifo ${output} *make*
            setb filetype make
-           hook buffer BufClose .* %{ %sh{ rm ${output} } }"
+           hook buffer BufClose .* %{ %sh{ rm -r $(dirname ${output}) } }"
 }}
 
 hook global WinSetOption filetype=make %{

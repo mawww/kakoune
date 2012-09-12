@@ -247,11 +247,15 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
     EventManager::instance().watch(fd, [buffer, &context](int fd) {
          char data[512];
          ssize_t count = read(fd, data, 512);
-         if (count > 0)
+         buffer->insert(buffer->end()-1,
+                        count > 0 ? String(data, data+count)
+                                  : "*** kak: fifo closed ***\n");
+         buffer->reset_undo_data();
+         context.draw_ifn();
+         if (count <= 0)
          {
-             buffer->insert(buffer->end()-1, String(data, data + count));
-             buffer->reset_undo_data();
-             context.draw_ifn();
+             close(fd);
+             EventManager::instance().unwatch(fd);
          }
     });
 

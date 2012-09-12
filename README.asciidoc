@@ -343,10 +343,15 @@ the +edit+ command can take a -fifo parameter:
 :edit -fifo <filename> <buffername>
 -----------------------------------
 in this case, a buffer named +<buffername>+ is created which reads its content
-from +<filename>+. When filename is appended to, the buffer is automatically
+from fifo +<filename>+. When the fifo is written to, the buffer is automatically
 updated.
+
 This is very useful for running some commands asynchronously while displaying
 their result in a buffer. See rc/make.kak and rc/grep.kak for examples.
+
+When the buffer is deleted, the fifo will be closed, so any program writing
+to it will receive SIGPIPE. This is usefull as it permits to stop the writing
+program when the buffer is deleted.
 
 Kakrc
 -----

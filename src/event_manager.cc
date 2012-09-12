@@ -36,7 +36,7 @@ void EventManager::handle_next_events()
     {
         for (size_t i = 0; i < m_events.size(); ++i)
         {
-            if (m_events[i].revents & POLLIN)
+            if (m_events[i].revents)
                 m_handlers[i](m_events[i].fd);
         }
     }
