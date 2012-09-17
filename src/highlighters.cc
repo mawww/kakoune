@@ -53,7 +53,7 @@ void highlight_range(DisplayBuffer& display_buffer,
     }
 }
 
-typedef std::unordered_map<size_t, std::pair<Color, Color>> ColorSpec;
+typedef std::unordered_map<size_t, const ColorPair*> ColorSpec;
 
 class RegexColorizer
 {
@@ -77,8 +77,8 @@ public:
 
                 highlight_range(display_buffer, match[n].first, match[n].second, true,
                                 [&](DisplayAtom& atom) {
-                                    atom.fg_color = col_it->second.first;
-                                    atom.bg_color = col_it->second.second;
+                                    atom.fg_color = col_it->second->first;
+                                    atom.bg_color = col_it->second->second;
                                 });
             }
         }
@@ -132,8 +132,8 @@ HighlighterAndId colorize_regex_factory(Window& window,
                                      "' expected <capture>:<fgcolor>[,<bgcolor>]");
 
             int capture = str_to_int(String(res[1].first, res[1].second));
-            ColorPair& color = colors[capture];
-            color = ColorRegistry::instance()[String(res[2].first, res[2].second)];
+            const ColorPair*& color = colors[capture];
+            color = &ColorRegistry::instance()[String(res[2].first, res[2].second)];
         }
 
         String id = "colre'" + params[0] + "'";
