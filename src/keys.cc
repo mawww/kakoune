@@ -19,7 +19,7 @@ Key canonicalize_ifn(Key key)
 static std::unordered_map<String, Character> keynamemap = {
     { "ret", '\r' },
     { "space", ' ' },
-    { "esc", 27 }
+    { "esc", Key::Escape }
 };
 
 KeyList parse_keys(const String& str)
