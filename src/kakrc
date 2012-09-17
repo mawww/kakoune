@@ -20,3 +20,14 @@ def -shell-params runtime %{ %sh{
         done
     fi
 }
+
+# define color scheme
+colalias value red
+colalias type yellow
+colalias identifier cyan
+colalias string magenta
+colalias error default,red
+colalias keyword blue
+colalias attribute green
+colalias comment cyan
+colalias macro magenta
