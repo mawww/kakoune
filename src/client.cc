@@ -245,6 +245,7 @@ public:
                 if (not contains(candidates, prefix))
                     candidates.push_back(std::move(prefix));
             }
+
             if (not reverse and ++m_current_completion >= candidates.size())
                 m_current_completion = 0;
             if (reverse and --m_current_completion < 0)
@@ -252,7 +253,8 @@ public:
 
             const String& completion = candidates[m_current_completion];
             m_client.menu_select(m_current_completion);
-            m_result = m_result.substr(0, m_completions.start) + completion;
+            m_result = m_result.substr(0, m_completions.start) + completion
+                     + m_result.substr(m_cursor_pos);
             m_cursor_pos = m_completions.start + completion.length();
         }
         else
