@@ -15,7 +15,8 @@ class ColorRegistry : public Singleton<ColorRegistry>
 {
 public:
     const ColorPair& operator[](const String& colordesc);
-    void register_alias(const String& name, const String& colordesc);
+    void register_alias(const String& name, const String& colordesc,
+                        bool override = false);
 
 private:
     std::unordered_map<String, ColorPair>    m_aliases;

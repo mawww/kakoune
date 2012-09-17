@@ -35,9 +35,10 @@ const ColorPair& ColorRegistry::operator[](const String& colordesc)
     m_aliases[colordesc] = colpair;
 }
 
-void ColorRegistry::register_alias(const String& name, const String& colordesc)
+void ColorRegistry::register_alias(const String& name, const String& colordesc,
+                                   bool override)
 {
-    if (m_aliases.find(name) != m_aliases.end())
+    if (not override and m_aliases.find(name) != m_aliases.end())
        throw runtime_error("alias '" + name + "' already defined");
 
     if (std::find_if(name.begin(), name.end(),

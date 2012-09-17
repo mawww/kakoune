@@ -750,6 +750,15 @@ void try_catch(const CommandParameters& params, Context& context)
     }
 }
 
+void define_color_alias(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, { { "allow-override", false } });
+    if (parser.positional_count() != 2)
+        throw wrong_argument_count();
+    ColorRegistry::instance().register_alias(
+        parser[0], parser[1], parser.has_option("allow-override"));
+}
+
 }
 
 void register_commands()
@@ -863,11 +872,7 @@ void register_commands()
                              { return context.window().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
 
-    cm.register_commands({"ca", "colalias"},
-                         [](const CommandParameters& params, Context&) {
-                              if (params.size() != 2) throw wrong_argument_count();
-                              ColorRegistry::instance().register_alias(params[0], params[1]);
-                         });
+    cm.register_commands({"ca", "colalias"}, define_color_alias);
 }
 
 }
