@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "string.hh"
+#include "color.hh"
 #include "line_and_column.hh"
 #include "buffer.hh"
 
@@ -29,19 +30,6 @@ enum Attributes
     Reverse = 2,
     Blink = 4,
     Bold = 8
-};
-
-enum class Color
-{
-    Default,
-    Black,
-    Red,
-    Green,
-    Yellow,
-    Blue,
-    Magenta,
-    Cyan,
-    White
 };
 
 struct AtomContent

@@ -2,6 +2,7 @@
 #include "assert.hh"
 #include "window.hh"
 #include "highlighter_registry.hh"
+#include "color_registry.hh"
 #include "highlighter_group.hh"
 #include "string.hh"
 
@@ -113,20 +114,6 @@ private:
     }
 };
 
-Color parse_color(const String& color)
-{
-    if (color == "default") return Color::Default;
-    if (color == "black")   return Color::Black;
-    if (color == "red")     return Color::Red;
-    if (color == "green")   return Color::Green;
-    if (color == "yellow")  return Color::Yellow;
-    if (color == "blue")    return Color::Blue;
-    if (color == "magenta") return Color::Magenta;
-    if (color == "cyan")    return Color::Cyan;
-    if (color == "white")   return Color::White;
-    return Color::Default;
-}
-
 HighlighterAndId colorize_regex_factory(Window& window,
                                         const HighlighterParameters params)
 {
@@ -135,7 +122,7 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
     try
     {
-        static Regex color_spec_ex(LR"((\d+):(\w+)(,(\w+))?)");
+        static Regex color_spec_ex(LR"((\d+):(\w+(,\w+)?))");
         ColorSpec colors;
         for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
@@ -145,11 +132,8 @@ HighlighterAndId colorize_regex_factory(Window& window,
                                      "' expected <capture>:<fgcolor>[,<bgcolor>]");
 
             int capture = str_to_int(String(res[1].first, res[1].second));
-            Color fg_color = parse_color(String(res[2].first, res[2].second));
-            Color bg_color = res[4].matched ?
-                               parse_color(String(res[4].first, res[4].second))
-                             : Color::Default;
-            colors[capture] = { fg_color, bg_color };
+            ColorPair& color = colors[capture];
+            color = ColorRegistry::instance()[String(res[2].first, res[2].second)];
         }
 
         String id = "colre'" + params[0] + "'";

@@ -18,6 +18,7 @@
 #include "context.hh"
 #include "ncurses.hh"
 #include "string.hh"
+#include "color_registry.hh"
 
 #include <unordered_map>
 #include <sys/types.h>
@@ -445,6 +446,7 @@ int main(int argc, char* argv[])
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     FilterRegistry      filter_registry;
+    ColorRegistry       color_registry;
 
     run_unit_tests();
 

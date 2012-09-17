@@ -15,6 +15,7 @@
 #include "completion.hh"
 #include "shell_manager.hh"
 #include "event_manager.hh"
+#include "color_registry.hh"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -861,6 +862,12 @@ void register_commands()
                              [](const Context& context, const String& prefix, CharCount cursor_pos)
                              { return context.window().option_manager().complete_option_name(prefix, cursor_pos); }
                          }));
+
+    cm.register_commands({"ca", "colalias"},
+                         [](const CommandParameters& params, Context&) {
+                              if (params.size() != 2) throw wrong_argument_count();
+                              ColorRegistry::instance().register_alias(params[0], params[1]);
+                         });
 }
 
 }
