@@ -128,13 +128,15 @@ void NCursesClient::draw_window(Window& window)
             set_color(atom.fg_color, atom.bg_color);
 
             String content = atom.content.content();
-            if (content[content.length()-1] == '\n')
+            int y,x;
+            getyx(stdscr, y,x);
+            if (content[content.length()-1] == '\n' and content.length() - 1 < max_x - x)
             {
                 addnstr(content.c_str(), (int)content.length() - 1);
                 addch(' ');
             }
             else
-                addstr(content.c_str());
+                addnstr(content.c_str(), max_x - x);
         }
         ++line_index;
     }
