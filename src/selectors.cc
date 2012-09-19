@@ -430,6 +430,9 @@ SelectionAndCapturesList select_all_matches(const Selection& selection,
             BufferIterator begin = (*re_it)[0].first;
             BufferIterator end   = (*re_it)[0].second;
 
+            if (begin == selection.end())
+                continue;
+
             CaptureList captures;
             for (auto& match : *re_it)
                 captures.push_back(String(match.first, match.second));
