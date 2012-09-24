@@ -22,7 +22,7 @@ class Client : public SafeCountable
 {
 public:
     Client();
-    virtual ~Client() {}
+    virtual ~Client();
     virtual void draw_window(Window& window) = 0;
     virtual void print_status(const String& status,
                               CharCount cursor_pos = -1) = 0;
@@ -49,18 +49,7 @@ private:
     void reset_normal_mode();
     std::pair<IncrementalInserter::Mode, std::vector<Key>> m_last_insert;
 
-    class Mode
-    {
-    public:
-        Mode(Client& client) : m_client(client) {}
-        virtual ~Mode() {}
-        Mode(const Mode&) = delete;
-        Mode& operator=(const Mode&) = delete;
-
-        virtual void on_key(const Key& key, Context& context) = 0;
-    protected:
-        Client& m_client;
-    };
+    class Mode;
     std::unique_ptr<Mode> m_mode;
 
     class NormalMode;

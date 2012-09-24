@@ -10,6 +10,19 @@ namespace Kakoune
 
 extern std::unordered_map<Key, std::function<void (Context& context)>> keymap;
 
+class Client::Mode
+{
+public:
+    Mode(Client& client) : m_client(client) {}
+    virtual ~Mode() {}
+    Mode(const Mode&) = delete;
+    Mode& operator=(const Mode&) = delete;
+
+    virtual void on_key(const Key& key, Context& context) = 0;
+protected:
+    Client& m_client;
+};
+
 class Client::NormalMode : public Client::Mode
 {
 public:
@@ -371,6 +384,10 @@ private:
 Client::Client()
     : m_mode(new NormalMode(*this)),
       m_last_insert(IncrementalInserter::Mode::Insert, {})
+{
+}
+
+Client::~Client()
 {
 }
 
