@@ -70,7 +70,7 @@ static void set_color(Color fg_color, Color bg_color)
 }
 
 
-NCursesClient::NCursesClient()
+NCursesUI::NCursesUI()
     : m_menu(nullptr)
 {
     // setlocale(LC_ALL, "");
@@ -89,12 +89,12 @@ NCursesClient::NCursesClient()
     m_menu_bg = get_color_pair(Color::Cyan, Color::Blue);
 }
 
-NCursesClient::~NCursesClient()
+NCursesUI::~NCursesUI()
 {
     endwin();
 }
 
-void NCursesClient::draw_window(Window& window)
+void NCursesUI::draw_window(Window& window)
 {
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
@@ -164,7 +164,7 @@ void NCursesClient::draw_window(Window& window)
     refresh();
 }
 
-Key NCursesClient::get_key()
+Key NCursesUI::get_key()
 {
     const int c = getch();
 
@@ -196,7 +196,7 @@ Key NCursesClient::get_key()
     return c;
 }
 
-void NCursesClient::print_status(const String& status, CharCount cursor_pos)
+void NCursesUI::print_status(const String& status, CharCount cursor_pos)
 {
     int x,y;
     getmaxyx(stdscr, y, x);
@@ -222,7 +222,7 @@ void NCursesClient::print_status(const String& status, CharCount cursor_pos)
     refresh();
 }
 
-void NCursesClient::menu_show(const memoryview<String>& choices)
+void NCursesUI::menu_show(const memoryview<String>& choices)
 {
     assert(m_menu == nullptr);
     m_choices = std::vector<String>(choices.begin(), choices.end());
@@ -252,7 +252,7 @@ void NCursesClient::menu_show(const memoryview<String>& choices)
     refresh();
 }
 
-void NCursesClient::menu_select(int selected)
+void NCursesUI::menu_select(int selected)
 {
     // last item in m_items is the nullptr, hence the - 1
     if (selected >= 0 and selected < m_items.size() - 1)
@@ -265,7 +265,7 @@ void NCursesClient::menu_select(int selected)
     refresh();
 }
 
-void NCursesClient::menu_hide()
+void NCursesUI::menu_hide()
 {
     if (not m_menu)
         return;

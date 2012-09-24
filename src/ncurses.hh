@@ -4,19 +4,19 @@
 #include <ncurses.h>
 #include <menu.h>
 
-#include "client.hh"
+#include "user_interface.hh"
 
 namespace Kakoune
 {
 
-class NCursesClient : public Client
+class NCursesUI : public UserInterface
 {
 public:
-    NCursesClient();
-    ~NCursesClient();
+    NCursesUI();
+    ~NCursesUI();
 
-    NCursesClient(const NCursesClient&) = delete;
-    NCursesClient& operator=(const NCursesClient&) = delete;
+    NCursesUI(const NCursesUI&) = delete;
+    NCursesUI& operator=(const NCursesUI&) = delete;
 
     void draw_window(Window& window) override;
     void print_status(const String& status, CharCount cursor_pos) override;

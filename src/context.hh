@@ -7,6 +7,8 @@
 namespace Kakoune
 {
 
+// A Context is provided to all commands, it permits
+// to access a client, window, editor or buffer if available.
 struct Context
 {
     Context() {}

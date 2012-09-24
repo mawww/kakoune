@@ -475,7 +475,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        NCursesClient client;
+        Client client(new NCursesUI());
         Context context(client);
 
         try

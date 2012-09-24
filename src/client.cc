@@ -62,12 +62,12 @@ public:
         : Client::Mode(client),
           m_callback(callback), m_choice_count(choices.size()), m_selected(0)
     {
-        client.menu_show(choices);
+        client.m_ui->menu_show(choices);
     }
 
     ~MenuMode()
     {
-        m_client.menu_hide();
+        m_client.m_ui->menu_hide();
     }
 
     void on_key(const Key& key, Context& context) override
@@ -79,7 +79,7 @@ public:
         {
             if (++m_selected >= m_choice_count)
                 m_selected = 0;
-            m_client.menu_select(m_selected);
+            m_client.m_ui->menu_select(m_selected);
         }
         if (key == Key::Up or
             key == Key::BackTab or
@@ -88,7 +88,7 @@ public:
         {
             if (--m_selected < 0)
                 m_selected = m_choice_count-1;
-            m_client.menu_select(m_selected);
+            m_client.m_ui->menu_select(m_selected);
         }
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
@@ -105,7 +105,7 @@ public:
         if (key.modifiers == Key::Modifiers::None and
             key.key >= '0' and key.key <= '9')
         {
-            m_client.menu_hide();
+            m_client.m_ui->menu_hide();
             // save callback as reset_normal_mode will delete this
             MenuCallback callback = std::move(m_callback);
             m_client.reset_normal_mode();
@@ -133,7 +133,7 @@ public:
 
     ~PromptMode()
     {
-        m_client.menu_hide();
+        m_client.m_ui->menu_hide();
     }
 
     void on_key(const Key& key, Context& context) override
@@ -226,14 +226,14 @@ public:
                 --m_cursor_pos;
             }
 
-            m_client.menu_hide();
+            m_client.m_ui->menu_hide();
             m_current_completion = -1;
         }
         else if (key == Key(Key::Modifiers::Control, 'r'))
         {
-            Key k = m_client.get_key();
+            Key k = m_client.m_ui->get_key();
             String reg = RegisterManager::instance()[k.key].values(context)[0];
-            m_client.menu_hide();
+            m_client.m_ui->menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + reg
                      + m_result.substr(m_cursor_pos, String::npos);
@@ -251,8 +251,8 @@ public:
                 if (candidates.empty())
                     return;
 
-                m_client.menu_hide();
-                m_client.menu_show(candidates);
+                m_client.m_ui->menu_hide();
+                m_client.m_ui->menu_show(candidates);
                 String prefix = m_result.substr(m_completions.start,
                                                 m_completions.end - m_completions.start);
                 if (not contains(candidates, prefix))
@@ -265,14 +265,14 @@ public:
                 m_current_completion = candidates.size()-1;
 
             const String& completion = candidates[m_current_completion];
-            m_client.menu_select(m_current_completion);
+            m_client.m_ui->menu_select(m_current_completion);
             m_result = m_result.substr(0, m_completions.start) + completion
                      + m_result.substr(m_cursor_pos);
             m_cursor_pos = m_completions.start + completion.length();
         }
         else
         {
-            m_client.menu_hide();
+            m_client.m_ui->menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + key.key + m_result.substr(m_cursor_pos, String::npos);
             ++m_cursor_pos;
@@ -381,8 +381,9 @@ private:
     IncrementalInserter m_inserter;
 };
 
-Client::Client()
+Client::Client(UserInterface* ui)
     : m_mode(new NormalMode(*this)),
+      m_ui(ui),
       m_last_insert(IncrementalInserter::Mode::Insert, {})
 {
 }
@@ -430,9 +431,20 @@ void Client::on_next_key(KeyCallback callback)
 
 void Client::handle_next_input(Context& context)
 {
-    m_mode->on_key(get_key(), context);
+    m_mode->on_key(m_ui->get_key(), context);
     context.draw_ifn();
 }
+
+void Client::print_status(const String& status, CharCount cursor_pos)
+{
+    m_ui->print_status(status, cursor_pos);
+}
+
+void Client::draw_window(Window& window)
+{
+    m_ui->draw_window(window);
+}
+
 
 void Client::reset_normal_mode()
 {

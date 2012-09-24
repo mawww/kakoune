@@ -649,10 +649,10 @@ private:
     char                m_name;
 };
 
-class BatchClient : public Client
+class BatchUI : public UserInterface
 {
 public:
-    BatchClient(const KeyList& keys)
+    BatchUI(const KeyList& keys)
         : m_keys(keys), m_pos(0)
     {
     }
@@ -680,7 +680,8 @@ private:
 
 void exec_keys(const KeyList& keys, Context& context)
 {
-    BatchClient batch_client(keys);
+    BatchUI* batch_ui = new BatchUI(keys);
+    Client batch_client(batch_ui);
 
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
@@ -689,7 +690,7 @@ void exec_keys(const KeyList& keys, Context& context)
 
     Context new_context(batch_client);
     new_context.change_editor(context.editor());
-    while (batch_client.has_key_left())
+    while (batch_ui->has_key_left())
         batch_client.handle_next_input(new_context);
 }
 
