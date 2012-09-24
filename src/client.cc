@@ -10,24 +10,28 @@ namespace Kakoune
 
 extern std::unordered_map<Key, std::function<void (Context& context)>> keymap;
 
-class Client::Mode
+class ClientMode
 {
 public:
-    Mode(Client& client) : m_client(client) {}
-    virtual ~Mode() {}
-    Mode(const Mode&) = delete;
-    Mode& operator=(const Mode&) = delete;
+    ClientMode(Client& client) : m_client(client) {}
+    virtual ~ClientMode() {}
+    ClientMode(const ClientMode&) = delete;
+    ClientMode& operator=(const ClientMode&) = delete;
 
     virtual void on_key(const Key& key, Context& context) = 0;
 protected:
+    UserInterface& ui() { return *m_client.m_ui; }
+    void reset_normal_mode();
+    std::pair<IncrementalInserter::Mode, std::vector<Key>>& last_insert() { return m_client.m_last_insert; }
+private:
     Client& m_client;
 };
 
-class Client::NormalMode : public Client::Mode
+class NormalMode : public ClientMode
 {
 public:
     NormalMode(Client& client)
-        : Client::Mode(client)
+        : ClientMode(client)
     {
     }
 
@@ -55,19 +59,24 @@ private:
     int m_count = 0;
 };
 
-class Client::MenuMode : public Client::Mode
+void ClientMode::reset_normal_mode()
+{
+     m_client.m_mode.reset(new NormalMode(m_client));
+}
+
+class MenuMode : public ClientMode
 {
 public:
     MenuMode(Client& client, const memoryview<String>& choices, MenuCallback callback)
-        : Client::Mode(client),
+        : ClientMode(client),
           m_callback(callback), m_choice_count(choices.size()), m_selected(0)
     {
-        client.m_ui->menu_show(choices);
+        ui().menu_show(choices);
     }
 
     ~MenuMode()
     {
-        m_client.m_ui->menu_hide();
+        ui().menu_hide();
     }
 
     void on_key(const Key& key, Context& context) override
@@ -79,7 +88,7 @@ public:
         {
             if (++m_selected >= m_choice_count)
                 m_selected = 0;
-            m_client.m_ui->menu_select(m_selected);
+            ui().menu_select(m_selected);
         }
         if (key == Key::Up or
             key == Key::BackTab or
@@ -88,27 +97,27 @@ public:
         {
             if (--m_selected < 0)
                 m_selected = m_choice_count-1;
-            m_client.m_ui->menu_select(m_selected);
+            ui().menu_select(m_selected);
         }
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
             // save callback as reset_normal_mode will delete this
             MenuCallback callback = std::move(m_callback);
             int selected = m_selected;
-            m_client.reset_normal_mode();
+            reset_normal_mode();
             callback(selected, context);
         }
         if (key == Key::Escape)
         {
-            m_client.reset_normal_mode();
+            reset_normal_mode();
         }
         if (key.modifiers == Key::Modifiers::None and
             key.key >= '0' and key.key <= '9')
         {
-            m_client.m_ui->menu_hide();
+            ui().menu_hide();
             // save callback as reset_normal_mode will delete this
             MenuCallback callback = std::move(m_callback);
-            m_client.reset_normal_mode();
+            reset_normal_mode();
             callback(key.key - '0' - 1, context);
         }
    }
@@ -119,21 +128,21 @@ private:
     int          m_choice_count;
 };
 
-class Client::PromptMode : public Client::Mode
+class PromptMode : public ClientMode
 {
 public:
     PromptMode(Client& client, const String& prompt,
                Completer completer, PromptCallback callback)
-        : Client::Mode(client), m_prompt(prompt),
+        : ClientMode(client), m_prompt(prompt),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
-        m_client.print_status(m_prompt, m_prompt.length());
+        ui().print_status(m_prompt, m_prompt.length());
     }
 
     ~PromptMode()
     {
-        m_client.m_ui->menu_hide();
+        ui().menu_hide();
     }
 
     void on_key(const Key& key, Context& context) override
@@ -146,11 +155,11 @@ public:
                 history.erase(it);
 
             history.push_back(m_result);
-            m_client.print_status("");
+            ui().print_status("");
             // save callback as reset_normal_mode will delete this
             PromptCallback callback = std::move(m_callback);
             String result = std::move(m_result);
-            m_client.reset_normal_mode();
+            reset_normal_mode();
             // call callback after reset_normal_mode so that callback
             // may change the mode
             callback(result, context);
@@ -158,8 +167,8 @@ public:
         }
         else if (key == Key::Escape)
         {
-            m_client.print_status("");
-            m_client.reset_normal_mode();
+            ui().print_status("");
+            reset_normal_mode();
             return;
         }
         else if (key == Key::Up or
@@ -226,14 +235,14 @@ public:
                 --m_cursor_pos;
             }
 
-            m_client.m_ui->menu_hide();
+            ui().menu_hide();
             m_current_completion = -1;
         }
         else if (key == Key(Key::Modifiers::Control, 'r'))
         {
-            Key k = m_client.m_ui->get_key();
+            Key k = ui().get_key();
             String reg = RegisterManager::instance()[k.key].values(context)[0];
-            m_client.m_ui->menu_hide();
+            ui().menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + reg
                      + m_result.substr(m_cursor_pos, String::npos);
@@ -251,8 +260,8 @@ public:
                 if (candidates.empty())
                     return;
 
-                m_client.m_ui->menu_hide();
-                m_client.m_ui->menu_show(candidates);
+                ui().menu_hide();
+                ui().menu_show(candidates);
                 String prefix = m_result.substr(m_completions.start,
                                                 m_completions.end - m_completions.start);
                 if (not contains(candidates, prefix))
@@ -265,19 +274,19 @@ public:
                 m_current_completion = candidates.size()-1;
 
             const String& completion = candidates[m_current_completion];
-            m_client.m_ui->menu_select(m_current_completion);
+            ui().menu_select(m_current_completion);
             m_result = m_result.substr(0, m_completions.start) + completion
                      + m_result.substr(m_cursor_pos);
             m_cursor_pos = m_completions.start + completion.length();
         }
         else
         {
-            m_client.m_ui->menu_hide();
+            ui().menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + key.key + m_result.substr(m_cursor_pos, String::npos);
             ++m_cursor_pos;
         }
-        m_client.print_status(m_prompt + m_result, m_prompt.length() + m_cursor_pos);
+        ui().print_status(m_prompt + m_result, m_prompt.length() + m_cursor_pos);
     }
 
 private:
@@ -293,19 +302,19 @@ private:
     static std::unordered_map<String, std::vector<String>> ms_history;
     std::vector<String>::iterator m_history_it;
 };
-std::unordered_map<String, std::vector<String>> Client::PromptMode::ms_history;
+std::unordered_map<String, std::vector<String>> PromptMode::ms_history;
 
-class Client::NextKeyMode : public Client::Mode
+class NextKeyMode : public ClientMode
 {
 public:
     NextKeyMode(Client& client, KeyCallback callback)
-        : Client::Mode(client), m_callback(callback) {}
+        : ClientMode(client), m_callback(callback) {}
 
     void on_key(const Key& key, Context& context) override
     {
         // save callback as reset_normal_mode will delete this
         KeyCallback callback = std::move(m_callback);
-        m_client.reset_normal_mode();
+        reset_normal_mode();
         callback(key, context);
    }
 
@@ -313,19 +322,19 @@ private:
     KeyCallback m_callback;
 };
 
-class Client::InsertMode : public Client::Mode
+class InsertMode : public ClientMode
 {
 public:
     InsertMode(Client& client, Editor& editor, IncrementalInserter::Mode mode)
-        : Client::Mode(client), m_inserter(editor, mode)
+        : ClientMode(client), m_inserter(editor, mode)
     {
-        m_client.m_last_insert.first = mode;
-        m_client.m_last_insert.second.clear();
+        last_insert().first = mode;
+        last_insert().second.clear();
     }
 
     void on_key(const Key& key, Context& context) override
     {
-        m_client.m_last_insert.second.push_back(key);
+        last_insert().second.push_back(key);
         if (m_insert_reg)
         {
             if (key.modifiers == Key::Modifiers::None)
@@ -339,7 +348,7 @@ public:
             switch (key.key)
             {
             case Key::Escape:
-                m_client.reset_normal_mode();
+                reset_normal_mode();
                 return;
             case Key::Backspace:
                 m_inserter.erase();
@@ -443,12 +452,6 @@ void Client::print_status(const String& status, CharCount cursor_pos)
 void Client::draw_window(Window& window)
 {
     m_ui->draw_window(window);
-}
-
-
-void Client::reset_normal_mode()
-{
-    m_mode.reset(new NormalMode(*this));
 }
 
 }

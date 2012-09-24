@@ -19,6 +19,8 @@ using MenuCallback = std::function<void (int, Context&)>;
 using PromptCallback = std::function<void (const String&, Context&)>;
 using KeyCallback = std::function<void (const Key&, Context&)>;
 
+class ClientMode;
+
 class Client : public SafeCountable
 {
 public:
@@ -42,19 +44,10 @@ public:
     void handle_next_input(Context& context);
 
 private:
-    void reset_normal_mode();
-    std::pair<IncrementalInserter::Mode, std::vector<Key>> m_last_insert;
-
+    friend class ClientMode;
+    std::unique_ptr<ClientMode> m_mode;
     std::unique_ptr<UserInterface> m_ui;
-
-    class Mode;
-    std::unique_ptr<Mode> m_mode;
-
-    class NormalMode;
-    class MenuMode;
-    class PromptMode;
-    class NextKeyMode;
-    class InsertMode;
+    std::pair<IncrementalInserter::Mode, std::vector<Key>> m_last_insert;
 };
 
 struct prompt_aborted {};
