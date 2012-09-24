@@ -471,10 +471,10 @@ void add_filter(const CommandParameters& params, Context& context)
     for (++begin; begin != parser.end(); ++begin)
         filter_params.push_back(*begin);
 
-    Window& window = context.window();
+    Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
-       window.filters().get_group(parser.option_value("group"))
-     : window.filters();
+       editor.filters().get_group(parser.option_value("group"))
+     : editor.filters();
 
     registry.add_filter_to_group(group, name, filter_params);
 }
@@ -485,10 +485,10 @@ void rm_filter(const CommandParameters& params, Context& context)
     if (parser.positional_count() != 1)
         throw wrong_argument_count();
 
-    Window& window = context.window();
+    Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
-       window.filters().get_group(parser.option_value("group"))
-     : window.filters();
+       editor.filters().get_group(parser.option_value("group"))
+     : editor.filters();
 
     group.remove(parser[0]);
 }

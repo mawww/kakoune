@@ -455,7 +455,7 @@ int main(int argc, char* argv[])
                                    { return context.buffer().name(); });
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
-                                   { return context.window().selections_content().back(); });
+                                   { return context.editor().selections_content().back(); });
     shell_manager.register_env_var("runtime",
                                    [](const String& name, const Context& context)
                                    { return runtime_directory(); });
