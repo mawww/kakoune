@@ -145,9 +145,9 @@ String Window::status_line() const
 
 void Window::on_incremental_insertion_end()
 {
-    push_selections();
+    SelectionList backup(selections());
     hook_manager().run_hook("InsertEnd", "", Context(*this));
-    pop_selections();
+    select(backup);
 }
 
 void Window::on_option_changed(const String& name, const Option& option)

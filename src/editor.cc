@@ -14,14 +14,13 @@ Editor::Editor(Buffer& buffer)
     : m_buffer(buffer),
       m_edition_level(0)
 {
-    m_selections.push_back(SelectionList());
-    m_selections.back().push_back(Selection(buffer.begin(), buffer.begin()));
+    m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
 }
 
 void Editor::erase()
 {
     scoped_edition edition(*this);
-    for (auto& sel : m_selections.back())
+    for (auto& sel : m_selections)
     {
         m_buffer.erase(sel.begin(), sel.end());
         sel.avoid_eol();
@@ -92,29 +91,15 @@ void Editor::replace(const memoryview<String>& strings)
 std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
-    for (auto& sel : selections())
+    for (auto& sel : m_selections)
         contents.push_back(m_buffer.string(sel.begin(), sel.end()));
     return contents;
-}
-
-void Editor::push_selections()
-{
-    SelectionList current_selections = m_selections.back();
-    m_selections.push_back(std::move(current_selections));
-}
-
-void Editor::pop_selections()
-{
-    if (m_selections.size() > 1)
-        m_selections.pop_back();
-    else
-        throw runtime_error("no more selections on stack");
 }
 
 void Editor::move_selections(const BufferCoord& offset, SelectMode mode)
 {
     assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    for (auto& sel : m_selections.back())
+    for (auto& sel : m_selections)
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
         BufferIterator last = m_buffer.iterator_at(pos + offset, true);
@@ -125,25 +110,25 @@ void Editor::move_selections(const BufferCoord& offset, SelectMode mode)
 void Editor::clear_selections()
 {
     check_invariant();
-    BufferIterator pos = selections().back().last();
+    BufferIterator pos = m_selections.back().last();
 
     if (*pos == '\n' and not pos.is_begin() and *(pos-1) != '\n')
         --pos;
 
     Selection sel = Selection(pos, pos);
-    m_selections.back().clear();
-    m_selections.back().push_back(std::move(sel));
+    m_selections.clear();
+    m_selections.push_back(std::move(sel));
 }
 
 void Editor::keep_selection(int index)
 {
     check_invariant();
 
-    if (index < selections().size())
+    if (index < m_selections.size())
     {
-        Selection sel = selections()[index];
-        m_selections.back().clear();
-        m_selections.back().push_back(std::move(sel));
+        Selection sel = m_selections[index];
+        m_selections.clear();
+        m_selections.push_back(std::move(sel));
     }
 }
 
@@ -151,14 +136,21 @@ void Editor::remove_selection(int index)
 {
     check_invariant();
 
-    if (selections().size() > 1 and index < selections().size())
-        m_selections.back().erase(m_selections.back().begin() + index);
+    if (m_selections.size() > 1 and index < m_selections.size())
+        m_selections.erase(m_selections.begin() + index);
 }
 
 void Editor::select(const BufferIterator& iterator)
 {
-    m_selections.back().clear();
-    m_selections.back().push_back(Selection(iterator, iterator));
+    m_selections.clear();
+    m_selections.push_back(Selection(iterator, iterator));
+}
+
+void Editor::select(SelectionList selections)
+{
+    if (selections.empty())
+        throw runtime_error("no selections");
+    m_selections = std::move(selections);
 }
 
 void Editor::select(const Selector& selector, SelectMode mode)
@@ -168,7 +160,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
     std::array<std::vector<String>, 10> captures;
 
     size_t capture_count = -1;
-    for (auto& sel : m_selections.back())
+    for (auto& sel : m_selections)
     {
         SelectionAndCaptures res = selector(sel);
         if (mode == SelectMode::Extend)
@@ -203,7 +195,7 @@ void Editor::multi_select(const MultiSelector& selector)
 
     size_t capture_count = -1;
     SelectionList new_selections;
-    for (auto& sel : m_selections.back())
+    for (auto& sel : m_selections)
     {
         SelectionAndCapturesList res = selector(sel);
         for (auto& sel_and_cap : res)
@@ -221,7 +213,7 @@ void Editor::multi_select(const MultiSelector& selector)
     if (new_selections.empty())
         throw nothing_selected();
 
-    m_selections.back() = std::move(new_selections);
+    m_selections = std::move(new_selections);
 
     if (not captures[0].empty())
     {
@@ -269,8 +261,8 @@ bool Editor::undo()
     bool res = m_buffer.undo();
     if (res)
     {
-        m_selections.back().clear();
-        m_selections.back().push_back(Selection(listener.first(),
+        m_selections.clear();
+        m_selections.push_back(Selection(listener.first(),
                                                 listener.last()));
     }
     return res;
@@ -282,8 +274,8 @@ bool Editor::redo()
     bool res = m_buffer.redo();
     if (res)
     {
-        m_selections.back().clear();
-        m_selections.back().push_back(Selection(listener.first(),
+        m_selections.clear();
+        m_selections.push_back(Selection(listener.first(),
                                                 listener.last()));
     }
     return res;
@@ -291,7 +283,7 @@ bool Editor::redo()
 
 void Editor::check_invariant() const
 {
-    assert(not selections().empty());
+    assert(not m_selections.empty());
 }
 
 void Editor::begin_edition()
@@ -318,11 +310,11 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 
     if (mode == Mode::Change)
     {
-        for (auto& sel : editor.m_selections.back())
+        for (auto& sel : editor.m_selections)
             editor.m_buffer.erase(sel.begin(), sel.end());
     }
 
-    for (auto& sel : m_editor.m_selections.back())
+    for (auto& sel : m_editor.m_selections)
     {
         BufferIterator first, last;
         switch (mode)
@@ -364,7 +356,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
         insert("\n");
         if (mode == Mode::OpenLineAbove)
         {
-            for (auto& sel : m_editor.m_selections.back())
+            for (auto& sel : m_editor.m_selections)
             {
                 // special case, the --first line above did nothing, so we need to compensate now
                 if (sel.first() == buffer().begin() + 1)
@@ -376,7 +368,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
 
 IncrementalInserter::~IncrementalInserter()
 {
-    for (auto& sel : m_editor.m_selections.back())
+    for (auto& sel : m_editor.m_selections)
     {
         if (m_mode == Mode::Append)
             sel = Selection(sel.first(), sel.last()-1);
@@ -389,7 +381,7 @@ IncrementalInserter::~IncrementalInserter()
 void IncrementalInserter::insert(const String& string)
 {
     Buffer& buffer = m_editor.buffer();
-    for (auto& sel : m_editor.selections())
+    for (auto& sel : m_editor.m_selections)
     {
         BufferIterator position = sel.last();
         String content = string;
@@ -405,7 +397,7 @@ void IncrementalInserter::insert(const memoryview<String>& strings)
 
 void IncrementalInserter::erase()
 {
-    for (auto& sel : m_editor.m_selections.back())
+    for (auto& sel : m_editor.m_selections)
     {
         BufferIterator pos = sel.last();
         m_editor.buffer().erase(pos-1, pos);
@@ -414,7 +406,7 @@ void IncrementalInserter::erase()
 
 void IncrementalInserter::move_cursors(const BufferCoord& offset)
 {
-    for (auto& sel : m_editor.m_selections.back())
+    for (auto& sel : m_editor.m_selections)
     {
         BufferCoord pos = m_editor.m_buffer.line_and_column_at(sel.last());
         BufferIterator it = m_editor.m_buffer.iterator_at(pos + offset);

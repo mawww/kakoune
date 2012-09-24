@@ -47,9 +47,6 @@ public:
     void replace(const String& string);
     void replace(const memoryview<String>& strings);
 
-    void push_selections();
-    void pop_selections();
-
     void move_selections(const BufferCoord& offset,
                          SelectMode mode = SelectMode::Replace);
     void clear_selections();
@@ -58,9 +55,10 @@ public:
     void select(const BufferIterator& iterator);
     void select(const Selector& selector,
                 SelectMode mode = SelectMode::Replace);
+    void select(SelectionList selections);
     void multi_select(const MultiSelector& selector);
 
-    const SelectionList& selections() const { return m_selections.back(); }
+    const SelectionList& selections() const { return m_selections; }
     std::vector<String>  selections_content() const;
 
     bool undo();
@@ -86,9 +84,9 @@ private:
     virtual void on_incremental_insertion_begin() {}
     virtual void on_incremental_insertion_end() {}
 
-    Buffer&                             m_buffer;
-    std::vector<SelectionList>          m_selections;
-    FilterGroup                         m_filters;
+    Buffer&       m_buffer;
+    SelectionList m_selections;
+    FilterGroup   m_filters;
 };
 
 struct scoped_edition
