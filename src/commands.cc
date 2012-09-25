@@ -653,25 +653,20 @@ class BatchUI : public UserInterface
 {
 public:
     BatchUI(const KeyList& keys)
-        : m_keys(keys), m_pos(0)
-    {
-    }
+        : m_keys(keys), m_pos(0) {}
 
     Key get_key() override
     {
-        if (m_pos >= m_keys.size())
-            throw runtime_error("no more characters");
+        assert(m_pos < m_keys.size());
         return m_keys[m_pos++];
     }
+    bool has_key_left() const { return m_pos < m_keys.size(); }
 
-    void print_status(const String& status, CharCount cursor_pos) override {}
-    void draw_window(Window& window) override {}
-
+    void print_status(const String& , CharCount) override {}
+    void draw_window(Window&) override {}
     void menu_show(const memoryview<String>&) override {}
     void menu_select(int) override {}
     void menu_hide() override {}
-
-    bool has_key_left() const { return m_pos < m_keys.size(); }
 
 private:
     const KeyList& m_keys;
