@@ -27,7 +27,6 @@
 using namespace Kakoune;
 using namespace std::placeholders;
 
-
 namespace Kakoune
 {
 

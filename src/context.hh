@@ -23,6 +23,7 @@ struct Context
     Context(Editor&& editor)
         : m_editor(&editor) {}
 
+    Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const
