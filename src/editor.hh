@@ -55,10 +55,10 @@ public:
     void select(const BufferIterator& iterator);
     void select(const Selector& selector,
                 SelectMode mode = SelectMode::Replace);
-    void select(SelectionList selections);
+    void select(SelectionAndCapturesList selections);
     void multi_select(const MultiSelector& selector);
 
-    const SelectionList& selections() const { return m_selections; }
+    const SelectionAndCapturesList& selections() const { return m_selections; }
     std::vector<String>  selections_content() const;
 
     bool undo();
@@ -85,7 +85,7 @@ private:
     virtual void on_incremental_insertion_end() {}
 
     Buffer&       m_buffer;
-    SelectionList m_selections;
+    SelectionAndCapturesList m_selections;
     FilterGroup   m_filters;
 };
 

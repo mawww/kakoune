@@ -23,7 +23,7 @@ void Editor::erase()
     for (auto& sel : m_selections)
     {
         m_buffer.erase(sel.begin(), sel.end());
-        sel.avoid_eol();
+        sel.selection.avoid_eol();
     }
 }
 
@@ -33,7 +33,8 @@ static void do_insert(Editor& editor, const String& string)
     scoped_edition edition(editor);
     for (auto& sel : editor.selections())
     {
-        BufferIterator pos = append ? sel.end() : sel.begin();
+        BufferIterator pos = append ? sel.end()
+                                    : sel.begin();
         editor.buffer().insert(pos, string);
     }
 }
@@ -92,7 +93,8 @@ std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
     for (auto& sel : m_selections)
-        contents.push_back(m_buffer.string(sel.begin(), sel.end()));
+        contents.push_back(m_buffer.string(sel.begin(),
+                                           sel.end()));
     return contents;
 }
 
@@ -103,7 +105,7 @@ void Editor::move_selections(const BufferCoord& offset, SelectMode mode)
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
         BufferIterator last = m_buffer.iterator_at(pos + offset, true);
-        sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
+        sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
 }
 
@@ -126,7 +128,7 @@ void Editor::keep_selection(int index)
 
     if (index < m_selections.size())
     {
-        Selection sel = m_selections[index];
+        SelectionAndCaptures sel = std::move(m_selections[index]);
         m_selections.clear();
         m_selections.push_back(std::move(sel));
     }
@@ -146,7 +148,7 @@ void Editor::select(const BufferIterator& iterator)
     m_selections.push_back(Selection(iterator, iterator));
 }
 
-void Editor::select(SelectionList selections)
+void Editor::select(SelectionAndCapturesList selections)
 {
     if (selections.empty())
         throw runtime_error("no selections");
@@ -162,11 +164,11 @@ void Editor::select(const Selector& selector, SelectMode mode)
     size_t capture_count = -1;
     for (auto& sel : m_selections)
     {
-        SelectionAndCaptures res = selector(sel);
+        SelectionAndCaptures res = selector(sel.selection);
         if (mode == SelectMode::Extend)
-            sel.merge_with(res.selection);
+            sel.selection.merge_with(res.selection);
         else
-            sel = std::move(res.selection);
+            sel.selection = std::move(res.selection);
 
         assert(capture_count == -1 or capture_count == res.captures.size());
         capture_count = res.captures.size();
@@ -194,10 +196,10 @@ void Editor::multi_select(const MultiSelector& selector)
     std::array<std::vector<String>, 10> captures;
 
     size_t capture_count = -1;
-    SelectionList new_selections;
+    SelectionAndCapturesList new_selections;
     for (auto& sel : m_selections)
     {
-        SelectionAndCapturesList res = selector(sel);
+        SelectionAndCapturesList res = selector(sel.selection);
         for (auto& sel_and_cap : res)
         {
             new_selections.push_back(sel_and_cap.selection);
@@ -372,7 +374,7 @@ IncrementalInserter::~IncrementalInserter()
     {
         if (m_mode == InsertMode::Append)
             sel = Selection(sel.first(), sel.last()-1);
-         sel.avoid_eol();
+         sel.selection.avoid_eol();
     }
 
     m_editor.on_incremental_insertion_end();

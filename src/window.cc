@@ -145,7 +145,7 @@ String Window::status_line() const
 
 void Window::on_incremental_insertion_end()
 {
-    SelectionList backup(selections());
+    SelectionAndCapturesList backup(selections());
     hook_manager().run_hook("InsertEnd", "", Context(*this));
     select(backup);
 }

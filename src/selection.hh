@@ -31,12 +31,12 @@ struct Selection : public BufferChangeListener
     void merge_with(const Selection& selection);
     void avoid_eol();
 
+private:
     void on_insert(const BufferIterator& begin,
                    const BufferIterator& end) override;
     void on_erase(const BufferIterator& begin,
                   const BufferIterator& end) override;
 
-private:
     BufferIterator m_first;
     BufferIterator m_last;
 
@@ -58,11 +58,16 @@ struct SelectionAndCaptures
     SelectionAndCaptures(const BufferIterator& first,
                          const BufferIterator& last,
                          CaptureList&& captures_list)
-        : selection(first, last), captures(captures_list) {}
+        : selection(first, last), captures(std::move(captures_list)) {}
     SelectionAndCaptures(const Selection& sel)
         : selection(sel) {}
-    SelectionAndCaptures(Selection&& sel)
-        : selection(sel) {}
+
+    // helper to access the selection
+    BufferIterator begin() const { return selection.begin(); }
+    BufferIterator end() const { return selection.end(); }
+
+    const BufferIterator& first() const { return selection.first(); }
+    const BufferIterator& last() const { return selection.last(); }
 };
 
 typedef std::vector<SelectionAndCaptures> SelectionAndCapturesList;
