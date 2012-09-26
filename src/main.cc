@@ -35,7 +35,7 @@ bool quit_requested = false;
 template<InsertMode mode>
 void do_insert(Context& context)
 {
-    context.client().insert(context.editor(), mode);
+    context.client().insert(context, mode);
 }
 
 void do_repeat_insert(Context& context)

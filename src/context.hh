@@ -97,13 +97,16 @@ struct Context
             ui().print_status(status);
     }
 
-    int numeric_param() const { return m_numeric_param; }
-    void numeric_param(int param) { m_numeric_param = param; }
+    using Insertion = std::pair<InsertMode, std::vector<Key>>;
+    Insertion& last_insert() { return m_last_insert; }
 
-public:
+    int& numeric_param() { return m_numeric_param; }
+private:
     safe_ptr<Editor>        m_editor;
     safe_ptr<Client>        m_client;
     safe_ptr<UserInterface> m_ui;
+
+    Insertion m_last_insert = {InsertMode::Insert, {}};
     int m_numeric_param = 0;
 };
 

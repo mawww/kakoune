@@ -22,7 +22,6 @@ public:
     virtual void on_key(const Key& key, Context& context) = 0;
 protected:
     void reset_normal_mode();
-    std::pair<InsertMode, std::vector<Key>>& last_insert() { return m_client.m_last_insert; }
 private:
     Client& m_client;
 };
@@ -47,7 +46,7 @@ public:
             auto it = keymap.find(key);
             if (it != keymap.end())
             {
-                context.numeric_param(m_count);
+                context.numeric_param() = m_count;
                 // it's important to do that before calling the command,
                 // as we may die during the command execution.
                 m_count = 0;
@@ -318,16 +317,17 @@ private:
 class Insert : public ClientMode
 {
 public:
-    Insert(Client& client, Editor& editor, InsertMode mode)
-        : ClientMode(client), m_inserter(editor, mode)
+    Insert(Context& context, InsertMode mode)
+        : ClientMode(context.client()),
+          m_inserter(context.editor(), mode)
     {
-        last_insert().first = mode;
-        last_insert().second.clear();
+        context.last_insert().first = mode;
+        context.last_insert().second.clear();
     }
 
     void on_key(const Key& key, Context& context) override
     {
-        last_insert().second.push_back(key);
+        context.last_insert().second.push_back(key);
         if (m_insert_reg)
         {
             if (key.modifiers == Key::Modifiers::None)
@@ -392,8 +392,7 @@ void ClientMode::reset_normal_mode()
 
 
 Client::Client()
-    : m_mode(new ClientModes::Normal(*this)),
-      m_last_insert(InsertMode::Insert, {})
+    : m_mode(new ClientModes::Normal(*this))
 {
 }
 
@@ -401,21 +400,24 @@ Client::~Client()
 {
 }
 
-void Client::insert(Editor& editor, InsertMode mode)
+void Client::insert(Context& context, InsertMode mode)
 {
-    m_mode.reset(new ClientModes::Insert(*this, editor, mode));
+    assert(&context.client() == this);
+    m_mode.reset(new ClientModes::Insert(context, mode));
 }
 
 void Client::repeat_last_insert(Context& context)
 {
-    if (m_last_insert.second.empty())
+    assert(&context.client() == this);
+    Context::Insertion& last_insert = context.last_insert();
+    if (last_insert.second.empty())
         return;
 
     std::vector<Key> keys;
-    swap(keys, m_last_insert.second);
-    // m_last_insert will be refilled by the new InsertMode
+    swap(keys, last_insert.second);
+    // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    m_mode.reset(new ClientModes::Insert(*this, context.editor(), m_last_insert.first));
+    m_mode.reset(new ClientModes::Insert(context, last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key, context);
     assert(dynamic_cast<ClientModes::Normal*>(m_mode.get()) != nullptr);

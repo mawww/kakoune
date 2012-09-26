@@ -25,7 +25,7 @@ public:
     Client();
     ~Client();
 
-    void insert(Editor& editor, InsertMode mode);
+    void insert(Context& context, InsertMode mode);
     void repeat_last_insert(Context& context);
 
     void prompt(const String& prompt, Completer completer,
@@ -41,7 +41,6 @@ public:
 private:
     friend class ClientMode;
     std::unique_ptr<ClientMode> m_mode;
-    std::pair<InsertMode, std::vector<Key>> m_last_insert;
 };
 
 struct prompt_aborted {};
