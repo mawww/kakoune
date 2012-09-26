@@ -3,6 +3,7 @@
 
 #include "window.hh"
 #include "client.hh"
+#include "user_interface.hh"
 
 namespace Kakoune
 {
@@ -56,9 +57,22 @@ struct Context
     }
     bool has_client() const { return m_client; }
 
+    UserInterface& ui() const
+    {
+        if (not has_ui())
+            throw runtime_error("no user interface in context");
+        return *m_ui;
+    }
+    bool has_ui() const { return m_ui; }
+
     void change_editor(Editor& editor)
     {
         m_editor.reset(&editor);
+    }
+
+    void change_ui(UserInterface& ui)
+    {
+        m_ui.reset(&ui);
     }
 
     OptionManager& option_manager() const
@@ -72,22 +86,23 @@ struct Context
 
     void draw_ifn() const
     {
-        if (has_client() and has_window())
-            client().draw_window(window());
+        if (has_ui() and has_window())
+            ui().draw_window(window());
     }
 
     void print_status(const String& status) const
     {
-        if (has_client())
-            client().print_status(status);
+        if (has_ui())
+            ui().print_status(status);
     }
 
     int numeric_param() const { return m_numeric_param; }
     void numeric_param(int param) { m_numeric_param = param; }
 
 public:
-    safe_ptr<Editor> m_editor;
-    safe_ptr<Client> m_client;
+    safe_ptr<Editor>        m_editor;
+    safe_ptr<Client>        m_client;
+    safe_ptr<UserInterface> m_ui;
     int m_numeric_param = 0;
 };
 

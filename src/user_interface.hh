@@ -4,6 +4,7 @@
 #include "memoryview.hh"
 #include "keys.hh"
 #include "units.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
@@ -11,7 +12,7 @@ namespace Kakoune
 class String;
 class Window;
 
-class UserInterface
+class UserInterface : public SafeCountable
 {
 public:
     virtual ~UserInterface() {}

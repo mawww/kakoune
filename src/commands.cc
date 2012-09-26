@@ -675,17 +675,18 @@ private:
 
 void exec_keys(const KeyList& keys, Context& context)
 {
-    BatchUI* batch_ui = new BatchUI(keys);
-    Client batch_client(batch_ui);
-
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
+
+    BatchUI batch_ui(keys);
+    Client batch_client;
 
     scoped_edition edition(context.editor());
 
     Context new_context(batch_client);
     new_context.change_editor(context.editor());
-    while (batch_ui->has_key_left())
+    new_context.change_ui(batch_ui);
+    while (batch_ui.has_key_left())
         batch_client.handle_next_input(new_context);
 }
 
@@ -725,7 +726,7 @@ void menu(const CommandParameters& params, Context& context)
         [=](int choice, Context& context) {
             if (choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);
-        });
+        }, context);
 }
 
 void try_catch(const CommandParameters& params, Context& context)

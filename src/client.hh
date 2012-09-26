@@ -6,13 +6,11 @@
 #include "utils.hh"
 #include "string.hh"
 #include "window.hh"
-#include "user_interface.hh"
 
 namespace Kakoune
 {
 
 class Editor;
-class Window;
 class Context;
 
 using MenuCallback = std::function<void (int, Context&)>;
@@ -24,20 +22,17 @@ class ClientMode;
 class Client : public SafeCountable
 {
 public:
-    Client(UserInterface* ui);
+    Client();
     ~Client();
 
     void insert(Editor& editor, IncrementalInserter::Mode mode);
-    void repeat_last_insert(Editor& editor, Context& context);
+    void repeat_last_insert(Context& context);
 
     void prompt(const String& prompt, Completer completer,
-                PromptCallback callback);
+                PromptCallback callback, Context& context);
 
     void menu(const memoryview<String>& choices,
-              MenuCallback callback);
-
-    void print_status(const String& status, CharCount cursor_pos = -1);
-    void draw_window(Window& window);
+              MenuCallback callback, Context& context);
 
     void on_next_key(KeyCallback callback);
 
@@ -46,7 +41,6 @@ public:
 private:
     friend class ClientMode;
     std::unique_ptr<ClientMode> m_mode;
-    std::unique_ptr<UserInterface> m_ui;
     std::pair<IncrementalInserter::Mode, std::vector<Key>> m_last_insert;
 };
 

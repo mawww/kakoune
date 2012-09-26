@@ -41,7 +41,7 @@ void do_insert(Context& context)
 
 void do_repeat_insert(Context& context)
 {
-    context.client().repeat_last_insert(context.editor(), context);
+    context.client().repeat_last_insert(context);
 }
 
 template<SelectMode mode>
@@ -98,7 +98,8 @@ void do_command(Context& context)
 {
     context.client().prompt(
         ":", std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
-        [](const String& cmdline, Context& context) { CommandManager::instance().execute(cmdline, context); });
+        [](const String& cmdline, Context& context) { CommandManager::instance().execute(cmdline, context); },
+        context);
 }
 
 void do_pipe(Context& context)
@@ -112,7 +113,7 @@ void do_pipe(Context& context)
                 strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
                                                                 cmdline, context, {}, {}));
             editor.replace(strings);
-        });
+        }, context);
 
 }
 
@@ -128,7 +129,7 @@ void do_search(Context& context)
                 RegisterManager::instance()['/'] = ex;
 
             context.editor().select(std::bind(select_next_match, _1, ex), mode);
-        });
+        }, context);
 }
 
 template<SelectMode mode>
@@ -195,14 +196,16 @@ void do_select_regex(Context& context)
 {
     context.client().prompt("select: ", complete_nothing,
         [](const String& ex, Context& context)
-        { context.editor().multi_select(std::bind(select_all_matches, _1, ex)); });
+        { context.editor().multi_select(std::bind(select_all_matches, _1, ex)); },
+        context);
 }
 
 void do_split_regex(Context& context)
 {
     context.client().prompt("select: ", complete_nothing,
         [](const String& ex, Context& context)
-        { context.editor().multi_select(std::bind(split_selection, _1, ex)); });
+        { context.editor().multi_select(std::bind(split_selection, _1, ex)); },
+        context);
 }
 
 void do_join(Context& context)
@@ -475,8 +478,11 @@ int main(int argc, char* argv[])
 
     try
     {
-        Client client(new NCursesUI());
+        Client client;
+        NCursesUI ui;
+
         Context context(client);
+        context.change_ui(ui);
 
         try
         {
