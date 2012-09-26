@@ -61,7 +61,7 @@ void test_incremental_inserter()
 
     editor.select(buffer.begin());
     {
-        IncrementalInserter inserter(editor, IncrementalInserter::Mode::OpenLineAbove);
+        IncrementalInserter inserter(editor, InsertMode::OpenLineAbove);
         assert(editor.is_editing());
         assert(editor.selections().size() == 1);
         assert(editor.selections().front().first() == buffer.begin());

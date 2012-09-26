@@ -101,22 +101,22 @@ private:
     Editor& m_editor;
 };
 
+enum class InsertMode : unsigned
+{
+    Insert,
+    Append,
+    Change,
+    InsertAtLineBegin,
+    AppendAtLineEnd,
+    OpenLineBelow,
+    OpenLineAbove
+};
+
 // An IncrementalInserter manage insert mode
 class IncrementalInserter
 {
 public:
-    enum class Mode
-    {
-        Insert,
-        Append,
-        Change,
-        InsertAtLineBegin,
-        AppendAtLineEnd,
-        OpenLineBelow,
-        OpenLineAbove
-    };
-
-    IncrementalInserter(Editor& editor, Mode mode = Mode::Insert);
+    IncrementalInserter(Editor& editor, InsertMode mode = InsertMode::Insert);
     ~IncrementalInserter();
 
     void insert(const String& string);
@@ -127,8 +127,8 @@ public:
     Buffer& buffer() const { return m_editor.buffer(); }
 
 private:
-    Mode    m_mode;
-    Editor& m_editor;
+    InsertMode     m_mode;
+    Editor&        m_editor;
     scoped_edition m_edition;
 };
 

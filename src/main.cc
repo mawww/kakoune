@@ -33,7 +33,7 @@ namespace Kakoune
 
 bool quit_requested = false;
 
-template<IncrementalInserter::Mode mode>
+template<InsertMode mode>
 void do_insert(Context& context)
 {
     context.client().insert(context.editor(), mode);
@@ -156,7 +156,7 @@ void do_erase(Context& context)
 void do_change(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    do_insert<IncrementalInserter::Mode::Change>(context);
+    do_insert<InsertMode::Change>(context);
 }
 
 enum class PasteMode
@@ -358,12 +358,12 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::None, 'd' }, do_erase },
     { { Key::Modifiers::None, 'c' }, do_change },
-    { { Key::Modifiers::None, 'i' }, do_insert<IncrementalInserter::Mode::Insert> },
-    { { Key::Modifiers::None, 'I' }, do_insert<IncrementalInserter::Mode::InsertAtLineBegin> },
-    { { Key::Modifiers::None, 'a' }, do_insert<IncrementalInserter::Mode::Append> },
-    { { Key::Modifiers::None, 'A' }, do_insert<IncrementalInserter::Mode::AppendAtLineEnd> },
-    { { Key::Modifiers::None, 'o' }, do_insert<IncrementalInserter::Mode::OpenLineBelow> },
-    { { Key::Modifiers::None, 'O' }, do_insert<IncrementalInserter::Mode::OpenLineAbove> },
+    { { Key::Modifiers::None, 'i' }, do_insert<InsertMode::Insert> },
+    { { Key::Modifiers::None, 'I' }, do_insert<InsertMode::InsertAtLineBegin> },
+    { { Key::Modifiers::None, 'a' }, do_insert<InsertMode::Append> },
+    { { Key::Modifiers::None, 'A' }, do_insert<InsertMode::AppendAtLineEnd> },
+    { { Key::Modifiers::None, 'o' }, do_insert<InsertMode::OpenLineBelow> },
+    { { Key::Modifiers::None, 'O' }, do_insert<InsertMode::OpenLineAbove> },
     { { Key::Modifiers::None, 'r' }, do_replace_with_char },
 
     { { Key::Modifiers::None, 'g' }, do_go<SelectMode::Replace> },

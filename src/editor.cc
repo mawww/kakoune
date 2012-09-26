@@ -303,12 +303,12 @@ void Editor::end_edition()
     --m_edition_level;
 }
 
-IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
+IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     : m_editor(editor), m_edition(editor), m_mode(mode)
 {
     m_editor.on_incremental_insertion_begin();
 
-    if (mode == Mode::Change)
+    if (mode == InsertMode::Change)
     {
         for (auto& sel : editor.m_selections)
             editor.m_buffer.erase(sel.begin(), sel.end());
@@ -319,20 +319,20 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
         BufferIterator first, last;
         switch (mode)
         {
-        case Mode::Insert: first = sel.end()-1; last = sel.begin(); break;
-        case Mode::Change: first = sel.end()-1; last = sel.begin(); break;
-        case Mode::Append: first = sel.begin(); last = sel.end(); break;
+        case InsertMode::Insert: first = sel.end()-1; last = sel.begin(); break;
+        case InsertMode::Change: first = sel.end()-1; last = sel.begin(); break;
+        case InsertMode::Append: first = sel.begin(); last = sel.end(); break;
 
-        case Mode::OpenLineBelow:
-        case Mode::AppendAtLineEnd:
+        case InsertMode::OpenLineBelow:
+        case InsertMode::AppendAtLineEnd:
             first = m_editor.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
             last  = first;
             break;
 
-        case Mode::OpenLineAbove:
-        case Mode::InsertAtLineBegin:
+        case InsertMode::OpenLineAbove:
+        case InsertMode::InsertAtLineBegin:
             first = m_editor.m_buffer.iterator_at_line_begin(sel.begin());
-            if (mode == Mode::OpenLineAbove)
+            if (mode == InsertMode::OpenLineAbove)
                 --first;
             else
             {
@@ -351,10 +351,10 @@ IncrementalInserter::IncrementalInserter(Editor& editor, Mode mode)
            --last;
         sel = Selection(first, last);
     }
-    if (mode == Mode::OpenLineBelow or mode == Mode::OpenLineAbove)
+    if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
     {
         insert("\n");
-        if (mode == Mode::OpenLineAbove)
+        if (mode == InsertMode::OpenLineAbove)
         {
             for (auto& sel : m_editor.m_selections)
             {
@@ -370,7 +370,7 @@ IncrementalInserter::~IncrementalInserter()
 {
     for (auto& sel : m_editor.m_selections)
     {
-        if (m_mode == Mode::Append)
+        if (m_mode == InsertMode::Append)
             sel = Selection(sel.first(), sel.last()-1);
          sel.avoid_eol();
     }

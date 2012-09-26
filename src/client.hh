@@ -5,7 +5,6 @@
 #include "completion.hh"
 #include "utils.hh"
 #include "string.hh"
-#include "window.hh"
 
 namespace Kakoune
 {
@@ -18,6 +17,7 @@ using PromptCallback = std::function<void (const String&, Context&)>;
 using KeyCallback = std::function<void (const Key&, Context&)>;
 
 class ClientMode;
+enum class InsertMode : unsigned;
 
 class Client : public SafeCountable
 {
@@ -25,7 +25,7 @@ public:
     Client();
     ~Client();
 
-    void insert(Editor& editor, IncrementalInserter::Mode mode);
+    void insert(Editor& editor, InsertMode mode);
     void repeat_last_insert(Context& context);
 
     void prompt(const String& prompt, Completer completer,
@@ -41,7 +41,7 @@ public:
 private:
     friend class ClientMode;
     std::unique_ptr<ClientMode> m_mode;
-    std::pair<IncrementalInserter::Mode, std::vector<Key>> m_last_insert;
+    std::pair<InsertMode, std::vector<Key>> m_last_insert;
 };
 
 struct prompt_aborted {};

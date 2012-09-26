@@ -1,6 +1,7 @@
 #include "client.hh"
 
 #include "context.hh"
+#include "editor.hh"
 #include "register_manager.hh"
 
 #include <unordered_map>
@@ -21,15 +22,18 @@ public:
     virtual void on_key(const Key& key, Context& context) = 0;
 protected:
     void reset_normal_mode();
-    std::pair<IncrementalInserter::Mode, std::vector<Key>>& last_insert() { return m_client.m_last_insert; }
+    std::pair<InsertMode, std::vector<Key>>& last_insert() { return m_client.m_last_insert; }
 private:
     Client& m_client;
 };
 
-class NormalMode : public ClientMode
+namespace ClientModes
+{
+
+class Normal : public ClientMode
 {
 public:
-    NormalMode(Client& client)
+    Normal(Client& client)
         : ClientMode(client)
     {
     }
@@ -58,16 +62,11 @@ private:
     int m_count = 0;
 };
 
-void ClientMode::reset_normal_mode()
-{
-     m_client.m_mode.reset(new NormalMode(m_client));
-}
-
-class MenuMode : public ClientMode
+class Menu : public ClientMode
 {
 public:
-    MenuMode(Context& context, const memoryview<String>& choices,
-             MenuCallback callback)
+    Menu(Context& context, const memoryview<String>& choices,
+         MenuCallback callback)
         : ClientMode(context.client()),
           m_callback(callback), m_choice_count(choices.size()), m_selected(0)
     {
@@ -125,11 +124,11 @@ private:
     int          m_choice_count;
 };
 
-class PromptMode : public ClientMode
+class Prompt : public ClientMode
 {
 public:
-    PromptMode(Context& context, const String& prompt,
-               Completer completer, PromptCallback callback)
+    Prompt(Context& context, const String& prompt,
+           Completer completer, PromptCallback callback)
         : ClientMode(context.client()), m_prompt(prompt),
           m_completer(completer), m_callback(callback)
     {
@@ -296,12 +295,12 @@ private:
     static std::unordered_map<String, std::vector<String>> ms_history;
     std::vector<String>::iterator m_history_it;
 };
-std::unordered_map<String, std::vector<String>> PromptMode::ms_history;
+std::unordered_map<String, std::vector<String>> Prompt::ms_history;
 
-class NextKeyMode : public ClientMode
+class NextKey : public ClientMode
 {
 public:
-    NextKeyMode(Client& client, KeyCallback callback)
+    NextKey(Client& client, KeyCallback callback)
         : ClientMode(client), m_callback(callback) {}
 
     void on_key(const Key& key, Context& context) override
@@ -316,10 +315,10 @@ private:
     KeyCallback m_callback;
 };
 
-class InsertMode : public ClientMode
+class Insert : public ClientMode
 {
 public:
-    InsertMode(Client& client, Editor& editor, IncrementalInserter::Mode mode)
+    Insert(Client& client, Editor& editor, InsertMode mode)
         : ClientMode(client), m_inserter(editor, mode)
     {
         last_insert().first = mode;
@@ -384,9 +383,17 @@ private:
     IncrementalInserter m_inserter;
 };
 
+}
+
+void ClientMode::reset_normal_mode()
+{
+     m_client.m_mode.reset(new ClientModes::Normal(m_client));
+}
+
+
 Client::Client()
-    : m_mode(new NormalMode(*this)),
-      m_last_insert(IncrementalInserter::Mode::Insert, {})
+    : m_mode(new ClientModes::Normal(*this)),
+      m_last_insert(InsertMode::Insert, {})
 {
 }
 
@@ -394,9 +401,9 @@ Client::~Client()
 {
 }
 
-void Client::insert(Editor& editor, IncrementalInserter::Mode mode)
+void Client::insert(Editor& editor, InsertMode mode)
 {
-    m_mode.reset(new InsertMode(*this, editor, mode));
+    m_mode.reset(new ClientModes::Insert(*this, editor, mode));
 }
 
 void Client::repeat_last_insert(Context& context)
@@ -408,29 +415,29 @@ void Client::repeat_last_insert(Context& context)
     swap(keys, m_last_insert.second);
     // m_last_insert will be refilled by the new InsertMode
     // this is very inefficient.
-    m_mode.reset(new InsertMode(*this, context.editor(), m_last_insert.first));
+    m_mode.reset(new ClientModes::Insert(*this, context.editor(), m_last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key, context);
-    assert(dynamic_cast<NormalMode*>(m_mode.get()) != nullptr);
+    assert(dynamic_cast<ClientModes::Normal*>(m_mode.get()) != nullptr);
 }
 
 void Client::prompt(const String& prompt, Completer completer,
                     PromptCallback callback, Context& context)
 {
     assert(&context.client() == this);
-    m_mode.reset(new PromptMode(context, prompt, completer, callback));
+    m_mode.reset(new ClientModes::Prompt(context, prompt, completer, callback));
 }
 
 void Client::menu(const memoryview<String>& choices,
                   MenuCallback callback, Context& context)
 {
     assert(&context.client() == this);
-    m_mode.reset(new MenuMode(context, choices, callback));
+    m_mode.reset(new ClientModes::Menu(context, choices, callback));
 }
 
 void Client::on_next_key(KeyCallback callback)
 {
-    m_mode.reset(new NextKeyMode(*this, callback));
+    m_mode.reset(new ClientModes::NextKey(*this, callback));
 }
 
 void Client::handle_next_input(Context& context)
