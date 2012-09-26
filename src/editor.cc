@@ -159,9 +159,6 @@ void Editor::select(const Selector& selector, SelectMode mode)
 {
     check_invariant();
 
-    std::array<std::vector<String>, 10> captures;
-
-    size_t capture_count = -1;
     for (auto& sel : m_selections)
     {
         SelectionAndCaptures res = selector(sel.selection);
@@ -170,17 +167,8 @@ void Editor::select(const Selector& selector, SelectMode mode)
         else
             sel.selection = std::move(res.selection);
 
-        assert(capture_count == -1 or capture_count == res.captures.size());
-        capture_count = res.captures.size();
-
-        for (size_t i = 0; i < res.captures.size(); ++i)
-            captures[i].push_back(res.captures[i]);
-    }
-
-    if (not captures[0].empty())
-    {
-        for (size_t i = 0; i < captures.size(); ++i)
-            RegisterManager::instance()['0' + i] = std::move(captures[i]);
+        if (not res.captures.empty())
+            sel.captures = std::move(res.captures);
     }
 }
 
@@ -193,35 +181,23 @@ void Editor::multi_select(const MultiSelector& selector)
 {
     check_invariant();
 
-    std::array<std::vector<String>, 10> captures;
-
-    size_t capture_count = -1;
     SelectionAndCapturesList new_selections;
     for (auto& sel : m_selections)
     {
         SelectionAndCapturesList res = selector(sel.selection);
         for (auto& sel_and_cap : res)
         {
-            new_selections.push_back(sel_and_cap.selection);
-
-            assert(capture_count == -1 or
-                   capture_count == sel_and_cap.captures.size());
-            capture_count = sel_and_cap.captures.size();
-
-            for (size_t i = 0; i < sel_and_cap.captures.size(); ++i)
-                captures[i].push_back(sel_and_cap.captures[i]);
+            // preserve captures when selectors captures nothing.
+            if (sel_and_cap.captures.empty())
+                new_selections.emplace_back(sel_and_cap.selection, sel.captures);
+            else
+                new_selections.push_back(std::move(sel_and_cap));
         }
     }
     if (new_selections.empty())
         throw nothing_selected();
 
     m_selections = std::move(new_selections);
-
-    if (not captures[0].empty())
-    {
-        for (size_t i = 0; i < captures.size(); ++i)
-            RegisterManager::instance()['0' + i] = std::move(captures[i]);
-    }
 }
 
 class LastModifiedRangeListener : public BufferChangeListener
@@ -265,7 +241,7 @@ bool Editor::undo()
     {
         m_selections.clear();
         m_selections.push_back(Selection(listener.first(),
-                                                listener.last()));
+                                         listener.last()));
     }
     return res;
 }
@@ -278,7 +254,7 @@ bool Editor::redo()
     {
         m_selections.clear();
         m_selections.push_back(Selection(listener.first(),
-                                                listener.last()));
+                                         listener.last()));
     }
     return res;
 }
@@ -351,7 +327,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
            --first;
         if (last.is_end())
            --last;
-        sel = Selection(first, last);
+        sel.selection = Selection(first, last);
     }
     if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
     {
@@ -362,7 +338,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             {
                 // special case, the --first line above did nothing, so we need to compensate now
                 if (sel.first() == buffer().begin() + 1)
-                    sel = Selection(buffer().begin(), buffer().begin());
+                    sel.selection = Selection(buffer().begin(), buffer().begin());
             }
         }
     }

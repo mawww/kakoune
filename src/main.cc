@@ -468,8 +468,18 @@ int main(int argc, char* argv[])
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });
 
-    register_manager.register_dynamic_register('%', [&](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
-    register_manager.register_dynamic_register('.', [&](const Context& context) { return context.editor().selections_content(); });
+    register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
+    register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
+    for (size_t i = 0; i < 10; ++i)
+    {
+         register_manager.register_dynamic_register('0'+i,
+              [i](const Context& context) {
+                  std::vector<String> result;
+                  for (auto& sel_and_cap : context.editor().selections())
+                      result.emplace_back(i < sel_and_cap.captures.size() ? sel_and_cap.captures[i] : "");
+                  return result;
+              });
+    }
 
     register_commands();
     register_highlighters();
