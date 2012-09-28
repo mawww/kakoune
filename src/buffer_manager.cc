@@ -52,6 +52,16 @@ Buffer* BufferManager::get_buffer(const String& name)
     return nullptr;
 }
 
+void BufferManager::set_last_used_buffer(Buffer& buffer)
+{
+    auto it = m_buffers.begin();
+    while (*it != &buffer and it != m_buffers.end())
+        ++it;
+    assert(it != m_buffers.end());
+    m_buffers.erase(it);
+    m_buffers.emplace(m_buffers.begin(), &buffer);
+}
+
 CandidateList BufferManager::complete_buffername(const String& prefix,
                                                  CharCount cursor_pos)
 {

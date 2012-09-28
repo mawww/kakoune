@@ -288,6 +288,7 @@ void edit(const CommandParameters& params, Context& context)
             buffer = open_or_create(name, context);
     }
 
+    BufferManager::instance().set_last_used_buffer(*buffer);
     Window& window = *buffer->get_or_create_window();
 
     if (param_count > 1)
@@ -382,6 +383,7 @@ void show_buffer(const CommandParameters& params, Context& context)
     if (not buffer)
         throw runtime_error("buffer " + buffer_name + " does not exists");
 
+    BufferManager::instance().set_last_used_buffer(*buffer);
     context.change_editor(*buffer->get_or_create_window());
 }
 

@@ -27,6 +27,7 @@ public:
     size_t   count() const { return m_buffers.size(); }
 
     Buffer* get_buffer(const String& name);
+    void    set_last_used_buffer(Buffer& buffer);
 
     CandidateList complete_buffername(const String& prefix,
                                       CharCount cursor_pos = -1);
