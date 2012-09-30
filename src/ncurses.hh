@@ -5,6 +5,7 @@
 #include <menu.h>
 
 #include "user_interface.hh"
+#include "display_buffer.hh"
 
 namespace Kakoune
 {
@@ -23,13 +24,18 @@ public:
 
     Key    get_key() override;
 
-    void menu_show(const memoryview<String>& choices) override;
+    void menu_show(const memoryview<String>& choices,
+                   const DisplayCoord& anchor, MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 private:
-    MENU* m_menu;
+    MENU* m_menu = nullptr;
+    WINDOW* m_menu_win = nullptr;
     std::vector<ITEM*> m_items;
     std::vector<String> m_choices;
+
+    DisplayCoord m_menu_pos;
+    DisplayCoord m_menu_size;
 
     int m_menu_fg;
     int m_menu_bg;

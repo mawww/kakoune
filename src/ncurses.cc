@@ -71,7 +71,6 @@ static void set_color(Color fg_color, Color bg_color)
 
 
 NCursesUI::NCursesUI()
-    : m_menu(nullptr)
 {
     // setlocale(LC_ALL, "");
     initscr();
@@ -94,6 +93,17 @@ NCursesUI::~NCursesUI()
     endwin();
 }
 
+static void redraw(WINDOW* menu_win)
+{
+    wnoutrefresh(stdscr);
+    if (menu_win)
+    {
+        redrawwin(menu_win);
+        wnoutrefresh(menu_win);
+    }
+    doupdate();
+}
+
 void NCursesUI::draw_window(Window& window)
 {
     int max_x,max_y;
@@ -101,19 +111,10 @@ void NCursesUI::draw_window(Window& window)
     max_y -= 1;
     int status_y = max_y;
 
-    if (m_menu)
-    {
-       int rows;
-       int cols;
-       menu_format(m_menu, &rows, &cols);
-       max_y -= rows;
-    }
-
     window.set_dimensions(DisplayCoord(LineCount(max_y), max_x));
     window.update_display_buffer();
 
     int line_index = 0;
-    int last_line = INT_MAX;
     for (const DisplayLine& line : window.display_buffer().lines())
     {
         move(line_index, 0);
@@ -161,7 +162,8 @@ void NCursesUI::draw_window(Window& window)
     move(status_y, max_x - (int)status_line.length());
     addstr(status_line.c_str());
     last_status_length = (int)status_line.length();
-    refresh();
+
+    redraw(m_menu_win);
 }
 
 Key NCursesUI::get_key()
@@ -219,12 +221,14 @@ void NCursesUI::print_status(const String& status, CharCount cursor_pos)
        addch(' ');
        set_attribute(A_REVERSE, 0);
     }
-    refresh();
+    redraw(m_menu_win);
 }
 
-void NCursesUI::menu_show(const memoryview<String>& choices)
+void NCursesUI::menu_show(const memoryview<String>& choices,
+                          const DisplayCoord& anchor, MenuStyle style)
 {
     assert(m_menu == nullptr);
+    assert(m_menu_win == nullptr);
     m_choices = std::vector<String>(choices.begin(), choices.end());
     CharCount longest = 0;
     for (int i = 0; i < m_choices.size(); ++i)
@@ -237,19 +241,26 @@ void NCursesUI::menu_show(const memoryview<String>& choices)
 
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
+    max_x -= (int)anchor.column;
 
-    int columns = max_x / std::min(max_x, (int)longest);
+    int columns = (style == MenuStyle::Prompt) ?
+                  (max_x / std::min(max_x, (int)longest)) : 1;
     int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
 
+    m_menu_pos = { anchor.line+1, anchor.column };
+    if (m_menu_pos.line + lines >= max_y)
+        m_menu_pos.line = anchor.line - lines;
+    m_menu_size = { lines, columns == 1 ? longest : max_x };
+
     m_menu = new_menu(&m_items[0]);
-    int pos_y = max_y - lines - 1;
-    set_menu_sub(m_menu, derwin(stdscr, max_y - pos_y - 1, max_x, pos_y, 0));
+    m_menu_win = newwin((int)m_menu_size.line, (int)m_menu_size.column,
+                        (int)m_menu_pos.line,  (int)m_menu_pos.column);
+    set_menu_win(m_menu, m_menu_win);
     set_menu_format(m_menu, lines, columns);
     set_menu_mark(m_menu, nullptr);
     set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
     set_menu_back(m_menu, COLOR_PAIR(m_menu_bg));
     post_menu(m_menu);
-    refresh();
 }
 
 void NCursesUI::menu_select(int selected)
@@ -262,7 +273,6 @@ void NCursesUI::menu_select(int selected)
     }
     else
         set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
-    refresh();
 }
 
 void NCursesUI::menu_hide()
@@ -275,8 +285,9 @@ void NCursesUI::menu_hide()
        if (item)
            free_item(item);
     m_menu = nullptr;
+    delwin(m_menu_win);
+    m_menu_win = nullptr;
     m_items.clear();
-    refresh();
 }
 
 }

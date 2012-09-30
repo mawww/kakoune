@@ -666,7 +666,8 @@ public:
 
     void print_status(const String& , CharCount) override {}
     void draw_window(Window&) override {}
-    void menu_show(const memoryview<String>&) override {}
+    void menu_show(const memoryview<String>&,
+                   const DisplayCoord&, MenuStyle) override {}
     void menu_select(int) override {}
     void menu_hide() override {}
 

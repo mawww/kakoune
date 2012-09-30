@@ -69,7 +69,8 @@ public:
         : ClientMode(context.client()),
           m_callback(callback), m_choice_count(choices.size()), m_selected(0)
     {
-        context.ui().menu_show(choices);
+        DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
+        context.ui().menu_show(choices, menu_pos, MenuStyle::Prompt);
     }
 
     void on_key(const Key& key, Context& context) override
@@ -253,7 +254,8 @@ public:
                     return;
 
                 context.ui().menu_hide();
-                context.ui().menu_show(candidates);
+                DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
+                context.ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
                 String prefix = m_result.substr(m_completions.start,
                                                 m_completions.end - m_completions.start);
                 if (not contains(candidates, prefix))
