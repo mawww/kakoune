@@ -316,6 +316,80 @@ private:
     KeyCallback m_callback;
 };
 
+class WordCompleter
+{
+public:
+    void select(const Context& context, int offset)
+    {
+        if (not setup_ifn(context))
+            return;
+
+        context.buffer().erase(m_position, m_position + m_completions[m_current_completion].length());
+        m_current_completion = (m_current_completion + offset) % m_completions.size();
+        context.buffer().insert(m_position, m_completions[m_current_completion]);
+        context.ui().menu_select(m_current_completion);
+    }
+
+    void reset(const Context& context)
+    {
+        m_position = BufferIterator();
+        context.ui().menu_hide();
+    }
+private:
+    bool setup_ifn(const Context& context)
+    {
+        if (not m_position.is_valid())
+        {
+            BufferIterator end = context.editor().selections().back().last();
+            BufferIterator begin = end-1;
+            while (not begin.is_begin() and is_word(*begin))
+                --begin;
+            if (not is_word(*begin))
+                ++begin;
+
+            String prefix = context.buffer().string(begin, end);
+            m_completions = complete_word(context, prefix);
+            if (m_completions.empty())
+                return false;
+
+            m_position = begin;
+            DisplayCoord menu_pos = context.window().display_position(m_position);
+            context.ui().menu_show(m_completions, menu_pos, MenuStyle::Inline);
+
+            m_completions.push_back(prefix);
+            m_current_completion = m_completions.size() - 1;
+        }
+        return true;
+    }
+
+    CandidateList complete_word(const Context& context,
+                                const String& prefix)
+    {
+        String ex = "\\<\\Q" + prefix + "\\E\\w+\\>";
+        Regex re(ex.begin(), ex.end());
+        Buffer& buffer = context.buffer();
+        boost::regex_iterator<BufferIterator> it(buffer.begin(), buffer.end(), re);
+        boost::regex_iterator<BufferIterator> end;
+
+        CandidateList result;
+        while (it != end)
+        {
+            auto& match = (*it)[0];
+            String content = buffer.string(match.first, match.second);
+            if (not contains(result, content))
+                result.emplace_back(std::move(content));
+            ++it;
+        }
+        std::sort(result.begin(), result.end());
+        return result;
+    }
+
+
+    BufferIterator m_position;
+    CandidateList  m_completions;
+    int            m_current_completion = -1;
+};
+
 class Insert : public ClientMode
 {
 public:
@@ -337,12 +411,14 @@ public:
             m_insert_reg = false;
             return;
         }
+        bool reset_completer = true;
         switch (key.modifiers)
         {
         case Key::Modifiers::None:
             switch (key.key)
             {
             case Key::Escape:
+                m_completer.reset(context);
                 reset_normal_mode();
                 return;
             case Key::Backspace:
@@ -376,13 +452,24 @@ public:
             case 'i':
                 m_inserter.insert(String() + '\t');
                 break;
+            case 'n':
+                m_completer.select(context, 1);
+                reset_completer = false;
+                break;
+            case 'p':
+                m_completer.select(context, -1);
+                reset_completer = false;
+                break;
             }
             break;
         }
+        if (reset_completer)
+            m_completer.reset(context);
     }
 private:
     bool m_insert_reg = false;
     IncrementalInserter m_inserter;
+    WordCompleter m_completer;
 };
 
 }
