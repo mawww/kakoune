@@ -57,6 +57,18 @@ public:
         }
     }
 
+    CharCount length() const
+    {
+        switch (m_type)
+        {
+            case BufferRange:
+               return m_end - m_begin;
+            case Text:
+            case ReplacedBufferRange:
+               return m_text.length();
+        }
+    }
+
     BufferIterator& begin()
     {
         assert(has_buffer_range());
