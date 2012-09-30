@@ -35,6 +35,8 @@ public:
     void center_selection();
     void update_display_buffer();
 
+    DisplayCoord display_position(const BufferIterator& it);
+
     String status_line() const;
 
     HighlighterGroup& highlighters() { return m_highlighters; }

@@ -129,6 +129,30 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     }
 }
 
+DisplayCoord Window::display_position(const BufferIterator& iterator)
+{
+    DisplayCoord res{0,0};
+    for (auto& line : m_display_buffer.lines())
+    {
+        if (line.buffer_line() == iterator.line())
+        {
+            for (auto& atom : line)
+            {
+                auto& content = atom.content;
+                if (content.has_buffer_range() and
+                    iterator >= content.begin() and iterator < content.end())
+                {
+                    res.column += iterator - content.begin();
+                    return res;
+                }
+                res.column += content.length();
+            }
+        }
+        ++res.line;
+    }
+    return { 0, 0 };
+}
+
 String Window::status_line() const
 {
     BufferCoord cursor = buffer().line_and_column_at(selections().back().last());
