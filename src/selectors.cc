@@ -21,20 +21,9 @@ bool is_blank(char c)
 }
 
 template<bool punctuation_is_word = false>
-bool is_word(char c);
-
-template<>
-bool is_word<false>(char c)
+bool is_word(char c)
 {
-    if (c >= '0' and c <= '9')
-        return true;
-    if (c >= 'a' and c <= 'z')
-        return true;
-    if (c >= 'A' and c <= 'Z')
-        return true;
-    if (c == '_')
-        return true;
-    return false;
+    return Kakoune::is_word(c);
 }
 
 template<>
