@@ -125,6 +125,7 @@ public:
     void move_cursors(const BufferCoord& offset);
 
     Buffer& buffer() const { return m_editor.buffer(); }
+    Editor& editor() const { return m_editor; }
 
 private:
     InsertMode     m_mode;

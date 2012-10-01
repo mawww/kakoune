@@ -438,6 +438,13 @@ public:
                 break;
             default:
                 m_inserter.insert(String() + key.key);
+                if (m_inserter.editor().selections().size() == 1 and
+                    is_word(key.key))
+                {
+                    m_completer.reset(context);
+                    reset_completer = false;
+                    m_completer.select(context, 0);
+                }
             }
             break;
         case Key::Modifiers::Control:
