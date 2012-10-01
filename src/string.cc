@@ -30,7 +30,7 @@ int str_to_int(const String& str)
     return atoi(str.c_str());
 }
 
-std::vector<String> split(const String& str, Character separator)
+std::vector<String> split(const String& str, char separator)
 {
     auto begin = str.begin();
     auto end   = str.begin();

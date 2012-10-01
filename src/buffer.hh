@@ -31,7 +31,7 @@ struct BufferCoord : LineAndColumn<BufferCoord>
 class BufferIterator
 {
 public:
-    typedef Character  value_type;
+    typedef char value_type;
     typedef size_t difference_type;
     typedef const value_type* pointer;
     typedef const value_type& reference;
@@ -47,7 +47,7 @@ public:
     bool operator>  (const BufferIterator& iterator) const;
     bool operator>= (const BufferIterator& iterator) const;
 
-    Character  operator* () const;
+    char   operator* () const;
     size_t operator- (const BufferIterator& iterator) const;
 
     BufferIterator operator+ (CharCount size) const;

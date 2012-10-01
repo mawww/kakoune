@@ -122,7 +122,7 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
     try
     {
-        static Regex color_spec_ex(LR"((\d+):(\w+(,\w+)?))");
+        static Regex color_spec_ex(R"((\d+):(\w+(,\w+)?))");
         ColorSpec colors;
         for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
