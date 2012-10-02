@@ -71,6 +71,7 @@ public:
     { return !m_value; }
 
     explicit constexpr operator ValueType() const { return m_value; }
+    explicit constexpr operator bool() const { return m_value; }
 private:
    ValueType m_value;
 };

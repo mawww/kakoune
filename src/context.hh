@@ -32,7 +32,7 @@ struct Context
             throw runtime_error("no buffer in context");
         return m_editor->buffer();
     }
-    bool has_buffer() const { return m_editor; }
+    bool has_buffer() const { return (bool)m_editor; }
 
     Editor& editor() const
     {
@@ -40,7 +40,7 @@ struct Context
             throw runtime_error("no editor in context");
         return *m_editor.get();
     }
-    bool has_editor() const { return m_editor; }
+    bool has_editor() const { return (bool)m_editor; }
 
     Window& window() const
     {
@@ -48,7 +48,7 @@ struct Context
             throw runtime_error("no window in context");
         return *dynamic_cast<Window*>(m_editor.get());
     }
-    bool has_window() const { return m_editor and dynamic_cast<Window*>(m_editor.get()); }
+    bool has_window() const { return (bool)m_editor and dynamic_cast<Window*>(m_editor.get()); }
 
     Client& client() const
     {
@@ -56,7 +56,7 @@ struct Context
             throw runtime_error("no client in context");
         return *m_client;
     }
-    bool has_client() const { return m_client; }
+    bool has_client() const { return (bool)m_client; }
 
     UserInterface& ui() const
     {
@@ -64,7 +64,7 @@ struct Context
             throw runtime_error("no user interface in context");
         return *m_ui;
     }
-    bool has_ui() const { return m_ui; }
+    bool has_ui() const { return (bool)m_ui; }
 
     void change_editor(Editor& editor)
     {

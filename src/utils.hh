@@ -54,8 +54,6 @@ T* Singleton<T>::ms_instance = nullptr;
 
 // *** safe_ptr: objects that assert nobody references them when they die ***
 
-typedef void* (*unspecified_bool_type)();
-
 template<typename T>
 class safe_ptr
 {
@@ -106,7 +104,7 @@ public:
 
    T* get() const { return m_ptr; }
 
-   operator unspecified_bool_type() const { return (unspecified_bool_type)(m_ptr); }
+   explicit operator bool() const { return m_ptr; }
 
 private:
    T* m_ptr;
