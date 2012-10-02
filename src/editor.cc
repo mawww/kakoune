@@ -98,13 +98,27 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-void Editor::move_selections(const BufferCoord& offset, SelectMode mode)
+void Editor::move_selections(CharCount offset, SelectMode mode)
+{
+    assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
+    for (auto& sel : m_selections)
+    {
+        auto last = sel.last();
+        last = clamp(last + offset,
+                     buffer().iterator_at_line_begin(last),
+                     buffer().iterator_at_line_end(last)-1);
+        sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
+    }
+}
+
+void Editor::move_selections(LineCount offset, SelectMode mode)
 {
     assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
-        BufferIterator last = m_buffer.iterator_at(pos + offset, true);
+        pos.line += offset;
+        BufferIterator last = m_buffer.iterator_at(pos, true);
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
 }

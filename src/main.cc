@@ -219,7 +219,7 @@ void do_join(Context& context)
     editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
     editor.replace(" ");
     editor.clear_selections();
-    editor.move_selections({0, -1});
+    editor.move_selections(-1_char);
 }
 
 template<bool inner>
@@ -340,15 +340,15 @@ String runtime_directory()
 
 std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 {
-    { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }); } },
-    { { Key::Modifiers::None, 'j' }, [](Context& context) { context.editor().move_selections({  std::max(context.numeric_param(),1), 0  }); } },
-    { { Key::Modifiers::None, 'k' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }); } },
-    { { Key::Modifiers::None, 'l' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }); } },
+    { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections(-CharCount(std::max(context.numeric_param(),1))); } },
+    { { Key::Modifiers::None, 'j' }, [](Context& context) { context.editor().move_selections( LineCount(std::max(context.numeric_param(),1))); } },
+    { { Key::Modifiers::None, 'k' }, [](Context& context) { context.editor().move_selections(-LineCount(std::max(context.numeric_param(),1))); } },
+    { { Key::Modifiers::None, 'l' }, [](Context& context) { context.editor().move_selections( CharCount(std::max(context.numeric_param(),1))); } },
 
-    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections({  0, -std::max(context.numeric_param(),1) }, SelectMode::Extend); } },
-    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections({  std::max(context.numeric_param(),1), 0 }, SelectMode::Extend); } },
-    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections({ -std::max(context.numeric_param(),1), 0 }, SelectMode::Extend); } },
-    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections({  0,  std::max(context.numeric_param(),1) }, SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections(-CharCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections( LineCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections(-LineCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections( CharCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
 
     { { Key::Modifiers::None, 't' }, select_to_next_char<SelectFlags::None> },
     { { Key::Modifiers::None, 'f' }, select_to_next_char<SelectFlags::Inclusive> },

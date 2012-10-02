@@ -47,7 +47,9 @@ public:
     void replace(const String& string);
     void replace(const memoryview<String>& strings);
 
-    void move_selections(const BufferCoord& offset,
+    void move_selections(LineCount move,
+                         SelectMode mode = SelectMode::Replace);
+    void move_selections(CharCount move,
                          SelectMode mode = SelectMode::Replace);
     void clear_selections();
     void keep_selection(int index);
