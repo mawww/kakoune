@@ -1,5 +1,5 @@
 def -shell-params make %{ echo make in progress, please wait...; %sh{
-     output=$(mktemp -t -d kak-make.XXXXXXXX)/fifo
+     output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( make $@ >& ${output} ) >& /dev/null < /dev/null &
      echo "echo

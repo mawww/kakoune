@@ -1,6 +1,6 @@
 def -shell-params -file-completion \
     grep %{ echo grep in progress, please wait...; %sh{
-     output=$(mktemp -t -d kak-grep.XXXXXXXX)/fifo
+     output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      ( grep -PHn "$@" >& ${output} ) >& /dev/null < /dev/null &
      echo "echo
