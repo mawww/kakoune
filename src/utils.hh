@@ -195,6 +195,12 @@ inline String escape(const String& name)
     return name.replace("([ \\t;])", R"(\\\1)");
 }
 
+template<typename T>
+const T& clamp(const T& val, const T& min, const T& max)
+{
+    return (val < min ? min : (val > max ? max : val));
+}
+
 }
 
 #endif // utils_hh_INCLUDED

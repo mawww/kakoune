@@ -11,16 +11,6 @@
 namespace Kakoune
 {
 
-template<typename T>
-T clamp(T min, T max, T val)
-{
-    if (val < min)
-        return min;
-    if (val > max)
-        return max;
-    return val;
-}
-
 Buffer::Buffer(String name, Type type,
                String initial_content)
     : m_name(std::move(name)), m_type(type),
@@ -83,9 +73,9 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
         return BufferCoord();
 
     BufferCoord result(line_and_column.line, line_and_column.column);
-    result.line = Kakoune::clamp(0_line, line_count() - 1, result.line);
+    result.line = Kakoune::clamp(result.line, 0_line, line_count() - 1);
     CharCount max_col = std::max(0_char, line_length(result.line) - (avoid_eol ? 2 : 1));
-    result.column = Kakoune::clamp(0_char, max_col, result.column);
+    result.column = Kakoune::clamp(result.column, 0_char, max_col);
     return result;
 }
 
