@@ -20,6 +20,10 @@
 #include "string.hh"
 #include "color_registry.hh"
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
+
 #include <unordered_map>
 #include <sys/types.h>
 #include <sys/wait.h>
