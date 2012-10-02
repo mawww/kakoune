@@ -42,10 +42,10 @@ public:
     { --m_value; return static_cast<RealType&>(*this); }
 
     RealType operator++(int)
-    { RealType backup(*this); ++m_value; return backup; }
+    { RealType backup(static_cast<RealType&>(*this)); ++m_value; return backup; }
 
     RealType operator--(int)
-    { RealType backup(*this); --m_value; return backup; }
+    { RealType backup(static_cast<RealType&>(*this)); --m_value; return backup; }
 
     constexpr RealType operator-() { return RealType(-m_value); }
 
