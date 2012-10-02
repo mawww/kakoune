@@ -199,6 +199,20 @@ inline BufferIterator& BufferIterator::operator--()
     return *this;
 }
 
+inline BufferIterator BufferIterator::operator++(int)
+{
+    BufferIterator save = *this;
+    ++*this;
+    return save;
+}
+
+inline BufferIterator BufferIterator::operator--(int)
+{
+    BufferIterator save = *this;
+    --*this;
+    return save;
+}
+
 inline bool BufferIterator::is_begin() const
 {
     assert(m_buffer);
