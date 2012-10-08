@@ -32,6 +32,8 @@ enum Attributes
     Bold = 8
 };
 
+class DisplayLine;
+
 struct AtomContent
 {
 public:
@@ -69,13 +71,13 @@ public:
         }
     }
 
-    BufferIterator& begin()
+    const BufferIterator& begin() const
     {
         assert(has_buffer_range());
         return m_begin;
     }
 
-    BufferIterator& end()
+    const BufferIterator& end() const
     {
         assert(has_buffer_range());
         return m_end;
@@ -96,6 +98,8 @@ public:
     Type type() const { return m_type; }
 
 private:
+    friend class DisplayLine;
+
     Type m_type;
 
     BufferIterator m_begin;

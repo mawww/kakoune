@@ -12,8 +12,8 @@ DisplayLine::iterator DisplayLine::split(iterator it, BufferIterator pos)
     assert(it->content.end() > pos);
 
     DisplayAtom atom = *it;
-    atom.content.end() = pos;
-    it->content.begin() = pos;
+    atom.content.m_end = pos;
+    it->content.m_begin = pos;
     return m_atoms.insert(it, std::move(atom));
 }
 
