@@ -348,7 +348,7 @@ private:
                 ++begin;
 
             String prefix = context.buffer().string(begin, end);
-            m_completions = complete_word(context, prefix);
+            m_completions = complete_word(context, prefix, begin);
             if (m_completions.empty())
                 return false;
 
@@ -363,7 +363,8 @@ private:
     }
 
     CandidateList complete_word(const Context& context,
-                                const String& prefix)
+                                const String& prefix,
+                                const BufferIterator& pos)
     {
         String ex = "\\<\\Q" + prefix + "\\E\\w+\\>";
         Regex re(ex.begin(), ex.end());
@@ -372,13 +373,15 @@ private:
         boost::regex_iterator<BufferIterator> end;
 
         CandidateList result;
-        while (it != end)
+        for (; it != end; ++it)
         {
             auto& match = (*it)[0];
+            if (match.first <= pos and pos < match.second)
+                continue;
+
             String content = buffer.string(match.first, match.second);
             if (not contains(result, content))
                 result.emplace_back(std::move(content));
-            ++it;
         }
         std::sort(result.begin(), result.end());
         return result;
