@@ -2,6 +2,7 @@
 #define selectors_hh_INCLUDED
 
 #include "selection.hh"
+#include "utf8.hh"
 
 namespace Kakoune
 {
@@ -15,14 +16,19 @@ SelectionAndCaptures select_to_previous_word(const Selection& selection);
 
 SelectionAndCaptures select_line(const Selection& selection);
 SelectionAndCaptures select_matching(const Selection& selection);
+
+
+using CodepointPair = std::pair<utf8::Codepoint, utf8::Codepoint>;
 SelectionAndCaptures select_surrounding(const Selection& selection,
-                                        const std::pair<char, char>& matching,
+                                        const CodepointPair& matching,
                                         bool inside);
 
 SelectionAndCaptures select_to(const Selection& selection,
-                               char c, int count, bool inclusive);
+                               utf8::Codepoint c,
+                               int count, bool inclusive);
 SelectionAndCaptures select_to_reverse(const Selection& selection,
-                                       char c, int count, bool inclusive);
+                                       utf8::Codepoint c,
+                                       int count, bool inclusive);
 
 SelectionAndCaptures select_to_eol(const Selection& selection);
 SelectionAndCaptures select_to_eol_reverse(const Selection& selection);
