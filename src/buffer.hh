@@ -205,7 +205,7 @@ private:
     LineList m_lines;
 
     void do_insert(const BufferIterator& pos, const String& content);
-    void do_erase(const BufferIterator& pos, CharCount length);
+    void do_erase(const BufferIterator& begin, const BufferIterator& end);
 
     String  m_name;
     const Type   m_type;

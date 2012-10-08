@@ -5,6 +5,7 @@
 #include "assert.hh"
 #include "utils.hh"
 #include "context.hh"
+#include "utf8.hh"
 
 #include <algorithm>
 
@@ -236,6 +237,7 @@ void Buffer::check_invariant() const
 
 void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
+    assert(pos.is_end() or utf8::is_character_start(pos));
     ++m_timestamp;
     CharCount offset = pos.offset();
 
@@ -310,26 +312,27 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         listener->on_insert(begin_it, end_it);
 }
 
-void Buffer::do_erase(const BufferIterator& pos, CharCount length)
+void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 {
+    assert(utf8::is_character_start(begin) and
+           (end.is_end() or utf8::is_character_start(end)));
     ++m_timestamp;
-    BufferIterator end = pos + length;
-    assert(end.is_valid());
-    String prefix = m_lines[pos.line()].content.substr(0, pos.column());
+    const CharCount length = end - begin;
+    String prefix = m_lines[begin.line()].content.substr(0, begin.column());
     String suffix = m_lines[end.line()].content.substr(end.column());
-    Line new_line = { m_lines[pos.line()].start, prefix + suffix };
+    Line new_line = { m_lines[begin.line()].start, prefix + suffix };
 
-    m_lines.erase(m_lines.begin() + (int)pos.line(), m_lines.begin() + (int)end.line() + 1);
+    m_lines.erase(m_lines.begin() + (int)begin.line(), m_lines.begin() + (int)end.line() + 1);
     if (new_line.length() != 0)
-        m_lines.insert(m_lines.begin() + (int)pos.line(), std::move(new_line));
+        m_lines.insert(m_lines.begin() + (int)begin.line(), std::move(new_line));
 
-    for (LineCount i = pos.line()+1; i < line_count(); ++i)
+    for (LineCount i = begin.line()+1; i < line_count(); ++i)
         m_lines[i].start -= length;
 
     check_invariant();
 
     for (auto listener : m_change_listeners)
-        listener->on_erase(pos, end);
+        listener->on_erase(begin, end);
 }
 
 void Buffer::apply_modification(const Modification& modification)
@@ -349,9 +352,9 @@ void Buffer::apply_modification(const Modification& modification)
     case Modification::Erase:
     {
         CharCount count = modification.content.length();
-        assert(string(modification.position, modification.position + count)
-               == modification.content);
-        do_erase(modification.position, count);
+        BufferIterator end = modification.position + count;
+        assert(string(modification.position, end) == modification.content);
+        do_erase(modification.position, end);
         break;
     }
     default:
@@ -382,7 +385,7 @@ void Buffer::erase(BufferIterator begin, BufferIterator end)
 
     m_current_undo_group.emplace_back(Modification::Erase, begin,
                                       string(begin, end));
-    do_erase(begin, end - begin);
+    do_erase(begin, end);
 }
 
 Window* Buffer::get_or_create_window()
