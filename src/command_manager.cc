@@ -63,7 +63,7 @@ private:
 using TokenList = std::vector<Token>;
 using TokenPosList = std::vector<std::pair<CharCount, CharCount>>;
 
-bool is_command_separator(Character c)
+bool is_command_separator(char c)
 {
     return c == ';' or c == '\n';
 }
@@ -124,17 +124,17 @@ TokenList parse(const String& line,
             if (type_name == "opt")
                 type = Token::Type::OptionExpand;
 
-            static const std::unordered_map<Character, Character> matching_delimiters = {
+            static const std::unordered_map<char, char> matching_delimiters = {
                 { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
             };
 
-            Character opening_delimiter = line[pos];
+            char opening_delimiter = line[pos];
             token_start = ++pos;
 
             auto delim_it = matching_delimiters.find(opening_delimiter);
             if (delim_it != matching_delimiters.end())
             {
-                Character closing_delimiter = delim_it->second;
+                char closing_delimiter = delim_it->second;
                 int level = 0;
                 while (pos != length)
                 {

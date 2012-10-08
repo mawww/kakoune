@@ -182,7 +182,7 @@ void NCursesUI::draw_window(Window& window)
 
 Key NCursesUI::get_key()
 {
-    const int c = getch();
+    const utf8::Codepoint c = getch();
 
     if (c > 0 and c < 27)
     {
@@ -191,7 +191,7 @@ Key NCursesUI::get_key()
     else if (c == 27)
     {
         timeout(0);
-        const int new_c = getch();
+        const utf8::Codepoint new_c = getch();
         timeout(-1);
         if (new_c != ERR)
             return {Key::Modifiers::Alt, new_c};

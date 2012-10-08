@@ -42,7 +42,7 @@ void ColorRegistry::register_alias(const String& name, const String& colordesc,
        throw runtime_error("alias '" + name + "' already defined");
 
     if (std::find_if(name.begin(), name.end(),
-                     [](Character c) { return not isalnum(c); }) != name.end())
+                     [](char c) { return not isalnum(c); }) != name.end())
         throw runtime_error("alias names are limited to alpha numeric words");
 
     auto it = std::find(colordesc.begin(), colordesc.end(), ',');
