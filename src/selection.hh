@@ -37,6 +37,8 @@ private:
     void on_erase(const BufferIterator& begin,
                   const BufferIterator& end) override;
 
+    void check_invariant() const;
+
     BufferIterator m_first;
     BufferIterator m_last;
 

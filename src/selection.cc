@@ -1,12 +1,15 @@
 #include "selection.hh"
 
+#include "utf8.hh"
+
 namespace Kakoune
 {
 
 Selection::Selection(const BufferIterator& first, const BufferIterator& last)
     : m_first(first), m_last(last)
 {
-   register_with_buffer();
+    check_invariant();
+    register_with_buffer();
 }
 
 Selection::Selection(const Selection& other)
@@ -42,7 +45,7 @@ BufferIterator Selection::begin() const
 
 BufferIterator Selection::end() const
 {
-    return std::max(m_first, m_last) + 1;
+    return utf8::next(std::max(m_first, m_last));
 }
 
 void Selection::merge_with(const Selection& selection)
@@ -54,22 +57,31 @@ void Selection::merge_with(const Selection& selection)
     m_last = selection.m_last;
 }
 
+static void avoid_eol(BufferIterator& it)
+{
+    const auto column = it.column();
+    if (column != 0 and column == it.buffer().line_length(it.line()) - 1)
+        it = utf8::previous(it);
+}
+
 void Selection::avoid_eol()
 {
-    m_first.clamp(true);
-    m_last.clamp(true);
+    Kakoune::avoid_eol(m_first);
+    Kakoune::avoid_eol(m_last);
 }
 
 void Selection::on_insert(const BufferIterator& begin, const BufferIterator& end)
 {
     m_first.on_insert(begin.coord(), end.coord());
     m_last.on_insert(begin.coord(), end.coord());
+    check_invariant();
 }
 
 void Selection::on_erase(const BufferIterator& begin, const BufferIterator& end)
 {
     m_first.on_erase(begin.coord(), end.coord());
     m_last.on_erase(begin.coord(), end.coord());
+    check_invariant();
 }
 
 void Selection::register_with_buffer()
@@ -82,6 +94,12 @@ void Selection::unregister_with_buffer()
 {
     Buffer& buffer = const_cast<Buffer&>(m_first.buffer());
     buffer.remove_change_listener(*this);
+}
+
+void Selection::check_invariant() const
+{
+    assert(utf8::is_character_start(m_first));
+    assert(utf8::is_character_start(m_last));
 }
 
 }

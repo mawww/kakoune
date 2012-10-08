@@ -132,6 +132,7 @@ public:
     BufferIterator end() const;
     CharCount      character_count() const;
     LineCount      line_count() const;
+    CharCount      line_length(LineCount line) const;
 
     // returns an iterator at given coordinates. line_and_column is
     // clamped according to avoid_eol.
@@ -205,8 +206,6 @@ private:
 
     void do_insert(const BufferIterator& pos, const String& content);
     void do_erase(const BufferIterator& pos, CharCount length);
-
-    CharCount line_length(LineCount line) const;
 
     String  m_name;
     const Type   m_type;
