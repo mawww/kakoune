@@ -5,6 +5,7 @@
 #include "color_registry.hh"
 #include "highlighter_group.hh"
 #include "string.hh"
+#include "utf8.hh"
 
 namespace Kakoune
 {
@@ -223,7 +224,7 @@ void highlight_selections(Window& window, DisplayBuffer& display_buffer)
                         [](DisplayAtom& atom) { atom.attribute |= Attributes::Underline; });
 
         const BufferIterator& last = sel.last();
-        highlight_range(display_buffer, last, last+1, false,
+        highlight_range(display_buffer, last, utf8::next(last), false,
                         [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse; });
     }
 }

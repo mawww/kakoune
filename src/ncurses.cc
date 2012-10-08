@@ -3,6 +3,8 @@
 #include "window.hh"
 #include "register_manager.hh"
 
+#include "utf8_iterator.hh"
+
 #include <map>
 
 #define CTRL(x) x - 'a' + 1
@@ -72,7 +74,7 @@ static void set_color(Color fg_color, Color bg_color)
 
 NCursesUI::NCursesUI()
 {
-    // setlocale(LC_ALL, "");
+    //setlocale(LC_CTYPE, "");
     initscr();
     cbreak();
     noecho();
@@ -104,6 +106,13 @@ static void redraw(WINDOW* menu_win)
     doupdate();
 }
 
+using utf8_it = utf8::utf8_iterator<String::iterator>;
+void addutf8str(utf8_it begin, utf8_it end)
+{
+    while (begin != end)
+        addch(*begin++);
+}
+
 void NCursesUI::draw_window(Window& window)
 {
     int max_x,max_y;
@@ -133,11 +142,16 @@ void NCursesUI::draw_window(Window& window)
             getyx(stdscr, y,x);
             if (content[content.length()-1] == '\n' and content.length() - 1 < max_x - x)
             {
-                addnstr(content.c_str(), (int)content.length() - 1);
+                addutf8str(utf8_it(content.begin()), utf8_it(content.end())-1);
                 addch(' ');
             }
             else
-                addnstr(content.c_str(), max_x - x);
+            {
+                utf8_it begin(content.begin()), end(content.end());
+                if (end - begin > max_x - x)
+                    end = begin + (max_x - x);
+                addutf8str(begin, end);
+            }
         }
         ++line_index;
     }

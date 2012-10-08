@@ -5,6 +5,8 @@
 #include "register.hh"
 #include "register_manager.hh"
 
+#include "utf8_iterator.hh"
+
 #include <array>
 
 namespace Kakoune
@@ -104,9 +106,9 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
     for (auto& sel : m_selections)
     {
         auto last = sel.last();
-        last = clamp(last + offset,
+        last = clamp(utf8::advance(last, offset),
                      buffer().iterator_at_line_begin(last),
-                     buffer().iterator_at_line_end(last)-1);
+                     utf8::previous(buffer().iterator_at_line_end(last)));
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
 }
@@ -128,8 +130,8 @@ void Editor::clear_selections()
     check_invariant();
     BufferIterator pos = m_selections.back().last();
 
-    if (*pos == '\n' and not pos.is_begin() and *(pos-1) != '\n')
-        --pos;
+    if (*pos == '\n' and not pos.is_begin() and *utf8::previous(pos) != '\n')
+        pos = utf8::previous(pos);
 
     Selection sel = Selection(pos, pos);
     m_selections.clear();
@@ -227,14 +229,14 @@ public:
     void on_insert(const BufferIterator& begin, const BufferIterator& end)
     {
         m_first = begin;
-        m_last = end-1;
+        m_last = utf8::previous(end);
     }
 
     void on_erase(const BufferIterator& begin, const BufferIterator& end)
     {
         m_first = begin;
         if (m_first >= m_buffer.end())
-            m_first = m_buffer.end() - 1;
+            m_first = utf8::previous(m_buffer.end());
         m_last = m_first;
     }
 
@@ -295,35 +297,38 @@ void Editor::end_edition()
     --m_edition_level;
 }
 
+using utf8_it = utf8::utf8_iterator<BufferIterator>;
+
 IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     : m_editor(editor), m_edition(editor), m_mode(mode)
 {
     m_editor.on_incremental_insertion_begin();
+    Buffer& buffer = editor.m_buffer;
 
     if (mode == InsertMode::Change)
     {
         for (auto& sel : editor.m_selections)
-            editor.m_buffer.erase(sel.begin(), sel.end());
+            buffer.erase(sel.begin(), sel.end());
     }
 
     for (auto& sel : m_editor.m_selections)
     {
-        BufferIterator first, last;
+        utf8_it first, last;
         switch (mode)
         {
-        case InsertMode::Insert: first = sel.end()-1; last = sel.begin(); break;
-        case InsertMode::Change: first = sel.end()-1; last = sel.begin(); break;
+        case InsertMode::Insert: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
+        case InsertMode::Change: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
         case InsertMode::Append: first = sel.begin(); last = sel.end(); break;
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
-            first = m_editor.m_buffer.iterator_at_line_end(sel.end() - 1) - 1;
+            first = utf8_it(buffer.iterator_at_line_end(utf8::previous(sel.end()))) - 1;
             last  = first;
             break;
 
         case InsertMode::OpenLineAbove:
         case InsertMode::InsertAtLineBegin:
-            first = m_editor.m_buffer.iterator_at_line_begin(sel.begin());
+            first = buffer.iterator_at_line_begin(sel.begin());
             if (mode == InsertMode::OpenLineAbove)
                 --first;
             else
@@ -337,11 +342,11 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             last = first;
             break;
         }
-        if (first.is_end())
+        if (first.underlying_iterator().is_end())
            --first;
-        if (last.is_end())
+        if (last.underlying_iterator().is_end())
            --last;
-        sel.selection = Selection(first, last);
+        sel.selection = Selection(first.underlying_iterator(), last.underlying_iterator());
     }
     if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
     {
@@ -351,8 +356,8 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             for (auto& sel : m_editor.m_selections)
             {
                 // special case, the --first line above did nothing, so we need to compensate now
-                if (sel.first() == buffer().begin() + 1)
-                    sel.selection = Selection(buffer().begin(), buffer().begin());
+                if (sel.first() == utf8::next(buffer.begin()))
+                    sel.selection = Selection(buffer.begin(), buffer.begin());
             }
         }
     }
@@ -363,7 +368,7 @@ IncrementalInserter::~IncrementalInserter()
     for (auto& sel : m_editor.m_selections)
     {
         if (m_mode == InsertMode::Append)
-            sel = Selection(sel.first(), sel.last()-1);
+            sel = Selection(sel.first(), utf8::previous(sel.last()));
          sel.selection.avoid_eol();
     }
 
@@ -392,7 +397,7 @@ void IncrementalInserter::erase()
     for (auto& sel : m_editor.m_selections)
     {
         BufferIterator pos = sel.last();
-        m_editor.buffer().erase(pos-1, pos);
+        m_editor.buffer().erase(utf8::previous(pos), pos);
     }
 }
 
