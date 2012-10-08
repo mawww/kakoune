@@ -1,6 +1,7 @@
 #include "display_buffer.hh"
 
 #include "assert.hh"
+#include "utf8.hh"
 
 namespace Kakoune
 {
@@ -10,6 +11,8 @@ DisplayLine::iterator DisplayLine::split(iterator it, BufferIterator pos)
     assert(it->content.type() == AtomContent::BufferRange);
     assert(it->content.begin() < pos);
     assert(it->content.end() > pos);
+
+    assert(utf8::is_character_start(pos));
 
     DisplayAtom atom = *it;
     atom.content.m_end = pos;
