@@ -93,7 +93,7 @@ void do_go(Context& context)
 void do_replace_with_char(Context& context)
 {
     context.client().on_next_key([](const Key& key, Context& context) {
-        context.editor().replace(String() + key.key);
+        context.editor().insert(String() + key.key, InsertMode::Replace);
     });
 }
 
@@ -115,7 +115,7 @@ void do_pipe(Context& context)
             for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
                 strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
                                                                 cmdline, context, {}, {}));
-            editor.replace(strings);
+            editor.insert(strings, InsertMode::Replace);
         }, context);
 
 }
@@ -159,40 +159,20 @@ void do_erase(Context& context)
 void do_change(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    do_insert<InsertMode::Change>(context);
+    do_insert<InsertMode::Replace>(context);
 }
 
-enum class PasteMode
-{
-    Before,
-    After,
-    Replace
-};
-
-template<PasteMode paste_mode>
+// todo linewise paste
+template<InsertMode insert_mode>
 void do_paste(Context& context)
 {
     Editor& editor = context.editor();
     int count = context.numeric_param();
     Register& reg = RegisterManager::instance()['"'];
     if (count == 0)
-    {
-        if (paste_mode == PasteMode::Before)
-            editor.insert(reg.values(context));
-        else if (paste_mode == PasteMode::After)
-            editor.append(reg.values(context));
-        else if (paste_mode == PasteMode::Replace)
-            editor.replace(reg.values(context));
-    }
+        editor.insert(reg.values(context), insert_mode);
     else
-    {
-        if (paste_mode == PasteMode::Before)
-            editor.insert(reg.values(context)[count-1]);
-        else if (paste_mode == PasteMode::After)
-            editor.append(reg.values(context)[count-1]);
-        else if (paste_mode == PasteMode::Replace)
-            editor.replace(reg.values(context)[count-1]);
-    }
+        editor.insert(reg.values(context)[count-1], insert_mode);
 }
 
 void do_select_regex(Context& context)
@@ -217,7 +197,7 @@ void do_join(Context& context)
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
     editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
-    editor.replace(" ");
+    editor.insert(" ", InsertMode::Replace);
     editor.clear_selections();
     editor.move_selections(-1_char);
 }
@@ -373,9 +353,9 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
 
     { { Key::Modifiers::None, 'y' }, do_yank },
-    { { Key::Modifiers::None, 'p' }, do_paste<PasteMode::After> },
-    { { Key::Modifiers::None, 'P' }, do_paste<PasteMode::Before> },
-    { { Key::Modifiers::Alt,  'p' }, do_paste<PasteMode::Replace> },
+    { { Key::Modifiers::None, 'p' }, do_paste<InsertMode::Append> },
+    { { Key::Modifiers::None, 'P' }, do_paste<InsertMode::Insert> },
+    { { Key::Modifiers::Alt,  'p' }, do_paste<InsertMode::Replace> },
 
     { { Key::Modifiers::None, 's' }, do_select_regex },
 

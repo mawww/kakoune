@@ -20,6 +20,17 @@ enum class SelectMode
     Append,
 };
 
+enum class InsertMode : unsigned
+{
+    Insert,
+    Append,
+    Replace,
+    InsertAtLineBegin,
+    AppendAtLineEnd,
+    OpenLineBelow,
+    OpenLineAbove
+};
+
 // An Editor is a buffer mutator
 //
 // The Editor class provides methods to manipulate a set of selections
@@ -38,14 +49,10 @@ public:
 
     void erase();
 
-    void insert(const String& string);
-    void insert(const memoryview<String>& strings);
-
-    void append(const String& string);
-    void append(const memoryview<String>& strings);
-
-    void replace(const String& string);
-    void replace(const memoryview<String>& strings);
+    void insert(const String& string,
+                InsertMode mode = InsertMode::Insert);
+    void insert(const memoryview<String>& strings,
+                InsertMode mode = InsertMode::Insert);
 
     void move_selections(LineCount move,
                          SelectMode mode = SelectMode::Replace);
@@ -101,17 +108,6 @@ struct scoped_edition
     { m_editor.end_edition(); }
 private:
     Editor& m_editor;
-};
-
-enum class InsertMode : unsigned
-{
-    Insert,
-    Append,
-    Change,
-    InsertAtLineBegin,
-    AppendAtLineEnd,
-    OpenLineBelow,
-    OpenLineAbove
 };
 
 // An IncrementalInserter manage insert mode

@@ -29,66 +29,36 @@ void Editor::erase()
     }
 }
 
-template<bool append>
-static void do_insert(Editor& editor, const String& string)
+void Editor::insert(const String& string, InsertMode mode)
 {
-    scoped_edition edition(editor);
-    for (auto& sel : editor.selections())
+    scoped_edition edition(*this);
+    if (mode == InsertMode::Replace)
+        erase();
+
+    for (auto& sel : m_selections)
     {
-        BufferIterator pos = append ? sel.end()
-                                    : sel.begin();
-        editor.buffer().insert(pos, string);
+        BufferIterator pos = (mode == InsertMode::Append) ?
+                             sel.end() : sel.begin();
+        m_buffer.insert(pos, string);
     }
 }
 
-template<bool append>
-static void do_insert(Editor& editor, const memoryview<String>& strings)
+void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 {
+    scoped_edition edition(*this);
+    if (mode == InsertMode::Replace)
+        erase();
+
     if (strings.empty())
         return;
 
-    scoped_edition edition(editor);
-    for (size_t i = 0; i < editor.selections().size(); ++i)
+    for (size_t i = 0; i < selections().size(); ++i)
     {
-        BufferIterator pos = append ? editor.selections()[i].end()
-                                    : editor.selections()[i].begin();
+        BufferIterator pos = (mode == InsertMode::Append) ?
+                             m_selections[i].end() : m_selections[i].begin();
         size_t index = std::min(i, strings.size()-1);
-        editor.buffer().insert(pos, strings[index]);
+        m_buffer.insert(pos, strings[index]);
     }
-}
-
-void Editor::insert(const String& string)
-{
-    do_insert<false>(*this, string);
-}
-
-void Editor::insert(const memoryview<String>& strings)
-{
-    do_insert<false>(*this, strings);
-}
-
-void Editor::append(const String& string)
-{
-    do_insert<true>(*this, string);
-}
-
-void Editor::append(const memoryview<String>& strings)
-{
-    do_insert<true>(*this, strings);
-}
-
-void Editor::replace(const String& string)
-{
-    scoped_edition edition(*this);
-    erase();
-    insert(string);
-}
-
-void Editor::replace(const memoryview<String>& strings)
-{
-    scoped_edition edition(*this);
-    erase();
-    insert(strings);
 }
 
 std::vector<String> Editor::selections_content() const
@@ -305,7 +275,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     m_editor.on_incremental_insertion_begin();
     Buffer& buffer = editor.m_buffer;
 
-    if (mode == InsertMode::Change)
+    if (mode == InsertMode::Replace)
     {
         for (auto& sel : editor.m_selections)
             buffer.erase(sel.begin(), sel.end());
@@ -316,9 +286,9 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
         utf8_it first, last;
         switch (mode)
         {
-        case InsertMode::Insert: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
-        case InsertMode::Change: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
-        case InsertMode::Append: first = sel.begin(); last = sel.end(); break;
+        case InsertMode::Insert:  first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
+        case InsertMode::Replace: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
+        case InsertMode::Append:  first = sel.begin(); last = sel.end(); break;
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
