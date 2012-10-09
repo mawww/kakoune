@@ -180,10 +180,16 @@ void NCursesUI::draw_window(Window& window)
     redraw(m_menu_win);
 }
 
+struct getch_iterator
+{
+    int operator*() { return getch(); }
+    getch_iterator& operator++() { return *this; }
+    getch_iterator& operator++(int) { return *this; }
+};
+
 Key NCursesUI::get_key()
 {
-    const utf8::Codepoint c = getch();
-
+    const unsigned c = getch();
     if (c > 0 and c < 27)
     {
         return {Key::Modifiers::Control, c - 1 + 'a'};
@@ -209,7 +215,9 @@ Key NCursesUI::get_key()
     case KEY_NPAGE: return Key::PageDown;
     case KEY_BTAB: return Key::BackTab;
     }
-    return c;
+
+    ungetch(c);
+    return utf8::codepoint(getch_iterator{});
 }
 
 void NCursesUI::print_status(const String& status, CharCount cursor_pos)
