@@ -29,6 +29,37 @@ void Editor::erase()
     }
 }
 
+static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
+                                     InsertMode mode)
+{
+    switch (mode)
+    {
+    case InsertMode::Insert:
+    case InsertMode::Replace:
+        return sel.begin();
+    case InsertMode::Append:
+        return sel.end();
+    case InsertMode::InsertAtLineBegin:
+        return buffer.iterator_at_line_begin(sel.begin());
+    case InsertMode::AppendAtLineEnd:
+        return buffer.iterator_at_line_end(sel.end()-1);
+    case InsertMode::OpenLineBelow:
+    {
+        auto pos = buffer.iterator_at_line_end(sel.end() - 1);
+        buffer.insert(pos, "\n");
+        return buffer.iterator_at_line_begin(pos.line() + 1);
+    }
+    case InsertMode::OpenLineAbove:
+    {
+        auto pos = buffer.iterator_at_line_begin(sel.begin());
+        buffer.insert(pos, "\n");
+        return pos;
+    }
+    }
+    assert(false);
+    return BufferIterator{};
+}
+
 void Editor::insert(const String& string, InsertMode mode)
 {
     scoped_edition edition(*this);
@@ -37,8 +68,7 @@ void Editor::insert(const String& string, InsertMode mode)
 
     for (auto& sel : m_selections)
     {
-        BufferIterator pos = (mode == InsertMode::Append) ?
-                             sel.end() : sel.begin();
+        BufferIterator pos = prepare_insert(m_buffer, sel.selection, mode);
         m_buffer.insert(pos, string);
     }
 }
@@ -54,8 +84,7 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 
     for (size_t i = 0; i < selections().size(); ++i)
     {
-        BufferIterator pos = (mode == InsertMode::Append) ?
-                             m_selections[i].end() : m_selections[i].begin();
+        BufferIterator pos = prepare_insert(m_buffer, m_selections[i].selection, mode);
         size_t index = std::min(i, strings.size()-1);
         m_buffer.insert(pos, strings[index]);
     }
