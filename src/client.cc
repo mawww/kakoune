@@ -393,6 +393,14 @@ private:
     int            m_current_completion = -1;
 };
 
+String codepoint_to_str(utf8::Codepoint cp)
+{
+    std::string str;
+    auto it = back_inserter(str);
+    utf8::dump(it, cp);
+    return String(str);
+}
+
 class Insert : public ClientMode
 {
 public:
@@ -440,7 +448,7 @@ public:
                 m_inserter.move_cursors({ 1, 0});
                 break;
             default:
-                m_inserter.insert(String() + key.key);
+                m_inserter.insert(codepoint_to_str(key.key));
                 if (m_inserter.editor().selections().size() == 1 and
                     is_word(key.key))
                 {
