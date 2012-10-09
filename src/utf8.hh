@@ -1,6 +1,9 @@
 #ifndef utf8_hh_INCLUDED
 #define utf8_hh_INCLUDED
 
+#include <cstdint>
+#include <cstddef>
+
 namespace Kakoune
 {
 
@@ -107,6 +110,35 @@ Codepoint codepoint(Iterator it)
     }
     else
         throw invalid_utf8_sequence{};
+}
+
+struct invalid_codepoint{};
+
+template<typename OutputIterator>
+void dump(OutputIterator& it, Codepoint cp)
+{
+    if (cp <= 0x7F)
+        *it++ = cp;
+    else if (cp <= 0x7FF)
+    {
+        *it++ = 0xC0 | (cp >> 6);
+        *it++ = 0x80 | (cp & 0x3F);
+    }
+    else if (cp <= 0xFFFF)
+    {
+        *it++ = 0xE0 | (cp >> 12);
+        *it++ = 0x80 | ((cp >> 6) & 0x3F);
+        *it++ = 0x80 | (cp & 0x3F);
+    }
+    else if (cp <= 0x10FFFF)
+    {
+        *it++ = 0xF0 | (cp >> 18);
+        *it++ = 0x80 | ((cp >> 12) & 0x3F);
+        *it++ = 0x80 | ((cp >> 6)  & 0x3F);
+        *it++ = 0x80 | (cp & 0x3F);
+    }
+    else
+        throw invalid_codepoint{};
 }
 
 }
