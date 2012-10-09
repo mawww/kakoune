@@ -18,16 +18,16 @@ SelectionAndCaptures select_line(const Selection& selection);
 SelectionAndCaptures select_matching(const Selection& selection);
 
 
-using CodepointPair = std::pair<utf8::Codepoint, utf8::Codepoint>;
+using CodepointPair = std::pair<Codepoint, Codepoint>;
 SelectionAndCaptures select_surrounding(const Selection& selection,
                                         const CodepointPair& matching,
                                         bool inside);
 
 SelectionAndCaptures select_to(const Selection& selection,
-                               utf8::Codepoint c,
+                               Codepoint c,
                                int count, bool inclusive);
 SelectionAndCaptures select_to_reverse(const Selection& selection,
-                                       utf8::Codepoint c,
+                                       Codepoint c,
                                        int count, bool inclusive);
 
 SelectionAndCaptures select_to_eol(const Selection& selection);

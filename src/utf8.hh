@@ -1,16 +1,14 @@
 #ifndef utf8_hh_INCLUDED
 #define utf8_hh_INCLUDED
 
-#include <cstdint>
 #include <cstddef>
+#include "unicode.hh"
 
 namespace Kakoune
 {
 
 namespace utf8
 {
-
-using Codepoint = uint32_t;
 
 // returns an iterator to next character first byte
 template<typename Iterator>

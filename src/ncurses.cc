@@ -197,7 +197,7 @@ Key NCursesUI::get_key()
     else if (c == 27)
     {
         timeout(0);
-        const utf8::Codepoint new_c = getch();
+        const Codepoint new_c = getch();
         timeout(-1);
         if (new_c != ERR)
             return {Key::Modifiers::Alt, new_c};

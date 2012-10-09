@@ -16,7 +16,7 @@ Key canonicalize_ifn(Key key)
     return key;
 }
 
-static std::unordered_map<String, utf8::Codepoint> keynamemap = {
+static std::unordered_map<String, Codepoint> keynamemap = {
     { "ret", '\r' },
     { "space", ' ' },
     { "esc", Key::Escape }
@@ -53,7 +53,7 @@ KeyList parse_keys(const String& str)
                 }
                 if (keyname.length() == 1)
                 {
-                    result.push_back(Key{ modifier, utf8::Codepoint(keyname[0]) });
+                    result.push_back(Key{ modifier, Codepoint(keyname[0]) });
                     pos = end_pos;
                     continue;
                 }
@@ -67,7 +67,7 @@ KeyList parse_keys(const String& str)
                 }
             }
         }
-        result.push_back({Key::Modifiers::None, utf8::Codepoint(str[pos])});
+        result.push_back({Key::Modifiers::None, Codepoint(str[pos])});
     }
     return result;
 }

@@ -3,6 +3,7 @@
 #include "context.hh"
 #include "editor.hh"
 #include "register_manager.hh"
+#include "utf8.hh"
 
 #include <unordered_map>
 
@@ -393,7 +394,7 @@ private:
     int            m_current_completion = -1;
 };
 
-String codepoint_to_str(utf8::Codepoint cp)
+String codepoint_to_str(Codepoint cp)
 {
     std::string str;
     auto it = back_inserter(str);

@@ -9,21 +9,10 @@
 namespace Kakoune
 {
 
-using utf8::Codepoint;
 using Utf8Iterator = utf8::utf8_iterator<BufferIterator>;
 
 namespace
 {
-
-bool is_eol(Codepoint c)
-{
-    return c == '\n';
-}
-
-bool is_blank(Codepoint c)
-{
-    return c == ' ' or c == '\t';
-}
 
 template<bool punctuation_is_word = false>
 bool is_word(Codepoint c)

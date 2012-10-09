@@ -83,14 +83,6 @@ String int_to_str(int value);
 int    str_to_int(const String& str);
 std::vector<String> split(const String& str, char separator);
 
-inline bool is_word(char c)
-{
-    return (c >= '0' and c <= '9') or
-           (c >= 'a' and c <= 'z') or
-           (c >= 'A' and c <= 'Z') or
-           c == '_';
-}
-
 }
 
 namespace std
