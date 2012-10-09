@@ -120,7 +120,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     {
         BufferCoord pos = m_buffer.line_and_column_at(sel.last());
         pos.line += offset;
-        BufferIterator last = m_buffer.iterator_at(pos, true);
+        BufferIterator last = utf8::finish(m_buffer.iterator_at(pos, true));
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
 }
