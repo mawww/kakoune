@@ -162,17 +162,43 @@ void do_change(Context& context)
     do_insert<InsertMode::Replace>(context);
 }
 
-// todo linewise paste
+static InsertMode adapt_for_linewise(InsertMode mode)
+{
+    if (mode == InsertMode::Append)
+        return InsertMode::AppendAtLineEnd;
+    if (mode == InsertMode::Insert)
+        return InsertMode::InsertAtLineBegin;
+
+    assert(false);
+    return InsertMode::Insert;
+}
+
 template<InsertMode insert_mode>
 void do_paste(Context& context)
 {
     Editor& editor = context.editor();
     int count = context.numeric_param();
-    Register& reg = RegisterManager::instance()['"'];
+    auto strings = RegisterManager::instance()['"'].values(context);
+    InsertMode mode = insert_mode;
     if (count == 0)
-        editor.insert(reg.values(context), insert_mode);
-    else
-        editor.insert(reg.values(context)[count-1], insert_mode);
+    {
+        for (auto& str : strings)
+        {
+            if (not str.empty() and str.back() == '\n')
+            {
+                mode = adapt_for_linewise(mode);
+                break;
+            }
+        }
+        editor.insert(strings, mode);
+    }
+    else if (count <= strings.size())
+    {
+        auto& str = strings[count-1];
+        if (not str.empty() and str.back() == '\n')
+            mode = adapt_for_linewise(mode);
+        editor.insert(str, mode);
+    }
 }
 
 void do_select_regex(Context& context)
