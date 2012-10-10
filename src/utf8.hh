@@ -108,6 +108,7 @@ Codepoint codepoint(Iterator it)
     }
     else
         throw invalid_utf8_sequence{};
+    return cp;
 }
 
 struct invalid_codepoint{};
