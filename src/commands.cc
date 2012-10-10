@@ -691,10 +691,15 @@ void exec_keys(const KeyList& keys, Context& context)
 
 void exec_string(const CommandParameters& params, Context& context)
 {
-    if (params.size() != 1)
+    if (params.empty())
         throw wrong_argument_count();
 
-    KeyList keys = parse_keys(params[0]);
+    KeyList keys;
+    for (auto& param : params)
+    {
+        KeyList param_keys = parse_keys(param);
+        keys.insert(keys.end(), param_keys.begin(), param_keys.end());
+    }
 
     exec_keys(keys, context);
 }
