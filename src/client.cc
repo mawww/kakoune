@@ -486,6 +486,8 @@ public:
                 break;
             }
             break;
+        default:
+            break;
         }
         if (reset_completer)
             m_completer.reset(context);

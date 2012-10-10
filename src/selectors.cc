@@ -170,9 +170,9 @@ SelectionAndCaptures select_line(const Selection& selection)
 
 SelectionAndCaptures select_matching(const Selection& selection)
 {
-    std::vector<char> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
+    std::vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     Utf8Iterator it = selection.last();
-    std::vector<char>::iterator match = matching_pairs.end();
+    std::vector<Codepoint>::iterator match = matching_pairs.end();
     while (not is_eol(*it))
     {
         match = std::find(matching_pairs.begin(), matching_pairs.end(), *it);
@@ -188,8 +188,8 @@ SelectionAndCaptures select_matching(const Selection& selection)
     if (((match - matching_pairs.begin()) % 2) == 0)
     {
         int level = 0;
-        const char opening = *match;
-        const char closing = *(match+1);
+        const Codepoint opening = *match;
+        const Codepoint closing = *(match+1);
         while (not is_end(it))
         {
             if (*it == opening)
@@ -203,8 +203,8 @@ SelectionAndCaptures select_matching(const Selection& selection)
     else
     {
         int level = 0;
-        const char opening = *(match-1);
-        const char closing = *match;
+        const Codepoint opening = *(match-1);
+        const Codepoint closing = *match;
         while (not is_begin(it))
         {
             if (*it == closing)

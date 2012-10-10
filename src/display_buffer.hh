@@ -54,6 +54,8 @@ public:
             case ReplacedBufferRange:
                return m_text;
         }
+        assert(false);
+        return 0;
     }
 
     CharCount length() const
@@ -66,6 +68,8 @@ public:
             case ReplacedBufferRange:
                return m_text.char_length();
         }
+        assert(false);
+        return 0;
     }
 
     const BufferIterator& begin() const

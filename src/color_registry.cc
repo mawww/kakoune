@@ -32,7 +32,7 @@ const ColorPair& ColorRegistry::operator[](const String& colordesc)
                            parse_color(String(it+1, colordesc.end()))
                          : Color::Default };
 
-    m_aliases[colordesc] = colpair;
+    return (m_aliases[colordesc] = colpair);
 }
 
 void ColorRegistry::register_alias(const String& name, const String& colordesc,

@@ -344,17 +344,15 @@ void Buffer::apply_modification(const Modification& modification)
     {
     case Modification::Insert:
     {
-        BufferIterator pos = modification.position < end() ?
-                             modification.position : end();
-        do_insert(pos, modification.content);
+        do_insert(pos < end() ? pos : end(), content);
         break;
     }
     case Modification::Erase:
     {
-        ByteCount count = modification.content.length();
-        BufferIterator end = modification.position + count;
-        assert(string(modification.position, end) == modification.content);
-        do_erase(modification.position, end);
+        ByteCount count = content.length();
+        BufferIterator end = pos + count;
+        assert(string(pos, end) == content);
+        do_erase(pos, end);
         break;
     }
     default:
