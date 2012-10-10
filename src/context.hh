@@ -8,19 +8,24 @@
 namespace Kakoune
 {
 
-// A Context is provided to all commands, it permits
-// to access a client, window, editor or buffer if available.
+// A Context is used to access non singleton objects for various services
+// in commands.
+//
+// The Context object links a Client, an Editor (which may be a Window),
+// and a UserInterface. It may represent an interactive user window, or
+// a hook execution or a macro replay.
 struct Context
 {
     Context() {}
-    Context(Editor& editor)
+    explicit Context(Editor& editor)
         : m_editor(&editor) {}
 
-    Context(Client& client)
+    explicit Context(Client& client)
         : m_client(&client) {}
 
     // to allow func(Context(Editor(...)))
-    Context(Editor&& editor)
+    // make sure the context will not survive the next ';'
+    explicit Context(Editor&& editor)
         : m_editor(&editor) {}
 
     Context(const Context&) = delete;
