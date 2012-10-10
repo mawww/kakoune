@@ -68,6 +68,7 @@ size_t distance(Iterator begin, Iterator end)
         if ((*begin++ & 0xC0) != 0x80)
             ++dist;
     }
+    return dist;
 }
 
 // return true if it points to the first byte of a (either single or
