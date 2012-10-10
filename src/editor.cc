@@ -174,6 +174,16 @@ void Editor::select(const Selector& selector, SelectMode mode)
 {
     check_invariant();
 
+    if (mode == SelectMode::Append)
+    {
+        auto& sel = m_selections.back();
+        SelectionAndCaptures res = selector(sel.selection);
+        if (res.captures.empty())
+            res.captures = sel.captures;
+        m_selections.push_back(res);
+        return;
+    }
+
     for (auto& sel : m_selections)
     {
         SelectionAndCaptures res = selector(sel.selection);
