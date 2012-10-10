@@ -99,6 +99,30 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
+static bool overlaps(const SelectionAndCaptures& lhs,
+                     const SelectionAndCaptures& rhs)
+{
+    return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
+           (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
+}
+
+static void merge_overlapping(SelectionAndCapturesList& selections)
+{
+    for (size_t i = 0; i < selections.size(); ++i)
+    {
+        for (size_t j = i+1; j < selections.size();)
+        {
+            if (overlaps(selections[i], selections[j]))
+            {
+                selections[i].selection.merge_with(selections[j].selection);
+                selections.erase(selections.begin() + j);
+            }
+            else
+               ++j;
+        }
+    }
+}
+
 void Editor::move_selections(CharCount offset, SelectMode mode)
 {
     assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
@@ -110,6 +134,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
                      utf8::previous(buffer().iterator_at_line_end(last)));
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
+    merge_overlapping(m_selections);
 }
 
 void Editor::move_selections(LineCount offset, SelectMode mode)
@@ -122,6 +147,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         BufferIterator last = utf8::finish(m_buffer.iterator_at(pos, true));
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
+    merge_overlapping(m_selections);
 }
 
 void Editor::clear_selections()
@@ -181,20 +207,22 @@ void Editor::select(const Selector& selector, SelectMode mode)
         if (res.captures.empty())
             res.captures = sel.captures;
         m_selections.push_back(res);
-        return;
     }
-
-    for (auto& sel : m_selections)
+    else
     {
-        SelectionAndCaptures res = selector(sel.selection);
-        if (mode == SelectMode::Extend)
-            sel.selection.merge_with(res.selection);
-        else
-            sel.selection = std::move(res.selection);
+        for (auto& sel : m_selections)
+        {
+            SelectionAndCaptures res = selector(sel.selection);
+            if (mode == SelectMode::Extend)
+                sel.selection.merge_with(res.selection);
+            else
+                sel.selection = std::move(res.selection);
 
-        if (not res.captures.empty())
-            sel.captures = std::move(res.captures);
+            if (not res.captures.empty())
+                sel.captures = std::move(res.captures);
+        }
     }
+    merge_overlapping(m_selections);
 }
 
 struct nothing_selected : public runtime_error
@@ -222,6 +250,7 @@ void Editor::multi_select(const MultiSelector& selector)
     if (new_selections.empty())
         throw nothing_selected();
 
+    merge_overlapping(new_selections);
     m_selections = std::move(new_selections);
 }
 
