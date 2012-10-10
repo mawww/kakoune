@@ -86,6 +86,16 @@ inline constexpr LineCount operator"" _line(unsigned long long int value)
     return LineCount(value);
 }
 
+struct ByteCount : public StronglyTypedInteger<ByteCount, int>
+{
+    constexpr ByteCount(int value) : StronglyTypedInteger<ByteCount>(value) {}
+};
+
+inline constexpr ByteCount operator"" _byte(unsigned long long int value)
+{
+    return ByteCount(value);
+}
+
 struct CharCount : public StronglyTypedInteger<CharCount, int>
 {
     constexpr CharCount(int value) : StronglyTypedInteger<CharCount>(value) {}
