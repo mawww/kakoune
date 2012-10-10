@@ -227,21 +227,17 @@ void NCursesUI::print_status(const String& status, CharCount cursor_pos)
     move(y-1, 0);
     clrtoeol();
     if (cursor_pos == -1)
-       addstr(status.c_str());
-    else if (cursor_pos < status.length())
-    {
-       addstr(status.substr(0, cursor_pos).c_str());
-       set_attribute(A_REVERSE, 1);
-       addch(status[cursor_pos]);
-       set_attribute(A_REVERSE, 0);
-       addstr(status.substr(cursor_pos+1, -1).c_str());
-    }
+       addutf8str(status.begin(), status.end());
     else
     {
-       addstr(status.c_str());
-       set_attribute(A_REVERSE, 1);
-       addch(' ');
-       set_attribute(A_REVERSE, 0);
+        auto cursor_it = utf8::advance(status.begin(), status.end(), (int)cursor_pos);
+        auto end = status.end();
+        addutf8str(status.begin(), cursor_it);
+        set_attribute(A_REVERSE, 1);
+        addch((cursor_it == end) ? ' ' : utf8::codepoint(cursor_it));
+        set_attribute(A_REVERSE, 0);
+        if (cursor_it != end)
+            addutf8str(utf8::next(cursor_it), end);
     }
     redraw(m_menu_win);
 }
@@ -256,7 +252,7 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     for (int i = 0; i < m_choices.size(); ++i)
     {
         m_items.push_back(new_item(m_choices[i].c_str(), ""));
-        longest = std::max(longest, m_choices[i].length());
+        longest = std::max(longest, m_choices[i].char_length());
     }
     m_items.push_back(nullptr);
     longest += 1;

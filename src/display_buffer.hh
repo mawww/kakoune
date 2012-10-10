@@ -7,18 +7,15 @@
 #include "color.hh"
 #include "line_and_column.hh"
 #include "buffer.hh"
+#include "utf8.hh"
 
 namespace Kakoune
 {
 
-struct DisplayCoord : LineAndColumn<DisplayCoord>
+struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, CharCount>
 {
     constexpr DisplayCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
-
-    template<typename T>
-    explicit constexpr DisplayCoord(const LineAndColumn<T>& other)
-        : LineAndColumn(other.line, other.column) {}
 };
 
 typedef int Attribute;
@@ -64,10 +61,10 @@ public:
         switch (m_type)
         {
             case BufferRange:
-               return m_end - m_begin;
+               return utf8::distance(m_begin, m_end);
             case Text:
             case ReplacedBufferRange:
-               return m_text.length();
+               return m_text.char_length();
         }
     }
 

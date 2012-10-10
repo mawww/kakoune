@@ -16,25 +16,25 @@ typedef std::vector<String> CandidateList;
 struct Completions
 {
     CandidateList candidates;
-    CharCount start;
-    CharCount end;
+    ByteCount start;
+    ByteCount end;
 
     Completions()
         : start(0), end(0) {}
 
-    Completions(CharCount start, CharCount end)
+    Completions(ByteCount start, ByteCount end)
         : start(start), end(end) {}
 };
 
 CandidateList complete_filename(const Context& context,
                                 const String& prefix,
-                                CharCount cursor_pos = -1);
+                                ByteCount cursor_pos = -1);
 
 typedef std::function<Completions (const Context&,
-                                   const String&, CharCount)> Completer;
+                                   const String&, ByteCount)> Completer;
 
 inline Completions complete_nothing(const Context& context,
-                                    const String&, CharCount cursor_pos)
+                                    const String&, ByteCount cursor_pos)
 {
     return Completions(cursor_pos, cursor_pos);
 }

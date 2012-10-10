@@ -114,7 +114,7 @@ inline char BufferIterator::operator*() const
     return m_buffer->m_lines[line()].content[column()];
 }
 
-inline CharCount BufferIterator::offset() const
+inline ByteCount BufferIterator::offset() const
 {
     assert(m_buffer);
     return line() == 0 ? column()
@@ -127,12 +127,12 @@ inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
     return (size_t)(int)(offset() - iterator.offset());
 }
 
-inline BufferIterator BufferIterator::operator+(CharCount size) const
+inline BufferIterator BufferIterator::operator+(ByteCount size) const
 {
     assert(m_buffer);
     if (size >= 0)
     {
-        CharCount o = std::min(m_buffer->character_count(), offset() + size);
+        ByteCount o = std::min(m_buffer->character_count(), offset() + size);
         for (LineCount i = line() + 1; i < m_buffer->line_count(); ++i)
         {
             if (m_buffer->m_lines[i].start > o)
@@ -144,12 +144,12 @@ inline BufferIterator BufferIterator::operator+(CharCount size) const
     return operator-(-size);
 }
 
-inline BufferIterator BufferIterator::operator-(CharCount size) const
+inline BufferIterator BufferIterator::operator-(ByteCount size) const
 {
     assert(m_buffer);
     if (size >= 0)
     {
-        CharCount o = std::max(0_char, offset() - size);
+        ByteCount o = std::max(0_byte, offset() - size);
         for (LineCount i = line(); i >= 0; --i)
         {
             if (m_buffer->m_lines[i].start <= o)
@@ -160,12 +160,12 @@ inline BufferIterator BufferIterator::operator-(CharCount size) const
     return operator+(-size);
 }
 
-inline BufferIterator& BufferIterator::operator+=(CharCount size)
+inline BufferIterator& BufferIterator::operator+=(ByteCount size)
 {
     return *this = (*this + size);
 }
 
-inline BufferIterator& BufferIterator::operator-=(CharCount size)
+inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 {
     return *this = (*this - size);
 }

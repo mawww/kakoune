@@ -61,7 +61,7 @@ private:
 
 
 using TokenList = std::vector<Token>;
-using TokenPosList = std::vector<std::pair<CharCount, CharCount>>;
+using TokenPosList = std::vector<std::pair<ByteCount, ByteCount>>;
 
 bool is_command_separator(char c)
 {
@@ -78,8 +78,8 @@ TokenList parse(const String& line,
 {
     TokenList result;
 
-    CharCount length = line.length();
-    CharCount pos = 0;
+    ByteCount length = line.length();
+    ByteCount pos = 0;
     while (pos < length)
     {
         while (pos != length)
@@ -97,7 +97,7 @@ TokenList parse(const String& line,
                 break;
         }
 
-        CharCount token_start = pos;
+        ByteCount token_start = pos;
 
         Token::Type type = Token::Type::Raw;
         if (line[pos] == '"' or line[pos] == '\'')
@@ -112,7 +112,7 @@ TokenList parse(const String& line,
         }
         else if (line[pos] == '%')
         {
-            CharCount type_start = ++pos;
+            ByteCount type_start = ++pos;
             while (isalpha(line[pos]))
                 ++pos;
             String type_name = line.substr(type_start, pos - type_start);
@@ -260,7 +260,7 @@ void CommandManager::execute(const String& command_line,
 }
 
 Completions CommandManager::complete(const Context& context,
-                                     const String& command_line, CharCount cursor_pos)
+                                     const String& command_line, ByteCount cursor_pos)
 {
     TokenPosList pos_info;
     TokenList tokens = parse(command_line, &pos_info);
@@ -277,7 +277,7 @@ Completions CommandManager::complete(const Context& context,
 
     if (token_to_complete == 0 or tokens.empty()) // command name completion
     {
-        CharCount cmd_start = tokens.empty() ? 0 : pos_info[0].first;
+        ByteCount cmd_start = tokens.empty() ? 0 : pos_info[0].first;
         Completions result(cmd_start, cursor_pos);
         String prefix = command_line.substr(cmd_start,
                                             cursor_pos - cmd_start);
@@ -302,10 +302,10 @@ Completions CommandManager::complete(const Context& context,
     if (command_it == m_commands.end() or not command_it->second.completer)
         return Completions();
 
-    CharCount start = token_to_complete < tokens.size() ?
+    ByteCount start = token_to_complete < tokens.size() ?
                    pos_info[token_to_complete].first : cursor_pos;
     Completions result(start , cursor_pos);
-    CharCount cursor_pos_in_token = cursor_pos - start;
+    ByteCount cursor_pos_in_token = cursor_pos - start;
 
     std::vector<String> params;
     for (auto token_it = tokens.begin()+1; token_it != tokens.end(); ++token_it)
@@ -319,7 +319,7 @@ Completions CommandManager::complete(const Context& context,
 CandidateList PerArgumentCommandCompleter::operator()(const Context& context,
                                                       const CommandParameters& params,
                                                       size_t token_to_complete,
-                                                      CharCount pos_in_token) const
+                                                      ByteCount pos_in_token) const
 {
     if (token_to_complete >= m_completers.size())
         return CandidateList();

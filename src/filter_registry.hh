@@ -30,7 +30,7 @@ public:
                              const FilterParameters& parameters);
 
     CandidateList complete_filter(const String& prefix,
-                                  CharCount cursor_pos);
+                                  ByteCount cursor_pos);
 
 private:
     idvaluemap<String, FilterFactory> m_factories;

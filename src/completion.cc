@@ -12,15 +12,15 @@ namespace Kakoune
 
 CandidateList complete_filename(const Context& context,
                                 const String& prefix,
-                                CharCount cursor_pos)
+                                ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     String dirname = "./";
     String dirprefix;
     String fileprefix = real_prefix;
 
-    CharCount dir_end = -1;
-    for (CharCount i = 0; i < real_prefix.length(); ++i)
+    ByteCount dir_end = -1;
+    for (ByteCount i = 0; i < real_prefix.length(); ++i)
     {
         if (real_prefix[i] == '/')
             dir_end = i;

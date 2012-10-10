@@ -57,7 +57,7 @@ const Option& OptionManager::operator[](const String& name) const
 }
 
 CandidateList OptionManager::complete_option_name(const String& prefix,
-                                                  CharCount cursor_pos)
+                                                  ByteCount cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;

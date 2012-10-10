@@ -3,10 +3,12 @@
 
 #include <string>
 #include <iosfwd>
+#include <climits>
 #include <boost/regex.hpp>
 
 #include "memoryview.hh"
 #include "units.hh"
+#include "utf8.hh"
 
 namespace Kakoune
 {
@@ -25,8 +27,11 @@ public:
    template<typename Iterator>
    String(Iterator begin, Iterator end) : m_content(begin, end) {}
 
-   char      operator[](CharCount pos) const { return m_content[(int)pos]; }
-   CharCount length() const { return m_content.length(); }
+   char      operator[](ByteCount pos) const { return m_content[(int)pos]; }
+   ByteCount length() const { return m_content.length(); }
+   CharCount char_length() const { return utf8::distance(begin(), end()); }
+   ByteCount byte_count_to(CharCount count) const { return utf8::advance(begin(), end(), (int)count) - begin(); }
+   CharCount char_count_to(ByteCount count) const { return utf8::distance(begin(), begin() + (int)count); }
    bool      empty()  const { return m_content.empty(); }
 
    bool      operator== (const String& other) const { return m_content == other.m_content; }
@@ -45,7 +50,13 @@ public:
    memoryview<char> data()  const { return memoryview<char>(m_content.data(), m_content.size()); }
    const char*      c_str() const { return m_content.c_str(); }
 
-   String substr(CharCount pos, CharCount length = -1) const { return String(m_content.substr((int)pos, (int)length)); }
+   String substr(ByteCount pos, ByteCount length = -1) const { return String(m_content.substr((int)pos, (int)length)); }
+   String substr(CharCount pos, CharCount length = INT_MAX) const
+   {
+       auto b = utf8::advance(begin(), end(), (int)pos);
+       auto e = utf8::advance(b, end(), (int)length);
+       return String(b,e);
+   }
    String replace(const String& expression, const String& replacement) const;
 
    using iterator = std::string::const_iterator;

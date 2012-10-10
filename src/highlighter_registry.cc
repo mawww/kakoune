@@ -33,7 +33,7 @@ void HighlighterRegistry::add_highlighter_to_group(Window& window,
 }
 
 CandidateList HighlighterRegistry::complete_highlighter(const String& prefix,
-                                                        CharCount cursor_pos)
+                                                        ByteCount cursor_pos)
 {
     return m_factories.complete_id(prefix, cursor_pos);
 }

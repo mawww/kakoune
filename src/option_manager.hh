@@ -57,7 +57,7 @@ public:
     void set_option(const String& name, const Option& value);
 
     CandidateList complete_option_name(const String& prefix,
-                                       CharCount cursor_pos);
+                                       ByteCount cursor_pos);
 
     typedef std::unordered_map<String, Option> OptionMap;
     OptionMap flatten_options() const;

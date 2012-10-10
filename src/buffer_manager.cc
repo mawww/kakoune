@@ -63,7 +63,7 @@ void BufferManager::set_last_used_buffer(Buffer& buffer)
 }
 
 CandidateList BufferManager::complete_buffername(const String& prefix,
-                                                 CharCount cursor_pos)
+                                                 ByteCount cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;

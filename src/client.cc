@@ -134,7 +134,7 @@ public:
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
-        context.ui().print_status(m_prompt, m_prompt.length());
+        context.ui().print_status(m_prompt, m_prompt.char_length());
     }
 
     void on_key(const Key& key, Context& context) override
@@ -174,7 +174,7 @@ public:
                    m_saved_result = m_result;
                 auto it = m_history_it;
                 // search for the previous history entry matching typed prefix
-                CharCount prefix_length = m_saved_result.length();
+                ByteCount prefix_length = m_saved_result.length();
                 do
                 {
                     --it;
@@ -182,7 +182,7 @@ public:
                     {
                         m_history_it = it;
                         m_result     = *it;
-                        m_cursor_pos = m_result.length();
+                        m_cursor_pos = m_result.char_length();
                         break;
                     }
                 } while (it != history.begin());
@@ -193,7 +193,7 @@ public:
         {
             if (m_history_it != history.end())
             {
-                CharCount prefix_length = m_saved_result.length();
+                ByteCount prefix_length = m_saved_result.length();
                 // search for the next history entry matching typed prefix
                 ++m_history_it;
                 while (m_history_it != history.end() and
@@ -204,7 +204,7 @@ public:
                     m_result = *m_history_it;
                 else
                     m_result = m_saved_result;
-                m_cursor_pos = m_result.length();
+                m_cursor_pos = m_result.char_length();
             }
         }
         else if (key == Key::Left or
@@ -216,7 +216,7 @@ public:
         else if (key == Key::Right or
                  key == Key{Key::Modifiers::Control, 'f'})
         {
-            if (m_cursor_pos < m_result.length())
+            if (m_cursor_pos < m_result.char_length())
                 ++m_cursor_pos;
         }
         else if (key == Key::Backspace)
@@ -240,7 +240,7 @@ public:
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + reg
                      + m_result.substr(m_cursor_pos, String::npos);
-            m_cursor_pos += reg.length();
+            m_cursor_pos += reg.char_length();
         }
         else if (key == Key(Key::Modifiers::Control, 'i') or // tab completion
                  key == Key::BackTab)
@@ -250,7 +250,8 @@ public:
             // first try, we need to ask our completer for completions
             if (m_current_completion == -1)
             {
-                m_completions = m_completer(context, m_result, m_cursor_pos);
+                m_completions = m_completer(context, m_result,
+                                            m_result.byte_count_to(m_cursor_pos));
                 if (candidates.empty())
                     return;
 
@@ -272,16 +273,20 @@ public:
             context.ui().menu_select(m_current_completion);
             m_result = m_result.substr(0, m_completions.start) + completion
                      + m_result.substr(m_cursor_pos);
-            m_cursor_pos = m_completions.start + completion.length();
+            m_cursor_pos = m_result.char_count_to(m_completions.start)
+                         + completion.char_length();
         }
         else
         {
             context.ui().menu_hide();
             m_current_completion = -1;
-            m_result = m_result.substr(0, m_cursor_pos) + key.key + m_result.substr(m_cursor_pos, String::npos);
+            std::string keystr;
+            auto inserter = back_inserter(keystr);
+            utf8::dump(inserter, key.key);
+            m_result = m_result.substr(0, m_cursor_pos) + keystr + m_result.substr(m_cursor_pos, String::npos);
             ++m_cursor_pos;
         }
-        context.ui().print_status(m_prompt + m_result, m_prompt.length() + m_cursor_pos);
+        context.ui().print_status(m_prompt + m_result, m_prompt.char_length() + m_cursor_pos);
     }
 
 private:

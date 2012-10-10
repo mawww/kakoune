@@ -30,7 +30,7 @@ public:
                                   const HighlighterParameters& parameters);
 
     CandidateList complete_highlighter(const String& prefix,
-                                      CharCount cursor_pos);
+                                      ByteCount cursor_pos);
 
 private:
     idvaluemap<String, HighlighterFactory> m_factories;

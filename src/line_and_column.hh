@@ -6,13 +6,13 @@
 namespace Kakoune
 {
 
-template<typename EffectiveType>
+template<typename EffectiveType, typename LineType, typename ColumnType>
 struct LineAndColumn
 {
-    LineCount line;
-    CharCount column;
+    LineType   line;
+    ColumnType column;
 
-    constexpr LineAndColumn(LineCount line = 0, CharCount column = 0)
+    constexpr LineAndColumn(LineType line = 0, ColumnType column = 0)
         : line(line), column(column) {}
 
     constexpr EffectiveType operator+(const EffectiveType& other) const

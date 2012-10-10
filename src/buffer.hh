@@ -17,14 +17,10 @@ namespace Kakoune
 class Buffer;
 class Window;
 
-struct BufferCoord : LineAndColumn<BufferCoord>
+struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 {
-    constexpr BufferCoord(LineCount line = 0, CharCount column = 0)
+    constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
         : LineAndColumn(line, column) {}
-
-    template<typename T>
-    explicit constexpr BufferCoord(const LineAndColumn<T>& other)
-        : LineAndColumn(other.line, other.column) {}
 };
 
 // A BufferIterator permits to iterate over the characters of a buffer
@@ -50,11 +46,11 @@ public:
     char   operator* () const;
     size_t operator- (const BufferIterator& iterator) const;
 
-    BufferIterator operator+ (CharCount size) const;
-    BufferIterator operator- (CharCount size) const;
+    BufferIterator operator+ (ByteCount size) const;
+    BufferIterator operator- (ByteCount size) const;
 
-    BufferIterator& operator+= (CharCount size);
-    BufferIterator& operator-= (CharCount size);
+    BufferIterator& operator+= (ByteCount size);
+    BufferIterator& operator-= (ByteCount size);
 
     BufferIterator& operator++ ();
     BufferIterator& operator-- ();
@@ -74,10 +70,10 @@ public:
     const Buffer& buffer() const;
     const BufferCoord& coord() const { return m_coord; }
     LineCount  line() const { return m_coord.line; }
-    CharCount column() const { return m_coord.column; }
+    ByteCount column() const { return m_coord.column; }
 
 private:
-    CharCount offset() const;
+    ByteCount offset() const;
 
     const Buffer* m_buffer;
     BufferCoord   m_coord;
@@ -130,9 +126,9 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    CharCount      character_count() const;
+    ByteCount      character_count() const;
     LineCount      line_count() const;
-    CharCount      line_length(LineCount line) const;
+    ByteCount      line_length(LineCount line) const;
 
     // returns an iterator at given coordinates. line_and_column is
     // clamped according to avoid_eol.
@@ -188,10 +184,10 @@ private:
 
     struct Line
     {
-        CharCount start;
+        ByteCount start;
         String    content;
 
-        CharCount length() const { return content.length(); }
+        ByteCount length() const { return content.length(); }
     };
     struct LineList : std::vector<Line>
     {

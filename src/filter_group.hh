@@ -19,8 +19,8 @@ public:
 
     FilterGroup& get_group(const String& id);
 
-    CandidateList complete_id(const String& prefix, CharCount cursor_pos);
-    CandidateList complete_group_id(const String& prefix, CharCount cursor_pos);
+    CandidateList complete_id(const String& prefix, ByteCount cursor_pos);
+    CandidateList complete_group_id(const String& prefix, ByteCount cursor_pos);
 
 private:
     idvaluemap<String, FilterFunc> m_filters;

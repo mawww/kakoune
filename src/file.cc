@@ -4,6 +4,8 @@
 #include "buffer_manager.hh"
 #include "assert.hh"
 
+#include "unicode.hh"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -14,25 +16,20 @@
 namespace Kakoune
 {
 
-bool isidentifier(char c)
-{
-    return std::isalnum(c) or c == '_';
-}
-
 String parse_filename(const String& filename)
 {
     if (filename.length() >= 2 and filename[0] == '~' and filename[1] == '/')
-        return parse_filename("$HOME/" + filename.substr(2));
+        return parse_filename("$HOME/" + filename.substr(2_byte));
 
-    CharCount pos = 0;
+    ByteCount pos = 0;
     String result;
-    for (CharCount i = 0; i < filename.length(); ++i)
+    for (ByteCount i = 0; i < filename.length(); ++i)
     {
         if (filename[i] == '$' and (i == 0 or filename[i-1] != '\\'))
         {
             result += filename.substr(pos, i - pos);
-            CharCount end = i+1;
-            while (end != filename.length() and isidentifier(filename[end]))
+            ByteCount end = i+1;
+            while (end != filename.length() and is_word(filename[end]))
                 ++end;
             String var_name = filename.substr(i+1, end - i - 1);
             const char* var_value = getenv(var_name.c_str());

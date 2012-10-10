@@ -59,10 +59,10 @@ BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
     return iterator.m_coord;
 }
 
-CharCount Buffer::line_length(LineCount line) const
+ByteCount Buffer::line_length(LineCount line) const
 {
     assert(line < line_count());
-    CharCount end = (line < line_count() - 1) ?
+    ByteCount end = (line < line_count() - 1) ?
                     m_lines[line + 1].start : character_count();
     return end - m_lines[line].start;
 }
@@ -75,8 +75,8 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
 
     BufferCoord result(line_and_column.line, line_and_column.column);
     result.line = Kakoune::clamp(result.line, 0_line, line_count() - 1);
-    CharCount max_col = std::max(0_char, line_length(result.line) - (avoid_eol ? 2 : 1));
-    result.column = Kakoune::clamp(result.column, 0_char, max_col);
+    ByteCount max_col = std::max(0_byte, line_length(result.line) - (avoid_eol ? 2 : 1));
+    result.column = Kakoune::clamp(result.column, 0_byte, max_col);
     return result;
 }
 
@@ -116,7 +116,7 @@ BufferIterator Buffer::end() const
     return BufferIterator(*this, { line_count()-1, m_lines.back().length() });
 }
 
-CharCount Buffer::character_count() const
+ByteCount Buffer::character_count() const
 {
     if (m_lines.empty())
         return 0;
@@ -133,10 +133,10 @@ String Buffer::string(const BufferIterator& begin, const BufferIterator& end) co
     String res;
     for (LineCount line = begin.line(); line <= end.line(); ++line)
     {
-       CharCount start = 0;
+       ByteCount start = 0;
        if (line == begin.line())
            start = begin.column();
-       CharCount count = -1;
+       ByteCount count = -1;
        if (line == end.line())
            count = end.column() - start;
        res += m_lines[line].content.substr(start, count);
@@ -224,7 +224,7 @@ void Buffer::reset_undo_data()
 
 void Buffer::check_invariant() const
 {
-    CharCount start = 0;
+    ByteCount start = 0;
     assert(not m_lines.empty());
     for (auto& line : m_lines)
     {
@@ -239,7 +239,7 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
     assert(pos.is_end() or utf8::is_character_start(pos));
     ++m_timestamp;
-    CharCount offset = pos.offset();
+    ByteCount offset = pos.offset();
 
     // all following lines advanced by length
     for (LineCount i = pos.line()+1; i < line_count(); ++i)
@@ -251,8 +251,8 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
     // line without inserting a '\n'
     if (pos == end() and (pos == begin() or *(pos-1) == '\n'))
     {
-        CharCount start = 0;
-        for (CharCount i = 0; i < content.length(); ++i)
+        ByteCount start = 0;
+        for (ByteCount i = 0; i < content.length(); ++i)
         {
             if (content[i] == '\n')
             {
@@ -274,8 +274,8 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         auto line_it = m_lines.begin() + (int)pos.line();
         line_it = m_lines.erase(line_it);
 
-        CharCount start = 0;
-        for (CharCount i = 0; i < content.length(); ++i)
+        ByteCount start = 0;
+        for (ByteCount i = 0; i < content.length(); ++i)
         {
             if (content[i] == '\n')
             {
@@ -317,7 +317,7 @@ void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
     assert(utf8::is_character_start(begin) and
            (end.is_end() or utf8::is_character_start(end)));
     ++m_timestamp;
-    const CharCount length = end - begin;
+    const ByteCount length = end - begin;
     String prefix = m_lines[begin.line()].content.substr(0, begin.column());
     String suffix = m_lines[end.line()].content.substr(end.column());
     Line new_line = { m_lines[begin.line()].start, prefix + suffix };
@@ -351,7 +351,7 @@ void Buffer::apply_modification(const Modification& modification)
     }
     case Modification::Erase:
     {
-        CharCount count = modification.content.length();
+        ByteCount count = modification.content.length();
         BufferIterator end = modification.position + count;
         assert(string(modification.position, end) == modification.content);
         do_erase(modification.position, end);

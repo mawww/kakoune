@@ -51,18 +51,14 @@ void Window::update_display_buffer()
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        BufferIterator pos        = buffer().iterator_at({ buffer_line, m_position.column });
-        BufferIterator line_begin = buffer().iterator_at_line_begin(pos);
-        BufferIterator line_end   = buffer().iterator_at_line_end(pos);
+        BufferIterator line_begin = buffer().iterator_at_line_begin(buffer_line);
+        BufferIterator line_end   = buffer().iterator_at_line_end(buffer_line);
 
-        BufferIterator end;
-        if (CharCount(line_end - pos) > m_dimensions.column)
-            end = pos + m_dimensions.column;
-        else
-            end = line_end;
+        BufferIterator begin = utf8::advance(line_begin, line_end, (int)m_position.column);
+        BufferIterator end   = utf8::advance(begin,      line_end, (int)m_dimensions.column);
 
         lines.push_back(DisplayLine(buffer_line));
-        lines.back().push_back(DisplayAtom(AtomContent(pos,end)));
+        lines.back().push_back(DisplayAtom(AtomContent(begin, end)));
     }
 
     m_display_buffer.compute_range();
@@ -107,20 +103,20 @@ void Window::scroll_to_keep_cursor_visible_ifn()
             atom.content.begin() <= cursor and atom.content.end() > cursor)
         {
             if (atom.content.type() == AtomContent::BufferRange)
-                column += cursor - atom.content.begin();
+                column += utf8::distance(atom.content.begin(), cursor);
             else
-                column += atom.content.content().length();
+                column += atom.content.content().char_length();
 
             // we could early out on this, but having scrolling left
             // faster than not scrolling at all is not really useful.
-            if (cursor.column() < m_position.column)
-                m_position.column = cursor.column();
+            if (column < m_position.column)
+                m_position.column = column;
             else if (column >= m_position.column + m_dimensions.column)
                 m_position.column = column - (m_dimensions.column - 1);
 
             return;
         }
-        column += atom.content.content().length();
+        column += atom.content.content().char_length();
     }
     if (cursor != buffer().end())
     {

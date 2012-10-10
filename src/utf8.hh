@@ -43,17 +43,17 @@ Iterator previous(Iterator it)
 // dth character after (or before if d < 0) the character
 // pointed by it
 template<typename Iterator, typename Distance>
-Iterator advance(Iterator it, Distance d)
+Iterator advance(Iterator it, Iterator end, Distance d)
 {
     if (d < 0)
     {
-       while (d++)
-           it = previous(it);
+       while (it != end and d++)
+           it = utf8::previous(it);
     }
     else
     {
-        while (d--)
-           it = next(it);
+        while (it != end and d--)
+           it = utf8::next(it);
     }
     return it;
 }

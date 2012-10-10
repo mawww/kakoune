@@ -30,7 +30,7 @@ public:
     void    set_last_used_buffer(Buffer& buffer);
 
     CandidateList complete_buffername(const String& prefix,
-                                      CharCount cursor_pos = -1);
+                                      ByteCount cursor_pos = -1);
 
 private:
     BufferList m_buffers;

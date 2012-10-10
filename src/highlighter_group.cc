@@ -39,13 +39,13 @@ HighlighterGroup& HighlighterGroup::get_group(const String& id)
 
 
 CandidateList HighlighterGroup::complete_id(const String& prefix,
-                                            CharCount cursor_pos)
+                                            ByteCount cursor_pos)
 {
     return m_highlighters.complete_id(prefix, cursor_pos);
 }
 
 CandidateList HighlighterGroup::complete_group_id(const String& prefix,
-                                                  CharCount cursor_pos)
+                                                  ByteCount cursor_pos)
 {
     return m_highlighters.complete_id_if(
         prefix, cursor_pos,

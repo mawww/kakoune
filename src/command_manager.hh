@@ -28,13 +28,13 @@ typedef std::function<void (const CommandParameters&,
 
 typedef std::function<CandidateList (const Context& context,
                                      const CommandParameters&,
-                                     size_t, CharCount)> CommandCompleter;
+                                     size_t, ByteCount)> CommandCompleter;
 
 class PerArgumentCommandCompleter
 {
 public:
     typedef std::function<CandidateList (const Context&,
-                                         const String&, CharCount)> ArgumentCompleter;
+                                         const String&, ByteCount)> ArgumentCompleter;
     typedef memoryview<ArgumentCompleter> ArgumentCompleterList;
 
     PerArgumentCommandCompleter(const ArgumentCompleterList& completers)
@@ -43,7 +43,7 @@ public:
     CandidateList operator()(const Context& context,
                              const CommandParameters& params,
                              size_t token_to_complete,
-                             CharCount pos_in_token) const;
+                             ByteCount pos_in_token) const;
 
 private:
     std::vector<ArgumentCompleter> m_completers;
@@ -57,7 +57,7 @@ public:
                  const EnvVarMap& env_vars = {});
 
     Completions complete(const Context& context,
-                         const String& command_line, CharCount cursor_pos);
+                         const String& command_line, ByteCount cursor_pos);
 
     bool command_defined(const String& command_name) const;
 

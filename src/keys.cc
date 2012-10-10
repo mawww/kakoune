@@ -25,11 +25,11 @@ static std::unordered_map<String, Codepoint> keynamemap = {
 KeyList parse_keys(const String& str)
 {
     KeyList result;
-    for (CharCount pos = 0; pos < str.length(); ++pos)
+    for (ByteCount pos = 0; pos < str.length(); ++pos)
     {
         if (str[pos] == '<')
         {
-            CharCount end_pos = pos;
+            ByteCount end_pos = pos;
             while (end_pos < str.length() and str[end_pos] != '>')
                 ++end_pos;
 
@@ -43,12 +43,12 @@ KeyList parse_keys(const String& str)
                     if (tolower(keyname[0]) == 'c' and keyname[1] == '-')
                     {
                         modifier = Key::Modifiers::Control;
-                        keyname = keyname.substr(2);
+                        keyname = keyname.substr(2_byte);
                     }
                     if (tolower(keyname[0]) == 'a' and keyname[1] == '-')
                     {
                         modifier = Key::Modifiers::Alt;
-                        keyname = keyname.substr(2);
+                        keyname = keyname.substr(2_byte);
                     }
                 }
                 if (keyname.length() == 1)

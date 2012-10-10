@@ -24,8 +24,8 @@ class Window : public Editor, public OptionManagerWatcher
 public:
     ~Window();
 
-    const BufferCoord& position() const { return m_position; }
-    void set_position(const BufferCoord& position) { m_position = buffer().clamp(position); }
+    const DisplayCoord& position() const { return m_position; }
+    void set_position(const DisplayCoord& position) { m_position = position; }
 
     const DisplayCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(const DisplayCoord& dimensions);
@@ -58,7 +58,7 @@ private:
 
     void scroll_to_keep_cursor_visible_ifn();
 
-    BufferCoord   m_position;
+    DisplayCoord  m_position;
     DisplayCoord  m_dimensions;
     DisplayBuffer m_display_buffer;
 

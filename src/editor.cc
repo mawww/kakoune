@@ -129,9 +129,9 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
     for (auto& sel : m_selections)
     {
         auto last = sel.last();
-        last = clamp(utf8::advance(last, offset),
-                     buffer().iterator_at_line_begin(last),
-                     utf8::previous(buffer().iterator_at_line_end(last)));
+        auto limit = offset < 0 ? buffer().iterator_at_line_begin(last)
+                                : utf8::previous(buffer().iterator_at_line_end(last));
+        last = utf8::advance(last, limit, offset);
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
     merge_overlapping(m_selections);

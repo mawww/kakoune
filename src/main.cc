@@ -263,20 +263,22 @@ void do_scroll(Context& context)
                   "do_scrool only implements PageUp and PageDown");
     Window& window = context.window();
     Buffer& buffer = context.buffer();
-    BufferCoord position = window.position();
-    BufferIterator cursor_pos;
+    DisplayCoord position = window.position();
+    LineCount cursor_line = 0;
 
     if (key == Key::PageUp)
     {
         position.line -= (window.dimensions().line - 2);
-        cursor_pos = buffer.iterator_at(position);
+        cursor_line = position.line;
     }
     else if (key == Key::PageDown)
     {
         position.line += (window.dimensions().line - 2);
-        cursor_pos = buffer.iterator_at(position + BufferCoord{window.dimensions().line - 1, 0});
+        cursor_line = position.line + window.dimensions().line - 1;
     }
-
+    auto cursor_pos = utf8::advance(buffer.iterator_at_line_begin(position.line),
+                                    buffer.iterator_at_line_end(position.line),
+                                    position.column);
     window.select(cursor_pos);
     window.set_position(position);
 }
@@ -473,7 +475,7 @@ int main(int argc, char* argv[])
                                    { return runtime_directory(); });
     shell_manager.register_env_var("opt_.+",
                                    [](const String& name, const Context& context)
-                                   { return context.option_manager()[name.substr(4)].as_string(); });
+                                   { return context.option_manager()[name.substr(4_byte)].as_string(); });
     shell_manager.register_env_var("reg_.+",
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });
