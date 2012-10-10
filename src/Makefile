@@ -16,5 +16,7 @@ kak : $(objects)
 tags:
 	ctags -R
 
-clean :
+clean:
 	rm -f *.o .*.d kak tags
+
+.PHONY: tags
