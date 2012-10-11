@@ -224,7 +224,7 @@ public:
             if (m_cursor_pos != 0)
             {
                 m_result = m_result.substr(0, m_cursor_pos - 1)
-                       + m_result.substr(m_cursor_pos, String::npos);
+                       + m_result.substr(m_cursor_pos);
 
                 --m_cursor_pos;
             }
@@ -239,7 +239,7 @@ public:
             context.ui().menu_hide();
             m_current_completion = -1;
             m_result = m_result.substr(0, m_cursor_pos) + reg
-                     + m_result.substr(m_cursor_pos, String::npos);
+                     + m_result.substr(m_cursor_pos);
             m_cursor_pos += reg.char_length();
         }
         else if (key == Key(Key::Modifiers::Control, 'i') or // tab completion
@@ -283,7 +283,7 @@ public:
             std::string keystr;
             auto inserter = back_inserter(keystr);
             utf8::dump(inserter, key.key);
-            m_result = m_result.substr(0, m_cursor_pos) + keystr + m_result.substr(m_cursor_pos, String::npos);
+            m_result = m_result.substr(0, m_cursor_pos) + keystr + m_result.substr(m_cursor_pos);
             ++m_cursor_pos;
         }
         context.ui().print_status(m_prompt + m_result, m_prompt.char_length() + m_cursor_pos);
