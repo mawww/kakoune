@@ -72,7 +72,7 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    BufferIterator cursor = selections().back().last();
+    const BufferIterator cursor = selections().back().last();
 
     // scroll lines if needed
     if (cursor.line() < m_position.line)
@@ -107,10 +107,11 @@ void Window::scroll_to_keep_cursor_visible_ifn()
             else
                 column += atom.content.content().char_length();
 
+            CharCount cursor_col = utf8::distance(line_begin, cursor);
             // we could early out on this, but having scrolling left
             // faster than not scrolling at all is not really useful.
-            if (column < m_position.column)
-                m_position.column = column;
+            if (cursor_col < m_position.column)
+                m_position.column = cursor_col;
             else if (column >= m_position.column + m_dimensions.column)
                 m_position.column = column - (m_dimensions.column - 1);
 
