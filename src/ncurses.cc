@@ -105,9 +105,9 @@ static void redraw(WINDOW* menu_win)
     }
     doupdate();
 }
-
-using utf8_it = utf8::utf8_iterator<String::iterator>;
-void addutf8str(utf8_it begin, utf8_it end)
+using Utf8Policy = utf8::InvalidBytePolicy::Pass;
+using Utf8Iterator = utf8::utf8_iterator<String::iterator, Utf8Policy>;
+void addutf8str(Utf8Iterator begin, Utf8Iterator end)
 {
     while (begin != end)
         addch(*begin++);
@@ -142,12 +142,12 @@ void NCursesUI::draw_window(Window& window)
             getyx(stdscr, y,x);
             if (content[content.length()-1] == '\n' and content.length() - 1 < max_x - x)
             {
-                addutf8str(utf8_it(content.begin()), utf8_it(content.end())-1);
+                addutf8str(Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
                 addch(' ');
             }
             else
             {
-                utf8_it begin(content.begin()), end(content.end());
+                Utf8Iterator begin(content.begin()), end(content.end());
                 if (end - begin > max_x - x)
                     end = begin + (max_x - x);
                 addutf8str(begin, end);
@@ -234,7 +234,7 @@ void NCursesUI::print_status(const String& status, CharCount cursor_pos)
         auto end = status.end();
         addutf8str(status.begin(), cursor_it);
         set_attribute(A_REVERSE, 1);
-        addch((cursor_it == end) ? ' ' : utf8::codepoint(cursor_it));
+        addch((cursor_it == end) ? ' ' : utf8::codepoint<Utf8Policy>(cursor_it));
         set_attribute(A_REVERSE, 0);
         if (cursor_it != end)
             addutf8str(utf8::next(cursor_it), end);

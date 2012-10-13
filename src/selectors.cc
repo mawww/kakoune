@@ -9,7 +9,7 @@
 namespace Kakoune
 {
 
-using Utf8Iterator = utf8::utf8_iterator<BufferIterator>;
+using Utf8Iterator = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
 
 namespace
 {

@@ -11,7 +11,8 @@ namespace utf8
 
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
-template<typename Iterator>
+template<typename Iterator,
+         typename InvalidPolicy = InvalidBytePolicy::Throw>
 class utf8_iterator
 {
 public:
@@ -125,7 +126,7 @@ private:
     Codepoint get_value() const
     {
         if (m_value == -1)
-            m_value = utf8::codepoint(m_it);
+            m_value = utf8::codepoint<InvalidPolicy>(m_it);
         return m_value;
     }
 

@@ -335,7 +335,7 @@ void Editor::end_edition()
     --m_edition_level;
 }
 
-using utf8_it = utf8::utf8_iterator<BufferIterator>;
+using utf8_it = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
 
 IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     : m_editor(editor), m_edition(editor), m_mode(mode)

@@ -81,9 +81,25 @@ bool is_character_start(Iterator it)
 
 struct invalid_utf8_sequence{};
 
+namespace InvalidBytePolicy
+{
+
+struct Throw
+{
+    Codepoint operator()(char byte) const { throw invalid_utf8_sequence{}; }
+};
+
+struct Pass
+{
+    Codepoint operator()(char byte) const { return byte; }
+};
+
+}
+
 // returns the codepoint of the character whose first byte
 // is pointed by it
-template<typename Iterator>
+template<typename InvalidPolicy = InvalidBytePolicy::Throw,
+         typename Iterator>
 Codepoint codepoint(Iterator it)
 {
     // According to rfc3629, UTF-8 allows only up to 4 bytes.
@@ -108,7 +124,7 @@ Codepoint codepoint(Iterator it)
         cp |= (*it & 0x3F);
     }
     else
-        throw invalid_utf8_sequence{};
+        cp = InvalidPolicy{}(byte);
     return cp;
 }
 
