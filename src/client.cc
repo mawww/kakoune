@@ -62,6 +62,70 @@ private:
     int m_count = 0;
 };
 
+class LineEditor
+{
+public:
+    void handle_key(const Key& key)
+    {
+        if (key == Key::Left or
+            key == Key{Key::Modifiers::Control, 'b'})
+        {
+            if (m_cursor_pos > 0)
+                --m_cursor_pos;
+        }
+        else if (key == Key::Right or
+                 key == Key{Key::Modifiers::Control, 'f'})
+        {
+            if (m_cursor_pos < m_line.char_length())
+                ++m_cursor_pos;
+        }
+        else if (key == Key::Backspace)
+        {
+            if (m_cursor_pos != 0)
+            {
+                m_line = m_line.substr(0, m_cursor_pos - 1)
+                       + m_line.substr(m_cursor_pos);
+
+                --m_cursor_pos;
+            }
+        }
+        else
+        {
+            std::string keystr;
+            auto inserter = back_inserter(keystr);
+            utf8::dump(inserter, key.key);
+            m_line = m_line.substr(0, m_cursor_pos) + keystr
+                   + m_line.substr(m_cursor_pos);
+            ++m_cursor_pos;
+        }
+    }
+
+    void insert(const String& str)
+    {
+        insert_from(m_cursor_pos, str);
+    }
+
+    void insert_from(CharCount start, const String& str)
+    {
+        assert(start <= m_cursor_pos);
+        m_line = m_line.substr(0, start) + str
+               + m_line.substr(m_cursor_pos);
+       m_cursor_pos = start + str.char_length();
+    }
+
+    void reset(String line)
+    {
+        m_line = std::move(line);
+        m_cursor_pos = m_line.char_length();
+    }
+
+    const String& line() const { return m_line; }
+    CharCount cursor_pos() const { return m_cursor_pos; }
+private:
+    CharCount      m_cursor_pos = 0;
+    String         m_line;
+};
+
 class Menu : public ClientMode
 {
 public:
@@ -140,18 +204,19 @@ public:
     void on_key(const Key& key, Context& context) override
     {
         std::vector<String>& history = ms_history[m_prompt];
+        const String& line = m_line_editor.line();
         if (key == Key{Key::Modifiers::Control, 'm'}) // enter
         {
             std::vector<String>::iterator it;
-            while ((it = find(history, m_result)) != history.end())
+            while ((it = find(history, line)) != history.end())
                 history.erase(it);
 
-            history.push_back(m_result);
+            history.push_back(line);
             context.ui().print_status("");
             context.ui().menu_hide();
             // save callback as reset_normal_mode will delete this
             PromptCallback callback = std::move(m_callback);
-            String result = std::move(m_result);
+            String result = line;
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
             // may change the mode
@@ -165,24 +230,29 @@ public:
             reset_normal_mode();
             return;
         }
+        else if (key == Key{Key::Modifiers::Control, 'r'})
+        {
+            Key k = context.ui().get_key();
+            String reg = RegisterManager::instance()[k.key].values(context)[0];
+            m_line_editor.insert(reg);
+        }
         else if (key == Key::Up or
                  key == Key{Key::Modifiers::Control, 'p'})
         {
             if (m_history_it != history.begin())
             {
                 if (m_history_it == history.end())
-                   m_saved_result = m_result;
+                   m_prefix = line;
                 auto it = m_history_it;
                 // search for the previous history entry matching typed prefix
-                ByteCount prefix_length = m_saved_result.length();
+                ByteCount prefix_length = m_prefix.length();
                 do
                 {
                     --it;
-                    if (it->substr(0, prefix_length) == m_saved_result)
+                    if (it->substr(0, prefix_length) == m_prefix)
                     {
                         m_history_it = it;
-                        m_result     = *it;
-                        m_cursor_pos = m_result.char_length();
+                        m_line_editor.reset(*it);
                         break;
                     }
                 } while (it != history.begin());
@@ -193,54 +263,18 @@ public:
         {
             if (m_history_it != history.end())
             {
-                ByteCount prefix_length = m_saved_result.length();
+                ByteCount prefix_length = m_prefix.length();
                 // search for the next history entry matching typed prefix
                 ++m_history_it;
                 while (m_history_it != history.end() and
-                       m_history_it->substr(0, prefix_length) != m_saved_result)
+                       m_history_it->substr(0, prefix_length) != m_prefix)
                     ++m_history_it;
 
                 if (m_history_it != history.end())
-                    m_result = *m_history_it;
+                    m_line_editor.reset(*m_history_it);
                 else
-                    m_result = m_saved_result;
-                m_cursor_pos = m_result.char_length();
+                    m_line_editor.reset(m_prefix);
             }
-        }
-        else if (key == Key::Left or
-                 key == Key{Key::Modifiers::Control, 'b'})
-        {
-            if (m_cursor_pos > 0)
-                --m_cursor_pos;
-        }
-        else if (key == Key::Right or
-                 key == Key{Key::Modifiers::Control, 'f'})
-        {
-            if (m_cursor_pos < m_result.char_length())
-                ++m_cursor_pos;
-        }
-        else if (key == Key::Backspace)
-        {
-            if (m_cursor_pos != 0)
-            {
-                m_result = m_result.substr(0, m_cursor_pos - 1)
-                       + m_result.substr(m_cursor_pos);
-
-                --m_cursor_pos;
-            }
-
-            context.ui().menu_hide();
-            m_current_completion = -1;
-        }
-        else if (key == Key(Key::Modifiers::Control, 'r'))
-        {
-            Key k = context.ui().get_key();
-            String reg = RegisterManager::instance()[k.key].values(context)[0];
-            context.ui().menu_hide();
-            m_current_completion = -1;
-            m_result = m_result.substr(0, m_cursor_pos) + reg
-                     + m_result.substr(m_cursor_pos);
-            m_cursor_pos += reg.char_length();
         }
         else if (key == Key(Key::Modifiers::Control, 'i') or // tab completion
                  key == Key::BackTab)
@@ -250,16 +284,16 @@ public:
             // first try, we need to ask our completer for completions
             if (m_current_completion == -1)
             {
-                m_completions = m_completer(context, m_result,
-                                            m_result.byte_count_to(m_cursor_pos));
+                m_completions = m_completer(context, line,
+                                            line.byte_count_to(m_line_editor.cursor_pos()));
                 if (candidates.empty())
                     return;
 
                 context.ui().menu_hide();
                 DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
                 context.ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
-                String prefix = m_result.substr(m_completions.start,
-                                                m_completions.end - m_completions.start);
+                String prefix = line.substr(m_completions.start,
+                                            m_completions.end - m_completions.start);
                 if (not contains(candidates, prefix))
                     candidates.push_back(std::move(prefix));
             }
@@ -271,33 +305,28 @@ public:
 
             const String& completion = candidates[m_current_completion];
             context.ui().menu_select(m_current_completion);
-            m_result = m_result.substr(0, m_completions.start) + completion
-                     + m_result.substr(m_cursor_pos);
-            m_cursor_pos = m_result.char_count_to(m_completions.start)
-                         + completion.char_length();
+
+            m_line_editor.insert_from(line.char_count_to(m_completions.start),
+                                      completion);
         }
         else
         {
             context.ui().menu_hide();
             m_current_completion = -1;
-            std::string keystr;
-            auto inserter = back_inserter(keystr);
-            utf8::dump(inserter, key.key);
-            m_result = m_result.substr(0, m_cursor_pos) + keystr + m_result.substr(m_cursor_pos);
-            ++m_cursor_pos;
+            m_line_editor.handle_key(key);
         }
-        context.ui().print_status(m_prompt + m_result, m_prompt.char_length() + m_cursor_pos);
+        context.ui().print_status(m_prompt + line,
+                                  m_prompt.char_length() + m_line_editor.cursor_pos());
     }
 
 private:
     PromptCallback m_callback;
     Completer      m_completer;
     const String   m_prompt;
-    CharCount      m_cursor_pos = 0;
     Completions    m_completions;
     int            m_current_completion = -1;
-    String         m_result;
-    String         m_saved_result;
+    String         m_prefix;
+    LineEditor     m_line_editor;
 
     static std::unordered_map<String, std::vector<String>> ms_history;
     std::vector<String>::iterator m_history_it;
