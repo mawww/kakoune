@@ -132,7 +132,8 @@ public:
     Menu(Context& context, const memoryview<String>& choices,
          MenuCallback callback)
         : ClientMode(context.client()),
-          m_callback(callback), m_choice_count(choices.size()), m_selected(0)
+          m_callback(callback), m_choices(choices.begin(), choices.end()),
+          m_selected(m_choices.begin())
     {
         DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
         context.ui().menu_show(choices, menu_pos, MenuStyle::Prompt);
@@ -140,53 +141,91 @@ public:
 
     void on_key(const Key& key, Context& context) override
     {
-        if (key == Key::Down or
-            key == Key(Key::Modifiers::Control, 'i') or
-            key == Key(Key::Modifiers::Control, 'n') or
-            key == Key(Key::Modifiers::None, 'j'))
-        {
-            if (++m_selected >= m_choice_count)
-                m_selected = 0;
-            context.ui().menu_select(m_selected);
-        }
-        if (key == Key::Up or
-            key == Key::BackTab or
-            key == Key(Key::Modifiers::Control, 'p') or
-            key == Key(Key::Modifiers::None, 'k'))
-        {
-            if (--m_selected < 0)
-                m_selected = m_choice_count-1;
-            context.ui().menu_select(m_selected);
-        }
+        auto match_filter = [this](const String& str) {
+            return boost::regex_match(str.begin(), str.end(), m_filter);
+        };
+
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
             context.ui().menu_hide();
+            context.ui().print_status("");
             // save callback as reset_normal_mode will delete this
             MenuCallback callback = std::move(m_callback);
-            int selected = m_selected;
+            int selected = m_selected - m_choices.begin();
             reset_normal_mode();
             callback(selected, context);
+            return;
         }
-        if (key == Key::Escape)
+        else if (key == Key::Escape)
         {
-            context.ui().menu_hide();
-            reset_normal_mode();
+            if (m_edit_filter)
+            {
+                m_edit_filter = false;
+                m_filter = boost::regex(".*");
+                m_filter_editor.reset("");
+                context.ui().print_status("");
+            }
+            else
+            {
+                context.ui().menu_hide();
+                reset_normal_mode();
+            }
         }
-        if (key.modifiers == Key::Modifiers::None and
-            key.key >= '0' and key.key <= '9')
+        else if (key == Key::Down or
+                 key == Key(Key::Modifiers::Control, 'i') or
+                 key == Key(Key::Modifiers::Control, 'n') or
+                 key == Key(Key::Modifiers::None, 'j'))
         {
-            context.ui().menu_hide();
-            // save callback as reset_normal_mode will delete this
-            MenuCallback callback = std::move(m_callback);
-            reset_normal_mode();
-            callback(key.key - '0' - 1, context);
+            auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
+            if (it == m_choices.end())
+                it = std::find_if(m_choices.begin(), m_selected+1, match_filter);
+            m_selected = it;
+            context.ui().menu_select(m_selected - m_choices.begin());
         }
+        else if (key == Key::Up or
+                 key == Key::BackTab or
+                 key == Key(Key::Modifiers::Control, 'p') or
+                 key == Key(Key::Modifiers::None, 'k'))
+        {
+            ChoiceList::const_reverse_iterator selected(m_selected);
+            auto it = std::find_if(selected, m_choices.rend(), match_filter);
+            if (it == m_choices.rend())
+                it = std::find_if(m_choices.rbegin(), selected, match_filter);
+            m_selected = it.base()-1;
+            context.ui().menu_select(m_selected - m_choices.begin());
+        }
+        else if (key == '/' and not m_edit_filter)
+        {
+            m_edit_filter = true;
+        }
+        else if (m_edit_filter)
+        {
+            m_filter_editor.handle_key(key);
+
+            auto search = ".*" + m_filter_editor.line() + ".*";
+            m_filter = boost::regex(search.begin(), search.end());
+            auto it = std::find_if(m_selected, m_choices.end(), match_filter);
+            if (it == m_choices.end())
+                it = std::find_if(m_choices.begin(), m_selected, match_filter);
+            m_selected = it;
+            context.ui().menu_select(m_selected - m_choices.begin());
+        }
+
+        if (m_edit_filter)
+            context.ui().print_status("/" + m_filter_editor.line(),
+                                      m_filter_editor.cursor_pos() + 1);
    }
 
 private:
     MenuCallback m_callback;
-    int          m_selected;
-    int          m_choice_count;
+
+    using ChoiceList = std::vector<String>;
+    const ChoiceList m_choices;
+    ChoiceList::const_iterator m_selected;
+
+    boost::regex m_filter = boost::regex(".*");
+    bool         m_edit_filter = false;
+    LineEditor   m_filter_editor;
 };
 
 class Prompt : public ClientMode
