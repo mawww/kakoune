@@ -1,8 +1,7 @@
 High Priority
 -------------
 
-* Encoding: Support different encoding, decide how to store buffer content
-            implement encoding conversions.
+* multiple window support
 
 Medium Priority
 ---------------
@@ -10,8 +9,9 @@ Medium Priority
 * tweak editing model, some behaviours are not intuitive, maybe a line
   wise mode will be needed after all.
 
-Low Priority
-------------
+* encoding: support different encoding for files, make utf8 implementation
+  more robust
 
-* Data driven syntax highlighter.
-* client server separation
+* key binding support
+
+* configurable insert mode completion support
