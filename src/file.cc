@@ -76,7 +76,7 @@ Buffer* create_buffer_from_file(const String& filename)
     if (fd == -1)
     {
         if (errno == ENOENT)
-            throw file_not_found(filename);
+            return nullptr;
 
         throw file_access_error(filename, strerror(errno));
     }

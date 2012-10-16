@@ -216,12 +216,8 @@ private:
 
 Buffer* open_or_create(const String& filename, Context& context)
 {
-    Buffer* buffer = NULL;
-    try
-    {
-        buffer = create_buffer_from_file(filename);
-    }
-    catch (file_not_found& what)
+    Buffer* buffer = create_buffer_from_file(filename);
+    if (not buffer)
     {
         context.print_status("new file " + filename);
         buffer = new Buffer(filename, Buffer::Type::NewFile);
