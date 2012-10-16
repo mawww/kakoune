@@ -15,6 +15,8 @@ private:
     String m_message;
 };
 
+void on_assert_failed(const String& message);
+
 }
 
 #define STRINGIFY(X) #X
@@ -27,6 +29,6 @@ private:
 
 #define assert(condition) \
     if (not (condition)) \
-        throw assert_failed("assert failed \"" #condition "\" at " __FILE__ ":" TOSTRING(__LINE__))
+        on_assert_failed("assert failed \"" #condition "\" at " __FILE__ ":" TOSTRING(__LINE__))
 
 #endif // assert_hh_INCLUDED
