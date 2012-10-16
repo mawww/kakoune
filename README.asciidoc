@@ -51,6 +51,10 @@ Basic Movement
  * _gg_, _gt_: go to the first line
  * _gb_: go to the last line
 
+ * _/_: search
+ * _n_: find next match
+ * _N_: add a new selection with next match
+
 Appending
 ---------
 
@@ -94,7 +98,7 @@ Multi Selection
 ---------------
 
 Kak was designed from the start to handle multiple selections.
-On way to get a multiselection is via the _s_ key.
+One way to get a multiselection is via the _s_ key.
 
 For example, to change all occurences of word 'roger' to word 'marcel'
 in a paragraph, here is what can be done:
@@ -165,7 +169,7 @@ Commands are entered using +:+.
       is relative to kak executable path.
  * +exec <keys>+: execute <keys> as if pressed in normal mode.
  * +echo <text>+: show <text> in status line
- * +set[bwg] <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
+ * +set{b,w,g} <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
       or *g*lobal scope.
 
 String syntax
