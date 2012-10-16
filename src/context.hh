@@ -20,8 +20,8 @@ struct Context
     explicit Context(Editor& editor)
         : m_editor(&editor) {}
 
-    explicit Context(Client& client)
-        : m_client(&client) {}
+    Context(Client& client, Editor& editor, UserInterface& ui)
+        : m_client(&client), m_editor(&editor), m_ui(&ui) {}
 
     // to allow func(Context(Editor(...)))
     // make sure the context will not survive the next ';'
@@ -29,6 +29,7 @@ struct Context
         : m_editor(&editor) {}
 
     Context(const Context&) = delete;
+    Context(Context&&) = default;
     Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const

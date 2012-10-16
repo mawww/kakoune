@@ -678,9 +678,7 @@ void exec_keys(const KeyList& keys, Context& context)
 
     scoped_edition edition(context.editor());
 
-    Context new_context(batch_client);
-    new_context.change_editor(context.editor());
-    new_context.change_ui(batch_ui);
+    Context new_context(batch_client, context.editor(), batch_ui);
     while (batch_ui.has_key_left())
         batch_client.handle_next_input(new_context);
     context.change_editor(new_context.editor());

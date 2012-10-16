@@ -18,6 +18,7 @@
 #include "context.hh"
 #include "ncurses.hh"
 #include "string.hh"
+#include "file.hh"
 #include "color_registry.hh"
 
 #if defined(__APPLE__)
@@ -502,9 +503,6 @@ int main(int argc, char* argv[])
         Client client;
         NCursesUI ui;
 
-        Context context(client);
-        context.change_ui(ui);
-
         try
         {
             Context initialisation_context;
@@ -513,40 +511,40 @@ int main(int argc, char* argv[])
         }
         catch (Kakoune::runtime_error& error)
         {
-            context.print_status(error.description());
+            ui.print_status(error.description(), -1);
         }
-
 
         write_debug("*** This is the debug buffer, where debug info will be written ***\n");
         write_debug("utf-8 test: é á ï");
 
+        Buffer* buffer = nullptr;
         if (argc > 1)
         {
-            String cmd = "edit ";
-            for (int i = 1; i < argc; ++i)
-                cmd += String(" ") + argv[i];
-            command_manager.execute(cmd, context);
+            buffer = create_buffer_from_file(argv[1]);
+            if (not buffer)
+            {
+                ui.print_status("new file "_str + argv[1], -1);
+                buffer = new Buffer(argv[1], Buffer::Type::NewFile);
+            }
         }
         else
-        {
-            auto buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
-            context.change_editor(*buffer->get_or_create_window());
-        }
+            buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
 
-        event_manager.watch(0, [&](int) { client.handle_next_input(context); });
-
-        context.draw_ifn();
-        while(not quit_requested)
-        {
+        Context context(client, *buffer->get_or_create_window(), ui);
+        event_manager.watch(0, [&](int) {
             try
             {
-                event_manager.handle_next_events();
+                client.handle_next_input(context);
             }
             catch (Kakoune::runtime_error& error)
             {
                 context.print_status(error.description());
             }
-        }
+        });
+
+        context.draw_ifn();
+        while(not quit_requested)
+            event_manager.handle_next_events();
     }
     catch (Kakoune::exception& error)
     {
