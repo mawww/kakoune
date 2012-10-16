@@ -94,6 +94,11 @@ String int_to_str(int value);
 int    str_to_int(const String& str);
 std::vector<String> split(const String& str, char separator);
 
+inline String operator"" _str(const char* str, size_t)
+{
+    return String(str);
+}
+
 }
 
 namespace std
