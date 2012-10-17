@@ -7,7 +7,7 @@
 #include "buffer.hh"
 #include "window.hh"
 #include "file.hh"
-#include "client.hh"
+#include "input_handler.hh"
 #include "string.hh"
 #include "highlighter_registry.hh"
 #include "filter_registry.hh"
@@ -674,13 +674,13 @@ void exec_keys(const KeyList& keys, Context& context)
     RegisterRestorer slash('/', context);
 
     BatchUI batch_ui(keys);
-    Client batch_client;
+    InputHandler batch_input_handler;
 
     scoped_edition edition(context.editor());
 
-    Context new_context(batch_client, context.editor(), batch_ui);
+    Context new_context(batch_input_handler, context.editor(), batch_ui);
     while (batch_ui.has_key_left())
-        batch_client.handle_next_input(new_context);
+        batch_input_handler.handle_next_input(new_context);
     context.change_editor(new_context.editor());
 }
 
@@ -721,7 +721,7 @@ void menu(const CommandParameters& params, Context& context)
         commands.push_back(parser[i+1]);
     }
 
-    context.client().menu(choices,
+    context.input_handler().menu(choices,
         [=](int choice, Context& context) {
             if (choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);

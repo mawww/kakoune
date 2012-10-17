@@ -2,7 +2,7 @@
 #define context_hh_INCLUDED
 
 #include "window.hh"
-#include "client.hh"
+#include "input_handler.hh"
 #include "user_interface.hh"
 
 namespace Kakoune
@@ -11,7 +11,7 @@ namespace Kakoune
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
-// The Context object links a Client, an Editor (which may be a Window),
+// The Context object links an InputHandler, an Editor (which may be a Window),
 // and a UserInterface. It may represent an interactive user window, or
 // a hook execution or a macro replay.
 struct Context
@@ -20,8 +20,8 @@ struct Context
     explicit Context(Editor& editor)
         : m_editor(&editor) {}
 
-    Context(Client& client, Editor& editor, UserInterface& ui)
-        : m_client(&client), m_editor(&editor), m_ui(&ui) {}
+    Context(InputHandler& input_handler, Editor& editor, UserInterface& ui)
+        : m_input_handler(&input_handler), m_editor(&editor), m_ui(&ui) {}
 
     // to allow func(Context(Editor(...)))
     // make sure the context will not survive the next ';'
@@ -56,13 +56,13 @@ struct Context
     }
     bool has_window() const { return (bool)m_editor and dynamic_cast<Window*>(m_editor.get()); }
 
-    Client& client() const
+    InputHandler& input_handler() const
     {
-        if (not has_client())
-            throw runtime_error("no client in context");
-        return *m_client;
+        if (not has_input_handler())
+            throw runtime_error("no input handler in context");
+        return *m_input_handler;
     }
-    bool has_client() const { return (bool)m_client; }
+    bool has_input_handler() const { return (bool)m_input_handler; }
 
     UserInterface& ui() const
     {
@@ -109,7 +109,7 @@ struct Context
     int& numeric_param() { return m_numeric_param; }
 private:
     safe_ptr<Editor>        m_editor;
-    safe_ptr<Client>        m_client;
+    safe_ptr<InputHandler>  m_input_handler;
     safe_ptr<UserInterface> m_ui;
 
     Insertion m_last_insert = {InsertMode::Insert, {}};

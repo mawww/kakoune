@@ -1,4 +1,4 @@
-#include "client.hh"
+#include "input_handler.hh"
 
 #include "context.hh"
 #include "editor.hh"
@@ -12,29 +12,29 @@ namespace Kakoune
 
 extern std::unordered_map<Key, std::function<void (Context& context)>> keymap;
 
-class ClientMode
+class InputMode
 {
 public:
-    ClientMode(Client& client) : m_client(client) {}
-    virtual ~ClientMode() {}
-    ClientMode(const ClientMode&) = delete;
-    ClientMode& operator=(const ClientMode&) = delete;
+    InputMode(InputHandler& input_handler) : m_input_handler(input_handler) {}
+    virtual ~InputMode() {}
+    InputMode(const InputMode&) = delete;
+    InputMode& operator=(const InputMode&) = delete;
 
     virtual void on_key(const Key& key, Context& context) = 0;
 protected:
     void reset_normal_mode();
 private:
-    Client& m_client;
+    InputHandler& m_input_handler;
 };
 
-namespace ClientModes
+namespace InputModes
 {
 
-class Normal : public ClientMode
+class Normal : public InputMode
 {
 public:
-    Normal(Client& client)
-        : ClientMode(client)
+    Normal(InputHandler& input_handler)
+        : InputMode(input_handler)
     {
     }
 
@@ -126,12 +126,12 @@ private:
     String         m_line;
 };
 
-class Menu : public ClientMode
+class Menu : public InputMode
 {
 public:
     Menu(Context& context, const memoryview<String>& choices,
          MenuCallback callback)
-        : ClientMode(context.client()),
+        : InputMode(context.input_handler()),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
@@ -228,12 +228,12 @@ private:
     LineEditor   m_filter_editor;
 };
 
-class Prompt : public ClientMode
+class Prompt : public InputMode
 {
 public:
     Prompt(Context& context, const String& prompt,
            Completer completer, PromptCallback callback)
-        : ClientMode(context.client()), m_prompt(prompt),
+        : InputMode(context.input_handler()), m_prompt(prompt),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
@@ -372,11 +372,11 @@ private:
 };
 std::unordered_map<String, std::vector<String>> Prompt::ms_history;
 
-class NextKey : public ClientMode
+class NextKey : public InputMode
 {
 public:
-    NextKey(Client& client, KeyCallback callback)
-        : ClientMode(client), m_callback(callback) {}
+    NextKey(InputHandler& input_handler, KeyCallback callback)
+        : InputMode(input_handler), m_callback(callback) {}
 
     void on_key(const Key& key, Context& context) override
     {
@@ -475,11 +475,11 @@ String codepoint_to_str(Codepoint cp)
     return String(str);
 }
 
-class Insert : public ClientMode
+class Insert : public InputMode
 {
 public:
     Insert(Context& context, InsertMode mode)
-        : ClientMode(context.client()),
+        : InputMode(context.input_handler()),
           m_inserter(context.editor(), mode)
     {
         context.last_insert().first = mode;
@@ -568,30 +568,30 @@ private:
 
 }
 
-void ClientMode::reset_normal_mode()
+void InputMode::reset_normal_mode()
 {
-     m_client.m_mode.reset(new ClientModes::Normal(m_client));
+     m_input_handler.m_mode.reset(new InputModes::Normal(m_input_handler));
 }
 
 
-Client::Client()
-    : m_mode(new ClientModes::Normal(*this))
+InputHandler::InputHandler()
+    : m_mode(new InputModes::Normal(*this))
 {
 }
 
-Client::~Client()
+InputHandler::~InputHandler()
 {
 }
 
-void Client::insert(Context& context, InsertMode mode)
+void InputHandler::insert(Context& context, InsertMode mode)
 {
-    assert(&context.client() == this);
-    m_mode.reset(new ClientModes::Insert(context, mode));
+    assert(&context.input_handler() == this);
+    m_mode.reset(new InputModes::Insert(context, mode));
 }
 
-void Client::repeat_last_insert(Context& context)
+void InputHandler::repeat_last_insert(Context& context)
 {
-    assert(&context.client() == this);
+    assert(&context.input_handler() == this);
     Context::Insertion& last_insert = context.last_insert();
     if (last_insert.second.empty())
         return;
@@ -600,32 +600,32 @@ void Client::repeat_last_insert(Context& context)
     swap(keys, last_insert.second);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    m_mode.reset(new ClientModes::Insert(context, last_insert.first));
+    m_mode.reset(new InputModes::Insert(context, last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key, context);
-    assert(dynamic_cast<ClientModes::Normal*>(m_mode.get()) != nullptr);
+    assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
-void Client::prompt(const String& prompt, Completer completer,
+void InputHandler::prompt(const String& prompt, Completer completer,
                     PromptCallback callback, Context& context)
 {
-    assert(&context.client() == this);
-    m_mode.reset(new ClientModes::Prompt(context, prompt, completer, callback));
+    assert(&context.input_handler() == this);
+    m_mode.reset(new InputModes::Prompt(context, prompt, completer, callback));
 }
 
-void Client::menu(const memoryview<String>& choices,
+void InputHandler::menu(const memoryview<String>& choices,
                   MenuCallback callback, Context& context)
 {
-    assert(&context.client() == this);
-    m_mode.reset(new ClientModes::Menu(context, choices, callback));
+    assert(&context.input_handler() == this);
+    m_mode.reset(new InputModes::Menu(context, choices, callback));
 }
 
-void Client::on_next_key(KeyCallback callback)
+void InputHandler::on_next_key(KeyCallback callback)
 {
-    m_mode.reset(new ClientModes::NextKey(*this, callback));
+    m_mode.reset(new InputModes::NextKey(*this, callback));
 }
 
-void Client::handle_next_input(Context& context)
+void InputHandler::handle_next_input(Context& context)
 {
     m_mode->on_key(context.ui().get_key(), context);
     context.draw_ifn();

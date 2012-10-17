@@ -40,12 +40,12 @@ bool quit_requested = false;
 template<InsertMode mode>
 void do_insert(Context& context)
 {
-    context.client().insert(context, mode);
+    context.input_handler().insert(context, mode);
 }
 
 void do_repeat_insert(Context& context)
 {
-    context.client().repeat_last_insert(context);
+    context.input_handler().repeat_last_insert(context);
 }
 
 template<SelectMode mode>
@@ -62,7 +62,7 @@ void do_go(Context& context)
             context.window().center_selection();
     }
     else
-        context.client().on_next_key([](const Key& key, Context& context) {
+        context.input_handler().on_next_key([](const Key& key, Context& context) {
             if (key.modifiers != Key::Modifiers::None)
                 return;
 
@@ -93,14 +93,14 @@ void do_go(Context& context)
 
 void do_replace_with_char(Context& context)
 {
-    context.client().on_next_key([](const Key& key, Context& context) {
+    context.input_handler().on_next_key([](const Key& key, Context& context) {
         context.editor().insert(String() + key.key, InsertMode::Replace);
     });
 }
 
 void do_command(Context& context)
 {
-    context.client().prompt(
+    context.input_handler().prompt(
         ":", std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
         [](const String& cmdline, Context& context) { CommandManager::instance().execute(cmdline, context); },
         context);
@@ -108,7 +108,7 @@ void do_command(Context& context)
 
 void do_pipe(Context& context)
 {
-    context.client().prompt("|", complete_nothing,
+    context.input_handler().prompt("|", complete_nothing,
         [](const String& cmdline, Context& context)
         {
             Editor& editor = context.editor();
@@ -124,7 +124,7 @@ void do_pipe(Context& context)
 template<SelectMode mode>
 void do_search(Context& context)
 {
-    context.client().prompt("/", complete_nothing,
+    context.input_handler().prompt("/", complete_nothing,
         [](const String& str, Context& context) {
             String ex = str;
             if (ex.empty())
@@ -204,7 +204,7 @@ void do_paste(Context& context)
 
 void do_select_regex(Context& context)
 {
-    context.client().prompt("select: ", complete_nothing,
+    context.input_handler().prompt("select: ", complete_nothing,
         [](const String& ex, Context& context)
         { context.editor().multi_select(std::bind(select_all_matches, _1, ex)); },
         context);
@@ -212,7 +212,7 @@ void do_select_regex(Context& context)
 
 void do_split_regex(Context& context)
 {
-    context.client().prompt("select: ", complete_nothing,
+    context.input_handler().prompt("select: ", complete_nothing,
         [](const String& ex, Context& context)
         { context.editor().multi_select(std::bind(split_selection, _1, ex)); },
         context);
@@ -232,7 +232,7 @@ void do_join(Context& context)
 template<bool inner>
 void do_select_object(Context& context)
 {
-    context.client().on_next_key(
+    context.input_handler().on_next_key(
     [](const Key& key, Context& context) {
         typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
         static const std::unordered_map<Key, Selector> key_to_selector =
@@ -317,7 +317,7 @@ template<int flags>
 void select_to_next_char(Context& context)
 {
     int param = context.numeric_param();
-    context.client().on_next_key([param](const Key& key, Context& context) {
+    context.input_handler().on_next_key([param](const Key& key, Context& context) {
         context.editor().select(
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
                       _1, key.key, param, flags & SelectFlags::Inclusive),
@@ -500,7 +500,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        Client client;
+        InputHandler input_handler;
         NCursesUI ui;
 
         try
@@ -530,11 +530,11 @@ int main(int argc, char* argv[])
         else
             buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
 
-        Context context(client, *buffer->get_or_create_window(), ui);
+        Context context(input_handler, *buffer->get_or_create_window(), ui);
         event_manager.watch(0, [&](int) {
             try
             {
-                client.handle_next_input(context);
+                input_handler.handle_next_input(context);
             }
             catch (Kakoune::runtime_error& error)
             {

@@ -1,5 +1,5 @@
-#ifndef client_hh_INCLUDED
-#define client_hh_INCLUDED
+#ifndef input_handler_hh_INCLUDED
+#define input_handler_hh_INCLUDED
 
 #include "keys.hh"
 #include "completion.hh"
@@ -16,14 +16,14 @@ using MenuCallback = std::function<void (int, Context&)>;
 using PromptCallback = std::function<void (const String&, Context&)>;
 using KeyCallback = std::function<void (const Key&, Context&)>;
 
-class ClientMode;
+class InputMode;
 enum class InsertMode : unsigned;
 
-class Client : public SafeCountable
+class InputHandler : public SafeCountable
 {
 public:
-    Client();
-    ~Client();
+    InputHandler();
+    ~InputHandler();
 
     void insert(Context& context, InsertMode mode);
     void repeat_last_insert(Context& context);
@@ -39,12 +39,12 @@ public:
     void handle_next_input(Context& context);
 
 private:
-    friend class ClientMode;
-    std::unique_ptr<ClientMode> m_mode;
+    friend class InputMode;
+    std::unique_ptr<InputMode> m_mode;
 };
 
 struct prompt_aborted {};
 
 }
 
-#endif // client_hh_INCLUDED
+#endif // input_handler_hh_INCLUDED
