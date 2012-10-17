@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include "unicode.hh"
+#include "assert.hh"
 
 namespace Kakoune
 {
@@ -79,14 +80,12 @@ bool is_character_start(Iterator it)
     return (*it & 0xC0) != 0x80;
 }
 
-struct invalid_utf8_sequence{};
-
 namespace InvalidBytePolicy
 {
 
-struct Throw
+struct Assert
 {
-    Codepoint operator()(char byte) const { throw invalid_utf8_sequence{}; }
+    Codepoint operator()(char byte) const { assert(false); return byte; }
 };
 
 struct Pass
@@ -98,7 +97,7 @@ struct Pass
 
 // returns the codepoint of the character whose first byte
 // is pointed by it
-template<typename InvalidPolicy = InvalidBytePolicy::Throw,
+template<typename InvalidPolicy = InvalidBytePolicy::Assert,
          typename Iterator>
 Codepoint codepoint(Iterator it)
 {

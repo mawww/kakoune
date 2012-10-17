@@ -12,7 +12,7 @@ namespace utf8
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
 template<typename Iterator,
-         typename InvalidPolicy = InvalidBytePolicy::Throw>
+         typename InvalidPolicy = InvalidBytePolicy::Assert>
 class utf8_iterator
 {
 public:
