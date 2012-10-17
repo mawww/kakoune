@@ -1,21 +1,23 @@
 #include "assert.hh"
 
+#include "exception.hh"
+
 namespace Kakoune
 {
 
-assert_failed::assert_failed(const String& message)
+struct assert_failed : logic_error
 {
-    m_message = message;
-}
+    assert_failed(const String& message)
+        : m_message(message) {}
 
-String assert_failed::description() const
-{
-    return m_message;
-}
+    String description() const override { return m_message; }
+private:
+    String m_message;
+};
 
-void on_assert_failed(const String& message)
+void on_assert_failed(const char* message)
 {
-    int res = system(("xmessage -buttons 'quit:0,ignore:1' '" + message + "'").c_str());
+    int res = system(("xmessage -buttons 'quit:0,ignore:1' '"_str + message + "'").c_str());
     switch (res)
     {
     case 0:

@@ -1,21 +1,10 @@
 #ifndef assert_hh_INCLUDED
 #define assert_hh_INCLUDED
 
-#include "exception.hh"
-
 namespace Kakoune
 {
 
-struct assert_failed : logic_error
-{
-    assert_failed(const String& message);
-    String description() const override;
-
-private:
-    String m_message;
-};
-
-void on_assert_failed(const String& message);
+void on_assert_failed(const char* message);
 
 }
 
