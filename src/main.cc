@@ -450,6 +450,53 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
 void run_unit_tests();
 
+struct Client
+{
+    std::unique_ptr<UserInterface> ui;
+    std::unique_ptr<InputHandler>  input_handler;
+    std::unique_ptr<Context>       context;
+
+    Client(UserInterface* ui, Window& window)
+        : ui(ui),
+          input_handler(new InputHandler{}),
+          context(new Context(*input_handler, window, *ui)) {}
+};
+
+Client create_client(const String& file)
+{
+    Buffer* buffer = nullptr;
+    UserInterface* ui = new NCursesUI{};
+    if (not file.empty())
+    {
+        buffer = create_buffer_from_file(file);
+        if (not buffer)
+        {
+            ui->print_status("new file " + file, -1);
+            buffer = new Buffer(file, Buffer::Type::NewFile);
+        }
+    }
+    else
+        buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
+
+    Client client{ui, *buffer->get_or_create_window()};
+
+    InputHandler*  input_handler = client.input_handler.get();
+    Context*       context = client.context.get();
+    EventManager::instance().watch(0, [=](int) {
+        try
+        {
+            input_handler->handle_next_input(*context);
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+            ui->print_status(error.description(), -1);
+        }
+    });
+
+    context->draw_ifn();
+    return client;
+}
+
 int main(int argc, char* argv[])
 {
     EventManager        event_manager;
@@ -498,11 +545,12 @@ int main(int argc, char* argv[])
     register_highlighters();
     register_filters();
 
+    write_debug("*** This is the debug buffer, where debug info will be written ***\n");
+    write_debug("utf-8 test: é á ï");
+
+    std::vector<Client> clients;
     try
     {
-        InputHandler input_handler;
-        NCursesUI ui;
-
         try
         {
             Context initialisation_context;
@@ -511,38 +559,11 @@ int main(int argc, char* argv[])
         }
         catch (Kakoune::runtime_error& error)
         {
-            ui.print_status(error.description(), -1);
+             write_debug("error while parsing kakrc: " + error.description());
         }
 
-        write_debug("*** This is the debug buffer, where debug info will be written ***\n");
-        write_debug("utf-8 test: é á ï");
+        clients.push_back(create_client(argc > 1 ? argv[1] : ""));
 
-        Buffer* buffer = nullptr;
-        if (argc > 1)
-        {
-            buffer = create_buffer_from_file(argv[1]);
-            if (not buffer)
-            {
-                ui.print_status("new file "_str + argv[1], -1);
-                buffer = new Buffer(argv[1], Buffer::Type::NewFile);
-            }
-        }
-        else
-            buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
-
-        Context context(input_handler, *buffer->get_or_create_window(), ui);
-        event_manager.watch(0, [&](int) {
-            try
-            {
-                input_handler.handle_next_input(context);
-            }
-            catch (Kakoune::runtime_error& error)
-            {
-                context.print_status(error.description());
-            }
-        });
-
-        context.draw_ifn();
         while(not quit_requested)
             event_manager.handle_next_events();
     }
