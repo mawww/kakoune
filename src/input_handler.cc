@@ -627,7 +627,9 @@ void InputHandler::on_next_key(KeyCallback callback)
 
 void InputHandler::handle_next_input(Context& context)
 {
-    m_mode->on_key(context.ui().get_key(), context);
+    Key key = context.ui().get_key();
+    if (key != Key::Invalid)
+        m_mode->on_key(key, context);
     context.draw_ifn();
 }
 

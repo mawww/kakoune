@@ -216,8 +216,12 @@ Key NCursesUI::get_key()
     case KEY_BTAB: return Key::BackTab;
     }
 
-    ungetch(c);
-    return utf8::codepoint(getch_iterator{});
+    if (c < 256)
+    {
+       ungetch(c);
+       return utf8::codepoint(getch_iterator{});
+    }
+    return Key::Invalid;
 }
 
 void NCursesUI::print_status(const String& status, CharCount cursor_pos)

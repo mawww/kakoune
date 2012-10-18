@@ -29,6 +29,7 @@ struct Key
         PageUp,
         PageDown,
         BackTab,
+        Invalid,
     };
 
     Modifiers modifiers;
@@ -42,6 +43,9 @@ struct Key
 
     constexpr bool operator==(const Key& other) const
     { return modifiers == other.modifiers and key == other.key; }
+
+    constexpr bool operator!=(const Key& other) const
+    { return modifiers != other.modifiers or key != other.key; }
 };
 
 typedef std::vector<Key> KeyList;
