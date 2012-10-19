@@ -20,7 +20,8 @@ void on_assert_failed(const char* message)
     int res = system(("xmessage -buttons 'quit:0,ignore:1' '"_str + message + "'").c_str());
     switch (res)
     {
-    case 0:
+    case -1:
+    case  0:
         throw assert_failed(message);
     case 1:
         return;
