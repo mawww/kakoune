@@ -1,6 +1,7 @@
 #ifndef memoryview_hh_INCLUDED
 #define memoryview_hh_INCLUDED
 
+#include <cstddef>
 #include <vector>
 #include <initializer_list>
 
