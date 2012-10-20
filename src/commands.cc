@@ -657,11 +657,13 @@ public:
     bool has_key_left() const { return m_pos < m_keys.size(); }
 
     void print_status(const String& , CharCount) override {}
-    void draw_window(Window&) override {}
+    void draw(const DisplayBuffer&, const String&) override {}
     void menu_show(const memoryview<String>&,
                    const DisplayCoord&, MenuStyle) override {}
     void menu_select(int) override {}
     void menu_hide() override {}
+
+    DisplayCoord dimensions() override { return { 0, 0 }; }
 
 private:
     const KeyList& m_keys;

@@ -19,7 +19,8 @@ public:
     NCursesUI(const NCursesUI&) = delete;
     NCursesUI& operator=(const NCursesUI&) = delete;
 
-    void draw_window(Window& window) override;
+    void draw(const DisplayBuffer& display_buffer,
+              const String& status_line) override;
     void print_status(const String& status, CharCount cursor_pos) override;
 
     Key    get_key() override;
@@ -28,6 +29,8 @@ public:
                    const DisplayCoord& anchor, MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
+
+    DisplayCoord dimensions() override;
 private:
     MENU* m_menu = nullptr;
     WINDOW* m_menu_win = nullptr;

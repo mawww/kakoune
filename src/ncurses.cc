@@ -1,6 +1,6 @@
 #include "ncurses.hh"
 
-#include "window.hh"
+#include "display_buffer.hh"
 #include "register_manager.hh"
 
 #include "utf8_iterator.hh"
@@ -113,18 +113,16 @@ void addutf8str(Utf8Iterator begin, Utf8Iterator end)
         addch(*begin++);
 }
 
-void NCursesUI::draw_window(Window& window)
+void NCursesUI::draw(const DisplayBuffer& display_buffer,
+                     const String& status_line)
 {
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
     int status_y = max_y;
 
-    window.set_dimensions(DisplayCoord(LineCount(max_y), max_x));
-    window.update_display_buffer();
-
     int line_index = 0;
-    for (const DisplayLine& line : window.display_buffer().lines())
+    for (const DisplayLine& line : display_buffer.lines())
     {
         move(line_index, 0);
         clrtoeol();
@@ -169,7 +167,6 @@ void NCursesUI::draw_window(Window& window)
     }
 
     set_color(Color::Cyan, Color::Black);
-    String status_line = window.status_line();
     static int last_status_length = 0;
     move(status_y, max_x - last_status_length);
     clrtoeol();
@@ -310,6 +307,13 @@ void NCursesUI::menu_hide()
     delwin(m_menu_win);
     m_menu_win = nullptr;
     m_items.clear();
+}
+
+DisplayCoord NCursesUI::dimensions()
+{
+    int max_x,max_y;
+    getmaxyx(stdscr, max_y, max_x);
+    return {max_y - 1, max_x};
 }
 
 }

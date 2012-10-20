@@ -94,7 +94,15 @@ struct Context
     void draw_ifn() const
     {
         if (has_ui() and has_window())
-            ui().draw_window(window());
+        {
+             DisplayCoord dimensions = ui().dimensions();
+             if (dimensions == DisplayCoord{0,0})
+                 return;
+             window().set_dimensions(dimensions);
+             window().update_display_buffer();;
+             ui().draw(window().display_buffer(), window().status_line());
+         }
+
     }
 
     void print_status(const String& status) const

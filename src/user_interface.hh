@@ -10,7 +10,7 @@ namespace Kakoune
 {
 
 class String;
-class Window;
+class DisplayBuffer;
 class DisplayCoord;
 
 enum class MenuStyle
@@ -28,7 +28,9 @@ public:
                            const DisplayCoord& anchor, MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
-    virtual void draw_window(Window& window) = 0;
+    virtual void draw(const DisplayBuffer& display_buffer,
+                      const String& status_line) = 0;
+    virtual DisplayCoord dimensions() = 0;
     virtual Key  get_key() = 0;
 };
 
