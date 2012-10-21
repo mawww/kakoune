@@ -70,6 +70,14 @@ void test_incremental_inserter()
     }
     assert(not editor.is_editing());
 }
+
+void test_utf8()
+{
+    String str = "maïs mélange bientôt";
+    assert(utf8::distance(str.begin(), str.end()) == 20);
+    assert(utf8::codepoint(str.begin() + 2) == 0x00EF);
+}
+
 void test_string()
 {
    assert(int_to_str(124)  == "124");
@@ -87,6 +95,7 @@ void test_string()
 
 void run_unit_tests()
 {
+    test_utf8();
     test_string();
     test_buffer();
     test_editor();
