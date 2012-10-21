@@ -460,9 +460,11 @@ struct Client
         : ui(ui),
           input_handler(new InputHandler{}),
           context(new Context(*input_handler, window, *ui)) {}
+
+    Client() {}
 };
 
-Client create_client(const String& file)
+Client create_local_client(const String& file)
 {
     Buffer* buffer = nullptr;
     UserInterface* ui = new NCursesUI{};
@@ -497,20 +499,9 @@ Client create_client(const String& file)
     return client;
 }
 
-int main(int argc, char* argv[])
+void register_env_vars()
 {
-    EventManager        event_manager;
-    GlobalOptionManager option_manager;
-    GlobalHookManager   hook_manager;
-    ShellManager        shell_manager;
-    CommandManager      command_manager;
-    BufferManager       buffer_manager;
-    RegisterManager     register_manager;
-    HighlighterRegistry highlighter_registry;
-    FilterRegistry      filter_registry;
-    ColorRegistry       color_registry;
-
-    run_unit_tests();
+    ShellManager& shell_manager = ShellManager::instance();
 
     shell_manager.register_env_var("bufname",
                                    [](const String& name, const Context& context)
@@ -527,6 +518,11 @@ int main(int argc, char* argv[])
     shell_manager.register_env_var("reg_.+",
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });
+}
+
+void register_registers()
+{
+    RegisterManager& register_manager = RegisterManager::instance();
 
     register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
     register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
@@ -540,7 +536,25 @@ int main(int argc, char* argv[])
                   return result;
               });
     }
+}
 
+int main(int argc, char* argv[])
+{
+    EventManager        event_manager;
+    GlobalOptionManager option_manager;
+    GlobalHookManager   hook_manager;
+    ShellManager        shell_manager;
+    CommandManager      command_manager;
+    BufferManager       buffer_manager;
+    RegisterManager     register_manager;
+    HighlighterRegistry highlighter_registry;
+    FilterRegistry      filter_registry;
+    ColorRegistry       color_registry;
+
+    run_unit_tests();
+
+    register_env_vars();
+    register_registers();
     register_commands();
     register_highlighters();
     register_filters();
@@ -548,7 +562,7 @@ int main(int argc, char* argv[])
     write_debug("*** This is the debug buffer, where debug info will be written ***\n");
     write_debug("utf-8 test: é á ï");
 
-    std::vector<Client> clients;
+    Client local_client;
     try
     {
         try
@@ -561,8 +575,7 @@ int main(int argc, char* argv[])
         {
              write_debug("error while parsing kakrc: " + error.description());
         }
-
-        clients.push_back(create_client(argc > 1 ? argv[1] : ""));
+        local_client = create_local_client(argc > 1 ? argv[1] : "");
 
         while(not quit_requested)
             event_manager.handle_next_events();
