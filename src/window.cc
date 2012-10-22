@@ -63,6 +63,7 @@ void Window::update_display_buffer()
 
     m_display_buffer.compute_range();
     m_highlighters(m_display_buffer);
+    m_display_buffer.optimize();
 }
 
 void Window::set_dimensions(const DisplayCoord& dimensions)

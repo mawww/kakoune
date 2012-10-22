@@ -20,6 +20,32 @@ DisplayLine::iterator DisplayLine::split(iterator it, BufferIterator pos)
     return m_atoms.insert(it, std::move(atom));
 }
 
+void DisplayLine::optimize()
+{
+    for (auto atom_it = m_atoms.begin(); atom_it != m_atoms.end(); ++atom_it)
+    {
+        decltype(atom_it) next_atom_it;
+        while ((next_atom_it = atom_it + 1) != m_atoms.end())
+        {
+            auto& atom = *atom_it;
+            auto& next_atom = *next_atom_it;
+
+            if (atom.fg_color == next_atom.fg_color and
+                atom.bg_color == next_atom.bg_color and
+                atom.attribute == next_atom.attribute and
+                atom.content.type() == AtomContent::BufferRange and
+                next_atom.content.type() == AtomContent::BufferRange and
+                next_atom.content.begin() == atom.content.end())
+            {
+                atom.content.m_end = next_atom.content.end();
+                atom_it = m_atoms.erase(next_atom_it) - 1;
+            }
+            else
+                break;
+        }
+    }
+}
+
 void DisplayBuffer::compute_range()
 {
     m_range.first  = BufferIterator();
@@ -42,4 +68,9 @@ void DisplayBuffer::compute_range()
     assert(m_range.first <= m_range.second);
 }
 
+void DisplayBuffer::optimize()
+{
+    for (auto& line : m_lines)
+        line.optimize();
+}
 }

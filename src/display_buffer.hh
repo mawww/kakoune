@@ -144,6 +144,7 @@ public:
     iterator insert(iterator it, DisplayAtom atom) { return m_atoms.insert(it, std::move(atom)); }
     void     push_back(DisplayAtom atom) { m_atoms.push_back(std::move(atom)); }
 
+    void     optimize();
 private:
     LineCount m_buffer_line;
     AtomList  m_atoms;
@@ -162,11 +163,11 @@ public:
 
     // returns the smallest BufferIterator range which contains every DisplayAtoms
     const BufferRange& range() const { return m_range; }
+    void optimize();
     void compute_range();
 
 private:
     LineList m_lines;
-
     BufferRange m_range;
 };
 
