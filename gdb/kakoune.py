@@ -82,6 +82,15 @@ class CharCount:
     def to_string(self):
         return self.val["m_value"]
 
+class ByteCount:
+    """Print a ByteCount"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val["m_value"]
+
 class LineCount:
     """Print a LineCount"""
 
@@ -102,5 +111,6 @@ def build_pretty_printer():
     pp.add_printer('Option',         '^Kakoune::Option$',            Option)
     pp.add_printer('LineCount',      '^Kakoune::LineCount$',         LineCount)
     pp.add_printer('CharCount',      '^Kakoune::CharCount$',         CharCount)
+    pp.add_printer('ByteCount',      '^Kakoune::ByteCount$',         ByteCount)
     return pp
 
