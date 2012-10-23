@@ -129,6 +129,8 @@ public:
     using const_iterator = AtomList::const_iterator;
 
     explicit DisplayLine(LineCount buffer_line) : m_buffer_line(buffer_line) {}
+    DisplayLine(LineCount buffer_line, AtomList atoms)
+        : m_buffer_line(buffer_line), m_atoms(std::move(atoms)) {}
 
     LineCount buffer_line() const { return m_buffer_line; }
 
@@ -137,6 +139,8 @@ public:
 
     const_iterator begin() const { return m_atoms.begin(); }
     const_iterator end() const { return m_atoms.end(); }
+
+    const AtomList& atoms() const { return m_atoms; }
 
     // Split atom pointed by it at pos, returns an iterator to the first atom
     iterator split(iterator it, BufferIterator pos);
