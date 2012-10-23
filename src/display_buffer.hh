@@ -155,7 +155,7 @@ using BufferRange = std::pair<BufferIterator, BufferIterator>;
 class DisplayBuffer
 {
 public:
-    using LineList = std::list<DisplayLine>;
+    using LineList = std::vector<DisplayLine>;
     DisplayBuffer() {}
 
     LineList& lines() { return m_lines; }
