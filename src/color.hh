@@ -4,7 +4,7 @@
 namespace Kakoune
 {
 
-enum class Color
+enum class Color : char
 {
     Default,
     Black,
