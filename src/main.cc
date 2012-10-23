@@ -20,6 +20,7 @@
 #include "string.hh"
 #include "file.hh"
 #include "color_registry.hh"
+#include "remote.hh"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -27,6 +28,8 @@
 
 #include <unordered_map>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 
 using namespace Kakoune;
@@ -450,6 +453,45 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
 void run_unit_tests();
 
+void register_env_vars()
+{
+    ShellManager& shell_manager = ShellManager::instance();
+
+    shell_manager.register_env_var("bufname",
+                                   [](const String& name, const Context& context)
+                                   { return context.buffer().name(); });
+    shell_manager.register_env_var("selection",
+                                   [](const String& name, const Context& context)
+                                   { return context.editor().selections_content().back(); });
+    shell_manager.register_env_var("runtime",
+                                   [](const String& name, const Context& context)
+                                   { return runtime_directory(); });
+    shell_manager.register_env_var("opt_.+",
+                                   [](const String& name, const Context& context)
+                                   { return context.option_manager()[name.substr(4_byte)].as_string(); });
+    shell_manager.register_env_var("reg_.+",
+                                   [](const String& name, const Context& context)
+                                   { return RegisterManager::instance()[name[4]].values(context)[0]; });
+}
+
+void register_registers()
+{
+    RegisterManager& register_manager = RegisterManager::instance();
+
+    register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
+    register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
+    for (size_t i = 0; i < 10; ++i)
+    {
+         register_manager.register_dynamic_register('0'+i,
+              [i](const Context& context) {
+                  std::vector<String> result;
+                  for (auto& sel_and_cap : context.editor().selections())
+                      result.emplace_back(i < sel_and_cap.captures.size() ? sel_and_cap.captures[i] : "");
+                  return result;
+              });
+    }
+}
+
 struct Client
 {
     std::unique_ptr<UserInterface> ui;
@@ -499,72 +541,129 @@ Client create_local_client(const String& file)
     return client;
 }
 
-void register_env_vars()
-{
-    ShellManager& shell_manager = ShellManager::instance();
+std::vector<Client> clients;
 
-    shell_manager.register_env_var("bufname",
-                                   [](const String& name, const Context& context)
-                                   { return context.buffer().name(); });
-    shell_manager.register_env_var("selection",
-                                   [](const String& name, const Context& context)
-                                   { return context.editor().selections_content().back(); });
-    shell_manager.register_env_var("runtime",
-                                   [](const String& name, const Context& context)
-                                   { return runtime_directory(); });
-    shell_manager.register_env_var("opt_.+",
-                                   [](const String& name, const Context& context)
-                                   { return context.option_manager()[name.substr(4_byte)].as_string(); });
-    shell_manager.register_env_var("reg_.+",
-                                   [](const String& name, const Context& context)
-                                   { return RegisterManager::instance()[name[4]].values(context)[0]; });
+void setup_server()
+{
+    auto filename = "/tmp/kak-" + int_to_str(getpid());
+
+    int listen_sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+
+    if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
+       throw runtime_error("unable to bind listen socket " + filename);
+
+    if (listen(listen_sock, 4) == -1)
+       throw runtime_error("unable to listen on socket " + filename);
+
+    auto accepter = [=](int socket) {
+        sockaddr_un client_addr;
+        socklen_t   client_addr_len = sizeof(sockaddr_un);
+        int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
+        if (sock == -1)
+            throw runtime_error("accept failed");
+
+        auto& buffer = *BufferManager::instance().begin();
+        RemoteUI* ui = new RemoteUI{sock};
+        ui->set_dimensions(DisplayCoord(24, 80));
+        Client client{ui, *buffer->get_or_create_window()};
+        InputHandler*  input_handler = client.input_handler.get();
+        Context*       context = client.context.get();
+        EventManager::instance().watch(sock, [=](int) {
+            try
+            {
+                input_handler->handle_next_input(*context);
+            }
+            catch (Kakoune::runtime_error& error)
+            {
+                ui->print_status(error.description(), -1);
+            }
+        });
+        clients.push_back(std::move(client));
+    };
+    EventManager::instance().watch(listen_sock, accepter);
 }
 
-void register_registers()
+RemoteClient* connect_to(const String& pid)
 {
-    RegisterManager& register_manager = RegisterManager::instance();
+    auto filename = "/tmp/kak-" + pid;
 
-    register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
-    register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
-    for (size_t i = 0; i < 10; ++i)
-    {
-         register_manager.register_dynamic_register('0'+i,
-              [i](const Context& context) {
-                  std::vector<String> result;
-                  for (auto& sel_and_cap : context.editor().selections())
-                      result.emplace_back(i < sel_and_cap.captures.size() ? sel_and_cap.captures[i] : "");
-                  return result;
-              });
-    }
+    int sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
+        throw runtime_error("connect to " + filename + " failed");
+
+    NCursesUI* ui = new NCursesUI{};
+    RemoteClient* remote_client = new RemoteClient{sock, ui};
+
+    EventManager::instance().watch(sock, [=](int) {
+        try
+        {
+            remote_client->process_next_message();
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+            ui->print_status(error.description(), -1);
+        }
+    });
+
+    EventManager::instance().watch(0, [=](int) {
+        try
+        {
+            remote_client->write_next_key();
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+            ui->print_status(error.description(), -1);
+        }
+    });
+
+    return remote_client;
 }
 
 int main(int argc, char* argv[])
 {
-    EventManager        event_manager;
-    GlobalOptionManager option_manager;
-    GlobalHookManager   hook_manager;
-    ShellManager        shell_manager;
-    CommandManager      command_manager;
-    BufferManager       buffer_manager;
-    RegisterManager     register_manager;
-    HighlighterRegistry highlighter_registry;
-    FilterRegistry      filter_registry;
-    ColorRegistry       color_registry;
-
-    run_unit_tests();
-
-    register_env_vars();
-    register_registers();
-    register_commands();
-    register_highlighters();
-    register_filters();
-
-    write_debug("*** This is the debug buffer, where debug info will be written ***\n");
-    write_debug("utf-8 test: é á ï");
-
-    Client local_client;
     try
     {
+        EventManager        event_manager;
+
+        if (argc == 3 and String("-c") == argv[1])
+        {
+            std::unique_ptr<RemoteClient> client(connect_to(argv[2]));
+            while(not quit_requested)
+                event_manager.handle_next_events();
+            return 0;
+        }
+
+        GlobalOptionManager option_manager;
+        GlobalHookManager   hook_manager;
+        ShellManager        shell_manager;
+        CommandManager      command_manager;
+        BufferManager       buffer_manager;
+        RegisterManager     register_manager;
+        HighlighterRegistry highlighter_registry;
+        FilterRegistry      filter_registry;
+        ColorRegistry       color_registry;
+
+        run_unit_tests();
+
+        register_env_vars();
+        register_registers();
+        register_commands();
+        register_highlighters();
+        register_filters();
+
+        write_debug("*** This is the debug buffer, where debug info will be written ***\n");
+        write_debug("pid: " + int_to_str(getpid()) + "\n");
+        write_debug("utf-8 test: é á ï");
+
+        setup_server();
+
+        Client local_client;
         try
         {
             Context initialisation_context;
