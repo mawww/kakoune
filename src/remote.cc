@@ -174,15 +174,31 @@ void RemoteUI::draw(const DisplayBuffer& display_buffer,
     write(msg, status_line);
 }
 
+static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
+
 Key RemoteUI::get_key()
 {
     Key key = read<Key>(m_socket);
+    if (key.modifiers == resize_modifier)
+    {
+        m_dimensions = { (int)(key.key >> 16), (int)(key.key & 0xFFFF) };
+        return Key::Invalid;
+    }
     return key;
 }
 
 DisplayCoord RemoteUI::dimensions()
 {
     return m_dimensions;
+}
+
+RemoteClient::RemoteClient(int socket, UserInterface* ui)
+    : m_socket(socket), m_ui(ui)
+{
+     DisplayCoord size = ui->dimensions();
+     Key key{ resize_modifier, (Codepoint)(((int)size.line << 16) | (int)size.column) };
+     Message msg(socket);
+     write(msg, key);
 }
 
 void RemoteClient::process_next_message()

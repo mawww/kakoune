@@ -21,7 +21,6 @@ public:
               const String& status_line) override;
     Key  get_key() override;
     DisplayCoord dimensions() override;
-    void set_dimensions(const DisplayCoord dim) { m_dimensions = dim; }
 
 private:
     int          m_socket;
@@ -31,7 +30,7 @@ private:
 class RemoteClient
 {
 public:
-    RemoteClient(int socket, UserInterface* ui) : m_ui(ui), m_socket(socket) {}
+    RemoteClient(int socket, UserInterface* ui);
 
     void process_next_message();
     void write_next_key();

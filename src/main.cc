@@ -567,7 +567,6 @@ void setup_server()
 
         auto& buffer = *BufferManager::instance().begin();
         RemoteUI* ui = new RemoteUI{sock};
-        ui->set_dimensions(DisplayCoord(24, 80));
         Client client{ui, *buffer->get_or_create_window()};
         InputHandler*  input_handler = client.input_handler.get();
         Context*       context = client.context.get();
