@@ -17,11 +17,20 @@ enum class RemoteUIMsg
     Draw
 };
 
+struct socket_error{};
+
 class Message
 {
 public:
     Message(int sock) : m_socket(sock) {}
-    ~Message() { ::write(m_socket, m_stream.data(), m_stream.size()); }
+    ~Message()
+    {
+        if (m_stream.size() == 0)
+            return;
+        int res = ::write(m_socket, m_stream.data(), m_stream.size());
+        if (res == 0)
+            throw peer_disconnected{};
+    }
 
     void write(const char* val, size_t size)
     {
@@ -77,12 +86,21 @@ void write(Message& msg, const DisplayBuffer& display_buffer)
     write(msg, display_buffer.lines());
 }
 
+void read(int socket, char* buffer, size_t size)
+{
+    int res = ::read(socket, buffer, size);
+    if (res == 0)
+        throw peer_disconnected{};
+    if (res == -1)
+        throw socket_error{};
+    assert(res == size);
+}
+
 template<typename T>
 T read(int socket)
 {
     char value[sizeof(T)];
-    auto res = ::read(socket, value, sizeof(T));
-    assert(res == sizeof(T));
+    read(socket, value, sizeof(T));
     return *(T*)(value);
 };
 
@@ -92,8 +110,7 @@ String read<String>(int socket)
     ByteCount length = read<ByteCount>(socket);
     char buffer[2048];
     assert(length < 2048);
-    auto res = ::read(socket, buffer, (int)length);
-    assert(res == (int)length);
+    read(socket, buffer, (int)length);
     return String(buffer, buffer+(int)length);
 };
 

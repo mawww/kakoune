@@ -7,6 +7,11 @@
 namespace Kakoune
 {
 
+struct peer_disconnected : public runtime_error
+{
+    peer_disconnected() : runtime_error("peer disconnected") {}
+};
+
 class RemoteUI : public UserInterface
 {
 public:
