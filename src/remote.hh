@@ -43,6 +43,7 @@ public:
 private:
     int                            m_socket;
     std::unique_ptr<UserInterface> m_ui;
+    DisplayCoord                   m_dimensions;
 };
 
 }

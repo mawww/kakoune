@@ -210,10 +210,9 @@ DisplayCoord RemoteUI::dimensions()
 }
 
 RemoteClient::RemoteClient(int socket, UserInterface* ui)
-    : m_socket(socket), m_ui(ui)
+    : m_socket(socket), m_ui(ui), m_dimensions(ui->dimensions())
 {
-     DisplayCoord size = ui->dimensions();
-     Key key{ resize_modifier, (Codepoint)(((int)size.line << 16) | (int)size.column) };
+     Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
      Message msg(socket);
      write(msg, key);
 }
@@ -256,7 +255,14 @@ void RemoteClient::process_next_message()
 
 void RemoteClient::write_next_key()
 {
+    DisplayCoord dimensions = m_ui->dimensions();
     Message msg(m_socket);
+    if (dimensions != m_dimensions)
+    {
+        m_dimensions = dimensions;
+        Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) | (int)dimensions.column) };
+        write(msg, m_dimensions);
+    }
     write(msg, m_ui->get_key());
 }
 
