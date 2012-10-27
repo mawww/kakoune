@@ -261,7 +261,7 @@ void RemoteClient::write_next_key()
     {
         m_dimensions = dimensions;
         Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) | (int)dimensions.column) };
-        write(msg, m_dimensions);
+        write(msg, key);
     }
     write(msg, m_ui->get_key());
 }
