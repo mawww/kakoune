@@ -47,7 +47,7 @@ public:
         return save;
     }
 
-    utf8_iterator operator+(int count) const
+    utf8_iterator operator+(CharCount count) const
     {
         if (count < 0)
            return operator-(-count);
@@ -58,7 +58,7 @@ public:
         return res;
     }
 
-    utf8_iterator operator-(int count) const
+    utf8_iterator operator-(CharCount count) const
     {
         if (count < 0)
            return operator+(-count);
@@ -92,12 +92,12 @@ public:
         return m_it >= other.m_it;
     }
 
-    size_t operator-(utf8_iterator other) const
+    CharCount operator-(utf8_iterator other) const
     {
         //assert(other < *this);
         check_invariant();
         other.check_invariant();
-        size_t dist = 0;
+        CharCount dist = 0;
         while (other.m_it != m_it)
         {
             ++dist;

@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include "unicode.hh"
+#include "units.hh"
 #include "assert.hh"
 
 namespace Kakoune
@@ -43,8 +44,8 @@ Iterator previous(Iterator it)
 // returns an iterator pointing to the first byte of the
 // dth character after (or before if d < 0) the character
 // pointed by it
-template<typename Iterator, typename Distance>
-Iterator advance(Iterator it, Iterator end, Distance d)
+template<typename Iterator>
+Iterator advance(Iterator it, Iterator end, CharCount d)
 {
     if (d < 0)
     {
@@ -61,9 +62,9 @@ Iterator advance(Iterator it, Iterator end, Distance d)
 
 // returns the character count between begin and end
 template<typename Iterator>
-size_t distance(Iterator begin, Iterator end)
+CharCount distance(Iterator begin, Iterator end)
 {
-    size_t dist = 0;
+    CharCount dist = 0;
     while (begin != end)
     {
         if ((*begin++ & 0xC0) != 0x80)
