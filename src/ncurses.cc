@@ -152,6 +152,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     {
         move((int)line_index, 0);
         clrtoeol();
+        CharCount col_index = 0;
         for (const DisplayAtom& atom : line)
         {
             set_attribute(A_UNDERLINE, atom.attribute & Underline);
@@ -162,10 +163,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             set_color(atom.fg_color, atom.bg_color);
 
             String content = atom.content.content();
-            int y,x;
-            getyx(stdscr, y,x);
             if (content[content.length()-1] == '\n' and
-                content.char_length() - 1 < m_dimensions.column - x)
+                content.char_length() - 1 < m_dimensions.column - col_index)
             {
                 addutf8str(Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
                 addch(' ');
@@ -173,9 +172,10 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             else
             {
                 Utf8Iterator begin(content.begin()), end(content.end());
-                if (end - begin > m_dimensions.column - x)
-                    end = begin + m_dimensions.column - x;
+                if (end - begin > m_dimensions.column - col_index)
+                    end = begin + m_dimensions.column - col_index;
                 addutf8str(begin, end);
+                col_index += end - begin;
             }
         }
         ++line_index;
