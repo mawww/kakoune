@@ -32,6 +32,11 @@ public:
 
     DisplayCoord dimensions() override;
 private:
+    friend void on_term_resize(int);
+
+    DisplayCoord m_dimensions;
+    void update_dimensions();
+
     MENU* m_menu = nullptr;
     WINDOW* m_menu_win = nullptr;
     std::vector<ITEM*> m_items;
@@ -39,6 +44,7 @@ private:
 
     DisplayCoord m_menu_pos;
     DisplayCoord m_menu_size;
+
 
     int m_menu_fg;
     int m_menu_bg;

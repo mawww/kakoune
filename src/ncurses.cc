@@ -7,7 +7,10 @@
 
 #include <map>
 
-#define CTRL(x) x - 'a' + 1
+#include <signal.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 
 namespace Kakoune
 {
@@ -71,6 +74,18 @@ static void set_color(Color fg_color, Color bg_color)
     }
 }
 
+static NCursesUI* signal_ui;
+void on_term_resize(int)
+{
+    int fd = open("/dev/tty", O_RDWR);
+    winsize ws;
+    if (fd == 0 or ioctl(fd, TIOCGWINSZ, (void*)&ws) != 0)
+        return;
+    close(fd);
+    resizeterm(ws.ws_row, ws.ws_col);
+    ungetch(KEY_RESIZE);
+    signal_ui->update_dimensions();
+}
 
 NCursesUI::NCursesUI()
 {
@@ -88,6 +103,11 @@ NCursesUI::NCursesUI()
 
     m_menu_fg = get_color_pair(Color::Blue, Color::Cyan);
     m_menu_bg = get_color_pair(Color::Cyan, Color::Blue);
+
+    update_dimensions();
+
+    signal_ui = this;
+    signal(SIGWINCH, on_term_resize);
 }
 
 NCursesUI::~NCursesUI()
@@ -113,18 +133,21 @@ void addutf8str(Utf8Iterator begin, Utf8Iterator end)
         addch(*begin++);
 }
 
-void NCursesUI::draw(const DisplayBuffer& display_buffer,
-                     const String& status_line)
+void NCursesUI::update_dimensions()
 {
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
     max_y -= 1;
-    int status_y = max_y;
+    m_dimensions = { max_y, max_x };
+}
 
-    int line_index = 0;
+void NCursesUI::draw(const DisplayBuffer& display_buffer,
+                     const String& status_line)
+{
+    LineCount line_index = 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
-        move(line_index, 0);
+        move((int)line_index, 0);
         clrtoeol();
         for (const DisplayAtom& atom : line)
         {
@@ -138,7 +161,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             String content = atom.content.content();
             int y,x;
             getyx(stdscr, y,x);
-            if (content[content.length()-1] == '\n' and content.length() - 1 < max_x - x)
+            if (content[content.length()-1] == '\n' and
+                content.char_length() - 1 < m_dimensions.column - x)
             {
                 addutf8str(Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
                 addch(' ');
@@ -146,8 +170,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             else
             {
                 Utf8Iterator begin(content.begin()), end(content.end());
-                if (end - begin > max_x - x)
-                    end = begin + (max_x - x);
+                if (end - begin > m_dimensions.column - x)
+                    end = begin + m_dimensions.column - x;
                 addutf8str(begin, end);
             }
         }
@@ -159,18 +183,18 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
     set_color(Color::Blue, Color::Black);
-    for (;line_index < max_y; ++line_index)
+    for (;line_index < m_dimensions.line; ++line_index)
     {
-        move(line_index, 0);
+        move((int)line_index, 0);
         clrtoeol();
         addch('~');
     }
 
     set_color(Color::Cyan, Color::Black);
     static int last_status_length = 0;
-    move(status_y, max_x - last_status_length);
+    move((int)m_dimensions.line, (int)(m_dimensions.column - last_status_length));
     clrtoeol();
-    move(status_y, max_x - (int)status_line.length());
+    move((int)m_dimensions.line, (int)(m_dimensions.column - status_line.char_length()));
     addstr(status_line.c_str());
     last_status_length = (int)status_line.length();
 
@@ -311,9 +335,7 @@ void NCursesUI::menu_hide()
 
 DisplayCoord NCursesUI::dimensions()
 {
-    int max_x,max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    return {max_y - 1, max_x};
+    return m_dimensions;
 }
 
 }
