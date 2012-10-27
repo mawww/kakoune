@@ -5,6 +5,8 @@
 namespace Kakoune
 {
 
+EventManager::EventManager() { m_forced.reserve(4); }
+
 void EventManager::watch(int fd, EventHandler handler)
 {
     auto event = std::find_if(m_events.begin(), m_events.end(),
@@ -31,15 +33,22 @@ void EventManager::unwatch(int fd)
 
 void EventManager::handle_next_events()
 {
-    int res = poll(m_events.data(), m_events.size(), -1);
-    if (res > 0)
+    const int timeout_ms = 100;
+    int res = poll(m_events.data(), m_events.size(), timeout_ms);
+    if (res >= 0)
     {
         for (size_t i = 0; i < m_events.size(); ++i)
         {
-            if (m_events[i].revents)
+            if (m_events[i].revents or contains(m_forced, m_events[i].fd))
                 m_handlers[i](m_events[i].fd);
         }
+        m_forced.clear();
     }
+}
+
+void EventManager::force_signal(int fd)
+{
+     m_forced.push_back(fd);
 }
 
 }
