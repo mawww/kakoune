@@ -4,6 +4,7 @@
 #include "register_manager.hh"
 
 #include "utf8_iterator.hh"
+#include "event_manager.hh"
 
 #include <map>
 
@@ -74,7 +75,7 @@ static void set_color(Color fg_color, Color bg_color)
     }
 }
 
-static NCursesUI* signal_ui;
+static NCursesUI* signal_ui = nullptr;
 void on_term_resize(int)
 {
     int fd = open("/dev/tty", O_RDWR);
@@ -85,6 +86,7 @@ void on_term_resize(int)
     resizeterm(ws.ws_row, ws.ws_col);
     ungetch(KEY_RESIZE);
     signal_ui->update_dimensions();
+    EventManager::instance().force_signal(0);
 }
 
 NCursesUI::NCursesUI()
@@ -106,6 +108,7 @@ NCursesUI::NCursesUI()
 
     update_dimensions();
 
+    assert(signal_ui == nullptr);
     signal_ui = this;
     signal(SIGWINCH, on_term_resize);
 }
