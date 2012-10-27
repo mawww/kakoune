@@ -35,15 +35,13 @@ void EventManager::handle_next_events()
 {
     const int timeout_ms = 100;
     int res = poll(m_events.data(), m_events.size(), timeout_ms);
-    if (res >= 0)
+    for (size_t i = 0; i < m_events.size(); ++i)
     {
-        for (size_t i = 0; i < m_events.size(); ++i)
-        {
-            if (m_events[i].revents or contains(m_forced, m_events[i].fd))
-                m_handlers[i](m_events[i].fd);
-        }
-        m_forced.clear();
+        if ((res > 0 and m_events[i].revents) or
+            contains(m_forced, m_events[i].fd))
+            m_handlers[i](m_events[i].fd);
     }
+    m_forced.clear();
 }
 
 void EventManager::force_signal(int fd)
