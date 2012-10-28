@@ -23,6 +23,7 @@ public:
               const String& status_line) override;
     void print_status(const String& status, CharCount cursor_pos) override;
 
+    bool   is_key_available() override;
     Key    get_key() override;
 
     void menu_show(const memoryview<String>& choices,

@@ -36,7 +36,7 @@ public:
 
     void on_next_key(KeyCallback callback);
 
-    void handle_next_input(Context& context);
+    void handle_available_inputs(Context& context);
 
 private:
     friend class InputMode;

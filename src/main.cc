@@ -529,7 +529,7 @@ Client create_local_client(const String& file)
     EventManager::instance().watch(0, [=](int) {
         try
         {
-            input_handler->handle_next_input(*context);
+            input_handler->handle_available_inputs(*context);
         }
         catch (Kakoune::runtime_error& error)
         {
@@ -573,7 +573,7 @@ void setup_server()
         EventManager::instance().watch(sock, [=](int) {
             try
             {
-                input_handler->handle_next_input(*context);
+                input_handler->handle_available_inputs(*context);
             }
             catch (Kakoune::runtime_error& error)
             {

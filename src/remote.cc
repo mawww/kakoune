@@ -193,6 +193,20 @@ void RemoteUI::draw(const DisplayBuffer& display_buffer,
 
 static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
 
+bool RemoteUI::is_key_available()
+{
+    timeval tv;
+    fd_set  rfds;
+
+    FD_ZERO(&rfds);
+    FD_SET(m_socket, &rfds);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    int res = select(m_socket+1, &rfds, NULL, NULL, &tv);
+    return res == 1;
+}
+
 Key RemoteUI::get_key()
 {
     Key key = read<Key>(m_socket);

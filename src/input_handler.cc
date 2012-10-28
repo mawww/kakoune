@@ -625,11 +625,14 @@ void InputHandler::on_next_key(KeyCallback callback)
     m_mode.reset(new InputModes::NextKey(*this, callback));
 }
 
-void InputHandler::handle_next_input(Context& context)
+void InputHandler::handle_available_inputs(Context& context)
 {
-    Key key = context.ui().get_key();
-    if (key != Key::Invalid)
-        m_mode->on_key(key, context);
+    while (context.ui().is_key_available())
+    {
+        Key key = context.ui().get_key();
+        if (key != Key::Invalid)
+            m_mode->on_key(key, context);
+    }
     context.draw_ifn();
 }
 

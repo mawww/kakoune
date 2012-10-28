@@ -654,7 +654,7 @@ public:
         assert(m_pos < m_keys.size());
         return m_keys[m_pos++];
     }
-    bool has_key_left() const { return m_pos < m_keys.size(); }
+    bool is_key_available() override { return m_pos < m_keys.size(); }
 
     void print_status(const String& , CharCount) override {}
     void draw(const DisplayBuffer&, const String&) override {}
@@ -681,8 +681,7 @@ void exec_keys(const KeyList& keys, Context& context)
     scoped_edition edition(context.editor());
 
     Context new_context(batch_input_handler, context.editor(), batch_ui);
-    while (batch_ui.has_key_left())
-        batch_input_handler.handle_next_input(new_context);
+    batch_input_handler.handle_available_inputs(new_context);
     context.change_editor(new_context.editor());
 }
 

@@ -211,6 +211,16 @@ struct getch_iterator
     getch_iterator& operator++(int) { return *this; }
 };
 
+bool NCursesUI::is_key_available()
+{
+    timeout(0);
+    const int c = getch();
+    if (c != ERR)
+        ungetch(c);
+    timeout(-1);
+    return c != ERR;
+}
+
 Key NCursesUI::get_key()
 {
     const unsigned c = getch();

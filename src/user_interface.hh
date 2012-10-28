@@ -31,6 +31,7 @@ public:
     virtual void draw(const DisplayBuffer& display_buffer,
                       const String& status_line) = 0;
     virtual DisplayCoord dimensions() = 0;
+    virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;
 };
 

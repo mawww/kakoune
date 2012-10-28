@@ -24,6 +24,8 @@ public:
     void menu_hide() override;
     void draw(const DisplayBuffer& display_buffer,
               const String& status_line) override;
+
+    bool is_key_available() override;
     Key  get_key() override;
     DisplayCoord dimensions() override;
 
