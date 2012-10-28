@@ -132,6 +132,7 @@ using Utf8Policy = utf8::InvalidBytePolicy::Pass;
 using Utf8Iterator = utf8::utf8_iterator<String::iterator, Utf8Policy>;
 void addutf8str(Utf8Iterator begin, Utf8Iterator end)
 {
+    assert(begin <= end);
     while (begin != end)
         addch(*begin++);
 }
@@ -173,7 +174,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             {
                 Utf8Iterator begin(content.begin()), end(content.end());
                 if (end - begin > m_dimensions.column - col_index)
-                    end = begin + m_dimensions.column - col_index;
+                    end = begin + (m_dimensions.column - col_index);
                 addutf8str(begin, end);
                 col_index += end - begin;
             }
