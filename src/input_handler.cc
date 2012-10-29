@@ -62,6 +62,14 @@ private:
     int m_count = 0;
 };
 
+String codepoint_to_str(Codepoint cp)
+{
+    std::string str;
+    auto it = back_inserter(str);
+    utf8::dump(it, cp);
+    return String(str);
+}
+
 class LineEditor
 {
 public:
@@ -91,10 +99,7 @@ public:
         }
         else
         {
-            std::string keystr;
-            auto inserter = back_inserter(keystr);
-            utf8::dump(inserter, key.key);
-            m_line = m_line.substr(0, m_cursor_pos) + keystr
+            m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(key.key)
                    + m_line.substr(m_cursor_pos);
             ++m_cursor_pos;
         }
@@ -467,14 +472,6 @@ private:
     int            m_current_completion = -1;
 };
 
-String codepoint_to_str(Codepoint cp)
-{
-    std::string str;
-    auto it = back_inserter(str);
-    utf8::dump(it, cp);
-    return String(str);
-}
-
 class Insert : public InputMode
 {
 public:
@@ -625,12 +622,17 @@ void InputHandler::on_next_key(KeyCallback callback)
     m_mode.reset(new InputModes::NextKey(*this, callback));
 }
 
+bool is_valid(const Key& key)
+{
+    return key != Key::Invalid and key.key <= 0x10FFFF;
+}
+
 void InputHandler::handle_available_inputs(Context& context)
 {
     while (context.ui().is_key_available())
     {
         Key key = context.ui().get_key();
-        if (key != Key::Invalid)
+        if (is_valid(key))
             m_mode->on_key(key, context);
     }
     context.draw_ifn();
