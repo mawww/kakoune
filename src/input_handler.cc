@@ -183,7 +183,7 @@ public:
         {
             auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
             if (it == m_choices.end())
-                it = std::find_if(m_choices.begin(), m_selected+1, match_filter);
+                it = std::find_if(m_choices.begin(), m_selected, match_filter);
             m_selected = it;
             context.ui().menu_select(m_selected - m_choices.begin());
         }
@@ -192,8 +192,8 @@ public:
                  key == Key(Key::Modifiers::Control, 'p') or
                  key == Key(Key::Modifiers::None, 'k'))
         {
-            ChoiceList::const_reverse_iterator selected(m_selected);
-            auto it = std::find_if(selected, m_choices.rend(), match_filter);
+            ChoiceList::const_reverse_iterator selected(m_selected+1);
+            auto it = std::find_if(selected+1, m_choices.rend(), match_filter);
             if (it == m_choices.rend())
                 it = std::find_if(m_choices.rbegin(), selected, match_filter);
             m_selected = it.base()-1;
