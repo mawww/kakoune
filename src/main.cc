@@ -543,47 +543,60 @@ Client create_local_client(const String& file)
 
 std::vector<Client> clients;
 
-void setup_server()
+struct Server
 {
-    auto filename = "/tmp/kak-" + int_to_str(getpid());
+    Server()
+    {
+        m_filename = "/tmp/kak-" + int_to_str(getpid());
 
-    int listen_sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+        m_listen_sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        sockaddr_un addr;
+        addr.sun_family = AF_UNIX;
+        strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
 
-    if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-       throw runtime_error("unable to bind listen socket " + filename);
+        if (bind(m_listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
+           throw runtime_error("unable to bind listen socket " + m_filename);
 
-    if (listen(listen_sock, 4) == -1)
-       throw runtime_error("unable to listen on socket " + filename);
+        if (listen(m_listen_sock, 4) == -1)
+           throw runtime_error("unable to listen on socket " + m_filename);
 
-    auto accepter = [=](int socket) {
-        sockaddr_un client_addr;
-        socklen_t   client_addr_len = sizeof(sockaddr_un);
-        int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
-        if (sock == -1)
-            throw runtime_error("accept failed");
+        auto accepter = [=](int socket) {
+            sockaddr_un client_addr;
+            socklen_t   client_addr_len = sizeof(sockaddr_un);
+            int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
+            if (sock == -1)
+                throw runtime_error("accept failed");
 
-        auto& buffer = *BufferManager::instance().begin();
-        RemoteUI* ui = new RemoteUI{sock};
-        Client client{ui, *buffer->get_or_create_window()};
-        InputHandler*  input_handler = client.input_handler.get();
-        Context*       context = client.context.get();
-        EventManager::instance().watch(sock, [=](int) {
-            try
-            {
-                input_handler->handle_available_inputs(*context);
-            }
-            catch (Kakoune::runtime_error& error)
-            {
-                ui->print_status(error.description(), -1);
-            }
-        });
-        clients.push_back(std::move(client));
-    };
-    EventManager::instance().watch(listen_sock, accepter);
-}
+            auto& buffer = *BufferManager::instance().begin();
+            RemoteUI* ui = new RemoteUI{sock};
+            Client client{ui, *buffer->get_or_create_window()};
+            InputHandler*  input_handler = client.input_handler.get();
+            Context*       context = client.context.get();
+            EventManager::instance().watch(sock, [=](int) {
+                try
+                {
+                    input_handler->handle_available_inputs(*context);
+                }
+                catch (Kakoune::runtime_error& error)
+                {
+                    ui->print_status(error.description(), -1);
+                }
+            });
+            clients.push_back(std::move(client));
+        };
+        EventManager::instance().watch(m_listen_sock, accepter);
+    }
+
+    ~Server()
+    {
+        unlink(m_filename.c_str());
+        close(m_listen_sock);
+    }
+
+private:
+    int    m_listen_sock;
+    String m_filename;
+};
 
 RemoteClient* connect_to(const String& pid)
 {
@@ -660,7 +673,7 @@ int main(int argc, char* argv[])
         write_debug("pid: " + int_to_str(getpid()) + "\n");
         write_debug("utf-8 test: é á ï");
 
-        setup_server();
+        Server server;
 
         Client local_client;
         try
