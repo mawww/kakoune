@@ -146,7 +146,7 @@ void NCursesUI::update_dimensions()
 }
 
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
-                     const String& status_line)
+                     const String& mode_line)
 {
     LineCount line_index = 0;
     for (const DisplayLine& line : display_buffer.lines())
@@ -195,13 +195,15 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     }
 
     set_color(Color::Cyan, Color::Black);
-    static int last_status_length = 0;
-    move((int)m_dimensions.line, (int)(m_dimensions.column - last_status_length));
-    clrtoeol();
-    move((int)m_dimensions.line, (int)(m_dimensions.column - status_line.char_length()));
-    addstr(status_line.c_str());
-    last_status_length = (int)status_line.length();
-
+    draw_status();
+    CharCount status_len = mode_line.char_length();
+    // only draw mode_line if it does not overlap one status line
+    if (m_dimensions.column - m_status_line.char_length() > status_len + 1)
+    {
+        move((int)m_dimensions.line, (int)(m_dimensions.column - status_len));
+        addutf8str(Utf8Iterator(mode_line.begin()),
+                   Utf8Iterator(mode_line.end()));
+    }
     redraw(m_menu_win);
 }
 
@@ -259,25 +261,31 @@ Key NCursesUI::get_key()
     return Key::Invalid;
 }
 
-void NCursesUI::print_status(const String& status, CharCount cursor_pos)
+void NCursesUI::draw_status()
 {
-    int x,y;
-    getmaxyx(stdscr, y, x);
-    move(y-1, 0);
+    move((int)m_dimensions.line, 0);
     clrtoeol();
-    if (cursor_pos == -1)
-       addutf8str(status.begin(), status.end());
+    if (m_status_cursor == -1)
+       addutf8str(m_status_line.begin(), m_status_line.end());
     else
     {
-        auto cursor_it = utf8::advance(status.begin(), status.end(), (int)cursor_pos);
-        auto end = status.end();
-        addutf8str(status.begin(), cursor_it);
+        auto cursor_it = utf8::advance(m_status_line.begin(), m_status_line.end(),
+                                       (int)m_status_cursor);
+        auto end = m_status_line.end();
+        addutf8str(m_status_line.begin(), cursor_it);
         set_attribute(A_REVERSE, 1);
         addch((cursor_it == end) ? ' ' : utf8::codepoint<Utf8Policy>(cursor_it));
         set_attribute(A_REVERSE, 0);
         if (cursor_it != end)
             addutf8str(utf8::next(cursor_it), end);
     }
+}
+
+void NCursesUI::print_status(const String& status, CharCount cursor_pos)
+{
+    m_status_line   = status;
+    m_status_cursor = cursor_pos;
+    draw_status();
     redraw(m_menu_win);
 }
 

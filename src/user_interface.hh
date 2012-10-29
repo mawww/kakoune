@@ -29,7 +29,7 @@ public:
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
     virtual void draw(const DisplayBuffer& display_buffer,
-                      const String& status_line) = 0;
+                      const String& mode_line) = 0;
     virtual DisplayCoord dimensions() = 0;
     virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;

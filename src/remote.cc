@@ -183,12 +183,12 @@ void RemoteUI::menu_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
-                    const String& status_line)
+                    const String& mode_line)
 {
     Message msg(m_socket);
     write(msg, RemoteUIMsg::Draw);
     write(msg, display_buffer);
-    write(msg, status_line);
+    write(msg, mode_line);
 }
 
 static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
@@ -260,8 +260,8 @@ void RemoteClient::process_next_message()
     case RemoteUIMsg::Draw:
     {
          DisplayBuffer display_buffer = read<DisplayBuffer>(m_socket);
-         String status_line = read<String>(m_socket);
-         m_ui->draw(display_buffer, status_line);
+         String mode_line = read<String>(m_socket);
+         m_ui->draw(display_buffer, mode_line);
          break;
     }
     }

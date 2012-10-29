@@ -20,7 +20,7 @@ public:
     NCursesUI& operator=(const NCursesUI&) = delete;
 
     void draw(const DisplayBuffer& display_buffer,
-              const String& status_line) override;
+              const String& mode_line) override;
     void print_status(const String& status, CharCount cursor_pos) override;
 
     bool   is_key_available() override;
@@ -38,6 +38,10 @@ private:
     DisplayCoord m_dimensions;
     void update_dimensions();
 
+    String    m_status_line;
+    CharCount m_status_cursor = -1;
+    void      draw_status();
+
     MENU* m_menu = nullptr;
     WINDOW* m_menu_win = nullptr;
     std::vector<ITEM*> m_items;
@@ -45,7 +49,6 @@ private:
 
     DisplayCoord m_menu_pos;
     DisplayCoord m_menu_size;
-
 
     int m_menu_fg;
     int m_menu_bg;
