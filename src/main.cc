@@ -172,6 +172,8 @@ static InsertMode adapt_for_linewise(InsertMode mode)
         return InsertMode::AppendAtLineEnd;
     if (mode == InsertMode::Insert)
         return InsertMode::InsertAtLineBegin;
+    if (mode == InsertMode::Replace)
+        return InsertMode::Replace;
 
     assert(false);
     return InsertMode::Insert;
