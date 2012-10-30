@@ -21,6 +21,7 @@
 #include "file.hh"
 #include "color_registry.hh"
 #include "remote.hh"
+#include "client_manager.hh"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -37,8 +38,6 @@ using namespace std::placeholders;
 
 namespace Kakoune
 {
-
-bool quit_requested = false;
 
 template<InsertMode mode>
 void do_insert(Context& context)
@@ -494,21 +493,7 @@ void register_registers()
     }
 }
 
-struct Client
-{
-    std::unique_ptr<UserInterface> ui;
-    std::unique_ptr<InputHandler>  input_handler;
-    std::unique_ptr<Context>       context;
-
-    Client(UserInterface* ui, Window& window)
-        : ui(ui),
-          input_handler(new InputHandler{}),
-          context(new Context(*input_handler, window, *ui)) {}
-
-    Client() {}
-};
-
-Client create_local_client(const String& file)
+void create_local_client(const String& file)
 {
     Buffer* buffer = nullptr;
     UserInterface* ui = new NCursesUI{};
@@ -537,13 +522,15 @@ Client create_local_client(const String& file)
         {
             ui->print_status(error.description(), -1);
         }
+        catch (Kakoune::client_removed&)
+        {
+             EventManager::instance().unwatch(0);
+        }
     });
 
     context->draw_ifn();
-    return client;
+    ClientManager::instance().add_client(std::move(client));
 }
-
-std::vector<Client> clients;
 
 struct Server
 {
@@ -583,8 +570,13 @@ struct Server
                 {
                     ui->print_status(error.description(), -1);
                 }
+                catch (Kakoune::client_removed&)
+                {
+                    EventManager::instance().unwatch(sock);
+                    close(sock);
+                }
             });
-            clients.push_back(std::move(client));
+            ClientManager::instance().add_client(std::move(client));
         };
         EventManager::instance().watch(m_listen_sock, accepter);
     }
@@ -647,9 +639,16 @@ int main(int argc, char* argv[])
 
         if (argc == 3 and String("-c") == argv[1])
         {
-            std::unique_ptr<RemoteClient> client(connect_to(argv[2]));
-            while(not quit_requested)
-                event_manager.handle_next_events();
+            try
+            {
+                std::unique_ptr<RemoteClient> client(connect_to(argv[2]));
+                while (true)
+                    event_manager.handle_next_events();
+            }
+            catch (peer_disconnected&)
+            {
+                puts("disconnected");
+            }
             return 0;
         }
 
@@ -662,6 +661,7 @@ int main(int argc, char* argv[])
         HighlighterRegistry highlighter_registry;
         FilterRegistry      filter_registry;
         ColorRegistry       color_registry;
+        ClientManager       client_manager;
 
         run_unit_tests();
 
@@ -677,7 +677,6 @@ int main(int argc, char* argv[])
 
         Server server;
 
-        Client local_client;
         try
         {
             Context initialisation_context;
@@ -688,9 +687,10 @@ int main(int argc, char* argv[])
         {
              write_debug("error while parsing kakrc: " + error.description());
         }
-        local_client = create_local_client(argc > 1 ? argv[1] : "");
 
-        while(not quit_requested)
+        create_local_client(argc > 1 ? argv[1] : "");
+
+        while (not client_manager.empty())
             event_manager.handle_next_events();
     }
     catch (Kakoune::exception& error)

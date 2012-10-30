@@ -108,6 +108,8 @@ template<>
 String read<String>(int socket)
 {
     ByteCount length = read<ByteCount>(socket);
+    if (length == 0)
+        return String{};
     char buffer[2048];
     assert(length < 2048);
     read(socket, buffer, (int)length);

@@ -16,6 +16,7 @@
 #include "shell_manager.hh"
 #include "event_manager.hh"
 #include "color_registry.hh"
+#include "client_manager.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -334,7 +335,7 @@ void quit(const CommandParameters& params, Context& context)
     if (params.size() != 0)
         throw wrong_argument_count();
 
-    if (not force)
+    if (not force and ClientManager::instance().count() == 1)
     {
         std::vector<String> names;
         for (auto& buffer : BufferManager::instance())
@@ -355,7 +356,8 @@ void quit(const CommandParameters& params, Context& context)
             throw runtime_error(message);
         }
     }
-    quit_requested = true;
+    ClientManager::instance().remove_client_by_context(context);
+    throw client_removed{};
 }
 
 template<bool force>
