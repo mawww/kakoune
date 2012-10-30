@@ -19,7 +19,16 @@ struct Client
           context(new Context(*input_handler, window, *ui)) {}
 
     Client(Client&&) = default;
-    Client& operator=(Client&&) = default;
+    Client& operator=(Client&& other)
+    {
+         // drop safe pointers first
+         context.reset();
+
+         ui = std::move(other.ui);
+         input_handler = std::move(other.input_handler);
+         context = std::move(other.context);
+         return *this;
+    }
 };
 
 struct client_removed{};
