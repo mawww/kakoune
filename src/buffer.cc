@@ -87,7 +87,9 @@ BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) co
 
 BufferIterator Buffer::iterator_at_line_begin(LineCount line) const
 {
-    return BufferIterator(*this, clamp({ line, 0 }));
+    line = Kakoune::clamp(line, 0_line, line_count()-1);
+    assert(line_length(line) > 0);
+    return BufferIterator(*this, { line, 0 });
 }
 
 BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
@@ -99,7 +101,7 @@ BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) cons
 
 BufferIterator Buffer::iterator_at_line_end(LineCount line) const
 {
-    line = std::min(line, line_count()-1);
+    line = Kakoune::clamp(line, 0_line, line_count()-1);
     assert(line_length(line) > 0);
     return ++BufferIterator(*this, { line, line_length(line) - 1 });
 }
