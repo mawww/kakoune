@@ -25,7 +25,7 @@ public:
     ~Window();
 
     const DisplayCoord& position() const { return m_position; }
-    void set_position(const DisplayCoord& position) { m_position = position; }
+    void set_position(const DisplayCoord& position);
 
     const DisplayCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(const DisplayCoord& dimensions);

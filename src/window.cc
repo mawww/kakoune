@@ -66,6 +66,12 @@ void Window::update_display_buffer()
     m_display_buffer.optimize();
 }
 
+void Window::set_position(const DisplayCoord& position)
+{
+    m_position.line = std::max(0_line, position.line);
+    m_position.column = std::max(0_char, position.column);
+}
+
 void Window::set_dimensions(const DisplayCoord& dimensions)
 {
     m_dimensions = dimensions;
