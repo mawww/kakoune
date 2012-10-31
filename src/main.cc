@@ -509,27 +509,8 @@ void create_local_client(const String& file)
     else
         buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
 
-    Client client{ui, *buffer->get_or_create_window()};
-
-    InputHandler*  input_handler = client.input_handler.get();
-    Context*       context = client.context.get();
-    EventManager::instance().watch(0, [=](int) {
-        try
-        {
-            input_handler->handle_available_inputs(*context);
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-            ui->print_status(error.description(), -1);
-        }
-        catch (Kakoune::client_removed&)
-        {
-             EventManager::instance().unwatch(0);
-        }
-    });
-
-    context->draw_ifn();
-    ClientManager::instance().add_client(std::move(client));
+    ClientManager::instance().create_client(
+        std::unique_ptr<UserInterface>{ui}, *buffer, 0);
 }
 
 struct Server
@@ -558,25 +539,8 @@ struct Server
 
             auto& buffer = *BufferManager::instance().begin();
             RemoteUI* ui = new RemoteUI{sock};
-            Client client{ui, *buffer->get_or_create_window()};
-            InputHandler*  input_handler = client.input_handler.get();
-            Context*       context = client.context.get();
-            EventManager::instance().watch(sock, [=](int) {
-                try
-                {
-                    input_handler->handle_available_inputs(*context);
-                }
-                catch (Kakoune::runtime_error& error)
-                {
-                    ui->print_status(error.description(), -1);
-                }
-                catch (Kakoune::client_removed&)
-                {
-                    EventManager::instance().unwatch(sock);
-                    close(sock);
-                }
-            });
-            ClientManager::instance().add_client(std::move(client));
+            ClientManager::instance().create_client(
+                std::unique_ptr<UserInterface>{ui}, *buffer, sock);
         };
         EventManager::instance().watch(m_listen_sock, accepter);
     }

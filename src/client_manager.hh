@@ -7,41 +7,43 @@
 namespace Kakoune
 {
 
-struct Client
-{
-    std::unique_ptr<UserInterface> ui;
-    std::unique_ptr<InputHandler>  input_handler;
-    std::unique_ptr<Context>       context;
-
-    Client(UserInterface* ui, Window& window)
-        : ui(ui),
-          input_handler(new InputHandler{}),
-          context(new Context(*input_handler, window, *ui)) {}
-
-    Client(Client&&) = default;
-    Client& operator=(Client&& other)
-    {
-         // drop safe pointers first
-         context.reset();
-
-         ui = std::move(other.ui);
-         input_handler = std::move(other.input_handler);
-         context = std::move(other.context);
-         return *this;
-    }
-};
-
 struct client_removed{};
 
 class ClientManager : public Singleton<ClientManager>
 {
 public:
-    void add_client(Client&& client);
+    void create_client(std::unique_ptr<UserInterface>&& ui,
+                       Buffer& buffer, int event_fd);
     void remove_client_by_context(Context& context);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
+
 private:
+    struct Client
+    {
+        Client(std::unique_ptr<UserInterface>&& ui, Window& window)
+            : user_interface(std::move(ui)), input_handler(new InputHandler{}),
+              context(new Context(*input_handler, window, *user_interface))
+        {}
+
+        Client(Client&&) = default;
+        Client& operator=(Client&& other)
+        {
+             // drop safe pointers first
+             context.reset();
+
+             user_interface = std::move(other.user_interface);
+             input_handler  = std::move(other.input_handler);
+             context        = std::move(other.context);
+             return *this;
+        }
+
+        std::unique_ptr<UserInterface> user_interface;
+        std::unique_ptr<InputHandler>  input_handler;
+        std::unique_ptr<Context>       context;
+    };
+
     std::vector<Client> m_clients;
 };
 
