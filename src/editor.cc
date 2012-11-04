@@ -13,7 +13,7 @@ namespace Kakoune
 {
 
 Editor::Editor(Buffer& buffer)
-    : m_buffer(buffer),
+    : m_buffer(&buffer),
       m_edition_level(0)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
@@ -24,7 +24,7 @@ void Editor::erase()
     scoped_edition edition(*this);
     for (auto& sel : m_selections)
     {
-        m_buffer.erase(sel.begin(), sel.end());
+        m_buffer->erase(sel.begin(), sel.end());
         sel.selection.avoid_eol();
     }
 }
@@ -68,8 +68,8 @@ void Editor::insert(const String& string, InsertMode mode)
 
     for (auto& sel : m_selections)
     {
-        BufferIterator pos = prepare_insert(m_buffer, sel.selection, mode);
-        m_buffer.insert(pos, string);
+        BufferIterator pos = prepare_insert(*m_buffer, sel.selection, mode);
+        m_buffer->insert(pos, string);
     }
 }
 
@@ -84,9 +84,9 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 
     for (size_t i = 0; i < selections().size(); ++i)
     {
-        BufferIterator pos = prepare_insert(m_buffer, m_selections[i].selection, mode);
+        BufferIterator pos = prepare_insert(*m_buffer, m_selections[i].selection, mode);
         size_t index = std::min(i, strings.size()-1);
-        m_buffer.insert(pos, strings[index]);
+        m_buffer->insert(pos, strings[index]);
     }
 }
 
@@ -94,7 +94,7 @@ std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
     for (auto& sel : m_selections)
-        contents.push_back(m_buffer.string(sel.begin(),
+        contents.push_back(m_buffer->string(sel.begin(),
                                            sel.end()));
     return contents;
 }
@@ -142,9 +142,9 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        BufferCoord pos = m_buffer.line_and_column_at(sel.last());
+        BufferCoord pos = m_buffer->line_and_column_at(sel.last());
         pos.line += offset;
-        BufferIterator last = utf8::finish(m_buffer.iterator_at(pos, true));
+        BufferIterator last = utf8::finish(m_buffer->iterator_at(pos, true));
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
     }
     merge_overlapping(m_selections);
@@ -290,7 +290,7 @@ private:
 bool Editor::undo()
 {
     LastModifiedRangeListener listener(buffer());
-    bool res = m_buffer.undo();
+    bool res = m_buffer->undo();
     if (res)
     {
         m_selections.clear();
@@ -303,7 +303,7 @@ bool Editor::undo()
 bool Editor::redo()
 {
     LastModifiedRangeListener listener(buffer());
-    bool res = m_buffer.redo();
+    bool res = m_buffer->redo();
     if (res)
     {
         m_selections.clear();
@@ -323,14 +323,14 @@ void Editor::begin_edition()
     ++m_edition_level;
 
     if (m_edition_level == 1)
-        m_buffer.begin_undo_group();
+        m_buffer->begin_undo_group();
 }
 
 void Editor::end_edition()
 {
     assert(m_edition_level > 0);
     if (m_edition_level == 1)
-        m_buffer.end_undo_group();
+        m_buffer->end_undo_group();
 
     --m_edition_level;
 }
@@ -341,7 +341,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     : m_editor(editor), m_edition(editor), m_mode(mode)
 {
     m_editor.on_incremental_insertion_begin();
-    Buffer& buffer = editor.m_buffer;
+    Buffer& buffer = *editor.m_buffer;
 
     if (mode == InsertMode::Replace)
     {
@@ -443,8 +443,8 @@ void IncrementalInserter::move_cursors(const BufferCoord& offset)
 {
     for (auto& sel : m_editor.m_selections)
     {
-        BufferCoord pos = m_editor.m_buffer.line_and_column_at(sel.last());
-        BufferIterator it = m_editor.m_buffer.iterator_at(pos + offset);
+        BufferCoord pos = m_editor.m_buffer->line_and_column_at(sel.last());
+        BufferIterator it = m_editor.m_buffer->iterator_at(pos + offset);
         sel = Selection(it, it);
     }
 }

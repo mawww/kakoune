@@ -45,7 +45,7 @@ public:
     Editor(Buffer& buffer);
     virtual ~Editor() {}
 
-    Buffer& buffer() const { return m_buffer; }
+    Buffer& buffer() const { return *m_buffer; }
 
     void erase();
 
@@ -93,7 +93,7 @@ private:
     virtual void on_incremental_insertion_begin() {}
     virtual void on_incremental_insertion_end() {}
 
-    Buffer&       m_buffer;
+    safe_ptr<Buffer>         m_buffer;
     SelectionAndCapturesList m_selections;
     FilterGroup   m_filters;
 };
