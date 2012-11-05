@@ -8,7 +8,7 @@ namespace Kakoune
 void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                   Buffer& buffer, int event_fd)
 {
-    m_clients.emplace_back(std::move(ui), *buffer.get_or_create_window());
+    m_clients.emplace_back(std::move(ui), get_unused_window_for_buffer(buffer));
 
     InputHandler*  input_handler = m_clients.back().input_handler.get();
     Context*       context = m_clients.back().context.get();
@@ -41,6 +41,20 @@ void ClientManager::remove_client_by_context(Context& context)
         }
     }
     assert(false);
+}
+
+Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer) const
+{
+    for (auto& w : buffer.windows())
+    {
+        auto it = std::find_if(m_clients.begin(), m_clients.end(),
+                               [&](const Client& client) {
+                                   return &client.context->window() == w.get();
+                               });
+        if (it == m_clients.end())
+            return *w;
+    }
+    return buffer.new_window();
 }
 
 }

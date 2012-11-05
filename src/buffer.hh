@@ -143,8 +143,11 @@ public:
 
     const String& name() const { return m_name; }
 
-    Window* get_or_create_window();
-    void delete_window(Window* window);
+    // Window handling
+    using WindowList = std::vector<std::unique_ptr<Window>>;
+    const WindowList& windows() const { return m_windows; }
+    Window& new_window();
+    void    delete_window(Window& window);
 
     // returns true if the buffer is in a different state than
     // the last time it was saved
@@ -216,7 +219,7 @@ private:
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
 
-    std::list<std::unique_ptr<Window>> m_windows;
+    WindowList m_windows;
 
     size_t m_last_save_undo_index;
     size_t m_timestamp;

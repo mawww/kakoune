@@ -388,18 +388,16 @@ void Buffer::erase(BufferIterator begin, BufferIterator end)
     do_erase(begin, end);
 }
 
-Window* Buffer::get_or_create_window()
+Window& Buffer::new_window()
 {
-    if (m_windows.empty())
-        m_windows.push_front(std::unique_ptr<Window>(new Window(*this)));
-
-    return m_windows.front().get();
+    m_windows.emplace_back(new Window(*this));
+    return *m_windows.back();
 }
 
-void Buffer::delete_window(Window* window)
+void Buffer::delete_window(Window& window)
 {
-    assert(&window->buffer() == this);
-    auto window_it = std::find(m_windows.begin(), m_windows.end(), window);
+    assert(&window.buffer() == this);
+    auto window_it = std::find(m_windows.begin(), m_windows.end(), &window);
     assert(window_it != m_windows.end());
     m_windows.erase(window_it);
 }

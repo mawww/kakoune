@@ -19,6 +19,8 @@ public:
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
+    Window& get_unused_window_for_buffer(Buffer& buffer) const;
+
 private:
     struct Client
     {

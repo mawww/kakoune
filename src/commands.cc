@@ -282,13 +282,13 @@ void edit(const CommandParameters& params, Context& context)
     }
 
     BufferManager::instance().set_last_used_buffer(*buffer);
-    Window& window = *buffer->get_or_create_window();
+    Window& window = ClientManager::instance().get_unused_window_for_buffer(*buffer);
 
     if (param_count > 1)
     {
         int line = std::max(0, str_to_int(parser[1]) - 1);
         int column = param_count > 2 ?
-                         std::max(0, str_to_int(parser[2]) - 1) : 0;
+                     std::max(0, str_to_int(parser[2]) - 1) : 0;
 
         window.select(window.buffer().iterator_at({ line,  column }));
         window.center_selection();
@@ -378,7 +378,8 @@ void show_buffer(const CommandParameters& params, Context& context)
         throw runtime_error("buffer " + buffer_name + " does not exists");
 
     BufferManager::instance().set_last_used_buffer(*buffer);
-    context.change_editor(*buffer->get_or_create_window());
+    Window& window = ClientManager::instance().get_unused_window_for_buffer(*buffer);
+    context.change_editor(window);
 }
 
 void delete_buffer(const CommandParameters& params, Context& context)
@@ -408,7 +409,8 @@ void delete_buffer(const CommandParameters& params, Context& context)
         {
             if (buf != buffer)
             {
-               context.change_editor(*buf->get_or_create_window());
+               Window& w = ClientManager::instance().get_unused_window_for_buffer(*buf);
+               context.change_editor(w);
                break;
             }
         }
