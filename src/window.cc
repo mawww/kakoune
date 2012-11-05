@@ -64,6 +64,8 @@ void Window::update_display_buffer()
     m_display_buffer.compute_range();
     m_highlighters(m_display_buffer);
     m_display_buffer.optimize();
+
+    m_timestamp = buffer().timestamp();
 }
 
 void Window::set_position(const DisplayCoord& position)

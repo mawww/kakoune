@@ -46,6 +46,8 @@ public:
     HookManager&         hook_manager()         { return m_hook_manager; }
     const HookManager&   hook_manager()   const { return m_hook_manager; }
 
+    size_t timestamp() const { return m_timestamp; }
+    void   forget_timestamp() { m_timestamp = -1; }
 
 private:
     friend class Buffer;
@@ -66,6 +68,8 @@ private:
 
     HookManager      m_hook_manager;
     OptionManager    m_option_manager;
+
+    size_t m_timestamp = -1;
 };
 
 }
