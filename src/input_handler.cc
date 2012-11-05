@@ -635,7 +635,6 @@ void InputHandler::handle_available_inputs(Context& context)
         if (is_valid(key))
             m_mode->on_key(key, context);
     }
-    context.draw_ifn();
 }
 
 }

@@ -16,6 +16,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         try
         {
             input_handler->handle_available_inputs(*context);
+            context->window().forget_timestamp();
         }
         catch (Kakoune::runtime_error& error)
         {
@@ -26,8 +27,9 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
             EventManager::instance().unwatch(event_fd);
             close(event_fd);
         }
+        ClientManager::instance().redraw_clients();
     });
-    context->draw_ifn();
+    redraw_clients();
 }
 
 void ClientManager::remove_client_by_context(Context& context)
@@ -52,9 +54,30 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer) const
                                    return &client.context->window() == w.get();
                                });
         if (it == m_clients.end())
+        {
+            w->forget_timestamp();
             return *w;
+        }
     }
     return buffer.new_window();
+}
+
+void ClientManager::redraw_clients() const
+{
+    for (auto& client : m_clients)
+    {
+        Context& context = *client.context;
+        if (context.window().timestamp() != context.buffer().timestamp())
+        {
+            DisplayCoord dimensions = context.ui().dimensions();
+            if (dimensions == DisplayCoord{0,0})
+                return;
+            context.window().set_dimensions(dimensions);
+            context.window().update_display_buffer();;
+            context.ui().draw(context.window().display_buffer(),
+                              context.window().status_line());
+        }
+    }
 }
 
 }

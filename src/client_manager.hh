@@ -21,6 +21,7 @@ public:
 
     Window& get_unused_window_for_buffer(Buffer& buffer) const;
 
+    void redraw_clients() const;
 private:
     struct Client
     {

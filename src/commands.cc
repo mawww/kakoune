@@ -238,14 +238,14 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         { EventManager::instance().unwatch(fd); close(fd); }
     );
 
-    EventManager::instance().watch(fd, [buffer, &context](int fd) {
+    EventManager::instance().watch(fd, [buffer](int fd) {
          char data[4096];
          ssize_t count = read(fd, data, 4096);
          buffer->insert(buffer->end()-1,
                         count > 0 ? String(data, data+count)
                                   : "*** kak: fifo closed ***\n");
          buffer->reset_undo_data();
-         context.draw_ifn();
+         ClientManager::instance().redraw_clients();
          if (count <= 0)
          {
              close(fd);
