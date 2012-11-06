@@ -454,6 +454,51 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
 void run_unit_tests();
 
+struct Server : public Singleton<Server>
+{
+    Server()
+    {
+        m_filename = "/tmp/kak-" + int_to_str(getpid());
+
+        m_listen_sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        sockaddr_un addr;
+        addr.sun_family = AF_UNIX;
+        strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
+
+        if (bind(m_listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
+           throw runtime_error("unable to bind listen socket " + m_filename);
+
+        if (listen(m_listen_sock, 4) == -1)
+           throw runtime_error("unable to listen on socket " + m_filename);
+
+        auto accepter = [=](int socket) {
+            sockaddr_un client_addr;
+            socklen_t   client_addr_len = sizeof(sockaddr_un);
+            int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
+            if (sock == -1)
+                throw runtime_error("accept failed");
+
+            auto& buffer = *BufferManager::instance().begin();
+            RemoteUI* ui = new RemoteUI{sock};
+            ClientManager::instance().create_client(
+                std::unique_ptr<UserInterface>{ui}, *buffer, sock);
+        };
+        EventManager::instance().watch(m_listen_sock, accepter);
+    }
+
+    ~Server()
+    {
+        unlink(m_filename.c_str());
+        close(m_listen_sock);
+    }
+
+    const String& filename() const { return m_filename; }
+
+private:
+    int    m_listen_sock;
+    String m_filename;
+};
+
 void register_env_vars()
 {
     ShellManager& shell_manager = ShellManager::instance();
@@ -473,6 +518,9 @@ void register_env_vars()
     shell_manager.register_env_var("reg_.+",
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });
+    shell_manager.register_env_var("socket",
+                                   [](const String& name, const Context& context)
+                                   { return Server::instance().filename(); });
 }
 
 void register_registers()
@@ -512,49 +560,6 @@ void create_local_client(const String& file)
     ClientManager::instance().create_client(
         std::unique_ptr<UserInterface>{ui}, *buffer, 0);
 }
-
-struct Server
-{
-    Server()
-    {
-        m_filename = "/tmp/kak-" + int_to_str(getpid());
-
-        m_listen_sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-        sockaddr_un addr;
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
-
-        if (bind(m_listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-           throw runtime_error("unable to bind listen socket " + m_filename);
-
-        if (listen(m_listen_sock, 4) == -1)
-           throw runtime_error("unable to listen on socket " + m_filename);
-
-        auto accepter = [=](int socket) {
-            sockaddr_un client_addr;
-            socklen_t   client_addr_len = sizeof(sockaddr_un);
-            int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
-            if (sock == -1)
-                throw runtime_error("accept failed");
-
-            auto& buffer = *BufferManager::instance().begin();
-            RemoteUI* ui = new RemoteUI{sock};
-            ClientManager::instance().create_client(
-                std::unique_ptr<UserInterface>{ui}, *buffer, sock);
-        };
-        EventManager::instance().watch(m_listen_sock, accepter);
-    }
-
-    ~Server()
-    {
-        unlink(m_filename.c_str());
-        close(m_listen_sock);
-    }
-
-private:
-    int    m_listen_sock;
-    String m_filename;
-};
 
 RemoteClient* connect_to(const String& pid)
 {
