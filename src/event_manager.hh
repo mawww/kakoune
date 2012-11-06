@@ -2,6 +2,7 @@
 #define event_manager_hh_INCLUDED
 
 #include <poll.h>
+#include <unordered_map>
 
 #include "utils.hh"
 
@@ -24,7 +25,7 @@ public:
 
 private:
     std::vector<pollfd> m_events;
-    std::vector<EventHandler> m_handlers;
+    std::unordered_map<int, EventHandler> m_handlers;
     std::vector<int>    m_forced;
 };
 

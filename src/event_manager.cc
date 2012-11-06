@@ -15,7 +15,7 @@ void EventManager::watch(int fd, EventHandler handler)
         throw runtime_error("fd already watched");
 
     m_events.push_back(pollfd{ fd, POLLIN | POLLPRI, 0 });
-    m_handlers.push_back(std::move(handler));
+    m_handlers.emplace(fd, std::move(handler));
 }
 
 void EventManager::unwatch(int fd)
@@ -25,7 +25,7 @@ void EventManager::unwatch(int fd)
         if (m_events[i].fd == fd)
         {
             m_events.erase(m_events.begin() + i);
-            m_handlers.erase(m_handlers.begin() + i);
+            m_handlers.erase(fd);
             return;
         }
     }
@@ -39,7 +39,7 @@ void EventManager::handle_next_events()
     {
         if ((res > 0 and m_events[i].revents) or
             contains(m_forced, m_events[i].fd))
-            m_handlers[i](m_events[i].fd);
+            m_handlers[m_events[i].fd](m_events[i].fd);
     }
     m_forced.clear();
 }
