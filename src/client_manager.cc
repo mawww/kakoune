@@ -12,7 +12,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
 
     InputHandler*  input_handler = m_clients.back().input_handler.get();
     Context*       context = m_clients.back().context.get();
-    EventManager::instance().watch(event_fd, [=](int) {
+    EventManager::instance().watch(event_fd, [input_handler, context, this](int fd) {
         try
         {
             input_handler->handle_available_inputs(*context);
@@ -24,8 +24,8 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         }
         catch (Kakoune::client_removed&)
         {
-            EventManager::instance().unwatch(event_fd);
-            close(event_fd);
+            EventManager::instance().unwatch(fd);
+            close(fd);
         }
         ClientManager::instance().redraw_clients();
     });
