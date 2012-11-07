@@ -401,20 +401,10 @@ void delete_buffer(const CommandParameters& params, Context& context)
     if (buffer->type()!= Buffer::Type::Scratch and buffer->is_modified())
         throw runtime_error("buffer " + buffer->name() + " is modified");
 
-    if (&context.buffer() == buffer)
-    {
-        if (manager.count() == 1)
-            throw runtime_error("buffer " + buffer->name() + " is the last one");
-        for (auto& buf : manager)
-        {
-            if (buf != buffer)
-            {
-               Window& w = ClientManager::instance().get_unused_window_for_buffer(*buf);
-               context.change_editor(w);
-               break;
-            }
-        }
-    }
+    if (manager.count() == 1)
+        throw runtime_error("buffer " + buffer->name() + " is the last one");
+
+    ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
     delete buffer;
 }
 

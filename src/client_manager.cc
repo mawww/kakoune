@@ -1,6 +1,7 @@
 #include "client_manager.hh"
 
 #include "event_manager.hh"
+#include "buffer_manager.hh"
 
 namespace Kakoune
 {
@@ -60,6 +61,28 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer) const
         }
     }
     return buffer.new_window();
+}
+
+void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
+{
+    for (auto& client : m_clients)
+    {
+        if (&client.context->buffer() != &buffer)
+            continue;
+
+        // change client context to edit the first buffer which is not the
+        // specified one. As BufferManager stores buffer according to last
+        // access, this selects a sensible buffer to display.
+        for (auto& buf : BufferManager::instance())
+        {
+            if (buf != &buffer)
+            {
+               Window& w = get_unused_window_for_buffer(*buf);
+               client.context->change_editor(w);
+               break;
+            }
+        }
+    }
 }
 
 void ClientManager::redraw_clients() const

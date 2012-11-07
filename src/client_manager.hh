@@ -20,6 +20,7 @@ public:
     size_t count() const { return m_clients.size(); }
 
     Window& get_unused_window_for_buffer(Buffer& buffer) const;
+    void    ensure_no_client_uses_buffer(Buffer& buffer);
 
     void redraw_clients() const;
 private:
