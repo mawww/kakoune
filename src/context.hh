@@ -79,11 +79,6 @@ struct Context
             window().set_dimensions(ui().dimensions());
     }
 
-    void change_ui(UserInterface& ui)
-    {
-        m_ui.reset(&ui);
-    }
-
     OptionManager& options() const
     {
         if (has_window())
