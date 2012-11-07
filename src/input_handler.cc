@@ -243,7 +243,14 @@ public:
     {
         std::vector<String>& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
-        if (key == Key{Key::Modifiers::Control, 'm'}) // enter
+
+        if (m_insert_reg)
+        {
+            String reg = RegisterManager::instance()[key.key].values(context)[0];
+            m_line_editor.insert(reg);
+            m_insert_reg = false;
+        }
+        else if (key == Key{Key::Modifiers::Control, 'm'}) // enter
         {
             std::vector<String>::iterator it;
             while ((it = find(history, line)) != history.end())
@@ -267,9 +274,7 @@ public:
         }
         else if (key == Key{Key::Modifiers::Control, 'r'})
         {
-            Key k = context.ui().get_key();
-            String reg = RegisterManager::instance()[k.key].values(context)[0];
-            m_line_editor.insert(reg);
+            m_insert_reg = true;
         }
         else if (key == Key::Up or
                  key == Key{Key::Modifiers::Control, 'p'})
@@ -362,6 +367,7 @@ private:
     int            m_current_completion = -1;
     String         m_prefix;
     LineEditor     m_line_editor;
+    bool           m_insert_reg = false;
 
     static std::unordered_map<String, std::vector<String>> ms_history;
     std::vector<String>::iterator m_history_it;
