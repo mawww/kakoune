@@ -282,7 +282,12 @@ void edit(const CommandParameters& params, Context& context)
     }
 
     BufferManager::instance().set_last_used_buffer(*buffer);
-    Window& window = ClientManager::instance().get_unused_window_for_buffer(*buffer);
+
+    if (buffer != &context.buffer())
+    {
+        auto& manager = ClientManager::instance();
+        context.change_editor(manager.get_unused_window_for_buffer(*buffer));
+    }
 
     if (param_count > 1)
     {
@@ -290,11 +295,10 @@ void edit(const CommandParameters& params, Context& context)
         int column = param_count > 2 ?
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        window.select(window.buffer().iterator_at({ line,  column }));
-        window.center_selection();
+        context.editor().select(context.buffer().iterator_at({ line,  column }));
+        if (context.has_window())
+            context.window().center_selection();
     }
-
-    context.change_editor(window);
 }
 
 void write_buffer(const CommandParameters& params, Context& context)
@@ -378,8 +382,12 @@ void show_buffer(const CommandParameters& params, Context& context)
         throw runtime_error("buffer " + buffer_name + " does not exists");
 
     BufferManager::instance().set_last_used_buffer(*buffer);
-    Window& window = ClientManager::instance().get_unused_window_for_buffer(*buffer);
-    context.change_editor(window);
+
+    if (buffer != &context.buffer())
+    {
+        auto& manager = ClientManager::instance();
+        context.change_editor(manager.get_unused_window_for_buffer(*buffer));
+    }
 }
 
 void delete_buffer(const CommandParameters& params, Context& context)
