@@ -161,7 +161,7 @@ public:
             callback(selected, context);
             return;
         }
-        else if (key == Key::Escape)
+        else if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
         {
             if (m_edit_filter)
             {
@@ -267,7 +267,7 @@ public:
             callback(result, context);
             return;
         }
-        else if (key == Key::Escape)
+        else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
         {
             context.ui().print_status("");
             context.ui().menu_hide();
@@ -494,66 +494,49 @@ public:
             return;
         }
         bool reset_completer = true;
-        switch (key.modifiers)
+        if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
         {
-        case Key::Modifiers::None:
-            switch (key.key)
-            {
-            case Key::Escape:
-                m_completer.reset(context);
-                reset_normal_mode();
-                return;
-            case Key::Backspace:
-                m_inserter.erase();
-                break;
-            case Key::Left:
-                m_inserter.move_cursors({0, -1});
-                break;
-            case Key::Right:
-                m_inserter.move_cursors({0,  1});
-                break;
-            case Key::Up:
-                m_inserter.move_cursors({-1, 0});
-                break;
-            case Key::Down:
-                m_inserter.move_cursors({ 1, 0});
-                break;
-            default:
-                m_inserter.insert(codepoint_to_str(key.key));
-                if (m_inserter.editor().selections().size() == 1 and
-                    is_word(key.key))
-                {
-                    m_completer.reset(context);
-                    reset_completer = false;
-                    m_completer.select(context, 0);
-                }
-            }
-            break;
-        case Key::Modifiers::Control:
-            switch (key.key)
-            {
-            case 'r':
-                m_insert_reg = true;
-                break;
-            case 'm':
-                m_inserter.insert(String() + '\n');
-                break;
-            case 'i':
-                m_inserter.insert(String() + '\t');
-                break;
-            case 'n':
-                m_completer.select(context, 1);
-                reset_completer = false;
-                break;
-            case 'p':
-                m_completer.select(context, -1);
-                reset_completer = false;
-                break;
-            }
-            break;
-        default:
-            break;
+            m_completer.reset(context);
+            reset_normal_mode();
         }
+        else if (key == Key::Backspace)
+            m_inserter.erase();
+        else if (key == Key::Left)
+            m_inserter.move_cursors({0, -1});
+        else if (key == Key::Right)
+            m_inserter.move_cursors({0,  1});
+        else if (key == Key::Up)
+            m_inserter.move_cursors({-1, 0});
+        else if (key == Key::Down)
+            m_inserter.move_cursors({ 1, 0});
+        else if (key.modifiers == Key::Modifiers::None)
+        {
+            m_inserter.insert(codepoint_to_str(key.key));
+            if (m_inserter.editor().selections().size() == 1 and
+                is_word(key.key))
+            {
+                m_completer.reset(context);
+                reset_completer = false;
+                m_completer.select(context, 0);
+            }
+        }
+        else if (key == Key{ Key::Modifiers::Control, 'r' })
+            m_insert_reg = true;
+        else if ( key == Key{ Key::Modifiers::Control, 'm' })
+            m_inserter.insert(String() + '\n');
+        else if ( key == Key{ Key::Modifiers::Control, 'i' })
+            m_inserter.insert(String() + '\t');
+        else if ( key == Key{ Key::Modifiers::Control, 'n' })
+        {
+            m_completer.select(context, 1);
+            reset_completer = false;
+        }
+        else if ( key == Key{ Key::Modifiers::Control, 'p' })
+        {
+            m_completer.select(context, -1);
+            reset_completer = false;
+        }
+
         if (reset_completer)
             m_completer.reset(context);
     }
