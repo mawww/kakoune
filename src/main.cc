@@ -216,7 +216,7 @@ void do_select_regex(Context& context)
 
 void do_split_regex(Context& context)
 {
-    context.input_handler().prompt("select: ", complete_nothing,
+    context.input_handler().prompt("split: ", complete_nothing,
         [](const String& ex, Context& context)
         { context.editor().multi_select(std::bind(split_selection, _1, ex)); },
         context);
@@ -347,7 +347,7 @@ String runtime_directory()
 #endif
     char* ptr = strrchr(buffer, '/');
     if (not ptr)
-        throw runtime_error("unable do determine runtime directory");
+        throw runtime_error("unable to determine runtime directory");
     return String(buffer, ptr);
 }
 
