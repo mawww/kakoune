@@ -89,6 +89,12 @@ void on_term_resize(int)
     EventManager::instance().force_signal(0);
 }
 
+void on_sigint(int)
+{
+    ungetch(CTRL('c'));
+    EventManager::instance().force_signal(0);
+}
+
 NCursesUI::NCursesUI()
 {
     //setlocale(LC_CTYPE, "");
@@ -111,6 +117,7 @@ NCursesUI::NCursesUI()
     assert(signal_ui == nullptr);
     signal_ui = this;
     signal(SIGWINCH, on_term_resize);
+    signal(SIGINT, on_sigint);
 }
 
 NCursesUI::~NCursesUI()
