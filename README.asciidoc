@@ -357,6 +357,15 @@ When the buffer is deleted, the fifo will be closed, so any program writing
 to it will receive SIGPIPE. This is usefull as it permits to stop the writing
 program when the buffer is deleted.
 
+Menus
+-----
+
+When a menu is displayed, you can use *j*, *control-n* or *tab* to select the next
+entry, and *k*, *control-p* or *shift-tab* to select the previous one.
+
+Using the */* key, you can enter some regex in order to restrict available choices
+to the matching ones.
+
 Kakrc
 -----
 
@@ -386,3 +395,6 @@ Existing commands files are:
      for grep output.
  * *rc/global.kak*: provides the +tag+ command to jump on a tag definition using
      gnu global tagging system.
+ * *rc/ctags.kak*: provides the +tag+ command to jump on a tag definition using
+     exuberant ctags files, this script requires the *readtags* binary, available
+     in the exuberant ctags package but not installed by default.
