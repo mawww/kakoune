@@ -116,11 +116,11 @@ public:
    SafeCountable() : m_count(0) {}
    ~SafeCountable() { assert(m_count == 0); }
 
-   void inc_safe_count() { ++m_count; }
-   void dec_safe_count() { --m_count; assert(m_count >= 0); }
+   void inc_safe_count() const { ++m_count; }
+   void dec_safe_count() const { --m_count; assert(m_count >= 0); }
 
 private:
-   int m_count;
+   mutable int m_count;
 };
 
 // *** Containers helpers ***
