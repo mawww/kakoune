@@ -86,14 +86,12 @@ void Selection::on_erase(const BufferIterator& begin, const BufferIterator& end)
 
 void Selection::register_with_buffer()
 {
-    Buffer& buffer = const_cast<Buffer&>(m_first.buffer());
-    buffer.add_change_listener(*this);
+    m_first.buffer().add_change_listener(*this);
 }
 
 void Selection::unregister_with_buffer()
 {
-    Buffer& buffer = const_cast<Buffer&>(m_first.buffer());
-    buffer.remove_change_listener(*this);
+    m_first.buffer().remove_change_listener(*this);
 }
 
 void Selection::check_invariant() const

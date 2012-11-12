@@ -156,8 +156,8 @@ public:
     // notify the buffer that it was saved in the current state
     void notify_saved();
 
-    void add_change_listener(BufferChangeListener& listener);
-    void remove_change_listener(BufferChangeListener& listener);
+    void add_change_listener(BufferChangeListener& listener) const;
+    void remove_change_listener(BufferChangeListener& listener) const;
 
     // returns an iterator pointing to the first character of the line
     // iterator is on
@@ -224,7 +224,9 @@ private:
     size_t m_last_save_undo_index;
     size_t m_timestamp;
 
-    std::vector<BufferChangeListener*> m_change_listeners;
+    // this mutable as adding or removing listeners is not muting the buffer
+    // observable state.
+    mutable std::vector<BufferChangeListener*> m_change_listeners;
 
     OptionManager m_option_manager;
     HookManager   m_hook_manager;

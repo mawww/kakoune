@@ -415,13 +415,13 @@ void Buffer::notify_saved()
     m_last_save_undo_index = history_cursor_index;
 }
 
-void Buffer::add_change_listener(BufferChangeListener& listener)
+void Buffer::add_change_listener(BufferChangeListener& listener) const
 {
     assert(not contains(m_change_listeners, &listener));
     m_change_listeners.push_back(&listener);
 }
 
-void Buffer::remove_change_listener(BufferChangeListener& listener)
+void Buffer::remove_change_listener(BufferChangeListener& listener) const
 {
     auto it = std::find(m_change_listeners.begin(),
                         m_change_listeners.end(),
