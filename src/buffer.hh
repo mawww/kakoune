@@ -75,7 +75,7 @@ public:
 private:
     ByteCount offset() const;
 
-    const Buffer* m_buffer;
+    safe_ptr<const Buffer> m_buffer;
     BufferCoord   m_coord;
     friend class Buffer;
 };
