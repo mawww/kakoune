@@ -67,6 +67,8 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 {
     for (auto& client : m_clients)
     {
+        client.context->forget_jumps_to_buffer(buffer);
+
         if (&client.context->buffer() != &buffer)
             continue;
 

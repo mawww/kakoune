@@ -283,6 +283,9 @@ void edit(const CommandParameters& params, Context& context)
 
     BufferManager::instance().set_last_used_buffer(*buffer);
 
+    if (buffer != &context.buffer() or param_count > 1)
+        context.push_jump();
+
     if (buffer != &context.buffer())
     {
         auto& manager = ClientManager::instance();
@@ -385,6 +388,7 @@ void show_buffer(const CommandParameters& params, Context& context)
 
     if (buffer != &context.buffer())
     {
+        context.push_jump();
         auto& manager = ClientManager::instance();
         context.change_editor(manager.get_unused_window_for_buffer(*buffer));
     }

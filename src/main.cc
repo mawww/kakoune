@@ -59,6 +59,7 @@ void do_go(Context& context)
         BufferIterator target =
             context.editor().buffer().iterator_at_line_begin(count-1);
 
+        context.push_jump();
         context.editor().select(target);
         if (context.has_window())
             context.window().center_selection();
@@ -73,6 +74,7 @@ void do_go(Context& context)
             {
             case 'g':
             case 't':
+                context.push_jump();
                 editor.select(editor.buffer().begin());
                 break;
             case 'l':
@@ -85,6 +87,7 @@ void do_go(Context& context)
                 break;
             case 'b':
             {
+                context.push_jump();
                 const Buffer& buf = editor.buffer();
                 editor.select(buf.iterator_at_line_begin(buf.line_count() - 1));
                 break;
@@ -329,6 +332,32 @@ void select_to_next_char(Context& context)
    });
 }
 
+void jump_forward(Context& context)
+{
+    auto jump = context.jump_forward();
+
+    BufferManager::instance().set_last_used_buffer(*jump.first);
+    if (jump.first != &context.buffer())
+    {
+        auto& manager = ClientManager::instance();
+        context.change_editor(manager.get_unused_window_for_buffer(*jump.first));
+    }
+    context.editor().select(jump.first->iterator_at(jump.second));
+}
+
+void jump_backward(Context& context)
+{
+    auto jump = context.jump_backward();
+
+    BufferManager::instance().set_last_used_buffer(*jump.first);
+    if (jump.first != &context.buffer())
+    {
+        auto& manager = ClientManager::instance();
+        context.change_editor(manager.get_unused_window_for_buffer(*jump.first));
+    }
+    context.editor().select(jump.first->iterator_at(jump.second));
+}
+
 String runtime_directory()
 {
     char buffer[2048];
@@ -448,6 +477,9 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::None, Key::PageUp }, do_scroll<Key::PageUp> },
     { { Key::Modifiers::None, Key::PageDown }, do_scroll<Key::PageDown> },
+
+    { { Key::Modifiers::Control, 'i' }, jump_forward },
+    { { Key::Modifiers::Control, 'o' }, jump_backward },
 };
 
 }

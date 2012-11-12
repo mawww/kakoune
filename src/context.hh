@@ -100,6 +100,62 @@ struct Context
     using Insertion = std::pair<InsertMode, std::vector<Key>>;
     Insertion& last_insert() { return m_last_insert; }
 
+    using Jump = std::pair<safe_ptr<Buffer>, BufferCoord>;
+    void push_jump()
+    {
+        Jump jump{safe_ptr<Buffer>{&buffer()},
+                  editor().selections().back().last().coord()};
+        if (m_current_jump != m_jump_list.end())
+        {
+            m_jump_list.erase(m_current_jump+1, m_jump_list.end());
+            if (*m_current_jump == jump)
+                return;
+        }
+
+        m_jump_list.push_back(jump);
+        m_current_jump = m_jump_list.end();
+    }
+
+    Jump jump_forward()
+    {
+        if (m_current_jump != m_jump_list.end() and
+            m_current_jump + 1 != m_jump_list.end())
+            return *++m_current_jump;
+        throw runtime_error("no next jump");
+    }
+
+    Jump jump_backward()
+    {
+        if (m_current_jump != m_jump_list.begin())
+        {
+            if (m_current_jump == m_jump_list.end())
+            {
+                push_jump();
+                --m_current_jump;
+            }
+            return *--m_current_jump;
+        }
+        throw runtime_error("no previous jump");
+    }
+
+    void forget_jumps_to_buffer(Buffer& buffer)
+    {
+        for (auto it = m_jump_list.begin(); it != m_jump_list.end();)
+        {
+            if (it->first == &buffer)
+            {
+                if (it < m_current_jump)
+                    --m_current_jump;
+                else if (it == m_current_jump)
+                    m_current_jump = m_jump_list.end();
+
+                it = m_jump_list.erase(it);
+            }
+            else
+                ++it;
+        }
+    }
+
     int& numeric_param() { return m_numeric_param; }
 private:
     safe_ptr<Editor>        m_editor;
@@ -108,6 +164,10 @@ private:
 
     Insertion m_last_insert = {InsertMode::Insert, {}};
     int m_numeric_param = 0;
+
+    using JumpList = std::vector<Jump>;
+    JumpList           m_jump_list;
+    JumpList::iterator m_current_jump = m_jump_list.begin();
 };
 
 }
