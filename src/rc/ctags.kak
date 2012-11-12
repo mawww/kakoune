@@ -13,8 +13,8 @@ def -shell-params \
             echo "echo tag not found ${tagname}"
         else
             menuparam=$(readtags ${tagname} | perl -i -ne '
-                /([^\t]+)\t([^\t]+)\t\/\^(.*)\$\// and print "%{$2 [$3]} %{try %{ edit %{$2}; exec %{%s\\Q$3<ret>} } catch %{ echo %{unable to find tag} } } ";
-                /([^\t]+)\t([^\t]+)\t(\d+)/        and print "%{$2:$3} %{edit %{$2}; exec %{$3g}} ";
+                /([^\t]+)\t([^\t]+)\t\/\^(.*)\$\// and print "%{$2 [$3]} %{try %{ edit %{$2}; exec %{/\\Q$3<ret>} } catch %{ echo %{unable to find tag} } } ";
+                /([^\t]+)\t([^\t]+)\t(\d+)/        and print "%{$2:$3} %{edit %{$2} %{$3}}";
             ')
 
             if [[ -z "${menuparam}" ]]; then
