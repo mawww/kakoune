@@ -332,30 +332,21 @@ void select_to_next_char(Context& context)
    });
 }
 
-void jump_forward(Context& context)
+enum class JumpDirection { Forward, Backward };
+template<JumpDirection direction>
+void jump(Context& context)
 {
-    auto jump = context.jump_forward();
+    auto jump = (direction == JumpDirection::Forward) ?
+                    context.jump_forward() : context.jump_backward();
 
-    BufferManager::instance().set_last_used_buffer(*jump.first);
-    if (jump.first != &context.buffer())
+    Buffer& buffer = const_cast<Buffer&>(jump.first().buffer());
+    BufferManager::instance().set_last_used_buffer(buffer);
+    if (&buffer != &context.buffer())
     {
         auto& manager = ClientManager::instance();
-        context.change_editor(manager.get_unused_window_for_buffer(*jump.first));
+        context.change_editor(manager.get_unused_window_for_buffer(buffer));
     }
-    context.editor().select(jump.first->iterator_at(jump.second));
-}
-
-void jump_backward(Context& context)
-{
-    auto jump = context.jump_backward();
-
-    BufferManager::instance().set_last_used_buffer(*jump.first);
-    if (jump.first != &context.buffer())
-    {
-        auto& manager = ClientManager::instance();
-        context.change_editor(manager.get_unused_window_for_buffer(*jump.first));
-    }
-    context.editor().select(jump.first->iterator_at(jump.second));
+    context.editor().select(SelectionAndCapturesList{ jump });
 }
 
 String runtime_directory()
@@ -478,8 +469,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, Key::PageUp }, do_scroll<Key::PageUp> },
     { { Key::Modifiers::None, Key::PageDown }, do_scroll<Key::PageDown> },
 
-    { { Key::Modifiers::Control, 'i' }, jump_forward },
-    { { Key::Modifiers::Control, 'o' }, jump_backward },
+    { { Key::Modifiers::Control, 'i' }, jump<JumpDirection::Forward> },
+    { { Key::Modifiers::Control, 'o' }, jump<JumpDirection::Backward> },
 };
 
 }

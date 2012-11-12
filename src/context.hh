@@ -100,23 +100,25 @@ struct Context
     using Insertion = std::pair<InsertMode, std::vector<Key>>;
     Insertion& last_insert() { return m_last_insert; }
 
-    using Jump = std::pair<safe_ptr<Buffer>, BufferCoord>;
     void push_jump()
     {
-        Jump jump{safe_ptr<Buffer>{&buffer()},
-                  editor().selections().back().last().coord()};
+        const SelectionAndCaptures& jump = editor().selections().back();
         if (m_current_jump != m_jump_list.end())
         {
-            m_jump_list.erase(m_current_jump+1, m_jump_list.end());
-            if (*m_current_jump == jump)
-                return;
+            auto begin = m_current_jump;
+            // when jump overlaps with m_current_jump, we replace m_current_jump
+            // instead of pushing after it.
+            if (&begin->first().buffer() != &jump.first().buffer() or
+                not overlaps(*begin, jump))
+                ++begin;
+            m_jump_list.erase(begin, m_jump_list.end());
         }
 
         m_jump_list.push_back(jump);
         m_current_jump = m_jump_list.end();
     }
 
-    Jump jump_forward()
+    SelectionAndCaptures jump_forward()
     {
         if (m_current_jump != m_jump_list.end() and
             m_current_jump + 1 != m_jump_list.end())
@@ -124,7 +126,7 @@ struct Context
         throw runtime_error("no next jump");
     }
 
-    Jump jump_backward()
+    SelectionAndCaptures jump_backward()
     {
         if (m_current_jump != m_jump_list.begin())
         {
@@ -142,12 +144,12 @@ struct Context
     {
         for (auto it = m_jump_list.begin(); it != m_jump_list.end();)
         {
-            if (it->first == &buffer)
+            if (&it->first().buffer() == &buffer)
             {
                 if (it < m_current_jump)
                     --m_current_jump;
                 else if (it == m_current_jump)
-                    m_current_jump = m_jump_list.end();
+                    m_current_jump = m_jump_list.end()-1;
 
                 it = m_jump_list.erase(it);
             }
@@ -165,9 +167,8 @@ private:
     Insertion m_last_insert = {InsertMode::Insert, {}};
     int m_numeric_param = 0;
 
-    using JumpList = std::vector<Jump>;
-    JumpList           m_jump_list;
-    JumpList::iterator m_current_jump = m_jump_list.begin();
+    SelectionAndCapturesList           m_jump_list;
+    SelectionAndCapturesList::iterator m_current_jump = m_jump_list.begin();
 };
 
 }
