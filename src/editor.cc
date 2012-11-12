@@ -423,13 +423,18 @@ void IncrementalInserter::insert(const String& string)
         BufferIterator position = sel.last();
         String content = string;
         m_editor.filters()(buffer, position, content);
-        m_editor.buffer().insert(position, content);
+        buffer.insert(position, content);
     }
 }
 
 void IncrementalInserter::insert(const memoryview<String>& strings)
 {
-    m_editor.insert(strings);
+    for (size_t i = 0; i < m_editor.m_selections.size(); ++i)
+    {
+        size_t index = std::min(i, strings.size()-1);
+        m_editor.buffer().insert(m_editor.m_selections[i].last(),
+                                 strings[index]);
+    }
 }
 
 void IncrementalInserter::erase()
