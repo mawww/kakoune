@@ -1,6 +1,12 @@
 Vi(m) to Kakoune:
 =================
 
+Most operations in Kakoune are reversed compared to Vim: In kak, you first
+select the text you want to act on, then you edit it. This way, things are
+much more consistent, as for example, kak does not need a key for delete
+character, the delete key handles this just fine as long as you did not
+select more than a character (but clearing selection is only one space away).
+
 delete a word:
  * vim: dw
  * kak: wd
@@ -12,14 +18,6 @@ delete a character:
 copy a line:
  * vim: yy
  * kak: xy
-
-paste a line (linewise):
- * vim: p or P
- * kak: xp or xP
-
-paste a line (not linewise):
- * vim: no supported
- * kak: p or P
 
 global replace:
  * vim: :%s/word/replacement

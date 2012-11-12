@@ -112,7 +112,8 @@ selection according to the regex entered. To split a comma separated list,
 use _alt-s_ then ', *'
 
 To clear multiple selections, use _space_. To keep only the nth selection
-use _n_ followed by _space_.
+use _n_ followed by _space_, to remove only the nth selection, use _n_
+followed by _alt-space_.
 
 Object Selection
 ----------------
@@ -342,7 +343,6 @@ FIFO Buffer
 -----------
 
 the +edit+ command can take a -fifo parameter:
-
 -----------------------------------
 :edit -fifo <filename> <buffername>
 -----------------------------------
