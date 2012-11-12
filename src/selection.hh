@@ -75,6 +75,14 @@ struct SelectionAndCaptures
     const BufferIterator& last() const { return selection.last(); }
 };
 
+inline bool overlaps(const SelectionAndCaptures& lhs,
+                     const SelectionAndCaptures& rhs)
+{
+    return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
+           (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
+}
+
+
 typedef std::vector<SelectionAndCaptures> SelectionAndCapturesList;
 
 }

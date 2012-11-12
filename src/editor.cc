@@ -99,13 +99,6 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-static bool overlaps(const SelectionAndCaptures& lhs,
-                     const SelectionAndCaptures& rhs)
-{
-    return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
-           (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
-}
-
 static void merge_overlapping(SelectionAndCapturesList& selections)
 {
     for (size_t i = 0; i < selections.size(); ++i)
