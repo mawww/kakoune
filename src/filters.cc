@@ -59,6 +59,58 @@ void expand_tabulations(Buffer& buffer, Selection& selection, String& content)
     }
 }
 
+struct RegexFilter
+{
+    RegexFilter(const String& line_match, const String& insert_match,
+                const String& replacement)
+    : m_line_match(line_match.c_str()), m_insert_match(insert_match.c_str()),
+      m_replacement(replacement.c_str()) {}
+
+    void operator() (Buffer& buffer, Selection& selection, String& content)
+    {
+        const auto& position = selection.last();
+        auto line_begin = buffer.iterator_at_line_begin(position);
+        boost::match_results<BufferIterator> results;
+        if (boost::regex_match(content.c_str(), m_insert_match) and
+            boost::regex_match(line_begin, position, results, m_line_match))
+        {
+            String suffix;
+            content = results.format(m_replacement.c_str());
+            auto it = std::find(content.begin(), content.end(), '$');
+            if (it != content.end())
+            {
+                ++it;
+                if (it != content.end() && *it == 'c')
+                {
+                    String suffix(it+1, content.end());
+                    content = String(content.begin(), it-1);
+
+                    auto first = selection.first();
+                    auto last = selection.last();
+                    buffer.insert(position, suffix);
+                    if (selection.first() == selection.last())
+                        selection.first() -= suffix.length();
+                    selection.last() -= suffix.length();
+                }
+            }
+        }
+    }
+
+private:
+    Regex  m_line_match;
+    Regex  m_insert_match;
+    String m_replacement;
+};
+
+FilterAndId regex_filter_factory(const FilterParameters& params)
+{
+    if (params.size() != 3)
+        throw runtime_error("wrong parameter count");
+
+    return FilterAndId{"re" + params[0] + "__" + params[1],
+                       RegexFilter{params[0], params[1], params[2]}};
+}
+
 template<void (*filter_func)(Buffer&, Selection&, String&)>
 class SimpleFilterFactory
 {
@@ -88,6 +140,7 @@ void register_filters()
     registry.register_factory("preserve_indent", SimpleFilterFactory<preserve_indent>("preserve_indent"));
     registry.register_factory("cleanup_whitespaces", SimpleFilterFactory<cleanup_whitespaces>("cleanup_whitespaces"));
     registry.register_factory("expand_tabulations", SimpleFilterFactory<expand_tabulations>("expand_tabulations"));
+    registry.register_factory("regex", regex_filter_factory);
     registry.register_factory("group", filter_group_factory);
 }
 
