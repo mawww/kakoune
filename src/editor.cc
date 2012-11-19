@@ -158,6 +158,13 @@ void Editor::clear_selections()
     m_selections.push_back(std::move(sel));
 }
 
+void Editor::flip_selections()
+{
+    check_invariant();
+    for (auto& sel : m_selections)
+        std::swap(sel.selection.first(), sel.selection.last());
+}
+
 void Editor::keep_selection(int index)
 {
     check_invariant();

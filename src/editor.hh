@@ -59,6 +59,7 @@ public:
     void move_selections(CharCount move,
                          SelectMode mode = SelectMode::Replace);
     void clear_selections();
+    void flip_selections();
     void keep_selection(int index);
     void remove_selection(int index);
     void select(const BufferIterator& iterator);

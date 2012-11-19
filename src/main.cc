@@ -422,7 +422,7 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
                                                             if (count == 0) context.editor().clear_selections();
                                                             else context.editor().keep_selection(count-1); } },
     { { Key::Modifiers::Alt,  ' ' }, [](Context& context) { int count = context.numeric_param();
-                                                            if (count == 0) context.editor().clear_selections();
+                                                            if (count == 0) context.editor().flip_selections();
                                                             else context.editor().remove_selection(count-1); } },
     { { Key::Modifiers::None, 'w' }, repeated([](Context& context) { context.editor().select(select_to_next_word<false>); }) },
     { { Key::Modifiers::None, 'e' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<false>); }) },
