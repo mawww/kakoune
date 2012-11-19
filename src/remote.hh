@@ -12,7 +12,8 @@ struct peer_disconnected {};
 class RemoteUI : public UserInterface
 {
 public:
-    RemoteUI(int socket) : m_socket(socket) {}
+    RemoteUI(int socket);
+    ~RemoteUI();
 
     void print_status(const String& status, CharCount cursor_pos) override;
     void menu_show(const memoryview<String>& choices,

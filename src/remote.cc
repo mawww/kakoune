@@ -1,6 +1,7 @@
 #include "remote.hh"
 
 #include "display_buffer.hh"
+#include "debug.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -151,6 +152,17 @@ DisplayBuffer read<DisplayBuffer>(int socket)
     DisplayBuffer db;
     db.lines() = read_vector<DisplayLine>(socket);
     return db;
+}
+
+RemoteUI::RemoteUI(int socket)
+    : m_socket(socket)
+{
+    write_debug("remote client connected: " + int_to_str(m_socket));
+}
+
+RemoteUI::~RemoteUI()
+{
+    write_debug("remote client disconnected: " + int_to_str(m_socket));
 }
 
 void RemoteUI::print_status(const String& status, CharCount cursor_pos)
