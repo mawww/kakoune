@@ -75,6 +75,8 @@ struct Context
     void change_editor(Editor& editor)
     {
         m_editor.reset(&editor);
+        if (has_window() && has_ui())
+            window().set_dimensions(ui().dimensions());
     }
 
     void change_ui(UserInterface& ui)
