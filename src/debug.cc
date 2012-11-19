@@ -24,7 +24,7 @@ void write_debug(const String& str)
     Buffer& debug_buffer = get_or_create_debug_buffer();
     Editor editor(debug_buffer);
     editor.select(debug_buffer.end()-1);
-    editor.insert(str);
+    editor.insert(str + "\n");
     debug_buffer.reset_undo_data();
 }
 

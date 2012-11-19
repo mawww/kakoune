@@ -663,8 +663,8 @@ int main(int argc, char* argv[])
         register_highlighters();
         register_filters();
 
-        write_debug("*** This is the debug buffer, where debug info will be written ***\n");
-        write_debug("pid: " + int_to_str(getpid()) + "\n");
+        write_debug("*** This is the debug buffer, where debug info will be written ***");
+        write_debug("pid: " + int_to_str(getpid()));
         write_debug("utf-8 test: é á ï");
 
         Server server;
