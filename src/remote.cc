@@ -89,12 +89,17 @@ void write(Message& msg, const DisplayBuffer& display_buffer)
 
 void read(int socket, char* buffer, size_t size)
 {
-    int res = ::read(socket, buffer, size);
-    if (res == 0)
-        throw peer_disconnected{};
-    if (res == -1)
-        throw socket_error{};
-    assert(res == size);
+    while (size)
+    {
+        int res = ::read(socket, buffer, size);
+        if (res == 0)
+            throw peer_disconnected{};
+        if (res < 0)
+            throw socket_error{};
+
+        buffer += res;
+        size   -= res;
+    }
 }
 
 template<typename T>
