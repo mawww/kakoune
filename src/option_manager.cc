@@ -94,6 +94,7 @@ GlobalOptionManager::GlobalOptionManager()
     : OptionManager()
 {
     set_option("tabstop", Option(8));
+    set_option("indentwidth", Option(4));
     set_option("eolformat", Option("lf"));
     set_option("BOM", Option("no"));
 }

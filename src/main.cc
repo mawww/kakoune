@@ -236,6 +236,32 @@ void do_join(Context& context)
     editor.move_selections(-1_char);
 }
 
+void do_indent(Context& context)
+{
+    const char* spaces = "                ";
+    int width = std::min(context.option_manager()["indentwidth"].as_int(), 16);
+    String indent(spaces, spaces + width);
+
+    Editor& editor = context.editor();
+    SelectionAndCapturesList sels = editor.selections();
+    auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
+    editor.select(select_whole_lines);
+    editor.multi_select(std::bind(select_all_matches, _1, "^[^\n]"));
+    editor.insert(indent, InsertMode::Insert);
+}
+
+void do_deindent(Context& context)
+{
+    int width = context.option_manager()["indentwidth"].as_int();
+    Editor& editor = context.editor();
+    SelectionAndCapturesList sels = editor.selections();
+    auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
+    editor.select(select_whole_lines);
+    editor.multi_select(std::bind(select_all_matches, _1,
+                                  "^\\h{1," + int_to_str(width) + "}"));
+    editor.erase();
+}
+
 template<bool inner>
 void do_select_object(Context& context)
 {
@@ -461,6 +487,9 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt, 's' }, do_split_regex },
 
     { { Key::Modifiers::Alt, 'j' }, do_join },
+
+    { { Key::Modifiers::None, '<' }, do_deindent },
+    { { Key::Modifiers::None, '>' }, do_indent },
 
     { { Key::Modifiers::Alt, 'x' }, [](Context& context) { context.editor().select(select_whole_lines); } },
 
