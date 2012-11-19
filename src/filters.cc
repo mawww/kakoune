@@ -6,11 +6,11 @@
 namespace Kakoune
 {
 
-void preserve_indent(Buffer& buffer, BufferIterator& position, String& content)
+void preserve_indent(Buffer& buffer, Selection& selection, String& content)
 {
     if (content == "\n")
     {
-         BufferIterator line_begin = buffer.iterator_at_line_begin(position - 1);
+         BufferIterator line_begin = buffer.iterator_at_line_begin(selection.last() - 1);
          BufferIterator first_non_white = line_begin;
          while ((*first_non_white == '\t' or *first_non_white == ' ') and
                 not first_non_white.is_end())
@@ -20,8 +20,9 @@ void preserve_indent(Buffer& buffer, BufferIterator& position, String& content)
     }
 }
 
-void cleanup_whitespaces(Buffer& buffer, BufferIterator& position, String& content)
+void cleanup_whitespaces(Buffer& buffer, Selection& selection, String& content)
 {
+    const BufferIterator& position = selection.last();
     if (content[0] == '\n' and not position.is_begin())
     {
         BufferIterator whitespace_start = position-1;
@@ -30,19 +31,17 @@ void cleanup_whitespaces(Buffer& buffer, BufferIterator& position, String& conte
             --whitespace_start;
         ++whitespace_start;
         if (whitespace_start!= position)
-        {
             buffer.erase(whitespace_start, position);
-            position = whitespace_start;
-        }
     }
 }
 
-void expand_tabulations(Buffer& buffer, BufferIterator& position, String& content)
+void expand_tabulations(Buffer& buffer, Selection& selection, String& content)
 {
     const int tabstop = buffer.option_manager()["tabstop"].as_int();
     if (content == "\t")
     {
         int column = 0;
+        const BufferIterator& position = selection.last();
         for (auto line_it = buffer.iterator_at_line_begin(position);
              line_it != position; ++line_it)
         {
@@ -60,7 +59,7 @@ void expand_tabulations(Buffer& buffer, BufferIterator& position, String& conten
     }
 }
 
-template<void (*filter_func)(Buffer&, BufferIterator&, String&)>
+template<void (*filter_func)(Buffer&, Selection&, String&)>
 class SimpleFilterFactory
 {
 public:

@@ -7,10 +7,10 @@ namespace Kakoune
 {
 
 void FilterGroup::operator()(Buffer& buffer,
-                             BufferIterator& position, String& content)
+                             Selection& selection, String& content)
 {
     for (auto& filter : m_filters)
-       filter.second(buffer, position, content);
+       filter.second(buffer, selection, content);
 }
 
 void FilterGroup::append(FilterAndId&& filter)

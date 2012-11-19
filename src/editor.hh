@@ -117,7 +117,7 @@ public:
     IncrementalInserter(Editor& editor, InsertMode mode = InsertMode::Insert);
     ~IncrementalInserter();
 
-    void insert(const String& string);
+    void insert(String content);
     void insert(const memoryview<String>& strings);
     void erase();
     void move_cursors(const BufferCoord& offset);

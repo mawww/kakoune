@@ -12,7 +12,7 @@ namespace Kakoune
 class FilterGroup
 {
 public:
-    void operator()(Buffer& buffer, BufferIterator& position, String& content);
+    void operator()(Buffer& buffer, Selection& selection, String& content);
 
     void append(FilterAndId&& filter);
     void remove(const String& id);

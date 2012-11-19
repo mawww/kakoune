@@ -2,6 +2,7 @@
 #define filter_hh_INCLUDED
 
 #include "string.hh"
+#include "selection.hh"
 #include <functional>
 
 namespace Kakoune
@@ -14,8 +15,8 @@ class BufferIterator;
 // Modification in order to mutate the Buffer or the Modification
 // prior to it's application.
 
-typedef std::function<void (Buffer& buffer, BufferIterator& position, String& content)> FilterFunc;
-typedef std::pair<String, FilterFunc> FilterAndId;
+using FilterFunc = std::function<void (Buffer& buffer, Selection& selection, String& content)>;
+using FilterAndId = std::pair<String, FilterFunc>;
 
 }
 

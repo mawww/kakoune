@@ -408,15 +408,13 @@ IncrementalInserter::~IncrementalInserter()
     m_editor.on_incremental_insertion_end();
 }
 
-void IncrementalInserter::insert(const String& string)
+void IncrementalInserter::insert(String content)
 {
     Buffer& buffer = m_editor.buffer();
     for (auto& sel : m_editor.m_selections)
     {
-        BufferIterator position = sel.last();
-        String content = string;
-        m_editor.filters()(buffer, position, content);
-        buffer.insert(position, content);
+        m_editor.filters()(buffer, sel.selection, content);
+        buffer.insert(sel.last(), content);
     }
 }
 
