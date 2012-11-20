@@ -55,6 +55,7 @@ String read_file(const String& filename)
 
         throw file_access_error(filename, strerror(errno));
     }
+    auto close_fd = on_scope_end([fd]{ close(fd); });
 
     String content;
     char buf[256];
@@ -66,7 +67,6 @@ String read_file(const String& filename)
 
         content += String(buf, buf + size);
     }
-    close(fd);
     return content;
 }
 
@@ -80,6 +80,7 @@ Buffer* create_buffer_from_file(const String& filename)
 
         throw file_access_error(filename, strerror(errno));
     }
+    auto close_fd = on_scope_end([fd]{ close(fd); });
 
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         delete buffer;
@@ -121,7 +122,6 @@ Buffer* create_buffer_from_file(const String& filename)
         }
         at_file_begin = false;
     }
-    close(fd);
 
     OptionManager& option_manager = buffer->option_manager();
     option_manager.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
@@ -166,6 +166,7 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
                   O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
+    auto close_fd = on_scope_end([fd]{ close(fd); });
 
     if (buffer.option_manager()["BOM"].as_string() == "utf-8")
         ::write(fd, "\xEF\xBB\xBF", 3);
@@ -178,7 +179,6 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
         write(fd, linedata.subrange(0, linedata.size()-1), filename);
         write(fd, eoldata, filename);
     }
-    close(fd);
 }
 
 }
