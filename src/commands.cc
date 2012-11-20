@@ -228,29 +228,39 @@ Buffer* open_or_create(const String& filename, Context& context)
 
 Buffer* open_fifo(const String& name , const String& filename, Context& context)
 {
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = open(filename.c_str(), O_RDONLY | O_CLOEXEC);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
     Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo);
 
-    buffer->hook_manager().add_hook(
-        "BufClose", [=](const String&, const Context&)
-        { EventManager::instance().unwatch(fd); close(fd); }
-    );
+    buffer->hook_manager().add_hook("BufClose",
+        [fd, buffer](const String&, const Context&) {
+            // Check if fifo is still alive, else fd may
+            // refer to another file/socket
+            if (buffer->flags() & Buffer::Flags::Fifo)
+            {
+                EventManager::instance().unwatch(fd);
+                close(fd);
+            }
+        });
 
     EventManager::instance().watch(fd, [buffer](int fd) {
-         char data[4096];
-         ssize_t count = read(fd, data, 4096);
-         buffer->insert(buffer->end()-1,
-                        count > 0 ? String(data, data+count)
+        char data[4096];
+        ssize_t count = read(fd, data, 4096);
+        buffer->insert(buffer->end()-1,
+                       count > 0 ? String(data, data+count)
                                   : "*** kak: fifo closed ***\n");
-         buffer->reset_undo_data();
-         ClientManager::instance().redraw_clients();
-         if (count <= 0)
-         {
-             close(fd);
-             EventManager::instance().unwatch(fd);
-         }
+        buffer->reset_undo_data();
+        ClientManager::instance().redraw_clients();
+        if (count <= 0)
+        {
+            assert(buffer->flags() & Buffer::Flags::Fifo);
+            buffer->flags() &= ~Buffer::Flags::Fifo;
+            // after that this closure will be dead, do not access
+            // any captured data.
+            EventManager::instance().unwatch(fd);
+            close(fd);
+        }
     });
 
     return buffer;
