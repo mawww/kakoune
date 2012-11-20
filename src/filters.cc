@@ -74,7 +74,6 @@ struct RegexFilter
         if (boost::regex_match(content.c_str(), m_insert_match) and
             boost::regex_match(line_begin, position, results, m_line_match))
         {
-            String suffix;
             content = results.format(m_replacement.c_str());
             auto it = std::find(content.begin(), content.end(), '$');
             if (it != content.end())

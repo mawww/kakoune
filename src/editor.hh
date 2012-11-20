@@ -41,7 +41,6 @@ public:
     typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
     typedef std::function<SelectionAndCapturesList (const Selection&)>  MultiSelector;
 
-
     Editor(Buffer& buffer);
     virtual ~Editor() {}
 
