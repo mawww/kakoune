@@ -95,20 +95,22 @@ public:
 class Buffer : public SafeCountable
 {
 public:
-    enum class Type
+    enum class Flags
     {
-        File,
-        NewFile,
-        Scratch
+        None = 0,
+        File = 1,
+        New  = 2,
+        Fifo = 4
     };
 
-    Buffer(String name, Type type, String initial_content = "\n");
+    Buffer(String name, Flags flags, String initial_content = "\n");
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
 
-    Type type() const { return m_type; }
+    Flags flags() const { return m_flags; }
+    Flags& flags() { return m_flags; }
 
     void insert(BufferIterator pos, String content);
     void erase(BufferIterator begin, BufferIterator end);
@@ -207,7 +209,7 @@ private:
     void do_erase(const BufferIterator& begin, const BufferIterator& end);
 
     String  m_name;
-    const Type   m_type;
+    Flags   m_flags;
 
     struct Modification;
     typedef std::vector<Modification> UndoGroup;
@@ -231,6 +233,34 @@ private:
     OptionManager m_option_manager;
     HookManager   m_hook_manager;
 };
+
+constexpr Buffer::Flags operator|(Buffer::Flags lhs, Buffer::Flags rhs)
+{
+    return (Buffer::Flags)((int) lhs | (int) rhs);
+}
+
+inline Buffer::Flags& operator|=(Buffer::Flags& lhs, Buffer::Flags rhs)
+{
+    (int&) lhs |= (int) rhs;
+    return lhs;
+}
+
+constexpr bool operator&(Buffer::Flags lhs, Buffer::Flags rhs)
+{
+    return ((int) lhs & (int) rhs) != 0;
+}
+
+inline Buffer::Flags& operator&=(Buffer::Flags& lhs, Buffer::Flags rhs)
+{
+    (int&) lhs &= (int) rhs;
+    return lhs;
+}
+
+constexpr Buffer::Flags operator~(Buffer::Flags lhs)
+{
+    return (Buffer::Flags)(~(int)lhs);
+}
+
 
 }
 

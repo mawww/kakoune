@@ -12,9 +12,9 @@
 namespace Kakoune
 {
 
-Buffer::Buffer(String name, Type type,
+Buffer::Buffer(String name, Flags flags,
                String initial_content)
-    : m_name(std::move(name)), m_type(type),
+    : m_name(std::move(name)), m_flags(flags),
       m_history(1), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_timestamp(0),
@@ -29,9 +29,9 @@ Buffer::Buffer(String name, Type type,
 
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
-    if (type == Type::NewFile)
+    if (flags & Flags::File and flags & Flags::New)
         m_hook_manager.run_hook("BufNew", m_name, context);
-    else if (type == Type::File)
+    else
         m_hook_manager.run_hook("BufOpen", m_name, context);
 
     m_hook_manager.run_hook("BufCreate", m_name, context);

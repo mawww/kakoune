@@ -7,7 +7,7 @@ using namespace Kakoune;
 
 void test_buffer()
 {
-    Buffer buffer("test", Buffer::Type::Scratch, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
+    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     assert(buffer.line_count() == 4);
 
     BufferIterator i = buffer.begin();
@@ -40,7 +40,7 @@ void test_buffer()
 
 void test_editor()
 {
-    Buffer buffer("test", Buffer::Type::Scratch, "test\n\nyoupi\n");
+    Buffer buffer("test", Buffer::Flags::None, "test\n\nyoupi\n");
     Editor editor(buffer);
 
     using namespace std::placeholders;
@@ -56,7 +56,7 @@ void test_editor()
 
 void test_incremental_inserter()
 {
-    Buffer buffer("test", Buffer::Type::Scratch, "test\n\nyoupi\nmatin\n");
+    Buffer buffer("test", Buffer::Flags::None, "test\n\nyoupi\nmatin\n");
     Editor editor(buffer);
 
     editor.select(buffer.begin());

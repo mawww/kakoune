@@ -221,7 +221,7 @@ Buffer* open_or_create(const String& filename, Context& context)
     if (not buffer)
     {
         context.print_status("new file " + filename);
-        buffer = new Buffer(filename, Buffer::Type::NewFile);
+        buffer = new Buffer(filename, Buffer::Flags::File | Buffer::Flags::New);
     }
     return buffer;
 }
@@ -231,7 +231,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
-    Buffer* buffer = new Buffer(name, Buffer::Type::Scratch);
+    Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo);
 
     buffer->hook_manager().add_hook(
         "BufClose", [=](const String&, const Context&)
@@ -274,7 +274,7 @@ void edit(const CommandParameters& params, Context& context)
     if (not buffer)
     {
         if (parser.has_option("scratch"))
-            buffer = new Buffer(name, Buffer::Type::Scratch);
+            buffer = new Buffer(name, Buffer::Flags::None);
         else if (parser.has_option("fifo"))
             buffer = open_fifo(name, parser.option_value("fifo"), context);
         else
@@ -311,8 +311,8 @@ void write_buffer(const CommandParameters& params, Context& context)
 
     Buffer& buffer = context.buffer();
 
-    if (params.empty() and buffer.type() == Buffer::Type::Scratch)
-        throw runtime_error("cannot write scratch buffer without a filename");
+    if (params.empty() and !(buffer.flags() & Buffer::Flags::File))
+        throw runtime_error("cannot write a non file buffer without a filename");
 
     String filename = params.empty() ? buffer.name()
                                      : parse_filename(params[0]);
@@ -328,7 +328,7 @@ void write_all_buffers(const CommandParameters& params, Context& context)
 
     for (auto& buffer : BufferManager::instance())
     {
-        if (buffer->type() != Buffer::Type::Scratch and buffer->is_modified())
+        if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
         {
             write_buffer_to_file(*buffer, buffer->name());
             buffer->notify_saved();
@@ -347,7 +347,7 @@ void quit(const CommandParameters& params, Context& context)
         std::vector<String> names;
         for (auto& buffer : BufferManager::instance())
         {
-            if (buffer->type() != Buffer::Type::Scratch and buffer->is_modified())
+            if (buffer->flags() != Buffer::Flags::File and buffer->is_modified())
                 names.push_back(buffer->name());
         }
         if (not names.empty())
@@ -410,7 +410,7 @@ void delete_buffer(const CommandParameters& params, Context& context)
         if (not buffer)
             throw runtime_error("buffer " + buffer_name + " does not exists");
     }
-    if (buffer->type()!= Buffer::Type::Scratch and buffer->is_modified())
+    if (buffer->flags() & Buffer::Flags::File and buffer->is_modified())
         throw runtime_error("buffer " + buffer->name() + " is modified");
 
     if (manager.count() == 1)

@@ -608,11 +608,11 @@ void create_local_client(const String& file)
         if (not buffer)
         {
             ui->print_status("new file " + file, -1);
-            buffer = new Buffer(file, Buffer::Type::NewFile);
+            buffer = new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
         }
     }
     else
-        buffer = new Buffer("*scratch*", Buffer::Type::Scratch);
+        buffer = new Buffer("*scratch*", Buffer::Flags::None);
 
     ClientManager::instance().create_client(
         std::unique_ptr<UserInterface>{ui}, *buffer, 0);

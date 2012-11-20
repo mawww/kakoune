@@ -85,7 +85,7 @@ Buffer* create_buffer_from_file(const String& filename)
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         delete buffer;
 
-    Buffer* buffer = new Buffer(filename, Buffer::Type::File, "");
+    Buffer* buffer = new Buffer(filename, Buffer::Flags::File, "");
 
     String content;
     char buf[256];
