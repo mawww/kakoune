@@ -14,7 +14,6 @@ class ClientManager : public Singleton<ClientManager>
 public:
     void create_client(std::unique_ptr<UserInterface>&& ui,
                        Buffer& buffer, int event_fd);
-    void remove_client_by_context(Context& context);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
@@ -24,6 +23,8 @@ public:
 
     void redraw_clients() const;
 private:
+    void remove_client_by_context(Context& context);
+
     struct Client
     {
         Client(std::unique_ptr<UserInterface>&& ui, Window& window)

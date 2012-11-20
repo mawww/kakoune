@@ -25,6 +25,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         }
         catch (Kakoune::client_removed&)
         {
+            ClientManager::instance().remove_client_by_context(*context);
             EventManager::instance().unwatch(fd);
             close(fd);
         }

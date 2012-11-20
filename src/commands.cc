@@ -363,7 +363,7 @@ void quit(const CommandParameters& params, Context& context)
             throw runtime_error(message);
         }
     }
-    ClientManager::instance().remove_client_by_context(context);
+    // unwind back to this client event handler.
     throw client_removed{};
 }
 
