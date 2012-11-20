@@ -80,7 +80,7 @@ void on_term_resize(int)
 {
     int fd = open("/dev/tty", O_RDWR);
     winsize ws;
-    if (fd == 0 or ioctl(fd, TIOCGWINSZ, (void*)&ws) != 0)
+    if (fd == -1 or ioctl(fd, TIOCGWINSZ, (void*)&ws) != 0)
         return;
     close(fd);
     resizeterm(ws.ws_row, ws.ws_col);
