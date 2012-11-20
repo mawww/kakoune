@@ -335,18 +335,23 @@ private:
 template<typename T>
 Repeated<T> repeated(T func) { return Repeated<T>(func); }
 
-namespace SelectFlags
+enum class SelectFlags
 {
-    enum Type
-    {
-        None = 0,
-        Reverse = 1,
-        Inclusive = 2,
-        Extend = 4
-    };
+    None = 0,
+    Reverse = 1,
+    Inclusive = 2,
+    Extend = 4
+};
+constexpr SelectFlags operator|(SelectFlags lhs, SelectFlags rhs)
+{
+    return (SelectFlags)((int) lhs | (int) rhs);
+}
+constexpr bool operator&(SelectFlags lhs, SelectFlags rhs)
+{
+    return ((int) lhs & (int) rhs) != 0;
 }
 
-template<int flags>
+template<SelectFlags flags>
 void select_to_next_char(Context& context)
 {
     int param = context.numeric_param();
