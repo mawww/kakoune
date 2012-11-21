@@ -16,6 +16,10 @@ namespace Kakoune
 
 struct Context;
 
+struct parse_error : runtime_error
+{
+    parse_error(const String& error);
+};
 
 using CommandParameters = memoryview<String>;
 

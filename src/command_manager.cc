@@ -31,6 +31,10 @@ void CommandManager::register_commands(const memoryview<String>& command_names,
         register_command(command_name, command, completer);
 }
 
+parse_error::parse_error(const String& error)
+    : runtime_error{"parse error: " + error} {}
+
+
 namespace
 {
 
@@ -73,8 +77,16 @@ bool is_horizontal_blank(char c)
    return c == ' ' or c == '\t';
 }
 
+struct unterminated_string : parse_error
+{
+    unterminated_string(const String& open, const String& close, int nest = 0)
+      : parse_error{"unterminated string '" + open + "..." + close + "'" +
+                    (nest > 0 ? "(nesting: " + int_to_str(nest) + ")" : "")}
+    {}
+};
+
 TokenList parse(const String& line,
-                TokenPosList* opt_token_pos_info = NULL)
+                TokenPosList* opt_token_pos_info = nullptr)
 {
     TokenList result;
 
@@ -109,6 +121,8 @@ TokenList parse(const String& line,
             while ((line[pos] != delimiter or line[pos-1] == '\\') and
                     pos != length)
                 ++pos;
+            if (pos == length)
+                throw unterminated_string(String{delimiter}, String{delimiter});
         }
         else if (line[pos] == '%')
         {
@@ -149,12 +163,18 @@ TokenList parse(const String& line,
                     }
                     ++pos;
                 }
+                if (pos == length)
+                    throw unterminated_string("%" + type_name + opening_delimiter,
+                                              String{closing_delimiter}, level);
             }
             else
             {
                 while (pos != length and
                        (line[pos] != opening_delimiter or line[pos-1] == '\\'))
                     ++pos;
+                if (pos == length)
+                    throw unterminated_string("%" + type_name + opening_delimiter,
+                                              String{opening_delimiter});
             }
         }
         else
