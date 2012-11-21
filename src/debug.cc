@@ -13,7 +13,7 @@ static Buffer& get_or_create_debug_buffer()
     Buffer* buffer = BufferManager::instance().get_buffer(debug_buffer_name);
 
     if (not buffer)
-        buffer = new Buffer(debug_buffer_name, Buffer::Flags::None, "");
+        buffer = new Buffer(debug_buffer_name, Buffer::Flags::NoUndo);
 
     assert(buffer);
     return *buffer;
@@ -25,7 +25,6 @@ void write_debug(const String& str)
     Editor editor(debug_buffer);
     editor.select(debug_buffer.end()-1);
     editor.insert(str + "\n");
-    debug_buffer.reset_undo_data();
 }
 
 }

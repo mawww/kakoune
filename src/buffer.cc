@@ -14,7 +14,7 @@ namespace Kakoune
 
 Buffer::Buffer(String name, Flags flags,
                String initial_content)
-    : m_name(std::move(name)), m_flags(flags),
+    : m_name(std::move(name)), m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_timestamp(0),
@@ -26,7 +26,6 @@ Buffer::Buffer(String name, Flags flags,
         initial_content += '\n';
     do_insert(begin(), std::move(initial_content));
 
-
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
     if (flags & Flags::File and flags & Flags::New)
@@ -36,7 +35,8 @@ Buffer::Buffer(String name, Flags flags,
 
     m_hook_manager.run_hook("BufCreate", m_name, context);
 
-    reset_undo_data();
+    // now we may begin to record undo data
+    m_flags = flags;
 }
 
 Buffer::~Buffer()
@@ -148,6 +148,9 @@ String Buffer::string(const BufferIterator& begin, const BufferIterator& end) co
 
 void Buffer::begin_undo_group()
 {
+    if (m_flags & Flags::NoUndo)
+        return;
+
     assert(m_current_undo_group.empty());
     m_history.erase(m_history_cursor, m_history.end());
 
@@ -159,6 +162,9 @@ void Buffer::begin_undo_group()
 
 void Buffer::end_undo_group()
 {
+    if (m_flags & Flags::NoUndo)
+        return;
+
     if (m_current_undo_group.empty())
         return;
 
@@ -215,13 +221,6 @@ bool Buffer::redo()
 
     ++m_history_cursor;
     return true;
-}
-
-void Buffer::reset_undo_data()
-{
-   m_history.clear();
-   m_history_cursor = m_history.end();
-   m_current_undo_group.clear();
 }
 
 void Buffer::check_invariant() const
@@ -370,9 +369,9 @@ void Buffer::insert(BufferIterator pos, String content)
     if (pos.is_end() and content.back() != '\n')
         content += '\n';
 
-    m_current_undo_group.emplace_back(Modification::Insert, pos,
-                                      std::move(content));
-    do_insert(pos, m_current_undo_group.back().content);
+    if (not (m_flags & Flags::NoUndo))
+        m_current_undo_group.emplace_back(Modification::Insert, pos, content);
+    do_insert(pos, content);
 }
 
 void Buffer::erase(BufferIterator begin, BufferIterator end)
@@ -383,8 +382,9 @@ void Buffer::erase(BufferIterator begin, BufferIterator end)
     if (begin == end)
         return;
 
-    m_current_undo_group.emplace_back(Modification::Erase, begin,
-                                      string(begin, end));
+    if (not (m_flags & Flags::NoUndo))
+        m_current_undo_group.emplace_back(Modification::Erase, begin,
+                                          string(begin, end));
     do_erase(begin, end);
 }
 

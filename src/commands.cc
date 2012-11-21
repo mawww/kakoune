@@ -231,7 +231,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
     int fd = open(filename.c_str(), O_RDONLY | O_CLOEXEC);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
-    Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo);
+    Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
     buffer->hook_manager().add_hook("BufClose",
         [fd, buffer](const String&, const Context&) {
@@ -250,7 +250,6 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         buffer->insert(buffer->end()-1,
                        count > 0 ? String(data, data+count)
                                   : "*** kak: fifo closed ***\n");
-        buffer->reset_undo_data();
         ClientManager::instance().redraw_clients();
         if (count <= 0)
         {

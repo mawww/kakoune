@@ -85,7 +85,7 @@ Buffer* create_buffer_from_file(const String& filename)
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         delete buffer;
 
-    Buffer* buffer = new Buffer(filename, Buffer::Flags::File, "");
+    Buffer* buffer = new Buffer(filename, Buffer::Flags::File | Buffer::Flags::NoUndo);
 
     String content;
     char buf[256];
@@ -131,8 +131,8 @@ Buffer* create_buffer_from_file(const String& filename)
     if (*(buffer->end() - 2) == '\n')
         buffer->erase(buffer->end() - 1, buffer->end());
 
-    // it never happened, buffer always was like that
-    buffer->reset_undo_data();
+    // enable undo data recording
+    buffer->flags() &= ~Buffer::Flags::NoUndo;
 
     return buffer;
 }

@@ -100,7 +100,8 @@ public:
         None = 0,
         File = 1,
         New  = 2,
-        Fifo = 4
+        Fifo = 4,
+        NoUndo = 8,
     };
 
     Buffer(String name, Flags flags, String initial_content = "\n");
@@ -121,7 +122,6 @@ public:
     void           end_undo_group();
     bool           undo();
     bool           redo();
-    void           reset_undo_data();
 
     String         string(const BufferIterator& begin,
                           const BufferIterator& end) const;
