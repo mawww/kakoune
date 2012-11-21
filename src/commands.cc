@@ -33,6 +33,11 @@ extern bool    quit_requested;
 namespace
 {
 
+struct wrong_argument_count : runtime_error
+{
+    wrong_argument_count() : runtime_error("wrong argument count") {}
+};
+
 struct unknown_option : public runtime_error
 {
     unknown_option(const String& name)

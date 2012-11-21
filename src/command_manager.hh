@@ -16,10 +16,6 @@ namespace Kakoune
 
 struct Context;
 
-struct wrong_argument_count : runtime_error
-{
-    wrong_argument_count() : runtime_error("wrong argument count") {}
-};
 
 using CommandParameters = memoryview<String>;
 
