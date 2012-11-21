@@ -301,22 +301,25 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
 {
     assert(m_menu == nullptr);
     assert(m_menu_win == nullptr);
-    m_choices = std::vector<String>(choices.begin(), choices.end());
-    CharCount longest = 0;
-    for (int i = 0; i < m_choices.size(); ++i)
-    {
-        m_items.push_back(new_item(m_choices[i].c_str(), ""));
-        longest = std::max(longest, m_choices[i].char_length());
-    }
-    m_items.push_back(nullptr);
-    longest += 1;
+    assert(m_choices.empty());
+    assert(m_items.empty());
 
     int max_x,max_y;
     getmaxyx(stdscr, max_y, max_x);
     max_x -= (int)anchor.column;
 
-    int columns = (style == MenuStyle::Prompt) ?
-                  (max_x / std::min(max_x, (int)longest)) : 1;
+    m_choices.reserve(choices.size());
+    CharCount longest = 0;
+    for (auto& choice : choices)
+    {
+        m_choices.push_back(choice.substr(0_char, std::min(max_x-1, 200)));
+        m_items.emplace_back(new_item(m_choices.back().c_str(), ""));
+        longest = std::max(longest, m_choices.back().char_length());
+    }
+    m_items.push_back(nullptr);
+    longest += 1;
+
+    int columns = (style == MenuStyle::Prompt) ? (max_x / (int)longest) : 1;
     int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
 
     m_menu_pos = { anchor.line+1, anchor.column };
@@ -360,6 +363,7 @@ void NCursesUI::menu_hide()
     delwin(m_menu_win);
     m_menu_win = nullptr;
     m_items.clear();
+    m_choices.clear();
 }
 
 DisplayCoord NCursesUI::dimensions()
