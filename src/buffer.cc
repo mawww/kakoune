@@ -15,14 +15,14 @@ namespace Kakoune
 Buffer::Buffer(String name, Flags flags,
                String initial_content)
     : m_name(std::move(name)), m_flags(flags),
-      m_history(1), m_history_cursor(m_history.begin()),
+      m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_timestamp(0),
       m_hook_manager(GlobalHookManager::instance()),
       m_option_manager(GlobalOptionManager::instance())
 {
     BufferManager::instance().register_buffer(*this);
-    if (initial_content.back() != '\n')
+    if (initial_content.empty() or initial_content.back() != '\n')
         initial_content += '\n';
     do_insert(begin(), std::move(initial_content));
 
