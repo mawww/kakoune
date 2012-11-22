@@ -9,10 +9,10 @@ namespace Kakoune
 void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                   Buffer& buffer, int event_fd)
 {
-    m_clients.emplace_back(std::move(ui), get_unused_window_for_buffer(buffer));
+    m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer)});
 
-    InputHandler*  input_handler = m_clients.back().input_handler.get();
-    Context*       context = m_clients.back().context.get();
+    InputHandler*  input_handler = &m_clients.back()->input_handler;
+    Context*       context = &m_clients.back()->context;
     EventManager::instance().watch(event_fd, [input_handler, context, this](int fd) {
         try
         {
@@ -40,7 +40,7 @@ void ClientManager::remove_client_by_context(Context& context)
 {
     for (auto it = m_clients.begin(); it != m_clients.end(); ++it)
     {
-        if (it->context.get() == &context)
+        if (&(*it)->context == &context)
         {
              m_clients.erase(it);
              return;
@@ -57,9 +57,8 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)
            continue;
 
         auto it = std::find_if(m_clients.begin(), m_clients.end(),
-                               [&](const Client& client) {
-                                   return &client.context->window() == w.get();
-                               });
+                               [&](const std::unique_ptr<Client>& client)
+                               { return &client->context.window() == w.get(); });
         if (it == m_clients.end())
         {
             w->forget_timestamp();
@@ -74,9 +73,9 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 {
     for (auto& client : m_clients)
     {
-        client.context->forget_jumps_to_buffer(buffer);
+        client->context.forget_jumps_to_buffer(buffer);
 
-        if (&client.context->buffer() != &buffer)
+        if (&client->context.buffer() != &buffer)
             continue;
 
         // change client context to edit the first buffer which is not the
@@ -87,13 +86,13 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             if (buf != &buffer)
             {
                Window& w = get_unused_window_for_buffer(*buf);
-               client.context->change_editor(w);
+               client->context.change_editor(w);
                break;
             }
         }
     }
     auto end = std::remove_if(m_windows.begin(), m_windows.end(),
-                              [&buffer](std::unique_ptr<Window>& w)
+                              [&buffer](const std::unique_ptr<Window>& w)
                               { return &w->buffer() == &buffer; });
     m_windows.erase(end, m_windows.end());
 }
@@ -102,7 +101,7 @@ void ClientManager::redraw_clients() const
 {
     for (auto& client : m_clients)
     {
-        Context& context = *client.context;
+        Context& context = client->context;
         if (context.window().timestamp() != context.buffer().timestamp())
         {
             DisplayCoord dimensions = context.ui().dimensions();
