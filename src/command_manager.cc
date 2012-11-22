@@ -16,19 +16,19 @@ bool CommandManager::command_defined(const String& command_name) const
     return m_commands.find(command_name) != m_commands.end();
 }
 
-void CommandManager::register_command(const String& command_name,
+void CommandManager::register_command(String command_name,
                                       Command command,
-                                      const CommandCompleter& completer)
+                                      CommandCompleter completer)
 {
-    m_commands[command_name] = CommandDescriptor { command, completer };
+    m_commands[command_name] = { std::move(command), std::move(completer) };
 }
 
 void CommandManager::register_commands(const memoryview<String>& command_names,
                                        Command command,
-                                       const CommandCompleter& completer)
+                                       CommandCompleter completer)
 {
     for (auto command_name : command_names)
-        register_command(command_name, command, completer);
+        m_commands[command_name] = { command, completer };
 }
 
 parse_error::parse_error(const String& error)

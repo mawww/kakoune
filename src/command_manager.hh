@@ -14,28 +14,25 @@
 namespace Kakoune
 {
 
-struct Context;
-
 struct parse_error : runtime_error
 {
     parse_error(const String& error);
 };
 
+struct Context;
 using CommandParameters = memoryview<String>;
-
-typedef std::function<void (const CommandParameters&,
-                            Context& context)> Command;
-
-typedef std::function<CandidateList (const Context& context,
-                                     const CommandParameters&,
-                                     size_t, ByteCount)> CommandCompleter;
+using Command = std::function<void (const CommandParameters&,
+                                    Context& context)>;
+using CommandCompleter = std::function<CandidateList (const Context& context,
+                                                      const CommandParameters&,
+                                                      size_t, ByteCount)>;
 
 class PerArgumentCommandCompleter
 {
 public:
-    typedef std::function<CandidateList (const Context&,
-                                         const String&, ByteCount)> ArgumentCompleter;
-    typedef memoryview<ArgumentCompleter> ArgumentCompleterList;
+    using ArgumentCompleter = std::function<CandidateList (const Context&,
+                                            const String&, ByteCount)>;
+    using ArgumentCompleterList = memoryview<ArgumentCompleter>;
 
     PerArgumentCommandCompleter(const ArgumentCompleterList& completers)
         : m_completers(completers.begin(), completers.end()) {}
@@ -61,13 +58,13 @@ public:
 
     bool command_defined(const String& command_name) const;
 
-    void register_command(const String& command_name,
+    void register_command(String command_name,
                           Command command,
-                          const CommandCompleter& completer = CommandCompleter());
+                          CommandCompleter completer = CommandCompleter());
 
     void register_commands(const memoryview<String>& command_names,
                            Command command,
-                           const CommandCompleter& completer = CommandCompleter());
+                           CommandCompleter completer = CommandCompleter());
 
 private:
     void execute_single_command(const CommandParameters& params,
