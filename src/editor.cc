@@ -136,7 +136,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        BufferCoord pos = m_buffer->line_and_column_at(sel.last());
+        BufferCoord pos = sel.last().coord();
         pos.line += offset;
         BufferIterator last = utf8::finish(m_buffer->iterator_at(pos, true));
         sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
@@ -448,7 +448,7 @@ void IncrementalInserter::move_cursors(const BufferCoord& offset)
 {
     for (auto& sel : m_editor.m_selections)
     {
-        BufferCoord pos = m_editor.m_buffer->line_and_column_at(sel.last());
+        BufferCoord pos = sel.last().coord();
         BufferIterator it = m_editor.m_buffer->iterator_at(pos + offset);
         sel = Selection(it, it);
     }

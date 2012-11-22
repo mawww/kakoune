@@ -53,11 +53,6 @@ BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,
     return BufferIterator(*this, clamp(line_and_column, avoid_eol));
 }
 
-BufferCoord Buffer::line_and_column_at(const BufferIterator& iterator) const
-{
-    return iterator.m_coord;
-}
-
 ByteCount Buffer::line_length(LineCount line) const
 {
     assert(line < line_count());

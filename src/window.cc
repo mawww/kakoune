@@ -161,7 +161,7 @@ DisplayCoord Window::display_position(const BufferIterator& iterator)
 
 String Window::status_line() const
 {
-    BufferCoord cursor = buffer().line_and_column_at(selections().back().last());
+    BufferCoord cursor = selections().back().last().coord();
     std::ostringstream oss;
     oss << buffer().name();
     if (buffer().is_modified())

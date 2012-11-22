@@ -70,13 +70,11 @@ public:
     const BufferCoord& coord() const { return m_coord; }
     LineCount  line() const { return m_coord.line; }
     ByteCount column() const { return m_coord.column; }
-
-private:
     ByteCount offset() const;
 
+private:
     safe_ptr<const Buffer> m_buffer;
     BufferCoord   m_coord;
-    friend class Buffer;
 };
 
 class BufferChangeListener
@@ -105,7 +103,6 @@ public:
 
     Buffer(String name, Flags flags, String initial_content = "\n");
     Buffer(const Buffer&) = delete;
-    Buffer(Buffer&&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
 
@@ -130,29 +127,18 @@ public:
     ByteCount      character_count() const;
     LineCount      line_count() const;
     ByteCount      line_length(LineCount line) const;
+    const String&  line_content(LineCount line) const
+    { return m_lines[line].content; }
 
     // returns an iterator at given coordinates. line_and_column is
     // clamped according to avoid_eol.
     BufferIterator iterator_at(const BufferCoord& line_and_column,
                                bool avoid_eol = false) const;
-    BufferCoord    line_and_column_at(const BufferIterator& iterator) const;
 
     // returns nearest valid coordinates from given ones
     // if avoid_eol, clamp to character before eol if line is not empty
     BufferCoord    clamp(const BufferCoord& line_and_column,
                          bool avoid_eol = false) const;
-
-    const String& name() const { return m_name; }
-
-    // returns true if the buffer is in a different state than
-    // the last time it was saved
-    bool is_modified() const;
-
-    // notify the buffer that it was saved in the current state
-    void notify_saved();
-
-    void add_change_listener(BufferChangeListener& listener) const;
-    void remove_change_listener(BufferChangeListener& listener) const;
 
     // returns an iterator pointing to the first character of the line
     // iterator is on
@@ -167,13 +153,22 @@ public:
     // the same but taking a line number instead of an iterator
     BufferIterator iterator_at_line_end(LineCount line) const;
 
-    const String& line_content(LineCount line) const
-    { return m_lines[line].content; }
+    const String& name() const { return m_name; }
+
+    // returns true if the buffer is in a different state than
+    // the last time it was saved
+    bool is_modified() const;
+
+    // notify the buffer that it was saved in the current state
+    void notify_saved();
 
     OptionManager&       options()       { return m_options; }
     const OptionManager& options() const { return m_options; }
     HookManager&         hooks()         { return m_hooks; }
     const HookManager&   hooks()   const { return m_hooks; }
+
+    void add_change_listener(BufferChangeListener& listener) const;
+    void remove_change_listener(BufferChangeListener& listener) const;
 
 private:
     friend class BufferIterator;
@@ -189,7 +184,6 @@ private:
     };
     struct LineList : std::vector<Line>
     {
-    public:
         Line& operator[](LineCount line)
         { return std::vector<Line>::operator[]((int)line); }
 

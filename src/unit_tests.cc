@@ -13,13 +13,13 @@ void test_buffer()
     BufferIterator i = buffer.begin();
     assert(*i == 'a');
     i += 6;
-    assert(buffer.line_and_column_at(i) == BufferCoord{0 COMMA 6});
+    assert(i.coord() == BufferCoord{0 COMMA 6});
     i += 1;
-    assert(buffer.line_and_column_at(i) == BufferCoord{1 COMMA 0});
+    assert(i.coord() == BufferCoord{1 COMMA 0});
     --i;
-    assert(buffer.line_and_column_at(i) == BufferCoord{0 COMMA 6});
+    assert(i.coord() == BufferCoord{0 COMMA 6});
     ++i;
-    assert(buffer.line_and_column_at(i) == BufferCoord{1 COMMA 0});
+    assert(i.coord() == BufferCoord{1 COMMA 0});
     buffer.insert(i, "tchou kanaky\n");
     assert(buffer.line_count() == 5);
 
