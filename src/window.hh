@@ -22,6 +22,7 @@ class HighlighterGroup;
 class Window : public Editor, public OptionManagerWatcher
 {
 public:
+    Window(Buffer& buffer);
     ~Window();
 
     const DisplayCoord& position() const { return m_position; }
@@ -50,9 +51,6 @@ public:
     void   forget_timestamp() { m_timestamp = -1; }
 
 private:
-    friend class Buffer;
-
-    Window(Buffer& buffer);
     Window(const Window&) = delete;
 
     void on_incremental_insertion_end() override;

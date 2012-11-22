@@ -15,7 +15,6 @@ namespace Kakoune
 {
 
 class Buffer;
-class Window;
 
 struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 {
@@ -145,12 +144,6 @@ public:
 
     const String& name() const { return m_name; }
 
-    // Window handling
-    using WindowList = std::vector<std::unique_ptr<Window>>;
-    const WindowList& windows() const { return m_windows; }
-    Window& new_window();
-    void    delete_window(Window& window);
-
     // returns true if the buffer is in a different state than
     // the last time it was saved
     bool is_modified() const;
@@ -221,13 +214,11 @@ private:
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
 
-    WindowList m_windows;
-
     size_t m_last_save_undo_index;
     size_t m_timestamp;
 
-    // this mutable as adding or removing listeners is not muting the buffer
-    // observable state.
+    // this is mutable as adding or removing listeners is not muting the
+    // buffer observable state.
     mutable std::vector<BufferChangeListener*> m_change_listeners;
 
     OptionManager m_options;

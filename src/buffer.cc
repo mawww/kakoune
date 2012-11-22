@@ -43,7 +43,6 @@ Buffer::~Buffer()
 {
     m_hooks.run_hook("BufClose", m_name, Context(Editor(*this)));
 
-    m_windows.clear();
     BufferManager::instance().unregister_buffer(*this);
     assert(m_change_listeners.empty());
 }
@@ -386,20 +385,6 @@ void Buffer::erase(BufferIterator begin, BufferIterator end)
         m_current_undo_group.emplace_back(Modification::Erase, begin,
                                           string(begin, end));
     do_erase(begin, end);
-}
-
-Window& Buffer::new_window()
-{
-    m_windows.emplace_back(new Window(*this));
-    return *m_windows.back();
-}
-
-void Buffer::delete_window(Window& window)
-{
-    assert(&window.buffer() == this);
-    auto window_it = std::find(m_windows.begin(), m_windows.end(), &window);
-    assert(window_it != m_windows.end());
-    m_windows.erase(window_it);
 }
 
 bool Buffer::is_modified() const

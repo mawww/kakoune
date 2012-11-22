@@ -49,10 +49,13 @@ void ClientManager::remove_client_by_context(Context& context)
     assert(false);
 }
 
-Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer) const
+Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)
 {
-    for (auto& w : buffer.windows())
+    for (auto& w : m_windows)
     {
+        if (&w->buffer() != &buffer)
+           continue;
+
         auto it = std::find_if(m_clients.begin(), m_clients.end(),
                                [&](const Client& client) {
                                    return &client.context->window() == w.get();
@@ -63,7 +66,8 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer) const
             return *w;
         }
     }
-    return buffer.new_window();
+    m_windows.emplace_back(new Window(buffer));
+    return *m_windows.back();
 }
 
 void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
@@ -88,6 +92,10 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             }
         }
     }
+    auto end = std::remove_if(m_windows.begin(), m_windows.end(),
+                              [&buffer](std::unique_ptr<Window>& w)
+                              { return &w->buffer() == &buffer; });
+    m_windows.erase(end, m_windows.end());
 }
 
 void ClientManager::redraw_clients() const

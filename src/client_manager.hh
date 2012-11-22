@@ -18,7 +18,7 @@ public:
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
-    Window& get_unused_window_for_buffer(Buffer& buffer) const;
+    Window& get_unused_window_for_buffer(Buffer& buffer);
     void    ensure_no_client_uses_buffer(Buffer& buffer);
 
     void redraw_clients() const;
@@ -50,6 +50,7 @@ private:
     };
 
     std::vector<Client> m_clients;
+    std::vector<std::unique_ptr<Window>> m_windows;
 };
 
 }
