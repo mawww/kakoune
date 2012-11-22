@@ -123,9 +123,9 @@ Buffer* create_buffer_from_file(const String& filename)
         at_file_begin = false;
     }
 
-    OptionManager& option_manager = buffer->option_manager();
-    option_manager.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
-    option_manager.set_option("BOM", Option(bom ? "utf-8" : "no"));
+    OptionManager& options = buffer->options();
+    options.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
+    options.set_option("BOM", Option(bom ? "utf-8" : "no"));
 
     // if the file ended with a \n, remove the \n added by the buffer
     if (*(buffer->end() - 2) == '\n')
@@ -155,7 +155,7 @@ static void write(int fd, const memoryview<char>& data, const String& filename)
 
 void write_buffer_to_file(const Buffer& buffer, const String& filename)
 {
-    String eolformat = buffer.option_manager()["eolformat"].as_string();
+    String eolformat = buffer.options()["eolformat"].as_string();
     if (eolformat == "crlf")
         eolformat = "\r\n";
     else
@@ -168,7 +168,7 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
         throw file_access_error(filename, strerror(errno));
     auto close_fd = on_scope_end([fd]{ close(fd); });
 
-    if (buffer.option_manager()["BOM"].as_string() == "utf-8")
+    if (buffer.options()["BOM"].as_string() == "utf-8")
         ::write(fd, "\xEF\xBB\xBF", 3);
 
     for (LineCount i = 0; i < buffer.line_count(); ++i)

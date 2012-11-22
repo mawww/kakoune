@@ -69,7 +69,7 @@ private:
     OptionManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root option manager
-    friend class GlobalOptionManager;
+    friend class GlobalOptions;
 
     OptionMap m_options;
     OptionManager* m_parent;
@@ -80,11 +80,11 @@ private:
     std::vector<OptionManagerWatcher*> m_watchers;
 };
 
-class GlobalOptionManager : public OptionManager,
-                            public Singleton<GlobalOptionManager>
+class GlobalOptions : public OptionManager,
+                      public Singleton<GlobalOptions>
 {
 public:
-    GlobalOptionManager();
+    GlobalOptions();
 };
 
 

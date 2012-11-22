@@ -239,7 +239,7 @@ void do_join(Context& context)
 void do_indent(Context& context)
 {
     const char* spaces = "                ";
-    int width = std::min(context.option_manager()["indentwidth"].as_int(), 16);
+    int width = std::min(context.options()["indentwidth"].as_int(), 16);
     String indent(spaces, spaces + width);
 
     Editor& editor = context.editor();
@@ -252,7 +252,7 @@ void do_indent(Context& context)
 
 void do_deindent(Context& context)
 {
-    int width = context.option_manager()["indentwidth"].as_int();
+    int width = context.options()["indentwidth"].as_int();
     Editor& editor = context.editor();
     SelectionAndCapturesList sels = editor.selections();
     auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
@@ -571,7 +571,7 @@ void register_env_vars()
                                    { return runtime_directory(); });
     shell_manager.register_env_var("opt_.+",
                                    [](const String& name, const Context& context)
-                                   { return context.option_manager()[name.substr(4_byte)].as_string(); });
+                                   { return context.options()[name.substr(4_byte)].as_string(); });
     shell_manager.register_env_var("reg_.+",
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });
@@ -678,8 +678,8 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        GlobalOptionManager option_manager;
-        GlobalHookManager   hook_manager;
+        GlobalOptions       global_options;
+        GlobalHooks         global_hooks;
         ShellManager        shell_manager;
         CommandManager      command_manager;
         BufferManager       buffer_manager;

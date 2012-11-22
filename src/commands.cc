@@ -238,7 +238,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
        throw runtime_error("unable to open " + filename);
     Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
-    buffer->hook_manager().add_hook("BufClose",
+    buffer->hooks().add_hook("BufClose",
         [fd, buffer](const String&, const Context&) {
             // Check if fifo is still alive, else fd may
             // refer to another file/socket
@@ -526,11 +526,11 @@ void add_hook(const CommandParameters& params, Context& context)
     const String& scope = params[0];
     const String& name = params[1];
     if (scope == "global")
-        GlobalHookManager::instance().add_hook(name, hook_func);
+        GlobalHooks::instance().add_hook(name, hook_func);
     else if (scope == "buffer")
-        context.buffer().hook_manager().add_hook(name, hook_func);
+        context.buffer().hooks().add_hook(name, hook_func);
     else if (scope == "window")
-        context.window().hook_manager().add_hook(name , hook_func);
+        context.window().hooks().add_hook(name , hook_func);
     else
         throw runtime_error("error: no such hook container " + scope);
 }
@@ -636,13 +636,13 @@ void exec_commands_in_file(const CommandParameters& params,
     CommandManager::instance().execute(file_content, context);
 }
 
-void set_option(OptionManager& option_manager, const CommandParameters& params,
+void set_option(OptionManager& options, const CommandParameters& params,
                 Context& context)
 {
     if (params.size() != 2)
         throw wrong_argument_count();
 
-    option_manager.set_option(params[0], Option(params[1]));
+    options.set_option(params[0], Option(params[1]));
 }
 
 class RegisterRestorer
@@ -869,24 +869,24 @@ void register_commands()
 
     cm.register_commands({ "setg", "setglobal" },
                          [](const CommandParameters& params, Context& context)
-                         { set_option(GlobalOptionManager::instance(), params, context); },
+                         { set_option(GlobalOptions::instance(), params, context); },
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
-                             { return GlobalOptionManager::instance().complete_option_name(prefix, cursor_pos); }
+                             { return GlobalOptions::instance().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setb", "setbuffer" },
                          [](const CommandParameters& params, Context& context)
-                         { set_option(context.buffer().option_manager(), params, context); },
+                         { set_option(context.buffer().options(), params, context); },
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
-                             { return context.buffer().option_manager().complete_option_name(prefix, cursor_pos); }
+                             { return context.buffer().options().complete_option_name(prefix, cursor_pos); }
                          }));
     cm.register_commands({ "setw", "setwindow" },
                          [](const CommandParameters& params, Context& context)
-                         { set_option(context.window().option_manager(), params, context); },
+                         { set_option(context.window().options(), params, context); },
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
-                             { return context.window().option_manager().complete_option_name(prefix, cursor_pos); }
+                             { return context.window().options().complete_option_name(prefix, cursor_pos); }
                          }));
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);

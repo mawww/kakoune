@@ -265,7 +265,7 @@ void CommandManager::execute(const String& command_line,
         }
         if (it->type() == Token::Type::OptionExpand)
         {
-            const Option& option = context.option_manager()[it->content()];
+            const Option& option = context.options()[it->content()];
             params.push_back(option.as_string());
         }
         if (it->type() == Token::Type::CommandSeparator)

@@ -18,8 +18,8 @@ Buffer::Buffer(String name, Flags flags,
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_timestamp(0),
-      m_hook_manager(GlobalHookManager::instance()),
-      m_option_manager(GlobalOptionManager::instance())
+      m_hooks(GlobalHooks::instance()),
+      m_options(GlobalOptions::instance())
 {
     BufferManager::instance().register_buffer(*this);
     if (initial_content.empty() or initial_content.back() != '\n')
@@ -29,11 +29,11 @@ Buffer::Buffer(String name, Flags flags,
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
     if (flags & Flags::File and flags & Flags::New)
-        m_hook_manager.run_hook("BufNew", m_name, context);
+        m_hooks.run_hook("BufNew", m_name, context);
     else
-        m_hook_manager.run_hook("BufOpen", m_name, context);
+        m_hooks.run_hook("BufOpen", m_name, context);
 
-    m_hook_manager.run_hook("BufCreate", m_name, context);
+    m_hooks.run_hook("BufCreate", m_name, context);
 
     // now we may begin to record undo data
     m_flags = flags;
@@ -41,7 +41,7 @@ Buffer::Buffer(String name, Flags flags,
 
 Buffer::~Buffer()
 {
-    m_hook_manager.run_hook("BufClose", m_name, Context(Editor(*this)));
+    m_hooks.run_hook("BufClose", m_name, Context(Editor(*this)));
 
     m_windows.clear();
     BufferManager::instance().unregister_buffer(*this);

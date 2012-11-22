@@ -41,10 +41,10 @@ public:
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 
-    OptionManager&       option_manager()       { return m_option_manager; }
-    const OptionManager& option_manager() const { return m_option_manager; }
-    HookManager&         hook_manager()         { return m_hook_manager; }
-    const HookManager&   hook_manager()   const { return m_hook_manager; }
+    OptionManager&       options()       { return m_options; }
+    const OptionManager& options() const { return m_options; }
+    HookManager&         hooks()         { return m_hooks; }
+    const HookManager&   hooks()   const { return m_hooks; }
 
     size_t timestamp() const { return m_timestamp; }
     void   forget_timestamp() { m_timestamp = -1; }
@@ -66,8 +66,8 @@ private:
 
     HighlighterGroup m_highlighters;
 
-    HookManager      m_hook_manager;
-    OptionManager    m_option_manager;
+    HookManager      m_hooks;
+    OptionManager    m_options;
 
     size_t m_timestamp = -1;
 };

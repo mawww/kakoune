@@ -13,24 +13,24 @@ namespace Kakoune
 
 Window::Window(Buffer& buffer)
     : Editor(buffer),
-      m_hook_manager(buffer.hook_manager()),
-      m_option_manager(buffer.option_manager())
+      m_hooks(buffer.hooks()),
+      m_options(buffer.options())
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    m_hook_manager.run_hook("WinCreate", buffer.name(), Context(*this));
-    m_option_manager.register_watcher(*this);
+    m_hooks.run_hook("WinCreate", buffer.name(), Context(*this));
+    m_options.register_watcher(*this);
 
     registry.add_highlighter_to_group(*this, m_highlighters, "expand_tabs", HighlighterParameters());
     registry.add_highlighter_to_group(*this, m_highlighters, "highlight_selections", HighlighterParameters());
 
-    for (auto& option : m_option_manager.flatten_options())
+    for (auto& option : m_options.flatten_options())
         on_option_changed(option.first, option.second);
 }
 
 Window::~Window()
 {
-    m_option_manager.unregister_watcher(*this);
+    m_options.unregister_watcher(*this);
 }
 
 void Window::center_selection()
@@ -176,14 +176,14 @@ String Window::status_line() const
 void Window::on_incremental_insertion_end()
 {
     SelectionAndCapturesList backup(selections());
-    hook_manager().run_hook("InsertEnd", "", Context(*this));
+    hooks().run_hook("InsertEnd", "", Context(*this));
     select(backup);
 }
 
 void Window::on_option_changed(const String& name, const Option& option)
 {
     String desc = name + "=" + option.as_string();
-    m_hook_manager.run_hook("WinSetOption", desc, Context(*this));
+    m_hooks.run_hook("WinSetOption", desc, Context(*this));
 }
 
 }

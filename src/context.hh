@@ -84,13 +84,13 @@ struct Context
         m_ui.reset(&ui);
     }
 
-    OptionManager& option_manager() const
+    OptionManager& options() const
     {
         if (has_window())
-            return window().option_manager();
+            return window().options();
         if (has_buffer())
-            return buffer().option_manager();
-        return GlobalOptionManager::instance();
+            return buffer().options();
+        return GlobalOptions::instance();
     }
 
     void print_status(const String& status) const

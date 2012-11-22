@@ -90,7 +90,7 @@ void OptionManager::on_option_changed(const String& name, const Option& value)
         watcher->on_option_changed(name, value);
 }
 
-GlobalOptionManager::GlobalOptionManager()
+GlobalOptions::GlobalOptions()
     : OptionManager()
 {
     set_option("tabstop", Option(8));

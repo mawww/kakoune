@@ -153,7 +153,7 @@ HighlighterAndId colorize_regex_factory(Window& window,
 
 void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
 {
-    const int tabstop = window.option_manager()["tabstop"].as_int();
+    const int tabstop = window.options()["tabstop"].as_int();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)

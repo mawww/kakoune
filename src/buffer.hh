@@ -177,10 +177,10 @@ public:
     const String& line_content(LineCount line) const
     { return m_lines[line].content; }
 
-    OptionManager&       option_manager()       { return m_option_manager; }
-    const OptionManager& option_manager() const { return m_option_manager; }
-    HookManager&         hook_manager()         { return m_hook_manager; }
-    const HookManager&   hook_manager()   const { return m_hook_manager; }
+    OptionManager&       options()       { return m_options; }
+    const OptionManager& options() const { return m_options; }
+    HookManager&         hooks()         { return m_hooks; }
+    const HookManager&   hooks()   const { return m_hooks; }
 
 private:
     friend class BufferIterator;
@@ -230,8 +230,8 @@ private:
     // observable state.
     mutable std::vector<BufferChangeListener*> m_change_listeners;
 
-    OptionManager m_option_manager;
-    HookManager   m_hook_manager;
+    OptionManager m_options;
+    HookManager   m_hooks;
 };
 
 constexpr Buffer::Flags operator|(Buffer::Flags lhs, Buffer::Flags rhs)
