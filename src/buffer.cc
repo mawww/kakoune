@@ -392,7 +392,11 @@ bool Buffer::is_modified() const
 void Buffer::notify_saved()
 {
     size_t history_cursor_index = m_history_cursor - m_history.begin();
-    m_last_save_undo_index = history_cursor_index;
+    if (m_last_save_undo_index != history_cursor_index)
+    {
+        ++m_timestamp;
+        m_last_save_undo_index = history_cursor_index;
+    }
 }
 
 void Buffer::add_change_listener(BufferChangeListener& listener) const
