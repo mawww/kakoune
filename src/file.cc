@@ -8,6 +8,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
@@ -80,59 +81,57 @@ Buffer* create_buffer_from_file(const String& filename)
 
         throw file_access_error(filename, strerror(errno));
     }
-    auto close_fd = on_scope_end([fd]{ close(fd); });
+    struct stat st;
+    fstat(fd, &st);
+    const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    auto cleanup = on_scope_end([&]{ munmap((void*)data, st.st_size); close(fd); });
 
     if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
         delete buffer;
 
-    Buffer* buffer = new Buffer(filename, Buffer::Flags::File | Buffer::Flags::NoUndo);
-
-    String content;
-    char buf[256];
+    const char* pos = data;
     bool crlf = false;
     bool bom  = false;
-    bool at_file_begin = true;
-    while (true)
+    if (st.st_size >= 3 and
+       data[0] == '\xEF' and data[1] == '\xBB' and data[2] == '\xBF')
     {
-        ssize_t size = read(fd, buf, 256);
-        if (size == -1 or size == 0)
-            break;
-
-        ssize_t pos = 0;
-        // detect utf-8 byte order mark
-        if (at_file_begin and size >= 3 and
-            buf[0] == '\xEF' and buf[1] == '\xBB' and buf[2] == '\xBF')
-        {
-            bom = true;
-            pos = 3;
-        }
-        ssize_t start = pos;
-
-        while (pos < size+1)
-        {
-            if (buf[pos] == '\r' or pos == size)
-            {
-                if (buf[pos] == '\r')
-                    crlf = true;
-
-                buffer->insert(buffer->end()-1, String(buf+start, buf+pos));
-                start = pos+1;
-            }
-            ++pos;
-        }
-        at_file_begin = false;
+        bom = true;
+        pos = data + 3;
     }
+
+    std::vector<String> lines;
+    const char* end = data + st.st_size;
+    while (pos < end)
+    {
+        const char* line_end = pos;
+        while (line_end < end and *line_end != '\r' and *line_end != '\n')
+             ++line_end;
+
+        // this should happen only when opening a file which has no
+        // end of line as last character.
+        if (line_end == end)
+        {
+            lines.emplace_back(pos, line_end);
+            lines.back() += '\n';
+            break;
+        }
+
+        lines.emplace_back(pos, line_end + 1);
+        lines.back().back() = '\n';
+
+        if (line_end+1 != end and *line_end == '\r' and *line_end+1 == '\n')
+        {
+            crlf = true;
+            pos = line_end + 2;
+        }
+        else
+            pos = line_end + 1;
+    }
+    Buffer* buffer = new Buffer(filename, Buffer::Flags::File, std::move(lines));
 
     OptionManager& options = buffer->options();
     options.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
     options.set_option("BOM", Option(bom ? "utf-8" : "no"));
-
-    // if the file ended with a \n, remove the \n added by the buffer
-    if (*(buffer->end() - 2) == '\n')
-        buffer->erase(buffer->end() - 1, buffer->end());
-
-    // enable undo data recording
-    buffer->flags() &= ~Buffer::Flags::NoUndo;
 
     return buffer;
 }
