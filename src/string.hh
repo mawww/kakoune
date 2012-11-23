@@ -66,6 +66,8 @@ public:
 
    char     front() const { return m_content.front(); }
    char     back()  const { return m_content.back(); }
+   char&    front()       { return m_content.front(); }
+   char&    back()        { return m_content.back(); }
 
    size_t   hash() const { return std::hash<std::string>()(m_content); }
 
