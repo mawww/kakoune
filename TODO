@@ -15,3 +15,9 @@ Medium Priority
 * key binding support
 
 * configurable insert mode completion support
+
+* File loading optimizations: loading big files is sloooooooow
+  take a look at mmap
+
+* pasting big chunks of text from the terminal is slooooow as well
+  optimize that.
