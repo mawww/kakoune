@@ -236,9 +236,8 @@ void do_join(Context& context)
 
 void do_indent(Context& context)
 {
-    const char* spaces = "                ";
-    int width = std::min(context.options()["indentwidth"].as_int(), 16);
-    String indent(spaces, spaces + width);
+    size_t width = context.options()["indentwidth"].as_int();
+    String indent(' ', width);
 
     Editor& editor = context.editor();
     SelectionAndCapturesList sels = editor.selections();
