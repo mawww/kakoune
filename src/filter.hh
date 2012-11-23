@@ -1,9 +1,13 @@
 #ifndef filter_hh_INCLUDED
 #define filter_hh_INCLUDED
 
-#include "string.hh"
-#include "selection.hh"
 #include <functional>
+
+#include "string.hh"
+#include "utils.hh"
+#include "memoryview.hh"
+#include "selection.hh"
+#include "function_registry.hh"
 
 namespace Kakoune
 {
@@ -17,6 +21,13 @@ class BufferIterator;
 
 using FilterFunc = std::function<void (Buffer& buffer, Selection& selection, String& content)>;
 using FilterAndId = std::pair<String, FilterFunc>;
+
+using FilterParameters = memoryview<String>;
+using FilterFactory = std::function<FilterAndId (const FilterParameters& params)>;
+
+struct FilterRegistry : FunctionRegistry<FilterFactory>,
+                        Singleton<FilterRegistry>
+{};
 
 }
 

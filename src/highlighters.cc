@@ -1,7 +1,6 @@
 #include "highlighters.hh"
 #include "assert.hh"
 #include "window.hh"
-#include "highlighter_registry.hh"
 #include "color_registry.hh"
 #include "highlighter_group.hh"
 #include "string.hh"
@@ -272,11 +271,11 @@ void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.register_factory("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
-    registry.register_factory("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
-    registry.register_factory("number_lines", WindowHighlighterFactory<show_line_numbers>("number_lines"));
-    registry.register_factory("regex", colorize_regex_factory);
-    registry.register_factory("group", highlighter_group_factory);
+    registry.register_func("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
+    registry.register_func("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
+    registry.register_func("number_lines", WindowHighlighterFactory<show_line_numbers>("number_lines"));
+    registry.register_func("regex", colorize_regex_factory);
+    registry.register_func("group", highlighter_group_factory);
 }
 
 }

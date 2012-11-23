@@ -1,7 +1,7 @@
 #include "window.hh"
 
 #include "assert.hh"
-#include "highlighter_registry.hh"
+#include "highlighter.hh"
 #include "hook_manager.hh"
 #include "context.hh"
 
@@ -21,8 +21,8 @@ Window::Window(Buffer& buffer)
     m_hooks.run_hook("WinCreate", buffer.name(), Context(*this));
     m_options.register_watcher(*this);
 
-    registry.add_highlighter_to_group(*this, m_highlighters, "expand_tabs", HighlighterParameters());
-    registry.add_highlighter_to_group(*this, m_highlighters, "highlight_selections", HighlighterParameters());
+    m_highlighters.append(registry["expand_tabs"](*this, {}));
+    m_highlighters.append(registry["highlight_selections"](*this, {}));
 
     for (auto& option : m_options.flatten_options())
         on_option_changed(option.first, option.second);

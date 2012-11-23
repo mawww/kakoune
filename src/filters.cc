@@ -1,5 +1,4 @@
 #include "filters.hh"
-#include "filter_registry.hh"
 #include "buffer.hh"
 #include "filter_group.hh"
 
@@ -136,11 +135,11 @@ void register_filters()
 {
     FilterRegistry& registry = FilterRegistry::instance();
 
-    registry.register_factory("preserve_indent", SimpleFilterFactory<preserve_indent>("preserve_indent"));
-    registry.register_factory("cleanup_whitespaces", SimpleFilterFactory<cleanup_whitespaces>("cleanup_whitespaces"));
-    registry.register_factory("expand_tabulations", SimpleFilterFactory<expand_tabulations>("expand_tabulations"));
-    registry.register_factory("regex", regex_filter_factory);
-    registry.register_factory("group", filter_group_factory);
+    registry.register_func("preserve_indent", SimpleFilterFactory<preserve_indent>("preserve_indent"));
+    registry.register_func("cleanup_whitespaces", SimpleFilterFactory<cleanup_whitespaces>("cleanup_whitespaces"));
+    registry.register_func("expand_tabulations", SimpleFilterFactory<expand_tabulations>("expand_tabulations"));
+    registry.register_func("regex", regex_filter_factory);
+    registry.register_func("group", filter_group_factory);
 }
 
 }

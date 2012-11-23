@@ -9,8 +9,8 @@
 #include "file.hh"
 #include "input_handler.hh"
 #include "string.hh"
-#include "highlighter_registry.hh"
-#include "filter_registry.hh"
+#include "highlighter.hh"
+#include "filter.hh"
 #include "register_manager.hh"
 #include "completion.hh"
 #include "shell_manager.hh"
@@ -453,8 +453,8 @@ void add_highlighter(const CommandParameters& params, Context& context)
        window.highlighters().get_group(parser.option_value("group"))
      : window.highlighters();
 
-    registry.add_highlighter_to_group(window, group, name,
-                                      highlighter_params);
+    auto& factory = registry[name];
+    group.append(factory(window, highlighter_params));
 }
 
 void rm_highlighter(const CommandParameters& params, Context& context)
@@ -490,7 +490,8 @@ void add_filter(const CommandParameters& params, Context& context)
        editor.filters().get_group(parser.option_value("group"))
      : editor.filters();
 
-    registry.add_filter_to_group(group, name, filter_params);
+    auto& factory = registry[name];
+    group.append(factory(filter_params));
 }
 
 void rm_filter(const CommandParameters& params, Context& context)
@@ -809,7 +810,7 @@ void register_commands()
                              if (token_to_complete == 1 and params[0] == "-group")
                                  return w.highlighters().complete_group_id(arg, pos_in_token);
                              else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-                                 return HighlighterRegistry::instance().complete_highlighter(arg, pos_in_token);
+                                 return HighlighterRegistry::instance().complete_name(arg, pos_in_token);
                              else
                                  return CandidateList();
                          });
@@ -837,7 +838,7 @@ void register_commands()
                              if (token_to_complete == 1 and params[0] == "-group")
                                  return w.filters().complete_group_id(arg, pos_in_token);
                              else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-                                 return FilterRegistry::instance().complete_filter(arg, pos_in_token);
+                                 return FilterRegistry::instance().complete_name(arg, pos_in_token);
                              else
                                  return CandidateList();
                          });
