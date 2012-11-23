@@ -201,7 +201,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         addch('~');
     }
 
-    set_color(Color::Cyan, Color::Black);
+    set_color(Color::Cyan, Color::Default);
     draw_status();
     CharCount status_len = mode_line.char_length();
     // only draw mode_line if it does not overlap one status line
