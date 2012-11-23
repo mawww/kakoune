@@ -101,7 +101,7 @@ public:
         NoUndo = 8,
     };
 
-    Buffer(String name, Flags flags, String initial_content = "\n");
+    Buffer(String name, Flags flags, std::vector<String> lines = { "\n" });
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();

@@ -12,8 +12,7 @@
 namespace Kakoune
 {
 
-Buffer::Buffer(String name, Flags flags,
-               String initial_content)
+Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
     : m_name(std::move(name)), m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
@@ -22,9 +21,15 @@ Buffer::Buffer(String name, Flags flags,
       m_options(GlobalOptions::instance())
 {
     BufferManager::instance().register_buffer(*this);
-    if (initial_content.empty() or initial_content.back() != '\n')
-        initial_content += '\n';
-    do_insert(begin(), std::move(initial_content));
+
+    ByteCount pos = 0;
+    m_lines.reserve(lines.size());
+    for (auto& line : lines)
+    {
+        assert(not line.empty() and line.back() == '\n');
+        m_lines.emplace_back(Line{ pos, std::move(line) });
+        pos += m_lines.back().length();
+    }
 
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
