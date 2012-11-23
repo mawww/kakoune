@@ -64,12 +64,17 @@ void Editor::insert(const String& string, InsertMode mode)
 {
     scoped_edition edition(*this);
     if (mode == InsertMode::Replace)
-        erase();
+    {
+        // do not call Editor::erase as we do not want to avoid end of lines
+        for (auto& sel : m_selections)
+            m_buffer->erase(sel.begin(), sel.end());
+    }
 
     for (auto& sel : m_selections)
     {
         BufferIterator pos = prepare_insert(*m_buffer, sel.selection, mode);
         m_buffer->insert(pos, string);
+        sel.selection.avoid_eol();
     }
 }
 
@@ -77,16 +82,21 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 {
     scoped_edition edition(*this);
     if (mode == InsertMode::Replace)
-        erase();
-
+    {
+        // do not call Editor::erase as we do not want to avoid end of lines
+        for (auto& sel : m_selections)
+            m_buffer->erase(sel.begin(), sel.end());
+    }
     if (strings.empty())
         return;
 
     for (size_t i = 0; i < selections().size(); ++i)
     {
-        BufferIterator pos = prepare_insert(*m_buffer, m_selections[i].selection, mode);
+        Selection& sel = m_selections[i].selection;
+        BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
         size_t index = std::min(i, strings.size()-1);
         m_buffer->insert(pos, strings[index]);
+        sel.avoid_eol();
     }
 }
 
