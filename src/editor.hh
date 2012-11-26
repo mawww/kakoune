@@ -121,7 +121,8 @@ public:
     void insert(String content);
     void insert(const memoryview<String>& strings);
     void erase();
-    void move_cursors(const BufferCoord& offset);
+    void move_cursors(CharCount move);
+    void move_cursors(LineCount move);
 
     Buffer& buffer() const { return m_editor.buffer(); }
     Editor& editor() const { return m_editor; }

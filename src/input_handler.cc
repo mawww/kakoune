@@ -502,13 +502,13 @@ public:
         else if (key == Key::Backspace)
             m_inserter.erase();
         else if (key == Key::Left)
-            m_inserter.move_cursors({0, -1});
+            m_inserter.move_cursors(-1_char);
         else if (key == Key::Right)
-            m_inserter.move_cursors({0,  1});
+            m_inserter.move_cursors(1_char);
         else if (key == Key::Up)
-            m_inserter.move_cursors({-1, 0});
+            m_inserter.move_cursors(-1_line);
         else if (key == Key::Down)
-            m_inserter.move_cursors({ 1, 0});
+            m_inserter.move_cursors(1_line);
         else if (key.modifiers == Key::Modifiers::None)
         {
             m_inserter.insert(codepoint_to_str(key.key));

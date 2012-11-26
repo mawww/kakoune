@@ -461,14 +461,14 @@ void IncrementalInserter::erase()
     }
 }
 
-void IncrementalInserter::move_cursors(const BufferCoord& offset)
+void IncrementalInserter::move_cursors(CharCount move)
 {
-    for (auto& sel : m_editor.m_selections)
-    {
-        BufferCoord pos = sel.last().coord();
-        BufferIterator it = m_editor.m_buffer->iterator_at(pos + offset);
-        sel = Selection(it, it);
-    }
+    m_editor.move_selections(move, SelectMode::Replace);
+}
+
+void IncrementalInserter::move_cursors(LineCount move)
+{
+    m_editor.move_selections(move, SelectMode::Replace);
 }
 
 }
