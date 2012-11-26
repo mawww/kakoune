@@ -306,8 +306,7 @@ bool Editor::undo()
     if (res)
     {
         m_selections.clear();
-        m_selections.push_back(Selection(listener.first(),
-                                         listener.last()));
+        m_selections.emplace_back(listener.first(), listener.last());
     }
     return res;
 }
@@ -319,8 +318,7 @@ bool Editor::redo()
     if (res)
     {
         m_selections.clear();
-        m_selections.push_back(Selection(listener.first(),
-                                         listener.last()));
+        m_selections.emplace_back(listener.first(), listener.last());
     }
     return res;
 }

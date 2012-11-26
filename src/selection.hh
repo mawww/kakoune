@@ -62,13 +62,11 @@ struct SelectionAndCaptures
 
     SelectionAndCaptures(const BufferIterator& first,
                          const BufferIterator& last,
-                         CaptureList captures_list)
+                         CaptureList captures_list = {})
         : selection(first, last), captures(std::move(captures_list)) {}
     SelectionAndCaptures(const Selection& sel,
-                         CaptureList captures_list)
+                         CaptureList captures_list = {})
         : selection(sel), captures(std::move(captures_list)) {}
-    SelectionAndCaptures(const Selection& sel)
-        : selection(sel) {}
 
     // helper to access the selection
     BufferIterator begin() const { return selection.begin(); }
