@@ -26,6 +26,7 @@ enum class InsertMode : unsigned
     Append,
     Replace,
     InsertAtLineBegin,
+    InsertAtNextLineBegin,
     AppendAtLineEnd,
     OpenLineBelow,
     OpenLineAbove

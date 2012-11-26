@@ -169,7 +169,7 @@ void do_change(Context& context)
 static InsertMode adapt_for_linewise(InsertMode mode)
 {
     if (mode == InsertMode::Append)
-        return InsertMode::AppendAtLineEnd;
+        return InsertMode::InsertAtNextLineBegin;
     if (mode == InsertMode::Insert)
         return InsertMode::InsertAtLineBegin;
     if (mode == InsertMode::Replace)

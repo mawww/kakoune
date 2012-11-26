@@ -38,10 +38,19 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
     case InsertMode::Replace:
         return sel.begin();
     case InsertMode::Append:
-        return sel.end();
+    {
+        // special case for end of lines, append to current line instead
+        auto pos = std::max(sel.first(), sel.last());
+        if (pos.column() == buffer.line_length(pos.line()) - 1)
+            return pos;
+        else
+            return pos+1;
+    }
     case InsertMode::InsertAtLineBegin:
         return buffer.iterator_at_line_begin(sel.begin());
     case InsertMode::AppendAtLineEnd:
+        return buffer.iterator_at_line_end(sel.end()-1)-1;
+    case InsertMode::InsertAtNextLineBegin:
         return buffer.iterator_at_line_end(sel.end()-1);
     case InsertMode::OpenLineBelow:
     {
