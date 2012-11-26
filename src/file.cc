@@ -119,7 +119,7 @@ Buffer* create_buffer_from_file(const String& filename)
         lines.emplace_back(pos, line_end + 1);
         lines.back().back() = '\n';
 
-        if (line_end+1 != end and *line_end == '\r' and *line_end+1 == '\n')
+        if (line_end+1 != end and *line_end == '\r' and *(line_end+1) == '\n')
         {
             crlf = true;
             pos = line_end + 2;
