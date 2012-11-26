@@ -5,8 +5,6 @@
 namespace Kakoune
 {
 
-EventManager::EventManager() { m_forced.reserve(4); }
-
 void EventManager::watch(int fd, EventHandler handler)
 {
     auto event = std::find_if(m_events.begin(), m_events.end(),
@@ -20,27 +18,32 @@ void EventManager::watch(int fd, EventHandler handler)
 
 void EventManager::unwatch(int fd)
 {
-    for (size_t i = 0; i < m_events.size(); ++i)
-    {
-        if (m_events[i].fd == fd)
-        {
-            m_events.erase(m_events.begin() + i);
-            m_handlers.erase(fd);
-            return;
-        }
-    }
+    // do not unwatch now, do that at the end of handle_next_events,
+    // so that if unwatch(fd) is called from fd event handler,
+    // it is not deleted now.
+    m_unwatched.push_back(fd);
 }
 
 void EventManager::handle_next_events()
 {
     const int timeout_ms = 100;
-    int res = poll(m_events.data(), m_events.size(), timeout_ms);
-    for (size_t i = 0; i < m_events.size(); ++i)
+    poll(m_events.data(), m_events.size(), timeout_ms);
+    for (auto& event : m_events)
     {
-        if ((res > 0 and m_events[i].revents) or
-            contains(m_forced, m_events[i].fd))
-            m_handlers[m_events[i].fd](m_events[i].fd);
+        const int fd = event.fd;
+        if ((event.revents or contains(m_forced, fd)) and not contains(m_unwatched, fd))
+            m_handlers[fd](fd);
     }
+
+    // remove unwatched.
+    for (auto fd : m_unwatched)
+    {
+        auto it = std::find_if(m_events.begin(), m_events.end(),
+                               [fd](pollfd& p) { return p.fd == fd; });
+        m_events.erase(it);
+        m_handlers.erase(fd);
+    }
+    m_unwatched.clear();
     m_forced.clear();
 }
 

@@ -260,8 +260,6 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         {
             assert(buffer->flags() & Buffer::Flags::Fifo);
             buffer->flags() &= ~Buffer::Flags::Fifo;
-            // after that this closure will be dead, do not access
-            // any captured data.
             EventManager::instance().unwatch(fd);
             close(fd);
         }

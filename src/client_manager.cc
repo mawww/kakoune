@@ -26,8 +26,6 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         catch (Kakoune::client_removed&)
         {
             ClientManager::instance().remove_client_by_context(*context);
-            // do not forget, after this line, the current closure
-            // is dead, do not access captured data.
             EventManager::instance().unwatch(fd);
             close(fd);
         }
