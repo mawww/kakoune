@@ -54,9 +54,9 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
         return buffer.iterator_at_line_end(sel.end()-1);
     case InsertMode::OpenLineBelow:
     {
-        auto pos = buffer.iterator_at_line_end(sel.end() - 1);
-        buffer.insert(pos, "\n");
-        return buffer.iterator_at_line_begin(pos.line() + 1);
+        LineCount line = (sel.end() - 1).line();
+        buffer.insert(buffer.iterator_at_line_end(line), "\n");
+        return buffer.iterator_at_line_begin(line + 1);
     }
     case InsertMode::OpenLineAbove:
     {
