@@ -41,6 +41,7 @@ public:
 private:
     friend class InputMode;
     std::unique_ptr<InputMode> m_mode;
+    std::vector<std::unique_ptr<InputMode>> m_mode_trash;
 };
 
 struct prompt_aborted {};

@@ -48,13 +48,9 @@ public:
             if (it != keymap.end())
             {
                 context.numeric_param() = m_count;
-                // it's important to do that before calling the command,
-                // as we may die during the command execution.
-                m_count = 0;
                 it->second(context);
             }
-            else
-                m_count = 0;
+            m_count = 0;
         }
     }
 
@@ -154,11 +150,9 @@ public:
         {
             context.ui().menu_hide();
             context.ui().print_status("");
-            // save callback as reset_normal_mode will delete this
-            MenuCallback callback = std::move(m_callback);
-            int selected = m_selected - m_choices.begin();
             reset_normal_mode();
-            callback(selected, context);
+            int selected = m_selected - m_choices.begin();
+            m_callback(selected, context);
             return;
         }
         else if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
@@ -258,13 +252,10 @@ public:
             history.push_back(line);
             context.ui().print_status("");
             context.ui().menu_hide();
-            // save callback as reset_normal_mode will delete this
-            PromptCallback callback = std::move(m_callback);
-            String result = line;
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
             // may change the mode
-            callback(result, context);
+            m_callback(line, context);
             return;
         }
         else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
@@ -385,10 +376,8 @@ public:
 
     void on_key(const Key& key, Context& context) override
     {
-        // save callback as reset_normal_mode will delete this
-        KeyCallback callback = std::move(m_callback);
         reset_normal_mode();
-        callback(key, context);
+        m_callback(key, context);
    }
 
 private:
@@ -550,7 +539,8 @@ private:
 
 void InputMode::reset_normal_mode()
 {
-     m_input_handler.m_mode.reset(new InputModes::Normal(m_input_handler));
+    m_input_handler.m_mode_trash.emplace_back(std::move(m_input_handler.m_mode));
+    m_input_handler.m_mode.reset(new InputModes::Normal(m_input_handler));
 }
 
 
@@ -566,6 +556,7 @@ InputHandler::~InputHandler()
 void InputHandler::insert(Context& context, InsertMode mode)
 {
     assert(&context.input_handler() == this);
+    m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Insert(context, mode));
 }
 
@@ -580,6 +571,7 @@ void InputHandler::repeat_last_insert(Context& context)
     swap(keys, last_insert.second);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
+    m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Insert(context, last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key, context);
@@ -590,6 +582,7 @@ void InputHandler::prompt(const String& prompt, Completer completer,
                     PromptCallback callback, Context& context)
 {
     assert(&context.input_handler() == this);
+    m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Prompt(context, prompt, completer, callback));
 }
 
@@ -597,11 +590,13 @@ void InputHandler::menu(const memoryview<String>& choices,
                   MenuCallback callback, Context& context)
 {
     assert(&context.input_handler() == this);
+    m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Menu(context, choices, callback));
 }
 
 void InputHandler::on_next_key(KeyCallback callback)
 {
+    m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::NextKey(*this, callback));
 }
 
@@ -612,11 +607,13 @@ bool is_valid(const Key& key)
 
 void InputHandler::handle_available_inputs(Context& context)
 {
+    m_mode_trash.clear();
     while (context.ui().is_key_available())
     {
         Key key = context.ui().get_key();
         if (is_valid(key))
             m_mode->on_key(key, context);
+        m_mode_trash.clear();
     }
 }
 
