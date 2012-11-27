@@ -22,6 +22,9 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
 {
     BufferManager::instance().register_buffer(*this);
 
+    if (lines.empty())
+        lines.emplace_back("\n");
+
     ByteCount pos = 0;
     m_lines.reserve(lines.size());
     for (auto& line : lines)
