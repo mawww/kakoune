@@ -35,10 +35,10 @@ public:
     void force_signal(int fd);
 
 private:
-    std::vector<pollfd>                   m_events;
-    std::unordered_map<int, EventHandler> m_handlers;
-    std::vector<int>                      m_forced;
-    std::vector<int>                      m_unwatched;
+    std::vector<pollfd>                        m_events;
+    std::vector<std::unique_ptr<EventHandler>> m_handlers;
+    std::vector<std::unique_ptr<EventHandler>> m_handlers_trash;
+    std::vector<int>                           m_forced;
 };
 
 }
