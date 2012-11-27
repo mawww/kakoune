@@ -78,6 +78,9 @@ static void set_color(Color fg_color, Color bg_color)
 static NCursesUI* signal_ui = nullptr;
 void on_term_resize(int)
 {
+    if (not signal_ui)
+        return;
+
     int fd = open("/dev/tty", O_RDWR);
     winsize ws;
     if (fd == -1 or ioctl(fd, TIOCGWINSZ, (void*)&ws) != 0)
@@ -123,6 +126,8 @@ NCursesUI::NCursesUI()
 NCursesUI::~NCursesUI()
 {
     endwin();
+    assert(signal_ui == this);
+    signal_ui = nullptr;
 }
 
 static void redraw(WINDOW* menu_win)
