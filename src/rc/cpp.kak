@@ -19,7 +19,7 @@ hook global WinSetOption filetype=cpp %~
     addhl -group cpp-highlight regex "(\`|(?<=\n))\h*#\h*[^\n]*" 0:macro
     addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
     addfilter group cpp-filters
-    addfilter -group cpp-filters regex ^(\h+)[^\n]*[^([{]\h* \n \n$1
+    addfilter -group cpp-filters regex ^(\h+)([^\n]*[^([{]\h*|$) \n \n$1
     addfilter -group cpp-filters regex ^(\h*)[^\n]*[([{]\h* \n '\n$1    '
     addfilter -group cpp-filters cleanup_whitespaces
     hook window InsertEnd .* %{ exec xs\h+(?=\n)<ret>d }
