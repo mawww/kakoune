@@ -7,6 +7,8 @@ using namespace Kakoune;
 
 void test_buffer()
 {
+    Buffer empty_buffer("empty", Buffer::Flags::None, {});
+
     Buffer buffer("test", Buffer::Flags::None, { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" });
     assert(buffer.line_count() == 4);
 
