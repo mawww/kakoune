@@ -98,6 +98,7 @@ GlobalOptions::GlobalOptions()
     set_option("eolformat", Option("lf"));
     set_option("BOM", Option("no"));
     set_option("complete_prefix", Option(1));
+    set_option("ignored_files", Option(R"(^(\..*|.*\.(o|so|a))$)"));
 }
 
 }

@@ -3,9 +3,12 @@
 #include "buffer_manager.hh"
 #include "utils.hh"
 #include "file.hh"
+#include "context.hh"
 
 #include <dirent.h>
 #include <algorithm>
+
+#include <boost/regex.hpp>
 
 namespace Kakoune
 {
@@ -18,6 +21,11 @@ CandidateList complete_filename(const Context& context,
     String dirname = "./";
     String dirprefix;
     String fileprefix = real_prefix;
+
+    String ignored_files = context.options()["ignored_files"].as_string();
+    boost::regex ignored_files_regex;
+    if (not ignored_files.empty())
+         ignored_files_regex = boost::regex(ignored_files.c_str());
 
     ByteCount dir_end = -1;
     for (ByteCount i = 0; i < real_prefix.length(); ++i)
@@ -43,6 +51,10 @@ CandidateList complete_filename(const Context& context,
     {
         String filename = entry->d_name;
         if (filename.empty())
+            continue;
+
+        if (not ignored_files.empty() and
+            boost::regex_match(filename.c_str(), ignored_files_regex))
             continue;
 
         if (filename.substr(0, fileprefix.length()) == fileprefix)
