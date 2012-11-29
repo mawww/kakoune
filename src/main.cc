@@ -30,6 +30,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 using namespace Kakoune;
 using namespace std::placeholders;
@@ -514,7 +516,8 @@ struct Server : public Singleton<Server>
     {
         m_filename = "/tmp/kak-" + int_to_str(getpid());
 
-        m_listen_sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        m_listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        fcntl(m_listen_sock, F_SETFD, FD_CLOEXEC);
         sockaddr_un addr;
         addr.sun_family = AF_UNIX;
         strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
@@ -531,6 +534,7 @@ struct Server : public Singleton<Server>
             int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
             if (sock == -1)
                 throw runtime_error("accept failed");
+            fcntl(sock, F_SETFD, FD_CLOEXEC);
 
             auto& buffer = *BufferManager::instance().begin();
             RemoteUI* ui = new RemoteUI{sock};
@@ -619,7 +623,8 @@ RemoteClient* connect_to(const String& pid)
 {
     auto filename = "/tmp/kak-" + pid;
 
-    int sock = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
