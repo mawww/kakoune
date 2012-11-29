@@ -227,6 +227,24 @@ private:
     LineEditor   m_filter_editor;
 };
 
+String common_prefix(const memoryview<String>& strings)
+{
+    String res;
+    if (strings.empty())
+        return res;
+    res = strings[0];
+    for (auto& str : strings)
+    {
+        ByteCount len = std::min(res.length(), str.length());
+        ByteCount common_len = 0;
+        while (common_len < len and str[common_len] == res[common_len])
+            ++common_len;
+        if (common_len != res.length())
+            res = res.substr(0, common_len);
+    }
+    return res;
+}
+
 class Prompt : public InputMode
 {
 public:
@@ -332,15 +350,25 @@ public:
                 context.ui().menu_hide();
                 DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
                 context.ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
-                String prefix = line.substr(m_completions.start,
-                                            m_completions.end - m_completions.start);
-                if (not contains(candidates, prefix))
-                    candidates.push_back(std::move(prefix));
-            }
 
-            if (not reverse and ++m_current_completion >= candidates.size())
+                bool use_common_prefix = context.options()["complete_prefix"].as_int();
+                String prefix = use_common_prefix ?
+                    common_prefix(candidates)
+                  : line.substr(m_completions.start,
+                                m_completions.end - m_completions.start);
+
+                auto it = find(candidates, prefix);
+                if (it == candidates.end())
+                {
+                    m_current_completion = use_common_prefix ? candidates.size() : 0;
+                    candidates.push_back(std::move(prefix));
+                }
+                else
+                    m_current_completion = use_common_prefix ? it - candidates.begin() : 0;
+            }
+            else if (not reverse and ++m_current_completion >= candidates.size())
                 m_current_completion = 0;
-            if (reverse and --m_current_completion < 0)
+            else if (reverse and --m_current_completion < 0)
                 m_current_completion = candidates.size()-1;
 
             const String& completion = candidates[m_current_completion];

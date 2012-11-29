@@ -97,6 +97,7 @@ GlobalOptions::GlobalOptions()
     set_option("indentwidth", Option(4));
     set_option("eolformat", Option("lf"));
     set_option("BOM", Option("no"));
+    set_option("complete_prefix", Option(1));
 }
 
 }
