@@ -602,7 +602,21 @@ void register_registers()
 void create_local_client(const String& file)
 {
     Buffer* buffer = nullptr;
-    UserInterface* ui = new NCursesUI{};
+
+    class LocalNCursesUI : public NCursesUI
+    {
+        ~LocalNCursesUI()
+        {
+            if (not ClientManager::instance().empty() and fork())
+            {
+                this->~NCursesUI();
+                puts("detached from terminal\n");
+                exit(0);
+            }
+        }
+    };
+
+    UserInterface* ui = new LocalNCursesUI{};
     if (not file.empty())
     {
         buffer = create_buffer_from_file(file);
