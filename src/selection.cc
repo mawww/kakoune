@@ -5,15 +5,42 @@
 namespace Kakoune
 {
 
-Selection::Selection(const BufferIterator& first, const BufferIterator& last)
-    : m_first(first), m_last(last)
+void Range::merge_with(const Range& range)
+{
+    if (m_first < m_last)
+        m_first = std::min(m_first, range.m_first);
+    if (m_first > m_last)
+        m_first = std::max(m_first, range.m_first);
+    m_last = range.m_last;
+}
+
+BufferIterator Range::begin() const
+{
+    return std::min(m_first, m_last);
+}
+
+BufferIterator Range::end() const
+{
+    return utf8::next(std::max(m_first, m_last));
+}
+
+Selection::Selection(const BufferIterator& first, const BufferIterator& last,
+                     CaptureList captures)
+    : Range{first, last}, m_captures{std::move(captures)}
 {
     check_invariant();
     register_with_buffer();
 }
 
 Selection::Selection(const Selection& other)
-    : m_first(other.m_first), m_last(other.m_last)
+    : Range(other), m_captures(other.m_captures)
+{
+   register_with_buffer();
+}
+
+Selection::Selection(Selection&& other)
+    : Range{other},
+      m_captures{std::move(other.m_captures)}
 {
    register_with_buffer();
 }
@@ -25,12 +52,13 @@ Selection::~Selection()
 
 Selection& Selection::operator=(const Selection& other)
 {
-   const bool new_buffer = &m_first.buffer() != &other.m_first.buffer();
+   const bool new_buffer = &first().buffer() != &other.first().buffer();
    if (new_buffer)
        unregister_with_buffer();
 
-   m_first    = other.m_first;
-   m_last     = other.m_last;
+   first() = other.first();
+   last()  = other.last();
+   m_captures = other.m_captures;
 
    if (new_buffer)
        register_with_buffer();
@@ -38,23 +66,20 @@ Selection& Selection::operator=(const Selection& other)
    return *this;
 }
 
-BufferIterator Selection::begin() const
+Selection& Selection::operator=(Selection&& other)
 {
-    return std::min(m_first, m_last);
-}
+   const bool new_buffer = &first().buffer() != &other.first().buffer();
+   if (new_buffer)
+       unregister_with_buffer();
 
-BufferIterator Selection::end() const
-{
-    return utf8::next(std::max(m_first, m_last));
-}
+   first() = other.first();
+   last()  = other.last();
+   m_captures = std::move(other.m_captures);
 
-void Selection::merge_with(const Selection& selection)
-{
-    if (m_first < m_last)
-        m_first = std::min(m_first, selection.m_first);
-    if (m_first > m_last)
-        m_first = std::max(m_first, selection.m_first);
-    m_last = selection.m_last;
+   if (new_buffer)
+       register_with_buffer();
+
+   return *this;
 }
 
 static void avoid_eol(BufferIterator& it)
@@ -66,38 +91,38 @@ static void avoid_eol(BufferIterator& it)
 
 void Selection::avoid_eol()
 {
-    Kakoune::avoid_eol(m_first);
-    Kakoune::avoid_eol(m_last);
+    Kakoune::avoid_eol(first());
+    Kakoune::avoid_eol(last());
 }
 
 void Selection::on_insert(const BufferIterator& begin, const BufferIterator& end)
 {
-    m_first.on_insert(begin.coord(), end.coord());
-    m_last.on_insert(begin.coord(), end.coord());
+    first().on_insert(begin.coord(), end.coord());
+    last().on_insert(begin.coord(), end.coord());
     check_invariant();
 }
 
 void Selection::on_erase(const BufferIterator& begin, const BufferIterator& end)
 {
-    m_first.on_erase(begin.coord(), end.coord());
-    m_last.on_erase(begin.coord(), end.coord());
+    first().on_erase(begin.coord(), end.coord());
+    last().on_erase(begin.coord(), end.coord());
     check_invariant();
 }
 
 void Selection::register_with_buffer()
 {
-    m_first.buffer().add_change_listener(*this);
+    first().buffer().add_change_listener(*this);
 }
 
 void Selection::unregister_with_buffer()
 {
-    m_first.buffer().remove_change_listener(*this);
+    first().buffer().remove_change_listener(*this);
 }
 
 void Selection::check_invariant() const
 {
-    assert(utf8::is_character_start(m_first));
-    assert(utf8::is_character_start(m_last));
+    assert(utf8::is_character_start(first()));
+    assert(utf8::is_character_start(last()));
 }
 
 }

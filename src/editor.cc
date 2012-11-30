@@ -25,7 +25,7 @@ void Editor::erase()
     for (auto& sel : m_selections)
     {
         m_buffer->erase(sel.begin(), sel.end());
-        sel.selection.avoid_eol();
+        sel.avoid_eol();
     }
 }
 
@@ -81,9 +81,9 @@ void Editor::insert(const String& string, InsertMode mode)
 
     for (auto& sel : m_selections)
     {
-        BufferIterator pos = prepare_insert(*m_buffer, sel.selection, mode);
+        BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
         m_buffer->insert(pos, string);
-        sel.selection.avoid_eol();
+        sel.avoid_eol();
     }
 }
 
@@ -101,7 +101,7 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 
     for (size_t i = 0; i < selections().size(); ++i)
     {
-        Selection& sel = m_selections[i].selection;
+        Selection& sel = m_selections[i];
         BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
         size_t index = std::min(i, strings.size()-1);
         m_buffer->insert(pos, strings[index]);
@@ -118,7 +118,7 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-static void merge_overlapping(SelectionAndCapturesList& selections)
+static void merge_overlapping(SelectionList& selections)
 {
     for (size_t i = 0; i < selections.size(); ++i)
     {
@@ -126,7 +126,7 @@ static void merge_overlapping(SelectionAndCapturesList& selections)
         {
             if (overlaps(selections[i], selections[j]))
             {
-                selections[i].selection.merge_with(selections[j].selection);
+                selections[i].merge_with(selections[j]);
                 selections.erase(selections.begin() + j);
             }
             else
@@ -144,8 +144,8 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
         auto limit = offset < 0 ? buffer().iterator_at_line_begin(last)
                                 : utf8::previous(buffer().iterator_at_line_end(last));
         last = utf8::advance(last, limit, offset);
-        sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
-        sel.selection.avoid_eol();
+        sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
+        sel.avoid_eol();
     }
     merge_overlapping(m_selections);
 }
@@ -158,8 +158,8 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         BufferCoord pos = sel.last().coord();
         pos.line += offset;
         BufferIterator last = utf8::finish(m_buffer->iterator_at(pos, true));
-        sel.selection = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
-        sel.selection.avoid_eol();
+        sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
+        sel.avoid_eol();
     }
     merge_overlapping(m_selections);
 }
@@ -181,7 +181,7 @@ void Editor::flip_selections()
 {
     check_invariant();
     for (auto& sel : m_selections)
-        std::swap(sel.selection.first(), sel.selection.last());
+        std::swap(sel.first(), sel.last());
 }
 
 void Editor::keep_selection(int index)
@@ -190,7 +190,7 @@ void Editor::keep_selection(int index)
 
     if (index < m_selections.size())
     {
-        SelectionAndCaptures sel = std::move(m_selections[index]);
+        Selection sel = std::move(m_selections[index]);
         m_selections.clear();
         m_selections.push_back(std::move(sel));
     }
@@ -210,7 +210,7 @@ void Editor::select(const BufferIterator& iterator)
     m_selections.push_back(Selection(iterator, iterator));
 }
 
-void Editor::select(SelectionAndCapturesList selections)
+void Editor::select(SelectionList selections)
 {
     if (selections.empty())
         throw runtime_error("no selections");
@@ -224,23 +224,23 @@ void Editor::select(const Selector& selector, SelectMode mode)
     if (mode == SelectMode::Append)
     {
         auto& sel = m_selections.back();
-        SelectionAndCaptures res = selector(sel.selection);
-        if (res.captures.empty())
-            res.captures = sel.captures;
+        Selection res = selector(sel);
+        if (res.captures().empty())
+            res.captures() = sel.captures();
         m_selections.push_back(res);
     }
     else
     {
         for (auto& sel : m_selections)
         {
-            SelectionAndCaptures res = selector(sel.selection);
+            Selection res = selector(sel);
             if (mode == SelectMode::Extend)
-                sel.selection.merge_with(res.selection);
+                sel.merge_with(res);
             else
-                sel.selection = std::move(res.selection);
+                sel = std::move(res);
 
-            if (not res.captures.empty())
-                sel.captures = std::move(res.captures);
+            if (not res.captures().empty())
+                sel.captures() = std::move(res.captures());
         }
     }
     merge_overlapping(m_selections);
@@ -255,17 +255,18 @@ void Editor::multi_select(const MultiSelector& selector)
 {
     check_invariant();
 
-    SelectionAndCapturesList new_selections;
+    SelectionList new_selections;
     for (auto& sel : m_selections)
     {
-        SelectionAndCapturesList res = selector(sel.selection);
-        for (auto& sel_and_cap : res)
+        SelectionList res = selector(sel);
+        for (auto& new_sel : res)
         {
             // preserve captures when selectors captures nothing.
-            if (sel_and_cap.captures.empty())
-                new_selections.emplace_back(sel_and_cap.selection, sel.captures);
+            if (new_sel.captures().empty())
+                new_selections.emplace_back(new_sel.first(), new_sel.last(),
+                                            sel.captures());
             else
-                new_selections.push_back(std::move(sel_and_cap));
+                new_selections.push_back(std::move(new_sel));
         }
     }
     if (new_selections.empty())
@@ -403,7 +404,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
            --first;
         if (last.underlying_iterator().is_end())
            --last;
-        sel.selection = Selection(first.underlying_iterator(), last.underlying_iterator());
+        sel = Selection(first.underlying_iterator(), last.underlying_iterator());
     }
     if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
     {
@@ -414,7 +415,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             {
                 // special case, the --first line above did nothing, so we need to compensate now
                 if (sel.first() == utf8::next(buffer.begin()))
-                    sel.selection = Selection(buffer.begin(), buffer.begin());
+                    sel = Selection(buffer.begin(), buffer.begin());
             }
         }
     }
@@ -426,7 +427,7 @@ IncrementalInserter::~IncrementalInserter()
     {
         if (m_mode == InsertMode::Append)
             sel = Selection(sel.first(), utf8::previous(sel.last()));
-         sel.selection.avoid_eol();
+         sel.avoid_eol();
     }
 
     m_editor.on_incremental_insertion_end();
@@ -437,7 +438,7 @@ void IncrementalInserter::insert(String content)
     Buffer& buffer = m_editor.buffer();
     for (auto& sel : m_editor.m_selections)
     {
-        m_editor.filters()(buffer, sel.selection, content);
+        m_editor.filters()(buffer, sel, content);
         buffer.insert(sel.last(), content);
     }
 }

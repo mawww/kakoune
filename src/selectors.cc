@@ -84,7 +84,7 @@ Selection utf8_selection(const Utf8Iterator& first, const Utf8Iterator& last)
 typedef boost::regex_iterator<BufferIterator> RegexIterator;
 
 template<bool punctuation_is_word>
-SelectionAndCaptures select_to_next_word(const Selection& selection)
+Selection select_to_next_word(const Selection& selection)
 {
     Utf8Iterator begin = selection.last();
     if (categorize<punctuation_is_word>(*begin) !=
@@ -103,11 +103,11 @@ SelectionAndCaptures select_to_next_word(const Selection& selection)
 
     return utf8_selection(begin, with_end ? end : end-1);
 }
-template SelectionAndCaptures select_to_next_word<false>(const Selection&);
-template SelectionAndCaptures select_to_next_word<true>(const Selection&);
+template Selection select_to_next_word<false>(const Selection&);
+template Selection select_to_next_word<true>(const Selection&);
 
 template<bool punctuation_is_word>
-SelectionAndCaptures select_to_next_word_end(const Selection& selection)
+Selection select_to_next_word_end(const Selection& selection)
 {
     Utf8Iterator begin = selection.last();
     if (categorize<punctuation_is_word>(*begin) !=
@@ -126,11 +126,11 @@ SelectionAndCaptures select_to_next_word_end(const Selection& selection)
 
     return utf8_selection(begin, with_end ? end : end-1);
 }
-template SelectionAndCaptures select_to_next_word_end<false>(const Selection&);
-template SelectionAndCaptures select_to_next_word_end<true>(const Selection&);
+template Selection select_to_next_word_end<false>(const Selection&);
+template Selection select_to_next_word_end<true>(const Selection&);
 
 template<bool punctuation_is_word>
-SelectionAndCaptures select_to_previous_word(const Selection& selection)
+Selection select_to_previous_word(const Selection& selection)
 {
     Utf8Iterator begin = selection.last();
 
@@ -150,10 +150,10 @@ SelectionAndCaptures select_to_previous_word(const Selection& selection)
 
     return utf8_selection(begin, with_end ? end : end+1);
 }
-template SelectionAndCaptures select_to_previous_word<false>(const Selection&);
-template SelectionAndCaptures select_to_previous_word<true>(const Selection&);
+template Selection select_to_previous_word<false>(const Selection&);
+template Selection select_to_previous_word<true>(const Selection&);
 
-SelectionAndCaptures select_line(const Selection& selection)
+Selection select_line(const Selection& selection)
 {
     Utf8Iterator first = selection.last();
     if (*first == '\n' and not is_end(first + 1))
@@ -168,7 +168,7 @@ SelectionAndCaptures select_line(const Selection& selection)
     return utf8_selection(first, last);
 }
 
-SelectionAndCaptures select_matching(const Selection& selection)
+Selection select_matching(const Selection& selection)
 {
     std::vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     Utf8Iterator it = selection.last();
@@ -217,9 +217,9 @@ SelectionAndCaptures select_matching(const Selection& selection)
     return selection;
 }
 
-SelectionAndCaptures select_surrounding(const Selection& selection,
-                                        const CodepointPair& matching,
-                                        bool inside)
+Selection select_surrounding(const Selection& selection,
+                             const CodepointPair& matching,
+                             bool inside)
 {
     int level = 0;
     Utf8Iterator first = selection.last();
@@ -266,8 +266,8 @@ SelectionAndCaptures select_surrounding(const Selection& selection,
     return utf8_selection(first, last);
 }
 
-SelectionAndCaptures select_to(const Selection& selection,
-                               Codepoint c, int count, bool inclusive)
+Selection select_to(const Selection& selection,
+                    Codepoint c, int count, bool inclusive)
 {
     Utf8Iterator begin = selection.last();
     Utf8Iterator end = begin;
@@ -283,8 +283,8 @@ SelectionAndCaptures select_to(const Selection& selection,
     return utf8_selection(begin, inclusive ? end : end-1);
 }
 
-SelectionAndCaptures select_to_reverse(const Selection& selection,
-                                       Codepoint c, int count, bool inclusive)
+Selection select_to_reverse(const Selection& selection,
+                            Codepoint c, int count, bool inclusive)
 {
     Utf8Iterator begin = selection.last();
     Utf8Iterator end = begin;
@@ -300,7 +300,7 @@ SelectionAndCaptures select_to_reverse(const Selection& selection,
     return utf8_selection(begin, inclusive ? end : end+1);
 }
 
-SelectionAndCaptures select_to_eol(const Selection& selection)
+Selection select_to_eol(const Selection& selection)
 {
     Utf8Iterator begin = selection.last();
     Utf8Iterator end = begin + 1;
@@ -308,7 +308,7 @@ SelectionAndCaptures select_to_eol(const Selection& selection)
     return utf8_selection(begin, end-1);
 }
 
-SelectionAndCaptures select_to_eol_reverse(const Selection& selection)
+Selection select_to_eol_reverse(const Selection& selection)
 {
     Utf8Iterator begin = selection.last();
     Utf8Iterator end = begin - 1;
@@ -317,7 +317,7 @@ SelectionAndCaptures select_to_eol_reverse(const Selection& selection)
 }
 
 template<bool punctuation_is_word>
-SelectionAndCaptures select_whole_word(const Selection& selection, bool inner)
+Selection select_whole_word(const Selection& selection, bool inner)
 {
     Utf8Iterator first = selection.last();
     Utf8Iterator last = first;
@@ -341,10 +341,10 @@ SelectionAndCaptures select_whole_word(const Selection& selection, bool inner)
     --last;
     return utf8_selection(first, last);
 }
-template SelectionAndCaptures select_whole_word<false>(const Selection&, bool);
-template SelectionAndCaptures select_whole_word<true>(const Selection&, bool);
+template Selection select_whole_word<false>(const Selection&, bool);
+template Selection select_whole_word<true>(const Selection&, bool);
 
-SelectionAndCaptures select_whole_lines(const Selection& selection)
+Selection select_whole_lines(const Selection& selection)
 {
      // no need to be utf8 aware for is_eol as we only use \n as line seperator
      BufferIterator first = selection.first();
@@ -361,14 +361,13 @@ SelectionAndCaptures select_whole_lines(const Selection& selection)
      return Selection(first, last);
 }
 
-SelectionAndCaptures select_whole_buffer(const Selection& selection)
+Selection select_whole_buffer(const Selection& selection)
 {
     const Buffer& buffer = selection.first().buffer();
     return Selection(buffer.begin(), utf8::previous(buffer.end()));
 }
 
-SelectionAndCaptures select_next_match(const Selection& selection,
-                                       const String& regex)
+Selection select_next_match(const Selection& selection, const String& regex)
 {
     try
     {
@@ -403,7 +402,7 @@ SelectionAndCaptures select_next_match(const Selection& selection,
         if (begin == end)
             ++end;
 
-        return SelectionAndCaptures(begin, utf8::previous(end), std::move(captures));
+        return Selection(begin, utf8::previous(end), std::move(captures));
     }
     catch (boost::regex_error& err)
     {
@@ -411,8 +410,7 @@ SelectionAndCaptures select_next_match(const Selection& selection,
     }
 }
 
-SelectionAndCapturesList select_all_matches(const Selection& selection,
-                                            const String& regex)
+SelectionList select_all_matches(const Selection& selection, const String& regex)
 {
     try
     {
@@ -420,7 +418,7 @@ SelectionAndCapturesList select_all_matches(const Selection& selection,
         RegexIterator re_it(selection.begin(), selection.end(), ex);
         RegexIterator re_end;
 
-        SelectionAndCapturesList result;
+        SelectionList result;
         for (; re_it != re_end; ++re_it)
         {
             BufferIterator begin = (*re_it)[0].first;
@@ -433,9 +431,8 @@ SelectionAndCapturesList select_all_matches(const Selection& selection,
             for (auto& match : *re_it)
                 captures.push_back(String(match.first, match.second));
 
-            result.push_back(SelectionAndCaptures(begin,
-                                                  begin == end ? end : utf8::previous(end),
-                                                  std::move(captures)));
+            result.push_back(Selection(begin, begin == end ? end : utf8::previous(end),
+                                       std::move(captures)));
         }
         return result;
     }
@@ -445,8 +442,8 @@ SelectionAndCapturesList select_all_matches(const Selection& selection,
     }
 }
 
-SelectionAndCapturesList split_selection(const Selection& selection,
-                                         const String& separator_regex)
+SelectionList split_selection(const Selection& selection,
+                              const String& separator_regex)
 {
     try
     {
@@ -455,7 +452,7 @@ SelectionAndCapturesList split_selection(const Selection& selection,
                             boost::regex_constants::match_nosubs);
         RegexIterator re_end;
 
-        SelectionAndCapturesList result;
+        SelectionList result;
         BufferIterator begin = selection.begin();
         for (; re_it != re_end; ++re_it)
         {

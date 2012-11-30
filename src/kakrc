@@ -28,6 +28,7 @@ colalias identifier cyan
 colalias string magenta
 colalias error default,red
 colalias keyword blue
+colalias operator yellow
 colalias attribute green
 colalias comment cyan
 colalias macro magenta

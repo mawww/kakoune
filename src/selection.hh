@@ -6,33 +6,50 @@
 namespace Kakoune
 {
 
-// A Selection holds a buffer range
-//
-// The Selection class manage a (first, last) buffer iterators pair.
-// Selections are oriented, first may be > last, and inclusive.
-// Selection updates it's iterators according to modifications made
-// in the buffer.
-struct Selection : public BufferChangeListener
+// An oriented, inclusive buffer range
+struct Range
 {
-    Selection(const BufferIterator& first, const BufferIterator& last);
-    Selection(const Selection& other);
-    ~Selection();
+public:
+    Range(const BufferIterator& first, const BufferIterator& last)
+        : m_first{first}, m_last{last} {}
 
-    Selection& operator=(const Selection& other);
+    void merge_with(const Range& range);
+
+    BufferIterator& first() { return m_first; }
+    BufferIterator& last() { return m_last; }
+
+    const BufferIterator& first() const { return m_first; }
+    const BufferIterator& last() const { return m_last; }
 
     // returns min(first, last)
     BufferIterator begin() const;
     // returns max(first, last) + 1
     BufferIterator end() const;
 
-    const BufferIterator& first() const { return m_first; }
-    const BufferIterator& last()  const { return m_last; }
+private:
+    BufferIterator m_first;
+    BufferIterator m_last;
+};
 
-    BufferIterator& first() { return m_first; }
-    BufferIterator& last()  { return m_last; }
+using CaptureList = std::vector<String>;
 
-    void merge_with(const Selection& selection);
+// A selection is a Range, associated with a CaptureList
+// that updates itself when the buffer it points to gets modified.
+struct Selection : public Range, public BufferChangeListener
+{
+    Selection(const BufferIterator& first, const BufferIterator& last,
+              CaptureList captures = {});
+    Selection(Selection&& other);
+    Selection(const Selection& other);
+    ~Selection();
+
+    Selection& operator=(const Selection& other);
+    Selection& operator=(Selection&& other);
+
     void avoid_eol();
+
+    CaptureList& captures() { return m_captures; }
+    const CaptureList& captures() const { return m_captures; }
 
 private:
     void on_insert(const BufferIterator& begin,
@@ -42,49 +59,18 @@ private:
 
     void check_invariant() const;
 
-    BufferIterator m_first;
-    BufferIterator m_last;
-
     void register_with_buffer();
     void unregister_with_buffer();
+
+    CaptureList m_captures;
 };
+using SelectionList = std::vector<Selection>;
 
-typedef std::vector<Selection> SelectionList;
-typedef std::vector<String> CaptureList;
-
-// Selections are often associated with a capture list
-// like when they are created from a regex match with
-// capture groups.
-struct SelectionAndCaptures
-{
-    Selection   selection;
-    CaptureList captures;
-
-    SelectionAndCaptures(const BufferIterator& first,
-                         const BufferIterator& last,
-                         CaptureList captures_list = {})
-        : selection(first, last), captures(std::move(captures_list)) {}
-    SelectionAndCaptures(const Selection& sel,
-                         CaptureList captures_list = {})
-        : selection(sel), captures(std::move(captures_list)) {}
-
-    // helper to access the selection
-    BufferIterator begin() const { return selection.begin(); }
-    BufferIterator end() const { return selection.end(); }
-
-    const BufferIterator& first() const { return selection.first(); }
-    const BufferIterator& last() const { return selection.last(); }
-};
-
-inline bool overlaps(const SelectionAndCaptures& lhs,
-                     const SelectionAndCaptures& rhs)
+inline bool overlaps(const Selection& lhs, const Selection& rhs)
 {
     return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
            (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
 }
-
-
-typedef std::vector<SelectionAndCaptures> SelectionAndCapturesList;
 
 }
 

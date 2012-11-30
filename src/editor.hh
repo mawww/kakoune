@@ -39,8 +39,8 @@ enum class InsertMode : unsigned
 class Editor : public SafeCountable
 {
 public:
-    typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
-    typedef std::function<SelectionAndCapturesList (const Selection&)>  MultiSelector;
+    typedef std::function<Selection (const Selection&)> Selector;
+    typedef std::function<SelectionList (const Selection&)>  MultiSelector;
 
     Editor(Buffer& buffer);
     virtual ~Editor() {}
@@ -65,10 +65,10 @@ public:
     void select(const BufferIterator& iterator);
     void select(const Selector& selector,
                 SelectMode mode = SelectMode::Replace);
-    void select(SelectionAndCapturesList selections);
+    void select(SelectionList selections);
     void multi_select(const MultiSelector& selector);
 
-    const SelectionAndCapturesList& selections() const { return m_selections; }
+    const SelectionList& selections() const { return m_selections; }
     std::vector<String>  selections_content() const;
 
     bool undo();
@@ -95,7 +95,7 @@ private:
     virtual void on_incremental_insertion_end() {}
 
     safe_ptr<Buffer>         m_buffer;
-    SelectionAndCapturesList m_selections;
+    SelectionList m_selections;
     FilterGroup   m_filters;
 };
 

@@ -242,7 +242,7 @@ void do_indent(Context& context)
     String indent(' ', width);
 
     Editor& editor = context.editor();
-    SelectionAndCapturesList sels = editor.selections();
+    SelectionList sels = editor.selections();
     auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
     editor.select(select_whole_lines);
     editor.multi_select(std::bind(select_all_matches, _1, "^[^\n]"));
@@ -253,7 +253,7 @@ void do_deindent(Context& context)
 {
     int width = context.options()["indentwidth"].as_int();
     Editor& editor = context.editor();
-    SelectionAndCapturesList sels = editor.selections();
+    SelectionList sels = editor.selections();
     auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
     editor.select(select_whole_lines);
     editor.multi_select(std::bind(select_all_matches, _1,
@@ -266,7 +266,7 @@ void do_select_object(Context& context)
 {
     context.input_handler().on_next_key(
     [](const Key& key, Context& context) {
-        typedef std::function<SelectionAndCaptures (const Selection&)> Selector;
+        typedef std::function<Selection (const Selection&)> Selector;
         static const std::unordered_map<Key, Selector> key_to_selector =
         {
             { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, std::pair<char, char>{ '(', ')' }, inner) },
@@ -376,7 +376,7 @@ void jump(Context& context)
         auto& manager = ClientManager::instance();
         context.change_editor(manager.get_unused_window_for_buffer(buffer));
     }
-    context.editor().select(SelectionAndCapturesList{ jump });
+    context.editor().select(SelectionList{ jump });
 }
 
 String runtime_directory()
@@ -592,8 +592,8 @@ void register_registers()
          register_manager.register_dynamic_register('0'+i,
               [i](const Context& context) {
                   std::vector<String> result;
-                  for (auto& sel_and_cap : context.editor().selections())
-                      result.emplace_back(i < sel_and_cap.captures.size() ? sel_and_cap.captures[i] : "");
+                  for (auto& sel : context.editor().selections())
+                      result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
                   return result;
               });
     }

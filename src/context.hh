@@ -99,7 +99,7 @@ struct Context
 
     void push_jump()
     {
-        const SelectionAndCaptures& jump = editor().selections().back();
+        const Selection& jump = editor().selections().back();
         if (m_current_jump != m_jump_list.end())
         {
             auto begin = m_current_jump;
@@ -115,7 +115,7 @@ struct Context
         m_current_jump = m_jump_list.end();
     }
 
-    SelectionAndCaptures jump_forward()
+    Selection jump_forward()
     {
         if (m_current_jump != m_jump_list.end() and
             m_current_jump + 1 != m_jump_list.end())
@@ -123,7 +123,7 @@ struct Context
         throw runtime_error("no next jump");
     }
 
-    SelectionAndCaptures jump_backward()
+    Selection jump_backward()
     {
         if (m_current_jump != m_jump_list.begin())
         {
@@ -164,8 +164,8 @@ private:
     Insertion m_last_insert = {InsertMode::Insert, {}};
     int m_numeric_param = 0;
 
-    SelectionAndCapturesList           m_jump_list;
-    SelectionAndCapturesList::iterator m_current_jump = m_jump_list.begin();
+    SelectionList           m_jump_list;
+    SelectionList::iterator m_current_jump = m_jump_list.begin();
 };
 
 }
