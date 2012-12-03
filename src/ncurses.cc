@@ -75,20 +75,9 @@ static void set_color(Color fg_color, Color bg_color)
     }
 }
 
-static NCursesUI* signal_ui = nullptr;
 void on_term_resize(int)
 {
-    if (not signal_ui)
-        return;
-
-    int fd = open("/dev/tty", O_RDWR);
-    winsize ws;
-    if (fd == -1 or ioctl(fd, TIOCGWINSZ, (void*)&ws) != 0)
-        return;
-    close(fd);
-    resizeterm(ws.ws_row, ws.ws_col);
     ungetch(KEY_RESIZE);
-    signal_ui->update_dimensions();
     EventManager::instance().force_signal(0);
 }
 
@@ -115,19 +104,17 @@ NCursesUI::NCursesUI()
     m_menu_fg = get_color_pair(Color::Blue, Color::Cyan);
     m_menu_bg = get_color_pair(Color::Cyan, Color::Blue);
 
-    update_dimensions();
-
-    assert(signal_ui == nullptr);
-    signal_ui = this;
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, on_sigint);
+
+    update_dimensions();
 }
 
 NCursesUI::~NCursesUI()
 {
     endwin();
-    assert(signal_ui == this);
-    signal_ui = nullptr;
+    signal(SIGWINCH, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
 }
 
 static void redraw(WINDOW* menu_win)
@@ -238,10 +225,10 @@ bool NCursesUI::is_key_available()
 
 Key NCursesUI::get_key()
 {
-    const unsigned c = getch();
+    const int c = getch();
     if (c > 0 and c < 27)
     {
-        return {Key::Modifiers::Control, c - 1 + 'a'};
+        return {Key::Modifiers::Control, Codepoint(c) - 1 + 'a'};
     }
     else if (c == 27)
     {
@@ -252,6 +239,18 @@ Key NCursesUI::get_key()
             return {Key::Modifiers::Alt, new_c};
         else
             return Key::Escape;
+    }
+    else if (c == KEY_RESIZE)
+    {
+        int fd = open("/dev/tty", O_RDWR);
+        winsize ws;
+        if (fd != -1 and ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
+        {
+            close(fd);
+            resizeterm(ws.ws_row, ws.ws_col);
+            update_dimensions();
+        }
+        return Key::Invalid;
     }
     else switch (c)
     {
@@ -265,7 +264,7 @@ Key NCursesUI::get_key()
     case KEY_BTAB: return Key::BackTab;
     }
 
-    if (c < 256)
+    if (c >= 0 and c < 256)
     {
        ungetch(c);
        return utf8::codepoint(getch_iterator{});
