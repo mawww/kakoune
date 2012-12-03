@@ -95,6 +95,33 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_windows.erase(end, m_windows.end());
 }
 
+void ClientManager::set_client_name(Context& context, String name)
+{
+    auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
+                                 { return client->name == name; });
+    if (it != m_clients.end() and &(*it)->context != &context)
+        throw runtime_error("name not unique: " + name);
+
+    for (auto& client : m_clients)
+    {
+        if (&client->context == &context)
+        {
+            client->name = std::move(name);
+            return;
+        }
+    }
+    throw runtime_error("no client for current context");
+}
+
+Context& ClientManager::get_client_context(const String& name)
+{
+    auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
+                                 { return client->name == name; });
+    if (it != m_clients.end())
+        return (*it)->context;
+    throw runtime_error("no client named: " + name);
+}
+
 void ClientManager::redraw_clients() const
 {
     for (auto& client : m_clients)

@@ -149,6 +149,13 @@ auto find(Container& container, const T& value) -> decltype(container.begin())
 }
 
 template<typename Container, typename T>
+auto find_if(Container& container, T op) -> decltype(container.begin())
+{
+    return std::find_if(container.begin(), container.end(), op);
+}
+
+
+template<typename Container, typename T>
 bool contains(const Container& container, const T& value)
 {
     return find(container, value) != container.end();

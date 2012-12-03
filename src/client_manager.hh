@@ -22,6 +22,9 @@ public:
     void    ensure_no_client_uses_buffer(Buffer& buffer);
 
     void redraw_clients() const;
+
+    void     set_client_name(Context& context, String name);
+    Context& get_client_context(const String& name);
 private:
     void remove_client_by_context(Context& context);
 
@@ -36,6 +39,7 @@ private:
         std::unique_ptr<UserInterface> user_interface;
         InputHandler  input_handler;
         Context       context;
+        String        name;
     };
 
     std::vector<std::unique_ptr<Client>> m_clients;
