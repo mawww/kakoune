@@ -19,6 +19,7 @@ using EventHandler = std::function<void (int fd)>;
 class EventManager : public Singleton<EventManager>
 {
 public:
+    EventManager();
     // Watch the given file descriptor, when data becomes
     // ready, handler will be called with fd as parameter.
     // It is an error to register multiple handlers on the
