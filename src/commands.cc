@@ -359,7 +359,7 @@ void quit(const CommandParameters& params, Context& context)
         std::vector<String> names;
         for (auto& buffer : BufferManager::instance())
         {
-            if (buffer->flags() != Buffer::Flags::File and buffer->is_modified())
+            if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
                 names.push_back(buffer->name());
         }
         if (not names.empty())
