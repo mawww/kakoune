@@ -288,6 +288,10 @@ void RemoteClient::process_next_message()
 
 void RemoteClient::write_next_key()
 {
+    // read key before checking dimensions
+    // so that get_key may handle a resize event
+    Key key = m_ui->get_key();
+
     DisplayCoord dimensions = m_ui->dimensions();
     Message msg(m_socket);
     if (dimensions != m_dimensions)
@@ -296,7 +300,7 @@ void RemoteClient::write_next_key()
         Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) | (int)dimensions.column) };
         write(msg, key);
     }
-    write(msg, m_ui->get_key());
+    write(msg, key);
 }
 
 }
