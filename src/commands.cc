@@ -706,17 +706,38 @@ void exec_keys(const KeyList& keys, Context& context)
 
 void exec_string(const CommandParameters& params, Context& context)
 {
-    if (params.empty())
+    ParametersParser parser(params, { { "client", true } });
+    if (parser.positional_count() == 0)
         throw wrong_argument_count();
 
     KeyList keys;
-    for (auto& param : params)
+    for (auto& param : parser)
     {
         KeyList param_keys = parse_keys(param);
         keys.insert(keys.end(), param_keys.begin(), param_keys.end());
     }
 
-    exec_keys(keys, context);
+
+    Context& keys_context = parser.has_option("client") ?
+        ClientManager::instance().get_client_context(parser.option_value("client"))
+      : context;
+    exec_keys(keys, keys_context);
+}
+
+void eval_string(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, { { "client", true } });
+    if (parser.positional_count() == 0)
+        throw wrong_argument_count();
+
+    String command;
+    for (auto& param : parser)
+        command += param + " ";
+
+    Context& command_context = parser.has_option("client") ?
+        ClientManager::instance().get_client_context(parser.option_value("client"))
+      : context;
+    CommandManager::instance().execute(command, command_context);
 }
 
 void menu(const CommandParameters& params, Context& context)
@@ -868,6 +889,7 @@ void register_commands()
     cm.register_command("source", exec_commands_in_file, filename_completer);
 
     cm.register_command("exec", exec_string);
+    cm.register_command("eval", eval_string);
     cm.register_command("menu", menu);
     cm.register_command("try",  try_catch);
 
