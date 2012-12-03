@@ -16,8 +16,8 @@ Medium Priority
 
 * configurable insert mode completion support
 
-* File loading optimizations: loading big files is sloooooooow
-  take a look at mmap
-
 * pasting big chunks of text from the terminal is slooooow as well
   optimize that.
+
+* Support for naming clients, and executing commands in another client
+  (so that we can define a client as target for make and grep output)
