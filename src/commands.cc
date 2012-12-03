@@ -775,6 +775,14 @@ void define_color_alias(const CommandParameters& params, Context& context)
         parser[0], parser[1], parser.has_option("allow-override"));
 }
 
+void set_client_name(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, {});
+    if (parser.positional_count() != 1)
+        throw wrong_argument_count();
+    ClientManager::instance().set_client_name(context, params[0]);
+}
+
 }
 
 void register_commands()
@@ -889,6 +897,7 @@ void register_commands()
                          }));
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);
+    cm.register_commands({"name"}, set_client_name);
 }
 
 }
