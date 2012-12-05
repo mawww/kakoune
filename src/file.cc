@@ -83,6 +83,11 @@ Buffer* create_buffer_from_file(const String& filename)
     }
     struct stat st;
     fstat(fd, &st);
+    if (S_ISDIR(st.st_mode))
+    {
+        close(fd);
+        throw file_access_error(filename, "is a directory");
+    }
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     auto cleanup = on_scope_end([&]{ munmap((void*)data, st.st_size); close(fd); });
 
