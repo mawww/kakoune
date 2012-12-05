@@ -627,7 +627,7 @@ void create_local_client(const String& file)
         }
     }
     else
-        buffer = new Buffer("*scratch*", Buffer::Flags::NoUndo);
+        buffer = new Buffer("*scratch*", Buffer::Flags::None);
 
     ClientManager::instance().create_client(
         std::unique_ptr<UserInterface>{ui}, *buffer, 0);
