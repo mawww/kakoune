@@ -13,7 +13,14 @@ class Editor;
 class Context;
 
 using MenuCallback = std::function<void (int, Context&)>;
-using PromptCallback = std::function<void (const String&, Context&)>;
+
+enum class PromptEvent
+{
+    Change,
+    Abort,
+    Validate
+};
+using PromptCallback = std::function<void (const String&, PromptEvent, Context&)>;
 using KeyCallback = std::function<void (const Key&, Context&)>;
 
 class InputMode;

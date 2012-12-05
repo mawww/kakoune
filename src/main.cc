@@ -107,15 +107,20 @@ void do_command(Context& context)
 {
     context.input_handler().prompt(
         ":", std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
-        [](const String& cmdline, Context& context) { CommandManager::instance().execute(cmdline, context); },
-        context);
+        [](const String& cmdline, PromptEvent event, Context& context) {
+             if (event == PromptEvent::Validate)
+                 CommandManager::instance().execute(cmdline, context);
+        }, context);
 }
 
 void do_pipe(Context& context)
 {
     context.input_handler().prompt("|", complete_nothing,
-        [](const String& cmdline, Context& context)
+        [](const String& cmdline, PromptEvent event, Context& context)
         {
+            if (event != PromptEvent::Validate)
+                return;
+
             Editor& editor = context.editor();
             std::vector<String> strings;
             for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
@@ -129,14 +134,22 @@ void do_pipe(Context& context)
 template<SelectMode mode>
 void do_search(Context& context)
 {
+    SelectionList selections = context.editor().selections();
     context.input_handler().prompt("/", complete_nothing,
-        [](const String& str, Context& context) {
-            String ex = str;
-            if (ex.empty())
-                ex = RegisterManager::instance()['/'].values(context)[0];
-            else
-                RegisterManager::instance()['/'] = ex;
+        [selections](const String& str, PromptEvent event, Context& context) {
+            context.editor().select(selections);
 
+            if (str.empty() or event == PromptEvent::Abort)
+                return;
+
+            String ex = str;
+            if (event == PromptEvent::Validate)
+            {
+                if (ex.empty())
+                    ex = RegisterManager::instance()['/'].values(context)[0];
+                else
+                    RegisterManager::instance()['/'] = ex;
+            }
             context.editor().select(std::bind(select_next_match, _1, ex), mode);
         }, context);
 }
@@ -212,17 +225,19 @@ void do_paste(Context& context)
 void do_select_regex(Context& context)
 {
     context.input_handler().prompt("select: ", complete_nothing,
-        [](const String& ex, Context& context)
-        { context.editor().multi_select(std::bind(select_all_matches, _1, ex)); },
-        context);
+        [](const String& ex, PromptEvent event, Context& context) {
+            if (event == PromptEvent::Validate)
+                context.editor().multi_select(std::bind(select_all_matches, _1, ex));
+        }, context);
 }
 
 void do_split_regex(Context& context)
 {
     context.input_handler().prompt("split: ", complete_nothing,
-        [](const String& ex, Context& context)
-        { context.editor().multi_select(std::bind(split_selection, _1, ex)); },
-        context);
+        [](const String& ex, PromptEvent event, Context& context) {
+            if (event == PromptEvent::Validate)
+                context.editor().multi_select(std::bind(split_selection, _1, ex));
+        }, context);
 }
 
 void do_join(Context& context)

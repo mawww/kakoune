@@ -280,7 +280,7 @@ public:
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
             // may change the mode
-            m_callback(line, context);
+            m_callback(line, PromptEvent::Validate, context);
             return;
         }
         else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
@@ -288,6 +288,7 @@ public:
             context.ui().print_status("");
             context.ui().menu_hide();
             reset_normal_mode();
+            m_callback(line, PromptEvent::Abort, context);
             return;
         }
         else if (key == Key{Key::Modifiers::Control, 'r'})
@@ -385,6 +386,7 @@ public:
         }
         context.ui().print_status(m_prompt + line,
                                   m_prompt.char_length() + m_line_editor.cursor_pos());
+        m_callback(line, PromptEvent::Change, context);
     }
 
 private:
