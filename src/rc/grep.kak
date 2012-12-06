@@ -1,8 +1,14 @@
+setg grepcmd 'grep -RHn'
+
 def -shell-params -file-completion \
     grep %{ %sh{
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
-     ( grep -PHn "$@" >& ${output} ) >& /dev/null < /dev/null &
+     if (( $# > 0 )); then
+         ( ${kak_opt_grepcmd} "$@" >& ${output} ) >& /dev/null < /dev/null &
+     else
+         ( ${kak_opt_grepcmd} "${kak_selection}" >& ${output} ) >& /dev/null < /dev/null &
+     fi
      echo "try %{ db *grep* } catch %{ }
            edit -fifo ${output} *grep*
            setb filetype grep
@@ -16,4 +22,4 @@ hook global WinSetOption filetype=grep %{
 
 hook global WinSetOption filetype=(?!grep).* %{ rmhl grep-highlight; }
 
-def gjump %{ exec 'xs^([^:]+):(\d+)<ret>'; edit %reg{1} %reg{2} }
+def jump %{ exec 'xs^([^:]+):(\d+):(\d+)?<ret>'; edit %reg{1} %reg{2} %reg{3} }
