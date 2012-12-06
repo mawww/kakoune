@@ -11,13 +11,13 @@ def -shell-params runtime %{ %sh{
     else
        localconfdir="$HOME/.config/kak"
     fi
-    if [[ -f "${localconfdir}/kakrc" ]]; then
-        echo "source '${localconfdir}/kakrc'"
-    fi
     if [[ -d "${localconfdir}/autoload" ]]; then
         for rcfile in ${localconfdir}/autoload/*; do
             echo "try %{ source '${rcfile}' } catch %{ }";
         done
+    fi
+    if [[ -f "${localconfdir}/kakrc" ]]; then
+        echo "source '${localconfdir}/kakrc'"
     fi
 }
 
