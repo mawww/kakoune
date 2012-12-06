@@ -1,10 +1,9 @@
 def -shell-params -file-completion \
-    grep %{ echo grep in progress, please wait...; %sh{
+    grep %{ %sh{
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      ( grep -PHn "$@" >& ${output} ) >& /dev/null < /dev/null &
-     echo "echo
-           try %{ db *grep* } catch %{ }
+     echo "try %{ db *grep* } catch %{ }
            edit -fifo ${output} *grep*
            setb filetype grep
            hook buffer BufClose .* %{ %sh{ rm -r $(dirname ${output}) } }"

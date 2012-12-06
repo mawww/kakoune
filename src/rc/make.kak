@@ -1,9 +1,8 @@
-def -shell-params make %{ echo make in progress, please wait...; %sh{
+def -shell-params make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( make $@ >& ${output} ) >& /dev/null < /dev/null &
-     echo "echo
-           try %{ db *make* } catch %{ }
+     echo "try %{ db *make* } catch %{ }
            edit -fifo ${output} *make*
            setb filetype make
            hook buffer BufClose .* %{ %sh{ rm -r $(dirname ${output}) } }"
@@ -11,9 +10,9 @@ def -shell-params make %{ echo make in progress, please wait...; %sh{
 
 hook global WinSetOption filetype=make %{
     addhl group make-highlight
-    addhl -group make-highlight regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?[^\n]*" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+    addhl -group make-highlight regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 }
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make-highlight; }
 
-def errjump %{ exec 'xs^([^:]+):(\d+)(?::(\d+))?:([^\n]+)\n<ret>'; edit %reg{1} %reg{2} %reg{3}; echo %reg{4} }
+def errjump %{ exec 'xs^([^:\n]+):(\d+)(?::(\d+))?:(.*?)$<ret>'; edit %reg{1} %reg{2} %reg{3}; echo %reg{4} }
