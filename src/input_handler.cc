@@ -353,10 +353,10 @@ public:
                 context.ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
 
                 bool use_common_prefix = context.options()["complete_prefix"].as_int();
-                String prefix = use_common_prefix ?
-                    common_prefix(candidates)
-                  : line.substr(m_completions.start,
-                                m_completions.end - m_completions.start);
+                String prefix = use_common_prefix ? common_prefix(candidates) : String();
+                if (m_completions.end - m_completions.start > prefix.length())
+                    prefix = line.substr(m_completions.start,
+                                         m_completions.end - m_completions.start);
 
                 auto it = find(candidates, prefix);
                 if (it == candidates.end())
