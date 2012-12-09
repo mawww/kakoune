@@ -251,6 +251,17 @@ void delete_buffer(const CommandParameters& params, Context& context)
     delete buffer;
 }
 
+template<typename Group>
+Group& get_group(Group& root, const String& group_path)
+{
+    auto it = find(group_path, '/');
+    Group& group = root.get_group(String(group_path.begin(), it));
+    if (it != group_path.end())
+        return get_group(group, String(it+1, group_path.end()));
+    else
+        return group;
+}
+
 void add_highlighter(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } });
@@ -267,7 +278,7 @@ void add_highlighter(const CommandParameters& params, Context& context)
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
-       window.highlighters().get_group(parser.option_value("group"))
+       get_group(window.highlighters(), parser.option_value("group"))
      : window.highlighters();
 
     auto& factory = registry[name];
@@ -282,7 +293,7 @@ void rm_highlighter(const CommandParameters& params, Context& context)
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
-       window.highlighters().get_group(parser.option_value("group"))
+       get_group(window.highlighters(), parser.option_value("group"))
      : window.highlighters();
 
     group.remove(parser[0]);
@@ -304,7 +315,7 @@ void add_filter(const CommandParameters& params, Context& context)
 
     Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
-       editor.filters().get_group(parser.option_value("group"))
+       get_group(editor.filters(), parser.option_value("group"))
      : editor.filters();
 
     auto& factory = registry[name];
@@ -319,7 +330,7 @@ void rm_filter(const CommandParameters& params, Context& context)
 
     Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
-       editor.filters().get_group(parser.option_value("group"))
+       get_group(editor.filters(), parser.option_value("group"))
      : editor.filters();
 
     group.remove(parser[0]);
@@ -670,7 +681,7 @@ void register_commands()
                              if (token_to_complete == 1 and params[0] == "-group")
                                  return w.highlighters().complete_group_id(arg, pos_in_token);
                              else if (token_to_complete == 2 and params[0] == "-group")
-                                 return w.highlighters().get_group(params[1]).complete_id(arg, pos_in_token);
+                                 return get_group(w.highlighters(), params[1]).complete_id(arg, pos_in_token);
                              else
                                  return w.highlighters().complete_id(arg, pos_in_token);
                          });
@@ -698,7 +709,7 @@ void register_commands()
                              if (token_to_complete == 1 and params[0] == "-group")
                                  return w.filters().complete_group_id(arg, pos_in_token);
                              else if (token_to_complete == 2 and params[0] == "-group")
-                                 return w.filters().get_group(params[1]).complete_id(arg, pos_in_token);
+                                 return get_group(w.filters(), params[1]).complete_id(arg, pos_in_token);
                              else
                                  return w.filters().complete_id(arg, pos_in_token);
                          });
