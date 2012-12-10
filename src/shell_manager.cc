@@ -1,6 +1,7 @@
 #include "shell_manager.hh"
 
 #include "debug.hh"
+#include "context.hh"
 
 #include <cstring>
 #include <sys/types.h>
@@ -116,14 +117,15 @@ String ShellManager::pipe(const String& input,
 
             ++it;
         }
-        std::vector<const char*> execparams = { "sh", "-c", cmdline.c_str() };
+        String shell = context.options()["shell"].as_string();
+        std::vector<const char*> execparams = { shell.c_str(), "-c", cmdline.c_str() };
         if (not params.empty())
-            execparams.push_back("sh");
+            execparams.push_back(shell.c_str());
         for (auto& param : params)
             execparams.push_back(param.c_str());
         execparams.push_back(NULL);
 
-        execvp("sh", (char* const*)execparams.data());
+        execvp(shell.c_str(), (char* const*)execparams.data());
         exit(-1);
     }
     catch (...) { exit(-1); }
