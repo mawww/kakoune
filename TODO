@@ -18,4 +18,7 @@ Medium Priority
 * pasting big chunks of text from the terminal is slooooow as well
   optimize that.
 
-* hierarchical highlighter/filter groups.
+* support an -e 'command' command line option, working with newly
+  connecting clients (so that they can specify the file to edit,
+  specify the client name...)
+
