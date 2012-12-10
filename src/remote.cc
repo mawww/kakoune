@@ -38,54 +38,54 @@ public:
         m_stream.insert(m_stream.end(), val, val + size);
     }
 
+    template<typename T>
+    void write(const T& val)
+    {
+        write((const char*)&val, sizeof(val));
+    };
+
+    void write(const String& str)
+    {
+        write(str.length());
+        write(str.c_str(), (int)str.length());
+    };
+
+    template<typename T>
+    void write(const memoryview<T>& view)
+    {
+        write<uint32_t>(view.size());
+        for (auto& val : view)
+            write(val);
+    };
+
+    template<typename T>
+    void write(const std::vector<T>& vec)
+    {
+        write(memoryview<T>(vec));
+    }
+
+    void write(const DisplayAtom& atom)
+    {
+        write(atom.fg_color);
+        write(atom.bg_color);
+        write(atom.attribute);
+        write(atom.content.content());
+    }
+
+    void write(const DisplayLine& line)
+    {
+        write(line.atoms());
+    }
+
+    void write(const DisplayBuffer& display_buffer)
+    {
+        write(display_buffer.lines());
+    }
+
 private:
     std::vector<char> m_stream;
     int m_socket;
 };
-
-template<typename T>
-void write(Message& msg, const T& val)
-{
-    msg.write((const char*)&val, sizeof(val));
-};
-
-void write(Message& msg, const String& str)
-{
-    write(msg, str.length());
-    msg.write(str.c_str(), (int)str.length());
-};
-
-template<typename T>
-void write(Message& msg, const memoryview<T>& view)
-{
-    write<uint32_t>(msg, view.size());
-    for (auto& val : view)
-        write(msg, val);
-};
-
-template<typename T>
-void write(Message& msg, const std::vector<T>& vec)
-{
-    write(msg, memoryview<T>(vec));
-}
-
-void write(Message& msg, const DisplayAtom& atom)
-{
-    write(msg, atom.fg_color);
-    write(msg, atom.bg_color);
-    write(msg, atom.attribute);
-    write(msg, atom.content.content());
-}
-
-void write(Message& msg, const DisplayLine& line)
-{
-    write(msg, line.atoms());
-}
-
-void write(Message& msg, const DisplayBuffer& display_buffer)
-{
-    write(msg, display_buffer.lines());
-}
 
 void read(int socket, char* buffer, size_t size)
 {
@@ -173,41 +173,41 @@ RemoteUI::~RemoteUI()
 void RemoteUI::print_status(const String& status, CharCount cursor_pos)
 {
     Message msg(m_socket);
-    write(msg, RemoteUIMsg::PrintStatus);
-    write(msg, status);
-    write(msg, cursor_pos);
+    msg.write(RemoteUIMsg::PrintStatus);
+    msg.write(status);
+    msg.write(cursor_pos);
 }
 
 void RemoteUI::menu_show(const memoryview<String>& choices,
                          const DisplayCoord& anchor, MenuStyle style)
 {
     Message msg(m_socket);
-    write(msg, RemoteUIMsg::MenuShow);
-    write(msg, choices);
-    write(msg, anchor);
-    write(msg, style);
+    msg.write(RemoteUIMsg::MenuShow);
+    msg.write(choices);
+    msg.write(anchor);
+    msg.write(style);
 }
 
 void RemoteUI::menu_select(int selected)
 {
     Message msg(m_socket);
-    write(msg, RemoteUIMsg::MenuSelect);
-    write(msg, selected);
+    msg.write(RemoteUIMsg::MenuSelect);
+    msg.write(selected);
 }
 
 void RemoteUI::menu_hide()
 {
     Message msg(m_socket);
-    write(msg, RemoteUIMsg::MenuHide);
+    msg.write(RemoteUIMsg::MenuHide);
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const String& mode_line)
 {
     Message msg(m_socket);
-    write(msg, RemoteUIMsg::Draw);
-    write(msg, display_buffer);
-    write(msg, mode_line);
+    msg.write(RemoteUIMsg::Draw);
+    msg.write(display_buffer);
+    msg.write(mode_line);
 }
 
 static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
@@ -247,7 +247,7 @@ RemoteClient::RemoteClient(int socket, UserInterface* ui)
 {
     Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
     Message msg(socket);
-    write(msg, key);
+    msg.write(key);
 }
 
 void RemoteClient::process_next_message()
@@ -291,14 +291,14 @@ void RemoteClient::write_next_key()
     Message msg(m_socket);
     // do that before checking dimensions as get_key may
     // handle a resize event.
-    write(msg, m_ui->get_key());
+    msg.write(m_ui->get_key());
 
     DisplayCoord dimensions = m_ui->dimensions();
     if (dimensions != m_dimensions)
     {
         m_dimensions = dimensions;
         Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) | (int)dimensions.column) };
-        write(msg, key);
+        msg.write(key);
     }
 }
 
