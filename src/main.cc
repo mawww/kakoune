@@ -137,21 +137,34 @@ void do_search(Context& context)
     SelectionList selections = context.editor().selections();
     context.input_handler().prompt("/", complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
-            context.editor().select(selections);
-
-            if (str.empty() or event == PromptEvent::Abort)
-                return;
-
-            String ex = str;
-            if (event == PromptEvent::Validate)
+            try
             {
-                if (ex.empty())
-                    ex = RegisterManager::instance()['/'].values(context)[0];
-                else
-                    RegisterManager::instance()['/'] = ex;
-                context.push_jump();
+                context.editor().select(selections);
+
+                if (str.empty() or event == PromptEvent::Abort)
+                    return;
+
+                String ex = str;
+                if (event == PromptEvent::Validate)
+                {
+                    if (ex.empty())
+                        ex = RegisterManager::instance()['/'].values(context)[0];
+                    else
+                        RegisterManager::instance()['/'] = ex;
+                    context.push_jump();
+                }
+
+                context.editor().select(std::bind(select_next_match, _1, ex), mode);
             }
-            context.editor().select(std::bind(select_next_match, _1, ex), mode);
+            catch (runtime_error&)
+            {
+                context.editor().select(selections);
+                // only validation should propagate errors,
+                // incremental search should not.
+                if (event == PromptEvent::Validate)
+                    throw;
+            }
+
         }, context);
 }
 
