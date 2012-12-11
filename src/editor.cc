@@ -14,7 +14,8 @@ namespace Kakoune
 
 Editor::Editor(Buffer& buffer)
     : m_buffer(&buffer),
-      m_edition_level(0)
+      m_edition_level(0),
+      m_selections(buffer)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
 }
@@ -118,7 +119,7 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-static void merge_overlapping(SelectionList& selections)
+static void merge_overlapping(DynamicSelectionList& selections)
 {
     for (size_t i = 0; i < selections.size(); ++i)
     {
@@ -214,7 +215,7 @@ void Editor::select(SelectionList selections)
 {
     if (selections.empty())
         throw runtime_error("no selections");
-    m_selections = std::move(selections);
+    m_selections.reset(std::move(selections));
 }
 
 void Editor::select(const Selector& selector, SelectMode mode)
@@ -272,8 +273,8 @@ void Editor::multi_select(const MultiSelector& selector)
     if (new_selections.empty())
         throw nothing_selected();
 
-    merge_overlapping(new_selections);
-    m_selections = std::move(new_selections);
+    m_selections.reset(std::move(new_selections));
+    merge_overlapping(m_selections);
 }
 
 class LastModifiedRangeListener : public BufferChangeListener
@@ -316,7 +317,7 @@ bool Editor::undo()
     if (res)
     {
         m_selections.clear();
-        m_selections.emplace_back(listener.first(), listener.last());
+        m_selections.push_back({listener.first(), listener.last()});
     }
     return res;
 }
@@ -328,7 +329,7 @@ bool Editor::redo()
     if (res)
     {
         m_selections.clear();
-        m_selections.emplace_back(listener.first(), listener.last());
+        m_selections.push_back({listener.first(), listener.last()});
     }
     return res;
 }

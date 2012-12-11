@@ -2,7 +2,7 @@
 #define editor_hh_INCLUDED
 
 #include "buffer.hh"
-#include "selection.hh"
+#include "dynamic_selection_list.hh"
 #include "filter.hh"
 #include "idvaluemap.hh"
 #include "memoryview.hh"
@@ -95,8 +95,8 @@ private:
     virtual void on_incremental_insertion_end() {}
 
     safe_ptr<Buffer>         m_buffer;
-    SelectionList m_selections;
-    FilterGroup   m_filters;
+    DynamicSelectionList     m_selections;
+    FilterGroup              m_filters;
 };
 
 struct scoped_edition

@@ -99,23 +99,21 @@ struct Context
 
     void push_jump()
     {
-        const Selection& jump = editor().selections().back();
+        const SelectionList& jump = editor().selections();
         if (m_current_jump != m_jump_list.end())
         {
             auto begin = m_current_jump;
-            // when jump overlaps with m_current_jump, we replace m_current_jump
-            // instead of pushing after it.
-            if (&begin->first().buffer() != &jump.first().buffer() or
-                not overlaps(*begin, jump))
+            if (&editor().buffer() != &begin->buffer() or
+                (const SelectionList&)(*begin) != jump)
                 ++begin;
             m_jump_list.erase(begin, m_jump_list.end());
         }
 
-        m_jump_list.push_back(jump);
+        m_jump_list.push_back({editor().buffer(), jump});
         m_current_jump = m_jump_list.end();
     }
 
-    Selection jump_forward()
+    const SelectionList& jump_forward()
     {
         if (m_current_jump != m_jump_list.end() and
             m_current_jump + 1 != m_jump_list.end())
@@ -123,7 +121,7 @@ struct Context
         throw runtime_error("no next jump");
     }
 
-    Selection jump_backward()
+    const SelectionList& jump_backward()
     {
         if (m_current_jump != m_jump_list.begin())
         {
@@ -141,7 +139,7 @@ struct Context
     {
         for (auto it = m_jump_list.begin(); it != m_jump_list.end();)
         {
-            if (&it->first().buffer() == &buffer)
+            if (&it->buffer() == &buffer)
             {
                 if (it < m_current_jump)
                     --m_current_jump;
@@ -164,8 +162,9 @@ private:
     Insertion m_last_insert = {InsertMode::Insert, {}};
     int m_numeric_param = 0;
 
-    SelectionList           m_jump_list;
-    SelectionList::iterator m_current_jump = m_jump_list.begin();
+    using JumpList = std::vector<DynamicSelectionList>;
+    JumpList           m_jump_list;
+    JumpList::iterator m_current_jump = m_jump_list.begin();
 };
 
 }

@@ -274,8 +274,8 @@ void do_indent(Context& context)
     String indent(' ', width);
 
     Editor& editor = context.editor();
-    SelectionList sels = editor.selections();
-    auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
+    DynamicSelectionList sels{editor.buffer(), editor.selections()};
+    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
     editor.multi_select(std::bind(select_all_matches, _1, "^[^\n]"));
     editor.insert(indent, InsertMode::Insert);
@@ -285,8 +285,8 @@ void do_deindent(Context& context)
 {
     int width = context.options()["indentwidth"].as_int();
     Editor& editor = context.editor();
-    SelectionList sels = editor.selections();
-    auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
+    DynamicSelectionList sels{editor.buffer(), editor.selections()};
+    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
     editor.multi_select(std::bind(select_all_matches, _1,
                                   "^\\h{1," + int_to_str(width) + "}"));
@@ -399,9 +399,9 @@ template<JumpDirection direction>
 void jump(Context& context)
 {
     auto jump = (direction == JumpDirection::Forward) ?
-                    context.jump_forward() : context.jump_backward();
+                 context.jump_forward() : context.jump_backward();
 
-    Buffer& buffer = const_cast<Buffer&>(jump.first().buffer());
+    Buffer& buffer = const_cast<Buffer&>(jump.front().buffer());
     BufferManager::instance().set_last_used_buffer(buffer);
     if (&buffer != &context.buffer())
     {
