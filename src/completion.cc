@@ -47,13 +47,16 @@ CandidateList complete_filename(const Context& context,
     if (not dir)
         return result;
 
+    const bool check_ignored_files = not ignored_files.empty() and
+        not boost::regex_match(fileprefix.c_str(), ignored_files_regex);
+
     while (dirent* entry = readdir(dir))
     {
         String filename = entry->d_name;
         if (filename.empty())
             continue;
 
-        if (not ignored_files.empty() and
+        if (check_ignored_files and
             boost::regex_match(filename.c_str(), ignored_files_regex))
             continue;
 
