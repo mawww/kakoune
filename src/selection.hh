@@ -31,6 +31,12 @@ private:
     BufferIterator m_last;
 };
 
+inline bool overlaps(const Range& lhs, const Range& rhs)
+{
+    return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
+           (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
+}
+
 using CaptureList = std::vector<String>;
 
 // A selection is a Range, associated with a CaptureList
@@ -65,12 +71,6 @@ private:
     CaptureList m_captures;
 };
 using SelectionList = std::vector<Selection>;
-
-inline bool overlaps(const Selection& lhs, const Selection& rhs)
-{
-    return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
-           (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
-}
 
 }
 
