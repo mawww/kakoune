@@ -19,4 +19,10 @@ tags:
 clean:
 	rm -f *.o .*.d kak tags
 
-.PHONY: tags
+XDG_CONFIG_HOME ?= $(HOME)/.config
+
+userconfig:
+	mkdir -p $(XDG_CONFIG_HOME)/kak/autoload
+	ln -rs rc/{asciidoc,cpp,diff,git,grep,kakrc,make}.kak $(XDG_CONFIG_HOME)/kak/autoload/
+
+.PHONY: tags userconfig
