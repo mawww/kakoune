@@ -377,6 +377,11 @@ public:
 
             m_line_editor.insert_from(line.char_count_to(m_completions.start),
                                       completion);
+
+            // when we have only one completion candidate, make next tab complete
+            // from the new content.
+            if (candidates.size() == 1)
+                m_current_completion = -1;
         }
         else
         {
