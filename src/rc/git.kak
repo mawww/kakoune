@@ -5,7 +5,7 @@ hook global BufCreate .*COMMIT_EDITMSG %{
 hook global WinSetOption filetype=git-commit %{
     addhl group git-commit-highlight
     addhl -group git-commit-highlight regex "#[^\n]*\n" 0:cyan,default
-    addhl -group git-commit-highlight regex "\<(?:(modified)|(deleted)|(new file)):([^\n]*)\n" 1:yellow 2:red 3:green 4:magenta
+    addhl -group git-commit-highlight regex "\<(?:(modified)|(deleted)|(new file)|(renamed)):([^\n]*)\n" 1:yellow 2:red 3:green 4:blue 5:magenta
 }
 
 hook global WinSetOption filetype=(?!git-commit).* %{
