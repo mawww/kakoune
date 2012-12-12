@@ -24,31 +24,31 @@ void highlight_range(DisplayBuffer& display_buffer,
 
     for (auto& line : display_buffer.lines())
     {
-        if (line.buffer_line() >= begin.line() and line.buffer_line() <= end.line())
+        if (line.buffer_line() < begin.line() or  end.line() < line.buffer_line())
+            continue;
+
+        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+            bool is_replaced = atom_it->content.type() == AtomContent::ReplacedBufferRange;
+
+            if (not atom_it->content.has_buffer_range() or
+                (skip_replaced and is_replaced))
+                continue;
+
+            if (end <= atom_it->content.begin() or begin >= atom_it->content.end())
+                continue;
+
+            if (not is_replaced and begin > atom_it->content.begin())
+                atom_it = ++line.split(atom_it, begin);
+
+            if (not is_replaced and end < atom_it->content.end())
             {
-                bool is_replaced = atom_it->content.type() == AtomContent::ReplacedBufferRange;
-
-                if (not atom_it->content.has_buffer_range() or
-                    (skip_replaced and is_replaced))
-                    continue;
-
-                if (end <= atom_it->content.begin() or begin >= atom_it->content.end())
-                    continue;
-
-                if (not is_replaced and begin > atom_it->content.begin())
-                    atom_it = ++line.split(atom_it, begin);
-
-                if (not is_replaced and end < atom_it->content.end())
-                {
-                    atom_it = line.split(atom_it, end);
-                    func(*atom_it);
-                    ++atom_it;
-                }
-                else
-                    func(*atom_it);
+                atom_it = line.split(atom_it, end);
+                func(*atom_it);
+                ++atom_it;
             }
+            else
+                func(*atom_it);
         }
     }
 }
