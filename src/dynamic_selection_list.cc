@@ -5,9 +5,10 @@ namespace Kakoune
 
 DynamicSelectionList::DynamicSelectionList(const Buffer& buffer,
                                            SelectionList selections)
-    : m_buffer(&buffer), m_selections(std::move(selections))
+    : m_buffer(&buffer), SelectionList(std::move(selections))
 {
     m_buffer->add_change_listener(*this);
+    check_invariant();
 }
 
 DynamicSelectionList::~DynamicSelectionList()
@@ -16,51 +17,59 @@ DynamicSelectionList::~DynamicSelectionList()
 }
 
 DynamicSelectionList::DynamicSelectionList(const DynamicSelectionList& other)
-    : m_selections(other.m_selections), m_buffer(other.m_buffer)
+    : SelectionList(other), m_buffer(other.m_buffer)
 {
     m_buffer->add_change_listener(*this);
 }
 
 DynamicSelectionList& DynamicSelectionList::operator=(const DynamicSelectionList& other)
 {
-    m_selections = other.m_selections;
+    SelectionList::operator=((const SelectionList&)other);
     if (m_buffer != other.m_buffer)
     {
         m_buffer->remove_change_listener(*this);
         m_buffer = other.m_buffer;
         m_buffer->add_change_listener(*this);
     }
+    check_invariant();
     return *this;
 }
 
 DynamicSelectionList::DynamicSelectionList(DynamicSelectionList&& other)
-    : m_selections(std::move(other.m_selections)), m_buffer(other.m_buffer)
+    : SelectionList(std::move(other)), m_buffer(other.m_buffer)
 {
     m_buffer->add_change_listener(*this);
 }
 
 DynamicSelectionList& DynamicSelectionList::operator=(DynamicSelectionList&& other)
 {
-    m_selections = std::move(other.m_selections);
+    SelectionList::operator=(std::move(other));
     if (m_buffer != other.m_buffer)
     {
         m_buffer->remove_change_listener(*this);
         m_buffer = other.m_buffer;
         m_buffer->add_change_listener(*this);
     }
+    check_invariant();
     return *this;
 }
 
-void DynamicSelectionList::reset(SelectionList selections)
+DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
 {
-    for (auto& sel : selections)
-        assert(&sel.buffer() == m_buffer);
-     m_selections = std::move(selections);
+    SelectionList::operator=(std::move(selections));
+    check_invariant();
+    return *this;
+}
+
+void DynamicSelectionList::check_invariant() const
+{
+    for (auto& sel : *this)
+        assert(m_buffer == &sel.buffer());
 }
 
 void DynamicSelectionList::on_insert(const BufferIterator& begin, const BufferIterator& end)
 {
-    for (auto& sel : m_selections)
+    for (auto& sel : *this)
     {
         sel.first().on_insert(begin.coord(), end.coord());
         sel.last().on_insert(begin.coord(), end.coord());
@@ -70,7 +79,7 @@ void DynamicSelectionList::on_insert(const BufferIterator& begin, const BufferIt
 
 void DynamicSelectionList::on_erase(const BufferIterator& begin, const BufferIterator& end)
 {
-    for (auto& sel : m_selections)
+    for (auto& sel : *this)
     {
         sel.first().on_erase(begin.coord(), end.coord());
         sel.last().on_erase(begin.coord(), end.coord());

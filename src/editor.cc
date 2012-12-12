@@ -102,7 +102,7 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 
     for (size_t i = 0; i < selections().size(); ++i)
     {
-        Selection& sel = m_selections[i];
+        auto& sel = m_selections[i];
         BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
         size_t index = std::min(i, strings.size()-1);
         m_buffer->insert(pos, strings[index]);
@@ -119,7 +119,7 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-static void merge_overlapping(DynamicSelectionList& selections)
+static void merge_overlapping(SelectionList& selections)
 {
     for (size_t i = 0; i < selections.size(); ++i)
     {
@@ -174,8 +174,7 @@ void Editor::clear_selections()
         pos = utf8::previous(pos);
 
     Selection sel = Selection(pos, pos);
-    m_selections.clear();
-    m_selections.push_back(std::move(sel));
+    m_selections = SelectionList{ std::move(sel) };
 }
 
 void Editor::flip_selections()
@@ -190,11 +189,7 @@ void Editor::keep_selection(int index)
     check_invariant();
 
     if (index < m_selections.size())
-    {
-        Selection sel = std::move(m_selections[index]);
-        m_selections.clear();
-        m_selections.push_back(std::move(sel));
-    }
+        m_selections = SelectionList{ std::move(m_selections[index]) };
 }
 
 void Editor::remove_selection(int index)
@@ -207,15 +202,14 @@ void Editor::remove_selection(int index)
 
 void Editor::select(const BufferIterator& iterator)
 {
-    m_selections.clear();
-    m_selections.push_back(Selection(iterator, iterator));
+    m_selections = SelectionList{ {iterator, iterator} };
 }
 
 void Editor::select(SelectionList selections)
 {
     if (selections.empty())
         throw runtime_error("no selections");
-    m_selections.reset(std::move(selections));
+    m_selections = std::move(selections);
 }
 
 void Editor::select(const Selector& selector, SelectMode mode)
@@ -272,9 +266,8 @@ void Editor::multi_select(const MultiSelector& selector)
     }
     if (new_selections.empty())
         throw nothing_selected();
-
-    m_selections.reset(std::move(new_selections));
-    merge_overlapping(m_selections);
+    merge_overlapping(new_selections);
+    m_selections = std::move(new_selections);
 }
 
 class LastModifiedRangeListener : public BufferChangeListener
@@ -315,10 +308,7 @@ bool Editor::undo()
     LastModifiedRangeListener listener(buffer());
     bool res = m_buffer->undo();
     if (res)
-    {
-        m_selections.clear();
-        m_selections.push_back({listener.first(), listener.last()});
-    }
+        m_selections = SelectionList{ {listener.first(), listener.last()} };
     return res;
 }
 
@@ -327,16 +317,14 @@ bool Editor::redo()
     LastModifiedRangeListener listener(buffer());
     bool res = m_buffer->redo();
     if (res)
-    {
-        m_selections.clear();
-        m_selections.push_back({listener.first(), listener.last()});
-    }
+        m_selections = SelectionList{ {listener.first(), listener.last()} };
     return res;
 }
 
 void Editor::check_invariant() const
 {
     assert(not m_selections.empty());
+    m_selections.check_invariant();
 }
 
 void Editor::begin_edition()

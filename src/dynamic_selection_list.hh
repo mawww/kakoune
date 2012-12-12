@@ -6,7 +6,7 @@
 namespace Kakoune
 {
 
-class DynamicSelectionList : public BufferChangeListener
+class DynamicSelectionList : public SelectionList, public BufferChangeListener
 {
 public:
     using iterator = SelectionList::iterator;
@@ -20,34 +20,8 @@ public:
     DynamicSelectionList(DynamicSelectionList&& other);
     DynamicSelectionList& operator=(DynamicSelectionList&& other);
 
-    size_t size()  const { return m_selections.size(); }
-    bool   empty() const { return m_selections.empty(); }
-
-    void clear() { m_selections.clear(); }
-    iterator erase(iterator it) { return m_selections.erase(it); }
-
-    void push_back(Selection selection)
-    {
-        assert(&selection.buffer() == m_buffer);
-        m_selections.push_back(std::move(selection));
-    }
-
-    void reset(SelectionList selections);
-
-    iterator begin() { return m_selections.begin(); }
-    iterator end()   { return m_selections.end(); }
-    const_iterator begin() const { return m_selections.begin(); }
-    const_iterator end()   const { return m_selections.end(); }
-
-    Selection& front() { return m_selections.front(); }
-    Selection& back()  { return m_selections.back(); }
-    const Selection& front() const { return m_selections.front(); }
-    const Selection& back()  const { return m_selections.back(); }
-
-    Selection& operator[](size_t index) { return m_selections[index]; }
-    const Selection& operator[](size_t index) const { return m_selections[index]; }
-
-    operator const SelectionList&() const { return m_selections; }
+    DynamicSelectionList& operator=(SelectionList selections);
+    void check_invariant() const;
 
     const Buffer& buffer() const { return *m_buffer; }
 
@@ -58,7 +32,6 @@ private:
                   const BufferIterator& end) override;
 
     const Buffer* m_buffer;
-    SelectionList m_selections;
 };
 
 };
