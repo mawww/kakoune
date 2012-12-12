@@ -99,7 +99,11 @@ void do_go(Context& context)
 void do_replace_with_char(Context& context)
 {
     context.input_handler().on_next_key([](const Key& key, Context& context) {
-        context.editor().insert(String() + key.key, InsertMode::Replace);
+        Editor& editor = context.editor();
+        SelectionList sels = editor.selections();
+        auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
+        editor.multi_select(std::bind(select_all_matches, _1, "."));
+        editor.insert(String() + key.key, InsertMode::Replace);
     });
 }
 
