@@ -5,8 +5,10 @@ High Priority
 Medium Priority
 ---------------
 
-* tweak editing model, some behaviours are not intuitive, maybe a line
-  wise mode will be needed after all.
+* tweak editing model, some behaviours are not intuitive, fix append when
+  end of line is selected (maybe we can merge some code between editor and
+  IncrementalInserter. By the way, IncrementalInserter is now only used by
+  InputHandler's InputMode::Insert, maybe this could be refactored).
 
 * encoding: support different encoding for files, make utf8 implementation
   more robust
@@ -15,10 +17,27 @@ Medium Priority
 
 * configurable insert mode completion support
 
-* pasting big chunks of text from the terminal is slooooow as well
-  optimize that.
+* pasting big chunks of text from the terminal is slooooow.
 
 * support an -e 'command' command line option, working with newly
   connecting clients (so that they can specify the file to edit,
   specify the client name...)
 
+* Add tooltip support to ui, and a command to display info
+
+* Add support for specifying command to run when selecting
+  a menu item (without validation). Use case include using
+  the tooltip functionality to display additional
+  informations
+
+* Design an Asynchronous model for interaction with external tools.
+  For example Kakoune should provide a way to run a completion
+  shell command without freezing until the completer returns.
+
+* merge_overlappings() is O(n²), this is too slow when there is a lot
+  of selections (think '%s.<ret>'). It should be optimized.
+
+* BufferIterators are slow, there should be two kind of BufferIterators,
+  the current ones, which survives Buffer modifications (even though they
+  may become invalid) and another kind, for regex iteraction for example
+  who would point directly to the memory for really fast iteration.
