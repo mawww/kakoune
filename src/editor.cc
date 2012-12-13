@@ -121,18 +121,18 @@ std::vector<String> Editor::selections_content() const
 
 static void merge_overlapping(SelectionList& selections)
 {
-    for (size_t i = 0; i < selections.size(); ++i)
+    assert(std::is_sorted(selections.begin(), selections.end(),
+                          [](const Selection& lhs, const Selection& rhs)
+                          { return lhs.begin() < rhs.begin(); }));
+    for (size_t i = 0; i < selections.size()-1;)
     {
-        for (size_t j = i+1; j < selections.size();)
+        if (overlaps(selections[i], selections[i+1]))
         {
-            if (overlaps(selections[i], selections[j]))
-            {
-                selections[i].merge_with(selections[j]);
-                selections.erase(selections.begin() + j);
-            }
-            else
-               ++j;
+            selections[i].merge_with(selections[i+1]);
+            selections.erase(selections.begin() + i + 1);
         }
+        else
+           ++i;
     }
 }
 
