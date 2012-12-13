@@ -110,8 +110,7 @@ inline void BufferIterator::on_erase(const BufferCoord& begin,
 
 inline char BufferIterator::operator*() const
 {
-    assert(m_buffer);
-    return m_buffer->m_lines[line()].content[column()];
+    return m_buffer->m_lines[m_coord.line].content[m_coord.column];
 }
 
 inline ByteCount BufferIterator::offset() const
@@ -172,9 +171,9 @@ inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 
 inline BufferIterator& BufferIterator::operator++()
 {
-    if (column() < m_buffer->m_lines[line()].length() - 1)
+    if (m_coord.column < m_buffer->m_lines[m_coord.line].length() - 1)
         ++m_coord.column;
-    else if (line() == m_buffer->line_count() - 1)
+    else if (m_coord.line == m_buffer->m_lines.size() - 1)
         m_coord.column = m_buffer->m_lines.back().length();
     else
     {
