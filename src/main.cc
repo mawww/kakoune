@@ -149,6 +149,7 @@ void do_search(Context& context)
                     ex = RegisterManager::instance()['/'].values(context)[0];
                 else
                     RegisterManager::instance()['/'] = ex;
+                context.push_jump();
             }
             context.editor().select(std::bind(select_next_match, _1, ex), mode);
         }, context);
@@ -159,7 +160,10 @@ void do_search_next(Context& context)
 {
     const String& ex = RegisterManager::instance()['/'].values(context)[0];
     if (not ex.empty())
+    {
+        context.push_jump();
         context.editor().select(std::bind(select_next_match, _1, ex), mode);
+    }
     else
         context.print_status("no search pattern");
 }
