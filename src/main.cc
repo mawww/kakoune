@@ -230,7 +230,7 @@ void do_select_regex(Context& context)
 {
     context.input_handler().prompt("select: ", complete_nothing,
         [](const String& ex, PromptEvent event, Context& context) {
-            if (event == PromptEvent::Validate)
+            if (event == PromptEvent::Validate and not ex.empty())
                 context.editor().multi_select(std::bind(select_all_matches, _1, ex));
         }, context);
 }
@@ -239,7 +239,7 @@ void do_split_regex(Context& context)
 {
     context.input_handler().prompt("split: ", complete_nothing,
         [](const String& ex, PromptEvent event, Context& context) {
-            if (event == PromptEvent::Validate)
+            if (event == PromptEvent::Validate and not ex.empty())
                 context.editor().multi_select(std::bind(split_selection, _1, ex));
         }, context);
 }
