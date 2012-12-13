@@ -18,6 +18,8 @@ Medium Priority
 * configurable insert mode completion support
 
 * pasting big chunks of text from the terminal is slooooow.
+  (this is due to WordCompletion regex matching the whole
+   buffer once per inserted char)
 
 * support an -e 'command' command line option, working with newly
   connecting clients (so that they can specify the file to edit,
@@ -33,11 +35,3 @@ Medium Priority
 * Design an Asynchronous model for interaction with external tools.
   For example Kakoune should provide a way to run a completion
   shell command without freezing until the completer returns.
-
-* merge_overlappings() is O(n²), this is too slow when there is a lot
-  of selections (think '%s.<ret>'). It should be optimized.
-
-* BufferIterators are slow, there should be two kind of BufferIterators,
-  the current ones, which survives Buffer modifications (even though they
-  may become invalid) and another kind, for regex iteraction for example
-  who would point directly to the memory for really fast iteration.
