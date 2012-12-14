@@ -16,10 +16,16 @@ public:
     ~RemoteUI();
 
     void print_status(const String& status, CharCount cursor_pos) override;
+
     void menu_show(const memoryview<String>& choices,
                    const DisplayCoord& anchor, MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
+
+    void info_show(const String& content,
+                   const DisplayCoord& anchor, MenuStyle style) override;
+    void info_hide() override;
+
     void draw(const DisplayBuffer& display_buffer,
               const String& mode_line) override;
 

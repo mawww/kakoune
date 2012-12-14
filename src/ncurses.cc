@@ -117,7 +117,7 @@ NCursesUI::~NCursesUI()
     signal(SIGINT, SIG_DFL);
 }
 
-static void redraw(WINDOW* menu_win)
+static void redraw(WINDOW* menu_win, WINDOW* info_win)
 {
     wnoutrefresh(stdscr);
     if (menu_win)
@@ -125,15 +125,20 @@ static void redraw(WINDOW* menu_win)
         redrawwin(menu_win);
         wnoutrefresh(menu_win);
     }
+    if (info_win)
+    {
+        redrawwin(info_win);
+        wnoutrefresh(info_win);
+    }
     doupdate();
 }
 using Utf8Policy = utf8::InvalidBytePolicy::Pass;
 using Utf8Iterator = utf8::utf8_iterator<String::iterator, Utf8Policy>;
-void addutf8str(Utf8Iterator begin, Utf8Iterator end)
+void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
     assert(begin <= end);
     while (begin != end)
-        addch(*begin++);
+        waddch(win, *begin++);
 }
 
 void NCursesUI::update_dimensions()
@@ -166,7 +171,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             if (content[content.length()-1] == '\n' and
                 content.char_length() - 1 < m_dimensions.column - col_index)
             {
-                addutf8str(Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
+                addutf8str(stdscr, Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
                 addch(' ');
             }
             else
@@ -174,7 +179,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
                 Utf8Iterator begin(content.begin()), end(content.end());
                 if (end - begin > m_dimensions.column - col_index)
                     end = begin + (m_dimensions.column - col_index);
-                addutf8str(begin, end);
+                addutf8str(stdscr, begin, end);
                 col_index += end - begin;
             }
         }
@@ -200,10 +205,10 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     if (m_dimensions.column - m_status_line.char_length() > status_len + 1)
     {
         move((int)m_dimensions.line, (int)(m_dimensions.column - status_len));
-        addutf8str(Utf8Iterator(mode_line.begin()),
+        addutf8str(stdscr, Utf8Iterator(mode_line.begin()),
                    Utf8Iterator(mode_line.end()));
     }
-    redraw(m_menu_win);
+    redraw(m_menu_win, m_info_win);
 }
 
 struct getch_iterator
@@ -277,18 +282,18 @@ void NCursesUI::draw_status()
     move((int)m_dimensions.line, 0);
     clrtoeol();
     if (m_status_cursor == -1)
-       addutf8str(m_status_line.begin(), m_status_line.end());
+       addutf8str(stdscr, m_status_line.begin(), m_status_line.end());
     else
     {
         auto cursor_it = utf8::advance(m_status_line.begin(), m_status_line.end(),
                                        (int)m_status_cursor);
         auto end = m_status_line.end();
-        addutf8str(m_status_line.begin(), cursor_it);
+        addutf8str(stdscr, m_status_line.begin(), cursor_it);
         set_attribute(A_REVERSE, 1);
         addch((cursor_it == end) ? ' ' : utf8::codepoint<Utf8Policy>(cursor_it));
         set_attribute(A_REVERSE, 0);
         if (cursor_it != end)
-            addutf8str(utf8::next(cursor_it), end);
+            addutf8str(stdscr, utf8::next(cursor_it), end);
     }
 }
 
@@ -297,7 +302,7 @@ void NCursesUI::print_status(const String& status, CharCount cursor_pos)
     m_status_line   = status;
     m_status_cursor = cursor_pos;
     draw_status();
-    redraw(m_menu_win);
+    redraw(m_menu_win, m_info_win);
 }
 
 void NCursesUI::menu_show(const memoryview<String>& choices,
@@ -326,14 +331,14 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     int columns = (style == MenuStyle::Prompt) ? (max_x / (int)longest) : 1;
     int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
 
-    m_menu_pos = { anchor.line+1, anchor.column };
-    if (m_menu_pos.line + lines >= max_y)
-        m_menu_pos.line = anchor.line - lines;
-    m_menu_size = { lines, columns == 1 ? longest : max_x };
+    DisplayCoord pos = { anchor.line+1, anchor.column };
+    if (pos.line + lines >= max_y)
+        pos.line = anchor.line - lines;
+    DisplayCoord size = { lines, columns == 1 ? longest : max_x };
 
     m_menu = new_menu(&m_items[0]);
-    m_menu_win = newwin((int)m_menu_size.line, (int)m_menu_size.column,
-                        (int)m_menu_pos.line,  (int)m_menu_pos.column);
+    m_menu_win = newwin((int)size.line, (int)size.column,
+                        (int)pos.line,  (int)pos.column);
     set_menu_win(m_menu, m_menu_win);
     set_menu_format(m_menu, lines, columns);
     set_menu_mark(m_menu, nullptr);
@@ -368,6 +373,59 @@ void NCursesUI::menu_hide()
     m_menu_win = nullptr;
     m_items.clear();
     m_choices.clear();
+}
+
+static DisplayCoord compute_needed_size(const String& str)
+{
+    DisplayCoord res{1,0};
+    CharCount line_len = 0;
+    for (Utf8Iterator begin{str.begin()}, end{str.end()}; begin != end; ++begin)
+    {
+        if (*begin == '\n')
+        {
+            line_len = 0;
+            ++res.line;
+        }
+        else
+        {
+            ++line_len;
+            res.column = std::max(res.column, line_len);
+        }
+    }
+    return res;
+}
+
+void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, MenuStyle style)
+{
+    assert(m_info_win == nullptr);
+
+    int max_x,max_y;
+    getmaxyx(stdscr, max_y, max_x);
+    max_x -= (int)anchor.column;
+
+    DisplayCoord size = compute_needed_size(content);
+    if (style == MenuStyle::Prompt)
+        size.column = max_x;
+
+    DisplayCoord pos = { anchor.line+1, anchor.column };
+    if (pos.line + size.line >= max_y)
+        pos.line = anchor.line - size.line;
+
+    m_info_win = newwin((int)size.line, (int)size.column,
+                        (int)pos.line,  (int)pos.column);
+
+    wbkgd(m_info_win, COLOR_PAIR(get_color_pair(Color::Black, Color::Yellow)));
+    wmove(m_info_win, 0, 0);
+    addutf8str(m_info_win, Utf8Iterator(content.begin()),
+               Utf8Iterator(content.end()));
+}
+
+void NCursesUI::info_hide()
+{
+    if (not m_info_win)
+        return;
+    delwin(m_info_win);
+    m_info_win = nullptr;
 }
 
 DisplayCoord NCursesUI::dimensions()

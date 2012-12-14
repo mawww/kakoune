@@ -15,6 +15,8 @@ enum class RemoteUIMsg
     MenuShow,
     MenuSelect,
     MenuHide,
+    InfoShow,
+    InfoHide,
     Draw
 };
 
@@ -201,6 +203,22 @@ void RemoteUI::menu_hide()
     msg.write(RemoteUIMsg::MenuHide);
 }
 
+void RemoteUI::info_show(const String& content,
+                         const DisplayCoord& anchor, MenuStyle style)
+{
+    Message msg(m_socket);
+    msg.write(RemoteUIMsg::InfoShow);
+    msg.write(content);
+    msg.write(anchor);
+    msg.write(style);
+}
+
+void RemoteUI::info_hide()
+{
+    Message msg(m_socket);
+    msg.write(RemoteUIMsg::InfoHide);
+}
+
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const String& mode_line)
 {
@@ -275,6 +293,17 @@ void RemoteClient::process_next_message()
          break;
     case RemoteUIMsg::MenuHide:
          m_ui->menu_hide();
+         break;
+    case RemoteUIMsg::InfoShow:
+    {
+         auto choices = read<String>(m_socket);
+         auto anchor = read<DisplayCoord>(m_socket);
+         auto style = read<MenuStyle>(m_socket);
+         m_ui->info_show(choices, anchor, style);
+         break;
+    }
+    case RemoteUIMsg::InfoHide:
+         m_ui->info_hide();
          break;
     case RemoteUIMsg::Draw:
     {

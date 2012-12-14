@@ -512,6 +512,9 @@ public:
     void menu_select(int) override {}
     void menu_hide() override {}
 
+    void info_show(const String&, const DisplayCoord&, MenuStyle) override {}
+    void info_hide() override {}
+
     DisplayCoord dimensions() override { return { 0, 0 }; }
 
 private:
@@ -597,6 +600,18 @@ void menu(const CommandParameters& params, Context& context)
             if (choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);
         }, context);
+}
+
+void info(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, { });
+
+    if (parser.positional_count() > 1)
+        throw wrong_argument_count();
+
+    context.ui().info_hide();
+    if (parser.positional_count() > 0)
+        context.ui().info_show(parser[0], {0,0}, MenuStyle::Inline);
 }
 
 void try_catch(const CommandParameters& params, Context& context)
@@ -721,6 +736,7 @@ void register_commands()
     cm.register_command("exec", exec_string);
     cm.register_command("eval", eval_string);
     cm.register_command("menu", menu);
+    cm.register_command("info", info);
     cm.register_command("try",  try_catch);
 
     cm.register_command("def",  define_command);

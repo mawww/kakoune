@@ -31,6 +31,10 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
+    void info_show(const String& content,
+                   const DisplayCoord& anchor, MenuStyle style) override;
+    void info_hide() override;
+
     DisplayCoord dimensions() override;
 private:
     friend void on_term_resize(int);
@@ -47,11 +51,10 @@ private:
     std::vector<ITEM*> m_items;
     std::vector<String> m_choices;
 
-    DisplayCoord m_menu_pos;
-    DisplayCoord m_menu_size;
-
     int m_menu_fg;
     int m_menu_bg;
+
+    WINDOW* m_info_win = nullptr;
 };
 
 }
