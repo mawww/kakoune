@@ -12,7 +12,13 @@ namespace Kakoune
 class Editor;
 class Context;
 
-using MenuCallback = std::function<void (int, Context&)>;
+enum class MenuEvent
+{
+    Select,
+    Abort,
+    Validate
+};
+using MenuCallback = std::function<void (int, MenuEvent, Context&)>;
 
 enum class PromptEvent
 {

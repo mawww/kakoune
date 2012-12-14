@@ -152,7 +152,7 @@ public:
             context.ui().print_status("");
             reset_normal_mode();
             int selected = m_selected - m_choices.begin();
-            m_callback(selected, context);
+            m_callback(selected, MenuEvent::Validate, context);
             return;
         }
         else if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
@@ -168,6 +168,8 @@ public:
             {
                 context.ui().menu_hide();
                 reset_normal_mode();
+                int selected = m_selected - m_choices.begin();
+                m_callback(selected, MenuEvent::Abort, context);
             }
         }
         else if (key == Key::Down or
@@ -178,8 +180,7 @@ public:
             auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
-            m_selected = it;
-            context.ui().menu_select(m_selected - m_choices.begin());
+            select(it, context);
         }
         else if (key == Key::Up or
                  key == Key::BackTab or
@@ -190,8 +191,7 @@ public:
             auto it = std::find_if(selected+1, m_choices.rend(), match_filter);
             if (it == m_choices.rend())
                 it = std::find_if(m_choices.rbegin(), selected, match_filter);
-            m_selected = it.base()-1;
-            context.ui().menu_select(m_selected - m_choices.begin());
+            select(it.base()-1, context);
         }
         else if (key == '/' and not m_edit_filter)
         {
@@ -206,8 +206,7 @@ public:
             auto it = std::find_if(m_selected, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
-            m_selected = it;
-            context.ui().menu_select(m_selected - m_choices.begin());
+            select(it, context);
         }
 
         if (m_edit_filter)
@@ -221,6 +220,14 @@ private:
     using ChoiceList = std::vector<String>;
     const ChoiceList m_choices;
     ChoiceList::const_iterator m_selected;
+
+    void select(ChoiceList::const_iterator it, Context& context)
+    {
+        m_selected = it;
+        int selected = m_selected - m_choices.begin();
+        context.ui().menu_select(selected);
+        m_callback(selected, MenuEvent::Select, context);
+    }
 
     boost::regex m_filter = boost::regex(".*");
     bool         m_edit_filter = false;

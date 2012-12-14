@@ -596,8 +596,8 @@ void menu(const CommandParameters& params, Context& context)
     }
 
     context.input_handler().menu(choices,
-        [=](int choice, Context& context) {
-            if (choice >= 0 and choice < commands.size())
+        [=](int choice, MenuEvent event, Context& context) {
+            if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);
         }, context);
 }
