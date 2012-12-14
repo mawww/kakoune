@@ -604,14 +604,23 @@ void menu(const CommandParameters& params, Context& context)
 
 void info(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { });
+    ParametersParser parser(params, { { "inline", false } });
 
     if (parser.positional_count() > 1)
         throw wrong_argument_count();
 
     context.ui().info_hide();
     if (parser.positional_count() > 0)
-        context.ui().info_show(parser[0], {0,0}, MenuStyle::Inline);
+    {
+        MenuStyle style = parser.has_option("inline") ?
+             MenuStyle::Inline : MenuStyle::Prompt;
+        DisplayCoord pos;
+        if (style == MenuStyle::Inline)
+            pos = context.window().display_position(context.editor().selections().back().last());
+        else
+            pos.line = context.ui().dimensions().line;
+        context.ui().info_show(parser[0], pos, style);
+    }
 }
 
 void try_catch(const CommandParameters& params, Context& context)
