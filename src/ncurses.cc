@@ -141,12 +141,17 @@ void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
         waddch(win, *begin++);
 }
 
+static DisplayCoord window_size(WINDOW* win)
+{
+    DisplayCoord size;
+    getmaxyx(win, (int&)size.line, (int&)size.column);
+    return size;
+}
+
 void NCursesUI::update_dimensions()
 {
-    int max_x,max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    max_y -= 1;
-    m_dimensions = { max_y, max_x };
+    m_dimensions = window_size(stdscr);
+    --m_dimensions.line;
 }
 
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
@@ -313,28 +318,27 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     assert(m_choices.empty());
     assert(m_items.empty());
 
-    int max_x,max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    max_x -= (int)anchor.column;
+    DisplayCoord maxsize = window_size(stdscr);
+    maxsize.column -= anchor.column;
 
     m_choices.reserve(choices.size());
     CharCount longest = 0;
     for (auto& choice : choices)
     {
-        m_choices.push_back(choice.substr(0_char, std::min(max_x-1, 200)));
+        m_choices.push_back(choice.substr(0_char, std::min((int)maxsize.column-1, 200)));
         m_items.emplace_back(new_item(m_choices.back().c_str(), ""));
         longest = std::max(longest, m_choices.back().char_length());
     }
     m_items.push_back(nullptr);
     longest += 1;
 
-    int columns = (style == MenuStyle::Prompt) ? (max_x / (int)longest) : 1;
+    int columns = (style == MenuStyle::Prompt) ? (int)(maxsize.column / longest) : 1;
     int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
 
     DisplayCoord pos = { anchor.line+1, anchor.column };
-    if (pos.line + lines >= max_y)
+    if (pos.line + lines >= maxsize.line)
         pos.line = anchor.line - lines;
-    DisplayCoord size = { lines, columns == 1 ? longest : max_x };
+    DisplayCoord size = { lines, columns == 1 ? longest : maxsize.column };
 
     m_menu = new_menu(&m_items[0]);
     m_menu_win = newwin((int)size.line, (int)size.column,
@@ -395,21 +399,25 @@ static DisplayCoord compute_needed_size(const String& str)
     return res;
 }
 
+static DisplayCoord compute_pos(const DisplayCoord& anchor,
+                                const DisplayCoord& size)
+{
+    DisplayCoord scrsize = window_size(stdscr);
+    DisplayCoord pos = { anchor.line+1, anchor.column };
+    if (pos.line + size.line >= scrsize.line)
+        pos.line = anchor.line - size.line;
+    return pos;
+}
+
 void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, MenuStyle style)
 {
     assert(m_info_win == nullptr);
 
-    int max_x,max_y;
-    getmaxyx(stdscr, max_y, max_x);
-    max_x -= (int)anchor.column;
-
     DisplayCoord size = compute_needed_size(content);
     if (style == MenuStyle::Prompt)
-        size.column = max_x;
+        size.column = window_size(stdscr).column - anchor.column;
 
-    DisplayCoord pos = { anchor.line+1, anchor.column };
-    if (pos.line + size.line >= max_y)
-        pos.line = anchor.line - size.line;
+    DisplayCoord pos = compute_pos(anchor, size);
 
     m_info_win = newwin((int)size.line, (int)size.column,
                         (int)pos.line,  (int)pos.column);
