@@ -148,6 +148,13 @@ static DisplayCoord window_size(WINDOW* win)
     return size;
 }
 
+static DisplayCoord window_pos(WINDOW* win)
+{
+    DisplayCoord pos;
+    getbegyx(win, (int&)pos.line, (int&)pos.column);
+    return pos;
+}
+
 void NCursesUI::update_dimensions()
 {
     m_dimensions = window_size(stdscr);
@@ -400,12 +407,32 @@ static DisplayCoord compute_needed_size(const String& str)
 }
 
 static DisplayCoord compute_pos(const DisplayCoord& anchor,
-                                const DisplayCoord& size)
+                                const DisplayCoord& size,
+                                WINDOW* opt_window_to_avoid = nullptr)
 {
     DisplayCoord scrsize = window_size(stdscr);
     DisplayCoord pos = { anchor.line+1, anchor.column };
     if (pos.line + size.line >= scrsize.line)
         pos.line = anchor.line - size.line;
+
+    if (opt_window_to_avoid)
+    {
+        DisplayCoord winbeg = window_pos(opt_window_to_avoid);
+        DisplayCoord winend = winbeg + window_size(opt_window_to_avoid);
+
+        DisplayCoord end = pos + size;
+
+        // check intersection
+        if (not (end.line < winbeg.line or end.column < winbeg.column or
+                 pos.line > winend.line or pos.column > winend.column))
+        {
+            pos.line = std::min(winbeg.line, anchor.line) - size.line;
+            // if above does not work, try below
+            if (pos.line < 0)
+                pos.line = std::max(winend.line, anchor.line);
+        }
+    }
+
     return pos;
 }
 
@@ -417,7 +444,7 @@ void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, Men
     if (style == MenuStyle::Prompt)
         size.column = window_size(stdscr).column - anchor.column;
 
-    DisplayCoord pos = compute_pos(anchor, size);
+    DisplayCoord pos = compute_pos(anchor, size, m_menu_win);
 
     m_info_win = newwin((int)size.line, (int)size.column,
                         (int)pos.line,  (int)pos.column);
