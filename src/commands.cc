@@ -575,13 +575,17 @@ void eval_string(const CommandParameters& params, Context& context)
 
 void menu(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "auto-single", false } });
+    ParametersParser parser(params, { { "auto-single", false },
+                                      { "select-cmds", false } });
 
-    size_t count = parser.positional_count();
-    if (count == 0 or (count % 2) != 0)
+    const bool with_select_cmds = parser.has_option("select-cmds");
+    const size_t modulo = with_select_cmds ? 3 : 2;
+
+    const size_t count = parser.positional_count();
+    if (count == 0 or (count % modulo) != 0)
         throw wrong_argument_count();
 
-    if (count == 2 and parser.has_option("auto-single"))
+    if (count == modulo and parser.has_option("auto-single"))
     {
         CommandManager::instance().execute(parser[1], context);
         return;
@@ -589,16 +593,21 @@ void menu(const CommandParameters& params, Context& context)
 
     std::vector<String> choices;
     std::vector<String> commands;
-    for (int i = 0; i < count; i += 2)
+    std::vector<String> select_cmds;
+    for (int i = 0; i < count; i += modulo)
     {
         choices.push_back(parser[i]);
         commands.push_back(parser[i+1]);
+        if (with_select_cmds)
+            select_cmds.push_back(parser[i+2]);
     }
 
     context.input_handler().menu(choices,
         [=](int choice, MenuEvent event, Context& context) {
             if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);
+            if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
+              CommandManager::instance().execute(select_cmds[choice], context);
         }, context);
 }
 
