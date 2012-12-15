@@ -110,6 +110,7 @@ TokenList parse(const String& line,
         }
 
         ByteCount token_start = pos;
+        ByteCount start_pos = pos;
 
         Token::Type type = Token::Type::Raw;
         if (line[pos] == '"' or line[pos] == '\'')
@@ -184,7 +185,7 @@ TokenList parse(const String& line,
                     or (pos != 0 and line[pos-1] == '\\')))
                 ++pos;
 
-        if (token_start != pos)
+        if (start_pos != pos)
         {
             if (opt_token_pos_info)
                 opt_token_pos_info->push_back({token_start, pos});
