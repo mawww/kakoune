@@ -264,12 +264,12 @@ void do_split_regex(Context& context)
 void do_join(Context& context)
 {
     Editor& editor = context.editor();
+    DynamicSelectionList sels{editor.buffer(), editor.selections()};
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
     editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
     editor.insert(" ", InsertMode::Replace);
-    editor.clear_selections();
-    editor.move_selections(-1_char);
+    editor.select(sels);
 }
 
 void do_indent(Context& context)
