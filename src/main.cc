@@ -70,26 +70,24 @@ void do_go(Context& context)
                 return;
 
             Editor& editor = context.editor();
-            switch (key.key)
+            switch (tolower(key.key))
             {
             case 'g':
             case 't':
                 context.push_jump();
-                editor.select(editor.buffer().begin());
+                editor.select(editor.buffer().begin(), mode);
                 break;
             case 'l':
-            case 'L':
                 editor.select(select_to_eol, mode);
                 break;
             case 'h':
-            case 'H':
                 editor.select(select_to_eol_reverse, mode);
                 break;
             case 'b':
             {
                 context.push_jump();
                 const Buffer& buf = editor.buffer();
-                editor.select(buf.iterator_at_line_begin(buf.line_count() - 1));
+                editor.select(buf.iterator_at_line_begin(buf.line_count() - 1), mode);
                 break;
             }
             }
