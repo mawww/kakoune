@@ -200,9 +200,18 @@ void Editor::remove_selection(int index)
         m_selections.erase(m_selections.begin() + index);
 }
 
-void Editor::select(const BufferIterator& iterator)
+void Editor::select(const BufferIterator& iterator, SelectMode mode)
 {
-    m_selections = SelectionList{ {iterator, iterator} };
+    if (mode == SelectMode::Replace)
+        m_selections = SelectionList{ {iterator, iterator} };
+    else if (mode == SelectMode::Extend)
+    {
+        for (auto& sel : m_selections)
+            sel.last() = iterator;
+        merge_overlapping(m_selections);
+    }
+    else if (mode == SelectMode::Append)
+        assert(false);
 }
 
 void Editor::select(SelectionList selections)
