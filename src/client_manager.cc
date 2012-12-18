@@ -2,17 +2,20 @@
 
 #include "event_manager.hh"
 #include "buffer_manager.hh"
+#include "command_manager.hh"
 
 namespace Kakoune
 {
 
 void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                  Buffer& buffer, int event_fd)
+                                  Buffer& buffer, int event_fd,
+                                  const String& init_commands)
 {
     m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer)});
 
     InputHandler*  input_handler = &m_clients.back()->input_handler;
     Context*       context = &m_clients.back()->context;
+    CommandManager::instance().execute(init_commands, *context);
     EventManager::instance().watch(event_fd, [input_handler, context, this](int fd) {
         try
         {

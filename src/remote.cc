@@ -2,6 +2,9 @@
 
 #include "display_buffer.hh"
 #include "debug.hh"
+#include "client_manager.hh"
+#include "buffer_manager.hh"
+#include "event_manager.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -161,6 +164,36 @@ DisplayBuffer read<DisplayBuffer>(int socket)
     return db;
 }
 
+class RemoteUI : public UserInterface
+{
+public:
+    RemoteUI(int socket);
+    ~RemoteUI();
+
+    void print_status(const String& status, CharCount cursor_pos) override;
+
+    void menu_show(const memoryview<String>& choices,
+                   const DisplayCoord& anchor, MenuStyle style) override;
+    void menu_select(int selected) override;
+    void menu_hide() override;
+
+    void info_show(const String& content,
+                   const DisplayCoord& anchor, MenuStyle style) override;
+    void info_hide() override;
+
+    void draw(const DisplayBuffer& display_buffer,
+              const String& mode_line) override;
+
+    bool is_key_available() override;
+    Key  get_key() override;
+    DisplayCoord dimensions() override;
+
+private:
+    int          m_socket;
+    DisplayCoord m_dimensions;
+};
+
+
 RemoteUI::RemoteUI(int socket)
     : m_socket(socket)
 {
@@ -260,11 +293,13 @@ DisplayCoord RemoteUI::dimensions()
     return m_dimensions;
 }
 
-RemoteClient::RemoteClient(int socket, UserInterface* ui)
+RemoteClient::RemoteClient(int socket, UserInterface* ui,
+                           const String& init_command)
     : m_socket(socket), m_ui(ui), m_dimensions(ui->dimensions())
 {
-    Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
     Message msg(socket);
+    msg.write(init_command);
+    Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
     msg.write(key);
 }
 
@@ -329,6 +364,17 @@ void RemoteClient::write_next_key()
         Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) | (int)dimensions.column) };
         msg.write(key);
     }
+}
+
+void handle_remote(int socket)
+{
+    String init_command = read<String>(socket);
+
+    auto& buffer = *BufferManager::instance().begin();
+    RemoteUI* ui = new RemoteUI{socket};
+    EventManager::instance().unwatch(socket);
+    ClientManager::instance().create_client(
+        std::unique_ptr<UserInterface>{ui}, *buffer, socket, init_command);
 }
 
 }

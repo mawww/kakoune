@@ -9,39 +9,13 @@ namespace Kakoune
 
 struct peer_disconnected {};
 
-class RemoteUI : public UserInterface
-{
-public:
-    RemoteUI(int socket);
-    ~RemoteUI();
-
-    void print_status(const String& status, CharCount cursor_pos) override;
-
-    void menu_show(const memoryview<String>& choices,
-                   const DisplayCoord& anchor, MenuStyle style) override;
-    void menu_select(int selected) override;
-    void menu_hide() override;
-
-    void info_show(const String& content,
-                   const DisplayCoord& anchor, MenuStyle style) override;
-    void info_hide() override;
-
-    void draw(const DisplayBuffer& display_buffer,
-              const String& mode_line) override;
-
-    bool is_key_available() override;
-    Key  get_key() override;
-    DisplayCoord dimensions() override;
-
-private:
-    int          m_socket;
-    DisplayCoord m_dimensions;
-};
+void handle_remote(int socket);
 
 class RemoteClient
 {
 public:
-    RemoteClient(int socket, UserInterface* ui);
+    RemoteClient(int socket, UserInterface* ui,
+                 const String& init_command);
 
     void process_next_message();
     void write_next_key();

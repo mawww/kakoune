@@ -570,10 +570,7 @@ struct Server : public Singleton<Server>
                 throw runtime_error("accept failed");
             fcntl(sock, F_SETFD, FD_CLOEXEC);
 
-            auto& buffer = *BufferManager::instance().begin();
-            RemoteUI* ui = new RemoteUI{sock};
-            ClientManager::instance().create_client(
-                std::unique_ptr<UserInterface>{ui}, *buffer, sock);
+            EventManager::instance().watch(sock, handle_remote);
         };
         EventManager::instance().watch(m_listen_sock, accepter);
     }
@@ -664,10 +661,10 @@ void create_local_client(const String& file)
         buffer = new Buffer("*scratch*", Buffer::Flags::None);
 
     ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, *buffer, 0);
+        std::unique_ptr<UserInterface>{ui}, *buffer, 0, "");
 }
 
-RemoteClient* connect_to(const String& pid)
+RemoteClient* connect_to(const String& pid, const String& init_command)
 {
     auto filename = "/tmp/kak-" + pid;
 
@@ -680,7 +677,7 @@ RemoteClient* connect_to(const String& pid)
         throw runtime_error("connect to " + filename + " failed");
 
     NCursesUI* ui = new NCursesUI{};
-    RemoteClient* remote_client = new RemoteClient{sock, ui};
+    RemoteClient* remote_client = new RemoteClient{sock, ui, init_command};
 
     EventManager::instance().watch(sock, [=](int) {
         try
@@ -717,7 +714,7 @@ int main(int argc, char* argv[])
         {
             try
             {
-                std::unique_ptr<RemoteClient> client(connect_to(argv[2]));
+                std::unique_ptr<RemoteClient> client(connect_to(argv[2], ""));
                 while (true)
                     event_manager.handle_next_events();
             }
