@@ -20,6 +20,7 @@
 #include "color_registry.hh"
 #include "remote.hh"
 #include "client_manager.hh"
+#include "parameters_parser.hh"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -630,7 +631,7 @@ void register_registers()
     }
 }
 
-void create_local_client(const String& file)
+void create_local_client(const String& file, const String& init_command)
 {
     Buffer* buffer = nullptr;
 
@@ -661,7 +662,7 @@ void create_local_client(const String& file)
         buffer = new Buffer("*scratch*", Buffer::Flags::None);
 
     ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, *buffer, 0, "");
+        std::unique_ptr<UserInterface>{ui}, *buffer, 0, init_command);
 }
 
 RemoteClient* connect_to(const String& pid, const String& init_command)
@@ -708,13 +709,22 @@ int main(int argc, char* argv[])
 {
     try
     {
-        EventManager        event_manager;
+        std::vector<String> params;
+        for (size_t i = 1; i < argc; ++i)
+             params.push_back(argv[i]);
+        ParametersParser parser(params, { { "c", true }, { "e", true } });
+        EventManager event_manager;
 
-        if (argc == 3 and String("-c") == argv[1])
+        String init_command;
+        if (parser.has_option("e"))
+            init_command = parser.option_value("e");
+
+        if (parser.has_option("c"))
         {
             try
             {
-                std::unique_ptr<RemoteClient> client(connect_to(argv[2], ""));
+                std::unique_ptr<RemoteClient> client(
+                    connect_to(parser.option_value("c"), init_command));
                 while (true)
                     event_manager.handle_next_events();
             }
@@ -761,7 +771,7 @@ int main(int argc, char* argv[])
              write_debug("error while parsing kakrc: " + error.description());
         }
 
-        create_local_client(argc > 1 ? argv[1] : "");
+        create_local_client(parser.positional_count() > 0 ? parser[0] : "", init_command);
 
         while (not client_manager.empty())
             event_manager.handle_next_events();
