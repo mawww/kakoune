@@ -712,7 +712,7 @@ int main(int argc, char* argv[])
         std::vector<String> params;
         for (size_t i = 1; i < argc; ++i)
              params.push_back(argv[i]);
-        ParametersParser parser(params, { { "c", true }, { "e", true } });
+        ParametersParser parser(params, { { "c", true }, { "e", true }, { "n", false } });
         EventManager event_manager;
 
         String init_command;
@@ -760,7 +760,7 @@ int main(int argc, char* argv[])
 
         Server server;
 
-        try
+        if (not parser.has_option("n")) try
         {
             Context initialisation_context;
             command_manager.execute("source " + runtime_directory() + "/kakrc",
