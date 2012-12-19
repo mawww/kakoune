@@ -15,7 +15,22 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
 
     InputHandler*  input_handler = &m_clients.back()->input_handler;
     Context*       context = &m_clients.back()->context;
-    CommandManager::instance().execute(init_commands, *context);
+
+    try
+    {
+        CommandManager::instance().execute(init_commands, *context);
+    }
+    catch (Kakoune::runtime_error& error)
+    {
+        context->print_status(error.description());
+    }
+    catch (Kakoune::client_removed&)
+    {
+        m_clients.pop_back();
+        close(event_fd);
+        return;
+    }
+
     EventManager::instance().watch(event_fd, [input_handler, context, this](int fd) {
         try
         {
