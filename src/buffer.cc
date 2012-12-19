@@ -399,6 +399,12 @@ bool Buffer::is_modified() const
 
 void Buffer::notify_saved()
 {
+    if (not m_current_undo_group.empty())
+    {
+        end_undo_group();
+        begin_undo_group();
+    }
+
     size_t history_cursor_index = m_history_cursor - m_history.begin();
     if (m_last_save_undo_index != history_cursor_index)
     {
