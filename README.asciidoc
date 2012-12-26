@@ -454,3 +454,9 @@ Existing commands files are:
  * *rc/ctags.kak*: provides the +tag+ command to jump on a tag definition using
      exuberant ctags files, this script requires the *readtags* binary, available
      in the exuberant ctags package but not installed by default.
+ * *rc/client.kak*: provides the +new+ command to launch a new client on the current
+     session, if tmux is detected, launch the client in a new tmux split, else
+     launch in a new terminal emulator.
+
+Certain command files defines options, such as grepcmd (for :grep) or
+termcmd (for :new).
