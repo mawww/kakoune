@@ -413,7 +413,8 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
            --first;
         if (last.underlying_iterator().is_end())
            --last;
-        sel = Selection(first.underlying_iterator(), last.underlying_iterator());
+        sel.first() = first.underlying_iterator();
+        sel.last()  = last.underlying_iterator();
     }
     if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
     {
@@ -424,7 +425,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             {
                 // special case, the --first line above did nothing, so we need to compensate now
                 if (sel.first() == utf8::next(buffer.begin()))
-                    sel = Selection(buffer.begin(), buffer.begin());
+                    sel.first() = sel.last() = buffer.begin();
             }
         }
     }
