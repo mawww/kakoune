@@ -205,12 +205,14 @@ Selection select_matching(const Selection& selection)
         int level = 0;
         const Codepoint opening = *(match-1);
         const Codepoint closing = *match;
-        while (not is_begin(it))
+        while (true)
         {
             if (*it == closing)
                 ++level;
             else if (*it == opening and --level == 0)
                 return utf8_selection(begin, it);
+            if (is_begin(it))
+                break;
             --it;
         }
     }
