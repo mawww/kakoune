@@ -463,7 +463,8 @@ SelectionList split_selection(const Selection& selection,
             result.push_back(Selection(begin, (begin == end) ? end : utf8::previous(end)));
             begin = (*re_it)[0].second;
         }
-        result.push_back(Selection(begin, selection.last()));
+        result.push_back(Selection(begin, std::max(selection.first(),
+                                                   selection.last())));
         return result;
     }
     catch (boost::regex_error& err)
