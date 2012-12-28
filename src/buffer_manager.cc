@@ -26,7 +26,7 @@ void BufferManager::register_buffer(Buffer& buffer)
             throw name_not_unique();
     }
 
-    m_buffers.push_back(safe_ptr<Buffer>(&buffer));
+    m_buffers.emplace(m_buffers.begin(), &buffer);
 }
 
 void BufferManager::unregister_buffer(Buffer& buffer)
