@@ -20,8 +20,8 @@ copy a line:
  * kak: xy
 
 global replace:
- * vim: :%s/word/replacement
- * kak: %sword<ret>creplacement
+ * vim: :%s/word/replacement<ret>
+ * kak: %sword<ret>creplacement<esc>
 
 join line with next:
  * vim: J
