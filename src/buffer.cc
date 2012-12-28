@@ -405,6 +405,7 @@ void Buffer::notify_saved()
         begin_undo_group();
     }
 
+    m_flags &= ~Flags::New;
     size_t history_cursor_index = m_history_cursor - m_history.begin();
     if (m_last_save_undo_index != history_cursor_index)
     {
