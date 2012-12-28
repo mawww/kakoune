@@ -385,7 +385,16 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
         {
         case InsertMode::Insert:  first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
         case InsertMode::Replace: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
-        case InsertMode::Append:  first = sel.begin(); last = sel.end(); break;
+        case InsertMode::Append:
+        {
+            first = sel.begin();
+            last  = std::max(sel.first(), sel.last());
+            // special case for end of lines, append to current line instead
+            auto coord = last.underlying_iterator().coord();
+            if (coord.column != buffer.line_length(coord.line) - 1)
+                ++last;
+            break;
+        }
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
@@ -435,8 +444,8 @@ IncrementalInserter::~IncrementalInserter()
 {
     for (auto& sel : m_editor.m_selections)
     {
-        if (m_mode == InsertMode::Append)
-            sel = Selection(sel.first(), utf8::previous(sel.last()));
+        if (m_mode == InsertMode::Append and sel.last().column() > 0)
+            sel.last() = utf8::previous(sel.last());
          sel.avoid_eol();
     }
 
