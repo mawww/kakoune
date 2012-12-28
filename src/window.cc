@@ -163,13 +163,15 @@ String Window::status_line() const
 {
     BufferCoord cursor = selections().back().last().coord();
     std::ostringstream oss;
-    oss << buffer().name();
+    oss << buffer().name()
+        << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
     if (buffer().is_modified())
         oss << " [+]";
-    oss << " -- " << (int)cursor.line+1 << "," << (int)cursor.column+1
-        << " -- " << selections().size() << " sel -- ";
+    if (buffer().flags() & Buffer::Flags::New)
+        oss << " [new file]";
+    oss << " [" << selections().size() << " sel]";
     if (is_editing())
-        oss << "[Insert]";
+        oss << " [insert]";
     return oss.str();
 }
 
