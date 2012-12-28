@@ -631,10 +631,8 @@ void register_registers()
     }
 }
 
-void create_local_client(const String& file, const String& init_command)
+void create_local_client(const String& init_command)
 {
-    Buffer* buffer = nullptr;
-
     class LocalNCursesUI : public NCursesUI
     {
         ~LocalNCursesUI()
@@ -649,20 +647,8 @@ void create_local_client(const String& file, const String& init_command)
     };
 
     UserInterface* ui = new LocalNCursesUI{};
-    if (not file.empty())
-    {
-        buffer = create_buffer_from_file(file);
-        if (not buffer)
-        {
-            ui->print_status("new file " + file, -1);
-            buffer = new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
-        }
-    }
-    else
-        buffer = new Buffer("*scratch*", Buffer::Flags::None);
-
     ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, *buffer, 0, init_command);
+        std::unique_ptr<UserInterface>{ui}, 0, init_command);
 }
 
 RemoteClient* connect_to(const String& pid, const String& init_command)
@@ -771,7 +757,21 @@ int main(int argc, char* argv[])
              write_debug("error while parsing kakrc: " + error.description());
         }
 
-        create_local_client(parser.positional_count() > 0 ? parser[0] : "", init_command);
+        if (parser.positional_count() != 0)
+        {
+            // create buffers in reverse order so that the first given buffer
+            // is the most recently created one.
+            for (int i = parser.positional_count() - 1; i >= 0; --i)
+            {
+                const String& file = parser[i];
+                if (not create_buffer_from_file(file))
+                    new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
+            }
+        }
+        else
+            new Buffer("*scratch*", Buffer::Flags::None);
+
+        create_local_client(init_command);
 
         while (not client_manager.empty())
             event_manager.handle_next_events();

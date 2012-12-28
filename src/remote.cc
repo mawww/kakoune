@@ -3,7 +3,6 @@
 #include "display_buffer.hh"
 #include "debug.hh"
 #include "client_manager.hh"
-#include "buffer_manager.hh"
 #include "event_manager.hh"
 
 #include <sys/types.h>
@@ -370,11 +369,10 @@ void handle_remote(int socket)
 {
     String init_command = read<String>(socket);
 
-    auto& buffer = *BufferManager::instance().begin();
     RemoteUI* ui = new RemoteUI{socket};
     EventManager::instance().unwatch(socket);
     ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, *buffer, socket, init_command);
+        std::unique_ptr<UserInterface>{ui}, socket, init_command);
 }
 
 }

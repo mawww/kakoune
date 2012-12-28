@@ -8,9 +8,9 @@ namespace Kakoune
 {
 
 void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                  Buffer& buffer, int event_fd,
-                                  const String& init_commands)
+                                  int event_fd, const String& init_commands)
 {
+    Buffer& buffer = **BufferManager::instance().begin();
     m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer)});
 
     InputHandler*  input_handler = &m_clients.back()->input_handler;
