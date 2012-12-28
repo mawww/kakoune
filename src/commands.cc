@@ -225,6 +225,7 @@ void show_buffer(const CommandParameters& params, Context& context)
     }
 }
 
+template<bool force>
 void delete_buffer(const CommandParameters& params, Context& context)
 {
     if (params.size() > 1)
@@ -241,7 +242,7 @@ void delete_buffer(const CommandParameters& params, Context& context)
         if (not buffer)
             throw runtime_error("buffer " + buffer_name + " does not exists");
     }
-    if (buffer->flags() & Buffer::Flags::File and buffer->is_modified())
+    if (not force and (buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
         throw runtime_error("buffer " + buffer->name() + " is modified");
 
     if (manager.count() == 1)
@@ -688,7 +689,8 @@ void register_commands()
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
     cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
-    cm.register_commands({ "db", "delbuf" }, delete_buffer, buffer_completer);
+    cm.register_commands({ "db", "delbuf" }, delete_buffer<false>, buffer_completer);
+    cm.register_commands({ "db!", "delbuf!" }, delete_buffer<true>, buffer_completer);
 
     cm.register_commands({ "ah", "addhl" }, add_highlighter,
                          [](const Context& context, const CommandParameters& params,
