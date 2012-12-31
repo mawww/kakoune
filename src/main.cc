@@ -268,11 +268,21 @@ void do_join(Context& context)
 {
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
+    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
-    editor.multi_select(std::bind(select_all_matches, _1, "\n\\h*"));
+    editor.multi_select([](const Selection& sel)
+    {
+        SelectionList res = select_all_matches(sel, "\n\\h*");
+        // remove last end of line if selected
+        assert(std::is_sorted(res.begin(), res.end(),
+              [](const Selection& lhs, const Selection& rhs)
+              { return lhs.begin() < rhs.begin(); }));
+        if (not res.empty() and res.back().end() == sel.buffer().end())
+            res.pop_back();
+        return res;
+    });
     editor.insert(" ", InsertMode::Replace);
-    editor.select(sels);
 }
 
 void do_indent(Context& context)
