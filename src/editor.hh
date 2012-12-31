@@ -62,7 +62,10 @@ public:
     void flip_selections();
     void keep_selection(int index);
     void remove_selection(int index);
-    void select(const BufferIterator& iterator,
+    void select(const BufferIterator& it,
+                SelectMode mode = SelectMode::Replace)
+    { select(Selection{ it, it }, mode); }
+    void select(const Selection& sel,
                 SelectMode mode = SelectMode::Replace);
     void select(const Selector& selector,
                 SelectMode mode = SelectMode::Replace);

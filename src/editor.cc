@@ -211,18 +211,21 @@ void Editor::remove_selection(int index)
         m_selections.erase(m_selections.begin() + index);
 }
 
-void Editor::select(const BufferIterator& iterator, SelectMode mode)
+void Editor::select(const Selection& selection, SelectMode mode)
 {
     if (mode == SelectMode::Replace)
-        m_selections = SelectionList{ {iterator, iterator} };
+        m_selections = SelectionList{ selection };
     else if (mode == SelectMode::Extend)
     {
         for (auto& sel : m_selections)
-            sel.last() = iterator;
+            sel.merge_with(selection);
         sort_and_merge_overlapping(m_selections);
     }
     else if (mode == SelectMode::Append)
-        assert(false);
+    {
+        m_selections.push_back(selection);
+        sort_and_merge_overlapping(m_selections);
+    }
 }
 
 void Editor::select(SelectionList selections)
