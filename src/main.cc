@@ -177,8 +177,12 @@ void do_search_next(Context& context)
     const String& ex = RegisterManager::instance()['/'].values(context)[0];
     if (not ex.empty())
     {
-        context.push_jump();
-        context.editor().select(std::bind(select_next_match, _1, ex), mode);
+        if (mode == SelectMode::Replace)
+            context.push_jump();
+        int count = context.numeric_param();
+        do {
+            context.editor().select(std::bind(select_next_match, _1, ex), mode);
+        } while (--count > 0);
     }
     else
         context.print_status("no search pattern");
