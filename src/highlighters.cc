@@ -3,6 +3,8 @@
 #include "window.hh"
 #include "color_registry.hh"
 #include "highlighter_group.hh"
+#include "register_manager.hh"
+#include "context.hh"
 #include "string.hh"
 #include "utf8.hh"
 
@@ -150,6 +152,51 @@ HighlighterAndId colorize_regex_factory(Window& window,
     }
 }
 
+class SearchHighlighter
+{
+public:
+    SearchHighlighter(const ColorSpec& colors)
+        : m_colors(colors), m_colorizer(Regex(), m_colors) {}
+
+    void operator()(DisplayBuffer& display_buffer)
+    {
+        memoryview<String> searches = RegisterManager::instance()['/'].values(Context{});
+        if (searches.empty())
+            return;
+        const String& search = searches[0];
+        if (search != m_last_search)
+        {
+            m_last_search = search;
+            if (not m_last_search.empty())
+                m_colorizer = RegexColorizer{Regex{m_last_search.begin(), m_last_search.end()}, m_colors};
+        }
+        if (not m_last_search.empty())
+            m_colorizer(display_buffer);
+    }
+
+private:
+     String         m_last_search;
+     ColorSpec      m_colors;
+     RegexColorizer m_colorizer;
+};
+
+HighlighterAndId highlight_search_factory(Window& window,
+                                          const HighlighterParameters params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+    try
+    {
+        ColorSpec colors;
+        colors[0] = &ColorRegistry::instance()[params[0]];
+        return {"hlsearch", SearchHighlighter{colors}};
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(String("regex error: ") + err.what());
+    }
+};
+
 void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
 {
     const int tabstop = window.options()["tabstop"].as_int();
@@ -275,6 +322,7 @@ void register_highlighters()
     registry.register_func("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
     registry.register_func("number_lines", WindowHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("regex", colorize_regex_factory);
+    registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
 }
 
