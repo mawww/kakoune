@@ -131,7 +131,6 @@ void do_pipe(Context& context)
                                                                 cmdline, context, {}, {}));
             editor.insert(strings, InsertMode::Replace);
         }, context);
-
 }
 
 template<SelectMode mode>
