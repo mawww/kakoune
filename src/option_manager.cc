@@ -99,6 +99,7 @@ GlobalOptions::GlobalOptions()
     set_option("BOM", Option("no"));
     set_option("shell", Option("sh"));
     set_option("complete_prefix", Option(1));
+    set_option("incsearch", Option(1));
     set_option("ignored_files", Option(R"(^(\..*|.*\.(o|so|a))$)"));
 }
 

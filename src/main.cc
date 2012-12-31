@@ -155,6 +155,8 @@ void do_search(Context& context)
                         RegisterManager::instance()['/'] = ex;
                     context.push_jump();
                 }
+                else if (not context.options()["incsearch"].as_int())
+                    return;
 
                 context.editor().select(std::bind(select_next_match, _1, ex), mode);
             }
