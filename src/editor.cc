@@ -178,7 +178,6 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
 
 void Editor::clear_selections()
 {
-    check_invariant();
     BufferIterator pos = m_selections.back().last();
 
     if (*pos == '\n' and not pos.is_begin() and *utf8::previous(pos) != '\n')
@@ -186,29 +185,28 @@ void Editor::clear_selections()
 
     Selection sel = Selection(pos, pos);
     m_selections = SelectionList{ std::move(sel) };
+    check_invariant();
 }
 
 void Editor::flip_selections()
 {
-    check_invariant();
     for (auto& sel : m_selections)
         std::swap(sel.first(), sel.last());
+    check_invariant();
 }
 
 void Editor::keep_selection(int index)
 {
-    check_invariant();
-
     if (index < m_selections.size())
         m_selections = SelectionList{ std::move(m_selections[index]) };
+    check_invariant();
 }
 
 void Editor::remove_selection(int index)
 {
-    check_invariant();
-
     if (m_selections.size() > 1 and index < m_selections.size())
         m_selections.erase(m_selections.begin() + index);
+    check_invariant();
 }
 
 void Editor::select(const Selection& selection, SelectMode mode)
@@ -226,6 +224,7 @@ void Editor::select(const Selection& selection, SelectMode mode)
         m_selections.push_back(selection);
         sort_and_merge_overlapping(m_selections);
     }
+    check_invariant();
 }
 
 void Editor::select(SelectionList selections)
@@ -233,12 +232,11 @@ void Editor::select(SelectionList selections)
     if (selections.empty())
         throw runtime_error("no selections");
     m_selections = std::move(selections);
+    check_invariant();
 }
 
 void Editor::select(const Selector& selector, SelectMode mode)
 {
-    check_invariant();
-
     if (mode == SelectMode::Append)
     {
         auto& sel = m_selections.back();
@@ -262,6 +260,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
         }
     }
     sort_and_merge_overlapping(m_selections);
+    check_invariant();
 }
 
 struct nothing_selected : public runtime_error
@@ -271,8 +270,6 @@ struct nothing_selected : public runtime_error
 
 void Editor::multi_select(const MultiSelector& selector)
 {
-    check_invariant();
-
     SelectionList new_selections;
     for (auto& sel : m_selections)
     {
@@ -291,6 +288,7 @@ void Editor::multi_select(const MultiSelector& selector)
         throw nothing_selected();
     sort_and_merge_overlapping(new_selections);
     m_selections = std::move(new_selections);
+    check_invariant();
 }
 
 class LastModifiedRangeListener : public BufferChangeListener
@@ -332,6 +330,7 @@ bool Editor::undo()
     bool res = m_buffer->undo();
     if (res)
         m_selections = SelectionList{ {listener.first(), listener.last()} };
+    check_invariant();
     return res;
 }
 
@@ -341,6 +340,7 @@ bool Editor::redo()
     bool res = m_buffer->redo();
     if (res)
         m_selections = SelectionList{ {listener.first(), listener.last()} };
+    check_invariant();
     return res;
 }
 
@@ -441,6 +441,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             }
         }
     }
+    editor.check_invariant();
 }
 
 IncrementalInserter::~IncrementalInserter()
