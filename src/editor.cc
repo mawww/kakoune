@@ -130,11 +130,11 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-static void merge_overlapping(SelectionList& selections)
+static void sort_and_merge_overlapping(SelectionList& selections)
 {
-    assert(std::is_sorted(selections.begin(), selections.end(),
-                          [](const Selection& lhs, const Selection& rhs)
-                          { return lhs.begin() < rhs.begin(); }));
+    std::sort(selections.begin(), selections.end(),
+              [](const Selection& lhs, const Selection& rhs)
+              { return lhs.begin() < rhs.begin(); });
     for (size_t i = 0; i < selections.size()-1;)
     {
         if (overlaps(selections[i], selections[i+1]))
@@ -159,7 +159,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
         sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
         sel.avoid_eol();
     }
-    merge_overlapping(m_selections);
+    sort_and_merge_overlapping(m_selections);
 }
 
 void Editor::move_selections(LineCount offset, SelectMode mode)
@@ -173,7 +173,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
         sel.avoid_eol();
     }
-    merge_overlapping(m_selections);
+    sort_and_merge_overlapping(m_selections);
 }
 
 void Editor::clear_selections()
@@ -219,7 +219,7 @@ void Editor::select(const BufferIterator& iterator, SelectMode mode)
     {
         for (auto& sel : m_selections)
             sel.last() = iterator;
-        merge_overlapping(m_selections);
+        sort_and_merge_overlapping(m_selections);
     }
     else if (mode == SelectMode::Append)
         assert(false);
@@ -258,7 +258,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
                 sel.captures() = std::move(res.captures());
         }
     }
-    merge_overlapping(m_selections);
+    sort_and_merge_overlapping(m_selections);
 }
 
 struct nothing_selected : public runtime_error
@@ -286,7 +286,7 @@ void Editor::multi_select(const MultiSelector& selector)
     }
     if (new_selections.empty())
         throw nothing_selected();
-    merge_overlapping(new_selections);
+    sort_and_merge_overlapping(new_selections);
     m_selections = std::move(new_selections);
 }
 
