@@ -125,22 +125,37 @@ std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
     for (auto& sel : m_selections)
-        contents.push_back(m_buffer->string(sel.begin(),
-                                           sel.end()));
+        contents.push_back(m_buffer->string(sel.begin(), sel.end()));
     return contents;
+}
+
+static bool compare_selections(const Selection& lhs, const Selection& rhs)
+{
+    return lhs.begin() < rhs.begin();
 }
 
 static void sort_and_merge_overlapping(SelectionList& selections)
 {
-    std::sort(selections.begin(), selections.end(),
-              [](const Selection& lhs, const Selection& rhs)
-              { return lhs.begin() < rhs.begin(); });
-    for (size_t i = 0; i < selections.size()-1;)
+    if (selections.size() == 1)
+        return;
+
+    Range back = selections.back();
+    auto back_rank = std::count_if(selections.begin(), selections.end(),
+                                   [&](const Selection& sel)
+                                   { return sel.begin() < back.begin(); });
+    std::sort(selections.begin(), selections.end(), compare_selections);
+    if (back_rank < selections.size() - 1)
+        std::rotate(selections.begin(), selections.begin() + back_rank + 1,
+                    selections.end());
+    assert(selections.back() == back);
+
+    for (size_t i = 0; i < selections.size() and selections.size() > 1;)
     {
-        if (overlaps(selections[i], selections[i+1]))
+        size_t next = (i + 1) % selections.size();
+        if (overlaps(selections[i], selections[next]))
         {
-            selections[i].merge_with(selections[i+1]);
-            selections.erase(selections.begin() + i + 1);
+            selections[i].merge_with(selections[next]);
+            selections.erase(selections.begin() + next);
         }
         else
            ++i;
@@ -350,6 +365,11 @@ void Editor::check_invariant() const
 {
     assert(not m_selections.empty());
     m_selections.check_invariant();
+
+    auto it = ++std::max_element(m_selections.begin(), m_selections.end(),
+                                 compare_selections);
+    assert(std::is_sorted(m_selections.begin(), it, compare_selections));
+    assert(std::is_sorted(it, m_selections.end(), compare_selections));
 }
 
 void Editor::begin_edition()
