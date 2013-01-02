@@ -156,7 +156,8 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
         auto limit = offset < 0 ? buffer().iterator_at_line_begin(last)
                                 : utf8::previous(buffer().iterator_at_line_end(last));
         last = utf8::advance(last, limit, offset);
-        sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
+        sel.first() = mode == SelectMode::Extend ? sel.first() : last;
+        sel.last()  = last;
         sel.avoid_eol();
     }
     sort_and_merge_overlapping(m_selections);
@@ -170,7 +171,8 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         BufferCoord pos = sel.last().coord();
         pos.line += offset;
         BufferIterator last = utf8::finish(m_buffer->iterator_at(pos, true));
-        sel = Selection(mode == SelectMode::Extend ? sel.first() : last, last);
+        sel.first() = mode == SelectMode::Extend ? sel.first() : last;
+        sel.last()  = last;
         sel.avoid_eol();
     }
     sort_and_merge_overlapping(m_selections);
