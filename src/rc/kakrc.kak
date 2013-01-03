@@ -4,7 +4,7 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
 
 hook global WinSetOption filetype=kak %{
     addhl group kak-highlight
-    addhl -group kak-highlight regex \<(hook|addhl|rmhl|addfilter|rmfilter|exec|source|runtime|def|echo|edit|set[gbw])\> 0:keyword
+    addhl -group kak-highlight regex \<(hook|addhl|rmhl|addfilter|rmfilter|exec|eval|source|runtime|def|echo|edit|set[gbw])\> 0:keyword
     addhl -group kak-highlight regex \<(default|black|red|green|yellow|blue|magenta|cyan|white)\> 0:value
     addhl -group kak-highlight regex (?<=\<hook)\h+((global|buffer|window)|(\S+))\h+(\S+)\h+(\H+) 2:attribute 3:error 4:identifier 5:string
     addhl -group kak-highlight regex (?<=\<regex)\h+(\S+) 1:string
