@@ -15,4 +15,4 @@ hook global WinSetOption filetype=make %{
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make-highlight; }
 
-def errjump %{ exec 'xs^([^:\n]+):(\d+)(?::(\d+))?:(.*?)$<ret>'; edit %reg{1} %reg{2} %reg{3}; echo %reg{4} }
+def errjump %{ exec 'xs^([^:\n]+):(\d+)(?::(\d+))?:(.*?)$<ret><a-h><space>'; edit %reg{1} %reg{2} %reg{3}; echo %reg{4} }
