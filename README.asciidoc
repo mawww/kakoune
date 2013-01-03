@@ -197,8 +197,8 @@ Commands are entered using +:+.
  * +nop+: does nothing, but as with every other commands, arguments may be
       evaluated. So nop can be used for example to execute a shell command
       while being sure that it's output will not be interpreted by kak.
-      :%sh{ echo echo tchou } will echo tchou in kakoune, wherease
-      :nop %sh{ echo echo tchou } will not, but both will execute the
+      +:%sh{ echo echo tchou }+ will echo tchou in kakoune, whereas
+      +:nop %sh{ echo echo tchou }+ will not, but both will execute the
       shell command.
 
 String syntax
@@ -227,10 +227,13 @@ Highlighters
 
 Manipulation of the displayed text is done through highlighters, which can be added
 or removed with the command
+
 -----------------------------------------------------
 :addhl <highlighter_name> <highlighter_parameters...>
 -----------------------------------------------------
+
 and
+
 ----------------------
 :rmhl <highlighter_id>
 ----------------------
@@ -258,10 +261,13 @@ Filters
 
 Filters can be installed to interact with buffer modifications. They can be
 added or removed with
+
 -----------------------------------------------
 :addfilter <filter_name> <filter_parameters...>
 -----------------------------------------------
+
 and
+
 ---------------------
 :rmfilter <filter_id>
 ---------------------
@@ -284,9 +290,11 @@ Hooks
 
 commands can be registred to be executed when certain events arise.
 to register a hook, use the hook command.
+
 ------------------------------------------------------
 :hook <scope> <hook_name> <filtering_regex> <commands>
 ------------------------------------------------------
+
 <scope> can be either global, buffer or window, the scope are hierarchical,
 meaning that a Window calling a hook will execute it's own, the buffer ones
 and the global ones.
@@ -296,6 +304,7 @@ called.
 
 for example, to automatically use line numbering with .cc files,
 use the following command:
+
 -----------------------------------------------------
 :hook global WinCreate .*\.cc %{ addhl number_lines }
 -----------------------------------------------------
@@ -318,6 +327,7 @@ Some of kakoune state is available through environment variables:
 
 for example you can print informations on the current file in the status
 line using:
+
 -------------------------------
 :echo %sh{ ls -l $kak_bufname }
 -------------------------------
@@ -329,6 +339,7 @@ Similar to shell expansion, register contents and options values can be
 accessed through %reg{<register>} and %opt{<option>} syntax.
 
 for example you can display last search pattern with
+
 -------------
 :echo %reg{/}
 -------------
@@ -337,9 +348,11 @@ Defining Commands
 -----------------
 
 new commands can be defined using the +def+ command.
+
 ------------------------------
 :def <command_name> <commands>
 ------------------------------
+
 <commands> is a string containing the commands to execute
 
 def can also takes some flags:
@@ -358,9 +371,11 @@ def can also takes some flags:
 
 Using shell expansion permits to define complex commands or to access
 kakoune state:
+
 ------------------------------------------------------
 :def print_selection %{ echo %sh{ ${kak_selection} } }
 ------------------------------------------------------
+
 Some helper commands can be used to define composite commands:
 
  * +menu <label1> <commands1> <label2> <commands2>...+: display a menu using
@@ -382,9 +397,11 @@ FIFO Buffer
 -----------
 
 the +edit+ command can take a -fifo parameter:
+
 -----------------------------------
 :edit -fifo <filename> <buffername>
 -----------------------------------
+
 in this case, a buffer named +<buffername>+ is created which reads its content
 from fifo +<filename>+. When the fifo is written to, the buffer is automatically
 updated.
