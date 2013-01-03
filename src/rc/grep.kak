@@ -9,10 +9,10 @@ def -shell-params -file-completion \
      else
          ( ${kak_opt_grepcmd} "${kak_selection}" >& ${output} ) >& /dev/null < /dev/null &
      fi
-     echo "try %{ db *grep* } catch %{ }
+     echo "try %{ db *grep* } catch %{}
            edit -fifo ${output} *grep*
            setb filetype grep
-           hook buffer BufClose .* %{ %sh{ rm -r $(dirname ${output}) } }"
+           hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
 }}
 
 hook global WinSetOption filetype=grep %{

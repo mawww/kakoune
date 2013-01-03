@@ -674,6 +674,8 @@ void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
 
+    cm.register_commands({"nop"}, [](const CommandParameters&, Context&){});
+
     PerArgumentCommandCompleter filename_completer({ complete_filename });
     cm.register_commands({ "e", "edit" }, edit<false>, filename_completer);
     cm.register_commands({ "e!", "edit!" }, edit<true>, filename_completer);

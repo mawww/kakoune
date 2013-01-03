@@ -194,6 +194,12 @@ Commands are entered using +:+.
       or *g*lobal scope.
  * +c[ol]a[lias] <name> <colspec>+: define a color alias, so that name can be
       used instead of colspec in contexts where a color is needed.
+ * +nop+: does nothing, but as with every other commands, arguments may be
+      evaluated. So nop can be used for example to execute a shell command
+      while being sure that it's output will not be interpreted by kak.
+      :%sh{ echo echo tchou } will echo tchou in kakoune, wherease
+      :nop %sh{ echo echo tchou } will not, but both will execute the
+      shell command.
 
 String syntax
 -------------

@@ -2,10 +2,10 @@ def -shell-params make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( make $@ >& ${output} ) >& /dev/null < /dev/null &
-     echo "try %{ db *make* } catch %{ }
+     echo "try %{ db *make* } catch %{}
            edit -fifo ${output} *make*
            setb filetype make
-           hook buffer BufClose .* %{ %sh{ rm -r $(dirname ${output}) } }"
+           hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
 }}
 
 hook global WinSetOption filetype=make %{
