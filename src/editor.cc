@@ -241,6 +241,8 @@ void Editor::select(const Selection& selection, SelectMode mode)
         m_selections.push_back(selection);
         sort_and_merge_overlapping(m_selections);
     }
+    else
+        assert(false);
     check_invariant();
 }
 
@@ -261,6 +263,11 @@ void Editor::select(const Selector& selector, SelectMode mode)
         if (res.captures().empty())
             res.captures() = sel.captures();
         m_selections.push_back(res);
+    }
+    else if (mode == SelectMode::ReplaceLast)
+    {
+        auto& sel = m_selections.back();
+        sel = selector(sel);
     }
     else
     {

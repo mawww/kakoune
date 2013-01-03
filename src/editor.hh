@@ -18,6 +18,7 @@ enum class SelectMode
     Replace,
     Extend,
     Append,
+    ReplaceLast,
 };
 
 enum class InsertMode : unsigned
