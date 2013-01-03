@@ -29,6 +29,7 @@ Basic Movement
 --------------
 
  * _space_: select the character under selection end
+ * _alt-space_: flip the selections
 
  * _h_: select the character on the right of selection end
  * _j_: select the character below the selection end
@@ -38,6 +39,7 @@ Basic Movement
  * _w_: select the word and following whitespaces  on the right of selection end
  * _b_: select preceding whitespaces and the word on the left of selection end
  * _e_: select preceding whitespaces and the word on the right of selection end
+ * _alt-[wbe]_: same as [wbe] but select WORD instead of word
 
  * _x_: select line on which selection end lies (or next line when end lies on
         an end-of-line)
@@ -51,14 +53,20 @@ Basic Movement
  * _gg_, _gt_: go to the first line
  * _gb_: go to the last line
 
- * _/_: search
- * _n_: find next match
+ * _/_: search (select next match)
+ * _?_: search (extend to next match)
+ * _n_: select next match
  * _N_: add a new selection with next match
+ * _alt-n_: replace last selection with next match (preserving the others)
+
+ * _alt-c_: center last selection in current window
+ * _pageup_: scroll up
+ * _pagedown_: scroll down
 
 Appending
 ---------
 
-for most selection commands, using shift permits to add to current selection
+for most selection commands, using shift permits to extend current selection
 instead of replacing it. for example, _wWW_ selects 3 consecutive words
 
 Using Counts
@@ -88,11 +96,18 @@ Changes
 
  * _p_: paste after current selection end
  * _P_: paste before current selection begin
+ * _alt-p_: replace current selection with yanked text
 
  * _alt-j_: join selected lines
 
+ * _>_: indent selected lines
+ * _<_: deindent selected lines
+
  * _|_: pipe each selections through the given external filter program
         and replace with it's output.
+
+ * _u_: undo last change
+ * _U_: redo last change
 
 Multi Selection
 ---------------
@@ -129,7 +144,7 @@ point is always the last character of the selection.
  * W: select the whole WORD
 
 When it makes sense, _alt-i_ selects the inner object and alt-a the whole
-object. For example _alt-i_ ( will only select the inside of the parenthesis,
+object. For example _alt-i_ will only select the inside of the parenthesis,
 for words, the difference between _alt-i_ and _alt-a_ is that _alt-a_ also
 selects the following blanks.
 
@@ -164,14 +179,21 @@ Commands are entered using +:+.
       unsaved buffers remaining.
  * +wq+: write current buffer and quit
  * +b[uffer] <name>+: switch to buffer <name>
- * +d[el]b[uf] [<name>]+: delete the buffer <name>
+ * +d[el]b[uf] [<name>]+: delete the buffer <name>, use d[el]b[uf]! to force
+      deleting a modified buffer.
  * +source <filename>+: execute commands in <filename>
  * +runtime <filename>+: execute commands in <filename>, <filename>
       is relative to kak executable path.
- * +exec <keys>+: execute <keys> as if pressed in normal mode.
+ * +name <name>+: set current client name
+ * +exec [-client <name>] <keys>+: execute <keys> as if pressed in normal mode.
+      if client if specified, exec keys in the named client context.
+ * +eval [-client <name>] <command>+: execute <command> as if entered in command line
+      if client if specified, exec command in the named client context.
  * +echo <text>+: show <text> in status line
  * +set{b,w,g} <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
       or *g*lobal scope.
+ * +c[ol]a[lias] <name> <colspec>+: define a color alias, so that name can be
+      used instead of colspec in contexts where a color is needed.
 
 String syntax
 -------------
@@ -244,6 +266,11 @@ exisiting filters are:
  * +cleanup_whitespaces+: remove trailing whitespaces on the previous line
                           when inserting an end-of-line.
  * +expand_tabulations+: insert spaces instead of tab characters
+ * +regex+: takes three arguments: current line regex, inserted text regex
+      and replacement text. when the current line regex and inserted text
+      regex matches, replace insereted text with the replacement text.
+      capture groups are available through $[0-9] escape sequence, and
+      cursor position can be specified with $c.
  * +group+: same as highlighters group
 
 Hooks
@@ -332,6 +359,12 @@ Some helper commands can be used to define composite commands:
 
  * +menu <label1> <commands1> <label2> <commands2>...+: display a menu using
      labels, the selected label's commands are executed.
+     +menu+ can take a -auto-single argument, to automatically run commands
+     when only one choice is provided. and a -select-cmds argument, in which
+     case menu takes three argument per item, the last one being a command
+     to execute when the item is selected (but not validated).
+ * +info <text>+: display text in an information box, when the option inline
+     is given, place the info box next to last selection end.
  * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead.
