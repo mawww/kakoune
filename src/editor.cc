@@ -195,13 +195,14 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
 
 void Editor::clear_selections()
 {
-    BufferIterator pos = m_selections.back().last();
+    auto& sel = m_selections.back();
+    auto& pos = sel.last();
 
     if (*pos == '\n' and not pos.is_begin() and *utf8::previous(pos) != '\n')
         pos = utf8::previous(pos);
+    sel.first() = pos;
 
-    Selection sel = Selection(pos, pos);
-    m_selections = SelectionList{ std::move(sel) };
+    m_selections.erase(m_selections.begin(), m_selections.end() - 1);
     check_invariant();
 }
 
@@ -259,7 +260,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
     if (mode == SelectMode::Append)
     {
         auto& sel = m_selections.back();
-        Selection res = selector(sel);
+        auto  res = selector(sel);
         if (res.captures().empty())
             res.captures() = sel.captures();
         m_selections.push_back(res);
@@ -267,18 +268,24 @@ void Editor::select(const Selector& selector, SelectMode mode)
     else if (mode == SelectMode::ReplaceLast)
     {
         auto& sel = m_selections.back();
-        sel = selector(sel);
+        auto  res = selector(sel);
+        sel.first() = res.first();
+        sel.last()  = res.last();
+        if (not res.captures().empty())
+            sel.captures() = std::move(res.captures());
     }
     else
     {
         for (auto& sel : m_selections)
         {
-            Selection res = selector(sel);
+            auto res = selector(sel);
             if (mode == SelectMode::Extend)
                 sel.merge_with(res);
             else
-                sel = std::move(res);
-
+            {
+                sel.first() = res.first();
+                sel.last()  = res.last();
+            }
             if (not res.captures().empty())
                 sel.captures() = std::move(res.captures());
         }
