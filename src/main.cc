@@ -518,6 +518,7 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, '/' }, do_search<SelectMode::Replace> },
     { { Key::Modifiers::None, '?' }, do_search<SelectMode::Extend> },
     { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace> },
+    { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceLast> },
     { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append> },
 
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
