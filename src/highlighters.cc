@@ -271,8 +271,12 @@ void highlight_selections(Window& window, DisplayBuffer& display_buffer)
 
         const BufferIterator& last = sel.last();
         highlight_range(display_buffer, last, utf8::next(last), false,
-                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse; });
+                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse; atom.attribute &= ~Attributes::Underline; });
     }
+    const Selection& back = window.selections().back();
+    const BufferIterator& last = back.last();
+    highlight_range(display_buffer, back.begin(), back.end(), false,
+                    [](DisplayAtom& atom) { atom.attribute |= Attributes::Bold; });
 }
 
 template<void (*highlighter_func)(DisplayBuffer&)>
