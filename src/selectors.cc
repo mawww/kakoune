@@ -59,19 +59,17 @@ bool is_begin(const Utf8Iterator& it) { return it.underlying_iterator().is_begin
 bool is_end(const Utf8Iterator& it) { return it.underlying_iterator().is_end(); }
 
 template<typename Iterator, typename T>
-bool skip_while(Iterator& it, T condition)
+void skip_while(Iterator& it, T condition)
 {
     while (not is_end(it) and condition(*it))
         ++it;
-    return not is_end(it) and condition(*it);
 }
 
 template<typename Iterator, typename T>
-bool skip_while_reverse(Iterator& it, T condition)
+void skip_while_reverse(Iterator& it, T condition)
 {
     while (not is_begin(it) and condition(*it))
         --it;
-    return not is_end(it) and condition(*it);
 }
 
 Selection utf8_selection(const Utf8Iterator& first, const Utf8Iterator& last)
@@ -99,9 +97,9 @@ Selection select_to_next_word(const Selection& selection)
     else if (is_word<punctuation_is_word>(*begin))
         skip_while(end, is_word<punctuation_is_word>);
 
-    bool with_end = skip_while(end, is_blank);
+    skip_while(end, is_blank);
 
-    return utf8_selection(begin, with_end ? end : end-1);
+    return utf8_selection(begin, end-1);
 }
 template Selection select_to_next_word<false>(const Selection&);
 template Selection select_to_next_word<true>(const Selection&);
@@ -118,13 +116,12 @@ Selection select_to_next_word_end(const Selection& selection)
     Utf8Iterator end = begin;
     skip_while(end, is_blank);
 
-    bool with_end = false;
     if (not punctuation_is_word and is_punctuation(*end))
-        with_end = skip_while(end, is_punctuation);
+        skip_while(end, is_punctuation);
     else if (is_word<punctuation_is_word>(*end))
-        with_end = skip_while(end, is_word<punctuation_is_word>);
+        skip_while(end, is_word<punctuation_is_word>);
 
-    return utf8_selection(begin, with_end ? end : end-1);
+    return utf8_selection(begin, end-1);
 }
 template Selection select_to_next_word_end<false>(const Selection&);
 template Selection select_to_next_word_end<true>(const Selection&);
@@ -144,9 +141,15 @@ Selection select_to_previous_word(const Selection& selection)
 
     bool with_end = false;
     if (not punctuation_is_word and is_punctuation(*end))
-        with_end = skip_while_reverse(end, is_punctuation);
+    {
+        skip_while_reverse(end, is_punctuation);
+        with_end = is_punctuation(*end);
+    }
     else if (is_word<punctuation_is_word>(*end))
-        with_end = skip_while_reverse(end, is_word<punctuation_is_word>);
+    {
+        skip_while_reverse(end, is_word<punctuation_is_word>);
+        with_end = is_word<punctuation_is_word>(*end);
+    }
 
     return utf8_selection(begin, with_end ? end : end+1);
 }
@@ -325,7 +328,8 @@ Selection select_whole_word(const Selection& selection, bool inner)
     Utf8Iterator last = first;
     if (is_word(*first))
     {
-        if (not skip_while_reverse(first, is_word<punctuation_is_word>))
+        skip_while_reverse(first, is_word<punctuation_is_word>);
+        if (not is_word<punctuation_is_word>(*first))
             ++first;
         skip_while(last, is_word<punctuation_is_word>);
         if (not inner)
@@ -333,7 +337,8 @@ Selection select_whole_word(const Selection& selection, bool inner)
     }
     else if (not inner)
     {
-        if (not skip_while_reverse(first, is_blank))
+        skip_while_reverse(first, is_blank);
+        if (is_blank(*first))
             ++first;
         skip_while(last, is_blank);
         if (not is_word<punctuation_is_word>(*last))
@@ -348,19 +353,20 @@ template Selection select_whole_word<true>(const Selection&, bool);
 
 Selection select_whole_lines(const Selection& selection)
 {
-     // no need to be utf8 aware for is_eol as we only use \n as line seperator
-     BufferIterator first = selection.first();
-     BufferIterator last =  selection.last();
-     BufferIterator& to_line_start = first <= last ? first : last;
-     BufferIterator& to_line_end = first <= last ? last : first;
+    // no need to be utf8 aware for is_eol as we only use \n as line seperator
+    BufferIterator first = selection.first();
+    BufferIterator last =  selection.last();
+    BufferIterator& to_line_start = first <= last ? first : last;
+    BufferIterator& to_line_end = first <= last ? last : first;
 
-     --to_line_start;
-     skip_while_reverse(to_line_start, [](char cur) { return not is_eol(cur); });
-     ++to_line_start;
+    --to_line_start;
+    skip_while_reverse(to_line_start, [](char cur) { return not is_eol(cur); });
+    if (is_eol(*to_line_start))
+        ++to_line_start;
 
-     skip_while(to_line_end, [](char cur) { return not is_eol(cur); });
+    skip_while(to_line_end, [](char cur) { return not is_eol(cur); });
 
-     return Selection(first, last);
+    return Selection(first, last);
 }
 
 Selection select_whole_buffer(const Selection& selection)
