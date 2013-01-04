@@ -10,13 +10,13 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
 {
     if (content == "\n")
     {
-         BufferIterator line_begin = buffer.iterator_at_line_begin(selection.last() - 1);
-         BufferIterator first_non_white = line_begin;
-         while ((*first_non_white == '\t' or *first_non_white == ' ') and
-                not first_non_white.is_end())
-             ++first_non_white;
+        BufferIterator line_begin = buffer.iterator_at_line_begin(selection.last() - 1);
+        BufferIterator first_non_white = line_begin;
+        while ((*first_non_white == '\t' or *first_non_white == ' ') and
+               not first_non_white.is_end())
+            ++first_non_white;
 
-         content += buffer.string(line_begin, first_non_white);
+        content += buffer.string(line_begin, first_non_white);
     }
 }
 

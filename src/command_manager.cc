@@ -80,8 +80,8 @@ bool is_horizontal_blank(char c)
 struct unterminated_string : parse_error
 {
     unterminated_string(const String& open, const String& close, int nest = 0)
-      : parse_error{"unterminated string '" + open + "..." + close + "'" +
-                    (nest > 0 ? "(nesting: " + int_to_str(nest) + ")" : "")}
+        : parse_error{"unterminated string '" + open + "..." + close + "'" +
+                      (nest > 0 ? "(nesting: " + int_to_str(nest) + ")" : "")}
     {}
 };
 

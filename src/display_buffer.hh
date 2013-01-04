@@ -117,8 +117,8 @@ struct DisplayAtom
     AtomContent    content;
 
     DisplayAtom(AtomContent content)
-       : content(std::move(content)), attribute(Normal),
-         fg_color(Color::Default), bg_color(Color::Default) {}
+        : content(std::move(content)), attribute(Normal),
+          fg_color(Color::Default), bg_color(Color::Default) {}
 };
 
 class DisplayLine

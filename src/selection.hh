@@ -50,7 +50,7 @@ struct Selection : public Range
 {
     Selection(const BufferIterator& first, const BufferIterator& last,
               CaptureList captures = {})
-      : Range(first, last), m_captures(std::move(captures)) {}
+        : Range(first, last), m_captures(std::move(captures)) {}
 
     void avoid_eol();
 

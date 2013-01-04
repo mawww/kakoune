@@ -175,9 +175,9 @@ public:
     }
 
 private:
-     String         m_last_search;
-     ColorSpec      m_colors;
-     RegexColorizer m_colorizer;
+    String         m_last_search;
+    ColorSpec      m_colors;
+    RegexColorizer m_colorizer;
 };
 
 HighlighterAndId highlight_search_factory(Window& window,
@@ -271,10 +271,10 @@ void highlight_selections(Window& window, DisplayBuffer& display_buffer)
 
         const BufferIterator& last = sel.last();
         highlight_range(display_buffer, last, utf8::next(last), false,
-                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse; atom.attribute &= ~Attributes::Underline; });
+                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse;
+                                                atom.attribute &= ~Attributes::Underline; });
     }
     const Selection& back = window.selections().back();
-    const BufferIterator& last = back.last();
     highlight_range(display_buffer, back.begin(), back.end(), false,
                     [](DisplayAtom& atom) { atom.attribute |= Attributes::Bold; });
 }

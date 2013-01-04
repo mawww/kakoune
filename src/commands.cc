@@ -279,8 +279,8 @@ void add_highlighter(const CommandParameters& params, Context& context)
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
-       get_group(window.highlighters(), parser.option_value("group"))
-     : window.highlighters();
+        get_group(window.highlighters(), parser.option_value("group"))
+      : window.highlighters();
 
     auto& factory = registry[name];
     group.append(factory(window, highlighter_params));
@@ -294,8 +294,8 @@ void rm_highlighter(const CommandParameters& params, Context& context)
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
-       get_group(window.highlighters(), parser.option_value("group"))
-     : window.highlighters();
+        get_group(window.highlighters(), parser.option_value("group"))
+      : window.highlighters();
 
     group.remove(parser[0]);
 }
@@ -316,8 +316,8 @@ void add_filter(const CommandParameters& params, Context& context)
 
     Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
-       get_group(editor.filters(), parser.option_value("group"))
-     : editor.filters();
+        get_group(editor.filters(), parser.option_value("group"))
+      : editor.filters();
 
     auto& factory = registry[name];
     group.append(factory(filter_params));
@@ -331,8 +331,8 @@ void rm_filter(const CommandParameters& params, Context& context)
 
     Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
-       get_group(editor.filters(), parser.option_value("group"))
-     : editor.filters();
+        get_group(editor.filters(), parser.option_value("group"))
+      : editor.filters();
 
     group.remove(parser[0]);
 }
@@ -371,8 +371,8 @@ EnvVarMap params_to_env_var_map(const CommandParameters& params)
     char param_name[] = "param0";
     for (size_t i = 0; i < params.size(); ++i)
     {
-         param_name[sizeof(param_name) - 2] = '0' + i;
-         vars[param_name] = params[i];
+        param_name[sizeof(param_name) - 2] = '0' + i;
+        vars[param_name] = params[i];
     }
     return vars;
 }
@@ -413,9 +413,9 @@ void define_command(const CommandParameters& params, Context& context)
     }
     else
     {
-         cmd = [=](const CommandParameters& params, Context& context) {
-             if (not params.empty())
-                 throw wrong_argument_count();
+        cmd = [=](const CommandParameters& params, Context& context) {
+            if (not params.empty())
+                throw wrong_argument_count();
             CommandManager::instance().execute(commands, context);
         };
     }
@@ -479,10 +479,10 @@ class RegisterRestorer
 {
 public:
     RegisterRestorer(char name, const Context& context)
-       : m_name(name)
+      : m_name(name)
     {
-         memoryview<String> save = RegisterManager::instance()[name].values(context);
-         m_save = std::vector<String>(save.begin(), save.end());
+        memoryview<String> save = RegisterManager::instance()[name].values(context);
+        m_save = std::vector<String>(save.begin(), save.end());
     }
 
     ~RegisterRestorer()
@@ -497,7 +497,7 @@ class BatchUI : public UserInterface
 {
 public:
     BatchUI(const KeyList& keys)
-        : m_keys(keys), m_pos(0) {}
+      : m_keys(keys), m_pos(0) {}
 
     Key get_key() override
     {
@@ -550,7 +550,6 @@ void exec_string(const CommandParameters& params, Context& context)
         KeyList param_keys = parse_keys(param);
         keys.insert(keys.end(), param_keys.begin(), param_keys.end());
     }
-
 
     Context& keys_context = parser.has_option("client") ?
         ClientManager::instance().get_client_context(parser.option_value("client"))

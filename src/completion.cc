@@ -18,11 +18,11 @@ static boost::regex make_regex_ifp(const String& ex)
     boost::regex result;
     if (not ex.empty())
     {
-         try
-         {
-             result = boost::regex(ex.c_str());
-         }
-         catch(boost::regex_error&) {}
+        try
+        {
+            result = boost::regex(ex.c_str());
+        }
+        catch(boost::regex_error&) {}
     }
     return result;
 }

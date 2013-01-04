@@ -486,7 +486,7 @@ IncrementalInserter::~IncrementalInserter()
     {
         if (m_mode == InsertMode::Append and sel.last().column() > 0)
             sel.last() = utf8::previous(sel.last());
-         sel.avoid_eol();
+        sel.avoid_eol();
     }
 
     m_editor.on_incremental_insertion_end();

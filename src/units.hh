@@ -9,7 +9,7 @@ class StronglyTypedInteger
 {
 public:
     explicit constexpr StronglyTypedInteger(ValueType value)
-         : m_value(value) {}
+        : m_value(value) {}
 
     constexpr RealType operator+(const RealType& other) const
     { return RealType(m_value + other.m_value); }

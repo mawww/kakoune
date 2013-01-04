@@ -309,42 +309,42 @@ void RemoteClient::process_next_message()
     {
     case RemoteUIMsg::PrintStatus:
     {
-         auto status = read<String>(m_socket);
-         auto cursor_pos = read<CharCount>(m_socket);
-         m_ui->print_status(status, cursor_pos);
-         break;
+        auto status = read<String>(m_socket);
+        auto cursor_pos = read<CharCount>(m_socket);
+        m_ui->print_status(status, cursor_pos);
+        break;
     }
     case RemoteUIMsg::MenuShow:
     {
-         auto choices = read_vector<String>(m_socket);
-         auto anchor = read<DisplayCoord>(m_socket);
-         auto style = read<MenuStyle>(m_socket);
-         m_ui->menu_show(choices, anchor, style);
-         break;
+        auto choices = read_vector<String>(m_socket);
+        auto anchor = read<DisplayCoord>(m_socket);
+        auto style = read<MenuStyle>(m_socket);
+        m_ui->menu_show(choices, anchor, style);
+        break;
     }
     case RemoteUIMsg::MenuSelect:
-         m_ui->menu_select(read<int>(m_socket));
-         break;
+        m_ui->menu_select(read<int>(m_socket));
+        break;
     case RemoteUIMsg::MenuHide:
-         m_ui->menu_hide();
-         break;
+        m_ui->menu_hide();
+        break;
     case RemoteUIMsg::InfoShow:
     {
-         auto choices = read<String>(m_socket);
-         auto anchor = read<DisplayCoord>(m_socket);
-         auto style = read<MenuStyle>(m_socket);
-         m_ui->info_show(choices, anchor, style);
-         break;
+        auto choices = read<String>(m_socket);
+        auto anchor = read<DisplayCoord>(m_socket);
+        auto style = read<MenuStyle>(m_socket);
+        m_ui->info_show(choices, anchor, style);
+        break;
     }
     case RemoteUIMsg::InfoHide:
-         m_ui->info_hide();
-         break;
+        m_ui->info_hide();
+        break;
     case RemoteUIMsg::Draw:
     {
-         DisplayBuffer display_buffer = read<DisplayBuffer>(m_socket);
-         String mode_line = read<String>(m_socket);
-         m_ui->draw(display_buffer, mode_line);
-         break;
+        DisplayBuffer display_buffer = read<DisplayBuffer>(m_socket);
+        String mode_line = read<String>(m_socket);
+        m_ui->draw(display_buffer, mode_line);
+        break;
     }
     }
 }

@@ -54,7 +54,7 @@ void EventManager::handle_next_events()
 
 void EventManager::force_signal(int fd)
 {
-     m_forced.push_back(fd);
+    m_forced.push_back(fd);
 }
 
 }

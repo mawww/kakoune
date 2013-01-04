@@ -126,8 +126,8 @@ void do_pipe(Context& context)
 
             Editor& editor = context.editor();
             std::vector<String> strings;
-            for (auto& sel : const_cast<const Editor&>(context.editor()).selections())
-                strings.push_back(ShellManager::instance().pipe(String(sel.begin(), sel.end()),
+            for (auto& sel : context.editor().selections())
+                strings.push_back(ShellManager::instance().pipe({sel.begin(), sel.end()},
                                                                 cmdline, context, {}, {}));
             editor.insert(strings, InsertMode::Replace);
         }, context);
@@ -637,13 +637,13 @@ void register_registers()
     register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
     for (size_t i = 0; i < 10; ++i)
     {
-         register_manager.register_dynamic_register('0'+i,
-              [i](const Context& context) {
-                  std::vector<String> result;
-                  for (auto& sel : context.editor().selections())
-                      result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
-                  return result;
-              });
+        register_manager.register_dynamic_register('0'+i,
+            [i](const Context& context) {
+                std::vector<String> result;
+                for (auto& sel : context.editor().selections())
+                    result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
+                return result;
+            });
     }
 }
 
