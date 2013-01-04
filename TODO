@@ -21,17 +21,10 @@ Medium Priority
   (this is due to WordCompletion regex matching the whole
    buffer once per inserted char)
 
-* support an -e 'command' command line option, working with newly
-  connecting clients (so that they can specify the file to edit,
-  specify the client name...)
-
-* Add tooltip support to ui, and a command to display info
-
-* Add support for specifying command to run when selecting
-  a menu item (without validation). Use case include using
-  the tooltip functionality to display additional
-  informations
-
 * Design an Asynchronous model for interaction with external tools.
   For example Kakoune should provide a way to run a completion
   shell command without freezing until the completer returns.
+
+* EventManager should handle timers.
+
+* automatic line splitting/paragraph formatting
