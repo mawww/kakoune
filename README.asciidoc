@@ -25,6 +25,10 @@ Kakoune dependencies are:
 
 To build, just type *make* in the src directory
 
+To setup a basic configuration on your account, type *make userconfig* in the
+src directory, this will setup an initial $XDG_CONFIG_HOME/kak directory. See
+the _Kakrc_ section for more information.
+
 Basic Movement
 --------------
 
