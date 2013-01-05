@@ -366,6 +366,17 @@ void do_scroll(Context& context)
     window.set_position(position);
 }
 
+void do_rotate_selections(Context& context)
+{
+    int count = context.numeric_param();
+    if (count == 0)
+        count = 1;
+    SelectionList sels = context.editor().selections();
+    count %= sels .size();
+    std::rotate(sels.begin(), sels.begin() + count, sels.end());
+    context.editor().select(std::move(sels));
+};
+
 template<typename T>
 class Repeated
 {
@@ -555,6 +566,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::Control, 'i' }, jump<JumpDirection::Forward> },
     { { Key::Modifiers::Control, 'o' }, jump<JumpDirection::Backward> },
+
+    { { Key::Modifiers::Alt, 'r' }, do_rotate_selections },
 };
 
 }
