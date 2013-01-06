@@ -16,8 +16,6 @@ struct option_not_found : public runtime_error
         : runtime_error("option not found: " + name) {}
 };
 
-String int_to_str(int value);
-
 class Option
 {
 public:
@@ -74,8 +72,7 @@ private:
     OptionMap m_options;
     OptionManager* m_parent;
 
-    void on_option_changed(const String& name,
-                           const Option& value);
+    void on_option_changed(const String& name, const Option& value);
 
     std::vector<OptionManagerWatcher*> m_watchers;
 };
