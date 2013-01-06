@@ -1,7 +1,9 @@
+setg makecmd make
+
 def -shell-params make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
-     ( make $@ >& ${output} ) >& /dev/null < /dev/null &
+     ( ${kak_opt_makecmd} $@ >& ${output} ) >& /dev/null < /dev/null &
      echo "try %{ db *make* } catch %{}
            edit -fifo ${output} *make*
            setb filetype make
