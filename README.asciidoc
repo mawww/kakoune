@@ -29,6 +29,17 @@ To setup a basic configuration on your account, type *make userconfig* in the
 src directory, this will setup an initial $XDG_CONFIG_HOME/kak directory. See
 the _Kakrc_ section for more information.
 
+Running
+-------
+
+Just running *kak* launch a new kak session with a client on local terminal.
+*kak* accepts some switches:
+
+ * +-c <session>+: connect to given session (which is the pid of the
+       initial kak process), sessions are unix sockets +/tmp/kak-<session>+
+ * +-e <commands>+: execute commands on startup
+ * +-n+: ignore kakrc file
+
 Basic Movement
 --------------
 
@@ -328,6 +339,8 @@ Some of kakoune state is available through environment variables:
  * +kak_runtime+: directory containing the kak binary
  * +kak_opt_name+: value of option name
  * +kak_reg_x+: value of register x
+ * +kak_socket+: filename of session socket (/tmp/kak-<session>)
+ * +kak_client+: name of current client
 
 for example you can print informations on the current file in the status
 line using:
