@@ -311,7 +311,7 @@ void do_deindent(Context& context)
     editor.erase();
 }
 
-template<bool inner>
+template<SurroundFlags flags>
 void do_select_object(Context& context)
 {
     context.input_handler().on_next_key(
@@ -319,18 +319,18 @@ void do_select_object(Context& context)
         typedef std::function<Selection (const Selection&)> Selector;
         static const std::unordered_map<Key, Selector> key_to_selector =
         {
-            { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, inner) },
-            { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, inner) },
-            { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, inner) },
-            { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, inner) },
-            { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, inner) },
-            { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, inner) },
-            { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, inner) },
-            { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, inner) },
-            { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, inner) },
-            { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, inner) },
-            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, inner) },
-            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, inner) },
+            { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, flags) },
+            { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, flags) },
+            { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, flags) },
+            { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
+            { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
+            { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
+            { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
+            { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
+            { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
+            { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
+            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, flags & SurroundFlags::Inner) },
+            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, flags & SurroundFlags::Inner) },
         };
 
         auto it = key_to_selector.find(key);
@@ -535,8 +535,10 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },
 
-    { { Key::Modifiers::Alt,  'i' }, do_select_object<true> },
-    { { Key::Modifiers::Alt,  'a' }, do_select_object<false> },
+    { { Key::Modifiers::Alt,  'i' }, do_select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd | SurroundFlags::Inner> },
+    { { Key::Modifiers::Alt,  'a' }, do_select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd> },
+    { { Key::Modifiers::None,  ']' }, do_select_object<SurroundFlags::ToEnd> },
+    { { Key::Modifiers::None,  '[' }, do_select_object<SurroundFlags::ToBegin> },
 
     { { Key::Modifiers::Alt, 'w' }, repeated([](Context& context) { context.editor().select(select_to_next_word<true>); }) },
     { { Key::Modifiers::Alt, 'e' }, repeated([](Context& context) { context.editor().select(select_to_next_word_end<true>); }) },

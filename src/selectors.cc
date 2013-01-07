@@ -224,51 +224,61 @@ Selection select_matching(const Selection& selection)
 
 Selection select_surrounding(const Selection& selection,
                              const CodepointPair& matching,
-                             bool inside)
+                             SurroundFlags flags)
 {
-    int level = 0;
+    const bool to_begin = flags & SurroundFlags::ToBegin;
+    const bool to_end   = flags & SurroundFlags::ToEnd;
     Utf8Iterator first = selection.last();
-    while (not is_begin(first))
+    if (to_begin)
     {
-        if (first != selection.last() and *first == matching.second)
-            ++level;
-        else if (*first == matching.first)
+        int level = 0;
+        while (not is_begin(first))
         {
-            if (level == 0)
-                break;
-            else
-                --level;
+            if (first != selection.last() and *first == matching.second)
+                ++level;
+            else if (*first == matching.first)
+            {
+                if (level == 0)
+                    break;
+                else
+                    --level;
+            }
+            --first;
         }
-        --first;
+        if (level != 0 or *first != matching.first)
+            return selection;
     }
-    if (level != 0 or *first != matching.first)
-        return selection;
 
-    level = 0;
-    Utf8Iterator last = first + 1;
-    while (not is_end(last))
+    Utf8Iterator last = selection.last();
+    if (to_end)
     {
-        if (*last == matching.first)
-            ++level;
-        else if (*last == matching.second)
+        int level = 0;
+        last = first + 1;
+        while (not is_end(last))
         {
-            if (level == 0)
-                break;
-            else
-                --level;
+            if (*last == matching.first)
+                ++level;
+            else if (*last == matching.second)
+            {
+                if (level == 0)
+                    break;
+                else
+                    --level;
+            }
+            ++last;
         }
-        ++last;
+        if (level != 0 or *last != matching.second)
+            return selection;
     }
-    if (level != 0 or *last != matching.second)
-        return selection;
 
-    if (inside)
+    if (flags & SurroundFlags::Inner)
     {
-        ++first;
-        if (first != last)
+        if (to_begin)
+            ++first;
+        if (to_end and first != last)
             --last;
     }
-    return utf8_selection(first, last);
+    return to_end ? utf8_selection(first, last) : utf8_selection(last, first);
 }
 
 Selection select_to(const Selection& selection,

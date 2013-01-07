@@ -2,7 +2,7 @@
 #define selectors_hh_INCLUDED
 
 #include "selection.hh"
-#include "utf8.hh"
+#include "unicode.hh"
 
 namespace Kakoune
 {
@@ -16,10 +16,6 @@ Selection select_to_previous_word(const Selection& selection);
 
 Selection select_line(const Selection& selection);
 Selection select_matching(const Selection& selection);
-
-using CodepointPair = std::pair<Codepoint, Codepoint>;
-Selection select_surrounding(const Selection& selection,
-                             const CodepointPair& matching, bool inside);
 
 Selection select_to(const Selection& selection,
                     Codepoint c, int count, bool inclusive);
@@ -42,6 +38,22 @@ SelectionList select_all_matches(const Selection& selection,
 
 SelectionList split_selection(const Selection& selection,
                               const String& separator_regex);
+
+enum class SurroundFlags
+{
+    ToBegin = 1,
+    ToEnd   = 2,
+    Inner   = 4
+};
+constexpr bool operator&(SurroundFlags lhs, SurroundFlags rhs)
+{ return (bool)((int)lhs & (int) rhs); }
+constexpr SurroundFlags operator|(SurroundFlags lhs, SurroundFlags rhs)
+{ return (SurroundFlags)((int)lhs | (int) rhs); }
+
+using CodepointPair = std::pair<Codepoint, Codepoint>;
+Selection select_surrounding(const Selection& selection,
+                             const CodepointPair& matching,
+                             SurroundFlags flags);
 
 }
 
