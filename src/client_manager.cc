@@ -7,11 +7,31 @@
 namespace Kakoune
 {
 
+String ClientManager::generate_name() const
+{
+    for (int i = 0; true; ++i)
+    {
+        String name = "unnamed" + int_to_str(i);
+        bool found = false;
+        for (auto& client : m_clients)
+        {
+            if (client->name == name)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (not found)
+            return name;
+    }
+}
+
 void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                   int event_fd, const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
-    m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer)});
+    m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer),
+                                      generate_name()});
 
     InputHandler*  input_handler = &m_clients.back()->input_handler;
     Context*       context = &m_clients.back()->context;
@@ -127,6 +147,16 @@ void ClientManager::set_client_name(Context& context, String name)
             client->name = std::move(name);
             return;
         }
+    }
+    throw runtime_error("no client for current context");
+}
+
+String ClientManager::get_client_name(const Context& context)
+{
+    for (auto& client : m_clients)
+    {
+        if (&client->context == &context)
+            return client->name;
     }
     throw runtime_error("no client for current context");
 }

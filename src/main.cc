@@ -640,6 +640,9 @@ void register_env_vars()
     shell_manager.register_env_var("socket",
                                    [](const String& name, const Context& context)
                                    { return Server::instance().filename(); });
+    shell_manager.register_env_var("client",
+                                   [](const String& name, const Context& context)
+                                   { return ClientManager::instance().get_client_name(context); });
 }
 
 void register_registers()

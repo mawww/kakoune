@@ -24,15 +24,19 @@ public:
     void redraw_clients() const;
 
     void     set_client_name(Context& context, String name);
+    String   get_client_name(const Context& context);
     Context& get_client_context(const String& name);
 private:
     void remove_client_by_context(Context& context);
+    String generate_name() const;
 
     struct Client
     {
-        Client(std::unique_ptr<UserInterface>&& ui, Window& window)
+        Client(std::unique_ptr<UserInterface>&& ui, Window& window,
+               String name)
             : user_interface(std::move(ui)),
-              context(input_handler, window, *user_interface) {}
+              context(input_handler, window, *user_interface),
+              name(std::move(name)) {}
         Client(Client&&) = delete;
         Client& operator=(Client&& other) = delete;
 
