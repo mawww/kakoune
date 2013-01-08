@@ -30,8 +30,8 @@ Selection select_whole_word(const Selection& selection, bool inner);
 Selection select_whole_lines(const Selection& selection);
 Selection select_whole_buffer(const Selection& selection);
 
-Selection select_next_match(const Selection& selection,
-                            const String& regex);
+template<bool forward>
+Selection select_next_match(const Selection& selection, const String& regex);
 
 SelectionList select_all_matches(const Selection& selection,
                                  const String& regex);

@@ -133,7 +133,7 @@ void do_pipe(Context& context)
         }, context);
 }
 
-template<SelectMode mode>
+template<SelectMode mode, bool forward>
 void do_search(Context& context)
 {
     SelectionList selections = context.editor().selections();
@@ -158,7 +158,7 @@ void do_search(Context& context)
                 else if (not context.options()["incsearch"].as_int())
                     return;
 
-                context.editor().select(std::bind(select_next_match, _1, ex), mode);
+                context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
             }
             catch (runtime_error&)
             {
@@ -172,7 +172,7 @@ void do_search(Context& context)
         }, context);
 }
 
-template<SelectMode mode>
+template<SelectMode mode, bool forward>
 void do_search_next(Context& context)
 {
     const String& ex = RegisterManager::instance()['/'].values(context)[0];
@@ -182,7 +182,7 @@ void do_search_next(Context& context)
             context.push_jump();
         int count = context.numeric_param();
         do {
-            context.editor().select(std::bind(select_next_match, _1, ex), mode);
+            context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
         } while (--count > 0);
     }
     else
@@ -526,11 +526,14 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'm' }, [](Context& context) { context.editor().select(select_matching); } },
     { { Key::Modifiers::None, 'M' }, [](Context& context) { context.editor().select(select_matching, SelectMode::Extend); } },
 
-    { { Key::Modifiers::None, '/' }, do_search<SelectMode::Replace> },
-    { { Key::Modifiers::None, '?' }, do_search<SelectMode::Extend> },
-    { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace> },
-    { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceLast> },
-    { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append> },
+    { { Key::Modifiers::None, '/' }, do_search<SelectMode::Replace, true> },
+    { { Key::Modifiers::None, '?' }, do_search<SelectMode::Extend, true> },
+    { { Key::Modifiers::Alt, '/' }, do_search<SelectMode::Replace, false> },
+    { { Key::Modifiers::Alt, '?' }, do_search<SelectMode::Extend, false> },
+
+    { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace, true> },
+    { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceLast, true> },
+    { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append, true> },
 
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },

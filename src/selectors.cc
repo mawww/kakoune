@@ -385,6 +385,39 @@ Selection select_whole_buffer(const Selection& selection)
     return Selection(buffer.begin(), utf8::previous(buffer.end()));
 }
 
+using MatchResults = boost::match_results<BufferIterator>;
+
+static bool find_last_match(BufferIterator begin, const BufferIterator& end,
+                            MatchResults& res, const Regex& regex)
+{
+    MatchResults matches;
+    while (boost::regex_search(begin, end, matches, regex))
+    {
+        if (begin == matches[0].second)
+            break;
+        begin = matches[0].second;
+        res.swap(matches);
+    }
+    return not res.empty();
+}
+
+template<bool forward>
+bool find_match_in_buffer(const BufferIterator pos, MatchResults& matches,
+                          const Regex& ex)
+{
+    auto bufbeg = pos.buffer().begin();
+    auto bufend = pos.buffer().end();
+
+    if (forward)
+        return (boost::regex_search(pos, bufend, matches, ex) or
+                boost::regex_search(bufbeg, pos, matches, ex));
+    else
+        return (find_last_match(bufbeg, pos, matches, ex) or
+                find_last_match(pos, bufend, matches, ex));
+}
+
+
+template<bool forward>
 Selection select_next_match(const Selection& selection, const String& regex)
 {
     try
@@ -395,19 +428,10 @@ Selection select_next_match(const Selection& selection, const String& regex)
         BufferIterator end = begin;
         CaptureList captures;
 
-        Regex ex(regex.begin(), regex.end());
-        boost::match_results<BufferIterator> matches;
+        Regex ex{regex.begin(), regex.end()};
+        MatchResults matches;
 
-        if (boost::regex_search(utf8::next(begin), begin.buffer().end(),
-                                matches, ex))
-        {
-            begin = matches[0].first;
-            end   = matches[0].second;
-            for (auto& match : matches)
-                captures.push_back(String(match.first, match.second));
-        }
-        else if (boost::regex_search(begin.buffer().begin(), utf8::next(begin),
-                                     matches, ex))
+        if (find_match_in_buffer<forward>(utf8::next(begin), matches, ex))
         {
             begin = matches[0].first;
             end   = matches[0].second;
@@ -420,13 +444,18 @@ Selection select_next_match(const Selection& selection, const String& regex)
         if (begin == end)
             ++end;
 
-        return Selection(begin, utf8::previous(end), std::move(captures));
+        end = utf8::previous(end);
+        if (not forward)
+            std::swap(begin, end);
+        return Selection{begin, end, std::move(captures)};
     }
     catch (boost::regex_error& err)
     {
         throw runtime_error(String("regex error: ") + err.what());
     }
 }
+template Selection select_next_match<true>(const Selection&, const String&);
+template Selection select_next_match<false>(const Selection&, const String&);
 
 SelectionList select_all_matches(const Selection& selection, const String& regex)
 {
