@@ -365,12 +365,13 @@ void RemoteClient::write_next_key()
     }
 }
 
-void handle_remote(int socket)
+void handle_remote(FDWatcher& watcher)
 {
+    int socket = watcher.fd();
     String init_command = read<String>(socket);
 
     RemoteUI* ui = new RemoteUI{socket};
-    EventManager::instance().unwatch(socket);
+    delete &watcher;
     ClientManager::instance().create_client(
         std::unique_ptr<UserInterface>{ui}, socket, init_command);
 }

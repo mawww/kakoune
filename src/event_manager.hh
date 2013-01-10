@@ -1,15 +1,24 @@
 #ifndef event_manager_hh_INCLUDED
 #define event_manager_hh_INCLUDED
 
-#include <poll.h>
-#include <unordered_map>
-
 #include "utils.hh"
 
 namespace Kakoune
 {
 
-using EventHandler = std::function<void (int fd)>;
+class FDWatcher
+{
+public:
+    using Callback = std::function<void (FDWatcher& watcher)>;
+    FDWatcher(int fd, Callback callback);
+    ~FDWatcher();
+
+    int fd() const { return m_fd; }
+    void run() { m_callback(*this); }
+private:
+    int      m_fd;
+    Callback m_callback;
+};
 
 // The EventManager provides an interface to file descriptor
 // based event handling.
@@ -20,26 +29,21 @@ class EventManager : public Singleton<EventManager>
 {
 public:
     EventManager();
-    // Watch the given file descriptor, when data becomes
-    // ready, handler will be called with fd as parameter.
-    // It is an error to register multiple handlers on the
-    // same file descriptor.
-    void watch(int fd, EventHandler handler);
-
-    // stop watching fd
-    void unwatch(int fd);
+    ~EventManager();
 
     void handle_next_events();
 
-    // force the handler associated with fd to be executed
+    // force the watchers associated with fd to be executed
     // on next handle_next_events call.
     void force_signal(int fd);
 
 private:
-    std::vector<pollfd>                        m_events;
-    std::vector<std::unique_ptr<EventHandler>> m_handlers;
-    std::vector<std::unique_ptr<EventHandler>> m_handlers_trash;
-    std::vector<int>                           m_forced;
+    friend class FDWatcher;
+    void register_fd_watcher(FDWatcher* watcher);
+    void unregister_fd_watcher(FDWatcher* watcher);
+
+    std::vector<FDWatcher*> m_fd_watchers;
+    std::vector<int>        m_forced_fd;
 };
 
 }

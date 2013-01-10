@@ -585,42 +585,42 @@ struct Server : public Singleton<Server>
     {
         m_filename = "/tmp/kak-" + int_to_str(getpid());
 
-        m_listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-        fcntl(m_listen_sock, F_SETFD, FD_CLOEXEC);
+        int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
         sockaddr_un addr;
         addr.sun_family = AF_UNIX;
         strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
 
-        if (bind(m_listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
+        if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
            throw runtime_error("unable to bind listen socket " + m_filename);
 
-        if (listen(m_listen_sock, 4) == -1)
+        if (listen(listen_sock, 4) == -1)
            throw runtime_error("unable to listen on socket " + m_filename);
 
-        auto accepter = [=](int socket) {
+        auto accepter = [](FDWatcher& watcher) {
             sockaddr_un client_addr;
             socklen_t   client_addr_len = sizeof(sockaddr_un);
-            int sock = accept(socket, (sockaddr*) &client_addr, &client_addr_len);
+            int sock = accept(watcher.fd(), (sockaddr*) &client_addr, &client_addr_len);
             if (sock == -1)
                 throw runtime_error("accept failed");
             fcntl(sock, F_SETFD, FD_CLOEXEC);
 
-            EventManager::instance().watch(sock, handle_remote);
+            new FDWatcher{sock, handle_remote};
         };
-        EventManager::instance().watch(m_listen_sock, accepter);
+        m_listener.reset(new FDWatcher{listen_sock, accepter});
     }
 
     ~Server()
     {
         unlink(m_filename.c_str());
-        close(m_listen_sock);
+        close(m_listener->fd());
     }
 
     const String& filename() const { return m_filename; }
 
 private:
-    int    m_listen_sock;
     String m_filename;
+    std::unique_ptr<FDWatcher> m_listener;
 };
 
 void register_env_vars()
@@ -703,7 +703,7 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
     NCursesUI* ui = new NCursesUI{};
     RemoteClient* remote_client = new RemoteClient{sock, ui, init_command};
 
-    EventManager::instance().watch(sock, [=](int) {
+    new FDWatcher{sock, [=](FDWatcher&) {
         try
         {
             remote_client->process_next_message();
@@ -712,9 +712,9 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
         {
             ui->print_status(error.description(), -1);
         }
-    });
+    }};
 
-    EventManager::instance().watch(0, [=](int) {
+    new FDWatcher{0, [=](FDWatcher& ev) {
         try
         {
             remote_client->write_next_key();
@@ -723,7 +723,7 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
         {
             ui->print_status(error.description(), -1);
         }
-    });
+    }};
 
     return remote_client;
 }

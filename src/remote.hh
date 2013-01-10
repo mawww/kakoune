@@ -3,13 +3,14 @@
 
 #include "user_interface.hh"
 #include "display_buffer.hh"
+#include "event_manager.hh"
 
 namespace Kakoune
 {
 
 struct peer_disconnected {};
 
-void handle_remote(int socket);
+void handle_remote(FDWatcher& event);
 
 class RemoteClient
 {

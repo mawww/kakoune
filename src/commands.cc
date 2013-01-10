@@ -57,20 +57,9 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
        throw runtime_error("unable to open " + filename);
     Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
-    buffer->hooks().add_hook("BufClose",
-        [fd, buffer](const String&, const Context&) {
-            // Check if fifo is still alive, else fd may
-            // refer to another file/socket
-            if (buffer->flags() & Buffer::Flags::Fifo)
-            {
-                EventManager::instance().unwatch(fd);
-                close(fd);
-            }
-        });
-
-    EventManager::instance().watch(fd, [buffer](int fd) {
+    auto watcher = new FDWatcher(fd, [buffer](FDWatcher& watcher) {
         char data[4096];
-        ssize_t count = read(fd, data, 4096);
+        ssize_t count = read(watcher.fd(), data, 4096);
         buffer->insert(buffer->end()-1,
                        count > 0 ? String(data, data+count)
                                   : "*** kak: fifo closed ***\n");
@@ -79,10 +68,20 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         {
             assert(buffer->flags() & Buffer::Flags::Fifo);
             buffer->flags() &= ~Buffer::Flags::Fifo;
-            EventManager::instance().unwatch(fd);
-            close(fd);
+            close(watcher.fd());
+            delete &watcher;
         }
     });
+
+    buffer->hooks().add_hook("BufClose",
+        [buffer, watcher](const String&, const Context&) {
+            // Check if fifo is still alive, else watcher is already dead
+            if (buffer->flags() & Buffer::Flags::Fifo)
+            {
+                close(watcher->fd());
+                delete watcher;
+            }
+        });
 
     return buffer;
 }
