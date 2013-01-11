@@ -19,6 +19,8 @@ enum class MenuStyle
     Inline
 };
 
+using InputCallback = std::function<void()>;
+
 class UserInterface : public SafeCountable
 {
 public:
@@ -39,6 +41,8 @@ public:
     virtual DisplayCoord dimensions() = 0;
     virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;
+
+    virtual void set_input_callback(InputCallback callback) = 0;
 };
 
 }

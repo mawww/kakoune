@@ -187,26 +187,30 @@ public:
     Key  get_key() override;
     DisplayCoord dimensions() override;
 
+    void set_input_callback(InputCallback callback) override;
+
 private:
-    int          m_socket;
+    FDWatcher    m_socket_watcher;
     DisplayCoord m_dimensions;
+    InputCallback m_input_callback;
 };
 
 
 RemoteUI::RemoteUI(int socket)
-    : m_socket(socket)
+    : m_socket_watcher(socket, [this](FDWatcher&) { if (m_input_callback) m_input_callback(); })
 {
-    write_debug("remote client connected: " + int_to_str(m_socket));
+    write_debug("remote client connected: " + int_to_str(m_socket_watcher.fd()));
 }
 
 RemoteUI::~RemoteUI()
 {
-    write_debug("remote client disconnected: " + int_to_str(m_socket));
+    write_debug("remote client disconnected: " + int_to_str(m_socket_watcher.fd()));
+    close(m_socket_watcher.fd());
 }
 
 void RemoteUI::print_status(const String& status, CharCount cursor_pos)
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::PrintStatus);
     msg.write(status);
     msg.write(cursor_pos);
@@ -215,7 +219,7 @@ void RemoteUI::print_status(const String& status, CharCount cursor_pos)
 void RemoteUI::menu_show(const memoryview<String>& choices,
                          const DisplayCoord& anchor, MenuStyle style)
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::MenuShow);
     msg.write(choices);
     msg.write(anchor);
@@ -224,21 +228,21 @@ void RemoteUI::menu_show(const memoryview<String>& choices,
 
 void RemoteUI::menu_select(int selected)
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::MenuSelect);
     msg.write(selected);
 }
 
 void RemoteUI::menu_hide()
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::MenuHide);
 }
 
 void RemoteUI::info_show(const String& content,
                          const DisplayCoord& anchor, MenuStyle style)
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::InfoShow);
     msg.write(content);
     msg.write(anchor);
@@ -247,14 +251,14 @@ void RemoteUI::info_show(const String& content,
 
 void RemoteUI::info_hide()
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::InfoHide);
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const String& mode_line)
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Draw);
     msg.write(display_buffer);
     msg.write(mode_line);
@@ -267,18 +271,19 @@ bool RemoteUI::is_key_available()
     timeval tv;
     fd_set  rfds;
 
+    int sock = m_socket_watcher.fd();
     FD_ZERO(&rfds);
-    FD_SET(m_socket, &rfds);
+    FD_SET(sock, &rfds);
 
     tv.tv_sec = 0;
     tv.tv_usec = 0;
-    int res = select(m_socket+1, &rfds, NULL, NULL, &tv);
+    int res = select(sock+1, &rfds, NULL, NULL, &tv);
     return res == 1;
 }
 
 Key RemoteUI::get_key()
 {
-    Key key = read<Key>(m_socket);
+    Key key = read<Key>(m_socket_watcher.fd());
     if (key.modifiers == resize_modifier)
     {
         m_dimensions = { (int)(key.key >> 16), (int)(key.key & 0xFFFF) };
@@ -292,6 +297,11 @@ DisplayCoord RemoteUI::dimensions()
     return m_dimensions;
 }
 
+void RemoteUI::set_input_callback(InputCallback callback)
+{
+    m_input_callback = std::move(callback);
+}
+
 RemoteClient::RemoteClient(int socket, UserInterface* ui,
                            const String& init_command)
     : m_ui(ui), m_dimensions(ui->dimensions()),
@@ -301,6 +311,8 @@ RemoteClient::RemoteClient(int socket, UserInterface* ui,
     msg.write(init_command);
     Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
     msg.write(key);
+
+    m_ui->set_input_callback([this]{ write_next_key(); });
 }
 
 void RemoteClient::process_next_message()
@@ -370,12 +382,12 @@ void RemoteClient::write_next_key()
 void handle_remote(FDWatcher& watcher)
 {
     int socket = watcher.fd();
+    delete &watcher;
     String init_command = read<String>(socket);
 
     RemoteUI* ui = new RemoteUI{socket};
-    delete &watcher;
     ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, socket, init_command);
+        std::unique_ptr<UserInterface>{ui}, init_command);
 }
 
 }

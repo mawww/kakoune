@@ -685,7 +685,7 @@ void create_local_client(const String& init_command)
 
     UserInterface* ui = new LocalNCursesUI{};
     ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, 0, init_command);
+        std::unique_ptr<UserInterface>{ui}, init_command);
 }
 
 RemoteClient* connect_to(const String& pid, const String& init_command)
@@ -702,17 +702,6 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
 
     NCursesUI* ui = new NCursesUI{};
     RemoteClient* remote_client = new RemoteClient{sock, ui, init_command};
-
-    new FDWatcher{0, [=](FDWatcher& ev) {
-        try
-        {
-            remote_client->write_next_key();
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-            ui->print_status(error.description(), -1);
-        }
-    }};
 
     return remote_client;
 }

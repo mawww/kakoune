@@ -88,6 +88,7 @@ void on_sigint(int)
 }
 
 NCursesUI::NCursesUI()
+    : m_stdin_watcher{0, [this](FDWatcher&){ if (m_input_callback) m_input_callback(); }}
 {
     //setlocale(LC_CTYPE, "");
     initscr();
@@ -466,6 +467,11 @@ void NCursesUI::info_hide()
 DisplayCoord NCursesUI::dimensions()
 {
     return m_dimensions;
+}
+
+void NCursesUI::set_input_callback(InputCallback callback)
+{
+    m_input_callback = std::move(callback);
 }
 
 }

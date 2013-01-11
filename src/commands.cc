@@ -517,6 +517,8 @@ public:
 
     DisplayCoord dimensions() override { return { 0, 0 }; }
 
+    void set_input_callback(InputCallback callback) {}
+
 private:
     const KeyList& m_keys;
     size_t         m_pos;

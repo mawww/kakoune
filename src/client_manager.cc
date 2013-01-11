@@ -27,7 +27,7 @@ String ClientManager::generate_name() const
 }
 
 void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                  int event_fd, const String& init_commands)
+                                  const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
     m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer),
@@ -47,11 +47,10 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     catch (Kakoune::client_removed&)
     {
         m_clients.pop_back();
-        close(event_fd);
         return;
     }
 
-    new FDWatcher(event_fd, [input_handler, context, this](FDWatcher& watcher) {
+    context->ui().set_input_callback([input_handler, context, this]() {
         try
         {
             input_handler->handle_available_inputs(*context);
@@ -64,8 +63,6 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         catch (Kakoune::client_removed&)
         {
             ClientManager::instance().remove_client_by_context(*context);
-            close(watcher.fd());
-            delete &watcher;
         }
         ClientManager::instance().redraw_clients();
     });

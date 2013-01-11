@@ -6,6 +6,7 @@
 
 #include "user_interface.hh"
 #include "display_buffer.hh"
+#include "event_manager.hh"
 
 namespace Kakoune
 {
@@ -35,6 +36,8 @@ public:
                    const DisplayCoord& anchor, MenuStyle style) override;
     void info_hide() override;
 
+    void set_input_callback(InputCallback callback) override;
+
     DisplayCoord dimensions() override;
 private:
     friend void on_term_resize(int);
@@ -55,6 +58,9 @@ private:
     int m_menu_bg;
 
     WINDOW* m_info_win = nullptr;
+
+    FDWatcher     m_stdin_watcher;
+    InputCallback m_input_callback;
 };
 
 }

@@ -13,7 +13,7 @@ class ClientManager : public Singleton<ClientManager>
 {
 public:
     void create_client(std::unique_ptr<UserInterface>&& ui,
-                       int event_fd, const String& init_cmd);
+                       const String& init_cmd);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
