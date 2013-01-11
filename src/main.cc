@@ -703,17 +703,6 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
     NCursesUI* ui = new NCursesUI{};
     RemoteClient* remote_client = new RemoteClient{sock, ui, init_command};
 
-    new FDWatcher{sock, [=](FDWatcher&) {
-        try
-        {
-            remote_client->process_next_message();
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-            ui->print_status(error.description(), -1);
-        }
-    }};
-
     new FDWatcher{0, [=](FDWatcher& ev) {
         try
         {

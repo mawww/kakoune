@@ -294,7 +294,8 @@ DisplayCoord RemoteUI::dimensions()
 
 RemoteClient::RemoteClient(int socket, UserInterface* ui,
                            const String& init_command)
-    : m_socket(socket), m_ui(ui), m_dimensions(ui->dimensions())
+    : m_ui(ui), m_dimensions(ui->dimensions()),
+      m_socket_watcher{socket, [this](FDWatcher&){ process_next_message(); }}
 {
     Message msg(socket);
     msg.write(init_command);
@@ -304,35 +305,36 @@ RemoteClient::RemoteClient(int socket, UserInterface* ui,
 
 void RemoteClient::process_next_message()
 {
-    RemoteUIMsg msg = read<RemoteUIMsg>(m_socket);
+    int socket = m_socket_watcher.fd();
+    RemoteUIMsg msg = read<RemoteUIMsg>(socket);
     switch (msg)
     {
     case RemoteUIMsg::PrintStatus:
     {
-        auto status = read<String>(m_socket);
-        auto cursor_pos = read<CharCount>(m_socket);
+        auto status = read<String>(socket);
+        auto cursor_pos = read<CharCount>(socket);
         m_ui->print_status(status, cursor_pos);
         break;
     }
     case RemoteUIMsg::MenuShow:
     {
-        auto choices = read_vector<String>(m_socket);
-        auto anchor = read<DisplayCoord>(m_socket);
-        auto style = read<MenuStyle>(m_socket);
+        auto choices = read_vector<String>(socket);
+        auto anchor = read<DisplayCoord>(socket);
+        auto style = read<MenuStyle>(socket);
         m_ui->menu_show(choices, anchor, style);
         break;
     }
     case RemoteUIMsg::MenuSelect:
-        m_ui->menu_select(read<int>(m_socket));
+        m_ui->menu_select(read<int>(socket));
         break;
     case RemoteUIMsg::MenuHide:
         m_ui->menu_hide();
         break;
     case RemoteUIMsg::InfoShow:
     {
-        auto choices = read<String>(m_socket);
-        auto anchor = read<DisplayCoord>(m_socket);
-        auto style = read<MenuStyle>(m_socket);
+        auto choices = read<String>(socket);
+        auto anchor = read<DisplayCoord>(socket);
+        auto style = read<MenuStyle>(socket);
         m_ui->info_show(choices, anchor, style);
         break;
     }
@@ -341,8 +343,8 @@ void RemoteClient::process_next_message()
         break;
     case RemoteUIMsg::Draw:
     {
-        DisplayBuffer display_buffer = read<DisplayBuffer>(m_socket);
-        String mode_line = read<String>(m_socket);
+        DisplayBuffer display_buffer = read<DisplayBuffer>(socket);
+        String mode_line = read<String>(socket);
         m_ui->draw(display_buffer, mode_line);
         break;
     }
@@ -351,7 +353,7 @@ void RemoteClient::process_next_message()
 
 void RemoteClient::write_next_key()
 {
-    Message msg(m_socket);
+    Message msg(m_socket_watcher.fd());
     // do that before checking dimensions as get_key may
     // handle a resize event.
     msg.write(m_ui->get_key());

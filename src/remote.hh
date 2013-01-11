@@ -22,9 +22,9 @@ public:
     void write_next_key();
 
 private:
-    int                            m_socket;
     std::unique_ptr<UserInterface> m_ui;
     DisplayCoord                   m_dimensions;
+    FDWatcher                      m_socket_watcher;
 };
 
 }
