@@ -7,19 +7,19 @@ DynamicSelectionList::DynamicSelectionList(const Buffer& buffer,
                                            SelectionList selections)
     : m_buffer(&buffer), SelectionList(std::move(selections))
 {
-    m_buffer->add_change_listener(*this);
+    m_buffer->change_listeners().add(this);
     check_invariant();
 }
 
 DynamicSelectionList::~DynamicSelectionList()
 {
-    m_buffer->remove_change_listener(*this);
+    m_buffer->change_listeners().remove(this);
 }
 
 DynamicSelectionList::DynamicSelectionList(const DynamicSelectionList& other)
     : SelectionList(other), m_buffer(other.m_buffer)
 {
-    m_buffer->add_change_listener(*this);
+    m_buffer->change_listeners().add(this);
 }
 
 DynamicSelectionList& DynamicSelectionList::operator=(const DynamicSelectionList& other)
@@ -27,9 +27,9 @@ DynamicSelectionList& DynamicSelectionList::operator=(const DynamicSelectionList
     SelectionList::operator=((const SelectionList&)other);
     if (m_buffer != other.m_buffer)
     {
-        m_buffer->remove_change_listener(*this);
+        m_buffer->change_listeners().remove(this);
         m_buffer = other.m_buffer;
-        m_buffer->add_change_listener(*this);
+        m_buffer->change_listeners().add(this);
     }
     check_invariant();
     return *this;
@@ -38,7 +38,7 @@ DynamicSelectionList& DynamicSelectionList::operator=(const DynamicSelectionList
 DynamicSelectionList::DynamicSelectionList(DynamicSelectionList&& other)
     : SelectionList(std::move(other)), m_buffer(other.m_buffer)
 {
-    m_buffer->add_change_listener(*this);
+    m_buffer->change_listeners().add(this);
 }
 
 DynamicSelectionList& DynamicSelectionList::operator=(DynamicSelectionList&& other)
@@ -46,9 +46,9 @@ DynamicSelectionList& DynamicSelectionList::operator=(DynamicSelectionList&& oth
     SelectionList::operator=(std::move(other));
     if (m_buffer != other.m_buffer)
     {
-        m_buffer->remove_change_listener(*this);
+        m_buffer->change_listeners().remove(this);
         m_buffer = other.m_buffer;
-        m_buffer->add_change_listener(*this);
+        m_buffer->change_listeners().add(this);
     }
     check_invariant();
     return *this;

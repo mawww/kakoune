@@ -39,11 +39,8 @@ public:
 
 private:
     friend class FDWatcher;
-    void register_fd_watcher(FDWatcher* watcher);
-    void unregister_fd_watcher(FDWatcher* watcher);
-
-    std::vector<FDWatcher*> m_fd_watchers;
-    std::vector<int>        m_forced_fd;
+    Set<FDWatcher*>  m_fd_watchers;
+    std::vector<int> m_forced_fd;
 };
 
 }

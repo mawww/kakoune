@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <vector>
 
 namespace Kakoune
 {
@@ -205,6 +206,42 @@ const T& clamp(const T& val, const T& min, const T& max)
 {
     return (val < min ? min : (val > max ? max : val));
 }
+
+// *** set ***
+// generic simple set based on vector
+
+template<typename T>
+class Set
+{
+public:
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+
+    void add(T value)
+    {
+        assert(not contains(m_values, value));
+        m_values.push_back(value);
+    }
+
+    void remove(T value)
+    {
+        auto it = find(m_values, value);
+        assert(it != m_values.end());
+        m_values.erase(it);
+    }
+
+    size_t size() const { return m_values.size(); }
+    bool   empty() const { return m_values.empty(); }
+
+    iterator begin() { return m_values.begin(); }
+    iterator end()   { return m_values.end(); }
+
+    const_iterator begin() const { return m_values.begin(); }
+    const_iterator end()   const { return m_values.end(); }
+
+private:
+    std::vector<T> m_values;
+};
 
 }
 

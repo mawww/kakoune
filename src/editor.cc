@@ -327,10 +327,10 @@ class LastModifiedRangeListener : public BufferChangeListener
 public:
     LastModifiedRangeListener(Buffer& buffer)
        : m_buffer(buffer)
-    { m_buffer.add_change_listener(*this); }
+    { m_buffer.change_listeners().add(this); }
 
     ~LastModifiedRangeListener()
-    { m_buffer.remove_change_listener(*this); }
+    { m_buffer.change_listeners().remove(this); }
 
     void on_insert(const BufferIterator& begin, const BufferIterator& end)
     {

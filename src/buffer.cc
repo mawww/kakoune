@@ -414,19 +414,4 @@ void Buffer::notify_saved()
     }
 }
 
-void Buffer::add_change_listener(BufferChangeListener& listener) const
-{
-    assert(not contains(m_change_listeners, &listener));
-    m_change_listeners.push_back(&listener);
-}
-
-void Buffer::remove_change_listener(BufferChangeListener& listener) const
-{
-    auto it = std::find(m_change_listeners.begin(),
-                        m_change_listeners.end(),
-                        &listener);
-    assert(it != m_change_listeners.end());
-    m_change_listeners.erase(it);
-}
-
 }

@@ -8,12 +8,12 @@ namespace Kakoune
 FDWatcher::FDWatcher(int fd, Callback callback)
     : m_fd{fd}, m_callback{std::move(callback)}
 {
-    EventManager::instance().register_fd_watcher(this);
+    EventManager::instance().m_fd_watchers.add(this);
 }
 
 FDWatcher::~FDWatcher()
 {
-    EventManager::instance().unregister_fd_watcher(this);
+    EventManager::instance().m_fd_watchers.remove(this);
 }
 
 EventManager::EventManager()
@@ -42,8 +42,8 @@ void EventManager::handle_next_events()
         const int fd = event.fd;
         if (event.revents or contains(forced, fd))
         {
-            auto it = std::find_if(m_fd_watchers.begin(), m_fd_watchers.end(),
-                                   [fd](FDWatcher* w) { return w->fd() == fd; });
+            auto it = find_if(m_fd_watchers,
+                              [fd](FDWatcher* w) { return w->fd() == fd; });
             if (it != m_fd_watchers.end())
                 (*it)->run();
         }
@@ -54,18 +54,6 @@ void EventManager::force_signal(int fd)
 {
     m_forced_fd.push_back(fd);
 
-}
-void EventManager::register_fd_watcher(FDWatcher* event)
-{
-    assert(not contains(m_fd_watchers, event));
-    m_fd_watchers.push_back(event);
-}
-
-void EventManager::unregister_fd_watcher(FDWatcher* event)
-{
-    auto it = find(m_fd_watchers, event);
-    assert(it != m_fd_watchers.end());
-    m_fd_watchers.erase(it);
 }
 
 }

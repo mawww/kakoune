@@ -167,9 +167,7 @@ public:
     HookManager&         hooks()         { return m_hooks; }
     const HookManager&   hooks()   const { return m_hooks; }
 
-    void add_change_listener(BufferChangeListener& listener) const;
-    void remove_change_listener(BufferChangeListener& listener) const;
-
+    Set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
 private:
     friend class BufferIterator;
 
@@ -213,7 +211,7 @@ private:
 
     // this is mutable as adding or removing listeners is not muting the
     // buffer observable state.
-    mutable std::vector<BufferChangeListener*> m_change_listeners;
+    mutable Set<BufferChangeListener*> m_change_listeners;
 
     OptionManager m_options;
     HookManager   m_hooks;
