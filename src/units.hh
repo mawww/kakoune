@@ -1,15 +1,21 @@
 #ifndef units_hh_INCLUDED
 #define units_hh_INCLUDED
 
+#include <type_traits>
+
 namespace Kakoune
 {
 
 template<typename RealType, typename ValueType = int>
-class StronglyTypedInteger
+class StronglyTypedNumber
 {
 public:
-    explicit constexpr StronglyTypedInteger(ValueType value)
-        : m_value(value) {}
+    explicit constexpr StronglyTypedNumber(ValueType value)
+        : m_value(value)
+    {
+        static_assert(std::is_base_of<StronglyTypedNumber, RealType>::value,
+                     "RealType is not derived from StronglyTypedNumber");
+    }
 
     constexpr RealType operator+(const RealType& other) const
     { return RealType(m_value + other.m_value); }
@@ -76,9 +82,9 @@ private:
    ValueType m_value;
 };
 
-struct LineCount : public StronglyTypedInteger<LineCount, int>
+struct LineCount : public StronglyTypedNumber<LineCount, int>
 {
-    constexpr LineCount(int value) : StronglyTypedInteger<LineCount>(value) {}
+    constexpr LineCount(int value) : StronglyTypedNumber<LineCount>(value) {}
 };
 
 inline constexpr LineCount operator"" _line(unsigned long long int value)
@@ -86,9 +92,9 @@ inline constexpr LineCount operator"" _line(unsigned long long int value)
     return LineCount(value);
 }
 
-struct ByteCount : public StronglyTypedInteger<ByteCount, int>
+struct ByteCount : public StronglyTypedNumber<ByteCount, int>
 {
-    constexpr ByteCount(int value) : StronglyTypedInteger<ByteCount>(value) {}
+    constexpr ByteCount(int value) : StronglyTypedNumber<ByteCount>(value) {}
 };
 
 inline constexpr ByteCount operator"" _byte(unsigned long long int value)
@@ -96,9 +102,9 @@ inline constexpr ByteCount operator"" _byte(unsigned long long int value)
     return ByteCount(value);
 }
 
-struct CharCount : public StronglyTypedInteger<CharCount, int>
+struct CharCount : public StronglyTypedNumber<CharCount, int>
 {
-    constexpr CharCount(int value) : StronglyTypedInteger<CharCount>(value) {}
+    constexpr CharCount(int value) : StronglyTypedNumber<CharCount>(value) {}
 };
 
 inline constexpr CharCount operator"" _char(unsigned long long int value)
