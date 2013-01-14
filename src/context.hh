@@ -88,6 +88,15 @@ struct Context
         return GlobalOptions::instance();
     }
 
+    HookManager& hooks() const
+    {
+        if (has_window())
+            return window().hooks();
+        if (has_buffer())
+            return buffer().hooks();
+        return GlobalHooks::instance();
+    }
+
     void print_status(const String& status) const
     {
         if (has_ui())
