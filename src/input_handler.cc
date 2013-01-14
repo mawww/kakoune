@@ -3,6 +3,7 @@
 #include "context.hh"
 #include "editor.hh"
 #include "register_manager.hh"
+#include "event_manager.hh"
 #include "utf8.hh"
 
 #include <unordered_map>
@@ -514,7 +515,12 @@ class Insert : public InputMode
 public:
     Insert(Context& context, InsertMode mode)
         : InputMode(context.input_handler()),
-          m_inserter(context.editor(), mode)
+          m_inserter(context.editor(), mode),
+          m_complete_timer{Clock::time_point::max(),
+                           [this, &context](Timer& timer) {
+                               m_completer.reset(context);
+                               m_completer.select(context, 0);
+                           }}
     {
         context.last_insert().first = mode;
         context.last_insert().second.clear();
@@ -554,7 +560,7 @@ public:
             {
                 m_completer.reset(context);
                 reset_completer = false;
-                m_completer.select(context, 0);
+                m_complete_timer.set_next_date(Clock::now() + std::chrono::milliseconds{250});
             }
         }
         else if (key == Key{ Key::Modifiers::Control, 'r' })
@@ -580,6 +586,7 @@ public:
 private:
     bool m_insert_reg = false;
     IncrementalInserter m_inserter;
+    Timer         m_complete_timer;
     WordCompleter m_completer;
 };
 
