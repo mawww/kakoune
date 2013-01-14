@@ -16,6 +16,23 @@ FDWatcher::~FDWatcher()
     EventManager::instance().m_fd_watchers.remove(this);
 }
 
+Timer::Timer(TimePoint date, Callback callback)
+    : m_date{date}, m_callback{std::move(callback)}
+{
+    EventManager::instance().m_timers.add(this);
+}
+
+Timer::~Timer()
+{
+    EventManager::instance().m_timers.remove(this);
+}
+
+void Timer::run()
+{
+    m_date = TimePoint::max();
+    m_callback(*this);
+}
+
 EventManager::EventManager()
 {
     m_forced_fd.reserve(4);
@@ -24,6 +41,7 @@ EventManager::EventManager()
 EventManager::~EventManager()
 {
     assert(m_fd_watchers.empty());
+    assert(m_timers.empty());
 }
 
 void EventManager::handle_next_events()
@@ -47,6 +65,13 @@ void EventManager::handle_next_events()
             if (it != m_fd_watchers.end())
                 (*it)->run();
         }
+    }
+
+    TimePoint now = Clock::now();
+    for (auto& timer : m_timers)
+    {
+        if (timer->next_date() <= now)
+            timer->run();
     }
 }
 

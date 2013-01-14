@@ -3,6 +3,8 @@
 
 #include "utils.hh"
 
+#include <chrono>
+
 namespace Kakoune
 {
 
@@ -18,6 +20,26 @@ public:
 private:
     int      m_fd;
     Callback m_callback;
+};
+
+using Clock = std::chrono::steady_clock;
+using TimePoint = Clock::time_point;
+
+class Timer
+{
+public:
+    using Callback = std::function<void (Timer& timer)>;
+
+    Timer(TimePoint date, Callback callback);
+    ~Timer();
+
+    TimePoint next_date() const { return m_date; }
+    void      set_next_date(TimePoint date) { m_date = date; }
+    void run();
+
+private:
+    TimePoint m_date;
+    Callback  m_callback;
 };
 
 // The EventManager provides an interface to file descriptor
@@ -39,8 +61,12 @@ public:
 
 private:
     friend class FDWatcher;
+    friend class Timer;
     Set<FDWatcher*>  m_fd_watchers;
+    Set<Timer*>      m_timers;
     std::vector<int> m_forced_fd;
+
+    TimePoint        m_last;
 };
 
 }
