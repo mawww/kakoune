@@ -357,6 +357,7 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
     set_menu_back(m_menu, COLOR_PAIR(m_menu_bg));
     post_menu(m_menu);
+    redraw(m_menu_win, m_info_win);
 }
 
 void NCursesUI::menu_select(int selected)
@@ -369,6 +370,7 @@ void NCursesUI::menu_select(int selected)
     }
     else
         set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
+    redraw(m_menu_win, m_info_win);
 }
 
 void NCursesUI::menu_hide()
@@ -385,6 +387,7 @@ void NCursesUI::menu_hide()
     m_menu_win = nullptr;
     m_items.clear();
     m_choices.clear();
+    redraw(m_menu_win, m_info_win);
 }
 
 static DisplayCoord compute_needed_size(const String& str)
@@ -454,6 +457,7 @@ void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, Men
     wmove(m_info_win, 0, 0);
     addutf8str(m_info_win, Utf8Iterator(content.begin()),
                Utf8Iterator(content.end()));
+    redraw(m_menu_win, m_info_win);
 }
 
 void NCursesUI::info_hide()
@@ -462,6 +466,7 @@ void NCursesUI::info_hide()
         return;
     delwin(m_info_win);
     m_info_win = nullptr;
+    redraw(m_menu_win, m_info_win);
 }
 
 DisplayCoord NCursesUI::dimensions()
