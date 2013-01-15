@@ -513,17 +513,26 @@ private:
 class Insert : public InputMode
 {
 public:
+    static constexpr std::chrono::milliseconds idle_timeout(){ return std::chrono::milliseconds{100}; }
+
     Insert(Context& context, InsertMode mode)
         : InputMode(context.input_handler()),
           m_inserter(context.editor(), mode),
-          m_complete_timer{Clock::time_point::max(),
-                           [this, &context](Timer& timer) {
-                               m_completer.reset(context);
-                               m_completer.select(context, 0);
-                           }}
+          m_idle_timer{Clock::time_point::max(),
+                       [this, &context](Timer& timer) {
+                           context.hooks().run_hook("InsertIdle", "", context);
+                           m_completer.reset(context);
+                           if (context.editor().selections().size() == 1)
+                           {
+                               BufferIterator prev = context.editor().selections().back().last();
+                               if (not prev.is_begin() && is_word(*utf8::previous(prev)))
+                                   m_completer.select(context, 0);
+                           }
+                       }}
     {
         context.last_insert().first = mode;
         context.last_insert().second.clear();
+        m_idle_timer.set_next_date(Clock::now() + idle_timeout());
     }
 
     void on_key(const Key& key, Context& context) override
@@ -555,13 +564,6 @@ public:
         else if (key.modifiers == Key::Modifiers::None)
         {
             m_inserter.insert(codepoint_to_str(key.key));
-            if (m_inserter.editor().selections().size() == 1 and
-                is_word(key.key))
-            {
-                m_completer.reset(context);
-                reset_completer = false;
-                m_complete_timer.set_next_date(Clock::now() + std::chrono::milliseconds{250});
-            }
         }
         else if (key == Key{ Key::Modifiers::Control, 'r' })
             m_insert_reg = true;
@@ -581,13 +583,16 @@ public:
         }
 
         if (reset_completer)
-            m_completer.reset(context);
+        {
+            // m_completer.reset(context);
+            m_idle_timer.set_next_date(Clock::now() + idle_timeout());
+        }
     }
 private:
     bool m_insert_reg = false;
     IncrementalInserter m_inserter;
-    Timer         m_complete_timer;
-    WordCompleter m_completer;
+    Timer               m_idle_timer;
+    WordCompleter       m_completer;
 };
 
 }
