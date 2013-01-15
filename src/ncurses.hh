@@ -41,6 +41,7 @@ public:
     DisplayCoord dimensions() override;
 private:
     friend void on_term_resize(int);
+    void redraw();
 
     DisplayCoord m_dimensions;
     void update_dimensions();

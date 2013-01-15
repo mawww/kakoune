@@ -118,18 +118,19 @@ NCursesUI::~NCursesUI()
     signal(SIGINT, SIG_DFL);
 }
 
-static void redraw(WINDOW* menu_win, WINDOW* info_win)
+void NCursesUI::redraw()
 {
+    redrawwin(stdscr);
     wnoutrefresh(stdscr);
-    if (menu_win)
+    if (m_menu_win)
     {
-        redrawwin(menu_win);
-        wnoutrefresh(menu_win);
+        redrawwin(m_menu_win);
+        wnoutrefresh(m_menu_win);
     }
-    if (info_win)
+    if (m_info_win)
     {
-        redrawwin(info_win);
-        wnoutrefresh(info_win);
+        redrawwin(m_info_win);
+        wnoutrefresh(m_info_win);
     }
     doupdate();
 }
@@ -221,7 +222,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         addutf8str(stdscr, Utf8Iterator(mode_line.begin()),
                    Utf8Iterator(mode_line.end()));
     }
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 struct getch_iterator
@@ -315,7 +316,7 @@ void NCursesUI::print_status(const String& status, CharCount cursor_pos)
     m_status_line   = status;
     m_status_cursor = cursor_pos;
     draw_status();
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 void NCursesUI::menu_show(const memoryview<String>& choices,
@@ -357,7 +358,7 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
     set_menu_back(m_menu, COLOR_PAIR(m_menu_bg));
     post_menu(m_menu);
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 void NCursesUI::menu_select(int selected)
@@ -370,7 +371,7 @@ void NCursesUI::menu_select(int selected)
     }
     else
         set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 void NCursesUI::menu_hide()
@@ -387,7 +388,7 @@ void NCursesUI::menu_hide()
     m_menu_win = nullptr;
     m_items.clear();
     m_choices.clear();
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 static DisplayCoord compute_needed_size(const String& str)
@@ -457,7 +458,7 @@ void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, Men
     wmove(m_info_win, 0, 0);
     addutf8str(m_info_win, Utf8Iterator(content.begin()),
                Utf8Iterator(content.end()));
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 void NCursesUI::info_hide()
@@ -466,7 +467,7 @@ void NCursesUI::info_hide()
         return;
     delwin(m_info_win);
     m_info_win = nullptr;
-    redraw(m_menu_win, m_info_win);
+    redraw();
 }
 
 DisplayCoord NCursesUI::dimensions()
