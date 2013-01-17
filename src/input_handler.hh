@@ -38,17 +38,31 @@ public:
     InputHandler();
     ~InputHandler();
 
+    // switch to insert mode
     void insert(Context& context, InsertMode mode);
+    // repeat last insert mode key sequence
     void repeat_last_insert(Context& context);
 
+    // enter prompt mode, callback is called on each change,
+    // abort or validation with corresponding PromptEvent value
+    // returns to normal mode after validation if callback does
+    // not change the mode itself
     void prompt(const String& prompt, Completer completer,
                 PromptCallback callback, Context& context);
 
+    // enter menu mode, callback is called on each selection change,
+    // abort or validation with corresponding MenuEvent value
+    // returns to normal mode after validation if callback does
+    // not change the mode itself
     void menu(const memoryview<String>& choices,
               MenuCallback callback, Context& context);
 
+    // execute callback on next keypress and returns to normal mode
+    // if callback does not change the mode itself
     void on_next_key(KeyCallback callback);
 
+    // read and process all inputs available in context
+    // user interface
     void handle_available_inputs(Context& context);
 
 private:
