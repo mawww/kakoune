@@ -18,7 +18,8 @@ Window::Window(Buffer& buffer)
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    m_hooks.run_hook("WinCreate", buffer.name(), Context(*this));
+    Context hook_context{*this};
+    m_hooks.run_hook("WinCreate", buffer.name(), hook_context);
     m_options.register_watcher(*this);
 
     m_highlighters.append(registry["expand_tabs"](*this, {}));
@@ -185,7 +186,8 @@ void Window::on_incremental_insertion_end()
 void Window::on_option_changed(const String& name, const Option& option)
 {
     String desc = name + "=" + option.as_string();
-    m_hooks.run_hook("WinSetOption", desc, Context(*this));
+    Context hook_context{*this};
+    m_hooks.run_hook("WinSetOption", desc, hook_context);
 }
 
 }

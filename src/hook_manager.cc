@@ -10,7 +10,7 @@ void HookManager::add_hook(const String& hook_name, HookFunc hook)
 
 void HookManager::run_hook(const String& hook_name,
                            const String& param,
-                           const Context& context) const
+                           Context& context) const
 {
     if (m_parent)
         m_parent->run_hook(hook_name, param, context);

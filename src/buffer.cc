@@ -49,7 +49,11 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
 
 Buffer::~Buffer()
 {
-    m_hooks.run_hook("BufClose", m_name, Context(Editor(*this)));
+    {
+        Editor hook_editor{*this};
+        Context hook_context{hook_editor};
+        m_hooks.run_hook("BufClose", m_name, hook_context);
+    }
 
     BufferManager::instance().unregister_buffer(*this);
     assert(m_change_listeners.empty());
