@@ -31,6 +31,8 @@ private:
 namespace InputModes
 {
 
+static constexpr std::chrono::milliseconds idle_timeout{100};
+
 class Normal : public InputMode
 {
 public:
@@ -513,12 +515,10 @@ private:
 class Insert : public InputMode
 {
 public:
-    static constexpr std::chrono::milliseconds idle_timeout(){ return std::chrono::milliseconds{100}; }
-
     Insert(Context& context, InsertMode mode)
         : InputMode(context.input_handler()),
           m_inserter(context.editor(), mode),
-          m_idle_timer{Clock::time_point::max(),
+          m_idle_timer{Clock::now() + idle_timeout,
                        [this, &context](Timer& timer) {
                            context.hooks().run_hook("InsertIdle", "", context);
                            m_completer.reset(context);
@@ -532,7 +532,7 @@ public:
     {
         context.last_insert().first = mode;
         context.last_insert().second.clear();
-        m_idle_timer.set_next_date(Clock::now() + idle_timeout());
+        context.hooks().run_hook("InsertBegin", "", context);
     }
 
     void on_key(const Key& key, Context& context) override
@@ -546,8 +546,10 @@ public:
             return;
         }
         bool reset_completer = true;
+        bool moved = false;
         if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
         {
+            context.hooks().run_hook("InsertEnd", "", context);
             m_completer.reset(context);
             reset_normal_mode();
         }
@@ -556,11 +558,20 @@ public:
         else if (key == Key::Left)
             m_inserter.move_cursors(-1_char);
         else if (key == Key::Right)
+        {
             m_inserter.move_cursors(1_char);
+            moved = true;
+        }
         else if (key == Key::Up)
+        {
             m_inserter.move_cursors(-1_line);
+            moved = true;
+        }
         else if (key == Key::Down)
+        {
             m_inserter.move_cursors(1_line);
+            moved = true;
+        }
         else if (key.modifiers == Key::Modifiers::None)
         {
             m_inserter.insert(codepoint_to_str(key.key));
@@ -585,8 +596,10 @@ public:
         if (reset_completer)
         {
             // m_completer.reset(context);
-            m_idle_timer.set_next_date(Clock::now() + idle_timeout());
+            m_idle_timer.set_next_date(Clock::now() + idle_timeout);
         }
+        if (moved)
+            context.hooks().run_hook("InsertMove", "", context);
     }
 private:
     bool m_insert_reg = false;
@@ -639,7 +652,7 @@ void InputHandler::repeat_last_insert(Context& context)
 }
 
 void InputHandler::prompt(const String& prompt, Completer completer,
-                    PromptCallback callback, Context& context)
+                          PromptCallback callback, Context& context)
 {
     assert(&context.input_handler() == this);
     m_mode_trash.emplace_back(std::move(m_mode));
@@ -647,7 +660,7 @@ void InputHandler::prompt(const String& prompt, Completer completer,
 }
 
 void InputHandler::menu(const memoryview<String>& choices,
-                  MenuCallback callback, Context& context)
+                        MenuCallback callback, Context& context)
 {
     assert(&context.input_handler() == this);
     m_mode_trash.emplace_back(std::move(m_mode));

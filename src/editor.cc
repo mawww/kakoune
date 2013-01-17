@@ -408,7 +408,6 @@ using utf8_it = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pas
 IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     : m_editor(editor), m_edition(editor), m_mode(mode)
 {
-    m_editor.on_incremental_insertion_begin();
     Buffer& buffer = *editor.m_buffer;
 
     if (mode == InsertMode::Replace)
@@ -488,8 +487,6 @@ IncrementalInserter::~IncrementalInserter()
             sel.last() = utf8::previous(sel.last());
         sel.avoid_eol();
     }
-
-    m_editor.on_incremental_insertion_end();
 }
 
 void IncrementalInserter::insert(String content)

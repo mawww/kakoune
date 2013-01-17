@@ -176,13 +176,6 @@ String Window::status_line() const
     return oss.str();
 }
 
-void Window::on_incremental_insertion_end()
-{
-    DynamicSelectionList backup(buffer(), selections());
-    hooks().run_hook("InsertEnd", "", Context(*this));
-    select((SelectionList)backup);
-}
-
 void Window::on_option_changed(const String& name, const Option& option)
 {
     String desc = name + "=" + option.as_string();

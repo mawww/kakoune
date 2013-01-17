@@ -96,8 +96,6 @@ private:
     void check_invariant() const;
 
     friend class IncrementalInserter;
-    virtual void on_incremental_insertion_begin() {}
-    virtual void on_incremental_insertion_end() {}
 
     safe_ptr<Buffer>         m_buffer;
     DynamicSelectionList     m_selections;
