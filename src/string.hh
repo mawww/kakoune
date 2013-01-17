@@ -101,6 +101,14 @@ inline String operator"" _str(const char* str, size_t)
     return String(str);
 }
 
+inline String codepoint_to_str(Codepoint cp)
+{
+    std::string str;
+    auto it = back_inserter(str);
+    utf8::dump(it, cp);
+    return String(str);
+}
+
 }
 
 namespace std

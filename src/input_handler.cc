@@ -61,14 +61,6 @@ private:
     int m_count = 0;
 };
 
-String codepoint_to_str(Codepoint cp)
-{
-    std::string str;
-    auto it = back_inserter(str);
-    utf8::dump(it, cp);
-    return String(str);
-}
-
 class LineEditor
 {
 public:
