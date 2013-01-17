@@ -545,7 +545,7 @@ public:
             m_insert_reg = false;
             return;
         }
-        bool reset_completer = true;
+        bool update_completions = true;
         bool moved = false;
         if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
         {
@@ -556,7 +556,10 @@ public:
         else if (key == Key::Backspace)
             m_inserter.erase();
         else if (key == Key::Left)
+        {
             m_inserter.move_cursors(-1_char);
+            moved = true;
+        }
         else if (key == Key::Right)
         {
             m_inserter.move_cursors(1_char);
@@ -573,9 +576,7 @@ public:
             moved = true;
         }
         else if (key.modifiers == Key::Modifiers::None)
-        {
             m_inserter.insert(codepoint_to_str(key.key));
-        }
         else if (key == Key{ Key::Modifiers::Control, 'r' })
             m_insert_reg = true;
         else if ( key == Key{ Key::Modifiers::Control, 'm' })
@@ -585,19 +586,16 @@ public:
         else if ( key == Key{ Key::Modifiers::Control, 'n' })
         {
             m_completer.select(context, 1);
-            reset_completer = false;
+            update_completions = false;
         }
         else if ( key == Key{ Key::Modifiers::Control, 'p' })
         {
             m_completer.select(context, -1);
-            reset_completer = false;
+            update_completions = false;
         }
 
-        if (reset_completer)
-        {
-            // m_completer.reset(context);
+        if (update_completions)
             m_idle_timer.set_next_date(Clock::now() + idle_timeout);
-        }
         if (moved)
             context.hooks().run_hook("InsertMove", "", context);
     }
