@@ -536,25 +536,19 @@ void exec_keys(const KeyList& keys, Context& context)
     context.change_editor(new_context.editor());
 }
 
-void exec_string(const CommandParameters& params, Context& context)
+template<typename Func>
+void context_wrap(const CommandParameters& params, Context& context, Func func)
 {
     ParametersParser parser(params, { { "client", true }, { "restore-selections", false }});
     if (parser.positional_count() == 0)
         throw wrong_argument_count();
 
-    KeyList keys;
-    for (auto& param : parser)
-    {
-        KeyList param_keys = parse_keys(param);
-        keys.insert(keys.end(), param_keys.begin(), param_keys.end());
-    }
-
-    Context& keys_context = parser.has_option("client") ?
+    Context& real_context = parser.has_option("client") ?
         ClientManager::instance().get_client_context(parser.option_value("client"))
       : context;
 
     const bool restore_selections = parser.has_option("restore-selections");
-    Editor& editor = keys_context.editor();
+    Editor& editor = real_context.editor();
     DynamicSelectionList sels(editor.buffer());
     if (restore_selections)
         sels = editor.selections();
@@ -563,34 +557,30 @@ void exec_string(const CommandParameters& params, Context& context)
             editor.select(sels);
     });
 
-    exec_keys(keys, keys_context);
+    func(parser, real_context);
+}
+
+void exec_string(const CommandParameters& params, Context& context)
+{
+    context_wrap(params, context, [](const ParametersParser& parser, Context& context) {
+        KeyList keys;
+        for (auto& param : parser)
+        {
+            KeyList param_keys = parse_keys(param);
+            keys.insert(keys.end(), param_keys.begin(), param_keys.end());
+        }
+        exec_keys(keys, context);
+    });
 }
 
 void eval_string(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "client", true }, { "restore-selections", false } });
-    if (parser.positional_count() == 0)
-        throw wrong_argument_count();
-
-    String command;
-    for (auto& param : parser)
-        command += param + " ";
-
-    Context& command_context = parser.has_option("client") ?
-        ClientManager::instance().get_client_context(parser.option_value("client"))
-      : context;
-
-    const bool restore_selections = parser.has_option("restore-selections");
-    Editor& editor = command_context.editor();
-    DynamicSelectionList sels(editor.buffer());
-    if (restore_selections)
-        sels = editor.selections();
-    auto restore_editor = on_scope_end([&]{
-        if (restore_selections)
-            editor.select(sels);
+    context_wrap(params, context, [](const ParametersParser& parser, Context& context) {
+        String command;
+        for (auto& param : parser)
+            command += param + " ";
+        CommandManager::instance().execute(command, context);
     });
-
-    CommandManager::instance().execute(command, command_context);
 }
 
 void menu(const CommandParameters& params, Context& context)
