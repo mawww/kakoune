@@ -204,7 +204,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     set_attribute(A_REVERSE, 0);
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
-    set_color(Color::Blue, Color::Black);
+    set_color(Color::Blue, Color::Default);
     for (;line_index < m_dimensions.line; ++line_index)
     {
         move((int)line_index, 0);
