@@ -142,10 +142,10 @@ static void sort_and_merge_overlapping(SelectionList& selections)
     Range back = selections.back();
     auto back_rank = std::count_if(selections.begin(), selections.end(),
                                    [&](const Selection& sel)
-                                   { return sel.begin() < back.begin(); });
-    std::sort(selections.begin(), selections.end(), compare_selections);
+                                   { return sel.begin() <= back.begin(); });
+    std::stable_sort(selections.begin(), selections.end(), compare_selections);
     if (back_rank < selections.size() - 1)
-        std::rotate(selections.begin(), selections.begin() + back_rank + 1,
+        std::rotate(selections.begin(), selections.begin() + back_rank,
                     selections.end());
     assert(selections.back() == back);
 
