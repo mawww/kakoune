@@ -17,14 +17,8 @@ Medium Priority
 
 * configurable insert mode completion support
 
-* pasting big chunks of text from the terminal is slooooow.
-  (this is due to WordCompletion regex matching the whole
-   buffer once per inserted char)
-
 * Design an Asynchronous model for interaction with external tools.
   For example Kakoune should provide a way to run a completion
   shell command without freezing until the completer returns.
-
-* EventManager should handle timers.
 
 * automatic line splitting/paragraph formatting
