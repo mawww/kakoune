@@ -149,7 +149,7 @@ DisplayCoord Window::display_position(const BufferIterator& iterator)
                 if (content.has_buffer_range() and
                     iterator >= content.begin() and iterator < content.end())
                 {
-                    res.column += iterator - content.begin();
+                    res.column += utf8::distance(content.begin(), iterator);
                     return res;
                 }
                 res.column += content.length();
