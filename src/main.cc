@@ -648,6 +648,12 @@ void register_env_vars()
     shell_manager.register_env_var("client",
                                    [](const String& name, const Context& context)
                                    { return ClientManager::instance().get_client_name(context); });
+    shell_manager.register_env_var("cursor_line",
+                                   [](const String& name, const Context& context)
+                                   { return int_to_str((int)context.editor().selections().back().last().line() + 1); });
+    shell_manager.register_env_var("cursor_column",
+                                   [](const String& name, const Context& context)
+                                   { return int_to_str((int)context.editor().selections().back().last().column() + 1); });
 }
 
 void register_registers()
