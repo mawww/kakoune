@@ -20,7 +20,7 @@ struct LineAndColumn
         return EffectiveType(line + other.line, column + other.column);
     }
 
-    constexpr EffectiveType& operator+=(const EffectiveType& other)
+    EffectiveType& operator+=(const EffectiveType& other)
     {
         line   += other.line;
         column += other.column;
