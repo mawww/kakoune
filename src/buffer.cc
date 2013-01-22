@@ -238,6 +238,7 @@ void Buffer::check_invariant() const
         assert(line.start == start);
         assert(line.length() > 0);
         assert(line.content.back() == '\n');
+        assert(find(line.content, '\n') == line.content.end()-1);
         start += line.length();
     }
 }
