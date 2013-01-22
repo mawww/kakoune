@@ -225,13 +225,6 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     redraw();
 }
 
-struct getch_iterator
-{
-    int operator*() { return getch(); }
-    getch_iterator& operator++() { return *this; }
-    getch_iterator& operator++(int) { return *this; }
-};
-
 bool NCursesUI::is_key_available()
 {
     timeout(0);
@@ -286,6 +279,12 @@ Key NCursesUI::get_key()
     if (c >= 0 and c < 256)
     {
        ungetch(c);
+       struct getch_iterator
+       {
+            int operator*() { return getch(); }
+            getch_iterator& operator++() { return *this; }
+            getch_iterator& operator++(int) { return *this; }
+       };
        return utf8::codepoint(getch_iterator{});
     }
     return Key::Invalid;
