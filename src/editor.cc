@@ -36,8 +36,13 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
     switch (mode)
     {
     case InsertMode::Insert:
-    case InsertMode::Replace:
         return sel.begin();
+    case InsertMode::Replace:
+    {
+        BufferIterator pos = sel.begin();
+        buffer.erase(sel.begin(), sel.end());
+        return pos;
+    }
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
@@ -74,13 +79,6 @@ void Editor::insert(const String& string, InsertMode mode)
 {
     scoped_edition edition(*this);
 
-    if (mode == InsertMode::Replace)
-    {
-        // do not call Editor::erase as we do not want to avoid end of lines
-        for (auto& sel : m_selections)
-            m_buffer->erase(sel.begin(), sel.end());
-    }
-
     for (auto& sel : m_selections)
     {
         BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
@@ -97,12 +95,6 @@ void Editor::insert(const String& string, InsertMode mode)
 void Editor::insert(const memoryview<String>& strings, InsertMode mode)
 {
     scoped_edition edition(*this);
-    if (mode == InsertMode::Replace)
-    {
-        // do not call Editor::erase as we do not want to avoid end of lines
-        for (auto& sel : m_selections)
-            m_buffer->erase(sel.begin(), sel.end());
-    }
     if (strings.empty())
         return;
 
@@ -413,19 +405,18 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
 {
     Buffer& buffer = *editor.m_buffer;
 
-    if (mode == InsertMode::Replace)
-    {
-        for (auto& sel : editor.m_selections)
-            buffer.erase(sel.begin(), sel.end());
-    }
-
     for (auto& sel : m_editor.m_selections)
     {
         utf8_it first, last;
         switch (mode)
         {
         case InsertMode::Insert:  first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
-        case InsertMode::Replace: first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
+        case InsertMode::Replace:
+        {
+            buffer.erase(sel.begin(), sel.end());
+            first = last = sel.begin();
+            break;
+        }
         case InsertMode::Append:
         {
             first = sel.begin();
