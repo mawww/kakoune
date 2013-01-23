@@ -712,10 +712,18 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
     return remote_client;
 }
 
+void sigsegv_handler(int)
+{
+    endwin();
+    on_assert_failed("Kakoune SEGFAULT !");
+    abort();
+}
+
 int main(int argc, char* argv[])
 {
     try
     {
+        signal(SIGSEGV, sigsegv_handler);
         std::vector<String> params;
         for (size_t i = 1; i < argc; ++i)
              params.push_back(argv[i]);
