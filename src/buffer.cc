@@ -272,7 +272,7 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         if (start != content.length())
             m_lines.push_back({ offset + start, content.substr(start) });
 
-        begin_it = pos;
+        begin_it = BufferIterator{*this, { pos.line() + 1, 0 }};
         end_it = end();
     }
     else
@@ -349,8 +349,14 @@ void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 void Buffer::apply_modification(const Modification& modification)
 {
     const String& content = modification.content;
-    const BufferIterator& pos = modification.position;
+    BufferIterator pos = modification.position;
 
+    // this may happen when a modification applied at the
+    // end of the buffer has been inverted for an undo.
+    if (pos.column() == m_lines[pos.line()].length())
+        pos = { pos.buffer(), { pos.line() + 1, 0 }};
+
+    assert(pos.is_valid());
     switch (modification.type)
     {
     case Modification::Insert:
