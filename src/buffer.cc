@@ -201,7 +201,7 @@ struct Buffer::Modification
         case Erase:  inverse_type = Insert; break;
         default: assert(false);
         }
-        return Modification(inverse_type, position, content);
+        return {inverse_type, position, content};
     }
 };
 

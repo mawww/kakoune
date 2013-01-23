@@ -68,7 +68,7 @@ public:
 
     const Buffer& buffer() const;
     const BufferCoord& coord() const { return m_coord; }
-    LineCount  line() const { return m_coord.line; }
+    LineCount line() const { return m_coord.line; }
     ByteCount column() const { return m_coord.column; }
     ByteCount offset() const;
 
