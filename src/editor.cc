@@ -334,12 +334,15 @@ public:
 
     void on_insert(const BufferIterator& begin, const BufferIterator& end)
     {
+        assert(begin.is_valid());
+        assert(end.is_valid());
         m_first = begin;
         m_last = utf8::previous(end);
     }
 
     void on_erase(const BufferIterator& begin, const BufferIterator& end)
     {
+        assert(begin.is_valid());
         m_first = begin;
         if (m_first >= m_buffer.end())
             m_first = utf8::previous(m_buffer.end());

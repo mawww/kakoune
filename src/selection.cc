@@ -26,8 +26,10 @@ BufferIterator Range::end() const
 
 void Range::check_invariant() const
 {
-    assert(utf8::is_character_start(first()));
-    assert(utf8::is_character_start(last()));
+    assert(m_first.is_valid());
+    assert(m_last.is_valid());
+    assert(utf8::is_character_start(m_first));
+    assert(utf8::is_character_start(m_last));
 }
 
 static void avoid_eol(BufferIterator& it)

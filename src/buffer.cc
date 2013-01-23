@@ -245,7 +245,8 @@ void Buffer::check_invariant() const
 
 void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
-    assert(pos.is_end() or utf8::is_character_start(pos));
+    assert(pos.is_valid() and (pos.is_end() or utf8::is_character_start(pos)));
+    assert(not contains(content, '\0'));
     ++m_timestamp;
     ByteCount offset = pos.offset();
 
@@ -322,6 +323,8 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
 
 void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 {
+    assert(begin.is_valid());
+    assert(end.is_valid());
     assert(utf8::is_character_start(begin) and
            (end.is_end() or utf8::is_character_start(end)));
     ++m_timestamp;

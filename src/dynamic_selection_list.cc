@@ -64,7 +64,10 @@ DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
 void DynamicSelectionList::check_invariant() const
 {
     for (auto& sel : *this)
+    {
         assert(m_buffer == &sel.buffer());
+        sel.check_invariant();
+    }
 }
 
 void DynamicSelectionList::on_insert(const BufferIterator& begin, const BufferIterator& end)
@@ -73,7 +76,6 @@ void DynamicSelectionList::on_insert(const BufferIterator& begin, const BufferIt
     {
         sel.first().on_insert(begin.coord(), end.coord());
         sel.last().on_insert(begin.coord(), end.coord());
-        sel.check_invariant();
     }
 }
 
@@ -83,7 +85,6 @@ void DynamicSelectionList::on_erase(const BufferIterator& begin, const BufferIte
     {
         sel.first().on_erase(begin.coord(), end.coord());
         sel.last().on_erase(begin.coord(), end.coord());
-        sel.check_invariant();
     }
 }
 
