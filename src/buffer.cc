@@ -256,9 +256,9 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
 
     BufferIterator begin_it;
     BufferIterator end_it;
-    // if we inserted at the end of the buffer, we may have created a new
+    // if we inserted at the end of the buffer, we have created a new
     // line without inserting a '\n'
-    if (pos == end() and (pos == begin() or *(pos-1) == '\n'))
+    if (pos.is_end())
     {
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)
@@ -361,7 +361,7 @@ void Buffer::apply_modification(const Modification& modification)
     {
     case Modification::Insert:
     {
-        do_insert(pos < end() ? pos : end(), content);
+        do_insert(pos, content);
         break;
     }
     case Modification::Erase:

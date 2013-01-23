@@ -116,8 +116,7 @@ inline char BufferIterator::operator*() const
 inline ByteCount BufferIterator::offset() const
 {
     assert(m_buffer);
-    return line() == 0 ? column()
-                       : m_buffer->m_lines[line()].start + column();
+    return m_buffer->m_lines[line()].start + column();
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
@@ -221,6 +220,11 @@ inline bool BufferIterator::is_begin() const
 inline bool BufferIterator::is_end() const
 {
     assert(m_buffer);
+    if (m_coord.line == m_buffer->line_count())
+    {
+        assert(m_coord.column == 0);
+        return true;
+    }
     return offset() == m_buffer->character_count();
 }
 
