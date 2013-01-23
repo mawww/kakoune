@@ -2,6 +2,9 @@
 
 #include "exception.hh"
 
+#include <sys/types.h>
+#include <unistd.h>
+
 namespace Kakoune
 {
 
@@ -17,7 +20,9 @@ private:
 
 void on_assert_failed(const char* message)
 {
-    int res = system(("xmessage -buttons 'quit:0,ignore:1' '"_str + message + "'").c_str());
+    String debug_info = "pid: " + int_to_str(getpid());
+    int res = system(("xmessage -buttons 'quit:0,ignore:1' '"_str +
+                      message + "\n[Debug Infos]\n" + debug_info + "'").c_str());
     switch (res)
     {
     case -1:
