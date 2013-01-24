@@ -272,7 +272,7 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         if (start != content.length())
             m_lines.push_back({ offset + start, content.substr(start) });
 
-        begin_it = BufferIterator{*this, { pos.line() + 1, 0 }};
+        begin_it = pos.column() == 0 ? pos : BufferIterator{*this, { pos.line() + 1, 0 }};
         end_it = end();
     }
     else
