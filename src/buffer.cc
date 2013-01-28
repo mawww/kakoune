@@ -353,7 +353,7 @@ void Buffer::apply_modification(const Modification& modification)
 
     // this may happen when a modification applied at the
     // end of the buffer has been inverted for an undo.
-    if (pos.column() == m_lines[pos.line()].length())
+    if (not pos.is_end() and pos.column() == m_lines[pos.line()].length())
         pos = { pos.buffer(), { pos.line() + 1, 0 }};
 
     assert(pos.is_valid());
