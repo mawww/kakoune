@@ -34,7 +34,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                       generate_name()});
 
     InputHandler*  input_handler = &m_clients.back()->input_handler;
-    Context*       context = &m_clients.back()->context;
+    Context*       context = &m_clients.back()->context();
 
     try
     {
@@ -50,10 +50,10 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         return;
     }
 
-    context->ui().set_input_callback([input_handler, context, this]() {
+    context->ui().set_input_callback([context, this]() {
         try
         {
-            input_handler->handle_available_inputs(*context);
+            context->input_handler().handle_available_inputs(*context);
             context->window().forget_timestamp();
         }
         catch (Kakoune::runtime_error& error)
@@ -73,7 +73,7 @@ void ClientManager::remove_client_by_context(Context& context)
 {
     for (auto it = m_clients.begin(); it != m_clients.end(); ++it)
     {
-        if (&(*it)->context == &context)
+        if (&(*it)->context() == &context)
         {
              m_clients.erase(it);
              return;
@@ -91,7 +91,7 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)
 
         auto it = std::find_if(m_clients.begin(), m_clients.end(),
                                [&](const std::unique_ptr<Client>& client)
-                               { return &client->context.window() == w.get(); });
+                               { return &client->context().window() == w.get(); });
         if (it == m_clients.end())
         {
             w->forget_timestamp();
@@ -106,9 +106,9 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 {
     for (auto& client : m_clients)
     {
-        client->context.forget_jumps_to_buffer(buffer);
+        client->context().forget_jumps_to_buffer(buffer);
 
-        if (&client->context.buffer() != &buffer)
+        if (&client->context().buffer() != &buffer)
             continue;
 
         // change client context to edit the first buffer which is not the
@@ -119,7 +119,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             if (buf != &buffer)
             {
                Window& w = get_unused_window_for_buffer(*buf);
-               client->context.change_editor(w);
+               client->context().change_editor(w);
                break;
             }
         }
@@ -134,12 +134,12 @@ void ClientManager::set_client_name(Context& context, String name)
 {
     auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
                                  { return client->name == name; });
-    if (it != m_clients.end() and &(*it)->context != &context)
+    if (it != m_clients.end() and &(*it)->context() != &context)
         throw runtime_error("name not unique: " + name);
 
     for (auto& client : m_clients)
     {
-        if (&client->context == &context)
+        if (&client->context() == &context)
         {
             client->name = std::move(name);
             return;
@@ -152,7 +152,7 @@ String ClientManager::get_client_name(const Context& context)
 {
     for (auto& client : m_clients)
     {
-        if (&client->context == &context)
+        if (&client->context() == &context)
             return client->name;
     }
     throw runtime_error("no client for current context");
@@ -163,7 +163,7 @@ Context& ClientManager::get_client_context(const String& name)
     auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
                                  { return client->name == name; });
     if (it != m_clients.end())
-        return (*it)->context;
+        return (*it)->context();
     throw runtime_error("no client named: " + name);
 }
 
@@ -171,7 +171,7 @@ void ClientManager::redraw_clients() const
 {
     for (auto& client : m_clients)
     {
-        Context& context = client->context;
+        Context& context = client->context();
         if (context.window().timestamp() != context.buffer().timestamp())
         {
             DisplayCoord dimensions = context.ui().dimensions();

@@ -35,14 +35,15 @@ private:
         Client(std::unique_ptr<UserInterface>&& ui, Window& window,
                String name)
             : user_interface(std::move(ui)),
-              context(input_handler, window, *user_interface),
-              name(std::move(name)) {}
+              input_handler(*user_interface),
+              name(std::move(name)) { context().change_editor(window); }
         Client(Client&&) = delete;
         Client& operator=(Client&& other) = delete;
 
+        Context& context() { return input_handler.context(); }
+
         std::unique_ptr<UserInterface> user_interface;
         InputHandler  input_handler;
-        Context       context;
         String        name;
     };
 

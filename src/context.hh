@@ -2,11 +2,12 @@
 #define context_hh_INCLUDED
 
 #include "window.hh"
-#include "input_handler.hh"
 #include "user_interface.hh"
 
 namespace Kakoune
 {
+
+class InputHandler;
 
 // A Context is used to access non singleton objects for various services
 // in commands.
@@ -19,7 +20,8 @@ struct Context
     Context() {}
     explicit Context(Editor& editor)
         : m_editor(&editor) {}
-
+    Context(InputHandler& input_handler, UserInterface& ui)
+        : m_input_handler(&input_handler), m_ui(&ui) {}
     Context(InputHandler& input_handler, Editor& editor, UserInterface& ui)
         : m_input_handler(&input_handler), m_editor(&editor), m_ui(&ui) {}
 
@@ -165,7 +167,7 @@ struct Context
     int& numeric_param() { return m_numeric_param; }
 private:
     safe_ptr<Editor>        m_editor;
-    safe_ptr<InputHandler>  m_input_handler;
+    InputHandler*           m_input_handler;
     safe_ptr<UserInterface> m_ui;
 
     Insertion m_last_insert = {InsertMode::Insert, {}};

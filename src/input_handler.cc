@@ -21,7 +21,8 @@ public:
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    virtual void on_key(const Key& key, Context& context) = 0;
+    virtual void on_key(const Key& key) = 0;
+    Context& context() const { return m_input_handler.context(); }
 protected:
     void reset_normal_mode();
 private:
@@ -41,7 +42,7 @@ public:
     {
     }
 
-    void on_key(const Key& key, Context& context) override
+    void on_key(const Key& key) override
     {
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             m_count = m_count * 10 + key.key - '0';
@@ -50,8 +51,8 @@ public:
             auto it = keymap.find(key);
             if (it != keymap.end())
             {
-                context.numeric_param() = m_count;
-                it->second(context);
+                context().numeric_param() = m_count;
+                it->second(context());
             }
             m_count = 0;
         }
@@ -125,17 +126,17 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(Context& context, const memoryview<String>& choices,
+    Menu(InputHandler& input_handler, const memoryview<String>& choices,
          MenuCallback callback)
-        : InputMode(context.input_handler()),
+        : InputMode(input_handler),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
-        DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
-        context.ui().menu_show(choices, menu_pos, MenuStyle::Prompt);
+        DisplayCoord menu_pos{ context().window().dimensions().line, 0_char };
+        context().ui().menu_show(choices, menu_pos, MenuStyle::Prompt);
     }
 
-    void on_key(const Key& key, Context& context) override
+    void on_key(const Key& key) override
     {
         auto match_filter = [this](const String& str) {
             return boost::regex_match(str.begin(), str.end(), m_filter);
@@ -143,11 +144,11 @@ public:
 
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
-            context.ui().menu_hide();
-            context.ui().print_status("");
+            context().ui().menu_hide();
+            context().ui().print_status("");
             reset_normal_mode();
             int selected = m_selected - m_choices.begin();
-            m_callback(selected, MenuEvent::Validate, context);
+            m_callback(selected, MenuEvent::Validate, context());
             return;
         }
         else if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
@@ -157,14 +158,14 @@ public:
                 m_edit_filter = false;
                 m_filter = boost::regex(".*");
                 m_filter_editor.reset("");
-                context.ui().print_status("");
+                context().ui().print_status("");
             }
             else
             {
-                context.ui().menu_hide();
+                context().ui().menu_hide();
                 reset_normal_mode();
                 int selected = m_selected - m_choices.begin();
-                m_callback(selected, MenuEvent::Abort, context);
+                m_callback(selected, MenuEvent::Abort, context());
             }
         }
         else if (key == Key::Down or
@@ -175,7 +176,7 @@ public:
             auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
-            select(it, context);
+            select(it);
         }
         else if (key == Key::Up or
                  key == Key::BackTab or
@@ -186,7 +187,7 @@ public:
             auto it = std::find_if(selected+1, m_choices.rend(), match_filter);
             if (it == m_choices.rend())
                 it = std::find_if(m_choices.rbegin(), selected, match_filter);
-            select(it.base()-1, context);
+            select(it.base()-1);
         }
         else if (key == '/' and not m_edit_filter)
         {
@@ -201,11 +202,11 @@ public:
             auto it = std::find_if(m_selected, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
-            select(it, context);
+            select(it);
         }
 
         if (m_edit_filter)
-            context.ui().print_status("/" + m_filter_editor.line(),
+            context().ui().print_status("/" + m_filter_editor.line(),
                                       m_filter_editor.cursor_pos() + 1);
    }
 
@@ -216,12 +217,12 @@ private:
     const ChoiceList m_choices;
     ChoiceList::const_iterator m_selected;
 
-    void select(ChoiceList::const_iterator it, Context& context)
+    void select(ChoiceList::const_iterator it)
     {
         m_selected = it;
         int selected = m_selected - m_choices.begin();
-        context.ui().menu_select(selected);
-        m_callback(selected, MenuEvent::Select, context);
+        context().ui().menu_select(selected);
+        m_callback(selected, MenuEvent::Select, context());
     }
 
     boost::regex m_filter = boost::regex(".*");
@@ -250,23 +251,23 @@ String common_prefix(const memoryview<String>& strings)
 class Prompt : public InputMode
 {
 public:
-    Prompt(Context& context, const String& prompt,
+    Prompt(InputHandler& input_handler, const String& prompt,
            Completer completer, PromptCallback callback)
-        : InputMode(context.input_handler()), m_prompt(prompt),
+        : InputMode(input_handler), m_prompt(prompt),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
-        context.ui().print_status(m_prompt, m_prompt.char_length());
+        context().ui().print_status(m_prompt, m_prompt.char_length());
     }
 
-    void on_key(const Key& key, Context& context) override
+    void on_key(const Key& key) override
     {
         std::vector<String>& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
 
         if (m_insert_reg)
         {
-            String reg = RegisterManager::instance()[key.key].values(context)[0];
+            String reg = RegisterManager::instance()[key.key].values(context())[0];
             m_line_editor.insert(reg);
             m_insert_reg = false;
         }
@@ -277,20 +278,20 @@ public:
                 history.erase(it);
 
             history.push_back(line);
-            context.ui().print_status("");
-            context.ui().menu_hide();
+            context().ui().print_status("");
+            context().ui().menu_hide();
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
             // may change the mode
-            m_callback(line, PromptEvent::Validate, context);
+            m_callback(line, PromptEvent::Validate, context());
             return;
         }
         else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
         {
-            context.ui().print_status("");
-            context.ui().menu_hide();
+            context().ui().print_status("");
+            context().ui().menu_hide();
             reset_normal_mode();
-            m_callback(line, PromptEvent::Abort, context);
+            m_callback(line, PromptEvent::Abort, context());
             return;
         }
         else if (key == Key{Key::Modifiers::Control, 'r'})
@@ -345,16 +346,16 @@ public:
             // first try, we need to ask our completer for completions
             if (m_current_completion == -1)
             {
-                m_completions = m_completer(context, line,
+                m_completions = m_completer(context(), line,
                                             line.byte_count_to(m_line_editor.cursor_pos()));
                 if (candidates.empty())
                     return;
 
-                context.ui().menu_hide();
-                DisplayCoord menu_pos{ context.window().dimensions().line, 0_char };
-                context.ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
+                context().ui().menu_hide();
+                DisplayCoord menu_pos{ context().window().dimensions().line, 0_char };
+                context().ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
 
-                bool use_common_prefix = context.options()["complete_prefix"].as_int();
+                bool use_common_prefix = context().options()["complete_prefix"].as_int();
                 String prefix = use_common_prefix ? common_prefix(candidates) : String();
                 if (m_completions.end - m_completions.start > prefix.length())
                     prefix = line.substr(m_completions.start,
@@ -375,7 +376,7 @@ public:
                 m_current_completion = candidates.size()-1;
 
             const String& completion = candidates[m_current_completion];
-            context.ui().menu_select(m_current_completion);
+            context().ui().menu_select(m_current_completion);
 
             m_line_editor.insert_from(line.char_count_to(m_completions.start),
                                       completion);
@@ -387,13 +388,13 @@ public:
         }
         else
         {
-            context.ui().menu_hide();
+            context().ui().menu_hide();
             m_current_completion = -1;
             m_line_editor.handle_key(key);
         }
-        context.ui().print_status(m_prompt + line,
+        context().ui().print_status(m_prompt + line,
                                   m_prompt.char_length() + m_line_editor.cursor_pos());
-        m_callback(line, PromptEvent::Change, context);
+        m_callback(line, PromptEvent::Change, context());
     }
 
 private:
@@ -417,10 +418,10 @@ public:
     NextKey(InputHandler& input_handler, KeyCallback callback)
         : InputMode(input_handler), m_callback(callback) {}
 
-    void on_key(const Key& key, Context& context) override
+    void on_key(const Key& key) override
     {
         reset_normal_mode();
-        m_callback(key, context);
+        m_callback(key, context());
    }
 
 private:
@@ -507,33 +508,33 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(Context& context, InsertMode mode)
-        : InputMode(context.input_handler()),
-          m_inserter(context.editor(), mode),
+    Insert(InputHandler& input_handler, InsertMode mode)
+        : InputMode(input_handler),
+          m_inserter(context().editor(), mode),
           m_idle_timer{Clock::now() + idle_timeout,
-                       [this, &context](Timer& timer) {
-                           context.hooks().run_hook("InsertIdle", "", context);
-                           m_completer.reset(context);
-                           if (context.editor().selections().size() == 1)
+                       [this](Timer& timer) {
+                           context().hooks().run_hook("InsertIdle", "", context());
+                           m_completer.reset(context());
+                           if (context().editor().selections().size() == 1)
                            {
-                               BufferIterator prev = context.editor().selections().back().last();
+                               BufferIterator prev = context().editor().selections().back().last();
                                if (not prev.is_begin() && is_word(*utf8::previous(prev)))
-                                   m_completer.select(context, 0);
+                                   m_completer.select(context(), 0);
                            }
                        }}
     {
-        context.last_insert().first = mode;
-        context.last_insert().second.clear();
-        context.hooks().run_hook("InsertBegin", "", context);
+        context().last_insert().first = mode;
+        context().last_insert().second.clear();
+        context().hooks().run_hook("InsertBegin", "", context());
     }
 
-    void on_key(const Key& key, Context& context) override
+    void on_key(const Key& key) override
     {
-        context.last_insert().second.push_back(key);
+        context().last_insert().second.push_back(key);
         if (m_insert_reg)
         {
             if (key.modifiers == Key::Modifiers::None)
-                m_inserter.insert(RegisterManager::instance()[key.key].values(context));
+                m_inserter.insert(RegisterManager::instance()[key.key].values(context()));
             m_insert_reg = false;
             return;
         }
@@ -541,8 +542,8 @@ public:
         bool moved = false;
         if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
         {
-            context.hooks().run_hook("InsertEnd", "", context);
-            m_completer.reset(context);
+            context().hooks().run_hook("InsertEnd", "", context());
+            m_completer.reset(context());
             reset_normal_mode();
         }
         else if (key == Key::Backspace)
@@ -577,19 +578,19 @@ public:
             m_inserter.insert(String() + '\t');
         else if ( key == Key{ Key::Modifiers::Control, 'n' })
         {
-            m_completer.select(context, 1);
+            m_completer.select(context(), 1);
             update_completions = false;
         }
         else if ( key == Key{ Key::Modifiers::Control, 'p' })
         {
-            m_completer.select(context, -1);
+            m_completer.select(context(), -1);
             update_completions = false;
         }
 
         if (update_completions)
             m_idle_timer.set_next_date(Clock::now() + idle_timeout);
         if (moved)
-            context.hooks().run_hook("InsertMove", "", context);
+            context().hooks().run_hook("InsertMove", "", context());
     }
 private:
     bool m_insert_reg = false;
@@ -607,8 +608,8 @@ void InputMode::reset_normal_mode()
 }
 
 
-InputHandler::InputHandler()
-    : m_mode(new InputModes::Normal(*this))
+InputHandler::InputHandler(UserInterface& ui)
+    : m_context(*this, ui), m_mode(new InputModes::Normal(*this))
 {
 }
 
@@ -618,14 +619,14 @@ InputHandler::~InputHandler()
 
 void InputHandler::insert(Context& context, InsertMode mode)
 {
-    assert(&context.input_handler() == this);
+    assert(&context == &m_context);
     m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Insert(context, mode));
+    m_mode.reset(new InputModes::Insert(*this, mode));
 }
 
 void InputHandler::repeat_last_insert(Context& context)
 {
-    assert(&context.input_handler() == this);
+    assert(&context == &m_context);
     Context::Insertion& last_insert = context.last_insert();
     if (last_insert.second.empty())
         return;
@@ -635,26 +636,26 @@ void InputHandler::repeat_last_insert(Context& context)
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
     m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Insert(context, last_insert.first));
+    m_mode.reset(new InputModes::Insert(*this, last_insert.first));
     for (auto& key : keys)
-        m_mode->on_key(key, context);
+        m_mode->on_key(key);
     assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
 void InputHandler::prompt(const String& prompt, Completer completer,
                           PromptCallback callback, Context& context)
 {
-    assert(&context.input_handler() == this);
+    assert(&context == &m_context);
     m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Prompt(context, prompt, completer, callback));
+    m_mode.reset(new InputModes::Prompt(*this, prompt, completer, callback));
 }
 
 void InputHandler::menu(const memoryview<String>& choices,
                         MenuCallback callback, Context& context)
 {
-    assert(&context.input_handler() == this);
+    assert(&context == &m_context);
     m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Menu(context, choices, callback));
+    m_mode.reset(new InputModes::Menu(*this, choices, callback));
 }
 
 void InputHandler::on_next_key(KeyCallback callback)
@@ -670,12 +671,13 @@ bool is_valid(const Key& key)
 
 void InputHandler::handle_available_inputs(Context& context)
 {
+    assert(&context == &m_context);
     m_mode_trash.clear();
     while (context.ui().is_key_available())
     {
         Key key = context.ui().get_key();
         if (is_valid(key))
-            m_mode->on_key(key, context);
+            m_mode->on_key(key);
         m_mode_trash.clear();
     }
 }

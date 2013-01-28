@@ -5,12 +5,12 @@
 #include "completion.hh"
 #include "utils.hh"
 #include "string.hh"
+#include "context.hh"
 
 namespace Kakoune
 {
 
 class Editor;
-class Context;
 
 enum class MenuEvent
 {
@@ -35,7 +35,7 @@ enum class InsertMode : unsigned;
 class InputHandler : public SafeCountable
 {
 public:
-    InputHandler();
+    InputHandler(UserInterface& ui);
     ~InputHandler();
 
     // switch to insert mode
@@ -65,7 +65,9 @@ public:
     // user interface
     void handle_available_inputs(Context& context);
 
+    Context& context() { return m_context; }
 private:
+    Context m_context;
     friend class InputMode;
     std::unique_ptr<InputMode> m_mode;
     std::vector<std::unique_ptr<InputMode>> m_mode_trash;

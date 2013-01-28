@@ -526,14 +526,14 @@ void exec_keys(const KeyList& keys, Context& context)
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
 
-    BatchUI batch_ui(keys);
-    InputHandler batch_input_handler;
-
     scoped_edition edition(context.editor());
 
-    Context new_context(batch_input_handler, context.editor(), batch_ui);
-    batch_input_handler.handle_available_inputs(new_context);
-    context.change_editor(new_context.editor());
+    BatchUI batch_ui(keys);
+    InputHandler batch_input_handler(batch_ui);
+    batch_input_handler.context().change_editor(context.editor());
+
+    batch_input_handler.handle_available_inputs(batch_input_handler.context());
+    context.change_editor(batch_input_handler.context().editor());
 }
 
 template<typename Func>
