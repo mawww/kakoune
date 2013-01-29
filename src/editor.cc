@@ -136,7 +136,7 @@ static void sort_and_merge_overlapping(SelectionList& selections)
                                    [&](const Selection& sel)
                                    { return sel.begin() <= back.begin(); });
     std::stable_sort(selections.begin(), selections.end(), compare_selections);
-    if (back_rank < selections.size() - 1)
+    if (back_rank < selections.size())
         std::rotate(selections.begin(), selections.begin() + back_rank,
                     selections.end());
     assert(selections.back() == back);
