@@ -398,6 +398,7 @@ static DisplayCoord compute_needed_size(const String& str)
     {
         if (*begin == '\n')
         {
+            res.column = std::max(res.column, line_len+1);
             line_len = 0;
             ++res.line;
         }
