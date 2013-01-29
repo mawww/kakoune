@@ -159,7 +159,7 @@ auto find_if(Container& container, T op) -> decltype(container.begin())
 template<typename Container, typename T>
 bool contains(const Container& container, const T& value)
 {
-    return find(container, value) != container.end();
+    return (not container.empty()) and find(container, value) != container.end();
 }
 
 // *** On scope end ***
