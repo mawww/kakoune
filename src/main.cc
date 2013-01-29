@@ -372,7 +372,7 @@ void do_rotate_selections(Context& context)
     if (count == 0)
         count = 1;
     SelectionList sels = context.editor().selections();
-    count %= sels .size();
+    count %= sels.size();
     std::rotate(sels.begin(), sels.begin() + count, sels.end());
     context.editor().select(std::move(sels));
 };
