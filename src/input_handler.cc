@@ -38,9 +38,11 @@ class Normal : public InputMode
 {
 public:
     Normal(InputHandler& input_handler)
-        : InputMode(input_handler)
-    {
-    }
+        : InputMode(input_handler),
+          m_idle_timer{Clock::now() + idle_timeout, [this](Timer& timer) {
+              context().hooks().run_hook("NormalIdle", "", context());
+          }}
+    {}
 
     void on_key(const Key& key) override
     {
@@ -56,10 +58,12 @@ public:
             }
             m_count = 0;
         }
+        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
     }
 
 private:
     int m_count = 0;
+    Timer m_idle_timer;
 };
 
 class LineEditor
