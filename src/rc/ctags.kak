@@ -24,3 +24,24 @@ def -shell-params \
             fi
         fi
     }}
+
+def funcinfo %{
+    eval -restore-selections %{
+        exec [(<space>B;
+        %sh{
+            if [[ "$kak_selection" =~ [a-zA-Z_]+\( ]]; then
+                sigs=$(readtags -e ${kak_selection%(} | grep kind:function | sed -e s/^.*signature://)
+                if [[ -n "$sigs" ]]; then
+                    echo "info -anchor right '$sigs'"
+                    exit
+                fi
+            fi
+            echo info
+        }
+    }
+}
+
+hook global WinSetOption filetype=cpp %{
+     hook window NormalIdle .* funcinfo
+     hook window InsertIdle .* funcinfo
+}
