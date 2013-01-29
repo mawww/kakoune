@@ -167,7 +167,7 @@ struct Context
     int& numeric_param() { return m_numeric_param; }
 private:
     safe_ptr<Editor>        m_editor;
-    InputHandler*           m_input_handler;
+    InputHandler*           m_input_handler = nullptr;
     safe_ptr<UserInterface> m_ui;
 
     Insertion m_last_insert = {InsertMode::Insert, {}};
