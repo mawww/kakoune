@@ -22,16 +22,8 @@ struct Context
         : m_editor(&editor) {}
     Context(InputHandler& input_handler, UserInterface& ui)
         : m_input_handler(&input_handler), m_ui(&ui) {}
-    Context(InputHandler& input_handler, Editor& editor, UserInterface& ui)
-        : m_input_handler(&input_handler), m_editor(&editor), m_ui(&ui) {}
-
-    // to allow func(Context(Editor(...)))
-    // make sure the context will not survive the next ';'
-    explicit Context(Editor&& editor)
-        : m_editor(&editor) {}
 
     Context(const Context&) = delete;
-    Context(Context&&) = default;
     Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const
