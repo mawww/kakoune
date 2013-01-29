@@ -617,17 +617,15 @@ InputHandler::~InputHandler()
 {
 }
 
-void InputHandler::insert(Context& context, InsertMode mode)
+void InputHandler::insert(InsertMode mode)
 {
-    assert(&context == &m_context);
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Insert(*this, mode));
 }
 
-void InputHandler::repeat_last_insert(Context& context)
+void InputHandler::repeat_last_insert()
 {
-    assert(&context == &m_context);
-    Context::Insertion& last_insert = context.last_insert();
+    Context::Insertion& last_insert = m_context.last_insert();
     if (last_insert.second.empty())
         return;
 
@@ -643,17 +641,15 @@ void InputHandler::repeat_last_insert(Context& context)
 }
 
 void InputHandler::prompt(const String& prompt, Completer completer,
-                          PromptCallback callback, Context& context)
+                          PromptCallback callback)
 {
-    assert(&context == &m_context);
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Prompt(*this, prompt, completer, callback));
 }
 
 void InputHandler::menu(const memoryview<String>& choices,
-                        MenuCallback callback, Context& context)
+                        MenuCallback callback)
 {
-    assert(&context == &m_context);
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Menu(*this, choices, callback));
 }
@@ -669,13 +665,12 @@ bool is_valid(const Key& key)
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }
 
-void InputHandler::handle_available_inputs(Context& context)
+void InputHandler::handle_available_inputs()
 {
-    assert(&context == &m_context);
     m_mode_trash.clear();
-    while (context.ui().is_key_available())
+    while (m_context.ui().is_key_available())
     {
-        Key key = context.ui().get_key();
+        Key key = m_context.ui().get_key();
         if (is_valid(key))
             m_mode->on_key(key);
         m_mode_trash.clear();

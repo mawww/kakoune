@@ -43,12 +43,12 @@ namespace Kakoune
 template<InsertMode mode>
 void do_insert(Context& context)
 {
-    context.input_handler().insert(context, mode);
+    context.input_handler().insert(mode);
 }
 
 void do_repeat_insert(Context& context)
 {
-    context.input_handler().repeat_last_insert(context);
+    context.input_handler().repeat_last_insert();
 }
 
 template<SelectMode mode>
@@ -113,7 +113,7 @@ void do_command(Context& context)
         [](const String& cmdline, PromptEvent event, Context& context) {
              if (event == PromptEvent::Validate)
                  CommandManager::instance().execute(cmdline, context);
-        }, context);
+        });
 }
 
 void do_pipe(Context& context)
@@ -130,7 +130,7 @@ void do_pipe(Context& context)
                 strings.push_back(ShellManager::instance().pipe({sel.begin(), sel.end()},
                                                                 cmdline, context, {}, {}));
             editor.insert(strings, InsertMode::Replace);
-        }, context);
+        });
 }
 
 template<SelectMode mode, bool forward>
@@ -169,7 +169,7 @@ void do_search(Context& context)
                     throw;
             }
 
-        }, context);
+        });
 }
 
 template<SelectMode mode, bool forward>
@@ -253,7 +253,7 @@ void do_select_regex(Context& context)
         [](const String& ex, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate and not ex.empty())
                 context.editor().multi_select(std::bind(select_all_matches, _1, ex));
-        }, context);
+        });
 }
 
 void do_split_regex(Context& context)
@@ -262,7 +262,7 @@ void do_split_regex(Context& context)
         [](const String& ex, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate and not ex.empty())
                 context.editor().multi_select(std::bind(split_selection, _1, ex));
-        }, context);
+        });
 }
 
 void do_join(Context& context)

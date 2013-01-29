@@ -53,7 +53,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     context->ui().set_input_callback([context, this]() {
         try
         {
-            context->input_handler().handle_available_inputs(*context);
+            context->input_handler().handle_available_inputs();
             context->window().forget_timestamp();
         }
         catch (Kakoune::runtime_error& error)

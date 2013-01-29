@@ -532,7 +532,7 @@ void exec_keys(const KeyList& keys, Context& context)
     InputHandler batch_input_handler(batch_ui);
     batch_input_handler.context().change_editor(context.editor());
 
-    batch_input_handler.handle_available_inputs(batch_input_handler.context());
+    batch_input_handler.handle_available_inputs();
     context.change_editor(batch_input_handler.context().editor());
 }
 
@@ -618,7 +618,7 @@ void menu(const CommandParameters& params, Context& context)
               CommandManager::instance().execute(commands[choice], context);
             if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
               CommandManager::instance().execute(select_cmds[choice], context);
-        }, context);
+        });
 }
 
 void info(const CommandParameters& params, Context& context)
