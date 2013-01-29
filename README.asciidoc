@@ -401,8 +401,9 @@ Some helper commands can be used to define composite commands:
      when only one choice is provided. and a -select-cmds argument, in which
      case menu takes three argument per item, the last one being a command
      to execute when the item is selected (but not validated).
- * +info <text>+: display text in an information box, when the option inline
-     is given, place the info box next to last selection end.
+ * +info <text>+: display text in an information box, at can take a -anchor
+     option, which accepts +left+, +right+ and +cursor+ as value, in order to
+     specify where the info box should be anchored relative to the last selection.
  * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead.

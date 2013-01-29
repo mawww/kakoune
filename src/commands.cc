@@ -623,7 +623,7 @@ void menu(const CommandParameters& params, Context& context)
 
 void info(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "inline", false } });
+    ParametersParser parser(params, { { "anchor", true } });
 
     if (parser.positional_count() > 1)
         throw wrong_argument_count();
@@ -631,13 +631,22 @@ void info(const CommandParameters& params, Context& context)
     context.ui().info_hide();
     if (parser.positional_count() > 0)
     {
-        MenuStyle style = parser.has_option("inline") ?
-             MenuStyle::Inline : MenuStyle::Prompt;
-        DisplayCoord pos;
-        if (style == MenuStyle::Inline)
-            pos = context.window().display_position(context.editor().selections().back().last());
-        else
-            pos.line = context.ui().dimensions().line;
+        MenuStyle style = MenuStyle::Prompt;
+        DisplayCoord pos = { context.ui().dimensions().line, 0 };
+        if (parser.has_option("anchor"))
+        {
+            style =  MenuStyle::Inline;
+            const auto& sel = context.editor().selections().back();
+            auto it = sel.last();
+            String anchor = parser.option_value("anchor");
+            if (anchor == "left")
+                it = sel.begin();
+            else if (anchor == "right")
+                it = sel.end() - 1;
+            else if (anchor != "cursor")
+                throw runtime_error("anchor param must be one of [left, right, cursor]");
+            pos = context.window().display_position(it);
+        }
         context.ui().info_show(parser[0], pos, style);
     }
 }
