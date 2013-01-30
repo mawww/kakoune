@@ -52,7 +52,8 @@ Buffer* open_or_create(const String& filename, Context& context)
 
 Buffer* open_fifo(const String& name , const String& filename, Context& context)
 {
-    int fd = open(filename.c_str(), O_RDONLY | O_CLOEXEC);
+    int fd = open(filename.c_str(), O_RDONLY);
+    fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
     Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
