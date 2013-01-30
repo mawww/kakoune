@@ -2,6 +2,7 @@
 #include "assert.hh"
 #include "editor.hh"
 #include "selectors.hh"
+#include "keys.hh"
 
 using namespace Kakoune;
 
@@ -104,10 +105,26 @@ void test_string()
    assert(splited[3] == "tchou");
 }
 
+void test_keys()
+{
+    std::vector<Key> keys{
+         { ' ' },
+         { 'c' },
+         { Key::Modifiers::Alt, 'j' },
+         { Key::Modifiers::Control, 'r' }
+    };
+    String keys_as_str;
+    for (auto& key : keys)
+        keys_as_str += key_to_str(key);
+    auto parsed_keys = parse_keys(keys_as_str);
+    assert(keys == parsed_keys);
+}
+
 void run_unit_tests()
 {
     test_utf8();
     test_string();
+    test_keys();
     test_buffer();
     test_editor();
     test_incremental_inserter();
