@@ -42,7 +42,14 @@ public:
           m_idle_timer{Clock::now() + idle_timeout, [this](Timer& timer) {
               context().hooks().run_hook("NormalIdle", "", context());
           }}
-    {}
+    {
+        context().hooks().run_hook("NormalBegin", "", context());
+    }
+
+    ~Normal()
+    {
+        context().hooks().run_hook("NormalEnd", "", context());
+    }
 
     void on_key(const Key& key) override
     {
@@ -58,6 +65,7 @@ public:
             }
             m_count = 0;
         }
+        context().hooks().run_hook("NormalKey", key_to_str(key), context());
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
     }
 
@@ -573,7 +581,10 @@ public:
             moved = true;
         }
         else if (key.modifiers == Key::Modifiers::None)
+        {
             m_inserter.insert(codepoint_to_str(key.key));
+            context().hooks().run_hook("InsertKey", key_to_str(key), context());
+        }
         else if (key == Key{ Key::Modifiers::Control, 'r' })
             m_insert_reg = true;
         else if ( key == Key{ Key::Modifiers::Control, 'm' })
@@ -594,7 +605,7 @@ public:
         if (update_completions)
             m_idle_timer.set_next_date(Clock::now() + idle_timeout);
         if (moved)
-            context().hooks().run_hook("InsertMove", "", context());
+            context().hooks().run_hook("InsertMove", key_to_str(key), context());
     }
 private:
     bool m_insert_reg = false;
