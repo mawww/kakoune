@@ -1,6 +1,5 @@
 #include "keys.hh"
-
-#include <unordered_map>
+#include "utils.hh"
 
 namespace Kakoune
 {
@@ -16,10 +15,15 @@ Key canonicalize_ifn(Key key)
     return key;
 }
 
-static std::unordered_map<String, Codepoint> keynamemap = {
+using KeyAndName = std::pair<String, Codepoint>;
+static std::vector<KeyAndName> keynamemap = {
     { "ret", '\r' },
     { "space", ' ' },
-    { "esc", Key::Escape }
+    { "esc", Key::Escape },
+    { "left", Key::Left },
+    { "right", Key::Right },
+    { "up", Key::Up },
+    { "down", Key::Down}
 };
 
 KeyList parse_keys(const String& str)
@@ -57,7 +61,8 @@ KeyList parse_keys(const String& str)
                     pos = end_pos;
                     continue;
                 }
-                auto it = keynamemap.find(keyname);
+                auto it = find_if(keynamemap, [&keyname](const KeyAndName& item)
+                                              { return item.first == keyname; });
                 if (it != keynamemap.end())
                 {
                     Key key = canonicalize_ifn(Key{ modifier, it->second });
@@ -70,6 +75,31 @@ KeyList parse_keys(const String& str)
         result.push_back({Key::Modifiers::None, Codepoint(str[pos])});
     }
     return result;
+}
+
+String key_to_str(const Key& key)
+{
+    bool named = false;
+    String res;
+    auto it = find_if(keynamemap, [&key](const KeyAndName& item)
+                                  { return item.second == key.key; });
+    if (it != keynamemap.end())
+    {
+        named = true;
+        res = it->first;
+    }
+    else
+        res = codepoint_to_str(key.key);
+
+    switch (key.modifiers)
+    {
+    case Key::Modifiers::Control: res = "c-" + res; named = true; break;
+    case Key::Modifiers::Alt:     res = "a-" + res; named = true; break;
+    default: break;
+    }
+    if (named)
+        res = '<' + res + '>';
+    return res;
 }
 
 }

@@ -51,6 +51,7 @@ struct Key
 typedef std::vector<Key> KeyList;
 
 KeyList parse_keys(const String& str);
+String  key_to_str(const Key& key);
 
 }
 
