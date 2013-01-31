@@ -41,7 +41,7 @@ def funcinfo %{
     }
 }
 
-hook global WinSetOption filetype=cpp %{
+def ctags_enable_autoinfo %{
      hook window NormalIdle .* funcinfo
      hook window NormalEnd  .* info
      hook window InsertIdle .* funcinfo
