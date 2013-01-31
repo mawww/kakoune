@@ -48,6 +48,8 @@ void test_buffer()
     buffer.end_undo_group();
     buffer.undo();
     assert(buffer.string(buffer.end() - 7, buffer.end()) == "kanaky\n");
+    buffer.redo();
+    assert(buffer.string(buffer.end() - 6, buffer.end()) == "mutch\n");
 }
 
 void test_editor()
