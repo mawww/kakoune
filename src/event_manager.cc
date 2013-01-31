@@ -8,23 +8,23 @@ namespace Kakoune
 FDWatcher::FDWatcher(int fd, Callback callback)
     : m_fd{fd}, m_callback{std::move(callback)}
 {
-    EventManager::instance().m_fd_watchers.add(this);
+    EventManager::instance().m_fd_watchers.insert(this);
 }
 
 FDWatcher::~FDWatcher()
 {
-    EventManager::instance().m_fd_watchers.remove(this);
+    EventManager::instance().m_fd_watchers.erase(this);
 }
 
 Timer::Timer(TimePoint date, Callback callback)
     : m_date{date}, m_callback{std::move(callback)}
 {
-    EventManager::instance().m_timers.add(this);
+    EventManager::instance().m_timers.insert(this);
 }
 
 Timer::~Timer()
 {
-    EventManager::instance().m_timers.remove(this);
+    EventManager::instance().m_timers.erase(this);
 }
 
 void Timer::run()

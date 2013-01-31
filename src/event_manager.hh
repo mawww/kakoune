@@ -4,6 +4,7 @@
 #include "utils.hh"
 
 #include <chrono>
+#include <unordered_set>
 
 namespace Kakoune
 {
@@ -62,8 +63,8 @@ public:
 private:
     friend class FDWatcher;
     friend class Timer;
-    Set<FDWatcher*>  m_fd_watchers;
-    Set<Timer*>      m_timers;
+    std::unordered_set<FDWatcher*>  m_fd_watchers;
+    std::unordered_set<Timer*>      m_timers;
     std::vector<int> m_forced_fd;
 
     TimePoint        m_last;

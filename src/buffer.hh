@@ -4,6 +4,7 @@
 #include <vector>
 #include <list>
 #include <memory>
+#include <unordered_set>
 
 #include "line_and_column.hh"
 #include "option_manager.hh"
@@ -167,7 +168,7 @@ public:
     HookManager&         hooks()         { return m_hooks; }
     const HookManager&   hooks()   const { return m_hooks; }
 
-    Set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
+    std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
 private:
     friend class BufferIterator;
 
@@ -211,7 +212,7 @@ private:
 
     // this is mutable as adding or removing listeners is not muting the
     // buffer observable state.
-    mutable Set<BufferChangeListener*> m_change_listeners;
+    mutable std::unordered_set<BufferChangeListener*> m_change_listeners;
 
     OptionManager m_options;
     HookManager   m_hooks;
