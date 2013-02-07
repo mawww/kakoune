@@ -449,6 +449,9 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             }
             last = first;
             break;
+        case InsertMode::InsertAtNextLineBegin:
+             assert(false); // not implemented
+             break;
         }
         if (first.underlying_iterator().is_end())
            --first;
