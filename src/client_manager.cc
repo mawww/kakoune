@@ -7,6 +7,30 @@
 namespace Kakoune
 {
 
+struct ClientManager::Client
+{
+    Client(std::unique_ptr<UserInterface>&& ui, Window& window,
+           String name)
+        : user_interface(std::move(ui)),
+          input_handler(*user_interface),
+          name(std::move(name))
+    {
+        assert(not this->name.empty());
+        context().change_editor(window);
+    }
+    Client(Client&&) = delete;
+    Client& operator=(Client&& other) = delete;
+
+    Context& context() { return input_handler.context(); }
+
+    std::unique_ptr<UserInterface> user_interface;
+    InputHandler  input_handler;
+    String        name;
+};
+
+ClientManager::ClientManager() = default;
+ClientManager::~ClientManager() = default;
+
 String ClientManager::generate_name() const
 {
     for (int i = 0; true; ++i)
@@ -32,10 +56,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     Buffer& buffer = **BufferManager::instance().begin();
     m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer),
                                       generate_name()});
-
-    InputHandler*  input_handler = &m_clients.back()->input_handler;
     Context*       context = &m_clients.back()->context();
-
     try
     {
         CommandManager::instance().execute(init_commands, *context);

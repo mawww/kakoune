@@ -12,6 +12,9 @@ struct client_removed{};
 class ClientManager : public Singleton<ClientManager>
 {
 public:
+    ClientManager();
+    ~ClientManager();
+
     void create_client(std::unique_ptr<UserInterface>&& ui,
                        const String& init_cmd);
 
@@ -30,23 +33,7 @@ private:
     void remove_client_by_context(Context& context);
     String generate_name() const;
 
-    struct Client
-    {
-        Client(std::unique_ptr<UserInterface>&& ui, Window& window,
-               String name)
-            : user_interface(std::move(ui)),
-              input_handler(*user_interface),
-              name(std::move(name)) { context().change_editor(window); }
-        Client(Client&&) = delete;
-        Client& operator=(Client&& other) = delete;
-
-        Context& context() { return input_handler.context(); }
-
-        std::unique_ptr<UserInterface> user_interface;
-        InputHandler  input_handler;
-        String        name;
-    };
-
+    struct Client;
     std::vector<std::unique_ptr<Client>> m_clients;
     std::vector<std::unique_ptr<Window>> m_windows;
 };
