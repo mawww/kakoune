@@ -534,7 +534,13 @@ void exec_keys(const KeyList& keys, Context& context)
     batch_input_handler.context().change_editor(context.editor());
 
     batch_input_handler.handle_available_inputs();
-    context.change_editor(batch_input_handler.context().editor());
+
+    auto& new_editor = batch_input_handler.context().editor();
+    if (&new_editor != &context.editor())
+    {
+        context.push_jump();
+        context.change_editor(new_editor);
+    }
 }
 
 template<typename Func>
