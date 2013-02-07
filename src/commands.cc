@@ -554,17 +554,15 @@ void context_wrap(const CommandParameters& params, Context& context, Func func)
         ClientManager::instance().get_client_context(parser.option_value("client"))
       : context;
 
-    const bool restore_selections = parser.has_option("restore-selections");
-    Editor& editor = real_context.editor();
-    DynamicSelectionList sels(editor.buffer());
-    if (restore_selections)
-        sels = editor.selections();
-    auto restore_editor = on_scope_end([&]{
-        if (restore_selections)
-            editor.select(sels);
-    });
-
-    func(parser, real_context);
+    if (parser.has_option("restore-selections"))
+    {
+        Editor& editor = real_context.editor();
+        DynamicSelectionList sels(editor.buffer(), editor.selections());
+        auto restore_sels = on_scope_end([&]{ editor.select(sels); });
+        func(parser, real_context);
+    }
+    else
+        func(parser, real_context);
 }
 
 void exec_string(const CommandParameters& params, Context& context)
