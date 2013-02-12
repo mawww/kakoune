@@ -82,21 +82,27 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    const BufferIterator cursor = selections().back().last();
+    const BufferIterator first = selections().back().first();
+    const BufferIterator last  = selections().back().last();
 
     // scroll lines if needed
-    if (cursor.line() < m_position.line)
-        m_position.line = cursor.line();
-    else if (cursor.line() >= m_position.line + m_dimensions.line)
-        m_position.line = cursor.line() - (m_dimensions.line - 1);
+    if (first.line() < m_position.line)
+        m_position.line = first.line();
+    else if (first.line() >= m_position.line + m_dimensions.line)
+        m_position.line = first.line() - (m_dimensions.line - 1);
+
+    if (last.line() < m_position.line)
+        m_position.line = last.line();
+    else if (last.line() >= m_position.line + m_dimensions.line)
+        m_position.line = last.line() - (m_dimensions.line - 1);
 
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.push_back(DisplayLine(cursor.line()));
+    lines.push_back(DisplayLine(last.line()));
 
-    BufferIterator line_begin = buffer().iterator_at_line_begin(cursor);
-    BufferIterator line_end   = buffer().iterator_at_line_end(cursor);
+    BufferIterator line_begin = buffer().iterator_at_line_begin(last);
+    BufferIterator line_end   = buffer().iterator_at_line_end(last);
     lines.back().push_back(DisplayAtom(AtomContent(line_begin, line_end)));
 
     display_buffer.compute_range();
@@ -110,18 +116,23 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     for (auto& atom : lines.back())
     {
         if (atom.content.has_buffer_range() and
-            atom.content.begin() <= cursor and atom.content.end() > cursor)
+            atom.content.begin() <= last and atom.content.end() > last)
         {
             if (atom.content.type() == AtomContent::BufferRange)
-                column += utf8::distance(atom.content.begin(), cursor);
+                column += utf8::distance(atom.content.begin(), last);
             else
                 column += atom.content.content().char_length();
 
-            CharCount cursor_col = utf8::distance(line_begin, cursor);
-            // we could early out on this, but having scrolling left
-            // faster than not scrolling at all is not really useful.
-            if (cursor_col < m_position.column)
-                m_position.column = cursor_col;
+            CharCount first_col = first.line() == last.line() ?
+                                  utf8::distance(line_begin, first) : 0_char;
+            if (first_col < m_position.column)
+                m_position.column = first_col;
+            else if (column >= m_position.column + m_dimensions.column)
+                m_position.column = column - (m_dimensions.column - 1);
+
+            CharCount last_col = utf8::distance(line_begin, last);
+            if (last_col < m_position.column)
+                m_position.column = last_col;
             else if (column >= m_position.column + m_dimensions.column)
                 m_position.column = column - (m_dimensions.column - 1);
 
@@ -129,7 +140,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
         }
         column += atom.content.content().char_length();
     }
-    if (cursor != buffer().end())
+    if (last != buffer().end())
     {
         // the cursor should always be visible.
         assert(false);
