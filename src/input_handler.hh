@@ -65,6 +65,10 @@ public:
     // user interface
     void handle_available_inputs();
 
+    void start_recording(char reg);
+    bool is_recording() const;
+    void stop_recording();
+
     Context& context() { return m_context; }
 private:
     Context m_context;
@@ -74,6 +78,9 @@ private:
 
     using Insertion = std::pair<InsertMode, std::vector<Key>>;
     Insertion m_last_insert = {InsertMode::Insert, {}};
+
+    char   m_recording_reg = 0;
+    String m_recorded_keys;
 };
 
 struct prompt_aborted {};

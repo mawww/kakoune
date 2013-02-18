@@ -23,7 +23,8 @@ static std::vector<KeyAndName> keynamemap = {
     { "left", Key::Left },
     { "right", Key::Right },
     { "up", Key::Up },
-    { "down", Key::Down}
+    { "down", Key::Down},
+    { "backspace", Key::Backspace}
 };
 
 KeyList parse_keys(const String& str)

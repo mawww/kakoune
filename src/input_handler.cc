@@ -690,9 +690,35 @@ void InputHandler::handle_available_inputs()
     {
         Key key = m_context.ui().get_key();
         if (is_valid(key))
+        {
+            const bool was_recording = is_recording();
+
             m_mode->on_key(key);
+
+            // do not record the key that made us enter or leave recording mode.
+            if (was_recording and is_recording())
+                m_recorded_keys += key_to_str(key);
+        }
         m_mode_trash.clear();
     }
+}
+
+void InputHandler::start_recording(char reg)
+{
+    assert(m_recording_reg == 0);
+    m_recording_reg = reg;
+}
+
+bool InputHandler::is_recording() const
+{
+    return m_recording_reg != 0;
+}
+
+void InputHandler::stop_recording()
+{
+    assert(m_recording_reg != 0);
+    RegisterManager::instance()[m_recording_reg] = memoryview<String>(m_recorded_keys);
+    m_recording_reg = 0;
 }
 
 }

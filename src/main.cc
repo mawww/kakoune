@@ -405,6 +405,33 @@ void select_to_next_char(Context& context)
    });
 }
 
+void start_or_end_macro_recording(Context& context)
+{
+    if (context.input_handler().is_recording())
+        context.input_handler().stop_recording();
+    else
+        context.input_handler().on_next_key([](const Key& key, Context& context) {
+            if (key.modifiers == Key::Modifiers::None)
+                context.input_handler().start_recording(key.key);
+        });
+}
+
+void replay_macro(Context& context)
+{
+    int count = context.numeric_param();
+    context.input_handler().on_next_key([count](const Key& key, Context& context) mutable {
+        if (key.modifiers == Key::Modifiers::None)
+        {
+            memoryview<String> reg_val = RegisterManager::instance()[key.key].values(context);
+            if (not reg_val.empty())
+            {
+                scoped_edition edition(context.editor());
+                do { exec_keys(parse_keys(reg_val[0]), context); } while (--count > 0);
+            }
+        }
+    });
+}
+
 enum class JumpDirection { Forward, Backward };
 template<JumpDirection direction>
 void jump(Context& context)
@@ -590,6 +617,9 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Control, 'o' }, jump<JumpDirection::Backward> },
 
     { { Key::Modifiers::Alt, 'r' }, do_rotate_selections },
+
+    { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
+    { { Key::Modifiers::None, '@' }, replay_macro },
 };
 
 }
