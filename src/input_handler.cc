@@ -148,7 +148,7 @@ public:
           m_callback(callback), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
-        DisplayCoord menu_pos{ context().window().dimensions().line, 0_char };
+        DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
         context().ui().menu_show(choices, menu_pos, MenuStyle::Prompt);
     }
 
@@ -368,7 +368,7 @@ public:
                     return;
 
                 context().ui().menu_hide();
-                DisplayCoord menu_pos{ context().window().dimensions().line, 0_char };
+                DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
                 context().ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
 
                 bool use_common_prefix = context().options()["complete_prefix"].as_int();
