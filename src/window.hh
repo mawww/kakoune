@@ -38,8 +38,6 @@ public:
 
     DisplayCoord display_position(const BufferIterator& it);
 
-    String status_line() const;
-
     HighlighterGroup& highlighters() { return m_highlighters; }
 
     OptionManager&       options()       { return m_options; }

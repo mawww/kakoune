@@ -171,22 +171,6 @@ DisplayCoord Window::display_position(const BufferIterator& iterator)
     return { 0, 0 };
 }
 
-String Window::status_line() const
-{
-    BufferCoord cursor = selections().back().last().coord();
-    std::ostringstream oss;
-    oss << buffer().name()
-        << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
-    if (buffer().is_modified())
-        oss << " [+]";
-    if (buffer().flags() & Buffer::Flags::New)
-        oss << " [new file]";
-    oss << " [" << selections().size() << " sel]";
-    if (is_editing())
-        oss << " [insert]";
-    return oss.str();
-}
-
 void Window::on_option_changed(const String& name, const Option& option)
 {
     String desc = name + "=" + option.as_string();

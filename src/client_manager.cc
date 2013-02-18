@@ -188,6 +188,24 @@ Context& ClientManager::get_client_context(const String& name)
     throw runtime_error("no client named: " + name);
 }
 
+static String generate_status_line(const Context& context)
+{
+    BufferCoord cursor = context.editor().selections().back().last().coord();
+    std::ostringstream oss;
+    oss << context.buffer().name()
+        << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
+    if (context.buffer().is_modified())
+        oss << " [+]";
+    if (context.input_handler().is_recording())
+       oss << " [recording]";
+    if (context.buffer().flags() & Buffer::Flags::New)
+        oss << " [new file]";
+    oss << " [" << context.editor().selections().size() << " sel]";
+    if (context.editor().is_editing())
+        oss << " [insert]";
+    return oss.str();
+}
+
 void ClientManager::redraw_clients() const
 {
     for (auto& client : m_clients)
@@ -200,8 +218,9 @@ void ClientManager::redraw_clients() const
                 return;
             context.window().set_dimensions(dimensions);
             context.window().update_display_buffer();;
+
             context.ui().draw(context.window().display_buffer(),
-                              context.window().status_line());
+                              generate_status_line(context));
         }
     }
 }
