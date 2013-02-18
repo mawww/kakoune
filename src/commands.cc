@@ -472,77 +472,6 @@ void set_option(OptionManager& options, const CommandParameters& params,
     options.set_option(params[0], Option(params[1]));
 }
 
-class RegisterRestorer
-{
-public:
-    RegisterRestorer(char name, const Context& context)
-      : m_name(name)
-    {
-        memoryview<String> save = RegisterManager::instance()[name].values(context);
-        m_save = std::vector<String>(save.begin(), save.end());
-    }
-
-    ~RegisterRestorer()
-    { RegisterManager::instance()[m_name] = m_save; }
-
-private:
-    std::vector<String> m_save;
-    char                m_name;
-};
-
-class BatchUI : public UserInterface
-{
-public:
-    BatchUI(const KeyList& keys)
-      : m_keys(keys), m_pos(0) {}
-
-    Key get_key() override
-    {
-        assert(m_pos < m_keys.size());
-        return m_keys[m_pos++];
-    }
-    bool is_key_available() override { return m_pos < m_keys.size(); }
-
-    void print_status(const String& , CharCount) override {}
-    void draw(const DisplayBuffer&, const String&) override {}
-    void menu_show(const memoryview<String>&,
-                   const DisplayCoord&, MenuStyle) override {}
-    void menu_select(int) override {}
-    void menu_hide() override {}
-
-    void info_show(const String&, const DisplayCoord&, MenuStyle) override {}
-    void info_hide() override {}
-
-    DisplayCoord dimensions() override { return { 0, 0 }; }
-
-    void set_input_callback(InputCallback callback) {}
-
-private:
-    const KeyList& m_keys;
-    size_t         m_pos;
-};
-
-void exec_keys(const KeyList& keys, Context& context)
-{
-    RegisterRestorer quote('"', context);
-    RegisterRestorer slash('/', context);
-
-    scoped_edition edition(context.editor());
-
-    BatchUI batch_ui(keys);
-    InputHandler batch_input_handler(batch_ui);
-    batch_input_handler.context().change_editor(context.editor());
-
-    batch_input_handler.handle_available_inputs();
-
-    auto& new_editor = batch_input_handler.context().editor();
-    if (&new_editor != &context.editor())
-    {
-        context.push_jump();
-        context.change_editor(new_editor);
-    }
-}
-
 template<typename Func>
 void context_wrap(const CommandParameters& params, Context& context, Func func)
 {
@@ -691,6 +620,77 @@ void set_client_name(const CommandParameters& params, Context& context)
     ClientManager::instance().set_client_name(context, params[0]);
 }
 
+class RegisterRestorer
+{
+public:
+    RegisterRestorer(char name, const Context& context)
+      : m_name(name)
+    {
+        memoryview<String> save = RegisterManager::instance()[name].values(context);
+        m_save = std::vector<String>(save.begin(), save.end());
+    }
+
+    ~RegisterRestorer()
+    { RegisterManager::instance()[m_name] = m_save; }
+
+private:
+    std::vector<String> m_save;
+    char                m_name;
+};
+
+class BatchUI : public UserInterface
+{
+public:
+    BatchUI(const KeyList& keys)
+      : m_keys(keys), m_pos(0) {}
+
+    Key get_key() override
+    {
+        assert(m_pos < m_keys.size());
+        return m_keys[m_pos++];
+    }
+    bool is_key_available() override { return m_pos < m_keys.size(); }
+
+    void print_status(const String& , CharCount) override {}
+    void draw(const DisplayBuffer&, const String&) override {}
+    void menu_show(const memoryview<String>&,
+                   const DisplayCoord&, MenuStyle) override {}
+    void menu_select(int) override {}
+    void menu_hide() override {}
+
+    void info_show(const String&, const DisplayCoord&, MenuStyle) override {}
+    void info_hide() override {}
+
+    DisplayCoord dimensions() override { return { 0, 0 }; }
+
+    void set_input_callback(InputCallback callback) {}
+
+private:
+    const KeyList& m_keys;
+    size_t         m_pos;
+};
+
+}
+
+void exec_keys(const KeyList& keys, Context& context)
+{
+    RegisterRestorer quote('"', context);
+    RegisterRestorer slash('/', context);
+
+    scoped_edition edition(context.editor());
+
+    BatchUI batch_ui(keys);
+    InputHandler batch_input_handler(batch_ui);
+    batch_input_handler.context().change_editor(context.editor());
+
+    batch_input_handler.handle_available_inputs();
+
+    auto& new_editor = batch_input_handler.context().editor();
+    if (&new_editor != &context.editor())
+    {
+        context.push_jump();
+        context.change_editor(new_editor);
+    }
 }
 
 void register_commands()
