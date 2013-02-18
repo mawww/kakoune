@@ -97,9 +97,6 @@ struct Context
             ui().print_status(status);
     }
 
-    using Insertion = std::pair<InsertMode, std::vector<Key>>;
-    Insertion& last_insert() { return m_last_insert; }
-
     void push_jump()
     {
         const SelectionList& jump = editor().selections();
@@ -162,7 +159,6 @@ private:
     InputHandler*           m_input_handler = nullptr;
     safe_ptr<UserInterface> m_ui;
 
-    Insertion m_last_insert = {InsertMode::Insert, {}};
     int m_numeric_param = 0;
 
     using JumpList = std::vector<DynamicSelectionList>;

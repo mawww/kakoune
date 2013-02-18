@@ -23,6 +23,10 @@ public:
 
     virtual void on_key(const Key& key) = 0;
     Context& context() const { return m_input_handler.context(); }
+
+    using Insertion = InputHandler::Insertion;
+    Insertion& last_insert() { return m_input_handler.m_last_insert; }
+
 protected:
     void reset_normal_mode();
 private:
@@ -535,14 +539,14 @@ public:
                            }
                        }}
     {
-        context().last_insert().first = mode;
-        context().last_insert().second.clear();
+        last_insert().first = mode;
+        last_insert().second.clear();
         context().hooks().run_hook("InsertBegin", "", context());
     }
 
     void on_key(const Key& key) override
     {
-        context().last_insert().second.push_back(key);
+        last_insert().second.push_back(key);
         if (m_insert_reg)
         {
             if (key.modifiers == Key::Modifiers::None)
@@ -640,16 +644,15 @@ void InputHandler::insert(InsertMode mode)
 
 void InputHandler::repeat_last_insert()
 {
-    Context::Insertion& last_insert = m_context.last_insert();
-    if (last_insert.second.empty())
+    if (m_last_insert.second.empty())
         return;
 
     std::vector<Key> keys;
-    swap(keys, last_insert.second);
+    swap(keys, m_last_insert.second);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
     m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Insert(*this, last_insert.first));
+    m_mode.reset(new InputModes::Insert(*this, m_last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key);
     assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
