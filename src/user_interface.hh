@@ -11,7 +11,7 @@ namespace Kakoune
 
 class String;
 class DisplayBuffer;
-class DisplayCoord;
+struct DisplayCoord;
 
 enum class MenuStyle
 {

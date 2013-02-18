@@ -9,7 +9,7 @@
 namespace Kakoune
 {
 
-class Context;
+struct Context;
 
 typedef std::vector<String> CandidateList;
 

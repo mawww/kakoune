@@ -12,7 +12,7 @@ namespace Kakoune
 {
 
 class Buffer;
-class Selection;
+struct Selection;
 
 // A Filter is a function which is applied to a Buffer and a pending
 // Modification in order to mutate the Buffer or the Modification

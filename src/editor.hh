@@ -87,7 +87,7 @@ public:
     bool is_editing() const { return m_edition_level!= 0; }
 
 private:
-    friend class scoped_edition;
+    friend struct scoped_edition;
     void begin_edition();
     void end_edition();
 
