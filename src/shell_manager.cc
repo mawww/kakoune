@@ -110,8 +110,12 @@ String ShellManager::pipe(const String& input,
 
                 if (env_var != m_env_vars.end())
                 {
-                    String value = env_var->second(name, context);
-                    setenv(("kak_" + name).c_str(), value.c_str(), 1);
+                    try
+                    {
+                        String value = env_var->second(name, context);
+                        setenv(("kak_" + name).c_str(), value.c_str(), 1);
+                    }
+                    catch (runtime_error&) {}
                 }
             }
 
