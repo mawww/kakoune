@@ -19,12 +19,18 @@ using KeyAndName = std::pair<String, Codepoint>;
 static std::vector<KeyAndName> keynamemap = {
     { "ret", '\r' },
     { "space", ' ' },
+    { "tab", '\t' },
+    { "backspace", Key::Backspace},
     { "esc", Key::Escape },
-    { "left", Key::Left },
-    { "right", Key::Right },
     { "up", Key::Up },
     { "down", Key::Down},
-    { "backspace", Key::Backspace}
+    { "left", Key::Left },
+    { "right", Key::Right },
+    { "pageup", Key::PageUp },
+    { "pagedown", Key::PageDown },
+    { "home", Key::Home },
+    { "end", Key::End },
+    { "backtab", Key::BackTab },
 };
 
 KeyList parse_keys(const String& str)

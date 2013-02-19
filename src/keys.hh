@@ -28,6 +28,8 @@ struct Key
         Right,
         PageUp,
         PageDown,
+        Home,
+        End,
         BackTab,
         Invalid,
     };

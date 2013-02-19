@@ -273,6 +273,8 @@ Key NCursesUI::get_key()
     case KEY_RIGHT: return Key::Right;
     case KEY_PPAGE: return Key::PageUp;
     case KEY_NPAGE: return Key::PageDown;
+    case KEY_HOME: return Key::Home;
+    case KEY_END: return Key::End;
     case KEY_BTAB: return Key::BackTab;
     }
 

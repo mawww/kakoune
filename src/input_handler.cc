@@ -95,6 +95,10 @@ public:
             if (m_cursor_pos < m_line.char_length())
                 ++m_cursor_pos;
         }
+        else if (key == Key::Home)
+            m_cursor_pos = 0;
+        else if (key == Key::End)
+            m_cursor_pos = m_line.char_length();
         else if (key == Key::Backspace)
         {
             if (m_cursor_pos != 0)
