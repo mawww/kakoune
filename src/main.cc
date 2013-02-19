@@ -143,7 +143,7 @@ void do_search(Context& context)
             {
                 context.editor().select(selections);
 
-                if (str.empty() or event == PromptEvent::Abort)
+                if (event == PromptEvent::Abort)
                     return;
 
                 String ex = str;
@@ -155,7 +155,7 @@ void do_search(Context& context)
                         RegisterManager::instance()['/'] = ex;
                     context.push_jump();
                 }
-                else if (not context.options()["incsearch"].as_int())
+                else if (ex.empty() or not context.options()["incsearch"].as_int())
                     return;
 
                 context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
