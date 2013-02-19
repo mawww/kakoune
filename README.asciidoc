@@ -180,6 +180,13 @@ selection.
 Registers are lists, instead of simply text in order to interact well with
 multiselection. Each selection have it's own captures, or yank buffer.
 
+Search selection
+----------------
+
+Using the _*_ key, you can set the search pattern to the current selection.
+This tries to be intelligent. It will for example detect if current selection
+begins and/or end at word boundaries, and set the search pattern accordingly.
+
 Basic Commands
 --------------
 
@@ -227,7 +234,7 @@ Kakoune support three string syntax:
  * +"strings" and \'strings\'+: classic strings, use \' or \" to escape the
       separator.
 
- * +%\{strings\}+: these strings are very usefull when entering commands
+ * +%\{strings\}+: these strings are very useful when entering commands
 
    - the '{' and '}' delimiter are configurable: you can use any non
      alphanumeric character. like %[string], %<string>, %(string), %~string~

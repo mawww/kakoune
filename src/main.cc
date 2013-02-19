@@ -189,6 +189,25 @@ void do_search_next(Context& context)
         context.print_status("no search pattern");
 }
 
+void use_selection_as_search_pattern(Context& context)
+{
+    std::vector<String> patterns;
+    auto& sels = context.editor().selections();
+    for (auto& sel : sels)
+    {
+        auto begin = sel.begin();
+        auto end = sel.end();
+        auto content = "\\Q" + context.buffer().string(begin, end) + "\\E";
+        if (begin.is_begin() or (is_word(utf8::codepoint(begin)) and not is_word(utf8::codepoint(utf8::previous(begin)))))
+            content = "\\b" + content;
+        if (end.is_end() or (is_word(utf8::codepoint(utf8::previous(end))) and not is_word(utf8::codepoint(end))))
+            content = content + "\\b";
+
+        patterns.push_back(std::move(content));
+    }
+    RegisterManager::instance()['/'] = patterns;
+}
+
 void do_yank(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
@@ -620,6 +639,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
     { { Key::Modifiers::None, '@' }, replay_macro },
+
+    { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern },
 };
 
 }
