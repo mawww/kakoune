@@ -293,11 +293,13 @@ public:
         }
         else if (key == Key{Key::Modifiers::Control, 'm'}) // enter
         {
-            std::vector<String>::iterator it;
-            while ((it = find(history, line)) != history.end())
-                history.erase(it);
-
-            history.push_back(line);
+            if (not line.empty())
+            {
+                std::vector<String>::iterator it;
+                while ((it = find(history, line)) != history.end())
+                    history.erase(it);
+                history.push_back(line);
+            }
             context().ui().print_status("");
             context().ui().menu_hide();
             reset_normal_mode();
