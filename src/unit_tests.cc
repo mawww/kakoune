@@ -40,12 +40,10 @@ void test_buffer()
     buffer.insert(buffer.end(), "kanaky\n");
     assert(buffer.string(begin+1, buffer.end()) == "kanaky\n");
 
-    buffer.end_undo_group();
-
-    buffer.begin_undo_group();
+    buffer.commit_undo_group();
     buffer.erase(begin+1, buffer.end());
     buffer.insert(buffer.end(), "mutch\n");
-    buffer.end_undo_group();
+    buffer.commit_undo_group();
     buffer.undo();
     assert(buffer.string(buffer.end() - 7, buffer.end()) == "kanaky\n");
     buffer.redo();

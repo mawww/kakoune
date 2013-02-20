@@ -384,16 +384,13 @@ void Editor::check_invariant() const
 void Editor::begin_edition()
 {
     ++m_edition_level;
-
-    if (m_edition_level == 1)
-        m_buffer->begin_undo_group();
 }
 
 void Editor::end_edition()
 {
     assert(m_edition_level > 0);
     if (m_edition_level == 1)
-        m_buffer->end_undo_group();
+        m_buffer->commit_undo_group();
 
     --m_edition_level;
 }

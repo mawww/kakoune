@@ -152,21 +152,7 @@ String Buffer::string(const BufferIterator& begin, const BufferIterator& end) co
     return res;
 }
 
-void Buffer::begin_undo_group()
-{
-    if (m_flags & Flags::NoUndo)
-        return;
-
-    assert(m_current_undo_group.empty());
-    m_history.erase(m_history_cursor, m_history.end());
-
-    if (m_history.size() < m_last_save_undo_index)
-        m_last_save_undo_index = -1;
-
-    m_history_cursor = m_history.end();
-}
-
-void Buffer::end_undo_group()
+void Buffer::commit_undo_group()
 {
     if (m_flags & Flags::NoUndo)
         return;
@@ -174,10 +160,14 @@ void Buffer::end_undo_group()
     if (m_current_undo_group.empty())
         return;
 
+    m_history.erase(m_history_cursor, m_history.end());
+
     m_history.push_back(std::move(m_current_undo_group));
+    m_current_undo_group.clear();
     m_history_cursor = m_history.end();
 
-    m_current_undo_group.clear();
+    if (m_history.size() < m_last_save_undo_index)
+        m_last_save_undo_index = -1;
 }
 
 // A Modification holds a single atomic modification to Buffer
@@ -414,10 +404,7 @@ bool Buffer::is_modified() const
 void Buffer::notify_saved()
 {
     if (not m_current_undo_group.empty())
-    {
-        end_undo_group();
-        begin_undo_group();
-    }
+        commit_undo_group();
 
     m_flags &= ~Flags::New;
     size_t history_cursor_index = m_history_cursor - m_history.begin();

@@ -115,8 +115,7 @@ public:
 
     size_t         timestamp() const { return m_timestamp; }
 
-    void           begin_undo_group();
-    void           end_undo_group();
+    void           commit_undo_group();
     bool           undo();
     bool           redo();
 
