@@ -197,6 +197,8 @@ struct Buffer::Modification
 
 bool Buffer::undo()
 {
+    commit_undo_group();
+
     if (m_history_cursor == m_history.begin())
         return false;
 
@@ -211,6 +213,8 @@ bool Buffer::redo()
 {
     if (m_history_cursor == m_history.end())
         return false;
+
+    assert(m_current_undo_group.empty());
 
     for (const Modification& modification : *m_history_cursor)
         apply_modification(modification);
