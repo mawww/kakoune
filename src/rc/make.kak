@@ -4,10 +4,15 @@ def -shell-params make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( ${kak_opt_makecmd} $@ >& ${output} ) >& /dev/null < /dev/null &
+
+     if [[ -n "$kak_opt_toolsclient" ]]; then echo "eval -client '$kak_opt_toolsclient' %{"; fi
+
      echo "try %{ db *make* } catch %{}
            edit -fifo ${output} *make*
            setb filetype make
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
+
+     if [[ -n "$kak_opt_toolsclient" ]]; then echo "}"; fi
 }}
 
 hook global WinSetOption filetype=make %{
