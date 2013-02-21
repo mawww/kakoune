@@ -712,6 +712,7 @@ void InputHandler::handle_available_inputs()
 void InputHandler::start_recording(char reg)
 {
     assert(m_recording_reg == 0);
+    m_recorded_keys = "";
     m_recording_reg = reg;
 }
 
