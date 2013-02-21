@@ -18,6 +18,7 @@ def -shell-params make %{ %sh{
 hook global WinSetOption filetype=make %{
     addhl group make-highlight
     addhl -group make-highlight regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+    hook buffer NormalKey <c-m> errjump
 }
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make-highlight; }

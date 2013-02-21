@@ -23,6 +23,7 @@ def -shell-params -file-completion \
 hook global WinSetOption filetype=grep %{
     addhl group grep-highlight
     addhl -group grep-highlight regex "^([^:]+):(\d+):" 1:cyan 2:green
+    hook buffer NormalKey <c-m> jump
 }
 
 hook global WinSetOption filetype=(?!grep).* %{ rmhl grep-highlight; }
