@@ -470,6 +470,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             }
         }
     }
+    sort_and_merge_overlapping(editor.m_selections);
     editor.check_invariant();
 }
 
