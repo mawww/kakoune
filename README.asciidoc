@@ -137,9 +137,15 @@ select the paragraph with enough _x_. press _s_ and enter roger then enter.
 now paragraph selection was replaced with multiselection of each roger in
 the paragraph. press _c_ and marcel<esc> to replace rogers with marcels.
 
-A multiselection can also be obtained with _Alt-s_, which splits the current
+A multiselection can also be obtained with _S_, which splits the current
 selection according to the regex entered. To split a comma separated list,
-use _alt-s_ then ', *'
+use _S_ then ', *'
+
+_s_ and _S_ share the search pattern with _/_, and hence entering an empty
+pattern uses the last one.
+
+As a convenience, _alt-s_ allows you to split the current selections on
+line boundaries.
 
 To clear multiple selections, use _space_. To keep only the nth selection
 use _n_ followed by _space_, to remove only the nth selection, use _n_

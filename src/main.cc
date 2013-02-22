@@ -300,6 +300,11 @@ void do_split_regex(Context& context)
         });
 }
 
+void do_split_lines(Context& context)
+{
+    context.editor().multi_select(std::bind(split_selection, _1, "^"));
+}
+
 void do_join(Context& context)
 {
     Editor& editor = context.editor();
@@ -588,6 +593,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt,  'p' }, do_paste<InsertMode::Replace> },
 
     { { Key::Modifiers::None, 's' }, do_select_regex },
+    { { Key::Modifiers::None, 'S' }, do_split_regex },
+    { { Key::Modifiers::Alt,  's' }, do_split_lines },
 
     { { Key::Modifiers::None, '.' }, do_repeat_insert },
 
@@ -640,8 +647,6 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt, 'L' }, repeated(select<SelectMode::Extend>(select_to_eol)) },
     { { Key::Modifiers::Alt, 'h' }, repeated(select<SelectMode::Replace>(select_to_eol_reverse)) },
     { { Key::Modifiers::Alt, 'H' }, repeated(select<SelectMode::Extend>(select_to_eol_reverse)) },
-
-    { { Key::Modifiers::Alt, 's' }, do_split_regex },
 
     { { Key::Modifiers::Alt, 'j' }, do_join },
 
