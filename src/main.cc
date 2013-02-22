@@ -242,28 +242,17 @@ template<InsertMode insert_mode>
 void do_paste(Context& context)
 {
     Editor& editor = context.editor();
-    int count = context.numeric_param();
     auto strings = RegisterManager::instance()['"'].values(context);
     InsertMode mode = insert_mode;
-    if (count == 0)
+    for (auto& str : strings)
     {
-        for (auto& str : strings)
-        {
-            if (not str.empty() and str.back() == '\n')
-            {
-                mode = adapt_for_linewise(mode);
-                break;
-            }
-        }
-        editor.insert(strings, mode);
-    }
-    else if (count <= strings.size())
-    {
-        auto& str = strings[count-1];
         if (not str.empty() and str.back() == '\n')
+        {
             mode = adapt_for_linewise(mode);
-        editor.insert(str, mode);
+            break;
+        }
     }
+    editor.insert(strings, mode);
 }
 
 void do_select_regex(Context& context)
@@ -588,8 +577,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
 
     { { Key::Modifiers::None, 'y' }, do_yank },
-    { { Key::Modifiers::None, 'p' }, do_paste<InsertMode::Append> },
-    { { Key::Modifiers::None, 'P' }, do_paste<InsertMode::Insert> },
+    { { Key::Modifiers::None, 'p' }, repeated(do_paste<InsertMode::Append>) },
+    { { Key::Modifiers::None, 'P' }, repeated(do_paste<InsertMode::Insert>) },
     { { Key::Modifiers::Alt,  'p' }, do_paste<InsertMode::Replace> },
 
     { { Key::Modifiers::None, 's' }, do_select_regex },
