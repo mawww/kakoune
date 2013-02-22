@@ -892,8 +892,12 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::exception& error)
     {
-        puts("uncaught exception:\n");
-        puts(error.description().c_str());
+        on_assert_failed(("uncaught exception:\n" + error.description()).c_str());
+        return -1;
+    }
+    catch (...)
+    {
+        on_assert_failed("uncaught exception");
         return -1;
     }
     return 0;
