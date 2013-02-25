@@ -23,7 +23,7 @@ public:
    String(std::string content) : m_content(std::move(content)) {}
    String(const String& string) = default;
    String(String&& string) = default;
-   explicit String(char content, size_t count = 1) : m_content(count, content) {}
+   explicit String(char content, CharCount count = 1) : m_content((size_t)(int)count, content) {}
    template<typename Iterator>
    String(Iterator begin, Iterator end) : m_content(begin, end) {}
 
