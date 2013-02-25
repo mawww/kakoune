@@ -18,6 +18,7 @@
 #include "color_registry.hh"
 #include "client_manager.hh"
 #include "parameters_parser.hh"
+#include "utf8_iterator.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -555,9 +556,83 @@ void menu(const CommandParameters& params, Context& context)
         });
 }
 
+static String assist(String message, CharCount maxWidth)
+{
+    static const std::vector<String> assistant =
+        { R"(  __       )",
+          R"( /  \      )",
+          R"( |  |      )",
+          R"( @  @     /)",
+          R"( || ||   / )",
+          R"( || || _/  )",
+          R"( |\_/|     )",
+          R"( \___/     )",
+          R"(           )" };
+
+    const CharCount maxBubbleWidth = maxWidth - assistant[0].char_length() - 6;
+    CharCount bubbleWidth = 0;
+    std::vector<String> lines;
+    {
+        using Utf8It = utf8::utf8_iterator<String::iterator>;
+        Utf8It word_begin{message.begin()};
+        Utf8It word_end{word_begin};
+        Utf8It end{message.end()};
+        CharCount col = 0;
+        String line;
+        while (word_begin != end)
+        {
+            do
+            {
+                ++word_end;
+            } while (word_end != end and not is_blank(*word_end) and not is_eol(*word_end));
+
+            col += word_end - word_begin;
+            if (col > maxBubbleWidth or *word_begin == '\n')
+            {
+                bubbleWidth = std::max(bubbleWidth, line.char_length());
+                lines.push_back(std::move(line));
+                line = "";
+                col = 0;
+            }
+            if (*word_begin != '\n')
+                line += String(word_begin.underlying_iterator(), word_end.underlying_iterator());
+            word_begin = word_end;
+        }
+        if (not line.empty())
+        {
+            bubbleWidth = std::max(bubbleWidth, line.char_length());
+            lines.push_back(std::move(line));
+        }
+    }
+
+    String result;
+    LineCount lineCount{std::max<int>(8, lines.size() + 3)};
+    for (LineCount i = 0; i < lineCount; ++i)
+    {
+
+        result += assistant[std::min((int)i, (int)assistant.size()-1)];
+        if (i == 0)
+            result += "  " + String('_', (int)bubbleWidth) + "  ";
+        else if (i == 1)
+            result += "/ " + String(' ', (int)bubbleWidth) + " \\";
+        else if (i < lines.size() + 2)
+        {
+            auto& line = lines[(int)i - 2];
+            const CharCount padding = std::max(bubbleWidth - line.char_length(), 0_char);
+            result += "| " + line + String(' ', padding) + " |";
+        }
+        else if (i == lines.size() + 2)
+            result += "\\_" + String('_', (int)bubbleWidth) + "_/";
+
+        result += "\n";
+    }
+    return result;
+}
+
+
 void info(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "anchor", true } });
+    ParametersParser parser(params, { { "anchor", true }, { "assist", false } });
 
     if (parser.positional_count() > 1)
         throw wrong_argument_count();
@@ -566,7 +641,8 @@ void info(const CommandParameters& params, Context& context)
     if (parser.positional_count() > 0)
     {
         MenuStyle style = MenuStyle::Prompt;
-        DisplayCoord pos = { context.ui().dimensions().line, 0 };
+        DisplayCoord dimensions = context.ui().dimensions();
+        DisplayCoord pos = { dimensions.line, 0 };
         if (parser.has_option("anchor"))
         {
             style =  MenuStyle::Inline;
@@ -581,7 +657,8 @@ void info(const CommandParameters& params, Context& context)
                 throw runtime_error("anchor param must be one of [left, right, cursor]");
             pos = context.window().display_position(it);
         }
-        context.ui().info_show(parser[0], pos, style);
+        const String& message = parser.has_option("assist") ? assist(parser[0], dimensions.column) : parser[0];
+        context.ui().info_show(message, pos, style);
     }
 }
 
