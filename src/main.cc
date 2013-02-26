@@ -34,6 +34,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <locale>
+
 using namespace Kakoune;
 using namespace std::placeholders;
 
@@ -808,6 +810,7 @@ int main(int argc, char* argv[])
 {
     try
     {
+        std::locale::global(std::locale("en_US.UTF-8"));
         signal(SIGSEGV, sigsegv_handler);
         std::vector<String> params;
         for (size_t i = 1; i < argc; ++i)

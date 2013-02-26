@@ -7,6 +7,10 @@
 #include "context.hh"
 #include "string.hh"
 #include "utf8.hh"
+#include "utf8_iterator.hh"
+
+#include <sstream>
+#include <locale>
 
 namespace Kakoune
 {
@@ -279,6 +283,35 @@ void highlight_selections(Window& window, DisplayBuffer& display_buffer)
                     [](DisplayAtom& atom) { atom.attribute |= Attributes::Bold; });
 }
 
+void expand_unprintable(DisplayBuffer& display_buffer)
+{
+    for (auto& line : display_buffer.lines())
+    {
+        for (auto& atom : line)
+        {
+            if (atom.content.type() == AtomContent::BufferRange)
+            {
+                using Utf8It = utf8::utf8_iterator<BufferIterator>;
+                for (Utf8It it = atom.content.begin(), end = atom.content.end(); it != end; ++it)
+                {
+                    Codepoint cp = *it;
+                    if (cp != '\n' and not std::isprint((wchar_t)cp, std::locale()))
+                    {
+                        std::ostringstream oss;
+                        oss << "U+" << std::hex << cp;
+                        String str = oss.str();
+                        highlight_range(display_buffer,
+                                        it.underlying_iterator(), (it+1).underlying_iterator(),
+                                        true, [&str](DisplayAtom& atom){ atom.content.replace(str);
+                                                                         atom.bg_color = Color::Red;
+                                                                         atom.fg_color = Color::Black; });
+                    }
+                }
+            }
+        }
+    }
+}
+
 template<void (*highlighter_func)(DisplayBuffer&)>
 class SimpleHighlighterFactory
 {
@@ -324,6 +357,7 @@ void register_highlighters()
 
     registry.register_func("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
     registry.register_func("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
+    registry.register_func("expand_unprintable", SimpleHighlighterFactory<expand_unprintable>("expand_unprintable"));
     registry.register_func("number_lines", WindowHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("search", highlight_search_factory);

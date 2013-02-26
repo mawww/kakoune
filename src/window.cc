@@ -23,6 +23,7 @@ Window::Window(Buffer& buffer)
     m_options.register_watcher(*this);
 
     m_highlighters.append(registry["expand_tabs"](*this, {}));
+    m_highlighters.append(registry["expand_unprintable"](*this, {}));
     m_highlighters.append(registry["highlight_selections"](*this, {}));
 
     for (auto& option : m_options.flatten_options())
