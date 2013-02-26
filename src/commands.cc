@@ -559,15 +559,14 @@ void menu(const CommandParameters& params, Context& context)
 static String assist(String message, CharCount maxWidth)
 {
     static const std::vector<String> assistant =
-        { R"(  __       )",
-          R"( /  \      )",
-          R"( |  |      )",
-          R"( @  @     /)",
-          R"( || ||   / )",
-          R"( || || _/  )",
-          R"( |\_/|     )",
-          R"( \___/     )",
-          R"(           )" };
+        { R"( ╭──╮   )",
+          R"( │  │   )",
+          R"( @  @  ╭)",
+          R"( ││ ││ │)",
+          R"( ││ ││ ╯)",
+          R"( │╰─╯│  )",
+          R"( ╰───╯  )",
+          R"(        )" };
 
     const CharCount maxBubbleWidth = maxWidth - assistant[0].char_length() - 6;
     CharCount bubbleWidth = 0;
@@ -606,23 +605,21 @@ static String assist(String message, CharCount maxWidth)
     }
 
     String result;
-    LineCount lineCount{std::max<int>(8, lines.size() + 3)};
+    LineCount lineCount{std::max<int>(assistant.size()-1, lines.size() + 2)};
     for (LineCount i = 0; i < lineCount; ++i)
     {
 
         result += assistant[std::min((int)i, (int)assistant.size()-1)];
         if (i == 0)
-            result += "  " + String('_', (int)bubbleWidth) + "  ";
-        else if (i == 1)
-            result += "/ " + String(' ', (int)bubbleWidth) + " \\";
-        else if (i < lines.size() + 2)
+            result += "╭─" + String(Codepoint{L'─'}, (int)bubbleWidth) + "─╮";
+        else if (i < lines.size() + 1)
         {
-            auto& line = lines[(int)i - 2];
+            auto& line = lines[(int)i - 1];
             const CharCount padding = std::max(bubbleWidth - line.char_length(), 0_char);
-            result += "| " + line + String(' ', padding) + " |";
+            result += "│ " + line + String(' ', padding) + " │";
         }
-        else if (i == lines.size() + 2)
-            result += "\\_" + String('_', (int)bubbleWidth) + "_/";
+        else if (i == lines.size() + 1)
+            result += "╰─" + String(Codepoint{L'─'}, (int)bubbleWidth) + "─╯";
 
         result += "\n";
     }
