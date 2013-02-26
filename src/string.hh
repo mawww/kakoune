@@ -24,6 +24,14 @@ public:
    String(const String& string) = default;
    String(String&& string) = default;
    explicit String(char content, CharCount count = 1) : m_content((size_t)(int)count, content) {}
+   explicit String(Codepoint cp, CharCount count = 1)
+   {
+       std::string str;
+       auto it = back_inserter(str);
+       utf8::dump(it, cp);
+       for (CharCount i = 0; i < count; ++i)
+           m_content += str;
+   }
    template<typename Iterator>
    String(Iterator begin, Iterator end) : m_content(begin, end) {}
 
