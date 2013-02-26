@@ -21,4 +21,15 @@ Medium Priority
   For example Kakoune should provide a way to run a completion
   shell command without freezing until the completer returns.
 
+* Mouse support
+
+* Crash recovery support (swap files)
+
+* Sanitize prompt history handling, hooks should not have side effects
+  on history
+
+* Rework jump list. one DynamicSelectionList per jump is too slow when
+  many selections are used (each buffer change makes all jumps update all
+  their selections)
+
 * automatic line splitting/paragraph formatting
