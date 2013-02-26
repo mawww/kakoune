@@ -398,6 +398,10 @@ static DisplayCoord compute_needed_size(const String& str)
     {
         if (*begin == '\n')
         {
+            // ignore last '\n', no need to show an empty line
+            if (begin+1 == end)
+                break;
+
             res.column = std::max(res.column, line_len+1);
             line_len = 0;
             ++res.line;
