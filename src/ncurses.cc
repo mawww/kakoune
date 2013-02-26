@@ -138,9 +138,7 @@ using Utf8Policy = utf8::InvalidBytePolicy::Pass;
 using Utf8Iterator = utf8::utf8_iterator<String::iterator, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
-    assert(begin <= end);
-    while (begin != end)
-        waddch(win, *begin++);
+    waddstr(win, std::string(begin.underlying_iterator(), end.underlying_iterator()).c_str());
 }
 
 static DisplayCoord window_size(WINDOW* win)

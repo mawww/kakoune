@@ -1,8 +1,8 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
-#include <ncurses.h>
-#include <menu.h>
+#include <ncursesw/ncurses.h>
+#include <ncursesw/menu.h>
 
 #include "user_interface.hh"
 #include "display_buffer.hh"

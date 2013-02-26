@@ -3,7 +3,7 @@ objects := $(sources:.cc=.o)
 deps := $(addprefix ., $(sources:.cc=.d))
 
 CXXFLAGS += -std=c++0x -g -Wall -Wno-reorder -Wno-sign-compare
-LDFLAGS += -lmenu -lncurses -lboost_regex
+LDFLAGS += -lmenu -lncursesw -lboost_regex
 
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) -o $@
