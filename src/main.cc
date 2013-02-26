@@ -799,10 +799,18 @@ RemoteClient* connect_to(const String& pid, const String& init_command)
     return remote_client;
 }
 
-void sigsegv_handler(int)
+void signal_handler(int signal)
 {
     endwin();
-    on_assert_failed("Kakoune SEGFAULT !");
+    const char* text = nullptr;
+    switch (signal)
+    {
+        case SIGSEGV: text = "SIGSEGV"; break;
+        case SIGFPE:  text = "SIGFPE";  break;
+        case SIGQUIT: text = "SIGQUIT"; break;
+        case SIGTERM: text = "SIGTERM"; break;
+    }
+    on_assert_failed(text);
     abort();
 }
 
@@ -811,7 +819,12 @@ int main(int argc, char* argv[])
     try
     {
         std::locale::global(std::locale("en_US.UTF-8"));
-        signal(SIGSEGV, sigsegv_handler);
+
+        signal(SIGSEGV, signal_handler);
+        signal(SIGFPE,  signal_handler);
+        signal(SIGQUIT, signal_handler);
+        signal(SIGTERM, signal_handler);
+
         std::vector<String> params;
         for (size_t i = 1; i < argc; ++i)
              params.push_back(argv[i]);
