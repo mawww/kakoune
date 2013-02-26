@@ -75,18 +75,19 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
     return BufferIterator{};
 }
 
-void Editor::insert(const String& string, InsertMode mode)
+void Editor::insert(const String& str, InsertMode mode)
 {
     scoped_edition edition(*this);
 
     for (auto& sel : m_selections)
     {
         BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
-        m_buffer->insert(pos, string);
+        m_buffer->insert(pos, str);
         if (mode == InsertMode::Replace)
         {
             sel.first() = pos;
-            sel.last()  = pos + (string.empty() ? 0 : string.length() - 1 );
+            sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
+            sel.check_invariant();
         }
         sel.avoid_eol();
     }
@@ -107,7 +108,8 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
         if (mode == InsertMode::Replace)
         {
             sel.first() = pos;
-            sel.last()  = pos + (str.empty() ? 0 : str.length() - 1);
+            sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
+            sel.check_invariant();
         }
         sel.avoid_eol();
     }
