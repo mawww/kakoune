@@ -2,6 +2,7 @@
 #define unicode_hh_INCLUDED
 
 #include <cstdint>
+#include <locale>
 
 namespace Kakoune
 {
@@ -10,10 +11,7 @@ using Codepoint = uint32_t;
 
 inline bool is_word(Codepoint c)
 {
-    return (c >= '0' and c <= '9') or
-           (c >= 'a' and c <= 'z') or
-           (c >= 'A' and c <= 'Z') or
-           c == '_';
+    return c == '_' or std::isalnum((wchar_t)c, std::locale());
 }
 
 inline bool is_eol(Codepoint c)
