@@ -81,6 +81,15 @@ bool is_character_start(Iterator it)
     return (*it & 0xC0) != 0x80;
 }
 
+// returns an iterator to the first byte of the character it is into
+template<typename Iterator>
+Iterator character_start(Iterator it)
+{
+    while (not is_character_start(it))
+        --it;
+    return it;
+}
+
 namespace InvalidBytePolicy
 {
 
