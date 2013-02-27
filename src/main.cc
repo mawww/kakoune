@@ -626,19 +626,34 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'W' }, repeated(select<SelectMode::Extend>(select_to_next_word<false>)) },
     { { Key::Modifiers::None, 'E' }, repeated(select<SelectMode::Extend>(select_to_next_word_end<false>)) },
     { { Key::Modifiers::None, 'B' }, repeated(select<SelectMode::Extend>(select_to_previous_word<false>)) },
+
+    { { Key::Modifiers::Alt,  'w' }, repeated(select<SelectMode::Replace>(select_to_next_word<true>)) },
+    { { Key::Modifiers::Alt,  'e' }, repeated(select<SelectMode::Replace>(select_to_next_word_end<true>)) },
+    { { Key::Modifiers::Alt,  'b' }, repeated(select<SelectMode::Replace>(select_to_previous_word<true>)) },
+    { { Key::Modifiers::Alt,  'W' }, repeated(select<SelectMode::Extend>(select_to_next_word<true>)) },
+    { { Key::Modifiers::Alt,  'E' }, repeated(select<SelectMode::Extend>(select_to_next_word_end<true>)) },
+    { { Key::Modifiers::Alt,  'B' }, repeated(select<SelectMode::Extend>(select_to_previous_word<true>)) },
+
+    { { Key::Modifiers::Alt,  'l' }, repeated(select<SelectMode::Replace>(select_to_eol)) },
+    { { Key::Modifiers::Alt,  'L' }, repeated(select<SelectMode::Extend>(select_to_eol)) },
+    { { Key::Modifiers::Alt,  'h' }, repeated(select<SelectMode::Replace>(select_to_eol_reverse)) },
+    { { Key::Modifiers::Alt,  'H' }, repeated(select<SelectMode::Extend>(select_to_eol_reverse)) },
+
     { { Key::Modifiers::None, 'x' }, repeated(select<SelectMode::Replace>(select_line)) },
     { { Key::Modifiers::None, 'X' }, repeated(select<SelectMode::Extend>(select_line)) },
+    { { Key::Modifiers::Alt,  'x' }, select<SelectMode::Replace>(select_whole_lines) },
+
     { { Key::Modifiers::None, 'm' }, select<SelectMode::Replace>(select_matching) },
     { { Key::Modifiers::None, 'M' }, select<SelectMode::Extend>(select_matching) },
 
     { { Key::Modifiers::None, '/' }, do_search<SelectMode::Replace, true> },
     { { Key::Modifiers::None, '?' }, do_search<SelectMode::Extend, true> },
-    { { Key::Modifiers::Alt, '/' }, do_search<SelectMode::Replace, false> },
-    { { Key::Modifiers::Alt, '?' }, do_search<SelectMode::Extend, false> },
-
+    { { Key::Modifiers::Alt,  '/' }, do_search<SelectMode::Replace, false> },
+    { { Key::Modifiers::Alt,  '?' }, do_search<SelectMode::Extend, false> },
     { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace, true> },
     { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceLast, true> },
     { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append, true> },
+    { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern },
 
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },
@@ -648,26 +663,12 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, ']' }, do_select_object<SurroundFlags::ToEnd> },
     { { Key::Modifiers::None, '[' }, do_select_object<SurroundFlags::ToBegin> },
 
-    { { Key::Modifiers::Alt, 'w' }, repeated(select<SelectMode::Replace>(select_to_next_word<true>)) },
-    { { Key::Modifiers::Alt, 'e' }, repeated(select<SelectMode::Replace>(select_to_next_word_end<true>)) },
-    { { Key::Modifiers::Alt, 'b' }, repeated(select<SelectMode::Replace>(select_to_previous_word<true>)) },
-    { { Key::Modifiers::Alt, 'W' }, repeated(select<SelectMode::Extend>(select_to_next_word<true>)) },
-    { { Key::Modifiers::Alt, 'E' }, repeated(select<SelectMode::Extend>(select_to_next_word_end<true>)) },
-    { { Key::Modifiers::Alt, 'B' }, repeated(select<SelectMode::Extend>(select_to_previous_word<true>)) },
-
-    { { Key::Modifiers::Alt, 'l' }, repeated(select<SelectMode::Replace>(select_to_eol)) },
-    { { Key::Modifiers::Alt, 'L' }, repeated(select<SelectMode::Extend>(select_to_eol)) },
-    { { Key::Modifiers::Alt, 'h' }, repeated(select<SelectMode::Replace>(select_to_eol_reverse)) },
-    { { Key::Modifiers::Alt, 'H' }, repeated(select<SelectMode::Extend>(select_to_eol_reverse)) },
-
-    { { Key::Modifiers::Alt, 'j' }, do_join },
+    { { Key::Modifiers::Alt,  'j' }, do_join },
 
     { { Key::Modifiers::None, '<' }, do_deindent },
     { { Key::Modifiers::None, '>' }, do_indent },
 
-    { { Key::Modifiers::Alt, 'x' }, select<SelectMode::Replace>(select_whole_lines) },
-
-    { { Key::Modifiers::Alt, 'c' }, [](Context& context) { if (context.has_window()) context.window().center_selection(); } },
+    { { Key::Modifiers::Alt,  'c' }, [](Context& context) { if (context.has_window()) context.window().center_selection(); } },
 
     { { Key::Modifiers::None, Key::PageUp }, do_scroll<Key::PageUp> },
     { { Key::Modifiers::None, Key::PageDown }, do_scroll<Key::PageDown> },
@@ -675,12 +676,10 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Control, 'i' }, jump<JumpDirection::Forward> },
     { { Key::Modifiers::Control, 'o' }, jump<JumpDirection::Backward> },
 
-    { { Key::Modifiers::Alt, 'r' }, do_rotate_selections },
+    { { Key::Modifiers::Alt,  'r' }, do_rotate_selections },
 
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
     { { Key::Modifiers::None, 'Q' }, replay_macro },
-
-    { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern },
 };
 
 }
