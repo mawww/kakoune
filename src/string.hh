@@ -68,9 +68,12 @@ public:
    String replace(const String& expression, const String& replacement) const;
 
    using iterator = std::string::const_iterator;
+   using riterator = std::string::const_reverse_iterator;
 
-   iterator begin() const { return m_content.begin(); }
-   iterator end()   const { return m_content.end(); }
+   iterator  begin()  const { return m_content.begin(); }
+   iterator  end()    const { return m_content.end(); }
+   riterator rbegin() const { return m_content.rbegin(); }
+   riterator rend()   const { return m_content.rend(); }
 
    char     front() const { return m_content.front(); }
    char     back()  const { return m_content.back(); }
