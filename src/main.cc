@@ -678,7 +678,7 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt, 'r' }, do_rotate_selections },
 
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
-    { { Key::Modifiers::None, '@' }, replay_macro },
+    { { Key::Modifiers::None, 'Q' }, replay_macro },
 
     { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern },
 };
