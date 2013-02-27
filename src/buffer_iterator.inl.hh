@@ -76,7 +76,7 @@ inline void BufferIterator::on_insert(const BufferCoord& begin,
     if (m_coord < begin)
         return;
 
-    if (begin.line == line())
+    if (begin.line == m_coord.line)
         m_coord.column = end.column + m_coord.column - begin.column;
     m_coord.line += end.line - begin.line;
 
@@ -90,7 +90,11 @@ inline void BufferIterator::on_erase(const BufferCoord& begin,
         return;
 
     if (m_coord <= end)
+    {
         m_coord = begin;
+        if (is_end())
+            operator--();
+    }
     else
     {
         if (end.line == m_coord.line)
@@ -101,9 +105,6 @@ inline void BufferIterator::on_erase(const BufferCoord& begin,
         else
             m_coord.line -= end.line - begin.line;
     }
-
-    if (is_end())
-        operator--();
     assert(is_valid());
 }
 

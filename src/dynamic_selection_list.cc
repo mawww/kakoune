@@ -63,28 +63,34 @@ DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
 
 void DynamicSelectionList::check_invariant() const
 {
+#ifdef KAK_DEBUG
     for (auto& sel : *this)
     {
         assert(m_buffer == &sel.buffer());
         sel.check_invariant();
     }
+#endif
 }
 
 void DynamicSelectionList::on_insert(const BufferIterator& begin, const BufferIterator& end)
 {
+    const BufferCoord begin_coord{begin.coord()};
+    const BufferCoord end_coord{end.coord()};
     for (auto& sel : *this)
     {
-        sel.first().on_insert(begin.coord(), end.coord());
-        sel.last().on_insert(begin.coord(), end.coord());
+        sel.first().on_insert(begin_coord, end_coord);
+        sel.last().on_insert(begin_coord, end_coord);
     }
 }
 
 void DynamicSelectionList::on_erase(const BufferIterator& begin, const BufferIterator& end)
 {
+    const BufferCoord begin_coord{begin.coord()};
+    const BufferCoord end_coord{end.coord()};
     for (auto& sel : *this)
     {
-        sel.first().on_erase(begin.coord(), end.coord());
-        sel.last().on_erase(begin.coord(), end.coord());
+        sel.first().on_erase(begin_coord, end_coord);
+        sel.last().on_erase(begin_coord, end_coord);
     }
 }
 
