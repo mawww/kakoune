@@ -376,6 +376,7 @@ bool Editor::redo()
 
 void Editor::check_invariant() const
 {
+#ifdef KAK_DEBUG
     assert(not m_selections.empty());
     m_selections.check_invariant();
 
@@ -383,6 +384,7 @@ void Editor::check_invariant() const
                                  compare_selections);
     assert(std::is_sorted(m_selections.begin(), it, compare_selections));
     assert(std::is_sorted(it, m_selections.end(), compare_selections));
+#endif
 }
 
 void Editor::begin_edition()

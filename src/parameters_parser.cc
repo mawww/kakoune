@@ -48,9 +48,11 @@ bool ParametersParser::has_option(const String& name) const
 
 const String& ParametersParser::option_value(const String& name) const
 {
+#ifdef KAK_DEBUG
     auto it = m_options.find(name);
     assert(it != m_options.end());
     assert(it->second == true);
+#endif
 
     for (size_t i = 0; i < m_params.size(); ++i)
     {

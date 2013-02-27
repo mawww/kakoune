@@ -16,8 +16,14 @@ void on_assert_failed(const char* message);
 #undef assert
 #endif
 
-#define assert(condition) \
-    if (not (condition)) \
-        on_assert_failed("assert failed \"" #condition "\" at " __FILE__ ":" TOSTRING(__LINE__))
+#ifdef KAK_DEBUG
+    #define assert(condition) \
+        if (not (condition)) \
+            on_assert_failed("assert failed \"" #condition \
+                             "\" at " __FILE__ ":" TOSTRING(__LINE__))
+#else
+    #define assert(condition)
+#endif
+
 
 #endif // assert_hh_INCLUDED

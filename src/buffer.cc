@@ -225,6 +225,7 @@ bool Buffer::redo()
 
 void Buffer::check_invariant() const
 {
+#ifdef KAK_DEBUG
     ByteCount start = 0;
     assert(not m_lines.empty());
     for (auto& line : m_lines)
@@ -234,6 +235,7 @@ void Buffer::check_invariant() const
         assert(line.content.back() == '\n');
         start += line.length();
     }
+#endif
 }
 
 void Buffer::do_insert(const BufferIterator& pos, const String& content)

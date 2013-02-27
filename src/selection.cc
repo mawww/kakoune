@@ -26,10 +26,12 @@ BufferIterator Range::end() const
 
 void Range::check_invariant() const
 {
+#ifdef KAK_DEBUG
     assert(m_first.is_valid());
     assert(m_last.is_valid());
     assert(utf8::is_character_start(m_first));
     assert(utf8::is_character_start(m_last));
+#endif
 }
 
 static void avoid_eol(BufferIterator& it)

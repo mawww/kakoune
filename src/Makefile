@@ -5,6 +5,17 @@ deps := $(addprefix ., $(sources:.cc=.d))
 CXXFLAGS += -std=c++0x -g -Wall -Wno-reorder -Wno-sign-compare
 LDFLAGS += -lmenu -lncursesw -lboost_regex
 
+debug ?= yes
+ifeq ($(debug),yes)
+    CXXFLAGS += -DKAK_DEBUG
+else
+    ifeq ($(debug),no)
+        CXXFLAGS += -O3
+    else
+        $(error debug should be either yes or no)
+    endif
+endif
+
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) -o $@
 

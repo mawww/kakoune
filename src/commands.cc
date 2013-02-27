@@ -27,11 +27,6 @@
 namespace Kakoune
 {
 
-using namespace std::placeholders;
-
-// berk
-extern bool    quit_requested;
-
 namespace
 {
 
