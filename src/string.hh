@@ -2,8 +2,6 @@
 #define string_hh_INCLUDED
 
 #include <string>
-#include <iosfwd>
-#include <climits>
 #include <boost/regex.hpp>
 
 #include "memoryview.hh"
