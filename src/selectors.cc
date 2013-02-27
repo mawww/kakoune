@@ -228,13 +228,14 @@ Selection select_surrounding(const Selection& selection,
 {
     const bool to_begin = flags & SurroundFlags::ToBegin;
     const bool to_end   = flags & SurroundFlags::ToEnd;
+    const bool nestable = matching.first != matching.second;
     Utf8Iterator first = selection.last();
     if (to_begin)
     {
         int level = 0;
         while (not is_begin(first))
         {
-            if (first != selection.last() and *first == matching.second)
+            if (nestable and first != selection.last() and *first == matching.second)
                 ++level;
             else if (*first == matching.first)
             {
@@ -256,7 +257,7 @@ Selection select_surrounding(const Selection& selection,
         last = first + 1;
         while (not is_end(last))
         {
-            if (*last == matching.first)
+            if (nestable and *last == matching.first)
                 ++level;
             else if (*last == matching.second)
             {
