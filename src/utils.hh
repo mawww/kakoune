@@ -137,27 +137,27 @@ struct ReversedContainer
 };
 
 template<typename Container>
-ReversedContainer<Container> reversed(Container& container)
+ReversedContainer<Container> reversed(Container&& container)
 {
     return ReversedContainer<Container>(container);
 }
 
 
 template<typename Container, typename T>
-auto find(Container& container, const T& value) -> decltype(container.begin())
+auto find(Container&& container, const T& value) -> decltype(container.begin())
 {
     return std::find(container.begin(), container.end(), value);
 }
 
 template<typename Container, typename T>
-auto find_if(Container& container, T op) -> decltype(container.begin())
+auto find_if(Container&& container, T op) -> decltype(container.begin())
 {
     return std::find_if(container.begin(), container.end(), op);
 }
 
 
 template<typename Container, typename T>
-bool contains(const Container& container, const T& value)
+bool contains(Container&& container, const T& value)
 {
     return (not container.empty()) and find(container, value) != container.end();
 }
