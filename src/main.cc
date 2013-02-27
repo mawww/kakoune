@@ -818,7 +818,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        std::locale::global(std::locale("en_US.UTF-8"));
+        std::locale::global(std::locale(""));
 
         signal(SIGSEGV, signal_handler);
         signal(SIGFPE,  signal_handler);
