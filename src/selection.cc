@@ -24,6 +24,11 @@ BufferIterator Range::end() const
     return utf8::next(std::max(m_first, m_last));
 }
 
+String Range::content() const
+{
+    return m_first.buffer().string(begin(), end());
+}
+
 void Range::check_invariant() const
 {
 #ifdef KAK_DEBUG

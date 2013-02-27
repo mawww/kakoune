@@ -31,6 +31,8 @@ public:
     // returns max(first, last) + 1
     BufferIterator end() const;
 
+    String content() const;
+
     void check_invariant() const;
 private:
     BufferIterator m_first;
