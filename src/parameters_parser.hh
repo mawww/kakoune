@@ -61,31 +61,26 @@ struct ParametersParser
 
         const String& operator*() const
         {
-            assert(m_parser.m_positional[m_index]);
-            return m_parser.m_params[m_index];
+            return m_parser.m_params[m_parser.m_positional_indices[m_index]];
         }
 
         const String* operator->() const
         {
-            assert(m_parser.m_positional[m_index]);
-            return &m_parser.m_params[m_index];
+            return &m_parser.m_params[m_parser.m_positional_indices[m_index]];
         }
 
-        iterator& operator++()
-        {
-           while (m_index < m_parser.m_positional.size() and
-                  not m_parser.m_positional[++m_index]) {}
-           return *this;
-        }
+        iterator& operator++() { ++m_index; return *this; }
 
         bool operator==(const iterator& other) const
         {
-            return &m_parser == &other.m_parser and m_index == other.m_index;
+            assert(&m_parser == &other.m_parser);
+            return m_index == other.m_index;
         }
 
         bool operator!=(const iterator& other) const
         {
-            return &m_parser != &other.m_parser or m_index != other.m_index;
+            assert(&m_parser == &other.m_parser);
+            return m_index != other.m_index;
         }
 
         bool operator<(const iterator& other) const
@@ -108,7 +103,7 @@ struct ParametersParser
 
 private:
     ParameterList     m_params;
-    std::vector<bool> m_positional;
+    std::vector<size_t> m_positional_indices;
     std::unordered_map<String, bool> m_options;
 };
 

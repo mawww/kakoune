@@ -5,12 +5,15 @@ namespace Kakoune
 
 ParametersParser::ParametersParser(const ParameterList& params,
                                    std::unordered_map<String, bool> options)
-    : m_params(params), m_positional(params.size(), true),
+    : m_params(params),
       m_options(std::move(options))
 {
+    bool only_pos = false;
     for (size_t i = 0; i < params.size(); ++i)
     {
-        if (params[i][0] == '-')
+        if (params[i] == "--")
+            only_pos = true;
+        else if (not only_pos and params[i][0] == '-')
         {
             auto it = m_options.find(params[i].substr(1_byte));
             if (it == m_options.end())
@@ -18,17 +21,13 @@ ParametersParser::ParametersParser(const ParameterList& params,
 
             if (it->second)
             {
-                if (i + 1 == params.size() or params[i+1][0] == '-')
+                ++i;
+                if (i == params.size() or params[i][0] == '-')
                    throw missing_option_value(params[i]);
-
-                m_positional[i+1] = false;
             }
-            m_positional[i] = false;
         }
-
-        // all options following -- are positional
-        if (params[i] == "--")
-            break;
+        else
+            m_positional_indices.push_back(i);
     }
 }
 
@@ -68,38 +67,23 @@ const String& ParametersParser::option_value(const String& name) const
 
 size_t ParametersParser::positional_count() const
 {
-    size_t res = 0;
-    for (bool positional : m_positional)
-    {
-       if (positional)
-           ++res;
-    }
-    return res;
+    return m_positional_indices.size();
 }
 
 const String& ParametersParser::operator[] (size_t index) const
 {
     assert(index < positional_count());
-    iterator it = begin();
-    while (index)
-    {
-        ++it;
-        --index;
-    }
-    return *it;
+    return m_params[m_positional_indices[index]];
 }
 
 ParametersParser::iterator ParametersParser::begin() const
 {
-    int index = 0;
-    while (index < m_positional.size() and not m_positional[index])
-        ++index;
-    return iterator(*this, index);
+    return iterator(*this, 0);
 }
 
 ParametersParser::iterator ParametersParser::end() const
 {
-    return iterator(*this, m_params.size());
+    return iterator(*this, m_positional_indices.size());
 }
 
 }
