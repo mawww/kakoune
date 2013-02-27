@@ -30,6 +30,7 @@ String parse_filename(const String& filename);
 String read_file(const String& filename);
 Buffer* create_buffer_from_file(const String& filename);
 void write_buffer_to_file(const Buffer& buffer, const String& filename);
+String find_file(const String& filename, const memoryview<String>& paths);
 
 }
 

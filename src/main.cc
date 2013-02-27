@@ -93,6 +93,25 @@ void do_go(Context& context)
                 editor.select(buf.iterator_at_line_begin(buf.line_count() - 1), mode);
                 break;
             }
+            case 'f':
+            {
+                String filename = context.editor().selections().back().content();
+                static char forbidden[] = { '\'', '\\', '\0' };
+                for (auto c : forbidden)
+                    if (contains(filename, c))
+                        return;
+
+                std::vector<String> paths = { ""_str, "/usr/include/"_str };
+                const String& buffer_name = context.buffer().name();
+                auto it = find(reversed(buffer_name), '/');
+                if (it != buffer_name.rend())
+                    paths.insert(paths.begin(), String{buffer_name.begin(), it.base()});
+
+                String path = find_file(filename, paths);
+                if (not path.empty())
+                    CommandManager::instance().execute("edit '" + path + "'", context);
+                break;
+            }
             }
         });
 }
