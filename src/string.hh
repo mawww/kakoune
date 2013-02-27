@@ -25,8 +25,7 @@ public:
    explicit String(Codepoint cp, CharCount count = 1)
    {
        std::string str;
-       auto it = back_inserter(str);
-       utf8::dump(it, cp);
+       utf8::dump(back_inserter(str), cp);
        for (CharCount i = 0; i < count; ++i)
            m_content += str;
    }
@@ -113,8 +112,7 @@ inline String operator"" _str(const char* str, size_t)
 inline String codepoint_to_str(Codepoint cp)
 {
     std::string str;
-    auto it = back_inserter(str);
-    utf8::dump(it, cp);
+    utf8::dump(back_inserter(str), cp);
     return String(str);
 }
 

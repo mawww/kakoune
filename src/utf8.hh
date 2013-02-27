@@ -140,7 +140,7 @@ Codepoint codepoint(Iterator it)
 struct invalid_codepoint{};
 
 template<typename OutputIterator>
-void dump(OutputIterator& it, Codepoint cp)
+void dump(OutputIterator&& it, Codepoint cp)
 {
     if (cp <= 0x7F)
         *it++ = cp;
