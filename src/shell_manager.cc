@@ -65,9 +65,7 @@ String ShellManager::pipe(const String& input,
         }
         close(error_pipe[0]);
         if (not errorout.empty())
-        {
-            write_debug("\nshell stderr: <<<\n" + errorout + ">>>\n");
-        }
+            write_debug("shell stderr: <<<\n" + errorout + ">>>");
 
         waitpid(pid, NULL, 0);
     }
