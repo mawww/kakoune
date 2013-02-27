@@ -181,7 +181,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         CharCount column = utf8::distance(m_buffer->iterator_at_line_begin(pos.line), sel.last());
         pos.line += offset;
         BufferIterator last = utf8::advance(m_buffer->iterator_at_line_begin(pos.line),
-                                            m_buffer->iterator_at_line_end(pos.line), column);
+                                            m_buffer->iterator_at_line_end(pos.line)-1, column);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
         sel.avoid_eol();
