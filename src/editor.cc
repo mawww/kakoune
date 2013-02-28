@@ -301,6 +301,7 @@ void Editor::multi_select(const MultiSelector& selector)
     for (auto& sel : m_selections)
     {
         SelectionList res = selector(sel);
+        new_selections.reserve(new_selections.size() + res.size());
         for (auto& new_sel : res)
         {
             // preserve captures when selectors captures nothing.
