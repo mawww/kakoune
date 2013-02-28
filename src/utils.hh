@@ -60,33 +60,46 @@ class safe_ptr
 {
 public:
     safe_ptr() : m_ptr(nullptr) {}
-    explicit safe_ptr(T* ptr) : m_ptr(ptr) { if (ptr) ptr->inc_safe_count(); }
+    explicit safe_ptr(T* ptr) : m_ptr(ptr)
+    {
+        #ifdef KAK_DEBUG
+        if (m_ptr)
+            m_ptr->inc_safe_count();
+        #endif
+    }
     safe_ptr(const safe_ptr& other) : safe_ptr(other.m_ptr) {}
     safe_ptr(safe_ptr&& other) : m_ptr(other.m_ptr) { other.m_ptr = nullptr; }
-    ~safe_ptr() { if (m_ptr) m_ptr->dec_safe_count(); }
+    ~safe_ptr()
+    {
+        #ifdef KAK_DEBUG
+        if (m_ptr)
+            m_ptr->dec_safe_count();
+        #endif
+    }
 
     safe_ptr& operator=(const safe_ptr& other)
     {
+        #ifdef KAK_DEBUG
         if (m_ptr != other.m_ptr)
         {
             if (m_ptr)
                 m_ptr->dec_safe_count();
-            m_ptr = other.m_ptr;
-            if (m_ptr)
-                m_ptr->inc_safe_count();
+            if (other.m_ptr)
+                other.m_ptr->inc_safe_count();
         }
+        #endif
+        m_ptr = other.m_ptr;
         return *this;
    }
 
    safe_ptr& operator=(safe_ptr&& other)
    {
-       if (m_ptr != other.m_ptr)
-       {
-           if (m_ptr)
-               m_ptr->dec_safe_count();
-           m_ptr = other.m_ptr;
-           other.m_ptr = nullptr;
-       }
+       #ifdef KAK_DEBUG
+       if (m_ptr)
+           m_ptr->dec_safe_count();
+       #endif
+       m_ptr = other.m_ptr;
+       other.m_ptr = nullptr;
        return *this;
    }
 
@@ -114,6 +127,7 @@ private:
 class SafeCountable
 {
 public:
+#ifdef KAK_DEBUG
    SafeCountable() : m_count(0) {}
    ~SafeCountable() { assert(m_count == 0); }
 
@@ -122,6 +136,7 @@ public:
 
 private:
    mutable int m_count;
+#endif
 };
 
 // *** Containers helpers ***
