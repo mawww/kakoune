@@ -184,7 +184,7 @@ struct Buffer::Modification
 
     Modification inverse() const
     {
-        Type inverse_type;
+        Type inverse_type = Insert;
         switch (type)
         {
         case Insert: inverse_type = Erase;  break;
