@@ -11,20 +11,23 @@
 namespace Kakoune
 {
 
+// Implementation in highlighters.cc
+void highlight_selections(const SelectionList& selections, DisplayBuffer& display_buffer);
+void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer);
+void expand_unprintable(DisplayBuffer& display_buffer);
+
 Window::Window(Buffer& buffer)
     : Editor(buffer),
       m_hooks(buffer.hooks()),
       m_options(buffer.options())
 {
-    HighlighterRegistry& registry = HighlighterRegistry::instance();
-
     Context hook_context{*this};
     m_hooks.run_hook("WinCreate", buffer.name(), hook_context);
     m_options.register_watcher(*this);
 
-    m_builtin_highlighters.append(registry["expand_tabs"](*this, {}));
-    m_builtin_highlighters.append(registry["expand_unprintable"](*this, {}));
-    m_builtin_highlighters.append(registry["highlight_selections"](*this, {}));
+    m_builtin_highlighters.append({"tabulations", [this](DisplayBuffer& db) { expand_tabulations(m_options, db); }});
+    m_builtin_highlighters.append({"unprintable", expand_unprintable});
+    m_builtin_highlighters.append({"selections",  [this](DisplayBuffer& db) { highlight_selections(selections(), db); }});
 
     for (auto& option : m_options.flatten_options())
         on_option_changed(option.first, option.second);

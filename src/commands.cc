@@ -280,7 +280,7 @@ void add_highlighter(const CommandParameters& params, Context& context)
       : window.highlighters();
 
     auto& factory = registry[name];
-    group.append(factory(window, highlighter_params));
+    group.append(factory(highlighter_params));
 }
 
 void rm_highlighter(const CommandParameters& params, Context& context)

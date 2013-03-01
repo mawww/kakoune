@@ -1,6 +1,5 @@
 #include "highlighters.hh"
 #include "assert.hh"
-#include "window.hh"
 #include "color_registry.hh"
 #include "highlighter_group.hh"
 #include "register_manager.hh"
@@ -120,8 +119,7 @@ private:
     }
 };
 
-HighlighterAndId colorize_regex_factory(Window& window,
-                                        const HighlighterParameters params)
+HighlighterAndId colorize_regex_factory(const HighlighterParameters params)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -184,8 +182,7 @@ private:
     RegexColorizer m_colorizer;
 };
 
-HighlighterAndId highlight_search_factory(Window& window,
-                                          const HighlighterParameters params)
+HighlighterAndId highlight_search_factory(const HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -201,9 +198,9 @@ HighlighterAndId highlight_search_factory(Window& window,
     }
 };
 
-void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
+void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer)
 {
-    const int tabstop = window.options()["tabstop"].as_int();
+    const int tabstop = options["tabstop"].as_int();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -266,9 +263,9 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     }
 }
 
-void highlight_selections(Window& window, DisplayBuffer& display_buffer)
+void highlight_selections(const SelectionList& selections, DisplayBuffer& display_buffer)
 {
-    for (auto& sel : window.selections())
+    for (auto& sel : selections)
     {
         highlight_range(display_buffer, sel.begin(), sel.end(), false,
                         [](DisplayAtom& atom) { atom.attribute |= Attributes::Underline; });
@@ -278,7 +275,7 @@ void highlight_selections(Window& window, DisplayBuffer& display_buffer)
                         [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse;
                                                 atom.attribute &= ~Attributes::Underline; });
     }
-    const Selection& back = window.selections().back();
+    const Selection& back = selections.back();
     highlight_range(display_buffer, back.begin(), back.end(), false,
                     [](DisplayAtom& atom) { atom.attribute |= Attributes::Bold; });
 }
@@ -318,8 +315,7 @@ class SimpleHighlighterFactory
 public:
     SimpleHighlighterFactory(const String& id) : m_id(id) {}
 
-    HighlighterAndId operator()(Window& window,
-                                const HighlighterParameters& params) const
+    HighlighterAndId operator()(const HighlighterParameters& params) const
     {
         return HighlighterAndId(m_id, HighlighterFunc(highlighter_func));
     }
@@ -327,23 +323,7 @@ private:
     String m_id;
 };
 
-template<void (*highlighter_func)(Window&, DisplayBuffer&)>
-class WindowHighlighterFactory
-{
-public:
-    WindowHighlighterFactory(const String& id) : m_id(id) {}
-
-    HighlighterAndId operator()(Window& window,
-                                const HighlighterParameters& params) const
-    {
-        return HighlighterAndId(m_id, std::bind(highlighter_func, std::ref(window), _1));
-    }
-private:
-    String m_id;
-};
-
-HighlighterAndId highlighter_group_factory(Window& window,
-                                           const HighlighterParameters& params)
+HighlighterAndId highlighter_group_factory(const HighlighterParameters& params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -355,9 +335,6 @@ void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.register_func("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
-    registry.register_func("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
-    registry.register_func("expand_unprintable", SimpleHighlighterFactory<expand_unprintable>("expand_unprintable"));
     registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("search", highlight_search_factory);
