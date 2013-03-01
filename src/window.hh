@@ -60,6 +60,7 @@ private:
     DisplayBuffer m_display_buffer;
 
     HighlighterGroup m_highlighters;
+    HighlighterGroup m_builtin_highlighters;
 
     HookManager      m_hooks;
     OptionManager    m_options;

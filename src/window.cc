@@ -22,9 +22,9 @@ Window::Window(Buffer& buffer)
     m_hooks.run_hook("WinCreate", buffer.name(), hook_context);
     m_options.register_watcher(*this);
 
-    m_highlighters.append(registry["expand_tabs"](*this, {}));
-    m_highlighters.append(registry["expand_unprintable"](*this, {}));
-    m_highlighters.append(registry["highlight_selections"](*this, {}));
+    m_builtin_highlighters.append(registry["expand_tabs"](*this, {}));
+    m_builtin_highlighters.append(registry["expand_unprintable"](*this, {}));
+    m_builtin_highlighters.append(registry["highlight_selections"](*this, {}));
 
     for (auto& option : m_options.flatten_options())
         on_option_changed(option.first, option.second);
@@ -65,6 +65,7 @@ void Window::update_display_buffer()
 
     m_display_buffer.compute_range();
     m_highlighters(m_display_buffer);
+    m_builtin_highlighters(m_display_buffer);
     m_display_buffer.optimize();
 
     m_timestamp = buffer().timestamp();
@@ -108,6 +109,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 
     display_buffer.compute_range();
     m_highlighters(display_buffer);
+    m_builtin_highlighters(display_buffer);
 
     // now we can compute where the cursor is in display columns
     // (this is only valid if highlighting one line and multiple lines put
