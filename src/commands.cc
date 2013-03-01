@@ -555,14 +555,14 @@ void menu(const CommandParameters& params, Context& context)
 static String assist(String message, CharCount maxWidth)
 {
     static const std::vector<String> assistant =
-        { R"( ╭──╮   )",
-          R"( │  │   )",
-          R"( @  @  ╭)",
-          R"( ││ ││ │)",
-          R"( ││ ││ ╯)",
-          R"( │╰─╯│  )",
-          R"( ╰───╯  )",
-          R"(        )" };
+        { " ╭──╮   ",
+          " │  │   ",
+          " @  @  ╭",
+          " ││ ││ │",
+          " ││ ││ ╯",
+          " │╰─╯│  ",
+          " ╰───╯  ",
+          "        " };
 
     const CharCount maxBubbleWidth = maxWidth - assistant[0].char_length() - 6;
     CharCount bubbleWidth = 0;
