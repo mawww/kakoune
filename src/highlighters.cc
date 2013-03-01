@@ -265,19 +265,20 @@ void show_line_numbers(DisplayBuffer& display_buffer)
 
 void highlight_selections(const SelectionList& selections, DisplayBuffer& display_buffer)
 {
-    for (auto& sel : selections)
+    for (size_t i = 0; i < selections.size(); ++i)
     {
-        highlight_range(display_buffer, sel.begin(), sel.end(), false,
-                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Underline; });
+        auto& sel = selections[i];
+        const bool forward = sel.first() <= sel.last();
+        BufferIterator begin = forward ? sel.first() : utf8::next(sel.last());
+        BufferIterator end   = forward ? sel.last() : utf8::next(sel.first());
 
-        const BufferIterator& last = sel.last();
-        highlight_range(display_buffer, last, utf8::next(last), false,
-                        [](DisplayAtom& atom) { atom.attribute |= Attributes::Reverse;
-                                                atom.attribute &= ~Attributes::Underline; });
+        Color fg_color = (i == selections.size() - 1) ? Color::Cyan : Color::Black;
+        Color bg_color = (i == selections.size() - 1) ? Color::Blue : Color::Blue;
+        highlight_range(display_buffer, begin, end, false,
+                        [&](DisplayAtom& atom) { atom.fg_color = fg_color; atom.bg_color = bg_color; });
+        highlight_range(display_buffer, sel.last(), utf8::next(sel.last()), false,
+                        [](DisplayAtom& atom) { atom.fg_color = Color::Black; atom.bg_color = Color::White; });
     }
-    const Selection& back = selections.back();
-    highlight_range(display_buffer, back.begin(), back.end(), false,
-                    [](DisplayAtom& atom) { atom.attribute |= Attributes::Bold; });
 }
 
 void expand_unprintable(DisplayBuffer& display_buffer)
