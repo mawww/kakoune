@@ -245,9 +245,9 @@ void expand_tabulations(Window& window, DisplayBuffer& display_buffer)
     }
 }
 
-void show_line_numbers(Window& window, DisplayBuffer& display_buffer)
+void show_line_numbers(DisplayBuffer& display_buffer)
 {
-    LineCount last_line = window.buffer().line_count();
+    LineCount last_line = display_buffer.range().first.buffer().line_count();
     int digit_count = 0;
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
@@ -358,7 +358,7 @@ void register_highlighters()
     registry.register_func("highlight_selections", WindowHighlighterFactory<highlight_selections>("highlight_selections"));
     registry.register_func("expand_tabs", WindowHighlighterFactory<expand_tabulations>("expand_tabs"));
     registry.register_func("expand_unprintable", SimpleHighlighterFactory<expand_unprintable>("expand_unprintable"));
-    registry.register_func("number_lines", WindowHighlighterFactory<show_line_numbers>("number_lines"));
+    registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
