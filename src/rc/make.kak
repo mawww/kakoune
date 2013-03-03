@@ -1,4 +1,4 @@
-setg makecmd make
+decl str makecmd make
 
 def -shell-params make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo

@@ -176,7 +176,7 @@ void do_search(Context& context)
                         RegisterManager::instance()['/'] = ex;
                     context.push_jump();
                 }
-                else if (ex.empty() or not context.options()["incsearch"].as_int())
+                else if (ex.empty() or not context.options()["incsearch"].get<int>())
                     return;
 
                 context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
@@ -338,7 +338,7 @@ void do_join(Context& context)
 
 void do_indent(Context& context)
 {
-    size_t width = context.options()["indentwidth"].as_int();
+    size_t width = context.options()["indentwidth"].get<int>();
     String indent(' ', width);
 
     Editor& editor = context.editor();
@@ -351,7 +351,7 @@ void do_indent(Context& context)
 
 void do_deindent(Context& context)
 {
-    int width = context.options()["indentwidth"].as_int();
+    int width = context.options()["indentwidth"].get<int>();
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
@@ -745,7 +745,7 @@ void register_env_vars()
                                    { return runtime_directory(); });
     shell_manager.register_env_var("opt_.+",
                                    [](const String& name, const Context& context)
-                                   { return context.options()[name.substr(4_byte)].as_string(); });
+                                   { return context.options()[name.substr(4_byte)].get_as_string(); });
     shell_manager.register_env_var("reg_.+",
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });

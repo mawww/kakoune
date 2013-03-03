@@ -1,4 +1,4 @@
-setg grepcmd 'grep -RHn'
+decl str grepcmd 'grep -RHn'
 
 def -shell-params -file-completion \
     grep %{ %sh{

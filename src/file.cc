@@ -135,8 +135,8 @@ Buffer* create_buffer_from_file(const String& filename)
     Buffer* buffer = new Buffer(filename, Buffer::Flags::File, std::move(lines));
 
     OptionManager& options = buffer->options();
-    options.set_option("eolformat", Option(crlf ? "crlf" : "lf"));
-    options.set_option("BOM", Option(bom ? "utf-8" : "no"));
+    options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");
+    options.get_local_option("BOM").set<String>(bom ? "utf-8" : "no");
 
     return buffer;
 }
@@ -159,7 +159,7 @@ static void write(int fd, const memoryview<char>& data, const String& filename)
 
 void write_buffer_to_file(const Buffer& buffer, const String& filename)
 {
-    String eolformat = buffer.options()["eolformat"].as_string();
+    String eolformat = buffer.options()["eolformat"].get<String>();
     if (eolformat == "crlf")
         eolformat = "\r\n";
     else
@@ -172,7 +172,7 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
         throw file_access_error(filename, strerror(errno));
     auto close_fd = on_scope_end([fd]{ close(fd); });
 
-    if (buffer.options()["BOM"].as_string() == "utf-8")
+    if (buffer.options()["BOM"].get<String>() == "utf-8")
         ::write(fd, "\xEF\xBB\xBF", 3);
 
     for (LineCount i = 0; i < buffer.line_count(); ++i)

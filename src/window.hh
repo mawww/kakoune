@@ -51,7 +51,7 @@ public:
 private:
     Window(const Window&) = delete;
 
-    void on_option_changed(const String& name, const Option& option) override;
+    void on_option_changed(const Option& option) override;
 
     void scroll_to_keep_cursor_visible_ifn();
 

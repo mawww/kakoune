@@ -36,7 +36,7 @@ CandidateList complete_filename(const Context& context,
     String dirprefix;
     String fileprefix = real_prefix;
 
-    boost::regex ignored_files = make_regex_ifp(context.options()["ignored_files"].as_string());
+    boost::regex ignored_files = make_regex_ifp(context.options()["ignored_files"].get<String>());
 
     ByteCount dir_end = -1;
     for (ByteCount i = 0; i < real_prefix.length(); ++i)

@@ -1,4 +1,4 @@
-setg termcmd %sh{
+decl str termcmd %sh{
     if [[ -n "$TMUX" ]]; then
         echo "'tmux split-window -h'"
     else

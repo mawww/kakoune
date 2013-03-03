@@ -377,7 +377,7 @@ public:
                 DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
                 context().ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
 
-                bool use_common_prefix = context().options()["complete_prefix"].as_int();
+                bool use_common_prefix = context().options()["complete_prefix"].get<int>();
                 String prefix = use_common_prefix ? common_prefix(candidates) : String();
                 if (m_completions.end - m_completions.start > prefix.length())
                     prefix = line.substr(m_completions.start,

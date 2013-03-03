@@ -16,23 +16,27 @@ struct option_not_found : public runtime_error
         : runtime_error("option not found: " + name) {}
 };
 
+class OptionManager;
+
 class Option
 {
 public:
-    Option() {}
-    explicit Option(int value) : m_value(int_to_str(value)) {}
-    explicit Option(const String& value) : m_value(value) {}
+    Option(OptionManager& manager, String name);
+    virtual ~Option() {}
 
-    Option& operator=(int value) { m_value = int_to_str(value); return *this; }
-    Option& operator=(const String& value) { m_value = value; return *this; }
+    template<typename T> const T& get() const;
+    template<typename T> void set(const T& val);
 
-    bool operator==(const Option& other) const { return m_value == other.m_value; }
-    bool operator!=(const Option& other) const { return m_value != other.m_value; }
+    virtual String get_as_string() const = 0;
+    virtual void   set_from_string(const String& str) = 0;
 
-    int    as_int()    const  { return str_to_int(m_value); }
-    String as_string() const { return m_value; }
-private:
-    String m_value;
+    String name() const { return m_name; }
+    OptionManager& manager() const { return m_manager; }
+
+    virtual Option* clone(OptionManager& manager) const = 0;
+protected:
+    OptionManager& m_manager;
+    String m_name;
 };
 
 class OptionManagerWatcher
@@ -40,8 +44,7 @@ class OptionManagerWatcher
 public:
     virtual ~OptionManagerWatcher() {}
 
-    virtual void on_option_changed(const String& name,
-                                   const Option& option) = 0;
+    virtual void on_option_changed(const Option& option) = 0;
 };
 
 class OptionManager : private OptionManagerWatcher
@@ -51,28 +54,26 @@ public:
     ~OptionManager();
 
     const Option& operator[] (const String& name) const;
-
-    void set_option(const String& name, const Option& value);
+    Option& get_local_option(const String& name);
 
     CandidateList complete_option_name(const String& prefix,
                                        ByteCount cursor_pos);
 
-    typedef std::unordered_map<String, Option> OptionMap;
-    OptionMap flatten_options() const;
+    using OptionList = std::vector<const Option*>;
+    OptionList flatten_options() const;
 
     void register_watcher(OptionManagerWatcher& watcher);
     void unregister_watcher(OptionManagerWatcher& watcher);
 
+    void on_option_changed(const Option& option) override;
 private:
     OptionManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root option manager
     friend class GlobalOptions;
 
-    OptionMap m_options;
+    std::vector<std::unique_ptr<Option>> m_options;
     OptionManager* m_parent;
-
-    void on_option_changed(const String& name, const Option& value);
 
     std::vector<OptionManagerWatcher*> m_watchers;
 };
@@ -82,8 +83,10 @@ class GlobalOptions : public OptionManager,
 {
 public:
     GlobalOptions();
-};
 
+    template<typename T>
+    Option& declare_option(const String& name, const T& inital_value);
+};
 
 }
 

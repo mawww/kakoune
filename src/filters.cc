@@ -37,7 +37,7 @@ void cleanup_whitespaces(Buffer& buffer, Selection& selection, String& content)
 
 void expand_tabulations(Buffer& buffer, Selection& selection, String& content)
 {
-    const int tabstop = buffer.options()["tabstop"].as_int();
+    const int tabstop = buffer.options()["tabstop"].get<int>();
     if (content == "\t")
     {
         int column = 0;

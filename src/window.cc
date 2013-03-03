@@ -30,7 +30,7 @@ Window::Window(Buffer& buffer)
     m_builtin_highlighters.append({"selections",  [this](DisplayBuffer& db) { highlight_selections(selections(), db); }});
 
     for (auto& option : m_options.flatten_options())
-        on_option_changed(option.first, option.second);
+        on_option_changed(*option);
 }
 
 Window::~Window()
@@ -177,9 +177,9 @@ DisplayCoord Window::display_position(const BufferIterator& iterator)
     return { 0, 0 };
 }
 
-void Window::on_option_changed(const String& name, const Option& option)
+void Window::on_option_changed(const Option& option)
 {
-    String desc = name + "=" + option.as_string();
+    String desc = option.name() + "=" + option.get_as_string();
     Context hook_context{*this};
     m_hooks.run_hook("WinSetOption", desc, hook_context);
 }

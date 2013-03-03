@@ -466,7 +466,24 @@ void set_option(OptionManager& options, const CommandParameters& params,
     if (params.size() != 2)
         throw wrong_argument_count();
 
-    options.set_option(params[0], Option(params[1]));
+    options.get_local_option(params[0]).set_from_string(params[1]);
+}
+
+void declare_option(const CommandParameters& params, Context& context)
+{
+    if (params.size() != 2 and params.size() != 3)
+        throw wrong_argument_count();
+    Option* opt = nullptr;
+
+    if (params[0] == "int")
+        opt = &GlobalOptions::instance().declare_option<int>(params[1], 0);
+    else if (params[0] == "str")
+        opt = &GlobalOptions::instance().declare_option<String>(params[1], "");
+    else
+        throw runtime_error("unknown type " + params[0]);
+
+    if (params.size() == 3)
+        opt->set_from_string(params[2]);
 }
 
 template<typename Func>
@@ -878,6 +895,7 @@ void register_commands()
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
                              { return context.window().options().complete_option_name(prefix, cursor_pos); }
                          }));
+    cm.register_command("decl", declare_option);
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);
     cm.register_commands({"name"}, set_client_name);
