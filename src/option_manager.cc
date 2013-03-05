@@ -6,6 +6,28 @@
 namespace Kakoune
 {
 
+namespace
+{
+
+String option_to_string(const String& opt) { return opt; }
+void option_from_string(const String& str, String& opt) { opt = str; }
+
+String option_to_string(int opt) { return int_to_str(opt); }
+void option_from_string(const String& str, int& opt) { opt = str_to_int(str); }
+
+String option_to_string(bool opt) { return opt ? "true" : "false"; }
+void option_from_string(const String& str, bool& opt)
+{
+    if (str == "true" or str == "yes")
+        opt = true;
+    else if (str == "false" or str == "no")
+        opt = false;
+    else
+        throw runtime_error("boolean values are either true, yes, false or no");
+}
+
+}
+
 template<typename T>
 class TypedOption : public Option
 {
@@ -23,8 +45,16 @@ public:
     }
     const T& get() const { return m_value; }
 
-    String get_as_string() const override;
-    void   set_from_string(const String& str) override;
+    String get_as_string() const override
+    {
+        return option_to_string(m_value);
+    }
+    void   set_from_string(const String& str) override
+    {
+        T val;
+        option_from_string(str, val);
+        set(val);
+    }
 
     Option* clone(OptionManager& manager) const override
     {
@@ -40,34 +70,15 @@ Option::Option(OptionManager& manager, String name)
 template<typename T> const T& Option::get() const { return dynamic_cast<const TypedOption<T>*>(this)->get(); }
 template<typename T> void     Option::set(const T& val) { return dynamic_cast<TypedOption<T>*>(this)->set(val); }
 
-// TypedOption<String> specializations;
-template<> String TypedOption<String>::get_as_string() const { return m_value; }
-template<> void   TypedOption<String>::set_from_string(const String& str) { set(str); }
-template class TypedOption<String>;
 template const String& Option::get<String>() const;
 template void Option::set<String>(const String&);
 
-// TypedOption<int> specializations;
-template<> String TypedOption<int>::get_as_string() const { return int_to_str(m_value); }
-template<> void   TypedOption<int>::set_from_string(const String& str) { set(str_to_int(str)); }
-template class TypedOption<int>;
 template const int& Option::get<int>() const;
 template void Option::set<int>(const int&);
 
-// TypedOption<bool> specializations;
-template<> String TypedOption<bool>::get_as_string() const { return m_value ? "true" : "false"; }
-template<> void   TypedOption<bool>::set_from_string(const String& str)
-{
-    if (str == "true" or str == "yes")
-        m_value = true;
-    else if (str == "false" or str == "no")
-        m_value = false;
-    else
-        throw runtime_error("boolean values are either true, yes, false or no");
-}
-template class TypedOption<bool>;
 template const bool& Option::get<bool>() const;
 template void Option::set<bool>(const bool&);
+
 
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
