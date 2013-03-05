@@ -4,6 +4,7 @@
 #include "utils.hh"
 #include "file.hh"
 #include "context.hh"
+#include "debug.hh"
 
 #include <dirent.h>
 #include <algorithm>
@@ -22,7 +23,10 @@ static boost::regex make_regex_ifp(const String& ex)
         {
             result = boost::regex(ex.c_str());
         }
-        catch(boost::regex_error&) {}
+        catch(boost::regex_error& err)
+        {
+            write_debug(err.what());
+        }
     }
     return result;
 }
