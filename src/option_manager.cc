@@ -192,7 +192,7 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("shell", "sh");
     declare_option<bool>("complete_prefix", true);
     declare_option<bool>("incsearch", true);
-    declare_option<String>("ignored_files", R"(^(\..*|.*\.(o|so|a)))$)");
+    declare_option<String>("ignored_files", R"(^(\..*|.*\.(o|so|a))$)");
     declare_option<String>("filetype", "");
 }
 
