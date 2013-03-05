@@ -54,6 +54,21 @@ template class TypedOption<int>;
 template const int& Option::get<int>() const;
 template void Option::set<int>(const int&);
 
+// TypedOption<bool> specializations;
+template<> String TypedOption<bool>::get_as_string() const { return m_value ? "true" : "false"; }
+template<> void   TypedOption<bool>::set_from_string(const String& str)
+{
+    if (str == "true" or str == "yes")
+        m_value = true;
+    else if (str == "false" or str == "no")
+        m_value = false;
+    else
+        throw runtime_error("boolean values are either true, yes, false or no");
+}
+template class TypedOption<bool>;
+template const bool& Option::get<bool>() const;
+template void Option::set<bool>(const bool&);
+
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
 {
@@ -164,8 +179,8 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("eolformat", "lf");
     declare_option<String>("BOM", "no");
     declare_option<String>("shell", "sh");
-    declare_option<int>("complete_prefix", 1);
-    declare_option<int>("incsearch", 1);
+    declare_option<bool>("complete_prefix", true);
+    declare_option<bool>("incsearch", true);
     declare_option<String>("ignored_files", R"(^(\..*|.*\.(o|so|a)))$)");
     declare_option<String>("filetype", "");
 }

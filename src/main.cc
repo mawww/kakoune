@@ -176,7 +176,7 @@ void do_search(Context& context)
                         RegisterManager::instance()['/'] = ex;
                     context.push_jump();
                 }
-                else if (ex.empty() or not context.options()["incsearch"].get<int>())
+                else if (ex.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
                 context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
