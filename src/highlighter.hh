@@ -23,7 +23,8 @@ typedef std::function<void (DisplayBuffer& display_buffer)> HighlighterFunc;
 typedef std::pair<String, HighlighterFunc> HighlighterAndId;
 typedef memoryview<String> HighlighterParameters;
 
-using HighlighterFactory = std::function<HighlighterAndId (const HighlighterParameters& params)>;
+using HighlighterFactory = std::function<HighlighterAndId (const HighlighterParameters& params,
+                                                           const Window& window)>;
 
 struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
                              Singleton<HighlighterRegistry>
