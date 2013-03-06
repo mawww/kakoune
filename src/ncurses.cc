@@ -119,7 +119,6 @@ NCursesUI::~NCursesUI()
 
 void NCursesUI::redraw()
 {
-    redrawwin(stdscr);
     wnoutrefresh(stdscr);
     if (m_menu_win)
     {
