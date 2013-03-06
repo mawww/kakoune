@@ -33,6 +33,12 @@ public:
         return save;
     }
 
+    void advance(CharCount count, const utf8_iterator& end)
+    {
+        while (*this != end and count-- > 0)
+            ++*this;
+    }
+
     utf8_iterator& operator--()
     {
         m_it = utf8::previous(m_it);
