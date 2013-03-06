@@ -310,6 +310,45 @@ void expand_unprintable(DisplayBuffer& display_buffer)
     }
 }
 
+class FlagLines
+{
+public:
+    FlagLines(String flag, String lines_opt_name, const OptionManager& options)
+        : m_flag(std::move(flag)), m_lines_opt_name(std::move(lines_opt_name)),
+          m_options(options)
+    {
+        // trigger an exception if option is not of right type.
+        m_options[m_lines_opt_name].get<std::vector<int>>();
+    }
+
+    void operator()(DisplayBuffer& display_buffer)
+    {
+        auto& lines = m_options[m_lines_opt_name].get<std::vector<int>>();
+        const String empty{' ', m_flag.char_length()};
+        for (auto& line : display_buffer.lines())
+        {
+            const bool flagged = contains(lines, (int)line.buffer_line() + 1);
+            DisplayAtom atom{AtomContent(flagged ? m_flag : empty)};
+            atom.fg_color = Color::Blue;
+            atom.bg_color = Color::Cyan;
+            line.insert(line.begin(), std::move(atom));
+        }
+    }
+
+private:
+    String m_flag;
+    String m_lines_opt_name;
+    const OptionManager& m_options;
+};
+
+HighlighterAndId flag_lines_factory(const HighlighterParameters& params, const Window& window)
+{
+    if (params.size() != 2)
+        throw runtime_error("wrong parameter count");
+
+    return {"hlflags_" + params[1], FlagLines{params[0], params[1], window.options()}};
+}
+
 template<void (*highlighter_func)(DisplayBuffer&)>
 class SimpleHighlighterFactory
 {
@@ -340,6 +379,7 @@ void register_highlighters()
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
+    registry.register_func("flag_lines", flag_lines_factory);
 }
 
 }
