@@ -26,6 +26,32 @@ void option_from_string(const String& str, bool& opt)
         throw runtime_error("boolean values are either true, yes, false or no");
 }
 
+template<typename T>
+String option_to_string(const std::vector<T>& opt)
+{
+    String res;
+    for (size_t i = 0; i < opt.size(); ++i)
+    {
+        res += option_to_string(opt[i]);
+        if (i != opt.size() - 1)
+            res += ",";
+    }
+    return res;
+}
+
+template<typename T>
+void option_from_string(const String& str, std::vector<T>& opt)
+{
+    opt.clear();
+    std::vector<String> elems = split(str, ',');
+    for (auto& elem: elems)
+    {
+        T opt_elem;
+        option_from_string(elem, opt_elem);
+        opt.push_back(opt_elem);
+    }
+}
+
 }
 
 template<typename T>
@@ -79,6 +105,8 @@ template void Option::set<int>(const int&);
 template const bool& Option::get<bool>() const;
 template void Option::set<bool>(const bool&);
 
+template const std::vector<int>& Option::get<std::vector<int>>() const;
+template void Option::set<std::vector<int>>(const std::vector<int>&);
 
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
@@ -204,5 +232,7 @@ Option& GlobalOptions::declare_option(const String& name, const T& value)
     m_options.emplace_back(new TypedOption<T>{*this, name, value});
     return *m_options.back();
 }
+
+template Option& GlobalOptions::declare_option<>(const String&, const std::vector<int>&);
 
 }
