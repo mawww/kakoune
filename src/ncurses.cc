@@ -297,15 +297,20 @@ void NCursesUI::draw_status()
        addutf8str(stdscr, m_status_line.begin(), m_status_line.end());
     else
     {
-        auto cursor_it = utf8::advance(m_status_line.begin(), m_status_line.end(),
-                                       (int)m_status_cursor);
-        auto end = m_status_line.end();
+        Utf8Iterator begin{m_status_line.begin()};
+        Utf8Iterator end{m_status_line.end()};
+        Utf8Iterator cursor_it{begin};
+        cursor_it.advance(m_status_cursor, end);
+
         addutf8str(stdscr, m_status_line.begin(), cursor_it);
         set_attribute(A_REVERSE, 1);
-        addch((cursor_it == end) ? ' ' : utf8::codepoint<Utf8Policy>(cursor_it));
+        if (cursor_it == end)
+            addch(' ');
+        else
+            addutf8str(stdscr, cursor_it, cursor_it+1);
         set_attribute(A_REVERSE, 0);
         if (cursor_it != end)
-            addutf8str(stdscr, utf8::next(cursor_it), end);
+            addutf8str(stdscr, cursor_it+1, end);
     }
 }
 
