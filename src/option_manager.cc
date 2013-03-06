@@ -93,8 +93,21 @@ private:
 Option::Option(OptionManager& manager, String name)
     : m_manager(manager), m_name(std::move(name)) {}
 
-template<typename T> const T& Option::get() const { return dynamic_cast<const TypedOption<T>*>(this)->get(); }
-template<typename T> void     Option::set(const T& val) { return dynamic_cast<TypedOption<T>*>(this)->set(val); }
+template<typename T> const T& Option::get() const
+{
+    auto* typed_opt = dynamic_cast<const TypedOption<T>*>(this);
+    if (not typed_opt)
+        throw runtime_error("option " + name() + " is not of type " + typeid(T).name());
+    return typed_opt->get();
+}
+
+template<typename T> void     Option::set(const T& val)
+{
+    auto* typed_opt = dynamic_cast<TypedOption<T>*>(this);
+    if (not typed_opt)
+        throw runtime_error("option " + name() + " is not of type " + typeid(T).name());
+    return typed_opt->set(val);
+}
 
 template const String& Option::get<String>() const;
 template void Option::set<String>(const String&);
