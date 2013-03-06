@@ -694,11 +694,11 @@ void try_catch(const CommandParameters& params, Context& context)
 
 void define_color_alias(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "allow-override", false } });
+    ParametersParser parser(params, {});
     if (parser.positional_count() != 2)
         throw wrong_argument_count();
     ColorRegistry::instance().register_alias(
-        parser[0], parser[1], parser.has_option("allow-override"));
+        parser[0], parser[1], true);
 }
 
 void set_client_name(const CommandParameters& params, Context& context)
