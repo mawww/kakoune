@@ -54,4 +54,14 @@ void ColorRegistry::register_alias(const String& name, const String& colordesc,
     m_aliases[name] = { fg, bg };
 }
 
+ColorRegistry::ColorRegistry()
+    : m_aliases{
+        { "PrimarySelection", { Color::Cyan, Color::Blue } },
+        { "SecondarySelection", { Color::Black, Color::Blue } },
+        { "PrimaryCursor", { Color::Black, Color::White } },
+        { "SecondaryCursor", { Color::Black, Color::White } },
+        { "LineNumbers", { Color::Black, Color::White } },
+      }
+{}
+
 }

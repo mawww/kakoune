@@ -12,6 +12,8 @@ namespace Kakoune
 class ColorRegistry : public Singleton<ColorRegistry>
 {
 public:
+    ColorRegistry();
+
     const ColorPair& operator[](const String& colordesc);
     void register_alias(const String& name, const String& colordesc,
                         bool override = false);

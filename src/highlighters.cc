@@ -248,13 +248,13 @@ void show_line_numbers(DisplayBuffer& display_buffer)
 
     char format[] = "%?d ";
     format[1] = '0' + digit_count;
-
+    auto& colors = ColorRegistry::instance()["LineNumbers"];
     for (auto& line : display_buffer.lines())
     {
         char buffer[10];
         snprintf(buffer, 10, format, (int)line.buffer_line() + 1);
         DisplayAtom atom = DisplayAtom(AtomContent(buffer));
-        atom.colors = { Color::Black, Color::White };
+        atom.colors = colors;
         line.insert(line.begin(), std::move(atom));
     }
 }
@@ -268,12 +268,13 @@ void highlight_selections(const SelectionList& selections, DisplayBuffer& displa
         BufferIterator begin = forward ? sel.first() : utf8::next(sel.last());
         BufferIterator end   = forward ? sel.last() : utf8::next(sel.first());
 
-        ColorPair colors = (i == selections.size() - 1) ? ColorPair{ Color::Cyan, Color::Blue }
-                                                        : ColorPair{ Color::Black, Color::Blue };
+        const bool primary = (i == selections.size() - 1);
+        ColorPair sel_colors = ColorRegistry::instance()[primary ? "PrimarySelection" : "SecondarySelection"];
+        ColorPair cur_colors = ColorRegistry::instance()[primary ? "PrimaryCursor" : "SecondaryCursor"];
         highlight_range(display_buffer, begin, end, false,
-                        [&](DisplayAtom& atom) { atom.colors = colors; });
+                        [&](DisplayAtom& atom) { atom.colors = sel_colors; });
         highlight_range(display_buffer, sel.last(), utf8::next(sel.last()), false,
-                        [](DisplayAtom& atom) { atom.colors = { Color::Black, Color::White}; });
+                        [&](DisplayAtom& atom) { atom.colors = cur_colors; });
     }
 }
 
