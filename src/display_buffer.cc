@@ -30,8 +30,7 @@ void DisplayLine::optimize()
             auto& atom = *atom_it;
             auto& next_atom = *next_atom_it;
 
-            if (atom.fg_color == next_atom.fg_color and
-                atom.bg_color == next_atom.bg_color and
+            if (atom.colors == next_atom.colors and
                 atom.attribute == next_atom.attribute and
                 atom.content.type() == AtomContent::BufferRange and
                 next_atom.content.type() == AtomContent::BufferRange and

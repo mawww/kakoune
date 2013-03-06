@@ -9,8 +9,6 @@
 namespace Kakoune
 {
 
-using ColorPair = std::pair<Color, Color>;
-
 class ColorRegistry : public Singleton<ColorRegistry>
 {
 public:

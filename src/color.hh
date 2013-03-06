@@ -17,6 +17,8 @@ enum class Color : char
     White
 };
 
+using ColorPair = std::pair<Color, Color>;
+
 }
 
 #endif // color_hh_INCLUDED

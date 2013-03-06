@@ -110,15 +110,14 @@ private:
 
 struct DisplayAtom
 {
-    Color          fg_color;
-    Color          bg_color;
+    ColorPair      colors;
     Attribute      attribute;
 
     AtomContent    content;
 
     DisplayAtom(AtomContent content)
-        : content(std::move(content)), attribute(Normal),
-          fg_color(Color::Default), bg_color(Color::Default) {}
+        : content{std::move(content)}, attribute{Normal},
+          colors{Color::Default, Color::Default} {}
 };
 
 class DisplayLine

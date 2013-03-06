@@ -81,10 +81,7 @@ public:
                     continue;
 
                 highlight_range(display_buffer, match[n].first, match[n].second, true,
-                                [&](DisplayAtom& atom) {
-                                    atom.fg_color = col_it->second->first;
-                                    atom.bg_color = col_it->second->second;
-                                });
+                                [&](DisplayAtom& atom) { atom.colors = *col_it->second; });
             }
         }
     }
@@ -257,8 +254,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
         char buffer[10];
         snprintf(buffer, 10, format, (int)line.buffer_line() + 1);
         DisplayAtom atom = DisplayAtom(AtomContent(buffer));
-        atom.fg_color = Color::Black;
-        atom.bg_color = Color::White;
+        atom.colors = { Color::Black, Color::White };
         line.insert(line.begin(), std::move(atom));
     }
 }
@@ -272,12 +268,12 @@ void highlight_selections(const SelectionList& selections, DisplayBuffer& displa
         BufferIterator begin = forward ? sel.first() : utf8::next(sel.last());
         BufferIterator end   = forward ? sel.last() : utf8::next(sel.first());
 
-        Color fg_color = (i == selections.size() - 1) ? Color::Cyan : Color::Black;
-        Color bg_color = (i == selections.size() - 1) ? Color::Blue : Color::Blue;
+        ColorPair colors = (i == selections.size() - 1) ? ColorPair{ Color::Cyan, Color::Blue }
+                                                        : ColorPair{ Color::Black, Color::Blue };
         highlight_range(display_buffer, begin, end, false,
-                        [&](DisplayAtom& atom) { atom.fg_color = fg_color; atom.bg_color = bg_color; });
+                        [&](DisplayAtom& atom) { atom.colors = colors; });
         highlight_range(display_buffer, sel.last(), utf8::next(sel.last()), false,
-                        [](DisplayAtom& atom) { atom.fg_color = Color::Black; atom.bg_color = Color::White; });
+                        [](DisplayAtom& atom) { atom.colors = { Color::Black, Color::White}; });
     }
 }
 
@@ -301,8 +297,7 @@ void expand_unprintable(DisplayBuffer& display_buffer)
                         highlight_range(display_buffer,
                                         it.underlying_iterator(), (it+1).underlying_iterator(),
                                         true, [&str](DisplayAtom& atom){ atom.content.replace(str);
-                                                                         atom.bg_color = Color::Red;
-                                                                         atom.fg_color = Color::Black; });
+                                                                         atom.colors = { Color::Red, Color::Black }; });
                     }
                 }
             }
@@ -329,8 +324,7 @@ public:
         {
             const bool flagged = contains(lines, (int)line.buffer_line() + 1);
             DisplayAtom atom{AtomContent(flagged ? m_flag : empty)};
-            atom.fg_color = Color::Blue;
-            atom.bg_color = Color::Cyan;
+            atom.colors = { Color::Blue, Color::Cyan };
             line.insert(line.begin(), std::move(atom));
         }
     }

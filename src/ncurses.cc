@@ -43,34 +43,32 @@ static int nc_color(Color color)
     }
 }
 
-static int get_color_pair(Color fg_color, Color bg_color)
+static int get_color_pair(const ColorPair& colors)
 {
-    static std::map<std::pair<Color, Color>, int> colorpairs;
+    static std::map<ColorPair, int> colorpairs;
     static int next_pair = 1;
 
-    std::pair<Color, Color> colorpair(fg_color, bg_color);
-
-    auto it = colorpairs.find(colorpair);
+    auto it = colorpairs.find(colors);
     if (it != colorpairs.end())
         return it->second;
     else
     {
-        init_pair(next_pair, nc_color(fg_color), nc_color(bg_color));
-        colorpairs[colorpair] = next_pair;
+        init_pair(next_pair, nc_color(colors.first), nc_color(colors.second));
+        colorpairs[colors] = next_pair;
         return next_pair++;
     }
 }
 
-static void set_color(Color fg_color, Color bg_color)
+static void set_color(const ColorPair colors)
 {
     static int current_pair = -1;
 
     if (current_pair != -1)
         attroff(COLOR_PAIR(current_pair));
 
-    if (fg_color != Color::Default or bg_color != Color::Default)
+    if (colors.first != Color::Default or colors.second != Color::Default)
     {
-        current_pair = get_color_pair(fg_color, bg_color);
+        current_pair = get_color_pair(colors);
         attron(COLOR_PAIR(current_pair));
     }
 }
@@ -101,8 +99,8 @@ NCursesUI::NCursesUI()
     use_default_colors();
     ESCDELAY=25;
 
-    m_menu_fg = get_color_pair(Color::Blue, Color::Cyan);
-    m_menu_bg = get_color_pair(Color::Cyan, Color::Blue);
+    m_menu_fg = get_color_pair({ Color::Blue, Color::Cyan });
+    m_menu_bg = get_color_pair({ Color::Cyan, Color::Blue });
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, on_sigint);
@@ -175,7 +173,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             set_attribute(A_BLINK, atom.attribute & Blink);
             set_attribute(A_BOLD, atom.attribute & Bold);
 
-            set_color(atom.fg_color, atom.bg_color);
+            set_color(atom.colors);
 
             String content = atom.content.content();
             if (content[content.length()-1] == '\n' and
@@ -200,7 +198,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     set_attribute(A_REVERSE, 0);
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
-    set_color(Color::Blue, Color::Default);
+    set_color({ Color::Blue, Color::Default });
     for (;line_index < m_dimensions.line; ++line_index)
     {
         move((int)line_index, 0);
@@ -208,7 +206,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         addch('~');
     }
 
-    set_color(Color::Cyan, Color::Default);
+    set_color({ Color::Cyan, Color::Default });
     draw_status();
     CharCount status_len = mode_line.char_length();
     // only draw mode_line if it does not overlap one status line
@@ -461,7 +459,7 @@ void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, Men
     m_info_win = newwin((int)size.line, (int)size.column,
                         (int)pos.line,  (int)pos.column);
 
-    wbkgd(m_info_win, COLOR_PAIR(get_color_pair(Color::Black, Color::Yellow)));
+    wbkgd(m_info_win, COLOR_PAIR(get_color_pair({ Color::Black, Color::Yellow })));
     wmove(m_info_win, 0, 0);
     addutf8str(m_info_win, Utf8Iterator(content.begin()),
                Utf8Iterator(content.end()));

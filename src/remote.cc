@@ -70,8 +70,8 @@ public:
 
     void write(const DisplayAtom& atom)
     {
-        write(atom.fg_color);
-        write(atom.bg_color);
+        write(atom.colors.first);
+        write(atom.colors.second);
         write(atom.attribute);
         write(atom.content.content());
     }
@@ -144,8 +144,7 @@ DisplayAtom read<DisplayAtom>(int socket)
     Color bg_color = read<Color>(socket);
     Attribute attribute = read<Attribute>(socket);
     DisplayAtom atom(AtomContent(read<String>(socket)));
-    atom.fg_color = fg_color;
-    atom.bg_color = bg_color;
+    atom.colors = { fg_color, bg_color };
     atom.attribute = attribute;
     return atom;
 }
