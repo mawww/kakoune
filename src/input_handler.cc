@@ -450,7 +450,38 @@ private:
     KeyCallback m_callback;
 };
 
-class WordCompleter
+static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterator& pos)
+{
+    BufferIterator end = pos;
+    BufferIterator begin = end-1;
+    while (not begin.is_begin() and is_word(*begin))
+        --begin;
+    if (not is_word(*begin))
+        ++begin;
+
+    const Buffer& buffer = pos.buffer();
+    String prefix = buffer.string(begin, end);
+    String ex = "\\<\\Q" + prefix + "\\E\\w+\\>";
+    Regex re(ex.begin(), ex.end());
+    boost::regex_iterator<BufferIterator> it(buffer.begin(), buffer.end(), re);
+    boost::regex_iterator<BufferIterator> re_end;
+
+    CandidateList result;
+    for (; it != re_end; ++it)
+    {
+        auto& match = (*it)[0];
+        if (match.first <= pos and pos < match.second)
+            continue;
+
+        String content = buffer.string(match.first, match.second);
+        if (not contains(result, content))
+            result.emplace_back(std::move(content));
+    }
+    std::sort(result.begin(), result.end());
+    return { result, begin };
+}
+
+class BufferCompleter
 {
 public:
     void select(const Context& context, int offset)
@@ -474,53 +505,22 @@ private:
     {
         if (not m_position.is_valid())
         {
-            BufferIterator end = context.editor().selections().back().last();
-            BufferIterator begin = end-1;
-            while (not begin.is_begin() and is_word(*begin))
-                --begin;
-            if (not is_word(*begin))
-                ++begin;
-
-            String prefix = context.buffer().string(begin, end);
-            m_completions = complete_word(context, prefix, begin);
+            BufferIterator cursor = context.editor().selections().back().last();
+            auto completions = complete_word(cursor);
+            m_completions = std::move(completions.first);
             if (m_completions.empty())
                 return false;
 
-            m_position = begin;
+            assert(cursor >= completions.second);
+            m_position = completions.second;
             DisplayCoord menu_pos = context.window().display_position(m_position);
             context.ui().menu_show(m_completions, menu_pos, MenuStyle::Inline);
 
-            m_completions.push_back(prefix);
+            m_completions.push_back(context.buffer().string(m_position, cursor));
             m_current_completion = m_completions.size() - 1;
         }
         return true;
     }
-
-    CandidateList complete_word(const Context& context,
-                                const String& prefix,
-                                const BufferIterator& pos)
-    {
-        String ex = "\\<\\Q" + prefix + "\\E\\w+\\>";
-        Regex re(ex.begin(), ex.end());
-        Buffer& buffer = context.buffer();
-        boost::regex_iterator<BufferIterator> it(buffer.begin(), buffer.end(), re);
-        boost::regex_iterator<BufferIterator> end;
-
-        CandidateList result;
-        for (; it != end; ++it)
-        {
-            auto& match = (*it)[0];
-            if (match.first <= pos and pos < match.second)
-                continue;
-
-            String content = buffer.string(match.first, match.second);
-            if (not contains(result, content))
-                result.emplace_back(std::move(content));
-        }
-        std::sort(result.begin(), result.end());
-        return result;
-    }
-
 
     BufferIterator m_position;
     CandidateList  m_completions;
@@ -621,7 +621,7 @@ private:
     bool m_insert_reg = false;
     IncrementalInserter m_inserter;
     Timer               m_idle_timer;
-    WordCompleter       m_completer;
+    BufferCompleter     m_completer;
 };
 
 }
