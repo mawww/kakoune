@@ -59,17 +59,17 @@ static int get_color_pair(const ColorPair& colors)
     }
 }
 
-static void set_color(const ColorPair colors)
+static void set_color(WINDOW* window, const ColorPair colors)
 {
     static int current_pair = -1;
 
     if (current_pair != -1)
-        attroff(COLOR_PAIR(current_pair));
+        wattroff(window, COLOR_PAIR(current_pair));
 
     if (colors.first != Color::Default or colors.second != Color::Default)
     {
         current_pair = get_color_pair(colors);
-        attron(COLOR_PAIR(current_pair));
+        wattron(window, COLOR_PAIR(current_pair));
     }
 }
 
@@ -163,8 +163,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     LineCount line_index = 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
-        move((int)line_index, 0);
-        clrtoeol();
+        wmove(stdscr, (int)line_index, 0);
+        wclrtoeol(stdscr);
         CharCount col_index = 0;
         for (const DisplayAtom& atom : line)
         {
@@ -173,7 +173,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
             set_attribute(A_BLINK, atom.attribute & Blink);
             set_attribute(A_BOLD, atom.attribute & Bold);
 
-            set_color(atom.colors);
+            set_color(stdscr, atom.colors);
 
             String content = atom.content.content();
             if (content[content.length()-1] == '\n' and
@@ -198,7 +198,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     set_attribute(A_REVERSE, 0);
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
-    set_color({ Color::Blue, Color::Default });
+    set_color(stdscr, { Color::Blue, Color::Default });
     for (;line_index < m_dimensions.line; ++line_index)
     {
         move((int)line_index, 0);
@@ -206,7 +206,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         addch('~');
     }
 
-    set_color({ Color::Cyan, Color::Default });
+    set_color(stdscr, { Color::Cyan, Color::Default });
     draw_status();
     CharCount status_len = mode_line.char_length();
     // only draw mode_line if it does not overlap one status line
@@ -384,10 +384,11 @@ void NCursesUI::menu_hide()
        if (item)
            free_item(item);
     m_menu = nullptr;
-    delwin(m_menu_win);
-    m_menu_win = nullptr;
     m_items.clear();
     m_choices.clear();
+    wredrawln(stdscr, (int)window_pos(m_menu_win).line, (int)window_size(m_menu_win).line);
+    delwin(m_menu_win);
+    m_menu_win = nullptr;
     redraw();
 }
 
@@ -470,6 +471,7 @@ void NCursesUI::info_hide()
 {
     if (not m_info_win)
         return;
+    wredrawln(stdscr, (int)window_pos(m_info_win).line, (int)window_size(m_info_win).line);
     delwin(m_info_win);
     m_info_win = nullptr;
     redraw();
