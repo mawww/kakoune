@@ -463,14 +463,12 @@ static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterat
         ++begin;
 
     const Buffer& buffer = pos.buffer();
-    String prefix = buffer.string(begin, end);
-    String ex = "\\<\\Q" + prefix + "\\E\\w+\\>";
+    String ex = R"(\<\Q)" + buffer.string(begin, end) + R"(\E\w+\>)";
     Regex re(ex.begin(), ex.end());
-    boost::regex_iterator<BufferIterator> it(buffer.begin(), buffer.end(), re);
-    boost::regex_iterator<BufferIterator> re_end;
+    using RegexIt = boost::regex_iterator<BufferIterator>;
 
     CandidateList result;
-    for (; it != re_end; ++it)
+    for (RegexIt it(buffer.begin(), buffer.end(), re), re_end; it != re_end; ++it)
     {
         auto& match = (*it)[0];
         if (match.first <= pos and pos < match.second)
@@ -481,7 +479,7 @@ static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterat
             result.emplace_back(std::move(content));
     }
     std::sort(result.begin(), result.end());
-    return { result, begin };
+    return { std::move(result), begin };
 }
 
 class BufferCompleter
