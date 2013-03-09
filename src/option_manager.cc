@@ -121,6 +121,9 @@ template void Option::set<bool>(const bool&);
 template const std::vector<int>& Option::get<std::vector<int>>() const;
 template void Option::set<std::vector<int>>(const std::vector<int>&);
 
+template const std::vector<String>& Option::get<std::vector<String>>() const;
+template void Option::set<std::vector<String>>(const std::vector<String>&);
+
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
 {
@@ -235,6 +238,7 @@ GlobalOptions::GlobalOptions()
     declare_option<bool>("incsearch", true);
     declare_option<String>("ignored_files", R"(^(\..*|.*\.(o|so|a))$)");
     declare_option<String>("filetype", "");
+    declare_option<std::vector<String>>("completions", {});
 }
 
 template<typename T>

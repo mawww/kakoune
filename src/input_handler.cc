@@ -482,6 +482,28 @@ static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterat
     return { std::move(result), begin };
 }
 
+static std::pair<CandidateList, BufferIterator> complete_opt(const BufferIterator& pos, OptionManager& options)
+{
+    using StringList = std::vector<String>;
+    const StringList& opt = options["completions"].get<StringList>();
+    if (opt.empty())
+        return { {}, pos };
+
+    auto& desc = opt[0];
+    Regex re(R"((\d+):(\d+)@(\d+))");
+    boost::match_results<String::iterator> match;
+    if (boost::regex_match(desc.begin(), desc.end(), match, re))
+    {
+        LineCount line   = str_to_int(String(match[1].first, match[1].second)) - 1;
+        ByteCount column = str_to_int(String(match[2].first, match[2].second)) - 1;
+        int timestamp = str_to_int(String(match[3].first, match[3].second));
+
+        if (timestamp == pos.buffer().timestamp() and line == pos.line() and column == pos.column())
+            return { { opt.begin() + 1, opt.end() }, pos };
+    }
+    return { {}, pos };
+}
+
 class BufferCompleter
 {
 public:
@@ -507,7 +529,9 @@ private:
         if (not m_position.is_valid())
         {
             BufferIterator cursor = context.editor().selections().back().last();
-            auto completions = complete_word(cursor);
+            auto completions = complete_opt(cursor, context.options());
+            if (completions.first.empty())
+                completions = complete_word(cursor);
             m_completions = std::move(completions.first);
             if (m_completions.empty())
                 return false;
