@@ -452,6 +452,9 @@ private:
 
 static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterator& pos)
 {
+   if (pos.is_begin() or not is_word(*utf8::previous(pos)))
+       return { {}, pos };
+
     BufferIterator end = pos;
     BufferIterator begin = end-1;
     while (not begin.is_begin() and is_word(*begin))
@@ -538,11 +541,7 @@ public:
                            context().hooks().run_hook("InsertIdle", "", context());
                            m_completer.reset(context());
                            if (context().editor().selections().size() == 1)
-                           {
-                               BufferIterator prev = context().editor().selections().back().last();
-                               if (not prev.is_begin() && is_word(*utf8::previous(prev)))
-                                   m_completer.select(context(), 0);
-                           }
+                               m_completer.select(context(), 0);
                        }}
     {
         last_insert().first = mode;
