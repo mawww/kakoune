@@ -737,6 +737,9 @@ void register_env_vars()
     shell_manager.register_env_var("bufname",
                                    [](const String& name, const Context& context)
                                    { return context.buffer().name(); });
+    shell_manager.register_env_var("timestamp",
+                                   [](const String& name, const Context& context)
+                                   { return int_to_str(context.buffer().timestamp()); });
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
                                    { return context.editor().selections_content().back(); });
