@@ -334,7 +334,7 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     CharCount longest = 0;
     for (auto& choice : choices)
     {
-        m_choices.push_back(choice.substr(0_char, std::min((int)maxsize.column-1, 200)));
+        m_choices.push_back(choice.empty() ? " " : choice.substr(0_char, std::min((int)maxsize.column-1, 200)));
         m_items.emplace_back(new_item(m_choices.back().c_str(), ""));
         longest = std::max(longest, m_choices.back().char_length());
     }
