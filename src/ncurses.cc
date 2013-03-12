@@ -234,6 +234,8 @@ Key NCursesUI::get_key()
     const int c = getch();
     if (c > 0 and c < 27)
     {
+        if (c == CTRL('l'))
+           redrawwin(stdscr);
         return {Key::Modifiers::Control, Codepoint(c) - 1 + 'a'};
     }
     else if (c == 27)
