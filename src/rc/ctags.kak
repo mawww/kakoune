@@ -41,7 +41,7 @@ def funcinfo %{
     }
 }
 
-def ctags_enable_autoinfo %{
+def ctags-enable-autoinfo %{
      hook window NormalIdle .* funcinfo
      hook window NormalEnd  .* info
      hook window InsertIdle .* funcinfo
