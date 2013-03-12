@@ -4,6 +4,8 @@
 #include "debug.hh"
 #include "client_manager.hh"
 #include "event_manager.hh"
+#include "buffer_manager.hh"
+#include "command_manager.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -307,7 +309,7 @@ RemoteClient::RemoteClient(int socket, UserInterface* ui,
       m_socket_watcher{socket, [this](FDWatcher&){ process_next_message(); }}
 {
     Message msg(socket);
-    msg.write(init_command);
+    msg.write(init_command.c_str(), (int)init_command.length()+1);
     Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
     msg.write(key);
 
@@ -378,15 +380,46 @@ void RemoteClient::write_next_key()
     }
 }
 
-void handle_remote(FDWatcher& watcher)
-{
-    int socket = watcher.fd();
-    delete &watcher;
-    String init_command = read<String>(socket);
+ClientAccepter::ClientAccepter(int socket)
+    : m_socket_watcher(socket, [this](FDWatcher&) { handle_available_input(); }) {}
 
-    RemoteUI* ui = new RemoteUI{socket};
-    ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, init_command);
+void ClientAccepter::handle_available_input()
+{
+    int socket = m_socket_watcher.fd();
+    timeval tv{ 0, 0 };
+    fd_set  rfds;
+    do
+    {
+        char c;
+        int res = ::read(socket, &c, 1);
+        if (res <= 0)
+        {
+            if (not m_buffer.empty()) try
+            {
+                Context context{};
+                CommandManager::instance().execute(m_buffer, context);
+            }
+            catch (runtime_error& e)
+            {
+                write_debug("error running command '" + m_buffer + "' : " + e.description());
+            }
+            delete this;
+            return;
+        }
+        if (c == 0) // end of initial command stream, go to interactive ui mode
+        {
+            ClientManager::instance().create_client(
+                std::unique_ptr<UserInterface>{new RemoteUI{socket}}, m_buffer);
+            delete this;
+            return;
+        }
+        else
+            m_buffer += c;
+
+        FD_ZERO(&rfds);
+        FD_SET(socket, &rfds);
+    }
+    while (select(socket+1, &rfds, NULL, NULL, &tv) == 1);
 }
 
 }

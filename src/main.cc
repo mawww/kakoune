@@ -712,7 +712,7 @@ struct Server : public Singleton<Server>
                 throw runtime_error("accept failed");
             fcntl(sock, F_SETFD, FD_CLOEXEC);
 
-            new FDWatcher{sock, handle_remote};
+            new ClientAccepter{sock};
         };
         m_listener.reset(new FDWatcher{listen_sock, accepter});
     }
