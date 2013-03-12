@@ -504,32 +504,53 @@ static std::pair<CandidateList, BufferIterator> complete_opt(const BufferIterato
     return { {}, pos };
 }
 
-class BufferCompleter
+class BufferCompleter : public OptionManagerWatcher
 {
 public:
-    void select(const Context& context, int offset)
+    BufferCompleter(const Context& context)
+        : m_context(context)
     {
-        if (not setup_ifn(context))
+        m_context.options().register_watcher(*this);
+    }
+    ~BufferCompleter()
+    {
+        m_context.options().unregister_watcher(*this);
+    }
+    BufferCompleter(const BufferCompleter&) = delete;
+    BufferCompleter operator=(const BufferCompleter&) = delete;
+
+    void select(int offset)
+    {
+        if (not setup_ifn())
             return;
 
-        context.buffer().erase(m_position, m_position + m_completions[m_current_completion].length());
+        m_context.buffer().erase(m_position, m_position + m_completions[m_current_completion].length());
         m_current_completion = (m_current_completion + offset) % m_completions.size();
-        context.buffer().insert(m_position, m_completions[m_current_completion]);
-        context.ui().menu_select(m_current_completion);
+        m_context.buffer().insert(m_position, m_completions[m_current_completion]);
+        m_context.ui().menu_select(m_current_completion);
     }
 
-    void reset(const Context& context)
+    void reset()
     {
         m_position = BufferIterator();
-        context.ui().menu_hide();
+        m_context.ui().menu_hide();
     }
 private:
-    bool setup_ifn(const Context& context)
+    void on_option_changed(const Option& opt) override
+    {
+        if (opt.name() == "completions")
+        {
+            reset();
+            select(0);
+        }
+    }
+
+    bool setup_ifn()
     {
         if (not m_position.is_valid())
         {
-            BufferIterator cursor = context.editor().selections().back().last();
-            auto completions = complete_opt(cursor, context.options());
+            BufferIterator cursor = m_context.editor().selections().back().last();
+            auto completions = complete_opt(cursor, m_context.options());
             if (completions.first.empty())
                 completions = complete_word(cursor);
             m_completions = std::move(completions.first);
@@ -538,15 +559,16 @@ private:
 
             assert(cursor >= completions.second);
             m_position = completions.second;
-            DisplayCoord menu_pos = context.window().display_position(m_position);
-            context.ui().menu_show(m_completions, menu_pos, MenuStyle::Inline);
+            DisplayCoord menu_pos = m_context.window().display_position(m_position);
+            m_context.ui().menu_show(m_completions, menu_pos, MenuStyle::Inline);
 
-            m_completions.push_back(context.buffer().string(m_position, cursor));
+            m_completions.push_back(m_context.buffer().string(m_position, cursor));
             m_current_completion = m_completions.size() - 1;
         }
         return true;
     }
 
+    const Context& m_context;
     BufferIterator m_position;
     CandidateList  m_completions;
     int            m_current_completion = -1;
@@ -558,12 +580,13 @@ public:
     Insert(InputHandler& input_handler, InsertMode mode)
         : InputMode(input_handler),
           m_inserter(context().editor(), mode),
+          m_completer(context()),
           m_idle_timer{Clock::now() + idle_timeout,
                        [this](Timer& timer) {
                            context().hooks().run_hook("InsertIdle", "", context());
-                           m_completer.reset(context());
+                           m_completer.reset();
                            if (context().editor().selections().size() == 1)
-                               m_completer.select(context(), 0);
+                               m_completer.select(0);
                        }}
     {
         last_insert().first = mode;
@@ -586,7 +609,7 @@ public:
         if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
         {
             context().hooks().run_hook("InsertEnd", "", context());
-            m_completer.reset(context());
+            m_completer.reset();
             reset_normal_mode();
         }
         else if (key == Key::Backspace)
@@ -624,12 +647,12 @@ public:
             m_inserter.insert(String() + '\t');
         else if ( key == Key{ Key::Modifiers::Control, 'n' })
         {
-            m_completer.select(context(), 1);
+            m_completer.select(1);
             update_completions = false;
         }
         else if ( key == Key{ Key::Modifiers::Control, 'p' })
         {
-            m_completer.select(context(), -1);
+            m_completer.select(-1);
             update_completions = false;
         }
 
@@ -641,8 +664,8 @@ public:
 private:
     bool m_insert_reg = false;
     IncrementalInserter m_inserter;
-    Timer               m_idle_timer;
     BufferCompleter     m_completer;
+    Timer               m_idle_timer;
 };
 
 }
