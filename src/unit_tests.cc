@@ -55,15 +55,22 @@ void test_editor()
     Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "youpi\n" });
     Editor editor(buffer);
 
-    using namespace std::placeholders;
-
-    editor.select(select_whole_buffer);
-    editor.multi_select(std::bind(select_all_matches, _1, "\\n\\h*"));
-    for (auto& sel : editor.selections())
     {
-        assert(*sel.begin() == '\n');
-        editor.buffer().erase(sel.begin(), sel.end());
+        scoped_edition edition{editor};
+        editor.select(select_whole_buffer);
+        editor.multi_select(std::bind(select_all_matches, std::placeholders::_1, "\\n\\h*"));
+        for (auto& sel : editor.selections())
+        {
+            assert(*sel.begin() == '\n');
+            editor.buffer().erase(sel.begin(), sel.end());
+        }
     }
+    editor.undo();
+
+    Selection sel{ buffer.iterator_at_line_begin(2_line), buffer.end() };
+    editor.select(sel, SelectMode::Replace);
+    editor.insert("",InsertMode::Replace);
+    assert(not editor.selections().back().first().is_end());
 }
 
 void test_incremental_inserter()

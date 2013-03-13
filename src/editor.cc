@@ -83,7 +83,7 @@ void Editor::insert(const String& str, InsertMode mode)
     {
         BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
         m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace)
+        if (mode == InsertMode::Replace and not pos.is_end())
         {
             sel.first() = pos;
             sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
@@ -105,7 +105,7 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
         BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
         const String& str = strings[std::min(i, strings.size()-1)];
         m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace)
+        if (mode == InsertMode::Replace and not pos.is_end())
         {
             sel.first() = pos;
             sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
