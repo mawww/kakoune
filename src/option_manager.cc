@@ -239,6 +239,7 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("ignored_files", R"(^(\..*|.*\.(o|so|a))$)");
     declare_option<String>("filetype", "");
     declare_option<std::vector<String>>("completions", {});
+    declare_option<std::vector<String>>("path", { "./", "/usr/include" });
 }
 
 template<typename T>

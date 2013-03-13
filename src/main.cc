@@ -101,7 +101,7 @@ void do_go(Context& context)
                     if (contains(filename, c))
                         return;
 
-                std::vector<String> paths = { ""_str, "/usr/include/"_str };
+                auto paths = context.options()["path"].get<std::vector<String>>();
                 const String& buffer_name = context.buffer().name();
                 auto it = find(reversed(buffer_name), '/');
                 if (it != buffer_name.rend())
