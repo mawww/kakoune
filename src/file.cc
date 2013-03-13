@@ -187,9 +187,11 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
 
 String find_file(const String& filename, const memoryview<String>& paths)
 {
-    for (auto path : paths)
+    for (auto candidate : paths)
     {
-        String candidate = path + filename;
+        if (not candidate.empty() and candidate.back() != '/')
+            candidate += '/';
+        candidate += filename;
         struct stat buf;
         if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
             return candidate;
