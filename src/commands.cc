@@ -146,7 +146,9 @@ void write_buffer(const CommandParameters& params, Context& context)
                                      : parse_filename(params[0]);
 
     write_buffer_to_file(buffer, filename);
-    buffer.notify_saved();
+
+    if (filename == buffer.name())
+        buffer.notify_saved();
 }
 
 void write_all_buffers(const CommandParameters& params, Context& context)
