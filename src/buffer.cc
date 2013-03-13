@@ -86,11 +86,6 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
     return result;
 }
 
-BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) const
-{
-    return BufferIterator(*this, { iterator.line(), 0 });
-}
-
 BufferIterator Buffer::iterator_at_line_begin(LineCount line) const
 {
     line = Kakoune::clamp(line, 0_line, line_count()-1);
@@ -98,11 +93,9 @@ BufferIterator Buffer::iterator_at_line_begin(LineCount line) const
     return BufferIterator(*this, { line, 0 });
 }
 
-BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
+BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) const
 {
-    LineCount line = iterator.line();
-    assert(line_length(line) > 0);
-    return ++BufferIterator(*this, { line, line_length(line) - 1 });
+    return iterator_at_line_begin(iterator.line());
 }
 
 BufferIterator Buffer::iterator_at_line_end(LineCount line) const
@@ -110,6 +103,11 @@ BufferIterator Buffer::iterator_at_line_end(LineCount line) const
     line = Kakoune::clamp(line, 0_line, line_count()-1);
     assert(line_length(line) > 0);
     return ++BufferIterator(*this, { line, line_length(line) - 1 });
+}
+
+BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
+{
+    return iterator_at_line_end(iterator.line());
 }
 
 BufferIterator Buffer::begin() const
