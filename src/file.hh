@@ -32,6 +32,9 @@ Buffer* create_buffer_from_file(const String& filename);
 void write_buffer_to_file(const Buffer& buffer, const String& filename);
 String find_file(const String& filename, const memoryview<String>& paths);
 
+std::vector<String> complete_filename(const String& prefix,
+                                      const String& ignore_regex,
+                                      ByteCount cursor_pos = -1);
 }
 
 #endif // file_hh_INCLUDED

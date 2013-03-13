@@ -26,10 +26,6 @@ struct Completions
         : start(start), end(end) {}
 };
 
-CandidateList complete_filename(const Context& context,
-                                const String& prefix,
-                                ByteCount cursor_pos = -1);
-
 typedef std::function<Completions (const Context&,
                                    const String&, ByteCount)> Completer;
 
