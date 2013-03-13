@@ -27,14 +27,8 @@
 #endif
 
 #include <unordered_map>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <fcntl.h>
-
 #include <locale>
+#include <signal.h>
 
 using namespace Kakoune;
 using namespace std::placeholders;
@@ -686,50 +680,6 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
 void run_unit_tests();
 
-struct Server : public Singleton<Server>
-{
-    Server()
-    {
-        m_filename = "/tmp/kak-" + int_to_str(getpid());
-
-        int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-        fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
-        sockaddr_un addr;
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
-
-        if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-           throw runtime_error("unable to bind listen socket " + m_filename);
-
-        if (listen(listen_sock, 4) == -1)
-           throw runtime_error("unable to listen on socket " + m_filename);
-
-        auto accepter = [](FDWatcher& watcher) {
-            sockaddr_un client_addr;
-            socklen_t   client_addr_len = sizeof(sockaddr_un);
-            int sock = accept(watcher.fd(), (sockaddr*) &client_addr, &client_addr_len);
-            if (sock == -1)
-                throw runtime_error("accept failed");
-            fcntl(sock, F_SETFD, FD_CLOEXEC);
-
-            new ClientAccepter{sock};
-        };
-        m_listener.reset(new FDWatcher{listen_sock, accepter});
-    }
-
-    ~Server()
-    {
-        unlink(m_filename.c_str());
-        close(m_listener->fd());
-    }
-
-    const String& filename() const { return m_filename; }
-
-private:
-    String m_filename;
-    std::unique_ptr<FDWatcher> m_listener;
-};
-
 void register_env_vars()
 {
     ShellManager& shell_manager = ShellManager::instance();
@@ -804,24 +754,6 @@ void create_local_client(const String& init_command)
         std::unique_ptr<UserInterface>{ui}, init_command);
 }
 
-RemoteClient* connect_to(const String& pid, const String& init_command)
-{
-    auto filename = "/tmp/kak-" + pid;
-
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
-    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw runtime_error("connect to " + filename + " failed");
-
-    NCursesUI* ui = new NCursesUI{};
-    RemoteClient* remote_client = new RemoteClient{sock, ui, init_command};
-
-    return remote_client;
-}
-
 void signal_handler(int signal)
 {
     endwin();
@@ -862,8 +794,9 @@ int main(int argc, char* argv[])
         {
             try
             {
-                std::unique_ptr<RemoteClient> client(
-                    connect_to(parser.option_value("c"), init_command));
+                auto client = connect_to(parser.option_value("c"),
+                                         std::unique_ptr<UserInterface>{new NCursesUI{}},
+                                         init_command);
                 while (true)
                     event_manager.handle_next_events();
             }

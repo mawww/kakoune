@@ -9,6 +9,11 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 
 namespace Kakoune
 {
@@ -303,9 +308,9 @@ void RemoteUI::set_input_callback(InputCallback callback)
     m_input_callback = std::move(callback);
 }
 
-RemoteClient::RemoteClient(int socket, UserInterface* ui,
+RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
                            const String& init_command)
-    : m_ui(ui), m_dimensions(ui->dimensions()),
+    : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions()),
       m_socket_watcher{socket, [this](FDWatcher&){ process_next_message(); }}
 {
     Message msg(socket);
@@ -380,46 +385,112 @@ void RemoteClient::write_next_key()
     }
 }
 
-ClientAccepter::ClientAccepter(int socket)
-    : m_socket_watcher(socket, [this](FDWatcher&) { handle_available_input(); }) {}
-
-void ClientAccepter::handle_available_input()
+std::unique_ptr<RemoteClient> connect_to(const String& pid, std::unique_ptr<UserInterface>&& ui,
+                                         const String& init_command)
 {
-    int socket = m_socket_watcher.fd();
-    timeval tv{ 0, 0 };
-    fd_set  rfds;
-    do
-    {
-        char c;
-        int res = ::read(socket, &c, 1);
-        if (res <= 0)
-        {
-            if (not m_buffer.empty()) try
-            {
-                Context context{};
-                CommandManager::instance().execute(m_buffer, context);
-            }
-            catch (runtime_error& e)
-            {
-                write_debug("error running command '" + m_buffer + "' : " + e.description());
-            }
-            delete this;
-            return;
-        }
-        if (c == 0) // end of initial command stream, go to interactive ui mode
-        {
-            ClientManager::instance().create_client(
-                std::unique_ptr<UserInterface>{new RemoteUI{socket}}, m_buffer);
-            delete this;
-            return;
-        }
-        else
-            m_buffer += c;
+    auto filename = "/tmp/kak-" + pid;
 
-        FD_ZERO(&rfds);
-        FD_SET(socket, &rfds);
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
+        throw runtime_error("connect to " + filename + " failed");
+
+    return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui), init_command}};
+}
+
+
+// A client accepter handle a connection until it closes or a nul byte is
+// recieved. Everything recieved before is considered to be a command.
+//
+// * When a nul byte is recieved, the socket is handed to a new Client along
+//   with the command.
+// * When the connection is closed, the command is run in an empty context.
+class ClientAccepter
+{
+public:
+    ClientAccepter(int socket)
+        : m_socket_watcher(socket, [this](FDWatcher&) { handle_available_input(); }) {}
+
+private:
+    void handle_available_input()
+    {
+        int socket = m_socket_watcher.fd();
+        timeval tv{ 0, 0 };
+        fd_set  rfds;
+        do
+        {
+            char c;
+            int res = ::read(socket, &c, 1);
+            if (res <= 0)
+            {
+                if (not m_buffer.empty()) try
+                {
+                    Context context{};
+                    CommandManager::instance().execute(m_buffer, context);
+                }
+                catch (runtime_error& e)
+                {
+                    write_debug("error running command '" + m_buffer + "' : " + e.description());
+                }
+                delete this;
+                return;
+            }
+            if (c == 0) // end of initial command stream, go to interactive ui mode
+            {
+                ClientManager::instance().create_client(
+                    std::unique_ptr<UserInterface>{new RemoteUI{socket}}, m_buffer);
+                delete this;
+                return;
+            }
+            else
+                m_buffer += c;
+
+            FD_ZERO(&rfds);
+            FD_SET(socket, &rfds);
+        }
+        while (select(socket+1, &rfds, NULL, NULL, &tv) == 1);
     }
-    while (select(socket+1, &rfds, NULL, NULL, &tv) == 1);
+
+    String    m_buffer;
+    FDWatcher m_socket_watcher;
+};
+
+Server::Server()
+{
+    m_filename = "/tmp/kak-" + int_to_str(getpid());
+
+    int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
+
+    if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
+       throw runtime_error("unable to bind listen socket " + m_filename);
+
+    if (listen(listen_sock, 4) == -1)
+       throw runtime_error("unable to listen on socket " + m_filename);
+
+    auto accepter = [](FDWatcher& watcher) {
+        sockaddr_un client_addr;
+        socklen_t   client_addr_len = sizeof(sockaddr_un);
+        int sock = accept(watcher.fd(), (sockaddr*) &client_addr, &client_addr_len);
+        if (sock == -1)
+            throw runtime_error("accept failed");
+        fcntl(sock, F_SETFD, FD_CLOEXEC);
+
+        new ClientAccepter{sock};
+    };
+    m_listener.reset(new FDWatcher{listen_sock, accepter});
+}
+
+Server::~Server()
+{
+    unlink(m_filename.c_str());
+    close(m_listener->fd());
 }
 
 }
