@@ -483,6 +483,8 @@ void declare_option(const CommandParameters& params, Context& context)
         opt = &GlobalOptions::instance().declare_option<String>(params[1], "");
     else if (params[0] == "int-list")
         opt = &GlobalOptions::instance().declare_option<std::vector<int>>(params[1], {});
+    else if (params[0] == "str-list")
+        opt = &GlobalOptions::instance().declare_option<std::vector<String>>(params[1], {});
     else
         throw runtime_error("unknown type " + params[0]);
 
