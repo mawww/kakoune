@@ -217,15 +217,13 @@ static boost::regex make_regex_ifp(const String& ex)
 }
 
 std::vector<String> complete_filename(const String& prefix,
-                                      const String& ignored_regex,
+                                      const Regex& ignored_regex,
                                       ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     String dirname = "./";
     String dirprefix;
     String fileprefix = real_prefix;
-
-    boost::regex ignored_files = make_regex_ifp(ignored_regex);
 
     ByteCount dir_end = -1;
     for (ByteCount i = 0; i < real_prefix.length(); ++i)
@@ -247,8 +245,8 @@ std::vector<String> complete_filename(const String& prefix,
     if (not dir)
         return result;
 
-    const bool check_ignored_files = not ignored_files.empty() and
-        not boost::regex_match(fileprefix.c_str(), ignored_files);
+    const bool check_ignored_regex = not ignored_regex.empty() and
+        not boost::regex_match(fileprefix.c_str(), ignored_regex);
 
     boost::regex file_regex = make_regex_ifp(fileprefix);
     std::vector<String> regex_result;
@@ -258,7 +256,7 @@ std::vector<String> complete_filename(const String& prefix,
         if (filename.empty())
             continue;
 
-        if (check_ignored_files and boost::regex_match(filename.c_str(), ignored_files))
+        if (check_ignored_regex and boost::regex_match(filename.c_str(), ignored_regex))
             continue;
 
         const bool match_prefix = (filename.substr(0, fileprefix.length()) == fileprefix);

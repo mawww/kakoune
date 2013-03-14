@@ -424,7 +424,7 @@ void define_command(const CommandParameters& params, Context& context)
         {
              const String& prefix = token_to_complete < params.size() ?
                                     params[token_to_complete] : String();
-             return complete_filename(context.options()["ignored_files"].get<String>(), prefix, pos_in_token);
+             return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), pos_in_token);
         };
     }
     else if (parser.has_option("shell-completion"))
@@ -792,7 +792,7 @@ void register_commands()
 
     PerArgumentCommandCompleter filename_completer({
          [](const Context& context, const String& prefix, ByteCount cursor_pos)
-         { return complete_filename(prefix, context.options()["ignored_files"].get<String>(), cursor_pos); }
+         { return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), cursor_pos); }
     });
     cm.register_commands({ "e", "edit" }, edit<false>, filename_completer);
     cm.register_commands({ "e!", "edit!" }, edit<true>, filename_completer);

@@ -52,6 +52,23 @@ void option_from_string(const String& str, std::vector<T>& opt)
     }
 }
 
+String option_to_string(const Regex& re)
+{
+    return String{re.str()};
+}
+
+void option_from_string(const String& str, Regex& re)
+{
+    try
+    {
+        re = Regex{str.begin(), str.end()};
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error("unable to create regex: "_str + err.what());
+    }
+}
+
 }
 
 template<typename T>
@@ -123,6 +140,9 @@ template void Option::set<std::vector<int>>(const std::vector<int>&);
 
 template const std::vector<String>& Option::get<std::vector<String>>() const;
 template void Option::set<std::vector<String>>(const std::vector<String>&);
+
+template const Regex& Option::get<Regex>() const;
+template void Option::set<Regex>(const Regex&);
 
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
@@ -236,7 +256,7 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("shell", "sh");
     declare_option<bool>("complete_prefix", true);
     declare_option<bool>("incsearch", true);
-    declare_option<String>("ignored_files", R"(^(\..*|.*\.(o|so|a))$)");
+    declare_option<Regex>("ignored_files", Regex{R"(^(\..*|.*\.(o|so|a))$)"});
     declare_option<String>("filetype", "");
     declare_option<std::vector<String>>("completions", {});
     declare_option<std::vector<String>>("path", { "./", "/usr/include" });
