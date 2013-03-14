@@ -502,6 +502,8 @@ Existing commands files are:
  * *rc/client.kak*: provides the +new+ command to launch a new client on the current
      session, if tmux is detected, launch the client in a new tmux split, else
      launch in a new terminal emulator.
+ * *rc/clang.kak*: provides the +clang-enable-autocomplete+ command for C/C++ 
+     insert mode completion support. This needs uses clang++ compiler.
 
 Certain command files defines options, such as grepcmd (for :grep) or
 termcmd (for :new).
