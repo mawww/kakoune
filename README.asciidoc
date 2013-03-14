@@ -154,20 +154,26 @@ followed by _alt-space_.
 Object Selection
 ----------------
 
-Using alt-i and alt-a, you can select some text object, the starting
-point is always the last character of the selection.
+Some keys allow you to select a text object:
+
+ * _alt-a_: selects the whole object
+ * _alt-i_: selects the inner object, that is the object excluding it's surrounder.
+            for example, for a quoted string, this will not select the quote, and
+            for a word this will not select trailing spaces.
+ * _[_: selects to object start
+ * _]_: selects to object end
+
+After this key, you need to enter a second key in order to specify which
+object you want.
 
  * _b_, _(_ or _)_: select the enclosing parenthesis
  * _B_, _{_ or _}_: select the enclosing {} block
  * _[_ or _]_: select the enclosing [] block
  * _<_ or _>_: select the enclosing <> block
- * w: select the whole word
- * W: select the whole WORD
-
-When it makes sense, _alt-i_ selects the inner object and alt-a the whole
-object. For example _alt-i_ will only select the inside of the parenthesis,
-for words, the difference between _alt-i_ and _alt-a_ is that _alt-a_ also
-selects the following blanks.
+ * _"_: select the enclosing double quoted string
+ * _'_: select the enclosing single quoted string
+ * _w_: select the whole word
+ * _W_: select the whole WORD
 
 Registers
 ---------
@@ -218,8 +224,11 @@ Commands are entered using +:+.
  * +eval [-client <name>] <command>+: execute <command> as if entered in command line
       if client if specified, exec command in the named client context.
  * +echo <text>+: show <text> in status line
+ * +decl <type> <name> [<value>]+:  declare an option, type can be int, str, int-list
+      and str-list.
  * +set{b,w,g} <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
       or *g*lobal scope.
+ * +name <name>+: sets current client name to name
  * +c[ol]a[lias] <name> <colspec>+: define a color alias, so that name can be
       used instead of colspec in contexts where a color is needed.
  * +nop+: does nothing, but as with every other commands, arguments may be
@@ -268,21 +277,23 @@ and
 
 existing highlighters are:
 
- * +highlight_selections+: used to make current selection visible
- * +expand_tabs+: expand tabs to next 8 multiple column (to make configurable)
  * +number_lines+: show line numbers
- * +group+: highlighter group, containing other highlighters. takes one
-            parameter, <group_name>. useful when multiple highlighters work
-            together and need to be removed as one. Adding and removing from
-            a group can be done using
-            `:addhl -group <group> <highlighter_name> <highlighter_parameters...>`
-            `:rmhl  -group <group> <highlighter_name>`
- * +regex+: highlight a regex, takes the regex as first parameter, followed by
-            any number of color spec parameters.
-            color spec format is: <capture_id>:<fg_color>[,<bg_color>]
-            For example: `:addhl regex //(\h+TODO:)?[^\n]+ 0:cyan 1:yellow,red`
-            will highlight C++ style comments in cyan, with an eventual
-            'TODO:' in yellow on red background.
+ * +group <group_name>+: highlighter group, containing other highlighters. 
+       useful when multiple highlighters work together and need to be
+       removed as one. Adding and removing from a group can be done using
+       `:addhl -group <group> <highlighter_name> <highlighter_parameters...>`
+       `:rmhl  -group <group> <highlighter_name>`
+ * +regex <ex> <color>...+: highlight a regex, takes the regex as first parameter,
+       followed by any number of color parameters. color format is:
+       <capture_id>:<fg_color>[,<bg_color>]
+       For example: `:addhl regex //(\h+TODO:)?[^\n]+ 0:cyan 1:yellow,red`
+       will highlight C++ style comments in cyan, with an eventual 'TODO:' in
+       yellow on red background.
+ * +search <color>+: highlight every matches to the current search pattern. takes
+       one parameter for the color to apply to highlighted elements.
+ * +flag_lines <flag> <option_name>+: add a column in front of text, and display the
+       given flag in it for everly lines contained in the int-list option named
+       <option_name>.
 
 Filters
 -------
@@ -304,13 +315,12 @@ exisiting filters are:
 
  * +preserve_indent+: insert previous line indent when inserting a newline
  * +cleanup_whitespaces+: remove trailing whitespaces on the previous line
-                          when inserting an end-of-line.
+       when inserting an end-of-line.
  * +expand_tabulations+: insert spaces instead of tab characters
- * +regex+: takes three arguments: current line regex, inserted text regex
-      and replacement text. when the current line regex and inserted text
-      regex matches, replace insereted text with the replacement text.
-      capture groups are available through $[0-9] escape sequence, and
-      cursor position can be specified with $c.
+ * +regex <line_regex> <insert_regex> <replacement>+: when the current line regex
+       and inserted text regex matches, replace insereted text with the
+       replacement text. Capture groups are available through $[0-9] escape
+       sequence, and cursor position can be specified with $c.
  * +group+: same as highlighters group
 
 Hooks
@@ -349,9 +359,11 @@ Some of kakoune state is available through environment variables:
 
  * +kak_selection+: content of the last selection
  * +kak_bufname+: name of the current buffer
+ * +kak_timestamp+: timestamp of the current buffer, the timestamp is an
+       integer value which is incremented each time the buffer is modified.
  * +kak_runtime+: directory containing the kak binary
- * +kak_opt_name+: value of option name
- * +kak_reg_x+: value of register x
+ * +kak_opt_<name>+: value of option <name>
+ * +kak_reg_<r>+: value of register <r>
  * +kak_socket+: filename of session socket (/tmp/kak-<session>)
  * +kak_client+: name of current client
  * +kak_cursor_line+: line of the end of the last selection
