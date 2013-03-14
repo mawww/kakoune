@@ -2,7 +2,6 @@
 #define ncurses_hh_INCLUDED
 
 #include <ncurses.h>
-#include <menu.h>
 
 #include "user_interface.hh"
 #include "display_buffer.hh"
@@ -50,13 +49,12 @@ private:
     CharCount m_status_cursor = -1;
     void      draw_status();
 
-    MENU* m_menu = nullptr;
     WINDOW* m_menu_win = nullptr;
-    std::vector<ITEM*> m_items;
     std::vector<String> m_choices;
-
-    int m_menu_fg;
-    int m_menu_bg;
+    int m_selected_choice = 0;
+    int m_menu_columns = 1;
+    LineCount m_menu_top_line = 0;
+    void draw_menu();
 
     WINDOW* m_info_win = nullptr;
 

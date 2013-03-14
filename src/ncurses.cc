@@ -99,9 +99,6 @@ NCursesUI::NCursesUI()
     use_default_colors();
     ESCDELAY=25;
 
-    m_menu_fg = get_color_pair({ Color::Blue, Color::Cyan });
-    m_menu_bg = get_color_pair({ Color::Cyan, Color::Blue });
-
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, on_sigint);
 
@@ -321,13 +318,46 @@ void NCursesUI::print_status(const String& status, CharCount cursor_pos)
     redraw();
 }
 
+void NCursesUI::draw_menu()
+{
+    assert(m_menu_win);
+
+    auto menu_fg = get_color_pair({ Color::Blue, Color::Cyan });
+    auto menu_bg = get_color_pair({ Color::Cyan, Color::Blue });
+
+    wattron(m_menu_win, COLOR_PAIR(menu_bg));
+    wbkgdset(m_menu_win, COLOR_PAIR(menu_bg));
+    DisplayCoord menu_size = window_size(m_menu_win);
+    CharCount column_width = menu_size.column / m_menu_columns;
+    for (auto line = 0_line; line < menu_size.line; ++line)
+    {
+        wmove(m_menu_win, (int)line, 0);
+        for (int col = 0; col < m_menu_columns; ++col)
+        {
+            int choice_idx = (int)(m_menu_top_line + line) * m_menu_columns + col;
+            if (choice_idx >= m_choices.size())
+                break;
+            if (choice_idx == m_selected_choice)
+                wattron(m_menu_win, COLOR_PAIR(menu_fg));
+
+            auto& choice = m_choices[choice_idx];
+            auto begin = choice.begin();
+            auto end = utf8::advance(begin, choice.end(), column_width);
+            addutf8str(m_menu_win, begin, end);
+            for (auto pad = column_width - utf8::distance(begin, end); pad > 0; --pad)
+                waddch(m_menu_win, ' ');
+            wattron(m_menu_win, COLOR_PAIR(menu_bg));
+        }
+        wclrtoeol(m_menu_win);
+    }
+    redraw();
+}
+
 void NCursesUI::menu_show(const memoryview<String>& choices,
                           const DisplayCoord& anchor, MenuStyle style)
 {
-    assert(m_menu == nullptr);
     assert(m_menu_win == nullptr);
     assert(m_choices.empty());
-    assert(m_items.empty());
 
     DisplayCoord maxsize = window_size(stdscr);
     maxsize.column -= anchor.column;
@@ -336,57 +366,51 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
     CharCount longest = 0;
     for (auto& choice : choices)
     {
-        m_choices.push_back(choice.empty() ? " " : choice.substr(0_char, std::min((int)maxsize.column-1, 200)));
-        m_items.emplace_back(new_item(m_choices.back().c_str(), ""));
+        m_choices.push_back(choice.substr(0_char, std::min((int)maxsize.column-1, 200)));
         longest = std::max(longest, m_choices.back().char_length());
     }
-    m_items.push_back(nullptr);
     longest += 1;
 
-    int columns = (style == MenuStyle::Prompt) ? (int)(maxsize.column / longest) : 1;
-    int lines = std::min(10, (int)ceilf((float)m_choices.size()/columns));
+    m_menu_columns = (style == MenuStyle::Prompt) ? (int)(maxsize.column / longest) : 1;
+    int lines = std::min(10, (int)ceilf((float)m_choices.size()/m_menu_columns));
 
     DisplayCoord pos = { anchor.line+1, anchor.column };
     if (pos.line + lines >= maxsize.line)
         pos.line = anchor.line - lines;
-    DisplayCoord size = { lines, columns == 1 ? longest : maxsize.column };
+    DisplayCoord size = { lines, style == MenuStyle::Prompt ? maxsize.column : longest };
 
-    m_menu = new_menu(&m_items[0]);
+    m_selected_choice = 0;
+    m_menu_top_line = 0;
     m_menu_win = newwin((int)size.line, (int)size.column,
                         (int)pos.line,  (int)pos.column);
-    set_menu_win(m_menu, m_menu_win);
-    set_menu_format(m_menu, lines, columns);
-    set_menu_mark(m_menu, nullptr);
-    set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
-    set_menu_back(m_menu, COLOR_PAIR(m_menu_bg));
-    post_menu(m_menu);
-    redraw();
+    draw_menu();
 }
 
 void NCursesUI::menu_select(int selected)
 {
-    // last item in m_items is the nullptr, hence the - 1
-    if (selected >= 0 and selected < m_items.size() - 1)
+    if (selected < 0 or selected >= m_choices.size())
     {
-        set_menu_fore(m_menu, COLOR_PAIR(m_menu_fg));
-        set_current_item(m_menu, m_items[selected]);
+        m_selected_choice = -1;
+        m_menu_top_line = 0;
     }
     else
-        set_menu_fore(m_menu, COLOR_PAIR(m_menu_bg));
-    redraw();
+    {
+        m_selected_choice = selected;
+        LineCount selected_line = m_selected_choice / m_menu_columns;
+        DisplayCoord menu_size = window_size(m_menu_win);
+        if (selected_line < m_menu_top_line)
+            m_menu_top_line = selected_line;
+        if (selected_line >= m_menu_top_line + menu_size.line)
+            m_menu_top_line = selected_line;
+    }
+
+    draw_menu();
 }
 
 void NCursesUI::menu_hide()
 {
-    if (not m_menu)
+    if (not m_menu_win)
         return;
-    unpost_menu(m_menu);
-    free_menu(m_menu);
-    for (auto item : m_items)
-       if (item)
-           free_item(item);
-    m_menu = nullptr;
-    m_items.clear();
     m_choices.clear();
     wredrawln(stdscr, (int)window_pos(m_menu_win).line, (int)window_size(m_menu_win).line);
     delwin(m_menu_win);
