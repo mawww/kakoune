@@ -70,45 +70,6 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
     return (m_coord >= iterator.m_coord);
 }
 
-inline void BufferIterator::on_insert(const BufferCoord& begin,
-                                      const BufferCoord& end)
-{
-    if (m_coord < begin)
-        return;
-
-    if (begin.line == m_coord.line)
-        m_coord.column = end.column + m_coord.column - begin.column;
-    m_coord.line += end.line - begin.line;
-
-    assert(is_valid());
-}
-
-inline void BufferIterator::on_erase(const BufferCoord& begin,
-                                     const BufferCoord& end)
-{
-    if (m_coord < begin)
-        return;
-
-    if (m_coord <= end)
-    {
-        m_coord = begin;
-        if (is_end())
-            operator--();
-    }
-    else
-    {
-        if (end.line == m_coord.line)
-        {
-            m_coord.line = begin.line;
-            m_coord.column = begin.column + m_coord.column - end.column;
-        }
-        else
-            m_coord.line -= end.line - begin.line;
-    }
-    assert(is_valid());
-}
-
-
 inline char BufferIterator::operator*() const
 {
     return m_buffer->m_lines[m_coord.line].content[m_coord.column];
@@ -210,6 +171,13 @@ inline BufferIterator BufferIterator::operator--(int)
     BufferIterator save = *this;
     --*this;
     return save;
+}
+
+inline BufferIterator& BufferIterator::operator=(const BufferCoord& coord)
+{
+    m_coord = coord;
+    assert(is_valid());
+    return *this;
 }
 
 inline bool BufferIterator::is_begin() const

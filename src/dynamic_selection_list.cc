@@ -72,14 +72,50 @@ void DynamicSelectionList::check_invariant() const
 #endif
 }
 
+static void update_insert(BufferIterator& it,
+                          const BufferCoord& begin, const BufferCoord& end)
+{
+    BufferCoord coord = it.coord();
+    if (coord < begin)
+        return;
+
+    if (begin.line == coord.line)
+        coord.column = end.column + coord.column - begin.column;
+    coord.line += end.line - begin.line;
+
+    it = coord;
+}
+
+static void update_erase(BufferIterator& it,
+                         const BufferCoord& begin, const BufferCoord& end)
+{
+    BufferCoord coord = it.coord();
+    if (coord < begin)
+        return;
+
+    if (coord <= end)
+        coord = it.buffer().clamp(begin);
+    else
+    {
+        if (end.line == coord.line)
+        {
+            coord.line = begin.line;
+            coord.column = begin.column + coord.column - end.column;
+        }
+        else
+            coord.line -= end.line - begin.line;
+    }
+    it = coord;
+}
+
 void DynamicSelectionList::on_insert(const BufferIterator& begin, const BufferIterator& end)
 {
     const BufferCoord begin_coord{begin.coord()};
     const BufferCoord end_coord{end.coord()};
     for (auto& sel : *this)
     {
-        sel.first().on_insert(begin_coord, end_coord);
-        sel.last().on_insert(begin_coord, end_coord);
+        update_insert(sel.first(), begin_coord, end_coord);
+        update_insert(sel.last(), begin_coord, end_coord);
     }
 }
 
@@ -89,8 +125,8 @@ void DynamicSelectionList::on_erase(const BufferIterator& begin, const BufferIte
     const BufferCoord end_coord{end.coord()};
     for (auto& sel : *this)
     {
-        sel.first().on_erase(begin_coord, end_coord);
-        sel.last().on_erase(begin_coord, end_coord);
+        update_erase(sel.first(), begin_coord, end_coord);
+        update_erase(sel.last(), begin_coord, end_coord);
     }
 }
 

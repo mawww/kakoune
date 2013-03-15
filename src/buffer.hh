@@ -58,14 +58,13 @@ public:
     BufferIterator operator++ (int);
     BufferIterator operator-- (int);
 
+    BufferIterator& operator=(const BufferCoord& coord);
+
     void clamp(bool avoid_eol);
 
     bool is_begin() const;
     bool is_end() const;
     bool is_valid() const;
-
-    void on_insert(const BufferCoord& begin, const BufferCoord& end);
-    void on_erase(const BufferCoord& begin, const BufferCoord& end);
 
     const Buffer& buffer() const;
     const BufferCoord& coord() const { return m_coord; }
