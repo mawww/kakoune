@@ -70,7 +70,7 @@ void test_editor()
     Selection sel{ buffer.iterator_at_line_begin(2_line), buffer.end() };
     editor.select(sel, SelectMode::Replace);
     editor.insert("",InsertMode::Replace);
-    assert(not editor.selections().back().first().is_end());
+    assert(not editor.main_selection().first().is_end());
 }
 
 void test_incremental_inserter()

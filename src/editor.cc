@@ -261,7 +261,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
             res.captures() = sel.captures();
         m_selections.push_back(res);
     }
-    else if (mode == SelectMode::ReplaceLast)
+    else if (mode == SelectMode::ReplaceMain)
     {
         auto& sel = m_selections.back();
         auto  res = selector(sel);

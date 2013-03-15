@@ -89,7 +89,7 @@ void do_go(Context& context)
             }
             case 'f':
             {
-                String filename = context.editor().selections().back().content();
+                String filename = context.editor().main_selection().content();
                 static char forbidden[] = { '\'', '\\', '\0' };
                 for (auto c : forbidden)
                     if (contains(filename, c))
@@ -646,7 +646,7 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::Alt,  '/' }, do_search<SelectMode::Replace, false> },
     { { Key::Modifiers::Alt,  '?' }, do_search<SelectMode::Extend, false> },
     { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace, true> },
-    { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceLast, true> },
+    { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceMain, true> },
     { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append, true> },
     { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern },
 
@@ -711,10 +711,10 @@ void register_env_vars()
                                    { return ClientManager::instance().get_client_name(context); });
     shell_manager.register_env_var("cursor_line",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str((int)context.editor().selections().back().last().line() + 1); });
+                                   { return int_to_str((int)context.editor().main_selection().last().line() + 1); });
     shell_manager.register_env_var("cursor_column",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str((int)context.editor().selections().back().last().column() + 1); });
+                                   { return int_to_str((int)context.editor().main_selection().last().column() + 1); });
 }
 
 void register_registers()

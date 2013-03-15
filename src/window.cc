@@ -40,7 +40,7 @@ Window::~Window()
 
 void Window::center_selection()
 {
-    BufferIterator cursor = selections().back().last();
+    BufferIterator cursor = main_selection().last();
     m_position.line = std::max(0_line, cursor.line() - m_dimensions.line/2_line);
 }
 
@@ -87,8 +87,8 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    const BufferIterator first = selections().back().first();
-    const BufferIterator last  = selections().back().last();
+    const BufferIterator first = main_selection().first();
+    const BufferIterator last  = main_selection().last();
 
     // scroll lines if needed
     if (first.line() < m_position.line)

@@ -190,7 +190,7 @@ Context& ClientManager::get_client_context(const String& name)
 
 static String generate_status_line(const Context& context)
 {
-    BufferCoord cursor = context.editor().selections().back().last().coord();
+    BufferCoord cursor = context.editor().main_selection().last().coord();
     std::ostringstream oss;
     oss << context.buffer().name()
         << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;

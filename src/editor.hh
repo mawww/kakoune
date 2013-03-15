@@ -18,7 +18,7 @@ enum class SelectMode
     Replace,
     Extend,
     Append,
-    ReplaceLast,
+    ReplaceMain,
 };
 
 enum class InsertMode : unsigned
@@ -74,6 +74,7 @@ public:
     void multi_select(const MultiSelector& selector);
 
     const SelectionList& selections() const { return m_selections; }
+    const Selection& main_selection() const { return m_selections.back(); }
     std::vector<String>  selections_content() const;
 
     bool undo();

@@ -549,7 +549,7 @@ private:
     {
         if (not m_position.is_valid())
         {
-            BufferIterator cursor = m_context.editor().selections().back().last();
+            BufferIterator cursor = m_context.editor().main_selection().last();
             auto completions = complete_opt(cursor, m_context.options());
             if (completions.first.empty())
                 completions = complete_word(cursor);
