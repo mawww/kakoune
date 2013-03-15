@@ -73,8 +73,11 @@ public:
     void select(SelectionList selections);
     void multi_select(const MultiSelector& selector);
 
+    void rotate_selections(int count) { m_main_sel = (m_main_sel + count) % m_selections.size(); }
+
     const SelectionList& selections() const { return m_selections; }
-    const Selection& main_selection() const { return m_selections.back(); }
+    const Selection& main_selection() const { return m_selections[m_main_sel]; }
+    size_t main_selection_index() const { return m_main_sel; }
     std::vector<String>  selections_content() const;
 
     bool undo();
@@ -100,6 +103,7 @@ private:
 
     safe_ptr<Buffer>         m_buffer;
     DynamicSelectionList     m_selections;
+    size_t                   m_main_sel;
     FilterGroup              m_filters;
 };
 

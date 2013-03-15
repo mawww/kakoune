@@ -18,6 +18,7 @@ Editor::Editor(Buffer& buffer)
       m_selections(buffer)
 {
     m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
+    m_main_sel = 0;
 }
 
 void Editor::erase()
@@ -128,28 +129,31 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
     return lhs.begin() < rhs.begin();
 }
 
-static void sort_and_merge_overlapping(SelectionList& selections)
+static void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection)
 {
     if (selections.size() == 1)
         return;
 
-    Range back = selections.back();
-    auto back_rank = std::count_if(selections.begin(), selections.end(),
-                                   [&](const Selection& sel)
-                                   { return sel.begin() <= back.begin(); });
+    const auto& main = selections[main_selection];
+    const auto main_begin = main.begin();
+    main_selection = std::count_if(selections.begin(), selections.end(),
+                                   [&](const Selection& sel) {
+                                       auto begin = sel.begin();
+                                       if (begin == main_begin)
+                                           return &sel < &main;
+                                       else
+                                           return sel.begin() < main_begin;
+                                   });
     std::stable_sort(selections.begin(), selections.end(), compare_selections);
-    if (back_rank < selections.size())
-        std::rotate(selections.begin(), selections.begin() + back_rank,
-                    selections.end());
-    assert(selections.back() == back);
 
-    for (size_t i = 0; i < selections.size() and selections.size() > 1;)
+    for (size_t i = 0; i+1 < selections.size() and selections.size() > 1;)
     {
-        size_t next = (i + 1) % selections.size();
-        if (overlaps(selections[i], selections[next]))
+        if (overlaps(selections[i], selections[i+1]))
         {
-            selections[i].merge_with(selections[next]);
-            selections.erase(selections.begin() + next);
+            selections[i].merge_with(selections[i+1]);
+            selections.erase(selections.begin() + i + 1);
+            if (i + 1 <= main_selection)
+                --main_selection;
         }
         else
            ++i;
@@ -169,7 +173,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
         sel.last()  = last;
         sel.avoid_eol();
     }
-    sort_and_merge_overlapping(m_selections);
+    sort_and_merge_overlapping(m_selections, m_main_sel);
 }
 
 void Editor::move_selections(LineCount offset, SelectMode mode)
@@ -186,19 +190,21 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         sel.last()  = last;
         sel.avoid_eol();
     }
-    sort_and_merge_overlapping(m_selections);
+    sort_and_merge_overlapping(m_selections, m_main_sel);
 }
 
 void Editor::clear_selections()
 {
-    auto& sel = m_selections.back();
+    auto& sel = m_selections[m_main_sel];
     auto& pos = sel.last();
 
     if (*pos == '\n' and not pos.is_begin() and *utf8::previous(pos) != '\n')
         pos = utf8::previous(pos);
     sel.first() = pos;
 
-    m_selections.erase(m_selections.begin(), m_selections.end() - 1);
+    m_selections.erase(m_selections.begin(), m_selections.begin() + m_main_sel);
+    m_selections.erase(m_selections.begin() + 1, m_selections.end());
+    m_main_sel = 0;
     check_invariant();
 }
 
@@ -212,14 +218,23 @@ void Editor::flip_selections()
 void Editor::keep_selection(int index)
 {
     if (index < m_selections.size())
-        m_selections = SelectionList{ std::move(m_selections[index]) };
+    {
+        size_t real_index = (index + m_main_sel + 1) % m_selections.size();
+        m_selections = SelectionList{ std::move(m_selections[real_index]) };
+        m_main_sel = 0;
+    }
     check_invariant();
 }
 
 void Editor::remove_selection(int index)
 {
     if (m_selections.size() > 1 and index < m_selections.size())
-        m_selections.erase(m_selections.begin() + index);
+    {
+        size_t real_index = (index + m_main_sel + 1) % m_selections.size();
+        m_selections.erase(m_selections.begin() + real_index);
+        if (real_index <= m_main_sel)
+            --m_main_sel;
+    }
     check_invariant();
 }
 
@@ -229,14 +244,14 @@ void Editor::select(const Selection& selection, SelectMode mode)
         m_selections = SelectionList{ selection };
     else if (mode == SelectMode::Extend)
     {
-        for (auto& sel : m_selections)
-            sel.merge_with(selection);
-        sort_and_merge_overlapping(m_selections);
+        m_selections[m_main_sel].merge_with(selection);
+        sort_and_merge_overlapping(m_selections, m_main_sel);
     }
     else if (mode == SelectMode::Append)
     {
+        m_main_sel = m_selections.size();
         m_selections.push_back(selection);
-        sort_and_merge_overlapping(m_selections);
+        sort_and_merge_overlapping(m_selections, m_main_sel);
     }
     else
         assert(false);
@@ -248,6 +263,7 @@ void Editor::select(SelectionList selections)
     if (selections.empty())
         throw runtime_error("no selections");
     m_selections = std::move(selections);
+    m_main_sel = m_selections.size() - 1;
     check_invariant();
 }
 
@@ -255,15 +271,16 @@ void Editor::select(const Selector& selector, SelectMode mode)
 {
     if (mode == SelectMode::Append)
     {
-        auto& sel = m_selections.back();
+        auto& sel = m_selections[m_main_sel];
         auto  res = selector(sel);
         if (res.captures().empty())
             res.captures() = sel.captures();
+        m_main_sel = m_selections.size();
         m_selections.push_back(res);
     }
     else if (mode == SelectMode::ReplaceMain)
     {
-        auto& sel = m_selections.back();
+        auto& sel = m_selections[m_main_sel];
         auto  res = selector(sel);
         sel.first() = res.first();
         sel.last()  = res.last();
@@ -286,7 +303,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
                 sel.captures() = std::move(res.captures());
         }
     }
-    sort_and_merge_overlapping(m_selections);
+    sort_and_merge_overlapping(m_selections, m_main_sel);
     check_invariant();
 }
 
@@ -314,7 +331,8 @@ void Editor::multi_select(const MultiSelector& selector)
     }
     if (new_selections.empty())
         throw nothing_selected();
-    sort_and_merge_overlapping(new_selections);
+    m_main_sel = new_selections.size() - 1;
+    sort_and_merge_overlapping(new_selections, m_main_sel);
     m_selections = std::move(new_selections);
     check_invariant();
 }
@@ -360,7 +378,10 @@ bool Editor::undo()
     LastModifiedRangeListener listener(buffer());
     bool res = m_buffer->undo();
     if (res)
+    {
         m_selections = SelectionList{ {listener.first(), listener.last()} };
+        m_main_sel = 0;
+    }
     check_invariant();
     return res;
 }
@@ -370,7 +391,10 @@ bool Editor::redo()
     LastModifiedRangeListener listener(buffer());
     bool res = m_buffer->redo();
     if (res)
+    {
         m_selections = SelectionList{ {listener.first(), listener.last()} };
+        m_main_sel = 0;
+    }
     check_invariant();
     return res;
 }
@@ -379,12 +403,9 @@ void Editor::check_invariant() const
 {
 #ifdef KAK_DEBUG
     assert(not m_selections.empty());
+    assert(m_main_sel < m_selections.size());
     m_selections.check_invariant();
-
-    auto it = ++std::max_element(m_selections.begin(), m_selections.end(),
-                                 compare_selections);
-    assert(std::is_sorted(m_selections.begin(), it, compare_selections));
-    assert(std::is_sorted(it, m_selections.end(), compare_selections));
+    assert(std::is_sorted(m_selections.begin(), m_selections.end(), compare_selections));
 #endif
 }
 
@@ -477,7 +498,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             }
         }
     }
-    sort_and_merge_overlapping(editor.m_selections);
+    sort_and_merge_overlapping(editor.m_selections, editor.m_main_sel);
     editor.check_invariant();
 }
 

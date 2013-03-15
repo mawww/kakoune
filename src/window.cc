@@ -12,7 +12,7 @@ namespace Kakoune
 {
 
 // Implementation in highlighters.cc
-void highlight_selections(const SelectionList& selections, DisplayBuffer& display_buffer);
+void highlight_selections(const Editor& editor, DisplayBuffer& display_buffer);
 void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer);
 void expand_unprintable(DisplayBuffer& display_buffer);
 
@@ -27,7 +27,7 @@ Window::Window(Buffer& buffer)
 
     m_builtin_highlighters.append({"tabulations", [this](DisplayBuffer& db) { expand_tabulations(m_options, db); }});
     m_builtin_highlighters.append({"unprintable", expand_unprintable});
-    m_builtin_highlighters.append({"selections",  [this](DisplayBuffer& db) { highlight_selections(selections(), db); }});
+    m_builtin_highlighters.append({"selections",  [this](DisplayBuffer& db) { highlight_selections(*this, db); }});
 
     for (auto& option : m_options.flatten_options())
         on_option_changed(*option);

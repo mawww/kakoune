@@ -259,16 +259,16 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     }
 }
 
-void highlight_selections(const SelectionList& selections, DisplayBuffer& display_buffer)
+void highlight_selections(const Editor& editor, DisplayBuffer& display_buffer)
 {
-    for (size_t i = 0; i < selections.size(); ++i)
+    for (size_t i = 0; i < editor.selections().size(); ++i)
     {
-        auto& sel = selections[i];
+        auto& sel = editor.selections()[i];
         const bool forward = sel.first() <= sel.last();
         BufferIterator begin = forward ? sel.first() : utf8::next(sel.last());
         BufferIterator end   = forward ? sel.last() : utf8::next(sel.first());
 
-        const bool primary = (i == selections.size() - 1);
+        const bool primary = (i == editor.main_selection_index());
         ColorPair sel_colors = ColorRegistry::instance()[primary ? "PrimarySelection" : "SecondarySelection"];
         ColorPair cur_colors = ColorRegistry::instance()[primary ? "PrimaryCursor" : "SecondaryCursor"];
         highlight_range(display_buffer, begin, end, false,
