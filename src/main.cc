@@ -478,8 +478,9 @@ void replay_macro(Context& context)
                 running_macro = true;
                 auto stop_macro = on_scope_end([&] { running_macro = false; });
 
+                auto keys = parse_keys(reg_val[0]);
                 scoped_edition edition(context.editor());
-                do { exec_keys(parse_keys(reg_val[0]), context); } while (--count > 0);
+                do { exec_keys(keys, context); } while (--count > 0);
             }
         }
     });
