@@ -2,8 +2,8 @@ sources := $(wildcard *.cc)
 objects := $(sources:.cc=.o)
 deps := $(addprefix ., $(sources:.cc=.d))
 
-CXXFLAGS += -std=c++0x -g -Wall -Wno-reorder -Wno-sign-compare
-LDFLAGS += -lmenu -lncursesw -lboost_regex
+CXXFLAGS += -std=c++11 -g -Wall -Wno-reorder -Wno-sign-compare
+LIBS += -lmenu -lncursesw -lboost_regex
 
 debug ?= yes
 ifeq ($(debug),yes)
@@ -17,7 +17,7 @@ else
 endif
 
 kak : $(objects)
-	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) -o $@
+	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
 
 -include $(deps)
 
