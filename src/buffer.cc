@@ -326,9 +326,13 @@ void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
     String suffix = m_lines[end.line()].content.substr(end.column());
     Line new_line = { m_lines[begin.line()].start, prefix + suffix };
 
-    m_lines.erase(m_lines.begin() + (int)begin.line(), m_lines.begin() + (int)end.line() + 1);
     if (new_line.length() != 0)
-        m_lines.insert(m_lines.begin() + (int)begin.line(), std::move(new_line));
+    {
+        m_lines.erase(m_lines.begin() + (int)begin.line(), m_lines.begin() + (int)end.line());
+        m_lines[begin.line()] = std::move(new_line);
+    }
+    else
+        m_lines.erase(m_lines.begin() + (int)begin.line(), m_lines.begin() + (int)end.line() + 1);
 
     for (LineCount i = begin.line()+1; i < line_count(); ++i)
         m_lines[i].start -= length;
