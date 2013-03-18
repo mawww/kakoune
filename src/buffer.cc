@@ -240,6 +240,10 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
     assert(pos.is_valid() and (pos.is_end() or utf8::is_character_start(pos)));
     assert(not contains(content, '\0'));
+
+    if (content.empty())
+        return;
+
     ++m_timestamp;
     ByteCount offset = pos.offset();
 
@@ -273,8 +277,7 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         String prefix = m_lines[pos.line()].content.substr(0, pos.column());
         String suffix = m_lines[pos.line()].content.substr(pos.column());
 
-        auto line_it = m_lines.begin() + (int)pos.line();
-        line_it = m_lines.erase(line_it);
+        std::vector<Line> new_lines;
 
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)
@@ -285,27 +288,28 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
                 if (start == 0)
                 {
                     line_content = prefix + line_content;
-                    line_it = m_lines.insert(line_it, { offset + start - prefix.length(),
-                                                        std::move(line_content) });
+                    new_lines.push_back({ offset + start - prefix.length(),
+                                          std::move(line_content) });
                 }
                 else
-                    line_it = m_lines.insert(line_it, { offset + start,
-                                                        std::move(line_content) });
-
-                ++line_it;
+                    new_lines.push_back({ offset + start, std::move(line_content) });
                 start = i + 1;
             }
         }
         if (start == 0)
-            line_it = m_lines.insert(line_it, { offset + start - prefix.length(), prefix + content + suffix });
+            new_lines.push_back({ offset + start - prefix.length(), prefix + content + suffix });
         else if (start != content.length() or not suffix.empty())
-            line_it = m_lines.insert(line_it, { offset + start, content.substr(start) + suffix });
-        else
-            --line_it;
+            new_lines.push_back({ offset + start, content.substr(start) + suffix });
+
+        LineCount last_line = pos.line() + new_lines.size() - 1;
+
+        auto line_it = m_lines.begin() + (int)pos.line();
+        *line_it = std::move(*new_lines.begin());
+        m_lines.insert(line_it+1, std::make_move_iterator(new_lines.begin() + 1),
+                       std::make_move_iterator(new_lines.end()));
 
         begin_it = pos;
-        end_it = BufferIterator(*this, { LineCount(line_it - m_lines.begin()),
-                                         line_it->length() - suffix.length() });
+        end_it = BufferIterator{*this, { last_line, m_lines[last_line].length() - suffix.length() }};
     }
 
     check_invariant();
