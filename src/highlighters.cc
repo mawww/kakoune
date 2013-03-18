@@ -282,12 +282,12 @@ void expand_unprintable(DisplayBuffer& display_buffer)
 {
     for (auto& line : display_buffer.lines())
     {
-        for (auto& atom : line)
+        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom.content.type() == AtomContent::BufferRange)
+            if (atom_it->content.type() == AtomContent::BufferRange)
             {
-                using Utf8It = utf8::utf8_iterator<BufferIterator>;
-                for (Utf8It it = atom.content.begin(), end = atom.content.end(); it != end; ++it)
+                using Utf8It = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
+                for (Utf8It it = atom_it->content.begin(), end = atom_it->content.end(); it != end; ++it)
                 {
                     Codepoint cp = *it;
                     if (cp != '\n' and not std::isprint((wchar_t)cp, std::locale()))
@@ -295,10 +295,13 @@ void expand_unprintable(DisplayBuffer& display_buffer)
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
                         String str = oss.str();
-                        highlight_range(display_buffer,
-                                        it.underlying_iterator(), (it+1).underlying_iterator(),
-                                        true, [&str](DisplayAtom& atom){ atom.content.replace(str);
-                                                                         atom.colors = { Color::Red, Color::Black }; });
+                        if (it.underlying_iterator() != atom_it->content.begin())
+                            atom_it = ++line.split(atom_it, it.underlying_iterator());
+                        if ((it+1).underlying_iterator() != atom_it->content.end())
+                            atom_it = line.split(atom_it, (it+1).underlying_iterator());
+                        atom_it->content.replace(str);
+                        atom_it->colors = { Color::Red, Color::Black };
+                        break;
                     }
                 }
             }
