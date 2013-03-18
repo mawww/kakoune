@@ -290,8 +290,8 @@ Selection select_to(const Selection& selection,
     do
     {
         ++end;
-        skip_while(end, [c](Codepoint cur) { return not is_eol(cur) and cur != c; });
-        if (is_end(end) or is_eol(*end))
+        skip_while(end, [c](Codepoint cur) { return cur != c; });
+        if (is_end(end))
             return selection;
     }
     while (--count > 0);
@@ -307,8 +307,8 @@ Selection select_to_reverse(const Selection& selection,
     do
     {
         --end;
-        skip_while_reverse(end, [c](Codepoint cur) { return not is_eol(cur) and cur != c; });
-        if (is_begin(end) or is_eol(*end))
+        skip_while_reverse(end, [c](Codepoint cur) { return cur != c; });
+        if (is_begin(end))
             return selection;
     }
     while (--count > 0);
