@@ -434,6 +434,7 @@ Some helper commands can be used to define composite commands:
  * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead.
+ * +reg <name> <content>+: set register <name> to <content>
 
 Note that these commands are available in interactive command mode, but are
 not that useful in this context.

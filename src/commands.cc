@@ -713,6 +713,16 @@ void set_client_name(const CommandParameters& params, Context& context)
     ClientManager::instance().set_client_name(context, params[0]);
 }
 
+void set_register(const CommandParameters& params, Context& context)
+{
+    if (params.size() != 2)
+        throw wrong_argument_count();
+
+    if (params[0].length() != 1)
+        throw runtime_error("register names are single character");
+    RegisterManager::instance()[params[0][0]] = memoryview<String>(params[1]);
+}
+
 class RegisterRestorer
 {
 public:
@@ -908,6 +918,8 @@ void register_commands()
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);
     cm.register_commands({"name"}, set_client_name);
+
+    cm.register_command("reg", set_register);
 }
 
 }
