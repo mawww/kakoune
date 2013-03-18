@@ -371,6 +371,7 @@ void do_select_object(Context& context)
             { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
             { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
             { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
+            { { Key::Modifiers::None, 'r' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
             { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
             { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
             { { Key::Modifiers::None, '"' }, std::bind(select_surrounding, _1, CodepointPair{ '"', '"' }, flags) },

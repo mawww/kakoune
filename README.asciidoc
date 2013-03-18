@@ -168,7 +168,7 @@ object you want.
 
  * _b_, _(_ or _)_: select the enclosing parenthesis
  * _B_, _{_ or _}_: select the enclosing {} block
- * _[_ or _]_: select the enclosing [] block
+ * _r_, _[_ or _]_: select the enclosing [] block
  * _<_ or _>_: select the enclosing <> block
  * _"_: select the enclosing double quoted string
  * _'_: select the enclosing single quoted string
