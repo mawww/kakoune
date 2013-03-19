@@ -12,7 +12,7 @@ namespace Kakoune
 {
 
 // Implementation in highlighters.cc
-void highlight_selections(const Editor& editor, DisplayBuffer& display_buffer);
+void highlight_selections(const Window& window, DisplayBuffer& display_buffer);
 void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer);
 void expand_unprintable(DisplayBuffer& display_buffer);
 

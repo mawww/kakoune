@@ -260,6 +260,7 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("filetype", "");
     declare_option<std::vector<String>>("completions", {});
     declare_option<std::vector<String>>("path", { "./", "/usr/include" });
+    declare_option<bool>("insert_hide_sel", false);
 }
 
 template<typename T>
