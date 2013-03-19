@@ -10,14 +10,13 @@ def clang-complete %{
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
     %sh{
-        # this runs in a detached shell, asynchronously, so that kakoune does not hang while clang is running
-        # as completions references a cursor position and a buffer timestamp, only valid completions should be
+        # this runs in a detached shell, asynchronously, so that kakoune does not hang while clang is running.
+        # As completions references a cursor position and a buffer timestamp, only valid completions should be
         # displayed.
         (
-            pos=${kak_opt_clang_filename}:${kak_cursor_line}:${kak_cursor_column}
-            cp ${kak_opt_clang_filename} /tmp/kak_clang_file.cpp
-            echo $pos > /tmp/kak_clang_pos
-            output=$(clang++ -fsyntax-only -I${PWD} ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} ${kak_opt_clang_filename} |
+            pos=-:${kak_cursor_line}:${kak_cursor_column}
+            cd $(dirname ${kak_bufname})
+            output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} |
                      grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
             rm -r $(dirname ${kak_opt_clang_filename})
             completions="${kak_cursor_line}:${kak_cursor_column}@${kak_timestamp}"
