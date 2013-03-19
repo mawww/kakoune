@@ -525,7 +525,9 @@ public:
             return;
 
         m_context.buffer().erase(m_position, m_position + m_completions[m_current_completion].length());
-        m_current_completion = (m_current_completion + offset) % m_completions.size();
+        m_current_completion = (m_current_completion + offset) % (int)m_completions.size();
+        if (m_current_completion < 0)
+            m_current_completion += m_completions.size();
         m_context.buffer().insert(m_position, m_completions[m_current_completion]);
         m_context.ui().menu_select(m_current_completion);
     }
