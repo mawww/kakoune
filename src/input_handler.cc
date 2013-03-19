@@ -524,12 +524,45 @@ public:
         if (not setup_ifn())
             return;
 
-        m_context.buffer().erase(m_position, m_position + m_completions[m_current_completion].length());
-        m_current_completion = (m_current_completion + offset) % (int)m_completions.size();
+        m_context.buffer().erase(m_position, m_position + m_matching_completions[m_current_completion].length());
+        m_current_completion = (m_current_completion + offset) % (int)m_matching_completions.size();
         if (m_current_completion < 0)
-            m_current_completion += m_completions.size();
-        m_context.buffer().insert(m_position, m_completions[m_current_completion]);
+            m_current_completion += m_matching_completions.size();
+        m_context.buffer().insert(m_position, m_matching_completions[m_current_completion]);
         m_context.ui().menu_select(m_current_completion);
+    }
+
+    void update()
+    {
+        if (m_position.is_valid())
+        {
+            BufferIterator cursor = m_context.editor().main_selection().last();
+            ByteCount longest_completion = std::max_element(m_all_completions.begin(), m_all_completions.end(),
+                                                            [](const String& lhs, const String& rhs)
+                                                            { return lhs.length() < rhs.length(); })->length();
+            if (cursor > m_position and ByteCount{(int)(cursor - m_position)} < longest_completion)
+            {
+                String prefix = m_context.buffer().string(m_position, cursor);
+                m_matching_completions.clear();
+                for (auto& candidate : m_all_completions)
+                {
+                    if (candidate.substr(0, prefix.length()) == prefix)
+                        m_matching_completions.push_back(candidate);
+                }
+                if (not m_matching_completions.empty())
+                {
+                    m_context.ui().menu_hide();
+                    m_current_completion = m_matching_completions.size();
+                    DisplayCoord menu_pos = m_context.window().display_position(m_position);
+                    m_context.ui().menu_show(m_matching_completions, menu_pos, MenuStyle::Inline);
+                    m_context.ui().menu_select(m_current_completion);
+                    m_matching_completions.push_back(prefix);
+                    return;
+                }
+            }
+        }
+        reset();
+        select(0);
     }
 
     void reset()
@@ -555,24 +588,26 @@ private:
             auto completions = complete_opt(cursor, m_context.options());
             if (completions.first.empty())
                 completions = complete_word(cursor);
-            m_completions = std::move(completions.first);
-            if (m_completions.empty())
+            m_all_completions = std::move(completions.first);
+            if (m_all_completions.empty())
                 return false;
 
             assert(cursor >= completions.second);
             m_position = completions.second;
-            DisplayCoord menu_pos = m_context.window().display_position(m_position);
-            m_context.ui().menu_show(m_completions, menu_pos, MenuStyle::Inline);
 
-            m_completions.push_back(m_context.buffer().string(m_position, cursor));
-            m_current_completion = m_completions.size() - 1;
+            m_matching_completions = m_all_completions;
+            DisplayCoord menu_pos = m_context.window().display_position(m_position);
+            m_context.ui().menu_show(m_matching_completions, menu_pos, MenuStyle::Inline);
+            m_matching_completions.push_back(m_context.buffer().string(m_position, cursor));
+            m_current_completion = m_matching_completions.size() - 1;
         }
         return true;
     }
 
     const Context& m_context;
     BufferIterator m_position;
-    CandidateList  m_completions;
+    CandidateList  m_all_completions;
+    CandidateList  m_matching_completions;
     int            m_current_completion = -1;
 };
 
@@ -586,9 +621,7 @@ public:
           m_idle_timer{Clock::now() + idle_timeout,
                        [this](Timer& timer) {
                            context().hooks().run_hook("InsertIdle", "", context());
-                           m_completer.reset();
-                           if (context().editor().selections().size() == 1)
-                               m_completer.select(0);
+                           m_completer.update();
                        }}
     {
         last_insert().first = mode;
