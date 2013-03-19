@@ -85,6 +85,12 @@ struct unterminated_string : parse_error
     {}
 };
 
+struct unknown_expand : parse_error
+{
+    unknown_expand(const String& name)
+        : parse_error{"unknown expand '" + name + "'"} {}
+};
+
 TokenList parse(const String& line,
                 TokenPosList* opt_token_pos_info = nullptr)
 {
@@ -132,12 +138,17 @@ TokenList parse(const String& line,
                 ++pos;
             String type_name = line.substr(type_start, pos - type_start);
 
+            if (pos == length)
+                throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
+
             if (type_name == "sh")
                 type = Token::Type::ShellExpand;
-            if (type_name == "reg")
+            else if (type_name == "reg")
                 type = Token::Type::RegisterExpand;
-            if (type_name == "opt")
+            else if (type_name == "opt")
                 type = Token::Type::OptionExpand;
+            else if (type_name != "")
+                throw unknown_expand{type_name};
 
             static const std::unordered_map<char, char> matching_delimiters = {
                 { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
