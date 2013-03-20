@@ -241,7 +241,10 @@ void Editor::remove_selection(int index)
 void Editor::select(const Selection& selection, SelectMode mode)
 {
     if (mode == SelectMode::Replace)
+    {
         m_selections = SelectionList{ selection };
+        m_main_sel = 0;
+    }
     else if (mode == SelectMode::Extend)
     {
         m_selections[m_main_sel].merge_with(selection);
