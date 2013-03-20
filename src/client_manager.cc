@@ -64,6 +64,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     catch (Kakoune::runtime_error& error)
     {
         context->print_status(error.description());
+        context->hooks().run_hook("RuntimeError", error.description(), *context);
     }
     catch (Kakoune::client_removed&)
     {
@@ -80,6 +81,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         catch (Kakoune::runtime_error& error)
         {
             context->print_status(error.description());
+            context->hooks().run_hook("RuntimeError", error.description(), *context);
         }
         catch (Kakoune::client_removed&)
         {
