@@ -346,7 +346,8 @@ void add_hook(const CommandParameters& params, Context& context)
     String command = params[3];
     auto hook_func = [=](const String& param, Context& context) {
         if (boost::regex_match(param.begin(), param.end(), regex))
-            CommandManager::instance().execute(command, context);
+            CommandManager::instance().execute(command, context, {},
+                                               { { "hook_param", param } });
     };
 
     const String& scope = params[0];
