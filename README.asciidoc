@@ -72,9 +72,9 @@ Basic Movement
  * _?_: search (extend to next match)
  * _n_: select next match
  * _N_: add a new selection with next match
- * _alt-n_: replace last selection with next match (preserving the others)
+ * _alt-n_: replace main selection with next match (preserving the others)
 
- * _alt-c_: center last selection in current window
+ * _alt-c_: center main selection in current window
  * _pageup_: scroll up
  * _pagedown_: scroll down
 
@@ -180,7 +180,7 @@ Registers
 
 registers are named list of text. They are used for various purpose, like
 storing the last yanked test, or the captures groups associated with the
-last selection.
+selections.
 
 While in insert mode, ctrl-r followed by a register name (one character)
 inserts it.
@@ -347,6 +347,33 @@ use the following command:
 :hook global WinCreate .*\.cc %{ addhl number_lines }
 -----------------------------------------------------
 
+existing hooks are:
+
+ * +NormalIdle+: A certain duration has passed since last key was pressed in
+       normal mode.
+ * +NormalBegin+: Entering normal mode
+ * +NormalEnd+: Leaving normal mode
+ * +NormalKey+: A key is received in normal mode, the key is used for filtering
+ * +InsertIdle+: A certain duration has passed since last key was pressed in
+       insert mode.
+ * +InsertBegin+: Entering insert mode
+ * +InsertEnd+: Leaving insert mode
+ * +InsertKey+: A key is received in insert mode, the key is used for filtering
+ * +InsertMove+: The cursor moved (without inserting) in insert mode, the key
+       that triggered the move is used for filtering
+ * +WinCreate+: A window was created
+ * +WinSetOption+: An option was set in a window context, the filtering text
+       is '<option_name>=<new_value>'
+ * +BufNew+: A buffer for a new file has been created, filename is used for
+       filtering
+ * +BufOpen+: A buffer for an existing file has been created, filename is
+       used for filtering
+ * +BufCreate+: A buffer has been created, filename is used for filtering
+ * +RuntimeError+: an error was encountered while executing an user command
+       the error message is used for filtering
+
+when not specified, the filtering text is an empty string.
+
 Shell expansion
 ---------------
 
@@ -357,7 +384,7 @@ for example: %sh{ ls } is replaced with the output of the ls command.
 
 Some of kakoune state is available through environment variables:
 
- * +kak_selection+: content of the last selection
+ * +kak_selection+: content of the main selection
  * +kak_bufname+: name of the current buffer
  * +kak_timestamp+: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
@@ -366,8 +393,9 @@ Some of kakoune state is available through environment variables:
  * +kak_reg_<r>+: value of register <r>
  * +kak_socket+: filename of session socket (/tmp/kak-<session>)
  * +kak_client+: name of current client
- * +kak_cursor_line+: line of the end of the last selection
- * +kak_cursor_cursor+: cursor of the end of the last selection
+ * +kak_cursor_line+: line of the end of the main selection
+ * +kak_cursor_cursor+: column of the end of the main selection
+ * +kak_hook_param+: filtering text passed to the currently executing hook
 
 for example you can print informations on the current file in the status
 line using:
@@ -430,7 +458,7 @@ Some helper commands can be used to define composite commands:
      to execute when the item is selected (but not validated).
  * +info <text>+: display text in an information box, at can take a -anchor
      option, which accepts +left+, +right+ and +cursor+ as value, in order to
-     specify where the info box should be anchored relative to the last selection.
+     specify where the info box should be anchored relative to the main selection.
  * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead.
