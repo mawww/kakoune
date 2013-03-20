@@ -5,7 +5,6 @@
 #include "assert.hh"
 #include "utils.hh"
 #include "context.hh"
-#include "utf8.hh"
 
 #include <algorithm>
 
@@ -238,8 +237,7 @@ void Buffer::check_invariant() const
 
 void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
-    assert(pos.is_valid() and (pos.is_end() or utf8::is_character_start(pos)));
-    assert(not contains(content, '\0'));
+    assert(pos.is_valid());
 
     if (content.empty())
         return;
@@ -322,8 +320,6 @@ void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 {
     assert(begin.is_valid());
     assert(end.is_valid());
-    assert(utf8::is_character_start(begin) and
-           (end.is_end() or utf8::is_character_start(end)));
     ++m_timestamp;
     const ByteCount length = end - begin;
     String prefix = m_lines[begin.line()].content.substr(0, begin.column());
