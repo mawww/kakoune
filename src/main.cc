@@ -691,7 +691,12 @@ void register_env_vars()
                                    { return int_to_str(context.buffer().timestamp()); });
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
-                                   { return context.editor().selections_content().back(); });
+                                   { return context.editor().main_selection().content(); });
+    shell_manager.register_env_var("selections",
+                                   [](const String& name, const Context& context)
+                                   { auto sels = context.editor().selections_content();
+                                     return std::accumulate(sels.begin(), sels.end(), ""_str,
+                                     [](const String& lhs, const String& rhs) { return lhs.empty() ? rhs : lhs + "," + rhs; }); });
     shell_manager.register_env_var("runtime",
                                    [](const String& name, const Context& context)
                                    { return runtime_directory(); });

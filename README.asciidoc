@@ -385,6 +385,7 @@ for example: %sh{ ls } is replaced with the output of the ls command.
 Some of kakoune state is available through environment variables:
 
  * +kak_selection+: content of the main selection
+ * +kak_selections+: content of the selection separated by commas
  * +kak_bufname+: name of the current buffer
  * +kak_timestamp+: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
