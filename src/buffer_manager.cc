@@ -42,7 +42,7 @@ void BufferManager::unregister_buffer(Buffer& buffer)
     assert(false);
 }
 
-Buffer* BufferManager::get_buffer(const String& name)
+Buffer* BufferManager::get_buffer_ifp(const String& name)
 {
     for (auto& buf : m_buffers)
     {
@@ -50,6 +50,14 @@ Buffer* BufferManager::get_buffer(const String& name)
             return buf.get();
     }
     return nullptr;
+}
+
+Buffer& BufferManager::get_buffer(const String& name)
+{
+    Buffer* res = get_buffer_ifp(name);
+    if (not res)
+        throw runtime_error("no such buffer '" + name + "'");
+    return *res;
 }
 
 void BufferManager::set_last_used_buffer(Buffer& buffer)

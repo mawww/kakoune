@@ -91,7 +91,7 @@ Buffer* create_buffer_from_file(const String& filename)
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     auto cleanup = on_scope_end([&]{ munmap((void*)data, st.st_size); close(fd); });
 
-    if (Buffer* buffer = BufferManager::instance().get_buffer(filename))
+    if (Buffer* buffer = BufferManager::instance().get_buffer_ifp(filename))
         delete buffer;
 
     const char* pos = data;

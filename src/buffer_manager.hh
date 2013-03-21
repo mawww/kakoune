@@ -26,7 +26,8 @@ public:
     iterator end() const { return m_buffers.cend(); }
     size_t   count() const { return m_buffers.size(); }
 
-    Buffer* get_buffer(const String& name);
+    Buffer* get_buffer_ifp(const String& name);
+    Buffer& get_buffer(const String& name);
     void    set_last_used_buffer(Buffer& buffer);
 
     CandidateList complete_buffername(const String& prefix,

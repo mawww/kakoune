@@ -98,7 +98,7 @@ void edit(const CommandParameters& params, Context& context)
 
     Buffer* buffer = nullptr;
     if (not force_reload)
-        buffer = BufferManager::instance().get_buffer(name);
+        buffer = BufferManager::instance().get_buffer_ifp(name);
     if (not buffer)
     {
         if (parser.has_option("scratch"))
@@ -209,18 +209,14 @@ void show_buffer(const CommandParameters& params, Context& context)
     if (params.size() != 1)
         throw wrong_argument_count();
 
-    const String& buffer_name = params[0];
-    Buffer* buffer = BufferManager::instance().get_buffer(buffer_name);
-    if (not buffer)
-        throw runtime_error("buffer " + buffer_name + " does not exists");
+    Buffer& buffer = BufferManager::instance().get_buffer(params[0]);
+    BufferManager::instance().set_last_used_buffer(buffer);
 
-    BufferManager::instance().set_last_used_buffer(*buffer);
-
-    if (buffer != &context.buffer())
+    if (&buffer != &context.buffer())
     {
         context.push_jump();
         auto& manager = ClientManager::instance();
-        context.change_editor(manager.get_unused_window_for_buffer(*buffer));
+        context.change_editor(manager.get_unused_window_for_buffer(buffer));
     }
 }
 
@@ -231,24 +227,15 @@ void delete_buffer(const CommandParameters& params, Context& context)
         throw wrong_argument_count();
 
     BufferManager& manager = BufferManager::instance();
-    Buffer* buffer = nullptr;
-    if (params.empty())
-        buffer = &context.buffer();
-    else
-    {
-        const String& buffer_name = params[0];
-        buffer = manager.get_buffer(buffer_name);
-        if (not buffer)
-            throw runtime_error("buffer " + buffer_name + " does not exists");
-    }
-    if (not force and (buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
-        throw runtime_error("buffer " + buffer->name() + " is modified");
+    Buffer& buffer = params.empty() ? context.buffer() : manager.get_buffer(params[0]);
+    if (not force and (buffer.flags() & Buffer::Flags::File) and buffer.is_modified())
+        throw runtime_error("buffer " + buffer.name() + " is modified");
 
     if (manager.count() == 1)
-        throw runtime_error("buffer " + buffer->name() + " is the last one");
+        throw runtime_error("buffer " + buffer.name() + " is the last one");
 
-    ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
-    delete buffer;
+    ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+    delete &buffer;
 }
 
 template<typename Group>
