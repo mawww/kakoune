@@ -46,6 +46,11 @@ String parse_filename(const String& filename)
     return result;
 }
 
+String canonicalize_filename(const String& filename)
+{
+    return filename.replace(R"(((^|(?<=/))\./)+|[^/]+/\.\./)", "");
+}
+
 String read_file(const String& filename)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
@@ -71,9 +76,11 @@ String read_file(const String& filename)
     return content;
 }
 
-Buffer* create_buffer_from_file(const String& filename)
+Buffer* create_buffer_from_file(String filename)
 {
-    int fd = open(parse_filename(filename).c_str(), O_RDONLY);
+    filename = canonicalize_filename(parse_filename(filename));
+
+    int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
         if (errno == ENOENT)

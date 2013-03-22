@@ -94,7 +94,7 @@ void edit(const CommandParameters& params, Context& context)
     if (param_count == 0 or param_count > 3)
         throw wrong_argument_count();
 
-    const String& name = parser[0];
+    String name = canonicalize_filename(parse_filename(parser[0]));
 
     Buffer* buffer = nullptr;
     if (not force_reload)
