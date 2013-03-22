@@ -33,6 +33,11 @@ public:
         ms_instance = nullptr;
     }
 
+    static bool has_instance()
+    {
+        return ms_instance != nullptr;
+    }
+
 protected:
     Singleton()
     {

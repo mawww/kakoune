@@ -4,6 +4,7 @@
 #include "buffer.hh"
 #include "exception.hh"
 #include "string.hh"
+#include "client_manager.hh"
 
 namespace Kakoune
 {
@@ -35,6 +36,8 @@ void BufferManager::unregister_buffer(Buffer& buffer)
     {
         if (*it == &buffer)
         {
+            if (ClientManager::has_instance())
+                ClientManager::instance().ensure_no_client_uses_buffer(buffer);
             m_buffers.erase(it);
             return;
         }

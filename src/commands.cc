@@ -234,7 +234,6 @@ void delete_buffer(const CommandParameters& params, Context& context)
     if (manager.count() == 1)
         throw runtime_error("buffer " + buffer.name() + " is the last one");
 
-    ClientManager::instance().ensure_no_client_uses_buffer(buffer);
     delete &buffer;
 }
 
