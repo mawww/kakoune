@@ -450,13 +450,33 @@ void exec_commands_in_file(const CommandParameters& params,
     CommandManager::instance().execute(file_content, context);
 }
 
-void set_option(OptionManager& options, const CommandParameters& params,
-                Context& context)
+void set_global_option(const CommandParameters& params, Context& context)
 {
     if (params.size() != 2)
         throw wrong_argument_count();
 
-    options.get_local_option(params[0]).set_from_string(params[1]);
+    GlobalOptions::instance().get_local_option(params[0]).set_from_string(params[1]);
+}
+
+void set_buffer_option(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, { { "buffer", true } });
+    if (parser.positional_count() != 2)
+        throw wrong_argument_count();
+
+    OptionManager& options = parser.has_option("buffer") ?
+        BufferManager::instance().get_buffer(parser.option_value("buffer")).options()
+      : context.buffer().options();
+
+    options.get_local_option(parser[0]).set_from_string(parser[1]);
+}
+
+void set_window_option(const CommandParameters& params, Context& context)
+{
+    if (params.size() != 2)
+        throw wrong_argument_count();
+
+    context.window().options().get_local_option(params[0]).set_from_string(params[1]);
 }
 
 void declare_option(const CommandParameters& params, Context& context)
@@ -881,23 +901,17 @@ void register_commands()
     cm.register_command("def",  define_command);
     cm.register_command("echo", echo_message);
 
-    cm.register_commands({ "setg", "setglobal" },
-                         [](const CommandParameters& params, Context& context)
-                         { set_option(GlobalOptions::instance(), params, context); },
+    cm.register_commands({ "setg", "setglobal" }, set_global_option,
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
                              { return GlobalOptions::instance().complete_option_name(prefix, cursor_pos); }
                          }));
-    cm.register_commands({ "setb", "setbuffer" },
-                         [](const CommandParameters& params, Context& context)
-                         { set_option(context.buffer().options(), params, context); },
+    cm.register_commands({ "setb", "setbuffer" }, set_buffer_option,
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
                              { return context.buffer().options().complete_option_name(prefix, cursor_pos); }
                          }));
-    cm.register_commands({ "setw", "setwindow" },
-                         [](const CommandParameters& params, Context& context)
-                         { set_option(context.window().options(), params, context); },
+    cm.register_commands({ "setw", "setwindow" }, set_window_option,
                          PerArgumentCommandCompleter({
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
                              { return context.window().options().complete_option_name(prefix, cursor_pos); }
