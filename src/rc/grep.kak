@@ -12,8 +12,7 @@ def -shell-params -file-completion \
 
      if [[ -n "$kak_opt_toolsclient" ]]; then echo "eval -client '$kak_opt_toolsclient' %{"; fi
 
-     echo "try %{ db *grep* } catch %{}
-           edit -fifo ${output} *grep*
+     echo "edit! -fifo ${output} *grep*
            setb filetype grep
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
 

@@ -7,8 +7,7 @@ def -shell-params make %{ %sh{
 
      if [[ -n "$kak_opt_toolsclient" ]]; then echo "eval -client '$kak_opt_toolsclient' %{"; fi
 
-     echo "try %{ db *make* } catch %{}
-           edit -fifo ${output} *make*
+     echo "edit! -fifo ${output} *make*
            setb filetype make
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
 
