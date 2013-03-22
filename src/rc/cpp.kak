@@ -34,14 +34,26 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) %{
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 }
 
+decl str-list alt_dirs ".,.."
+
 def alt %{ %sh{
     shopt -s extglob
-    case ${kak_bufname} in
+    alt_dirs=${kak_opt_alt_dirs/,/ }
+    file=$(basename ${kak_bufname})
+    dir=$(dirname ${kak_bufname})
+
+    case ${file} in
          *.c|*.cc|*.cpp|*.cxx|*.C)
-             altname=$(ls -1 "${kak_bufname%.*}".@(h|hh|hpp|hxx|H) 2> /dev/null | head -n 1)
+             for alt_dir in ${alt_dirs}; do
+                 altname=$(ls -1 "${dir}/${alt_dir}/${file%.*}".@(h|hh|hpp|hxx|H) 2> /dev/null | head -n 1)
+                 [[ -n ${altname} ]] && break
+             done
          ;;
          *.h|*.hh|*.hpp|*.hxx|*.H)
-             altname=$(ls -1 "${kak_bufname%.*}".@(c|cc|cpp|cxx|C) 2> /dev/null | head -n 1)
+             for alt_dir in ${alt_dirs}; do
+                 altname=$(ls -1 "${dir}/${alt_dir}/${file%.*}".@(c|cc|cpp|cxx|C) 2> /dev/null | head -n 1)
+                 [[ -n ${altname} ]] && break
+             done
          ;;
     esac
     if [[ -e ${altname} ]]; then
