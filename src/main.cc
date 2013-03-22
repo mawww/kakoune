@@ -871,6 +871,11 @@ int main(int argc, char* argv[])
         on_assert_failed(("uncaught exception:\n" + error.description()).c_str());
         return -1;
     }
+    catch (std::exception& error)
+    {
+        on_assert_failed(("uncaught exception:\n"_str + error.what()).c_str());
+        return -1;
+    }
     catch (...)
     {
         on_assert_failed("uncaught exception");
