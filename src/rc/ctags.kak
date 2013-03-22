@@ -26,7 +26,7 @@ def -shell-params \
     }}
 
 def funcinfo %{
-    eval -restore-selections %{
+    eval -draft %{
         exec [(<space>B;
         %sh{
             if [[ "$kak_selection" =~ [a-zA-Z_]+\( ]]; then

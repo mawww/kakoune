@@ -483,7 +483,7 @@ void declare_option(const CommandParameters& params, Context& context)
 template<typename Func>
 void context_wrap(const CommandParameters& params, Context& context, Func func)
 {
-    ParametersParser parser(params, { { "client", true }, { "restore-selections", false }});
+    ParametersParser parser(params, { { "client", true }, { "draft", false }});
     if (parser.positional_count() == 0)
         throw wrong_argument_count();
 
@@ -491,11 +491,11 @@ void context_wrap(const CommandParameters& params, Context& context, Func func)
         ClientManager::instance().get_client_context(parser.option_value("client"))
       : context;
 
-    if (parser.has_option("restore-selections"))
+    if (parser.has_option("draft"))
     {
         Editor& editor = real_context.editor();
-        DynamicSelectionList sels(editor.buffer(), editor.selections());
-        auto restore_sels = on_scope_end([&]{ editor.select(sels); });
+        DynamicSelectionList sels{editor.buffer(), editor.selections()};
+        auto restore_sels = on_scope_end([&]{ editor.select(sels); real_context.change_editor(editor); });
         func(parser, real_context);
     }
     else

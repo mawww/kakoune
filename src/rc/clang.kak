@@ -29,7 +29,7 @@ def clang-complete %{
 }
 
 def clang-enable-autocomplete %{
-    hook window InsertIdle .* %{ eval -restore-selections %{
+    hook window InsertIdle .* %{ eval -draft %{
         exec <a-h>
         %sh{ [[ $kak_selection =~ .*(\.|->|::).$ ]] && echo "exec <a-space>; echo 'completing...'; clang-complete" }
     }}
