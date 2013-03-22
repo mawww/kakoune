@@ -1,22 +1,22 @@
 def -shell-params runtime %{ %sh{
-        while (( "$#" )); do
+        while [ $# -gt 0 ]; do
             echo "source '${kak_runtime}/$1'"
             shift
         done
 }}
 
 %sh{
-    if [[ -n "${XDG_CONFIG_HOME}" ]]; then
+    if [ -n "${XDG_CONFIG_HOME}" ]; then
        localconfdir="${XDG_CONFIG_HOME}/kak"
     else
        localconfdir="$HOME/.config/kak"
     fi
-    if [[ -d "${localconfdir}/autoload" ]]; then
+    if [ -d "${localconfdir}/autoload" ]; then
         for rcfile in ${localconfdir}/autoload/*; do
             echo "try %{ source '${rcfile}' } catch %{ }";
         done
     fi
-    if [[ -f "${localconfdir}/kakrc" ]]; then
+    if [ -f "${localconfdir}/kakrc" ]; then
         echo "source '${localconfdir}/kakrc'"
     fi
 }
