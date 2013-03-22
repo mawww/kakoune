@@ -52,6 +52,9 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
+
+    delete BufferManager::instance().get_buffer_ifp(name);
+
     Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
     auto watcher = new FDWatcher(fd, [buffer](FDWatcher& watcher) {
