@@ -69,8 +69,12 @@ struct Context
     void change_editor(Editor& editor)
     {
         m_editor.reset(&editor);
-        if (has_window() && has_ui())
-            window().set_dimensions(ui().dimensions());
+        if (has_window())
+        {
+            if (has_ui())
+                window().set_dimensions(ui().dimensions());
+            window().hooks().run_hook("WinDisplay", buffer().name(), *this);
+        }
     }
 
     OptionManager& options() const

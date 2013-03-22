@@ -361,7 +361,9 @@ existing hooks are:
  * +InsertKey+: A key is received in insert mode, the key is used for filtering
  * +InsertMove+: The cursor moved (without inserting) in insert mode, the key
        that triggered the move is used for filtering
- * +WinCreate+: A window was created
+ * +WinCreate+: A window was created, the filtering text is the buffer name
+ * +WinDisplay+: A window was bound a client, the filtering text is the buffer
+       name
  * +WinSetOption+: An option was set in a window context, the filtering text
        is '<option_name>=<new_value>'
  * +BufNew+: A buffer for a new file has been created, filename is used for
