@@ -734,6 +734,15 @@ void set_register(const CommandParameters& params, Context& context)
     RegisterManager::instance()[params[0][0]] = memoryview<String>(params[1]);
 }
 
+void change_working_directory(const CommandParameters& params, Context&)
+{
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    if (chdir(parse_filename(params[0]).c_str()) != 0)
+        throw runtime_error("cannot change to directory " + params[0]);
+}
+
 class RegisterRestorer
 {
 public:
@@ -925,6 +934,8 @@ void register_commands()
     cm.register_commands({"name"}, set_client_name);
 
     cm.register_command("reg", set_register);
+
+    cm.register_command("cd", change_working_directory, filename_completer);
 }
 
 }
