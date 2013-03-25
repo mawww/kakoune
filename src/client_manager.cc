@@ -195,11 +195,9 @@ static String generate_status_line(const Context& context)
 {
     BufferCoord cursor = context.editor().main_selection().last().coord();
     std::ostringstream oss;
-    String name = context.buffer().name();
-    if (context.buffer().flags() & Buffer::Flags::File)
-        name = compact_path(name);
 
-    oss << name << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
+    oss << context.buffer().display_name()
+        << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
     if (context.buffer().is_modified())
         oss << " [+]";
     if (context.input_handler().is_recording())

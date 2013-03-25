@@ -153,6 +153,7 @@ public:
     BufferIterator iterator_at_line_end(LineCount line) const;
 
     const String& name() const { return m_name; }
+    String display_name() const;
 
     // returns true if the buffer is in a different state than
     // the last time it was saved

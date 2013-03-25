@@ -5,6 +5,7 @@
 #include "assert.hh"
 #include "utils.hh"
 #include "context.hh"
+#include "file.hh"
 
 #include <algorithm>
 
@@ -20,6 +21,9 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
       m_options(GlobalOptions::instance())
 {
     BufferManager::instance().register_buffer(*this);
+
+    if (flags & Flags::File)
+        m_name = real_path(m_name);
 
     if (lines.empty())
         lines.emplace_back("\n");
@@ -56,6 +60,13 @@ Buffer::~Buffer()
 
     BufferManager::instance().unregister_buffer(*this);
     assert(m_change_listeners.empty());
+}
+
+String Buffer::display_name() const
+{
+    if (m_flags & Flags::File)
+        return compact_path(m_name);
+    return m_name;
 }
 
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,

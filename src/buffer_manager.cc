@@ -5,6 +5,7 @@
 #include "exception.hh"
 #include "string.hh"
 #include "client_manager.hh"
+#include "file.hh"
 
 namespace Kakoune
 {
@@ -49,7 +50,9 @@ Buffer* BufferManager::get_buffer_ifp(const String& name)
 {
     for (auto& buf : m_buffers)
     {
-        if (buf->name() == name)
+        if (buf->name() == name or
+            (buf->flags() & Buffer::Flags::File and
+             real_path(buf->name()) == real_path(parse_filename(name))))
             return buf.get();
     }
     return nullptr;
@@ -80,7 +83,7 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
     CandidateList result;
     for (auto& buffer : m_buffers)
     {
-        const String& name = buffer->name();
+        String name = buffer->display_name();
         if (name.substr(0, real_prefix.length()) == real_prefix)
             result.push_back(escape(name));
     }
@@ -92,7 +95,7 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
             Regex ex(real_prefix.begin(), real_prefix.end());
             for (auto& buffer : m_buffers)
             {
-                const String& name = buffer->name();
+                String name = buffer->display_name();
                 if (boost::regex_search(name.begin(), name.end(), ex))
                     result.push_back(escape(name));
             }

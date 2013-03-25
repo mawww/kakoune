@@ -97,8 +97,7 @@ void edit(const CommandParameters& params, Context& context)
     if (param_count == 0 or param_count > 3)
         throw wrong_argument_count();
 
-    const bool file = not parser.has_option("scratch") and not parser.has_option("fifo");
-    String name = file ? real_path(parse_filename(parser[0])) : parser[0];
+    const String name = parser[0];
 
     Buffer* buffer = nullptr;
     if (not force_reload)
