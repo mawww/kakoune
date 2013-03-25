@@ -1,6 +1,8 @@
 #include "option_manager.hh"
 #include "assert.hh"
 
+#include "option_types.hh"
+
 #include <sstream>
 
 namespace Kakoune
@@ -144,6 +146,9 @@ template void Option::set<std::vector<String>>(const std::vector<String>&);
 template const Regex& Option::get<Regex>() const;
 template void Option::set<Regex>(const Regex&);
 
+template const std::vector<LineAndFlag>& Option::get<std::vector<LineAndFlag>>() const;
+template void Option::set<std::vector<LineAndFlag>>(const std::vector<LineAndFlag>&);
+
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
 {
@@ -273,5 +278,6 @@ Option& GlobalOptions::declare_option(const String& name, const T& value)
 }
 
 template Option& GlobalOptions::declare_option<>(const String&, const std::vector<int>&);
+template Option& GlobalOptions::declare_option<>(const String&, const std::vector<LineAndFlag>&);
 
 }

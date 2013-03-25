@@ -19,6 +19,7 @@
 #include "client_manager.hh"
 #include "parameters_parser.hh"
 #include "utf8_iterator.hh"
+#include "option_types.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -495,6 +496,8 @@ void declare_option(const CommandParameters& params, Context& context)
         opt = &GlobalOptions::instance().declare_option<std::vector<int>>(params[1], {});
     else if (params[0] == "str-list")
         opt = &GlobalOptions::instance().declare_option<std::vector<String>>(params[1], {});
+    else if (params[0] == "line-flag-list")
+        opt = &GlobalOptions::instance().declare_option<std::vector<LineAndFlag>>(params[1], {});
     else
         throw runtime_error("unknown type " + params[0]);
 

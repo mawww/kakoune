@@ -8,6 +8,8 @@
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 
+#include "option_types.hh"
+
 #include <sstream>
 #include <locale>
 
@@ -316,30 +318,35 @@ void expand_unprintable(DisplayBuffer& display_buffer)
 class FlagLines
 {
 public:
-    FlagLines(String flag, String lines_opt_name, const OptionManager& options)
-        : m_flag(std::move(flag)), m_lines_opt_name(std::move(lines_opt_name)),
+    FlagLines(Color bg, String option_name, const OptionManager& options)
+        : m_bg(bg), m_option_name(std::move(option_name)),
           m_options(options)
     {
         // trigger an exception if option is not of right type.
-        m_options[m_lines_opt_name].get<std::vector<int>>();
+        m_options[m_option_name].get<std::vector<LineAndFlag>>();
     }
 
     void operator()(DisplayBuffer& display_buffer)
     {
-        auto& lines = m_options[m_lines_opt_name].get<std::vector<int>>();
-        const String empty{' ', m_flag.char_length()};
+        auto& lines = m_options[m_option_name].get<std::vector<LineAndFlag>>();
+
+        CharCount width = 0;
+        for (auto& l : lines)
+             width = std::max(width, l.flag.char_length());
+        const String empty{' ', width};
         for (auto& line : display_buffer.lines())
         {
-            const bool flagged = contains(lines, (int)line.buffer_line() + 1);
-            DisplayAtom atom{AtomContent(flagged ? m_flag : empty)};
-            atom.colors = { Color::Blue, Color::Cyan };
+            int line_num = (int)line.buffer_line() + 1;
+            auto it = find_if(lines, [&](const LineAndFlag& l) { return l.line == line_num; });
+            DisplayAtom atom{AtomContent(it != lines.end() ? it->flag : empty)};
+            atom.colors = { it != lines.end() ? it->color : Color::Default , m_bg };
             line.insert(line.begin(), std::move(atom));
         }
     }
 
 private:
-    String m_flag;
-    String m_lines_opt_name;
+    Color m_bg;
+    String m_option_name;
     const OptionManager& m_options;
 };
 
@@ -348,7 +355,7 @@ HighlighterAndId flag_lines_factory(const HighlighterParameters& params, const W
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    return {"hlflags_" + params[1], FlagLines{params[0], params[1], window.options()}};
+    return {"hlflags_" + params[1], FlagLines{str_to_color(params[0]), params[1], window.options()}};
 }
 
 template<void (*highlighter_func)(DisplayBuffer&)>
