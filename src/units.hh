@@ -84,6 +84,7 @@ private:
 
 struct LineCount : public StronglyTypedNumber<LineCount, int>
 {
+    LineCount() : LineCount(0) {}
     constexpr LineCount(int value) : StronglyTypedNumber<LineCount>(value) {}
 };
 
@@ -94,6 +95,7 @@ inline constexpr LineCount operator"" _line(unsigned long long int value)
 
 struct ByteCount : public StronglyTypedNumber<ByteCount, int>
 {
+    ByteCount() : ByteCount(0) {}
     constexpr ByteCount(int value) : StronglyTypedNumber<ByteCount>(value) {}
 };
 
@@ -104,6 +106,7 @@ inline constexpr ByteCount operator"" _byte(unsigned long long int value)
 
 struct CharCount : public StronglyTypedNumber<CharCount, int>
 {
+    CharCount() : CharCount(0) {}
     constexpr CharCount(int value) : StronglyTypedNumber<CharCount>(value) {}
 };
 
