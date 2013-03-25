@@ -26,7 +26,8 @@ class Buffer;
 
 // parse ~/ and $env values in filename and returns the translated filename
 String parse_filename(const String& filename);
-String canonicalize_filename(const String& filename);
+String real_path(const String& filename);
+String compact_path(const String& filename);
 
 String read_file(const String& filename);
 Buffer* create_buffer_from_file(String filename);

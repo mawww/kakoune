@@ -46,9 +46,44 @@ String parse_filename(const String& filename)
     return result;
 }
 
-String canonicalize_filename(const String& filename)
+String real_path(const String& filename)
 {
-    return filename.replace(R"(((^|(?<=/))\./)+|[^/]+/\.\./)", "");
+    String dirname = ".";
+    String basename = filename;
+
+    auto it = find(reversed(filename), '/');
+    if (it != filename.rend())
+    {
+        dirname = String{filename.begin(), it.base()};
+        basename = String{it.base(), filename.end()};
+    }
+
+    char buffer[PATH_MAX+1];
+    char* res = realpath(dirname.c_str(), buffer);
+    if (not res)
+        throw file_not_found{dirname};
+    return res + "/"_str + basename;
+}
+
+String compact_path(const String& filename)
+{
+    String real_filename = real_path(filename);
+
+    char cwd[1024];
+    getcwd(cwd, 1024);
+    String real_cwd = real_path(cwd);
+    if (real_filename.substr(0, real_cwd.length()) == real_cwd)
+        return real_filename.substr(real_cwd.length()+1);
+
+    const char* home = getenv("HOME");
+    if (home)
+    {
+        ByteCount home_len = (int)strlen(home);
+        if (real_filename.substr(0, home_len) == home)
+            return "~" + real_filename.substr(home_len);
+    }
+
+    return filename;
 }
 
 String read_file(const String& filename)
@@ -78,7 +113,7 @@ String read_file(const String& filename)
 
 Buffer* create_buffer_from_file(String filename)
 {
-    filename = canonicalize_filename(parse_filename(filename));
+    filename = real_path(parse_filename(filename));
 
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)

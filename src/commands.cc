@@ -48,7 +48,7 @@ Buffer* open_or_create(const String& filename, Context& context)
 
 Buffer* open_fifo(const String& name , const String& filename, Context& context)
 {
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
@@ -97,7 +97,8 @@ void edit(const CommandParameters& params, Context& context)
     if (param_count == 0 or param_count > 3)
         throw wrong_argument_count();
 
-    String name = canonicalize_filename(parse_filename(parser[0]));
+    const bool file = not parser.has_option("scratch") and not parser.has_option("fifo");
+    String name = file ? real_path(parse_filename(parser[0])) : parser[0];
 
     Buffer* buffer = nullptr;
     if (not force_reload)

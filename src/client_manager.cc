@@ -3,6 +3,7 @@
 #include "event_manager.hh"
 #include "buffer_manager.hh"
 #include "command_manager.hh"
+#include "file.hh"
 
 namespace Kakoune
 {
@@ -194,8 +195,11 @@ static String generate_status_line(const Context& context)
 {
     BufferCoord cursor = context.editor().main_selection().last().coord();
     std::ostringstream oss;
-    oss << context.buffer().name()
-        << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
+    String name = context.buffer().name();
+    if (context.buffer().flags() & Buffer::Flags::File)
+        name = compact_path(name);
+
+    oss << name << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
     if (context.buffer().is_modified())
         oss << " [+]";
     if (context.input_handler().is_recording())
