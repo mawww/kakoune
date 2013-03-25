@@ -517,7 +517,7 @@ public:
         m_context.options().unregister_watcher(*this);
     }
     BufferCompleter(const BufferCompleter&) = delete;
-    BufferCompleter operator=(const BufferCompleter&) = delete;
+    BufferCompleter& operator=(const BufferCompleter&) = delete;
 
     void select(int offset)
     {

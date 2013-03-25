@@ -459,9 +459,8 @@ private:
 };
 
 Server::Server()
+    : m_filename{"/tmp/kak-" + int_to_str(getpid())}
 {
-    m_filename = "/tmp/kak-" + int_to_str(getpid());
-
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr;
