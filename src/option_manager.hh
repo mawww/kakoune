@@ -4,6 +4,7 @@
 #include "utils.hh"
 #include "exception.hh"
 #include "completion.hh"
+#include "option_types.hh"
 
 #include <unordered_map>
 
@@ -78,6 +79,65 @@ private:
     std::vector<OptionManagerWatcher*> m_watchers;
 };
 
+template<typename T>
+class TypedOption : public Option
+{
+public:
+    TypedOption(OptionManager& manager, String name, const T& value)
+        : Option(manager, std::move(name)), m_value(value) {}
+
+    void set(const T& value)
+    {
+        if (m_value != value)
+        {
+            m_value = value;
+            m_manager.on_option_changed(*this);
+        }
+    }
+    const T& get() const { return m_value; }
+
+    String get_as_string() const override
+    {
+        return option_to_string(m_value);
+    }
+    void set_from_string(const String& str) override
+    {
+        T val;
+        option_from_string(str, val);
+        set(val);
+    }
+
+    Option* clone(OptionManager& manager) const override
+    {
+        return new TypedOption{manager, name(), m_value};
+    }
+private:
+    T m_value;
+};
+
+template<typename T> const T& Option::get() const
+{
+    auto* typed_opt = dynamic_cast<const TypedOption<T>*>(this);
+    if (not typed_opt)
+        throw runtime_error("option " + name() + " is not of type " + typeid(T).name());
+    return typed_opt->get();
+}
+
+template<typename T> void Option::set(const T& val)
+{
+    auto* typed_opt = dynamic_cast<TypedOption<T>*>(this);
+    if (not typed_opt)
+        throw runtime_error("option " + name() + " is not of type " + typeid(T).name());
+    return typed_opt->set(val);
+}
+
+template<typename T>
+auto find_option(T& container, const String& name) -> decltype(container.begin())
+{
+    using ptr_type = decltype(*container.begin());
+    return find_if(container, [&name](const ptr_type& opt) { return opt->name() == name; });
+}
+
 class GlobalOptions : public OptionManager,
                       public Singleton<GlobalOptions>
 {
@@ -85,7 +145,13 @@ public:
     GlobalOptions();
 
     template<typename T>
-    Option& declare_option(const String& name, const T& inital_value);
+    Option& declare_option(const String& name, const T& value)
+    {
+        if (find_option(m_options, name) != m_options.end())
+            throw runtime_error("option " + name + " already declared");
+        m_options.emplace_back(new TypedOption<T>{*this, name, value});
+        return *m_options.back();
+    }
 };
 
 }

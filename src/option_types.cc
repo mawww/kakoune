@@ -5,6 +5,23 @@
 namespace Kakoune
 {
 
+String option_to_string(const Regex& re)
+{
+    return String{re.str()};
+}
+
+void option_from_string(const String& str, Regex& re)
+{
+    try
+    {
+        re = Regex{str.begin(), str.end()};
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error("unable to create regex: "_str + err.what());
+    }
+}
+
 String option_to_string(const LineAndFlag& opt)
 {
     return int_to_str((int)opt.line) + ":" + color_to_str(opt.color) + ":" + opt.flag;
