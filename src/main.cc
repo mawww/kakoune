@@ -724,7 +724,7 @@ void register_registers()
 {
     RegisterManager& register_manager = RegisterManager::instance();
 
-    register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().name()); });
+    register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().display_name()); });
     register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
     for (size_t i = 0; i < 10; ++i)
     {
