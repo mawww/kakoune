@@ -153,32 +153,31 @@ HighlighterAndId colorize_regex_factory(const HighlighterParameters params, cons
     }
 }
 
-class SearchHighlighter
+template<typename RegexGetter>
+class DynamicRegexHighlighter
 {
 public:
-    SearchHighlighter(const ColorSpec& colors)
-        : m_colors(colors), m_colorizer(Regex(), m_colors) {}
+    DynamicRegexHighlighter(const ColorSpec& colors, RegexGetter getter)
+        : m_regex_getter(getter), m_colors(colors), m_colorizer(Regex(), m_colors) {}
 
     void operator()(DisplayBuffer& display_buffer)
     {
-        memoryview<String> searches = RegisterManager::instance()['/'].values(Context{});
-        if (searches.empty())
-            return;
-        const String& search = searches[0];
-        if (search != m_last_search)
+        Regex regex = m_regex_getter();
+        if (regex != m_last_regex)
         {
-            m_last_search = search;
-            if (not m_last_search.empty())
-                m_colorizer = RegexColorizer{Regex{m_last_search.begin(), m_last_search.end()}, m_colors};
+            m_last_regex = regex;
+            if (not m_last_regex.empty())
+                m_colorizer = RegexColorizer{m_last_regex, m_colors};
         }
-        if (not m_last_search.empty())
+        if (not m_last_regex.empty())
             m_colorizer(display_buffer);
     }
 
 private:
-    String         m_last_search;
+    Regex          m_last_regex;
     ColorSpec      m_colors;
     RegexColorizer m_colorizer;
+    RegexGetter    m_regex_getter;
 };
 
 HighlighterAndId highlight_search_factory(const HighlighterParameters params, const Window&)
@@ -187,14 +186,32 @@ HighlighterAndId highlight_search_factory(const HighlighterParameters params, co
         throw runtime_error("wrong parameter count");
     try
     {
-        ColorSpec colors;
-        colors[0] = &ColorRegistry::instance()[params[0]];
-        return {"hlsearch", SearchHighlighter{colors}};
+        ColorSpec colors { { 0, &ColorRegistry::instance()[params[0]] } };
+        auto get_regex = []{
+            auto s = RegisterManager::instance()['/'].values(Context{});
+            return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
+        };
+        return {"hlsearch", DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
     }
     catch (boost::regex_error& err)
     {
         throw runtime_error(String("regex error: ") + err.what());
     }
+};
+
+HighlighterAndId highlight_regex_option_factory(const HighlighterParameters params, const Window& window)
+{
+    if (params.size() != 2)
+        throw runtime_error("wrong parameter count");
+
+    ColorSpec colors { { 0, &ColorRegistry::instance()[params[1]] } };
+    String option_name = params[0];
+    const OptionManager& options = window.options();
+    // verify option type now
+    options[option_name].get<Regex>();
+
+    auto get_regex = [option_name, &options]{ return options[option_name].get<Regex>(); };
+    return {"hloption_" + option_name, DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
 };
 
 void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer)
@@ -386,6 +403,7 @@ void register_highlighters()
 
     registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("regex", colorize_regex_factory);
+    registry.register_func("regex_option", highlight_regex_option_factory);
     registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
     registry.register_func("flag_lines", flag_lines_factory);
