@@ -44,15 +44,15 @@ public:
         return *group;
     }
 
-    CandidateList complete_id(const String& prefix, ByteCount cursor_pos)
+    CandidateList complete_id(const String& prefix, ByteCount cursor_pos) const
     {
         return m_functions.complete_id(prefix, cursor_pos);
     }
 
-    CandidateList complete_group_id(const String& prefix, ByteCount cursor_pos)
+    CandidateList complete_group_id(const String& prefix, ByteCount cursor_pos) const
     {
         return m_functions.complete_id_if(
-            prefix, cursor_pos, [](FunctionAndId& func) {
+            prefix, cursor_pos, [](const FunctionAndId& func) {
                 return func.second.template target<FunctionGroup>() != nullptr;
             });
     }

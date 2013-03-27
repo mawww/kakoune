@@ -66,7 +66,7 @@ public:
     template<typename _Condition>
     CandidateList complete_id_if(const String& prefix,
                                  ByteCount cursor_pos,
-                                 _Condition condition)
+                                 _Condition condition) const
     {
         String real_prefix = prefix.substr(0, cursor_pos);
         CandidateList result;
@@ -83,7 +83,7 @@ public:
     }
 
     CandidateList complete_id(const String& prefix,
-                              ByteCount cursor_pos)
+                              ByteCount cursor_pos) const
     {
         return complete_id_if(
             prefix, cursor_pos, [](const value_type&) { return true; });
