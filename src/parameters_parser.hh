@@ -24,6 +24,12 @@ struct missing_option_value: public runtime_error
         : runtime_error("missing value for option '" + name + "'") {}
 };
 
+struct wrong_argument_count : runtime_error
+{
+    wrong_argument_count() : runtime_error("wrong argument count") {}
+};
+
+
 // ParameterParser provides tools to parse command parameters.
 // There are 3 types of parameters:
 //  * unnamed options, which are accessed by position (ignoring named ones)
@@ -35,7 +41,9 @@ struct ParametersParser
     // they are understood as string options, else they are understood as
     // boolean option.
     ParametersParser(const ParameterList& params,
-                     std::unordered_map<String, bool> options);
+                     std::unordered_map<String, bool> options,
+                     size_t min_positionals = 0,
+                     size_t max_positionals = -1);
 
     // check if a named option (either string or boolean) is specified
     bool has_option(const String& name) const;

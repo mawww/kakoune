@@ -31,11 +31,6 @@ namespace Kakoune
 namespace
 {
 
-struct wrong_argument_count : runtime_error
-{
-    wrong_argument_count() : runtime_error("wrong argument count") {}
-};
-
 Buffer* open_or_create(const String& filename, Context& context)
 {
     Buffer* buffer = create_buffer_from_file(filename);
@@ -92,11 +87,7 @@ template<bool force_reload>
 void edit(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "scratch", false },
-                                      { "fifo", true } });
-
-    const size_t param_count = parser.positional_count();
-    if (param_count == 0 or param_count > 3)
-        throw wrong_argument_count();
+                                      { "fifo", true } }, 1, 3);
 
     const String name = parser[0];
 
@@ -115,6 +106,7 @@ void edit(const CommandParameters& params, Context& context)
 
     BufferManager::instance().set_last_used_buffer(*buffer);
 
+    const size_t param_count = parser.positional_count();
     if (buffer != &context.buffer() or param_count > 1)
         context.push_jump();
 
@@ -254,10 +246,7 @@ Group& get_group(Group& root, const String& group_path)
 
 void add_highlighter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } });
-    if (parser.positional_count() < 1)
-        throw wrong_argument_count();
-
+    ParametersParser parser(params, { { "group", true } }, 1);
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     auto begin = parser.begin();
@@ -277,9 +266,7 @@ void add_highlighter(const CommandParameters& params, Context& context)
 
 void rm_highlighter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } });
-    if (parser.positional_count() != 1)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "group", true } }, 1, 1);
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
@@ -291,9 +278,7 @@ void rm_highlighter(const CommandParameters& params, Context& context)
 
 void add_filter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } });
-    if (parser.positional_count() < 1)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "group", true } }, 1);
 
     FilterRegistry& registry = FilterRegistry::instance();
 
@@ -314,9 +299,7 @@ void add_filter(const CommandParameters& params, Context& context)
 
 void rm_filter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } });
-    if (parser.positional_count() != 1)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "group", true } }, 1, 1);
 
     Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
@@ -371,10 +354,8 @@ void define_command(const CommandParameters& params, Context& context)
                               { "shell-params", false },
                               { "allow-override", false },
                               { "file-completion", false },
-                              { "shell-completion", true } });
-
-    if (parser.positional_count() != 2)
-        throw wrong_argument_count();
+                              { "shell-completion", true } },
+                             2, 2);
 
     auto begin = parser.begin();
     const String& cmd_name = *begin;
@@ -510,9 +491,7 @@ void declare_option(const CommandParameters& params, Context& context)
 template<typename Func>
 void context_wrap(const CommandParameters& params, Context& context, Func func)
 {
-    ParametersParser parser(params, { { "client", true }, { "draft", false }});
-    if (parser.positional_count() == 0)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "client", true }, { "draft", false }}, 1);
 
     Context& real_context = parser.has_option("client") ?
         ClientManager::instance().get_client_context(parser.option_value("client"))
@@ -663,10 +642,7 @@ static String assist(String message, CharCount maxWidth)
 
 void info(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "anchor", true }, { "assist", false } });
-
-    if (parser.positional_count() > 1)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "anchor", true }, { "assist", false } }, 0, 1);
 
     context.ui().info_hide();
     if (parser.positional_count() > 0)
@@ -713,18 +689,14 @@ void try_catch(const CommandParameters& params, Context& context)
 
 void define_color_alias(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, {});
-    if (parser.positional_count() != 2)
-        throw wrong_argument_count();
+    ParametersParser parser(params, {}, 2, 2);
     ColorRegistry::instance().register_alias(
         parser[0], parser[1], true);
 }
 
 void set_client_name(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, {});
-    if (parser.positional_count() != 1)
-        throw wrong_argument_count();
+    ParametersParser parser(params, {}, 1, 1);
     ClientManager::instance().set_client_name(context, params[0]);
 }
 
