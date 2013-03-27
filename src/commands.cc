@@ -747,6 +747,38 @@ void change_working_directory(const CommandParameters& params, Context&)
         throw runtime_error("cannot change to directory " + params[0]);
 }
 
+template<typename GetRootGroup>
+CommandCompleter group_rm_completer(GetRootGroup get_root_group)
+{
+    return [=](const Context& context, const CommandParameters& params,
+               size_t token_to_complete, ByteCount pos_in_token) {
+        auto& root_group = get_root_group(context);
+        const String& arg = token_to_complete < params.size() ?
+                            params[token_to_complete] : String();
+        if (token_to_complete == 1 and params[0] == "-group")
+            return root_group.complete_group_id(arg, pos_in_token);
+        else if (token_to_complete == 2 and params[0] == "-group")
+            return get_group(root_group, params[1]).complete_id(arg, pos_in_token);
+        return root_group.complete_id(arg, pos_in_token);
+    };
+}
+
+template<typename FactoryRegistry, typename GetRootGroup>
+CommandCompleter group_add_completer(GetRootGroup get_root_group)
+{
+    return [=](const Context& context, const CommandParameters& params,
+               size_t token_to_complete, ByteCount pos_in_token) {
+        auto& root_group = get_root_group(context);
+        const String& arg = token_to_complete < params.size() ?
+                            params[token_to_complete] : String();
+        if (token_to_complete == 1 and params[0] == "-group")
+            return root_group.complete_group_id(arg, pos_in_token);
+        else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
+            return FactoryRegistry::instance().complete_name(arg, pos_in_token);
+        return CandidateList();
+    };
+}
+
 class RegisterRestorer
 {
 public:
@@ -820,6 +852,7 @@ void exec_keys(const KeyList& keys, Context& context)
     }
 }
 
+
 void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
@@ -847,62 +880,12 @@ void register_commands()
     cm.register_commands({ "db", "delbuf" }, delete_buffer<false>, buffer_completer);
     cm.register_commands({ "db!", "delbuf!" }, delete_buffer<true>, buffer_completer);
 
-    cm.register_commands({ "ah", "addhl" }, add_highlighter,
-                         [](const Context& context, const CommandParameters& params,
-                           size_t token_to_complete, ByteCount pos_in_token)
-                         {
-                             Window& w = context.window();
-                             const String& arg = token_to_complete < params.size() ?
-                                                 params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
-                                 return w.highlighters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-                                 return HighlighterRegistry::instance().complete_name(arg, pos_in_token);
-                             else
-                                 return CandidateList();
-                         });
-    cm.register_commands({ "rh", "rmhl" }, rm_highlighter,
-                         [](const Context& context, const CommandParameters& params,
-                            size_t token_to_complete, ByteCount pos_in_token)
-                         {
-                             Window& w = context.window();
-                             const String& arg = token_to_complete < params.size() ?
-                                                 params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
-                                 return w.highlighters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 2 and params[0] == "-group")
-                                 return get_group(w.highlighters(), params[1]).complete_id(arg, pos_in_token);
-                             else
-                                 return w.highlighters().complete_id(arg, pos_in_token);
-                         });
-    cm.register_commands({ "af", "addfilter" }, add_filter,
-                         [](const Context& context, const CommandParameters& params,
-                            size_t token_to_complete, ByteCount pos_in_token)
-                         {
-                             Window& w = context.window();
-                             const String& arg = token_to_complete < params.size() ?
-                                                 params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
-                                 return w.filters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-                                 return FilterRegistry::instance().complete_name(arg, pos_in_token);
-                             else
-                                 return CandidateList();
-                         });
-    cm.register_commands({ "rf", "rmfilter" }, rm_filter,
-                         [](const Context& context, const CommandParameters& params,
-                            size_t token_to_complete, ByteCount pos_in_token)
-                         {
-                             Window& w = context.window();
-                             const String& arg = token_to_complete < params.size() ?
-                                                 params[token_to_complete] : String();
-                             if (token_to_complete == 1 and params[0] == "-group")
-                                 return w.filters().complete_group_id(arg, pos_in_token);
-                             else if (token_to_complete == 2 and params[0] == "-group")
-                                 return get_group(w.filters(), params[1]).complete_id(arg, pos_in_token);
-                             else
-                                 return w.filters().complete_id(arg, pos_in_token);
-                         });
+    auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
+    auto get_filters      = [](const Context& c) -> FilterGroup& { return c.window().filters(); };
+    cm.register_commands({ "ah", "addhl" }, add_highlighter, group_add_completer<HighlighterRegistry>(get_highlighters));
+    cm.register_commands({ "rh", "rmhl" }, rm_highlighter, group_rm_completer(get_highlighters));
+    cm.register_commands({ "af", "addfilter" }, add_filter, group_add_completer<FilterRegistry>(get_filters));
+    cm.register_commands({ "rf", "rmfilter" }, rm_filter, group_rm_completer(get_filters));
 
     cm.register_command("hook", add_hook);
 
