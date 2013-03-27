@@ -4,7 +4,6 @@
 #include "buffer.hh"
 #include "dynamic_selection_list.hh"
 #include "filter.hh"
-#include "idvaluemap.hh"
 #include "memoryview.hh"
 
 namespace Kakoune

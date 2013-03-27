@@ -7,11 +7,11 @@
 namespace Kakoune
 {
 
-template<typename _Id, typename _Value>
+template<typename Id, typename Value>
 class idvaluemap
 {
 public:
-    typedef std::pair<_Id, _Value> value_type;
+    typedef std::pair<Id, Value> value_type;
     typedef std::vector<value_type> container_type;
     typedef typename container_type::iterator iterator;
     typedef typename container_type::const_iterator const_iterator;
@@ -23,10 +23,10 @@ public:
 
     void append(value_type&& value)
     {
-        m_content.push_back(std::forward<value_type>(value));
+        m_content.push_back(std::move(value));
     }
 
-    iterator find(const _Id& id)
+    iterator find(const Id& id)
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -36,7 +36,7 @@ public:
         return end();
     }
 
-    const_iterator find(const _Id& id) const
+    const_iterator find(const Id& id) const
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -46,12 +46,12 @@ public:
         return end();
     }
 
-    bool contains(const _Id& id) const
+    bool contains(const Id& id) const
     {
         return find(id) != end();
     }
 
-    void remove(const _Id& id)
+    void remove(const Id& id)
     {
         for (auto it = m_content.begin(); it != m_content.end(); ++it)
         {
@@ -63,10 +63,10 @@ public:
         }
     }
 
-    template<typename _Condition>
+    template<typename Condition>
     CandidateList complete_id_if(const String& prefix,
                                  ByteCount cursor_pos,
-                                 _Condition condition) const
+                                 Condition condition) const
     {
         String real_prefix = prefix.substr(0, cursor_pos);
         CandidateList result;
