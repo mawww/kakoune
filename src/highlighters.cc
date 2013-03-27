@@ -1,7 +1,6 @@
 #include "highlighters.hh"
 #include "assert.hh"
 #include "color_registry.hh"
-#include "highlighter_group.hh"
 #include "register_manager.hh"
 #include "context.hh"
 #include "string.hh"

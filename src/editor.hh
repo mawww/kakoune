@@ -6,7 +6,6 @@
 #include "filter.hh"
 #include "idvaluemap.hh"
 #include "memoryview.hh"
-#include "filter_group.hh"
 
 namespace Kakoune
 {

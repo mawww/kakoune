@@ -1,6 +1,5 @@
 #include "filters.hh"
 #include "buffer.hh"
-#include "filter_group.hh"
 #include "selection.hh"
 
 namespace Kakoune

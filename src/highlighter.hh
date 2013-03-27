@@ -7,6 +7,7 @@
 #include "utils.hh"
 #include "memoryview.hh"
 #include "function_registry.hh"
+#include "function_group.hh"
 
 namespace Kakoune
 {
@@ -25,6 +26,8 @@ typedef memoryview<String> HighlighterParameters;
 
 using HighlighterFactory = std::function<HighlighterAndId (const HighlighterParameters& params,
                                                            const Window& window)>;
+
+using HighlighterGroup = FunctionGroup<DisplayBuffer&>;
 
 struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
                              Singleton<HighlighterRegistry>

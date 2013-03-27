@@ -5,13 +5,12 @@
 #include "display_buffer.hh"
 #include "completion.hh"
 #include "highlighter.hh"
-#include "highlighter_group.hh"
+#include "highlighter.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"
 
 namespace Kakoune
 {
-class HighlighterGroup;
 
 // A Window is an editing view onto a Buffer
 //

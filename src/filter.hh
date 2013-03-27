@@ -7,6 +7,7 @@
 #include "utils.hh"
 #include "memoryview.hh"
 #include "function_registry.hh"
+#include "function_group.hh"
 
 namespace Kakoune
 {
@@ -20,6 +21,7 @@ struct Selection;
 
 using FilterFunc = std::function<void (Buffer& buffer, Selection& selection, String& content)>;
 using FilterAndId = std::pair<String, FilterFunc>;
+using FilterGroup = FunctionGroup<Buffer&, Selection&, String&>;
 
 using FilterParameters = memoryview<String>;
 using FilterFactory = std::function<FilterAndId (const FilterParameters& params)>;
