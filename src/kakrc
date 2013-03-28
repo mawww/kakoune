@@ -1,3 +1,15 @@
+# define color scheme
+colalias value red
+colalias type yellow
+colalias identifier cyan
+colalias string magenta
+colalias error default,red
+colalias keyword blue
+colalias operator yellow
+colalias attribute green
+colalias comment cyan
+colalias macro magenta
+
 def -shell-params runtime %{ %sh{
         while [ $# -gt 0 ]; do
             echo "source '${kak_runtime}/$1'"
@@ -20,15 +32,3 @@ def -shell-params runtime %{ %sh{
         echo "source '${localconfdir}/kakrc'"
     fi
 }
-
-# define color scheme
-colalias value red
-colalias type yellow
-colalias identifier cyan
-colalias string magenta
-colalias error default,red
-colalias keyword blue
-colalias operator yellow
-colalias attribute green
-colalias comment cyan
-colalias macro magenta
