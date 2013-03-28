@@ -531,6 +531,7 @@ public:
 
     void operator() (Context& context)
     {
+        scoped_edition edition(context.editor());
         int count = context.numeric_param();
         do { m_func(context); } while(--count > 0);
     }
