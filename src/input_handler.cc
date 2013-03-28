@@ -450,10 +450,19 @@ private:
     KeyCallback m_callback;
 };
 
-static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterator& pos)
+struct BufferCompletion
+{
+    BufferIterator begin;
+    BufferIterator end;
+    CandidateList  candidates;
+
+    bool is_valid() const { return begin.is_valid() and not candidates.empty(); }
+};
+
+static BufferCompletion complete_word(const BufferIterator& pos)
 {
    if (pos.is_begin() or not is_word(*utf8::previous(pos)))
-       return { {}, pos };
+       return {};
 
     BufferIterator end = pos;
     BufferIterator begin = end-1;
@@ -479,15 +488,15 @@ static std::pair<CandidateList, BufferIterator> complete_word(const BufferIterat
             result.emplace_back(std::move(content));
     }
     std::sort(result.begin(), result.end());
-    return { std::move(result), begin };
+    return { begin, end, std::move(result) };
 }
 
-static std::pair<CandidateList, BufferIterator> complete_opt(const BufferIterator& pos, OptionManager& options)
+static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& options)
 {
     using StringList = std::vector<String>;
     const StringList& opt = options["completions"].get<StringList>();
     if (opt.empty())
-        return { {}, pos };
+        return {};
 
     auto& desc = opt[0];
     Regex re(R"((\d+):(\d+)@(\d+))");
@@ -499,9 +508,9 @@ static std::pair<CandidateList, BufferIterator> complete_opt(const BufferIterato
         int timestamp = str_to_int(String(match[3].first, match[3].second));
 
         if (timestamp == pos.buffer().timestamp() and line == pos.line() and column == pos.column())
-            return { { opt.begin() + 1, opt.end() }, pos };
+            return { pos, pos, { opt.begin() + 1, opt.end() } };
     }
-    return { {}, pos };
+    return {};
 }
 
 class BufferCompleter : public OptionManagerWatcher
@@ -524,39 +533,44 @@ public:
         if (not setup_ifn())
             return;
 
-        m_context.buffer().erase(m_position, m_position + m_matching_completions[m_current_completion].length());
-        m_current_completion = (m_current_completion + offset) % (int)m_matching_completions.size();
-        if (m_current_completion < 0)
-            m_current_completion += m_matching_completions.size();
-        m_context.buffer().insert(m_position, m_matching_completions[m_current_completion]);
-        m_context.ui().menu_select(m_current_completion);
+        m_current_candidate = (m_current_candidate + offset) % (int)m_matching_candidates.size();
+        if (m_current_candidate < 0)
+            m_current_candidate += m_matching_candidates.size();
+        const String& candidate = m_matching_candidates[m_current_candidate];
+
+        m_context.buffer().erase(m_completions.begin, m_completions.end);
+        m_context.buffer().insert(m_completions.begin, candidate);
+        m_completions.end = m_completions.begin + candidate.length();
+        m_context.ui().menu_select(m_current_candidate);
     }
 
     void update()
     {
-        if (m_position.is_valid())
+        if (m_completions.is_valid())
         {
+            ByteCount longest_completion = 0;
+            for (auto& candidate : m_completions.candidates)
+                 longest_completion = std::max(longest_completion, candidate.length());
+
             BufferIterator cursor = m_context.editor().main_selection().last();
-            ByteCount longest_completion = std::max_element(m_all_completions.begin(), m_all_completions.end(),
-                                                            [](const String& lhs, const String& rhs)
-                                                            { return lhs.length() < rhs.length(); })->length();
-            if (cursor > m_position and ByteCount{(int)(cursor - m_position)} < longest_completion)
+            if (cursor > m_completions.begin and ByteCount{(int)(cursor - m_completions.begin)} < longest_completion)
             {
-                String prefix = m_context.buffer().string(m_position, cursor);
-                m_matching_completions.clear();
-                for (auto& candidate : m_all_completions)
+                String prefix = m_context.buffer().string(m_completions.begin, cursor);
+                m_matching_candidates.clear();
+                for (auto& candidate : m_completions.candidates)
                 {
                     if (candidate.substr(0, prefix.length()) == prefix)
-                        m_matching_completions.push_back(candidate);
+                        m_matching_candidates.push_back(candidate);
                 }
-                if (not m_matching_completions.empty())
+                if (not m_matching_candidates.empty())
                 {
                     m_context.ui().menu_hide();
-                    m_current_completion = m_matching_completions.size();
-                    DisplayCoord menu_pos = m_context.window().display_position(m_position);
-                    m_context.ui().menu_show(m_matching_completions, menu_pos, MenuStyle::Inline);
-                    m_context.ui().menu_select(m_current_completion);
-                    m_matching_completions.push_back(prefix);
+                    m_current_candidate = m_matching_candidates.size();
+                    DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
+                    m_context.ui().menu_show(m_matching_candidates, menu_pos, MenuStyle::Inline);
+                    m_context.ui().menu_select(m_current_candidate);
+                    m_completions.end = cursor;
+                    m_matching_candidates.push_back(prefix);
                     return;
                 }
             }
@@ -567,7 +581,7 @@ public:
 
     void reset()
     {
-        m_position = BufferIterator();
+        m_completions = BufferCompletion{};
         m_context.ui().menu_hide();
     }
 private:
@@ -582,33 +596,30 @@ private:
 
     bool setup_ifn()
     {
-        if (not m_position.is_valid())
+        if (not m_completions.is_valid())
         {
             BufferIterator cursor = m_context.editor().main_selection().last();
-            auto completions = complete_opt(cursor, m_context.options());
-            if (completions.first.empty())
-                completions = complete_word(cursor);
-            m_all_completions = std::move(completions.first);
-            if (m_all_completions.empty())
+            m_completions = complete_opt(cursor, m_context.options());
+            if (not m_completions.is_valid())
+                m_completions = complete_word(cursor);
+            if (not m_completions.is_valid())
                 return false;
 
-            assert(cursor >= completions.second);
-            m_position = completions.second;
+            assert(cursor >= m_completions.begin);
 
-            m_matching_completions = m_all_completions;
-            DisplayCoord menu_pos = m_context.window().display_position(m_position);
-            m_context.ui().menu_show(m_matching_completions, menu_pos, MenuStyle::Inline);
-            m_matching_completions.push_back(m_context.buffer().string(m_position, cursor));
-            m_current_completion = m_matching_completions.size() - 1;
+            m_matching_candidates = m_completions.candidates;
+            DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
+            m_context.ui().menu_show(m_matching_candidates, menu_pos, MenuStyle::Inline);
+            m_matching_candidates.push_back(m_context.buffer().string(m_completions.begin, m_completions.end));
+            m_current_candidate = m_matching_candidates.size() - 1;
         }
         return true;
     }
 
-    const Context& m_context;
-    BufferIterator m_position;
-    CandidateList  m_all_completions;
-    CandidateList  m_matching_completions;
-    int            m_current_completion = -1;
+    const Context&   m_context;
+    BufferCompletion m_completions;
+    CandidateList    m_matching_candidates;
+    int              m_current_candidate = -1;
 };
 
 class Insert : public InputMode
