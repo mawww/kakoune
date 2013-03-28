@@ -38,7 +38,7 @@ decl str-list alt_dirs ".,.."
 
 def alt %{ %sh{
     shopt -s extglob
-    alt_dirs=${kak_opt_alt_dirs/,/ }
+    alt_dirs=${kak_opt_alt_dirs//,/ }
     file=$(basename ${kak_bufname})
     dir=$(dirname ${kak_bufname})
 
@@ -46,13 +46,13 @@ def alt %{ %sh{
          *.c|*.cc|*.cpp|*.cxx|*.C)
              for alt_dir in ${alt_dirs}; do
                  altname=$(ls -1 "${dir}/${alt_dir}/${file%.*}".@(h|hh|hpp|hxx|H) 2> /dev/null | head -n 1)
-                 [[ -n ${altname} ]] && break
+                 [[ -e ${altname} ]] && break
              done
          ;;
          *.h|*.hh|*.hpp|*.hxx|*.H)
              for alt_dir in ${alt_dirs}; do
                  altname=$(ls -1 "${dir}/${alt_dir}/${file%.*}".@(c|cc|cpp|cxx|C) 2> /dev/null | head -n 1)
-                 [[ -n ${altname} ]] && break
+                 [[ -e ${altname} ]] && break
              done
          ;;
     esac
