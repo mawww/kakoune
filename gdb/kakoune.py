@@ -55,6 +55,7 @@ class BufferIterator:
         else:
             return "buffer<none>@(%s, %s)" % (self.val['m_coord']['line'], self.val['m_coord']['column'])
 
+std_str = gdb.lookup_type("std::string")
 class String:
     """ Print a String"""
 
@@ -62,7 +63,7 @@ class String:
         self.val = val
 
     def to_string(self):
-        return self.val["m_content"]
+        return self.val.cast(std_str)
 
 class Option:
     """ Print a Option"""
