@@ -1,10 +1,12 @@
 #ifndef option_types_hh_INCLUDED
 #define option_types_hh_INCLUDED
 
-#include "units.hh"
 #include "string.hh"
-#include "color.hh"
+#include "units.hh"
 #include "exception.hh"
+
+#include <tuple>
+#include <vector>
 
 namespace Kakoune
 {
@@ -52,24 +54,63 @@ void option_from_string(const String& str, std::vector<T>& opt)
     }
 }
 
-String option_to_string(const Regex& re);
-void option_from_string(const String& str, Regex& re);
 
-struct LineAndFlag
+template<size_t I, typename... Types>
+struct TupleOptionDetail
 {
-    LineCount line;
-    Color     color;
-    String    flag;
+    static String to_string(const std::tuple<Types...>& opt)
+    {
+        return TupleOptionDetail<I-1, Types...>::to_string(opt) + ":" + option_to_string(std::get<I>(opt));
+    }
 
-    bool operator==(const LineAndFlag& other) const
-    { return line == other.line and color == other.color and flag == other.flag; }
+    static void from_string(const String& str, std::tuple<Types...>& opt)
+    {
+        auto it = str.begin();
+        auto end = str.end();
+        for (size_t i = 0; i < I; ++i)
+            it = std::find(it+1, end, ':');
+        if (it == end)
+            throw runtime_error("not enough elements in tuple");
 
-    bool operator!=(const LineAndFlag& other) const
-    { return not (*this == other); }
+        option_from_string(String{it+1, std::find(it+1, end, ':')}, std::get<I>(opt));
+        TupleOptionDetail<I-1, Types...>::from_string(str, opt);
+    }
 };
 
-String option_to_string(const LineAndFlag& opt);
-void option_from_string(const String& str, LineAndFlag& opt);
+template<typename... Types>
+struct TupleOptionDetail<0, Types...>
+{
+    static String to_string(const std::tuple<Types...>& opt)
+    {
+        return option_to_string(std::get<0>(opt));
+    }
+
+    static void from_string(const String& str, std::tuple<Types...>& opt)
+    {
+        option_from_string(String{str.begin(), std::find(str.begin(), str.end(), ':')}, std::get<0>(opt));
+    }
+};
+
+template<typename... Types>
+String option_to_string(const std::tuple<Types...>& opt)
+{
+    return TupleOptionDetail<sizeof...(Types)-1, Types...>::to_string(opt);
+}
+
+template<typename... Types>
+void option_from_string(const String& str, std::tuple<Types...>& opt)
+{
+    TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(str, opt);
+}
+
+template<typename RealType, typename ValueType = int>
+inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& opt) { return int_to_str((int)opt); }
+
+template<typename RealType, typename ValueType = int>
+inline void option_from_string(const String& str, StronglyTypedNumber<RealType, ValueType>& opt)
+{
+     opt = StronglyTypedNumber<RealType, ValueType>{str_to_int(str)};
+}
 
 }
 

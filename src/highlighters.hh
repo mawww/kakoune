@@ -3,10 +3,14 @@
 
 #include "highlighter.hh"
 
+#include "color.hh"
+
 namespace Kakoune
 {
 
 void register_highlighters();
+
+using LineAndFlag = std::tuple<LineCount, Color, String>;
 
 }
 

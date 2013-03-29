@@ -26,6 +26,9 @@ using ColorPair = std::pair<Color, Color>;
 Color str_to_color(const String& color);
 String color_to_str(const Color& color);
 
+String option_to_string(const Color& color);
+void option_from_string(const String& str, Color& color);
+
 }
 
 #endif // color_hh_INCLUDED

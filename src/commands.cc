@@ -10,6 +10,7 @@
 #include "input_handler.hh"
 #include "string.hh"
 #include "highlighter.hh"
+#include "highlighters.hh"
 #include "filter.hh"
 #include "register_manager.hh"
 #include "completion.hh"

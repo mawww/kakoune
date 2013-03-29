@@ -87,6 +87,9 @@ inline String codepoint_to_str(Codepoint cp)
     return String(str);
 }
 
+String option_to_string(const Regex& re);
+void option_from_string(const String& str, Regex& re);
+
 }
 
 namespace std

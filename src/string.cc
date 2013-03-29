@@ -1,4 +1,5 @@
 #include "string.hh"
+#include "exception.hh"
 
 namespace Kakoune
 {
@@ -53,6 +54,23 @@ String String::replace(const String& expression,
 {
    boost::regex re(expression);
    return String(boost::regex_replace(*this, re, replacement));
+}
+
+String option_to_string(const Regex& re)
+{
+    return String{re.str()};
+}
+
+void option_from_string(const String& str, Regex& re)
+{
+    try
+    {
+        re = Regex{str.begin(), str.end()};
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error("unable to create regex: "_str + err.what());
+    }
 }
 
 }

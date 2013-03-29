@@ -38,4 +38,14 @@ String color_to_str(const Color& color)
     return "default";
 }
 
+String option_to_string(const Color& color)
+{
+    return color_to_str(color);
+}
+
+void option_from_string(const String& str, Color& color)
+{
+    color = str_to_color(str);
+}
+
 }

@@ -348,14 +348,14 @@ public:
 
         CharCount width = 0;
         for (auto& l : lines)
-             width = std::max(width, l.flag.char_length());
+             width = std::max(width, std::get<2>(l).char_length());
         const String empty{' ', width};
         for (auto& line : display_buffer.lines())
         {
             int line_num = (int)line.buffer_line() + 1;
-            auto it = find_if(lines, [&](const LineAndFlag& l) { return l.line == line_num; });
-            DisplayAtom atom{AtomContent(it != lines.end() ? it->flag : empty)};
-            atom.colors = { it != lines.end() ? it->color : Color::Default , m_bg };
+            auto it = find_if(lines, [&](const LineAndFlag& l) { return std::get<0>(l) == line_num; });
+            DisplayAtom atom{AtomContent(it != lines.end() ? std::get<2>(*it) : empty)};
+            atom.colors = { it != lines.end() ? std::get<1>(*it) : Color::Default , m_bg };
             line.insert(line.begin(), std::move(atom));
         }
     }
