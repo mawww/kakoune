@@ -13,49 +13,39 @@ namespace Kakoune
 
 typedef boost::regex Regex;
 
-class String
+class String : public std::string
 {
 public:
    String() {}
-   String(const char* content) : m_content(content) {}
-   String(std::string content) : m_content(std::move(content)) {}
-   String(const String& string) = default;
-   String(String&& string) = default;
-   explicit String(char content, CharCount count = 1) : m_content((size_t)(int)count, content) {}
-   explicit String(Codepoint cp, CharCount count = 1)
-   {
-       std::string str;
-       utf8::dump(back_inserter(str), cp);
-       for (CharCount i = 0; i < count; ++i)
-           m_content += str;
-   }
+   String(const char* content) : std::string(content) {}
+   String(std::string content) : std::string(std::move(content)) {}
+   explicit String(char content, CharCount count = 1) : std::string((size_t)(int)count, content) {}
+   explicit String(Codepoint cp, CharCount count = 1) { utf8::dump(back_inserter(*this), cp); }
    template<typename Iterator>
-   String(Iterator begin, Iterator end) : m_content(begin, end) {}
+   String(Iterator begin, Iterator end) : std::string(begin, end) {}
 
-   char      operator[](ByteCount pos) const { return m_content[(int)pos]; }
-   ByteCount length() const { return m_content.length(); }
+   std::string& stdstr() { return *this; }
+   const std::string& stdstr() const { return *this; }
+
+   char      operator[](ByteCount pos) const { return std::string::operator[]((int)pos); }
+   char&     operator[](ByteCount pos) { return std::string::operator[]((int)pos); }
+   ByteCount length() const { return ByteCount{(int)std::string::length()}; }
    CharCount char_length() const { return utf8::distance(begin(), end()); }
    ByteCount byte_count_to(CharCount count) const { return utf8::advance(begin(), end(), (int)count) - begin(); }
    CharCount char_count_to(ByteCount count) const { return utf8::distance(begin(), begin() + (int)count); }
-   bool      empty()  const { return m_content.empty(); }
 
-   bool      operator== (const String& other) const { return m_content == other.m_content; }
-   bool      operator!= (const String& other) const { return m_content != other.m_content; }
-   bool      operator<  (const String& other) const { return m_content < other.m_content;  }
+   String  operator+(const String& other) const { return String{stdstr() + other.stdstr()}; }
+   String& operator+=(const String& other) { std::string::operator+=(other); return *this; }
+   String  operator+(const char* other) const { return String{stdstr() + other}; }
+   String& operator+=(const char* other) { std::string::operator+=(other); return *this; }
+   String  operator+(char other) const { return String{stdstr() + other}; }
+   String& operator+=(char other) { std::string::operator+=(other); return *this; }
+   String  operator+(Codepoint cp) const { String res = *this; utf8::dump(back_inserter(res), cp); return res; }
+   String& operator+=(Codepoint cp) { utf8::dump(back_inserter(*this), cp); return *this; }
 
-   String&   operator=  (const String& other)       { m_content = other.m_content; return *this; }
-   String&   operator=  (String&& other)            { m_content = std::move(other.m_content); return *this; }
+   memoryview<char> data()  const { return memoryview<char>(std::string::data(), size()); }
 
-   String    operator+  (const String& other) const { return String(m_content + other.m_content); }
-   String&   operator+= (const String& other)       { m_content += other.m_content; return *this; }
-
-   String    operator+  (char c) const { return String(m_content + c); }
-   String&   operator+= (char c)       { m_content += c; return *this; }
-
-   memoryview<char> data()  const { return memoryview<char>(m_content.data(), m_content.size()); }
-   const char*      c_str() const { return m_content.c_str(); }
-
-   String substr(ByteCount pos, ByteCount length = -1) const { return String(m_content.substr((int)pos, (int)length)); }
+   String substr(ByteCount pos, ByteCount length = -1) const { return String{std::string::substr((int)pos, (int)length)}; }
    String substr(CharCount pos, CharCount length = INT_MAX) const
    {
        auto b = utf8::advance(begin(), end(), (int)pos);
@@ -63,31 +53,6 @@ public:
        return String(b,e);
    }
    String replace(const String& expression, const String& replacement) const;
-
-   using iterator = std::string::const_iterator;
-   using riterator = std::string::const_reverse_iterator;
-
-   iterator  begin()  const { return m_content.begin(); }
-   iterator  end()    const { return m_content.end(); }
-   riterator rbegin() const { return m_content.rbegin(); }
-   riterator rend()   const { return m_content.rend(); }
-
-   char     front() const { return m_content.front(); }
-   char     back()  const { return m_content.back(); }
-   char&    front()       { return m_content.front(); }
-   char&    back()        { return m_content.back(); }
-
-   size_t   hash() const { return std::hash<std::string>()(m_content); }
-
-   inline friend std::ostream& operator<<(std::ostream& os, const String& str)
-   {
-       return os << str.m_content;
-   }
-
-   enum { npos = -1 };
-
-private:
-   std::string m_content;
 };
 
 inline String operator+(const char* lhs, const String& rhs)
@@ -99,6 +64,12 @@ inline String operator+(char lhs, const String& rhs)
 {
     return String(lhs) + rhs;
 }
+
+inline String operator+(Codepoint lhs, const String& rhs)
+{
+    return String(lhs) + rhs;
+}
+
 
 String int_to_str(int value);
 int    str_to_int(const String& str);
@@ -121,11 +92,11 @@ inline String codepoint_to_str(Codepoint cp)
 namespace std
 {
     template<>
-    struct hash<Kakoune::String>
+    struct hash<Kakoune::String> : hash<std::string>
     {
         size_t operator()(const Kakoune::String& str) const
         {
-            return str.hash();
+            return hash<std::string>::operator()(str);
         }
     };
 }

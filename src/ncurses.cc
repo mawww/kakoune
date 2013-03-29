@@ -128,7 +128,7 @@ void NCursesUI::redraw()
     doupdate();
 }
 using Utf8Policy = utf8::InvalidBytePolicy::Pass;
-using Utf8Iterator = utf8::utf8_iterator<String::iterator, Utf8Policy>;
+using Utf8Iterator = utf8::utf8_iterator<String::const_iterator, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
     waddstr(win, std::string(begin.underlying_iterator(), end.underlying_iterator()).c_str());
@@ -290,7 +290,7 @@ void NCursesUI::draw_status()
     move((int)m_dimensions.line, 0);
     clrtoeol();
     if (m_status_cursor == -1)
-       addutf8str(stdscr, m_status_line.begin(), m_status_line.end());
+       addutf8str(stdscr, m_status_line.cbegin(), m_status_line.cend());
     else
     {
         Utf8Iterator begin{m_status_line.begin()};
@@ -298,7 +298,7 @@ void NCursesUI::draw_status()
         Utf8Iterator cursor_it{begin};
         cursor_it.advance(m_status_cursor, end);
 
-        addutf8str(stdscr, m_status_line.begin(), cursor_it);
+        addutf8str(stdscr, m_status_line.cbegin(), cursor_it);
         set_attribute(A_REVERSE, 1);
         if (cursor_it == end)
             addch(' ');
@@ -345,8 +345,8 @@ void NCursesUI::draw_menu()
                 wattron(m_menu_win, COLOR_PAIR(menu_fg));
 
             auto& choice = m_choices[choice_idx];
-            auto begin = choice.begin();
-            auto end = utf8::advance(begin, choice.end(), column_width);
+            auto begin = choice.cbegin();
+            auto end = utf8::advance(begin, choice.cend(), column_width);
             addutf8str(m_menu_win, begin, end);
             for (auto pad = column_width - utf8::distance(begin, end); pad > 0; --pad)
                 waddch(m_menu_win, ' ');

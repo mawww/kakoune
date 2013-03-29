@@ -500,7 +500,7 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
 
     auto& desc = opt[0];
     Regex re(R"((\d+):(\d+)@(\d+))");
-    boost::match_results<String::iterator> match;
+    boost::smatch match;
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {
         LineCount line   = str_to_int(String(match[1].first, match[1].second)) - 1;

@@ -128,7 +128,7 @@ HighlighterAndId colorize_regex_factory(const HighlighterParameters params, cons
         ColorSpec colors;
         for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
-            boost::match_results<String::iterator> res;
+            boost::smatch res;
             if (not boost::regex_match(it->begin(), it->end(), res, color_spec_ex))
                 throw runtime_error("wrong colorspec: '" + *it +
                                      "' expected <capture>:<fgcolor>[,<bgcolor>]");

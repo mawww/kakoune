@@ -31,7 +31,7 @@ void option_from_string(const String& str, LineAndFlag& opt)
 {
     static Regex re{R"((\d+):(\w+):(.+))"};
 
-    boost::match_results<String::iterator> res;
+    boost::smatch res;
     if (not boost::regex_match(str.begin(), str.end(), res, re))
         throw runtime_error("wrong syntax, expected <line>:<color>:<flag>");
 
