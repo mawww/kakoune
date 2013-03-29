@@ -437,31 +437,39 @@ void exec_commands_in_file(const CommandParameters& params,
 
 void set_global_option(const CommandParameters& params, Context& context)
 {
-    if (params.size() != 2)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "add", false } }, 2, 2);
 
-    GlobalOptions::instance().get_local_option(params[0]).set_from_string(params[1]);
+    Option& opt = GlobalOptions::instance().get_local_option(parser[0]);
+    if (parser.has_option("add"))
+        opt.add_from_string(parser[1]);
+    else
+        opt.set_from_string(parser[1]);
 }
 
 void set_buffer_option(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "buffer", true } });
-    if (parser.positional_count() != 2)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "buffer", true }, { "add", false } }, 2, 2);
 
     OptionManager& options = parser.has_option("buffer") ?
         BufferManager::instance().get_buffer(parser.option_value("buffer")).options()
       : context.buffer().options();
 
-    options.get_local_option(parser[0]).set_from_string(parser[1]);
+    Option& opt = options.get_local_option(parser[0]);
+    if (parser.has_option("add"))
+        opt.add_from_string(parser[1]);
+    else
+        opt.set_from_string(parser[1]);
 }
 
 void set_window_option(const CommandParameters& params, Context& context)
 {
-    if (params.size() != 2)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "add", false } }, 2, 2);
 
-    context.window().options().get_local_option(params[0]).set_from_string(params[1]);
+    Option& opt = context.window().options().get_local_option(parser[0]);
+    if (parser.has_option("add"))
+        opt.add_from_string(parser[1]);
+    else
+        opt.set_from_string(parser[1]);
 }
 
 void declare_option(const CommandParameters& params, Context& context)

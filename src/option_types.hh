@@ -16,6 +16,7 @@ inline void option_from_string(const String& str, String& opt) { opt = str; }
 
 inline String option_to_string(int opt) { return int_to_str(opt); }
 inline void option_from_string(const String& str, int& opt) { opt = str_to_int(str); }
+inline bool option_add(int& opt, int val) { opt += val; return val != 0; }
 
 inline String option_to_string(bool opt) { return opt ? "true" : "false"; }
 inline void option_from_string(const String& str, bool& opt)
@@ -52,6 +53,13 @@ void option_from_string(const String& str, std::vector<T>& opt)
         option_from_string(elem, opt_elem);
         opt.push_back(opt_elem);
     }
+}
+
+template<typename T>
+bool option_add(std::vector<T>& opt, const std::vector<T>& vec)
+{
+    std::copy(vec.begin(), vec.end(), back_inserter(opt));
+    return not vec.empty();
 }
 
 
@@ -110,6 +118,19 @@ template<typename RealType, typename ValueType = int>
 inline void option_from_string(const String& str, StronglyTypedNumber<RealType, ValueType>& opt)
 {
      opt = StronglyTypedNumber<RealType, ValueType>{str_to_int(str)};
+}
+
+template<typename RealType, typename ValueType = int>
+inline bool option_add(StronglyTypedNumber<RealType, ValueType>& opt,
+                       StronglyTypedNumber<RealType, ValueType> val)
+{
+    opt += val; return val != 0;
+}
+
+template<typename T>
+bool option_add(T&, const T&)
+{
+    throw runtime_error("no add operation supported for this option type");
 }
 
 }

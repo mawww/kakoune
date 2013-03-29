@@ -30,6 +30,7 @@ public:
 
     virtual String get_as_string() const = 0;
     virtual void   set_from_string(const String& str) = 0;
+    virtual void   add_from_string(const String& str) = 0;
 
     String name() const { return m_name; }
     OptionManager& manager() const { return m_manager; }
@@ -105,6 +106,13 @@ public:
         T val;
         option_from_string(str, val);
         set(val);
+    }
+    void add_from_string(const String& str) override
+    {
+        T val;
+        option_from_string(str, val);
+        if (option_add(m_value, val))
+            m_manager.on_option_changed(*this);
     }
 
     Option* clone(OptionManager& manager) const override
