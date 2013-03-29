@@ -78,7 +78,8 @@ inline char BufferIterator::operator*() const
 inline ByteCount BufferIterator::offset() const
 {
     assert(m_buffer);
-    return m_buffer->m_lines[line()].start + column();
+    return line() >= m_buffer->line_count() ?
+        m_buffer->character_count() : m_buffer->m_lines[line()].start + column();
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
