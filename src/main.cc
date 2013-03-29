@@ -121,6 +121,27 @@ void do_replace_with_char(Context& context)
     });
 }
 
+Codepoint swap_case(Codepoint cp)
+{
+    if ('A' <= cp and cp <= 'Z')
+        return cp - 'A' + 'a';
+    if ('a' <= cp and cp <= 'z')
+        return cp - 'a' + 'A';
+    return cp;
+}
+
+void do_swap_case(Context& context)
+{
+    Editor& editor = context.editor();
+    std::vector<String> sels = editor.selections_content();
+    for (auto& sel : sels)
+    {
+        for (auto& c : sel)
+            c = swap_case(c);
+    }
+    editor.insert(sels, InsertMode::Replace);
+}
+
 void do_command(Context& context)
 {
     context.input_handler().prompt(
@@ -674,6 +695,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
     { { Key::Modifiers::None, 'Q' }, replay_macro },
+
+    { { Key::Modifiers::None, '~' }, do_swap_case },
 };
 
 }
