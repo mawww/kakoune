@@ -355,7 +355,9 @@ public:
         {
             int line_num = (int)line.buffer_line() + 1;
             auto it = find_if(lines, [&](const LineAndFlag& l) { return std::get<0>(l) == line_num; });
-            DisplayAtom atom{AtomContent(it != lines.end() ? std::get<2>(*it) : empty)};
+            String content = it != lines.end() ? std::get<2>(*it) : empty;
+            content += String(' ', width - content.char_length());
+            DisplayAtom atom{AtomContent(std::move(content))};
             atom.colors = { it != lines.end() ? std::get<1>(*it) : Color::Default , m_bg };
             line.insert(line.begin(), std::move(atom));
         }
