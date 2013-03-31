@@ -331,11 +331,12 @@ void expand_unprintable(DisplayBuffer& display_buffer)
     }
 }
 
-class FlagLines
+class FlagLines : public BufferChangeListener_AutoRegister
 {
 public:
-    FlagLines(Color bg, String option_name, const OptionManager& options)
-        : m_bg(bg), m_option_name(std::move(option_name)),
+    FlagLines(Color bg, String option_name, OptionManager& options, const Buffer& buffer)
+        : BufferChangeListener_AutoRegister(buffer),
+          m_bg(bg), m_option_name(std::move(option_name)),
           m_options(options)
     {
         // trigger an exception if option is not of right type.
@@ -360,18 +361,48 @@ public:
         }
     }
 
+    void on_insert(const BufferIterator& begin, const BufferIterator& end) override
+    {
+        LineCount new_lines = end.line() - begin.line();
+        if (new_lines == 0)
+            return;
+
+        auto lines = m_options[m_option_name].get<std::vector<LineAndFlag>>();
+        for (auto& line : lines)
+        {
+            if (std::get<0>(line) > begin.line())
+                std::get<0>(line) += new_lines;
+        }
+        m_options.get_local_option(m_option_name).set(lines);
+    }
+
+    void on_erase(const BufferIterator& begin, const BufferIterator& end)  override
+    {
+        LineCount removed_lines = end.line() - begin.line();
+        if (removed_lines == 0)
+            return;
+
+        auto lines = m_options[m_option_name].get<std::vector<LineAndFlag>>();
+        for (auto& line : lines)
+        {
+            if (std::get<0>(line) > begin.line())
+                std::get<0>(line) -= removed_lines;
+        }
+        m_options.get_local_option(m_option_name).set(lines);
+    }
+
 private:
     Color m_bg;
     String m_option_name;
-    const OptionManager& m_options;
+    OptionManager& m_options;
 };
 
-HighlighterAndId flag_lines_factory(const HighlighterParameters& params, const Window& window)
+HighlighterAndId flag_lines_factory(const HighlighterParameters& params, Window& window)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    return {"hlflags_" + params[1], FlagLines{str_to_color(params[0]), params[1], window.options()}};
+    return {"hlflags_" + params[1], FlagLines{str_to_color(params[0]), params[1], window.options(), window.buffer()}};
 }
 
 template<void (*highlighter_func)(DisplayBuffer&)>
