@@ -5,53 +5,10 @@ namespace Kakoune
 
 DynamicSelectionList::DynamicSelectionList(const Buffer& buffer,
                                            SelectionList selections)
-    : m_buffer(&buffer), SelectionList(std::move(selections))
+    : SelectionList(std::move(selections)),
+      BufferChangeListener_AutoRegister(buffer)
 {
-    m_buffer->change_listeners().insert(this);
     check_invariant();
-}
-
-DynamicSelectionList::~DynamicSelectionList()
-{
-    m_buffer->change_listeners().erase(this);
-}
-
-DynamicSelectionList::DynamicSelectionList(const DynamicSelectionList& other)
-    : SelectionList(other), m_buffer(other.m_buffer)
-{
-    m_buffer->change_listeners().insert(this);
-}
-
-DynamicSelectionList& DynamicSelectionList::operator=(const DynamicSelectionList& other)
-{
-    SelectionList::operator=((const SelectionList&)other);
-    if (m_buffer != other.m_buffer)
-    {
-        m_buffer->change_listeners().erase(this);
-        m_buffer = other.m_buffer;
-        m_buffer->change_listeners().insert(this);
-    }
-    check_invariant();
-    return *this;
-}
-
-DynamicSelectionList::DynamicSelectionList(DynamicSelectionList&& other)
-    : SelectionList(std::move(other)), m_buffer(other.m_buffer)
-{
-    m_buffer->change_listeners().insert(this);
-}
-
-DynamicSelectionList& DynamicSelectionList::operator=(DynamicSelectionList&& other)
-{
-    SelectionList::operator=(std::move(other));
-    if (m_buffer != other.m_buffer)
-    {
-        m_buffer->change_listeners().erase(this);
-        m_buffer = other.m_buffer;
-        m_buffer->change_listeners().insert(this);
-    }
-    check_invariant();
-    return *this;
 }
 
 DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
@@ -64,9 +21,10 @@ DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
 void DynamicSelectionList::check_invariant() const
 {
 #ifdef KAK_DEBUG
+    const Buffer* buf = &buffer();
     for (auto& sel : *this)
     {
-        assert(m_buffer == &sel.buffer());
+        assert(buf == &sel.buffer());
         sel.check_invariant();
     }
 #endif
