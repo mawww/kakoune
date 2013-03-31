@@ -111,7 +111,7 @@ GlobalOptions::GlobalOptions()
     declare_option<int>("indentwidth", 4);
     declare_option<String>("eolformat", "lf");
     declare_option<String>("BOM", "no");
-    declare_option<String>("shell", "sh");
+    declare_option<String>("shell", "bash");
     declare_option<bool>("complete_prefix", true);
     declare_option<bool>("incsearch", true);
     declare_option<Regex>("ignored_files", Regex{R"(^(\..*|.*\.(o|so|a))$)"});
