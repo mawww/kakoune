@@ -229,8 +229,6 @@ Commands are entered using +:+.
  * +set{b,w,g} <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
       or *g*lobal scope.
  * +name <name>+: sets current client name to name
- * +c[ol]a[lias] <name> <colspec>+: define a color alias, so that name can be
-      used instead of colspec in contexts where a color is needed.
  * +nop+: does nothing, but as with every other commands, arguments may be
       evaluated. So nop can be used for example to execute a shell command
       while being sure that it's output will not be interpreted by kak.
@@ -375,6 +373,32 @@ existing hooks are:
        the error message is used for filtering
 
 when not specified, the filtering text is an empty string.
+
+Color Aliases
+-------------
+
+Colorspec takes the form <fg_color>[,<bg_color>], they can be named using the
+following command.
+
+--------------------------
+:colalias <name> <colspec>
+--------------------------
+
+note that colspec can itself be a color alias.
+
+Using color alias instead of colorspec permits to change the effective colors
+afterward.
+
+there are some builtins color aliases:
+
+ * +PrimarySelection+: main selection color for every selected character except
+     the last one
+ * +SecondarySelection+: secondary selection color for every selected character
+     except the last one
+ * +PrimaryCursor+: last character of the primary selection
+ * +SecondaryCursor+: last character of the secondary selection
+ * +LineNumbers+: colors used by the number_lines highlighter
+
 
 Shell expansion
 ---------------
