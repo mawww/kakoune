@@ -88,7 +88,8 @@ template<bool force_reload>
 void edit(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, { { "scratch", false },
-                                      { "fifo", true } }, 1, 3);
+                                      { "fifo", true } },
+                            ParametersParser::Flags::None, 1, 3);
 
     const String name = parser[0];
 
@@ -247,7 +248,7 @@ Group& get_group(Group& root, const String& group_path)
 
 void add_highlighter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } }, 1);
+    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1);
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     auto begin = parser.begin();
@@ -267,7 +268,7 @@ void add_highlighter(const CommandParameters& params, Context& context)
 
 void rm_highlighter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } }, 1, 1);
+    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
 
     Window& window = context.window();
     HighlighterGroup& group = parser.has_option("group") ?
@@ -279,7 +280,7 @@ void rm_highlighter(const CommandParameters& params, Context& context)
 
 void add_filter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } }, 1);
+    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1);
 
     FilterRegistry& registry = FilterRegistry::instance();
 
@@ -300,7 +301,7 @@ void add_filter(const CommandParameters& params, Context& context)
 
 void rm_filter(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } }, 1, 1);
+    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
 
     Editor& editor = context.editor();
     FilterGroup& group = parser.has_option("group") ?
@@ -356,6 +357,7 @@ void define_command(const CommandParameters& params, Context& context)
                               { "allow-override", false },
                               { "file-completion", false },
                               { "shell-completion", true } },
+                             ParametersParser::Flags::None,
                              2, 2);
 
     auto begin = parser.begin();
@@ -437,7 +439,9 @@ void exec_commands_in_file(const CommandParameters& params,
 
 void set_global_option(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "add", false } }, 2, 2);
+    ParametersParser parser(params, { { "add", false } },
+                            ParametersParser::Flags::OptionsOnlyAtStart,
+                            2, 2);
 
     Option& opt = GlobalOptions::instance().get_local_option(parser[0]);
     if (parser.has_option("add"))
@@ -448,7 +452,9 @@ void set_global_option(const CommandParameters& params, Context& context)
 
 void set_buffer_option(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "buffer", true }, { "add", false } }, 2, 2);
+    ParametersParser parser(params, { { "buffer", true}, { "add", false } },
+                            ParametersParser::Flags::OptionsOnlyAtStart,
+                            2, 2);
 
     OptionManager& options = parser.has_option("buffer") ?
         BufferManager::instance().get_buffer(parser.option_value("buffer")).options()
@@ -463,7 +469,9 @@ void set_buffer_option(const CommandParameters& params, Context& context)
 
 void set_window_option(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "add", false } }, 2, 2);
+    ParametersParser parser(params, { { "add", false } },
+                            ParametersParser::Flags::OptionsOnlyAtStart,
+                            2, 2);
 
     Option& opt = context.window().options().get_local_option(parser[0]);
     if (parser.has_option("add"))
@@ -500,7 +508,8 @@ void declare_option(const CommandParameters& params, Context& context)
 template<typename Func>
 void context_wrap(const CommandParameters& params, Context& context, Func func)
 {
-    ParametersParser parser(params, { { "client", true }, { "draft", false }}, 1);
+    ParametersParser parser(params, { { "client", true }, { "draft", false }},
+                            ParametersParser::Flags::None, 1);
 
     Context& real_context = parser.has_option("client") ?
         ClientManager::instance().get_client_context(parser.option_value("client"))
@@ -651,7 +660,8 @@ static String assist(String message, CharCount maxWidth)
 
 void info(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "anchor", true }, { "assist", false } }, 0, 1);
+    ParametersParser parser(params, { { "anchor", true }, { "assist", false } },
+                            ParametersParser::Flags::None, 0, 1);
 
     context.ui().info_hide();
     if (parser.positional_count() > 0)
@@ -698,14 +708,14 @@ void try_catch(const CommandParameters& params, Context& context)
 
 void define_color_alias(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, {}, 2, 2);
+    ParametersParser parser(params, {}, ParametersParser::Flags::None, 2, 2);
     ColorRegistry::instance().register_alias(
         parser[0], parser[1], true);
 }
 
 void set_client_name(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, {}, 1, 1);
+    ParametersParser parser(params, {}, ParametersParser::Flags::None, 1, 1);
     ClientManager::instance().set_client_name(context, params[0]);
 }
 

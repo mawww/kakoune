@@ -5,6 +5,7 @@ namespace Kakoune
 
 ParametersParser::ParametersParser(const ParameterList& params,
                                    std::unordered_map<String, bool> options,
+                                   Flags flags,
                                    size_t min_positionals,
                                    size_t max_positionals)
     : m_params(params),
@@ -29,7 +30,11 @@ ParametersParser::ParametersParser(const ParameterList& params,
             }
         }
         else
+        {
+            if (flags & Flags::OptionsOnlyAtStart)
+                only_pos = true;
             m_positional_indices.push_back(i);
+        }
     }
     size_t count = m_positional_indices.size();
     if (count > max_positionals or count < min_positionals)

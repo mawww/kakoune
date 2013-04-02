@@ -37,11 +37,26 @@ struct wrong_argument_count : runtime_error
 //  * named string options,  which are defined using '-name value' syntax
 struct ParametersParser
 {
+    enum class Flags
+    {
+        None = 0,
+        OptionsOnlyAtStart = 1,
+    };
+    friend constexpr Flags operator|(Flags lhs, Flags rhs)
+    {
+        return (Flags)((int) lhs | (int) rhs);
+    }
+    friend constexpr bool operator&(Flags lhs, Flags rhs)
+    {
+        return ((int) lhs & (int) rhs) != 0;
+    }
+
     // the options defines named options, if they map to true, then
     // they are understood as string options, else they are understood as
     // boolean option.
     ParametersParser(const ParameterList& params,
                      std::unordered_map<String, bool> options,
+                     Flags flags = Flags::None,
                      size_t min_positionals = 0,
                      size_t max_positionals = -1);
 
