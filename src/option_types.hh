@@ -29,6 +29,8 @@ inline void option_from_string(const String& str, bool& opt)
         throw runtime_error("boolean values are either true, yes, false or no");
 }
 
+constexpr Codepoint list_separator = ';';
+
 template<typename T>
 String option_to_string(const std::vector<T>& opt)
 {
@@ -37,7 +39,7 @@ String option_to_string(const std::vector<T>& opt)
     {
         res += option_to_string(opt[i]);
         if (i != opt.size() - 1)
-            res += ',';
+            res += list_separator;
     }
     return res;
 }
@@ -46,7 +48,7 @@ template<typename T>
 void option_from_string(const String& str, std::vector<T>& opt)
 {
     opt.clear();
-    std::vector<String> elems = split(str, ',');
+    std::vector<String> elems = split(str, list_separator);
     for (auto& elem: elems)
     {
         T opt_elem;
@@ -62,26 +64,21 @@ bool option_add(std::vector<T>& opt, const std::vector<T>& vec)
     return not vec.empty();
 }
 
+constexpr Codepoint tuple_separator = '|';
 
 template<size_t I, typename... Types>
 struct TupleOptionDetail
 {
     static String to_string(const std::tuple<Types...>& opt)
     {
-        return TupleOptionDetail<I-1, Types...>::to_string(opt) + ":" + option_to_string(std::get<I>(opt));
+        return TupleOptionDetail<I-1, Types...>::to_string(opt) +
+               tuple_separator + option_to_string(std::get<I>(opt));
     }
 
-    static void from_string(const String& str, std::tuple<Types...>& opt)
+    static void from_string(const memoryview<String>& elems, std::tuple<Types...>& opt)
     {
-        auto it = str.begin();
-        auto end = str.end();
-        for (size_t i = 0; i < I; ++i)
-            it = std::find(it+1, end, ':');
-        if (it == end)
-            throw runtime_error("not enough elements in tuple");
-
-        option_from_string(String{it+1, std::find(it+1, end, ':')}, std::get<I>(opt));
-        TupleOptionDetail<I-1, Types...>::from_string(str, opt);
+        option_from_string(elems[I], std::get<I>(opt));
+        TupleOptionDetail<I-1, Types...>::from_string(elems, opt);
     }
 };
 
@@ -93,9 +90,9 @@ struct TupleOptionDetail<0, Types...>
         return option_to_string(std::get<0>(opt));
     }
 
-    static void from_string(const String& str, std::tuple<Types...>& opt)
+    static void from_string(const memoryview<String>& elems, std::tuple<Types...>& opt)
     {
-        option_from_string(String{str.begin(), std::find(str.begin(), str.end(), ':')}, std::get<0>(opt));
+        option_from_string(elems[0], std::get<0>(opt));
     }
 };
 
@@ -108,7 +105,10 @@ String option_to_string(const std::tuple<Types...>& opt)
 template<typename... Types>
 void option_from_string(const String& str, std::tuple<Types...>& opt)
 {
-    TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(str, opt);
+    auto elems = split(str, tuple_separator);
+    if (elems.size() != sizeof...(Types))
+        throw runtime_error("not enough elements in tuple");
+    TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(elems, opt);
 }
 
 template<typename RealType, typename ValueType = int>

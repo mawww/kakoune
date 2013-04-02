@@ -36,7 +36,7 @@ def git-blame %{
                 text="${sha:0:8} ${authors[$sha]}"
                 flag="$line:black:$text"
                 for (( i=1; $i < $count; i++ )); do
-                    flag="$flag,$(($line+$i)):black:$text"
+                    flag="$flag;$(($line+$i))|black|$text"
                 done
                 echo "setb -add -buffer $kak_bufname git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:${kak_socket}
             }

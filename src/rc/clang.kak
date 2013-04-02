@@ -21,7 +21,7 @@ def clang-complete %{
             rm -r $(dirname ${kak_opt_clang_filename})
             completions="${kak_cursor_line}:${kak_cursor_column}@${kak_timestamp}"
             for cmp in ${output}; do
-                completions="${completions},${cmp}"
+                completions="${completions};${cmp}"
             done
             echo "eval -client $kak_client %[ echo completed; setb completions '${completions}' ]" | socat stdin UNIX-CONNECT:${kak_socket}
         ) >& /dev/null < /dev/null &
