@@ -436,6 +436,7 @@ private:
                     write_debug("error running command '" + m_buffer + "' : " + e.description());
                 }
                 ClientManager::instance().redraw_clients();
+                close(socket);
                 delete this;
                 return;
             }
