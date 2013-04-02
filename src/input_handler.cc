@@ -499,16 +499,23 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
         return {};
 
     auto& desc = opt[0];
-    Regex re(R"((\d+):(\d+)@(\d+))");
+    static const Regex re(R"((\d+):(\d+)(?:\+(\d+))?@(\d+))");
     boost::smatch match;
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {
-        LineCount line   = str_to_int(String(match[1].first, match[1].second)) - 1;
-        ByteCount column = str_to_int(String(match[2].first, match[2].second)) - 1;
-        int timestamp = str_to_int(String(match[3].first, match[3].second));
+        LineCount line   = str_to_int({match[1].first, match[1].second}) - 1;
+        ByteCount column = str_to_int({match[2].first, match[2].second}) - 1;
+
+        BufferIterator end = pos;
+        if (match[3].matched)
+        {
+            ByteCount len = str_to_int({match[3].first, match[3].second});
+            end = pos + len;
+        }
+        int timestamp = str_to_int(String(match[4].first, match[4].second));
 
         if (timestamp == pos.buffer().timestamp() and line == pos.line() and column == pos.column())
-            return { pos, pos, { opt.begin() + 1, opt.end() } };
+            return { pos, end, { opt.begin() + 1, opt.end() } };
     }
     return {};
 }
