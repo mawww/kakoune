@@ -633,7 +633,7 @@ static String assist(String message, CharCount maxWidth)
 
         result += assistant[std::min((int)i, (int)assistant.size()-1)];
         if (i == 0)
-            result += "╭─" + String(Codepoint{L'─'}, (int)bubbleWidth) + "─╮";
+            result += "╭─" + String(Codepoint{L'─'}, bubbleWidth) + "─╮";
         else if (i < lines.size() + 1)
         {
             auto& line = lines[(int)i - 1];
@@ -641,7 +641,7 @@ static String assist(String message, CharCount maxWidth)
             result += "│ " + line + String(' ', padding) + " │";
         }
         else if (i == lines.size() + 1)
-            result += "╰─" + String(Codepoint{L'─'}, (int)bubbleWidth) + "─╯";
+            result += "╰─" + String(Codepoint{L'─'}, bubbleWidth) + "─╯";
 
         result += "\n";
     }
