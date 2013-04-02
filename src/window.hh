@@ -58,11 +58,11 @@ private:
     DisplayCoord  m_dimensions;
     DisplayBuffer m_display_buffer;
 
-    HighlighterGroup m_highlighters;
-    HighlighterGroup m_builtin_highlighters;
-
     HookManager      m_hooks;
     OptionManager    m_options;
+
+    HighlighterGroup m_highlighters;
+    HighlighterGroup m_builtin_highlighters;
 
     size_t m_timestamp = -1;
 };
