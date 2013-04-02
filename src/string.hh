@@ -20,7 +20,11 @@ public:
    String(const char* content) : std::string(content) {}
    String(std::string content) : std::string(std::move(content)) {}
    explicit String(char content, CharCount count = 1) : std::string((size_t)(int)count, content) {}
-   explicit String(Codepoint cp, CharCount count = 1) { utf8::dump(back_inserter(*this), cp); }
+   explicit String(Codepoint cp, CharCount count = 1)
+   {
+       while (count-- > 0)
+           utf8::dump(back_inserter(*this), cp);
+   }
    template<typename Iterator>
    String(Iterator begin, Iterator end) : std::string(begin, end) {}
 
