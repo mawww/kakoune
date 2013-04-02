@@ -331,21 +331,23 @@ void expand_unprintable(DisplayBuffer& display_buffer)
     }
 }
 
-class FlagLines : public BufferChangeListener_AutoRegister
+class FlagLines : public BufferChangeListener_AutoRegister,
+                  public OptionManagerWatcher_AutoRegister
 {
 public:
-    FlagLines(Color bg, String option_name, OptionManager& options, const Buffer& buffer)
-        : BufferChangeListener_AutoRegister(buffer),
+    FlagLines(Color bg, String option_name, Window& window)
+        : BufferChangeListener_AutoRegister(window.buffer()),
+          OptionManagerWatcher_AutoRegister(window.options()),
           m_bg(bg), m_option_name(std::move(option_name)),
-          m_options(options)
+          m_window(window)
     {
         // trigger an exception if option is not of right type.
-        m_options[m_option_name].get<std::vector<LineAndFlag>>();
+        m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
     }
 
     void operator()(DisplayBuffer& display_buffer)
     {
-        auto& lines = m_options[m_option_name].get<std::vector<LineAndFlag>>();
+        auto& lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
 
         CharCount width = 0;
         for (auto& l : lines)
@@ -363,19 +365,25 @@ public:
         }
     }
 
+    void on_option_changed(const Option& option)
+    {
+        if (option.name() == m_option_name)
+            m_window.forget_timestamp();
+    }
+
     void on_insert(const BufferIterator& begin, const BufferIterator& end) override
     {
         LineCount new_lines = end.line() - begin.line();
         if (new_lines == 0)
             return;
 
-        auto lines = m_options[m_option_name].get<std::vector<LineAndFlag>>();
+        auto lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
         for (auto& line : lines)
         {
             if (std::get<0>(line) > begin.line())
                 std::get<0>(line) += new_lines;
         }
-        m_options.get_local_option(m_option_name).set(lines);
+        m_window.options().get_local_option(m_option_name).set(lines);
     }
 
     void on_erase(const BufferIterator& begin, const BufferIterator& end)  override
@@ -384,19 +392,19 @@ public:
         if (removed_lines == 0)
             return;
 
-        auto lines = m_options[m_option_name].get<std::vector<LineAndFlag>>();
+        auto lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
         for (auto& line : lines)
         {
             if (std::get<0>(line) > begin.line())
                 std::get<0>(line) -= removed_lines;
         }
-        m_options.get_local_option(m_option_name).set(lines);
+        m_window.options().get_local_option(m_option_name).set(lines);
     }
 
 private:
     Color m_bg;
     String m_option_name;
-    OptionManager& m_options;
+    Window& m_window;
 };
 
 HighlighterAndId flag_lines_factory(const HighlighterParameters& params, Window& window)
@@ -404,7 +412,7 @@ HighlighterAndId flag_lines_factory(const HighlighterParameters& params, Window&
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    return {"hlflags_" + params[1], FlagLines{str_to_color(params[0]), params[1], window.options(), window.buffer()}};
+    return {"hlflags_" + params[1], FlagLines{str_to_color(params[0]), params[1], window}};
 }
 
 template<void (*highlighter_func)(DisplayBuffer&)>
