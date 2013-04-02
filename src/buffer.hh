@@ -244,57 +244,28 @@ constexpr Buffer::Flags operator~(Buffer::Flags lhs)
     return (Buffer::Flags)(~(int)lhs);
 }
 
-class BufferChangeListener_AutoRegister : public BufferChangeListener
+struct BufferListenerRegisterFuncs
+{
+    static void insert(const Buffer& buffer, BufferChangeListener& listener)
+    {
+        buffer.change_listeners().insert(&listener);
+    }
+    static void remove(const Buffer& buffer, BufferChangeListener& listener)
+    {
+        buffer.change_listeners().erase(&listener);
+    }
+};
+
+class BufferChangeListener_AutoRegister
+    : public BufferChangeListener,
+      public AutoRegister<BufferChangeListener_AutoRegister,
+                          BufferListenerRegisterFuncs, const Buffer>
 {
 public:
     BufferChangeListener_AutoRegister(const Buffer& buffer)
-        : m_buffer(&buffer)
-    {
-        m_buffer->change_listeners().insert(this);
-    }
+        : AutoRegister(buffer) {}
 
-    BufferChangeListener_AutoRegister(const BufferChangeListener_AutoRegister& other)
-        : m_buffer(other.m_buffer)
-    {
-        m_buffer->change_listeners().insert(this);
-    }
-
-    BufferChangeListener_AutoRegister(BufferChangeListener_AutoRegister&& other)
-        : m_buffer(other.m_buffer)
-    {
-        m_buffer->change_listeners().insert(this);
-    }
-
-    ~BufferChangeListener_AutoRegister()
-    {
-        m_buffer->change_listeners().erase(this);
-    }
-
-    BufferChangeListener_AutoRegister& operator=(const BufferChangeListener_AutoRegister& other)
-    {
-        if (m_buffer != other.m_buffer)
-        {
-            m_buffer->change_listeners().erase(this);
-            m_buffer = other.m_buffer;
-            m_buffer->change_listeners().insert(this);
-        }
-        return *this;
-    }
-
-    BufferChangeListener_AutoRegister& operator=(BufferChangeListener_AutoRegister&& other)
-    {
-        if (m_buffer != other.m_buffer)
-        {
-            m_buffer->change_listeners().erase(this);
-            m_buffer = other.m_buffer;
-            m_buffer->change_listeners().insert(this);
-        }
-        return *this;
-    }
-
-    const Buffer& buffer() const { return *m_buffer; }
-private:
-    const Buffer* m_buffer;
+    const Buffer& buffer() const { return registry(); }
 };
 
 }

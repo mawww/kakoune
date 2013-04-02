@@ -227,6 +227,63 @@ const T& clamp(const T& val, const T& min, const T& max)
     return (val < min ? min : (val > max ? max : val));
 }
 
+// *** AutoRegister: RAII handling of value semantics registering classes ***
+
+template<typename EffectiveType, typename RegisterFuncs, typename Registry>
+class AutoRegister
+{
+public:
+    AutoRegister(Registry& registry)
+        : m_registry(&registry)
+    {
+        RegisterFuncs::insert(*m_registry, effective_this());
+    }
+
+    AutoRegister(const AutoRegister& other)
+        : m_registry(other.m_registry)
+    {
+        RegisterFuncs::insert(*m_registry, effective_this());
+    }
+
+    AutoRegister(AutoRegister&& other)
+        : m_registry(other.m_registry)
+    {
+        RegisterFuncs::insert(*m_registry, effective_this());
+    }
+
+    ~AutoRegister()
+    {
+        RegisterFuncs::remove(*m_registry, effective_this());
+    }
+
+    AutoRegister& operator=(const AutoRegister& other)
+    {
+        if (m_registry != other.m_registry)
+        {
+            RegisterFuncs::remove(*m_registry, effective_this());
+            m_registry = other.m_registry;
+            RegisterFuncs::insert(*m_registry, effective_this());
+        }
+        return *this;
+    }
+
+    AutoRegister& operator=(AutoRegister&& other)
+    {
+        if (m_registry != other.m_registry)
+        {
+            RegisterFuncs::remove(*m_registry, effective_this());
+            m_registry = other.m_registry;
+            RegisterFuncs::insert(*m_registry, effective_this());
+        }
+        return *this;
+    }
+    Registry& registry() const { return *m_registry; }
+
+private:
+    EffectiveType& effective_this() { return static_cast<EffectiveType&>(*this); }
+    Registry* m_registry;
+};
+
 }
 
 #endif // utils_hh_INCLUDED
