@@ -199,6 +199,9 @@ Using the _*_ key, you can set the search pattern to the current selection.
 This tries to be intelligent. It will for example detect if current selection
 begins and/or end at word boundaries, and set the search pattern accordingly.
 
+with _alt-*_ you can set the search pattern to the current seletion without
+kakoune trying to be smart.
+
 Basic Commands
 --------------
 

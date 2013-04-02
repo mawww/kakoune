@@ -225,6 +225,7 @@ void do_search_next(Context& context)
         context.print_status("no search pattern");
 }
 
+template<bool smart>
 void use_selection_as_search_pattern(Context& context)
 {
     std::vector<String> patterns;
@@ -234,11 +235,17 @@ void use_selection_as_search_pattern(Context& context)
         auto begin = sel.begin();
         auto end = sel.end();
         auto content = "\\Q" + context.buffer().string(begin, end) + "\\E";
-        if (begin.is_begin() or (is_word(utf8::codepoint(begin)) and not is_word(utf8::codepoint(utf8::previous(begin)))))
-            content = "\\b" + content;
-        if (end.is_end() or (is_word(utf8::codepoint(utf8::previous(end))) and not is_word(utf8::codepoint(end))))
-            content = content + "\\b";
-
+        if (smart)
+        {
+            if (begin.is_begin() or
+                (is_word(utf8::codepoint(begin)) and not
+                 is_word(utf8::codepoint(utf8::previous(begin)))))
+                content = "\\b" + content;
+            if (end.is_end() or
+                (is_word(utf8::codepoint(utf8::previous(end))) and not
+                 is_word(utf8::codepoint(end))))
+                content = content + "\\b";
+        }
         patterns.push_back(std::move(content));
     }
     RegisterManager::instance()['/'] = patterns;
@@ -668,7 +675,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace, true> },
     { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceMain, true> },
     { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append, true> },
-    { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern },
+    { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern<true> },
+    { { Key::Modifiers::Alt,  '*' }, use_selection_as_search_pattern<false> },
 
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },
