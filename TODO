@@ -18,8 +18,6 @@
 
 * automatic line splitting/paragraph formatting
 
-* Use boost::filesystem for path handling
-
 * folding support
 
 * spelling support
@@ -31,3 +29,5 @@
 * more than 16 colors support
 
 * investigate 'kakdiff'
+
+* improve input filters, try to have a decent C++ input mode indenter
