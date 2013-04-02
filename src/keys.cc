@@ -20,6 +20,8 @@ static std::vector<KeyAndName> keynamemap = {
     { "ret", '\r' },
     { "space", ' ' },
     { "tab", '\t' },
+    { "lt", '<' },
+    { "gt", '>' },
     { "backspace", Key::Backspace},
     { "esc", Key::Escape },
     { "up", Key::Up },
