@@ -196,7 +196,7 @@ template<typename T>
 class OnScopeEnd
 {
 public:
-    OnScopeEnd(T func) : m_func(func) {}
+    OnScopeEnd(T func) : m_func(std::move(func)) {}
     ~OnScopeEnd() { m_func(); }
 private:
     T m_func;
