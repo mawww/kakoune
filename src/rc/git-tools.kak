@@ -31,10 +31,11 @@ def git-blame %{
     setb git_blame_flags ''
     %sh{ (
             declare -A authors
+            declare -A dates
             send_flags() {
                 if [[ -z "$line" ]]; then return; fi
-                text="${sha:0:8} ${authors[$sha]}"
-                flag="$line:black:$text"
+                text="${sha:0:8} ${dates[$sha]} ${authors[$sha]}"
+                flag="$line|black|$text"
                 for (( i=1; $i < $count; i++ )); do
                     flag="$flag;$(($line+$i))|black|$text"
                 done
@@ -48,6 +49,8 @@ def git-blame %{
                     count=${BASH_REMATCH[4]}
                 elif [[ $blame_line =~ author[^-](.*) ]]; then
                     authors[$sha]=${BASH_REMATCH[1]}
+                elif [[ $blame_line =~ author-time.([0-9]*) ]]; then
+                    dates[$sha]="$(date -d @${BASH_REMATCH[1]} +'%F %T')"
                 fi
             done; send_flags )
        ) >& /dev/null < /dev/null & }
