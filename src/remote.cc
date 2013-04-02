@@ -435,6 +435,7 @@ private:
                 {
                     write_debug("error running command '" + m_buffer + "' : " + e.description());
                 }
+                ClientManager::instance().redraw_clients();
                 delete this;
                 return;
             }
