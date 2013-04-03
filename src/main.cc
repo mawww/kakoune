@@ -257,6 +257,15 @@ void do_yank(Context& context)
     RegisterManager::instance()['"'] = context.editor().selections_content();
 }
 
+void do_cat_yank(Context& context)
+{
+    auto sels = context.editor().selections_content();
+    String str;
+    for (auto& sel : sels)
+        str += sel;
+    RegisterManager::instance()['"'] = memoryview<String>(str);
+}
+
 void do_erase(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
@@ -647,6 +656,7 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
 
     { { Key::Modifiers::None, 'y' }, do_yank },
+    { { Key::Modifiers::None, 'Y' }, do_cat_yank },
     { { Key::Modifiers::None, 'p' }, repeated(do_paste<InsertMode::Append>) },
     { { Key::Modifiers::None, 'P' }, repeated(do_paste<InsertMode::Insert>) },
     { { Key::Modifiers::Alt,  'p' }, do_paste<InsertMode::Replace> },
