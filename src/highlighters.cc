@@ -196,7 +196,7 @@ HighlighterAndId highlight_search_factory(const HighlighterParameters params, co
     {
         throw runtime_error(String("regex error: ") + err.what());
     }
-};
+}
 
 HighlighterAndId highlight_regex_option_factory(const HighlighterParameters params, const Window& window)
 {
@@ -211,7 +211,7 @@ HighlighterAndId highlight_regex_option_factory(const HighlighterParameters para
 
     auto get_regex = [option_name, &options]{ return options[option_name].get<Regex>(); };
     return {"hloption_" + option_name, DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
-};
+}
 
 void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer)
 {

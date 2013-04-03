@@ -2,7 +2,7 @@ sources := $(wildcard *.cc)
 objects := $(addprefix ., $(sources:.cc=.o))
 deps := $(addprefix ., $(sources:.cc=.d))
 
-CXXFLAGS += -std=c++11 -g -Wall -Wno-reorder -Wno-sign-compare
+CXXFLAGS += -std=c++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
 LIBS += -lmenu -lncursesw -lboost_regex
 
 debug ?= yes

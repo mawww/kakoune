@@ -25,7 +25,7 @@ private:
                   const BufferIterator& end) override;
 };
 
-};
+}
 
 #endif // dynamic_selection_list_hh_INCLUDED
 

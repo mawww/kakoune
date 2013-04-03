@@ -53,7 +53,7 @@ public:
     void write(const T& val)
     {
         write((const char*)&val, sizeof(val));
-    };
+    }
 
     void write(const String& str)
     {
@@ -67,7 +67,7 @@ public:
         write<uint32_t>(view.size());
         for (auto& val : view)
             write(val);
-    };
+    }
 
     template<typename T>
     void write(const std::vector<T>& vec)
@@ -119,7 +119,7 @@ T read(int socket)
     char value[sizeof(T)];
     read(socket, value, sizeof(T));
     return *(T*)(value);
-};
+}
 
 template<>
 String read<String>(int socket)
@@ -131,7 +131,7 @@ String read<String>(int socket)
     assert(length < 2048);
     read(socket, buffer, (int)length);
     return String(buffer, buffer+(int)length);
-};
+}
 
 template<typename T>
 std::vector<T> read_vector(int socket)
@@ -142,7 +142,7 @@ std::vector<T> read_vector(int socket)
     while (size--)
         res.push_back(read<T>(socket));
     return res;
-};
+}
 
 template<>
 DisplayAtom read<DisplayAtom>(int socket)
