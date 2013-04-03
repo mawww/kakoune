@@ -359,6 +359,30 @@ void do_join(Context& context)
     editor.insert(" ", InsertMode::Replace);
 }
 
+template<bool matching>
+void do_keep(Context& context)
+{
+    constexpr const char* prompt = matching ? "keep matching: " : "keep not matching: ";
+    context.input_handler().prompt(prompt, complete_nothing,
+        [](const String& str, PromptEvent event, Context& context) {
+            if (event == PromptEvent::Validate)
+            {
+                Regex re(str);
+                Editor& editor = context.editor();
+                SelectionList sels = editor.selections();
+                SelectionList keep;
+                for (auto& sel : sels)
+                {
+                    if (boost::regex_search(sel.begin(), sel.end(), re) == matching)
+                        keep.push_back(sel);
+                }
+                if (keep.empty())
+                    throw runtime_error("no selections remaining");
+                editor.select(std::move(keep));
+            }
+        });
+}
+
 void do_indent(Context& context)
 {
     size_t width = context.options()["indentwidth"].get<int>();
@@ -689,6 +713,9 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::Alt,  'j' }, do_join },
 
+    { { Key::Modifiers::Alt,  'k' }, do_keep<true> },
+    { { Key::Modifiers::Alt,  'K' }, do_keep<false> },
+
     { { Key::Modifiers::None, '<' }, do_deindent },
     { { Key::Modifiers::None, '>' }, do_indent },
 
@@ -751,6 +778,11 @@ void register_env_vars()
     shell_manager.register_env_var("cursor_column",
                                    [](const String& name, const Context& context)
                                    { return int_to_str((int)context.editor().main_selection().last().column() + 1); });
+    shell_manager.register_env_var("selection_desc",
+                                   [](const String& name, const Context& context)
+                                   { auto& sel = context.editor().main_selection();
+                                     auto beg = sel.begin();
+                                     return int_to_str((int)beg.line() + 1) + ':' + int_to_str((int)beg.column() + 1) + '+' + int_to_str((int)(sel.end() - beg)); });
 }
 
 void register_registers()

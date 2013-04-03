@@ -151,6 +151,10 @@ To clear multiple selections, use _space_. To keep only the nth selection
 use _n_ followed by _space_, to remove only the nth selection, use _n_
 followed by _alt-space_.
 
+_alt-k_ allows you to enter a regex and keep only the selections that
+contains a match for this regex. using _alt-K_ you can keep the selections
+not containing a match.
+
 Object Selection
 ----------------
 
