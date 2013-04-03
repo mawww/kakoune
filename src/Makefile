@@ -1,5 +1,5 @@
 sources := $(wildcard *.cc)
-objects := $(sources:.cc=.o)
+objects := $(addprefix ., $(sources:.cc=.o))
 deps := $(addprefix ., $(sources:.cc=.d))
 
 CXXFLAGS += -std=c++11 -g -Wall -Wno-reorder -Wno-sign-compare
@@ -21,14 +21,14 @@ kak : $(objects)
 
 -include $(deps)
 
-%.o: %.cc
+.%.o: %.cc
 	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
 
 tags:
 	ctags -R
 
 clean:
-	rm -f *.o .*.d kak tags
+	rm -f .*.o .*.d kak tags
 
 XDG_CONFIG_HOME ?= $(HOME)/.config
 
