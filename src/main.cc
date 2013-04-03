@@ -255,6 +255,7 @@ void use_selection_as_search_pattern(Context& context)
 void do_yank(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
+    context.print_status("yanked " + int_to_str(context.editor().selections().size()) + " selections");
 }
 
 void do_cat_yank(Context& context)
@@ -264,6 +265,8 @@ void do_cat_yank(Context& context)
     for (auto& sel : sels)
         str += sel;
     RegisterManager::instance()['"'] = memoryview<String>(str);
+    context.print_status("concatenated and yanked " +
+                         int_to_str(sels.size()) + " selections");
 }
 
 void do_erase(Context& context)
