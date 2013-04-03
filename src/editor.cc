@@ -51,7 +51,7 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
         if (pos.column() == buffer.line_length(pos.line()) - 1)
             return pos;
         else
-            return pos+1;
+            return utf8::next(pos);
     }
     case InsertMode::InsertAtLineBegin:
         return buffer.iterator_at_line_begin(sel.begin());
