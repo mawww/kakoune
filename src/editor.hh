@@ -87,7 +87,6 @@ public:
                                     size_t cursor_pos = String::npos);
 
     bool is_editing() const { return m_edition_level!= 0; }
-
 private:
     friend struct scoped_edition;
     void begin_edition();

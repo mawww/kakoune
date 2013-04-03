@@ -88,10 +88,10 @@ void Editor::insert(const String& str, InsertMode mode)
         {
             sel.first() = pos;
             sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
-            sel.check_invariant();
         }
         sel.avoid_eol();
     }
+    check_invariant();
 }
 
 void Editor::insert(const memoryview<String>& strings, InsertMode mode)
@@ -110,10 +110,10 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
         {
             sel.first() = pos;
             sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
-            sel.check_invariant();
         }
         sel.avoid_eol();
     }
+    check_invariant();
 }
 
 std::vector<String> Editor::selections_content() const
@@ -408,6 +408,7 @@ void Editor::check_invariant() const
     assert(not m_selections.empty());
     assert(m_main_sel < m_selections.size());
     m_selections.check_invariant();
+    buffer().check_invariant();
     assert(std::is_sorted(m_selections.begin(), m_selections.end(), compare_selections));
 #endif
 }

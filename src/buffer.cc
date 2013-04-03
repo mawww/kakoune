@@ -321,8 +321,6 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         end_it = BufferIterator{*this, { last_line, m_lines[last_line].length() - suffix.length() }};
     }
 
-    check_invariant();
-
     for (auto listener : m_change_listeners)
         listener->on_insert(begin_it, end_it);
 }
@@ -347,8 +345,6 @@ void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 
     for (LineCount i = begin.line()+1; i < line_count(); ++i)
         m_lines[i].start -= length;
-
-    check_invariant();
 
     for (auto listener : m_change_listeners)
         listener->on_erase(begin, end);

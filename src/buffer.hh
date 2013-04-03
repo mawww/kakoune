@@ -168,10 +168,10 @@ public:
     const HookManager&   hooks()   const { return m_hooks; }
 
     std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
-private:
-    friend class BufferIterator;
 
     void check_invariant() const;
+private:
+    friend class BufferIterator;
 
     struct Line
     {
