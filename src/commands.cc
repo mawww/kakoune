@@ -379,7 +379,7 @@ void define_command(const CommandParameters& params, Context& context)
     if (parser.has_option("shell-params"))
     {
         cmd = [=](const CommandParameters& params, Context& context) {
-            CommandManager::instance().execute(commands, context, params, {});
+            CommandManager::instance().execute(commands, context, params);
         };
     }
     else
@@ -708,14 +708,16 @@ void try_catch(const CommandParameters& params, Context& context)
 
 void define_color_alias(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, {}, ParametersParser::Flags::None, 2, 2);
+    ParametersParser parser(params, OptionMap{},
+                            ParametersParser::Flags::None, 2, 2);
     ColorRegistry::instance().register_alias(
         parser[0], parser[1], true);
 }
 
 void set_client_name(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, {}, ParametersParser::Flags::None, 1, 1);
+    ParametersParser parser(params, OptionMap{},
+                            ParametersParser::Flags::None, 1, 1);
     ClientManager::instance().set_client_name(context, params[0]);
 }
 

@@ -29,6 +29,7 @@ struct wrong_argument_count : runtime_error
     wrong_argument_count() : runtime_error("wrong argument count") {}
 };
 
+using OptionMap = std::unordered_map<String, bool>;
 
 // ParameterParser provides tools to parse command parameters.
 // There are 3 types of parameters:
@@ -55,7 +56,7 @@ struct ParametersParser
     // they are understood as string options, else they are understood as
     // boolean option.
     ParametersParser(const ParameterList& params,
-                     std::unordered_map<String, bool> options,
+                     OptionMap options,
                      Flags flags = Flags::None,
                      size_t min_positionals = 0,
                      size_t max_positionals = -1);

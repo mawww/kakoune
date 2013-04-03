@@ -164,7 +164,8 @@ void do_pipe(Context& context)
             std::vector<String> strings;
             for (auto& sel : context.editor().selections())
                 strings.push_back(ShellManager::instance().pipe({sel.begin(), sel.end()},
-                                                                cmdline, context, {}, {}));
+                                                                cmdline, context, {},
+                                                                EnvVarMap{}));
             editor.insert(strings, InsertMode::Replace);
         });
 }
@@ -778,7 +779,7 @@ void create_local_client(const String& init_command)
         {
             if (not ClientManager::instance().empty() and fork())
             {
-                this->~NCursesUI();
+                this->NCursesUI::~NCursesUI();
                 puts("detached from terminal\n");
                 exit(0);
             }

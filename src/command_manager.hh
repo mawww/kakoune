@@ -51,7 +51,7 @@ class CommandManager : public Singleton<CommandManager>
 public:
     void execute(const String& command_line, Context& context,
                  const memoryview<String>& shell_params = {},
-                 const EnvVarMap& env_vars = {});
+                 const EnvVarMap& env_vars = EnvVarMap{});
 
     Completions complete(const Context& context,
                          const String& command_line, ByteCount cursor_pos);
