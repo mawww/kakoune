@@ -405,7 +405,8 @@ there are some builtins color aliases:
  * +PrimaryCursor+: last character of the primary selection
  * +SecondaryCursor+: last character of the secondary selection
  * +LineNumbers+: colors used by the number_lines highlighter
-
+ * +MenuForeground+: colors for the selected element in menus
+ * +MenuBackground+: colors for the not selected elements in menus
 
 Shell expansion
 ---------------

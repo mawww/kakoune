@@ -5,6 +5,7 @@
 #include "keys.hh"
 #include "units.hh"
 #include "utils.hh"
+#include "color.hh"
 
 namespace Kakoune
 {
@@ -28,7 +29,8 @@ public:
     virtual void print_status(const String& status, CharCount cursor_pos = -1) = 0;
 
     virtual void menu_show(const memoryview<String>& choices,
-                           const DisplayCoord& anchor, MenuStyle style) = 0;
+                           DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                           MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
 

@@ -46,6 +46,8 @@ ColorRegistry::ColorRegistry()
         { "PrimaryCursor", { Color::Black, Color::White } },
         { "SecondaryCursor", { Color::Black, Color::White } },
         { "LineNumbers", { Color::Black, Color::White } },
+        { "MenuForeground", { Color::Blue, Color::Cyan } },
+        { "MenuBackground", { Color::Cyan, Color::Blue } },
       }
 {}
 

@@ -806,7 +806,7 @@ public:
     void print_status(const String& , CharCount) override {}
     void draw(const DisplayBuffer&, const String&) override {}
     void menu_show(const memoryview<String>&,
-                   const DisplayCoord&, MenuStyle) override {}
+                   DisplayCoord, ColorPair, ColorPair, MenuStyle) override {}
     void menu_select(int) override {}
     void menu_hide() override {}
 

@@ -75,12 +75,17 @@ public:
         write(memoryview<T>(vec));
     }
 
+    void write(const ColorPair& colors)
+    {
+        write(colors.first);
+        write(colors.second);
+    }
+
     void write(const DisplayAtom& atom)
     {
-        write(atom.colors.first);
-        write(atom.colors.second);
-        write(atom.attribute);
         write(atom.content.content());
+        write(atom.colors);
+        write(atom.attribute);
     }
 
     void write(const DisplayLine& line)
@@ -145,14 +150,20 @@ std::vector<T> read_vector(int socket)
 }
 
 template<>
+ColorPair read<ColorPair>(int socket)
+{
+    ColorPair res;
+    res.first = read<Color>(socket);
+    res.second = read<Color>(socket);
+    return res;
+}
+
+template<>
 DisplayAtom read<DisplayAtom>(int socket)
 {
-    Color fg_color = read<Color>(socket);
-    Color bg_color = read<Color>(socket);
-    Attribute attribute = read<Attribute>(socket);
     DisplayAtom atom(AtomContent(read<String>(socket)));
-    atom.colors = { fg_color, bg_color };
-    atom.attribute = attribute;
+    atom.colors = read<ColorPair>(socket);
+    atom.attribute = read<Attribute>(socket);
     return atom;
 }
 template<>
@@ -178,7 +189,8 @@ public:
     void print_status(const String& status, CharCount cursor_pos) override;
 
     void menu_show(const memoryview<String>& choices,
-                   const DisplayCoord& anchor, MenuStyle style) override;
+                   DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                   MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
@@ -223,12 +235,15 @@ void RemoteUI::print_status(const String& status, CharCount cursor_pos)
 }
 
 void RemoteUI::menu_show(const memoryview<String>& choices,
-                         const DisplayCoord& anchor, MenuStyle style)
+                         DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                         MenuStyle style)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::MenuShow);
     msg.write(choices);
     msg.write(anchor);
+    msg.write(fg);
+    msg.write(bg);
     msg.write(style);
 }
 
@@ -338,8 +353,10 @@ void RemoteClient::process_next_message()
     {
         auto choices = read_vector<String>(socket);
         auto anchor = read<DisplayCoord>(socket);
+        auto fg = read<ColorPair>(socket);
+        auto bg = read<ColorPair>(socket);
         auto style = read<MenuStyle>(socket);
-        m_ui->menu_show(choices, anchor, style);
+        m_ui->menu_show(choices, anchor, fg, bg, style);
         break;
     }
     case RemoteUIMsg::MenuSelect:

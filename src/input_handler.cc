@@ -5,6 +5,7 @@
 #include "register_manager.hh"
 #include "event_manager.hh"
 #include "utf8.hh"
+#include "color_registry.hh"
 
 #include <unordered_map>
 
@@ -153,7 +154,9 @@ public:
           m_selected(m_choices.begin())
     {
         DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
-        context().ui().menu_show(choices, menu_pos, MenuStyle::Prompt);
+        ColorRegistry& colreg = ColorRegistry::instance();
+        context().ui().menu_show(choices, menu_pos, colreg["MenuForeground"],
+                                 colreg["MenuBackground"], MenuStyle::Prompt);
     }
 
     void on_key(const Key& key) override
@@ -375,7 +378,9 @@ public:
 
                 context().ui().menu_hide();
                 DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
-                context().ui().menu_show(candidates, menu_pos, MenuStyle::Prompt);
+                ColorRegistry& colreg = ColorRegistry::instance();
+                context().ui().menu_show(candidates, menu_pos, colreg["MenuForeground"],
+                                         colreg["MenuBackground"], MenuStyle::Prompt);
 
                 bool use_common_prefix = context().options()["complete_prefix"].get<bool>();
                 String prefix = use_common_prefix ? common_prefix(candidates) : String();
@@ -573,10 +578,8 @@ public:
                 {
                     m_context.ui().menu_hide();
                     m_current_candidate = m_matching_candidates.size();
-                    DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
-                    m_context.ui().menu_show(m_matching_candidates, menu_pos, MenuStyle::Inline);
-                    m_context.ui().menu_select(m_current_candidate);
                     m_completions.end = cursor;
+                    menu_show();
                     m_matching_candidates.push_back(prefix);
                     return;
                 }
@@ -601,6 +604,18 @@ private:
         }
     }
 
+    void menu_show()
+    {
+        DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
+
+        ColorRegistry& colreg = ColorRegistry::instance();
+        m_context.ui().menu_show(m_matching_candidates, menu_pos,
+                                 colreg["MenuForeground"],
+                                 colreg["MenuBackground"],
+                                 MenuStyle::Inline);
+        m_context.ui().menu_select(m_current_candidate);
+    }
+
     bool setup_ifn()
     {
         if (not m_completions.is_valid())
@@ -615,10 +630,9 @@ private:
             assert(cursor >= m_completions.begin);
 
             m_matching_candidates = m_completions.candidates;
-            DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
-            m_context.ui().menu_show(m_matching_candidates, menu_pos, MenuStyle::Inline);
+            m_current_candidate = m_matching_candidates.size();
+            menu_show();
             m_matching_candidates.push_back(m_context.buffer().string(m_completions.begin, m_completions.end));
-            m_current_candidate = m_matching_candidates.size() - 1;
         }
         return true;
     }

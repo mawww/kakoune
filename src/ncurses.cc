@@ -322,11 +322,11 @@ void NCursesUI::draw_menu()
 {
     assert(m_menu_win);
 
-    auto menu_fg = get_color_pair({ Color::Blue, Color::Cyan });
-    auto menu_bg = get_color_pair({ Color::Cyan, Color::Blue });
+    auto menu_fg = get_color_pair(m_menu_fg);
+    auto menu_bg = get_color_pair(m_menu_bg);
 
     auto scroll_fg = get_color_pair({ Color::White, Color::White });
-    auto scroll_bg = get_color_pair({ Color::White, Color::Blue });
+    auto scroll_bg = get_color_pair(m_menu_bg);
 
     wattron(m_menu_win, COLOR_PAIR(menu_bg));
     wbkgdset(m_menu_win, COLOR_PAIR(menu_bg));
@@ -362,10 +362,14 @@ void NCursesUI::draw_menu()
 }
 
 void NCursesUI::menu_show(const memoryview<String>& choices,
-                          const DisplayCoord& anchor, MenuStyle style)
+                          DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                          MenuStyle style)
 {
     assert(m_menu_win == nullptr);
     assert(m_choices.empty());
+
+    m_menu_fg = fg;
+    m_menu_bg = bg;
 
     DisplayCoord maxsize = window_size(stdscr);
     maxsize.column -= anchor.column;
