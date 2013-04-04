@@ -145,7 +145,8 @@ void do_swap_case(Context& context)
 void do_command(Context& context)
 {
     context.input_handler().prompt(
-        ":", std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
+        ":", get_color("StatusLine"),
+        std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
         [](const String& cmdline, PromptEvent event, Context& context) {
              if (event == PromptEvent::Validate)
                  CommandManager::instance().execute(cmdline, context);
@@ -154,7 +155,7 @@ void do_command(Context& context)
 
 void do_pipe(Context& context)
 {
-    context.input_handler().prompt("|", complete_nothing,
+    context.input_handler().prompt("|", get_color("StatusLine"), complete_nothing,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -174,7 +175,7 @@ template<SelectMode mode, bool forward>
 void do_search(Context& context)
 {
     SelectionList selections = context.editor().selections();
-    context.input_handler().prompt("/", complete_nothing,
+    context.input_handler().prompt("/", get_color("StatusLine"), complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
             try
             {
@@ -313,7 +314,7 @@ void do_paste(Context& context)
 
 void do_select_regex(Context& context)
 {
-    context.input_handler().prompt("select: ", complete_nothing,
+    context.input_handler().prompt("select: ", get_color("Prompt"), complete_nothing,
         [](const String& str, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate)
             {
@@ -330,7 +331,7 @@ void do_select_regex(Context& context)
 
 void do_split_regex(Context& context)
 {
-    context.input_handler().prompt("split: ", complete_nothing,
+    context.input_handler().prompt("split: ", get_color("Prompt"), complete_nothing,
         [](const String& str, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate)
             {
@@ -375,7 +376,7 @@ template<bool matching>
 void do_keep(Context& context)
 {
     constexpr const char* prompt = matching ? "keep matching: " : "keep not matching: ";
-    context.input_handler().prompt(prompt, complete_nothing,
+    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [](const String& str, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate)
             {
@@ -484,7 +485,7 @@ void do_rotate_selections(Context& context)
     if (count == 0)
         count = 1;
     context.editor().rotate_selections(count);
-};
+}
 
 enum class SelectFlags
 {

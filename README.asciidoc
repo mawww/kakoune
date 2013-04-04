@@ -411,6 +411,7 @@ there are some builtins color aliases:
  * +Error+: colors of error messages
  * +StatusLine+: colors used for the status line
  * +StatusCursor+: colors used for the status line cursor
+ * +Prompt+: colors used prompt displayed on the status line
 
 Shell expansion
 ---------------

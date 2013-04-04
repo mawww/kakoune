@@ -286,12 +286,12 @@ class Prompt : public InputMode
 {
 public:
     Prompt(InputHandler& input_handler, const String& prompt,
-           Completer completer, PromptCallback callback)
-        : InputMode(input_handler), m_prompt(prompt),
+           ColorPair colors, Completer completer, PromptCallback callback)
+        : InputMode(input_handler), m_prompt(prompt), m_prompt_colors(colors),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
-        context().ui().print_status(line_with_cursor(m_prompt, m_prompt.char_length()));
+        display();
     }
 
     void on_key(const Key& key) override
@@ -429,15 +429,22 @@ public:
             m_current_completion = -1;
             m_line_editor.handle_key(key);
         }
-        auto curpos = m_prompt.char_length() + m_line_editor.cursor_pos();
-        context().ui().print_status(line_with_cursor(m_prompt + line, curpos));
+        display();
         m_callback(line, PromptEvent::Change, context());
     }
 
 private:
+    void display() const
+    {
+        auto display_line = line_with_cursor(m_line_editor.line(), m_line_editor.cursor_pos());
+        display_line.insert(display_line.begin(), { m_prompt, m_prompt_colors });
+        context().ui().print_status(display_line);
+    }
+
     PromptCallback m_callback;
     Completer      m_completer;
     const String   m_prompt;
+    ColorPair      m_prompt_colors;
     Completions    m_completions;
     int            m_current_completion = -1;
     String         m_prefix;
@@ -784,11 +791,12 @@ void InputHandler::repeat_last_insert()
     assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
-void InputHandler::prompt(const String& prompt, Completer completer,
-                          PromptCallback callback)
+void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
+                          Completer completer, PromptCallback callback)
 {
     m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Prompt(*this, prompt, completer, callback));
+    m_mode.reset(new InputModes::Prompt(*this, prompt, prompt_colors,
+                                        completer, callback));
 }
 
 void InputHandler::menu(const memoryview<String>& choices,

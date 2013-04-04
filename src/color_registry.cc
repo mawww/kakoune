@@ -52,6 +52,7 @@ ColorRegistry::ColorRegistry()
         { "Error", { Color::Black, Color::Red } },
         { "StatusLine", { Color::Cyan, Color::Default } },
         { "StatusCursor", { Color::Black, Color::Cyan } },
+        { "Prompt", { Color::Cyan, Color::Blue} },
       }
 {}
 
