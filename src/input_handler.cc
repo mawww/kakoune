@@ -433,6 +433,15 @@ public:
         m_callback(line, PromptEvent::Change, context());
     }
 
+    void set_prompt_colors(ColorPair colors)
+    {
+        if (colors != m_prompt_colors)
+        {
+            m_prompt_colors = colors;
+            display();
+        }
+    }
+
 private:
     void display() const
     {
@@ -797,6 +806,13 @@ void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Prompt(*this, prompt, prompt_colors,
                                         completer, callback));
+}
+
+void InputHandler::set_prompt_colors(ColorPair prompt_colors)
+{
+    InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(m_mode.get());
+    if (prompt)
+        prompt->set_prompt_colors(prompt_colors);
 }
 
 void InputHandler::menu(const memoryview<String>& choices,

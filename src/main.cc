@@ -326,6 +326,11 @@ void do_select_regex(Context& context)
                 if (not ex.empty())
                     context.editor().multi_select(std::bind(select_all_matches, _1, ex));
             }
+            else if (event == PromptEvent::Change)
+            {
+                const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
+                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
+            }
         });
 }
 
@@ -342,6 +347,11 @@ void do_split_regex(Context& context)
                     RegisterManager::instance()['/'] = ex;
                 if (not ex.empty())
                     context.editor().multi_select(std::bind(split_selection, _1, ex));
+            }
+            else if (event == PromptEvent::Change)
+            {
+                const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
+                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
             }
         });
 }
@@ -392,6 +402,11 @@ void do_keep(Context& context)
                 if (keep.empty())
                     throw runtime_error("no selections remaining");
                 editor.select(std::move(keep));
+            }
+            else if (event == PromptEvent::Change)
+            {
+                const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
+                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
             }
         });
 }
