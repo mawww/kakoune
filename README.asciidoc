@@ -407,6 +407,7 @@ there are some builtins color aliases:
  * +LineNumbers+: colors used by the number_lines highlighter
  * +MenuForeground+: colors for the selected element in menus
  * +MenuBackground+: colors for the not selected elements in menus
+ * +Information+: colors the informations windows
 
 Shell expansion
 ---------------

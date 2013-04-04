@@ -48,6 +48,7 @@ ColorRegistry::ColorRegistry()
         { "LineNumbers", { Color::Black, Color::White } },
         { "MenuForeground", { Color::Blue, Color::Cyan } },
         { "MenuBackground", { Color::Cyan, Color::Blue } },
+        { "Information", { Color::Black, Color::Yellow } },
       }
 {}
 

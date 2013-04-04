@@ -684,7 +684,8 @@ void info(const CommandParameters& params, Context& context)
             pos = context.window().display_position(it);
         }
         const String& message = parser.has_option("assist") ? assist(parser[0], dimensions.column) : parser[0];
-        context.ui().info_show(message, pos, style);
+        ColorPair colors = ColorRegistry::instance()["Information"];
+        context.ui().info_show(message, pos, colors, style);
     }
 }
 
@@ -810,7 +811,7 @@ public:
     void menu_select(int) override {}
     void menu_hide() override {}
 
-    void info_show(const String&, const DisplayCoord&, MenuStyle) override {}
+    void info_show(const String&, DisplayCoord, ColorPair, MenuStyle) override {}
     void info_hide() override {}
 
     DisplayCoord dimensions() override { return { 0, 0 }; }

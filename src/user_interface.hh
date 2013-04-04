@@ -34,8 +34,8 @@ public:
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
 
-    virtual void info_show(const String& content,
-                           const DisplayCoord& anchor, MenuStyle style) = 0;
+    virtual void info_show(const String& content, DisplayCoord anchor,
+                           ColorPair colors, MenuStyle style) = 0;
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,

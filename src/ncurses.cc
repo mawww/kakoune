@@ -485,7 +485,8 @@ static DisplayCoord compute_pos(const DisplayCoord& anchor,
     return pos;
 }
 
-void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, MenuStyle style)
+void NCursesUI::info_show(const String& content, DisplayCoord anchor,
+                          ColorPair colors, MenuStyle style)
 {
     assert(m_info_win == nullptr);
 
@@ -498,7 +499,7 @@ void NCursesUI::info_show(const String& content, const DisplayCoord& anchor, Men
     m_info_win = newwin((int)size.line, (int)size.column,
                         (int)pos.line,  (int)pos.column);
 
-    wbkgd(m_info_win, COLOR_PAIR(get_color_pair({ Color::Black, Color::Yellow })));
+    wbkgd(m_info_win, COLOR_PAIR(get_color_pair(colors)));
     wmove(m_info_win, 0, 0);
     addutf8str(m_info_win, Utf8Iterator(content.begin()),
                Utf8Iterator(content.end()));
