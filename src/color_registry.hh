@@ -22,6 +22,11 @@ private:
     std::unordered_map<String, ColorPair>    m_aliases;
 };
 
+inline const ColorPair& get_color(const String& colordesc)
+{
+    return ColorRegistry::instance()[colordesc];
+}
+
 }
 
 #endif // color_registry_hh_INCLUDED

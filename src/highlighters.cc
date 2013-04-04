@@ -135,7 +135,7 @@ HighlighterAndId colorize_regex_factory(const HighlighterParameters params, cons
 
             int capture = str_to_int(String(res[1].first, res[1].second));
             const ColorPair*& color = colors[capture];
-            color = &ColorRegistry::instance()[String(res[2].first, res[2].second)];
+            color = &get_color(String(res[2].first, res[2].second));
         }
 
         String id = "colre'" + params[0] + "'";
@@ -185,7 +185,7 @@ HighlighterAndId highlight_search_factory(const HighlighterParameters params, co
         throw runtime_error("wrong parameter count");
     try
     {
-        ColorSpec colors { { 0, &ColorRegistry::instance()[params[0]] } };
+        ColorSpec colors { { 0, &get_color(params[0]) } };
         auto get_regex = []{
             auto s = RegisterManager::instance()['/'].values(Context{});
             return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
@@ -203,7 +203,7 @@ HighlighterAndId highlight_regex_option_factory(const HighlighterParameters para
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    ColorSpec colors { { 0, &ColorRegistry::instance()[params[1]] } };
+    ColorSpec colors { { 0, &get_color(params[1]) } };
     String option_name = params[0];
     const OptionManager& options = window.options();
     // verify option type now
@@ -266,7 +266,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
 
     char format[] = "%?d ";
     format[1] = '0' + digit_count;
-    auto& colors = ColorRegistry::instance()["LineNumbers"];
+    auto& colors = get_color("LineNumbers");
     for (auto& line : display_buffer.lines())
     {
         char buffer[10];
@@ -290,11 +290,11 @@ void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
         const bool primary = (i == window.main_selection_index());
         if (not only_cursor)
         {
-            ColorPair sel_colors = ColorRegistry::instance()[primary ? "PrimarySelection" : "SecondarySelection"];
+            ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
             highlight_range(display_buffer, begin, end, false,
                             [&](DisplayAtom& atom) { atom.colors = sel_colors; });
         }
-        ColorPair cur_colors = ColorRegistry::instance()[primary ? "PrimaryCursor" : "SecondaryCursor"];
+        ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
         highlight_range(display_buffer, sel.last(), utf8::next(sel.last()), false,
                         [&](DisplayAtom& atom) { atom.colors = cur_colors; });
     }

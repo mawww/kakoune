@@ -154,9 +154,8 @@ public:
           m_selected(m_choices.begin())
     {
         DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
-        ColorRegistry& colreg = ColorRegistry::instance();
-        context().ui().menu_show(choices, menu_pos, colreg["MenuForeground"],
-                                 colreg["MenuBackground"], MenuStyle::Prompt);
+        context().ui().menu_show(choices, menu_pos, get_color("MenuForeground"),
+                                 get_color("MenuBackground"), MenuStyle::Prompt);
     }
 
     void on_key(const Key& key) override
@@ -378,9 +377,8 @@ public:
 
                 context().ui().menu_hide();
                 DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
-                ColorRegistry& colreg = ColorRegistry::instance();
-                context().ui().menu_show(candidates, menu_pos, colreg["MenuForeground"],
-                                         colreg["MenuBackground"], MenuStyle::Prompt);
+                context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
+                                         get_color("MenuBackground"), MenuStyle::Prompt);
 
                 bool use_common_prefix = context().options()["complete_prefix"].get<bool>();
                 String prefix = use_common_prefix ? common_prefix(candidates) : String();
@@ -608,10 +606,9 @@ private:
     {
         DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
 
-        ColorRegistry& colreg = ColorRegistry::instance();
         m_context.ui().menu_show(m_matching_candidates, menu_pos,
-                                 colreg["MenuForeground"],
-                                 colreg["MenuBackground"],
+                                 get_color("MenuForeground"),
+                                 get_color("MenuBackground"),
                                  MenuStyle::Inline);
         m_context.ui().menu_select(m_current_candidate);
     }

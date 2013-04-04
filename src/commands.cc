@@ -684,8 +684,7 @@ void info(const CommandParameters& params, Context& context)
             pos = context.window().display_position(it);
         }
         const String& message = parser.has_option("assist") ? assist(parser[0], dimensions.column) : parser[0];
-        ColorPair colors = ColorRegistry::instance()["Information"];
-        context.ui().info_show(message, pos, colors, style);
+        context.ui().info_show(message, pos, get_color("Information"), style);
     }
 }
 
