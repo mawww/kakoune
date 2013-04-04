@@ -112,12 +112,13 @@ struct DisplayAtom
 {
     ColorPair      colors;
     Attribute      attribute;
-
     AtomContent    content;
 
-    DisplayAtom(AtomContent content)
-        : content{std::move(content)}, attribute{Normal},
-          colors{Color::Default, Color::Default} {}
+    DisplayAtom(AtomContent content,
+                ColorPair colors = {Color::Default, Color::Default},
+                Attribute attribute = Normal)
+        : content{std::move(content)}, colors{colors}, attribute{attribute}
+    {}
 };
 
 class DisplayLine
@@ -130,6 +131,8 @@ public:
     explicit DisplayLine(LineCount buffer_line) : m_buffer_line(buffer_line) {}
     DisplayLine(LineCount buffer_line, AtomList atoms)
         : m_buffer_line(buffer_line), m_atoms(std::move(atoms)) {}
+    DisplayLine(String str, ColorPair color)
+        : m_buffer_line(-1), m_atoms{ { std::move(str), color } } {}
 
     LineCount buffer_line() const { return m_buffer_line; }
 
@@ -140,6 +143,8 @@ public:
     const_iterator end() const { return m_atoms.end(); }
 
     const AtomList& atoms() const { return m_atoms; }
+
+    CharCount length() const;
 
     // Split atom pointed by it at pos, returns an iterator to the first atom
     iterator split(iterator it, BufferIterator pos);

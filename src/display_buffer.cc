@@ -42,6 +42,14 @@ void DisplayLine::optimize()
     }
 }
 
+CharCount DisplayLine::length() const
+{
+    CharCount len = 0;
+    for (auto& atom : m_atoms)
+        len += atom.content.length();
+    return len;
+}
+
 void DisplayBuffer::compute_range()
 {
     m_range.first  = BufferIterator();

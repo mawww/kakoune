@@ -144,6 +144,18 @@ private:
     String         m_line;
 };
 
+static DisplayLine line_with_cursor(const String& str, CharCount cursor_pos)
+{
+    assert(cursor_pos <= str.char_length());
+    if (cursor_pos == str.char_length())
+        return DisplayLine{-1, { {str, get_color("StatusLine")},
+                                 {" "_str, get_color("StatusCursor")} }};
+    else
+        return DisplayLine(-1, { DisplayAtom{ str.substr(0, cursor_pos), get_color("StatusLine") },
+                                  DisplayAtom{ str.substr(cursor_pos, 1), get_color("StatusCursor") },
+                                  DisplayAtom{ str.substr(cursor_pos+1), get_color("StatusLine") } });
+}
+
 class Menu : public InputMode
 {
 public:
@@ -167,7 +179,7 @@ public:
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
             context().ui().menu_hide();
-            context().ui().print_status("");
+            context().ui().print_status(DisplayLine{ -1 });
             reset_normal_mode();
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
@@ -180,7 +192,7 @@ public:
                 m_edit_filter = false;
                 m_filter = boost::regex(".*");
                 m_filter_editor.reset("");
-                context().ui().print_status("");
+                context().ui().print_status(DisplayLine{ -1 });
             }
             else
             {
@@ -228,8 +240,8 @@ public:
         }
 
         if (m_edit_filter)
-            context().ui().print_status("/" + m_filter_editor.line(),
-                                      m_filter_editor.cursor_pos() + 1);
+            context().ui().print_status(line_with_cursor("/" + m_filter_editor.line(),
+                                                         m_filter_editor.cursor_pos() + 1));
    }
 
 private:
@@ -279,7 +291,7 @@ public:
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
-        context().ui().print_status(m_prompt, m_prompt.char_length());
+        context().ui().print_status(line_with_cursor(m_prompt, m_prompt.char_length()));
     }
 
     void on_key(const Key& key) override
@@ -302,7 +314,7 @@ public:
                     history.erase(it);
                 history.push_back(line);
             }
-            context().ui().print_status("");
+            context().ui().print_status(DisplayLine{ -1 });
             context().ui().menu_hide();
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
@@ -312,7 +324,7 @@ public:
         }
         else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
         {
-            context().ui().print_status("");
+            context().ui().print_status(DisplayLine{ -1 });
             context().ui().menu_hide();
             reset_normal_mode();
             m_callback(line, PromptEvent::Abort, context());
@@ -417,8 +429,8 @@ public:
             m_current_completion = -1;
             m_line_editor.handle_key(key);
         }
-        context().ui().print_status(m_prompt + line,
-                                  m_prompt.char_length() + m_line_editor.cursor_pos());
+        auto curpos = m_prompt.char_length() + m_line_editor.cursor_pos();
+        context().ui().print_status(line_with_cursor(m_prompt + line, curpos));
         m_callback(line, PromptEvent::Change, context());
     }
 

@@ -20,8 +20,8 @@ public:
     NCursesUI& operator=(const NCursesUI&) = delete;
 
     void draw(const DisplayBuffer& display_buffer,
-              const String& mode_line) override;
-    void print_status(const String& status, CharCount cursor_pos) override;
+              const DisplayLine& mode_line) override;
+    void print_status(const DisplayLine& status) override;
 
     bool   is_key_available() override;
     Key    get_key() override;
@@ -42,13 +42,12 @@ public:
 private:
     friend void on_term_resize(int);
     void redraw();
+    void draw_line(const DisplayLine& line, CharCount col_index) const;
 
     DisplayCoord m_dimensions;
     void update_dimensions();
 
-    String    m_status_line;
-    CharCount m_status_cursor = -1;
-    void      draw_status();
+    DisplayLine m_status_line;
 
     WINDOW* m_menu_win = nullptr;
     std::vector<String> m_choices;

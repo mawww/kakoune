@@ -4,6 +4,7 @@
 #include "buffer_manager.hh"
 #include "command_manager.hh"
 #include "file.hh"
+#include "color_registry.hh"
 
 namespace Kakoune
 {
@@ -64,7 +65,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     }
     catch (Kakoune::runtime_error& error)
     {
-        context->print_status(error.description());
+        context->print_status({ error.description(), get_color("Error") });
         context->hooks().run_hook("RuntimeError", error.description(), *context);
     }
     catch (Kakoune::client_removed&)
@@ -81,7 +82,7 @@ void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         }
         catch (Kakoune::runtime_error& error)
         {
-            context->print_status(error.description());
+            context->print_status({ error.description(), get_color("Error") });
             context->hooks().run_hook("RuntimeError", error.description(), *context);
         }
         catch (Kakoune::client_removed&)
@@ -191,7 +192,7 @@ Context& ClientManager::get_client_context(const String& name)
     throw runtime_error("no client named: " + name);
 }
 
-static String generate_status_line(const Context& context)
+static DisplayLine generate_status_line(const Context& context)
 {
     BufferCoord cursor = context.editor().main_selection().last().coord();
     std::ostringstream oss;
@@ -207,7 +208,7 @@ static String generate_status_line(const Context& context)
     oss << " [" << context.editor().selections().size() << " sel]";
     if (context.editor().is_editing())
         oss << " [insert]";
-    return oss.str();
+    return { oss.str(), get_color("StatusLine") };
 }
 
 void ClientManager::redraw_clients() const

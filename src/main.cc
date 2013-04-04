@@ -223,7 +223,7 @@ void do_search_next(Context& context)
         } while (--count > 0);
     }
     else
-        context.print_status("no search pattern");
+        context.print_status({ "no search pattern", get_color("Error") });
 }
 
 template<bool smart>
@@ -255,7 +255,7 @@ void use_selection_as_search_pattern(Context& context)
 void do_yank(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    context.print_status("yanked " + int_to_str(context.editor().selections().size()) + " selections");
+    context.print_status({ "yanked " + int_to_str(context.editor().selections().size()) + " selections", get_color("Information") });
 }
 
 void do_cat_yank(Context& context)
@@ -265,8 +265,8 @@ void do_cat_yank(Context& context)
     for (auto& sel : sels)
         str += sel;
     RegisterManager::instance()['"'] = memoryview<String>(str);
-    context.print_status("concatenated and yanked " +
-                         int_to_str(sels.size()) + " selections");
+    context.print_status({ "concatenated and yanked " +
+                           int_to_str(sels.size()) + " selections", get_color("Information") });
 }
 
 void do_erase(Context& context)
@@ -716,8 +716,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern<true> },
     { { Key::Modifiers::Alt,  '*' }, use_selection_as_search_pattern<false> },
 
-    { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status("nothing left to undo"); } }) },
-    { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status("nothing left to redo"); } }) },
+    { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status({ "nothing left to undo", get_color("Information") }); } }) },
+    { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status({ "nothing left to redo", get_color("Information") }); } }) },
 
     { { Key::Modifiers::Alt,  'i' }, do_select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd | SurroundFlags::Inner> },
     { { Key::Modifiers::Alt,  'a' }, do_select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd> },

@@ -86,7 +86,8 @@ void on_sigint(int)
 }
 
 NCursesUI::NCursesUI()
-    : m_stdin_watcher{0, [this](FDWatcher&){ if (m_input_callback) m_input_callback(); }}
+    : m_stdin_watcher{0, [this](FDWatcher&){ if (m_input_callback) m_input_callback(); }},
+      m_status_line{-1}
 {
     initscr();
     cbreak();
@@ -154,40 +155,44 @@ void NCursesUI::update_dimensions()
     --m_dimensions.line;
 }
 
+void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
+{
+    for (const DisplayAtom& atom : line)
+    {
+        set_attribute(A_UNDERLINE, atom.attribute & Underline);
+        set_attribute(A_REVERSE, atom.attribute & Reverse);
+        set_attribute(A_BLINK, atom.attribute & Blink);
+        set_attribute(A_BOLD, atom.attribute & Bold);
+
+        set_color(stdscr, atom.colors);
+
+        String content = atom.content.content();
+        if (content[content.length()-1] == '\n' and
+            content.char_length() - 1 < m_dimensions.column - col_index)
+        {
+            addutf8str(stdscr, Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
+            addch(' ');
+        }
+        else
+        {
+            Utf8Iterator begin(content.begin()), end(content.end());
+            if (end - begin > m_dimensions.column - col_index)
+                end = begin + (m_dimensions.column - col_index);
+            addutf8str(stdscr, begin, end);
+            col_index += end - begin;
+        }
+    }
+}
+
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
-                     const String& mode_line)
+                     const DisplayLine& mode_line)
 {
     LineCount line_index = 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(stdscr, (int)line_index, 0);
         wclrtoeol(stdscr);
-        CharCount col_index = 0;
-        for (const DisplayAtom& atom : line)
-        {
-            set_attribute(A_UNDERLINE, atom.attribute & Underline);
-            set_attribute(A_REVERSE, atom.attribute & Reverse);
-            set_attribute(A_BLINK, atom.attribute & Blink);
-            set_attribute(A_BOLD, atom.attribute & Bold);
-
-            set_color(stdscr, atom.colors);
-
-            String content = atom.content.content();
-            if (content[content.length()-1] == '\n' and
-                content.char_length() - 1 < m_dimensions.column - col_index)
-            {
-                addutf8str(stdscr, Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
-                addch(' ');
-            }
-            else
-            {
-                Utf8Iterator begin(content.begin()), end(content.end());
-                if (end - begin > m_dimensions.column - col_index)
-                    end = begin + (m_dimensions.column - col_index);
-                addutf8str(stdscr, begin, end);
-                col_index += end - begin;
-            }
-        }
+            draw_line(line, 0);
         ++line_index;
     }
 
@@ -203,15 +208,16 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         addch('~');
     }
 
-    set_color(stdscr, { Color::Cyan, Color::Default });
-    draw_status();
-    CharCount status_len = mode_line.char_length();
+    move((int)m_dimensions.line, 0);
+    clrtoeol();
+    draw_line(m_status_line, 0);
+    CharCount status_len = mode_line.length();
     // only draw mode_line if it does not overlap one status line
-    if (m_dimensions.column - m_status_line.char_length() > status_len + 1)
+    if (m_dimensions.column - m_status_line.length() > status_len + 1)
     {
-        move((int)m_dimensions.line, (int)(m_dimensions.column - status_len));
-        addutf8str(stdscr, Utf8Iterator(mode_line.begin()),
-                   Utf8Iterator(mode_line.end()));
+        CharCount col = m_dimensions.column - status_len;
+        move((int)m_dimensions.line, (int)col);
+        draw_line(mode_line, col);
     }
     redraw();
 }
@@ -285,36 +291,12 @@ Key NCursesUI::get_key()
     return Key::Invalid;
 }
 
-void NCursesUI::draw_status()
-{
-    move((int)m_dimensions.line, 0);
-    clrtoeol();
-    if (m_status_cursor == -1)
-       addutf8str(stdscr, m_status_line.cbegin(), m_status_line.cend());
-    else
-    {
-        Utf8Iterator begin{m_status_line.begin()};
-        Utf8Iterator end{m_status_line.end()};
-        Utf8Iterator cursor_it{begin};
-        cursor_it.advance(m_status_cursor, end);
-
-        addutf8str(stdscr, m_status_line.cbegin(), cursor_it);
-        set_attribute(A_REVERSE, 1);
-        if (cursor_it == end)
-            addch(' ');
-        else
-            addutf8str(stdscr, cursor_it, cursor_it+1);
-        set_attribute(A_REVERSE, 0);
-        if (cursor_it != end)
-            addutf8str(stdscr, cursor_it+1, end);
-    }
-}
-
-void NCursesUI::print_status(const String& status, CharCount cursor_pos)
+void NCursesUI::print_status(const DisplayLine& status)
 {
     m_status_line   = status;
-    m_status_cursor = cursor_pos;
-    draw_status();
+    move((int)m_dimensions.line, 0);
+    clrtoeol();
+    draw_line(status, 0);
     redraw();
 }
 

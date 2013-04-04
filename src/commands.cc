@@ -37,7 +37,7 @@ Buffer* open_or_create(const String& filename, Context& context)
     Buffer* buffer = create_buffer_from_file(filename);
     if (not buffer)
     {
-        context.print_status("new file " + filename);
+        context.print_status({ "new file " + filename, get_color("StatusLine") });
         buffer = new Buffer(filename, Buffer::Flags::File | Buffer::Flags::New);
     }
     return buffer;
@@ -424,7 +424,7 @@ void echo_message(const CommandParameters& params, Context& context)
     String message;
     for (auto& param : params)
         message += param + " ";
-    context.print_status(message);
+    context.print_status({ std::move(message), get_color("StatusLine") } );
 }
 
 void exec_commands_in_file(const CommandParameters& params,
@@ -803,8 +803,8 @@ public:
     }
     bool is_key_available() override { return m_pos < m_keys.size(); }
 
-    void print_status(const String& , CharCount) override {}
-    void draw(const DisplayBuffer&, const String&) override {}
+    void print_status(const DisplayLine&) override {}
+    void draw(const DisplayBuffer&, const DisplayLine&) override {}
     void menu_show(const memoryview<String>&,
                    DisplayCoord, ColorPair, ColorPair, MenuStyle) override {}
     void menu_select(int) override {}

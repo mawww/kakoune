@@ -95,7 +95,7 @@ struct Context
         return GlobalHooks::instance();
     }
 
-    void print_status(const String& status) const
+    void print_status(const DisplayLine& status) const
     {
         if (has_ui())
             ui().print_status(status);

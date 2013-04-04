@@ -186,7 +186,7 @@ public:
     RemoteUI(int socket);
     ~RemoteUI();
 
-    void print_status(const String& status, CharCount cursor_pos) override;
+    void print_status(const DisplayLine& status) override;
 
     void menu_show(const memoryview<String>& choices,
                    DisplayCoord anchor, ColorPair fg, ColorPair bg,
@@ -199,7 +199,7 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
-              const String& mode_line) override;
+              const DisplayLine& mode_line) override;
 
     bool is_key_available() override;
     Key  get_key() override;
@@ -226,12 +226,11 @@ RemoteUI::~RemoteUI()
     close(m_socket_watcher.fd());
 }
 
-void RemoteUI::print_status(const String& status, CharCount cursor_pos)
+void RemoteUI::print_status(const DisplayLine& status)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::PrintStatus);
     msg.write(status);
-    msg.write(cursor_pos);
 }
 
 void RemoteUI::menu_show(const memoryview<String>& choices,
@@ -278,7 +277,7 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
-                    const String& mode_line)
+                    const DisplayLine& mode_line)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Draw);
@@ -345,9 +344,8 @@ void RemoteClient::process_next_message()
     {
     case RemoteUIMsg::PrintStatus:
     {
-        auto status = read<String>(socket);
-        auto cursor_pos = read<CharCount>(socket);
-        m_ui->print_status(status, cursor_pos);
+        auto status = read<DisplayLine>(socket);
+        m_ui->print_status(status);
         break;
     }
     case RemoteUIMsg::MenuShow:
@@ -380,8 +378,8 @@ void RemoteClient::process_next_message()
         break;
     case RemoteUIMsg::Draw:
     {
-        DisplayBuffer display_buffer = read<DisplayBuffer>(socket);
-        String mode_line = read<String>(socket);
+        auto display_buffer = read<DisplayBuffer>(socket);
+        auto mode_line = read<DisplayLine>(socket);
         m_ui->draw(display_buffer, mode_line);
         break;
     }

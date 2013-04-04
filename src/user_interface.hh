@@ -12,6 +12,7 @@ namespace Kakoune
 
 class String;
 class DisplayBuffer;
+class DisplayLine;
 struct DisplayCoord;
 
 enum class MenuStyle
@@ -26,7 +27,7 @@ class UserInterface : public SafeCountable
 {
 public:
     virtual ~UserInterface() {}
-    virtual void print_status(const String& status, CharCount cursor_pos = -1) = 0;
+    virtual void print_status(const DisplayLine& status) = 0;
 
     virtual void menu_show(const memoryview<String>& choices,
                            DisplayCoord anchor, ColorPair fg, ColorPair bg,
@@ -39,7 +40,7 @@ public:
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
-                      const String& mode_line) = 0;
+                      const DisplayLine& mode_line) = 0;
     virtual DisplayCoord dimensions() = 0;
     virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;

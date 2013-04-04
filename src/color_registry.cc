@@ -49,6 +49,9 @@ ColorRegistry::ColorRegistry()
         { "MenuForeground", { Color::Blue, Color::Cyan } },
         { "MenuBackground", { Color::Cyan, Color::Blue } },
         { "Information", { Color::Black, Color::Yellow } },
+        { "Error", { Color::Black, Color::Red } },
+        { "StatusLine", { Color::Cyan, Color::Default } },
+        { "StatusCursor", { Color::Black, Color::Cyan } },
       }
 {}
 
