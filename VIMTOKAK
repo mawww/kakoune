@@ -40,3 +40,8 @@ alphabetic chars had to change.
   you should use <space>M (<space> clears the trim to one character)
 
 * 0 and $ became alt-h and alt-l. Another binding is gh and gl.
+
+:[gv]/re/cmd
+to emulate :g or :v, use % to select the whole buffer, alt-s to get
+one selection by line, and then alt-k or alt-K in order to keep only the
+selections matching (or not matching) the entered regex.
