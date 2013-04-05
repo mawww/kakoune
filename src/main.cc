@@ -312,20 +312,13 @@ void do_paste(Context& context)
     editor.insert(strings, mode);
 }
 
-void do_select_regex(Context& context)
+template<typename T>
+void regex_prompt(Context& context, const String prompt, T on_validate)
 {
-    context.input_handler().prompt("select: ", get_color("Prompt"), complete_nothing,
-        [](const String& str, PromptEvent event, Context& context) {
+    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
+        [=](const String& str, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate)
-            {
-                String ex = str;
-                if (ex.empty())
-                    ex = RegisterManager::instance()['/'].values(context)[0];
-                else
-                    RegisterManager::instance()['/'] = ex;
-                if (not ex.empty())
-                    context.editor().multi_select(std::bind(select_all_matches, _1, ex));
-            }
+                on_validate(str, context);
             else if (event == PromptEvent::Change)
             {
                 const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
@@ -334,26 +327,30 @@ void do_select_regex(Context& context)
         });
 }
 
+void do_select_regex(Context& context)
+{
+    regex_prompt(context, "select: ", [](const String& str, Context& context) {
+        String ex = str;
+        if (ex.empty())
+            ex = RegisterManager::instance()['/'].values(context)[0];
+        else
+            RegisterManager::instance()['/'] = ex;
+        if (not ex.empty())
+            context.editor().multi_select(std::bind(select_all_matches, _1, ex));
+    });
+}
+
 void do_split_regex(Context& context)
 {
-    context.input_handler().prompt("split: ", get_color("Prompt"), complete_nothing,
-        [](const String& str, PromptEvent event, Context& context) {
-            if (event == PromptEvent::Validate)
-            {
-                String ex = str;
-                if (ex.empty())
-                    ex = RegisterManager::instance()['/'].values(context)[0];
-                else
-                    RegisterManager::instance()['/'] = ex;
-                if (not ex.empty())
-                    context.editor().multi_select(std::bind(split_selection, _1, ex));
-            }
-            else if (event == PromptEvent::Change)
-            {
-                const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
-                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
-            }
-        });
+    regex_prompt(context, "split: ", [](const String& str, Context& context) {
+        String ex = str;
+        if (ex.empty())
+            ex = RegisterManager::instance()['/'].values(context)[0];
+        else
+            RegisterManager::instance()['/'] = ex;
+        if (not ex.empty())
+            context.editor().multi_select(std::bind(split_selection, _1, ex));
+    });
 }
 
 void do_split_lines(Context& context)
@@ -386,29 +383,27 @@ template<bool matching>
 void do_keep(Context& context)
 {
     constexpr const char* prompt = matching ? "keep matching: " : "keep not matching: ";
-    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
-        [](const String& str, PromptEvent event, Context& context) {
-            if (event == PromptEvent::Validate)
+    regex_prompt(context, prompt, [](const String& str, Context& context) {
+        try
+        {
+            Regex re(str);
+            Editor& editor = context.editor();
+            SelectionList sels = editor.selections();
+            SelectionList keep;
+            for (auto& sel : sels)
             {
-                Regex re(str);
-                Editor& editor = context.editor();
-                SelectionList sels = editor.selections();
-                SelectionList keep;
-                for (auto& sel : sels)
-                {
-                    if (boost::regex_search(sel.begin(), sel.end(), re) == matching)
-                        keep.push_back(sel);
-                }
-                if (keep.empty())
-                    throw runtime_error("no selections remaining");
-                editor.select(std::move(keep));
+                if (boost::regex_search(sel.begin(), sel.end(), re) == matching)
+                    keep.push_back(sel);
             }
-            else if (event == PromptEvent::Change)
-            {
-                const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
-                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
-            }
-        });
+            if (keep.empty())
+                throw runtime_error("no selections remaining");
+            editor.select(std::move(keep));
+        }
+        catch (boost::regex_error& error)
+        {
+            throw runtime_error("regex_error: "_str + error.what());
+        }
+    });
 }
 
 void do_indent(Context& context)
