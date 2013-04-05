@@ -31,13 +31,13 @@ Selection select_whole_lines(const Selection& selection);
 Selection select_whole_buffer(const Selection& selection);
 
 template<bool forward>
-Selection select_next_match(const Selection& selection, const String& regex);
+Selection select_next_match(const Selection& selection, const Regex& regex);
 
 SelectionList select_all_matches(const Selection& selection,
-                                 const String& regex);
+                                 const Regex& regex);
 
 SelectionList split_selection(const Selection& selection,
-                              const String& separator_regex);
+                              const Regex& separator_regex);
 
 enum class SurroundFlags
 {

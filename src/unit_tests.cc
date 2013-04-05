@@ -58,7 +58,7 @@ void test_editor()
     {
         scoped_edition edition{editor};
         editor.select(select_whole_buffer);
-        editor.multi_select(std::bind(select_all_matches, std::placeholders::_1, "\\n\\h*"));
+        editor.multi_select(std::bind(select_all_matches, std::placeholders::_1, Regex{"\\n\\h*"}));
         for (auto& sel : editor.selections())
         {
             assert(*sel.begin() == '\n');

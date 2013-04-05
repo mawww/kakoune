@@ -116,7 +116,7 @@ void do_replace_with_char(Context& context)
         Editor& editor = context.editor();
         SelectionList sels = editor.selections();
         auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
-        editor.multi_select(std::bind(select_all_matches, _1, "."));
+        editor.multi_select(std::bind(select_all_matches, _1, Regex{"."}));
         editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
     });
 }
@@ -184,19 +184,24 @@ void do_search(Context& context)
                 if (event == PromptEvent::Abort)
                     return;
 
-                String ex = str;
+                Regex ex{str};
                 if (event == PromptEvent::Validate)
                 {
-                    if (ex.empty())
-                        ex = RegisterManager::instance()['/'].values(context)[0];
+                    if (str.empty())
+                        ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
                     else
-                        RegisterManager::instance()['/'] = ex;
+                        RegisterManager::instance()['/'] = str;
                     context.push_jump();
                 }
-                else if (ex.empty() or not context.options()["incsearch"].get<bool>())
+                else if (str.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
                 context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
+            }
+            catch (boost::regex_error& err)
+            {
+                if (event == PromptEvent::Validate)
+                    throw runtime_error("regex error: "_str + err.what());
             }
             catch (runtime_error&)
             {
@@ -206,25 +211,32 @@ void do_search(Context& context)
                 if (event == PromptEvent::Validate)
                     throw;
             }
-
         });
 }
 
 template<SelectMode mode, bool forward>
 void do_search_next(Context& context)
 {
-    const String& ex = RegisterManager::instance()['/'].values(context)[0];
-    if (not ex.empty())
+    const String& str = RegisterManager::instance()['/'].values(context)[0];
+    if (not str.empty())
     {
-        if (mode == SelectMode::Replace)
-            context.push_jump();
-        int count = context.numeric_param();
-        do {
-            context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
-        } while (--count > 0);
+        try
+        {
+            Regex ex{str};
+            if (mode == SelectMode::Replace)
+                context.push_jump();
+            int count = context.numeric_param();
+            do {
+                context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
+            } while (--count > 0);
+        }
+        catch (boost::regex_error& err)
+        {
+            throw runtime_error("regex error: "_str + err.what());
+        }
     }
     else
-        context.print_status({ "no search pattern", get_color("Error") });
+        throw runtime_error("no search pattern");
 }
 
 template<bool smart>
@@ -318,7 +330,16 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
     context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [=](const String& str, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate)
-                on_validate(str, context);
+            {
+                try
+                {
+                    on_validate(Regex{str}, context);
+                }
+                catch (boost::regex_error& err)
+                {
+                    throw runtime_error("regex error: "_str + err.what());
+                }
+            }
             else if (event == PromptEvent::Change)
             {
                 const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
@@ -329,12 +350,11 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
 
 void do_select_regex(Context& context)
 {
-    regex_prompt(context, "select: ", [](const String& str, Context& context) {
-        String ex = str;
+    regex_prompt(context, "select: ", [](Regex ex, Context& context) {
         if (ex.empty())
-            ex = RegisterManager::instance()['/'].values(context)[0];
+            ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
         else
-            RegisterManager::instance()['/'] = ex;
+            RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty())
             context.editor().multi_select(std::bind(select_all_matches, _1, ex));
     });
@@ -342,12 +362,11 @@ void do_select_regex(Context& context)
 
 void do_split_regex(Context& context)
 {
-    regex_prompt(context, "split: ", [](const String& str, Context& context) {
-        String ex = str;
+    regex_prompt(context, "split: ", [](Regex ex, Context& context) {
         if (ex.empty())
-            ex = RegisterManager::instance()['/'].values(context)[0];
+            ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
         else
-            RegisterManager::instance()['/'] = ex;
+            RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty())
             context.editor().multi_select(std::bind(split_selection, _1, ex));
     });
@@ -355,7 +374,7 @@ void do_split_regex(Context& context)
 
 void do_split_lines(Context& context)
 {
-    context.editor().multi_select(std::bind(split_selection, _1, "^"));
+    context.editor().multi_select(std::bind(split_selection, _1, Regex{"^"}));
 }
 
 void do_join(Context& context)
@@ -367,7 +386,7 @@ void do_join(Context& context)
     editor.select(select_to_eol, SelectMode::Extend);
     editor.multi_select([](const Selection& sel)
     {
-        SelectionList res = select_all_matches(sel, "\n\\h*");
+        SelectionList res = select_all_matches(sel, Regex{"\n\\h*"});
         // remove last end of line if selected
         assert(std::is_sorted(res.begin(), res.end(),
               [](const Selection& lhs, const Selection& rhs)
@@ -383,26 +402,18 @@ template<bool matching>
 void do_keep(Context& context)
 {
     constexpr const char* prompt = matching ? "keep matching: " : "keep not matching: ";
-    regex_prompt(context, prompt, [](const String& str, Context& context) {
-        try
+    regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
+        Editor& editor = context.editor();
+        SelectionList sels = editor.selections();
+        SelectionList keep;
+        for (auto& sel : sels)
         {
-            Regex re(str);
-            Editor& editor = context.editor();
-            SelectionList sels = editor.selections();
-            SelectionList keep;
-            for (auto& sel : sels)
-            {
-                if (boost::regex_search(sel.begin(), sel.end(), re) == matching)
-                    keep.push_back(sel);
-            }
-            if (keep.empty())
-                throw runtime_error("no selections remaining");
-            editor.select(std::move(keep));
+            if (boost::regex_search(sel.begin(), sel.end(), ex) == matching)
+                keep.push_back(sel);
         }
-        catch (boost::regex_error& error)
-        {
-            throw runtime_error("regex_error: "_str + error.what());
-        }
+        if (keep.empty())
+            throw runtime_error("no selections remaining");
+        editor.select(std::move(keep));
     });
 }
 
@@ -415,7 +426,7 @@ void do_indent(Context& context)
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
-    editor.multi_select(std::bind(select_all_matches, _1, "^[^\n]"));
+    editor.multi_select(std::bind(select_all_matches, _1, Regex{"^[^\n]"}));
     editor.insert(indent, InsertMode::Insert);
 }
 
@@ -427,7 +438,7 @@ void do_deindent(Context& context)
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
     editor.multi_select(std::bind(select_all_matches, _1,
-                                  "^\\h{1," + int_to_str(width) + "}"));
+                                  Regex{"^\\h{1," + int_to_str(width) + "}"}));
     editor.erase();
 }
 

@@ -419,104 +419,80 @@ bool find_match_in_buffer(const BufferIterator pos, MatchResults& matches,
 
 
 template<bool forward>
-Selection select_next_match(const Selection& selection, const String& regex)
+Selection select_next_match(const Selection& selection, const Regex& regex)
 {
-    try
+    // regex matching do not use Utf8Iterator as boost::regex handle utf8
+    // decoding itself
+    BufferIterator begin = selection.last();
+    BufferIterator end = begin;
+    CaptureList captures;
+
+    MatchResults matches;
+
+    if (find_match_in_buffer<forward>(utf8::next(begin), matches, regex))
     {
-        // regex matching do not use Utf8Iterator as boost::regex handle utf8
-        // decoding itself
-        BufferIterator begin = selection.last();
-        BufferIterator end = begin;
-        CaptureList captures;
-
-        Regex ex{regex.begin(), regex.end()};
-        MatchResults matches;
-
-        if (find_match_in_buffer<forward>(utf8::next(begin), matches, ex))
-        {
-            begin = matches[0].first;
-            end   = matches[0].second;
-            for (auto& match : matches)
-                captures.push_back(String(match.first, match.second));
-        }
-        else
-            throw runtime_error("'" + regex + "': no matches found");
-
-        if (begin == end)
-            ++end;
-
-        end = utf8::previous(end);
-        if (not forward)
-            std::swap(begin, end);
-        return Selection{begin, end, std::move(captures)};
+        begin = matches[0].first;
+        end   = matches[0].second;
+        for (auto& match : matches)
+            captures.push_back(String(match.first, match.second));
     }
-    catch (boost::regex_error& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
+    else
+        throw runtime_error("'" + regex.str() + "': no matches found");
+
+    if (begin == end)
+        ++end;
+
+    end = utf8::previous(end);
+    if (not forward)
+        std::swap(begin, end);
+    return Selection{begin, end, std::move(captures)};
 }
-template Selection select_next_match<true>(const Selection&, const String&);
-template Selection select_next_match<false>(const Selection&, const String&);
+template Selection select_next_match<true>(const Selection&, const Regex&);
+template Selection select_next_match<false>(const Selection&, const Regex&);
 
-SelectionList select_all_matches(const Selection& selection, const String& regex)
+SelectionList select_all_matches(const Selection& selection, const Regex& regex)
 {
-    try
+    RegexIterator re_it(selection.begin(), selection.end(), regex);
+    RegexIterator re_end;
+
+    SelectionList result;
+    for (; re_it != re_end; ++re_it)
     {
-        Regex ex(regex.begin(), regex.end());
-        RegexIterator re_it(selection.begin(), selection.end(), ex);
-        RegexIterator re_end;
+        BufferIterator begin = (*re_it)[0].first;
+        BufferIterator end   = (*re_it)[0].second;
 
-        SelectionList result;
-        for (; re_it != re_end; ++re_it)
-        {
-            BufferIterator begin = (*re_it)[0].first;
-            BufferIterator end   = (*re_it)[0].second;
+        if (begin == selection.end())
+            continue;
 
-            if (begin == selection.end())
-                continue;
+        CaptureList captures;
+        for (auto& match : *re_it)
+            captures.push_back(String(match.first, match.second));
 
-            CaptureList captures;
-            for (auto& match : *re_it)
-                captures.push_back(String(match.first, match.second));
-
-            result.push_back(Selection(begin, begin == end ? end : utf8::previous(end),
-                                       std::move(captures)));
-        }
-        return result;
+        result.push_back(Selection(begin, begin == end ? end : utf8::previous(end),
+                                   std::move(captures)));
     }
-    catch (boost::regex_error& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
+    return result;
 }
 
 SelectionList split_selection(const Selection& selection,
-                              const String& separator_regex)
+                              const Regex& regex)
 {
-    try
-    {
-        Regex ex(separator_regex.begin(), separator_regex.end());
-        RegexIterator re_it(selection.begin(), selection.end(), ex,
-                            boost::regex_constants::match_nosubs);
-        RegexIterator re_end;
+    RegexIterator re_it(selection.begin(), selection.end(), regex,
+                        boost::regex_constants::match_nosubs);
+    RegexIterator re_end;
 
-        SelectionList result;
-        BufferIterator begin = selection.begin();
-        for (; re_it != re_end; ++re_it)
-        {
-            BufferIterator end = (*re_it)[0].first;
-
-            result.push_back(Selection(begin, (begin == end) ? end : utf8::previous(end)));
-            begin = (*re_it)[0].second;
-        }
-        result.push_back(Selection(begin, std::max(selection.first(),
-                                                   selection.last())));
-        return result;
-    }
-    catch (boost::regex_error& err)
+    SelectionList result;
+    BufferIterator begin = selection.begin();
+    for (; re_it != re_end; ++re_it)
     {
-        throw runtime_error(String("regex error: ") + err.what());
+        BufferIterator end = (*re_it)[0].first;
+
+        result.push_back(Selection(begin, (begin == end) ? end : utf8::previous(end)));
+        begin = (*re_it)[0].second;
     }
+    result.push_back(Selection(begin, std::max(selection.first(),
+                                               selection.last())));
+    return result;
 }
 
 }
