@@ -155,7 +155,7 @@ void do_command(Context& context)
 
 void do_pipe(Context& context)
 {
-    context.input_handler().prompt("|", get_color("StatusLine"), complete_nothing,
+    context.input_handler().prompt("pipe: ", get_color("Prompt"), complete_nothing,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -174,8 +174,9 @@ void do_pipe(Context& context)
 template<SelectMode mode, bool forward>
 void do_search(Context& context)
 {
+    const char* prompt = forward ? "search: " : "reverse search: ";
     SelectionList selections = context.editor().selections();
-    context.input_handler().prompt("/", get_color("StatusLine"), complete_nothing,
+    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
             try
             {
@@ -185,6 +186,7 @@ void do_search(Context& context)
                     return;
 
                 Regex ex{str};
+                context.input_handler().set_prompt_colors(get_color("Prompt"));
                 if (event == PromptEvent::Validate)
                 {
                     if (str.empty())
@@ -202,6 +204,8 @@ void do_search(Context& context)
             {
                 if (event == PromptEvent::Validate)
                     throw runtime_error("regex error: "_str + err.what());
+                else
+                    context.input_handler().set_prompt_colors(get_color("Error"));
             }
             catch (runtime_error&)
             {
