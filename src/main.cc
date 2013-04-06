@@ -145,7 +145,7 @@ void do_swap_case(Context& context)
 void do_command(Context& context)
 {
     context.input_handler().prompt(
-        ":", get_color("StatusLine"),
+        ":", get_color("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
         [](const String& cmdline, PromptEvent event, Context& context) {
              if (event == PromptEvent::Validate)
@@ -155,7 +155,7 @@ void do_command(Context& context)
 
 void do_pipe(Context& context)
 {
-    context.input_handler().prompt("pipe: ", get_color("Prompt"), complete_nothing,
+    context.input_handler().prompt("pipe:", get_color("Prompt"), complete_nothing,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -174,7 +174,7 @@ void do_pipe(Context& context)
 template<SelectMode mode, bool forward>
 void do_search(Context& context)
 {
-    const char* prompt = forward ? "search: " : "reverse search: ";
+    const char* prompt = forward ? "search:" : "reverse search:";
     SelectionList selections = context.editor().selections();
     context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
@@ -354,7 +354,7 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
 
 void do_select_regex(Context& context)
 {
-    regex_prompt(context, "select: ", [](Regex ex, Context& context) {
+    regex_prompt(context, "select:", [](Regex ex, Context& context) {
         if (ex.empty())
             ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
         else
@@ -366,7 +366,7 @@ void do_select_regex(Context& context)
 
 void do_split_regex(Context& context)
 {
-    regex_prompt(context, "split: ", [](Regex ex, Context& context) {
+    regex_prompt(context, "split:", [](Regex ex, Context& context) {
         if (ex.empty())
             ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
         else
@@ -405,7 +405,7 @@ void do_join(Context& context)
 template<bool matching>
 void do_keep(Context& context)
 {
-    constexpr const char* prompt = matching ? "keep matching: " : "keep not matching: ";
+    constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
     regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
         Editor& editor = context.editor();
         SelectionList sels = editor.selections();
