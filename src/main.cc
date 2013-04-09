@@ -87,6 +87,17 @@ void do_go(Context& context)
                 editor.select(buf.iterator_at_line_begin(buf.line_count() - 1), mode);
                 break;
             }
+            case 'a':
+            {
+                auto& buffer_manager = BufferManager::instance();
+                auto it = buffer_manager.begin();
+                if (it->get() == &context.buffer() and ++it == buffer_manager.end())
+                    break;
+                context.push_jump();
+                auto& client_manager = ClientManager::instance();
+                context.change_editor(client_manager.get_unused_window_for_buffer(**it));
+                break;
+            }
             case 'f':
             {
                 String filename = context.editor().main_selection().content();
