@@ -69,6 +69,7 @@ void do_go(Context& context)
             Editor& editor = context.editor();
             switch (tolower(key.key))
             {
+            case 'g':
             case 'k':
                 context.push_jump();
                 editor.select(editor.buffer().begin(), mode);
