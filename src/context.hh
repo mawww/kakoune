@@ -112,7 +112,8 @@ struct Context
                 ++begin;
             m_jump_list.erase(begin, m_jump_list.end());
         }
-
+        m_jump_list.erase(std::remove(begin(m_jump_list), end(m_jump_list), jump),
+                          end(m_jump_list));
         m_jump_list.push_back({editor().buffer(), jump});
         m_current_jump = m_jump_list.end();
     }
