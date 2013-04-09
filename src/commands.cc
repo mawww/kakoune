@@ -524,6 +524,10 @@ void context_wrap(const CommandParameters& params, Context& context, Func func)
     }
     else
         func(parser, real_context);
+
+    // force redraw of this client window
+    if (parser.has_option("client") and real_context.has_window())
+        real_context.window().forget_timestamp();
 }
 
 void exec_string(const CommandParameters& params, Context& context)
