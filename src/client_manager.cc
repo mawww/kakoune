@@ -1,10 +1,12 @@
 #include "client_manager.hh"
 
-#include "event_manager.hh"
 #include "buffer_manager.hh"
-#include "command_manager.hh"
-#include "file.hh"
 #include "color_registry.hh"
+#include "command_manager.hh"
+#include "event_manager.hh"
+#include "file.hh"
+#include "user_interface.hh"
+#include "window.hh"
 
 namespace Kakoune
 {

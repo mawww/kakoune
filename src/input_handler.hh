@@ -1,11 +1,13 @@
 #ifndef input_handler_hh_INCLUDED
 #define input_handler_hh_INCLUDED
 
-#include "keys.hh"
+#include "color.hh"
 #include "completion.hh"
-#include "utils.hh"
-#include "string.hh"
 #include "context.hh"
+#include "editor.hh"
+#include "keys.hh"
+#include "string.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {

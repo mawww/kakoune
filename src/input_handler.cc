@@ -1,11 +1,13 @@
 #include "input_handler.hh"
 
+#include "color_registry.hh"
 #include "context.hh"
 #include "editor.hh"
-#include "register_manager.hh"
 #include "event_manager.hh"
+#include "register_manager.hh"
+#include "user_interface.hh"
 #include "utf8.hh"
-#include "color_registry.hh"
+#include "window.hh"
 
 #include <unordered_map>
 

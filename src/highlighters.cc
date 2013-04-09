@@ -1,13 +1,14 @@
 #include "highlighters.hh"
+
 #include "assert.hh"
 #include "color_registry.hh"
-#include "register_manager.hh"
 #include "context.hh"
+#include "option_types.hh"
+#include "register_manager.hh"
 #include "string.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-
-#include "option_types.hh"
+#include "window.hh"
 
 #include <sstream>
 #include <locale>
