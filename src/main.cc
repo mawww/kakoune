@@ -87,6 +87,12 @@ void do_go(Context& context)
                 editor.select(buf.iterator_at_line_begin(buf.line_count() - 1), mode);
                 break;
             }
+            case 'e':
+            {
+                context.push_jump();
+                editor.select(editor.buffer().end()-1, mode);
+                break;
+            }
             case 'a':
             {
                 auto& buffer_manager = BufferManager::instance();
