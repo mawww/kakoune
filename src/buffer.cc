@@ -1,11 +1,11 @@
 #include "buffer.hh"
 
-#include "buffer_manager.hh"
-#include "window.hh"
 #include "assert.hh"
-#include "utils.hh"
+#include "buffer_manager.hh"
 #include "context.hh"
 #include "file.hh"
+#include "utils.hh"
+#include "window.hh"
 
 #include <algorithm>
 

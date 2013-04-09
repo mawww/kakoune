@@ -1,15 +1,15 @@
 #ifndef command_manager_hh_INCLUDED
 #define command_manager_hh_INCLUDED
 
-#include <unordered_map>
-#include <functional>
-#include <initializer_list>
-
-#include "string.hh"
-#include "utils.hh"
 #include "completion.hh"
 #include "memoryview.hh"
 #include "shell_manager.hh"
+#include "string.hh"
+#include "utils.hh"
+
+#include <unordered_map>
+#include <functional>
+#include <initializer_list>
 
 namespace Kakoune
 {

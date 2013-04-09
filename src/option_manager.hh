@@ -1,10 +1,10 @@
 #ifndef option_manager_hh_INCLUDED
 #define option_manager_hh_INCLUDED
 
-#include "utils.hh"
-#include "exception.hh"
 #include "completion.hh"
+#include "exception.hh"
 #include "option_types.hh"
+#include "utils.hh"
 
 #include <unordered_map>
 

@@ -1,10 +1,11 @@
 #ifndef utf8_hh_INCLUDED
 #define utf8_hh_INCLUDED
 
-#include <cstddef>
+#include "assert.hh"
 #include "unicode.hh"
 #include "units.hh"
-#include "assert.hh"
+
+#include <cstddef>
 
 namespace Kakoune
 {

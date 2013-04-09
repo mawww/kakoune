@@ -1,8 +1,8 @@
-#include "buffer.hh"
 #include "assert.hh"
+#include "buffer.hh"
 #include "editor.hh"
-#include "selectors.hh"
 #include "keys.hh"
+#include "selectors.hh"
 
 using namespace Kakoune;
 

@@ -1,11 +1,10 @@
 #ifndef user_interface_hh_INCLUDED
 #define user_interface_hh_INCLUDED
 
-#include "memoryview.hh"
-#include "keys.hh"
-#include "units.hh"
-#include "utils.hh"
 #include "color.hh"
+#include "keys.hh"
+#include "memoryview.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {

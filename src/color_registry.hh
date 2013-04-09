@@ -1,10 +1,10 @@
 #ifndef color_registry_hh_INCLUDED
 #define color_registry_hh_INCLUDED
 
-#include <unordered_map>
-
 #include "color.hh"
 #include "utils.hh"
+
+#include <unordered_map>
 
 namespace Kakoune
 {

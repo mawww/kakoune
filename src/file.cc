@@ -1,11 +1,11 @@
 #include "file.hh"
 
+#include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
-#include "assert.hh"
-#include "unicode.hh"
-#include "debug.hh"
 #include "completion.hh"
+#include "debug.hh"
+#include "unicode.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>

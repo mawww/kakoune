@@ -1,7 +1,6 @@
 #include "selectors.hh"
 
 #include "string.hh"
-
 #include "utf8_iterator.hh"
 
 #include <algorithm>

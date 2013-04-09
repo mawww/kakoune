@@ -1,7 +1,7 @@
 #include "register_manager.hh"
 
-#include "utils.hh"
 #include "assert.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {

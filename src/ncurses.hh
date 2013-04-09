@@ -1,11 +1,11 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
-#include <ncurses.h>
-
-#include "user_interface.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "user_interface.hh"
+
+#include <ncurses.h>
 
 namespace Kakoune
 {

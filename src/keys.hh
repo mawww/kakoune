@@ -1,9 +1,10 @@
 #ifndef keys_hh_INCLUDED
 #define keys_hh_INCLUDED
 
-#include <vector>
-#include "unicode.hh"
 #include "string.hh"
+#include "unicode.hh"
+
+#include <vector>
 
 namespace Kakoune
 {

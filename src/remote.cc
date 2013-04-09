@@ -1,11 +1,11 @@
 #include "remote.hh"
 
-#include "display_buffer.hh"
-#include "debug.hh"
-#include "client_manager.hh"
-#include "event_manager.hh"
 #include "buffer_manager.hh"
+#include "client_manager.hh"
 #include "command_manager.hh"
+#include "debug.hh"
+#include "display_buffer.hh"
+#include "event_manager.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>

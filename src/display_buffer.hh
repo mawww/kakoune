@@ -1,13 +1,13 @@
 #ifndef display_buffer_hh_INCLUDED
 #define display_buffer_hh_INCLUDED
 
-#include <vector>
-
-#include "string.hh"
+#include "buffer.hh"
 #include "color.hh"
 #include "line_and_column.hh"
-#include "buffer.hh"
+#include "string.hh"
 #include "utf8.hh"
+
+#include <vector>
 
 namespace Kakoune
 {

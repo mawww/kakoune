@@ -1,16 +1,16 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
+#include "hook_manager.hh"
+#include "line_and_column.hh"
+#include "option_manager.hh"
+#include "string.hh"
+#include "units.hh"
+
 #include <vector>
 #include <list>
 #include <memory>
 #include <unordered_set>
-
-#include "line_and_column.hh"
-#include "option_manager.hh"
-#include "hook_manager.hh"
-#include "string.hh"
-#include "units.hh"
 
 namespace Kakoune
 {

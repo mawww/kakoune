@@ -2,7 +2,6 @@
 #define file_hh_INCLUDED
 
 #include "string.hh"
-
 #include "exception.hh"
 
 namespace Kakoune

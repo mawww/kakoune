@@ -1,10 +1,10 @@
 #ifndef completion_hh_INCLUDED
 #define completion_hh_INCLUDED
 
+#include "string.hh"
+
 #include <vector>
 #include <functional>
-
-#include "string.hh"
 
 namespace Kakoune
 {

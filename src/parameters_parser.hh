@@ -1,9 +1,9 @@
 #ifndef parameters_parser_hh_INCLUDED
 #define parameters_parser_hh_INCLUDED
 
-#include "string.hh"
-#include "memoryview.hh"
 #include "exception.hh"
+#include "memoryview.hh"
+#include "string.hh"
 
 #include <unordered_map>
 

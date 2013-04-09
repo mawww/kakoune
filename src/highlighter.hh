@@ -1,13 +1,13 @@
 #ifndef highlighter_hh_INCLUDED
 #define highlighter_hh_INCLUDED
 
-#include <functional>
-
+#include "function_group.hh"
+#include "function_registry.hh"
+#include "memoryview.hh"
 #include "string.hh"
 #include "utils.hh"
-#include "memoryview.hh"
-#include "function_registry.hh"
-#include "function_group.hh"
+
+#include <functional>
 
 namespace Kakoune
 {

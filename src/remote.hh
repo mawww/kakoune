@@ -1,9 +1,9 @@
 #ifndef remote_hh_INCLUDED
 #define remote_hh_INCLUDED
 
-#include "user_interface.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "user_interface.hh"
 
 namespace Kakoune
 {

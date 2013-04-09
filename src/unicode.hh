@@ -27,4 +27,3 @@ inline bool is_blank(Codepoint c)
 }
 
 #endif // unicode_hh_INCLUDED
-

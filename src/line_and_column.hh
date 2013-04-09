@@ -1,8 +1,6 @@
 #ifndef line_and_column_hh_INCLUDED
 #define line_and_column_hh_INCLUDED
 
-#include "units.hh"
-
 namespace Kakoune
 {
 

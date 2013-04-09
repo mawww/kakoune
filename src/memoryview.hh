@@ -1,7 +1,6 @@
 #ifndef memoryview_hh_INCLUDED
 #define memoryview_hh_INCLUDED
 
-#include <cstddef>
 #include <vector>
 #include <initializer_list>
 
@@ -14,6 +13,8 @@ template<typename T>
 class memoryview
 {
 public:
+    using size_t = std::size_t;
+
     memoryview()
         : m_pointer(nullptr), m_size(0) {}
 

@@ -1,9 +1,9 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
-#include "editor.hh"
-#include "display_buffer.hh"
 #include "completion.hh"
+#include "display_buffer.hh"
+#include "editor.hh"
 #include "highlighter.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"

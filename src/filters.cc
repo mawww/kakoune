@@ -1,4 +1,5 @@
 #include "filters.hh"
+
 #include "buffer.hh"
 #include "selection.hh"
 

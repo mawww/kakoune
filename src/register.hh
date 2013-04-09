@@ -1,8 +1,8 @@
 #ifndef register_hh_INCLUDED
 #define register_hh_INCLUDED
 
-#include "string.hh"
 #include "memoryview.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

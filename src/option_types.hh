@@ -1,9 +1,9 @@
 #ifndef option_types_hh_INCLUDED
 #define option_types_hh_INCLUDED
 
+#include "exception.hh"
 #include "string.hh"
 #include "units.hh"
-#include "exception.hh"
 
 #include <tuple>
 #include <vector>

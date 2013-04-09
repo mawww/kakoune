@@ -1,11 +1,10 @@
 #include "editor.hh"
 
 #include "exception.hh"
-#include "utils.hh"
 #include "register.hh"
 #include "register_manager.hh"
-
 #include "utf8_iterator.hh"
+#include "utils.hh"
 
 #include <array>
 

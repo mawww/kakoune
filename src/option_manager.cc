@@ -1,4 +1,5 @@
 #include "option_manager.hh"
+
 #include "assert.hh"
 
 #include <sstream>

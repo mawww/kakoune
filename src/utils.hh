@@ -1,11 +1,11 @@
 #ifndef utils_hh_INCLUDED
 #define utils_hh_INCLUDED
 
-#include "exception.hh"
 #include "assert.hh"
+#include "exception.hh"
 
-#include <memory>
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 namespace Kakoune

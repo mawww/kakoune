@@ -2,7 +2,6 @@
 #define register_manager_hh_INCLUDED
 
 #include "register.hh"
-
 #include "utils.hh"
 
 #include <unordered_map>

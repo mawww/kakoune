@@ -1,6 +1,7 @@
 #include "exception.hh"
 
 #include "string.hh"
+
 #include <typeinfo>
 
 namespace Kakoune

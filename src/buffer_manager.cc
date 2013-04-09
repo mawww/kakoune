@@ -2,10 +2,10 @@
 
 #include "assert.hh"
 #include "buffer.hh"
-#include "exception.hh"
-#include "string.hh"
 #include "client_manager.hh"
+#include "exception.hh"
 #include "file.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

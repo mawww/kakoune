@@ -1,12 +1,12 @@
 #ifndef string_hh_INCLUDED
 #define string_hh_INCLUDED
 
-#include <string>
-#include <boost/regex.hpp>
-
 #include "memoryview.hh"
 #include "units.hh"
 #include "utf8.hh"
+
+#include <string>
+#include <boost/regex.hpp>
 
 namespace Kakoune
 {

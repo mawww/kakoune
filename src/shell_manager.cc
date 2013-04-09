@@ -1,7 +1,7 @@
 #include "shell_manager.hh"
 
-#include "debug.hh"
 #include "context.hh"
+#include "debug.hh"
 
 #include <cstring>
 #include <sys/types.h>

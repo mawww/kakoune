@@ -1,4 +1,5 @@
 #include "keys.hh"
+
 #include "utils.hh"
 
 namespace Kakoune

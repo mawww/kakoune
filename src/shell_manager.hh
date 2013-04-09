@@ -1,8 +1,8 @@
 #ifndef shell_manager_hh_INCLUDED
 #define shell_manager_hh_INCLUDED
 
-#include "utils.hh"
 #include "string.hh"
+#include "utils.hh"
 
 #include <unordered_map>
 

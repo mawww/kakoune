@@ -1,9 +1,9 @@
 #ifndef function_group_hh_INCLUDED
 #define function_group_hh_INCLUDED
 
-#include "string.hh"
-#include "idvaluemap.hh"
 #include "exception.hh"
+#include "idvaluemap.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

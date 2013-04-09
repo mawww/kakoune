@@ -1,9 +1,9 @@
 #include "window.hh"
 
 #include "assert.hh"
+#include "context.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
-#include "context.hh"
 
 #include <algorithm>
 #include <sstream>

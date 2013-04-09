@@ -1,9 +1,9 @@
 #ifndef function_registry_h_INCLUDED
 #define function_registry_h_INCLUDED
 
-#include "string.hh"
 #include "completion.hh"
 #include "idvaluemap.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

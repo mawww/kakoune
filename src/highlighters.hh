@@ -1,9 +1,8 @@
 #ifndef highlighters_hh_INCLUDED
 #define highlighters_hh_INCLUDED
 
-#include "highlighter.hh"
-
 #include "color.hh"
+#include "highlighter.hh"
 
 namespace Kakoune
 {

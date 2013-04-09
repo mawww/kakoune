@@ -1,10 +1,10 @@
 #include "command_manager.hh"
 
-#include "utils.hh"
 #include "assert.hh"
 #include "context.hh"
-#include "shell_manager.hh"
 #include "register_manager.hh"
+#include "shell_manager.hh"
+#include "utils.hh"
 
 #include <algorithm>
 

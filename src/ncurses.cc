@@ -1,10 +1,9 @@
 #include "ncurses.hh"
 
 #include "display_buffer.hh"
-#include "register_manager.hh"
-
-#include "utf8_iterator.hh"
 #include "event_manager.hh"
+#include "register_manager.hh"
+#include "utf8_iterator.hh"
 
 #include <map>
 
