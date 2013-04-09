@@ -44,7 +44,7 @@ void expand_tabulations(Buffer& buffer, Selection& selection, String& content)
         for (auto line_it = buffer.iterator_at_line_begin(position);
              line_it != position; ++line_it)
         {
-            assert(*line_it != '\n');
+            kak_assert(*line_it != '\n');
             if (*line_it == '\t')
                 column += tabstop - (column % tabstop);
             else

@@ -41,13 +41,13 @@ public:
 protected:
     Singleton()
     {
-        assert(not ms_instance);
+        kak_assert(not ms_instance);
         ms_instance = static_cast<T*>(this);
     }
 
     ~Singleton()
     {
-        assert(ms_instance == this);
+        kak_assert(ms_instance == this);
         ms_instance = nullptr;
     }
 
@@ -134,10 +134,10 @@ class SafeCountable
 public:
 #ifdef KAK_DEBUG
    SafeCountable() : m_count(0) {}
-   ~SafeCountable() { assert(m_count == 0); }
+   ~SafeCountable() { kak_assert(m_count == 0); }
 
    void inc_safe_count() const { ++m_count; }
-   void dec_safe_count() const { --m_count; assert(m_count >= 0); }
+   void dec_safe_count() const { --m_count; kak_assert(m_count >= 0); }
 
 private:
    mutable int m_count;

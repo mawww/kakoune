@@ -15,7 +15,7 @@ static Buffer& get_or_create_debug_buffer()
     if (not buffer)
         buffer = new Buffer(debug_buffer_name, Buffer::Flags::NoUndo);
 
-    assert(buffer);
+    kak_assert(buffer);
     return *buffer;
 }
 

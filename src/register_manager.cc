@@ -66,7 +66,7 @@ Register& RegisterManager::operator[](char reg)
 void RegisterManager::register_dynamic_register(char reg, RegisterRetriever function)
 {
     auto& reg_ptr = m_registers[reg];
-    assert(not reg_ptr);
+    kak_assert(not reg_ptr);
     reg_ptr.reset(new DynamicRegister(std::move(function)));
 }
 

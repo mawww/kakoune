@@ -95,7 +95,7 @@ namespace InvalidBytePolicy
 
 struct Assert
 {
-    Codepoint operator()(char byte) const { assert(false); return byte; }
+    Codepoint operator()(char byte) const { kak_assert(false); return byte; }
 };
 
 struct Pass

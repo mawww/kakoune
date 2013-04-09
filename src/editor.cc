@@ -72,7 +72,7 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
         return pos;
     }
     }
-    assert(false);
+    kak_assert(false);
     return BufferIterator{};
 }
 
@@ -162,7 +162,7 @@ static void sort_and_merge_overlapping(SelectionList& selections, size_t& main_s
 
 void Editor::move_selections(CharCount offset, SelectMode mode)
 {
-    assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
+    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
         auto last = sel.last();
@@ -178,7 +178,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
 
 void Editor::move_selections(LineCount offset, SelectMode mode)
 {
-    assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
+    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
         BufferCoord pos = sel.last().coord();
@@ -257,7 +257,7 @@ void Editor::select(const Selection& selection, SelectMode mode)
         sort_and_merge_overlapping(m_selections, m_main_sel);
     }
     else
-        assert(false);
+        kak_assert(false);
     check_invariant();
 }
 
@@ -352,15 +352,15 @@ public:
 
     void on_insert(const BufferIterator& begin, const BufferIterator& end)
     {
-        assert(begin.is_valid());
-        assert(end.is_valid());
+        kak_assert(begin.is_valid());
+        kak_assert(end.is_valid());
         m_first = begin;
         m_last = utf8::previous(end);
     }
 
     void on_erase(const BufferIterator& begin, const BufferIterator& end)
     {
-        assert(begin.is_valid());
+        kak_assert(begin.is_valid());
         m_first = begin;
         if (m_first >= m_buffer.end())
             m_first = utf8::previous(m_buffer.end());
@@ -405,11 +405,11 @@ bool Editor::redo()
 void Editor::check_invariant() const
 {
 #ifdef KAK_DEBUG
-    assert(not m_selections.empty());
-    assert(m_main_sel < m_selections.size());
+    kak_assert(not m_selections.empty());
+    kak_assert(m_main_sel < m_selections.size());
     m_selections.check_invariant();
     buffer().check_invariant();
-    assert(std::is_sorted(m_selections.begin(), m_selections.end(), compare_selections));
+    kak_assert(std::is_sorted(m_selections.begin(), m_selections.end(), compare_selections));
 #endif
 }
 
@@ -420,7 +420,7 @@ void Editor::begin_edition()
 
 void Editor::end_edition()
 {
-    assert(m_edition_level > 0);
+    kak_assert(m_edition_level > 0);
     if (m_edition_level == 1)
         m_buffer->commit_undo_group();
 
@@ -479,7 +479,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             last = first;
             break;
         case InsertMode::InsertAtNextLineBegin:
-             assert(false); // not implemented
+             kak_assert(false); // not implemented
              break;
         }
         if (first.underlying_iterator().is_end())

@@ -24,7 +24,7 @@ void DynamicSelectionList::check_invariant() const
     const Buffer* buf = &buffer();
     for (auto& sel : *this)
     {
-        assert(buf == &sel.buffer());
+        kak_assert(buf == &sel.buffer());
         sel.check_invariant();
     }
 #endif
@@ -70,7 +70,7 @@ struct UpdateInsert
     {
         BufferCoord coord = it.coord();
         if (assume_different_line)
-            assert(begin.line < coord.line);
+            kak_assert(begin.line < coord.line);
         if (not assume_greater_than_begin and coord < begin)
             return;
         if (not assume_different_line and begin.line == coord.line)
@@ -91,7 +91,7 @@ struct UpdateErase
         if (not assume_greater_than_begin and coord < begin)
             return;
         if (assume_different_line)
-            assert(end.line < coord.line);
+            kak_assert(end.line < coord.line);
         if (not assume_different_line and coord <= end)
             coord = it.buffer().clamp(begin);
         else

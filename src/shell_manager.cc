@@ -92,8 +92,8 @@ String ShellManager::pipe(const String& input,
             else if (match[2].matched)
                 name = String(match[2].first, match[2].second);
             else
-                assert(false);
-            assert(name.length() > 0);
+                kak_assert(false);
+            kak_assert(name.length() > 0);
 
             auto local_var = env_vars.find(name);
             if (local_var != env_vars.end())

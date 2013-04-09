@@ -239,7 +239,7 @@ void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buf
                     for (auto line_it = it.buffer().iterator_at_line_begin(it);
                          line_it != it; ++line_it)
                     {
-                        assert(*line_it != '\n');
+                        kak_assert(*line_it != '\n');
                         if (*line_it == '\t')
                             column += tabstop - (column % tabstop);
                         else

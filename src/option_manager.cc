@@ -20,19 +20,19 @@ OptionManager::~OptionManager()
     if (m_parent)
         m_parent->unregister_watcher(*this);
 
-    assert(m_watchers.empty());
+    kak_assert(m_watchers.empty());
 }
 
 void OptionManager::register_watcher(OptionManagerWatcher& watcher)
 {
-    assert(not contains(m_watchers, &watcher));
+    kak_assert(not contains(m_watchers, &watcher));
     m_watchers.push_back(&watcher);
 }
 
 void OptionManager::unregister_watcher(OptionManagerWatcher& watcher)
 {
     auto it = find(m_watchers.begin(), m_watchers.end(), &watcher);
-    assert(it != m_watchers.end());
+    kak_assert(it != m_watchers.end());
     m_watchers.erase(it);
 }
 

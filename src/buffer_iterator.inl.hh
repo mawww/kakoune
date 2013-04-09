@@ -9,12 +9,12 @@ namespace Kakoune
 inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
     : m_buffer(&buffer), m_coord(coord)
 {
-    assert(is_valid());
+    kak_assert(is_valid());
 }
 
 inline const Buffer& BufferIterator::buffer() const
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     return *m_buffer;
 }
 
@@ -30,7 +30,7 @@ inline bool BufferIterator::is_valid() const
 
 inline void BufferIterator::clamp(bool avoid_eol)
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     m_coord = m_buffer->clamp(m_coord, avoid_eol);
 }
 
@@ -46,25 +46,25 @@ inline bool BufferIterator::operator!=(const BufferIterator& iterator) const
 
 inline bool BufferIterator::operator<(const BufferIterator& iterator) const
 {
-    assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord < iterator.m_coord);
 }
 
 inline bool BufferIterator::operator<=(const BufferIterator& iterator) const
 {
-    assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord <= iterator.m_coord);
 }
 
 inline bool BufferIterator::operator>(const BufferIterator& iterator) const
 {
-    assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord > iterator.m_coord);
 }
 
 inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
 {
-    assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord >= iterator.m_coord);
 }
 
@@ -75,20 +75,20 @@ inline char BufferIterator::operator*() const
 
 inline ByteCount BufferIterator::offset() const
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     return line() >= m_buffer->line_count() ?
         m_buffer->character_count() : m_buffer->m_lines[line()].start + column();
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
-    assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_buffer == iterator.m_buffer);
     return (size_t)(int)(offset() - iterator.offset());
 }
 
 inline BufferIterator BufferIterator::operator+(ByteCount size) const
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     if (size >= 0)
     {
         ByteCount o = std::min(m_buffer->character_count(), offset() + size);
@@ -105,7 +105,7 @@ inline BufferIterator BufferIterator::operator+(ByteCount size) const
 
 inline BufferIterator BufferIterator::operator-(ByteCount size) const
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     if (size >= 0)
     {
         ByteCount o = std::max(0_byte, offset() - size);
@@ -114,7 +114,7 @@ inline BufferIterator BufferIterator::operator-(ByteCount size) const
             if (m_buffer->m_lines[i].start <= o)
                 return BufferIterator(*m_buffer, { i, o - m_buffer->m_lines[i].start });
         }
-        assert(false);
+        kak_assert(false);
     }
     return operator+(-size);
 }
@@ -175,22 +175,22 @@ inline BufferIterator BufferIterator::operator--(int)
 inline BufferIterator& BufferIterator::operator=(const BufferCoord& coord)
 {
     m_coord = coord;
-    assert(is_valid());
+    kak_assert(is_valid());
     return *this;
 }
 
 inline bool BufferIterator::is_begin() const
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     return m_coord.line == 0 and m_coord.column == 0;
 }
 
 inline bool BufferIterator::is_end() const
 {
-    assert(m_buffer);
+    kak_assert(m_buffer);
     if (m_coord.line == m_buffer->line_count())
     {
-        assert(m_coord.column == 0);
+        kak_assert(m_coord.column == 0);
         return true;
     }
     return offset() == m_buffer->character_count();

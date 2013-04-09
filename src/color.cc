@@ -34,7 +34,7 @@ String color_to_str(const Color& color)
         case Color::Cyan:    return "cyan";
         case Color::White:   return "white";
     }
-    assert(false);
+    kak_assert(false);
     return "default";
 }
 

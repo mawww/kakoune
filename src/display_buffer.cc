@@ -7,9 +7,9 @@ namespace Kakoune
 
 DisplayLine::iterator DisplayLine::split(iterator it, BufferIterator pos)
 {
-    assert(it->content.type() == AtomContent::BufferRange);
-    assert(it->content.begin() < pos);
-    assert(it->content.end() > pos);
+    kak_assert(it->content.type() == AtomContent::BufferRange);
+    kak_assert(it->content.begin() < pos);
+    kak_assert(it->content.end() > pos);
 
     DisplayAtom atom = *it;
     atom.content.m_end = pos;
@@ -68,8 +68,8 @@ void DisplayBuffer::compute_range()
                 m_range.second = atom.content.end();
         }
     }
-    assert(m_range.first.is_valid() and m_range.second.is_valid());
-    assert(m_range.first <= m_range.second);
+    kak_assert(m_range.first.is_valid() and m_range.second.is_valid());
+    kak_assert(m_range.first <= m_range.second);
 }
 
 void DisplayBuffer::optimize()

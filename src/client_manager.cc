@@ -19,7 +19,7 @@ struct ClientManager::Client
           input_handler(*user_interface),
           name(std::move(name))
     {
-        assert(not this->name.empty());
+        kak_assert(not this->name.empty());
         context().change_editor(window);
     }
     Client(Client&&) = delete;
@@ -106,7 +106,7 @@ void ClientManager::remove_client_by_context(Context& context)
              return;
         }
     }
-    assert(false);
+    kak_assert(false);
 }
 
 Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)

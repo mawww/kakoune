@@ -127,7 +127,7 @@ public:
 
     void insert_from(CharCount start, const String& str)
     {
-        assert(start <= m_cursor_pos);
+        kak_assert(start <= m_cursor_pos);
         m_line = m_line.substr(0, start) + str
                + m_line.substr(m_cursor_pos);
        m_cursor_pos = start + str.char_length();
@@ -148,7 +148,7 @@ private:
 
 static DisplayLine line_with_cursor(const String& str, CharCount cursor_pos)
 {
-    assert(cursor_pos <= str.char_length());
+    kak_assert(cursor_pos <= str.char_length());
     if (cursor_pos == str.char_length())
         return DisplayLine{-1, { {str, get_color("StatusLine")},
                                  {" "_str, get_color("StatusCursor")} }};
@@ -654,7 +654,7 @@ private:
             if (not m_completions.is_valid())
                 return false;
 
-            assert(cursor >= m_completions.begin);
+            kak_assert(cursor >= m_completions.begin);
 
             m_matching_candidates = m_completions.candidates;
             m_current_candidate = m_matching_candidates.size();
@@ -799,7 +799,7 @@ void InputHandler::repeat_last_insert()
     m_mode.reset(new InputModes::Insert(*this, m_last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key);
-    assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
+    kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
 void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
@@ -857,7 +857,7 @@ void InputHandler::handle_available_inputs()
 
 void InputHandler::start_recording(char reg)
 {
-    assert(m_recording_reg == 0);
+    kak_assert(m_recording_reg == 0);
     m_recorded_keys = "";
     m_recording_reg = reg;
 }
@@ -869,7 +869,7 @@ bool InputHandler::is_recording() const
 
 void InputHandler::stop_recording()
 {
-    assert(m_recording_reg != 0);
+    kak_assert(m_recording_reg != 0);
     RegisterManager::instance()[m_recording_reg] = memoryview<String>(m_recorded_keys);
     m_recording_reg = 0;
 }

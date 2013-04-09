@@ -97,19 +97,19 @@ struct ParametersParser
 
         bool operator==(const iterator& other) const
         {
-            assert(&m_parser == &other.m_parser);
+            kak_assert(&m_parser == &other.m_parser);
             return m_index == other.m_index;
         }
 
         bool operator!=(const iterator& other) const
         {
-            assert(&m_parser == &other.m_parser);
+            kak_assert(&m_parser == &other.m_parser);
             return m_index != other.m_index;
         }
 
         bool operator<(const iterator& other) const
         {
-            assert(&m_parser == &other.m_parser);
+            kak_assert(&m_parser == &other.m_parser);
             return m_index < other.m_index;
         }
 

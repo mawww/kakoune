@@ -324,7 +324,7 @@ static InsertMode adapt_for_linewise(InsertMode mode)
     if (mode == InsertMode::Replace)
         return InsertMode::Replace;
 
-    assert(false);
+    kak_assert(false);
     return InsertMode::Insert;
 }
 
@@ -409,7 +409,7 @@ void do_join(Context& context)
     {
         SelectionList res = select_all_matches(sel, Regex{"\n\\h*"});
         // remove last end of line if selected
-        assert(std::is_sorted(res.begin(), res.end(),
+        kak_assert(std::is_sorted(res.begin(), res.end(),
               [](const Selection& lhs, const Selection& rhs)
               { return lhs.begin() < rhs.begin(); }));
         if (not res.empty() and res.back().end() == sel.buffer().end())
@@ -614,7 +614,7 @@ String runtime_directory()
     char buffer[2048];
 #if defined(__linux__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
-    assert(res != -1);
+    kak_assert(res != -1);
     buffer[res] = '\0';
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048;

@@ -40,8 +40,8 @@ EventManager::EventManager()
 
 EventManager::~EventManager()
 {
-    assert(m_fd_watchers.empty());
-    assert(m_timers.empty());
+    kak_assert(m_fd_watchers.empty());
+    kak_assert(m_timers.empty());
 }
 
 void EventManager::handle_next_events()

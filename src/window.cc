@@ -149,7 +149,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     if (last != buffer().end())
     {
         // the cursor should always be visible.
-        assert(false);
+        kak_assert(false);
     }
 }
 

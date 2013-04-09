@@ -20,7 +20,7 @@ class FunctionRegistry
 public:
     void register_func(const String& name, const FunctionType& function)
     {
-        assert(not m_functions.contains(name));
+        kak_assert(not m_functions.contains(name));
         m_functions.append(std::make_pair(name, function));
     }
 

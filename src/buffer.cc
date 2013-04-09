@@ -32,7 +32,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
     m_lines.reserve(lines.size());
     for (auto& line : lines)
     {
-        assert(not line.empty() and line.back() == '\n');
+        kak_assert(not line.empty() and line.back() == '\n');
         m_lines.emplace_back(Line{ pos, std::move(line) });
         pos += m_lines.back().length();
     }
@@ -59,7 +59,7 @@ Buffer::~Buffer()
     }
 
     BufferManager::instance().unregister_buffer(*this);
-    assert(m_change_listeners.empty());
+    kak_assert(m_change_listeners.empty());
 }
 
 String Buffer::display_name() const
@@ -77,7 +77,7 @@ BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,
 
 ByteCount Buffer::line_length(LineCount line) const
 {
-    assert(line < line_count());
+    kak_assert(line < line_count());
     ByteCount end = (line < line_count() - 1) ?
                     m_lines[line + 1].start : character_count();
     return end - m_lines[line].start;
@@ -99,7 +99,7 @@ BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
 BufferIterator Buffer::iterator_at_line_begin(LineCount line) const
 {
     line = Kakoune::clamp(line, 0_line, line_count()-1);
-    assert(line_length(line) > 0);
+    kak_assert(line_length(line) > 0);
     return BufferIterator(*this, { line, 0 });
 }
 
@@ -111,7 +111,7 @@ BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) co
 BufferIterator Buffer::iterator_at_line_end(LineCount line) const
 {
     line = Kakoune::clamp(line, 0_line, line_count()-1);
-    assert(line_length(line) > 0);
+    kak_assert(line_length(line) > 0);
     return ++BufferIterator(*this, { line, line_length(line) - 1 });
 }
 
@@ -197,7 +197,7 @@ struct Buffer::Modification
         {
         case Insert: inverse_type = Erase;  break;
         case Erase:  inverse_type = Insert; break;
-        default: assert(false);
+        default: kak_assert(false);
         }
         return {inverse_type, position, content};
     }
@@ -222,7 +222,7 @@ bool Buffer::redo()
     if (m_history_cursor == m_history.end())
         return false;
 
-    assert(m_current_undo_group.empty());
+    kak_assert(m_current_undo_group.empty());
 
     for (const Modification& modification : *m_history_cursor)
         apply_modification(modification);
@@ -235,12 +235,12 @@ void Buffer::check_invariant() const
 {
 #ifdef KAK_DEBUG
     ByteCount start = 0;
-    assert(not m_lines.empty());
+    kak_assert(not m_lines.empty());
     for (auto& line : m_lines)
     {
-        assert(line.start == start);
-        assert(line.length() > 0);
-        assert(line.content.back() == '\n');
+        kak_assert(line.start == start);
+        kak_assert(line.length() > 0);
+        kak_assert(line.content.back() == '\n');
         start += line.length();
     }
 #endif
@@ -248,7 +248,7 @@ void Buffer::check_invariant() const
 
 void Buffer::do_insert(const BufferIterator& pos, const String& content)
 {
-    assert(pos.is_valid());
+    kak_assert(pos.is_valid());
 
     if (content.empty())
         return;
@@ -327,8 +327,8 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
 
 void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 {
-    assert(begin.is_valid());
-    assert(end.is_valid());
+    kak_assert(begin.is_valid());
+    kak_assert(end.is_valid());
     ++m_timestamp;
     const ByteCount length = end - begin;
     String prefix = m_lines[begin.line()].content.substr(0, begin.column());
@@ -360,7 +360,7 @@ void Buffer::apply_modification(const Modification& modification)
     if (not pos.is_end() and pos.column() == m_lines[pos.line()].length())
         pos = { pos.buffer(), { pos.line() + 1, 0 }};
 
-    assert(pos.is_valid());
+    kak_assert(pos.is_valid());
     switch (modification.type)
     {
     case Modification::Insert:
@@ -372,12 +372,12 @@ void Buffer::apply_modification(const Modification& modification)
     {
         ByteCount count = content.length();
         BufferIterator end = pos + count;
-        assert(string(pos, end) == content);
+        kak_assert(string(pos, end) == content);
         do_erase(pos, end);
         break;
     }
     default:
-        assert(false);
+        kak_assert(false);
     }
 }
 

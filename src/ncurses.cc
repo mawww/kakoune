@@ -302,7 +302,7 @@ void NCursesUI::print_status(const DisplayLine& status)
 
 void NCursesUI::draw_menu()
 {
-    assert(m_menu_win);
+    kak_assert(m_menu_win);
 
     auto menu_fg = get_color_pair(m_menu_fg);
     auto menu_bg = get_color_pair(m_menu_bg);
@@ -347,8 +347,8 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
                           DisplayCoord anchor, ColorPair fg, ColorPair bg,
                           MenuStyle style)
 {
-    assert(m_menu_win == nullptr);
-    assert(m_choices.empty());
+    kak_assert(m_menu_win == nullptr);
+    kak_assert(m_choices.empty());
 
     m_menu_fg = fg;
     m_menu_bg = bg;
@@ -470,7 +470,7 @@ static DisplayCoord compute_pos(const DisplayCoord& anchor,
 void NCursesUI::info_show(const String& content, DisplayCoord anchor,
                           ColorPair colors, MenuStyle style)
 {
-    assert(m_info_win == nullptr);
+    kak_assert(m_info_win == nullptr);
 
     DisplayCoord size = compute_needed_size(content);
     if (style == MenuStyle::Prompt)

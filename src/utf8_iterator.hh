@@ -100,7 +100,7 @@ public:
 
     CharCount operator-(utf8_iterator other) const
     {
-        //assert(other < *this);
+        //kak_assert(other < *this);
         check_invariant();
         other.check_invariant();
         CharCount dist = 0;
@@ -124,7 +124,7 @@ protected:
     void check_invariant() const
     {
         // always point to a character first byte;
-        // assert(is_character_start(it));
+        // kak_assert(is_character_start(it));
     }
 
 private:

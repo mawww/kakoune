@@ -43,7 +43,7 @@ ParametersParser::ParametersParser(const ParameterList& params,
 
 bool ParametersParser::has_option(const String& name) const
 {
-    assert(m_options.find(name) != m_options.end());
+    kak_assert(m_options.find(name) != m_options.end());
     for (auto& param : m_params)
     {
         if (param[0] == '-' and param.substr(1_byte) == name)
@@ -59,8 +59,8 @@ const String& ParametersParser::option_value(const String& name) const
 {
 #ifdef KAK_DEBUG
     auto it = m_options.find(name);
-    assert(it != m_options.end());
-    assert(it->second == true);
+    kak_assert(it != m_options.end());
+    kak_assert(it->second == true);
 #endif
 
     for (size_t i = 0; i < m_params.size(); ++i)
@@ -82,7 +82,7 @@ size_t ParametersParser::positional_count() const
 
 const String& ParametersParser::operator[] (size_t index) const
 {
-    assert(index < positional_count());
+    kak_assert(index < positional_count());
     return m_params[m_positional_indices[index]];
 }
 

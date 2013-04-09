@@ -324,7 +324,7 @@ Completions CommandManager::complete(const Context& context,
         return result;
     }
 
-    assert(not tokens.empty());
+    kak_assert(not tokens.empty());
     if (tokens[0].type() != Token::Type::Raw)
         return Completions();
 
@@ -357,7 +357,7 @@ CandidateList PerArgumentCommandCompleter::operator()(const Context& context,
         return CandidateList();
 
     // it is possible to try to complete a new argument
-    assert(token_to_complete <= params.size());
+    kak_assert(token_to_complete <= params.size());
 
     const String& argument = token_to_complete < params.size() ?
                              params[token_to_complete] : String();

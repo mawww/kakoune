@@ -8,7 +8,7 @@ Key canonicalize_ifn(Key key)
 {
     if (key.key > 0 and key.key < 27)
     {
-        assert(key.modifiers == Key::Modifiers::None);
+        kak_assert(key.modifiers == Key::Modifiers::None);
         key.modifiers = Key::Modifiers::Control;
         key.key = key.key - 1 + 'a';
     }

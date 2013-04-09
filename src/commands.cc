@@ -66,7 +66,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         ClientManager::instance().redraw_clients();
         if (count <= 0)
         {
-            assert(buffer->flags() & Buffer::Flags::Fifo);
+            kak_assert(buffer->flags() & Buffer::Flags::Fifo);
             buffer->flags() &= ~Buffer::Flags::Fifo;
             close(watcher.fd());
             delete &watcher;
@@ -804,7 +804,7 @@ public:
 
     Key get_key() override
     {
-        assert(m_pos < m_keys.size());
+        kak_assert(m_pos < m_keys.size());
         return m_keys[m_pos++];
     }
     bool is_key_available() override { return m_pos < m_keys.size(); }

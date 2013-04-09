@@ -54,7 +54,7 @@ public:
             case ReplacedBufferRange:
                return m_text;
         }
-        assert(false);
+        kak_assert(false);
         return 0;
     }
 
@@ -68,25 +68,25 @@ public:
             case ReplacedBufferRange:
                return m_text.char_length();
         }
-        assert(false);
+        kak_assert(false);
         return 0;
     }
 
     const BufferIterator& begin() const
     {
-        assert(has_buffer_range());
+        kak_assert(has_buffer_range());
         return m_begin;
     }
 
     const BufferIterator& end() const
     {
-        assert(has_buffer_range());
+        kak_assert(has_buffer_range());
         return m_end;
     }
 
     void replace(String text)
     {
-        assert(m_type == BufferRange);
+        kak_assert(m_type == BufferRange);
         m_type = ReplacedBufferRange;
         m_text = std::move(text);
     }

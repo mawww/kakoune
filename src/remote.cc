@@ -133,7 +133,7 @@ String read<String>(int socket)
     if (length == 0)
         return String{};
     char buffer[2048];
-    assert(length < 2048);
+    kak_assert(length < 2048);
     read(socket, buffer, (int)length);
     return String(buffer, buffer+(int)length);
 }
