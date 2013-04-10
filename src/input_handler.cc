@@ -31,7 +31,7 @@ public:
     Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
-    void reset_normal_mode();
+    InputMode& reset_normal_mode();
 private:
     InputHandler& m_input_handler;
 };
@@ -553,18 +553,12 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
     return {};
 }
 
-class BufferCompleter : public OptionManagerWatcher
+class BufferCompleter : public OptionManagerWatcher_AutoRegister
 {
 public:
     BufferCompleter(const Context& context)
-        : m_context(context)
-    {
-        m_context.options().register_watcher(*this);
-    }
-    ~BufferCompleter()
-    {
-        m_context.options().unregister_watcher(*this);
-    }
+        : OptionManagerWatcher_AutoRegister(context.options()), m_context(context)
+    {}
     BufferCompleter(const BufferCompleter&) = delete;
     BufferCompleter& operator=(const BufferCompleter&) = delete;
 
@@ -690,6 +684,9 @@ public:
 
     void on_key(const Key& key) override
     {
+        if (&context().editor() != &m_inserter.editor())
+            return reset_normal_mode().on_key(key);
+
         last_insert().second.push_back(key);
         if (m_insert_reg)
         {
@@ -764,10 +761,11 @@ private:
 
 }
 
-void InputMode::reset_normal_mode()
+InputMode& InputMode::reset_normal_mode()
 {
     m_input_handler.m_mode_trash.emplace_back(std::move(m_input_handler.m_mode));
     m_input_handler.m_mode.reset(new InputModes::Normal(m_input_handler));
+    return *m_input_handler.m_mode;
 }
 
 
