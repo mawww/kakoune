@@ -429,6 +429,14 @@ void echo_message(const CommandParameters& params, Context& context)
     context.print_status({ std::move(message), get_color("StatusLine") } );
 }
 
+void write_debug_message(const CommandParameters& params, Context&)
+{
+    String message;
+    for (auto& param : params)
+        message += param + " ";
+    write_debug(message);
+}
+
 void exec_commands_in_file(const CommandParameters& params,
                            Context& context)
 {
@@ -895,9 +903,13 @@ void register_commands()
     cm.register_command("menu", menu);
     cm.register_command("info", info);
     cm.register_command("try",  try_catch);
+    cm.register_command("reg", set_register);
 
     cm.register_command("def",  define_command);
+    cm.register_command("decl", declare_option);
+
     cm.register_command("echo", echo_message);
+    cm.register_command("debug", write_debug_message);
 
     cm.register_commands({ "setg", "setglobal" }, set_global_option,
                          PerArgumentCommandCompleter({
@@ -914,14 +926,10 @@ void register_commands()
                              [](const Context& context, const String& prefix, ByteCount cursor_pos)
                              { return context.window().options().complete_option_name(prefix, cursor_pos); }
                          }));
-    cm.register_command("decl", declare_option);
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);
     cm.register_commands({"name"}, set_client_name);
 
-    cm.register_command("reg", set_register);
-
     cm.register_command("cd", change_working_directory, filename_completer);
 }
-
 }
