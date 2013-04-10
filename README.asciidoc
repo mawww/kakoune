@@ -65,8 +65,12 @@ Basic Movement
  * _gh_, _alt-H_: select to line begin
  * _gl_, _alt-L_: select to line end
 
- * _gg_, _gt_: go to the first line
- * _gb_: go to the last line
+ * _gg_, _gk_: go to the first line
+ * _gj_: go to the last line
+
+ * _gt_, _gk_: go to the first displayed line
+ * _gc_, _gk_: go to the middle displayed line
+ * _gb_: go to the last displayed line
 
  * _/_: search (select next match)
  * _?_: search (extend to next match)

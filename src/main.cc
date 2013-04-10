@@ -88,11 +88,32 @@ void do_go(Context& context)
                 break;
             }
             case 'e':
-            {
                 context.push_jump();
                 editor.select(editor.buffer().end()-1, mode);
                 break;
-            }
+            case 't':
+                if (context.has_window())
+                {
+                    auto line = context.window().position().line;
+                    editor.select(editor.buffer().iterator_at_line_begin(line), mode);
+                }
+                break;
+            case 'b':
+                if (context.has_window())
+                {
+                    auto& window = context.window();
+                    auto line = window.position().line + window.dimensions().line - 1;
+                    editor.select(editor.buffer().iterator_at_line_begin(line), mode);
+                }
+                break;
+            case 'c':
+                if (context.has_window())
+                {
+                    auto& window = context.window();
+                    auto line = window.position().line + window.dimensions().line / 2;
+                    editor.select(editor.buffer().iterator_at_line_begin(line), mode);
+                }
+                break;
             case 'a':
             {
                 auto& buffer_manager = BufferManager::instance();
