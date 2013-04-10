@@ -22,6 +22,9 @@ public:
     void register_buffer(Buffer& buffer);
     void unregister_buffer(Buffer& buffer);
 
+    void delete_buffer(Buffer& buffer);
+    void delete_buffer_if_exists(const String& name);
+
     iterator begin() const { return m_buffers.cbegin(); }
     iterator end() const { return m_buffers.cend(); }
     size_t   count() const { return m_buffers.size(); }

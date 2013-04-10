@@ -52,7 +52,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
 
-    delete BufferManager::instance().get_buffer_ifp(name);
+    BufferManager::instance().delete_buffer_if_exists(name);
 
     Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
@@ -234,7 +234,7 @@ void delete_buffer(const CommandParameters& params, Context& context)
     if (manager.count() == 1)
         throw runtime_error("buffer " + buffer.name() + " is the last one");
 
-    delete &buffer;
+    manager.delete_buffer(buffer);
 }
 
 template<typename Group>

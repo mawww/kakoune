@@ -37,13 +37,32 @@ void BufferManager::unregister_buffer(Buffer& buffer)
     {
         if (*it == &buffer)
         {
-            if (ClientManager::has_instance())
-                ClientManager::instance().ensure_no_client_uses_buffer(buffer);
             m_buffers.erase(it);
             return;
         }
     }
     kak_assert(false);
+}
+
+void BufferManager::delete_buffer(Buffer& buffer)
+{
+    for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
+    {
+        if (*it == &buffer)
+        {
+            if (ClientManager::has_instance())
+                ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+            delete it->get();
+            return;
+        }
+    }
+    kak_assert(false);
+}
+
+void BufferManager::delete_buffer_if_exists(const String& name)
+{
+    if (Buffer* buf = get_buffer_ifp(name))
+        delete_buffer(*buf);
 }
 
 Buffer* BufferManager::get_buffer_ifp(const String& name)
