@@ -148,6 +148,8 @@ window.
  * _zz_ or _zc_: center the main selection in the window
  * _zt_: scroll to put the main selection on the top line of the window
  * _zb_: scroll to put the main selection on the bottom line of the window
+ * _zj_: scroll the window count line downward
+ * _zk_: scroll the window count line upward
 
 Multi Selection
 ---------------

@@ -52,6 +52,11 @@ void Window::center_selection()
     display_selection_at(m_dimensions.line/2_line);
 }
 
+void Window::scroll(LineCount offset)
+{
+    m_position.line = std::max(0_line, m_position.line + offset);
+}
+
 void Window::update_display_buffer()
 {
     scroll_to_keep_cursor_visible_ifn();

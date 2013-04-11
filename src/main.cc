@@ -167,6 +167,12 @@ void do_disp_cmd(Context& context)
         case 'b':
             context.window().display_selection_at(window.dimensions().line-1);
             break;
+        case 'j':
+            context.window().scroll( std::max<LineCount>(1, context.numeric_param()));
+            break;
+        case 'k':
+            context.window().scroll(-std::max<LineCount>(1, context.numeric_param()));
+            break;
         }
     });
 }
