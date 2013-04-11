@@ -62,15 +62,8 @@ Basic Movement
 
  * _%_: select whole buffer
 
- * _gh_, _alt-H_: select to line begin
- * _gl_, _alt-L_: select to line end
-
- * _gg_, _gk_: go to the first line
- * _gj_: go to the last line
-
- * _gt_, _gk_: go to the first displayed line
- * _gc_, _gk_: go to the middle displayed line
- * _gb_: go to the last displayed line
+ * _alt-H_: select to line begin
+ * _alt-L_: select to line end
 
  * _/_: search (select next match)
  * _?_: search (extend to next match)
@@ -127,6 +120,34 @@ Changes
 
  * _u_: undo last change
  * _U_: redo last change
+
+Goto Commands
+-------------
+
+Commands begining with g are used to goto certain position and or buffer:
+
+ * _gh_: select to line begin
+ * _gl_: select to line end
+
+ * _gg_, _gk_: go to the first line
+ * _gj_: go to the last line
+
+ * _gt_, _gk_: go to the first displayed line
+ * _gc_, _gk_: go to the middle displayed line
+ * _gb_: go to the last displayed line
+
+ * _ga_: go to the previous (alternate) buffer
+ * _gf_: open the file whose name is selected
+
+Window commands
+---------------
+
+Some commands, all begining with z permit to manipulate the current
+window.
+
+ * _zz_ or _zc_: center the main selection in the window
+ * _zt_: scroll to put the main selection on the top line of the window
+ * _zb_: scroll to put the main selection on the bottom line of the window
 
 Multi Selection
 ---------------
