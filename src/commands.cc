@@ -101,7 +101,10 @@ void edit(const CommandParameters& params, Context& context)
     if (not buffer)
     {
         if (parser.has_option("scratch"))
+        {
+            BufferManager::instance().delete_buffer_if_exists(name);
             buffer = new Buffer(name, Buffer::Flags::None);
+        }
         else if (parser.has_option("fifo"))
             buffer = open_fifo(name, parser.option_value("fifo"), context);
         else
