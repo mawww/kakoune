@@ -1,5 +1,7 @@
 #include "hook_manager.hh"
 
+#include "debug.hh"
+
 namespace Kakoune
 {
 
@@ -25,7 +27,10 @@ void HookManager::run_hook(const String& hook_name,
         {
             hook(param, context);
         }
-        catch (runtime_error&) {}
+        catch (runtime_error& err)
+        {
+            write_debug("error running hook " + hook_name + ": " + err.what());
+        }
     }
 }
 
