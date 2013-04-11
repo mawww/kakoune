@@ -13,7 +13,7 @@ struct assert_failed : logic_error
     assert_failed(const String& message)
         : m_message(message) {}
 
-    String description() const override { return m_message; }
+    const char* what() const override { return m_message.c_str(); }
 private:
     String m_message;
 };

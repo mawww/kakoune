@@ -986,7 +986,7 @@ int main(int argc, char* argv[])
         }
         catch (Kakoune::runtime_error& error)
         {
-             write_debug("error while parsing kakrc: " + error.description());
+             write_debug("error while parsing kakrc: "_str + error.what());
         }
 
         if (parser.positional_count() != 0)
@@ -1010,7 +1010,7 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::exception& error)
     {
-        on_assert_failed(("uncaught exception:\n" + error.description()).c_str());
+        on_assert_failed(("uncaught exception:\n"_str + error.what()).c_str());
         return -1;
     }
     catch (std::exception& error)

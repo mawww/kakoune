@@ -9,18 +9,18 @@ namespace Kakoune
 struct exception
 {
     virtual ~exception() {}
-    virtual String description() const;
+    virtual const char* what() const;
 };
 
 struct runtime_error : exception
 {
-    runtime_error(const String& description)
-        : m_description(description) {}
+    runtime_error(String what)
+        : m_what(std::move(what)) {}
 
-    String description() const override { return m_description; }
+    const char* what() const override { return m_what.c_str(); }
 
 private:
-    String m_description;
+    String m_what;
 };
 
 struct logic_error : exception

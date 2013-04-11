@@ -450,7 +450,7 @@ private:
                 }
                 catch (runtime_error& e)
                 {
-                    write_debug("error running command '" + m_buffer + "' : " + e.description());
+                    write_debug("error running command '" + m_buffer + "' : " + e.what());
                 }
                 ClientManager::instance().redraw_clients();
                 close(socket);
