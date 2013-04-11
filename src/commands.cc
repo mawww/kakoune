@@ -73,7 +73,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         }
     });
 
-    buffer->hooks().add_hook("BufClose",
+    buffer->hooks().add_hook("BufClose", "",
         [buffer, watcher](const String&, const Context&) {
             // Check if fifo is still alive, else watcher is already dead
             if (buffer->flags() & Buffer::Flags::Fifo)
@@ -313,30 +313,36 @@ void rm_filter(const CommandParameters& params, Context& context)
     group.remove(parser[0]);
 }
 
+static HookManager& get_hook_manager(const String& scope, Context& context)
+{
+    if (scope == "global")
+        return GlobalHooks::instance();
+    else if (scope == "buffer")
+        return context.buffer().hooks();
+    else if (scope == "window")
+        return context.window().hooks();
+    throw runtime_error("error: no such hook container " + scope);
+}
+
 void add_hook(const CommandParameters& params, Context& context)
 {
-    if (params.size() != 4)
-        throw wrong_argument_count();
-
+    ParametersParser parser(params, { { "id", true } }, ParametersParser::Flags::None, 4, 4);
     // copy so that the lambda gets a copy as well
-    Regex regex(params[2].begin(), params[2].end());
-    String command = params[3];
+    Regex regex(parser[2].begin(), parser[2].end());
+    String command = parser[3];
     auto hook_func = [=](const String& param, Context& context) {
         if (boost::regex_match(param.begin(), param.end(), regex))
             CommandManager::instance().execute(command, context, {},
                                                { { "hook_param", param } });
     };
+    String id = parser.has_option("id") ? parser.option_value("id") : "";
+    get_hook_manager(parser[0], context).add_hook(parser[1], id, hook_func);
+}
 
-    const String& scope = params[0];
-    const String& name = params[1];
-    if (scope == "global")
-        GlobalHooks::instance().add_hook(name, hook_func);
-    else if (scope == "buffer")
-        context.buffer().hooks().add_hook(name, hook_func);
-    else if (scope == "window")
-        context.window().hooks().add_hook(name , hook_func);
-    else
-        throw runtime_error("error: no such hook container " + scope);
+void rm_hooks(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, {}, ParametersParser::Flags::None, 2, 2);
+    get_hook_manager(parser[0], context).remove_hooks(parser[1]);
 }
 
 EnvVarMap params_to_env_var_map(const CommandParameters& params)
@@ -895,6 +901,7 @@ void register_commands()
     cm.register_commands({ "rf", "rmfilter" }, rm_filter, group_rm_completer(get_filters));
 
     cm.register_command("hook", add_hook);
+    cm.register_command("rmhooks", rm_hooks);
 
     cm.register_command("source", exec_commands_in_file, filename_completer);
 

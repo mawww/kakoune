@@ -5,9 +5,18 @@
 namespace Kakoune
 {
 
-void HookManager::add_hook(const String& hook_name, HookFunc hook)
+void HookManager::add_hook(const String& hook_name, String id, HookFunc hook)
 {
-    m_hook[hook_name].push_back(hook);
+    auto& hooks = m_hook[hook_name];
+    hooks.append({std::move(id), std::move(hook)});
+}
+
+void HookManager::remove_hooks(const String& id)
+{
+    if (id.empty())
+        throw runtime_error("invalid id");
+    for (auto& hooks : m_hook)
+        hooks.second.remove_all(id);
 }
 
 void HookManager::run_hook(const String& hook_name,
@@ -25,11 +34,12 @@ void HookManager::run_hook(const String& hook_name,
     {
         try
         {
-            hook(param, context);
+            hook.second(param, context);
         }
         catch (runtime_error& err)
         {
-            write_debug("error running hook " + hook_name + ": " + err.what());
+            write_debug("error running hook " + hook_name + "/" +
+                        hook.first + ": " + err.what());
         }
     }
 }
