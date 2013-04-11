@@ -148,6 +148,29 @@ void do_go(Context& context)
         });
 }
 
+void do_disp_cmd(Context& context)
+{
+    context.input_handler().on_next_key([](const Key& key, Context& context) {
+        if (key.modifiers != Key::Modifiers::None or not context.has_window())
+            return;
+
+        Window& window = context.window();
+        switch (tolower(key.key))
+        {
+        case 'z':
+        case 'c':
+            context.window().center_selection();
+            break;
+        case 't':
+            context.window().display_selection_at(0);
+            break;
+        case 'b':
+            context.window().display_selection_at(window.dimensions().line-1);
+            break;
+        }
+    });
+}
+
 void do_replace_with_char(Context& context)
 {
     context.input_handler().on_next_key([](const Key& key, Context& context) {
@@ -722,6 +745,8 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
     { { Key::Modifiers::None, 'g' }, do_go<SelectMode::Replace> },
     { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
 
+    { { Key::Modifiers::None, 'z' }, do_disp_cmd },
+
     { { Key::Modifiers::None, 'y' }, do_yank },
     { { Key::Modifiers::None, 'Y' }, do_cat_yank },
     { { Key::Modifiers::None, 'p' }, repeated(do_paste<InsertMode::Append>) },
@@ -795,8 +820,6 @@ std::unordered_map<Key, std::function<void (Context& context)>> keymap =
 
     { { Key::Modifiers::None, '<' }, do_deindent },
     { { Key::Modifiers::None, '>' }, do_indent },
-
-    { { Key::Modifiers::Alt,  'c' }, [](Context& context) { if (context.has_window()) context.window().center_selection(); } },
 
     { { Key::Modifiers::None, Key::PageUp }, do_scroll<Key::PageUp> },
     { { Key::Modifiers::None, Key::PageDown }, do_scroll<Key::PageDown> },
