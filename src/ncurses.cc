@@ -7,6 +7,7 @@
 
 #include <map>
 
+#include <ncurses.h>
 #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -14,6 +15,8 @@
 
 namespace Kakoune
 {
+
+struct NCursesWin : WINDOW {};
 
 static void set_attribute(int attribute, bool on)
 {
@@ -374,8 +377,8 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
 
     m_selected_choice = 0;
     m_menu_top_line = 0;
-    m_menu_win = newwin((int)size.line, (int)size.column,
-                        (int)pos.line,  (int)pos.column);
+    m_menu_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
+                                     (int)pos.line,  (int)pos.column);
     draw_menu();
 }
 
@@ -477,8 +480,8 @@ void NCursesUI::info_show(const String& content, DisplayCoord anchor,
 
     DisplayCoord pos = compute_pos(anchor, size, m_menu_win);
 
-    m_info_win = newwin((int)size.line, (int)size.column,
-                        (int)pos.line,  (int)pos.column);
+    m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
+                                     (int)pos.line,  (int)pos.column);
 
     wbkgd(m_info_win, COLOR_PAIR(get_color_pair(colors)));
     wmove(m_info_win, 0, 0);
@@ -505,6 +508,11 @@ DisplayCoord NCursesUI::dimensions()
 void NCursesUI::set_input_callback(InputCallback callback)
 {
     m_input_callback = std::move(callback);
+}
+
+void NCursesUI::abort()
+{
+    endwin();
 }
 
 }

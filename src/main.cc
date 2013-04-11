@@ -925,7 +925,7 @@ void create_local_client(const String& init_command)
 
 void signal_handler(int signal)
 {
-    endwin();
+    NCursesUI::abort();
     const char* text = nullptr;
     switch (signal)
     {

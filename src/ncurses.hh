@@ -5,10 +5,10 @@
 #include "event_manager.hh"
 #include "user_interface.hh"
 
-#include <ncurses.h>
-
 namespace Kakoune
 {
+
+struct NCursesWin;
 
 class NCursesUI : public UserInterface
 {
@@ -39,6 +39,8 @@ public:
     void set_input_callback(InputCallback callback) override;
 
     DisplayCoord dimensions() override;
+
+    static void abort();
 private:
     friend void on_term_resize(int);
     void redraw();
@@ -49,7 +51,7 @@ private:
 
     DisplayLine m_status_line;
 
-    WINDOW* m_menu_win = nullptr;
+    NCursesWin* m_menu_win = nullptr;
     std::vector<String> m_choices;
     ColorPair m_menu_fg;
     ColorPair m_menu_bg;
@@ -58,7 +60,7 @@ private:
     LineCount m_menu_top_line = 0;
     void draw_menu();
 
-    WINDOW* m_info_win = nullptr;
+    NCursesWin* m_info_win = nullptr;
 
     FDWatcher     m_stdin_watcher;
     InputCallback m_input_callback;
