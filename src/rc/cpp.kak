@@ -22,12 +22,13 @@ hook global WinSetOption filetype=cpp %~
     addfilter -group cpp-filters regex ^(\h+)([^\n]*[^([{]\h*|$) \n \n$1
     addfilter -group cpp-filters regex ^(\h*)[^\n]*[([{]\h* \n '\n$1    '
     addfilter -group cpp-filters cleanup_whitespaces
-    hook window InsertEnd .* %{ exec -draft <a-x>s\h+$<ret>d }
+    hook window InsertEnd .* -id cpp-hooks %{ exec -draft <a-x>s\h+$<ret>d }
 ~
 
 hook global WinSetOption filetype=(?!cpp).* %{
     rmhl cpp-highlight
     rmfilter cpp-filters
+    rmhooks window cpp-hooks
 }
 
 hook global BufNew .*\.(h|hh|hpp|hxx|H) %{

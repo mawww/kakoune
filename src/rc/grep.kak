@@ -22,9 +22,9 @@ def -shell-params -file-completion \
 hook global WinSetOption filetype=grep %{
     addhl group grep-highlight
     addhl -group grep-highlight regex "^([^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
-    hook buffer NormalKey <c-m> jump
+    hook buffer -id grep-hooks NormalKey <c-m> jump
 }
 
-hook global WinSetOption filetype=(?!grep).* %{ rmhl grep-highlight; }
+hook global WinSetOption filetype=(?!grep).* %{ rmhl grep-highlight; rmhooks buffer grep-hooks }
 
 def jump %{ exec 'xs^([^:]+):(\d+):(\d+)?<ret>'; edit %reg{1} %reg{2} %reg{3} }
