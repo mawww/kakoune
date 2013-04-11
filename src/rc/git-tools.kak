@@ -55,3 +55,16 @@ def git-blame %{
             done; send_flags )
        ) >& /dev/null < /dev/null & }
 }
+
+def -shell-params git-show %{ %sh{
+    tmpfile=$(mktemp /tmp/kak-git-show-XXXXXX)
+    if git show "$@" > ${tmpfile}; then
+       echo "edit! -scratch *git-show*
+             exec |cat<space>${tmpfile}<ret>gk
+             nop %sh{rm ${tmpfile}}
+             setb filetype diff"
+    else
+       echo "echo %{git show '$@' failed, see *debug* buffer}"
+       rm ${tmpfile}
+    fi
+}}
