@@ -38,10 +38,18 @@ Window::~Window()
     m_options.unregister_watcher(*this);
 }
 
+void Window::display_selection_at(LineCount line)
+{
+    if (line >= 0 or line < m_dimensions.line)
+    {
+        auto cursor_line = main_selection().last().line();
+        m_position.line = std::max(0_line, cursor_line - line);
+    }
+}
+
 void Window::center_selection()
 {
-    BufferIterator cursor = main_selection().last();
-    m_position.line = std::max(0_line, cursor.line() - m_dimensions.line/2_line);
+    display_selection_at(m_dimensions.line/2_line);
 }
 
 void Window::update_display_buffer()

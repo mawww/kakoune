@@ -33,6 +33,7 @@ public:
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
     void center_selection();
+    void display_selection_at(LineCount line);
     void update_display_buffer();
 
     DisplayCoord display_position(const BufferIterator& it);
