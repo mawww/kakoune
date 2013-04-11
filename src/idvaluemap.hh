@@ -54,14 +54,15 @@ public:
 
     void remove(const Id& id)
     {
-        for (auto it = m_content.begin(); it != m_content.end(); ++it)
-        {
-            if (it->first == id)
-            {
-                m_content.erase(it);
-                return;
-            }
-        }
+        auto it = find(id);
+        if (it != end())
+            m_content.erase(it);
+    }
+
+    void remove_all(const Id& id)
+    {
+        for (auto it = find(id); it != end(); it = find(id))
+            m_content.erase(it);
     }
 
     template<typename Condition>
