@@ -200,11 +200,12 @@ Context& ClientManager::get_client_context(const String& name)
 
 static DisplayLine generate_status_line(const Context& context)
 {
-    BufferCoord cursor = context.editor().main_selection().last().coord();
-    std::ostringstream oss;
+    auto pos = context.editor().main_selection().last();
+    auto col = utf8::distance(context.buffer().iterator_at_line_begin(pos), pos);
 
+    std::ostringstream oss;
     oss << context.buffer().display_name()
-        << " " << (int)cursor.line+1 << "," << (int)cursor.column+1;
+        << " " << (int)pos.line()+1 << "," << (int)col+1;
     if (context.buffer().is_modified())
         oss << " [+]";
     if (context.input_handler().is_recording())
