@@ -218,7 +218,8 @@ bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
 
 inline String escape(const String& name)
 {
-    return name.replace("([ \\t;])", R"(\\\1)");
+    static Regex ex{"([ \\t;])"};
+    return boost::regex_replace(name, ex, R"(\\\1)");
 }
 
 template<typename T>

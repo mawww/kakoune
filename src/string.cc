@@ -50,13 +50,6 @@ std::vector<String> split(const String& str, char separator)
     return res;
 }
 
-String String::replace(const String& expression,
-                       const String& replacement) const
-{
-   boost::regex re(expression);
-   return String(boost::regex_replace(*this, re, replacement));
-}
-
 String option_to_string(const Regex& re)
 {
     return String{re.str()};

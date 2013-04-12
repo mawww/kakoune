@@ -201,7 +201,8 @@ TokenList parse(const String& line,
             if (opt_token_pos_info)
                 opt_token_pos_info->push_back({token_start, pos});
             String token = line.substr(token_start, pos - token_start);
-            token = token.replace(R"(\\([ \t;\n]))", "\\1");
+            static const Regex regex{R"(\\([ \t;\n]))"};
+            token = boost::regex_replace(token, regex, "\\1");
             result.push_back({type, token});
         }
 
