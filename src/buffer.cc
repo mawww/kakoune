@@ -39,10 +39,13 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
 
     Editor editor_for_hooks(*this);
     Context context(editor_for_hooks);
-    if (flags & Flags::File and flags & Flags::New)
-        m_hooks.run_hook("BufNew", m_name, context);
-    else
-        m_hooks.run_hook("BufOpen", m_name, context);
+    if (flags & Flags::File)
+    {
+        if (flags & Flags::New)
+            m_hooks.run_hook("BufNew", m_name, context);
+        else
+            m_hooks.run_hook("BufOpen", m_name, context);
+    }
 
     m_hooks.run_hook("BufCreate", m_name, context);
 
