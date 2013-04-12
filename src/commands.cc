@@ -432,10 +432,14 @@ void define_command(const CommandParameters& params, Context& context)
 
 void echo_message(const CommandParameters& params, Context& context)
 {
+    ParametersParser parser(params, { { "col", true } },
+                            ParametersParser::Flags::OptionsOnlyAtStart);
     String message;
-    for (auto& param : params)
+    for (auto& param : parser)
         message += param + " ";
-    context.print_status({ std::move(message), get_color("StatusLine") } );
+    ColorPair color = get_color(parser.has_option("col") ?
+                                parser.option_value("col") : "StatusLine");
+    context.print_status({ std::move(message), color } );
 }
 
 void write_debug_message(const CommandParameters& params, Context&)
