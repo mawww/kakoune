@@ -4,6 +4,7 @@
 #include "context.hh"
 #include "editor.hh"
 #include "event_manager.hh"
+#include "normal.hh"
 #include "register_manager.hh"
 #include "user_interface.hh"
 #include "utf8.hh"
@@ -13,8 +14,6 @@
 
 namespace Kakoune
 {
-
-extern std::unordered_map<Key, std::function<void (Context& context)>> keymap;
 
 class InputMode
 {
