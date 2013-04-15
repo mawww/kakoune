@@ -231,6 +231,10 @@ int main(int argc, char* argv[])
         {
              write_debug("error while parsing kakrc: "_str + error.what());
         }
+        catch (Kakoune::client_removed&)
+        {
+             write_debug("error while parsing kakrc: asked to quit");
+        }
 
         if (parser.positional_count() != 0)
         {
