@@ -49,9 +49,9 @@ public:
     Client&  get_client(const Context& context);
     Client&  get_client(const String& name);
     void set_client_name(Client& client, String name);
+    void remove_client(Client& client);
 
 private:
-    void remove_client(Client& client);
     String generate_name() const;
 
     std::vector<std::unique_ptr<Client>> m_clients;

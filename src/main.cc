@@ -134,8 +134,13 @@ void create_local_client(const String& init_command)
     };
 
     UserInterface* ui = new LocalNCursesUI{};
-    ClientManager::instance().create_client(
+    static Client* client = ClientManager::instance().create_client(
         std::unique_ptr<UserInterface>{ui}, init_command);
+    signal(SIGHUP, [](int) {
+        if (client)
+            ClientManager::instance().remove_client(*client);
+        client = nullptr;
+    });
 }
 
 void signal_handler(int signal)
