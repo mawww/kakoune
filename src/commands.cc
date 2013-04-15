@@ -535,7 +535,7 @@ void context_wrap(const CommandParameters& params, Context& context, Func func)
                             ParametersParser::Flags::None, 1);
 
     Context& real_context = parser.has_option("client") ?
-        ClientManager::instance().get_client_context(parser.option_value("client"))
+        ClientManager::instance().get_client(parser.option_value("client")).context()
       : context;
 
     if (parser.has_option("draft"))
@@ -745,7 +745,8 @@ void set_client_name(const CommandParameters& params, Context& context)
 {
     ParametersParser parser(params, OptionMap{},
                             ParametersParser::Flags::None, 1, 1);
-    ClientManager::instance().set_client_name(context, params[0]);
+    auto& manager = ClientManager::instance();
+    manager.set_client_name(manager.get_client(context), params[0]);
 }
 
 void set_register(const CommandParameters& params, Context& context)

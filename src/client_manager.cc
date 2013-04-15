@@ -11,26 +11,15 @@
 namespace Kakoune
 {
 
-struct ClientManager::Client
+Client::Client(std::unique_ptr<UserInterface>&& ui,
+               Window& window, String name)
+    : m_user_interface(std::move(ui)),
+      m_input_handler(*m_user_interface),
+      m_name(std::move(name))
 {
-    Client(std::unique_ptr<UserInterface>&& ui, Window& window,
-           String name)
-        : user_interface(std::move(ui)),
-          input_handler(*user_interface),
-          name(std::move(name))
-    {
-        kak_assert(not this->name.empty());
-        context().change_editor(window);
-    }
-    Client(Client&&) = delete;
-    Client& operator=(Client&& other) = delete;
-
-    Context& context() { return input_handler.context(); }
-
-    std::unique_ptr<UserInterface> user_interface;
-    InputHandler  input_handler;
-    String        name;
-};
+    kak_assert(not m_name.empty());
+    context().change_editor(window);
+}
 
 ClientManager::ClientManager() = default;
 ClientManager::~ClientManager() = default;
@@ -43,7 +32,7 @@ String ClientManager::generate_name() const
         bool found = false;
         for (auto& client : m_clients)
         {
-            if (client->name == name)
+            if (client->m_name == name)
             {
                 found = true;
                 break;
@@ -54,53 +43,57 @@ String ClientManager::generate_name() const
     }
 }
 
-void ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                  const String& init_commands)
+Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
+                                     const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
-    m_clients.emplace_back(new Client{std::move(ui), get_unused_window_for_buffer(buffer),
-                                      generate_name()});
-    Context*       context = &m_clients.back()->context();
+    Client* client = new Client{std::move(ui), get_unused_window_for_buffer(buffer),
+                                generate_name()};
+    m_clients.emplace_back(client);
     try
     {
-        CommandManager::instance().execute(init_commands, *context);
+        CommandManager::instance().execute(init_commands, client->context());
     }
     catch (Kakoune::runtime_error& error)
     {
-        context->print_status({ error.what(), get_color("Error") });
-        context->hooks().run_hook("RuntimeError", error.what(), *context);
+        client->context().print_status({ error.what(), get_color("Error") });
+        client->context().hooks().run_hook("RuntimeError", error.what(),
+                                           client->context());
     }
     catch (Kakoune::client_removed&)
     {
         m_clients.pop_back();
-        return;
+        return nullptr;
     }
 
-    context->ui().set_input_callback([context, this]() {
+    client->m_user_interface->set_input_callback([client, this]() {
         try
         {
-            context->input_handler().handle_available_inputs();
-            context->window().forget_timestamp();
+            client->m_input_handler.handle_available_inputs();
+            client->context().window().forget_timestamp();
         }
         catch (Kakoune::runtime_error& error)
         {
-            context->print_status({ error.what(), get_color("Error") });
-            context->hooks().run_hook("RuntimeError", error.what(), *context);
+            client->context().print_status({ error.what(), get_color("Error") });
+            client->context().hooks().run_hook("RuntimeError", error.what(),
+                                               client->context());
         }
         catch (Kakoune::client_removed&)
         {
-            ClientManager::instance().remove_client_by_context(*context);
+            ClientManager::instance().remove_client(*client);
         }
         ClientManager::instance().redraw_clients();
     });
     redraw_clients();
+
+    return client;
 }
 
-void ClientManager::remove_client_by_context(Context& context)
+void ClientManager::remove_client(Client& client)
 {
     for (auto it = m_clients.begin(); it != m_clients.end(); ++it)
     {
-        if (&(*it)->context() == &context)
+        if (it->get() == &client)
         {
              m_clients.erase(it);
              return;
@@ -139,7 +132,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             continue;
 
         if (client->context().editor().is_editing())
-            throw runtime_error("client '" + client->name + "' is inserting in '" +
+            throw runtime_error("client '" + client->m_name + "' is inserting in '" +
                                 buffer.display_name() + '\'');
 
         // change client context to edit the first buffer which is not the
@@ -161,40 +154,32 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_windows.erase(end, m_windows.end());
 }
 
-void ClientManager::set_client_name(Context& context, String name)
+void ClientManager::set_client_name(Client& client, String name)
 {
     auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
-                                 { return client->name == name; });
-    if (it != m_clients.end() and &(*it)->context() != &context)
+                                 { return client->m_name == name; });
+    if (it != m_clients.end() and it->get() != &client)
         throw runtime_error("name not unique: " + name);
-
-    for (auto& client : m_clients)
-    {
-        if (&client->context() == &context)
-        {
-            client->name = std::move(name);
-            return;
-        }
-    }
-    throw runtime_error("no client for current context");
+    client.m_name = std::move(name);
 }
 
-String ClientManager::get_client_name(const Context& context)
+Client& ClientManager::get_client(const Context& context)
 {
     for (auto& client : m_clients)
     {
         if (&client->context() == &context)
-            return client->name;
+            return *client;
     }
     throw runtime_error("no client for current context");
 }
 
-Context& ClientManager::get_client_context(const String& name)
+Client& ClientManager::get_client(const String& name)
 {
-    auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
-                                 { return client->name == name; });
-    if (it != m_clients.end())
-        return (*it)->context();
+    for (auto& client : m_clients)
+    {
+        if (client->m_name == name)
+            return *client;
+    }
     throw runtime_error("no client named: " + name);
 }
 
