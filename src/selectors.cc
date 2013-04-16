@@ -379,6 +379,22 @@ Selection select_whole_lines(const Selection& selection)
     return Selection(first, last);
 }
 
+Selection trim_partial_lines(const Selection& selection)
+{
+    // same as select_whole_lines
+    BufferIterator first = selection.first();
+    BufferIterator last =  selection.last();
+    BufferIterator& to_line_start = first <= last ? first : last;
+    BufferIterator& to_line_end = first <= last ? last : first;
+
+    while (not is_begin(to_line_start) and *(to_line_start-1) != '\n')
+        ++to_line_start;
+    while (*(to_line_end+1) != '\n' and to_line_end != to_line_start)
+        --to_line_end;
+
+    return Selection(first, last);
+}
+
 Selection select_whole_buffer(const Selection& selection)
 {
     const Buffer& buffer = selection.first().buffer();

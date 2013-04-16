@@ -29,6 +29,7 @@ template<bool punctuation_is_word>
 Selection select_whole_word(const Selection& selection, bool inner);
 Selection select_whole_lines(const Selection& selection);
 Selection select_whole_buffer(const Selection& selection);
+Selection trim_partial_lines(const Selection& selection);
 
 template<bool forward>
 Selection select_next_match(const Selection& selection, const Regex& regex);

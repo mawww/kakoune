@@ -759,6 +759,7 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'x' }, repeated(select<SelectMode::Replace>(select_line)) },
     { { Key::Modifiers::None, 'X' }, repeated(select<SelectMode::Extend>(select_line)) },
     { { Key::Modifiers::Alt,  'x' }, select<SelectMode::Replace>(select_whole_lines) },
+    { { Key::Modifiers::Alt,  'X' }, select<SelectMode::Replace>(trim_partial_lines) },
 
     { { Key::Modifiers::None, 'm' }, select<SelectMode::Replace>(select_matching) },
     { { Key::Modifiers::None, 'M' }, select<SelectMode::Extend>(select_matching) },

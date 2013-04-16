@@ -59,6 +59,8 @@ Basic Movement
  * _x_: select line on which selection end lies (or next line when end lies on
         an end-of-line)
  * _alt-x_: expand selections to contain full lines (including end-of-lines)
+ * _alt-X_: trim selections to only contain full lines (not including last
+            end-of-line)
 
  * _%_: select whole buffer
 
