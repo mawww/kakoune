@@ -21,18 +21,18 @@ namespace Kakoune
 using namespace std::placeholders;
 
 template<InsertMode mode>
-void do_insert(Context& context)
+void insert(Context& context)
 {
     context.input_handler().insert(mode);
 }
 
-void do_repeat_insert(Context& context)
+void repeat_insert(Context& context)
 {
     context.input_handler().repeat_last_insert();
 }
 
 template<SelectMode mode>
-void do_go(Context& context)
+void go(Context& context)
 {
     int count = context.numeric_param();
     if (count != 0)
@@ -132,7 +132,7 @@ void do_go(Context& context)
         });
 }
 
-void do_view_commands(Context& context)
+void view_commands(Context& context)
 {
     context.input_handler().on_next_key([](const Key& key, Context& context) {
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
@@ -161,7 +161,7 @@ void do_view_commands(Context& context)
     });
 }
 
-void do_replace_with_char(Context& context)
+void replace_with_char(Context& context)
 {
     context.input_handler().on_next_key([](const Key& key, Context& context) {
         Editor& editor = context.editor();
@@ -172,7 +172,7 @@ void do_replace_with_char(Context& context)
     });
 }
 
-Codepoint swap_case(Codepoint cp)
+Codepoint swapped_case(Codepoint cp)
 {
     if ('A' <= cp and cp <= 'Z')
         return cp - 'A' + 'a';
@@ -181,19 +181,19 @@ Codepoint swap_case(Codepoint cp)
     return cp;
 }
 
-void do_swap_case(Context& context)
+void swap_case(Context& context)
 {
     Editor& editor = context.editor();
     std::vector<String> sels = editor.selections_content();
     for (auto& sel : sels)
     {
         for (auto& c : sel)
-            c = swap_case(c);
+            c = swapped_case(c);
     }
     editor.insert(sels, InsertMode::Replace);
 }
 
-void do_command(Context& context)
+void command(Context& context)
 {
     context.input_handler().prompt(
         ":", get_color("Prompt"),
@@ -204,7 +204,7 @@ void do_command(Context& context)
         });
 }
 
-void do_pipe(Context& context)
+void pipe(Context& context)
 {
     context.input_handler().prompt("pipe:", get_color("Prompt"), complete_nothing,
         [](const String& cmdline, PromptEvent event, Context& context)
@@ -223,7 +223,7 @@ void do_pipe(Context& context)
 }
 
 template<SelectMode mode, bool forward>
-void do_search(Context& context)
+void search(Context& context)
 {
     const char* prompt = forward ? "search:" : "reverse search:";
     SelectionList selections = context.editor().selections();
@@ -270,7 +270,7 @@ void do_search(Context& context)
 }
 
 template<SelectMode mode, bool forward>
-void do_search_next(Context& context)
+void search_next(Context& context)
 {
     const String& str = RegisterManager::instance()['/'].values(context)[0];
     if (not str.empty())
@@ -320,13 +320,13 @@ void use_selection_as_search_pattern(Context& context)
     RegisterManager::instance()['/'] = patterns;
 }
 
-void do_yank(Context& context)
+void yank(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
     context.print_status({ "yanked " + int_to_str(context.editor().selections().size()) + " selections", get_color("Information") });
 }
 
-void do_cat_yank(Context& context)
+void cat_yank(Context& context)
 {
     auto sels = context.editor().selections_content();
     String str;
@@ -337,16 +337,16 @@ void do_cat_yank(Context& context)
                            int_to_str(sels.size()) + " selections", get_color("Information") });
 }
 
-void do_erase(Context& context)
+void erase(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
     context.editor().erase();
 }
 
-void do_change(Context& context)
+void change(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    do_insert<InsertMode::Replace>(context);
+    insert<InsertMode::Replace>(context);
 }
 
 static InsertMode adapt_for_linewise(InsertMode mode)
@@ -363,7 +363,7 @@ static InsertMode adapt_for_linewise(InsertMode mode)
 }
 
 template<InsertMode insert_mode>
-void do_paste(Context& context)
+void paste(Context& context)
 {
     Editor& editor = context.editor();
     auto strings = RegisterManager::instance()['"'].values(context);
@@ -403,7 +403,7 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
         });
 }
 
-void do_select_regex(Context& context)
+void select_regex(Context& context)
 {
     regex_prompt(context, "select:", [](Regex ex, Context& context) {
         if (ex.empty())
@@ -415,7 +415,7 @@ void do_select_regex(Context& context)
     });
 }
 
-void do_split_regex(Context& context)
+void split_regex(Context& context)
 {
     regex_prompt(context, "split:", [](Regex ex, Context& context) {
         if (ex.empty())
@@ -427,12 +427,12 @@ void do_split_regex(Context& context)
     });
 }
 
-void do_split_lines(Context& context)
+void split_lines(Context& context)
 {
     context.editor().multi_select(std::bind(split_selection, _1, Regex{"^"}));
 }
 
-void do_join(Context& context)
+void join(Context& context)
 {
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
@@ -454,7 +454,7 @@ void do_join(Context& context)
 }
 
 template<bool matching>
-void do_keep(Context& context)
+void keep(Context& context)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
     regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
@@ -472,7 +472,7 @@ void do_keep(Context& context)
     });
 }
 
-void do_indent(Context& context)
+void indent(Context& context)
 {
     size_t width = context.options()["indentwidth"].get<int>();
     String indent(' ', width);
@@ -485,7 +485,7 @@ void do_indent(Context& context)
     editor.insert(indent, InsertMode::Insert);
 }
 
-void do_deindent(Context& context)
+void deindent(Context& context)
 {
     int width = context.options()["indentwidth"].get<int>();
     Editor& editor = context.editor();
@@ -498,7 +498,7 @@ void do_deindent(Context& context)
 }
 
 template<SurroundFlags flags>
-void do_select_object(Context& context)
+void select_object(Context& context)
 {
     context.input_handler().on_next_key(
     [](const Key& key, Context& context) {
@@ -529,10 +529,10 @@ void do_select_object(Context& context)
 }
 
 template<Key::NamedKey key>
-void do_scroll(Context& context)
+void scroll(Context& context)
 {
     static_assert(key == Key::PageUp or key == Key::PageDown,
-                  "do_scrool only implements PageUp and PageDown");
+                  "scrool only implements PageUp and PageDown");
     Window& window = context.window();
     Buffer& buffer = context.buffer();
     DisplayCoord position = window.position();
@@ -555,7 +555,7 @@ void do_scroll(Context& context)
     window.set_position(position);
 }
 
-void do_rotate_selections(Context& context)
+void rotate_selections(Context& context)
 {
     int count = context.numeric_param();
     if (count == 0)
@@ -700,37 +700,37 @@ KeyMap keymap =
     { { Key::Modifiers::Alt,  'T' }, select_to_next_char<SelectFlags::Extend | SelectFlags::Reverse> },
     { { Key::Modifiers::Alt,  'F' }, select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend | SelectFlags::Reverse> },
 
-    { { Key::Modifiers::None, 'd' }, do_erase },
-    { { Key::Modifiers::None, 'c' }, do_change },
-    { { Key::Modifiers::None, 'i' }, do_insert<InsertMode::Insert> },
-    { { Key::Modifiers::None, 'I' }, do_insert<InsertMode::InsertAtLineBegin> },
-    { { Key::Modifiers::None, 'a' }, do_insert<InsertMode::Append> },
-    { { Key::Modifiers::None, 'A' }, do_insert<InsertMode::AppendAtLineEnd> },
-    { { Key::Modifiers::None, 'o' }, do_insert<InsertMode::OpenLineBelow> },
-    { { Key::Modifiers::None, 'O' }, do_insert<InsertMode::OpenLineAbove> },
-    { { Key::Modifiers::None, 'r' }, do_replace_with_char },
+    { { Key::Modifiers::None, 'd' }, erase },
+    { { Key::Modifiers::None, 'c' }, change },
+    { { Key::Modifiers::None, 'i' }, insert<InsertMode::Insert> },
+    { { Key::Modifiers::None, 'I' }, insert<InsertMode::InsertAtLineBegin> },
+    { { Key::Modifiers::None, 'a' }, insert<InsertMode::Append> },
+    { { Key::Modifiers::None, 'A' }, insert<InsertMode::AppendAtLineEnd> },
+    { { Key::Modifiers::None, 'o' }, insert<InsertMode::OpenLineBelow> },
+    { { Key::Modifiers::None, 'O' }, insert<InsertMode::OpenLineAbove> },
+    { { Key::Modifiers::None, 'r' }, replace_with_char },
 
-    { { Key::Modifiers::None, 'g' }, do_go<SelectMode::Replace> },
-    { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
+    { { Key::Modifiers::None, 'g' }, go<SelectMode::Replace> },
+    { { Key::Modifiers::None, 'G' }, go<SelectMode::Extend> },
 
-    { { Key::Modifiers::None, 'v' }, do_view_commands },
+    { { Key::Modifiers::None, 'v' }, view_commands },
 
-    { { Key::Modifiers::None, 'y' }, do_yank },
-    { { Key::Modifiers::None, 'Y' }, do_cat_yank },
-    { { Key::Modifiers::None, 'p' }, repeated(do_paste<InsertMode::Append>) },
-    { { Key::Modifiers::None, 'P' }, repeated(do_paste<InsertMode::Insert>) },
-    { { Key::Modifiers::Alt,  'p' }, do_paste<InsertMode::Replace> },
+    { { Key::Modifiers::None, 'y' }, yank },
+    { { Key::Modifiers::None, 'Y' }, cat_yank },
+    { { Key::Modifiers::None, 'p' }, repeated(paste<InsertMode::Append>) },
+    { { Key::Modifiers::None, 'P' }, repeated(paste<InsertMode::Insert>) },
+    { { Key::Modifiers::Alt,  'p' }, paste<InsertMode::Replace> },
 
-    { { Key::Modifiers::None, 's' }, do_select_regex },
-    { { Key::Modifiers::None, 'S' }, do_split_regex },
-    { { Key::Modifiers::Alt,  's' }, do_split_lines },
+    { { Key::Modifiers::None, 's' }, select_regex },
+    { { Key::Modifiers::None, 'S' }, split_regex },
+    { { Key::Modifiers::Alt,  's' }, split_lines },
 
-    { { Key::Modifiers::None, '.' }, do_repeat_insert },
+    { { Key::Modifiers::None, '.' }, repeat_insert },
 
     { { Key::Modifiers::None, '%' }, [](Context& context) { context.editor().clear_selections(); context.editor().select(select_whole_buffer); } },
 
-    { { Key::Modifiers::None, ':' }, do_command },
-    { { Key::Modifiers::None, '|' }, do_pipe },
+    { { Key::Modifiers::None, ':' }, command },
+    { { Key::Modifiers::None, '|' }, pipe },
     { { Key::Modifiers::None, ' ' }, [](Context& context) { int count = context.numeric_param();
                                                             if (count == 0) context.editor().clear_selections();
                                                             else context.editor().keep_selection(count-1); } },
@@ -763,44 +763,44 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'm' }, select<SelectMode::Replace>(select_matching) },
     { { Key::Modifiers::None, 'M' }, select<SelectMode::Extend>(select_matching) },
 
-    { { Key::Modifiers::None, '/' }, do_search<SelectMode::Replace, true> },
-    { { Key::Modifiers::None, '?' }, do_search<SelectMode::Extend, true> },
-    { { Key::Modifiers::Alt,  '/' }, do_search<SelectMode::Replace, false> },
-    { { Key::Modifiers::Alt,  '?' }, do_search<SelectMode::Extend, false> },
-    { { Key::Modifiers::None, 'n' }, do_search_next<SelectMode::Replace, true> },
-    { { Key::Modifiers::Alt,  'n' }, do_search_next<SelectMode::ReplaceMain, true> },
-    { { Key::Modifiers::None, 'N' }, do_search_next<SelectMode::Append, true> },
+    { { Key::Modifiers::None, '/' }, search<SelectMode::Replace, true> },
+    { { Key::Modifiers::None, '?' }, search<SelectMode::Extend, true> },
+    { { Key::Modifiers::Alt,  '/' }, search<SelectMode::Replace, false> },
+    { { Key::Modifiers::Alt,  '?' }, search<SelectMode::Extend, false> },
+    { { Key::Modifiers::None, 'n' }, search_next<SelectMode::Replace, true> },
+    { { Key::Modifiers::Alt,  'n' }, search_next<SelectMode::ReplaceMain, true> },
+    { { Key::Modifiers::None, 'N' }, search_next<SelectMode::Append, true> },
     { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern<true> },
     { { Key::Modifiers::Alt,  '*' }, use_selection_as_search_pattern<false> },
 
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status({ "nothing left to undo", get_color("Information") }); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status({ "nothing left to redo", get_color("Information") }); } }) },
 
-    { { Key::Modifiers::Alt,  'i' }, do_select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd | SurroundFlags::Inner> },
-    { { Key::Modifiers::Alt,  'a' }, do_select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd> },
-    { { Key::Modifiers::None, ']' }, do_select_object<SurroundFlags::ToEnd> },
-    { { Key::Modifiers::None, '[' }, do_select_object<SurroundFlags::ToBegin> },
+    { { Key::Modifiers::Alt,  'i' }, select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd | SurroundFlags::Inner> },
+    { { Key::Modifiers::Alt,  'a' }, select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd> },
+    { { Key::Modifiers::None, ']' }, select_object<SurroundFlags::ToEnd> },
+    { { Key::Modifiers::None, '[' }, select_object<SurroundFlags::ToBegin> },
 
-    { { Key::Modifiers::Alt,  'j' }, do_join },
+    { { Key::Modifiers::Alt,  'j' }, join },
 
-    { { Key::Modifiers::Alt,  'k' }, do_keep<true> },
-    { { Key::Modifiers::Alt,  'K' }, do_keep<false> },
+    { { Key::Modifiers::Alt,  'k' }, keep<true> },
+    { { Key::Modifiers::Alt,  'K' }, keep<false> },
 
-    { { Key::Modifiers::None, '<' }, do_deindent },
-    { { Key::Modifiers::None, '>' }, do_indent },
+    { { Key::Modifiers::None, '<' }, deindent },
+    { { Key::Modifiers::None, '>' }, indent },
 
-    { { Key::Modifiers::None, Key::PageUp }, do_scroll<Key::PageUp> },
-    { { Key::Modifiers::None, Key::PageDown }, do_scroll<Key::PageDown> },
+    { { Key::Modifiers::None, Key::PageUp }, scroll<Key::PageUp> },
+    { { Key::Modifiers::None, Key::PageDown }, scroll<Key::PageDown> },
 
     { { Key::Modifiers::Control, 'i' }, jump<JumpDirection::Forward> },
     { { Key::Modifiers::Control, 'o' }, jump<JumpDirection::Backward> },
 
-    { { Key::Modifiers::Alt,  'r' }, do_rotate_selections },
+    { { Key::Modifiers::Alt,  'r' }, rotate_selections },
 
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
     { { Key::Modifiers::None, 'Q' }, replay_macro },
 
-    { { Key::Modifiers::None, '~' }, do_swap_case },
+    { { Key::Modifiers::None, '~' }, swap_case },
 };
 
 }
