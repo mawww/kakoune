@@ -132,7 +132,7 @@ void do_go(Context& context)
         });
 }
 
-void do_disp_cmd(Context& context)
+void do_view_commands(Context& context)
 {
     context.input_handler().on_next_key([](const Key& key, Context& context) {
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
@@ -141,7 +141,7 @@ void do_disp_cmd(Context& context)
         Window& window = context.window();
         switch (tolower(key.key))
         {
-        case 'z':
+        case 'v':
         case 'c':
             context.window().center_selection();
             break;
@@ -713,7 +713,7 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'g' }, do_go<SelectMode::Replace> },
     { { Key::Modifiers::None, 'G' }, do_go<SelectMode::Extend> },
 
-    { { Key::Modifiers::None, 'z' }, do_disp_cmd },
+    { { Key::Modifiers::None, 'v' }, do_view_commands },
 
     { { Key::Modifiers::None, 'y' }, do_yank },
     { { Key::Modifiers::None, 'Y' }, do_cat_yank },
