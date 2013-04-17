@@ -1,4 +1,5 @@
 decl line-flag-list git_diff_flags
+decl str docsclient
 
 def git-diff-update-buffer %{ %sh{
     added_lines=""
@@ -59,10 +60,14 @@ def git-blame %{
 def -shell-params git-show %{ %sh{
     tmpfile=$(mktemp /tmp/kak-git-show-XXXXXX)
     if git show "$@" > ${tmpfile}; then
-       echo "edit! -scratch *git-show*
-             exec |cat<space>${tmpfile}<ret>gk
-             nop %sh{rm ${tmpfile}}
-             setb filetype diff"
+        [[ -n "$kak_opt_docsclient" ]] && echo "eval -client '$kak_opt_docsclient' %{"
+
+        echo "edit! -scratch *git-show*
+              exec |cat<space>${tmpfile}<ret>gk
+              nop %sh{rm ${tmpfile}}
+              setb filetype diff"
+
+        [[ -n "$kak_opt_docsclient" ]] && echo "}"
     else
        echo "echo %{git show '$@' failed, see *debug* buffer}"
        rm ${tmpfile}

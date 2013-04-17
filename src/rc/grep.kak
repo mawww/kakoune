@@ -1,4 +1,5 @@
 decl str grepcmd 'grep -RHn'
+decl str toolsclient
 
 def -shell-params -file-completion \
     grep %{ %sh{
@@ -10,13 +11,13 @@ def -shell-params -file-completion \
          ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
      fi
 
-     if [[ -n "$kak_opt_toolsclient" ]]; then echo "eval -client '$kak_opt_toolsclient' %{"; fi
+     [[ -n "$kak_opt_toolsclient" ]] && echo "eval -client '$kak_opt_toolsclient' %{"
 
      echo "edit! -fifo ${output} *grep*
            setb filetype grep
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
 
-     if [[ -n "$kak_opt_toolsclient" ]]; then echo "}"; fi
+     [[ -n "$kak_opt_toolsclient" ]] && echo "}"
 }}
 
 hook global WinSetOption filetype=grep %{
