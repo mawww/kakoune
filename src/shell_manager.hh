@@ -30,7 +30,6 @@ public:
     void register_env_var(const String& regex, EnvVarRetriever retriever);
 
 private:
-    Regex                                          m_regex;
     std::vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
 };
 

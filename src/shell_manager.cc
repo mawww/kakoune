@@ -9,10 +9,10 @@
 
 namespace Kakoune
 {
-String env_var_regex(R"(\$\{kak_(\w+)[^}]*\}|\$kak_(\w+))");
+
+static const Regex env_var_regex(R"(\$\{kak_(\w+)[^}]*\}|\$kak_(\w+))");
 
 ShellManager::ShellManager()
-   : m_regex(env_var_regex.begin(), env_var_regex.end())
 {
 }
 
@@ -79,7 +79,7 @@ String ShellManager::pipe(const String& input,
         dup2(error_pipe[1], 2); close(error_pipe[1]);
         dup2(write_pipe[0], 0); close(write_pipe[0]);
 
-        boost::regex_iterator<String::const_iterator> it(cmdline.begin(), cmdline.end(), m_regex);
+        boost::regex_iterator<String::const_iterator> it(cmdline.begin(), cmdline.end(), env_var_regex);
         boost::regex_iterator<String::const_iterator> end;
 
         while (it != end)
