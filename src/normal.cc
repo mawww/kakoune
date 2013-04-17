@@ -174,11 +174,8 @@ void replace_with_char(Context& context)
 
 Codepoint swapped_case(Codepoint cp)
 {
-    if ('A' <= cp and cp <= 'Z')
-        return cp - 'A' + 'a';
-    if ('a' <= cp and cp <= 'z')
-        return cp - 'a' + 'A';
-    return cp;
+    Codepoint res = std::tolower(cp);
+    return res == cp ? std::toupper(cp) : res;
 }
 
 void swap_case(Context& context)
