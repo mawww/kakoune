@@ -27,6 +27,7 @@ public:
 
     template<typename T> const T& get() const;
     template<typename T> void set(const T& val);
+    template<typename T> bool is_of_type() const;
 
     virtual String get_as_string() const = 0;
     virtual void   set_from_string(const String& str) = 0;
@@ -139,6 +140,11 @@ template<typename T> void Option::set(const T& val)
     return typed_opt->set(val);
 }
 
+template<typename T> bool Option::is_of_type() const
+{
+    return dynamic_cast<const TypedOption<T>*>(this) != nullptr;
+}
+
 template<typename T>
 auto find_option(T& container, const String& name) -> decltype(container.begin())
 {
@@ -155,8 +161,13 @@ public:
     template<typename T>
     Option& declare_option(const String& name, const T& value)
     {
-        if (find_option(m_options, name) != m_options.end())
-            throw runtime_error("option " + name + " already declared");
+        auto it = find_option(m_options, name);
+        if (it != m_options.end())
+        {
+            if ((*it)->is_of_type<T>())
+                return **it;
+            throw runtime_error("option " + name + " already declared with different type");
+        }
         m_options.emplace_back(new TypedOption<T>{*this, name, value});
         return *m_options.back();
     }
