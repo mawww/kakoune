@@ -532,7 +532,7 @@ template<typename Func>
 void context_wrap(const CommandParameters& params, Context& context, Func func)
 {
     ParametersParser parser(params, { { "client", true }, { "draft", false }},
-                            ParametersParser::Flags::None, 1);
+                            ParametersParser::Flags::OptionsOnlyAtStart, 1);
 
     Context& real_context = parser.has_option("client") ?
         ClientManager::instance().get_client(parser.option_value("client")).context()
