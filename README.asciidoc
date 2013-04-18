@@ -588,8 +588,11 @@ Existing commands files are:
  * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
  * *rc/git.kak*: provides various git format highlighting (commit message editing,
      interactive rebase)
+ * *rc/git-tools.kak*: provides some git integration, like +git-blame+, +git-show+
+     or +git-diff-show+
  * *rc/make.kak*: provides the +make+ and +errjump+ commands along with highlighting
      for compiler output.
+ * *rc/man.kak*: provides the +man+ command 
  * *rc/grep.kak*: provides the +grep+ and +gjump+ commands along with highlighting
      for grep output.
  * *rc/global.kak*: provides the +tag+ command to jump on a tag definition using
@@ -603,5 +606,9 @@ Existing commands files are:
  * *rc/clang.kak*: provides the +clang-enable-autocomplete+ command for C/C++ 
      insert mode completion support. This needs uses clang++ compiler.
 
-Certain command files defines options, such as grepcmd (for :grep) or
-termcmd (for :new).
+Certain command files defines options, such as +grepcmd+ (for :grep) +makecmd+
+(for :make) or +termcmd+ (for :new).
+
+Some options are shared with commands. grep and make honor the +toolsclient+ option,
+if specified, to open their buffer in it rather than the current client. man honor
+the +docsclient+ option for the same purpose.
