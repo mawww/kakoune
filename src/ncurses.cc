@@ -221,6 +221,18 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         move((int)m_dimensions.line, (int)col);
         draw_line(mode_line, col);
     }
+
+    const char* tsl = tigetstr((char*)"tsl");
+    const char* fsl = tigetstr((char*)"fsl");
+    if (tsl != 0 and (ptrdiff_t)tsl != -1 and fsl != 0 and (ptrdiff_t)fsl != -1)
+    {
+        String title;
+        for (auto& atom : mode_line)
+            title += atom.content.content();
+        title += " - Kakoune";
+        printf("%s%s%s", tsl, title.c_str(), fsl);
+    }
+
     redraw();
 }
 
