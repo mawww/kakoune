@@ -19,6 +19,7 @@
 #include "remote.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "window.hh"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -98,6 +99,12 @@ void register_env_vars()
                                    { auto& sel = context.editor().main_selection();
                                      auto beg = sel.begin();
                                      return int_to_str((int)beg.line() + 1) + ':' + int_to_str((int)beg.column() + 1) + '+' + int_to_str((int)(sel.end() - beg)); });
+    shell_manager.register_env_var("window_width",
+                                   [](const String& name, const Context& context)
+                                   { return int_to_str((int)context.window().dimensions().column); });
+    shell_manager.register_env_var("window_height",
+                                   [](const String& name, const Context& context)
+                                   { return int_to_str((int)context.window().dimensions().line); });
 }
 
 void register_registers()
