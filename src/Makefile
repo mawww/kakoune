@@ -34,6 +34,6 @@ XDG_CONFIG_HOME ?= $(HOME)/.config
 
 userconfig:
 	mkdir -p $(XDG_CONFIG_HOME)/kak/autoload
-	ln -s $(CURDIR)/rc/{asciidoc,client,cpp,diff,git,grep,kakrc,make,sh,mail}.kak $(XDG_CONFIG_HOME)/kak/autoload/
+	ln -s $(CURDIR)/rc/{asciidoc,client,cpp,diff,git,grep,kakrc,make,sh,mail,man}.kak $(XDG_CONFIG_HOME)/kak/autoload/
 
 .PHONY: tags userconfig
