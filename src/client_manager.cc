@@ -183,14 +183,15 @@ Client& ClientManager::get_client(const String& name)
     throw runtime_error("no client named: " + name);
 }
 
-static DisplayLine generate_status_line(const Context& context)
+static DisplayLine generate_status_line(Client& client)
 {
+    auto& context = client.context();
     auto pos = context.editor().main_selection().last();
     auto col = utf8::distance(context.buffer().iterator_at_line_begin(pos), pos);
 
     std::ostringstream oss;
     oss << context.buffer().display_name()
-        << " " << (int)pos.line()+1 << "," << (int)col+1;
+        << " " << (int)pos.line()+1 << ":" << (int)col+1;
     if (context.buffer().is_modified())
         oss << " [+]";
     if (context.input_handler().is_recording())
@@ -200,6 +201,7 @@ static DisplayLine generate_status_line(const Context& context)
     oss << " [" << context.editor().selections().size() << " sel]";
     if (context.editor().is_editing())
         oss << " [insert]";
+    oss << " - " << client.name();
     return { oss.str(), get_color("StatusLine") };
 }
 
@@ -217,7 +219,7 @@ void ClientManager::redraw_clients() const
             context.window().update_display_buffer();;
 
             context.ui().draw(context.window().display_buffer(),
-                              generate_status_line(context));
+                              generate_status_line(*client));
         }
     }
 }
