@@ -243,6 +243,11 @@ int main(int argc, char* argv[])
              write_debug("error while parsing kakrc: asked to quit");
         }
 
+        {
+            Context empty_context;
+            global_hooks.run_hook("KakBegin", "", empty_context);
+        }
+
         if (parser.positional_count() != 0)
         {
             // create buffers in reverse order so that the first given buffer
@@ -261,6 +266,11 @@ int main(int argc, char* argv[])
 
         while (not client_manager.empty())
             event_manager.handle_next_events();
+
+        {
+            Context empty_context;
+            global_hooks.run_hook("KakEnd", "", empty_context);
+        }
     }
     catch (Kakoune::exception& error)
     {
