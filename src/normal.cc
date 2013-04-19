@@ -32,7 +32,7 @@ void repeat_insert(Context& context)
 }
 
 template<SelectMode mode>
-void go(Context& context)
+void goto_commands(Context& context)
 {
     int count = context.numeric_param();
     if (count != 0)
@@ -707,8 +707,8 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'O' }, insert<InsertMode::OpenLineAbove> },
     { { Key::Modifiers::None, 'r' }, replace_with_char },
 
-    { { Key::Modifiers::None, 'g' }, go<SelectMode::Replace> },
-    { { Key::Modifiers::None, 'G' }, go<SelectMode::Extend> },
+    { { Key::Modifiers::None, 'g' }, goto_commands<SelectMode::Replace> },
+    { { Key::Modifiers::None, 'G' }, goto_commands<SelectMode::Extend> },
 
     { { Key::Modifiers::None, 'v' }, view_commands },
 
