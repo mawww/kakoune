@@ -223,7 +223,7 @@ template<SelectMode mode, bool forward>
 void search(Context& context)
 {
     const char* prompt = forward ? "search:" : "reverse search:";
-    SelectionList selections = context.editor().selections();
+    DynamicSelectionList selections{context.buffer(), context.editor().selections()};
     context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
             try
