@@ -1,36 +1,47 @@
-decl line-flag-list git_diff_flags
 decl str docsclient
 
-def git-diff-update-buffer %{ %sh{
-    added_lines=""
-    removed_lines=""
-    git diff -U0 $kak_bufname | {
-        line=0
-        flags="0|red|."
-        while read; do
-            if [[ $REPLY =~ ^---.* ]]; then
-                continue
-            elif [[ $REPLY =~ ^@@.-[0-9]+(,[0-9]+)?.\+([0-9]+)(,[0-9]+)?.@@.* ]]; then
-                line=${BASH_REMATCH[2]}
-            elif [[ $REPLY =~ ^\+ ]]; then
-                flags="$flags;$line|green|+"
-                ((line++))
-            elif [[ $REPLY =~ ^\- ]]; then
-                flags="$flags;$line|red|-"
-            fi
-        done
-        echo "setb git_diff_flags '$flags'"
-    }
-}}
+hook global WinSetOption filetype=git-log %{
+    addhl group git-log-highlight
+    addhl -group git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
+    addhl -group git-log-highlight regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
+}
 
-def git-diff-show %{ addhl flag_lines black git_diff_flags; git-diff-update-buffer }
+hook global WinSetOption filetype=(?!git-log).* %{
+    rmhl git-log-highlight
+}
 
 decl line-flag-list git_blame_flags
+decl line-flag-list git_diff_flags
 
-def git-blame %{
-    try %{ addhl flag_lines magenta git_blame_flags } catch %{}
-    setb git_blame_flags ''
-    %sh{ (
+def -shell-params git %{ %sh{
+    show_git_cmd_output() {
+        local filetype
+        case "$1" in
+           show) filetype=diff ;;
+           log)  filetype=git-log ;;
+        esac
+        tmpfile=$(mktemp /tmp/kak-git-XXXXXX)
+        if git "$@" > ${tmpfile}; then
+            [[ -n "$kak_opt_docsclient" ]] && echo "eval -client '$kak_opt_docsclient' %{"
+
+            echo "edit! -scratch *git*
+                  exec |cat<space>${tmpfile}<ret>gk
+                  nop %sh{rm ${tmpfile}}
+                  setb filetype '${filetype}'"
+
+            [[ -n "$kak_opt_docsclient" ]] && echo "}"
+        else
+           echo "echo %{git $@ failed, see *debug* buffer}"
+           rm ${tmpfile}
+        fi
+    }
+
+    run_git_blame() {
+        (
+            echo "eval -client '$kak_client' %{
+                      try %{ addhl flag_lines magenta git_blame_flags } catch %{}
+                      setb -buffer '$kak_bufname' git_blame_flags ''
+                  }" | socat -u stdin UNIX-CONNECT:${kak_socket}
             declare -A authors
             declare -A dates
             send_flags() {
@@ -40,7 +51,7 @@ def git-blame %{
                 for (( i=1; $i < $count; i++ )); do
                     flag="$flag;$(($line+$i))|black|$text"
                 done
-                echo "setb -add -buffer $kak_bufname git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:${kak_socket}
+                echo "setb -add -buffer '$kak_bufname' git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:${kak_socket}
             }
             git blame --incremental $kak_bufname | ( while read blame_line; do
                 if [[ $blame_line =~ ([0-9a-f]{40}).([0-9]+).([0-9]+).([0-9]+) ]]; then
@@ -54,22 +65,38 @@ def git-blame %{
                     dates[$sha]="$(date -d @${BASH_REMATCH[1]} +'%F %T')"
                 fi
             done; send_flags )
-       ) >& /dev/null < /dev/null & }
-}
+        ) >& /dev/null < /dev/null &
+    }
 
-def -shell-params git-show %{ %sh{
-    tmpfile=$(mktemp /tmp/kak-git-show-XXXXXX)
-    if git show "$@" > ${tmpfile}; then
-        [[ -n "$kak_opt_docsclient" ]] && echo "eval -client '$kak_opt_docsclient' %{"
+    update_diff() {
+        git diff -U0 $kak_bufname | {
+            local line=0
+            local flags="0|red|."
+            while read; do
+                if [[ $REPLY =~ ^---.* ]]; then
+                    continue
+                elif [[ $REPLY =~ ^@@.-[0-9]+(,[0-9]+)?.\+([0-9]+)(,[0-9]+)?.@@.* ]]; then
+                    line=${BASH_REMATCH[2]}
+                elif [[ $REPLY =~ ^\+ ]]; then
+                    flags="$flags;$line|green|+"
+                    ((line++))
+                elif [[ $REPLY =~ ^\- ]]; then
+                    flags="$flags;$line|red|-"
+                fi
+            done
+            echo "setb git_diff_flags '$flags'"
+        }
+    }
 
-        echo "edit! -scratch *git-show*
-              exec |cat<space>${tmpfile}<ret>gk
-              nop %sh{rm ${tmpfile}}
-              setb filetype diff"
+    case "$1" in
+       show|log) show_git_cmd_output "$@" ;;
+       blame) run_git_blame ;;
+       show-diff)
+           echo "try %{ addhl flag_lines black git_diff_flags } catch %{}"
+           update_diff
+           ;;
+       update-diff) update_diff ;;
+       *) echo "echo %{unknown git command '$1'}"; exit ;;
+    esac
 
-        [[ -n "$kak_opt_docsclient" ]] && echo "}"
-    else
-       echo "echo %{git show '$@' failed, see *debug* buffer}"
-       rm ${tmpfile}
-    fi
 }}
