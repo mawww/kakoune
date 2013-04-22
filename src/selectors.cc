@@ -5,6 +5,8 @@
 
 #include <algorithm>
 
+#include <boost/optional.hpp>
+
 namespace Kakoune
 {
 
@@ -71,9 +73,9 @@ void skip_while_reverse(Iterator& it, T condition)
         --it;
 }
 
-Selection utf8_selection(const Utf8Iterator& first, const Utf8Iterator& last)
+Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
-    return Selection(first.underlying_iterator(), last.underlying_iterator());
+    return Range{first.underlying_iterator(), last.underlying_iterator()};
 }
 
 }
@@ -98,7 +100,7 @@ Selection select_to_next_word(const Selection& selection)
 
     skip_while(end, is_blank);
 
-    return utf8_selection(begin, end-1);
+    return utf8_range(begin, end-1);
 }
 template Selection select_to_next_word<false>(const Selection&);
 template Selection select_to_next_word<true>(const Selection&);
@@ -120,7 +122,7 @@ Selection select_to_next_word_end(const Selection& selection)
     else if (is_word<punctuation_is_word>(*end))
         skip_while(end, is_word<punctuation_is_word>);
 
-    return utf8_selection(begin, end-1);
+    return utf8_range(begin, end-1);
 }
 template Selection select_to_next_word_end<false>(const Selection&);
 template Selection select_to_next_word_end<true>(const Selection&);
@@ -150,7 +152,7 @@ Selection select_to_previous_word(const Selection& selection)
         with_end = is_word<punctuation_is_word>(*end);
     }
 
-    return utf8_selection(begin, with_end ? end : end+1);
+    return utf8_range(begin, with_end ? end : end+1);
 }
 template Selection select_to_previous_word<false>(const Selection&);
 template Selection select_to_previous_word<true>(const Selection&);
@@ -167,7 +169,7 @@ Selection select_line(const Selection& selection)
     Utf8Iterator last = first;
     while (not is_end(last + 1) and *last != '\n')
         ++last;
-    return utf8_selection(first, last);
+    return utf8_range(first, last);
 }
 
 Selection select_matching(const Selection& selection)
@@ -197,7 +199,7 @@ Selection select_matching(const Selection& selection)
             if (*it == opening)
                 ++level;
             else if (*it == closing and --level == 0)
-                return utf8_selection(begin, it);
+                return utf8_range(begin, it);
 
             ++it;
         }
@@ -212,7 +214,7 @@ Selection select_matching(const Selection& selection)
             if (*it == closing)
                 ++level;
             else if (*it == opening and --level == 0)
-                return utf8_selection(begin, it);
+                return utf8_range(begin, it);
             if (is_begin(it))
                 break;
             --it;
@@ -221,20 +223,22 @@ Selection select_matching(const Selection& selection)
     return selection;
 }
 
-Selection select_surrounding(const Selection& selection,
-                             const CodepointPair& matching,
-                             SurroundFlags flags)
+// c++14 will add std::optional, so we use boost::optional until then
+using boost::optional;
+static optional<Range> find_surrounding(const BufferIterator& pos,
+                                        const CodepointPair& matching,
+                                        SurroundFlags flags)
 {
     const bool to_begin = flags & SurroundFlags::ToBegin;
     const bool to_end   = flags & SurroundFlags::ToEnd;
     const bool nestable = matching.first != matching.second;
-    Utf8Iterator first = selection.last();
+    Utf8Iterator first = pos;
     if (to_begin)
     {
         int level = 0;
         while (not is_begin(first))
         {
-            if (nestable and first != selection.last() and *first == matching.second)
+            if (nestable and first != pos and *first == matching.second)
                 ++level;
             else if (*first == matching.first)
             {
@@ -246,10 +250,10 @@ Selection select_surrounding(const Selection& selection,
             --first;
         }
         if (level != 0 or *first != matching.first)
-            return selection;
+            return optional<Range>{};
     }
 
-    Utf8Iterator last = selection.last();
+    Utf8Iterator last = pos;
     if (to_end)
     {
         int level = 0;
@@ -268,7 +272,7 @@ Selection select_surrounding(const Selection& selection,
             ++last;
         }
         if (level != 0 or *last != matching.second)
-            return selection;
+            return optional<Range>{};
     }
 
     if (flags & SurroundFlags::Inner)
@@ -278,7 +282,25 @@ Selection select_surrounding(const Selection& selection,
         if (to_end and first != last)
             --last;
     }
-    return to_end ? utf8_selection(first, last) : utf8_selection(last, first);
+    return to_end ? utf8_range(first, last) : utf8_range(last, first);
+}
+
+Selection select_surrounding(const Selection& selection,
+                             const CodepointPair& matching,
+                             SurroundFlags flags)
+{
+    auto res = find_surrounding(selection.last(), matching, flags);
+    if (not res)
+        return selection;
+
+    if (flags == (SurroundFlags::ToBegin | SurroundFlags::ToEnd) and
+        matching.first != matching.second and not res->last().is_end() and
+        (*res == selection or Range{res->last(), res->first()} == selection))
+    {
+        res = find_surrounding(res->last() + 1, matching, flags);
+        return res ? Selection{*res} : selection;
+    }
+    return *res;
 }
 
 Selection select_to(const Selection& selection,
@@ -295,7 +317,7 @@ Selection select_to(const Selection& selection,
     }
     while (--count > 0);
 
-    return utf8_selection(begin, inclusive ? end : end-1);
+    return utf8_range(begin, inclusive ? end : end-1);
 }
 
 Selection select_to_reverse(const Selection& selection,
@@ -312,7 +334,7 @@ Selection select_to_reverse(const Selection& selection,
     }
     while (--count > 0);
 
-    return utf8_selection(begin, inclusive ? end : end+1);
+    return utf8_range(begin, inclusive ? end : end+1);
 }
 
 Selection select_to_eol(const Selection& selection)
@@ -320,7 +342,7 @@ Selection select_to_eol(const Selection& selection)
     Utf8Iterator begin = selection.last();
     Utf8Iterator end = begin + 1;
     skip_while(end, [](Codepoint cur) { return not is_eol(cur); });
-    return utf8_selection(begin, end-1);
+    return utf8_range(begin, end-1);
 }
 
 Selection select_to_eol_reverse(const Selection& selection)
@@ -328,7 +350,7 @@ Selection select_to_eol_reverse(const Selection& selection)
     Utf8Iterator begin = selection.last();
     Utf8Iterator end = begin - 1;
     skip_while_reverse(end, [](Codepoint cur) { return not is_eol(cur); });
-    return utf8_selection(begin, is_begin(end) ? end : end+1);
+    return utf8_range(begin, is_begin(end) ? end : end+1);
 }
 
 template<bool punctuation_is_word>
@@ -356,7 +378,7 @@ Selection select_whole_word(const Selection& selection, bool inner)
         skip_while(last, is_word<punctuation_is_word>);
     }
     --last;
-    return utf8_selection(first, last);
+    return utf8_range(first, last);
 }
 template Selection select_whole_word<false>(const Selection&, bool);
 template Selection select_whole_word<true>(const Selection&, bool);

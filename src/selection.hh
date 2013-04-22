@@ -54,6 +54,9 @@ struct Selection : public Range
               CaptureList captures = {})
         : Range(first, last), m_captures(std::move(captures)) {}
 
+    Selection(const Range& range)
+        : Range(range) {}
+
     void avoid_eol();
 
     CaptureList& captures() { return m_captures; }
