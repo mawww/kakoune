@@ -72,6 +72,20 @@ String Buffer::display_name() const
     return m_name;
 }
 
+bool Buffer::set_name(String name)
+{
+    Buffer* other = BufferManager::instance().get_buffer_ifp(name);
+    if (other == nullptr or other == this)
+    {
+        if (m_flags & Flags::File)
+            m_name = real_path(name);
+        else
+            m_name = std::move(name);
+        return true;
+    }
+    return false;
+}
+
 BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,
                                    bool avoid_eol) const
 {

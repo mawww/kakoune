@@ -254,7 +254,8 @@ Commands are entered using +:+.
  * +source <filename>+: execute commands in <filename>
  * +runtime <filename>+: execute commands in <filename>, <filename>
       is relative to kak executable path.
- * +name <name>+: set current client name
+ * +nameclient <name>+: set current client name
+ * +namebuf <name>+: set current buffer name
  * +exec [-client <name>] <keys>+: execute <keys> as if pressed in normal mode.
       if client if specified, exec keys in the named client context.
  * +eval [-client <name>] <command>+: execute <command> as if entered in command line

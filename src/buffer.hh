@@ -109,6 +109,8 @@ public:
     Flags flags() const { return m_flags; }
     Flags& flags() { return m_flags; }
 
+    bool set_name(String name);
+
     void insert(BufferIterator pos, String content);
     void erase(BufferIterator begin, BufferIterator end);
 

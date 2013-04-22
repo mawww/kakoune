@@ -240,6 +240,14 @@ void delete_buffer(const CommandParameters& params, Context& context)
     manager.delete_buffer(buffer);
 }
 
+void set_buffer_name(const CommandParameters& params, Context& context)
+{
+    ParametersParser parser(params, OptionMap{},
+                            ParametersParser::Flags::None, 1, 1);
+    if (not context.buffer().set_name(parser[0]))
+        throw runtime_error("unable to change buffer name to " + parser[0]);
+}
+
 template<typename Group>
 Group& get_group(Group& root, const String& group_path)
 {
@@ -900,6 +908,7 @@ void register_commands()
     cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
     cm.register_commands({ "db", "delbuf" }, delete_buffer<false>, buffer_completer);
     cm.register_commands({ "db!", "delbuf!" }, delete_buffer<true>, buffer_completer);
+    cm.register_commands({"nb", "namebuf"}, set_buffer_name);
 
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
     auto get_filters      = [](const Context& c) -> FilterGroup& { return c.window().filters(); };
@@ -943,7 +952,7 @@ void register_commands()
                          }));
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);
-    cm.register_commands({"name"}, set_client_name);
+    cm.register_commands({"nc", "nameclient"}, set_client_name);
 
     cm.register_command("cd", change_working_directory, filename_completer);
 }
