@@ -429,16 +429,14 @@ void split_lines(Context& context)
     context.editor().multi_select(std::bind(split_selection, _1, Regex{"^"}));
 }
 
-void join(Context& context)
+void join_select_spaces(Context& context)
 {
     Editor& editor = context.editor();
-    DynamicSelectionList sels{editor.buffer(), editor.selections()};
-    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
     editor.multi_select([](const Selection& sel)
     {
-        SelectionList res = select_all_matches(sel, Regex{"\n\\h*"});
+        SelectionList res = select_all_matches(sel, Regex{"(\n\\h*)+"});
         // remove last end of line if selected
         kak_assert(std::is_sorted(res.begin(), res.end(),
               [](const Selection& lhs, const Selection& rhs)
@@ -448,6 +446,14 @@ void join(Context& context)
         return res;
     });
     editor.insert(" ", InsertMode::Replace);
+}
+
+void join(Context& context)
+{
+    Editor& editor = context.editor();
+    DynamicSelectionList sels{editor.buffer(), editor.selections()};
+    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
+    join_select_spaces(context);
 }
 
 template<bool matching>
@@ -780,6 +786,7 @@ KeyMap keymap =
     { { Key::Modifiers::None, '[' }, select_object<SurroundFlags::ToBegin> },
 
     { { Key::Modifiers::Alt,  'j' }, join },
+    { { Key::Modifiers::Alt,  'J' }, join_select_spaces },
 
     { { Key::Modifiers::Alt,  'k' }, keep<true> },
     { { Key::Modifiers::Alt,  'K' }, keep<false> },

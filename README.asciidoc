@@ -113,6 +113,8 @@ Changes
  * _alt-p_: replace current selection with yanked text
 
  * _alt-j_: join selected lines
+ * _alt-J_: join selected lines and select spaces inserted
+            in place of line breaks
 
  * _>_: indent selected lines
  * _<_: deindent selected lines
