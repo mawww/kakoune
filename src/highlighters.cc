@@ -378,13 +378,16 @@ public:
         if (new_lines == 0)
             return;
 
-        auto lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
+        const Option& opt = m_window.options()[m_option_name];
+        if (&opt.manager() == &GlobalOptions::instance())
+            return;
+        auto lines = opt.get<std::vector<LineAndFlag>>();
         for (auto& line : lines)
         {
             if (std::get<0>(line) > begin.line())
                 std::get<0>(line) += new_lines;
         }
-        m_window.options().get_local_option(m_option_name).set(lines);
+        opt.manager().get_local_option(m_option_name).set(lines);
     }
 
     void on_erase(const BufferIterator& begin, const BufferIterator& end)  override
@@ -393,13 +396,17 @@ public:
         if (removed_lines == 0)
             return;
 
-        auto lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
+        const Option& opt = m_window.options()[m_option_name];
+        // only update
+        if (&opt.manager() == &GlobalOptions::instance())
+            return;
+        auto lines = opt.get<std::vector<LineAndFlag>>();
         for (auto& line : lines)
         {
             if (std::get<0>(line) > begin.line())
                 std::get<0>(line) -= removed_lines;
         }
-        m_window.options().get_local_option(m_option_name).set(lines);
+        opt.manager().get_local_option(m_option_name).set(lines);
     }
 
 private:
