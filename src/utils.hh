@@ -228,6 +228,12 @@ const T& clamp(const T& val, const T& min, const T& max)
     return (val < min ? min : (val > max ? max : val));
 }
 
+template<typename T>
+bool is_in_range(const T& val, const T& min, const T& max)
+{
+    return min <= val and val <= max;
+}
+
 // *** AutoRegister: RAII handling of value semantics registering classes ***
 
 template<typename EffectiveType, typename RegisterFuncs, typename Registry>
