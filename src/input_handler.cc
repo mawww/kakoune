@@ -487,6 +487,7 @@ struct BufferCompletion
     BufferIterator begin;
     BufferIterator end;
     CandidateList  candidates;
+    size_t         timestamp;
 
     bool is_valid() const { return begin.is_valid() and not candidates.empty(); }
 };
@@ -520,7 +521,7 @@ static BufferCompletion complete_word(const BufferIterator& pos)
             result.emplace_back(std::move(content));
     }
     std::sort(result.begin(), result.end());
-    return { begin, end, std::move(result) };
+    return { begin, end, std::move(result), begin.buffer().timestamp() };
 }
 
 static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& options)
@@ -535,19 +536,27 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
     boost::smatch match;
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {
-        LineCount line   = str_to_int({match[1].first, match[1].second}) - 1;
-        ByteCount column = str_to_int({match[2].first, match[2].second}) - 1;
-
-        BufferIterator end = pos;
+        BufferCoord coord{ str_to_int({match[1].first, match[1].second}) - 1,
+                           str_to_int({match[2].first, match[2].second}) - 1 };
+        if (not pos.buffer().is_valid(coord))
+            return {};
+        BufferIterator beg{pos.buffer(), coord};
+        BufferIterator end = beg;
         if (match[3].matched)
         {
             ByteCount len = str_to_int({match[3].first, match[3].second});
-            end = pos + len;
+            end = beg + len;
         }
-        int timestamp = str_to_int(String(match[4].first, match[4].second));
+        size_t timestamp = (size_t)str_to_int(String(match[4].first, match[4].second));
 
-        if (timestamp == pos.buffer().timestamp() and line == pos.line() and column == pos.column())
-            return { pos, end, { opt.begin() + 1, opt.end() } };
+        size_t longest_completion = 0;
+        for (auto it = opt.begin() + 1; it != opt.end(); ++it)
+             longest_completion = std::max<size_t>(longest_completion, (int)it->length());
+
+        if (timestamp == pos.buffer().timestamp() and
+            pos.line() == coord.line and pos.column() <= coord.column and
+            pos - beg < longest_completion)
+            return { beg, end, { opt.begin() + 1, opt.end() }, timestamp };
     }
     return {};
 }
@@ -574,7 +583,14 @@ public:
         m_context.buffer().erase(m_completions.begin, m_completions.end);
         m_context.buffer().insert(m_completions.begin, candidate);
         m_completions.end = m_completions.begin + candidate.length();
+        m_completions.timestamp = m_context.buffer().timestamp();
         m_context.ui().menu_select(m_current_candidate);
+
+        // when we select a match, remove non displayed matches from the candidates
+        // which are considered as invalid with the new completion timestamp
+        m_completions.candidates.clear();
+        std::copy(m_matching_candidates.begin(), m_matching_candidates.end()-1,
+                  std::back_inserter(m_completions.candidates));
     }
 
     void update()
@@ -586,14 +602,23 @@ public:
                  longest_completion = std::max(longest_completion, candidate.length());
 
             BufferIterator cursor = m_context.editor().main_selection().last();
-            if (cursor > m_completions.begin and ByteCount{(int)(cursor - m_completions.begin)} < longest_completion)
+            auto& compl_beg = m_completions.begin;
+            if (cursor.line() == compl_beg.line() and
+                is_in_range(cursor.column() - compl_beg.column(),
+                            ByteCount{0}, longest_completion-1))
             {
-                String prefix = m_context.buffer().string(m_completions.begin, cursor);
-                m_matching_candidates.clear();
-                for (auto& candidate : m_completions.candidates)
+                String prefix = m_context.buffer().string(compl_beg, cursor);
+
+                if (m_context.buffer().timestamp() == m_completions.timestamp)
+                    m_matching_candidates = m_completions.candidates;
+                else
                 {
-                    if (candidate.substr(0, prefix.length()) == prefix)
-                        m_matching_candidates.push_back(candidate);
+                    m_matching_candidates.clear();
+                    for (auto& candidate : m_completions.candidates)
+                    {
+                        if (candidate.substr(0, prefix.length()) == prefix)
+                            m_matching_candidates.push_back(candidate);
+                    }
                 }
                 if (not m_matching_candidates.empty())
                 {
@@ -628,7 +653,6 @@ private:
     void menu_show()
     {
         DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
-
         m_context.ui().menu_show(m_matching_candidates, menu_pos,
                                  get_color("MenuForeground"),
                                  get_color("MenuBackground"),
