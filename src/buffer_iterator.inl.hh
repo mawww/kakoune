@@ -20,12 +20,7 @@ inline const Buffer& BufferIterator::buffer() const
 
 inline bool BufferIterator::is_valid() const
 {
-    return m_buffer and
-           ((line() < m_buffer->line_count() and
-             column() < m_buffer->m_lines[line()].length()) or
-            ((line() == m_buffer->line_count() and column() == 0)) or
-             (line() == m_buffer->line_count() - 1 and
-              column() == m_buffer->m_lines.back().length()));
+    return m_buffer and m_buffer->is_valid(m_coord);
 }
 
 inline void BufferIterator::clamp(bool avoid_eol)

@@ -446,4 +446,11 @@ void Buffer::notify_saved()
     }
 }
 
+bool Buffer::is_valid(const BufferCoord& c) const
+{
+   return (c.line < line_count() and c.column < m_lines[c.line].length()) or
+          (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
+          (c.line == line_count() and c.column == 0);
+}
+
 }

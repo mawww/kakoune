@@ -123,6 +123,8 @@ public:
     String         string(const BufferIterator& begin,
                           const BufferIterator& end) const;
 
+    bool is_valid(const BufferCoord& c) const;
+
     BufferIterator begin() const;
     BufferIterator end() const;
     ByteCount      character_count() const;
