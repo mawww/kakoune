@@ -127,7 +127,7 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    ByteCount      character_count() const;
+    ByteCount      byte_count() const;
     LineCount      line_count() const;
     ByteCount      line_length(LineCount line) const;
     const String&  line_content(LineCount line) const

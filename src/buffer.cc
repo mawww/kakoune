@@ -96,7 +96,7 @@ ByteCount Buffer::line_length(LineCount line) const
 {
     kak_assert(line < line_count());
     ByteCount end = (line < line_count() - 1) ?
-                    m_lines[line + 1].start : character_count();
+                    m_lines[line + 1].start : byte_count();
     return end - m_lines[line].start;
 }
 
@@ -149,7 +149,7 @@ BufferIterator Buffer::end() const
     return BufferIterator(*this, { line_count()-1, m_lines.back().length() });
 }
 
-ByteCount Buffer::character_count() const
+ByteCount Buffer::byte_count() const
 {
     if (m_lines.empty())
         return 0;

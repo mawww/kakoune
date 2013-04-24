@@ -72,7 +72,7 @@ inline ByteCount BufferIterator::offset() const
 {
     kak_assert(m_buffer);
     return line() >= m_buffer->line_count() ?
-        m_buffer->character_count() : m_buffer->m_lines[line()].start + column();
+        m_buffer->byte_count() : m_buffer->m_lines[line()].start + column();
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
@@ -86,7 +86,7 @@ inline BufferIterator BufferIterator::operator+(ByteCount size) const
     kak_assert(m_buffer);
     if (size >= 0)
     {
-        ByteCount o = std::min(m_buffer->character_count(), offset() + size);
+        ByteCount o = std::min(m_buffer->byte_count(), offset() + size);
         for (LineCount i = line() + 1; i < m_buffer->line_count(); ++i)
         {
             if (m_buffer->m_lines[i].start > o)
@@ -188,7 +188,7 @@ inline bool BufferIterator::is_end() const
         kak_assert(m_coord.column == 0);
         return true;
     }
-    return offset() == m_buffer->character_count();
+    return offset() == m_buffer->byte_count();
 }
 
 }
