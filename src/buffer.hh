@@ -202,6 +202,7 @@ private:
 
     struct Modification;
     typedef std::vector<Modification> UndoGroup;
+    friend class UndoGroupOptimizer;
 
     std::vector<UndoGroup>           m_history;
     std::vector<UndoGroup>::iterator m_history_cursor;

@@ -177,24 +177,6 @@ String Buffer::string(const BufferIterator& begin, const BufferIterator& end) co
     return res;
 }
 
-void Buffer::commit_undo_group()
-{
-    if (m_flags & Flags::NoUndo)
-        return;
-
-    if (m_current_undo_group.empty())
-        return;
-
-    m_history.erase(m_history_cursor, m_history.end());
-
-    m_history.push_back(std::move(m_current_undo_group));
-    m_current_undo_group.clear();
-    m_history_cursor = m_history.end();
-
-    if (m_history.size() < m_last_save_undo_index)
-        m_last_save_undo_index = -1;
-}
-
 // A Modification holds a single atomic modification to Buffer
 struct Buffer::Modification
 {
@@ -219,6 +201,207 @@ struct Buffer::Modification
         return {inverse_type, coord, content};
     }
 };
+
+class UndoGroupOptimizer
+{
+    static constexpr auto Insert = Buffer::Modification::Type::Insert;
+    static constexpr auto Erase = Buffer::Modification::Type::Erase;
+
+    static BufferCoord advance(BufferCoord coord, const String& str)
+    {
+        for (auto c : str)
+        {
+            if (c == '\n')
+            {
+                ++coord.line;
+                coord.column = 0;
+            }
+            else
+                ++coord.column;
+        }
+        return coord;
+    }
+
+    static ByteCount count_byte_to(BufferCoord pos, const BufferCoord& endpos, const String& str)
+    {
+        ByteCount count = 0;
+        for (auto it = str.begin(); it != str.end() and pos != endpos; ++it)
+        {
+            if (*it == '\n')
+            {
+                ++pos.line;
+                pos.column = 0;
+            }
+            else
+                ++pos.column;
+            ++count;
+        }
+        assert(pos == endpos);
+        return count;
+    }
+
+    static const ByteCount overlaps(const String& lhs, const String& rhs)
+    {
+        if (lhs.empty() or rhs.empty())
+            return -1;
+
+        char c = rhs.front();
+        ByteCount pos = 0;
+        while ((pos = (int)lhs.find_first_of(c, (int)pos)) != -1)
+        {
+            ByteCount i = pos, j = 0;
+            while (i != lhs.length() and j != rhs.length() and lhs[i] == rhs[j])
+                 ++i, ++j;
+            if (i == lhs.length())
+                break;
+            ++pos;
+        }
+        return pos;
+    }
+
+    static bool merge_contiguous(Buffer::UndoGroup& undo_group)
+    {
+        bool progress = false;
+        auto it = undo_group.begin();
+        auto it_next = it+1;
+        while (it_next != undo_group.end())
+        {
+            ByteCount pos;
+            auto& coord = it->coord;
+            auto& next_coord = it_next->coord;
+
+            // reorders modification doing a kind of custom bubble sort
+            // so we have a O(n²) worst case complexity of the undo group optimization
+            if (next_coord < coord)
+            {
+                BufferCoord next_end = advance(next_coord, it_next->content);
+                if (it_next->type == Insert)
+                {
+                     if (coord.line == next_coord.line)
+                         coord.column += next_end.column - next_coord.column;
+                     coord.line += next_end.line - next_coord.line;
+                }
+                else if (it->type == Insert)
+                {
+                    if (next_end > coord)
+                    {
+                        ByteCount start = count_byte_to(next_coord, coord, it_next->content);
+                        ByteCount len = std::min(it->content.length(), it_next->content.length() - start);
+                        it->coord = it_next->coord;
+                        it->content = it->content.substr(len);
+                        it_next->content = it_next->content.substr(0,start) + it_next->content.substr(start + len);
+                    }
+                    else
+                    {
+                        if (next_end.line == coord.line)
+                        {
+                            coord.line = next_coord.line;
+                            coord.column = next_coord.column + coord.column - next_end.column;
+                        }
+                        else
+                            coord.line -= next_end.line - next_coord.line;
+                    }
+                }
+                else if (it->type == Erase and next_end > coord)
+                {
+                    ByteCount start = count_byte_to(next_coord, coord, it_next->content);
+                    it_next->content = it_next->content.substr(0, start) + it->content + it_next->content.substr(start);
+                    it->coord = it_next->coord;
+                    it->content.clear();
+                }
+                std::swap(*it, *it_next);
+                progress = true;
+            }
+
+            if (it->type == Erase and it_next->type == Erase and coord == next_coord)
+            {
+                it->content += it_next->content;
+                it_next = undo_group.erase(it_next);
+                progress = true;
+            }
+            else if (it->type == Insert and it_next->type == Insert and
+                     is_in_range(next_coord, coord, advance(coord, it->content)))
+            {
+                ByteCount prefix_len = count_byte_to(coord, next_coord, it->content);
+                it->content = it->content.substr(0, prefix_len) + it_next->content
+                            + it->content.substr(prefix_len);
+                it_next = undo_group.erase(it_next);
+                progress = true;
+            }
+            else if (it->type == Insert and it_next->type == Erase and
+                     coord <= next_coord and next_coord < advance(coord, it->content))
+            {
+                ByteCount insert_len = it->content.length();
+                ByteCount erase_len  = it_next->content.length();
+                ByteCount prefix_len = count_byte_to(coord, next_coord, it->content);
+
+                it->content = it->content.substr(0, prefix_len) +
+                              ((prefix_len + erase_len < insert_len) ?
+                               it->content.substr(prefix_len + erase_len) : "");
+                it_next->content = (insert_len - prefix_len < erase_len) ?
+                                   it_next->content.substr(insert_len - prefix_len) : "";
+                ++it, ++it_next;
+                progress = true;
+            }
+            else if (it->type == Erase and it_next->type == Insert and coord == next_coord and
+                     (pos = overlaps(it->content, it_next->content)) != -1)
+            {
+                ByteCount overlaps_len = it->content.length() - pos;
+                it->content = it->content.substr(0, pos);
+                it_next->content = it_next->content.substr(overlaps_len);
+                ++it, ++it_next;
+                progress = true;
+            }
+            else
+                ++it, ++it_next;
+        }
+        return progress;
+    }
+
+    static bool erase_empty(Buffer::UndoGroup& undo_group)
+    {
+        auto it = std::remove_if(begin(undo_group), end(undo_group),
+                                 [](Buffer::Modification& m) { return m.content.empty(); });
+        if (it != end(undo_group))
+        {
+            undo_group.erase(it, end(undo_group));
+            return true;
+        }
+        return false;
+    }
+public:
+    static void optimize(Buffer::UndoGroup& undo_group)
+    {
+        while (undo_group.size() > 1)
+        {
+            bool progress = false;
+            progress |= merge_contiguous(undo_group);
+            progress |= erase_empty(undo_group);
+            if (not progress)
+                break;
+        }
+    }
+};
+
+void Buffer::commit_undo_group()
+{
+    if (m_flags & Flags::NoUndo)
+        return;
+
+    UndoGroupOptimizer::optimize(m_current_undo_group);
+
+    if (m_current_undo_group.empty())
+        return;
+
+    m_history.erase(m_history_cursor, m_history.end());
+
+    m_history.push_back(std::move(m_current_undo_group));
+    m_current_undo_group.clear();
+    m_history_cursor = m_history.end();
+
+    if (m_history.size() < m_last_save_undo_index)
+        m_last_save_undo_index = -1;
+}
 
 bool Buffer::undo()
 {
