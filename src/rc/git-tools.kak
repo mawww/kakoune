@@ -17,7 +17,7 @@ def -shell-params git %{ %sh{
     show_git_cmd_output() {
         local filetype
         case "$1" in
-           show) filetype=diff ;;
+           show|diff) filetype=diff ;;
            log)  filetype=git-log ;;
         esac
         tmpfile=$(mktemp /tmp/kak-git-XXXXXX)
@@ -89,13 +89,21 @@ def -shell-params git %{ %sh{
     }
 
     case "$1" in
-       show|log) show_git_cmd_output "$@" ;;
+       show|log|diff) show_git_cmd_output "$@" ;;
        blame) run_git_blame ;;
        show-diff)
            echo "try %{ addhl flag_lines black git_diff_flags } catch %{}"
            update_diff
            ;;
        update-diff) update_diff ;;
+       add)
+           name="${2:-${kak_bufname}}"
+           if git add -- "${name}"; then
+              echo "echo -color Information 'git: added ${name}'"
+           else
+              echo "echo -color Error 'git: unable to add ${name}'"
+           fi
+           ;;
        *) echo "echo %{unknown git command '$1'}"; exit ;;
     esac
 
