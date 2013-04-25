@@ -440,13 +440,13 @@ void define_command(const CommandParameters& params, Context& context)
 
 void echo_message(const CommandParameters& params, Context& context)
 {
-    ParametersParser parser(params, { { "col", true } },
+    ParametersParser parser(params, { { "color", true } },
                             ParametersParser::Flags::OptionsOnlyAtStart);
     String message;
     for (auto& param : parser)
         message += param + " ";
-    ColorPair color = get_color(parser.has_option("col") ?
-                                parser.option_value("col") : "StatusLine");
+    ColorPair color = get_color(parser.has_option("color") ?
+                                parser.option_value("color") : "StatusLine");
     context.print_status({ std::move(message), color } );
 }
 
