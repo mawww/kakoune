@@ -31,3 +31,7 @@
 * improve input filters, try to have a decent C++ input mode indenter
 
 * Tree based undo
+
+* Complete secondary selections as well as primary
+
+* incrementation/decrementation of integers support
