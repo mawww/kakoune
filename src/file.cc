@@ -19,8 +19,9 @@ namespace Kakoune
 
 String parse_filename(const String& filename)
 {
-    if (filename.length() >= 2 and filename[0] == '~' and filename[1] == '/')
-        return parse_filename("$HOME/" + filename.substr(2_byte));
+    if (filename.length() >= 1 and filename[0] == '~' and
+        (filename.length() == 1 or filename[1] == '/'))
+        return parse_filename("$HOME" + filename.substr(1_byte));
 
     ByteCount pos = 0;
     String result;
