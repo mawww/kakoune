@@ -200,12 +200,12 @@ struct Buffer::Modification
 {
     enum Type { Insert, Erase };
 
-    Type           type;
-    BufferIterator position;
-    String         content;
+    Type        type;
+    BufferCoord coord;
+    String      content;
 
-    Modification(Type type, BufferIterator position, String content)
-        : type(type), position(position), content(std::move(content)) {}
+    Modification(Type type, BufferCoord coord, String content)
+        : type(type), coord(coord), content(std::move(content)) {}
 
     Modification inverse() const
     {
@@ -216,7 +216,7 @@ struct Buffer::Modification
         case Erase:  inverse_type = Insert; break;
         default: kak_assert(false);
         }
-        return {inverse_type, position, content};
+        return {inverse_type, coord, content};
     }
 };
 
@@ -370,14 +370,14 @@ void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
 void Buffer::apply_modification(const Modification& modification)
 {
     const String& content = modification.content;
-    BufferIterator pos = modification.position;
+    BufferCoord coord = modification.coord;
 
     // this may happen when a modification applied at the
     // end of the buffer has been inverted for an undo.
-    if (not pos.is_end() and pos.column() == m_lines[pos.line()].length())
-        pos = { pos.buffer(), { pos.line() + 1, 0 }};
+    if (coord.line < line_count()-1 and coord.column == m_lines[coord.line].length())
+        coord = { coord.line + 1, 0 };
 
-    kak_assert(pos.is_valid());
+    BufferIterator pos{*this, coord};
     switch (modification.type)
     {
     case Modification::Insert:
@@ -407,7 +407,7 @@ void Buffer::insert(BufferIterator pos, String content)
         content += '\n';
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, pos, content);
+        m_current_undo_group.emplace_back(Modification::Insert, pos.coord(), content);
     do_insert(pos, content);
 }
 
@@ -420,7 +420,7 @@ void Buffer::erase(BufferIterator begin, BufferIterator end)
         return;
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin,
+        m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
                                           string(begin, end));
     do_erase(begin, end);
 }
