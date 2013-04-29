@@ -302,7 +302,7 @@ class UndoGroupOptimizer
                             coord.line -= next_end.line - next_coord.line;
                     }
                 }
-                else if (it->type == Erase and next_end > coord)
+                else if (it->type == Erase and next_end >= coord)
                 {
                     ByteCount start = count_byte_to(next_coord, coord, it_next->content);
                     it_next->content = it_next->content.substr(0, start) + it->content + it_next->content.substr(start);
