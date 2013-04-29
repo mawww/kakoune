@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
             global_hooks.run_hook("KakBegin", "", empty_context);
         }
 
-        if (parser.positional_count() != 0)
+        if (parser.positional_count() != 0) try
         {
             // create buffers in reverse order so that the first given buffer
             // is the most recently created one.
@@ -258,6 +258,10 @@ int main(int argc, char* argv[])
                 if (not create_buffer_from_file(file))
                     new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
             }
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+             write_debug("error while opening command line files: "_str + error.what());
         }
         else
             new Buffer("*scratch*", Buffer::Flags::None);
