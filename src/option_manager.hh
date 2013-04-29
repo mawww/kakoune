@@ -19,7 +19,7 @@ struct option_not_found : public runtime_error
 
 class OptionManager;
 
-class Option
+class Option : public SafeCountable
 {
 public:
     Option(OptionManager& manager, String name);

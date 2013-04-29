@@ -332,22 +332,22 @@ void expand_unprintable(DisplayBuffer& display_buffer)
     }
 }
 
-class FlagLines : public BufferChangeListener_AutoRegister,
-                  public OptionManagerWatcher_AutoRegister
+class FlagLines : public OptionManagerWatcher_AutoRegister
 {
 public:
     FlagLines(Color bg, String option_name, Window& window)
-        : BufferChangeListener_AutoRegister(window.buffer()),
-          OptionManagerWatcher_AutoRegister(window.options()),
+        : OptionManagerWatcher_AutoRegister(window.options()),
           m_bg(bg), m_option_name(std::move(option_name)),
           m_window(window)
     {
         // trigger an exception if option is not of right type.
         m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
+        update_shared_option_updater();
     }
 
     void operator()(DisplayBuffer& display_buffer)
     {
+        update_shared_option_updater();
         auto& lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
 
         CharCount width = 0;
@@ -366,54 +366,82 @@ public:
         }
     }
 
-    void on_option_changed(const Option& option)
+private:
+    void on_option_changed(const Option& option) override
     {
         if (option.name() == m_option_name)
             m_window.forget_timestamp();
     }
 
-    void on_insert(const BufferIterator& begin, const BufferIterator& end) override
+    struct OptionUpdater : BufferChangeListener_AutoRegister
     {
-        LineCount new_lines = end.line() - begin.line();
-        if (new_lines == 0)
-            return;
-
-        const Option& opt = m_window.options()[m_option_name];
-        if (&opt.manager() == &GlobalOptions::instance())
-            return;
-        auto lines = opt.get<std::vector<LineAndFlag>>();
-        for (auto& line : lines)
+        OptionUpdater(Buffer& buffer, Option& option)
+            : BufferChangeListener_AutoRegister(buffer), m_option(&option)
         {
-            if (std::get<0>(line) > begin.line())
-                std::get<0>(line) += new_lines;
+            // sanity checks
+            kak_assert(&m_option->manager() != &GlobalOptions::instance());
+            m_option->get<std::vector<LineAndFlag>>();
         }
-        opt.manager().get_local_option(m_option_name).set(lines);
+
+        void on_insert(const BufferIterator& begin, const BufferIterator& end) override
+        {
+            LineCount new_lines = end.line() - begin.line();
+            if (new_lines == 0)
+                return;
+
+            auto lines = m_option->get<std::vector<LineAndFlag>>();
+            for (auto& line : lines)
+            {
+                if (std::get<0>(line) > begin.line())
+                    std::get<0>(line) += new_lines;
+            }
+            m_option->set(lines);
+        }
+
+        void on_erase(const BufferIterator& begin, const BufferIterator& end)  override
+        {
+            LineCount removed_lines = end.line() - begin.line();
+            if (removed_lines == 0)
+                return;
+
+            auto lines = m_option->get<std::vector<LineAndFlag>>();
+            for (auto& line : lines)
+            {
+                if (std::get<0>(line) > begin.line())
+                    std::get<0>(line) -= removed_lines;
+            }
+            m_option->set(lines);
+        }
+
+        const Option& option() const { return *m_option; }
+    private:
+        safe_ptr<Option> m_option;
+    };
+    static std::unordered_map<const Option*, std::weak_ptr<OptionUpdater>> ms_updaters;
+
+    void update_shared_option_updater()
+    {
+        const Option& option = m_window.options()[m_option_name];
+        if (&option.manager() == &GlobalOptions::instance() or
+            (m_updater and &option == &m_updater->option()))
+            return;
+        auto& shared_updater = ms_updaters[&option];
+        if (shared_updater.expired())
+        {
+            m_updater = std::make_shared<OptionUpdater>(
+                m_window.buffer(), option.manager().get_local_option(option.name()));
+            shared_updater = m_updater;
+        }
+        else
+           m_updater = shared_updater.lock();
     }
 
-    void on_erase(const BufferIterator& begin, const BufferIterator& end)  override
-    {
-        LineCount removed_lines = end.line() - begin.line();
-        if (removed_lines == 0)
-            return;
-
-        const Option& opt = m_window.options()[m_option_name];
-        // only update
-        if (&opt.manager() == &GlobalOptions::instance())
-            return;
-        auto lines = opt.get<std::vector<LineAndFlag>>();
-        for (auto& line : lines)
-        {
-            if (std::get<0>(line) > begin.line())
-                std::get<0>(line) -= removed_lines;
-        }
-        opt.manager().get_local_option(m_option_name).set(lines);
-    }
-
-private:
     Color m_bg;
     String m_option_name;
     Window& m_window;
+    std::shared_ptr<OptionUpdater> m_updater;
 };
+std::unordered_map<const Option*, std::weak_ptr<FlagLines::OptionUpdater>> FlagLines::ms_updaters;
 
 HighlighterAndId flag_lines_factory(const HighlighterParameters& params, Window& window)
 {
