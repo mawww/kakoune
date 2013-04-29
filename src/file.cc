@@ -72,9 +72,9 @@ String compact_path(const String& filename)
 
     char cwd[1024];
     getcwd(cwd, 1024);
-    String real_cwd = real_path(cwd);
+    String real_cwd = real_path(cwd) + '/';
     if (real_filename.substr(0, real_cwd.length()) == real_cwd)
-        return real_filename.substr(real_cwd.length()+1);
+        return real_filename.substr(real_cwd.length());
 
     const char* home = getenv("HOME");
     if (home)
