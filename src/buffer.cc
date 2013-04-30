@@ -348,6 +348,7 @@ class UndoGroupOptimizer
             {
                 ByteCount overlaps_len = it->content.length() - pos;
                 it->content = it->content.substr(0, pos);
+                it_next->coord = advance(it_next->coord, it_next->content.substr(0, overlaps_len));
                 it_next->content = it_next->content.substr(overlaps_len);
                 ++it, ++it_next;
                 progress = true;
