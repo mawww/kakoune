@@ -383,6 +383,44 @@ Selection select_whole_word(const Selection& selection, bool inner)
 template Selection select_whole_word<false>(const Selection&, bool);
 template Selection select_whole_word<true>(const Selection&, bool);
 
+Selection select_whole_sentence(const Selection& selection, bool inner)
+{
+    BufferIterator first = selection.last();
+
+    while (not is_begin(first))
+    {
+        char cur = *first;
+        char prev = *(first-1);
+        if (is_eol(prev) and is_eol(cur))
+        {
+            ++first;
+            break;
+        }
+        else if (prev == '.' or prev == ';')
+            break;
+        --first;
+    }
+    skip_while(first, is_blank);
+
+    BufferIterator last = first;
+    while (not is_end(last))
+    {
+        char cur = *last;
+        if (cur == '.' or cur == ';' or cur == '!' or cur == '?' or
+            (is_eol(cur) and (is_end(last+1) or is_eol(*last+1))))
+            break;
+        ++last;
+    }
+    if (not inner and not is_end(last))
+    {
+        ++last;
+        skip_while(last, is_blank);
+        --last;
+    }
+
+    return Selection{first, last};
+}
+
 Selection select_whole_lines(const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator

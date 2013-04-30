@@ -209,6 +209,7 @@ object you want.
  * _'_: select the enclosing single quoted string
  * _w_: select the whole word
  * _W_: select the whole WORD
+ * _s_: select the sentence
 
 Registers
 ---------
