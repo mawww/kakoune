@@ -421,6 +421,40 @@ Selection select_whole_sentence(const Selection& selection, bool inner)
     return Selection{first, last};
 }
 
+Selection select_whole_paragraph(const Selection& selection, bool inner)
+{
+    BufferIterator first = selection.last();
+
+    while (not is_begin(first))
+    {
+        char cur = *first;
+        char prev = *(first-1);
+        if (is_eol(prev) and is_eol(cur))
+        {
+            ++first;
+            break;
+        }
+        --first;
+    }
+
+    BufferIterator last = first;
+    while (not is_end(last))
+    {
+        char cur = *last;
+        char prev = *(last-1);
+        if (is_eol(cur) and is_eol(prev))
+        {
+            if (not inner)
+                skip_while(last, is_eol);
+           --last;
+            break;
+        }
+        ++last;
+    }
+
+    return Selection{first, last};
+}
+
 Selection select_whole_lines(const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator

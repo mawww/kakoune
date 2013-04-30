@@ -28,6 +28,7 @@ Selection select_to_eol_reverse(const Selection& selection);
 template<bool punctuation_is_word>
 Selection select_whole_word(const Selection& selection, bool inner);
 Selection select_whole_sentence(const Selection& selection, bool inner);
+Selection select_whole_paragraph(const Selection& selection, bool inner);
 Selection select_whole_lines(const Selection& selection);
 Selection select_whole_buffer(const Selection& selection);
 Selection trim_partial_lines(const Selection& selection);

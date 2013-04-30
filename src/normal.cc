@@ -524,6 +524,7 @@ void select_object(Context& context)
             { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, flags & SurroundFlags::Inner) },
             { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, flags & SurroundFlags::Inner) },
             { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, flags & SurroundFlags::Inner) },
+            { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, flags & SurroundFlags::Inner) },
         };
 
         auto it = key_to_selector.find(key);

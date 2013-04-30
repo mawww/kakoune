@@ -210,6 +210,7 @@ object you want.
  * _w_: select the whole word
  * _W_: select the whole WORD
  * _s_: select the sentence
+ * _p_: select the paragraph
 
 Registers
 ---------
