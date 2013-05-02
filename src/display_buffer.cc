@@ -19,26 +19,41 @@ DisplayLine::iterator DisplayLine::split(iterator it, BufferIterator pos)
 
 void DisplayLine::optimize()
 {
-    for (auto atom_it = m_atoms.begin(); atom_it != m_atoms.end(); ++atom_it)
-    {
-        decltype(atom_it) next_atom_it;
-        while ((next_atom_it = atom_it + 1) != m_atoms.end())
-        {
-            auto& atom = *atom_it;
-            auto& next_atom = *next_atom_it;
+    if (m_atoms.empty())
+        return;
 
-            if (atom.colors == next_atom.colors and
-                atom.attribute == next_atom.attribute and
-                atom.content.type() == AtomContent::BufferRange and
-                next_atom.content.type() == AtomContent::BufferRange and
+    auto atom_it = m_atoms.begin();
+    auto next_atom_it = atom_it + 1;
+    while (next_atom_it != m_atoms.end())
+    {
+        auto& atom = *atom_it;
+        auto& next_atom = *next_atom_it;
+        bool merged = false;
+
+        if (atom.colors == next_atom.colors and
+            atom.attribute == next_atom.attribute and
+            atom.content.type() ==  next_atom.content.type())
+        {
+            auto type = atom.content.type();
+            if ((type == AtomContent::BufferRange or
+                 type == AtomContent::ReplacedBufferRange) and
                 next_atom.content.begin() == atom.content.end())
             {
                 atom.content.m_end = next_atom.content.end();
-                atom_it = m_atoms.erase(next_atom_it) - 1;
+                if (type == AtomContent::ReplacedBufferRange)
+                    atom.content.m_text += next_atom.content.m_text;
+                merged = true;
             }
-            else
-                break;
+            if (type == AtomContent::Text)
+            {
+                atom.content.m_text += next_atom.content.m_text;
+                merged = true;
+            }
         }
+        if (merged)
+            next_atom_it = m_atoms.erase(next_atom_it);
+        else
+            atom_it = next_atom_it++;
     }
 }
 
