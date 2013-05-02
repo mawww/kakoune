@@ -128,22 +128,30 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
     return lhs.begin() < rhs.begin();
 }
 
-static void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection)
+template<bool already_sorted = false>
+void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection)
 {
     if (selections.size() == 1)
         return;
 
-    const auto& main = selections[main_selection];
-    const auto main_begin = main.begin();
-    main_selection = std::count_if(selections.begin(), selections.end(),
-                                   [&](const Selection& sel) {
-                                       auto begin = sel.begin();
-                                       if (begin == main_begin)
-                                           return &sel < &main;
-                                       else
-                                           return sel.begin() < main_begin;
-                                   });
-    std::stable_sort(selections.begin(), selections.end(), compare_selections);
+    if (already_sorted)
+    {
+        kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
+    }
+    else
+    {
+        const auto& main = selections[main_selection];
+        const auto main_begin = main.begin();
+        main_selection = std::count_if(selections.begin(), selections.end(),
+                                       [&](const Selection& sel) {
+                                           auto begin = sel.begin();
+                                           if (begin == main_begin)
+                                               return &sel < &main;
+                                           else
+                                               return sel.begin() < main_begin;
+                                       });
+        std::stable_sort(selections.begin(), selections.end(), compare_selections);
+    }
 
     for (size_t i = 0; i+1 < selections.size() and selections.size() > 1;)
     {
@@ -339,50 +347,51 @@ void Editor::multi_select(const MultiSelector& selector)
     check_invariant();
 }
 
-class LastModifiedRangeListener : public BufferChangeListener
+class ModifiedRangesListener : public BufferChangeListener_AutoRegister
 {
 public:
-    LastModifiedRangeListener(Buffer& buffer)
-       : m_buffer(buffer)
-    { m_buffer.change_listeners().insert(this); }
-
-    ~LastModifiedRangeListener()
-    { m_buffer.change_listeners().erase(this); }
+    ModifiedRangesListener(Buffer& buffer)
+        : BufferChangeListener_AutoRegister(buffer) {}
 
     void on_insert(const BufferIterator& begin, const BufferIterator& end)
     {
         kak_assert(begin.is_valid());
         kak_assert(end.is_valid());
-        m_first = begin;
-        m_last = utf8::previous(end);
+        m_ranges.update_insert(begin.coord(), end.coord());
+        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
+                                   [](const BufferIterator& it, const Selection& sel)
+                                   { return it < sel.begin(); });
+        m_ranges.emplace(it, begin, utf8::previous(end));
     }
 
     void on_erase(const BufferIterator& begin, const BufferIterator& end)
     {
         kak_assert(begin.is_valid());
-        m_first = begin;
-        if (m_first >= m_buffer.end())
-            m_first = utf8::previous(m_buffer.end());
-        m_last = m_first;
-    }
+        m_ranges.update_erase(begin.coord(), end.coord());
+        auto pos = begin;
+        if (pos >= buffer().end())
+            pos = utf8::previous(buffer().end());
 
-    const BufferIterator& first() const { return m_first; }
-    const BufferIterator& last() const { return m_last; }
+        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
+                                   [](const BufferIterator& it, const Selection& sel)
+                                   { return it < sel.begin(); });
+        m_ranges.emplace(it, pos, pos);
+    }
+    SelectionList& ranges() { return m_ranges; }
 
 private:
-    BufferIterator m_first;
-    BufferIterator m_last;
-    Buffer& m_buffer;
+    SelectionList m_ranges;
 };
 
 bool Editor::undo()
 {
-    LastModifiedRangeListener listener(buffer());
+    ModifiedRangesListener listener(buffer());
     bool res = m_buffer->undo();
-    if (res)
+    if (res and not listener.ranges().empty())
     {
-        m_selections = SelectionList{ {listener.first(), listener.last()} };
-        m_main_sel = 0;
+        m_selections = std::move(listener.ranges());
+        m_main_sel = m_selections.size() - 1;
+        sort_and_merge_overlapping<true>(m_selections, m_main_sel);
     }
     check_invariant();
     return res;
@@ -390,12 +399,13 @@ bool Editor::undo()
 
 bool Editor::redo()
 {
-    LastModifiedRangeListener listener(buffer());
+    ModifiedRangesListener listener(buffer());
     bool res = m_buffer->redo();
-    if (res)
+    if (res and not listener.ranges().empty())
     {
-        m_selections = SelectionList{ {listener.first(), listener.last()} };
-        m_main_sel = 0;
+        m_selections = std::move(listener.ranges());
+        m_main_sel = m_selections.size() - 1;
+        sort_and_merge_overlapping<true>(m_selections, m_main_sel);
     }
     check_invariant();
     return res;
