@@ -632,7 +632,7 @@ public:
             }
         }
         reset();
-        select(0);
+        setup_ifn();
     }
 
     void reset()
@@ -646,7 +646,7 @@ private:
         if (opt.name() == "completions")
         {
             reset();
-            select(0);
+            setup_ifn();
         }
     }
 
