@@ -21,12 +21,11 @@ DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
 void DynamicSelectionList::check_invariant() const
 {
 #ifdef KAK_DEBUG
+    if (empty())
+        return;
     const Buffer* buf = &buffer();
-    for (auto& sel : *this)
-    {
-        kak_assert(buf == &sel.buffer());
-        sel.check_invariant();
-    }
+    kak_assert(&front().buffer() == buf);
+    SelectionList::check_invariant();
 #endif
 }
 

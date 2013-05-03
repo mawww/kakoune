@@ -142,4 +142,17 @@ void SelectionList::update_erase(const BufferCoord& begin, const BufferCoord& en
     on_buffer_change<UpdateErase>(*this, begin, end, end.line);
 }
 
+void SelectionList::check_invariant() const
+{
+#ifdef KAK_DEBUG
+    for (size_t i = 0; i < size(); ++i)
+    {
+        auto& sel = (*this)[i];
+        sel.check_invariant();
+        if (i+1 < size())
+            kak_assert(sel.begin() <= (*this)[i+1].begin());
+    }
+#endif
+}
+
 }
