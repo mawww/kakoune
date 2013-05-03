@@ -128,31 +128,11 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
     return lhs.begin() < rhs.begin();
 }
 
-template<bool already_sorted = false>
-void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection)
+template<typename OverlapsFunc>
+void merge_overlapping(SelectionList& selections, size_t& main_selection,
+                       OverlapsFunc overlaps)
 {
-    if (selections.size() == 1)
-        return;
-
-    if (already_sorted)
-    {
-        kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
-    }
-    else
-    {
-        const auto& main = selections[main_selection];
-        const auto main_begin = main.begin();
-        main_selection = std::count_if(selections.begin(), selections.end(),
-                                       [&](const Selection& sel) {
-                                           auto begin = sel.begin();
-                                           if (begin == main_begin)
-                                               return &sel < &main;
-                                           else
-                                               return sel.begin() < main_begin;
-                                       });
-        std::stable_sort(selections.begin(), selections.end(), compare_selections);
-    }
-
+    kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
     for (size_t i = 0; i+1 < selections.size() and selections.size() > 1;)
     {
         if (overlaps(selections[i], selections[i+1]))
@@ -165,6 +145,26 @@ void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selectio
         else
            ++i;
     }
+}
+
+void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection)
+{
+    if (selections.size() == 1)
+        return;
+
+    const auto& main = selections[main_selection];
+    const auto main_begin = main.begin();
+    main_selection = std::count_if(selections.begin(), selections.end(),
+                                   [&](const Selection& sel) {
+                                       auto begin = sel.begin();
+                                       if (begin == main_begin)
+                                           return &sel < &main;
+                                       else
+                                           return sel.begin() < main_begin;
+                                   });
+    std::stable_sort(selections.begin(), selections.end(), compare_selections);
+
+    merge_overlapping(selections, main_selection, overlaps);
 }
 
 void Editor::move_selections(CharCount offset, SelectMode mode)
@@ -391,7 +391,7 @@ bool Editor::undo()
     {
         m_selections = std::move(listener.ranges());
         m_main_sel = m_selections.size() - 1;
-        sort_and_merge_overlapping<true>(m_selections, m_main_sel);
+        merge_overlapping(m_selections, m_main_sel, touches);
     }
     check_invariant();
     return res;
@@ -405,7 +405,7 @@ bool Editor::redo()
     {
         m_selections = std::move(listener.ranges());
         m_main_sel = m_selections.size() - 1;
-        sort_and_merge_overlapping<true>(m_selections, m_main_sel);
+        merge_overlapping(m_selections, m_main_sel, touches);
     }
     check_invariant();
     return res;

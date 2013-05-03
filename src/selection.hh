@@ -45,6 +45,12 @@ inline bool overlaps(const Range& lhs, const Range& rhs)
            (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
 }
 
+inline bool touches(const Range& lhs, const Range& rhs)
+{
+    return lhs.begin() <= rhs.begin() ? lhs.end() >= rhs.begin()
+                                      : lhs.begin() <= rhs.end();
+}
+
 using CaptureList = std::vector<String>;
 
 // A selection is a Range, associated with a CaptureList
