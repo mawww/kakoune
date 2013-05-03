@@ -664,9 +664,11 @@ private:
     {
         if (not m_completions.is_valid())
         {
+            auto& completers = options()["completers"].get<std::vector<String>>();
             BufferIterator cursor = m_context.editor().main_selection().last();
-            m_completions = complete_opt(cursor, m_context.options());
-            if (not m_completions.is_valid())
+            if (contains(completers, "option"))
+                m_completions = complete_opt(cursor, m_context.options());
+            if (not m_completions.is_valid() and contains(completers, "word"))
                 m_completions = complete_word(cursor);
             if (not m_completions.is_valid())
                 return false;

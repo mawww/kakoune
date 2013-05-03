@@ -193,6 +193,8 @@ class OptionManagerWatcher_AutoRegister
 public:
     OptionManagerWatcher_AutoRegister(OptionManager& options)
         : AutoRegister(options) {}
+
+    OptionManager& options() { return registry(); }
 };
 
 
