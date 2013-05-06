@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <unordered_set>
 
 namespace Kakoune
 {
@@ -180,6 +181,12 @@ template<typename Container, typename T>
 bool contains(Container&& container, const T& value)
 {
     return (not container.empty()) and find(container, value) != container.end();
+}
+
+template<typename T1, typename T2>
+bool contains(const std::unordered_set<T1>& container, const T2& value)
+{
+    return container.find(value) != container.end();
 }
 
 // *** On scope end ***
