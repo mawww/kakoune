@@ -81,18 +81,24 @@ private:
     std::vector<OptionManagerWatcher*> m_watchers;
 };
 
+template<typename T> using OptionChecker = std::function<void (const T&)>;
+
 template<typename T>
 class TypedOption : public Option
 {
 public:
-    TypedOption(OptionManager& manager, String name, const T& value)
-        : Option(manager, std::move(name)), m_value(value) {}
+    TypedOption(OptionManager& manager, String name, const T& value,
+                OptionChecker<T> checker)
+        : Option(manager, std::move(name)), m_value(value),
+          m_checker(std::move(checker)) {}
 
-    void set(const T& value)
+    void set(T value)
     {
         if (m_value != value)
         {
-            m_value = value;
+            if (m_checker)
+                m_checker(value);
+            m_value = std::move(value);
             m_manager.on_option_changed(*this);
         }
     }
@@ -106,22 +112,25 @@ public:
     {
         T val;
         option_from_string(str, val);
-        set(val);
+        set(std::move(val));
     }
     void add_from_string(const String& str) override
     {
         T val;
         option_from_string(str, val);
+        if (m_checker)
+            m_checker(val);
         if (option_add(m_value, val))
             m_manager.on_option_changed(*this);
     }
 
     Option* clone(OptionManager& manager) const override
     {
-        return new TypedOption{manager, name(), m_value};
+        return new TypedOption{manager, name(), m_value, m_checker};
     }
 private:
     T m_value;
+    OptionChecker<T> m_checker;
 };
 
 template<typename T> const T& Option::get() const
@@ -159,7 +168,8 @@ public:
     GlobalOptions();
 
     template<typename T>
-    Option& declare_option(const String& name, const T& value)
+    Option& declare_option(const String& name, const T& value,
+                           OptionChecker<T> checker = OptionChecker<T>{})
     {
         auto it = find_option(m_options, name);
         if (it != m_options.end())
@@ -168,7 +178,7 @@ public:
                 return **it;
             throw runtime_error("option " + name + " already declared with different type");
         }
-        m_options.emplace_back(new TypedOption<T>{*this, name, value});
+        m_options.emplace_back(new TypedOption<T>{*this, name, value, std::move(checker)});
         return *m_options.back();
     }
 };

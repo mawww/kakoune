@@ -119,7 +119,14 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("filetype", "");
     declare_option<std::vector<String>>("completions", {});
     declare_option<std::vector<String>>("path", { "./", "/usr/include" });
-    declare_option<std::unordered_set<String>>("completers", {"option", "word"});
+    declare_option<std::unordered_set<String>>("completers", {"option", "word"},
+                                        [](const std::unordered_set<String>& s) {
+                                            for (auto& v : s)
+                                            {
+                                                if (v != "option" and v != "word")
+                                                    throw runtime_error(v + " is not a recognised value for completers");
+                                            }
+                                        });
     declare_option<bool>("insert_hide_sel", false);
 }
 
