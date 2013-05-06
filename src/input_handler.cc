@@ -664,7 +664,7 @@ private:
     {
         if (not m_completions.is_valid())
         {
-            auto& completers = options()["completers"].get<std::vector<String>>();
+            auto& completers = options()["completers"].get<std::unordered_set<String>>();
             BufferIterator cursor = m_context.editor().main_selection().last();
             if (contains(completers, "option"))
                 m_completions = complete_opt(cursor, m_context.options());
