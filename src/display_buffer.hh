@@ -115,7 +115,7 @@ struct DisplayAtom
     AtomContent    content;
 
     DisplayAtom(AtomContent content,
-                ColorPair colors = {Color::Default, Color::Default},
+                ColorPair colors = {Colors::Default, Colors::Default},
                 Attribute attribute = Normal)
         : content{std::move(content)}, colors{colors}, attribute{attribute}
     {}

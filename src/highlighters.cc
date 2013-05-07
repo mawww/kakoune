@@ -323,7 +323,7 @@ void expand_unprintable(DisplayBuffer& display_buffer)
                         if ((it+1).underlying_iterator() != atom_it->content.end())
                             atom_it = line.split(atom_it, (it+1).underlying_iterator());
                         atom_it->content.replace(str);
-                        atom_it->colors = { Color::Red, Color::Black };
+                        atom_it->colors = { Colors::Red, Colors::Black };
                         break;
                     }
                 }
@@ -361,7 +361,7 @@ public:
             String content = it != lines.end() ? std::get<2>(*it) : empty;
             content += String(' ', width - content.char_length());
             DisplayAtom atom{AtomContent(std::move(content))};
-            atom.colors = { it != lines.end() ? std::get<1>(*it) : Color::Default , m_bg };
+            atom.colors = { it != lines.end() ? std::get<1>(*it) : Colors::Default , m_bg };
             line.insert(line.begin(), std::move(atom));
         }
     }

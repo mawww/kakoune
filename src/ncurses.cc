@@ -26,22 +26,73 @@ static void set_attribute(int attribute, bool on)
         attroff(attribute);
 }
 
-static int nc_color(Color color)
+static bool operator<(const Color& lhs, const Color& rhs)
 {
-    switch (color)
-    {
-    case Color::Black:   return COLOR_BLACK;
-    case Color::Red:     return COLOR_RED;
-    case Color::Green:   return COLOR_GREEN;
-    case Color::Yellow:  return COLOR_YELLOW;
-    case Color::Blue:    return COLOR_BLUE;
-    case Color::Magenta: return COLOR_MAGENTA;
-    case Color::Cyan:    return COLOR_CYAN;
-    case Color::White:   return COLOR_WHITE;
+    if (lhs.color == rhs.color and lhs.color == Colors::RGB)
+        return lhs.r == rhs.r ? (lhs.g == rhs.g ? lhs.b < rhs.b
+                                                : lhs.g < rhs.g)
+                              : lhs.r < rhs.r;
+    return lhs.color < rhs.color;
+}
 
-    case Color::Default:
-    default:
-        return -1;
+static int nc_color(const Color& color)
+{
+    static std::map<Color, int> colors = {
+        { Colors::Default, -1 },
+        { Colors::Black,   COLOR_BLACK },
+        { Colors::Red,     COLOR_RED },
+        { Colors::Green,   COLOR_GREEN },
+        { Colors::Yellow,  COLOR_YELLOW },
+        { Colors::Blue,    COLOR_BLUE },
+        { Colors::Magenta, COLOR_MAGENTA },
+        { Colors::Cyan,    COLOR_CYAN },
+        { Colors::White,   COLOR_WHITE },
+    };
+    static int next_color = 8;
+
+    auto it = colors.find(color);
+    if (it != colors.end())
+        return it->second;
+    else if (can_change_color() and COLORS > 8)
+    {
+        kak_assert(color.color == Colors::RGB);
+        if (next_color > COLORS)
+            next_color = 8;
+        init_color(next_color,
+                   color.r * 1000 / 255,
+                   color.g * 1000 / 255,
+                   color.b * 1000 / 255);
+        colors[color] = next_color;
+        return next_color++;
+    }
+    else
+    {
+        kak_assert(color.color == Colors::RGB);
+        // project to closest color.
+        struct BuiltinColor { int id; unsigned char r, g, b; };
+        static constexpr BuiltinColor builtins[] = {
+            { COLOR_BLACK,   0,   0,   0 },
+            { COLOR_RED,     255, 0,   0 },
+            { COLOR_GREEN,   0,   255, 0 },
+            { COLOR_YELLOW,  255, 255, 0 },
+            { COLOR_BLUE,    0,   0,   255 },
+            { COLOR_MAGENTA, 255, 0,   255 },
+            { COLOR_CYAN,    0,   255, 255 },
+            { COLOR_WHITE,   255, 255, 255 }
+        };
+        auto sq = [](int x) { return x * x; };
+        int lowestDist = INT_MAX;
+        int closestCol = -1;
+        for (auto& col : builtins)
+        {
+            int dist = sq(color.r - col.r) + sq(color.g - col.g) + sq(color.b - col.b);
+            if (dist < lowestDist)
+            {
+                lowestDist = dist;
+                closestCol = col.id;
+            }
+        }
+        return closestCol;
     }
 }
 
@@ -68,7 +119,7 @@ static void set_color(WINDOW* window, const ColorPair colors)
     if (current_pair != -1)
         wattroff(window, COLOR_PAIR(current_pair));
 
-    if (colors.first != Color::Default or colors.second != Color::Default)
+    if (colors.first != Colors::Default or colors.second != Colors::Default)
     {
         current_pair = get_color_pair(colors);
         wattron(window, COLOR_PAIR(current_pair));
@@ -202,7 +253,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     set_attribute(A_REVERSE, 0);
     set_attribute(A_BLINK, 0);
     set_attribute(A_BOLD, 0);
-    set_color(stdscr, { Color::Blue, Color::Default });
+    set_color(stdscr, { Colors::Blue, Colors::Default });
     for (;line_index < m_dimensions.line; ++line_index)
     {
         move((int)line_index, 0);
@@ -321,7 +372,7 @@ void NCursesUI::draw_menu()
     auto menu_fg = get_color_pair(m_menu_fg);
     auto menu_bg = get_color_pair(m_menu_bg);
 
-    auto scroll_fg = get_color_pair({ Color::White, Color::White });
+    auto scroll_fg = get_color_pair({ Colors::White, Colors::White });
     auto scroll_bg = get_color_pair(m_menu_bg);
 
     wattron(m_menu_win, COLOR_PAIR(menu_bg));

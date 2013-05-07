@@ -15,7 +15,7 @@ const ColorPair& ColorRegistry::operator[](const String& colordesc)
     ColorPair colpair{ str_to_color(String(colordesc.begin(), it)),
                        it != colordesc.end() ?
                            str_to_color(String(it+1, colordesc.end()))
-                         : Color::Default };
+                         : Colors::Default };
 
     return (m_aliases[colordesc] = colpair);
 }
@@ -32,7 +32,7 @@ void ColorRegistry::register_alias(const String& name, const String& colordesc,
 
     auto it = std::find(colordesc.begin(), colordesc.end(), ',');
     auto fg = str_to_color(String(colordesc.begin(), it));
-    auto bg = Color::Default;
+    auto bg = Color{Colors::Default};
     if (it != colordesc.end())
         bg = str_to_color(String(it+1, colordesc.end()));
 
@@ -41,18 +41,18 @@ void ColorRegistry::register_alias(const String& name, const String& colordesc,
 
 ColorRegistry::ColorRegistry()
     : m_aliases{
-        { "PrimarySelection", { Color::Cyan, Color::Blue } },
-        { "SecondarySelection", { Color::Black, Color::Blue } },
-        { "PrimaryCursor", { Color::Black, Color::White } },
-        { "SecondaryCursor", { Color::Black, Color::White } },
-        { "LineNumbers", { Color::Black, Color::White } },
-        { "MenuForeground", { Color::Blue, Color::Cyan } },
-        { "MenuBackground", { Color::Cyan, Color::Blue } },
-        { "Information", { Color::Black, Color::Yellow } },
-        { "Error", { Color::Black, Color::Red } },
-        { "StatusLine", { Color::Cyan, Color::Default } },
-        { "StatusCursor", { Color::Black, Color::Cyan } },
-        { "Prompt", { Color::Yellow, Color::Default} },
+        { "PrimarySelection", { Colors::Cyan, Colors::Blue } },
+        { "SecondarySelection", { Colors::Black, Colors::Blue } },
+        { "PrimaryCursor", { Colors::Black, Colors::White } },
+        { "SecondaryCursor", { Colors::Black, Colors::White } },
+        { "LineNumbers", { Colors::Black, Colors::White } },
+        { "MenuForeground", { Colors::Blue, Colors::Cyan } },
+        { "MenuBackground", { Colors::Cyan, Colors::Blue } },
+        { "Information", { Colors::Black, Colors::Yellow } },
+        { "Error", { Colors::Black, Colors::Red } },
+        { "StatusLine", { Colors::Cyan, Colors::Default } },
+        { "StatusCursor", { Colors::Black, Colors::Cyan } },
+        { "Prompt", { Colors::Yellow, Colors::Default} },
       }
 {}
 

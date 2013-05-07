@@ -2,37 +2,54 @@
 
 #include "exception.hh"
 
+#include <stdlib.h>
+
 namespace Kakoune
 {
 
 Color str_to_color(const String& color)
 {
-    if (color == "default") return Color::Default;
-    if (color == "black")   return Color::Black;
-    if (color == "red")     return Color::Red;
-    if (color == "green")   return Color::Green;
-    if (color == "yellow")  return Color::Yellow;
-    if (color == "blue")    return Color::Blue;
-    if (color == "magenta") return Color::Magenta;
-    if (color == "cyan")    return Color::Cyan;
-    if (color == "white")   return Color::White;
+    if (color == "default") return Colors::Default;
+    if (color == "black")   return Colors::Black;
+    if (color == "red")     return Colors::Red;
+    if (color == "green")   return Colors::Green;
+    if (color == "yellow")  return Colors::Yellow;
+    if (color == "blue")    return Colors::Blue;
+    if (color == "magenta") return Colors::Magenta;
+    if (color == "cyan")    return Colors::Cyan;
+    if (color == "white")   return Colors::White;
+
+    static const Regex rgb_regex{"rgb:[0-9a-fA-F]{6}"};
+    if (boost::regex_match(color, rgb_regex))
+    {
+        long int l = strtol(color.c_str() + 4, NULL, 16);
+        return { (unsigned char)((l >> 16) & 0xFF),
+                 (unsigned char)((l >> 8) & 0xFF),
+                 (unsigned char)(l & 0xFF) };
+    }
     throw runtime_error("Unable to parse color '" + color + "'");
-    return Color::Default;
+    return Colors::Default;
 }
 
 String color_to_str(const Color& color)
 {
-    switch (color)
+    switch (color.color)
     {
-        case Color::Default: return "default";
-        case Color::Black:   return "black";
-        case Color::Red:     return "red";
-        case Color::Green:   return "green";
-        case Color::Yellow:  return "yellow";
-        case Color::Blue:    return "blue";
-        case Color::Magenta: return "magenta";
-        case Color::Cyan:    return "cyan";
-        case Color::White:   return "white";
+        case Colors::Default: return "default";
+        case Colors::Black:   return "black";
+        case Colors::Red:     return "red";
+        case Colors::Green:   return "green";
+        case Colors::Yellow:  return "yellow";
+        case Colors::Blue:    return "blue";
+        case Colors::Magenta: return "magenta";
+        case Colors::Cyan:    return "cyan";
+        case Colors::White:   return "white";
+        case Colors::RGB:
+        {
+            char buffer[11];
+            sprintf(buffer, "rgb:%02x%02x%02x", color.r, color.g, color.b);
+            return buffer;
+        }
     }
     kak_assert(false);
     return "default";

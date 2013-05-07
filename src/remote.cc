@@ -75,6 +75,17 @@ public:
         write(memoryview<T>(vec));
     }
 
+    void write(const Color& color)
+    {
+        write(color.color);
+        if (color.color == Colors::RGB)
+        {
+            write(color.r);
+            write(color.g);
+            write(color.b);
+        }
+    }
+
     void write(const ColorPair& colors)
     {
         write(colors.first);
@@ -146,6 +157,20 @@ std::vector<T> read_vector(int socket)
     res.reserve(size);
     while (size--)
         res.push_back(read<T>(socket));
+    return res;
+}
+
+template<>
+Color read<Color>(int socket)
+{
+    Color res;
+    res.color = read<Colors>(socket);
+    if (res.color == Colors::RGB)
+    {
+        res.r = read<unsigned char>(socket);
+        res.g = read<unsigned char>(socket);
+        res.b = read<unsigned char>(socket);
+    }
     return res;
 }
 
