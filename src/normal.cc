@@ -386,7 +386,7 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
             {
                 try
                 {
-                    on_validate(Regex{str}, context);
+                    on_validate(str.empty() ? Regex{} : Regex{str}, context);
                 }
                 catch (boost::regex_error& err)
                 {
@@ -408,7 +408,7 @@ void select_regex(Context& context)
             ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
         else
             RegisterManager::instance()['/'] = String{ex.str()};
-        if (not ex.empty())
+        if (not ex.empty() and not ex.str().empty())
             context.editor().multi_select(std::bind(select_all_matches, _1, ex));
     });
 }
@@ -420,7 +420,7 @@ void split_regex(Context& context)
             ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
         else
             RegisterManager::instance()['/'] = String{ex.str()};
-        if (not ex.empty())
+        if (not ex.empty() and not ex.str().empty())
             context.editor().multi_select(std::bind(split_selection, _1, ex));
     });
 }
