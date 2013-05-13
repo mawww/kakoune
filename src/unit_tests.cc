@@ -99,10 +99,6 @@ void test_utf8()
 
 void test_string()
 {
-   kak_assert(int_to_str(124)  == "124");
-   kak_assert(int_to_str(-129) == "-129");
-   kak_assert(int_to_str(0)    == "0");
-
    kak_assert(String("youpi ") + "matin" == "youpi matin");
 
    std::vector<String> splited = split("youpi:matin::tchou", ':');

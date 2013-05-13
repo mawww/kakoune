@@ -28,7 +28,7 @@ String ClientManager::generate_name() const
 {
     for (int i = 0; true; ++i)
     {
-        String name = "unnamed" + int_to_str(i);
+        String name = "unnamed" + to_string(i);
         bool found = false;
         for (auto& client : m_clients)
         {

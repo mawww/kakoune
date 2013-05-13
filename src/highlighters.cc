@@ -134,9 +134,9 @@ HighlighterAndId colorize_regex_factory(const HighlighterParameters params, cons
                 throw runtime_error("wrong colorspec: '" + *it +
                                      "' expected <capture>:<fgcolor>[,<bgcolor>]");
 
-            int capture = str_to_int(String(res[1].first, res[1].second));
+            int capture = stoi(res[1].str());
             const ColorPair*& color = colors[capture];
-            color = &get_color(String(res[2].first, res[2].second));
+            color = &get_color(res[2].str());
         }
 
         String id = "colre'" + params[0] + "'";

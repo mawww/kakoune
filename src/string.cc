@@ -5,33 +5,6 @@
 namespace Kakoune
 {
 
-String int_to_str(int value)
-{
-    const bool negative = value < 0;
-    if (negative)
-        value = -value;
-
-    char buffer[16];
-    size_t pos = sizeof(buffer);
-    buffer[--pos] = 0;
-    do
-    {
-        buffer[--pos] = '0' + (value % 10);
-        value /= 10;
-    }
-    while (value);
-
-    if (negative)
-       buffer[--pos] = '-';
-
-    return String(buffer + pos);
-}
-
-int str_to_int(const String& str)
-{
-    return atoi(str.c_str());
-}
-
 std::vector<String> split(const String& str, char separator)
 {
     auto begin = str.begin();

@@ -15,8 +15,8 @@ namespace Kakoune
 inline String option_to_string(const String& opt) { return opt; }
 inline void option_from_string(const String& str, String& opt) { opt = str; }
 
-inline String option_to_string(int opt) { return int_to_str(opt); }
-inline void option_from_string(const String& str, int& opt) { opt = str_to_int(str); }
+inline String option_to_string(int opt) { return to_string(opt); }
+inline void option_from_string(const String& str, int& opt) { opt = stoi(str); }
 inline bool option_add(int& opt, int val) { opt += val; return val != 0; }
 
 inline String option_to_string(bool opt) { return opt ? "true" : "false"; }
@@ -145,16 +145,19 @@ void option_from_string(const String& str, std::tuple<Types...>& opt)
     TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(elems, opt);
 }
 
-template<typename RealType, typename ValueType = int>
-inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& opt) { return int_to_str((int)opt); }
-
-template<typename RealType, typename ValueType = int>
-inline void option_from_string(const String& str, StronglyTypedNumber<RealType, ValueType>& opt)
+template<typename RealType, typename ValueType>
+inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& opt)
 {
-     opt = StronglyTypedNumber<RealType, ValueType>{str_to_int(str)};
+    return to_string(opt);
 }
 
-template<typename RealType, typename ValueType = int>
+template<typename RealType, typename ValueType>
+inline void option_from_string(const String& str, StronglyTypedNumber<RealType, ValueType>& opt)
+{
+     opt = StronglyTypedNumber<RealType, ValueType>{stoi(str)};
+}
+
+template<typename RealType, typename ValueType>
 inline bool option_add(StronglyTypedNumber<RealType, ValueType>& opt,
                        StronglyTypedNumber<RealType, ValueType> val)
 {

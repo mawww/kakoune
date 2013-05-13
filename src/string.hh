@@ -64,6 +64,16 @@ inline String operator+(const char* lhs, const String& rhs)
     return String(lhs) + rhs;
 }
 
+inline String operator+(const std::string& lhs, const String& rhs)
+{
+    return String(lhs) + rhs;
+}
+
+inline String operator+(const String& lhs, const std::string& rhs)
+{
+    return lhs + String(rhs);
+}
+
 inline String operator+(char lhs, const String& rhs)
 {
     return String(lhs) + rhs;
@@ -74,9 +84,6 @@ inline String operator+(Codepoint lhs, const String& rhs)
     return String(lhs) + rhs;
 }
 
-
-String int_to_str(int value);
-int    str_to_int(const String& str);
 std::vector<String> split(const String& str, char separator);
 
 inline String operator"" _str(const char* str, size_t)
@@ -93,6 +100,15 @@ inline String codepoint_to_str(Codepoint cp)
 
 String option_to_string(const Regex& re);
 void option_from_string(const String& str, Regex& re);
+
+
+using std::to_string;
+
+template<typename RealType, typename ValueType>
+std::string to_string(const StronglyTypedNumber<RealType, ValueType>& val)
+{
+    return to_string((ValueType)val);
+}
 
 }
 

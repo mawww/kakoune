@@ -125,9 +125,9 @@ void edit(const CommandParameters& params, Context& context)
 
     if (param_count > 1)
     {
-        int line = std::max(0, str_to_int(parser[1]) - 1);
+        int line = std::max(0, stoi(parser[1]) - 1);
         int column = param_count > 2 ?
-                     std::max(0, str_to_int(parser[2]) - 1) : 0;
+                     std::max(0, stoi(parser[2]) - 1) : 0;
 
         context.editor().select(context.buffer().iterator_at({ line,  column }));
         if (context.has_window())
@@ -427,12 +427,12 @@ void define_command(const CommandParameters& params, Context& context)
         completer = [=](const Context& context, const CommandParameters& params,
                         size_t token_to_complete, ByteCount pos_in_token)
         {
-           EnvVarMap vars = {
-               {"token_to_complete", int_to_str(token_to_complete) },
-               { "pos_in_token",     int_to_str((int)pos_in_token) }
-           };
-           String output = ShellManager::instance().eval(shell_cmd, context, params, vars);
-           return split(output, '\n');
+            EnvVarMap vars = {
+                { "token_to_complete", to_string(token_to_complete) },
+                { "pos_in_token",      to_string(pos_in_token) }
+            };
+            String output = ShellManager::instance().eval(shell_cmd, context, params, vars);
+            return split(output, '\n');
         };
     }
     CommandManager::instance().register_command(cmd_name, cmd, completer);

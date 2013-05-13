@@ -43,7 +43,7 @@ String ShellManager::pipe(const String& input,
         close(read_pipe[1]);
         close(error_pipe[1]);
 
-        memoryview<char> data = input.data();
+        auto data = input.data();
         write(write_pipe[1], data.pointer(), data.size());
         close(write_pipe[1]);
 

@@ -320,7 +320,8 @@ void use_selection_as_search_pattern(Context& context)
 void yank(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    context.print_status({ "yanked " + int_to_str(context.editor().selections().size()) + " selections", get_color("Information") });
+    context.print_status({ "yanked " + to_string(context.editor().selections().size()) +
+                           " selections", get_color("Information") });
 }
 
 void cat_yank(Context& context)
@@ -331,7 +332,7 @@ void cat_yank(Context& context)
         str += sel;
     RegisterManager::instance()['"'] = memoryview<String>(str);
     context.print_status({ "concatenated and yanked " +
-                           int_to_str(sels.size()) + " selections", get_color("Information") });
+                           to_string(sels.size()) + " selections", get_color("Information") });
 }
 
 void erase(Context& context)
@@ -496,7 +497,7 @@ void deindent(Context& context)
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
     editor.multi_select(std::bind(select_all_matches, _1,
-                                  Regex{"^\\h{1," + int_to_str(width) + "}"}));
+                                  Regex{"^\\h{1," + to_string(width) + "}"}));
     editor.erase();
 }
 

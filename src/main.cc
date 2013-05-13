@@ -64,7 +64,7 @@ void register_env_vars()
                                    { return context.buffer().display_name(); });
     shell_manager.register_env_var("timestamp",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str(context.buffer().timestamp()); });
+                                   { return to_string(context.buffer().timestamp()); });
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
                                    { return context.editor().main_selection().content(); });
@@ -90,21 +90,21 @@ void register_env_vars()
                                    { return ClientManager::instance().get_client(context).name(); });
     shell_manager.register_env_var("cursor_line",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str((int)context.editor().main_selection().last().line() + 1); });
+                                   { return to_string(context.editor().main_selection().last().line() + 1); });
     shell_manager.register_env_var("cursor_column",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str((int)context.editor().main_selection().last().column() + 1); });
+                                   { return to_string(context.editor().main_selection().last().column() + 1); });
     shell_manager.register_env_var("selection_desc",
                                    [](const String& name, const Context& context)
                                    { auto& sel = context.editor().main_selection();
                                      auto beg = sel.begin();
-                                     return int_to_str((int)beg.line() + 1) + ':' + int_to_str((int)beg.column() + 1) + '+' + int_to_str((int)(sel.end() - beg)); });
+                                     return to_string(beg.line() + 1) + ':' + to_string(beg.column() + 1) + '+' + to_string((sel.end() - beg)); });
     shell_manager.register_env_var("window_width",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str((int)context.window().dimensions().column); });
+                                   { return to_string(context.window().dimensions().column); });
     shell_manager.register_env_var("window_height",
                                    [](const String& name, const Context& context)
-                                   { return int_to_str((int)context.window().dimensions().line); });
+                                   { return to_string(context.window().dimensions().line); });
 }
 
 void register_registers()
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
         register_filters();
 
         write_debug("*** This is the debug buffer, where debug info will be written ***");
-        write_debug("pid: " + int_to_str(getpid()));
+        write_debug("pid: " + to_string(getpid()));
         write_debug("utf-8 test: é á ï");
 
         Server server;

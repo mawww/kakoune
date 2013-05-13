@@ -242,12 +242,12 @@ private:
 RemoteUI::RemoteUI(int socket)
     : m_socket_watcher(socket, [this](FDWatcher&) { if (m_input_callback) m_input_callback(); })
 {
-    write_debug("remote client connected: " + int_to_str(m_socket_watcher.fd()));
+    write_debug("remote client connected: " + to_string(m_socket_watcher.fd()));
 }
 
 RemoteUI::~RemoteUI()
 {
-    write_debug("remote client disconnected: " + int_to_str(m_socket_watcher.fd()));
+    write_debug("remote client disconnected: " + to_string(m_socket_watcher.fd()));
     close(m_socket_watcher.fd());
 }
 
@@ -504,7 +504,7 @@ private:
 };
 
 Server::Server()
-    : m_filename{"/tmp/kak-" + int_to_str(getpid())}
+    : m_filename{"/tmp/kak-" + to_string(getpid())}
 {
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);

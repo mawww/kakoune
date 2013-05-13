@@ -20,7 +20,7 @@ private:
 
 void on_assert_failed(const char* message)
 {
-    String debug_info = "pid: " + int_to_str(getpid());
+    String debug_info = "pid: " + to_string(getpid());
     int res = system(("xmessage -buttons 'quit:0,ignore:1' '"_str +
                       message + "\n[Debug Infos]\n" + debug_info + "'").c_str());
     switch (res)
