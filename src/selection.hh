@@ -41,8 +41,8 @@ private:
 
 inline bool overlaps(const Range& lhs, const Range& rhs)
 {
-    return (lhs.first() <= rhs.first() and lhs.last() >= rhs.first()) or
-           (lhs.first() <= rhs.last()  and lhs.last() >= rhs.last());
+    return lhs.begin() <= rhs.begin() ? lhs.end() > rhs.begin()
+                                      : lhs.begin() < rhs.end();
 }
 
 inline bool touches(const Range& lhs, const Range& rhs)
