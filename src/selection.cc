@@ -7,11 +7,11 @@ namespace Kakoune
 
 void Range::merge_with(const Range& range)
 {
+    m_last = range.m_last;
     if (m_first < m_last)
         m_first = std::min(m_first, range.m_first);
     if (m_first > m_last)
         m_first = std::max(m_first, range.m_first);
-    m_last = range.m_last;
 }
 
 BufferIterator Range::begin() const
