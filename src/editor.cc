@@ -255,7 +255,8 @@ void Editor::select(const Selection& selection, SelectMode mode)
     else if (mode == SelectMode::Extend)
     {
         m_selections[m_main_sel].merge_with(selection);
-        sort_and_merge_overlapping(m_selections, m_main_sel);
+        m_selections = SelectionList{ std::move(m_selections[m_main_sel]) };
+        m_main_sel = 0;
     }
     else if (mode == SelectMode::Append)
     {
