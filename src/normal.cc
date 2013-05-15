@@ -501,7 +501,7 @@ void deindent(Context& context)
     editor.erase();
 }
 
-template<SurroundFlags flags>
+template<ObjectFlags flags>
 void select_object(Context& context)
 {
     context.input_handler().on_next_key(
@@ -522,10 +522,10 @@ void select_object(Context& context)
             { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
             { { Key::Modifiers::None, '"' }, std::bind(select_surrounding, _1, CodepointPair{ '"', '"' }, flags) },
             { { Key::Modifiers::None, '\'' }, std::bind(select_surrounding, _1, CodepointPair{ '\'', '\'' }, flags) },
-            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, flags & SurroundFlags::Inner) },
-            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, flags & SurroundFlags::Inner) },
-            { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, flags & SurroundFlags::Inner) },
-            { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, flags & SurroundFlags::Inner) },
+            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, flags) },
+            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, flags) },
+            { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, flags) },
+            { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, flags) },
         };
 
         auto it = key_to_selector.find(key);
@@ -783,10 +783,10 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status({ "nothing left to undo", get_color("Information") }); } }) },
     { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status({ "nothing left to redo", get_color("Information") }); } }) },
 
-    { { Key::Modifiers::Alt,  'i' }, select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd | SurroundFlags::Inner> },
-    { { Key::Modifiers::Alt,  'a' }, select_object<SurroundFlags::ToBegin | SurroundFlags::ToEnd> },
-    { { Key::Modifiers::None, ']' }, select_object<SurroundFlags::ToEnd> },
-    { { Key::Modifiers::None, '[' }, select_object<SurroundFlags::ToBegin> },
+    { { Key::Modifiers::Alt,  'i' }, select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner> },
+    { { Key::Modifiers::Alt,  'a' }, select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },
+    { { Key::Modifiers::None, ']' }, select_object<ObjectFlags::ToEnd> },
+    { { Key::Modifiers::None, '[' }, select_object<ObjectFlags::ToBegin> },
 
     { { Key::Modifiers::Alt,  'j' }, join },
     { { Key::Modifiers::Alt,  'J' }, join_select_spaces },

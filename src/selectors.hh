@@ -25,10 +25,21 @@ Selection select_to_reverse(const Selection& selection,
 Selection select_to_eol(const Selection& selection);
 Selection select_to_eol_reverse(const Selection& selection);
 
+enum class ObjectFlags
+{
+    ToBegin = 1,
+    ToEnd   = 2,
+    Inner   = 4
+};
+constexpr bool operator&(ObjectFlags lhs, ObjectFlags rhs)
+{ return (bool)((int)lhs & (int) rhs); }
+constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
+{ return (ObjectFlags)((int)lhs | (int) rhs); }
+
 template<bool punctuation_is_word>
-Selection select_whole_word(const Selection& selection, bool inner);
-Selection select_whole_sentence(const Selection& selection, bool inner);
-Selection select_whole_paragraph(const Selection& selection, bool inner);
+Selection select_whole_word(const Selection& selection, ObjectFlags flags);
+Selection select_whole_sentence(const Selection& selection, ObjectFlags flags);
+Selection select_whole_paragraph(const Selection& selection, ObjectFlags flags);
 Selection select_whole_lines(const Selection& selection);
 Selection select_whole_buffer(const Selection& selection);
 Selection trim_partial_lines(const Selection& selection);
@@ -42,21 +53,10 @@ SelectionList select_all_matches(const Selection& selection,
 SelectionList split_selection(const Selection& selection,
                               const Regex& separator_regex);
 
-enum class SurroundFlags
-{
-    ToBegin = 1,
-    ToEnd   = 2,
-    Inner   = 4
-};
-constexpr bool operator&(SurroundFlags lhs, SurroundFlags rhs)
-{ return (bool)((int)lhs & (int) rhs); }
-constexpr SurroundFlags operator|(SurroundFlags lhs, SurroundFlags rhs)
-{ return (SurroundFlags)((int)lhs | (int) rhs); }
-
 using CodepointPair = std::pair<Codepoint, Codepoint>;
 Selection select_surrounding(const Selection& selection,
                              const CodepointPair& matching,
-                             SurroundFlags flags);
+                             ObjectFlags flags);
 
 }
 

@@ -227,10 +227,10 @@ Selection select_matching(const Selection& selection)
 using boost::optional;
 static optional<Range> find_surrounding(const BufferIterator& pos,
                                         const CodepointPair& matching,
-                                        SurroundFlags flags)
+                                        ObjectFlags flags)
 {
-    const bool to_begin = flags & SurroundFlags::ToBegin;
-    const bool to_end   = flags & SurroundFlags::ToEnd;
+    const bool to_begin = flags & ObjectFlags::ToBegin;
+    const bool to_end   = flags & ObjectFlags::ToEnd;
     const bool nestable = matching.first != matching.second;
     Utf8Iterator first = pos;
     if (to_begin)
@@ -275,7 +275,7 @@ static optional<Range> find_surrounding(const BufferIterator& pos,
             return optional<Range>{};
     }
 
-    if (flags & SurroundFlags::Inner)
+    if (flags & ObjectFlags::Inner)
     {
         if (to_begin)
             ++first;
@@ -287,13 +287,13 @@ static optional<Range> find_surrounding(const BufferIterator& pos,
 
 Selection select_surrounding(const Selection& selection,
                              const CodepointPair& matching,
-                             SurroundFlags flags)
+                             ObjectFlags flags)
 {
     auto res = find_surrounding(selection.last(), matching, flags);
     if (not res)
         return selection;
 
-    if (flags == (SurroundFlags::ToBegin | SurroundFlags::ToEnd) and
+    if (flags == (ObjectFlags::ToBegin | ObjectFlags::ToEnd) and
         matching.first != matching.second and not res->last().is_end() and
         (*res == selection or Range{res->last(), res->first()} == selection))
     {
@@ -354,105 +354,140 @@ Selection select_to_eol_reverse(const Selection& selection)
 }
 
 template<bool punctuation_is_word>
-Selection select_whole_word(const Selection& selection, bool inner)
+Selection select_whole_word(const Selection& selection, ObjectFlags flags)
 {
     Utf8Iterator first = selection.last();
     Utf8Iterator last = first;
-    if (is_word(*first))
+    if (is_word<punctuation_is_word>(*first))
     {
-        skip_while_reverse(first, is_word<punctuation_is_word>);
-        if (not is_word<punctuation_is_word>(*first))
-            ++first;
-        skip_while(last, is_word<punctuation_is_word>);
-        if (not inner)
+        if (flags & ObjectFlags::ToBegin)
+        {
+            skip_while_reverse(first, is_word<punctuation_is_word>);
+            if (not is_word<punctuation_is_word>(*first))
+                ++first;
+        }
+        if (flags & ObjectFlags::ToEnd)
+        {
+            skip_while(last, is_word<punctuation_is_word>);
+            if (not (flags & ObjectFlags::Inner))
+                skip_while(last, is_blank);
+            --last;
+        }
+    }
+    else if (not (flags & ObjectFlags::Inner))
+    {
+        if (flags & ObjectFlags::ToBegin)
+        {
+            skip_while_reverse(first, is_blank);
+            if (not is_word<punctuation_is_word>(*first))
+                return selection;
+            skip_while_reverse(first, is_word<punctuation_is_word>);
+            if (not is_word<punctuation_is_word>(*first))
+                ++first;
+        }
+        if (flags & ObjectFlags::ToEnd)
+        {
             skip_while(last, is_blank);
+            --last;
+        }
     }
-    else if (not inner)
-    {
-        skip_while_reverse(first, is_blank);
-        if (is_blank(*first))
-            ++first;
-        skip_while(last, is_blank);
-        if (not is_word<punctuation_is_word>(*last))
-            return selection;
-        skip_while(last, is_word<punctuation_is_word>);
-    }
-    --last;
-    return utf8_range(first, last);
+    return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
+                                        : utf8_range(last, first);
 }
-template Selection select_whole_word<false>(const Selection&, bool);
-template Selection select_whole_word<true>(const Selection&, bool);
+template Selection select_whole_word<false>(const Selection&, ObjectFlags);
+template Selection select_whole_word<true>(const Selection&, ObjectFlags);
 
-Selection select_whole_sentence(const Selection& selection, bool inner)
+Selection select_whole_sentence(const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = selection.last();
-
-    while (not is_begin(first))
-    {
-        char cur = *first;
-        char prev = *(first-1);
-        if (is_eol(prev) and is_eol(cur))
-        {
-            ++first;
-            break;
-        }
-        else if (prev == '.' or prev == ';')
-            break;
-        --first;
-    }
-    skip_while(first, is_blank);
-
     BufferIterator last = first;
-    while (not is_end(last))
-    {
-        char cur = *last;
-        if (cur == '.' or cur == ';' or cur == '!' or cur == '?' or
-            (is_eol(cur) and (is_end(last+1) or is_eol(*last+1))))
-            break;
-        ++last;
-    }
-    if (not inner and not is_end(last))
-    {
-        ++last;
-        skip_while(last, is_blank);
-        --last;
-    }
 
-    return Selection{first, last};
+    if (flags & ObjectFlags::ToBegin)
+    {
+        bool saw_non_blank = false;
+        while (not is_begin(first))
+        {
+            char cur = *first;
+            char prev = *(first-1);
+            if (not is_blank(cur))
+                saw_non_blank = true;
+            if (is_eol(prev) and is_eol(cur))
+            {
+                ++first;
+                break;
+            }
+            else if (prev == '.' or prev == ';' or prev == '!' or prev == '?')
+            {
+                if (saw_non_blank)
+                    break;
+                else if (flags & ObjectFlags::ToEnd)
+                    last = first-1;
+            }
+            --first;
+        }
+        skip_while(first, is_blank);
+    }
+    if (flags & ObjectFlags::ToEnd)
+    {
+        while (not is_end(last))
+        {
+            char cur = *last;
+            if (cur == '.' or cur == ';' or cur == '!' or cur == '?' or
+                (is_eol(cur) and (is_end(last+1) or is_eol(*last+1))))
+                break;
+            ++last;
+        }
+        if (not (flags & ObjectFlags::Inner) and not is_end(last))
+        {
+            ++last;
+            skip_while(last, is_blank);
+            --last;
+        }
+    }
+    return (flags & ObjectFlags::ToEnd) ? Selection{first, last}
+                                        : Selection{last, first};
 }
 
-Selection select_whole_paragraph(const Selection& selection, bool inner)
+Selection select_whole_paragraph(const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = selection.last();
-
-    while (not is_begin(first))
-    {
-        char cur = *first;
-        char prev = *(first-1);
-        if (is_eol(prev) and is_eol(cur))
-        {
-            ++first;
-            break;
-        }
-        --first;
-    }
-
     BufferIterator last = first;
-    while (not is_end(last))
-    {
-        char cur = *last;
-        char prev = *(last-1);
-        if (is_eol(cur) and is_eol(prev))
-        {
-            if (not inner)
-                skip_while(last, is_eol);
-           --last;
-            break;
-        }
-        ++last;
-    }
 
-    return Selection{first, last};
+    if (flags & ObjectFlags::ToBegin and not is_begin(first))
+    {
+        skip_while_reverse(first, is_eol);
+        if (flags & ObjectFlags::ToEnd)
+            last = first;
+        while (not is_begin(first))
+        {
+            char cur = *first;
+            char prev = *(first-1);
+            if (is_eol(prev) and is_eol(cur))
+            {
+                ++first;
+                break;
+            }
+            --first;
+        }
+    }
+    if (flags & ObjectFlags::ToEnd)
+    {
+        while (not is_end(last))
+        {
+            char cur = *last;
+            char prev = *(last-1);
+            if (is_eol(cur) and is_eol(prev))
+            {
+                if (not (flags & ObjectFlags::Inner))
+                    skip_while(last, is_eol);
+               --last;
+                break;
+            }
+            ++last;
+        }
+    }
+    return (flags & ObjectFlags::ToEnd) ? Selection{first, last}
+                                        : Selection{last, first};
 }
 
 Selection select_whole_lines(const Selection& selection)
