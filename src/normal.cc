@@ -649,6 +649,24 @@ void jump(Context& context)
     context.editor().select(SelectionList{ jump });
 }
 
+void align(Context& context)
+{
+    auto& selections = context.editor().selections();
+    auto& buffer = context.buffer();
+    auto get_column = [&buffer](const BufferIterator& it)
+    { return utf8::distance(buffer.iterator_at_line_begin(it), it); };
+
+    CharCount max_col = 0;
+    for (auto& sel : selections)
+        max_col = std::max(get_column(sel.last()), max_col);
+
+    for (auto& sel : selections)
+    {
+        CharCount padding = max_col - get_column(sel.last());
+        buffer.insert(sel.last(), String{ ' ', padding });
+    }
+}
+
 template<typename T>
 class Repeated
 {
@@ -809,6 +827,7 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'Q' }, replay_macro },
 
     { { Key::Modifiers::None, '~' }, swap_case },
+    { { Key::Modifiers::None, '&' }, align },
 };
 
 }
