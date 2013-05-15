@@ -125,6 +125,11 @@ Changes
  * _u_: undo last change
  * _U_: redo last change
 
+ * _r_: replace each character with the next entered one
+ * _&_: align selection, align the last character of selections by
+        inserting spaces before
+ * _~_: swap case
+
 Goto Commands
 -------------
 
