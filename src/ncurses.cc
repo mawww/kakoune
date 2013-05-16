@@ -492,7 +492,7 @@ static DisplayCoord compute_needed_size(const String& str)
             if (begin+1 == end)
                 break;
 
-            res.column = std::max(res.column, line_len+1);
+            res.column = std::max(res.column, line_len);
             line_len = 0;
             ++res.line;
         }
@@ -550,9 +550,17 @@ void NCursesUI::info_show(const String& content, DisplayCoord anchor,
                                      (int)pos.line,  (int)pos.column);
 
     wbkgd(m_info_win, COLOR_PAIR(get_color_pair(colors)));
-    wmove(m_info_win, 0, 0);
-    addutf8str(m_info_win, Utf8Iterator(content.begin()),
-               Utf8Iterator(content.end()));
+    int line = 0;
+    auto it = content.begin(), end = content.end();
+    while (true)
+    {
+        wmove(m_info_win, line++, 0);
+        auto eol = std::find_if(it, end, [](char c) { return c == '\n'; });
+        addutf8str(m_info_win, Utf8Iterator(it), Utf8Iterator(eol));
+        if (eol == end)
+           break;
+        it = eol + 1;
+    }
     redraw();
 }
 
