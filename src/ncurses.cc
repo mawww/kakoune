@@ -512,7 +512,9 @@ static DisplayCoord compute_pos(const DisplayCoord& anchor,
     DisplayCoord scrsize = window_size(stdscr);
     DisplayCoord pos = { anchor.line+1, anchor.column };
     if (pos.line + size.line >= scrsize.line)
-        pos.line = anchor.line - size.line;
+        pos.line = std::max(0_line, anchor.line - size.line);
+    if (pos.column + size.column >= scrsize.column)
+        pos.column = std::max(0_char, anchor.column - size.column+1);
 
     if (opt_window_to_avoid)
     {
