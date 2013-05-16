@@ -35,7 +35,7 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) %{
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 }
 
-decl str-list alt_dirs ".,.."
+decl str-list alt_dirs ".;.."
 
 def alt %{ %sh{
     shopt -s extglob
