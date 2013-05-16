@@ -14,6 +14,7 @@
 #include "shell_manager.hh"
 #include "string.hh"
 #include "window.hh"
+#include "user_interface.hh"
 
 namespace Kakoune
 {
@@ -31,6 +32,17 @@ void repeat_insert(Context& context)
     context.input_handler().repeat_last_insert();
 }
 
+bool show_auto_info_ifn(const String& info, const Context& context)
+{
+    if (not context.options()["autoinfo"].get<bool>() or not context.has_ui())
+        return false;
+    ColorPair col{ Colors::Black, Colors::Yellow };
+    DisplayCoord pos = context.window().dimensions();
+    pos.column -= 1;
+    context.ui().info_show(info, pos , col, MenuStyle::Inline);
+    return true;
+}
+
 template<SelectMode mode>
 void goto_commands(Context& context)
 {
@@ -46,7 +58,22 @@ void goto_commands(Context& context)
             context.window().center_selection();
     }
     else
-        context.input_handler().on_next_key([](const Key& key, Context& context) {
+    {
+        const bool hide = show_auto_info_ifn("╭────────┤goto├───────╮\n"
+                                             "│ g,k:  buffer top    │\n"
+                                             "│ l:    line end      │\n"
+                                             "│ h:    line begin    │\n"
+                                             "│ j:    buffer bottom │\n"
+                                             "│ e:    buffer end    │\n"
+                                             "│ t:    window top    │\n"
+                                             "│ b:    window bottom │\n"
+                                             "│ c:    window center │\n"
+                                             "│ a:    last buffer   │\n"
+                                             "│ f:    file          │\n"
+                                             "╰─────────────────────╯\n", context);
+        context.input_handler().on_next_key([=](const Key& key, Context& context) {
+            if (hide)
+                context.ui().info_hide();
             if (key.modifiers != Key::Modifiers::None)
                 return;
 
@@ -130,11 +157,21 @@ void goto_commands(Context& context)
             }
             }
         });
+    }
 }
 
 void view_commands(Context& context)
 {
-    context.input_handler().on_next_key([](const Key& key, Context& context) {
+    const bool hide = show_auto_info_ifn("╭─────────┤view├─────────╮\n"
+                                         "│ v,c:  center cursor    │\n"
+                                         "│ t:    cursor on top    │\n"
+                                         "│ b:    cursor on bottom │\n"
+                                         "│ j:    scroll down      │\n"
+                                         "│ k:    scroll up        │\n"
+                                         "╰────────────────────────╯\n", context);
+    context.input_handler().on_next_key([hide](const Key& key, Context& context) {
+        if (hide)
+            context.ui().info_hide();
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
             return;
 
@@ -504,8 +541,22 @@ void deindent(Context& context)
 template<ObjectFlags flags>
 void select_object(Context& context)
 {
+    const bool hide = show_auto_info_ifn("╭──────┤select object├───────╮\n"
+                                         "│ b,(,):  parenthesis block  │\n"
+                                         "│ B,{,}:  braces block       │\n"
+                                         "│ [,]:    brackets block     │\n"
+                                         "│ <,>:    angle block        │\n"
+                                         "│ \":    double quote string  │\n"
+                                         "│ ':    single quote string  │\n"
+                                         "│ w:    word                 │\n"
+                                         "│ W:    WORD                 │\n"
+                                         "│ s:    sentence             │\n"
+                                         "│ p:    paragraph            │\n"
+                                         "╰────────────────────────────╯\n", context);
     context.input_handler().on_next_key(
-    [](const Key& key, Context& context) {
+    [=](const Key& key, Context& context) {
+        if (hide)
+            context.ui().info_hide();
         typedef std::function<Selection (const Selection&)> Selector;
         static const std::unordered_map<Key, Selector> key_to_selector =
         {
