@@ -110,6 +110,7 @@ GlobalOptions::GlobalOptions()
 {
     declare_option<int>("tabstop", 8);
     declare_option<int>("indentwidth", 4);
+    declare_option<int>("scrolloff", 0);
     declare_option<String>("eolformat", "lf");
     declare_option<String>("BOM", "no");
     declare_option<String>("shell", "bash");

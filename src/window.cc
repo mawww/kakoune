@@ -98,21 +98,31 @@ void Window::set_dimensions(const DisplayCoord& dimensions)
     m_dimensions = dimensions;
 }
 
+static LineCount adapt_view_pos(LineCount line, LineCount offset,
+                                LineCount view_pos, LineCount view_size,
+                                LineCount buffer_size)
+{
+    if (line - offset < view_pos)
+        return std::max(0_line, line - offset);
+    else if (line + offset >= view_pos + view_size)
+        return std::min(buffer_size - view_size,
+                        line + offset - (view_size - 1));
+    return view_pos;
+}
+
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
     const BufferIterator first = main_selection().first();
     const BufferIterator last  = main_selection().last();
 
-    // scroll lines if needed
-    if (first.line() < m_position.line)
-        m_position.line = first.line();
-    else if (first.line() >= m_position.line + m_dimensions.line)
-        m_position.line = first.line() - (m_dimensions.line - 1);
+    const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
+                                                 (m_dimensions.line - 1) / 2);
 
-    if (last.line() < m_position.line)
-        m_position.line = last.line();
-    else if (last.line() >= m_position.line + m_dimensions.line)
-        m_position.line = last.line() - (m_dimensions.line - 1);
+    // scroll lines if needed, try to get as much of the selection visible as possible
+    m_position.line = adapt_view_pos(first.line(), offset, m_position.line,
+                                     m_dimensions.line, buffer().line_count());
+    m_position.line = adapt_view_pos(last.line(),  offset, m_position.line,
+                                     m_dimensions.line, buffer().line_count());
 
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
