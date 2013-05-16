@@ -420,12 +420,15 @@ void NCursesUI::menu_show(const memoryview<String>& choices,
 
     DisplayCoord maxsize = window_size(stdscr);
     maxsize.column -= anchor.column;
+    if (maxsize.column <= 2)
+        return;
 
     m_choices.reserve(choices.size());
     CharCount longest = 0;
+    const CharCount maxlen = std::min((int)maxsize.column-2, 200);
     for (auto& choice : choices)
     {
-        m_choices.push_back(choice.substr(0_char, std::min((int)maxsize.column-2, 200)));
+        m_choices.push_back(choice.substr(0_char, maxlen));
         longest = std::max(longest, m_choices.back().char_length());
     }
     longest += 1;
