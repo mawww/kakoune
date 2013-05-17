@@ -23,6 +23,18 @@ std::vector<String> split(const String& str, char separator)
     return res;
 }
 
+int str_to_int(const String& str)
+{
+    try
+    {
+        return stoi(str);
+    }
+    catch (std::logic_error&)
+    {
+        throw runtime_error(str + "is not a number");
+    }
+}
+
 String option_to_string(const Regex& re)
 {
     return String{re.str()};

@@ -125,9 +125,9 @@ void edit(const CommandParameters& params, Context& context)
 
     if (param_count > 1)
     {
-        int line = std::max(0, stoi(parser[1]) - 1);
+        int line = std::max(0, str_to_int(parser[1]) - 1);
         int column = param_count > 2 ?
-                     std::max(0, stoi(parser[2]) - 1) : 0;
+                     std::max(0, str_to_int(parser[2]) - 1) : 0;
 
         context.editor().select(context.buffer().iterator_at({ line,  column }));
         if (context.has_window())

@@ -134,7 +134,7 @@ HighlighterAndId colorize_regex_factory(const HighlighterParameters params, cons
                 throw runtime_error("wrong colorspec: '" + *it +
                                      "' expected <capture>:<fgcolor>[,<bgcolor>]");
 
-            int capture = stoi(res[1].str());
+            int capture = str_to_int(res[1].str());
             const ColorPair*& color = colors[capture];
             color = &get_color(res[2].str());
         }

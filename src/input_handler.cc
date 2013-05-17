@@ -536,17 +536,17 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
     boost::smatch match;
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {
-        BufferCoord coord{ stoi(match[1].str()) - 1, stoi(match[2].str()) - 1 };
+        BufferCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
         if (not pos.buffer().is_valid(coord))
             return {};
         BufferIterator beg{pos.buffer(), coord};
         BufferIterator end = beg;
         if (match[3].matched)
         {
-            ByteCount len = stoi(match[3].str());
+            ByteCount len = str_to_int(match[3].str());
             end = beg + len;
         }
-        size_t timestamp = (size_t)stoi(match[4].str());
+        size_t timestamp = (size_t)str_to_int(match[4].str());
 
         size_t longest_completion = 0;
         for (auto it = opt.begin() + 1; it != opt.end(); ++it)

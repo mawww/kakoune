@@ -101,6 +101,7 @@ inline String codepoint_to_str(Codepoint cp)
 String option_to_string(const Regex& re);
 void option_from_string(const String& str, Regex& re);
 
+int str_to_int(const String& str);
 
 using std::to_string;
 

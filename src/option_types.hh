@@ -16,7 +16,7 @@ inline String option_to_string(const String& opt) { return opt; }
 inline void option_from_string(const String& str, String& opt) { opt = str; }
 
 inline String option_to_string(int opt) { return to_string(opt); }
-inline void option_from_string(const String& str, int& opt) { opt = stoi(str); }
+inline void option_from_string(const String& str, int& opt) { opt = str_to_int(str); }
 inline bool option_add(int& opt, int val) { opt += val; return val != 0; }
 
 inline String option_to_string(bool opt) { return opt ? "true" : "false"; }
@@ -154,7 +154,7 @@ inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& o
 template<typename RealType, typename ValueType>
 inline void option_from_string(const String& str, StronglyTypedNumber<RealType, ValueType>& opt)
 {
-     opt = StronglyTypedNumber<RealType, ValueType>{stoi(str)};
+     opt = StronglyTypedNumber<RealType, ValueType>{str_to_int(str)};
 }
 
 template<typename RealType, typename ValueType>
