@@ -140,22 +140,22 @@ public:
 
     const String& line() const { return m_line; }
     CharCount cursor_pos() const { return m_cursor_pos; }
+
+    DisplayLine build_display_line() const
+    {
+        kak_assert(m_cursor_pos <= m_line.char_length());
+        if (m_cursor_pos == m_line.char_length())
+            return DisplayLine{-1, { {m_line, get_color("StatusLine")},
+                                     {" "_str, get_color("StatusCursor")} }};
+        else
+            return DisplayLine(-1, { DisplayAtom{ m_line.substr(0, m_cursor_pos), get_color("StatusLine") },
+                                     DisplayAtom{ m_line.substr(m_cursor_pos, 1), get_color("StatusCursor") },
+                                     DisplayAtom{ m_line.substr(m_cursor_pos+1), get_color("StatusLine") } });
+    }
 private:
     CharCount      m_cursor_pos = 0;
     String         m_line;
 };
-
-static DisplayLine line_with_cursor(const String& str, CharCount cursor_pos)
-{
-    kak_assert(cursor_pos <= str.char_length());
-    if (cursor_pos == str.char_length())
-        return DisplayLine{-1, { {str, get_color("StatusLine")},
-                                 {" "_str, get_color("StatusCursor")} }};
-    else
-        return DisplayLine(-1, { DisplayAtom{ str.substr(0, cursor_pos), get_color("StatusLine") },
-                                  DisplayAtom{ str.substr(cursor_pos, 1), get_color("StatusCursor") },
-                                  DisplayAtom{ str.substr(cursor_pos+1), get_color("StatusLine") } });
-}
 
 class Menu : public InputMode
 {
@@ -241,8 +241,11 @@ public:
         }
 
         if (m_edit_filter)
-            context().ui().print_status(line_with_cursor("/" + m_filter_editor.line(),
-                                                         m_filter_editor.cursor_pos() + 1));
+        {
+            auto display_line = m_filter_editor.build_display_line();
+            display_line.insert(display_line.begin(), { "filter:"_str, get_color("Prompt") });
+            context().ui().print_status(display_line);
+        }
    }
 
 private:
@@ -446,7 +449,7 @@ public:
 private:
     void display() const
     {
-        auto display_line = line_with_cursor(m_line_editor.line(), m_line_editor.cursor_pos());
+        auto display_line = m_line_editor.build_display_line();
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_colors });
         context().ui().print_status(display_line);
     }
