@@ -14,17 +14,17 @@
 * Sanitize prompt history handling, hooks should not have side effects
   on history
 
-* More text objects: sentence, paragraph, indent, user defined ?
+* More text objects: indent, user defined ?
 
-* automatic line splitting/paragraph formatting
+* automatic line splitting
 
 * folding support
 
 * spelling support
 
-* improve info boxes, how to make them hide
+* improve info boxes, use a sane hiding behaviour
 
-* more than 16 colors support
+* allow colalias to reference another colalias
 
 * investigate 'kakdiff'
 
