@@ -39,7 +39,7 @@ decl str-list alt_dirs ".;.."
 
 def alt %{ %sh{
     shopt -s extglob
-    alt_dirs=${kak_opt_alt_dirs//,/ }
+    alt_dirs=${kak_opt_alt_dirs//;/ }
     file=$(basename ${kak_bufname})
     dir=$(dirname ${kak_bufname})
 
