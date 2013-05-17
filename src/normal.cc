@@ -661,19 +661,19 @@ void start_or_end_macro_recording(Context& context)
 
 void replay_macro(Context& context)
 {
-    static bool running_macro = false;
-    if (running_macro)
-        throw runtime_error("nested macros not supported");
-
     int count = context.numeric_param();
     context.input_handler().on_next_key([count](const Key& key, Context& context) mutable {
         if (key.modifiers == Key::Modifiers::None)
         {
+            static std::unordered_set<char> running_macros;
+            if (contains(running_macros, key.key))
+                throw runtime_error("recursive macros call detected");
+
             memoryview<String> reg_val = RegisterManager::instance()[key.key].values(context);
             if (not reg_val.empty())
             {
-                running_macro = true;
-                auto stop_macro = on_scope_end([&] { running_macro = false; });
+                running_macros.insert(key.key);
+                auto stop = on_scope_end([&]{ running_macros.erase(key.key); });
 
                 auto keys = parse_keys(reg_val[0]);
                 scoped_edition edition(context.editor());
