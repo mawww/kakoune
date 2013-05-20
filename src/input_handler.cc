@@ -6,6 +6,7 @@
 #include "event_manager.hh"
 #include "normal.hh"
 #include "register_manager.hh"
+#include "buffer_manager.hh"
 #include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
@@ -495,7 +496,7 @@ struct BufferCompletion
     bool is_valid() const { return begin.is_valid() and not candidates.empty(); }
 };
 
-static BufferCompletion complete_word(const BufferIterator& pos)
+static BufferCompletion complete_word(const BufferIterator& pos, bool other_buffers)
 {
    if (pos.is_begin() or not is_word(*utf8::previous(pos)))
        return {};
@@ -512,17 +513,31 @@ static BufferCompletion complete_word(const BufferIterator& pos)
     Regex re(ex.begin(), ex.end());
     using RegexIt = boost::regex_iterator<BufferIterator>;
 
-    CandidateList result;
+    std::unordered_set<String> matches;
     for (RegexIt it(buffer.begin(), buffer.end(), re), re_end; it != re_end; ++it)
     {
         auto& match = (*it)[0];
         if (match.first <= pos and pos < match.second)
             continue;
-
-        String content = buffer.string(match.first, match.second);
-        if (not contains(result, content))
-            result.emplace_back(std::move(content));
+        matches.insert(buffer.string(match.first, match.second));
     }
+    if (other_buffers)
+    {
+        for (const auto& buf : BufferManager::instance())
+        {
+            if (buf.get() == &buffer)
+                continue;
+            for (RegexIt it(buf->begin(), buf->end(), re), re_end; it != re_end; ++it)
+            {
+                auto& match = (*it)[0];
+                matches.insert(buf->string(match.first, match.second));
+            }
+        }
+    }
+    CandidateList result;
+    std::copy(make_move_iterator(matches.begin()),
+              make_move_iterator(matches.end()),
+              inserter(result, result.begin()));
     std::sort(result.begin(), result.end());
     return { begin, end, std::move(result), begin.buffer().timestamp() };
 }
@@ -670,8 +685,10 @@ private:
             BufferIterator cursor = m_context.editor().main_selection().last();
             if (contains(completers, "option"))
                 m_completions = complete_opt(cursor, m_context.options());
-            if (not m_completions.is_valid() and contains(completers, "word"))
-                m_completions = complete_word(cursor);
+            if (not m_completions.is_valid() and
+                (contains(completers, "word=buffer") or
+                 contains(completers, "word=all")))
+                m_completions = complete_word(cursor, contains(completers, "word=all"));
             if (not m_completions.is_valid())
                 return false;
 
