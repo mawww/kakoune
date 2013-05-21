@@ -596,9 +596,22 @@ public:
         if (m_current_candidate < 0)
             m_current_candidate += m_matching_candidates.size();
         const String& candidate = m_matching_candidates[m_current_candidate];
+        auto main_cursor = m_context.editor().main_selection().last();
+        ByteCount beg_offset = main_cursor - m_completions.begin;
+        ByteCount end_offset = m_completions.end - main_cursor;
+        ByteCount buffer_len = m_context.buffer().byte_count();
 
-        m_context.buffer().erase(m_completions.begin, m_completions.end);
-        m_context.buffer().insert(m_completions.begin, candidate);
+        for (auto& sel : m_context.editor().selections())
+        {
+            auto offset = sel.last().offset();
+            if (offset > beg_offset and offset + end_offset < buffer_len and
+                std::equal(sel.last() - beg_offset, sel.last(), m_completions.begin))
+            {
+                m_context.buffer().erase(sel.last() - beg_offset, sel.last() + end_offset);
+                m_context.buffer().insert(sel.last(), candidate);
+            }
+        }
+
         m_completions.end = m_completions.begin + candidate.length();
         m_completions.timestamp = m_context.buffer().timestamp();
         m_context.ui().menu_select(m_current_candidate);
