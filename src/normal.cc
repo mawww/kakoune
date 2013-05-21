@@ -139,7 +139,7 @@ void goto_commands(Context& context)
             case 'f':
             {
                 String filename = context.editor().main_selection().content();
-                static char forbidden[] = { '\'', '\\', '\0' };
+                static constexpr char forbidden[] = { '\'', '\\', '\0' };
                 for (auto c : forbidden)
                     if (contains(filename, c))
                         return;
@@ -151,8 +151,9 @@ void goto_commands(Context& context)
                     paths.insert(paths.begin(), String{buffer_name.begin(), it.base()});
 
                 String path = find_file(filename, paths);
-                if (not path.empty())
-                    CommandManager::instance().execute("edit '" + path + "'", context);
+                if (path.empty())
+                    throw runtime_error("unable to find file '" + filename + "'");
+                CommandManager::instance().execute("edit '" + path + "'", context);
                 break;
             }
             }
