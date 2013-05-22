@@ -95,9 +95,7 @@ BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,
 ByteCount Buffer::line_length(LineCount line) const
 {
     kak_assert(line < line_count());
-    ByteCount end = (line < line_count() - 1) ?
-                    m_lines[line + 1].start : byte_count();
-    return end - m_lines[line].start;
+    return m_lines[line].length();
 }
 
 BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
@@ -630,11 +628,37 @@ void Buffer::notify_saved()
     }
 }
 
+BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
+{
+    ByteCount off = Kakoune::clamp(offset(coord) + count, 0_byte, byte_count());
+    auto it = std::upper_bound(m_lines.begin(), m_lines.end(), off,
+                               [](ByteCount s, const Line& l) { return s < l.start; }) - 1;
+    return { LineCount{ (int)(it - m_lines.begin()) }, off - it->start };
+}
+
+ByteCount Buffer::distance(const BufferCoord& begin, const BufferCoord& end) const
+{
+    return offset(end) - offset(begin);
+}
+
+ByteCount Buffer::offset(const BufferCoord& c) const
+{
+    if (c.line == line_count())
+        return m_lines.back().start + m_lines.back().length();
+    return m_lines[c.line].start + c.column;
+}
+
 bool Buffer::is_valid(const BufferCoord& c) const
 {
    return (c.line < line_count() and c.column < m_lines[c.line].length()) or
           (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
           (c.line == line_count() and c.column == 0);
+}
+
+bool Buffer::is_end(const BufferCoord& c) const
+{
+    return (c.line == line_count() and c.column == 0) or
+           (c.line == line_count() - 1 and c.column == m_lines.back().length());
 }
 
 }

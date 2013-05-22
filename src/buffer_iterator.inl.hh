@@ -71,47 +71,24 @@ inline char BufferIterator::operator*() const
 inline ByteCount BufferIterator::offset() const
 {
     kak_assert(m_buffer);
-    return line() >= m_buffer->line_count() ?
-        m_buffer->byte_count() : m_buffer->m_lines[line()].start + column();
+    return m_buffer->offset(m_coord);
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
     kak_assert(m_buffer == iterator.m_buffer);
-    return (size_t)(int)(offset() - iterator.offset());
+    return (size_t)(int)m_buffer->distance(iterator.m_coord, m_coord);
 }
 
 inline BufferIterator BufferIterator::operator+(ByteCount size) const
 {
     kak_assert(m_buffer);
-    if (size >= 0)
-    {
-        ByteCount o = std::min(m_buffer->byte_count(), offset() + size);
-        for (LineCount i = line() + 1; i < m_buffer->line_count(); ++i)
-        {
-            if (m_buffer->m_lines[i].start > o)
-                return BufferIterator(*m_buffer, { i-1, o - m_buffer->m_lines[i-1].start });
-        }
-        LineCount last_line = std::max(0_line, m_buffer->line_count() - 1);
-        return BufferIterator(*m_buffer, { last_line, o - m_buffer->m_lines[last_line].start });
-    }
-    return operator-(-size);
+    return { *m_buffer, m_buffer->advance(m_coord, size) };
 }
 
 inline BufferIterator BufferIterator::operator-(ByteCount size) const
 {
-    kak_assert(m_buffer);
-    if (size >= 0)
-    {
-        ByteCount o = std::max(0_byte, offset() - size);
-        for (LineCount i = line(); i >= 0; --i)
-        {
-            if (m_buffer->m_lines[i].start <= o)
-                return BufferIterator(*m_buffer, { i, o - m_buffer->m_lines[i].start });
-        }
-        kak_assert(false);
-    }
-    return operator+(-size);
+    return { *m_buffer, m_buffer->advance(m_coord, -size) };
 }
 
 inline BufferIterator& BufferIterator::operator+=(ByteCount size)
@@ -183,12 +160,7 @@ inline bool BufferIterator::is_begin() const
 inline bool BufferIterator::is_end() const
 {
     kak_assert(m_buffer);
-    if (m_coord.line == m_buffer->line_count())
-    {
-        kak_assert(m_coord.column == 0);
-        return true;
-    }
-    return offset() == m_buffer->byte_count();
+    return m_buffer->is_end(m_coord);
 }
 
 }
