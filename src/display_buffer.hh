@@ -36,10 +36,8 @@ struct AtomContent
 public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
 
-    AtomContent(BufferIterator begin, BufferIterator end)
-        : m_type(BufferRange),
-          m_begin(std::move(begin)),
-          m_end(std::move(end)) {}
+    AtomContent(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+        : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end) {}
 
     AtomContent(String str)
         : m_type(Text), m_text(std::move(str)) {}
@@ -49,7 +47,7 @@ public:
         switch (m_type)
         {
             case BufferRange:
-               return m_begin.buffer().string(m_begin, m_end);
+               return m_buffer->string(m_begin, m_end);
             case Text:
             case ReplacedBufferRange:
                return m_text;
@@ -63,7 +61,8 @@ public:
         switch (m_type)
         {
             case BufferRange:
-               return utf8::distance(m_begin, m_end);
+               return utf8::distance(m_buffer->iterator_at(m_begin),
+                                     m_buffer->iterator_at(m_end));
             case Text:
             case ReplacedBufferRange:
                return m_text.char_length();
@@ -72,13 +71,13 @@ public:
         return 0;
     }
 
-    const BufferIterator& begin() const
+    const BufferCoord& begin() const
     {
         kak_assert(has_buffer_range());
         return m_begin;
     }
 
-    const BufferIterator& end() const
+    const BufferCoord& end() const
     {
         kak_assert(has_buffer_range());
         return m_end;
@@ -103,8 +102,9 @@ private:
 
     Type m_type;
 
-    BufferIterator m_begin;
-    BufferIterator m_end;
+    const Buffer* m_buffer = nullptr;
+    BufferCoord m_begin;
+    BufferCoord m_end;
     String m_text;
 };
 
