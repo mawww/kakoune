@@ -445,25 +445,25 @@ void Buffer::check_invariant() const
 #endif
 }
 
-void Buffer::do_insert(const BufferIterator& pos, const String& content)
+void Buffer::do_insert(const BufferCoord& pos, const String& content)
 {
-    kak_assert(pos.is_valid());
+    kak_assert(is_valid(pos));
 
     if (content.empty())
         return;
 
     ++m_timestamp;
-    ByteCount offset = pos.offset();
+    ByteCount offset = this->offset(pos);
 
     // all following lines advanced by length
-    for (LineCount i = pos.line()+1; i < line_count(); ++i)
+    for (LineCount i = pos.line+1; i < line_count(); ++i)
         m_lines[i].start += content.length();
 
-    BufferIterator begin_it;
-    BufferIterator end_it;
+    BufferCoord begin;
+    BufferCoord end;
     // if we inserted at the end of the buffer, we have created a new
     // line without inserting a '\n'
-    if (pos.is_end())
+    if (is_end(pos))
     {
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)
@@ -477,13 +477,13 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         if (start != content.length())
             m_lines.push_back({ offset + start, content.substr(start) });
 
-        begin_it = pos.column() == 0 ? pos : BufferIterator{*this, { pos.line() + 1, 0 }};
-        end_it = end();
+        begin = pos.column == 0 ? pos : BufferCoord{ pos.line + 1, 0 };
+        end = this->end().coord();
     }
     else
     {
-        String prefix = m_lines[pos.line()].content.substr(0, pos.column());
-        String suffix = m_lines[pos.line()].content.substr(pos.column());
+        String prefix = m_lines[pos.line].content.substr(0, pos.column);
+        String suffix = m_lines[pos.line].content.substr(pos.column);
 
         std::vector<Line> new_lines;
 
@@ -509,40 +509,40 @@ void Buffer::do_insert(const BufferIterator& pos, const String& content)
         else if (start != content.length() or not suffix.empty())
             new_lines.push_back({ offset + start, content.substr(start) + suffix });
 
-        LineCount last_line = pos.line() + new_lines.size() - 1;
+        LineCount last_line = pos.line + new_lines.size() - 1;
 
-        auto line_it = m_lines.begin() + (int)pos.line();
+        auto line_it = m_lines.begin() + (int)pos.line;
         *line_it = std::move(*new_lines.begin());
         m_lines.insert(line_it+1, std::make_move_iterator(new_lines.begin() + 1),
                        std::make_move_iterator(new_lines.end()));
 
-        begin_it = pos;
-        end_it = BufferIterator{*this, { last_line, m_lines[last_line].length() - suffix.length() }};
+        begin = pos;
+        end = BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
     }
 
     for (auto listener : m_change_listeners)
-        listener->on_insert(begin_it, end_it);
+        listener->on_insert(begin, end);
 }
 
-void Buffer::do_erase(const BufferIterator& begin, const BufferIterator& end)
+void Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
 {
-    kak_assert(begin.is_valid());
-    kak_assert(end.is_valid());
+    kak_assert(is_valid(begin));
+    kak_assert(is_valid(end));
     ++m_timestamp;
-    const ByteCount length = end - begin;
-    String prefix = m_lines[begin.line()].content.substr(0, begin.column());
-    String suffix = m_lines[end.line()].content.substr(end.column());
-    Line new_line = { m_lines[begin.line()].start, prefix + suffix };
+    const ByteCount length = distance(begin, end);
+    String prefix = m_lines[begin.line].content.substr(0, begin.column);
+    String suffix = m_lines[end.line].content.substr(end.column);
+    Line new_line = { m_lines[begin.line].start, prefix + suffix };
 
     if (new_line.length() != 0)
     {
-        m_lines.erase(m_lines.begin() + (int)begin.line(), m_lines.begin() + (int)end.line());
-        m_lines[begin.line()] = std::move(new_line);
+        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
+        m_lines[begin.line] = std::move(new_line);
     }
     else
-        m_lines.erase(m_lines.begin() + (int)begin.line(), m_lines.begin() + (int)end.line() + 1);
+        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line + 1);
 
-    for (LineCount i = begin.line()+1; i < line_count(); ++i)
+    for (LineCount i = begin.line+1; i < line_count(); ++i)
         m_lines[i].start -= length;
 
     for (auto listener : m_change_listeners)
@@ -559,20 +559,20 @@ void Buffer::apply_modification(const Modification& modification)
     if (coord.line < line_count()-1 and coord.column == m_lines[coord.line].length())
         coord = { coord.line + 1, 0 };
 
-    BufferIterator pos{*this, coord};
+    kak_assert(is_valid(coord));
     switch (modification.type)
     {
     case Modification::Insert:
     {
-        do_insert(pos, content);
+        do_insert(coord, content);
         break;
     }
     case Modification::Erase:
     {
         ByteCount count = content.length();
-        BufferIterator end = pos + count;
-        kak_assert(string(pos, end) == content);
-        do_erase(pos, end);
+        BufferCoord end = advance(coord, count);
+        kak_assert(string({*this, coord}, {*this, end}) == content);
+        do_erase(coord, end);
         break;
     }
     default:
@@ -590,7 +590,7 @@ void Buffer::insert(BufferIterator pos, String content)
 
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, pos.coord(), content);
-    do_insert(pos, content);
+    do_insert(pos.coord(), content);
 }
 
 void Buffer::erase(BufferIterator begin, BufferIterator end)
@@ -604,7 +604,7 @@ void Buffer::erase(BufferIterator begin, BufferIterator end)
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
                                           string(begin, end));
-    do_erase(begin, end);
+    do_erase(begin.coord(), end.coord());
 }
 
 bool Buffer::is_modified() const

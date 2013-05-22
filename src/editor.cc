@@ -367,28 +367,26 @@ public:
     ModifiedRangesListener(Buffer& buffer)
         : BufferChangeListener_AutoRegister(buffer) {}
 
-    void on_insert(const BufferIterator& begin, const BufferIterator& end)
+    void on_insert(const BufferCoord& begin, const BufferCoord& end)
     {
-        kak_assert(begin.is_valid());
-        kak_assert(end.is_valid());
-        m_ranges.update_insert(begin.coord(), end.coord());
+        m_ranges.update_insert(begin, end);
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
-                                   [](const BufferIterator& it, const Selection& sel)
-                                   { return it < sel.begin(); });
-        m_ranges.emplace(it, begin, utf8::previous(end));
+                                   [](const BufferCoord& c, const Selection& sel)
+                                   { return c < sel.begin().coord(); });
+        m_ranges.emplace(it, registry().iterator_at(begin),
+                         utf8::previous(registry().iterator_at(end)));
     }
 
-    void on_erase(const BufferIterator& begin, const BufferIterator& end)
+    void on_erase(const BufferCoord& begin, const BufferCoord& end)
     {
-        kak_assert(begin.is_valid());
-        m_ranges.update_erase(begin.coord(), end.coord());
-        auto pos = begin;
+        m_ranges.update_erase(begin, end);
+        BufferIterator pos{registry(), begin};
         if (pos >= buffer().end())
             pos = utf8::previous(buffer().end());
 
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
-                                   [](const BufferIterator& it, const Selection& sel)
-                                   { return it < sel.begin(); });
+                                   [](const BufferCoord& c, const Selection& sel)
+                                   { return c < sel.begin().coord(); });
         m_ranges.emplace(it, pos, pos);
     }
     SelectionList& ranges() { return m_ranges; }

@@ -383,31 +383,31 @@ private:
             m_option->get<std::vector<LineAndFlag>>();
         }
 
-        void on_insert(const BufferIterator& begin, const BufferIterator& end) override
+        void on_insert(const BufferCoord& begin, const BufferCoord& end) override
         {
-            LineCount new_lines = end.line() - begin.line();
+            LineCount new_lines = end.line - begin.line;
             if (new_lines == 0)
                 return;
 
             auto lines = m_option->get<std::vector<LineAndFlag>>();
             for (auto& line : lines)
             {
-                if (std::get<0>(line) > begin.line())
+                if (std::get<0>(line) > begin.line)
                     std::get<0>(line) += new_lines;
             }
             m_option->set(lines);
         }
 
-        void on_erase(const BufferIterator& begin, const BufferIterator& end)  override
+        void on_erase(const BufferCoord& begin, const BufferCoord& end)  override
         {
-            LineCount removed_lines = end.line() - begin.line();
+            LineCount removed_lines = end.line - begin.line;
             if (removed_lines == 0)
                 return;
 
             auto lines = m_option->get<std::vector<LineAndFlag>>();
             for (auto& line : lines)
             {
-                if (std::get<0>(line) > begin.line())
+                if (std::get<0>(line) > begin.line)
                     std::get<0>(line) -= removed_lines;
             }
             m_option->set(lines);

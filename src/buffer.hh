@@ -80,8 +80,8 @@ private:
 class BufferChangeListener
 {
 public:
-    virtual void on_insert(const BufferIterator& begin, const BufferIterator& end) = 0;
-    virtual void on_erase(const BufferIterator& begin, const BufferIterator& end) = 0;
+    virtual void on_insert(const BufferCoord& begin, const BufferCoord& end) = 0;
+    virtual void on_erase(const BufferCoord& begin, const BufferCoord& end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file
@@ -198,8 +198,8 @@ private:
     };
     LineList m_lines;
 
-    void do_insert(const BufferIterator& pos, const String& content);
-    void do_erase(const BufferIterator& begin, const BufferIterator& end);
+    void do_insert(const BufferCoord& pos, const String& content);
+    void do_erase(const BufferCoord& begin, const BufferCoord& end);
 
     String  m_name;
     Flags   m_flags;
