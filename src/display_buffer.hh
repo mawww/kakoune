@@ -147,7 +147,7 @@ public:
     CharCount length() const;
 
     // Split atom pointed by it at pos, returns an iterator to the first atom
-    iterator split(iterator it, BufferIterator pos);
+    iterator split(iterator it, BufferCoord pos);
 
     iterator insert(iterator it, DisplayAtom atom) { return m_atoms.insert(it, std::move(atom)); }
     void     push_back(DisplayAtom atom) { m_atoms.push_back(std::move(atom)); }
@@ -158,7 +158,7 @@ private:
     AtomList  m_atoms;
 };
 
-using BufferRange = std::pair<BufferIterator, BufferIterator>;
+using BufferRange = std::pair<BufferCoord, BufferCoord>;
 
 class DisplayBuffer
 {
@@ -169,7 +169,7 @@ public:
     LineList& lines() { return m_lines; }
     const LineList& lines() const { return m_lines; }
 
-    // returns the smallest BufferIterator range which contains every DisplayAtoms
+    // returns the smallest BufferRange which contains every DisplayAtoms
     const BufferRange& range() const { return m_range; }
     void optimize();
     void compute_range();

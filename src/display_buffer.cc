@@ -5,7 +5,7 @@
 namespace Kakoune
 {
 
-DisplayLine::iterator DisplayLine::split(iterator it, BufferIterator pos)
+DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
 {
     kak_assert(it->content.type() == AtomContent::BufferRange);
     kak_assert(it->content.begin() < pos);
@@ -67,8 +67,8 @@ CharCount DisplayLine::length() const
 
 void DisplayBuffer::compute_range()
 {
-    m_range.first  = BufferIterator();
-    m_range.second = BufferIterator();
+    m_range.first  = {INT_MAX,INT_MAX};
+    m_range.second = {0,0};
     for (auto& line : m_lines)
     {
         for (auto& atom : line)
@@ -76,14 +76,13 @@ void DisplayBuffer::compute_range()
             if (not atom.content.has_buffer_range())
                 continue;
 
-            if (not m_range.first.is_valid() or m_range.first > atom.content.begin())
+            if (m_range.first > atom.content.begin())
                 m_range.first = atom.content.begin();
 
-            if (not m_range.second.is_valid() or m_range.second < atom.content.end())
+            if (m_range.second < atom.content.end())
                 m_range.second = atom.content.end();
         }
     }
-    kak_assert(m_range.first.is_valid() and m_range.second.is_valid());
     kak_assert(m_range.first <= m_range.second);
 }
 

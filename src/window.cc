@@ -76,7 +76,7 @@ void Window::update_display_buffer()
         BufferIterator end   = utf8::advance(begin,      line_end, (int)m_dimensions.column);
 
         lines.push_back(DisplayLine(buffer_line));
-        lines.back().push_back(DisplayAtom(AtomContent(begin, end)));
+        lines.back().push_back(DisplayAtom(AtomContent(buffer(), begin.coord(), end.coord())));
     }
 
     m_display_buffer.compute_range();
@@ -131,7 +131,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 
     BufferIterator line_begin = buffer().iterator_at_line_begin(last);
     BufferIterator line_end   = buffer().iterator_at_line_end(last);
-    lines.back().push_back(DisplayAtom(AtomContent(line_begin, line_end)));
+    lines.back().push_back(DisplayAtom(AtomContent(buffer(), line_begin.coord(), line_end.coord())));
 
     display_buffer.compute_range();
     m_highlighters(*this, display_buffer);
@@ -145,10 +145,10 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     for (auto& atom : lines.back())
     {
         if (atom.content.has_buffer_range() and
-            atom.content.begin() <= last and atom.content.end() > last)
+            atom.content.begin() <= last.coord() and atom.content.end() > last.coord())
         {
             if (atom.content.type() == AtomContent::BufferRange)
-                column += utf8::distance(atom.content.begin(), last);
+                column += utf8::distance(buffer().iterator_at(atom.content.begin()), last);
             else
                 column += atom.content.content().char_length();
 
@@ -187,9 +187,9 @@ DisplayCoord Window::display_position(const BufferIterator& iterator)
             {
                 auto& content = atom.content;
                 if (content.has_buffer_range() and
-                    iterator >= content.begin() and iterator < content.end())
+                    iterator.coord() >= content.begin() and iterator.coord() < content.end())
                 {
-                    res.column += utf8::distance(content.begin(), iterator);
+                    res.column += utf8::distance(buffer().iterator_at(content.begin()), iterator);
                     return res;
                 }
                 res.column += content.length();

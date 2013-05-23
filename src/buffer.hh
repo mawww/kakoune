@@ -120,8 +120,11 @@ public:
     bool           undo();
     bool           redo();
 
+    String         string(const BufferCoord& begin,
+                          const BufferCoord& end) const;
     String         string(const BufferIterator& begin,
-                          const BufferIterator& end) const;
+                          const BufferIterator& end) const
+    { return string(begin.coord(), end.coord()); }
 
     ByteCount   offset(const BufferCoord& c) const;
     ByteCount   distance(const BufferCoord& begin, const BufferCoord& end) const;

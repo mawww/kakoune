@@ -22,7 +22,7 @@ typedef boost::regex_iterator<BufferIterator> RegexIterator;
 
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
-                     BufferIterator begin, BufferIterator end,
+                     BufferCoord begin, BufferCoord end,
                      bool skip_replaced, T func)
 {
     if (begin == end or end <= display_buffer.range().first
@@ -31,7 +31,7 @@ void highlight_range(DisplayBuffer& display_buffer,
 
     for (auto& line : display_buffer.lines())
     {
-        if (line.buffer_line() < begin.line() or  end.line() < line.buffer_line())
+        if (line.buffer_line() < begin.line or  end.line < line.buffer_line())
             continue;
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -71,9 +71,9 @@ public:
     {
     }
 
-    void operator()(const Window&, DisplayBuffer& display_buffer)
+    void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
-        update_cache_ifn(display_buffer.range());
+        update_cache_ifn(window.buffer(), display_buffer.range());
         for (auto& match : m_cache_matches)
         {
             for (size_t n = 0; n < match.size(); ++n)
@@ -82,7 +82,7 @@ public:
                 if (col_it == m_colors.end())
                     continue;
 
-                highlight_range(display_buffer, match[n].first, match[n].second, true,
+                highlight_range(display_buffer, match[n].first.coord(), match[n].second.coord(), true,
                                 [&](DisplayAtom& atom) { atom.colors = *col_it->second; });
             }
         }
@@ -96,22 +96,20 @@ private:
     Regex     m_regex;
     ColorSpec m_colors;
 
-    void update_cache_ifn(const BufferRange& range)
+    void update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
-        const Buffer& buf = range.first.buffer();
-        if (m_cache_range.first.is_valid() and
-            &m_cache_range.first.buffer() == &buf and
-            buf.timestamp() == m_cache_timestamp and
+        if (buffer.timestamp() == m_cache_timestamp and
             range.first >= m_cache_range.first and
             range.second <= m_cache_range.second)
            return;
 
         m_cache_matches.clear();
-        m_cache_range.first  = buf.iterator_at_line_begin(range.first.line() - 10);
-        m_cache_range.second = buf.iterator_at_line_end(range.second.line() + 10);
-        m_cache_timestamp = buf.timestamp();
+        m_cache_range.first  = buffer.clamp({range.first.line - 10, 0});
+        m_cache_range.second = buffer.clamp({range.second.line + 10, INT_MAX});
+        m_cache_timestamp = buffer.timestamp();
 
-        RegexIterator re_it(m_cache_range.first, m_cache_range.second, m_regex);
+        RegexIterator re_it{buffer.iterator_at(m_cache_range.first),
+                            buffer.iterator_at(m_cache_range.second), m_regex};
         RegexIterator re_end;
         for (; re_it != re_end; ++re_it)
             m_cache_matches.push_back(*re_it);
@@ -217,6 +215,7 @@ HighlighterAndId highlight_regex_option_factory(const HighlighterParameters para
 void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
 {
     const int tabstop = window.options()["tabstop"].get<int>();
+    auto& buffer = window.buffer();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -224,19 +223,19 @@ void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
             if (atom_it->content.type() != AtomContent::BufferRange)
                 continue;
 
-            auto begin = atom_it->content.begin();
-            auto end = atom_it->content.end();
+            auto begin = buffer.iterator_at(atom_it->content.begin());
+            auto end = buffer.iterator_at(atom_it->content.end());
             for (BufferIterator it = begin; it != end; ++it)
             {
                 if (*it == '\t')
                 {
                     if (it != begin)
-                        atom_it = ++line.split(atom_it, it);
+                        atom_it = ++line.split(atom_it, it.coord());
                     if (it+1 != end)
-                        atom_it = line.split(atom_it, it+1);
+                        atom_it = line.split(atom_it, (it+1).coord());
 
                     int column = 0;
-                    for (auto line_it = it.buffer().iterator_at_line_begin(it);
+                    for (auto line_it = buffer.iterator_at_line_begin(it);
                          line_it != it; ++line_it)
                     {
                         kak_assert(*line_it != '\n');
@@ -292,17 +291,18 @@ void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
         if (not only_cursor)
         {
             ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
-            highlight_range(display_buffer, begin, end, false,
+            highlight_range(display_buffer, begin.coord(), end.coord(), false,
                             [&](DisplayAtom& atom) { atom.colors = sel_colors; });
         }
         ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
-        highlight_range(display_buffer, sel.last(), utf8::next(sel.last()), false,
+        highlight_range(display_buffer, sel.last().coord(), utf8::next(sel.last()).coord(), false,
                         [&](DisplayAtom& atom) { atom.colors = cur_colors; });
     }
 }
 
-void expand_unprintable(const Window&, DisplayBuffer& display_buffer)
+void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
 {
+    auto& buffer = window.buffer();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -310,7 +310,8 @@ void expand_unprintable(const Window&, DisplayBuffer& display_buffer)
             if (atom_it->content.type() == AtomContent::BufferRange)
             {
                 using Utf8It = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
-                for (Utf8It it = atom_it->content.begin(), end = atom_it->content.end(); it != end; ++it)
+                for (Utf8It it  = buffer.iterator_at(atom_it->content.begin()),
+                            end = buffer.iterator_at(atom_it->content.end()); it != end; ++it)
                 {
                     Codepoint cp = *it;
                     if (cp != '\n' and not std::isprint((wchar_t)cp, std::locale()))
@@ -318,10 +319,10 @@ void expand_unprintable(const Window&, DisplayBuffer& display_buffer)
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
                         String str = oss.str();
-                        if (it.underlying_iterator() != atom_it->content.begin())
-                            atom_it = ++line.split(atom_it, it.underlying_iterator());
-                        if ((it+1).underlying_iterator() != atom_it->content.end())
-                            atom_it = line.split(atom_it, (it+1).underlying_iterator());
+                        if (it.underlying_iterator().coord() != atom_it->content.begin())
+                            atom_it = ++line.split(atom_it, it.underlying_iterator().coord());
+                        if ((it+1).underlying_iterator().coord() != atom_it->content.end())
+                            atom_it = line.split(atom_it, (it+1).underlying_iterator().coord());
                         atom_it->content.replace(str);
                         atom_it->colors = { Colors::Red, Colors::Black };
                         break;

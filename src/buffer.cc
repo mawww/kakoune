@@ -159,17 +159,17 @@ LineCount Buffer::line_count() const
     return LineCount(m_lines.size());
 }
 
-String Buffer::string(const BufferIterator& begin, const BufferIterator& end) const
+String Buffer::string(const BufferCoord& begin, const BufferCoord& end) const
 {
     String res;
-    for (LineCount line = begin.line(); line <= end.line(); ++line)
+    for (LineCount line = begin.line; line <= end.line; ++line)
     {
        ByteCount start = 0;
-       if (line == begin.line())
-           start = begin.column();
+       if (line == begin.line)
+           start = begin.column;
        ByteCount count = -1;
-       if (line == end.line())
-           count = end.column() - start;
+       if (line == end.line)
+           count = end.column - start;
        res += m_lines[line].content.substr(start, count);
     }
     return res;
