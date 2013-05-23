@@ -32,8 +32,8 @@ String Range::content() const
 void Range::check_invariant() const
 {
 #ifdef KAK_DEBUG
-    kak_assert(m_first.is_valid());
-    kak_assert(m_last.is_valid());
+    kak_assert(m_first.is_valid() and not m_first.is_end());
+    kak_assert(m_last.is_valid() and not m_last.is_end());
     kak_assert(utf8::is_character_start(m_first));
     kak_assert(utf8::is_character_start(m_last));
 #endif

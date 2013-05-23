@@ -67,7 +67,7 @@ void test_editor()
     }
     editor.undo();
 
-    Selection sel{ buffer.iterator_at_line_begin(2_line), buffer.end() };
+    Selection sel{ buffer.iterator_at_line_begin(2_line), buffer.end()-1 };
     editor.select(sel, SelectMode::Replace);
     editor.insert("",InsertMode::Replace);
     kak_assert(not editor.main_selection().first().is_end());

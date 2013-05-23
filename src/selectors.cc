@@ -504,6 +504,8 @@ Selection select_whole_lines(const Selection& selection)
         ++to_line_start;
 
     skip_while(to_line_end, [](char cur) { return not is_eol(cur); });
+    if (is_end(to_line_end))
+        --to_line_end;
 
     return Selection(first, last);
 }
