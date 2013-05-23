@@ -488,12 +488,12 @@ private:
 
 struct BufferCompletion
 {
-    BufferIterator begin;
-    BufferIterator end;
+    BufferCoord begin;
+    BufferCoord end;
     CandidateList  candidates;
     size_t         timestamp;
 
-    bool is_valid() const { return begin.is_valid() and not candidates.empty(); }
+    bool is_valid() const { return not candidates.empty(); }
 };
 
 static BufferCompletion complete_word(const BufferIterator& pos, bool other_buffers)
@@ -592,27 +592,29 @@ public:
         if (not setup_ifn())
             return;
 
+        auto& buffer = m_context.buffer();
         m_current_candidate = (m_current_candidate + offset) % (int)m_matching_candidates.size();
         if (m_current_candidate < 0)
             m_current_candidate += m_matching_candidates.size();
         const String& candidate = m_matching_candidates[m_current_candidate];
         auto main_cursor = m_context.editor().main_selection().last();
-        ByteCount beg_offset = main_cursor - m_completions.begin;
-        ByteCount end_offset = m_completions.end - main_cursor;
-        ByteCount buffer_len = m_context.buffer().byte_count();
+        ByteCount beg_offset = buffer.distance(m_completions.begin, main_cursor);
+        ByteCount end_offset = buffer.distance(main_cursor, m_completions.end);
+        ByteCount buffer_len = buffer.byte_count();
 
+        BufferIterator begin{buffer, m_completions.begin};
         for (auto& sel : m_context.editor().selections())
         {
             auto offset = sel.last().offset();
             if (offset > beg_offset and offset + end_offset < buffer_len and
-                std::equal(sel.last() - beg_offset, sel.last(), m_completions.begin))
+                std::equal(sel.last() - beg_offset, sel.last(), begin))
             {
-                m_context.buffer().erase(sel.last() - beg_offset, sel.last() + end_offset);
-                m_context.buffer().insert(sel.last(), candidate);
+                buffer.erase(sel.last() - beg_offset, sel.last() + end_offset);
+                buffer.insert(sel.last(), candidate);
             }
         }
 
-        m_completions.end = m_completions.begin + candidate.length();
+        m_completions.end = buffer.advance(m_completions.begin, candidate.length());
         m_completions.timestamp = m_context.buffer().timestamp();
         m_context.ui().menu_select(m_current_candidate);
 
@@ -631,10 +633,10 @@ public:
             for (auto& candidate : m_completions.candidates)
                  longest_completion = std::max(longest_completion, candidate.length());
 
-            BufferIterator cursor = m_context.editor().main_selection().last();
-            auto& compl_beg = m_completions.begin;
-            if (cursor.line() == compl_beg.line() and
-                is_in_range(cursor.column() - compl_beg.column(),
+            BufferCoord cursor = m_context.editor().main_selection().last();
+            BufferCoord compl_beg = m_completions.begin;
+            if (cursor.line == compl_beg.line and
+                is_in_range(cursor.column - compl_beg.column,
                             ByteCount{0}, longest_completion-1))
             {
                 String prefix = m_context.buffer().string(compl_beg, cursor);
@@ -705,7 +707,7 @@ private:
             if (not m_completions.is_valid())
                 return false;
 
-            kak_assert(cursor >= m_completions.begin);
+            kak_assert(cursor.coord() >= m_completions.begin);
 
             m_matching_candidates = m_completions.candidates;
             m_current_candidate = m_matching_candidates.size();
