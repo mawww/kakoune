@@ -176,20 +176,21 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     }
 }
 
-DisplayCoord Window::display_position(const BufferIterator& iterator)
+DisplayCoord Window::display_position(const BufferCoord& coord)
 {
     DisplayCoord res{0,0};
     for (auto& line : m_display_buffer.lines())
     {
-        if (line.buffer_line() == iterator.line())
+        if (line.buffer_line() == coord.line)
         {
             for (auto& atom : line)
             {
                 auto& content = atom.content;
                 if (content.has_buffer_range() and
-                    iterator.coord() >= content.begin() and iterator.coord() < content.end())
+                    coord >= content.begin() and coord < content.end())
                 {
-                    res.column += utf8::distance(buffer().iterator_at(content.begin()), iterator);
+                    res.column += utf8::distance(buffer().iterator_at(content.begin()),
+                                                 buffer().iterator_at(coord));
                     return res;
                 }
                 res.column += content.length();

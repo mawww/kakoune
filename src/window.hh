@@ -37,7 +37,7 @@ public:
     void scroll(LineCount offset);
     void update_display_buffer();
 
-    DisplayCoord display_position(const BufferIterator& it);
+    DisplayCoord display_position(const BufferCoord& coord);
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 

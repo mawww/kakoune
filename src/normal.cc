@@ -49,11 +49,8 @@ void goto_commands(Context& context)
     int count = context.numeric_param();
     if (count != 0)
     {
-        BufferIterator target =
-            context.editor().buffer().iterator_at_line_begin(count-1);
-
         context.push_jump();
-        context.editor().select(target);
+        context.editor().select(BufferCoord{count - 1, 0});
         if (context.has_window())
             context.window().center_selection();
     }
