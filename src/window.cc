@@ -13,8 +13,8 @@ namespace Kakoune
 
 // Implementation in highlighters.cc
 void highlight_selections(const Window& window, DisplayBuffer& display_buffer);
-void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer);
-void expand_unprintable(DisplayBuffer& display_buffer);
+void expand_tabulations(const Window& window, DisplayBuffer& display_buffer);
+void expand_unprintable(const Window& window, DisplayBuffer& display_buffer);
 
 Window::Window(Buffer& buffer)
     : Editor(buffer),
@@ -25,9 +25,9 @@ Window::Window(Buffer& buffer)
     m_hooks.run_hook("WinCreate", buffer.name(), hook_context);
     m_options.register_watcher(*this);
 
-    m_builtin_highlighters.append({"tabulations", [this](DisplayBuffer& db) { expand_tabulations(m_options, db); }});
+    m_builtin_highlighters.append({"tabulations", expand_tabulations});
     m_builtin_highlighters.append({"unprintable", expand_unprintable});
-    m_builtin_highlighters.append({"selections",  [this](DisplayBuffer& db) { highlight_selections(*this, db); }});
+    m_builtin_highlighters.append({"selections",  highlight_selections});
 
     for (auto& option : m_options.flatten_options())
         on_option_changed(*option);
@@ -80,8 +80,8 @@ void Window::update_display_buffer()
     }
 
     m_display_buffer.compute_range();
-    m_highlighters(m_display_buffer);
-    m_builtin_highlighters(m_display_buffer);
+    m_highlighters(*this, m_display_buffer);
+    m_builtin_highlighters(*this, m_display_buffer);
     m_display_buffer.optimize();
 
     m_timestamp = buffer().timestamp();
@@ -134,8 +134,8 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     lines.back().push_back(DisplayAtom(AtomContent(line_begin, line_end)));
 
     display_buffer.compute_range();
-    m_highlighters(display_buffer);
-    m_builtin_highlighters(display_buffer);
+    m_highlighters(*this, display_buffer);
+    m_builtin_highlighters(*this, display_buffer);
 
     // now we can compute where the cursor is in display columns
     // (this is only valid if highlighting one line and multiple lines put

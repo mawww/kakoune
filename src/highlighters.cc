@@ -71,7 +71,7 @@ public:
     {
     }
 
-    void operator()(DisplayBuffer& display_buffer)
+    void operator()(const Window&, DisplayBuffer& display_buffer)
     {
         update_cache_ifn(display_buffer.range());
         for (auto& match : m_cache_matches)
@@ -160,7 +160,7 @@ public:
     DynamicRegexHighlighter(const ColorSpec& colors, RegexGetter getter)
         : m_regex_getter(getter), m_colors(colors), m_colorizer(Regex(), m_colors) {}
 
-    void operator()(DisplayBuffer& display_buffer)
+    void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
         Regex regex = m_regex_getter();
         if (regex != m_last_regex)
@@ -170,7 +170,7 @@ public:
                 m_colorizer = RegexColorizer{m_last_regex, m_colors};
         }
         if (not m_last_regex.empty())
-            m_colorizer(display_buffer);
+            m_colorizer(window, display_buffer);
     }
 
 private:
@@ -214,9 +214,9 @@ HighlighterAndId highlight_regex_option_factory(const HighlighterParameters para
     return {"hloption_" + option_name, DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
 }
 
-void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buffer)
+void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
 {
-    const int tabstop = options["tabstop"].get<int>();
+    const int tabstop = window.options()["tabstop"].get<int>();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -258,9 +258,9 @@ void expand_tabulations(const OptionManager& options, DisplayBuffer& display_buf
     }
 }
 
-void show_line_numbers(DisplayBuffer& display_buffer)
+void show_line_numbers(const Window& window, DisplayBuffer& display_buffer)
 {
-    LineCount last_line = display_buffer.range().first.buffer().line_count();
+    LineCount last_line = window.buffer().line_count();
     int digit_count = 0;
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
@@ -301,7 +301,7 @@ void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
     }
 }
 
-void expand_unprintable(DisplayBuffer& display_buffer)
+void expand_unprintable(const Window&, DisplayBuffer& display_buffer)
 {
     for (auto& line : display_buffer.lines())
     {
@@ -345,7 +345,7 @@ public:
         update_shared_option_updater();
     }
 
-    void operator()(DisplayBuffer& display_buffer)
+    void operator()(const Window&, DisplayBuffer& display_buffer)
     {
         update_shared_option_updater();
         auto& lines = m_window.options()[m_option_name].get<std::vector<LineAndFlag>>();
@@ -451,7 +451,7 @@ HighlighterAndId flag_lines_factory(const HighlighterParameters& params, Window&
     return {"hlflags_" + params[1], FlagLines{str_to_color(params[0]), params[1], window}};
 }
 
-template<void (*highlighter_func)(DisplayBuffer&)>
+template<void (*highlighter_func)(const Window&, DisplayBuffer&)>
 class SimpleHighlighterFactory
 {
 public:

@@ -20,14 +20,14 @@ class Window;
 // color, adding information text (line numbering for example) or replacing
 // buffer content (folding for example)
 
-typedef std::function<void (DisplayBuffer& display_buffer)> HighlighterFunc;
+typedef std::function<void (const Window& window, DisplayBuffer& display_buffer)> HighlighterFunc;
 typedef std::pair<String, HighlighterFunc> HighlighterAndId;
 typedef memoryview<String> HighlighterParameters;
 
 using HighlighterFactory = std::function<HighlighterAndId (const HighlighterParameters& params,
                                                            Window& window)>;
 
-using HighlighterGroup = FunctionGroup<DisplayBuffer&>;
+using HighlighterGroup = FunctionGroup<const Window&, DisplayBuffer&>;
 
 struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
                              Singleton<HighlighterRegistry>
