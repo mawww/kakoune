@@ -65,7 +65,7 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
 
 inline char BufferIterator::operator*() const
 {
-    return m_buffer->m_lines[m_coord.line].content[m_coord.column];
+    return m_buffer->at(m_coord);
 }
 
 inline ByteCount BufferIterator::offset() const
@@ -103,30 +103,13 @@ inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 
 inline BufferIterator& BufferIterator::operator++()
 {
-    if (m_coord.column < m_buffer->m_lines[m_coord.line].length() - 1)
-        ++m_coord.column;
-    else if (m_coord.line == m_buffer->m_lines.size() - 1)
-        m_coord.column = m_buffer->m_lines.back().length();
-    else
-    {
-        ++m_coord.line;
-        m_coord.column = 0;
-    }
+    m_coord = m_buffer->next(m_coord);
     return *this;
 }
 
 inline BufferIterator& BufferIterator::operator--()
 {
-    if (column() == 0)
-    {
-        if (line() > 0)
-        {
-            --m_coord.line;
-            m_coord.column = m_buffer->m_lines[m_coord.line].length() - 1;
-        }
-    }
-    else
-       --m_coord.column;
+    m_coord = m_buffer->prev(m_coord);
     return *this;
 }
 

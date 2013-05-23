@@ -123,11 +123,15 @@ public:
 
     String         string(const BufferCoord& begin,
                           const BufferCoord& end) const;
-    ByteCount   offset(const BufferCoord& c) const;
-    ByteCount   distance(const BufferCoord& begin, const BufferCoord& end) const;
-    BufferCoord advance(BufferCoord coord, ByteCount count) const;
-    bool is_valid(const BufferCoord& c) const;
-    bool is_end(const BufferCoord& c) const;
+    char           at(const BufferCoord& c) const;
+    ByteCount      offset(const BufferCoord& c) const;
+    ByteCount      distance(const BufferCoord& begin,
+                            const BufferCoord& end) const;
+    BufferCoord    advance(BufferCoord coord, ByteCount count) const;
+    BufferCoord    next(BufferCoord coord) const;
+    BufferCoord    prev(BufferCoord coord) const;
+    bool           is_valid(const BufferCoord& c) const;
+    bool           is_end(const BufferCoord& c) const;
 
     BufferIterator begin() const;
     BufferIterator end() const;

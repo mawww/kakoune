@@ -637,6 +637,35 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
     return { LineCount{ (int)(it - m_lines.begin()) }, off - it->start };
 }
 
+BufferCoord Buffer::next(BufferCoord coord) const
+{
+    if (coord.column < m_lines[coord.line].length() - 1)
+        ++coord.column;
+    else if (coord.line == m_lines.size() - 1)
+        coord.column = m_lines.back().length();
+    else
+    {
+        ++coord.line;
+        coord.column = 0;
+    }
+    return coord;
+}
+
+BufferCoord Buffer::prev(BufferCoord coord) const
+{
+    if (coord.column == 0)
+    {
+        if (coord.line > 0)
+        {
+            --coord.line;
+            coord.column = m_lines[coord.line].length() - 1;
+        }
+    }
+    else
+       --coord.column;
+    return coord;
+}
+
 ByteCount Buffer::distance(const BufferCoord& begin, const BufferCoord& end) const
 {
     return offset(end) - offset(begin);
@@ -660,6 +689,12 @@ bool Buffer::is_end(const BufferCoord& c) const
 {
     return (c.line == line_count() and c.column == 0) or
            (c.line == line_count() - 1 and c.column == m_lines.back().length());
+}
+
+char Buffer::at(const BufferCoord& c) const
+{
+    kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
+    return m_lines[c.line].content[c.column];
 }
 
 }
