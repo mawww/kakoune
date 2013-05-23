@@ -146,8 +146,8 @@ inline BufferIterator BufferIterator::operator--(int)
 
 inline BufferIterator& BufferIterator::operator=(const BufferCoord& coord)
 {
+    kak_assert(m_buffer and m_buffer->is_valid(coord));
     m_coord = coord;
-    kak_assert(is_valid());
     return *this;
 }
 
