@@ -112,8 +112,8 @@ public:
 
     bool set_name(String name);
 
-    void insert(BufferIterator pos, String content);
-    void erase(BufferIterator begin, BufferIterator end);
+    void insert(BufferCoord pos, String content);
+    void erase(BufferCoord begin, BufferCoord end);
 
     size_t         timestamp() const { return m_timestamp; }
 
@@ -123,10 +123,6 @@ public:
 
     String         string(const BufferCoord& begin,
                           const BufferCoord& end) const;
-    String         string(const BufferIterator& begin,
-                          const BufferIterator& end) const
-    { return string(begin.coord(), end.coord()); }
-
     ByteCount   offset(const BufferCoord& c) const;
     ByteCount   distance(const BufferCoord& begin, const BufferCoord& end) const;
     BufferCoord advance(BufferCoord coord, ByteCount count) const;

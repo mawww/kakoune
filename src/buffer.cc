@@ -571,7 +571,7 @@ void Buffer::apply_modification(const Modification& modification)
     {
         ByteCount count = content.length();
         BufferCoord end = advance(coord, count);
-        kak_assert(string({*this, coord}, {*this, end}) == content);
+        kak_assert(string(coord, end) == content);
         do_erase(coord, end);
         break;
     }
@@ -580,31 +580,32 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-void Buffer::insert(BufferIterator pos, String content)
+void Buffer::insert(BufferCoord pos, String content)
 {
+    kak_assert(is_valid(pos));
     if (content.empty())
         return;
 
-    if (pos.is_end() and content.back() != '\n')
+    if (is_end(pos) and content.back() != '\n')
         content += '\n';
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, pos.coord(), content);
-    do_insert(pos.coord(), content);
+        m_current_undo_group.emplace_back(Modification::Insert, pos, content);
+    do_insert(pos, content);
 }
 
-void Buffer::erase(BufferIterator begin, BufferIterator end)
+void Buffer::erase(BufferCoord begin, BufferCoord end)
 {
-    if (end.is_end() and (begin.column() != 0 or begin.is_begin()))
-        --end;
+    if (is_end(end) and (begin.column != 0 or begin == BufferCoord{0,0}))
+        end = { line_count() - 1, m_lines.back().length() - 1};
 
     if (begin == end)
         return;
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
+        m_current_undo_group.emplace_back(Modification::Erase, begin,
                                           string(begin, end));
-    do_erase(begin.coord(), end.coord());
+    do_erase(begin, end);
 }
 
 bool Buffer::is_modified() const

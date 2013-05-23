@@ -38,7 +38,7 @@ void Editor::erase()
     scoped_edition edition(*this);
     for (auto& sel : m_selections)
     {
-        m_buffer->erase(sel.begin(), sel.end());
+        m_buffer->erase(sel.begin().coord(), sel.end().coord());
         avoid_eol(sel);
     }
 }
@@ -53,7 +53,7 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
     case InsertMode::Replace:
     {
         BufferIterator pos = sel.begin();
-        buffer.erase(sel.begin(), sel.end());
+        buffer.erase(sel.begin().coord(), sel.end().coord());
         return pos;
     }
     case InsertMode::Append:
@@ -72,17 +72,14 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
     case InsertMode::InsertAtNextLineBegin:
         return buffer.iterator_at_line_end(sel.end()-1);
     case InsertMode::OpenLineBelow:
-    {
-        LineCount line = (sel.end() - 1).line();
-        buffer.insert(buffer.iterator_at_line_end(line), "\n");
-        return buffer.iterator_at_line_begin(line + 1);
-    }
     case InsertMode::OpenLineAbove:
     {
-        auto pos = buffer.iterator_at_line_begin(sel.begin());
-        buffer.insert(pos, "\n");
-        return pos;
+        auto line = mode == InsertMode::OpenLineAbove ?
+            sel.begin().line() : (sel.end() - 1).line() + 1;
+        buffer.insert(line, "\n");
+        return {buffer, line};
     }
+
     }
     kak_assert(false);
     return BufferIterator{};
