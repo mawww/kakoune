@@ -63,8 +63,6 @@ struct Selection : public Range
     Selection(const Range& range)
         : Range(range) {}
 
-    void avoid_eol();
-
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
 

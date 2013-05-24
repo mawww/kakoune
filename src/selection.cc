@@ -39,19 +39,6 @@ void Range::check_invariant() const
 #endif
 }
 
-static void avoid_eol(BufferIterator& it)
-{
-    const auto column = it.column();
-    if (column != 0 and column == it.buffer().line_length(it.line()) - 1)
-        it = utf8::previous(it);
-}
-
-void Selection::avoid_eol()
-{
-    Kakoune::avoid_eol(first());
-    Kakoune::avoid_eol(last());
-}
-
 namespace
 {
 

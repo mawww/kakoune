@@ -20,13 +20,26 @@ Editor::Editor(Buffer& buffer)
     m_main_sel = 0;
 }
 
+static void avoid_eol(BufferIterator& it)
+{
+    const auto column = it.column();
+    if (column != 0 and column == it.buffer().line_length(it.line()) - 1)
+        it = utf8::previous(it);
+}
+
+static void avoid_eol(Selection& sel)
+{
+    avoid_eol(sel.first());
+    avoid_eol(sel.last());
+}
+
 void Editor::erase()
 {
     scoped_edition edition(*this);
     for (auto& sel : m_selections)
     {
         m_buffer->erase(sel.begin(), sel.end());
-        sel.avoid_eol();
+        avoid_eol(sel);
     }
 }
 
@@ -88,7 +101,7 @@ void Editor::insert(const String& str, InsertMode mode)
             sel.first() = pos;
             sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
         }
-        sel.avoid_eol();
+        avoid_eol(sel);
     }
     check_invariant();
 }
@@ -110,7 +123,7 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
             sel.first() = pos;
             sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
         }
-        sel.avoid_eol();
+        avoid_eol(sel);
     }
     check_invariant();
 }
@@ -178,7 +191,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
         last = utf8::advance(last, limit, offset);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
-        sel.avoid_eol();
+        avoid_eol(sel);
     }
     sort_and_merge_overlapping(m_selections, m_main_sel);
 }
@@ -195,7 +208,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
                                             m_buffer->iterator_at_line_end(pos.line)-1, column);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
-        sel.avoid_eol();
+        avoid_eol(sel);
     }
     sort_and_merge_overlapping(m_selections, m_main_sel);
 }
@@ -522,7 +535,7 @@ IncrementalInserter::~IncrementalInserter()
     {
         if (m_mode == InsertMode::Append and sel.last().column() > 0)
             sel.last() = utf8::previous(sel.last());
-        sel.avoid_eol();
+        avoid_eol(sel);
     }
 }
 
