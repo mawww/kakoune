@@ -61,8 +61,8 @@ void test_editor()
         editor.multi_select(std::bind(select_all_matches, std::placeholders::_1, Regex{"\\n\\h*"}));
         for (auto& sel : editor.selections())
         {
-            kak_assert(*sel.begin() == '\n');
-            editor.buffer().erase(sel.begin(), sel.end());
+            kak_assert(*sel.min() == '\n');
+            editor.buffer().erase(sel.min(), utf8::next(sel.max()));
         }
     }
     editor.undo();

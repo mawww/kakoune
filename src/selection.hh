@@ -26,10 +26,8 @@ public:
         return m_first == other.m_first and m_last == other.m_last;
     }
 
-    // returns min(first, last)
-    BufferIterator begin() const;
-    // returns max(first, last) + 1
-    BufferIterator end() const;
+    const BufferIterator& min() const { return std::min(m_first, m_last); }
+    const BufferIterator& max() const { return std::max(m_first, m_last); }
 
     String content() const;
 
@@ -41,14 +39,8 @@ private:
 
 inline bool overlaps(const Range& lhs, const Range& rhs)
 {
-    return lhs.begin() <= rhs.begin() ? lhs.end() > rhs.begin()
-                                      : lhs.begin() < rhs.end();
-}
-
-inline bool touches(const Range& lhs, const Range& rhs)
-{
-    return lhs.begin() <= rhs.begin() ? lhs.end() >= rhs.begin()
-                                      : lhs.begin() <= rhs.end();
+    return lhs.min() <= rhs.min() ? lhs.max() >= rhs.min()
+                                  : lhs.min() <= rhs.max();
 }
 
 using CaptureList = std::vector<String>;

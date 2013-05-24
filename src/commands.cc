@@ -711,9 +711,9 @@ void info(const CommandParameters& params, Context& context)
             auto it = sel.last();
             String anchor = parser.option_value("anchor");
             if (anchor == "left")
-                it = sel.begin();
+                it = sel.min();
             else if (anchor == "right")
-                it = sel.end() - 1;
+                it = sel.max();
             else if (anchor != "cursor")
                 throw runtime_error("anchor param must be one of [left, right, cursor]");
             pos = context.window().display_position(it);

@@ -38,7 +38,7 @@ void Editor::erase()
     scoped_edition edition(*this);
     for (auto& sel : m_selections)
     {
-        m_buffer->erase(sel.begin().coord(), sel.end().coord());
+        m_buffer->erase(sel.min(), utf8::next(sel.max()));
         avoid_eol(sel);
     }
 }
@@ -49,11 +49,11 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
     switch (mode)
     {
     case InsertMode::Insert:
-        return sel.begin();
+        return sel.min();
     case InsertMode::Replace:
     {
-        BufferIterator pos = sel.begin();
-        buffer.erase(sel.begin().coord(), sel.end().coord());
+        BufferIterator pos = sel.min();
+        buffer.erase(sel.min(), utf8::next(sel.max()));
         return pos;
     }
     case InsertMode::Append:
@@ -66,16 +66,16 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
             return utf8::next(pos);
     }
     case InsertMode::InsertAtLineBegin:
-        return buffer.iterator_at_line_begin(sel.begin());
+        return buffer.iterator_at_line_begin(sel.min());
     case InsertMode::AppendAtLineEnd:
-        return buffer.iterator_at_line_end(sel.end()-1)-1;
+        return buffer.iterator_at_line_end(sel.max())-1;
     case InsertMode::InsertAtNextLineBegin:
-        return buffer.iterator_at_line_end(sel.end()-1);
+        return buffer.iterator_at_line_end(sel.max());
     case InsertMode::OpenLineBelow:
     case InsertMode::OpenLineAbove:
     {
         auto line = mode == InsertMode::OpenLineAbove ?
-            sel.begin().line() : (sel.end() - 1).line() + 1;
+            sel.min().line() : sel.max().line() + 1;
         buffer.insert(line, "\n");
         return {buffer, line};
     }
@@ -135,7 +135,7 @@ std::vector<String> Editor::selections_content() const
 
 static bool compare_selections(const Selection& lhs, const Selection& rhs)
 {
-    return lhs.begin() < rhs.begin();
+    return lhs.min() < rhs.min();
 }
 
 template<typename OverlapsFunc>
@@ -163,14 +163,14 @@ void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selectio
         return;
 
     const auto& main = selections[main_selection];
-    const auto main_begin = main.begin();
+    const auto main_begin = main.min();
     main_selection = std::count_if(selections.begin(), selections.end(),
                                    [&](const Selection& sel) {
-                                       auto begin = sel.begin();
+                                       auto begin = sel.min();
                                        if (begin == main_begin)
                                            return &sel < &main;
                                        else
-                                           return sel.begin() < main_begin;
+                                           return begin < main_begin;
                                    });
     std::stable_sort(selections.begin(), selections.end(), compare_selections);
 
@@ -369,7 +369,7 @@ public:
         m_ranges.update_insert(begin, end);
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](const BufferCoord& c, const Selection& sel)
-                                   { return c < sel.begin().coord(); });
+                                   { return c < sel.min().coord(); });
         m_ranges.emplace(it, registry().iterator_at(begin),
                          utf8::previous(registry().iterator_at(end)));
     }
@@ -383,7 +383,7 @@ public:
 
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](const BufferCoord& c, const Selection& sel)
-                                   { return c < sel.begin().coord(); });
+                                   { return c < sel.min().coord(); });
         m_ranges.emplace(it, pos, pos);
     }
     SelectionList& ranges() { return m_ranges; }
@@ -391,6 +391,12 @@ public:
 private:
     SelectionList m_ranges;
 };
+
+inline bool touches(const Range& lhs, const Range& rhs)
+{
+    return lhs.min() <= rhs.min() ? utf8::next(lhs.max()) >= rhs.min()
+                                  : lhs.min() <= utf8::next(rhs.max());
+}
 
 bool Editor::undo()
 {
@@ -457,16 +463,16 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
         utf8_it first, last;
         switch (mode)
         {
-        case InsertMode::Insert:  first = utf8_it(sel.end()) - 1; last = sel.begin(); break;
+        case InsertMode::Insert:  first = sel.max(); last = sel.min(); break;
         case InsertMode::Replace:
         {
-            buffer.erase(sel.begin(), sel.end());
-            first = last = sel.begin();
+            buffer.erase(sel.min(), utf8::next(sel.max()));
+            first = last = sel.min();
             break;
         }
         case InsertMode::Append:
         {
-            first = sel.begin();
+            first = sel.min();
             last  = std::max(sel.first(), sel.last());
             // special case for end of lines, append to current line instead
             auto coord = last.underlying_iterator().coord();
@@ -477,13 +483,13 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
-            first = utf8_it(buffer.iterator_at_line_end(utf8::previous(sel.end()))) - 1;
+            first = utf8_it(buffer.iterator_at_line_end(sel.max())) - 1;
             last  = first;
             break;
 
         case InsertMode::OpenLineAbove:
         case InsertMode::InsertAtLineBegin:
-            first = buffer.iterator_at_line_begin(sel.begin());
+            first = buffer.iterator_at_line_begin(sel.min());
             if (mode == InsertMode::OpenLineAbove)
                 --first;
             else

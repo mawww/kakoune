@@ -247,7 +247,7 @@ void pipe(Context& context)
             Editor& editor = context.editor();
             std::vector<String> strings;
             for (auto& sel : context.editor().selections())
-                strings.push_back(ShellManager::instance().pipe({sel.begin(), sel.end()},
+                strings.push_back(ShellManager::instance().pipe({sel.min(), utf8::next(sel.max())},
                                                                 cmdline, context, {},
                                                                 EnvVarMap{}));
             editor.insert(strings, InsertMode::Replace);
@@ -333,8 +333,8 @@ void use_selection_as_search_pattern(Context& context)
     auto& sels = context.editor().selections();
     for (auto& sel : sels)
     {
-        auto begin = sel.begin();
-        auto end = sel.end();
+        auto begin = sel.min();
+        auto end = utf8::next(sel.max());
         auto content = "\\Q" + context.buffer().string(begin, end) + "\\E";
         if (smart)
         {
@@ -476,8 +476,8 @@ void join_select_spaces(Context& context)
         // remove last end of line if selected
         kak_assert(std::is_sorted(res.begin(), res.end(),
               [](const Selection& lhs, const Selection& rhs)
-              { return lhs.begin() < rhs.begin(); }));
-        if (not res.empty() and res.back().end() == sel.buffer().end())
+              { return lhs.min() < rhs.min(); }));
+        if (not res.empty() and utf8::next(res.back().max()).is_end())
             res.pop_back();
         return res;
     });
@@ -502,7 +502,7 @@ void keep(Context& context)
         SelectionList keep;
         for (auto& sel : sels)
         {
-            if (boost::regex_search(sel.begin(), sel.end(), ex) == matching)
+            if (boost::regex_search(sel.min(), utf8::next(sel.max()), ex) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())

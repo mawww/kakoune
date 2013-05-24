@@ -598,7 +598,8 @@ template Selection select_next_match<false>(const Selection&, const Regex&);
 
 SelectionList select_all_matches(const Selection& selection, const Regex& regex)
 {
-    RegexIterator re_it(selection.begin(), selection.end(), regex);
+    auto sel_end = utf8::next(selection.max());
+    RegexIterator re_it(selection.min(), sel_end, regex);
     RegexIterator re_end;
 
     SelectionList result;
@@ -607,7 +608,7 @@ SelectionList select_all_matches(const Selection& selection, const Regex& regex)
         BufferIterator begin = (*re_it)[0].first;
         BufferIterator end   = (*re_it)[0].second;
 
-        if (begin == selection.end())
+        if (begin == sel_end)
             continue;
 
         CaptureList captures;
@@ -623,12 +624,13 @@ SelectionList select_all_matches(const Selection& selection, const Regex& regex)
 SelectionList split_selection(const Selection& selection,
                               const Regex& regex)
 {
-    RegexIterator re_it(selection.begin(), selection.end(), regex,
+    auto sel_end = utf8::next(selection.max());
+    RegexIterator re_it(selection.min(), sel_end, regex,
                         boost::regex_constants::match_nosubs);
     RegexIterator re_end;
 
     SelectionList result;
-    BufferIterator begin = selection.begin();
+    BufferIterator begin = selection.min();
     for (; re_it != re_end; ++re_it)
     {
         BufferIterator end = (*re_it)[0].first;
@@ -636,8 +638,7 @@ SelectionList split_selection(const Selection& selection,
         result.push_back(Selection(begin, (begin == end) ? end : utf8::previous(end)));
         begin = (*re_it)[0].second;
     }
-    result.push_back(Selection(begin, std::max(selection.first(),
-                                               selection.last())));
+    result.push_back(Selection(begin, selection.max()));
     return result;
 }
 

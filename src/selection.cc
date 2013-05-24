@@ -14,19 +14,9 @@ void Range::merge_with(const Range& range)
         m_first = std::max(m_first, range.m_first);
 }
 
-BufferIterator Range::begin() const
-{
-    return std::min(m_first, m_last);
-}
-
-BufferIterator Range::end() const
-{
-    return utf8::next(std::max(m_first, m_last));
-}
-
 String Range::content() const
 {
-    return m_first.buffer().string(begin(), end());
+    return m_first.buffer().string(min(), utf8::next(max()));
 }
 
 void Range::check_invariant() const
@@ -137,7 +127,7 @@ void SelectionList::check_invariant() const
         auto& sel = (*this)[i];
         sel.check_invariant();
         if (i+1 < size())
-            kak_assert(sel.begin() <= (*this)[i+1].begin());
+            kak_assert(sel.min() <= (*this)[i+1].min());
     }
 #endif
 }

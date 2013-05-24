@@ -97,8 +97,9 @@ void register_env_vars()
     shell_manager.register_env_var("selection_desc",
                                    [](const String& name, const Context& context)
                                    { auto& sel = context.editor().main_selection();
-                                     auto beg = sel.begin();
-                                     return to_string(beg.line() + 1) + ':' + to_string(beg.column() + 1) + '+' + to_string((sel.end() - beg)); });
+                                     auto beg = sel.min();
+                                     return to_string(beg.line() + 1) + ':' + to_string(beg.column() + 1) + '+' +
+                                            to_string((int)context.buffer().distance(beg, sel.max())+1); });
     shell_manager.register_env_var("window_width",
                                    [](const String& name, const Context& context)
                                    { return to_string(context.window().dimensions().column); });
