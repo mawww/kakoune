@@ -42,7 +42,7 @@ ColorRegistry::ColorRegistry()
         { "SecondarySelection", { Colors::Black, Colors::Blue } },
         { "PrimaryCursor", { Colors::Black, Colors::White } },
         { "SecondaryCursor", { Colors::Black, Colors::White } },
-        { "LineNumbers", { Colors::Black, Colors::White } },
+        { "LineNumbers", { Colors::Default, Colors::Default } },
         { "MenuForeground", { Colors::Blue, Colors::Cyan } },
         { "MenuBackground", { Colors::Cyan, Colors::Blue } },
         { "Information", { Colors::Black, Colors::Yellow } },

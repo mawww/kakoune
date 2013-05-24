@@ -265,7 +265,7 @@ void show_line_numbers(DisplayBuffer& display_buffer)
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
 
-    char format[] = "%?d ";
+    char format[] = "%?d│";
     format[1] = '0' + digit_count;
     auto& colors = get_color("LineNumbers");
     for (auto& line : display_buffer.lines())
