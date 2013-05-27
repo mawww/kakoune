@@ -691,7 +691,7 @@ void jump(Context& context)
     auto jump = (direction == JumpDirection::Forward) ?
                  context.jump_forward() : context.jump_backward();
 
-    Buffer& buffer = const_cast<Buffer&>(jump.front().buffer());
+    Buffer& buffer = const_cast<Buffer&>(jump.buffer());
     BufferManager::instance().set_last_used_buffer(buffer);
     if (&buffer != &context.buffer())
     {

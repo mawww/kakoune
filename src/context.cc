@@ -98,7 +98,7 @@ void Context::push_jump()
     m_current_jump = m_jump_list.end();
 }
 
-const SelectionList& Context::jump_forward()
+const DynamicSelectionList& Context::jump_forward()
 {
     if (m_current_jump != m_jump_list.end() and
         m_current_jump + 1 != m_jump_list.end())
@@ -106,7 +106,7 @@ const SelectionList& Context::jump_forward()
     throw runtime_error("no next jump");
 }
 
-const SelectionList& Context::jump_backward()
+const DynamicSelectionList& Context::jump_backward()
 {
     if (m_current_jump != m_jump_list.begin())
     {

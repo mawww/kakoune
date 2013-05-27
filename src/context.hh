@@ -52,8 +52,8 @@ struct Context
     void print_status(const DisplayLine& status) const;
 
     void push_jump();
-    const SelectionList& jump_forward();
-    const SelectionList& jump_backward();
+    const DynamicSelectionList& jump_forward();
+    const DynamicSelectionList& jump_backward();
     void forget_jumps_to_buffer(Buffer& buffer);
 
     int& numeric_param() { return m_numeric_param; }
