@@ -10,8 +10,8 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
 {
     if (content == "\n")
     {
-        BufferIterator line_begin = buffer.iterator_at_line_begin(selection.last() - 1);
-        BufferIterator first_non_white = line_begin;
+        BufferCoord line_begin{selection.last().line(), 0};
+        auto first_non_white = buffer.iterator_at(line_begin);
         while ((*first_non_white == '\t' or *first_non_white == ' ') and
                not first_non_white.is_end())
             ++first_non_white;
@@ -22,15 +22,15 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
 
 void cleanup_whitespaces(Buffer& buffer, Selection& selection, String& content)
 {
-    const BufferIterator& position = selection.last();
+    const auto position = buffer.iterator_at(selection.last());
     if (content[0] == '\n' and not position.is_begin())
     {
-        BufferIterator whitespace_start = position-1;
+        auto whitespace_start = position-1;
         while ((*whitespace_start == ' ' or *whitespace_start == '\t') and
                not whitespace_start .is_begin())
             --whitespace_start;
         ++whitespace_start;
-        if (whitespace_start!= position)
+        if (whitespace_start != position)
             buffer.erase(whitespace_start, position);
     }
 }
@@ -41,21 +41,19 @@ void expand_tabulations(Buffer& buffer, Selection& selection, String& content)
     if (content == "\t")
     {
         int column = 0;
-        const BufferIterator& position = selection.last();
-        for (auto line_it = buffer.iterator_at_line_begin(position);
-             line_it != position; ++line_it)
+        const auto position = buffer.iterator_at(selection.last());
+        for (auto it = buffer.iterator_at_line_begin(position);
+             it != position; ++it)
         {
-            kak_assert(*line_it != '\n');
-            if (*line_it == '\t')
+            kak_assert(*it != '\n');
+            if (*it == '\t')
                 column += tabstop - (column % tabstop);
             else
                ++column;
         }
 
-        int count = tabstop - (column % tabstop);
-        content = String();
-        for (int i = 0; i < count; ++i)
-            content += ' ';
+        CharCount count = tabstop - (column % tabstop);
+        content = String(' ', count);
     }
 }
 
@@ -68,7 +66,7 @@ struct RegexFilter
 
     void operator() (Buffer& buffer, Selection& selection, String& content)
     {
-        const auto& position = selection.last();
+        const auto position = buffer.iterator_at(selection.last());
         auto line_begin = buffer.iterator_at_line_begin(position);
         boost::match_results<BufferIterator> results;
         if (boost::regex_match(content.c_str(), m_insert_match) and
