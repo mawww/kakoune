@@ -129,7 +129,7 @@ std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
     for (auto& sel : m_selections)
-        contents.push_back(sel.content());
+        contents.push_back(m_buffer->string(sel.min(), utf8::next(sel.max())));
     return contents;
 }
 

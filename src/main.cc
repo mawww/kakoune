@@ -67,7 +67,8 @@ void register_env_vars()
                                    { return to_string(context.buffer().timestamp()); });
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
-                                   { return context.editor().main_selection().content(); });
+                                   { const Range& sel = context.editor().main_selection();
+                                     return context.buffer().string(sel.min(), utf8::next(sel.max())); });
     shell_manager.register_env_var("selections",
                                    [](const String& name, const Context& context)
                                    { auto sels = context.editor().selections_content();

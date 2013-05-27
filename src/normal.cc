@@ -135,7 +135,8 @@ void goto_commands(Context& context)
             }
             case 'f':
             {
-                String filename = context.editor().main_selection().content();
+                const Range& sel = context.editor().main_selection();
+                String filename = context.buffer().string(sel.min(), utf8::next(sel.max()));
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
                 for (auto c : forbidden)
                     if (contains(filename, c))

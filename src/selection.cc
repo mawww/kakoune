@@ -14,11 +14,6 @@ void Range::merge_with(const Range& range)
         m_first = std::max(m_first, range.m_first);
 }
 
-String Range::content() const
-{
-    return m_first.buffer().string(min(), utf8::next(max()));
-}
-
 void Range::check_invariant() const
 {
 #ifdef KAK_DEBUG
