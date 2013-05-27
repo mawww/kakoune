@@ -29,8 +29,6 @@ public:
     const BufferIterator& min() const { return std::min(m_first, m_last); }
     const BufferIterator& max() const { return std::max(m_first, m_last); }
 
-
-    void check_invariant() const;
 private:
     BufferIterator m_first;
     BufferIterator m_last;

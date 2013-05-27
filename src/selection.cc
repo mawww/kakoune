@@ -14,16 +14,6 @@ void Range::merge_with(const Range& range)
         m_first = std::max(m_first, range.m_first);
 }
 
-void Range::check_invariant() const
-{
-#ifdef KAK_DEBUG
-    kak_assert(m_first.is_valid() and not m_first.is_end());
-    kak_assert(m_last.is_valid() and not m_last.is_end());
-    kak_assert(utf8::is_character_start(m_first));
-    kak_assert(utf8::is_character_start(m_last));
-#endif
-}
-
 namespace
 {
 
@@ -116,15 +106,8 @@ void SelectionList::update_erase(const BufferCoord& begin, const BufferCoord& en
 
 void SelectionList::check_invariant() const
 {
-#ifdef KAK_DEBUG
-    for (size_t i = 0; i < size(); ++i)
-    {
-        auto& sel = (*this)[i];
-        sel.check_invariant();
-        if (i+1 < size())
-            kak_assert(sel.min() <= (*this)[i+1].min());
-    }
-#endif
+    for (size_t i = 0; i+1 < size(); ++ i)
+        kak_assert((*this)[i].min() <= (*this)[i+1].min());
 }
 
 }
