@@ -71,7 +71,6 @@ public:
     const BufferCoord& coord() const { return m_coord; }
     LineCount line() const { return m_coord.line; }
     ByteCount column() const { return m_coord.column; }
-    ByteCount offset() const;
 
 private:
     safe_ptr<const Buffer> m_buffer;

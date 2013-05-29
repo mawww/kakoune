@@ -68,12 +68,6 @@ inline char BufferIterator::operator*() const
     return m_buffer->at(m_coord);
 }
 
-inline ByteCount BufferIterator::offset() const
-{
-    kak_assert(m_buffer);
-    return m_buffer->offset(m_coord);
-}
-
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
     kak_assert(m_buffer == iterator.m_buffer);

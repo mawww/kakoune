@@ -605,7 +605,7 @@ public:
         BufferIterator begin{buffer, m_completions.begin};
         for (auto& sel : m_context.editor().selections())
         {
-            auto offset = sel.last().offset();
+            auto offset = buffer.offset(sel.last());
             if (offset > beg_offset and offset + end_offset < buffer_len and
                 std::equal(sel.last() - beg_offset, sel.last(), begin))
             {
