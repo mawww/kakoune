@@ -138,6 +138,26 @@ Codepoint codepoint(Iterator it)
     return cp;
 }
 
+template<typename InvalidPolicy = InvalidBytePolicy::Assert,
+         typename Iterator>
+ByteCount codepoint_size(Iterator it)
+{
+    char byte = *it;
+    if (not (byte & 0x80)) // 0xxxxxxx
+        return 1;
+    else if ((byte & 0xE0) == 0xC0) // 110xxxxx
+        return 2;
+    else if ((byte & 0xF0) == 0xE0) // 1110xxxx
+        return 3;
+    else if ((byte & 0xF8) == 0xF0) // 11110xxx
+        return 4;
+    else
+    {
+        InvalidPolicy{}(byte);
+        return -1;
+    }
+}
+
 struct invalid_codepoint{};
 
 template<typename OutputIterator>
