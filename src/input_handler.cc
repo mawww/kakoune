@@ -610,7 +610,7 @@ public:
         for (auto& sel : m_context.editor().selections())
         {
             auto offset = buffer.offset(sel.last());
-            if (offset > beg_offset and offset + end_offset < buffer_len and
+            if (offset >= beg_offset and offset + end_offset < buffer_len and
                 std::equal(sel.last() - beg_offset, sel.last(), begin))
             {
                 buffer.erase(sel.last() - beg_offset, sel.last() + end_offset);
