@@ -61,8 +61,6 @@ public:
     BufferIterator& operator=(const BufferCoord& coord);
     operator const BufferCoord&() const { return m_coord; }
 
-    void clamp(bool avoid_eol);
-
     bool is_begin() const;
     bool is_end() const;
     bool is_valid() const;

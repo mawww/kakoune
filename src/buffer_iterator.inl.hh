@@ -23,12 +23,6 @@ inline bool BufferIterator::is_valid() const
     return m_buffer and m_buffer->is_valid(m_coord);
 }
 
-inline void BufferIterator::clamp(bool avoid_eol)
-{
-    kak_assert(m_buffer);
-    m_coord = m_buffer->clamp(m_coord, avoid_eol);
-}
-
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const
 {
     return (m_buffer == iterator.m_buffer and m_coord == iterator.m_coord);
