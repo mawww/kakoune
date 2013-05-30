@@ -59,6 +59,7 @@ public:
     BufferIterator operator-- (int);
 
     BufferIterator& operator=(const BufferCoord& coord);
+    operator const BufferCoord&() const { return m_coord; }
 
     void clamp(bool avoid_eol);
 
