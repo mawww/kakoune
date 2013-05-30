@@ -31,7 +31,7 @@ public:
     typedef size_t difference_type;
     typedef const value_type* pointer;
     typedef const value_type& reference;
-    typedef std::bidirectional_iterator_tag iterator_category;
+    typedef std::random_access_iterator_tag iterator_category;
 
     BufferIterator() : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, BufferCoord coord);
@@ -44,6 +44,7 @@ public:
     bool operator>= (const BufferIterator& iterator) const;
 
     char   operator* () const;
+    char   operator[](size_t n) const;
     size_t operator- (const BufferIterator& iterator) const;
 
     BufferIterator operator+ (ByteCount size) const;

@@ -62,6 +62,11 @@ inline char BufferIterator::operator*() const
     return m_buffer->at(m_coord);
 }
 
+inline char BufferIterator::operator[](size_t n) const
+{
+    return m_buffer->at(m_buffer->advance(m_coord, n));
+}
+
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
     kak_assert(m_buffer == iterator.m_buffer);
