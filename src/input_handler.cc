@@ -496,19 +496,21 @@ struct BufferCompletion
     bool is_valid() const { return not candidates.empty(); }
 };
 
-static BufferCompletion complete_word(const BufferIterator& pos, bool other_buffers)
+static BufferCompletion complete_word(const Buffer& buffer,
+                                      const BufferCoord& cursor_pos,
+                                      bool other_buffers)
 {
+   auto pos = buffer.iterator_at(cursor_pos);
    if (pos.is_begin() or not is_word(*utf8::previous(pos)))
        return {};
 
-    BufferIterator end = pos;
-    BufferIterator begin = end-1;
+    auto end = buffer.iterator_at(cursor_pos);
+    auto begin = end-1;
     while (not begin.is_begin() and is_word(*begin))
         --begin;
     if (not is_word(*begin))
         ++begin;
 
-    const Buffer& buffer = pos.buffer();
     String ex = R"(\<\Q)" + buffer.string(begin, end) + R"(\E\w+\>)";
     Regex re(ex.begin(), ex.end());
     using RegexIt = boost::regex_iterator<BufferIterator>;
@@ -539,10 +541,12 @@ static BufferCompletion complete_word(const BufferIterator& pos, bool other_buff
               make_move_iterator(matches.end()),
               inserter(result, result.begin()));
     std::sort(result.begin(), result.end());
-    return { begin, end, std::move(result), begin.buffer().timestamp() };
+    return { begin, end, std::move(result), buffer.timestamp() };
 }
 
-static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& options)
+static BufferCompletion complete_opt(const Buffer& buffer,
+                                     const BufferCoord& cursor_pos,
+                                     OptionManager& options)
 {
     using StringList = std::vector<String>;
     const StringList& opt = options["completions"].get<StringList>();
@@ -555,10 +559,10 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {
         BufferCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
-        if (not pos.buffer().is_valid(coord))
+        if (not buffer.is_valid(coord))
             return {};
-        BufferIterator beg{pos.buffer(), coord};
-        BufferIterator end = beg;
+        auto beg = buffer.iterator_at(coord);
+        auto end = beg;
         if (match[3].matched)
         {
             ByteCount len = str_to_int(match[3].str());
@@ -566,13 +570,13 @@ static BufferCompletion complete_opt(const BufferIterator& pos, OptionManager& o
         }
         size_t timestamp = (size_t)str_to_int(match[4].str());
 
-        size_t longest_completion = 0;
+        ByteCount longest_completion = 0;
         for (auto it = opt.begin() + 1; it != opt.end(); ++it)
-             longest_completion = std::max<size_t>(longest_completion, (int)it->length());
+             longest_completion = std::max(longest_completion, it->length());
 
-        if (timestamp == pos.buffer().timestamp() and
-            pos.line() == coord.line and pos.column() <= coord.column and
-            pos - beg < longest_completion)
+        if (timestamp == buffer.timestamp() and
+            cursor_pos.line == coord.line and cursor_pos.column <= coord.column and
+            buffer.distance(beg, cursor_pos) < longest_completion)
             return { beg, end, { opt.begin() + 1, opt.end() }, timestamp };
     }
     return {};
@@ -696,18 +700,19 @@ private:
     {
         if (not m_completions.is_valid())
         {
+            auto& buffer = m_context.buffer();
             auto& completers = options()["completers"].get<std::unordered_set<String>>();
-            BufferIterator cursor = m_context.editor().main_selection().last();
+            BufferCoord cursor_pos = m_context.editor().main_selection().last();
             if (contains(completers, "option"))
-                m_completions = complete_opt(cursor, m_context.options());
+                m_completions = complete_opt(buffer, cursor_pos, m_context.options());
             if (not m_completions.is_valid() and
                 (contains(completers, "word=buffer") or
                  contains(completers, "word=all")))
-                m_completions = complete_word(cursor, contains(completers, "word=all"));
+                m_completions = complete_word(buffer, cursor_pos, contains(completers, "word=all"));
             if (not m_completions.is_valid())
                 return false;
 
-            kak_assert(cursor.coord() >= m_completions.begin);
+            kak_assert(cursor_pos >= m_completions.begin);
 
             m_matching_candidates = m_completions.candidates;
             m_current_candidate = m_matching_candidates.size();
