@@ -55,9 +55,7 @@ struct Selection : public Range
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
 
-    const Buffer& buffer() const { return first().buffer(); }
 private:
-
     CaptureList m_captures;
 };
 
