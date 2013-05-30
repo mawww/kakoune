@@ -119,12 +119,10 @@ public:
     bool           undo();
     bool           redo();
 
-    String         string(const BufferCoord& begin,
-                          const BufferCoord& end) const;
+    String         string(const BufferCoord& begin, const BufferCoord& end) const;
     char           at(const BufferCoord& c) const;
     ByteCount      offset(const BufferCoord& c) const;
-    ByteCount      distance(const BufferCoord& begin,
-                            const BufferCoord& end) const;
+    ByteCount      distance(const BufferCoord& begin, const BufferCoord& end) const;
     BufferCoord    advance(BufferCoord coord, ByteCount count) const;
     BufferCoord    next(BufferCoord coord) const;
     BufferCoord    prev(BufferCoord coord) const;
@@ -139,15 +137,11 @@ public:
     const String&  line_content(LineCount line) const
     { return m_lines[line].content; }
 
-    // returns an iterator at given coordinates. line_and_column is
-    // clamped according to avoid_eol.
-    BufferIterator iterator_at(const BufferCoord& line_and_column,
-                               bool avoid_eol = false) const;
+    // returns an iterator at given coordinates. clamp line_and_column
+    BufferIterator iterator_at(const BufferCoord& coord) const;
 
     // returns nearest valid coordinates from given ones
-    // if avoid_eol, clamp to character before eol if line is not empty
-    BufferCoord    clamp(const BufferCoord& line_and_column,
-                         bool avoid_eol = false) const;
+    BufferCoord    clamp(BufferCoord coord) const;
 
     // returns an iterator pointing to the first character of the line
     // iterator is on

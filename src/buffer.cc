@@ -86,10 +86,9 @@ bool Buffer::set_name(String name)
     return false;
 }
 
-BufferIterator Buffer::iterator_at(const BufferCoord& line_and_column,
-                                   bool avoid_eol) const
+BufferIterator Buffer::iterator_at(const BufferCoord& coord) const
 {
-    return BufferIterator(*this, clamp(line_and_column, avoid_eol));
+    return BufferIterator(*this, clamp(coord));
 }
 
 ByteCount Buffer::line_length(LineCount line) const
@@ -98,17 +97,15 @@ ByteCount Buffer::line_length(LineCount line) const
     return m_lines[line].length();
 }
 
-BufferCoord Buffer::clamp(const BufferCoord& line_and_column,
-                          bool avoid_eol) const
+BufferCoord Buffer::clamp(BufferCoord coord) const
 {
     if (m_lines.empty())
-        return BufferCoord();
+        return BufferCoord{};
 
-    BufferCoord result(line_and_column.line, line_and_column.column);
-    result.line = Kakoune::clamp(result.line, 0_line, line_count() - 1);
-    ByteCount max_col = std::max(0_byte, line_length(result.line) - (avoid_eol ? 2 : 1));
-    result.column = Kakoune::clamp(result.column, 0_byte, max_col);
-    return result;
+    coord.line = Kakoune::clamp(coord.line, 0_line, line_count() - 1);
+    ByteCount max_col = std::max(0_byte, line_length(coord.line) - 1);
+    coord.column = Kakoune::clamp(coord.column, 0_byte, max_col);
+    return coord;
 }
 
 BufferIterator Buffer::iterator_at_line_begin(LineCount line) const
