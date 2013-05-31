@@ -384,7 +384,7 @@ private:
             m_option->get<std::vector<LineAndFlag>>();
         }
 
-        void on_insert(const BufferCoord& begin, const BufferCoord& end) override
+        void on_insert(const Buffer&, const BufferCoord& begin, const BufferCoord& end) override
         {
             LineCount new_lines = end.line - begin.line;
             if (new_lines == 0)
@@ -399,7 +399,7 @@ private:
             m_option->set(lines);
         }
 
-        void on_erase(const BufferCoord& begin, const BufferCoord& end)  override
+        void on_erase(const Buffer&, const BufferCoord& begin, const BufferCoord& end)  override
         {
             LineCount removed_lines = end.line - begin.line;
             if (removed_lines == 0)

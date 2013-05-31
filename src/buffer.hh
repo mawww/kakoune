@@ -79,8 +79,8 @@ private:
 class BufferChangeListener
 {
 public:
-    virtual void on_insert(const BufferCoord& begin, const BufferCoord& end) = 0;
-    virtual void on_erase(const BufferCoord& begin, const BufferCoord& end) = 0;
+    virtual void on_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end) = 0;
+    virtual void on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file

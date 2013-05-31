@@ -19,8 +19,8 @@ public:
     void check_invariant() const;
 
 private:
-    void on_insert(const BufferCoord& begin, const BufferCoord& end) override;
-    void on_erase(const BufferCoord& begin, const BufferCoord& end) override;
+    void on_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end) override;
+    void on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end) override;
 };
 
 }

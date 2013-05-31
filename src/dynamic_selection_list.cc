@@ -34,14 +34,14 @@ void DynamicSelectionList::check_invariant() const
 #endif
 }
 
-void DynamicSelectionList::on_insert(const BufferCoord& begin, const BufferCoord& end)
+void DynamicSelectionList::on_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
 {
-    update_insert(begin, end);
+    update_insert(buffer, begin, end);
 }
 
-void DynamicSelectionList::on_erase(const BufferCoord& begin, const BufferCoord& end)
+void DynamicSelectionList::on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
 {
-    update_erase(begin, end);
+    update_erase(buffer, begin, end);
 }
 
 }

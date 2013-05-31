@@ -63,8 +63,8 @@ struct SelectionList : std::vector<Selection>
 {
     using std::vector<Selection>::vector;
 
-    void update_insert(const BufferCoord& begin, const BufferCoord& end);
-    void update_erase(const BufferCoord& begin, const BufferCoord& end);
+    void update_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end);
+    void update_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end);
 
     void check_invariant() const;
 };

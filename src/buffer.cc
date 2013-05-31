@@ -518,7 +518,7 @@ void Buffer::do_insert(const BufferCoord& pos, const String& content)
     }
 
     for (auto listener : m_change_listeners)
-        listener->on_insert(begin, end);
+        listener->on_insert(*this, begin, end);
 }
 
 void Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
@@ -543,7 +543,7 @@ void Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
         m_lines[i].start -= length;
 
     for (auto listener : m_change_listeners)
-        listener->on_erase(begin, end);
+        listener->on_erase(*this, begin, end);
 }
 
 void Buffer::apply_modification(const Modification& modification)

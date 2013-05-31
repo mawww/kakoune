@@ -364,26 +364,26 @@ public:
     ModifiedRangesListener(Buffer& buffer)
         : BufferChangeListener_AutoRegister(buffer) {}
 
-    void on_insert(const BufferCoord& begin, const BufferCoord& end)
+    void on_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
     {
-        m_ranges.update_insert(begin, end);
+        m_ranges.update_insert(buffer, begin, end);
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](const BufferCoord& c, const Selection& sel)
-                                   { return c < sel.min().coord(); });
+                                   { return c < sel.min(); });
         m_ranges.emplace(it, registry().iterator_at(begin),
                          utf8::previous(registry().iterator_at(end)));
     }
 
-    void on_erase(const BufferCoord& begin, const BufferCoord& end)
+    void on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
     {
-        m_ranges.update_erase(begin, end);
+        m_ranges.update_erase(buffer, begin, end);
         BufferIterator pos{registry(), begin};
-        if (pos >= buffer().end())
-            pos = utf8::previous(buffer().end());
+        if (pos >= buffer.end())
+            pos = utf8::previous(buffer.end());
 
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](const BufferCoord& c, const Selection& sel)
-                                   { return c < sel.min().coord(); });
+                                   { return c < sel.min(); });
         m_ranges.emplace(it, pos, pos);
     }
     SelectionList& ranges() { return m_ranges; }
