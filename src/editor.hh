@@ -38,8 +38,8 @@ enum class InsertMode : unsigned
 class Editor : public SafeCountable
 {
 public:
-    typedef std::function<Selection (const Selection&)> Selector;
-    typedef std::function<SelectionList (const Selection&)>  MultiSelector;
+    typedef std::function<Selection (const Buffer&, const Selection&)> Selector;
+    typedef std::function<SelectionList (const Buffer&, const Selection&)>  MultiSelector;
 
     Editor(Buffer& buffer);
     virtual ~Editor() {}

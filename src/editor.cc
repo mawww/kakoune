@@ -293,7 +293,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
     if (mode == SelectMode::Append)
     {
         auto& sel = m_selections[m_main_sel];
-        auto  res = selector(sel);
+        auto  res = selector(*m_buffer, sel);
         if (res.captures().empty())
             res.captures() = sel.captures();
         m_main_sel = m_selections.size();
@@ -302,7 +302,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
     else if (mode == SelectMode::ReplaceMain)
     {
         auto& sel = m_selections[m_main_sel];
-        auto  res = selector(sel);
+        auto  res = selector(*m_buffer, sel);
         sel.first() = res.first();
         sel.last()  = res.last();
         if (not res.captures().empty())
@@ -312,7 +312,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
     {
         for (auto& sel : m_selections)
         {
-            auto res = selector(sel);
+            auto res = selector(*m_buffer, sel);
             if (mode == SelectMode::Extend)
                 sel.merge_with(res);
             else
@@ -338,7 +338,7 @@ void Editor::multi_select(const MultiSelector& selector)
     SelectionList new_selections;
     for (auto& sel : m_selections)
     {
-        SelectionList res = selector(sel);
+        SelectionList res = selector(*m_buffer, sel);
         new_selections.reserve(new_selections.size() + res.size());
         for (auto& new_sel : res)
         {

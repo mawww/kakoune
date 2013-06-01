@@ -52,13 +52,14 @@ void test_buffer()
 
 void test_editor()
 {
+    using namespace std::placeholders;
     Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "youpi\n" });
     Editor editor(buffer);
 
     {
         scoped_edition edition{editor};
         editor.select(select_whole_buffer);
-        editor.multi_select(std::bind(select_all_matches, std::placeholders::_1, Regex{"\\n\\h*"}));
+        editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"\\n\\h*"}));
         for (auto& sel : editor.selections())
         {
             kak_assert(*sel.min() == '\n');

@@ -203,7 +203,7 @@ void replace_with_char(Context& context)
         Editor& editor = context.editor();
         SelectionList sels = editor.selections();
         auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
-        editor.multi_select(std::bind(select_all_matches, _1, Regex{"."}));
+        editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"."}));
         editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
     });
 }
@@ -282,7 +282,7 @@ void search(Context& context)
                 else if (str.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
-                context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
+                context.editor().select(std::bind(select_next_match<forward>, _1, _2, ex), mode);
             }
             catch (boost::regex_error& err)
             {
@@ -315,7 +315,7 @@ void search_next(Context& context)
                 context.push_jump();
             int count = context.numeric_param();
             do {
-                context.editor().select(std::bind(select_next_match<forward>, _1, ex), mode);
+                context.editor().select(std::bind(select_next_match<forward>, _1, _2, ex), mode);
             } while (--count > 0);
         }
         catch (boost::regex_error& err)
@@ -445,7 +445,7 @@ void select_regex(Context& context)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            context.editor().multi_select(std::bind(select_all_matches, _1, ex));
+            context.editor().multi_select(std::bind(select_all_matches, _1, _2, ex));
     });
 }
 
@@ -457,13 +457,13 @@ void split_regex(Context& context)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            context.editor().multi_select(std::bind(split_selection, _1, ex));
+            context.editor().multi_select(std::bind(split_selection, _1, _2, ex));
     });
 }
 
 void split_lines(Context& context)
 {
-    context.editor().multi_select(std::bind(split_selection, _1, Regex{"^"}));
+    context.editor().multi_select(std::bind(split_selection, _1, _2, Regex{"^"}));
 }
 
 void join_select_spaces(Context& context)
@@ -471,9 +471,9 @@ void join_select_spaces(Context& context)
     Editor& editor = context.editor();
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
-    editor.multi_select([](const Selection& sel)
+    editor.multi_select([](const Buffer& buffer, const Selection& sel)
     {
-        SelectionList res = select_all_matches(sel, Regex{"(\n\\h*)+"});
+        SelectionList res = select_all_matches(buffer, sel, Regex{"(\n\\h*)+"});
         // remove last end of line if selected
         kak_assert(std::is_sorted(res.begin(), res.end(),
               [](const Selection& lhs, const Selection& rhs)
@@ -521,7 +521,7 @@ void indent(Context& context)
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
-    editor.multi_select(std::bind(select_all_matches, _1, Regex{"^[^\n]"}));
+    editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"^[^\n]"}));
     editor.insert(indent, InsertMode::Insert);
 }
 
@@ -532,7 +532,7 @@ void deindent(Context& context)
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
     editor.select(select_whole_lines);
-    editor.multi_select(std::bind(select_all_matches, _1,
+    editor.multi_select(std::bind(select_all_matches, _1, _2,
                                   Regex{"^\\h{1," + to_string(width) + "}"}));
     editor.erase();
 }
@@ -556,26 +556,26 @@ void select_object(Context& context)
     [=](const Key& key, Context& context) {
         if (hide)
             context.ui().info_hide();
-        typedef std::function<Selection (const Selection&)> Selector;
+        typedef std::function<Selection (const Buffer&, const Selection&)> Selector;
         static const std::unordered_map<Key, Selector> key_to_selector =
         {
-            { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, flags) },
-            { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, flags) },
-            { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, CodepointPair{ '(', ')' }, flags) },
-            { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
-            { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
-            { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, CodepointPair{ '{', '}' }, flags) },
-            { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
-            { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
-            { { Key::Modifiers::None, 'r' }, std::bind(select_surrounding, _1, CodepointPair{ '[', ']' }, flags) },
-            { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
-            { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, CodepointPair{ '<', '>' }, flags) },
-            { { Key::Modifiers::None, '"' }, std::bind(select_surrounding, _1, CodepointPair{ '"', '"' }, flags) },
-            { { Key::Modifiers::None, '\'' }, std::bind(select_surrounding, _1, CodepointPair{ '\'', '\'' }, flags) },
-            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, flags) },
-            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, flags) },
-            { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, flags) },
-            { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, flags) },
+            { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '(', ')' }, flags) },
+            { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '(', ')' }, flags) },
+            { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '(', ')' }, flags) },
+            { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '{', '}' }, flags) },
+            { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '{', '}' }, flags) },
+            { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '{', '}' }, flags) },
+            { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '[', ']' }, flags) },
+            { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '[', ']' }, flags) },
+            { { Key::Modifiers::None, 'r' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '[', ']' }, flags) },
+            { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '<', '>' }, flags) },
+            { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '<', '>' }, flags) },
+            { { Key::Modifiers::None, '"' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '"', '"' }, flags) },
+            { { Key::Modifiers::None, '\'' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '\'', '\'' }, flags) },
+            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<false>, _1, _2, flags) },
+            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, _2, flags) },
+            { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, _2, flags) },
+            { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, _2, flags) },
         };
 
         auto it = key_to_selector.find(key);
@@ -642,7 +642,7 @@ void select_to_next_char(Context& context)
     context.input_handler().on_next_key([param](const Key& key, Context& context) {
         context.editor().select(
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
-                      _1, key.key, param, flags & SelectFlags::Inclusive),
+                      _1, _2, key.key, param, flags & SelectFlags::Inclusive),
             flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace);
    });
 }
