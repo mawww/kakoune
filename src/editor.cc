@@ -454,8 +454,6 @@ void Editor::end_edition()
     --m_edition_level;
 }
 
-using utf8_it = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
-
 IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
     : m_editor(editor), m_edition(editor), m_mode(mode)
 {
@@ -463,30 +461,29 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
 
     for (auto& sel : m_editor.m_selections)
     {
-        utf8_it first, last;
+        BufferCoord first, last;
         switch (mode)
         {
-        case InsertMode::Insert:  first = buffer.iterator_at(sel.max()); last = buffer.iterator_at(sel.min()); break;
+        case InsertMode::Insert:  first = sel.max(); last = sel.min(); break;
         case InsertMode::Replace:
         {
             Kakoune::erase(buffer, sel);
-            first = last = buffer.iterator_at(sel.min());
+            first = last = sel.min();
             break;
         }
         case InsertMode::Append:
         {
-            first = buffer.iterator_at(sel.min());
-            last  = buffer.iterator_at(sel.max());
+            first = sel.min();
+            last  = sel.max();
             // special case for end of lines, append to current line instead
-            auto coord = last.underlying_iterator().coord();
-            if (coord.column != buffer.line_length(coord.line) - 1)
-                ++last;
+            if (last.column != buffer.line_length(last.line) - 1)
+                last = buffer.char_next(last);
             break;
         }
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
-            first = utf8_it(buffer.iterator_at(sel.max().line+1)) - 1;
+            first = buffer.char_prev(sel.max().line+1);
             last  = first;
             break;
 
@@ -494,10 +491,10 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
         case InsertMode::InsertAtLineBegin:
             first = buffer.iterator_at(sel.min().line);
             if (mode == InsertMode::OpenLineAbove)
-                --first;
+                first = buffer.char_prev(first);
             else
             {
-                auto first_non_blank = first;
+                auto first_non_blank = buffer.iterator_at(first);
                 while (*first_non_blank == ' ' or *first_non_blank == '\t')
                     ++first_non_blank;
                 if (*first_non_blank != '\n')
@@ -509,12 +506,12 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
              kak_assert(false); // not implemented
              break;
         }
-        if (first.underlying_iterator().is_end())
-           --first;
-        if (last.underlying_iterator().is_end())
-           --last;
-        sel.first() = first.underlying_iterator();
-        sel.last()  = last.underlying_iterator();
+        if (buffer.is_end(first))
+           first = buffer.char_prev(first);
+        if (buffer.is_end(last))
+           last = buffer.char_prev(last);
+        sel.first() = first;
+        sel.last()  = last;
     }
     if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
     {
@@ -524,8 +521,8 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             for (auto& sel : m_editor.m_selections)
             {
                 // special case, the --first line above did nothing, so we need to compensate now
-                if (sel.first() == utf8::next(buffer.begin()))
-                    sel.first() = sel.last() = buffer.begin();
+                if (sel.first() == buffer.char_next({0,0}))
+                    sel.first() = sel.last() = BufferCoord{0,0};
             }
         }
     }
