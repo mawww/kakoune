@@ -75,7 +75,7 @@ void skip_while_reverse(Iterator& it, T condition)
 
 Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
-    return Range{first.underlying_iterator(), last.underlying_iterator()};
+    return {first.underlying_iterator(), last.underlying_iterator()};
 }
 
 }
@@ -480,11 +480,11 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
             {
                 if (not (flags & ObjectFlags::Inner))
                     skip_while(last, is_eol);
-               --last;
                 break;
             }
             ++last;
         }
+        --last;
     }
     return (flags & ObjectFlags::ToEnd) ? Selection{first, last}
                                         : Selection{last, first};
