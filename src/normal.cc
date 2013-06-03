@@ -92,7 +92,7 @@ void goto_commands(Context& context)
             {
                 context.push_jump();
                 const Buffer& buf = editor.buffer();
-                editor.select(buf.iterator_at_line_begin(buf.line_count() - 1), mode);
+                editor.select(buf.iterator_at(buf.line_count() - 1), mode);
                 break;
             }
             case 'e':
@@ -103,7 +103,7 @@ void goto_commands(Context& context)
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    editor.select(editor.buffer().iterator_at_line_begin(line), mode);
+                    editor.select(editor.buffer().iterator_at(line), mode);
                 }
                 break;
             case 'b':
@@ -111,7 +111,7 @@ void goto_commands(Context& context)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    editor.select(editor.buffer().iterator_at_line_begin(line), mode);
+                    editor.select(editor.buffer().iterator_at(line), mode);
                 }
                 break;
             case 'c':
@@ -119,7 +119,7 @@ void goto_commands(Context& context)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    editor.select(editor.buffer().iterator_at_line_begin(line), mode);
+                    editor.select(editor.buffer().iterator_at(line), mode);
                 }
                 break;
             case 'a':
@@ -608,8 +608,8 @@ void scroll(Context& context)
         position.line += (window.dimensions().line - 2);
         cursor_line = position.line + window.dimensions().line - 1;
     }
-    auto cursor_pos = utf8::advance(buffer.iterator_at_line_begin(position.line),
-                                    buffer.iterator_at_line_end(position.line),
+    auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
+                                    buffer.iterator_at(position.line+1),
                                     position.column);
     window.select(cursor_pos);
     window.set_position(position);

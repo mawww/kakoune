@@ -235,7 +235,7 @@ void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
                         atom_it = line.split(atom_it, (it+1).coord());
 
                     int column = 0;
-                    for (auto line_it = buffer.iterator_at_line_begin(it);
+                    for (auto line_it = buffer.iterator_at(it.line());
                          line_it != it; ++line_it)
                     {
                         kak_assert(*line_it != '\n');

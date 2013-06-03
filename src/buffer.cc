@@ -108,30 +108,6 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
-BufferIterator Buffer::iterator_at_line_begin(LineCount line) const
-{
-    line = Kakoune::clamp(line, 0_line, line_count()-1);
-    kak_assert(line_length(line) > 0);
-    return BufferIterator(*this, { line, 0 });
-}
-
-BufferIterator Buffer::iterator_at_line_begin(const BufferIterator& iterator) const
-{
-    return iterator_at_line_begin(iterator.line());
-}
-
-BufferIterator Buffer::iterator_at_line_end(LineCount line) const
-{
-    line = Kakoune::clamp(line, 0_line, line_count()-1);
-    kak_assert(line_length(line) > 0);
-    return ++BufferIterator(*this, { line, line_length(line) - 1 });
-}
-
-BufferIterator Buffer::iterator_at_line_end(const BufferIterator& iterator) const
-{
-    return iterator_at_line_end(iterator.line());
-}
-
 BufferIterator Buffer::begin() const
 {
     return BufferIterator(*this, { 0_line, 0 });
@@ -729,8 +705,7 @@ bool Buffer::is_valid(const BufferCoord& c) const
 
 bool Buffer::is_end(const BufferCoord& c) const
 {
-    return (c.line == line_count() and c.column == 0) or
-           (c.line == line_count() - 1 and c.column == m_lines.back().length());
+    return c >= BufferCoord{line_count() - 1, m_lines.back().length()};
 }
 
 char Buffer::byte_at(const BufferCoord& c) const

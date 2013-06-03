@@ -42,7 +42,7 @@ void expand_tabulations(Buffer& buffer, Selection& selection, String& content)
     {
         int column = 0;
         const auto position = buffer.iterator_at(selection.last());
-        for (auto it = buffer.iterator_at_line_begin(position);
+        for (auto it = buffer.iterator_at(position.line());
              it != position; ++it)
         {
             kak_assert(*it != '\n');
@@ -67,7 +67,7 @@ struct RegexFilter
     void operator() (Buffer& buffer, Selection& selection, String& content)
     {
         const auto position = buffer.iterator_at(selection.last());
-        auto line_begin = buffer.iterator_at_line_begin(position);
+        auto line_begin = buffer.iterator_at(position.line());
         boost::match_results<BufferIterator> results;
         if (boost::regex_match(content.c_str(), m_insert_match) and
             boost::regex_match(line_begin, position, results, m_line_match))

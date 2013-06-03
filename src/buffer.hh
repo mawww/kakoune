@@ -151,19 +151,6 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord    clamp(BufferCoord coord) const;
 
-    // returns an iterator pointing to the first character of the line
-    // iterator is on
-    BufferIterator iterator_at_line_begin(const BufferIterator& iterator) const;
-    // the same but taking a line number instead of an iterator
-    BufferIterator iterator_at_line_begin(LineCount line) const;
-
-    // returns an iterator pointing to the character after the last of the
-    // line iterator is on (which is the first of the next line if iterator is
-    // not on the last one)
-    BufferIterator iterator_at_line_end(const BufferIterator& iterator) const;
-    // the same but taking a line number instead of an iterator
-    BufferIterator iterator_at_line_end(LineCount line) const;
-
     const String& name() const { return m_name; }
     String display_name() const;
 
