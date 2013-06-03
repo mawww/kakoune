@@ -475,7 +475,7 @@ void Buffer::do_insert(const BufferCoord& pos, const String& content)
             m_lines.push_back({ offset + start, content.substr(start) });
 
         begin = pos.column == 0 ? pos : BufferCoord{ pos.line + 1, 0 };
-        end = this->end().coord();
+        end = BufferCoord{ line_count()-1, m_lines.back().length() };
     }
     else
     {
