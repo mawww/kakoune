@@ -10,28 +10,28 @@ namespace Kakoune
 struct Range
 {
 public:
-    Range(const BufferIterator& first, const BufferIterator& last)
+    Range(const BufferCoord& first, const BufferCoord& last)
         : m_first{first}, m_last{last} {}
 
     void merge_with(const Range& range);
 
-    BufferIterator& first() { return m_first; }
-    BufferIterator& last() { return m_last; }
+    BufferCoord& first() { return m_first; }
+    BufferCoord& last() { return m_last; }
 
-    const BufferIterator& first() const { return m_first; }
-    const BufferIterator& last() const { return m_last; }
+    const BufferCoord& first() const { return m_first; }
+    const BufferCoord& last() const { return m_last; }
 
     bool operator== (const Range& other) const
     {
         return m_first == other.m_first and m_last == other.m_last;
     }
 
-    const BufferIterator& min() const { return std::min(m_first, m_last); }
-    const BufferIterator& max() const { return std::max(m_first, m_last); }
+    const BufferCoord& min() const { return std::min(m_first, m_last); }
+    const BufferCoord& max() const { return std::max(m_first, m_last); }
 
 private:
-    BufferIterator m_first;
-    BufferIterator m_last;
+    BufferCoord m_first;
+    BufferCoord m_last;
 };
 
 inline bool overlaps(const Range& lhs, const Range& rhs)
@@ -40,12 +40,22 @@ inline bool overlaps(const Range& lhs, const Range& rhs)
                                   : lhs.min() <= rhs.max();
 }
 
+inline String content(const Buffer& buffer, const Range& range)
+{
+    return buffer.string(range.min(), buffer.char_next(range.max()));
+}
+
+inline void erase(Buffer& buffer, const Range& range)
+{
+    return buffer.erase(range.min(), buffer.char_next(range.max()));
+}
+
 using CaptureList = std::vector<String>;
 
 // A selection is a Range, associated with a CaptureList
 struct Selection : public Range
 {
-    Selection(const BufferIterator& first, const BufferIterator& last,
+    Selection(const BufferCoord& first, const BufferCoord& last,
               CaptureList captures = {})
         : Range(first, last), m_captures(std::move(captures)) {}
 

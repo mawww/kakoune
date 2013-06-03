@@ -187,11 +187,11 @@ static DisplayLine generate_status_line(Client& client)
 {
     auto& context = client.context();
     auto pos = context.editor().main_selection().last();
-    auto col = utf8::distance(context.buffer().iterator_at_line_begin(pos), pos);
+    auto col = context.buffer().char_distance({pos.line, 0}, pos);
 
     std::ostringstream oss;
     oss << context.buffer().display_name()
-        << " " << (int)pos.line()+1 << ":" << (int)col+1;
+        << " " << (int)pos.line+1 << ":" << (int)col+1;
     if (context.buffer().is_modified())
         oss << " [+]";
     if (context.input_handler().is_recording())

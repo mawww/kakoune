@@ -280,22 +280,23 @@ void show_line_numbers(const Window& window, DisplayBuffer& display_buffer)
 void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
 {
     const bool only_cursor = window.is_editing() and window.options()["insert_hide_sel"].get<bool>();
+    const auto& buffer = window.buffer();
     for (size_t i = 0; i < window.selections().size(); ++i)
     {
         auto& sel = window.selections()[i];
         const bool forward = sel.first() <= sel.last();
-        BufferIterator begin = forward ? sel.first() : utf8::next(sel.last());
-        BufferIterator end   = forward ? sel.last() : utf8::next(sel.first());
+        BufferCoord begin = forward ? sel.first() : buffer.char_next(sel.last());
+        BufferCoord end   = forward ? sel.last() : buffer.char_next(sel.first());
 
         const bool primary = (i == window.main_selection_index());
         if (not only_cursor)
         {
             ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
-            highlight_range(display_buffer, begin.coord(), end.coord(), false,
+            highlight_range(display_buffer, begin, end, false,
                             [&](DisplayAtom& atom) { atom.colors = sel_colors; });
         }
         ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
-        highlight_range(display_buffer, sel.last().coord(), utf8::next(sel.last()).coord(), false,
+        highlight_range(display_buffer, sel.last(), buffer.char_next(sel.last()), false,
                         [&](DisplayAtom& atom) { atom.colors = cur_colors; });
     }
 }

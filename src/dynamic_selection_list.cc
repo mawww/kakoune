@@ -30,8 +30,8 @@ void DynamicSelectionList::check_invariant() const
         kak_assert(buffer.is_valid(sel.last()));
         kak_assert(not buffer.is_end(sel.first()));
         kak_assert(not buffer.is_end(sel.last()));
-        kak_assert(utf8::is_character_start(sel.first()));
-        kak_assert(utf8::is_character_start(sel.last()));
+        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.first())));
+        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.last())));
     }
 #endif
 }

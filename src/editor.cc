@@ -20,17 +20,17 @@ Editor::Editor(Buffer& buffer)
     m_main_sel = 0;
 }
 
-static void avoid_eol(BufferIterator& it)
+static void avoid_eol(const Buffer& buffer, BufferCoord& coord)
 {
-    const auto column = it.column();
-    if (column != 0 and column == it.buffer().line_length(it.line()) - 1)
-        it = utf8::previous(it);
+    const auto column = coord.column;
+    if (column != 0 and column == buffer.line_length(coord.line) - 1)
+        coord = buffer.char_prev(coord);
 }
 
-static void avoid_eol(Selection& sel)
+static void avoid_eol(const Buffer& buffer, Range& sel)
 {
-    avoid_eol(sel.first());
-    avoid_eol(sel.last());
+    avoid_eol(buffer, sel.first());
+    avoid_eol(buffer, sel.last());
 }
 
 void Editor::erase()
@@ -38,13 +38,13 @@ void Editor::erase()
     scoped_edition edition(*this);
     for (auto& sel : m_selections)
     {
-        m_buffer->erase(sel.min(), utf8::next(sel.max()));
-        avoid_eol(sel);
+        Kakoune::erase(*m_buffer, sel);
+        avoid_eol(*m_buffer, sel);
     }
 }
 
-static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
-                                     InsertMode mode)
+static BufferCoord prepare_insert(Buffer& buffer, const Selection& sel,
+                                  InsertMode mode)
 {
     switch (mode)
     {
@@ -52,37 +52,37 @@ static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
         return sel.min();
     case InsertMode::Replace:
     {
-        BufferIterator pos = sel.min();
-        buffer.erase(sel.min(), utf8::next(sel.max()));
+        BufferCoord pos = sel.min();
+        Kakoune::erase(buffer, sel);
         return pos;
     }
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
         auto pos = std::max(sel.first(), sel.last());
-        if (pos.column() == buffer.line_length(pos.line()) - 1)
+        if (pos.column == buffer.line_length(pos.line) - 1)
             return pos;
         else
-            return utf8::next(pos);
+            return buffer.char_next(pos);
     }
     case InsertMode::InsertAtLineBegin:
-        return buffer.iterator_at_line_begin(sel.min());
+        return sel.min().line;
     case InsertMode::AppendAtLineEnd:
-        return buffer.iterator_at_line_end(sel.max())-1;
+        return buffer.char_prev(sel.max().line+1);
     case InsertMode::InsertAtNextLineBegin:
-        return buffer.iterator_at_line_end(sel.max());
+        return sel.max().line+1;
     case InsertMode::OpenLineBelow:
     case InsertMode::OpenLineAbove:
     {
         auto line = mode == InsertMode::OpenLineAbove ?
-            sel.min().line() : sel.max().line() + 1;
+            sel.min().line : sel.max().line + 1;
         buffer.insert(line, "\n");
-        return {buffer, line};
+        return line;
     }
 
     }
     kak_assert(false);
-    return BufferIterator{};
+    return {};
 }
 
 void Editor::insert(const String& str, InsertMode mode)
@@ -91,14 +91,15 @@ void Editor::insert(const String& str, InsertMode mode)
 
     for (auto& sel : m_selections)
     {
-        BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
+        BufferCoord pos = prepare_insert(*m_buffer, sel, mode);
         m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace and not pos.is_end())
+        if (mode == InsertMode::Replace and not m_buffer->is_end(pos))
         {
             sel.first() = pos;
-            sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
+            sel.last()  = str.empty() ?
+                 pos : m_buffer->char_advance(pos, str.char_length() - 1);
         }
-        avoid_eol(sel);
+        avoid_eol(*m_buffer, sel);
     }
     check_invariant();
 }
@@ -112,15 +113,16 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
     for (size_t i = 0; i < selections().size(); ++i)
     {
         auto& sel = m_selections[i];
-        BufferIterator pos = prepare_insert(*m_buffer, sel, mode);
+        BufferCoord pos = prepare_insert(*m_buffer, sel, mode);
         const String& str = strings[std::min(i, strings.size()-1)];
         m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace and not pos.is_end())
+        if (mode == InsertMode::Replace and not m_buffer->is_end(pos))
         {
             sel.first() = pos;
-            sel.last() = str.empty() ? pos : utf8::character_start(pos + str.length() - 1);
+            sel.last()  = str.empty() ?
+                 pos : m_buffer->char_advance(pos, str.char_length() - 1);
         }
-        avoid_eol(sel);
+        avoid_eol(*m_buffer, sel);
     }
     check_invariant();
 }
@@ -129,7 +131,7 @@ std::vector<String> Editor::selections_content() const
 {
     std::vector<String> contents;
     for (auto& sel : m_selections)
-        contents.push_back(m_buffer->string(sel.min(), utf8::next(sel.max())));
+        contents.push_back(m_buffer->string(sel.min(), m_buffer->char_next(sel.max())));
     return contents;
 }
 
@@ -183,12 +185,11 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
     for (auto& sel : m_selections)
     {
         auto last = sel.last();
-        auto limit = offset < 0 ? buffer().iterator_at_line_begin(last)
-                                : utf8::previous(buffer().iterator_at_line_end(last));
-        last = utf8::advance(last, limit, offset);
+        last = clamp<BufferCoord>(m_buffer->char_advance(last, offset),
+                                  last.line, m_buffer->char_prev(last.line+1));
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
-        avoid_eol(sel);
+        avoid_eol(*m_buffer, sel);
     }
     sort_and_merge_overlapping(m_selections, m_main_sel);
 }
@@ -198,14 +199,14 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        BufferCoord pos = sel.last().coord();
-        CharCount column = utf8::distance(m_buffer->iterator_at_line_begin(pos.line), sel.last());
+        auto pos = sel.last();
+        CharCount column = m_buffer->char_distance(pos.line, pos);
         pos.line += offset;
-        BufferIterator last = utf8::advance(m_buffer->iterator_at_line_begin(pos.line),
-                                            m_buffer->iterator_at_line_end(pos.line)-1, column);
+        auto last = std::min(m_buffer->char_advance(pos.line, column),
+                             m_buffer->char_prev(pos.line+1));
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
-        avoid_eol(sel);
+        avoid_eol(*m_buffer, sel);
     }
     sort_and_merge_overlapping(m_selections, m_main_sel);
 }
@@ -215,8 +216,8 @@ void Editor::clear_selections()
     auto& sel = m_selections[m_main_sel];
     auto& pos = sel.last();
 
-    if (*pos == '\n' and not pos.is_begin() and *utf8::previous(pos) != '\n')
-        pos = utf8::previous(pos);
+    if (pos.column != 0 and pos.column == m_buffer->line_length(pos.line) - 1)
+        pos = m_buffer->char_prev(pos);
     sel.first() = pos;
 
     m_selections.erase(m_selections.begin(), m_selections.begin() + m_main_sel);
@@ -392,21 +393,22 @@ private:
     SelectionList m_ranges;
 };
 
-inline bool touches(const Range& lhs, const Range& rhs)
+inline bool touches(const Buffer& buffer, const Range& lhs, const Range& rhs)
 {
-    return lhs.min() <= rhs.min() ? utf8::next(lhs.max()) >= rhs.min()
-                                  : lhs.min() <= utf8::next(rhs.max());
+    return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
+                                  : lhs.min() <= buffer.char_next(rhs.max());
 }
 
 bool Editor::undo()
 {
+    using namespace std::placeholders;
     ModifiedRangesListener listener(buffer());
     bool res = m_buffer->undo();
     if (res and not listener.ranges().empty())
     {
         m_selections = std::move(listener.ranges());
         m_main_sel = m_selections.size() - 1;
-        merge_overlapping(m_selections, m_main_sel, touches);
+        merge_overlapping(m_selections, m_main_sel, std::bind(touches, std::ref(buffer()), _1, _2));
     }
     check_invariant();
     return res;
@@ -414,13 +416,14 @@ bool Editor::undo()
 
 bool Editor::redo()
 {
+    using namespace std::placeholders;
     ModifiedRangesListener listener(buffer());
     bool res = m_buffer->redo();
     if (res and not listener.ranges().empty())
     {
         m_selections = std::move(listener.ranges());
         m_main_sel = m_selections.size() - 1;
-        merge_overlapping(m_selections, m_main_sel, touches);
+        merge_overlapping(m_selections, m_main_sel, std::bind(touches, std::ref(buffer()), _1, _2));
     }
     check_invariant();
     return res;
@@ -463,17 +466,17 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
         utf8_it first, last;
         switch (mode)
         {
-        case InsertMode::Insert:  first = sel.max(); last = sel.min(); break;
+        case InsertMode::Insert:  first = buffer.iterator_at(sel.max()); last = buffer.iterator_at(sel.min()); break;
         case InsertMode::Replace:
         {
-            buffer.erase(sel.min(), utf8::next(sel.max()));
-            first = last = sel.min();
+            Kakoune::erase(buffer, sel);
+            first = last = buffer.iterator_at(sel.min());
             break;
         }
         case InsertMode::Append:
         {
-            first = sel.min();
-            last  = std::max(sel.first(), sel.last());
+            first = buffer.iterator_at(sel.min());
+            last  = buffer.iterator_at(sel.max());
             // special case for end of lines, append to current line instead
             auto coord = last.underlying_iterator().coord();
             if (coord.column != buffer.line_length(coord.line) - 1)
@@ -483,13 +486,13 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
-            first = utf8_it(buffer.iterator_at_line_end(sel.max())) - 1;
+            first = utf8_it(buffer.iterator_at(sel.max().line+1)) - 1;
             last  = first;
             break;
 
         case InsertMode::OpenLineAbove:
         case InsertMode::InsertAtLineBegin:
-            first = buffer.iterator_at_line_begin(sel.min());
+            first = buffer.iterator_at(sel.min().line);
             if (mode == InsertMode::OpenLineAbove)
                 --first;
             else
@@ -534,9 +537,9 @@ IncrementalInserter::~IncrementalInserter()
 {
     for (auto& sel : m_editor.m_selections)
     {
-        if (m_mode == InsertMode::Append and sel.last().column() > 0)
-            sel.last() = utf8::previous(sel.last());
-        avoid_eol(sel);
+        if (m_mode == InsertMode::Append and sel.last().column > 0)
+            sel.last() = m_editor.buffer().char_prev(sel.last());
+        avoid_eol(m_editor.buffer(), sel);
     }
 }
 
@@ -564,8 +567,8 @@ void IncrementalInserter::erase()
 {
     for (auto& sel : m_editor.m_selections)
     {
-        BufferIterator pos = sel.last();
-        m_editor.buffer().erase(utf8::previous(pos), pos);
+        BufferCoord pos = sel.last();
+        m_editor.buffer().erase(m_editor.buffer().char_prev(pos), pos);
     }
 }
 

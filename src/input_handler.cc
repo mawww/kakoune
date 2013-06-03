@@ -610,11 +610,13 @@ public:
         for (auto& sel : m_context.editor().selections())
         {
             auto offset = buffer.offset(sel.last());
+            auto pos = buffer.iterator_at(sel.last());
             if (offset >= beg_offset and offset + end_offset < buffer_len and
-                std::equal(sel.last() - beg_offset, sel.last(), begin))
+                std::equal(pos - beg_offset, pos, begin))
             {
-                buffer.erase(sel.last() - beg_offset, sel.last() + end_offset);
-                buffer.insert(sel.last(), candidate);
+                auto beg = pos - beg_offset;
+                buffer.erase(beg, pos + end_offset);
+                buffer.insert(beg, candidate);
             }
         }
 

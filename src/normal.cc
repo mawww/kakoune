@@ -136,14 +136,15 @@ void goto_commands(Context& context)
             case 'f':
             {
                 const Range& sel = context.editor().main_selection();
-                String filename = context.buffer().string(sel.min(), utf8::next(sel.max()));
+                const Buffer& buffer = context.buffer();
+                String filename = content(buffer, sel);
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
                 for (auto c : forbidden)
                     if (contains(filename, c))
                         return;
 
                 auto paths = context.options()["path"].get<std::vector<String>>();
-                const String& buffer_name = context.buffer().name();
+                const String& buffer_name = buffer.name();
                 auto it = find(reversed(buffer_name), '/');
                 if (it != buffer_name.rend())
                     paths.insert(paths.begin(), String{buffer_name.begin(), it.base()});
@@ -248,7 +249,7 @@ void pipe(Context& context)
             Editor& editor = context.editor();
             std::vector<String> strings;
             for (auto& sel : context.editor().selections())
-                strings.push_back(ShellManager::instance().pipe({sel.min(), utf8::next(sel.max())},
+                strings.push_back(ShellManager::instance().pipe(content(context.buffer(), sel),
                                                                 cmdline, context, {},
                                                                 EnvVarMap{}));
             editor.insert(strings, InsertMode::Replace);
@@ -332,20 +333,21 @@ void use_selection_as_search_pattern(Context& context)
 {
     std::vector<String> patterns;
     auto& sels = context.editor().selections();
+    const auto& buffer = context.buffer();
     for (auto& sel : sels)
     {
         auto begin = sel.min();
-        auto end = utf8::next(sel.max());
+        auto end = buffer.char_next(sel.max());
         auto content = "\\Q" + context.buffer().string(begin, end) + "\\E";
         if (smart)
         {
-            if (begin.is_begin() or
-                (is_word(utf8::codepoint(begin)) and not
-                 is_word(utf8::codepoint(utf8::previous(begin)))))
+            if (begin == BufferCoord{0,0} or
+                (is_word(buffer.char_at(begin)) and not
+                 is_word(buffer.char_at(buffer.char_prev(begin)))))
                 content = "\\b" + content;
-            if (end.is_end() or
-                (is_word(utf8::codepoint(utf8::previous(end))) and not
-                 is_word(utf8::codepoint(end))))
+            if (buffer.is_end(end) or
+                (is_word(buffer.char_at(buffer.char_prev(end))) and not
+                 is_word(buffer.char_at(end))))
                 content = content + "\\b";
         }
         patterns.push_back(std::move(content));
@@ -371,7 +373,7 @@ void cat_yank(Context& context)
                            to_string(sels.size()) + " selections", get_color("Information") });
 }
 
-void erase(Context& context)
+void erase_selections(Context& context)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
     context.editor().erase();
@@ -478,7 +480,7 @@ void join_select_spaces(Context& context)
         kak_assert(std::is_sorted(res.begin(), res.end(),
               [](const Selection& lhs, const Selection& rhs)
               { return lhs.min() < rhs.min(); }));
-        if (not res.empty() and utf8::next(res.back().max()).is_end())
+        if (not res.empty() and buffer.is_end(buffer.char_next(res.back().max())))
             res.pop_back();
         return res;
     });
@@ -499,11 +501,13 @@ void keep(Context& context)
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
     regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
         Editor& editor = context.editor();
+        const Buffer& buffer = context.buffer();
         SelectionList sels = editor.selections();
         SelectionList keep;
         for (auto& sel : sels)
         {
-            if (boost::regex_search(sel.min(), utf8::next(sel.max()), ex) == matching)
+            if (boost::regex_search(buffer.iterator_at(sel.min()),
+                                    utf8::next(buffer.iterator_at(sel.max())), ex) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())
@@ -703,8 +707,8 @@ void align(Context& context)
 {
     auto& selections = context.editor().selections();
     auto& buffer = context.buffer();
-    auto get_column = [&buffer](const BufferIterator& it)
-    { return utf8::distance(buffer.iterator_at_line_begin(it), it); };
+    auto get_column = [&buffer](const BufferCoord& coord)
+    { return buffer.char_distance({coord.line, 0}, coord); };
 
     CharCount max_col = 0;
     for (auto& sel : selections)
@@ -774,7 +778,7 @@ KeyMap keymap =
     { { Key::Modifiers::Alt,  'T' }, select_to_next_char<SelectFlags::Extend | SelectFlags::Reverse> },
     { { Key::Modifiers::Alt,  'F' }, select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend | SelectFlags::Reverse> },
 
-    { { Key::Modifiers::None, 'd' }, erase },
+    { { Key::Modifiers::None, 'd' }, erase_selections },
     { { Key::Modifiers::None, 'c' }, change },
     { { Key::Modifiers::None, 'i' }, insert<InsertMode::Insert> },
     { { Key::Modifiers::None, 'I' }, insert<InsertMode::InsertAtLineBegin> },

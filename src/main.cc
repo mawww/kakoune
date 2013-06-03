@@ -68,7 +68,7 @@ void register_env_vars()
     shell_manager.register_env_var("selection",
                                    [](const String& name, const Context& context)
                                    { const Range& sel = context.editor().main_selection();
-                                     return context.buffer().string(sel.min(), utf8::next(sel.max())); });
+                                     return content(context.buffer(), sel); });
     shell_manager.register_env_var("selections",
                                    [](const String& name, const Context& context)
                                    { auto sels = context.editor().selections_content();
@@ -91,15 +91,15 @@ void register_env_vars()
                                    { return ClientManager::instance().get_client(context).name(); });
     shell_manager.register_env_var("cursor_line",
                                    [](const String& name, const Context& context)
-                                   { return to_string(context.editor().main_selection().last().line() + 1); });
+                                   { return to_string(context.editor().main_selection().last().line + 1); });
     shell_manager.register_env_var("cursor_column",
                                    [](const String& name, const Context& context)
-                                   { return to_string(context.editor().main_selection().last().column() + 1); });
+                                   { return to_string(context.editor().main_selection().last().column + 1); });
     shell_manager.register_env_var("selection_desc",
                                    [](const String& name, const Context& context)
                                    { auto& sel = context.editor().main_selection();
                                      auto beg = sel.min();
-                                     return to_string(beg.line() + 1) + ':' + to_string(beg.column() + 1) + '+' +
+                                     return to_string(beg.line + 1) + ':' + to_string(beg.column + 1) + '+' +
                                             to_string((int)context.buffer().distance(beg, sel.max())+1); });
     shell_manager.register_env_var("window_width",
                                    [](const String& name, const Context& context)

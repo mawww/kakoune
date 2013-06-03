@@ -10,7 +10,7 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
 {
     if (content == "\n")
     {
-        BufferCoord line_begin{selection.last().line(), 0};
+        BufferCoord line_begin{selection.last().line, 0};
         auto first_non_white = buffer.iterator_at(line_begin);
         while ((*first_non_white == '\t' or *first_non_white == ' ') and
                not first_non_white.is_end())
@@ -82,12 +82,12 @@ struct RegexFilter
                     String suffix(it+1, content.end());
                     content = String(content.begin(), it-1);
 
-                    auto first = selection.first();
-                    auto last = selection.last();
+                    auto& first = selection.first();
+                    auto& last = selection.last();
                     buffer.insert(position, suffix);
-                    if (selection.first() == selection.last())
-                        selection.first() -= suffix.length();
-                    selection.last() -= suffix.length();
+                    if (first == last)
+                        first = buffer.advance(first, -suffix.length());
+                    last = buffer.advance(last, -suffix.length());
                 }
             }
         }

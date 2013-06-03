@@ -62,8 +62,8 @@ void test_editor()
         editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"\\n\\h*"}));
         for (auto& sel : editor.selections())
         {
-            kak_assert(*sel.min() == '\n');
-            editor.buffer().erase(sel.min(), utf8::next(sel.max()));
+            kak_assert(buffer.byte_at(sel.min()) == '\n');
+            erase(buffer, sel);
         }
     }
     editor.undo();
@@ -71,7 +71,7 @@ void test_editor()
     Selection sel{ buffer.iterator_at_line_begin(2_line), buffer.end()-1 };
     editor.select(sel, SelectMode::Replace);
     editor.insert("",InsertMode::Replace);
-    kak_assert(not editor.main_selection().first().is_end());
+    kak_assert(not buffer.is_end(editor.main_selection().first()));
 }
 
 void test_incremental_inserter()

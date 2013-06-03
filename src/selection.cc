@@ -22,9 +22,9 @@ void on_buffer_change(const Buffer& buffer, SelectionList& sels,
                       const BufferCoord& begin, const BufferCoord& end, LineCount end_line)
 {
     auto update_beg = std::lower_bound(sels.begin(), sels.end(), begin,
-                                       [](const Selection& s, const BufferCoord& c) { return std::max(s.first().coord(), s.last().coord()) < c; });
+                                       [](const Selection& s, const BufferCoord& c) { return std::max(s.first(), s.last()) < c; });
     auto update_only_line_beg = std::upper_bound(sels.begin(), sels.end(), end_line,
-                                                 [](LineCount l, const Selection& s) { return l < std::min(s.first().coord(), s.last().coord()).line; });
+                                                 [](LineCount l, const Selection& s) { return l < std::min(s.first(), s.last()).line; });
 
     if (update_beg != update_only_line_beg)
     {
@@ -50,10 +50,9 @@ void on_buffer_change(const Buffer& buffer, SelectionList& sels,
 template<bool assume_different_line, bool assume_greater_than_begin>
 struct UpdateInsert
 {
-    void operator()(const Buffer& buffer, BufferIterator& it,
+    void operator()(const Buffer& buffer, BufferCoord& coord,
                     const BufferCoord& begin, const BufferCoord& end) const
     {
-        auto coord = it.coord();
         if (assume_different_line)
             kak_assert(begin.line < coord.line);
         if (not assume_greater_than_begin and coord < begin)
@@ -62,17 +61,15 @@ struct UpdateInsert
             coord.column = end.column + coord.column - begin.column;
 
         coord.line += end.line - begin.line;
-        it = coord;
     }
 };
 
 template<bool assume_different_line, bool assume_greater_than_begin>
 struct UpdateErase
 {
-    void operator()(const Buffer& buffer, BufferIterator& it,
+    void operator()(const Buffer& buffer, BufferCoord& coord,
                     const BufferCoord& begin, const BufferCoord& end) const
     {
-        auto coord = it.coord();
         if (not assume_greater_than_begin and coord < begin)
             return;
         if (assume_different_line)
@@ -89,7 +86,6 @@ struct UpdateErase
             else
                 coord.line -= end.line - begin.line;
         }
-        it = coord;
     }
 };
 
