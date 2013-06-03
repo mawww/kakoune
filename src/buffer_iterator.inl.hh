@@ -59,12 +59,12 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
 
 inline char BufferIterator::operator*() const
 {
-    return m_buffer->at(m_coord);
+    return m_buffer->byte_at(m_coord);
 }
 
 inline char BufferIterator::operator[](size_t n) const
 {
-    return m_buffer->at(m_buffer->advance(m_coord, n));
+    return m_buffer->byte_at(m_buffer->advance(m_coord, n));
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const

@@ -88,7 +88,7 @@ bool Buffer::set_name(String name)
 
 BufferIterator Buffer::iterator_at(const BufferCoord& coord) const
 {
-    return BufferIterator(*this, clamp(coord));
+    return is_end(coord) ? end() : BufferIterator(*this, clamp(coord));
 }
 
 ByteCount Buffer::line_length(LineCount line) const
@@ -634,10 +634,32 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
     return { LineCount{ (int)(it - m_lines.begin()) }, off - it->start };
 }
 
+BufferCoord Buffer::char_advance(BufferCoord coord, CharCount count) const
+{
+    return utf8::advance(iterator_at(coord), end(), count);
+}
+
 BufferCoord Buffer::next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
         ++coord.column;
+    else if (coord.line == m_lines.size() - 1)
+        coord.column = m_lines.back().length();
+    else
+    {
+        ++coord.line;
+        coord.column = 0;
+    }
+    return coord;
+}
+
+BufferCoord Buffer::char_next(BufferCoord coord) const
+{
+    if (coord.column < m_lines[coord.line].length() - 1)
+    {
+        auto& line = m_lines[coord.line].content;
+        coord.column += utf8::codepoint_size(line.begin() + (int)coord.column);
+    }
     else if (coord.line == m_lines.size() - 1)
         coord.column = m_lines.back().length();
     else
@@ -663,9 +685,32 @@ BufferCoord Buffer::prev(BufferCoord coord) const
     return coord;
 }
 
+BufferCoord Buffer::char_prev(BufferCoord coord) const
+{
+    kak_assert(is_valid(coord));
+    if (is_end(coord))
+        return coord = {(int)m_lines.size()-1, m_lines.back().length() - 1};
+    else if (coord.column == 0)
+    {
+        if (coord.line > 0)
+            coord = { coord.line-1, m_lines[coord.line-1].length() - 1 };
+    }
+    else
+    {
+        auto& line = m_lines[coord.line].content;
+        coord.column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1) - line.begin());
+    }
+    return coord;
+}
+
 ByteCount Buffer::distance(const BufferCoord& begin, const BufferCoord& end) const
 {
     return offset(end) - offset(begin);
+}
+
+CharCount Buffer::char_distance(const BufferCoord& begin, const BufferCoord& end) const
+{
+    return utf8::distance(iterator_at(begin), iterator_at(end));
 }
 
 ByteCount Buffer::offset(const BufferCoord& c) const
@@ -688,10 +733,16 @@ bool Buffer::is_end(const BufferCoord& c) const
            (c.line == line_count() - 1 and c.column == m_lines.back().length());
 }
 
-char Buffer::at(const BufferCoord& c) const
+char Buffer::byte_at(const BufferCoord& c) const
 {
     kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
     return m_lines[c.line].content[c.column];
+}
+
+Codepoint Buffer::char_at(const BufferCoord& c) const
+{
+    kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
+    return utf8::codepoint(m_lines[c.line].content.begin() + (int)c.column);
 }
 
 }

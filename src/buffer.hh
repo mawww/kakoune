@@ -120,12 +120,20 @@ public:
     bool           redo();
 
     String         string(const BufferCoord& begin, const BufferCoord& end) const;
-    char           at(const BufferCoord& c) const;
+
+    char           byte_at(const BufferCoord& c) const;
     ByteCount      offset(const BufferCoord& c) const;
     ByteCount      distance(const BufferCoord& begin, const BufferCoord& end) const;
     BufferCoord    advance(BufferCoord coord, ByteCount count) const;
     BufferCoord    next(BufferCoord coord) const;
     BufferCoord    prev(BufferCoord coord) const;
+
+    Codepoint      char_at(const BufferCoord& c) const;
+    CharCount      char_distance(const BufferCoord& begin, const BufferCoord& end) const;
+    BufferCoord    char_advance(BufferCoord coord, CharCount count) const;
+    BufferCoord    char_next(BufferCoord coord) const;
+    BufferCoord    char_prev(BufferCoord coord) const;
+
     bool           is_valid(const BufferCoord& c) const;
     bool           is_end(const BufferCoord& c) const;
 
