@@ -651,10 +651,7 @@ BufferCoord Buffer::prev(BufferCoord coord) const
     if (coord.column == 0)
     {
         if (coord.line > 0)
-        {
-            --coord.line;
-            coord.column = m_lines[coord.line].length() - 1;
-        }
+            coord.column = m_lines[--coord.line].length() - 1;
     }
     else
        --coord.column;
@@ -669,7 +666,7 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
     else if (coord.column == 0)
     {
         if (coord.line > 0)
-            coord = { coord.line-1, m_lines[coord.line-1].length() - 1 };
+            coord.column = m_lines[--coord.line].length() - 1;
     }
     else
     {
