@@ -199,11 +199,10 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        auto pos = sel.last();
-        CharCount column = m_buffer->char_distance(pos.line, pos);
-        pos.line += offset;
-        auto last = std::min(m_buffer->char_advance(pos.line, column),
-                             m_buffer->char_prev(pos.line+1));
+        CharCount column = m_buffer->char_distance(sel.last().line, sel.last());
+        auto line = clamp(sel.last().line + offset, 0_line, m_buffer->line_count()-1);
+        column = std::min(column, m_buffer->line_content(line).char_length()-1);
+        BufferCoord last = m_buffer->char_advance(line, column);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
         avoid_eol(*m_buffer, sel);
