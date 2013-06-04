@@ -9,12 +9,7 @@ namespace Kakoune
 inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
     : m_buffer(&buffer), m_coord(coord)
 {
-    kak_assert(is_valid());
-}
-
-inline bool BufferIterator::is_valid() const
-{
-    return m_buffer and m_buffer->is_valid(m_coord);
+    kak_assert(m_buffer and m_buffer->is_valid(m_coord));
 }
 
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const
