@@ -64,7 +64,6 @@ public:
 
     bool is_valid() const;
 
-    const Buffer& buffer() const;
     const BufferCoord& coord() const { return m_coord; }
 
 private:

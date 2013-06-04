@@ -12,12 +12,6 @@ inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
     kak_assert(is_valid());
 }
 
-inline const Buffer& BufferIterator::buffer() const
-{
-    kak_assert(m_buffer);
-    return *m_buffer;
-}
-
 inline bool BufferIterator::is_valid() const
 {
     return m_buffer and m_buffer->is_valid(m_coord);
