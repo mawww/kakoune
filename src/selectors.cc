@@ -86,11 +86,15 @@ template<bool punctuation_is_word>
 Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator begin = buffer.iterator_at(selection.last());
+    if (is_end(begin+1))
+        return selection;
     if (categorize<punctuation_is_word>(*begin) !=
         categorize<punctuation_is_word>(*(begin+1)))
         ++begin;
 
     skip_while(begin, is_eol);
+    if (is_end(begin))
+        return selection;
     Utf8Iterator end = begin+1;
 
     if (not punctuation_is_word and is_punctuation(*begin))
@@ -109,11 +113,15 @@ template<bool punctuation_is_word>
 Selection select_to_next_word_end(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator begin = buffer.iterator_at(selection.last());
+    if (is_end(begin+1))
+        return selection;
     if (categorize<punctuation_is_word>(*begin) !=
         categorize<punctuation_is_word>(*(begin+1)))
         ++begin;
 
     skip_while(begin, is_eol);
+    if (is_end(begin))
+        return selection;
     Utf8Iterator end = begin;
     skip_while(end, is_blank);
 
@@ -131,7 +139,8 @@ template<bool punctuation_is_word>
 Selection select_to_previous_word(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator begin = buffer.iterator_at(selection.last());
-
+    if (is_end(begin+1))
+        return selection;
     if (categorize<punctuation_is_word>(*begin) !=
         categorize<punctuation_is_word>(*(begin-1)))
         --begin;
