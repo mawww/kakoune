@@ -13,7 +13,7 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
         BufferCoord line_begin{selection.last().line, 0};
         auto first_non_white = buffer.iterator_at(line_begin);
         while ((*first_non_white == '\t' or *first_non_white == ' ') and
-               not first_non_white.is_end())
+               first_non_white != buffer.end())
             ++first_non_white;
 
         content += buffer.string(line_begin, first_non_white);
@@ -23,11 +23,11 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
 void cleanup_whitespaces(Buffer& buffer, Selection& selection, String& content)
 {
     const auto position = buffer.iterator_at(selection.last());
-    if (content[0] == '\n' and not position.is_begin())
+    if (content[0] == '\n' and position != buffer.begin())
     {
         auto whitespace_start = position-1;
         while ((*whitespace_start == ' ' or *whitespace_start == '\t') and
-               not whitespace_start .is_begin())
+               whitespace_start != buffer.begin())
             --whitespace_start;
         ++whitespace_start;
         if (whitespace_start != position)

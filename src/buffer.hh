@@ -62,8 +62,6 @@ public:
     BufferIterator& operator=(const BufferCoord& coord);
     operator const BufferCoord&() const { return m_coord; }
 
-    bool is_begin() const;
-    bool is_end() const;
     bool is_valid() const;
 
     const Buffer& buffer() const;

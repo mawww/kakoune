@@ -127,17 +127,5 @@ inline BufferIterator& BufferIterator::operator=(const BufferCoord& coord)
     return *this;
 }
 
-inline bool BufferIterator::is_begin() const
-{
-    kak_assert(m_buffer);
-    return m_coord.line == 0 and m_coord.column == 0;
-}
-
-inline bool BufferIterator::is_end() const
-{
-    kak_assert(m_buffer);
-    return m_buffer->is_end(m_coord);
-}
-
 }
 #endif // buffer_iterator_inl_h_INCLUDED

@@ -501,12 +501,12 @@ static BufferCompletion complete_word(const Buffer& buffer,
                                       bool other_buffers)
 {
    auto pos = buffer.iterator_at(cursor_pos);
-   if (pos.is_begin() or not is_word(*utf8::previous(pos)))
+   if (pos == buffer.begin() or not is_word(*utf8::previous(pos)))
        return {};
 
     auto end = buffer.iterator_at(cursor_pos);
     auto begin = end-1;
-    while (not begin.is_begin() and is_word(*begin))
+    while (begin != buffer.begin() and is_word(*begin))
         --begin;
     if (not is_word(*begin))
         ++begin;
