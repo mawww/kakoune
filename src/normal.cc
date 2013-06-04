@@ -96,7 +96,7 @@ void goto_commands(Context& context)
             }
             case 'e':
                 context.push_jump();
-                editor.select(editor.buffer().end()-1, mode);
+                editor.select(editor.buffer().back_coord(), mode);
                 break;
             case 't':
                 if (context.has_window())
@@ -610,7 +610,7 @@ void scroll(Context& context)
     auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
                                     buffer.iterator_at(position.line+1),
                                     position.column);
-    window.select(cursor_pos);
+    window.select(cursor_pos.coord());
     window.set_position(position);
 }
 

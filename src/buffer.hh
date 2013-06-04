@@ -59,9 +59,6 @@ public:
     BufferIterator operator++ (int);
     BufferIterator operator-- (int);
 
-    BufferIterator& operator=(const BufferCoord& coord);
-    operator const BufferCoord&() const { return m_coord; }
-
     const BufferCoord& coord() const { return m_coord; }
 
 private:
@@ -126,6 +123,9 @@ public:
     BufferCoord    char_advance(BufferCoord coord, CharCount count) const;
     BufferCoord    char_next(BufferCoord coord) const;
     BufferCoord    char_prev(BufferCoord coord) const;
+
+    BufferCoord    back_coord() const { return { line_count() - 1, m_lines.back().length() - 1 }; }
+    BufferCoord    end_coord() const { return { line_count() - 1, m_lines.back().length() }; }
 
     bool           is_valid(const BufferCoord& c) const;
     bool           is_end(const BufferCoord& c) const;

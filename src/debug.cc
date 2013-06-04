@@ -23,7 +23,7 @@ void write_debug(const String& str)
 {
     Buffer& debug_buffer = get_or_create_debug_buffer();
     Editor editor(debug_buffer);
-    editor.select(debug_buffer.end()-1);
+    editor.select(debug_buffer.back_coord());
     editor.insert(str + "\n");
 }
 

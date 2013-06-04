@@ -511,7 +511,7 @@ static BufferCompletion complete_word(const Buffer& buffer,
     if (not is_word(*begin))
         ++begin;
 
-    String ex = R"(\<\Q)" + buffer.string(begin, end) + R"(\E\w+\>)";
+    String ex = R"(\<\Q)" + String{begin, end} + R"(\E\w+\>)";
     Regex re(ex.begin(), ex.end());
     using RegexIt = boost::regex_iterator<BufferIterator>;
 
@@ -521,7 +521,7 @@ static BufferCompletion complete_word(const Buffer& buffer,
         auto& match = (*it)[0];
         if (match.first <= pos and pos < match.second)
             continue;
-        matches.insert(buffer.string(match.first, match.second));
+        matches.insert(String{match.first, match.second});
     }
     if (other_buffers)
     {
@@ -532,7 +532,7 @@ static BufferCompletion complete_word(const Buffer& buffer,
             for (RegexIt it(buf->begin(), buf->end(), re), re_end; it != re_end; ++it)
             {
                 auto& match = (*it)[0];
-                matches.insert(buf->string(match.first, match.second));
+                matches.insert(String{match.first, match.second});
             }
         }
     }
@@ -541,7 +541,7 @@ static BufferCompletion complete_word(const Buffer& buffer,
               make_move_iterator(matches.end()),
               inserter(result, result.begin()));
     std::sort(result.begin(), result.end());
-    return { begin, end, std::move(result), buffer.timestamp() };
+    return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
 }
 
 static BufferCompletion complete_opt(const Buffer& buffer,
@@ -561,12 +561,11 @@ static BufferCompletion complete_opt(const Buffer& buffer,
         BufferCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
         if (not buffer.is_valid(coord))
             return {};
-        auto beg = buffer.iterator_at(coord);
-        auto end = beg;
+        auto end = coord;
         if (match[3].matched)
         {
             ByteCount len = str_to_int(match[3].str());
-            end = beg + len;
+            end = buffer.advance(coord, len);
         }
         size_t timestamp = (size_t)str_to_int(match[4].str());
 
@@ -576,8 +575,8 @@ static BufferCompletion complete_opt(const Buffer& buffer,
 
         if (timestamp == buffer.timestamp() and
             cursor_pos.line == coord.line and cursor_pos.column <= coord.column and
-            buffer.distance(beg, cursor_pos) < longest_completion)
-            return { beg, end, { opt.begin() + 1, opt.end() }, timestamp };
+            buffer.distance(coord, cursor_pos) < longest_completion)
+            return { coord, end, { opt.begin() + 1, opt.end() }, timestamp };
     }
     return {};
 }
@@ -614,8 +613,8 @@ public:
             if (offset >= beg_offset and offset + end_offset < buffer_len and
                 std::equal(pos - beg_offset, pos, begin))
             {
-                auto beg = pos - beg_offset;
-                buffer.erase(beg, pos + end_offset);
+                auto beg = buffer.advance(sel.last(), -beg_offset);
+                buffer.erase(beg, buffer.advance(sel.last(), end_offset));
                 buffer.insert(beg, candidate);
             }
         }

@@ -69,7 +69,7 @@ void skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
 
 Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
-    return {first.underlying_iterator(), last.underlying_iterator()};
+    return {first.underlying_iterator().coord(), last.underlying_iterator().coord()};
 }
 
 }
@@ -448,8 +448,8 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
             --last;
         }
     }
-    return (flags & ObjectFlags::ToEnd) ? Selection{first, last}
-                                        : Selection{last, first};
+    return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
+                                        : Selection{last.coord(), first.coord()};
 }
 
 Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
@@ -490,8 +490,8 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
         }
         --last;
     }
-    return (flags & ObjectFlags::ToEnd) ? Selection{first, last}
-                                        : Selection{last, first};
+    return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
+                                        : Selection{last.coord(), first.coord()};
 }
 
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
@@ -511,7 +511,7 @@ Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
     if (to_line_end == buffer.end())
         --to_line_end;
 
-    return Selection(first, last);
+    return Selection(first.coord(), last.coord());
 }
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
@@ -527,12 +527,12 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
     while (*(to_line_end+1) != '\n' and to_line_end != to_line_start)
         --to_line_end;
 
-    return Selection(first, last);
+    return Selection(first.coord(), last.coord());
 }
 
 Selection select_whole_buffer(const Buffer& buffer, const Selection&)
 {
-    return Selection(buffer.begin(), utf8::previous(buffer.end()));
+    return Selection({0,0}, buffer.back_coord());
 }
 
 using MatchResults = boost::match_results<BufferIterator>;
@@ -591,7 +591,7 @@ Selection select_next_match(const Buffer& buffer, const Selection& selection, co
     end = utf8::previous(end);
     if (not forward)
         std::swap(begin, end);
-    return Selection{begin, end, std::move(captures)};
+    return Selection{begin.coord(), end.coord(), std::move(captures)};
 }
 template Selection select_next_match<true>(const Buffer&, const Selection&, const Regex&);
 template Selection select_next_match<false>(const Buffer&, const Selection&, const Regex&);
@@ -615,7 +615,7 @@ SelectionList select_all_matches(const Buffer& buffer, const Selection& selectio
         for (auto& match : *re_it)
             captures.push_back(String(match.first, match.second));
 
-        result.push_back(Selection(begin, begin == end ? end : utf8::previous(end),
+        result.push_back(Selection(begin.coord(), (begin == end ? end : utf8::previous(end)).coord(),
                                    std::move(captures)));
     }
     return result;
@@ -634,10 +634,10 @@ SelectionList split_selection(const Buffer& buffer, const Selection& selection,
     {
         BufferIterator end = (*re_it)[0].first;
 
-        result.push_back(Selection(begin, (begin == end) ? end : utf8::previous(end)));
+        result.push_back(Selection(begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord()));
         begin = (*re_it)[0].second;
     }
-    result.push_back(Selection(begin, selection.max()));
+    result.push_back(Selection(begin.coord(), selection.max()));
     return result;
 }
 

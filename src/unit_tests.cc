@@ -13,41 +13,39 @@ void test_buffer()
     Buffer buffer("test", Buffer::Flags::None, { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" });
     kak_assert(buffer.line_count() == 4);
 
-    BufferIterator i = buffer.begin();
-    kak_assert(*i == 'a');
-    i += 6;
-    kak_assert(i.coord() == BufferCoord{0 COMMA 6});
-    i += 1;
-    kak_assert(i.coord() == BufferCoord{1 COMMA 0});
-    --i;
-    kak_assert(i.coord() == BufferCoord{0 COMMA 6});
-    ++i;
-    kak_assert(i.coord() == BufferCoord{1 COMMA 0});
-    buffer.insert(i, "tchou kanaky\n");
+    BufferCoord pos = {0,0};
+    kak_assert(buffer.byte_at(pos) == 'a');
+    pos = buffer.advance(pos, 6);
+    kak_assert(pos == BufferCoord{0 COMMA 6});
+    pos = buffer.next(pos);
+    kak_assert(pos == BufferCoord{1 COMMA 0});
+    pos = buffer.prev(pos);
+    kak_assert(pos == BufferCoord{0 COMMA 6});
+    pos = buffer.advance(pos, 1);
+    kak_assert(pos == BufferCoord{1 COMMA 0});
+    buffer.insert(pos, "tchou kanaky\n");
     kak_assert(buffer.line_count() == 5);
 
-    BufferIterator begin = buffer.iterator_at({ 4, 1 });
-    BufferIterator end = buffer.iterator_at({ 4, 5 }) + 1;
-    String str = buffer.string(begin, end);
+    String str = buffer.string({ 4, 1 }, buffer.next({ 4, 5 }));
     kak_assert(str == "youpi");
 
     // check insert at end behaviour: auto add end of line if necessary
-    begin = buffer.end() - 1;
-    buffer.insert(buffer.end(), "tchou");
-    kak_assert(buffer.string(begin+1, buffer.end()) == "tchou\n");
+    pos = buffer.back_coord();
+    buffer.insert(pos, "tchou");
+    kak_assert(buffer.string(pos, buffer.end_coord()) == "tchou\n");
 
-    begin = buffer.end() - 1;
-    buffer.insert(buffer.end(), "kanaky\n");
-    kak_assert(buffer.string(begin+1, buffer.end()) == "kanaky\n");
+    pos = buffer.back_coord();
+    buffer.insert(buffer.end_coord(), "kanaky\n");
+    kak_assert(buffer.string(buffer.next(pos), buffer.end_coord()) == "kanaky\n");
 
     buffer.commit_undo_group();
-    buffer.erase(begin+1, buffer.end());
-    buffer.insert(buffer.end(), "mutch\n");
+    buffer.erase(buffer.next(pos), buffer.end_coord());
+    buffer.insert(buffer.end_coord(), "mutch\n");
     buffer.commit_undo_group();
     buffer.undo();
-    kak_assert(buffer.string(buffer.end() - 7, buffer.end()) == "kanaky\n");
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == "kanaky\n");
     buffer.redo();
-    kak_assert(buffer.string(buffer.end() - 6, buffer.end()) == "mutch\n");
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6), buffer.end_coord()) == "mutch\n");
 }
 
 void test_editor()
@@ -68,7 +66,7 @@ void test_editor()
     }
     editor.undo();
 
-    Selection sel{ buffer.iterator_at(2_line), buffer.end()-1 };
+    Selection sel{ 2_line, buffer.back_coord() };
     editor.select(sel, SelectMode::Replace);
     editor.insert("",InsertMode::Replace);
     kak_assert(not buffer.is_end(editor.main_selection().first()));
@@ -79,13 +77,13 @@ void test_incremental_inserter()
     Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "youpi\n", "matin\n" });
     Editor editor(buffer);
 
-    editor.select(buffer.begin());
+    editor.select({0,0});
     {
         IncrementalInserter inserter(editor, InsertMode::OpenLineAbove);
         kak_assert(editor.is_editing());
         kak_assert(editor.selections().size() == 1);
-        kak_assert(editor.selections().front().first() == buffer.begin());
-        kak_assert(editor.selections().front().last() == buffer.begin());
+        kak_assert(editor.selections().front().first() == BufferCoord{0 COMMA 0});
+        kak_assert(editor.selections().front().last() == BufferCoord{0 COMMA 0});
         kak_assert(*buffer.begin() == L'\n');
     }
     kak_assert(not editor.is_editing());

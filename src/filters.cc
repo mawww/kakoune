@@ -16,7 +16,7 @@ void preserve_indent(Buffer& buffer, Selection& selection, String& content)
                first_non_white != buffer.end())
             ++first_non_white;
 
-        content += buffer.string(line_begin, first_non_white);
+        content += buffer.string(line_begin, first_non_white.coord());
     }
 }
 
@@ -31,7 +31,7 @@ void cleanup_whitespaces(Buffer& buffer, Selection& selection, String& content)
             --whitespace_start;
         ++whitespace_start;
         if (whitespace_start != position)
-            buffer.erase(whitespace_start, position);
+            buffer.erase(whitespace_start.coord(), position.coord());
     }
 }
 
@@ -84,7 +84,7 @@ struct RegexFilter
 
                     auto& first = selection.first();
                     auto& last = selection.last();
-                    buffer.insert(position, suffix);
+                    buffer.insert(last, suffix);
                     if (first == last)
                         first = buffer.advance(first, -suffix.length());
                     last = buffer.advance(last, -suffix.length());

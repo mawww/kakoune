@@ -16,7 +16,7 @@ Editor::Editor(Buffer& buffer)
       m_edition_level(0),
       m_selections(buffer)
 {
-    m_selections.push_back(Selection(buffer.begin(), buffer.begin()));
+    m_selections.push_back(Selection({}, {}));
     m_main_sel = 0;
 }
 
@@ -370,18 +370,14 @@ public:
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](const BufferCoord& c, const Selection& sel)
                                    { return c < sel.min(); });
-        m_ranges.emplace(it, registry().iterator_at(begin),
-                         utf8::previous(registry().iterator_at(end)));
+        m_ranges.emplace(it, begin, buffer.char_prev(end));
     }
 
     void on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
     {
         m_ranges.update_erase(buffer, begin, end);
-        BufferIterator pos{registry(), begin};
-        if (pos >= buffer.end())
-            pos = utf8::previous(buffer.end());
-
-        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
+        auto pos = std::min(begin, buffer.back_coord());
+        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
                                    [](const BufferCoord& c, const Selection& sel)
                                    { return c < sel.min(); });
         m_ranges.emplace(it, pos, pos);
@@ -488,7 +484,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
 
         case InsertMode::OpenLineAbove:
         case InsertMode::InsertAtLineBegin:
-            first = buffer.iterator_at(sel.min().line);
+            first = sel.min().line;
             if (mode == InsertMode::OpenLineAbove)
                 first = buffer.char_prev(first);
             else
@@ -497,7 +493,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
                 while (*first_non_blank == ' ' or *first_non_blank == '\t')
                     ++first_non_blank;
                 if (*first_non_blank != '\n')
-                    first = first_non_blank;
+                    first = first_non_blank.coord();
             }
             last = first;
             break;

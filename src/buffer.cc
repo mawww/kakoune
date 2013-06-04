@@ -612,7 +612,7 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
 
 BufferCoord Buffer::char_advance(BufferCoord coord, CharCount count) const
 {
-    return utf8::advance(iterator_at(coord), end(), count);
+    return utf8::advance(iterator_at(coord), end(), count).coord();
 }
 
 BufferCoord Buffer::next(BufferCoord coord) const
