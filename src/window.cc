@@ -143,10 +143,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
         if (atom.content.has_buffer_range() and
             atom.content.begin() <= last and atom.content.end() > last)
         {
-            if (atom.content.type() == AtomContent::BufferRange)
-                column += buffer().char_distance(atom.content.begin(), last);
-            else
-                column += atom.content.content().char_length();
+            column += atom.content.length();
 
             CharCount first_col = first.line == last.line ?
                                   buffer().char_distance(last.line, first) : 0_char;
