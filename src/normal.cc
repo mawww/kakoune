@@ -80,7 +80,7 @@ void goto_commands(Context& context)
             case 'g':
             case 'k':
                 context.push_jump();
-                editor.select(editor.buffer().begin(), mode);
+                editor.select(BufferCoord{0,0}, mode);
                 break;
             case 'l':
                 editor.select(select_to_eol, mode);
@@ -91,8 +91,7 @@ void goto_commands(Context& context)
             case 'j':
             {
                 context.push_jump();
-                const Buffer& buf = editor.buffer();
-                editor.select(buf.iterator_at(buf.line_count() - 1), mode);
+                editor.select(editor.buffer().line_count() - 1, mode);
                 break;
             }
             case 'e':
@@ -103,7 +102,7 @@ void goto_commands(Context& context)
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    editor.select(editor.buffer().iterator_at(line), mode);
+                    editor.select(line, mode);
                 }
                 break;
             case 'b':
@@ -111,7 +110,7 @@ void goto_commands(Context& context)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    editor.select(editor.buffer().iterator_at(line), mode);
+                    editor.select(line, mode);
                 }
                 break;
             case 'c':
@@ -119,7 +118,7 @@ void goto_commands(Context& context)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    editor.select(editor.buffer().iterator_at(line), mode);
+                    editor.select(line, mode);
                 }
                 break;
             case 'a':

@@ -129,7 +129,7 @@ void edit(const CommandParameters& params, Context& context)
         int column = param_count > 2 ?
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        context.editor().select(context.buffer().iterator_at({ line,  column }));
+        context.editor().select(context.buffer().clamp({ line,  column }));
         if (context.has_window())
             context.window().center_selection();
     }
