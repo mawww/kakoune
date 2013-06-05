@@ -604,11 +604,6 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
     return { LineCount{ (int)(it - m_lines.begin()) }, off - it->start };
 }
 
-BufferCoord Buffer::char_advance(BufferCoord coord, CharCount count) const
-{
-    return utf8::advance(iterator_at(coord), end(), count).coord();
-}
-
 BufferCoord Buffer::next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
@@ -673,11 +668,6 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
 ByteCount Buffer::distance(const BufferCoord& begin, const BufferCoord& end) const
 {
     return offset(end) - offset(begin);
-}
-
-CharCount Buffer::char_distance(const BufferCoord& begin, const BufferCoord& end) const
-{
-    return utf8::distance(iterator_at(begin), iterator_at(end));
 }
 
 ByteCount Buffer::offset(const BufferCoord& c) const

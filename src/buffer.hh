@@ -119,8 +119,6 @@ public:
     BufferCoord    prev(BufferCoord coord) const;
 
     Codepoint      char_at(const BufferCoord& c) const;
-    CharCount      char_distance(const BufferCoord& begin, const BufferCoord& end) const;
-    BufferCoord    char_advance(BufferCoord coord, CharCount count) const;
     BufferCoord    char_next(BufferCoord coord) const;
     BufferCoord    char_prev(BufferCoord coord) const;
 

@@ -69,9 +69,9 @@ void Window::update_display_buffer()
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        BufferCoord limit{buffer_line+1, 0};
-        auto begin = std::min(buffer().char_advance(buffer_line, m_position.column), limit);
-        auto end   = std::min(buffer().char_advance(begin, m_dimensions.column), limit);
+        const String& content = buffer()[buffer_line];
+        BufferCoord begin{buffer_line, content.byte_count_to(m_position.column)};
+        BufferCoord end{buffer_line, content.byte_count_to(m_position.column + m_dimensions.column)};
 
         lines.push_back(DisplayLine(buffer_line));
         lines.back().push_back(DisplayAtom(AtomContent(buffer(), begin, end)));
@@ -112,6 +112,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 {
     const auto& first = main_selection().first();
     const auto& last  = main_selection().last();
+    const String& content = buffer()[last.line];
 
     const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
                                                  (m_dimensions.line - 1) / 2);
@@ -145,14 +146,14 @@ void Window::scroll_to_keep_cursor_visible_ifn()
         {
             column += atom.content.length();
 
-            CharCount first_col = first.line == last.line ?
-                                  buffer().char_distance(last.line, first) : 0_char;
+            auto first_col = (first.line == last.line) ? content.char_count_to(first.column) : 0_char;
+            auto last_col = content.char_count_to(last.column);
+
             if (first_col < m_position.column)
                 m_position.column = first_col;
             else if (column >= m_position.column + m_dimensions.column)
                 m_position.column = column - (m_dimensions.column - 1);
 
-            CharCount last_col = buffer().char_distance(last.line, last);
             if (last_col < m_position.column)
                 m_position.column = last_col;
             else if (column >= m_position.column + m_dimensions.column)

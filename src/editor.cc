@@ -97,7 +97,7 @@ void Editor::insert(const String& str, InsertMode mode)
         {
             sel.first() = pos;
             sel.last()  = str.empty() ?
-                 pos : m_buffer->char_advance(pos, str.char_length() - 1);
+                 pos : m_buffer->advance(pos, str.byte_count_to(str.char_length() - 1));
         }
         avoid_eol(*m_buffer, sel);
     }
@@ -120,7 +120,7 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
         {
             sel.first() = pos;
             sel.last()  = str.empty() ?
-                 pos : m_buffer->char_advance(pos, str.char_length() - 1);
+                 pos : m_buffer->advance(pos, str.byte_count_to(str.char_length() - 1));
         }
         avoid_eol(*m_buffer, sel);
     }
@@ -185,8 +185,10 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
     for (auto& sel : m_selections)
     {
         auto last = sel.last();
-        last = clamp<BufferCoord>(m_buffer->char_advance(last, offset),
-                                  last.line, m_buffer->char_prev(last.line+1));
+        auto& line = buffer()[last.line];
+        auto character = std::max(0_char, std::min(line.char_count_to(last.column) + offset,
+                                                   line.char_length() - 2));
+        last.column = line.byte_count_to(character);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
         avoid_eol(*m_buffer, sel);
@@ -199,12 +201,14 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        CharCount column = m_buffer->char_distance(sel.last().line, sel.last());
+        auto character = (*m_buffer)[sel.last().line].char_count_to(sel.last().column);
         auto line = clamp(sel.last().line + offset, 0_line, m_buffer->line_count()-1);
-        column = std::min(column, (*m_buffer)[line].char_length()-1);
-        BufferCoord last = m_buffer->char_advance(line, column);
-        sel.first() = mode == SelectMode::Extend ? sel.first() : last;
-        sel.last()  = last;
+        auto& content = (*m_buffer)[line];
+
+        character = std::max(0_char, std::min(character, content.char_length() - 2));
+        BufferCoord pos{line, content.byte_count_to(character)};
+        sel.first() = mode == SelectMode::Extend ? sel.first() : pos;
+        sel.last()  = pos;
         avoid_eol(*m_buffer, sel);
     }
     sort_and_merge_overlapping(m_selections, m_main_sel);
