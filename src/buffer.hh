@@ -134,8 +134,8 @@ public:
     BufferIterator end() const;
     ByteCount      byte_count() const;
     LineCount      line_count() const;
-    ByteCount      line_length(LineCount line) const;
-    const String&  line_content(LineCount line) const
+
+    const String&  operator[](LineCount line) const
     { return m_lines[line].content; }
 
     // returns an iterator at given coordinates. clamp line_and_column

@@ -91,19 +91,13 @@ BufferIterator Buffer::iterator_at(const BufferCoord& coord) const
     return is_end(coord) ? end() : BufferIterator(*this, clamp(coord));
 }
 
-ByteCount Buffer::line_length(LineCount line) const
-{
-    kak_assert(line < line_count());
-    return m_lines[line].length();
-}
-
 BufferCoord Buffer::clamp(BufferCoord coord) const
 {
     if (m_lines.empty())
         return BufferCoord{};
 
     coord.line = Kakoune::clamp(coord.line, 0_line, line_count() - 1);
-    ByteCount max_col = std::max(0_byte, line_length(coord.line) - 1);
+    ByteCount max_col = std::max(0_byte, m_lines[coord.line].length() - 1);
     coord.column = Kakoune::clamp(coord.column, 0_byte, max_col);
     return coord;
 }

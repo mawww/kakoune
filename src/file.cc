@@ -221,7 +221,7 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
     {
         // end of lines are written according to eolformat but always
         // stored as \n
-        memoryview<char> linedata = buffer.line_content(i).data();
+        memoryview<char> linedata = buffer[i].data();
         write(fd, linedata.subrange(0, linedata.size()-1), filename);
         write(fd, eoldata, filename);
     }

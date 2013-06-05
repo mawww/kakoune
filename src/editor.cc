@@ -23,7 +23,7 @@ Editor::Editor(Buffer& buffer)
 static void avoid_eol(const Buffer& buffer, BufferCoord& coord)
 {
     const auto column = coord.column;
-    if (column != 0 and column == buffer.line_length(coord.line) - 1)
+    if (column != 0 and column == buffer[coord.line].length() - 1)
         coord = buffer.char_prev(coord);
 }
 
@@ -60,7 +60,7 @@ static BufferCoord prepare_insert(Buffer& buffer, const Selection& sel,
     {
         // special case for end of lines, append to current line instead
         auto pos = std::max(sel.first(), sel.last());
-        if (pos.column == buffer.line_length(pos.line) - 1)
+        if (pos.column == buffer[pos.line].length() - 1)
             return pos;
         else
             return buffer.char_next(pos);
@@ -201,7 +201,7 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
     {
         CharCount column = m_buffer->char_distance(sel.last().line, sel.last());
         auto line = clamp(sel.last().line + offset, 0_line, m_buffer->line_count()-1);
-        column = std::min(column, m_buffer->line_content(line).char_length()-1);
+        column = std::min(column, (*m_buffer)[line].char_length()-1);
         BufferCoord last = m_buffer->char_advance(line, column);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
@@ -215,7 +215,7 @@ void Editor::clear_selections()
     auto& sel = m_selections[m_main_sel];
     auto& pos = sel.last();
 
-    if (pos.column != 0 and pos.column == m_buffer->line_length(pos.line) - 1)
+    if (pos.column != 0 and pos.column == (*m_buffer)[pos.line].length() - 1)
         pos = m_buffer->char_prev(pos);
     sel.first() = pos;
 
@@ -471,7 +471,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
             first = sel.min();
             last  = sel.max();
             // special case for end of lines, append to current line instead
-            if (last.column != buffer.line_length(last.line) - 1)
+            if (last.column != buffer[last.line].length() - 1)
                 last = buffer.char_next(last);
             break;
         }
