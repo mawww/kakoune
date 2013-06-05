@@ -140,8 +140,13 @@ private:
     mutable Codepoint m_value = -1;
 };
 
+template<typename InvalidPolicy = InvalidBytePolicy::Assert, typename Iterator>
+utf8_iterator<Iterator, InvalidPolicy> make_iterator(Iterator it)
+{
+    return utf8_iterator<Iterator, InvalidPolicy>{std::move(it)};
 }
 
 }
 
+}
 #endif // utf8_iterator_hh_INCLUDED
