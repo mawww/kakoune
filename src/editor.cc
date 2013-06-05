@@ -23,8 +23,9 @@ Editor::Editor(Buffer& buffer)
 static void avoid_eol(const Buffer& buffer, BufferCoord& coord)
 {
     const auto column = coord.column;
-    if (column != 0 and column == buffer[coord.line].length() - 1)
-        coord = buffer.char_prev(coord);
+    const auto& line = buffer[coord.line];
+    if (column != 0 and column == line.length() - 1)
+        coord.column = line.byte_count_to(line.char_length() - 2);
 }
 
 static void avoid_eol(const Buffer& buffer, Range& sel)
