@@ -15,6 +15,7 @@
 #include "string.hh"
 #include "window.hh"
 #include "user_interface.hh"
+#include "utf8_iterator.hh"
 
 namespace Kakoune
 {
@@ -335,18 +336,14 @@ void use_selection_as_search_pattern(Context& context)
     const auto& buffer = context.buffer();
     for (auto& sel : sels)
     {
-        auto begin = sel.min();
-        auto end = buffer.char_next(sel.max());
-        auto content = "\\Q" + context.buffer().string(begin, end) + "\\E";
+        auto begin = utf8::make_iterator(buffer.iterator_at(sel.min()));
+        auto end   = utf8::make_iterator(buffer.iterator_at(sel.max()))+1;
+        auto content = "\\Q" + String{begin.base(), end.base()} + "\\E";
         if (smart)
         {
-            if (begin == BufferCoord{0,0} or
-                (is_word(buffer.char_at(begin)) and not
-                 is_word(buffer.char_at(buffer.char_prev(begin)))))
+            if (begin == buffer.begin() or (is_word(*begin) and not is_word(*begin-1)))
                 content = "\\b" + content;
-            if (buffer.is_end(end) or
-                (is_word(buffer.char_at(buffer.char_prev(end))) and not
-                 is_word(buffer.char_at(end))))
+            if (end == buffer.end() or (is_word(*(end-1)) and not is_word(*end)))
                 content = content + "\\b";
         }
         patterns.push_back(std::move(content));
