@@ -320,10 +320,10 @@ void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
                         String str = oss.str();
-                        if (it.underlying_iterator().coord() != atom_it->content.begin())
-                            atom_it = ++line.split(atom_it, it.underlying_iterator().coord());
-                        if ((it+1).underlying_iterator().coord() != atom_it->content.end())
-                            atom_it = line.split(atom_it, (it+1).underlying_iterator().coord());
+                        if (it.base().coord() != atom_it->content.begin())
+                            atom_it = ++line.split(atom_it, it.base().coord());
+                        if ((it+1).base().coord() != atom_it->content.end())
+                            atom_it = line.split(atom_it, (it+1).base().coord());
                         atom_it->content.replace(str);
                         atom_it->colors = { Colors::Red, Colors::Black };
                         break;

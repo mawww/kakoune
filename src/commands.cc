@@ -660,7 +660,7 @@ static String assist(String message, CharCount maxWidth)
                 col = 0;
             }
             if (*word_begin != '\n')
-                line += String(word_begin.underlying_iterator(), word_end.underlying_iterator());
+                line += String{word_begin.base(), word_end.base()};
             word_begin = word_end;
         }
         if (not line.empty())

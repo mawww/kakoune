@@ -117,8 +117,8 @@ public:
         return get_value();
     }
 
-    const Iterator& underlying_iterator() const { return m_it; }
-    Iterator& underlying_iterator() { return m_it; }
+    const Iterator& base() const { return m_it; }
+    Iterator& base() { return m_it; }
 
 protected:
     void check_invariant() const

@@ -69,7 +69,7 @@ void skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
 
 Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
-    return {first.underlying_iterator().coord(), last.underlying_iterator().coord()};
+    return {first.base().coord(), last.base().coord()};
 }
 
 }
