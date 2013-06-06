@@ -118,7 +118,6 @@ public:
     BufferCoord    next(BufferCoord coord) const;
     BufferCoord    prev(BufferCoord coord) const;
 
-    Codepoint      char_at(const BufferCoord& c) const;
     BufferCoord    char_next(BufferCoord coord) const;
     BufferCoord    char_prev(BufferCoord coord) const;
 

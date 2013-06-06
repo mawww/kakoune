@@ -695,10 +695,4 @@ char Buffer::byte_at(const BufferCoord& c) const
     return m_lines[c.line].content[c.column];
 }
 
-Codepoint Buffer::char_at(const BufferCoord& c) const
-{
-    kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
-    return utf8::codepoint(m_lines[c.line].content.begin() + (int)c.column);
-}
-
 }
