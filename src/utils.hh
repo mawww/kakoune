@@ -24,7 +24,7 @@ public:
 
     static T& instance()
     {
-        assert (ms_instance);
+        kak_assert (ms_instance);
         return *ms_instance;
     }
 

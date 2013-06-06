@@ -201,7 +201,7 @@ class UndoGroupOptimizer
                 ++pos.column;
             ++count;
         }
-        assert(pos == endpos);
+        kak_assert(pos == endpos);
         return count;
     }
 
