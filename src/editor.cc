@@ -60,7 +60,7 @@ static BufferCoord prepare_insert(Buffer& buffer, const Selection& sel,
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
-        auto pos = std::max(sel.first(), sel.last());
+        auto& pos = std::max(sel.first(), sel.last());
         if (pos.column == buffer[pos.line].length() - 1)
             return pos;
         else
@@ -69,7 +69,7 @@ static BufferCoord prepare_insert(Buffer& buffer, const Selection& sel,
     case InsertMode::InsertAtLineBegin:
         return sel.min().line;
     case InsertMode::AppendAtLineEnd:
-        return buffer.char_prev(sel.max().line+1);
+        return {sel.max().line, buffer[sel.max().line].length() - 1};
     case InsertMode::InsertAtNextLineBegin:
         return sel.max().line+1;
     case InsertMode::OpenLineBelow:
@@ -219,9 +219,7 @@ void Editor::clear_selections()
 {
     auto& sel = m_selections[m_main_sel];
     auto& pos = sel.last();
-
-    if (pos.column != 0 and pos.column == (*m_buffer)[pos.line].length() - 1)
-        pos = m_buffer->char_prev(pos);
+    avoid_eol(*m_buffer, pos);
     sel.first() = pos;
 
     m_selections.erase(m_selections.begin(), m_selections.begin() + m_main_sel);
@@ -483,7 +481,7 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
-            first = buffer.char_prev(sel.max().line+1);
+            first = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
             last  = first;
             break;
 
