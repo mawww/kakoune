@@ -48,6 +48,26 @@ void test_buffer()
     kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6), buffer.end_coord()) == "mutch\n");
 }
 
+void test_undo_group_optimizer()
+{
+    std::vector<String> lines = { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" };
+    Buffer buffer("test", Buffer::Flags::None, lines);
+    auto pos = buffer.insert(buffer.end(), "kanaky\n");
+    buffer.erase(pos, buffer.end());
+    buffer.insert(buffer.iterator_at(2_line), "tchou\n");
+    buffer.insert(buffer.iterator_at(2_line), "mutch\n");
+    buffer.erase(buffer.iterator_at({2, 1}), buffer.iterator_at({2, 5}));
+    buffer.erase(buffer.iterator_at(2_line), buffer.end());
+    buffer.insert(buffer.end(), "youpi");
+    buffer.undo();
+    buffer.redo();
+    buffer.undo();
+
+    kak_assert((int)buffer.line_count() == lines.size());
+    for (size_t i = 0; i < lines.size(); ++i)
+        kak_assert(lines[i] == buffer[LineCount((int)i)]);
+}
+
 void test_editor()
 {
     using namespace std::placeholders;
@@ -128,6 +148,7 @@ void run_unit_tests()
     test_string();
     test_keys();
     test_buffer();
+    test_undo_group_optimizer();
     test_editor();
     test_incremental_inserter();
 }
