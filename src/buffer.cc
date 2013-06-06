@@ -526,14 +526,11 @@ BufferCoord Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
 void Buffer::apply_modification(const Modification& modification)
 {
     const String& content = modification.content;
-    BufferCoord coord = modification.coord;
-
-    // this may happen when a modification applied at the
-    // end of the buffer has been inverted for an undo.
-    if (coord.line < line_count()-1 and coord.column == m_lines[coord.line].length())
-        coord = { coord.line + 1, 0 };
+    const BufferCoord& coord = modification.coord;
 
     kak_assert(is_valid(coord));
+    // in modifications, end coords should be {line_count(), 0}
+    kak_assert(coord != BufferCoord(line_count()-1, m_lines.back().length()));
     switch (modification.type)
     {
     case Modification::Insert:
@@ -563,8 +560,11 @@ BufferIterator Buffer::insert(const BufferIterator& pos, String content)
     if (pos == end() and content.back() != '\n')
         content += '\n';
 
+    // for undo and redo purpose it is better to use one past last line rather
+    // than one past last char coord.
+    auto coord = pos == end() ? BufferCoord{line_count()} : pos.coord();
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, pos.coord(), content);
+        m_current_undo_group.emplace_back(Modification::Insert, coord, content);
     return {*this, do_insert(pos.coord(), content)};
 }
 
