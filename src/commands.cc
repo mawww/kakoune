@@ -60,9 +60,8 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         constexpr size_t buffer_size = 1024 * 16;
         char data[buffer_size];
         ssize_t count = read(watcher.fd(), data, buffer_size);
-        buffer->insert(buffer->back_coord(),
-                       count > 0 ? String(data, data+count)
-                                  : "*** kak: fifo closed ***\n");
+        buffer->insert(buffer->end()-1, count > 0 ? String(data, data+count)
+                                                  : "*** kak: fifo closed ***\n");
         ClientManager::instance().redraw_clients();
         if (count <= 0)
         {

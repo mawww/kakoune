@@ -100,8 +100,8 @@ public:
 
     bool set_name(String name);
 
-    void insert(BufferCoord pos, String content);
-    void erase(BufferCoord begin, BufferCoord end);
+    BufferIterator insert(const BufferIterator& pos, String content);
+    BufferIterator erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const { return m_timestamp; }
 
@@ -160,8 +160,6 @@ public:
 
     void check_invariant() const;
 private:
-    friend class BufferIterator;
-
     struct Line
     {
         ByteCount start;
@@ -179,8 +177,8 @@ private:
     };
     LineList m_lines;
 
-    void do_insert(const BufferCoord& pos, const String& content);
-    void do_erase(const BufferCoord& begin, const BufferCoord& end);
+    BufferCoord do_insert(const BufferCoord& pos, const String& content);
+    BufferCoord do_erase(const BufferCoord& begin, const BufferCoord& end);
 
     String  m_name;
     Flags   m_flags;

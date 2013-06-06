@@ -45,9 +45,10 @@ inline String content(const Buffer& buffer, const Range& range)
     return buffer.string(range.min(), buffer.char_next(range.max()));
 }
 
-inline void erase(Buffer& buffer, const Range& range)
+inline BufferIterator erase(Buffer& buffer, const Range& range)
 {
-    return buffer.erase(range.min(), buffer.char_next(range.max()));
+    return buffer.erase(buffer.iterator_at(range.min()),
+                        utf8::next(buffer.iterator_at(range.max())));
 }
 
 using CaptureList = std::vector<String>;

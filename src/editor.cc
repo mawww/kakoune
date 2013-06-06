@@ -44,43 +44,31 @@ void Editor::erase()
     }
 }
 
-static BufferCoord prepare_insert(Buffer& buffer, const Selection& sel,
-                                  InsertMode mode)
+static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
+                                     InsertMode mode)
 {
     switch (mode)
     {
     case InsertMode::Insert:
-        return sel.min();
+        return buffer.iterator_at(sel.min());
     case InsertMode::Replace:
-    {
-        BufferCoord pos = sel.min();
-        Kakoune::erase(buffer, sel);
-        return pos;
-    }
+        return Kakoune::erase(buffer, sel);
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
-        auto& pos = std::max(sel.first(), sel.last());
-        if (pos.column == buffer[pos.line].length() - 1)
-            return pos;
-        else
-            return buffer.char_next(pos);
+        auto pos = buffer.iterator_at(sel.max());
+        return *pos == '\n' ? pos : utf8::next(pos);
     }
     case InsertMode::InsertAtLineBegin:
-        return sel.min().line;
+        return buffer.iterator_at(sel.min().line);
     case InsertMode::AppendAtLineEnd:
-        return {sel.max().line, buffer[sel.max().line].length() - 1};
+        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
     case InsertMode::InsertAtNextLineBegin:
-        return sel.max().line+1;
+        return buffer.iterator_at(sel.max().line+1);
     case InsertMode::OpenLineBelow:
+        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
     case InsertMode::OpenLineAbove:
-    {
-        auto line = mode == InsertMode::OpenLineAbove ?
-            sel.min().line : sel.max().line + 1;
-        buffer.insert(line, "\n");
-        return line;
-    }
-
+        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
     }
     kak_assert(false);
     return {};
@@ -92,13 +80,13 @@ void Editor::insert(const String& str, InsertMode mode)
 
     for (auto& sel : m_selections)
     {
-        BufferCoord pos = prepare_insert(*m_buffer, sel, mode);
-        m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace and not m_buffer->is_end(pos))
+        auto pos = prepare_insert(*m_buffer, sel, mode);
+        pos = m_buffer->insert(pos, str);
+        if (mode == InsertMode::Replace and pos != m_buffer->end())
         {
-            sel.first() = pos;
+            sel.first() = pos.coord();
             sel.last()  = str.empty() ?
-                 pos : m_buffer->advance(pos, str.byte_count_to(str.char_length() - 1));
+                 pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
         avoid_eol(*m_buffer, sel);
     }
@@ -114,14 +102,14 @@ void Editor::insert(const memoryview<String>& strings, InsertMode mode)
     for (size_t i = 0; i < selections().size(); ++i)
     {
         auto& sel = m_selections[i];
-        BufferCoord pos = prepare_insert(*m_buffer, sel, mode);
+        auto pos = prepare_insert(*m_buffer, sel, mode);
         const String& str = strings[std::min(i, strings.size()-1)];
-        m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace and not m_buffer->is_end(pos))
+        pos = m_buffer->insert(pos, str);
+        if (mode == InsertMode::Replace and pos != m_buffer->end())
         {
-            sel.first() = pos;
-            sel.last()  = str.empty() ?
-                 pos : m_buffer->advance(pos, str.byte_count_to(str.char_length() - 1));
+            sel.first() = pos.coord();
+            sel.last()  = (str.empty() ?
+                           pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
         avoid_eol(*m_buffer, sel);
     }
@@ -462,27 +450,24 @@ IncrementalInserter::IncrementalInserter(Editor& editor, InsertMode mode)
         BufferCoord first, last;
         switch (mode)
         {
-        case InsertMode::Insert:  first = sel.max(); last = sel.min(); break;
-        case InsertMode::Replace:
-        {
-            Kakoune::erase(buffer, sel);
-            first = last = sel.min();
+        case InsertMode::Insert:
+            first = sel.max();
+            last = sel.min();
             break;
-        }
+        case InsertMode::Replace:
+            first = last = Kakoune::erase(buffer, sel).coord();
+            break;
         case InsertMode::Append:
-        {
             first = sel.min();
-            last  = sel.max();
+            last = sel.max();
             // special case for end of lines, append to current line instead
             if (last.column != buffer[last.line].length() - 1)
                 last = buffer.char_next(last);
             break;
-        }
 
         case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
-            first = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
-            last  = first;
+            first = last = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
             break;
 
         case InsertMode::OpenLineAbove:
@@ -540,30 +525,32 @@ IncrementalInserter::~IncrementalInserter()
 
 void IncrementalInserter::insert(String content)
 {
-    Buffer& buffer = m_editor.buffer();
+    auto& buffer = m_editor.buffer();
     for (auto& sel : m_editor.m_selections)
     {
         m_editor.filters()(buffer, sel, content);
-        buffer.insert(sel.last(), content);
+        buffer.insert(buffer.iterator_at(sel.last()), content);
     }
 }
 
 void IncrementalInserter::insert(const memoryview<String>& strings)
 {
+    auto& buffer = m_editor.buffer();
     for (size_t i = 0; i < m_editor.m_selections.size(); ++i)
     {
         size_t index = std::min(i, strings.size()-1);
-        m_editor.buffer().insert(m_editor.m_selections[i].last(),
-                                 strings[index]);
+        buffer.insert(buffer.iterator_at(m_editor.m_selections[i].last()),
+                      strings[index]);
     }
 }
 
 void IncrementalInserter::erase()
 {
+    auto& buffer = m_editor.buffer();
     for (auto& sel : m_editor.m_selections)
     {
-        BufferCoord pos = sel.last();
-        m_editor.buffer().erase(m_editor.buffer().char_prev(pos), pos);
+        auto pos = buffer.iterator_at(sel.last());
+        buffer.erase(pos-1, pos);
     }
 }
 

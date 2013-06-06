@@ -13,16 +13,16 @@ void test_buffer()
     Buffer buffer("test", Buffer::Flags::None, { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" });
     kak_assert(buffer.line_count() == 4);
 
-    BufferCoord pos = {0,0};
-    kak_assert(buffer.byte_at(pos) == 'a');
-    pos = buffer.advance(pos, 6);
-    kak_assert(pos == BufferCoord{0 COMMA 6});
-    pos = buffer.next(pos);
-    kak_assert(pos == BufferCoord{1 COMMA 0});
-    pos = buffer.prev(pos);
-    kak_assert(pos == BufferCoord{0 COMMA 6});
-    pos = buffer.advance(pos, 1);
-    kak_assert(pos == BufferCoord{1 COMMA 0});
+    BufferIterator pos = buffer.begin();
+    kak_assert(*pos == 'a');
+    pos += 6;
+    kak_assert(pos.coord() == BufferCoord{0 COMMA 6});
+    ++pos;
+    kak_assert(pos.coord() == BufferCoord{1 COMMA 0});
+    --pos;
+    kak_assert(pos.coord() == BufferCoord{0 COMMA 6});
+    pos += 1;
+    kak_assert(pos.coord() == BufferCoord{1 COMMA 0});
     buffer.insert(pos, "tchou kanaky\n");
     kak_assert(buffer.line_count() == 5);
 
@@ -30,17 +30,17 @@ void test_buffer()
     kak_assert(str == "youpi");
 
     // check insert at end behaviour: auto add end of line if necessary
-    pos = buffer.back_coord();
+    pos = buffer.end()-1;
     buffer.insert(pos, "tchou");
-    kak_assert(buffer.string(pos, buffer.end_coord()) == "tchou\n");
+    kak_assert(buffer.string(pos.coord(), buffer.end_coord()) == "tchou\n");
 
-    pos = buffer.back_coord();
-    buffer.insert(buffer.end_coord(), "kanaky\n");
-    kak_assert(buffer.string(buffer.next(pos), buffer.end_coord()) == "kanaky\n");
+    pos = buffer.end()-1;
+    buffer.insert(buffer.end(), "kanaky\n");
+    kak_assert(buffer.string((pos+1).coord(), buffer.end_coord()) == "kanaky\n");
 
     buffer.commit_undo_group();
-    buffer.erase(buffer.next(pos), buffer.end_coord());
-    buffer.insert(buffer.end_coord(), "mutch\n");
+    buffer.erase(pos+1, buffer.end());
+    buffer.insert(buffer.end(), "mutch\n");
     buffer.commit_undo_group();
     buffer.undo();
     kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == "kanaky\n");

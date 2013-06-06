@@ -412,12 +412,12 @@ void Buffer::check_invariant() const
 #endif
 }
 
-void Buffer::do_insert(const BufferCoord& pos, const String& content)
+BufferCoord Buffer::do_insert(const BufferCoord& pos, const String& content)
 {
     kak_assert(is_valid(pos));
 
     if (content.empty())
-        return;
+        return pos;
 
     ++m_timestamp;
     ByteCount offset = this->offset(pos);
@@ -489,9 +489,10 @@ void Buffer::do_insert(const BufferCoord& pos, const String& content)
 
     for (auto listener : m_change_listeners)
         listener->on_insert(*this, begin, end);
+    return begin;
 }
 
-void Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
+BufferCoord Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
 {
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
@@ -501,19 +502,25 @@ void Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
     String suffix = m_lines[end.line].content.substr(end.column);
     Line new_line = { m_lines[begin.line].start, prefix + suffix };
 
+    BufferCoord next;
     if (new_line.length() != 0)
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
         m_lines[begin.line] = std::move(new_line);
+        next = begin;
     }
     else
+    {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line + 1);
+        next = is_end(begin) ? end_coord() : BufferCoord{begin.line, 0};
+    }
 
     for (LineCount i = begin.line+1; i < line_count(); ++i)
         m_lines[i].start -= length;
 
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, begin, end);
+    return next;
 }
 
 void Buffer::apply_modification(const Modification& modification)
@@ -547,32 +554,33 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-void Buffer::insert(BufferCoord pos, String content)
+BufferIterator Buffer::insert(const BufferIterator& pos, String content)
 {
-    kak_assert(is_valid(pos));
+    kak_assert(is_valid(pos.coord()));
     if (content.empty())
-        return;
+        return pos;
 
-    if (is_end(pos) and content.back() != '\n')
+    if (pos == end() and content.back() != '\n')
         content += '\n';
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, pos, content);
-    do_insert(pos, content);
+        m_current_undo_group.emplace_back(Modification::Insert, pos.coord(), content);
+    return {*this, do_insert(pos.coord(), content)};
 }
 
-void Buffer::erase(BufferCoord begin, BufferCoord end)
+BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
 {
-    if (is_end(end) and (begin.column != 0 or begin == BufferCoord{0,0}))
-        end = { line_count() - 1, m_lines.back().length() - 1};
+    // do not erase last \n except if we erase from the start of a line
+    if (end == this->end() and (begin.coord().column != 0 or begin == this->begin()))
+        --end;
 
     if (begin == end)
-        return;
+        return begin;
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin,
-                                          string(begin, end));
-    do_erase(begin, end);
+        m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
+                                          string(begin.coord(), end.coord()));
+    return {*this, do_erase(begin.coord(), end.coord())};
 }
 
 bool Buffer::is_modified() const

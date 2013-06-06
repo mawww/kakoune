@@ -474,9 +474,9 @@ void join_select_spaces(Context& context)
         SelectionList res = select_all_matches(buffer, sel, Regex{"(\n\\h*)+"});
         // remove last end of line if selected
         kak_assert(std::is_sorted(res.begin(), res.end(),
-              [](const Selection& lhs, const Selection& rhs)
-              { return lhs.min() < rhs.min(); }));
-        if (not res.empty() and buffer.is_end(buffer.char_next(res.back().max())))
+                   [](const Selection& lhs, const Selection& rhs)
+                   { return lhs.min() < rhs.min(); }));
+        if (not res.empty() and res.back().max() == buffer.back_coord())
             res.pop_back();
         return res;
     });
@@ -713,7 +713,7 @@ void align(Context& context)
     for (auto& sel : selections)
     {
         CharCount padding = max_col - get_column(sel.last());
-        buffer.insert(sel.last(), String{ ' ', padding });
+        buffer.insert(buffer.iterator_at(sel.last()), String{ ' ', padding });
     }
 }
 

@@ -613,9 +613,8 @@ public:
             if (offset >= beg_offset and offset + end_offset < buffer_len and
                 std::equal(pos - beg_offset, pos, begin))
             {
-                auto beg = buffer.advance(sel.last(), -beg_offset);
-                buffer.erase(beg, buffer.advance(sel.last(), end_offset));
-                buffer.insert(beg, candidate);
+                pos = buffer.erase(pos - beg_offset, pos + end_offset);
+                buffer.insert(pos, candidate);
             }
         }
 

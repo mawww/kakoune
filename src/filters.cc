@@ -31,7 +31,7 @@ void cleanup_whitespaces(Buffer& buffer, Selection& selection, String& content)
             --whitespace_start;
         ++whitespace_start;
         if (whitespace_start != position)
-            buffer.erase(whitespace_start.coord(), position.coord());
+            buffer.erase(whitespace_start, position);
     }
 }
 
@@ -81,10 +81,10 @@ struct RegexFilter
                 {
                     String suffix(it+1, content.end());
                     content = String(content.begin(), it-1);
+                    buffer.insert(position, suffix);
 
                     auto& first = selection.first();
                     auto& last = selection.last();
-                    buffer.insert(last, suffix);
                     if (first == last)
                         first = buffer.advance(first, -suffix.length());
                     last = buffer.advance(last, -suffix.length());
