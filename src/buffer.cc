@@ -201,7 +201,7 @@ class UndoGroupOptimizer
                 ++pos.column;
             ++count;
         }
-        kak_assert(pos == endpos or pos == BufferCoord(endpos.line+1, 0));
+        kak_assert(pos == endpos);
         return count;
     }
 
@@ -242,30 +242,18 @@ class UndoGroupOptimizer
                 BufferCoord next_end = advance(next_coord, it_next->content);
                 if (it_next->type == Insert)
                 {
-                     if (coord.line == next_coord.line)
-                         coord.column += next_end.column - next_coord.column;
-                     coord.line += next_end.line - next_coord.line;
+                    if (coord.line == next_coord.line)
+                        coord.column += next_end.column - next_coord.column;
+                    coord.line += next_end.line - next_coord.line;
                 }
-                else if (it->type == Insert)
+                else if (it->type == Insert and next_end > coord)
                 {
-                    if (next_end > coord)
-                    {
-                        ByteCount start = count_byte_to(next_coord, coord, it_next->content);
-                        ByteCount len = std::min(it->content.length(), it_next->content.length() - start);
-                        it->coord = it_next->coord;
-                        it->content = it->content.substr(len);
-                        it_next->content = it_next->content.substr(0,start) + it_next->content.substr(start + len);
-                    }
-                    else
-                    {
-                        if (next_end.line == coord.line)
-                        {
-                            coord.line = next_coord.line;
-                            coord.column = next_coord.column + coord.column - next_end.column;
-                        }
-                        else
-                            coord.line -= next_end.line - next_coord.line;
-                    }
+                    ByteCount start = count_byte_to(next_coord, coord, it_next->content);
+                    ByteCount len = std::min(it->content.length(), it_next->content.length() - start);
+                    kak_assert(it_next->content.substr(start, len) == it->content.substr(0, len));
+                    it->coord = it_next->coord;
+                    it->content = it->content.substr(len);
+                    it_next->content = it_next->content.substr(0,start) + it_next->content.substr(start + len);
                 }
                 else if (it->type == Erase and next_end >= coord)
                 {
@@ -274,10 +262,21 @@ class UndoGroupOptimizer
                     it->coord = it_next->coord;
                     it->content.clear();
                 }
+                else
+                {
+                    if (next_end.line == coord.line)
+                    {
+                        coord.line = next_coord.line;
+                        coord.column = next_coord.column + coord.column - next_end.column;
+                    }
+                    else
+                        coord.line -= next_end.line - next_coord.line;
+                }
                 std::swap(*it, *it_next);
                 progress = true;
             }
 
+            kak_assert(coord <= next_coord);
             if (it->type == Erase and it_next->type == Erase and coord == next_coord)
             {
                 it->content += it_next->content;
@@ -294,18 +293,24 @@ class UndoGroupOptimizer
                 progress = true;
             }
             else if (it->type == Insert and it_next->type == Erase and
-                     coord <= next_coord and next_coord < advance(coord, it->content))
+                     next_coord < advance(coord, it->content))
             {
                 ByteCount insert_len = it->content.length();
                 ByteCount erase_len  = it_next->content.length();
                 ByteCount prefix_len = count_byte_to(coord, next_coord, it->content);
 
-                it->content = it->content.substr(0, prefix_len) +
-                              ((prefix_len + erase_len < insert_len) ?
-                               it->content.substr(prefix_len + erase_len) : "");
-                it_next->content = (insert_len - prefix_len < erase_len) ?
-                                   it_next->content.substr(insert_len - prefix_len) : "";
-                ++it, ++it_next;
+                ByteCount suffix_len = insert_len - prefix_len;
+                if (suffix_len >= erase_len)
+                {
+                    it->content = it->content.substr(0, prefix_len) + it->content.substr(prefix_len + erase_len);
+                    it_next = undo_group.erase(it_next);
+                }
+                else
+                {
+                    it->content = it->content.substr(0, prefix_len);
+                    it_next->content = it_next->content.substr(suffix_len);
+                    ++it, ++it_next;
+                }
                 progress = true;
             }
             else if (it->type == Erase and it_next->type == Insert and coord == next_coord and
