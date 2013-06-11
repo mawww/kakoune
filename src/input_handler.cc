@@ -600,25 +600,25 @@ public:
         if (m_current_candidate < 0)
             m_current_candidate += m_matching_candidates.size();
         const String& candidate = m_matching_candidates[m_current_candidate];
-        auto main_cursor = m_context.editor().main_selection().last();
-        ByteCount beg_offset = buffer.distance(m_completions.begin, main_cursor);
-        ByteCount end_offset = buffer.distance(main_cursor, m_completions.end);
-        ByteCount buffer_len = buffer.byte_count();
+        const auto& cursor_pos = m_context.editor().main_selection().last();
+        const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
+        const auto suffix_len = buffer.distance(cursor_pos, m_completions.end);
+        const auto buffer_len = buffer.byte_count();
 
-        BufferIterator begin{buffer, m_completions.begin};
+        auto ref = buffer.string(m_completions.begin, m_completions.end);
         for (auto& sel : m_context.editor().selections())
         {
             auto offset = buffer.offset(sel.last());
             auto pos = buffer.iterator_at(sel.last());
-            if (offset >= beg_offset and offset + end_offset < buffer_len and
-                std::equal(pos - beg_offset, pos, begin))
+            if (offset >= prefix_len and offset + suffix_len < buffer_len and
+                std::equal(ref.begin(), ref.end(), pos - prefix_len))
             {
-                pos = buffer.erase(pos - beg_offset, pos + end_offset);
+                pos = buffer.erase(pos - prefix_len, pos + suffix_len);
                 buffer.insert(pos, candidate);
             }
         }
-
-        m_completions.end = buffer.advance(m_completions.begin, candidate.length());
+        m_completions.end   = cursor_pos;
+        m_completions.begin = buffer.advance(m_completions.end, -candidate.length());
         m_completions.timestamp = m_context.buffer().timestamp();
         m_context.ui().menu_select(m_current_candidate);
 
