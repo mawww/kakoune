@@ -7,7 +7,10 @@
 
 #include <map>
 
-#include <ncurses.h>
+#define NCURSES_OPAQUE 0
+#define NCURSES_INTERNALS
+
+#include <ncursesw/ncurses.h>
 #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -151,7 +154,7 @@ NCursesUI::NCursesUI()
     curs_set(0);
     start_color();
     use_default_colors();
-    ESCDELAY=25;
+    set_escdelay(25);
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, on_sigint);
