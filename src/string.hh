@@ -103,10 +103,10 @@ void option_from_string(const String& str, Regex& re);
 
 int str_to_int(const String& str);
 
-using std::to_string;
+String to_string(int val);
 
 template<typename RealType, typename ValueType>
-std::string to_string(const StronglyTypedNumber<RealType, ValueType>& val)
+String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 {
     return to_string((ValueType)val);
 }

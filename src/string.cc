@@ -25,14 +25,17 @@ std::vector<String> split(const String& str, char separator)
 
 int str_to_int(const String& str)
 {
-    try
-    {
-        return stoi(str);
-    }
-    catch (std::logic_error&)
-    {
+    int res = 0;
+    if (sscanf(str.c_str(), "%i", &res) != 1)
         throw runtime_error(str + "is not a number");
-    }
+    return res;
+}
+
+String to_string(int val)
+{
+    char buf[16];
+    sprintf(buf, "%i", val);
+    return buf;
 }
 
 String option_to_string(const Regex& re)

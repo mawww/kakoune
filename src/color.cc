@@ -20,7 +20,8 @@ Color str_to_color(const String& color)
     static const Regex rgb_regex{"rgb:[0-9a-fA-F]{6}"};
     if (boost::regex_match(color, rgb_regex))
     {
-        long l = stol(color.substr(ByteCount{4}), NULL, 16);
+        unsigned l;
+        sscanf(color.c_str() + 4, "%x", &l);
         return { (unsigned char)((l >> 16) & 0xFF),
                  (unsigned char)((l >> 8) & 0xFF),
                  (unsigned char)(l & 0xFF) };
