@@ -19,7 +19,7 @@ Building
 
 Kakoune dependencies are:
 
- * GCC >= 4.8
+ * GCC >= 4.7
  * boost
  * ncurses
 

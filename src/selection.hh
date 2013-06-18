@@ -72,7 +72,8 @@ private:
 
 struct SelectionList : std::vector<Selection>
 {
-    using std::vector<Selection>::vector;
+    SelectionList() = default;
+    SelectionList(Selection s) : std::vector<Selection>{s} {}
 
     void update_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end);
     void update_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end);

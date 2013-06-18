@@ -92,7 +92,7 @@ void goto_commands(Context& context)
             case 'j':
             {
                 context.push_jump();
-                editor.select(editor.buffer().line_count() - 1, mode);
+                editor.select({editor.buffer().line_count() - 1, 0}, mode);
                 break;
             }
             case 'e':
@@ -103,7 +103,7 @@ void goto_commands(Context& context)
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    editor.select(line, mode);
+                    editor.select({line, 0}, mode);
                 }
                 break;
             case 'b':
@@ -111,7 +111,7 @@ void goto_commands(Context& context)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    editor.select(line, mode);
+                    editor.select({line, 0}, mode);
                 }
                 break;
             case 'c':
@@ -119,7 +119,7 @@ void goto_commands(Context& context)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    editor.select(line, mode);
+                    editor.select({line, 0}, mode);
                 }
                 break;
             case 'a':
