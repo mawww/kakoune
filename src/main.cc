@@ -36,7 +36,7 @@ void run_unit_tests();
 String runtime_directory()
 {
     char buffer[2048];
-#if defined(__linux__)
+#if defined(__linux__) || defined(__CYGWIN__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
     kak_assert(res != -1);
     buffer[res] = '\0';
