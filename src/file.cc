@@ -7,6 +7,7 @@
 #include "debug.hh"
 #include "unicode.hh"
 
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
