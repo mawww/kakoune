@@ -32,6 +32,10 @@
 
 * Tree based undo
 
-* Complete secondary selections as well as primary
-
 * incrementation/decrementation of integers support
+
+* more sane command line parsing, better shell interaction with quoting
+
+* configurable evaluated (%sh{...}) strings ? use an option to define
+  the interpreters, regex for finding used kak variables (ability to
+  add direct python/perl/ruby/whatever evaluation).
