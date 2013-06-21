@@ -71,7 +71,7 @@ void Window::update_display_buffer()
             break;
         const String& content = buffer()[buffer_line];
         BufferCoord begin{buffer_line, content.byte_count_to(m_position.column)};
-        BufferCoord end{buffer_line, content.byte_count_to(m_position.column + m_dimensions.column)};
+        BufferCoord end = buffer().advance(buffer_line, content.byte_count_to(m_position.column + m_dimensions.column));
 
         lines.push_back(DisplayLine(buffer_line));
         lines.back().push_back(DisplayAtom(AtomContent(buffer(), begin, end)));
