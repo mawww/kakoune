@@ -291,17 +291,16 @@ if you want to give parameters with spaces, you should quote them.
 Kakoune support three string syntax:
 
  * +"strings" and \'strings\'+: classic strings, use \' or \" to escape the
-      separator.
+     separator.
 
  * +%\{strings\}+: these strings are very useful when entering commands
 
    - the '{' and '}' delimiter are configurable: you can use any non
      alphanumeric character. like %[string], %<string>, %(string), %~string~
      or %!string!...
-   - if the character following the % is one of {[(<, then
-     the closing one is the matching }])>, and these delimiters in the string
-     need not to be escaped if the contained delimiters are balanced.
-     for example +%{ roger {}; }+ is a valid string.
+   - if the character following the % is one of {[(<, then the closing one is
+     the matching }])> and the delimiters are not escapable but are nestable.
+     for example +%{ roger {}; }+ is a valid string, +%{ marcel \}+ as well.
 
 Highlighters
 ------------

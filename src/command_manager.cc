@@ -91,6 +91,26 @@ struct unknown_expand : parse_error
         : parse_error{"unknown expand '" + name + "'"} {}
 };
 
+static String get_until_delimiter(const String& base, ByteCount& pos, char delimiter)
+{
+    const ByteCount length = base.length();
+    String str;
+    while (true)
+    {
+        char c = base[pos];
+        if (c == delimiter)
+        {
+            if (base[pos-1] != '\\')
+                return str;
+            str.back() = delimiter;
+        }
+        else
+            str += c;
+        if (++pos == length)
+            throw unterminated_string(String{delimiter}, String{delimiter});
+    }
+}
+
 TokenList parse(const String& line,
                 TokenPosList* opt_token_pos_info = nullptr)
 {
@@ -118,18 +138,15 @@ TokenList parse(const String& line,
         ByteCount token_start = pos;
         ByteCount start_pos = pos;
 
-        Token::Type type = Token::Type::Raw;
         if (line[pos] == '"' or line[pos] == '\'')
         {
             char delimiter = line[pos];
 
             token_start = ++pos;
-
-            while ((line[pos] != delimiter or line[pos-1] == '\\') and
-                    pos != length)
-                ++pos;
-            if (pos == length)
-                throw unterminated_string(String{delimiter}, String{delimiter});
+            String token = get_until_delimiter(line, pos, delimiter);
+            result.emplace_back(Token::Type::Raw, std::move(token));
+            if (opt_token_pos_info)
+                opt_token_pos_info->push_back({token_start, pos});
         }
         else if (line[pos] == '%')
         {
@@ -141,6 +158,7 @@ TokenList parse(const String& line,
             if (pos == length)
                 throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
 
+            Token::Type type = Token::Type::Raw;
             if (type_name == "sh")
                 type = Token::Type::ShellExpand;
             else if (type_name == "reg")
@@ -164,9 +182,9 @@ TokenList parse(const String& line,
                 int level = 0;
                 while (pos != length)
                 {
-                    if (line[pos-1] != '\\' and line[pos] == opening_delimiter)
+                    if (line[pos] == opening_delimiter)
                         ++level;
-                    if (line[pos-1] != '\\' and line[pos] == closing_delimiter)
+                    else if (line[pos] == closing_delimiter)
                     {
                         if (level > 0)
                             --level;
@@ -178,32 +196,32 @@ TokenList parse(const String& line,
                 if (pos == length)
                     throw unterminated_string("%" + type_name + opening_delimiter,
                                               String{closing_delimiter}, level);
+                result.emplace_back(type, line.substr(token_start, pos - token_start));
             }
             else
             {
-                while (pos != length and
-                       (line[pos] != opening_delimiter or line[pos-1] == '\\'))
-                    ++pos;
-                if (pos == length)
-                    throw unterminated_string("%" + type_name + opening_delimiter,
-                                              String{opening_delimiter});
+                String token = get_until_delimiter(line, pos, opening_delimiter);
+                result.emplace_back(type, std::move(token));
             }
+            if (opt_token_pos_info)
+                opt_token_pos_info->push_back({token_start, pos});
         }
         else
+        {
             while (pos != length and
                    ((not is_command_separator(line[pos]) and
                      not is_horizontal_blank(line[pos]))
                     or (pos != 0 and line[pos-1] == '\\')))
                 ++pos;
-
-        if (start_pos != pos)
-        {
-            if (opt_token_pos_info)
-                opt_token_pos_info->push_back({token_start, pos});
-            String token = line.substr(token_start, pos - token_start);
-            static const Regex regex{R"(\\([ \t;\n]))"};
-            token = boost::regex_replace(token, regex, "\\1");
-            result.push_back({type, token});
+            if (start_pos != pos)
+            {
+                if (opt_token_pos_info)
+                    opt_token_pos_info->push_back({token_start, pos});
+                auto token = line.substr(token_start, pos - token_start);
+                static const Regex regex{R"(\\([ \t;\n]))"};
+                result.emplace_back(Token::Type::Raw,
+                                    boost::regex_replace(token, regex, "\\1"));
+            }
         }
 
         if (is_command_separator(line[pos]))
