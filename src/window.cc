@@ -69,17 +69,17 @@ void Window::update_display_buffer()
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        const String& content = buffer()[buffer_line];
-        BufferCoord begin{buffer_line, content.byte_count_to(m_position.column)};
-        BufferCoord end = buffer().advance(buffer_line, content.byte_count_to(m_position.column + m_dimensions.column));
-
         lines.push_back(DisplayLine(buffer_line));
-        lines.back().push_back(DisplayAtom(AtomContent(buffer(), begin, end)));
+        lines.back().push_back(DisplayAtom(AtomContent(buffer(), buffer_line, buffer_line+1)));
     }
 
     m_display_buffer.compute_range();
     m_highlighters(*this, m_display_buffer);
     m_builtin_highlighters(*this, m_display_buffer);
+
+    // cut the start of the line before m_position.column
+    for (auto& line : lines)
+        line.trim(m_position.column, m_dimensions.column);
     m_display_buffer.optimize();
 
     m_timestamp = buffer().timestamp();
@@ -152,12 +152,12 @@ void Window::scroll_to_keep_cursor_visible_ifn()
             if (first_col < m_position.column)
                 m_position.column = first_col;
             else if (column >= m_position.column + m_dimensions.column)
-                m_position.column = column - (m_dimensions.column - 1);
+                m_position.column = column - m_dimensions.column;
 
             if (last_col < m_position.column)
                 m_position.column = last_col;
             else if (column >= m_position.column + m_dimensions.column)
-                m_position.column = column - (m_dimensions.column - 1);
+                m_position.column = column - m_dimensions.column;
 
             return;
         }

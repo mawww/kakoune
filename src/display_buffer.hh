@@ -97,6 +97,8 @@ public:
 
     Type type() const { return m_type; }
 
+    void trim_begin(CharCount count);
+    void trim_end(CharCount count);
 private:
     friend class DisplayLine;
 
@@ -151,6 +153,10 @@ public:
 
     iterator insert(iterator it, DisplayAtom atom) { return m_atoms.insert(it, std::move(atom)); }
     void     push_back(DisplayAtom atom) { m_atoms.push_back(std::move(atom)); }
+
+    // remove first_char from the begining of the line, and make sure
+    // the line is less that char_count character
+    void trim(CharCount first_char, CharCount char_count);
 
     void     optimize();
 private:

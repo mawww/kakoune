@@ -5,6 +5,24 @@
 namespace Kakoune
 {
 
+void AtomContent::trim_begin(CharCount count)
+{
+    if (m_type == BufferRange)
+        m_begin = utf8::advance(m_buffer->iterator_at(m_begin),
+                                m_buffer->iterator_at(m_end), count).coord();
+    else
+        m_text = m_text.substr(count);
+}
+
+void AtomContent::trim_end(CharCount count)
+{
+    if (m_type == BufferRange)
+        m_end = utf8::advance(m_buffer->iterator_at(m_end),
+                              m_buffer->iterator_at(m_begin), -count).coord();
+    else
+        m_text = m_text.substr(0, m_text.char_length() - count);
+}
+
 DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
 {
     kak_assert(it->content.type() == AtomContent::BufferRange);
@@ -63,6 +81,37 @@ CharCount DisplayLine::length() const
     for (auto& atom : m_atoms)
         len += atom.content.length();
     return len;
+}
+
+void DisplayLine::trim(CharCount first_char, CharCount char_count)
+{
+    for (auto it = begin(); first_char > 0 and it != end(); )
+    {
+        if (not it->content.has_buffer_range())
+        {
+            ++it;
+            continue;
+        }
+
+        auto len = it->content.length();
+        if (len <= first_char)
+        {
+            m_atoms.erase(it);
+            first_char -= len;
+        }
+        else
+        {
+            it->content.trim_begin(first_char);
+            first_char = 0;
+        }
+    }
+    auto it = begin();
+    for (; it != end() and char_count > 0; ++it)
+        char_count -= it->content.length();
+
+    if (char_count < 0)
+        (it-1)->content.trim_end(-char_count);
+    m_atoms.erase(it, end());
 }
 
 void DisplayBuffer::compute_range()
