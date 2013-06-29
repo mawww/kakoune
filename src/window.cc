@@ -112,7 +112,6 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 {
     const auto& first = main_selection().first();
     const auto& last  = main_selection().last();
-    const String& content = buffer()[last.line];
 
     const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
                                                  (m_dimensions.line - 1) / 2);
@@ -138,30 +137,28 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // (this is only valid if highlighting one line and multiple lines put
     // the cursor in the same position, however I do not find any sane example
     // of highlighters not doing that)
-    CharCount column = 0;
+    auto cursor = buffer().iterator_at(last);
+    CharCount buffer_column = 0;
+    CharCount non_buffer_column = 0;
     for (auto& atom : lines.back())
     {
-        if (atom.content.has_buffer_range() and
-            atom.content.begin() <= last and atom.content.end() > last)
+        if (atom.content.has_buffer_range())
         {
-            column += atom.content.length();
+            if (atom.content.begin() <= last and atom.content.end() > last)
+            {
+                if (buffer_column < m_position.column)
+                    m_position.column = buffer_column;
 
-            auto first_col = (first.line == last.line) ? content.char_count_to(first.column) : 0_char;
-            auto last_col = content.char_count_to(last.column);
+                auto last_column = buffer_column + atom.content.length();
+                if (last_column >= m_position.column + m_dimensions.column - non_buffer_column)
+                    m_position.column = last_column - m_dimensions.column + non_buffer_column;
 
-            if (first_col < m_position.column)
-                m_position.column = first_col;
-            else if (column >= m_position.column + m_dimensions.column)
-                m_position.column = column - m_dimensions.column;
-
-            if (last_col < m_position.column)
-                m_position.column = last_col;
-            else if (column >= m_position.column + m_dimensions.column)
-                m_position.column = column - m_dimensions.column;
-
-            return;
+                return;
+            }
+            buffer_column += atom.content.length();
         }
-        column += atom.content.content().char_length();
+        else
+            non_buffer_column += atom.content.length();
     }
     if (not buffer().is_end(last))
     {
