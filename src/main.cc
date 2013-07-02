@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        std::locale::global(std::locale(""));
+        setlocale(LC_ALL, "");
 
         signal(SIGSEGV, signal_handler);
         signal(SIGFPE,  signal_handler);

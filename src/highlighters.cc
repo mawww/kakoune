@@ -315,7 +315,7 @@ void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
                             end = buffer.iterator_at(atom_it->content.end()); it != end; ++it)
                 {
                     Codepoint cp = *it;
-                    if (cp != '\n' and not std::isprint((wchar_t)cp, std::locale()))
+                    if (cp != '\n' and not isprint((int)cp))
                     {
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
