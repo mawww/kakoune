@@ -201,6 +201,8 @@ void view_commands(Context& context)
 void replace_with_char(Context& context)
 {
     context.input_handler().on_next_key([](const Key& key, Context& context) {
+        if (not isprint(key.key))
+            return;
         Editor& editor = context.editor();
         SelectionList sels = editor.selections();
         auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
