@@ -258,10 +258,10 @@ void pipe(Context& context)
         });
 }
 
-template<SelectMode mode, bool forward>
+template<SelectMode mode, Direction direction>
 void search(Context& context)
 {
-    const char* prompt = forward ? "search:" : "reverse search:";
+    const char* prompt = direction == Forward ? "search:" : "reverse search:";
     DynamicSelectionList selections{context.buffer(), context.editor().selections()};
     context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
@@ -285,7 +285,7 @@ void search(Context& context)
                 else if (str.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
-                context.editor().select(std::bind(select_next_match<forward>, _1, _2, ex), mode);
+                context.editor().select(std::bind(select_next_match<direction>, _1, _2, ex), mode);
             }
             catch (boost::regex_error& err)
             {
@@ -305,7 +305,7 @@ void search(Context& context)
         });
 }
 
-template<SelectMode mode, bool forward>
+template<SelectMode mode, Direction direction>
 void search_next(Context& context)
 {
     const String& str = RegisterManager::instance()['/'].values(context)[0];
@@ -318,7 +318,7 @@ void search_next(Context& context)
                 context.push_jump();
             int count = context.numeric_param();
             do {
-                context.editor().select(std::bind(select_next_match<forward>, _1, _2, ex), mode);
+                context.editor().select(std::bind(select_next_match<direction>, _1, _2, ex), mode);
             } while (--count > 0);
         }
         catch (boost::regex_error& err)
@@ -684,11 +684,10 @@ void replay_macro(Context& context)
     });
 }
 
-enum class JumpDirection { Forward, Backward };
-template<JumpDirection direction>
+template<Direction direction>
 void jump(Context& context)
 {
-    auto jump = (direction == JumpDirection::Forward) ?
+    auto jump = (direction == Forward) ?
                  context.jump_forward() : context.jump_backward();
 
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
@@ -755,17 +754,24 @@ private:
 template<SelectMode mode, typename T>
 constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
 
+template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
+void move(Context& context)
+{
+    Type offset(std::max(context.numeric_param(),1));
+    context.editor().move_selections(direction == Backward ? -offset : offset, mode);
+}
+
 KeyMap keymap =
 {
-    { { Key::Modifiers::None, 'h' }, [](Context& context) { context.editor().move_selections(-CharCount(std::max(context.numeric_param(),1))); } },
-    { { Key::Modifiers::None, 'j' }, [](Context& context) { context.editor().move_selections( LineCount(std::max(context.numeric_param(),1))); } },
-    { { Key::Modifiers::None, 'k' }, [](Context& context) { context.editor().move_selections(-LineCount(std::max(context.numeric_param(),1))); } },
-    { { Key::Modifiers::None, 'l' }, [](Context& context) { context.editor().move_selections( CharCount(std::max(context.numeric_param(),1))); } },
+    { { Key::Modifiers::None, 'h' }, move<CharCount, Backward> },
+    { { Key::Modifiers::None, 'j' }, move<LineCount, Forward> },
+    { { Key::Modifiers::None, 'k' }, move<LineCount, Backward> },
+    { { Key::Modifiers::None, 'l' }, move<CharCount, Forward> },
 
-    { { Key::Modifiers::None, 'H' }, [](Context& context) { context.editor().move_selections(-CharCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
-    { { Key::Modifiers::None, 'J' }, [](Context& context) { context.editor().move_selections( LineCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
-    { { Key::Modifiers::None, 'K' }, [](Context& context) { context.editor().move_selections(-LineCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
-    { { Key::Modifiers::None, 'L' }, [](Context& context) { context.editor().move_selections( CharCount(std::max(context.numeric_param(),1)), SelectMode::Extend); } },
+    { { Key::Modifiers::None, 'H' }, move<CharCount, Backward, SelectMode::Extend> },
+    { { Key::Modifiers::None, 'J' }, move<LineCount, Forward, SelectMode::Extend> },
+    { { Key::Modifiers::None, 'K' }, move<LineCount, Backward, SelectMode::Extend> },
+    { { Key::Modifiers::None, 'L' }, move<CharCount, Forward, SelectMode::Extend> },
 
     { { Key::Modifiers::None, 't' }, select_to_next_char<SelectFlags::None> },
     { { Key::Modifiers::None, 'f' }, select_to_next_char<SelectFlags::Inclusive> },
@@ -840,13 +846,13 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'm' }, select<SelectMode::Replace>(select_matching) },
     { { Key::Modifiers::None, 'M' }, select<SelectMode::Extend>(select_matching) },
 
-    { { Key::Modifiers::None, '/' }, search<SelectMode::Replace, true> },
-    { { Key::Modifiers::None, '?' }, search<SelectMode::Extend, true> },
-    { { Key::Modifiers::Alt,  '/' }, search<SelectMode::Replace, false> },
-    { { Key::Modifiers::Alt,  '?' }, search<SelectMode::Extend, false> },
-    { { Key::Modifiers::None, 'n' }, search_next<SelectMode::Replace, true> },
-    { { Key::Modifiers::Alt,  'n' }, search_next<SelectMode::ReplaceMain, true> },
-    { { Key::Modifiers::None, 'N' }, search_next<SelectMode::Append, true> },
+    { { Key::Modifiers::None, '/' }, search<SelectMode::Replace, Forward> },
+    { { Key::Modifiers::None, '?' }, search<SelectMode::Extend, Forward> },
+    { { Key::Modifiers::Alt,  '/' }, search<SelectMode::Replace, Backward> },
+    { { Key::Modifiers::Alt,  '?' }, search<SelectMode::Extend, Backward> },
+    { { Key::Modifiers::None, 'n' }, search_next<SelectMode::Replace, Forward> },
+    { { Key::Modifiers::Alt,  'n' }, search_next<SelectMode::ReplaceMain, Forward> },
+    { { Key::Modifiers::None, 'N' }, search_next<SelectMode::Append, Forward> },
     { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern<true> },
     { { Key::Modifiers::Alt,  '*' }, use_selection_as_search_pattern<false> },
 
@@ -867,11 +873,8 @@ KeyMap keymap =
     { { Key::Modifiers::None, '<' }, deindent },
     { { Key::Modifiers::None, '>' }, indent },
 
-    { { Key::Modifiers::None, Key::PageUp }, scroll<Key::PageUp> },
-    { { Key::Modifiers::None, Key::PageDown }, scroll<Key::PageDown> },
-
-    { { Key::Modifiers::Control, 'i' }, jump<JumpDirection::Forward> },
-    { { Key::Modifiers::Control, 'o' }, jump<JumpDirection::Backward> },
+    { { Key::Modifiers::Control, 'i' }, jump<Forward> },
+    { { Key::Modifiers::Control, 'o' }, jump<Backward> },
 
     { { Key::Modifiers::Alt,  'r' }, rotate_selections },
 
@@ -880,6 +883,14 @@ KeyMap keymap =
 
     { { Key::Modifiers::None, '~' }, swap_case },
     { { Key::Modifiers::None, '&' }, align },
+
+    { Key::Left,  move<CharCount, Backward> },
+    { Key::Down,  move<LineCount, Forward> },
+    { Key::Up,    move<LineCount, Backward> },
+    { Key::Right, move<CharCount, Forward> },
+
+    { Key::PageUp,   scroll<Key::PageUp> },
+    { Key::PageDown, scroll<Key::PageDown> },
 };
 
 }

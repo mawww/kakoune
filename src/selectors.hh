@@ -52,7 +52,9 @@ Selection select_whole_lines(const Buffer& buffer, const Selection& selection);
 Selection select_whole_buffer(const Buffer& buffer, const Selection& selection);
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
 
-template<bool forward>
+enum Direction { Forward, Backward };
+
+template<Direction direction>
 Selection select_next_match(const Buffer& buffer, const Selection& selection,
                             const Regex& regex);
 

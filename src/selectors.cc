@@ -551,11 +551,11 @@ static bool find_last_match(BufferIterator begin, const BufferIterator& end,
     return not res.empty();
 }
 
-template<bool forward>
+template<Direction direction>
 bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
                           MatchResults& matches, const Regex& ex)
 {
-    if (forward)
+    if (direction == Forward)
         return (boost::regex_search(pos, buffer.end(), matches, ex) or
                 boost::regex_search(buffer.begin(), pos, matches, ex));
     else
@@ -564,7 +564,7 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
 }
 
 
-template<bool forward>
+template<Direction direction>
 Selection select_next_match(const Buffer& buffer, const Selection& selection, const Regex& regex)
 {
     // regex matching do not use Utf8Iterator as boost::regex handle utf8
@@ -575,7 +575,7 @@ Selection select_next_match(const Buffer& buffer, const Selection& selection, co
 
     MatchResults matches;
 
-    if (find_match_in_buffer<forward>(buffer, utf8::next(begin), matches, regex))
+    if (find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex))
     {
         begin = matches[0].first;
         end   = matches[0].second;
@@ -589,12 +589,12 @@ Selection select_next_match(const Buffer& buffer, const Selection& selection, co
         ++end;
 
     end = utf8::previous(end);
-    if (not forward)
+    if (direction == Backward)
         std::swap(begin, end);
     return Selection{begin.coord(), end.coord(), std::move(captures)};
 }
-template Selection select_next_match<true>(const Buffer&, const Selection&, const Regex&);
-template Selection select_next_match<false>(const Buffer&, const Selection&, const Regex&);
+template Selection select_next_match<Forward>(const Buffer&, const Selection&, const Regex&);
+template Selection select_next_match<Backward>(const Buffer&, const Selection&, const Regex&);
 
 SelectionList select_all_matches(const Buffer& buffer, const Selection& selection, const Regex& regex)
 {
