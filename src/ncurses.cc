@@ -370,7 +370,10 @@ void NCursesUI::print_status(const DisplayLine& status)
 
 void NCursesUI::draw_menu()
 {
-    kak_assert(m_menu_win);
+    // menu show may have not created the window if it did not fit.
+    // so be tolerant.
+    if (not m_menu_win)
+        return;
 
     auto menu_fg = get_color_pair(m_menu_fg);
     auto menu_bg = get_color_pair(m_menu_bg);
