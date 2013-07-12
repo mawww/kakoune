@@ -62,7 +62,7 @@ public:
     void keep_selection(int index);
     void remove_selection(int index);
     void select(const BufferCoord& c, SelectMode mode = SelectMode::Replace)
-    { select(Selection{ c, c }, mode); }
+    { select(Selection{ buffer().clamp(c) }, mode); }
     void select(const Selection& sel,
                 SelectMode mode = SelectMode::Replace);
     void select(const Selector& selector,

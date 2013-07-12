@@ -56,6 +56,7 @@ using CaptureList = std::vector<String>;
 // A selection is a Range, associated with a CaptureList
 struct Selection : public Range
 {
+    explicit Selection(const BufferCoord& pos) : Range(pos,pos) {}
     Selection(const BufferCoord& first, const BufferCoord& last,
               CaptureList captures = {})
         : Range(first, last), m_captures(std::move(captures)) {}
