@@ -211,20 +211,24 @@ void replace_with_char(Context& context)
     });
 }
 
-Codepoint swapped_case(Codepoint cp)
+Codepoint to_lower(Codepoint cp) { return tolower(cp); }
+Codepoint to_upper(Codepoint cp) { return toupper(cp); }
+
+Codepoint swap_case(Codepoint cp)
 {
     Codepoint res = std::tolower(cp);
     return res == cp ? std::toupper(cp) : res;
 }
 
-void swap_case(Context& context)
+template<Codepoint (*func)(Codepoint)>
+void for_each_char(Context& context)
 {
     Editor& editor = context.editor();
     std::vector<String> sels = editor.selections_content();
     for (auto& sel : sels)
     {
         for (auto& c : sel)
-            c = swapped_case(c);
+            c = func(c);
     }
     editor.insert(sels, InsertMode::Replace);
 }
@@ -881,7 +885,10 @@ KeyMap keymap =
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
     { { Key::Modifiers::None, 'Q' }, replay_macro },
 
-    { { Key::Modifiers::None, '~' }, swap_case },
+    { { Key::Modifiers::None, '`' }, for_each_char<to_lower> },
+    { { Key::Modifiers::None, '~' }, for_each_char<to_upper> },
+    { { Key::Modifiers::Alt, '`' },  for_each_char<swap_case> },
+
     { { Key::Modifiers::None, '&' }, align },
 
     { Key::Left,  move<CharCount, Backward> },
