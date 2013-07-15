@@ -347,7 +347,7 @@ void use_selection_as_search_pattern(Context& context)
         auto content = "\\Q" + String{begin.base(), end.base()} + "\\E";
         if (smart)
         {
-            if (begin == buffer.begin() or (is_word(*begin) and not is_word(*begin-1)))
+            if (begin == buffer.begin() or (is_word(*begin) and not is_word(*(begin-1))))
                 content = "\\b" + content;
             if (end == buffer.end() or (is_word(*(end-1)) and not is_word(*end)))
                 content = content + "\\b";
