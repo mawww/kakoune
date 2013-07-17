@@ -56,6 +56,8 @@ private:
 
     void scroll_to_keep_cursor_visible_ifn();
 
+    BufferCoord offset_coord(const BufferCoord& coord, LineCount move) override;
+
     DisplayCoord  m_position;
     DisplayCoord  m_dimensions;
     DisplayBuffer m_display_buffer;

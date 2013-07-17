@@ -167,29 +167,79 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     }
 }
 
+namespace
+{
+CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
+                              const BufferCoord& coord)
+{
+    kak_assert(coord.line == line.buffer_line());
+    CharCount column = 0;
+    for (auto& atom : line)
+    {
+        auto& content = atom.content;
+        if (content.has_buffer_range() and
+            coord >= content.begin() and coord < content.end())
+        {
+            if (content.type() == AtomContent::BufferRange)
+                column += utf8::distance(buffer.iterator_at(content.begin()),
+                                         buffer.iterator_at(coord));
+            return column;
+        }
+        column += content.length();
+    }
+    return column;
+}
+
+BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
+                              CharCount column)
+{
+    LineCount l = line.buffer_line();
+    for (auto& atom : line)
+    {
+        auto& content = atom.content;
+        CharCount len = content.length();
+        if (content.has_buffer_range() and column < len)
+        {
+            if (content.type() == AtomContent::BufferRange)
+                return utf8::advance(buffer.iterator_at(content.begin()), buffer.iterator_at(l+1),
+                                     std::max(0_char, column)).coord();
+             return content.begin();
+         }
+        column -= len;
+    }
+    return buffer.clamp({l, buffer[l].length()});
+}
+}
+
 DisplayCoord Window::display_position(const BufferCoord& coord)
 {
-    DisplayCoord res{0,0};
+    LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
     {
         if (line.buffer_line() == coord.line)
-        {
-            for (auto& atom : line)
-            {
-                auto& content = atom.content;
-                if (content.has_buffer_range() and
-                    coord >= content.begin() and coord < content.end())
-                {
-                    res.column += utf8::distance(buffer().iterator_at(content.begin()),
-                                                 buffer().iterator_at(coord));
-                    return res;
-                }
-                res.column += content.length();
-            }
-        }
-        ++res.line;
+            return {l, find_display_column(line, buffer(), coord)};
+        ++l;
     }
     return { 0, 0 };
+}
+
+BufferCoord Window::offset_coord(const BufferCoord& coord, LineCount offset)
+{
+    auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
+    DisplayBuffer display_buffer;
+    DisplayBuffer::LineList& lines = display_buffer.lines();
+    {
+        lines.emplace_back(coord.line);
+        lines.back().push_back({AtomContent(buffer(), coord.line, coord.line+1)});
+        lines.emplace_back(line);
+        lines.back().push_back({AtomContent(buffer(), line, line+1)});
+    }
+    display_buffer.compute_range();
+    m_highlighters(*this, display_buffer);
+    m_builtin_highlighters(*this, display_buffer);
+
+    CharCount column = find_display_column(lines[0], buffer(), coord);
+    return find_buffer_coord(lines[1], buffer(), column);
 }
 
 void Window::on_option_changed(const Option& option)

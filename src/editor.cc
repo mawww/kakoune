@@ -168,16 +168,20 @@ void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selectio
     merge_overlapping(selections, main_selection, overlaps);
 }
 
+BufferCoord Editor::offset_coord(const BufferCoord& coord, CharCount offset)
+{
+    auto& line = buffer()[coord.line];
+    auto character = std::max(0_char, std::min(line.char_count_to(coord.column) + offset,
+                                               line.char_length() - 2));
+    return {coord.line, line.byte_count_to(character)};
+}
+
 void Editor::move_selections(CharCount offset, SelectMode mode)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        auto last = sel.last();
-        auto& line = buffer()[last.line];
-        auto character = std::max(0_char, std::min(line.char_count_to(last.column) + offset,
-                                                   line.char_length() - 2));
-        last.column = line.byte_count_to(character);
+        auto last = offset_coord(sel.last(), offset);
         sel.first() = mode == SelectMode::Extend ? sel.first() : last;
         sel.last()  = last;
         avoid_eol(*m_buffer, sel);
@@ -185,17 +189,22 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
     sort_and_merge_overlapping(m_selections, m_main_sel);
 }
 
+BufferCoord Editor::offset_coord(const BufferCoord& coord, LineCount offset)
+{
+    auto character = (*m_buffer)[coord.line].char_count_to(coord.column);
+    auto line = clamp(coord.line + offset, 0_line, m_buffer->line_count()-1);
+    auto& content = (*m_buffer)[line];
+
+    character = std::max(0_char, std::min(character, content.char_length() - 2));
+    return {line, content.byte_count_to(character)};
+}
+
 void Editor::move_selections(LineCount offset, SelectMode mode)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     for (auto& sel : m_selections)
     {
-        auto character = (*m_buffer)[sel.last().line].char_count_to(sel.last().column);
-        auto line = clamp(sel.last().line + offset, 0_line, m_buffer->line_count()-1);
-        auto& content = (*m_buffer)[line];
-
-        character = std::max(0_char, std::min(character, content.char_length() - 2));
-        BufferCoord pos{line, content.byte_count_to(character)};
+        auto pos = offset_coord(sel.last(), offset);
         sel.first() = mode == SelectMode::Extend ? sel.first() : pos;
         sel.last()  = pos;
         avoid_eol(*m_buffer, sel);

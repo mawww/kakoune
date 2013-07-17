@@ -91,6 +91,9 @@ private:
     void begin_edition();
     void end_edition();
 
+    virtual BufferCoord offset_coord(const BufferCoord& coord, LineCount move);
+    virtual BufferCoord offset_coord(const BufferCoord& coord, CharCount move);
+
     int m_edition_level;
 
     void check_invariant() const;
