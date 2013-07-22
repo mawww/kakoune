@@ -582,6 +582,7 @@ void select_object(Context& context)
             { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<true>, _1, _2, flags) },
             { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, _2, flags) },
             { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, _2, flags) },
+            { { Key::Modifiers::None, 'i' }, std::bind(select_whole_indent, _1, _2, flags) },
         };
 
         auto it = key_to_selector.find(key);

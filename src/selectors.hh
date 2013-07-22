@@ -48,6 +48,8 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
                                 ObjectFlags flags);
 Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection,
                                  ObjectFlags flags);
+Selection select_whole_indent(const Buffer& buffer, const Selection& selection,
+                              ObjectFlags flags);
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection);
 Selection select_whole_buffer(const Buffer& buffer, const Selection& selection);
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);

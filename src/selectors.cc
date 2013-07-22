@@ -494,6 +494,45 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
                                         : Selection{last.coord(), first.coord()};
 }
 
+static CharCount get_indent(const String& str, int tabstop)
+{
+    CharCount indent = 0;
+    for (auto& c : str)
+    {
+    if (c == ' ')
+        ++indent;
+    else if (c =='\t')
+        indent = (indent / tabstop + 1) * tabstop;
+    else
+        break;
+    }
+    return indent;
+}
+
+Selection select_whole_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+{
+    int tabstop = buffer.options()["tabstop"].get<int>();
+    LineCount line = selection.last().line;
+    auto indent = get_indent(buffer[line], tabstop);
+
+    LineCount begin_line = line - 1;
+    if (flags & ObjectFlags::ToBegin)
+    {
+        while (begin_line >= 0 and (buffer[begin_line] == "\n" or get_indent(buffer[begin_line], tabstop) >= indent))
+            --begin_line;
+    }
+    ++begin_line;
+    LineCount end_line = line + 1;
+    if (flags & ObjectFlags::ToEnd)
+    {
+        LineCount end = buffer.line_count();
+        while (end_line < end and (buffer[end_line] == "\n" or get_indent(buffer[end_line], tabstop) >= indent))
+            ++end_line;
+    }
+    --end_line;
+    return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
+}
+
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator
