@@ -146,12 +146,12 @@ public:
     {
         kak_assert(m_cursor_pos <= m_line.char_length());
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{-1, { {m_line, get_color("StatusLine")},
-                                     {" "_str, get_color("StatusCursor")} }};
+            return DisplayLine{{ {m_line, get_color("StatusLine")},
+                                 {" "_str, get_color("StatusCursor")} }};
         else
-            return DisplayLine(-1, { DisplayAtom{ m_line.substr(0, m_cursor_pos), get_color("StatusLine") },
-                                     DisplayAtom{ m_line.substr(m_cursor_pos, 1), get_color("StatusCursor") },
-                                     DisplayAtom{ m_line.substr(m_cursor_pos+1), get_color("StatusLine") } });
+            return DisplayLine({ { m_line.substr(0, m_cursor_pos), get_color("StatusLine") },
+                                 { m_line.substr(m_cursor_pos, 1), get_color("StatusCursor") },
+                                 { m_line.substr(m_cursor_pos+1), get_color("StatusLine") } });
     }
 private:
     CharCount      m_cursor_pos = 0;
@@ -181,7 +181,7 @@ public:
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
             context().ui().menu_hide();
-            context().ui().print_status(DisplayLine{ -1 });
+            context().ui().print_status(DisplayLine{});
             reset_normal_mode();
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
@@ -194,7 +194,7 @@ public:
                 m_edit_filter = false;
                 m_filter = boost::regex(".*");
                 m_filter_editor.reset("");
-                context().ui().print_status(DisplayLine{ -1 });
+                context().ui().print_status(DisplayLine{});
             }
             else
             {
@@ -319,7 +319,7 @@ public:
                     history.erase(it);
                 history.push_back(line);
             }
-            context().ui().print_status(DisplayLine{ -1 });
+            context().ui().print_status(DisplayLine{});
             context().ui().menu_hide();
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
@@ -329,7 +329,7 @@ public:
         }
         else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
         {
-            context().ui().print_status(DisplayLine{ -1 });
+            context().ui().print_status(DisplayLine{});
             context().ui().menu_hide();
             reset_normal_mode();
             m_callback(line, PromptEvent::Abort, context());

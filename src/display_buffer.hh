@@ -29,8 +29,6 @@ enum Attributes
     Bold = 8
 };
 
-class DisplayLine;
-
 struct AtomContent
 {
 public:
@@ -123,6 +121,8 @@ struct DisplayAtom
     {}
 };
 
+using BufferRange = std::pair<BufferCoord, BufferCoord>;
+
 class DisplayLine
 {
 public:
@@ -130,13 +130,10 @@ public:
     using iterator = AtomList::iterator;
     using const_iterator = AtomList::const_iterator;
 
-    explicit DisplayLine(LineCount buffer_line) : m_buffer_line(buffer_line) {}
-    DisplayLine(LineCount buffer_line, AtomList atoms)
-        : m_buffer_line(buffer_line), m_atoms(std::move(atoms)) {}
+    DisplayLine() = default;
+    DisplayLine(AtomList atoms);
     DisplayLine(String str, ColorPair color)
-        : m_buffer_line(-1), m_atoms{ { std::move(str), color } } {}
-
-    LineCount buffer_line() const { return m_buffer_line; }
+    { push_back({ std::move(str), color }); }
 
     iterator begin() { return m_atoms.begin(); }
     iterator end() { return m_atoms.end(); }
@@ -147,12 +144,13 @@ public:
     const AtomList& atoms() const { return m_atoms; }
 
     CharCount length() const;
+    const BufferRange& range() const { return m_range; }
 
     // Split atom pointed by it at pos, returns an iterator to the first atom
     iterator split(iterator it, BufferCoord pos);
 
-    iterator insert(iterator it, DisplayAtom atom) { return m_atoms.insert(it, std::move(atom)); }
-    void     push_back(DisplayAtom atom) { m_atoms.push_back(std::move(atom)); }
+    iterator insert(iterator it, DisplayAtom atom);
+    void     push_back(DisplayAtom atom);
 
     // remove first_char from the begining of the line, and make sure
     // the line is less that char_count character
@@ -160,11 +158,10 @@ public:
 
     void     optimize();
 private:
-    LineCount m_buffer_line;
+    void compute_range();
+    BufferRange m_range = { { INT_MAX, INT_MAX }, { INT_MIN, INT_MIN } };
     AtomList  m_atoms;
 };
-
-using BufferRange = std::pair<BufferCoord, BufferCoord>;
 
 class DisplayBuffer
 {

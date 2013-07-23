@@ -23,6 +23,12 @@ void AtomContent::trim_end(CharCount count)
         m_text = m_text.substr(0, m_text.char_length() - count);
 }
 
+DisplayLine::DisplayLine(AtomList atoms)
+    : m_atoms(std::move(atoms))
+{
+    compute_range();
+}
+
 DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
 {
     kak_assert(it->content.type() == AtomContent::BufferRange);
@@ -33,6 +39,26 @@ DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
     atom.content.m_end = pos;
     it->content.m_begin = pos;
     return m_atoms.insert(it, std::move(atom));
+}
+
+DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
+{
+    if (atom.content.has_buffer_range())
+    {
+        m_range.first  = std::min(m_range.first, atom.content.begin());
+        m_range.second = std::max(m_range.second, atom.content.end());
+    }
+    return m_atoms.insert(it, std::move(atom));
+}
+
+void DisplayLine::push_back(DisplayAtom atom)
+{
+    if (atom.content.has_buffer_range())
+    {
+        m_range.first  = std::min(m_range.first, atom.content.begin());
+        m_range.second = std::max(m_range.second, atom.content.end());
+    }
+    m_atoms.push_back(std::move(atom));
 }
 
 void DisplayLine::optimize()
@@ -112,6 +138,20 @@ void DisplayLine::trim(CharCount first_char, CharCount char_count)
     if (char_count < 0)
         (it-1)->content.trim_end(-char_count);
     m_atoms.erase(it, end());
+
+    compute_range();
+}
+
+void DisplayLine::compute_range()
+{
+    m_range = { {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
+    for (auto& atom : m_atoms)
+    {
+        if (not atom.content.has_buffer_range())
+            continue;
+        m_range.first  = std::min(m_range.first, atom.content.begin());
+        m_range.second = std::max(m_range.second, atom.content.end());
+    }
 }
 
 void DisplayBuffer::compute_range()
@@ -120,17 +160,8 @@ void DisplayBuffer::compute_range()
     m_range.second = {0,0};
     for (auto& line : m_lines)
     {
-        for (auto& atom : line)
-        {
-            if (not atom.content.has_buffer_range())
-                continue;
-
-            if (m_range.first > atom.content.begin())
-                m_range.first = atom.content.begin();
-
-            if (m_range.second < atom.content.end())
-                m_range.second = atom.content.end();
-        }
+        m_range.first  = std::min(line.range().first, m_range.first);
+        m_range.second = std::max(line.range().second, m_range.second);
     }
     kak_assert(m_range.first <= m_range.second);
 }

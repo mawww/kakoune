@@ -194,7 +194,7 @@ DisplayAtom read<DisplayAtom>(int socket)
 template<>
 DisplayLine read<DisplayLine>(int socket)
 {
-    return DisplayLine(0, read_vector<DisplayAtom>(socket));
+    return DisplayLine(read_vector<DisplayAtom>(socket));
 }
 
 template<>

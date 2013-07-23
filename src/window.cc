@@ -69,7 +69,7 @@ void Window::update_display_buffer()
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        lines.push_back(DisplayLine(buffer_line));
+        lines.emplace_back();
         lines.back().push_back(DisplayAtom(AtomContent(buffer(), buffer_line, buffer_line+1)));
     }
 
@@ -125,7 +125,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.push_back(DisplayLine(last.line));
+    lines.emplace_back();
 
     lines.back().push_back(DisplayAtom(AtomContent(buffer(), last.line, last.line+1)));
 
@@ -172,7 +172,6 @@ namespace
 CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
                               const BufferCoord& coord)
 {
-    kak_assert(coord.line == line.buffer_line());
     CharCount column = 0;
     for (auto& atom : line)
     {
@@ -193,7 +192,7 @@ CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
 BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
                               CharCount column)
 {
-    LineCount l = line.buffer_line();
+    auto& range = line.range();
     for (auto& atom : line)
     {
         auto& content = atom.content;
@@ -201,13 +200,13 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
         if (content.has_buffer_range() and column < len)
         {
             if (content.type() == AtomContent::BufferRange)
-                return utf8::advance(buffer.iterator_at(content.begin()), buffer.iterator_at(l+1),
+                return utf8::advance(buffer.iterator_at(content.begin()), buffer.iterator_at(range.second),
                                      std::max(0_char, column)).coord();
              return content.begin();
          }
         column -= len;
     }
-    return buffer.clamp({l, buffer[l].length()});
+    return buffer.clamp(buffer.prev(range.second));
 }
 }
 
@@ -216,7 +215,8 @@ DisplayCoord Window::display_position(const BufferCoord& coord)
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
     {
-        if (line.buffer_line() == coord.line)
+        auto& range = line.range();
+        if (range.first <= coord and coord < range.second)
             return {l, find_display_column(line, buffer(), coord)};
         ++l;
     }
@@ -229,9 +229,9 @@ BufferCoord Window::offset_coord(const BufferCoord& coord, LineCount offset)
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
     {
-        lines.emplace_back(coord.line);
+        lines.emplace_back();
         lines.back().push_back({AtomContent(buffer(), coord.line, coord.line+1)});
-        lines.emplace_back(line);
+        lines.emplace_back();
         lines.back().push_back({AtomContent(buffer(), line, line+1)});
     }
     display_buffer.compute_range();

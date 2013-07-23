@@ -31,7 +31,8 @@ void highlight_range(DisplayBuffer& display_buffer,
 
     for (auto& line : display_buffer.lines())
     {
-        if (line.buffer_line() < begin.line or  end.line < line.buffer_line())
+        auto& range = line.range();
+        if (range.second <= begin or  end < range.first)
             continue;
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -235,7 +236,7 @@ void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
                         atom_it = line.split(atom_it, (it+1).coord());
 
                     int column = 0;
-                    for (auto line_it = buffer.iterator_at(line.buffer_line());
+                    for (auto line_it = buffer.iterator_at(it.coord().line);
                          line_it != it; ++line_it)
                     {
                         kak_assert(*line_it != '\n');
@@ -270,7 +271,7 @@ void show_line_numbers(const Window& window, DisplayBuffer& display_buffer)
     for (auto& line : display_buffer.lines())
     {
         char buffer[10];
-        snprintf(buffer, 10, format, (int)line.buffer_line() + 1);
+        snprintf(buffer, 10, format, (int)line.range().first.line + 1);
         DisplayAtom atom = DisplayAtom(AtomContent(buffer));
         atom.colors = colors;
         line.insert(line.begin(), std::move(atom));
@@ -358,7 +359,7 @@ public:
         const String empty{' ', width};
         for (auto& line : display_buffer.lines())
         {
-            int line_num = (int)line.buffer_line() + 1;
+            int line_num = (int)line.range().first.line + 1;
             auto it = find_if(lines, [&](const LineAndFlag& l) { return std::get<0>(l) == line_num; });
             String content = it != lines.end() ? std::get<2>(*it) : empty;
             content += String(' ', width - content.char_length());
