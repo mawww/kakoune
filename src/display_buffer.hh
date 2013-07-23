@@ -122,11 +122,11 @@ struct DisplayAtom
 };
 
 using BufferRange = std::pair<BufferCoord, BufferCoord>;
+using AtomList = std::vector<DisplayAtom>;
 
 class DisplayLine
 {
 public:
-    using AtomList = std::vector<DisplayAtom>;
     using iterator = AtomList::iterator;
     using const_iterator = AtomList::const_iterator;
 

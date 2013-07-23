@@ -69,8 +69,7 @@ void Window::update_display_buffer()
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        lines.emplace_back();
-        lines.back().push_back(DisplayAtom(AtomContent(buffer(), buffer_line, buffer_line+1)));
+        lines.emplace_back(AtomList{ {AtomContent(buffer(), buffer_line, buffer_line+1)} });
     }
 
     m_display_buffer.compute_range();
@@ -108,6 +107,31 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
     return view_pos;
 }
 
+static CharCount adapt_view_pos(const DisplayLine& line, BufferCoord pos, CharCount view_pos, CharCount view_size)
+{
+    CharCount buffer_column = 0;
+    CharCount non_buffer_column = 0;
+    for (auto& atom : line)
+    {
+        if (atom.content.has_buffer_range())
+        {
+            if (atom.content.begin() <= pos and atom.content.end() > pos)
+            {
+                if (buffer_column < view_pos)
+                    return buffer_column;
+
+                auto last_column = buffer_column + atom.content.length();
+                if (last_column >= view_pos + view_size - non_buffer_column)
+                    return last_column - view_size + non_buffer_column;
+            }
+            buffer_column += atom.content.length();
+        }
+        else
+            non_buffer_column += atom.content.length();
+    }
+    return view_pos;
+}
+
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
     const auto& first = main_selection().first();
@@ -125,9 +149,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.emplace_back();
-
-    lines.back().push_back(DisplayAtom(AtomContent(buffer(), last.line, last.line+1)));
+    lines.emplace_back(AtomList{ AtomContent(buffer(), last.line, last.line+1) });
 
     display_buffer.compute_range();
     m_highlighters(*this, display_buffer);
@@ -137,34 +159,11 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // (this is only valid if highlighting one line and multiple lines put
     // the cursor in the same position, however I do not find any sane example
     // of highlighters not doing that)
-    auto cursor = buffer().iterator_at(last);
-    CharCount buffer_column = 0;
-    CharCount non_buffer_column = 0;
-    for (auto& atom : lines.back())
-    {
-        if (atom.content.has_buffer_range())
-        {
-            if (atom.content.begin() <= last and atom.content.end() > last)
-            {
-                if (buffer_column < m_position.column)
-                    m_position.column = buffer_column;
-
-                auto last_column = buffer_column + atom.content.length();
-                if (last_column >= m_position.column + m_dimensions.column - non_buffer_column)
-                    m_position.column = last_column - m_dimensions.column + non_buffer_column;
-
-                return;
-            }
-            buffer_column += atom.content.length();
-        }
-        else
-            non_buffer_column += atom.content.length();
-    }
-    if (not buffer().is_end(last))
-    {
-        // the cursor should always be visible.
-        kak_assert(false);
-    }
+    m_position.column = adapt_view_pos(lines.back(),
+                                       first.line == last.line ? first : last.line,
+                                        m_position.column, m_dimensions.column);
+    m_position.column = adapt_view_pos(lines.back(), last,
+                                        m_position.column, m_dimensions.column);
 }
 
 namespace
@@ -228,12 +227,8 @@ BufferCoord Window::offset_coord(const BufferCoord& coord, LineCount offset)
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    {
-        lines.emplace_back();
-        lines.back().push_back({AtomContent(buffer(), coord.line, coord.line+1)});
-        lines.emplace_back();
-        lines.back().push_back({AtomContent(buffer(), line, line+1)});
-    }
+    lines.emplace_back(AtomList{ {AtomContent(buffer(), coord.line, coord.line+1)} });
+    lines.emplace_back(AtomList{ {AtomContent(buffer(), line, line+1)} });
     display_buffer.compute_range();
     m_highlighters(*this, display_buffer);
     m_builtin_highlighters(*this, display_buffer);
