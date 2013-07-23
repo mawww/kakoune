@@ -57,6 +57,11 @@ void Window::scroll(LineCount offset)
     m_position.line = std::max(0_line, m_position.line + offset);
 }
 
+void Window::scroll(CharCount offset)
+{
+    m_position.column = std::max(0_char, m_position.column + offset);
+}
+
 void Window::update_display_buffer()
 {
     scroll_to_keep_cursor_visible_ifn();

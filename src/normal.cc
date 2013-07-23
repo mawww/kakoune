@@ -194,6 +194,12 @@ void view_commands(Context& context)
         case 'k':
             context.window().scroll(-std::max<LineCount>(1, context.numeric_param()));
             break;
+        case 'l':
+            context.window().scroll( std::max<CharCount>(1, context.numeric_param()));
+            break;
+        case 'h':
+            context.window().scroll(-std::max<CharCount>(1, context.numeric_param()));
+            break;
         }
     });
 }

@@ -35,6 +35,7 @@ public:
     void center_selection();
     void display_selection_at(LineCount line);
     void scroll(LineCount offset);
+    void scroll(CharCount offset);
     void update_display_buffer();
 
     DisplayCoord display_position(const BufferCoord& coord);
