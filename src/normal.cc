@@ -261,9 +261,17 @@ void pipe(Context& context)
             Editor& editor = context.editor();
             std::vector<String> strings;
             for (auto& sel : context.editor().selections())
-                strings.push_back(ShellManager::instance().pipe(content(context.buffer(), sel),
-                                                                cmdline, context, {},
-                                                                EnvVarMap{}));
+            {
+                auto str = content(context.buffer(), sel);
+                bool insert_eol = str.back() != '\n';
+                if (insert_eol)
+                    str += '\n';
+                str = ShellManager::instance().pipe(str, cmdline, context,
+                                                    {}, EnvVarMap{});
+                if (insert_eol and str.back() == '\n')
+                    str = str.substr(0, str.length()-1);
+                strings.push_back(str);
+            }
             editor.insert(strings, InsertMode::Replace);
         });
 }
