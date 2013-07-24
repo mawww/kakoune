@@ -85,7 +85,7 @@ external completions are provided using the +completions+ option, which
 have the following format.
 
 ----
-line:column[+len]@timestamp;candidate1;candidate2;...
+line.column[+len]@timestamp:candidate1:candidate2:...
 ----
 
 the first element of this string list specify where and when this completions
@@ -110,12 +110,12 @@ nop %sh{ ( # launch a detached shell
     buffer="${kak_opt_plugin_filename}"
     line="${kak_cursor_line}"
     column="${kak_cursor_column}"
-    # run completer program an put output in semicolon separated format
+    # run completer program and put output in colon separated format
     candidates=$(completer $buffer $line $column | completer_filter)
     # remove temporary file
     rm $buffer
     # generate completion option value
-    completions="$line:$column@$kak_timestamp;$candidates"
+    completions="$line.$column@$kak_timestamp:$candidates"
     # write to kakoune socket for the buffer that triggered the completion
     echo "setb -buffer '${kak_bufname}' completions '$completions'" |
         socat stdin UNIX-SOCKET:${kak_socket}
