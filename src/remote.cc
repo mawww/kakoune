@@ -94,7 +94,7 @@ public:
 
     void write(const DisplayAtom& atom)
     {
-        write(atom.content.content());
+        write(atom.content());
         write(atom.colors);
         write(atom.attribute);
     }
@@ -186,7 +186,7 @@ ColorPair read<ColorPair>(int socket)
 template<>
 DisplayAtom read<DisplayAtom>(int socket)
 {
-    DisplayAtom atom(AtomContent(read<String>(socket)));
+    DisplayAtom atom(read<String>(socket));
     atom.colors = read<ColorPair>(socket);
     atom.attribute = read<Attribute>(socket);
     return atom;

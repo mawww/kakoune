@@ -29,16 +29,17 @@ enum Attributes
     Bold = 8
 };
 
-struct AtomContent
+struct DisplayAtom
 {
 public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
 
-    AtomContent(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
         : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end) {}
 
-    AtomContent(String str)
-        : m_type(Text), m_text(std::move(str)) {}
+    DisplayAtom(String str, ColorPair colors = { Colors::Default, Colors::Default },
+                Attribute attribute = Normal)
+        : m_type(Text), m_text(std::move(str)), colors(colors), attribute(attribute) {}
 
     String content() const
     {
@@ -97,6 +98,11 @@ public:
 
     void trim_begin(CharCount count);
     void trim_end(CharCount count);
+
+public:
+    ColorPair      colors = {Colors::Default, Colors::Default};
+    Attribute      attribute = Normal;
+
 private:
     friend class DisplayLine;
 
@@ -106,19 +112,6 @@ private:
     BufferCoord m_begin;
     BufferCoord m_end;
     String m_text;
-};
-
-struct DisplayAtom
-{
-    ColorPair      colors;
-    Attribute      attribute;
-    AtomContent    content;
-
-    DisplayAtom(AtomContent content,
-                ColorPair colors = {Colors::Default, Colors::Default},
-                Attribute attribute = Normal)
-        : content{std::move(content)}, colors{colors}, attribute{attribute}
-    {}
 };
 
 using BufferRange = std::pair<BufferCoord, BufferCoord>;

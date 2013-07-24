@@ -37,19 +37,19 @@ void highlight_range(DisplayBuffer& display_buffer,
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            bool is_replaced = atom_it->content.type() == AtomContent::ReplacedBufferRange;
+            bool is_replaced = atom_it->type() == DisplayAtom::ReplacedBufferRange;
 
-            if (not atom_it->content.has_buffer_range() or
+            if (not atom_it->has_buffer_range() or
                 (skip_replaced and is_replaced))
                 continue;
 
-            if (end <= atom_it->content.begin() or begin >= atom_it->content.end())
+            if (end <= atom_it->begin() or begin >= atom_it->end())
                 continue;
 
-            if (not is_replaced and begin > atom_it->content.begin())
+            if (not is_replaced and begin > atom_it->begin())
                 atom_it = ++line.split(atom_it, begin);
 
-            if (not is_replaced and end < atom_it->content.end())
+            if (not is_replaced and end < atom_it->end())
             {
                 atom_it = line.split(atom_it, end);
                 func(*atom_it);
@@ -221,11 +221,11 @@ void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom_it->content.type() != AtomContent::BufferRange)
+            if (atom_it->type() != DisplayAtom::BufferRange)
                 continue;
 
-            auto begin = buffer.iterator_at(atom_it->content.begin());
-            auto end = buffer.iterator_at(atom_it->content.end());
+            auto begin = buffer.iterator_at(atom_it->begin());
+            auto end = buffer.iterator_at(atom_it->end());
             for (BufferIterator it = begin; it != end; ++it)
             {
                 if (*it == '\t')
@@ -250,7 +250,7 @@ void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
                     String padding;
                     for (int i = 0; i < count; ++i)
                         padding += ' ';
-                    atom_it->content.replace(padding);
+                    atom_it->replace(padding);
                     break;
                 }
             }
@@ -272,7 +272,7 @@ void show_line_numbers(const Window& window, DisplayBuffer& display_buffer)
     {
         char buffer[10];
         snprintf(buffer, 10, format, (int)line.range().first.line + 1);
-        DisplayAtom atom = DisplayAtom(AtomContent(buffer));
+        DisplayAtom atom{buffer};
         atom.colors = colors;
         line.insert(line.begin(), std::move(atom));
     }
@@ -309,11 +309,11 @@ void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom_it->content.type() == AtomContent::BufferRange)
+            if (atom_it->type() == DisplayAtom::BufferRange)
             {
                 using Utf8It = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
-                for (Utf8It it  = buffer.iterator_at(atom_it->content.begin()),
-                            end = buffer.iterator_at(atom_it->content.end()); it != end; ++it)
+                for (Utf8It it  = buffer.iterator_at(atom_it->begin()),
+                            end = buffer.iterator_at(atom_it->end()); it != end; ++it)
                 {
                     Codepoint cp = *it;
                     if (cp != '\n' and iscntrl((int)cp))
@@ -321,11 +321,11 @@ void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
                         String str = oss.str();
-                        if (it.base().coord() != atom_it->content.begin())
+                        if (it.base().coord() != atom_it->begin())
                             atom_it = ++line.split(atom_it, it.base().coord());
-                        if ((it+1).base().coord() != atom_it->content.end())
+                        if ((it+1).base().coord() != atom_it->end())
                             atom_it = line.split(atom_it, (it+1).base().coord());
-                        atom_it->content.replace(str);
+                        atom_it->replace(str);
                         atom_it->colors = { Colors::Red, Colors::Black };
                         break;
                     }
@@ -363,7 +363,7 @@ public:
             auto it = find_if(lines, [&](const LineAndFlag& l) { return std::get<0>(l) == line_num; });
             String content = it != lines.end() ? std::get<2>(*it) : empty;
             content += String(' ', width - content.char_length());
-            DisplayAtom atom{AtomContent(std::move(content))};
+            DisplayAtom atom{std::move(content)};
             atom.colors = { it != lines.end() ? std::get<1>(*it) : Colors::Default , m_bg };
             line.insert(line.begin(), std::move(atom));
         }

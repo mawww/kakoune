@@ -74,7 +74,7 @@ void Window::update_display_buffer()
         LineCount buffer_line = m_position.line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        lines.emplace_back(AtomList{ {AtomContent(buffer(), buffer_line, buffer_line+1)} });
+        lines.emplace_back(AtomList{ {buffer(), buffer_line, buffer_line+1} });
     }
 
     m_display_buffer.compute_range();
@@ -118,21 +118,21 @@ static CharCount adapt_view_pos(const DisplayLine& line, BufferCoord pos, CharCo
     CharCount non_buffer_column = 0;
     for (auto& atom : line)
     {
-        if (atom.content.has_buffer_range())
+        if (atom.has_buffer_range())
         {
-            if (atom.content.begin() <= pos and atom.content.end() > pos)
+            if (atom.begin() <= pos and atom.end() > pos)
             {
                 if (buffer_column < view_pos)
                     return buffer_column;
 
-                auto last_column = buffer_column + atom.content.length();
+                auto last_column = buffer_column + atom.length();
                 if (last_column >= view_pos + view_size - non_buffer_column)
                     return last_column - view_size + non_buffer_column;
             }
-            buffer_column += atom.content.length();
+            buffer_column += atom.length();
         }
         else
-            non_buffer_column += atom.content.length();
+            non_buffer_column += atom.length();
     }
     return view_pos;
 }
@@ -154,7 +154,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.emplace_back(AtomList{ AtomContent(buffer(), last.line, last.line+1) });
+    lines.emplace_back(AtomList{ {buffer(), last.line, last.line+1} });
 
     display_buffer.compute_range();
     m_highlighters(*this, display_buffer);
@@ -179,16 +179,15 @@ CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
     CharCount column = 0;
     for (auto& atom : line)
     {
-        auto& content = atom.content;
-        if (content.has_buffer_range() and
-            coord >= content.begin() and coord < content.end())
+        if (atom.has_buffer_range() and
+            coord >= atom.begin() and coord < atom.end())
         {
-            if (content.type() == AtomContent::BufferRange)
-                column += utf8::distance(buffer.iterator_at(content.begin()),
+            if (atom.type() == DisplayAtom::BufferRange)
+                column += utf8::distance(buffer.iterator_at(atom.begin()),
                                          buffer.iterator_at(coord));
             return column;
         }
-        column += content.length();
+        column += atom.length();
     }
     return column;
 }
@@ -199,14 +198,13 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
     auto& range = line.range();
     for (auto& atom : line)
     {
-        auto& content = atom.content;
-        CharCount len = content.length();
-        if (content.has_buffer_range() and column < len)
+        CharCount len = atom.length();
+        if (atom.has_buffer_range() and column < len)
         {
-            if (content.type() == AtomContent::BufferRange)
-                return utf8::advance(buffer.iterator_at(content.begin()), buffer.iterator_at(range.second),
+            if (atom.type() == DisplayAtom::BufferRange)
+                return utf8::advance(buffer.iterator_at(atom.begin()), buffer.iterator_at(range.second),
                                      std::max(0_char, column)).coord();
-             return content.begin();
+             return atom.begin();
          }
         column -= len;
     }
@@ -232,8 +230,8 @@ BufferCoord Window::offset_coord(const BufferCoord& coord, LineCount offset)
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.emplace_back(AtomList{ {AtomContent(buffer(), coord.line, coord.line+1)} });
-    lines.emplace_back(AtomList{ {AtomContent(buffer(), line, line+1)} });
+    lines.emplace_back(AtomList{ {buffer(), coord.line, coord.line+1} });
+    lines.emplace_back(AtomList{ {buffer(), line, line+1} });
     display_buffer.compute_range();
     m_highlighters(*this, display_buffer);
     m_builtin_highlighters(*this, display_buffer);

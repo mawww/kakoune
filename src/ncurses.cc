@@ -221,7 +221,7 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
 
         set_color(stdscr, atom.colors);
 
-        String content = atom.content.content();
+        String content = atom.content();
         if (content[content.length()-1] == '\n' and
             content.char_length() - 1 < m_dimensions.column - col_index)
         {
@@ -281,7 +281,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     {
         String title;
         for (auto& atom : mode_line)
-            title += atom.content.content();
+            title += atom.content();
         title += " - Kakoune";
         printf("%s%s%s", tsl, title.c_str(), fsl);
     }

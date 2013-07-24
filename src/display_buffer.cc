@@ -5,7 +5,7 @@
 namespace Kakoune
 {
 
-void AtomContent::trim_begin(CharCount count)
+void DisplayAtom::trim_begin(CharCount count)
 {
     if (m_type == BufferRange)
         m_begin = utf8::advance(m_buffer->iterator_at(m_begin),
@@ -14,7 +14,7 @@ void AtomContent::trim_begin(CharCount count)
         m_text = m_text.substr(count);
 }
 
-void AtomContent::trim_end(CharCount count)
+void DisplayAtom::trim_end(CharCount count)
 {
     if (m_type == BufferRange)
         m_end = utf8::advance(m_buffer->iterator_at(m_end),
@@ -31,32 +31,32 @@ DisplayLine::DisplayLine(AtomList atoms)
 
 DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
 {
-    kak_assert(it->content.type() == AtomContent::BufferRange);
-    kak_assert(it->content.begin() < pos);
-    kak_assert(it->content.end() > pos);
+    kak_assert(it->type() == DisplayAtom::BufferRange);
+    kak_assert(it->begin() < pos);
+    kak_assert(it->end() > pos);
 
     DisplayAtom atom = *it;
-    atom.content.m_end = pos;
-    it->content.m_begin = pos;
+    atom.m_end = pos;
+    it->m_begin = pos;
     return m_atoms.insert(it, std::move(atom));
 }
 
 DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
 {
-    if (atom.content.has_buffer_range())
+    if (atom.has_buffer_range())
     {
-        m_range.first  = std::min(m_range.first, atom.content.begin());
-        m_range.second = std::max(m_range.second, atom.content.end());
+        m_range.first  = std::min(m_range.first, atom.begin());
+        m_range.second = std::max(m_range.second, atom.end());
     }
     return m_atoms.insert(it, std::move(atom));
 }
 
 void DisplayLine::push_back(DisplayAtom atom)
 {
-    if (atom.content.has_buffer_range())
+    if (atom.has_buffer_range())
     {
-        m_range.first  = std::min(m_range.first, atom.content.begin());
-        m_range.second = std::max(m_range.second, atom.content.end());
+        m_range.first  = std::min(m_range.first, atom.begin());
+        m_range.second = std::max(m_range.second, atom.end());
     }
     m_atoms.push_back(std::move(atom));
 }
@@ -76,21 +76,21 @@ void DisplayLine::optimize()
 
         if (atom.colors == next_atom.colors and
             atom.attribute == next_atom.attribute and
-            atom.content.type() ==  next_atom.content.type())
+            atom.type() ==  next_atom.type())
         {
-            auto type = atom.content.type();
-            if ((type == AtomContent::BufferRange or
-                 type == AtomContent::ReplacedBufferRange) and
-                next_atom.content.begin() == atom.content.end())
+            auto type = atom.type();
+            if ((type == DisplayAtom::BufferRange or
+                 type == DisplayAtom::ReplacedBufferRange) and
+                next_atom.begin() == atom.end())
             {
-                atom.content.m_end = next_atom.content.end();
-                if (type == AtomContent::ReplacedBufferRange)
-                    atom.content.m_text += next_atom.content.m_text;
+                atom.m_end = next_atom.end();
+                if (type == DisplayAtom::ReplacedBufferRange)
+                    atom.m_text += next_atom.m_text;
                 merged = true;
             }
-            if (type == AtomContent::Text)
+            if (type == DisplayAtom::Text)
             {
-                atom.content.m_text += next_atom.content.m_text;
+                atom.m_text += next_atom.m_text;
                 merged = true;
             }
         }
@@ -105,7 +105,7 @@ CharCount DisplayLine::length() const
 {
     CharCount len = 0;
     for (auto& atom : m_atoms)
-        len += atom.content.length();
+        len += atom.length();
     return len;
 }
 
@@ -113,13 +113,13 @@ void DisplayLine::trim(CharCount first_char, CharCount char_count)
 {
     for (auto it = begin(); first_char > 0 and it != end(); )
     {
-        if (not it->content.has_buffer_range())
+        if (not it->has_buffer_range())
         {
             ++it;
             continue;
         }
 
-        auto len = it->content.length();
+        auto len = it->length();
         if (len <= first_char)
         {
             m_atoms.erase(it);
@@ -127,16 +127,16 @@ void DisplayLine::trim(CharCount first_char, CharCount char_count)
         }
         else
         {
-            it->content.trim_begin(first_char);
+            it->trim_begin(first_char);
             first_char = 0;
         }
     }
     auto it = begin();
     for (; it != end() and char_count > 0; ++it)
-        char_count -= it->content.length();
+        char_count -= it->length();
 
     if (char_count < 0)
-        (it-1)->content.trim_end(-char_count);
+        (it-1)->trim_end(-char_count);
     m_atoms.erase(it, end());
 
     compute_range();
@@ -147,10 +147,10 @@ void DisplayLine::compute_range()
     m_range = { {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
     for (auto& atom : m_atoms)
     {
-        if (not atom.content.has_buffer_range())
+        if (not atom.has_buffer_range())
             continue;
-        m_range.first  = std::min(m_range.first, atom.content.begin());
-        m_range.second = std::max(m_range.second, atom.content.end());
+        m_range.first  = std::min(m_range.first, atom.begin());
+        m_range.second = std::max(m_range.second, atom.end());
     }
 }
 
