@@ -84,7 +84,8 @@ inline String operator+(Codepoint lhs, const String& rhs)
     return String(lhs) + rhs;
 }
 
-std::vector<String> split(const String& str, char separator);
+std::vector<String> split(const String& str, char separator, char escape = 0);
+String escape(const String& str, char character, char escape);
 
 inline String operator"" _str(const char* str, size_t)
 {

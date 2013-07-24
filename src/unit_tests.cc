@@ -120,11 +120,15 @@ void test_string()
 {
    kak_assert(String("youpi ") + "matin" == "youpi matin");
 
-   std::vector<String> splited = split("youpi:matin::tchou", ':');
+   std::vector<String> splited = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':', '\\');
    kak_assert(splited[0] == "youpi");
    kak_assert(splited[1] == "matin");
    kak_assert(splited[2] == "");
-   kak_assert(splited[3] == "tchou");
+   kak_assert(splited[3] == "tchou:kanaky");
+   kak_assert(splited[4] == "hihi:");
+
+   String escaped = escape("youpi:matin:tchou:", ':', '\\');
+   kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
 }
 
 void test_keys()

@@ -5,7 +5,7 @@
 namespace Kakoune
 {
 
-std::vector<String> split(const String& str, char separator)
+std::vector<String> split(const String& str, char separator, char escape)
 {
     auto begin = str.begin();
     auto end   = str.begin();
@@ -13,12 +13,40 @@ std::vector<String> split(const String& str, char separator)
     std::vector<String> res;
     while (end != str.end())
     {
-        while (end != str.end() and *end != separator)
-            ++end;
-        res.push_back(String(begin, end));
-        if (end == str.end())
-            break;
-        begin = ++end;
+        res.emplace_back();
+        String& element = res.back();
+        while (end != str.end())
+        {
+            auto c = *end;
+            if (c == escape and end + 1 != end and *(end+1) == separator)
+            {
+                element += separator;
+                end += 2;
+            }
+            else if (c == separator)
+            {
+                ++end;
+                break;
+            }
+            else
+            {
+                element += c;
+                ++end;
+            }
+        }
+        begin = end;
+    }
+    return res;
+}
+
+String escape(const String& str, char character, char escape)
+{
+    String res;
+    for (auto& c : str)
+    {
+        if (c == character)
+            res += escape;
+        res += c;
     }
     return res;
 }
