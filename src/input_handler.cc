@@ -554,7 +554,7 @@ static BufferCompletion complete_opt(const Buffer& buffer,
         return {};
 
     auto& desc = opt[0];
-    static const Regex re(R"((\d+):(\d+)(?:\+(\d+))?@(\d+))");
+    static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
     boost::smatch match;
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {

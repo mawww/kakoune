@@ -30,7 +30,7 @@ inline void option_from_string(const String& str, bool& opt)
         throw runtime_error("boolean values are either true, yes, false or no");
 }
 
-constexpr Codepoint list_separator = ';';
+constexpr Codepoint list_separator = ':';
 
 template<typename T>
 String option_to_string(const std::vector<T>& opt)

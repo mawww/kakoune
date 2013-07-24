@@ -17,11 +17,11 @@ def clang-complete %{
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_bufname})
             output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} |
-                     grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
+                     grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/:/\\:/g; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
             rm -r $(dirname ${kak_opt_clang_filename})
-            completions="${kak_cursor_line}:${kak_cursor_column}@${kak_timestamp}"
+            completions="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
             for cmp in ${output}; do
-                completions="${completions};${cmp}"
+                completions="${completions}:${cmp}"
             done
             echo "eval -client $kak_client %[ echo completed; setb completions '${completions}' ]" | socat -u stdin UNIX-CONNECT:${kak_socket}
         ) >& /dev/null < /dev/null &
