@@ -38,7 +38,7 @@ String option_to_string(const std::vector<T>& opt)
     String res;
     for (size_t i = 0; i < opt.size(); ++i)
     {
-        res += option_to_string(opt[i]);
+        res += escape(option_to_string(opt[i]), list_separator, '\\');
         if (i != opt.size() - 1)
             res += list_separator;
     }
@@ -49,7 +49,7 @@ template<typename T>
 void option_from_string(const String& str, std::vector<T>& opt)
 {
     opt.clear();
-    std::vector<String> elems = split(str, list_separator);
+    std::vector<String> elems = split(str, list_separator, '\\');
     for (auto& elem: elems)
     {
         T opt_elem;
@@ -73,7 +73,7 @@ String option_to_string(const std::unordered_set<T>& opt)
     {
         if (it != begin(opt))
             res += list_separator;
-        res += option_to_string(*it);
+        res += escape(option_to_string(*it), list_separator, '\\');
     }
     return res;
 }
@@ -82,7 +82,7 @@ template<typename T>
 void option_from_string(const String& str, std::unordered_set<T>& opt)
 {
     opt.clear();
-    std::vector<String> elems = split(str, list_separator);
+    std::vector<String> elems = split(str, list_separator, '\\');
     for (auto& elem: elems)
     {
         T opt_elem;
@@ -106,7 +106,7 @@ struct TupleOptionDetail
     static String to_string(const std::tuple<Types...>& opt)
     {
         return TupleOptionDetail<I-1, Types...>::to_string(opt) +
-               tuple_separator + option_to_string(std::get<I>(opt));
+               tuple_separator + escape(option_to_string(std::get<I>(opt)), tuple_separator, '\\');
     }
 
     static void from_string(const memoryview<String>& elems, std::tuple<Types...>& opt)
@@ -139,7 +139,7 @@ String option_to_string(const std::tuple<Types...>& opt)
 template<typename... Types>
 void option_from_string(const String& str, std::tuple<Types...>& opt)
 {
-    auto elems = split(str, tuple_separator);
+    auto elems = split(str, tuple_separator, '\\');
     if (elems.size() != sizeof...(Types))
         throw runtime_error("not enough elements in tuple");
     TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(elems, opt);
