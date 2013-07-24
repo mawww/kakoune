@@ -518,6 +518,8 @@ void declare_option(const CommandParameters& params, Context& context)
 
     if (params[0] == "int")
         opt = &GlobalOptions::instance().declare_option<int>(params[1], 0);
+    if (params[0] == "bool")
+        opt = &GlobalOptions::instance().declare_option<bool>(params[1], 0);
     else if (params[0] == "str")
         opt = &GlobalOptions::instance().declare_option<String>(params[1], "");
     else if (params[0] == "regex")
