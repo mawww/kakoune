@@ -106,7 +106,7 @@ private:
 
         m_cache_matches.clear();
         m_cache_range.first  = buffer.clamp({range.first.line - 10, 0});
-        m_cache_range.second = buffer.clamp({range.second.line + 10, INT_MAX});
+        m_cache_range.second = buffer.next(buffer.clamp({range.second.line + 10, INT_MAX}));
         m_cache_timestamp = buffer.timestamp();
 
         RegexIterator re_it{buffer.iterator_at(m_cache_range.first),
