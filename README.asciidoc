@@ -275,10 +275,6 @@ Commands are entered using +:+.
  * +eval [-client <name>] <command>+: execute <command> as if entered in command line
       if client if specified, exec command in the named client context.
  * +echo <text>+: show <text> in status line
- * +decl <type> <name> [<value>]+:  declare an option, type can be int, str, int-list
-      and str-list.
- * +set{b,w,g} <option> <value>+: set <option> to <value> in *b*uffer, *w*indow
-      or *g*lobal scope.
  * +name <name>+: sets current client name to name
  * +nop+: does nothing, but as with every other commands, arguments may be
       evaluated. So nop can be used for example to execute a shell command
@@ -306,6 +302,83 @@ Kakoune support three string syntax:
    - if the character following the % is one of {[(<, then the closing one is
      the matching }])> and the delimiters are not escapable but are nestable.
      for example +%{ roger {}; }+ is a valid string, +%{ marcel \}+ as well.
+
+Options
+-------
+
+For user configuration, Kakoune supports options.
+
+Options are typed, their type can be
+
+ * +int+: an integer number
+ * +bool+: a boolean value, +yes/true+ or +no/false+
+ * +str+: a string, some freeform text
+ * +regex+: as a string but the +set+ commands will complain
+   if the entered text is not a valid regex.
+ * +{int,str}-list+: a list, elements are separated by a colon (:)
+   if an element needs to contain a colon, it can be escaped with a
+   backslash.
+
+Options value can be changed using the +set+ commands:
+
+--------------------------------------------------------------
+:set{b,w,g} <option> <value> # buffer, window, or global scope
+--------------------------------------------------------------
+
+Option values can be different by scope, an option can have a global
+value, a buffer value and a window value. The effective value of an
+option depends on the current context. If we have a window in the
+context (interactive edition for example), then the window value
+(if any) is used, if not we try the buffer value (if we have a buffer
+in the context), and if not we use the global value.
+
+That means that two windows on the same buffer can use different options
+(like different filetype, or different tabstop). However some options
+might end up ignored if their scope is not in the command context:
+
+Writing a file never uses the window options for example, so any
+options related to writing wont be taken into account if set in the
+window scope (+BOM+ or +eolformat+ for example).
+
+New options can be declared using the +decl+ command:
+
+-----------------------------
+:decl <type> <name> [<value>]
+-----------------------------
+
+Some options are built in kakoune, and can be used to control it's behaviour:
+
+ * +tabstop+ _int_: width of a tab character.
+ * +indentwidth+ _int_: width used for indentation.
+ * +scrolloff+ _int_: number of lines to keep visible above/below
+   the cursor when scrolling.
+ * +eolformat+ _string_ ('lf' or 'crlf'): the format of end of lines when
+   writing a buffer, this is autodetected on load.
+ * +BOM+ _string_ ("no" or "utf-8"): define if the file should be written
+   with an unicode byte order mark.
+ * +shell+ _string_ ("bash" by default): what command to run to evaluate
+   shell commands.
+ * +complete_prefix+ _bool_: when completing in command line, and multiple
+   candidates exist, enable completion with common prefix.
+ * +incsearch+ _bool_: execute search as it is typed
+ * +autoinfo+ _bool_: display automatic information box for certain commands.
+ * +ignored_files+ _regex_: filenames matching this regex wont be considered
+   as candidates on filename completion (except if the text being completed
+   already matches it).
+ * +filetype+ _str_: arbitrary string defining the type of the file
+   filetype dependant actions should hook on this option changing for
+   activation/deactivation.
+ * +completions+ _str-list_: option used for external completion, the
+   first string should follow the format
+   _<line>.<column>[+<length>]@<timestamp>_ to define where the completion
+   apply in the buffer, and the other strings are the candidates.
+ * +path+ _str-list_: directories to search for gf command.
+ * +completers+ _str-list_: completion systems to use for insert mode
+   completion. Support +option+ which use the +completions+ option, and
+   +word=all+ or +word=buffer+ which complete using words in all buffers
+   (+word=all+) or only the current one (+word=buffer+)
+ * +insert_hide_sel+ _bool_: hide the selection (except the last
+   element) in insert mode
 
 Highlighters
 ------------
