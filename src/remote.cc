@@ -132,9 +132,13 @@ void read(int socket, char* buffer, size_t size)
 template<typename T>
 T read(int socket)
 {
-    char value[sizeof(T)];
+    union
+    {
+        T object;
+        char value[sizeof(T)];
+    };
     read(socket, value, sizeof(T));
-    return *(T*)(value);
+    return object;
 }
 
 template<>
