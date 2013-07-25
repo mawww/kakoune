@@ -87,7 +87,7 @@ KeyList parse_keys(const String& str)
     return result;
 }
 
-String key_to_str(const Key& key)
+String key_to_str(Key key)
 {
     bool named = false;
     String res;

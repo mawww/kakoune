@@ -69,7 +69,7 @@ void goto_commands(Context& context)
                                              "│ a:    last buffer   │\n"
                                              "│ f:    file          │\n"
                                              "╰─────────────────────╯\n", context);
-        context.input_handler().on_next_key([=](const Key& key, Context& context) {
+        context.input_handler().on_next_key([=](Key key, Context& context) {
             if (hide)
                 context.ui().info_hide();
             if (key.modifiers != Key::Modifiers::None)
@@ -169,7 +169,7 @@ void view_commands(Context& context)
                                          "│ j:    scroll down      │\n"
                                          "│ k:    scroll up        │\n"
                                          "╰────────────────────────╯\n", context);
-    context.input_handler().on_next_key([hide](const Key& key, Context& context) {
+    context.input_handler().on_next_key([hide](Key key, Context& context) {
         if (hide)
             context.ui().info_hide();
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
@@ -206,7 +206,7 @@ void view_commands(Context& context)
 
 void replace_with_char(Context& context)
 {
-    context.input_handler().on_next_key([](const Key& key, Context& context) {
+    context.input_handler().on_next_key([](Key key, Context& context) {
         if (not isprint(key.key))
             return;
         Editor& editor = context.editor();
@@ -573,7 +573,7 @@ void select_object(Context& context)
                                          "│ p:    paragraph            │\n"
                                          "╰────────────────────────────╯\n", context);
     context.input_handler().on_next_key(
-    [=](const Key& key, Context& context) {
+    [=](Key key, Context& context) {
         if (hide)
             context.ui().info_hide();
         typedef std::function<Selection (const Buffer&, const Selection&)> Selector;
@@ -660,7 +660,7 @@ template<SelectFlags flags>
 void select_to_next_char(Context& context)
 {
     int param = context.numeric_param();
-    context.input_handler().on_next_key([param](const Key& key, Context& context) {
+    context.input_handler().on_next_key([param](Key key, Context& context) {
         context.editor().select(
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
                       _1, _2, key.key, param, flags & SelectFlags::Inclusive),
@@ -673,7 +673,7 @@ void start_or_end_macro_recording(Context& context)
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
     else
-        context.input_handler().on_next_key([](const Key& key, Context& context) {
+        context.input_handler().on_next_key([](Key key, Context& context) {
             if (key.modifiers == Key::Modifiers::None)
                 context.input_handler().start_recording(key.key);
         });
@@ -682,7 +682,7 @@ void start_or_end_macro_recording(Context& context)
 void replay_macro(Context& context)
 {
     int count = context.numeric_param();
-    context.input_handler().on_next_key([count](const Key& key, Context& context) mutable {
+    context.input_handler().on_next_key([count](Key key, Context& context) mutable {
         if (key.modifiers == Key::Modifiers::None)
         {
             static std::unordered_set<char> running_macros;

@@ -29,7 +29,7 @@ enum class PromptEvent
     Validate
 };
 using PromptCallback = std::function<void (const String&, PromptEvent, Context&)>;
-using KeyCallback = std::function<void (const Key&, Context&)>;
+using KeyCallback = std::function<void (Key, Context&)>;
 
 class InputMode;
 enum class InsertMode : unsigned;

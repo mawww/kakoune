@@ -24,7 +24,7 @@ public:
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    virtual void on_key(const Key& key) = 0;
+    virtual void on_key(Key key) = 0;
     Context& context() const { return m_input_handler.context(); }
 
     using Insertion = InputHandler::Insertion;
@@ -58,7 +58,7 @@ public:
         context().hooks().run_hook("NormalEnd", "", context());
     }
 
-    void on_key(const Key& key) override
+    void on_key(Key key) override
     {
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             m_count = m_count * 10 + key.key - '0';
@@ -84,7 +84,7 @@ private:
 class LineEditor
 {
 public:
-    void handle_key(const Key& key)
+    void handle_key(Key key)
     {
         if (key == Key::Left or
             key == Key{Key::Modifiers::Control, 'b'})
@@ -172,7 +172,7 @@ public:
                                  get_color("MenuBackground"), MenuStyle::Prompt);
     }
 
-    void on_key(const Key& key) override
+    void on_key(Key key) override
     {
         auto match_filter = [this](const String& str) {
             return boost::regex_match(str.begin(), str.end(), m_filter);
@@ -299,7 +299,7 @@ public:
         display();
     }
 
-    void on_key(const Key& key) override
+    void on_key(Key key) override
     {
         std::vector<String>& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
@@ -476,7 +476,7 @@ public:
     NextKey(InputHandler& input_handler, KeyCallback callback)
         : InputMode(input_handler), m_callback(callback) {}
 
-    void on_key(const Key& key) override
+    void on_key(Key key) override
     {
         reset_normal_mode();
         m_callback(key, context());
@@ -746,7 +746,7 @@ public:
         context().hooks().run_hook("InsertBegin", "", context());
     }
 
-    void on_key(const Key& key) override
+    void on_key(Key key) override
     {
         if (&context().editor() != &m_inserter.editor())
             return reset_normal_mode().on_key(key);
@@ -892,7 +892,7 @@ void InputHandler::on_next_key(KeyCallback callback)
     m_mode.reset(new InputModes::NextKey(*this, callback));
 }
 
-bool is_valid(const Key& key)
+bool is_valid(Key key)
 {
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }

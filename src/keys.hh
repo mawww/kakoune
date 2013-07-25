@@ -44,17 +44,17 @@ struct Key
     constexpr Key(Codepoint key)
         : modifiers(Modifiers::None), key(key) {}
 
-    constexpr bool operator==(const Key& other) const
+    constexpr bool operator==(Key other) const
     { return modifiers == other.modifiers and key == other.key; }
 
-    constexpr bool operator!=(const Key& other) const
+    constexpr bool operator!=(Key other) const
     { return modifiers != other.modifiers or key != other.key; }
 };
 
 typedef std::vector<Key> KeyList;
 
 KeyList parse_keys(const String& str);
-String  key_to_str(const Key& key);
+String  key_to_str(Key key);
 
 }
 
@@ -64,7 +64,7 @@ namespace std
 template<>
 struct hash<Kakoune::Key> : unary_function<const Kakoune::Key&, size_t>
 {
-    size_t operator()(const Kakoune::Key& key) const
+    size_t operator()(Kakoune::Key key) const
     {
         return static_cast<size_t>(key.modifiers) * 1024 + key.key;
     }
