@@ -69,8 +69,8 @@ private:
 class BufferChangeListener
 {
 public:
-    virtual void on_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end) = 0;
-    virtual void on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end) = 0;
+    virtual void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end) = 0;
+    virtual void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file
@@ -109,11 +109,11 @@ public:
     bool           undo();
     bool           redo();
 
-    String         string(const BufferCoord& begin, const BufferCoord& end) const;
+    String         string(BufferCoord begin, BufferCoord end) const;
 
-    char           byte_at(const BufferCoord& c) const;
-    ByteCount      offset(const BufferCoord& c) const;
-    ByteCount      distance(const BufferCoord& begin, const BufferCoord& end) const;
+    char           byte_at(BufferCoord c) const;
+    ByteCount      offset(BufferCoord c) const;
+    ByteCount      distance(BufferCoord begin, BufferCoord end) const;
     BufferCoord    advance(BufferCoord coord, ByteCount count) const;
     BufferCoord    next(BufferCoord coord) const;
     BufferCoord    prev(BufferCoord coord) const;
@@ -124,8 +124,8 @@ public:
     BufferCoord    back_coord() const { return { line_count() - 1, m_lines.back().length() - 1 }; }
     BufferCoord    end_coord() const { return { line_count() - 1, m_lines.back().length() }; }
 
-    bool           is_valid(const BufferCoord& c) const;
-    bool           is_end(const BufferCoord& c) const;
+    bool           is_valid(BufferCoord c) const;
+    bool           is_end(BufferCoord c) const;
 
     BufferIterator begin() const;
     BufferIterator end() const;
@@ -136,7 +136,7 @@ public:
     { return m_lines[line].content; }
 
     // returns an iterator at given coordinates. clamp line_and_column
-    BufferIterator iterator_at(const BufferCoord& coord) const;
+    BufferIterator iterator_at(BufferCoord coord) const;
 
     // returns nearest valid coordinates from given ones
     BufferCoord    clamp(BufferCoord coord) const;
@@ -177,8 +177,8 @@ private:
     };
     LineList m_lines;
 
-    BufferCoord do_insert(const BufferCoord& pos, const String& content);
-    BufferCoord do_erase(const BufferCoord& begin, const BufferCoord& end);
+    BufferCoord do_insert(BufferCoord pos, const String& content);
+    BufferCoord do_erase(BufferCoord begin, BufferCoord end);
 
     String  m_name;
     Flags   m_flags;

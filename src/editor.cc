@@ -168,7 +168,7 @@ void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selectio
     merge_overlapping(selections, main_selection, overlaps);
 }
 
-BufferCoord Editor::offset_coord(const BufferCoord& coord, CharCount offset)
+BufferCoord Editor::offset_coord(BufferCoord coord, CharCount offset)
 {
     auto& line = buffer()[coord.line];
     auto character = std::max(0_char, std::min(line.char_count_to(coord.column) + offset,
@@ -189,7 +189,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
     sort_and_merge_overlapping(m_selections, m_main_sel);
 }
 
-BufferCoord Editor::offset_coord(const BufferCoord& coord, LineCount offset)
+BufferCoord Editor::offset_coord(BufferCoord coord, LineCount offset)
 {
     auto character = (*m_buffer)[coord.line].char_count_to(coord.column);
     auto line = clamp(coord.line + offset, 0_line, m_buffer->line_count()-1);
@@ -364,21 +364,21 @@ public:
     ModifiedRangesListener(Buffer& buffer)
         : BufferChangeListener_AutoRegister(buffer) {}
 
-    void on_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
+    void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
     {
         m_ranges.update_insert(buffer, begin, end);
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
-                                   [](const BufferCoord& c, const Selection& sel)
+                                   [](BufferCoord c, const Selection& sel)
                                    { return c < sel.min(); });
         m_ranges.emplace(it, begin, buffer.char_prev(end));
     }
 
-    void on_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
+    void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
     {
         m_ranges.update_erase(buffer, begin, end);
         auto pos = std::min(begin, buffer.back_coord());
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
-                                   [](const BufferCoord& c, const Selection& sel)
+                                   [](BufferCoord c, const Selection& sel)
                                    { return c < sel.min(); });
         m_ranges.emplace(it, pos, pos);
     }

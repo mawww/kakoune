@@ -19,10 +19,10 @@ namespace
 
 template<template <bool, bool> class UpdateFunc>
 void on_buffer_change(const Buffer& buffer, SelectionList& sels,
-                      const BufferCoord& begin, const BufferCoord& end, LineCount end_line)
+                      BufferCoord begin, BufferCoord end, LineCount end_line)
 {
     auto update_beg = std::lower_bound(sels.begin(), sels.end(), begin,
-                                       [](const Selection& s, const BufferCoord& c) { return std::max(s.first(), s.last()) < c; });
+                                       [](const Selection& s, BufferCoord c) { return std::max(s.first(), s.last()) < c; });
     auto update_only_line_beg = std::upper_bound(sels.begin(), sels.end(), end_line,
                                                  [](LineCount l, const Selection& s) { return l < std::min(s.first(), s.last()).line; });
 
@@ -51,7 +51,7 @@ template<bool assume_different_line, bool assume_greater_than_begin>
 struct UpdateInsert
 {
     void operator()(const Buffer& buffer, BufferCoord& coord,
-                    const BufferCoord& begin, const BufferCoord& end) const
+                    BufferCoord begin, BufferCoord end) const
     {
         if (assume_different_line)
             kak_assert(begin.line < coord.line);
@@ -68,7 +68,7 @@ template<bool assume_different_line, bool assume_greater_than_begin>
 struct UpdateErase
 {
     void operator()(const Buffer& buffer, BufferCoord& coord,
-                    const BufferCoord& begin, const BufferCoord& end) const
+                    BufferCoord begin, BufferCoord end) const
     {
         if (not assume_greater_than_begin and coord < begin)
             return;
@@ -91,12 +91,12 @@ struct UpdateErase
 
 }
 
-void SelectionList::update_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
+void SelectionList::update_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
 {
     on_buffer_change<UpdateInsert>(buffer, *this, begin, end, begin.line);
 }
 
-void SelectionList::update_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end)
+void SelectionList::update_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
 {
     on_buffer_change<UpdateErase>(buffer, *this, begin, end, end.line);
 }

@@ -497,7 +497,7 @@ struct BufferCompletion
 };
 
 static BufferCompletion complete_word(const Buffer& buffer,
-                                      const BufferCoord& cursor_pos,
+                                      BufferCoord cursor_pos,
                                       bool other_buffers)
 {
    auto pos = buffer.iterator_at(cursor_pos);
@@ -545,7 +545,7 @@ static BufferCompletion complete_word(const Buffer& buffer,
 }
 
 static BufferCompletion complete_opt(const Buffer& buffer,
-                                     const BufferCoord& cursor_pos,
+                                     BufferCoord cursor_pos,
                                      OptionManager& options)
 {
     using StringList = std::vector<String>;

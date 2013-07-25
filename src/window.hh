@@ -25,10 +25,10 @@ public:
     ~Window();
 
     const DisplayCoord& position() const { return m_position; }
-    void set_position(const DisplayCoord& position);
+    void set_position(DisplayCoord position);
 
     const DisplayCoord& dimensions() const { return m_dimensions; }
-    void set_dimensions(const DisplayCoord& dimensions);
+    void set_dimensions(DisplayCoord dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
@@ -38,7 +38,7 @@ public:
     void scroll(CharCount offset);
     void update_display_buffer();
 
-    DisplayCoord display_position(const BufferCoord& coord);
+    DisplayCoord display_position(BufferCoord coord);
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 
@@ -57,7 +57,7 @@ private:
 
     void scroll_to_keep_cursor_visible_ifn();
 
-    BufferCoord offset_coord(const BufferCoord& coord, LineCount move) override;
+    BufferCoord offset_coord(BufferCoord coord, LineCount move) override;
 
     DisplayCoord  m_position;
     DisplayCoord  m_dimensions;

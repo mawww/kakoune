@@ -723,7 +723,7 @@ void align(Context& context)
 {
     auto& selections = context.editor().selections();
     auto& buffer = context.buffer();
-    auto get_column = [&buffer](const BufferCoord& coord)
+    auto get_column = [&buffer](BufferCoord coord)
     { return buffer[coord.line].char_count_to(coord.column); };
 
     CharCount max_col = 0;

@@ -89,13 +89,13 @@ void Window::update_display_buffer()
     m_timestamp = buffer().timestamp();
 }
 
-void Window::set_position(const DisplayCoord& position)
+void Window::set_position(DisplayCoord position)
 {
     m_position.line = std::max(0_line, position.line);
     m_position.column = std::max(0_char, position.column);
 }
 
-void Window::set_dimensions(const DisplayCoord& dimensions)
+void Window::set_dimensions(DisplayCoord dimensions)
 {
     m_dimensions = dimensions;
 }
@@ -174,7 +174,7 @@ void Window::scroll_to_keep_cursor_visible_ifn()
 namespace
 {
 CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
-                              const BufferCoord& coord)
+                              BufferCoord coord)
 {
     CharCount column = 0;
     for (auto& atom : line)
@@ -212,7 +212,7 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 }
 }
 
-DisplayCoord Window::display_position(const BufferCoord& coord)
+DisplayCoord Window::display_position(BufferCoord coord)
 {
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
@@ -225,7 +225,7 @@ DisplayCoord Window::display_position(const BufferCoord& coord)
     return { 0, 0 };
 }
 
-BufferCoord Window::offset_coord(const BufferCoord& coord, LineCount offset)
+BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
 {
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
     DisplayBuffer display_buffer;

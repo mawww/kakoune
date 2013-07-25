@@ -13,60 +13,60 @@ struct LineAndColumn
     constexpr LineAndColumn(LineType line = 0, ColumnType column = 0)
         : line(line), column(column) {}
 
-    constexpr EffectiveType operator+(const EffectiveType& other) const
+    constexpr EffectiveType operator+(EffectiveType other) const
     {
         return EffectiveType(line + other.line, column + other.column);
     }
 
-    EffectiveType& operator+=(const EffectiveType& other)
+    EffectiveType& operator+=(EffectiveType other)
     {
         line   += other.line;
         column += other.column;
         return *static_cast<EffectiveType*>(this);
     }
 
-    constexpr EffectiveType operator-(const EffectiveType& other) const
+    constexpr EffectiveType operator-(EffectiveType other) const
     {
         return EffectiveType(line - other.line, column - other.column);
     }
 
-    EffectiveType& operator-=(const EffectiveType& other)
+    EffectiveType& operator-=(EffectiveType other)
     {
         line   -= other.line;
         column -= other.column;
         return *static_cast<EffectiveType*>(this);
     }
 
-    constexpr bool operator< (const EffectiveType& other) const
+    constexpr bool operator< (EffectiveType other) const
     {
         return (line != other.line) ? line < other.line
                                     : column < other.column;
     }
 
-    constexpr bool operator<= (const EffectiveType& other) const
+    constexpr bool operator<= (EffectiveType other) const
     {
         return (line != other.line) ? line < other.line
                                     : column <= other.column;
     }
 
-    constexpr bool operator> (const EffectiveType& other) const
+    constexpr bool operator> (EffectiveType other) const
     {
         return (line != other.line) ? line > other.line
                                     : column > other.column;
     }
 
-    constexpr bool operator>= (const EffectiveType& other) const
+    constexpr bool operator>= (EffectiveType other) const
     {
         return (line != other.line) ? line > other.line
                                     : column >= other.column;
     }
 
-    constexpr bool operator== (const EffectiveType& other) const
+    constexpr bool operator== (EffectiveType other) const
     {
         return line == other.line and column == other.column;
     }
 
-    constexpr bool operator!= (const EffectiveType& other) const
+    constexpr bool operator!= (EffectiveType other) const
     {
         return line != other.line or column != other.column;
     }

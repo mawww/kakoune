@@ -86,7 +86,7 @@ bool Buffer::set_name(String name)
     return false;
 }
 
-BufferIterator Buffer::iterator_at(const BufferCoord& coord) const
+BufferIterator Buffer::iterator_at(BufferCoord coord) const
 {
     return is_end(coord) ? end() : BufferIterator(*this, clamp(coord));
 }
@@ -126,7 +126,7 @@ LineCount Buffer::line_count() const
     return LineCount(m_lines.size());
 }
 
-String Buffer::string(const BufferCoord& begin, const BufferCoord& end) const
+String Buffer::string(BufferCoord begin, BufferCoord end) const
 {
     String res;
     for (auto line = begin.line; line <= end.line and line < line_count(); ++line)
@@ -187,7 +187,7 @@ class UndoGroupOptimizer
         return coord;
     }
 
-    static ByteCount count_byte_to(BufferCoord pos, const BufferCoord& endpos, const String& str)
+    static ByteCount count_byte_to(BufferCoord pos, BufferCoord endpos, const String& str)
     {
         ByteCount count = 0;
         for (auto it = str.begin(); it != str.end() and pos != endpos; ++it)
@@ -417,7 +417,7 @@ void Buffer::check_invariant() const
 #endif
 }
 
-BufferCoord Buffer::do_insert(const BufferCoord& pos, const String& content)
+BufferCoord Buffer::do_insert(BufferCoord pos, const String& content)
 {
     kak_assert(is_valid(pos));
 
@@ -497,7 +497,7 @@ BufferCoord Buffer::do_insert(const BufferCoord& pos, const String& content)
     return begin;
 }
 
-BufferCoord Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
+BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
 {
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
@@ -531,7 +531,7 @@ BufferCoord Buffer::do_erase(const BufferCoord& begin, const BufferCoord& end)
 void Buffer::apply_modification(const Modification& modification)
 {
     const String& content = modification.content;
-    const BufferCoord& coord = modification.coord;
+    BufferCoord coord = modification.coord;
 
     kak_assert(is_valid(coord));
     // in modifications, end coords should be {line_count(), 0}
@@ -678,31 +678,31 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
     return coord;
 }
 
-ByteCount Buffer::distance(const BufferCoord& begin, const BufferCoord& end) const
+ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
 {
     return offset(end) - offset(begin);
 }
 
-ByteCount Buffer::offset(const BufferCoord& c) const
+ByteCount Buffer::offset(BufferCoord c) const
 {
     if (c.line == line_count())
         return m_lines.back().start + m_lines.back().length();
     return m_lines[c.line].start + c.column;
 }
 
-bool Buffer::is_valid(const BufferCoord& c) const
+bool Buffer::is_valid(BufferCoord c) const
 {
    return (c.line < line_count() and c.column < m_lines[c.line].length()) or
           (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
           (c.line == line_count() and c.column == 0);
 }
 
-bool Buffer::is_end(const BufferCoord& c) const
+bool Buffer::is_end(BufferCoord c) const
 {
     return c >= BufferCoord{line_count() - 1, m_lines.back().length()};
 }
 
-char Buffer::byte_at(const BufferCoord& c) const
+char Buffer::byte_at(BufferCoord c) const
 {
     kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
     return m_lines[c.line].content[c.column];

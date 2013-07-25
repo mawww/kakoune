@@ -510,8 +510,8 @@ static DisplayCoord compute_needed_size(const String& str)
     return res;
 }
 
-static DisplayCoord compute_pos(const DisplayCoord& anchor,
-                                const DisplayCoord& size,
+static DisplayCoord compute_pos(DisplayCoord anchor,
+                                DisplayCoord size,
                                 WINDOW* opt_window_to_avoid = nullptr)
 {
     DisplayCoord scrsize = window_size(stdscr);

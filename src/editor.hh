@@ -61,7 +61,7 @@ public:
     void flip_selections();
     void keep_selection(int index);
     void remove_selection(int index);
-    void select(const BufferCoord& c, SelectMode mode = SelectMode::Replace)
+    void select(BufferCoord c, SelectMode mode = SelectMode::Replace)
     { select(Selection{ buffer().clamp(c) }, mode); }
     void select(const Selection& sel,
                 SelectMode mode = SelectMode::Replace);
@@ -91,8 +91,8 @@ private:
     void begin_edition();
     void end_edition();
 
-    virtual BufferCoord offset_coord(const BufferCoord& coord, LineCount move);
-    virtual BufferCoord offset_coord(const BufferCoord& coord, CharCount move);
+    virtual BufferCoord offset_coord(BufferCoord coord, LineCount move);
+    virtual BufferCoord offset_coord(BufferCoord coord, CharCount move);
 
     int m_edition_level;
 

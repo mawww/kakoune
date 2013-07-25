@@ -10,7 +10,7 @@ namespace Kakoune
 struct Range
 {
 public:
-    Range(const BufferCoord& first, const BufferCoord& last)
+    Range(BufferCoord first, BufferCoord last)
         : m_first{first}, m_last{last} {}
 
     void merge_with(const Range& range);
@@ -56,8 +56,8 @@ using CaptureList = std::vector<String>;
 // A selection is a Range, associated with a CaptureList
 struct Selection : public Range
 {
-    explicit Selection(const BufferCoord& pos) : Range(pos,pos) {}
-    Selection(const BufferCoord& first, const BufferCoord& last,
+    explicit Selection(BufferCoord pos) : Range(pos,pos) {}
+    Selection(BufferCoord first, BufferCoord last,
               CaptureList captures = {})
         : Range(first, last), m_captures(std::move(captures)) {}
 
@@ -76,8 +76,8 @@ struct SelectionList : std::vector<Selection>
     SelectionList() = default;
     SelectionList(Selection s) : std::vector<Selection>{s} {}
 
-    void update_insert(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end);
-    void update_erase(const Buffer& buffer, const BufferCoord& begin, const BufferCoord& end);
+    void update_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end);
+    void update_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end);
 
     void check_invariant() const;
 };

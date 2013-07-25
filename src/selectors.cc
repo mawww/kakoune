@@ -228,8 +228,8 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
 // c++14 will add std::optional, so we use boost::optional until then
 using boost::optional;
 static optional<Range> find_surrounding(const Buffer& buffer,
-                                        const BufferCoord& coord,
-                                        const CodepointPair& matching,
+                                        BufferCoord coord,
+                                        CodepointPair matching,
                                         ObjectFlags flags)
 {
     const bool to_begin = flags & ObjectFlags::ToBegin;
@@ -290,7 +290,7 @@ static optional<Range> find_surrounding(const Buffer& buffer,
 }
 
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
-                             const CodepointPair& matching,
+                             CodepointPair matching,
                              ObjectFlags flags)
 {
     auto res = find_surrounding(buffer, selection.last(), matching, flags);
