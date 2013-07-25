@@ -46,10 +46,10 @@ def -shell-params git %{ %sh{
             declare -A dates
             send_flags() {
                 if [[ -z "$line" ]]; then return; fi
-                text="${sha:0:8} ${dates[$sha]} ${authors[$sha]}"
+                text=$(echo "${sha:0:8} ${dates[$sha]} ${authors[$sha]}" | sed -e 's/:/\\:/g')
                 flag="$line|black|$text"
                 for (( i=1; $i < $count; i++ )); do
-                    flag="$flag;$(($line+$i))|black|$text"
+                    flag="$flag:$(($line+$i))|black|$text"
                 done
                 echo "setb -add -buffer '$kak_bufname' git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:${kak_socket}
             }
@@ -78,10 +78,10 @@ def -shell-params git %{ %sh{
                 elif [[ $REPLY =~ ^@@.-[0-9]+(,[0-9]+)?.\+([0-9]+)(,[0-9]+)?.@@.* ]]; then
                     line=${BASH_REMATCH[2]}
                 elif [[ $REPLY =~ ^\+ ]]; then
-                    flags="$flags;$line|green|+"
+                    flags="$flags:$line|green|+"
                     ((line++))
                 elif [[ $REPLY =~ ^\- ]]; then
-                    flags="$flags;$line|red|-"
+                    flags="$flags:$line|red|-"
                 fi
             done
             echo "setb git_diff_flags '$flags'"
