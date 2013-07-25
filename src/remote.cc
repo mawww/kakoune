@@ -62,7 +62,7 @@ public:
     };
 
     template<typename T>
-    void write(const memoryview<T>& view)
+    void write(memoryview<T> view)
     {
         write<uint32_t>(view.size());
         for (auto& val : view)
@@ -213,7 +213,7 @@ public:
 
     void print_status(const DisplayLine& status) override;
 
-    void menu_show(const memoryview<String>& choices,
+    void menu_show(memoryview<String> choices,
                    DisplayCoord anchor, ColorPair fg, ColorPair bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -258,7 +258,7 @@ void RemoteUI::print_status(const DisplayLine& status)
     msg.write(status);
 }
 
-void RemoteUI::menu_show(const memoryview<String>& choices,
+void RemoteUI::menu_show(memoryview<String> choices,
                          DisplayCoord anchor, ColorPair fg, ColorPair bg,
                          MenuStyle style)
 {

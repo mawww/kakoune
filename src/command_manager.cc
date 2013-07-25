@@ -23,7 +23,7 @@ void CommandManager::register_command(String command_name,
     m_commands[command_name] = { std::move(command), std::move(completer) };
 }
 
-void CommandManager::register_commands(const memoryview<String>& command_names,
+void CommandManager::register_commands(memoryview<String> command_names,
                                        Command command,
                                        CommandCompleter completer)
 {
@@ -247,7 +247,7 @@ struct command_not_found : runtime_error
         : runtime_error(command + " : no such command") {}
 };
 
-void CommandManager::execute_single_command(const CommandParameters& params,
+void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context) const
 {
     if (params.empty())
@@ -262,7 +262,7 @@ void CommandManager::execute_single_command(const CommandParameters& params,
 
 void CommandManager::execute(const String& command_line,
                              Context& context,
-                             const memoryview<String>& shell_params,
+                             memoryview<String> shell_params,
                              const EnvVarMap& env_vars)
 {
     TokenList tokens = parse(command_line);
@@ -368,7 +368,7 @@ Completions CommandManager::complete(const Context& context,
 }
 
 CandidateList PerArgumentCommandCompleter::operator()(const Context& context,
-                                                      const CommandParameters& params,
+                                                      CommandParameters params,
                                                       size_t token_to_complete,
                                                       ByteCount pos_in_token) const
 {

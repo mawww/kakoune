@@ -28,7 +28,7 @@ public:
     virtual ~UserInterface() {}
     virtual void print_status(const DisplayLine& status) = 0;
 
-    virtual void menu_show(const memoryview<String>& choices,
+    virtual void menu_show(memoryview<String> choices,
                            DisplayCoord anchor, ColorPair fg, ColorPair bg,
                            MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;

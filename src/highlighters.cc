@@ -117,7 +117,7 @@ private:
     }
 };
 
-HighlighterAndId colorize_regex_factory(const HighlighterParameters params, const Window&)
+HighlighterAndId colorize_regex_factory(HighlighterParameters params, const Window&)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -179,7 +179,7 @@ private:
     RegexGetter    m_regex_getter;
 };
 
-HighlighterAndId highlight_search_factory(const HighlighterParameters params, const Window&)
+HighlighterAndId highlight_search_factory(HighlighterParameters params, const Window&)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -198,7 +198,7 @@ HighlighterAndId highlight_search_factory(const HighlighterParameters params, co
     }
 }
 
-HighlighterAndId highlight_regex_option_factory(const HighlighterParameters params, const Window& window)
+HighlighterAndId highlight_regex_option_factory(HighlighterParameters params, const Window& window)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -446,7 +446,7 @@ private:
 };
 std::unordered_map<const Option*, std::weak_ptr<FlagLines::OptionUpdater>> FlagLines::ms_updaters;
 
-HighlighterAndId flag_lines_factory(const HighlighterParameters& params, Window& window)
+HighlighterAndId flag_lines_factory(HighlighterParameters params, Window& window)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -460,7 +460,7 @@ class SimpleHighlighterFactory
 public:
     SimpleHighlighterFactory(const String& id) : m_id(id) {}
 
-    HighlighterAndId operator()(const HighlighterParameters& params, const Window&) const
+    HighlighterAndId operator()(HighlighterParameters params, const Window&) const
     {
         return HighlighterAndId(m_id, HighlighterFunc(highlighter_func));
     }
@@ -468,7 +468,7 @@ private:
     String m_id;
 };
 
-HighlighterAndId highlighter_group_factory(const HighlighterParameters& params, const Window&)
+HighlighterAndId highlighter_group_factory(HighlighterParameters params, const Window&)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");

@@ -50,7 +50,7 @@ public:
 
     void insert(const String& string,
                 InsertMode mode = InsertMode::Insert);
-    void insert(const memoryview<String>& strings,
+    void insert(memoryview<String> strings,
                 InsertMode mode = InsertMode::Insert);
 
     void move_selections(LineCount move,
@@ -126,7 +126,7 @@ public:
     ~IncrementalInserter();
 
     void insert(String content);
-    void insert(const memoryview<String>& strings);
+    void insert(memoryview<String> strings);
     void erase();
     void move_cursors(CharCount move);
     void move_cursors(LineCount move);

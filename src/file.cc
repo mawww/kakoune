@@ -184,7 +184,7 @@ Buffer* create_buffer_from_file(String filename)
     return buffer;
 }
 
-static void write(int fd, const memoryview<char>& data, const String& filename)
+static void write(int fd, memoryview<char> data, const String& filename)
 {
     const char* ptr = data.pointer();
     ssize_t count   = data.size();
@@ -228,7 +228,7 @@ void write_buffer_to_file(const Buffer& buffer, const String& filename)
     }
 }
 
-String find_file(const String& filename, const memoryview<String>& paths)
+String find_file(const String& filename, memoryview<String> paths)
 {
     for (auto candidate : paths)
     {

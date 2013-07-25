@@ -99,7 +99,7 @@ private:
     String m_replacement;
 };
 
-FilterAndId regex_filter_factory(const FilterParameters& params)
+FilterAndId regex_filter_factory(FilterParameters params)
 {
     if (params.size() != 3)
         throw runtime_error("wrong parameter count");
@@ -114,7 +114,7 @@ class SimpleFilterFactory
 public:
     SimpleFilterFactory(const String& id) : m_id(id) {}
 
-    FilterAndId operator()(const FilterParameters& params) const
+    FilterAndId operator()(FilterParameters params) const
     {
         return FilterAndId(m_id, FilterFunc(filter_func));
     }
@@ -122,7 +122,7 @@ private:
     String m_id;
 };
 
-FilterAndId filter_group_factory(const FilterParameters& params)
+FilterAndId filter_group_factory(FilterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");

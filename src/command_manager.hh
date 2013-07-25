@@ -21,10 +21,10 @@ struct parse_error : runtime_error
 
 struct Context;
 using CommandParameters = memoryview<String>;
-using Command = std::function<void (const CommandParameters&,
+using Command = std::function<void (CommandParameters,
                                     Context& context)>;
 using CommandCompleter = std::function<CandidateList (const Context& context,
-                                                      const CommandParameters&,
+                                                      CommandParameters,
                                                       size_t, ByteCount)>;
 
 class PerArgumentCommandCompleter
@@ -34,11 +34,11 @@ public:
                                             const String&, ByteCount)>;
     using ArgumentCompleterList = memoryview<ArgumentCompleter>;
 
-    PerArgumentCommandCompleter(const ArgumentCompleterList& completers)
+    PerArgumentCommandCompleter(ArgumentCompleterList completers)
         : m_completers(completers.begin(), completers.end()) {}
 
     CandidateList operator()(const Context& context,
-                             const CommandParameters& params,
+                             CommandParameters params,
                              size_t token_to_complete,
                              ByteCount pos_in_token) const;
 
@@ -50,7 +50,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(const String& command_line, Context& context,
-                 const memoryview<String>& shell_params = {},
+                 memoryview<String> shell_params = {},
                  const EnvVarMap& env_vars = EnvVarMap{});
 
     Completions complete(const Context& context,
@@ -62,12 +62,12 @@ public:
                           Command command,
                           CommandCompleter completer = CommandCompleter());
 
-    void register_commands(const memoryview<String>& command_names,
+    void register_commands(memoryview<String> command_names,
                            Command command,
                            CommandCompleter completer = CommandCompleter());
 
 private:
-    void execute_single_command(const CommandParameters& params,
+    void execute_single_command(CommandParameters params,
                                 Context& context) const;
     struct CommandDescriptor
     {

@@ -17,7 +17,7 @@ ShellManager::ShellManager()
 }
 
 String ShellManager::eval(const String& cmdline, const Context& context,
-                          const memoryview<String>& params,
+                          memoryview<String> params,
                           const EnvVarMap& env_vars)
 {
     return pipe("", cmdline, context, params, env_vars);
@@ -25,7 +25,7 @@ String ShellManager::eval(const String& cmdline, const Context& context,
 
 String ShellManager::pipe(const String& input,
                           const String& cmdline, const Context& context,
-                          const memoryview<String>& params,
+                          memoryview<String> params,
                           const EnvVarMap& env_vars)
 {
     int write_pipe[2]; // child stdin

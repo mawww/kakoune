@@ -161,7 +161,7 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(InputHandler& input_handler, const memoryview<String>& choices,
+    Menu(InputHandler& input_handler, memoryview<String> choices,
          MenuCallback callback)
         : InputMode(input_handler),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
@@ -269,7 +269,7 @@ private:
     LineEditor   m_filter_editor;
 };
 
-String common_prefix(const memoryview<String>& strings)
+String common_prefix(memoryview<String> strings)
 {
     String res;
     if (strings.empty())
@@ -879,7 +879,7 @@ void InputHandler::set_prompt_colors(ColorPair prompt_colors)
         prompt->set_prompt_colors(prompt_colors);
 }
 
-void InputHandler::menu(const memoryview<String>& choices,
+void InputHandler::menu(memoryview<String> choices,
                         MenuCallback callback)
 {
     m_mode_trash.emplace_back(std::move(m_mode));

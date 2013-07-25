@@ -93,7 +93,7 @@ void Editor::insert(const String& str, InsertMode mode)
     check_invariant();
 }
 
-void Editor::insert(const memoryview<String>& strings, InsertMode mode)
+void Editor::insert(memoryview<String> strings, InsertMode mode)
 {
     scoped_edition edition(*this);
     if (strings.empty())
@@ -542,7 +542,7 @@ void IncrementalInserter::insert(String content)
     }
 }
 
-void IncrementalInserter::insert(const memoryview<String>& strings)
+void IncrementalInserter::insert(memoryview<String> strings)
 {
     auto& buffer = m_editor.buffer();
     for (size_t i = 0; i < m_editor.m_selections.size(); ++i)

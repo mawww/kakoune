@@ -26,7 +26,7 @@ public:
     bool   is_key_available() override;
     Key    get_key() override;
 
-    void menu_show(const memoryview<String>& choices,
+    void menu_show(memoryview<String> choices,
                    DisplayCoord anchor, ColorPair fg, ColorPair bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;

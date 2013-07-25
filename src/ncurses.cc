@@ -413,7 +413,7 @@ void NCursesUI::draw_menu()
     redraw();
 }
 
-void NCursesUI::menu_show(const memoryview<String>& choices,
+void NCursesUI::menu_show(memoryview<String> choices,
                           DisplayCoord anchor, ColorPair fg, ColorPair bg,
                           MenuStyle style)
 {

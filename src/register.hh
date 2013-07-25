@@ -13,7 +13,7 @@ class Register
 {
 public:
     virtual ~Register() {}
-    virtual Register& operator=(const memoryview<String>& values) = 0;
+    virtual Register& operator=(memoryview<String> values) = 0;
 
     virtual memoryview<String> values(const Context& context) = 0;
 };

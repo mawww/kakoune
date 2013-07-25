@@ -24,7 +24,7 @@ using FilterAndId = std::pair<String, FilterFunc>;
 using FilterGroup = FunctionGroup<Buffer&, Selection&, String&>;
 
 using FilterParameters = memoryview<String>;
-using FilterFactory = std::function<FilterAndId (const FilterParameters& params)>;
+using FilterFactory = std::function<FilterAndId (FilterParameters params)>;
 
 struct FilterRegistry : FunctionRegistry<FilterFactory>,
                         Singleton<FilterRegistry>

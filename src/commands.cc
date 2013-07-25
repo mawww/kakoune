@@ -86,7 +86,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
 }
 
 template<bool force_reload>
-void edit(const CommandParameters& params, Context& context)
+void edit(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "scratch", false },
                                       { "fifo", true } },
@@ -134,7 +134,7 @@ void edit(const CommandParameters& params, Context& context)
     }
 }
 
-void write_buffer(const CommandParameters& params, Context& context)
+void write_buffer(CommandParameters params, Context& context)
 {
     if (params.size() > 1)
         throw wrong_argument_count();
@@ -153,7 +153,7 @@ void write_buffer(const CommandParameters& params, Context& context)
         buffer.notify_saved();
 }
 
-void write_all_buffers(const CommandParameters& params, Context& context)
+void write_all_buffers(CommandParameters params, Context& context)
 {
     if (params.size() != 0)
         throw wrong_argument_count();
@@ -169,7 +169,7 @@ void write_all_buffers(const CommandParameters& params, Context& context)
 }
 
 template<bool force>
-void quit(const CommandParameters& params, Context& context)
+void quit(CommandParameters params, Context& context)
 {
     if (params.size() != 0)
         throw wrong_argument_count();
@@ -200,13 +200,13 @@ void quit(const CommandParameters& params, Context& context)
 }
 
 template<bool force>
-void write_and_quit(const CommandParameters& params, Context& context)
+void write_and_quit(CommandParameters params, Context& context)
 {
     write_buffer(params, context);
     quit<force>(CommandParameters(), context);
 }
 
-void show_buffer(const CommandParameters& params, Context& context)
+void show_buffer(CommandParameters params, Context& context)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -223,7 +223,7 @@ void show_buffer(const CommandParameters& params, Context& context)
 }
 
 template<bool force>
-void delete_buffer(const CommandParameters& params, Context& context)
+void delete_buffer(CommandParameters params, Context& context)
 {
     if (params.size() > 1)
         throw wrong_argument_count();
@@ -239,7 +239,7 @@ void delete_buffer(const CommandParameters& params, Context& context)
     manager.delete_buffer(buffer);
 }
 
-void set_buffer_name(const CommandParameters& params, Context& context)
+void set_buffer_name(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, OptionMap{},
                             ParametersParser::Flags::None, 1, 1);
@@ -258,7 +258,7 @@ Group& get_group(Group& root, const String& group_path)
         return group;
 }
 
-void add_highlighter(const CommandParameters& params, Context& context)
+void add_highlighter(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1);
     HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -278,7 +278,7 @@ void add_highlighter(const CommandParameters& params, Context& context)
     group.append(factory(highlighter_params, window));
 }
 
-void rm_highlighter(const CommandParameters& params, Context& context)
+void rm_highlighter(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
 
@@ -290,7 +290,7 @@ void rm_highlighter(const CommandParameters& params, Context& context)
     group.remove(parser[0]);
 }
 
-void add_filter(const CommandParameters& params, Context& context)
+void add_filter(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1);
 
@@ -311,7 +311,7 @@ void add_filter(const CommandParameters& params, Context& context)
     group.append(factory(filter_params));
 }
 
-void rm_filter(const CommandParameters& params, Context& context)
+void rm_filter(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
 
@@ -334,7 +334,7 @@ static HookManager& get_hook_manager(const String& scope, Context& context)
     throw runtime_error("error: no such hook container " + scope);
 }
 
-void add_hook(const CommandParameters& params, Context& context)
+void add_hook(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "id", true } }, ParametersParser::Flags::None, 4, 4);
     // copy so that the lambda gets a copy as well
@@ -349,13 +349,13 @@ void add_hook(const CommandParameters& params, Context& context)
     get_hook_manager(parser[0], context).add_hook(parser[1], id, hook_func);
 }
 
-void rm_hooks(const CommandParameters& params, Context& context)
+void rm_hooks(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, {}, ParametersParser::Flags::None, 2, 2);
     get_hook_manager(parser[0], context).remove_hooks(parser[1]);
 }
 
-EnvVarMap params_to_env_var_map(const CommandParameters& params)
+EnvVarMap params_to_env_var_map(CommandParameters params)
 {
     std::unordered_map<String, String> vars;
     char param_name[] = "param0";
@@ -367,7 +367,7 @@ EnvVarMap params_to_env_var_map(const CommandParameters& params)
     return vars;
 }
 
-void define_command(const CommandParameters& params, Context& context)
+void define_command(CommandParameters params, Context& context)
 {
     ParametersParser parser(params,
                             { { "env-params", false },
@@ -389,20 +389,20 @@ void define_command(const CommandParameters& params, Context& context)
     Command cmd;
     if (parser.has_option("env-params"))
     {
-        cmd = [=](const CommandParameters& params, Context& context) {
+        cmd = [=](CommandParameters params, Context& context) {
             CommandManager::instance().execute(commands, context, {},
                                                params_to_env_var_map(params));
         };
     }
     if (parser.has_option("shell-params"))
     {
-        cmd = [=](const CommandParameters& params, Context& context) {
+        cmd = [=](CommandParameters params, Context& context) {
             CommandManager::instance().execute(commands, context, params);
         };
     }
     else
     {
-        cmd = [=](const CommandParameters& params, Context& context) {
+        cmd = [=](CommandParameters params, Context& context) {
             if (not params.empty())
                 throw wrong_argument_count();
             CommandManager::instance().execute(commands, context);
@@ -412,7 +412,7 @@ void define_command(const CommandParameters& params, Context& context)
     CommandCompleter completer;
     if (parser.has_option("file-completion"))
     {
-        completer = [](const Context& context, const CommandParameters& params,
+        completer = [](const Context& context, CommandParameters params,
                        size_t token_to_complete, ByteCount pos_in_token)
         {
              const String& prefix = token_to_complete < params.size() ?
@@ -423,7 +423,7 @@ void define_command(const CommandParameters& params, Context& context)
     else if (parser.has_option("shell-completion"))
     {
         String shell_cmd = parser.option_value("shell-completion");
-        completer = [=](const Context& context, const CommandParameters& params,
+        completer = [=](const Context& context, CommandParameters params,
                         size_t token_to_complete, ByteCount pos_in_token)
         {
             EnvVarMap vars = {
@@ -437,7 +437,7 @@ void define_command(const CommandParameters& params, Context& context)
     CommandManager::instance().register_command(cmd_name, cmd, completer);
 }
 
-void echo_message(const CommandParameters& params, Context& context)
+void echo_message(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "color", true } },
                             ParametersParser::Flags::OptionsOnlyAtStart);
@@ -449,7 +449,7 @@ void echo_message(const CommandParameters& params, Context& context)
     context.print_status({ std::move(message), color } );
 }
 
-void write_debug_message(const CommandParameters& params, Context&)
+void write_debug_message(CommandParameters params, Context&)
 {
     String message;
     for (auto& param : params)
@@ -457,7 +457,7 @@ void write_debug_message(const CommandParameters& params, Context&)
     write_debug(message);
 }
 
-void exec_commands_in_file(const CommandParameters& params,
+void exec_commands_in_file(CommandParameters params,
                            Context& context)
 {
     if (params.size() != 1)
@@ -467,7 +467,7 @@ void exec_commands_in_file(const CommandParameters& params,
     CommandManager::instance().execute(file_content, context);
 }
 
-void set_global_option(const CommandParameters& params, Context& context)
+void set_global_option(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "add", false } },
                             ParametersParser::Flags::OptionsOnlyAtStart,
@@ -480,7 +480,7 @@ void set_global_option(const CommandParameters& params, Context& context)
         opt.set_from_string(parser[1]);
 }
 
-void set_buffer_option(const CommandParameters& params, Context& context)
+void set_buffer_option(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "buffer", true}, { "add", false } },
                             ParametersParser::Flags::OptionsOnlyAtStart,
@@ -497,7 +497,7 @@ void set_buffer_option(const CommandParameters& params, Context& context)
         opt.set_from_string(parser[1]);
 }
 
-void set_window_option(const CommandParameters& params, Context& context)
+void set_window_option(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "add", false } },
                             ParametersParser::Flags::OptionsOnlyAtStart,
@@ -510,7 +510,7 @@ void set_window_option(const CommandParameters& params, Context& context)
         opt.set_from_string(parser[1]);
 }
 
-void declare_option(const CommandParameters& params, Context& context)
+void declare_option(CommandParameters params, Context& context)
 {
     if (params.size() != 2 and params.size() != 3)
         throw wrong_argument_count();
@@ -538,7 +538,7 @@ void declare_option(const CommandParameters& params, Context& context)
 }
 
 template<typename Func>
-void context_wrap(const CommandParameters& params, Context& context, Func func)
+void context_wrap(CommandParameters params, Context& context, Func func)
 {
     ParametersParser parser(params, { { "client", true }, { "draft", false }},
                             ParametersParser::Flags::OptionsOnlyAtStart, 1);
@@ -562,7 +562,7 @@ void context_wrap(const CommandParameters& params, Context& context, Func func)
         real_context.window().forget_timestamp();
 }
 
-void exec_string(const CommandParameters& params, Context& context)
+void exec_string(CommandParameters params, Context& context)
 {
     context_wrap(params, context, [](const ParametersParser& parser, Context& context) {
         KeyList keys;
@@ -575,7 +575,7 @@ void exec_string(const CommandParameters& params, Context& context)
     });
 }
 
-void eval_string(const CommandParameters& params, Context& context)
+void eval_string(CommandParameters params, Context& context)
 {
     context_wrap(params, context, [](const ParametersParser& parser, Context& context) {
         String command;
@@ -585,7 +585,7 @@ void eval_string(const CommandParameters& params, Context& context)
     });
 }
 
-void menu(const CommandParameters& params, Context& context)
+void menu(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "auto-single", false },
                                       { "select-cmds", false } });
@@ -694,7 +694,7 @@ static String assist(String message, CharCount maxWidth)
 }
 
 
-void info(const CommandParameters& params, Context& context)
+void info(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "anchor", true }, { "assist", false } },
                             ParametersParser::Flags::None, 0, 1);
@@ -724,7 +724,7 @@ void info(const CommandParameters& params, Context& context)
     }
 }
 
-void try_catch(const CommandParameters& params, Context& context)
+void try_catch(CommandParameters params, Context& context)
 {
     if (params.size() != 3)
         throw wrong_argument_count();
@@ -742,7 +742,7 @@ void try_catch(const CommandParameters& params, Context& context)
     }
 }
 
-void define_color_alias(const CommandParameters& params, Context& context)
+void define_color_alias(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, OptionMap{},
                             ParametersParser::Flags::None, 2, 2);
@@ -750,7 +750,7 @@ void define_color_alias(const CommandParameters& params, Context& context)
         parser[0], parser[1], true);
 }
 
-void set_client_name(const CommandParameters& params, Context& context)
+void set_client_name(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, OptionMap{},
                             ParametersParser::Flags::None, 1, 1);
@@ -758,7 +758,7 @@ void set_client_name(const CommandParameters& params, Context& context)
     manager.set_client_name(manager.get_client(context), params[0]);
 }
 
-void set_register(const CommandParameters& params, Context& context)
+void set_register(CommandParameters params, Context& context)
 {
     if (params.size() != 2)
         throw wrong_argument_count();
@@ -768,7 +768,7 @@ void set_register(const CommandParameters& params, Context& context)
     RegisterManager::instance()[params[0][0]] = memoryview<String>(params[1]);
 }
 
-void change_working_directory(const CommandParameters& params, Context&)
+void change_working_directory(CommandParameters params, Context&)
 {
     if (params.size() != 1)
         throw wrong_argument_count();
@@ -780,7 +780,7 @@ void change_working_directory(const CommandParameters& params, Context&)
 template<typename GetRootGroup>
 CommandCompleter group_rm_completer(GetRootGroup get_root_group)
 {
-    return [=](const Context& context, const CommandParameters& params,
+    return [=](const Context& context, CommandParameters params,
                size_t token_to_complete, ByteCount pos_in_token) {
         auto& root_group = get_root_group(context);
         const String& arg = token_to_complete < params.size() ?
@@ -796,7 +796,7 @@ CommandCompleter group_rm_completer(GetRootGroup get_root_group)
 template<typename FactoryRegistry, typename GetRootGroup>
 CommandCompleter group_add_completer(GetRootGroup get_root_group)
 {
-    return [=](const Context& context, const CommandParameters& params,
+    return [=](const Context& context, CommandParameters params,
                size_t token_to_complete, ByteCount pos_in_token) {
         auto& root_group = get_root_group(context);
         const String& arg = token_to_complete < params.size() ?
@@ -842,7 +842,7 @@ public:
 
     void print_status(const DisplayLine&) override {}
     void draw(const DisplayBuffer&, const DisplayLine&) override {}
-    void menu_show(const memoryview<String>&,
+    void menu_show(memoryview<String>,
                    DisplayCoord, ColorPair, ColorPair, MenuStyle) override {}
     void menu_select(int) override {}
     void menu_hide() override {}
@@ -887,7 +887,7 @@ void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
 
-    cm.register_commands({"nop"}, [](const CommandParameters&, Context&){});
+    cm.register_commands({"nop"}, [](CommandParameters, Context&){});
 
     PerArgumentCommandCompleter filename_completer({
          [](const Context& context, const String& prefix, ByteCount cursor_pos)

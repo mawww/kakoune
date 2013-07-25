@@ -57,7 +57,7 @@ public:
     // abort or validation with corresponding MenuEvent value
     // returns to normal mode after validation if callback does
     // not change the mode itself
-    void menu(const memoryview<String>& choices,
+    void menu(memoryview<String> choices,
               MenuCallback callback);
 
     // execute callback on next keypress and returns to normal mode
