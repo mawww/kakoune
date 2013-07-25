@@ -75,7 +75,7 @@ public:
         write(memoryview<T>(vec));
     }
 
-    void write(const Color& color)
+    void write(Color color)
     {
         write(color.color);
         if (color.color == Colors::RGB)
@@ -86,7 +86,7 @@ public:
         }
     }
 
-    void write(const ColorPair& colors)
+    void write(ColorPair colors)
     {
         write(colors.first);
         write(colors.second);

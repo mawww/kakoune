@@ -30,7 +30,7 @@ Color str_to_color(const String& color)
     return Colors::Default;
 }
 
-String color_to_str(const Color& color)
+String color_to_str(Color color)
 {
     switch (color.color)
     {
@@ -54,7 +54,7 @@ String color_to_str(const Color& color)
     return "default";
 }
 
-String option_to_string(const Color& color)
+String option_to_string(Color color)
 {
     return color_to_str(color);
 }

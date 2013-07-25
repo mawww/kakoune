@@ -29,7 +29,7 @@ static void set_attribute(int attribute, bool on)
         attroff(attribute);
 }
 
-static bool operator<(const Color& lhs, const Color& rhs)
+static bool operator<(Color lhs, Color rhs)
 {
     if (lhs.color == rhs.color and lhs.color == Colors::RGB)
         return lhs.r == rhs.r ? (lhs.g == rhs.g ? lhs.b < rhs.b
@@ -38,7 +38,7 @@ static bool operator<(const Color& lhs, const Color& rhs)
     return lhs.color < rhs.color;
 }
 
-static int nc_color(const Color& color)
+static int nc_color(Color color)
 {
     static std::map<Color, int> colors = {
         { Colors::Default, -1 },
@@ -99,7 +99,7 @@ static int nc_color(const Color& color)
     }
 }
 
-static int get_color_pair(const ColorPair& colors)
+static int get_color_pair(ColorPair colors)
 {
     static std::map<ColorPair, int> colorpairs;
     static int next_pair = 1;
@@ -115,7 +115,7 @@ static int get_color_pair(const ColorPair& colors)
     }
 }
 
-static void set_color(WINDOW* window, const ColorPair colors)
+static void set_color(WINDOW* window, ColorPair colors)
 {
     static int current_pair = -1;
 
