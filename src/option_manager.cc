@@ -116,7 +116,7 @@ GlobalOptions::GlobalOptions()
     declare_option<String>("shell", "bash");
     declare_option<bool>("complete_prefix", true);
     declare_option<bool>("incsearch", true);
-    declare_option<bool>("autoinfo", false);
+    declare_option<bool>("autoinfo", true);
     declare_option<Regex>("ignored_files", Regex{R"(^(\..*|.*\.(o|so|a))$)"});
     declare_option<String>("filetype", "");
     declare_option<std::vector<String>>("completions", {});
