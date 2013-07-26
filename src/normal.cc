@@ -166,8 +166,10 @@ void view_commands(Context& context)
                                          "│ v,c:  center cursor    │\n"
                                          "│ t:    cursor on top    │\n"
                                          "│ b:    cursor on bottom │\n"
+                                         "│ h:    scroll left      │\n"
                                          "│ j:    scroll down      │\n"
                                          "│ k:    scroll up        │\n"
+                                         "│ l:    scroll right     │\n"
                                          "╰────────────────────────╯\n", context);
     context.input_handler().on_next_key([hide](Key key, Context& context) {
         if (hide)
@@ -188,6 +190,9 @@ void view_commands(Context& context)
         case 'b':
             context.window().display_selection_at(window.dimensions().line-1);
             break;
+        case 'h':
+            context.window().scroll(-std::max<CharCount>(1, context.numeric_param()));
+            break;
         case 'j':
             context.window().scroll( std::max<LineCount>(1, context.numeric_param()));
             break;
@@ -196,9 +201,6 @@ void view_commands(Context& context)
             break;
         case 'l':
             context.window().scroll( std::max<CharCount>(1, context.numeric_param()));
-            break;
-        case 'h':
-            context.window().scroll(-std::max<CharCount>(1, context.numeric_param()));
             break;
         }
     });
@@ -563,7 +565,7 @@ void select_object(Context& context)
     const bool hide = show_auto_info_ifn("╭──────┤select object├───────╮\n"
                                          "│ b,(,):  parenthesis block  │\n"
                                          "│ B,{,}:  braces block       │\n"
-                                         "│ [,]:    brackets block     │\n"
+                                         "│ r,[,]:  brackets block     │\n"
                                          "│ <,>:    angle block        │\n"
                                          "│ \":    double quote string  │\n"
                                          "│ ':    single quote string  │\n"
@@ -571,6 +573,7 @@ void select_object(Context& context)
                                          "│ W:    WORD                 │\n"
                                          "│ s:    sentence             │\n"
                                          "│ p:    paragraph            │\n"
+                                         "│ i:    indent               │\n"
                                          "╰────────────────────────────╯\n", context);
     context.input_handler().on_next_key(
     [=](Key key, Context& context) {
