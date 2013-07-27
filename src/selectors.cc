@@ -530,7 +530,21 @@ Selection select_whole_indent(const Buffer& buffer, const Selection& selection, 
             ++end_line;
     }
     --end_line;
-    return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
+    BufferCoord first = begin_line;
+    // keep the first line indent in inner mode
+    if (flags & ObjectFlags::Inner)
+    {
+        CharCount i = 0;
+        for (; i < indent; ++first.column)
+        {
+            auto c = buffer.byte_at(first);
+            if (c == ' ')
+                ++i;
+            if (c == '\t')
+                i = (i / tabstop + 1) * tabstop;
+        }
+    }
+    return Selection{first, {end_line, buffer[end_line].length() - 1}};
 }
 
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
