@@ -159,9 +159,9 @@ view.
  * _vv_ or _vc_: center the main selection in the window
  * _vt_: scroll to put the main selection on the top line of the window
  * _vb_: scroll to put the main selection on the bottom line of the window
+ * _vh_: scroll the window count columns left
  * _vj_: scroll the window count line downward
  * _vk_: scroll the window count line upward
- * _vh_: scroll the window count columns left
  * _vl_: scroll the window count columns right
 
 Multi Selection
