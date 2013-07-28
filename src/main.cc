@@ -43,7 +43,7 @@ String runtime_directory()
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048;
     _NSGetExecutablePath(buffer, &bufsize);
-    char* canonical_path = realpath(buffer, NULL);
+    char* canonical_path = realpath(buffer, nullptr);
     strncpy(buffer, canonical_path, 2048);
     free(canonical_path);
 #else

@@ -31,9 +31,11 @@ void CommandManager::register_commands(memoryview<String> command_names,
         m_commands[command_name] = { command, completer };
 }
 
-parse_error::parse_error(const String& error)
-    : runtime_error{"parse error: " + error} {}
-
+struct parse_error : runtime_error
+{
+    parse_error(const String& error)
+        : runtime_error{"parse error: " + error} {}
+};
 
 namespace
 {

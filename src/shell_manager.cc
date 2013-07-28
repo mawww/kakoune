@@ -67,7 +67,7 @@ String ShellManager::pipe(const String& input,
         if (not errorout.empty())
             write_debug("shell stderr: <<<\n" + errorout + ">>>");
 
-        waitpid(pid, NULL, 0);
+        waitpid(pid, nullptr, 0);
     }
     else try
     {
@@ -125,7 +125,7 @@ String ShellManager::pipe(const String& input,
             execparams.push_back(shell.c_str());
         for (auto& param : params)
             execparams.push_back(param.c_str());
-        execparams.push_back(NULL);
+        execparams.push_back(nullptr);
 
         execvp(shell.c_str(), (char* const*)execparams.data());
         exit(-1);

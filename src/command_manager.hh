@@ -14,15 +14,9 @@
 namespace Kakoune
 {
 
-struct parse_error : runtime_error
-{
-    parse_error(const String& error);
-};
-
 struct Context;
 using CommandParameters = memoryview<String>;
-using Command = std::function<void (CommandParameters,
-                                    Context& context)>;
+using Command = std::function<void (CommandParameters, Context& context)>;
 using CommandCompleter = std::function<CandidateList (const Context& context,
                                                       CommandParameters,
                                                       size_t, ByteCount)>;

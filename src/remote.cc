@@ -327,7 +327,7 @@ bool RemoteUI::is_key_available()
 
     tv.tv_sec = 0;
     tv.tv_usec = 0;
-    int res = select(sock+1, &rfds, NULL, NULL, &tv);
+    int res = select(sock+1, &rfds, nullptr, nullptr, &tv);
     return res == 1;
 }
 
@@ -500,7 +500,7 @@ private:
             FD_ZERO(&rfds);
             FD_SET(socket, &rfds);
         }
-        while (select(socket+1, &rfds, NULL, NULL, &tv) == 1);
+        while (select(socket+1, &rfds, nullptr, nullptr, &tv) == 1);
     }
 
     String    m_buffer;
