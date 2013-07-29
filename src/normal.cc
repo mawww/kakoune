@@ -493,7 +493,18 @@ void split_regex(Context& context)
 
 void split_lines(Context& context)
 {
-    context.editor().multi_select(std::bind(split_selection, _1, _2, Regex{"^"}));
+    context.editor().multi_select([](const Buffer& buffer, const Selection& sel) {
+        if (sel.first().line == sel.last().line)
+            return SelectionList{ sel };
+        SelectionList res;
+        auto min = sel.min();
+        auto max = sel.max();
+        res.push_back({min, {min.line, buffer[min.line].length()-1}});
+        for (auto line = min.line+1; line < max.line; ++line)
+            res.push_back({line, {line, buffer[line].length()-1}});
+        res.push_back({max.line, max});
+        return res;
+	});
 }
 
 void join_select_spaces(Context& context)
