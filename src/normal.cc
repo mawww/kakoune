@@ -541,9 +541,8 @@ void keep(Context& context)
     regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
         Editor& editor = context.editor();
         const Buffer& buffer = context.buffer();
-        SelectionList sels = editor.selections();
         SelectionList keep;
-        for (auto& sel : sels)
+        for (auto& sel : editor.selections())
         {
             if (boost::regex_search(buffer.iterator_at(sel.min()),
                                     utf8::next(buffer.iterator_at(sel.max())), ex) == matching)
