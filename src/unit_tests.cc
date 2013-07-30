@@ -94,7 +94,7 @@ void test_editor()
 
 void test_incremental_inserter()
 {
-    Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "youpi\n", "matin\n" });
+    Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "yoüpi\n", "matin\n" });
     Editor editor(buffer);
 
     editor.select({0,0});
@@ -105,6 +105,13 @@ void test_incremental_inserter()
         kak_assert(editor.selections().front().first() == BufferCoord{0 COMMA 0});
         kak_assert(editor.selections().front().last() == BufferCoord{0 COMMA 0});
         kak_assert(*buffer.begin() == L'\n');
+    }
+    // check utf-8 erase
+    editor.select({3,4});
+    {
+        IncrementalInserter inserter(editor, InsertMode::Insert);
+        inserter.erase();
+        kak_assert(editor.selections().back().last() == BufferCoord{3 COMMA 2});
     }
     kak_assert(not editor.is_editing());
 }

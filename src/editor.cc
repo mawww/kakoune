@@ -558,8 +558,10 @@ void IncrementalInserter::erase()
     auto& buffer = m_editor.buffer();
     for (auto& sel : m_editor.m_selections)
     {
+        if (sel.last() == BufferCoord{0,0})
+            continue;
         auto pos = buffer.iterator_at(sel.last());
-        buffer.erase(pos-1, pos);
+        buffer.erase(utf8::previous(pos), pos);
     }
 }
 
