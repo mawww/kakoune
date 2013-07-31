@@ -203,34 +203,34 @@ private:
 
     OptionManager m_options;
     HookManager   m_hooks;
+
+    friend constexpr Flags operator|(Flags lhs, Flags rhs)
+    {
+        return (Flags)((int) lhs | (int) rhs);
+    }
+
+    friend Flags& operator|=(Flags& lhs, Flags rhs)
+    {
+        (int&) lhs |= (int) rhs;
+        return lhs;
+    }
+
+    friend constexpr bool operator&(Flags lhs, Flags rhs)
+    {
+        return ((int) lhs & (int) rhs) != 0;
+    }
+
+    friend Flags& operator&=(Flags& lhs, Flags rhs)
+    {
+        (int&) lhs &= (int) rhs;
+        return lhs;
+    }
+
+    friend constexpr Flags operator~(Flags lhs)
+    {
+        return (Flags)(~(int)lhs);
+    }
 };
-
-constexpr Buffer::Flags operator|(Buffer::Flags lhs, Buffer::Flags rhs)
-{
-    return (Buffer::Flags)((int) lhs | (int) rhs);
-}
-
-inline Buffer::Flags& operator|=(Buffer::Flags& lhs, Buffer::Flags rhs)
-{
-    (int&) lhs |= (int) rhs;
-    return lhs;
-}
-
-constexpr bool operator&(Buffer::Flags lhs, Buffer::Flags rhs)
-{
-    return ((int) lhs & (int) rhs) != 0;
-}
-
-inline Buffer::Flags& operator&=(Buffer::Flags& lhs, Buffer::Flags rhs)
-{
-    (int&) lhs &= (int) rhs;
-    return lhs;
-}
-
-constexpr Buffer::Flags operator~(Buffer::Flags lhs)
-{
-    return (Buffer::Flags)(~(int)lhs);
-}
 
 struct BufferListenerRegisterFuncs
 {
