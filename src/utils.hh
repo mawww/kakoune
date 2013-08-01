@@ -180,7 +180,7 @@ auto find_if(Container&& container, T op) -> decltype(container.begin())
 template<typename Container, typename T>
 bool contains(Container&& container, const T& value)
 {
-    return (not container.empty()) and find(container, value) != container.end();
+    return find(container, value) != container.end();
 }
 
 template<typename T1, typename T2>
