@@ -10,6 +10,7 @@
 #include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
+#include "file.hh"
 
 #include <unordered_map>
 
@@ -544,6 +545,38 @@ static BufferCompletion complete_word(const Buffer& buffer,
     return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
 }
 
+static bool is_filename(char c)
+{
+    return isalnum(c) or c == '/' or c == '.' or c == '_' or c == '-';
+}
+
+static BufferCompletion complete_filename(const Buffer& buffer,
+                                          BufferCoord cursor_pos,
+                                          memoryview<String> path)
+{
+    auto pos = buffer.iterator_at(cursor_pos);
+    auto begin = pos;
+
+    while (begin != buffer.begin() and is_filename(*(begin-1)))
+        --begin;
+
+    if (begin == pos)
+        return {};
+
+    String prefix{begin, pos};
+    std::vector<String> res;
+    for (auto dir : path)
+    {
+        if (not dir.empty() and dir.back() != '/')
+            dir += '/';
+        for (auto& filename : complete_filename(dir + prefix, Regex{}))
+            res.push_back(filename.substr(dir.length()));
+    }
+    if (res.empty())
+        return {};
+    return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
+}
+
 static BufferCompletion complete_opt(const Buffer& buffer,
                                      BufferCoord cursor_pos,
                                      OptionManager& options)
@@ -701,14 +734,17 @@ private:
         if (not m_completions.is_valid())
         {
             auto& buffer = m_context.buffer();
-            auto& completers = options()["completers"].get<std::unordered_set<String>>();
+            auto& completers = options()["completers"].get<std::vector<String>>();
             BufferCoord cursor_pos = m_context.editor().main_selection().last();
             if (contains(completers, "option"))
-                m_completions = complete_opt(buffer, cursor_pos, m_context.options());
+                m_completions = complete_opt(buffer, cursor_pos, options());
             if (not m_completions.is_valid() and
-                (contains(completers, "word=buffer") or
-                 contains(completers, "word=all")))
-                m_completions = complete_word(buffer, cursor_pos, contains(completers, "word=all"));
+                (contains(completers, "word=buffer") or contains(completers, "word=all")))
+                m_completions = complete_word(buffer, cursor_pos,
+                                              contains(completers, "word=all"));
+            if (not m_completions.is_valid() and contains(completers, "filename"))
+                m_completions = complete_filename(buffer, cursor_pos,
+                                                  options()["path"].get<std::vector<String>>());
             if (not m_completions.is_valid())
                 return false;
 
@@ -717,7 +753,7 @@ private:
             m_matching_candidates = m_completions.candidates;
             m_current_candidate = m_matching_candidates.size();
             menu_show();
-            m_matching_candidates.push_back(m_context.buffer().string(m_completions.begin, m_completions.end));
+            m_matching_candidates.push_back(buffer.string(m_completions.begin, m_completions.end));
         }
         return true;
     }
