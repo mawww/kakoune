@@ -497,122 +497,6 @@ struct BufferCompletion
     bool is_valid() const { return not candidates.empty(); }
 };
 
-static BufferCompletion complete_word(const Buffer& buffer,
-                                      BufferCoord cursor_pos,
-                                      bool other_buffers)
-{
-   auto pos = buffer.iterator_at(cursor_pos);
-   if (pos == buffer.begin() or not is_word(*utf8::previous(pos)))
-       return {};
-
-    auto end = buffer.iterator_at(cursor_pos);
-    auto begin = end-1;
-    while (begin != buffer.begin() and is_word(*begin))
-        --begin;
-    if (not is_word(*begin))
-        ++begin;
-
-    String ex = R"(\<\Q)" + String{begin, end} + R"(\E\w+\>)";
-    Regex re(ex.begin(), ex.end());
-    using RegexIt = boost::regex_iterator<BufferIterator>;
-
-    std::unordered_set<String> matches;
-    for (RegexIt it(buffer.begin(), buffer.end(), re), re_end; it != re_end; ++it)
-    {
-        auto& match = (*it)[0];
-        if (match.first <= pos and pos < match.second)
-            continue;
-        matches.insert(String{match.first, match.second});
-    }
-    if (other_buffers)
-    {
-        for (const auto& buf : BufferManager::instance())
-        {
-            if (buf.get() == &buffer)
-                continue;
-            for (RegexIt it(buf->begin(), buf->end(), re), re_end; it != re_end; ++it)
-            {
-                auto& match = (*it)[0];
-                matches.insert(String{match.first, match.second});
-            }
-        }
-    }
-    CandidateList result;
-    std::copy(make_move_iterator(matches.begin()),
-              make_move_iterator(matches.end()),
-              inserter(result, result.begin()));
-    std::sort(result.begin(), result.end());
-    return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
-}
-
-static bool is_filename(char c)
-{
-    return isalnum(c) or c == '/' or c == '.' or c == '_' or c == '-';
-}
-
-static BufferCompletion complete_filename(const Buffer& buffer,
-                                          BufferCoord cursor_pos,
-                                          memoryview<String> path)
-{
-    auto pos = buffer.iterator_at(cursor_pos);
-    auto begin = pos;
-
-    while (begin != buffer.begin() and is_filename(*(begin-1)))
-        --begin;
-
-    if (begin == pos)
-        return {};
-
-    String prefix{begin, pos};
-    std::vector<String> res;
-    for (auto dir : path)
-    {
-        if (not dir.empty() and dir.back() != '/')
-            dir += '/';
-        for (auto& filename : complete_filename(dir + prefix, Regex{}))
-            res.push_back(filename.substr(dir.length()));
-    }
-    if (res.empty())
-        return {};
-    return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
-}
-
-static BufferCompletion complete_opt(const Buffer& buffer,
-                                     BufferCoord cursor_pos,
-                                     OptionManager& options)
-{
-    using StringList = std::vector<String>;
-    const StringList& opt = options["completions"].get<StringList>();
-    if (opt.empty())
-        return {};
-
-    auto& desc = opt[0];
-    static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
-    boost::smatch match;
-    if (boost::regex_match(desc.begin(), desc.end(), match, re))
-    {
-        BufferCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
-        if (not buffer.is_valid(coord))
-            return {};
-        auto end = coord;
-        if (match[3].matched)
-        {
-            ByteCount len = str_to_int(match[3].str());
-            end = buffer.advance(coord, len);
-        }
-        size_t timestamp = (size_t)str_to_int(match[4].str());
-
-        ByteCount longest_completion = 0;
-        for (auto it = opt.begin() + 1; it != opt.end(); ++it)
-             longest_completion = std::max(longest_completion, it->length());
-
-        if (timestamp == buffer.timestamp() and
-            cursor_pos.line == coord.line and cursor_pos.column <= coord.column and
-            buffer.distance(coord, cursor_pos) < longest_completion)
-            return { coord, end, { opt.begin() + 1, opt.end() }, timestamp };
-    }
-    return {};
-}
 
 class BufferCompleter : public OptionManagerWatcher_AutoRegister
 {
@@ -710,6 +594,118 @@ public:
         m_context.ui().menu_hide();
     }
 private:
+    using StringList = std::vector<String>;
+
+    template<bool other_buffers>
+    BufferCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
+    {
+       auto pos = buffer.iterator_at(cursor_pos);
+       if (pos == buffer.begin() or not is_word(*utf8::previous(pos)))
+           return {};
+
+        auto end = buffer.iterator_at(cursor_pos);
+        auto begin = end-1;
+        while (begin != buffer.begin() and is_word(*begin))
+            --begin;
+        if (not is_word(*begin))
+            ++begin;
+
+        String ex = R"(\<\Q)" + String{begin, end} + R"(\E\w+\>)";
+        Regex re(ex.begin(), ex.end());
+        using RegexIt = boost::regex_iterator<BufferIterator>;
+
+        std::unordered_set<String> matches;
+        for (RegexIt it(buffer.begin(), buffer.end(), re), re_end; it != re_end; ++it)
+        {
+            auto& match = (*it)[0];
+            if (match.first <= pos and pos < match.second)
+                continue;
+            matches.insert(String{match.first, match.second});
+        }
+        if (other_buffers)
+        {
+            for (const auto& buf : BufferManager::instance())
+            {
+                if (buf.get() == &buffer)
+                    continue;
+                for (RegexIt it(buf->begin(), buf->end(), re), re_end; it != re_end; ++it)
+                {
+                    auto& match = (*it)[0];
+                    matches.insert(String{match.first, match.second});
+                }
+            }
+        }
+        CandidateList result;
+        std::copy(make_move_iterator(matches.begin()),
+                  make_move_iterator(matches.end()),
+                  inserter(result, result.begin()));
+        std::sort(result.begin(), result.end());
+        return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
+    }
+
+    BufferCompletion complete_filename(const Buffer& buffer, BufferCoord cursor_pos)
+    {
+        auto pos = buffer.iterator_at(cursor_pos);
+        auto begin = pos;
+
+        auto is_filename = [](char c)
+        {
+            return isalnum(c) or c == '/' or c == '.' or c == '_' or c == '-';
+        };
+        while (begin != buffer.begin() and is_filename(*(begin-1)))
+            --begin;
+
+        if (begin == pos)
+            return {};
+
+        String prefix{begin, pos};
+        StringList res;
+        for (auto dir : options()["path"].get<StringList>())
+        {
+            if (not dir.empty() and dir.back() != '/')
+                dir += '/';
+            for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
+                res.push_back(filename.substr(dir.length()));
+        }
+        if (res.empty())
+            return {};
+        return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
+    }
+
+    BufferCompletion complete_opt(const Buffer& buffer, BufferCoord cursor_pos)
+    {
+        const StringList& opt = options()["completions"].get<StringList>();
+        if (opt.empty())
+            return {};
+
+        auto& desc = opt[0];
+        static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
+        boost::smatch match;
+        if (boost::regex_match(desc.begin(), desc.end(), match, re))
+        {
+            BufferCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
+            if (not buffer.is_valid(coord))
+                return {};
+            auto end = coord;
+            if (match[3].matched)
+            {
+                ByteCount len = str_to_int(match[3].str());
+                end = buffer.advance(coord, len);
+            }
+            size_t timestamp = (size_t)str_to_int(match[4].str());
+
+            ByteCount longest_completion = 0;
+            for (auto it = opt.begin() + 1; it != opt.end(); ++it)
+                 longest_completion = std::max(longest_completion, it->length());
+
+            if (timestamp == buffer.timestamp() and
+                cursor_pos.line == coord.line and cursor_pos.column <= coord.column and
+                buffer.distance(coord, cursor_pos) < longest_completion)
+                return { coord, end, { opt.begin() + 1, opt.end() }, timestamp };
+        }
+        return {};
+    }
+
     void on_option_changed(const Option& opt) override
     {
         if (opt.name() == "completions")
@@ -734,17 +730,16 @@ private:
         if (not m_completions.is_valid())
         {
             auto& buffer = m_context.buffer();
-            auto& completers = options()["completers"].get<std::vector<String>>();
+            auto& completers = options()["completers"].get<StringList>();
             BufferCoord cursor_pos = m_context.editor().main_selection().last();
             if (contains(completers, "option"))
-                m_completions = complete_opt(buffer, cursor_pos, options());
-            if (not m_completions.is_valid() and
-                (contains(completers, "word=buffer") or contains(completers, "word=all")))
-                m_completions = complete_word(buffer, cursor_pos,
-                                              contains(completers, "word=all"));
+                m_completions = complete_opt(buffer, cursor_pos);
+            if (not m_completions.is_valid() and contains(completers, "word=buffer"))
+                m_completions = complete_word<false>(buffer, cursor_pos);
+            if (not m_completions.is_valid() and contains(completers, "word=all"))
+                m_completions = complete_word<true>(buffer, cursor_pos);
             if (not m_completions.is_valid() and contains(completers, "filename"))
-                m_completions = complete_filename(buffer, cursor_pos,
-                                                  options()["path"].get<std::vector<String>>());
+                m_completions = complete_filename(buffer, cursor_pos);
             if (not m_completions.is_valid())
                 return false;
 
