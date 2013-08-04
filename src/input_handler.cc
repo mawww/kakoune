@@ -593,7 +593,24 @@ public:
         m_completions = BufferCompletion{};
         m_context.ui().menu_hide();
     }
-private:
+
+    template<BufferCompletion (BufferCompleter::*complete_func)(const Buffer&, BufferCoord)>
+    bool try_complete()
+    {
+        auto& buffer = m_context.buffer();
+        BufferCoord cursor_pos = m_context.editor().main_selection().last();
+        m_completions = (this->*complete_func)(buffer, cursor_pos);
+        if (not m_completions.is_valid())
+            return false;
+
+        kak_assert(cursor_pos >= m_completions.begin);
+        m_matching_candidates = m_completions.candidates;
+        m_current_candidate = m_matching_candidates.size();
+        m_context.ui().menu_hide();
+        menu_show();
+        m_matching_candidates.push_back(buffer.string(m_completions.begin, m_completions.end));
+        return true;
+    }
     using StringList = std::vector<String>;
 
     template<bool other_buffers>
@@ -706,6 +723,7 @@ private:
         return {};
     }
 
+private:
     void on_option_changed(const Option& opt) override
     {
         if (opt.name() == "completions")
@@ -729,26 +747,17 @@ private:
     {
         if (not m_completions.is_valid())
         {
-            auto& buffer = m_context.buffer();
             auto& completers = options()["completers"].get<StringList>();
-            BufferCoord cursor_pos = m_context.editor().main_selection().last();
-            if (contains(completers, "option"))
-                m_completions = complete_opt(buffer, cursor_pos);
-            if (not m_completions.is_valid() and contains(completers, "word=buffer"))
-                m_completions = complete_word<false>(buffer, cursor_pos);
-            if (not m_completions.is_valid() and contains(completers, "word=all"))
-                m_completions = complete_word<true>(buffer, cursor_pos);
-            if (not m_completions.is_valid() and contains(completers, "filename"))
-                m_completions = complete_filename(buffer, cursor_pos);
-            if (not m_completions.is_valid())
-                return false;
+            if (contains(completers, "option") and try_complete<&BufferCompleter::complete_opt>())
+                return true;
+            if (contains(completers, "word=buffer") and try_complete<&BufferCompleter::complete_word<false>>())
+                return true;
+            if (contains(completers, "word=all") and try_complete<&BufferCompleter::complete_word<true>>())
+                return true;
+            if (contains(completers, "filename") and try_complete<&BufferCompleter::complete_filename>())
+                return true;
 
-            kak_assert(cursor_pos >= m_completions.begin);
-
-            m_matching_candidates = m_completions.candidates;
-            m_current_candidate = m_matching_candidates.size();
-            menu_show();
-            m_matching_candidates.push_back(buffer.string(m_completions.begin, m_completions.end));
+            return false;
         }
         return true;
     }
@@ -839,6 +848,11 @@ public:
         else if ( key == Key{ Key::Modifiers::Control, 'p' })
         {
             m_completer.select(-1);
+            update_completions = false;
+        }
+        else if ( key == Key{ Key::Modifiers::Control, 'f' })
+        {
+            m_completer.try_complete<&BufferCompleter::complete_filename>();
             update_completions = false;
         }
 
