@@ -380,6 +380,18 @@ Some options are built in kakoune, and can be used to control it's behaviour:
  * +insert_hide_sel+ _bool_: hide the selection (except the last
    element) in insert mode
 
+Insert mode completion
+----------------------
+
+Kakoune can propose completions while inserting text, the +completers+ option
+control automatic completion, which kicks in when a certain idle timeout is
+reached (100 milliseconds). Insert mode completion can be explicitely triggered
+using *control-x*, followed, by:
+
+ * *f* : filename completion
+ * *w* : buffer word completion
+ * *o* : option based completion
+
 Highlighters
 ------------
 

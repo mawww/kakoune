@@ -689,7 +689,7 @@ public:
         return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
     }
 
-    BufferCompletion complete_opt(const Buffer& buffer, BufferCoord cursor_pos)
+    BufferCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos)
     {
         const StringList& opt = options()["completions"].get<StringList>();
         if (opt.empty())
@@ -748,7 +748,7 @@ private:
         if (not m_completions.is_valid())
         {
             auto& completers = options()["completers"].get<StringList>();
-            if (contains(completers, "option") and try_complete<&BufferCompleter::complete_opt>())
+            if (contains(completers, "option") and try_complete<&BufferCompleter::complete_option>())
                 return true;
             if (contains(completers, "word=buffer") and try_complete<&BufferCompleter::complete_word<false>>())
                 return true;
@@ -792,13 +792,25 @@ public:
             return reset_normal_mode().on_key(key);
 
         last_insert().second.push_back(key);
-        if (m_insert_reg)
+        if (m_mode == Mode::InsertReg)
         {
             if (key.modifiers == Key::Modifiers::None)
                 m_inserter.insert(RegisterManager::instance()[key.key].values(context()));
-            m_insert_reg = false;
+            m_mode = Mode::Default;
             return;
         }
+        if (m_mode == Mode::Complete)
+        {
+            if (key.key == 'f')
+                m_completer.try_complete<&BufferCompleter::complete_filename>();
+            if (key.key == 'w')
+                m_completer.try_complete<&BufferCompleter::complete_word<true>>();
+            if (key.key == 'o')
+                m_completer.try_complete<&BufferCompleter::complete_option>();
+            m_mode = Mode::Default;
+            return;
+        }
+
         bool update_completions = true;
         bool moved = false;
         if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
@@ -835,7 +847,7 @@ public:
             context().hooks().run_hook("InsertKey", key_to_str(key), context());
         }
         else if (key == Key{ Key::Modifiers::Control, 'r' })
-            m_insert_reg = true;
+            m_mode = Mode::InsertReg;
         else if ( key == Key{ Key::Modifiers::Control, 'm' })
             m_inserter.insert(String() + '\n');
         else if ( key == Key{ Key::Modifiers::Control, 'i' })
@@ -850,11 +862,8 @@ public:
             m_completer.select(-1);
             update_completions = false;
         }
-        else if ( key == Key{ Key::Modifiers::Control, 'f' })
-        {
-            m_completer.try_complete<&BufferCompleter::complete_filename>();
-            update_completions = false;
-        }
+        else if ( key == Key{ Key::Modifiers::Control, 'x' })
+            m_mode = Mode::Complete;
 
         if (update_completions)
             m_idle_timer.set_next_date(Clock::now() + idle_timeout);
@@ -862,7 +871,8 @@ public:
             context().hooks().run_hook("InsertMove", key_to_str(key), context());
     }
 private:
-    bool m_insert_reg = false;
+    enum class Mode { Default, Complete, InsertReg };
+    Mode m_mode = Mode::Default;
     IncrementalInserter m_inserter;
     BufferCompleter     m_completer;
     Timer               m_idle_timer;
