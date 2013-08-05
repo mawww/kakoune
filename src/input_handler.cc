@@ -723,6 +723,23 @@ public:
         return {};
     }
 
+    BufferCompletion complete_line(const Buffer& buffer, BufferCoord cursor_pos)
+    {
+        String prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
+        StringList res;
+        for (LineCount l = 0_line; l < buffer.line_count(); ++l)
+        {
+            if (l == cursor_pos.line)
+                continue;
+            ByteCount len = buffer[l].length();
+            if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buffer[l].begin()))
+                res.push_back(buffer[l].substr(0_byte, len-1));
+        }
+        if (res.empty())
+            return {};
+        return { cursor_pos.line, cursor_pos, std::move(res), buffer.timestamp() };
+    }
+
 private:
     void on_option_changed(const Option& opt) override
     {
@@ -807,6 +824,8 @@ public:
                 m_completer.try_complete<&BufferCompleter::complete_word<true>>();
             if (key.key == 'o')
                 m_completer.try_complete<&BufferCompleter::complete_option>();
+            if (key.key == 'l')
+                m_completer.try_complete<&BufferCompleter::complete_line>();
             m_mode = Mode::Default;
             return;
         }
