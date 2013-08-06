@@ -737,6 +737,8 @@ public:
         }
         if (res.empty())
             return {};
+        std::sort(res.begin(), res.end());
+        res.erase(std::unique(res.begin(), res.end()), res.end());
         return { cursor_pos.line, cursor_pos, std::move(res), buffer.timestamp() };
     }
 
