@@ -335,13 +335,25 @@ bool RemoteUI::is_key_available()
 
 Key RemoteUI::get_key()
 {
-    Key key = read<Key>(m_socket_watcher.fd());
-    if (key.modifiers == resize_modifier)
+    try
     {
-        m_dimensions = { (int)(key.key >> 16), (int)(key.key & 0xFFFF) };
-        return Key::Invalid;
+        Key key = read<Key>(m_socket_watcher.fd());
+        if (key.modifiers == resize_modifier)
+        {
+            m_dimensions = { (int)(key.key >> 16), (int)(key.key & 0xFFFF) };
+            return Key::Invalid;
+        }
+        return key;
     }
-    return key;
+    catch (peer_disconnected&)
+    {
+        throw client_removed{};
+    }
+    catch (socket_error&)
+    {
+        write_debug("ungraceful deconnection detected");
+        throw client_removed{};
+    }
 }
 
 DisplayCoord RemoteUI::dimensions()
