@@ -122,10 +122,10 @@ void edit(CommandParameters params, Context& context)
         context.change_editor(manager.get_unused_window_for_buffer(*buffer));
     }
 
-    if (param_count > 1)
+    if (param_count > 1 and not parser[1].empty())
     {
         int line = std::max(0, str_to_int(parser[1]) - 1);
-        int column = param_count > 2 ?
+        int column = param_count > 2 and not parser[2].empty() ?
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
         context.editor().select(context.buffer().clamp({ line,  column }));
