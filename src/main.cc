@@ -70,10 +70,17 @@ void register_env_vars()
                                    { const Range& sel = context.editor().main_selection();
                                      return content(context.buffer(), sel); });
     shell_manager.register_env_var("selections",
-                                   [](const String& name, const Context& context)
-                                   { auto sels = context.editor().selections_content();
-                                     return std::accumulate(sels.begin(), sels.end(), ""_str,
-                                     [](const String& lhs, const String& rhs) { return lhs.empty() ? rhs : lhs + "," + rhs; }); });
+                                   [](const String& name, const Context& context) {
+                                       auto sels = context.editor().selections_content();
+                                       String res;
+                                       for (size_t i = 0; i < sels.size(); ++i)
+                                       {
+                                           res += escape(sels[i], ':', '\\');
+                                           if (i != sels.size() - 1)
+                                               res += ':';
+                                       }
+                                       return res;
+                                   });
     shell_manager.register_env_var("runtime",
                                    [](const String& name, const Context& context)
                                    { return runtime_directory(); });
