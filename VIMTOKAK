@@ -37,7 +37,7 @@ alphabetic chars had to change.
 
 * % become m (for matching), however m will replace selection with the next
   block, if you want to get a selection from current point to next block end,
-  you should use <space>M (<space> clears the trim to one character)
+  you should use <space>M (<space> clears the selection to one character)
 
 * 0 and $ became alt-h and alt-l. Another binding is gh and gl.
 
