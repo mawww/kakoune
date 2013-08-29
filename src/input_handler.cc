@@ -677,12 +677,17 @@ public:
 
         String prefix{begin, pos};
         StringList res;
-        for (auto dir : options()["path"].get<StringList>())
+        if (prefix.front() == '/')
+            res = Kakoune::complete_filename(prefix, Regex{});
+        else
         {
-            if (not dir.empty() and dir.back() != '/')
-                dir += '/';
-            for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
-                res.push_back(filename.substr(dir.length()));
+            for (auto dir : options()["path"].get<StringList>())
+            {
+                if (not dir.empty() and dir.back() != '/')
+                    dir += '/';
+                for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
+                    res.push_back(filename.substr(dir.length()));
+            }
         }
         if (res.empty())
             return {};
