@@ -37,7 +37,7 @@ bool show_auto_info_ifn(const String& info, const Context& context)
 {
     if (not context.options()["autoinfo"].get<bool>() or not context.has_ui())
         return false;
-    ColorPair col{ Colors::Black, Colors::Yellow };
+    ColorPair col = get_color("Information");
     DisplayCoord pos = context.window().dimensions();
     pos.column -= 1;
     context.ui().info_show(info, pos , col, MenuStyle::Inline);
