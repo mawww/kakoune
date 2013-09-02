@@ -504,7 +504,7 @@ void split_lines(Context& context)
             res.push_back({line, {line, buffer[line].length()-1}});
         res.push_back({max.line, max});
         return res;
-	});
+    });
 }
 
 void join_select_spaces(Context& context)
@@ -748,6 +748,7 @@ void jump(Context& context)
     context.editor().select(SelectionList{ jump });
 }
 
+template<bool insert_at_begin>
 void align(Context& context)
 {
     auto& selections = context.editor().selections();
@@ -757,12 +758,17 @@ void align(Context& context)
 
     CharCount max_col = 0;
     for (auto& sel : selections)
+    {
+        if (sel.first().line != sel.last().line)
+            throw runtime_error("align cannot work with multi line selections");
         max_col = std::max(get_column(sel.last()), max_col);
+    }
 
     for (auto& sel : selections)
     {
         CharCount padding = max_col - get_column(sel.last());
-        buffer.insert(buffer.iterator_at(sel.last()), String{ ' ', padding });
+        auto it = buffer.iterator_at(insert_at_begin ? sel.min() : sel.last());
+        buffer.insert(it, String{ ' ', padding });
     }
 }
 
@@ -931,9 +937,10 @@ KeyMap keymap =
 
     { { Key::Modifiers::None, '`' }, for_each_char<to_lower> },
     { { Key::Modifiers::None, '~' }, for_each_char<to_upper> },
-    { { Key::Modifiers::Alt, '`' },  for_each_char<swap_case> },
+    { { Key::Modifiers::Alt,  '`' },  for_each_char<swap_case> },
 
-    { { Key::Modifiers::None, '&' }, align },
+    { { Key::Modifiers::None, '&' }, align<false> },
+    { { Key::Modifiers::Alt,  '&' }, align<true> },
 
     { Key::Left,  move<CharCount, Backward> },
     { Key::Down,  move<LineCount, Forward> },
