@@ -978,24 +978,19 @@ bool is_valid(Key key)
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }
 
-void InputHandler::handle_available_inputs()
+void InputHandler::handle_key(Key key)
 {
-    m_mode_trash.clear();
-    while (m_context.ui().is_key_available())
+    if (is_valid(key))
     {
-        Key key = m_context.ui().get_key();
-        if (is_valid(key))
-        {
-            const bool was_recording = is_recording();
+        const bool was_recording = is_recording();
 
-            m_mode->on_key(key);
+        m_mode->on_key(key);
 
-            // do not record the key that made us enter or leave recording mode.
-            if (was_recording and is_recording())
-                m_recorded_keys += key_to_str(key);
-        }
-        m_mode_trash.clear();
+        // do not record the key that made us enter or leave recording mode.
+        if (was_recording and is_recording())
+            m_recorded_keys += key_to_str(key);
     }
+    m_mode_trash.clear();
 }
 
 void InputHandler::start_recording(char reg)

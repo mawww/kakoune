@@ -549,10 +549,12 @@ void context_wrap(CommandParameters params, Context& context, Func func)
 
     if (parser.has_option("draft"))
     {
+        InputHandler input_handler(real_context.ui());
         Editor& editor = real_context.editor();
+        input_handler.context().change_editor(editor);
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
-        auto restore_sels = on_scope_end([&]{ editor.select(sels); real_context.change_editor(editor); });
-        func(parser, real_context);
+        auto restore_sels = on_scope_end([&]{ editor.select(sels); });
+        func(parser, input_handler.context());
     }
     else
         func(parser, real_context);
@@ -827,38 +829,6 @@ private:
     char                m_name;
 };
 
-class BatchUI : public UserInterface
-{
-public:
-    BatchUI(const KeyList& keys)
-      : m_keys(keys), m_pos(0) {}
-
-    Key get_key() override
-    {
-        kak_assert(m_pos < m_keys.size());
-        return m_keys[m_pos++];
-    }
-    bool is_key_available() override { return m_pos < m_keys.size(); }
-
-    void print_status(const DisplayLine&) override {}
-    void draw(const DisplayBuffer&, const DisplayLine&) override {}
-    void menu_show(memoryview<String>,
-                   DisplayCoord, ColorPair, ColorPair, MenuStyle) override {}
-    void menu_select(int) override {}
-    void menu_hide() override {}
-
-    void info_show(const String&, DisplayCoord, ColorPair, MenuStyle) override {}
-    void info_hide() override {}
-
-    DisplayCoord dimensions() override { return { 0, 0 }; }
-
-    void set_input_callback(InputCallback callback) {}
-
-private:
-    const KeyList& m_keys;
-    size_t         m_pos;
-};
-
 }
 
 void exec_keys(const KeyList& keys, Context& context)
@@ -868,20 +838,9 @@ void exec_keys(const KeyList& keys, Context& context)
 
     scoped_edition edition(context.editor());
 
-    BatchUI batch_ui(keys);
-    InputHandler batch_input_handler(batch_ui);
-    batch_input_handler.context().change_editor(context.editor());
-
-    batch_input_handler.handle_available_inputs();
-
-    auto& new_editor = batch_input_handler.context().editor();
-    if (&new_editor != &context.editor())
-    {
-        context.push_jump();
-        context.change_editor(new_editor);
-    }
+    for (auto& key : keys)
+        context.input_handler().handle_key(key);
 }
-
 
 void register_commands()
 {

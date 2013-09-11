@@ -64,9 +64,8 @@ public:
     // if callback does not change the mode itself
     void on_next_key(KeyCallback callback);
 
-    // read and process all inputs available in context
-    // user interface
-    void handle_available_inputs();
+    // process the given key
+    void handle_key(Key key);
 
     void start_recording(char reg);
     bool is_recording() const;
