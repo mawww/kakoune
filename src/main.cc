@@ -95,7 +95,7 @@ void register_env_vars()
                                    { return Server::instance().filename(); });
     shell_manager.register_env_var("client",
                                    [](const String& name, const Context& context)
-                                   { return ClientManager::instance().get_client(context).name(); });
+                                   { return context.client().name(); });
     shell_manager.register_env_var("cursor_line",
                                    [](const String& name, const Context& context)
                                    { return to_string(context.editor().main_selection().last().line + 1); });
