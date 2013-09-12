@@ -31,7 +31,7 @@ def clang-complete %{
 def clang-enable-autocomplete %{
     hook window -id clang-autocomplete InsertIdle .* %{ eval -draft %{
         exec <a-h>
-        %sh{ [[ $kak_selection =~ .*(\.|->|::).$ ]] && echo "exec <a-space>; echo 'completing...'; clang-complete" }
+        %sh{ [[ $kak_selection =~ .*(\.|->|::).$ ]] && echo "exec <a-space>; eval -client $kak_client echo 'completing...'; clang-complete" }
     }}
 }
 
