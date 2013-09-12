@@ -9,21 +9,21 @@ namespace Kakoune
 class Editor;
 class Window;
 class Buffer;
-class InputHandler;
+class Client;
 class UserInterface;
 class DisplayLine;
 
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
-// The Context object links an InputHandler, an Editor (which may be a Window),
+// The Context object links an Client, an Editor (which may be a Window),
 // and a UserInterface. It may represent an interactive user window, or
 // a hook execution or a macro replay.
 struct Context
 {
     Context();
     explicit Context(Editor& editor);
-    Context(InputHandler& input_handler, Editor& editor);
+    Context(Client& client, Editor& editor);
     ~Context();
 
     Context(const Context&) = delete;
@@ -38,11 +38,11 @@ struct Context
     Window& window() const;
     bool has_window() const;
 
-    InputHandler& input_handler() const;
-    bool has_input_handler() const { return (bool)m_input_handler; }
+    Client& client() const;
+    bool has_client() const { return (bool)m_client; }
 
     UserInterface& ui() const;
-    bool has_ui() const { return (bool)m_input_handler; }
+    bool has_ui() const { return (bool)m_client; }
 
     void change_editor(Editor& editor);
 
@@ -59,7 +59,7 @@ struct Context
     int& numeric_param() { return m_numeric_param; }
 private:
     safe_ptr<Editor>        m_editor;
-    safe_ptr<InputHandler>  m_input_handler;
+    safe_ptr<Client>  m_client;
 
     int m_numeric_param = 0;
 

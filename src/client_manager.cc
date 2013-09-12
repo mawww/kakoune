@@ -33,11 +33,11 @@ String ClientManager::generate_name() const
     }
 }
 
-InputHandler* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                           const String& init_commands)
+Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
+                                     const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
-    InputHandler* client = new InputHandler{std::move(ui), get_unused_window_for_buffer(buffer),
+    Client* client = new Client{std::move(ui), get_unused_window_for_buffer(buffer),
                                             generate_name()};
     m_clients.emplace_back(client);
     try
@@ -80,7 +80,7 @@ InputHandler* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     return client;
 }
 
-void ClientManager::remove_client(InputHandler& client)
+void ClientManager::remove_client(Client& client)
 {
     for (auto it = m_clients.begin(); it != m_clients.end(); ++it)
     {
@@ -101,7 +101,7 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)
            continue;
 
         auto it = std::find_if(m_clients.begin(), m_clients.end(),
-                               [&](const std::unique_ptr<InputHandler>& client)
+                               [&](const std::unique_ptr<Client>& client)
                                { return &client->context().window() == w.get(); });
         if (it == m_clients.end())
         {
@@ -145,16 +145,16 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_windows.erase(end, m_windows.end());
 }
 
-void ClientManager::set_client_name(InputHandler& client, String name)
+void ClientManager::set_client_name(Client& client, String name)
 {
-    auto it = find_if(m_clients, [&name](std::unique_ptr<InputHandler>& client)
+    auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
                                  { return client->m_name == name; });
     if (it != m_clients.end() and it->get() != &client)
         throw runtime_error("name not unique: " + name);
     client.m_name = std::move(name);
 }
 
-InputHandler& ClientManager::get_client(const Context& context)
+Client& ClientManager::get_client(const Context& context)
 {
     for (auto& client : m_clients)
     {
@@ -164,7 +164,7 @@ InputHandler& ClientManager::get_client(const Context& context)
     throw runtime_error("no client for current context");
 }
 
-InputHandler& ClientManager::get_client(const String& name)
+Client& ClientManager::get_client(const String& name)
 {
     for (auto& client : m_clients)
     {
@@ -174,7 +174,7 @@ InputHandler& ClientManager::get_client(const String& name)
     throw runtime_error("no client named: " + name);
 }
 
-static DisplayLine generate_status_line(InputHandler& client)
+static DisplayLine generate_status_line(Client& client)
 {
     auto& context = client.context();
     auto pos = context.editor().main_selection().last();
@@ -185,7 +185,7 @@ static DisplayLine generate_status_line(InputHandler& client)
         << " " << (int)pos.line+1 << ":" << (int)col+1;
     if (context.buffer().is_modified())
         oss << " [+]";
-    if (context.input_handler().is_recording())
+    if (context.client().is_recording())
        oss << " [recording]";
     if (context.buffer().flags() & Buffer::Flags::New)
         oss << " [new file]";

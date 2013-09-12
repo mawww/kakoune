@@ -1,4 +1,4 @@
-#include "input_handler.hh"
+#include "client.hh"
 
 #include "color_registry.hh"
 #include "context.hh"
@@ -20,21 +20,21 @@ namespace Kakoune
 class InputMode
 {
 public:
-    InputMode(InputHandler& input_handler) : m_input_handler(input_handler) {}
+    InputMode(Client& client) : m_client(client) {}
     virtual ~InputMode() {}
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
     virtual void on_key(Key key) = 0;
-    Context& context() const { return m_input_handler.context(); }
+    Context& context() const { return m_client.context(); }
 
-    using Insertion = InputHandler::Insertion;
-    Insertion& last_insert() { return m_input_handler.m_last_insert; }
+    using Insertion = Client::Insertion;
+    Insertion& last_insert() { return m_client.m_last_insert; }
 
 protected:
     InputMode& reset_normal_mode();
 private:
-    InputHandler& m_input_handler;
+    Client& m_client;
 };
 
 namespace InputModes
@@ -45,8 +45,8 @@ static constexpr std::chrono::milliseconds idle_timeout{100};
 class Normal : public InputMode
 {
 public:
-    Normal(InputHandler& input_handler)
-        : InputMode(input_handler),
+    Normal(Client& client)
+        : InputMode(client),
           m_idle_timer{Clock::now() + idle_timeout, [this](Timer& timer) {
               context().hooks().run_hook("NormalIdle", "", context());
           }}
@@ -162,9 +162,9 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(InputHandler& input_handler, memoryview<String> choices,
+    Menu(Client& client, memoryview<String> choices,
          MenuCallback callback)
-        : InputMode(input_handler),
+        : InputMode(client),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
@@ -291,9 +291,9 @@ String common_prefix(memoryview<String> strings)
 class Prompt : public InputMode
 {
 public:
-    Prompt(InputHandler& input_handler, const String& prompt,
+    Prompt(Client& client, const String& prompt,
            ColorPair colors, Completer completer, PromptCallback callback)
-        : InputMode(input_handler), m_prompt(prompt), m_prompt_colors(colors),
+        : InputMode(client), m_prompt(prompt), m_prompt_colors(colors),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
@@ -474,8 +474,8 @@ std::unordered_map<String, std::vector<String>> Prompt::ms_history;
 class NextKey : public InputMode
 {
 public:
-    NextKey(InputHandler& input_handler, KeyCallback callback)
-        : InputMode(input_handler), m_callback(callback) {}
+    NextKey(Client& client, KeyCallback callback)
+        : InputMode(client), m_callback(callback) {}
 
     void on_key(Key key) override
     {
@@ -795,8 +795,8 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(InputHandler& input_handler, InsertMode mode)
-        : InputMode(input_handler),
+    Insert(Client& client, InsertMode mode)
+        : InputMode(client),
           m_inserter(context().editor(), mode),
           m_completer(context()),
           m_idle_timer{Clock::now() + idle_timeout,
@@ -908,28 +908,28 @@ private:
 
 InputMode& InputMode::reset_normal_mode()
 {
-    m_input_handler.m_mode_trash.emplace_back(std::move(m_input_handler.m_mode));
-    m_input_handler.m_mode.reset(new InputModes::Normal(m_input_handler));
-    return *m_input_handler.m_mode;
+    m_client.m_mode_trash.emplace_back(std::move(m_client.m_mode));
+    m_client.m_mode.reset(new InputModes::Normal(m_client));
+    return *m_client.m_mode;
 }
 
 
-InputHandler::InputHandler(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
+Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
     : m_ui(std::move(ui)), m_context(*this, editor), m_mode(new InputModes::Normal(*this)), m_name(name)
 {
 }
 
-InputHandler::~InputHandler()
+Client::~Client()
 {
 }
 
-void InputHandler::insert(InsertMode mode)
+void Client::insert(InsertMode mode)
 {
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Insert(*this, mode));
 }
 
-void InputHandler::repeat_last_insert()
+void Client::repeat_last_insert()
 {
     if (m_last_insert.second.empty())
         return;
@@ -945,7 +945,7 @@ void InputHandler::repeat_last_insert()
     kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
-void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
+void Client::prompt(const String& prompt, ColorPair prompt_colors,
                           Completer completer, PromptCallback callback)
 {
     m_mode_trash.emplace_back(std::move(m_mode));
@@ -953,21 +953,21 @@ void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
                                         completer, callback));
 }
 
-void InputHandler::set_prompt_colors(ColorPair prompt_colors)
+void Client::set_prompt_colors(ColorPair prompt_colors)
 {
     InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(m_mode.get());
     if (prompt)
         prompt->set_prompt_colors(prompt_colors);
 }
 
-void InputHandler::menu(memoryview<String> choices,
+void Client::menu(memoryview<String> choices,
                         MenuCallback callback)
 {
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::Menu(*this, choices, callback));
 }
 
-void InputHandler::on_next_key(KeyCallback callback)
+void Client::on_next_key(KeyCallback callback)
 {
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new InputModes::NextKey(*this, callback));
@@ -978,7 +978,7 @@ bool is_valid(Key key)
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }
 
-void InputHandler::handle_key(Key key)
+void Client::handle_key(Key key)
 {
     if (is_valid(key))
     {
@@ -993,19 +993,19 @@ void InputHandler::handle_key(Key key)
     m_mode_trash.clear();
 }
 
-void InputHandler::start_recording(char reg)
+void Client::start_recording(char reg)
 {
     kak_assert(m_recording_reg == 0);
     m_recorded_keys = "";
     m_recording_reg = reg;
 }
 
-bool InputHandler::is_recording() const
+bool Client::is_recording() const
 {
     return m_recording_reg != 0;
 }
 
-void InputHandler::stop_recording()
+void Client::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
     RegisterManager::instance()[m_recording_reg] = memoryview<String>(m_recorded_keys);

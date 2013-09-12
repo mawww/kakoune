@@ -25,12 +25,12 @@ using namespace std::placeholders;
 template<InsertMode mode>
 void insert(Context& context)
 {
-    context.input_handler().insert(mode);
+    context.client().insert(mode);
 }
 
 void repeat_insert(Context& context)
 {
-    context.input_handler().repeat_last_insert();
+    context.client().repeat_last_insert();
 }
 
 bool show_auto_info_ifn(const String& info, const Context& context)
@@ -48,7 +48,7 @@ template<typename Cmd>
 void on_next_key_with_autoinfo(const Context& context, Cmd cmd, const std::string& info)
 {
     const bool hide = show_auto_info_ifn(info, context);
-    context.input_handler().on_next_key([hide,cmd](Key key, Context& context) mutable {
+    context.client().on_next_key([hide,cmd](Key key, Context& context) mutable {
             if (hide)
                 context.ui().info_hide();
             cmd(key, context);
@@ -253,7 +253,7 @@ void for_each_char(Context& context)
 
 void command(Context& context)
 {
-    context.input_handler().prompt(
+    context.client().prompt(
         ":", get_color("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
         [](const String& cmdline, PromptEvent event, Context& context) {
@@ -264,7 +264,7 @@ void command(Context& context)
 
 void pipe(Context& context)
 {
-    context.input_handler().prompt("pipe:", get_color("Prompt"), complete_nothing,
+    context.client().prompt("pipe:", get_color("Prompt"), complete_nothing,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -293,7 +293,7 @@ void search(Context& context)
 {
     const char* prompt = direction == Forward ? "search:" : "reverse search:";
     DynamicSelectionList selections{context.buffer(), context.editor().selections()};
-    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
+    context.client().prompt(prompt, get_color("Prompt"), complete_nothing,
         [selections](const String& str, PromptEvent event, Context& context) {
             try
             {
@@ -303,7 +303,7 @@ void search(Context& context)
                     return;
 
                 Regex ex{str};
-                context.input_handler().set_prompt_colors(get_color("Prompt"));
+                context.client().set_prompt_colors(get_color("Prompt"));
                 if (event == PromptEvent::Validate)
                 {
                     if (str.empty())
@@ -322,7 +322,7 @@ void search(Context& context)
                 if (event == PromptEvent::Validate)
                     throw runtime_error("regex error: "_str + err.what());
                 else
-                    context.input_handler().set_prompt_colors(get_color("Error"));
+                    context.client().set_prompt_colors(get_color("Error"));
             }
             catch (runtime_error&)
             {
@@ -446,7 +446,7 @@ void paste(Context& context)
 template<typename T>
 void regex_prompt(Context& context, const String prompt, T on_validate)
 {
-    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
+    context.client().prompt(prompt, get_color("Prompt"), complete_nothing,
         [=](const String& str, PromptEvent event, Context& context) {
             if (event == PromptEvent::Validate)
             {
@@ -462,7 +462,7 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
             else if (event == PromptEvent::Change)
             {
                 const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
-                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
+                context.client().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
             }
         });
 }
@@ -693,12 +693,12 @@ void select_to_next_char(Context& context)
 
 void start_or_end_macro_recording(Context& context)
 {
-    if (context.input_handler().is_recording())
-        context.input_handler().stop_recording();
+    if (context.client().is_recording())
+        context.client().stop_recording();
     else
         on_next_key_with_autoinfo(context, [](Key key, Context& context) {
             if (key.modifiers == Key::Modifiers::None)
-                context.input_handler().start_recording(key.key);
+                context.client().start_recording(key.key);
         },
         "╭──┤record macro├──╮\n"
         "│ enter macro name │\n"

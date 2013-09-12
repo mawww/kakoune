@@ -1,5 +1,5 @@
-#ifndef input_handler_hh_INCLUDED
-#define input_handler_hh_INCLUDED
+#ifndef client_hh_INCLUDED
+#define client_hh_INCLUDED
 
 #include "color.hh"
 #include "completion.hh"
@@ -34,11 +34,11 @@ using KeyCallback = std::function<void (Key, Context&)>;
 class InputMode;
 enum class InsertMode : unsigned;
 
-class InputHandler : public SafeCountable
+class Client : public SafeCountable
 {
 public:
-    InputHandler(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name);
-    ~InputHandler();
+    Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name);
+    ~Client();
 
     // switch to insert mode
     void insert(InsertMode mode);
@@ -96,4 +96,4 @@ struct prompt_aborted {};
 
 }
 
-#endif // input_handler_hh_INCLUDED
+#endif // client_hh_INCLUDED

@@ -13,7 +13,7 @@
 #include "filter.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
-#include "input_handler.hh"
+#include "client.hh"
 #include "option_manager.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
@@ -570,12 +570,12 @@ void context_wrap(CommandParameters params, Context& context, Func func)
     if (parser.has_option("draft"))
     {
         Editor& editor = real_context.editor();
-        InputHandler input_handler(std::unique_ptr<UserInterface>(new DraftUI()), editor,
-                                   real_context.has_input_handler() ?
-                                   real_context.input_handler().name() : "");
+        Client client(std::unique_ptr<UserInterface>(new DraftUI()), editor,
+                                   real_context.has_client() ?
+                                   real_context.client().name() : "");
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
         auto restore_sels = on_scope_end([&]{ editor.select(sels); });
-        func(parser, input_handler.context());
+        func(parser, client.context());
     }
     else
         func(parser, real_context);
@@ -637,7 +637,7 @@ void menu(CommandParameters params, Context& context)
             select_cmds.push_back(parser[i+2]);
     }
 
-    context.input_handler().menu(choices,
+    context.client().menu(choices,
         [=](int choice, MenuEvent event, Context& context) {
             if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);
@@ -860,7 +860,7 @@ void exec_keys(const KeyList& keys, Context& context)
     scoped_edition edition(context.editor());
 
     for (auto& key : keys)
-        context.input_handler().handle_key(key);
+        context.client().handle_key(key);
 }
 
 void register_commands()
