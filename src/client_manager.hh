@@ -26,9 +26,8 @@ public:
 
     void redraw_clients() const;
 
-    Client& get_client(const Context& context);
     Client&  get_client(const String& name);
-    void set_client_name(Client& client, String name);
+    bool validate_client_name(const String& name) const;
     void remove_client(Client& client);
 
 private:

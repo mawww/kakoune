@@ -73,12 +73,12 @@ public:
 
     Context& context() { return m_context; }
     const String& name() const { return m_name; }
+    void set_name(String name) { m_name = std::move(name); }
 
     UserInterface& ui() const { return *m_ui; }
 private:
     Context m_context;
     friend class InputMode;
-    friend class ClientManager;
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<InputMode> m_mode;
     std::vector<std::unique_ptr<InputMode>> m_mode_trash;

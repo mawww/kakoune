@@ -777,8 +777,10 @@ void set_client_name(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, OptionMap{},
                             ParametersParser::Flags::None, 1, 1);
-    auto& manager = ClientManager::instance();
-    manager.set_client_name(manager.get_client(context), params[0]);
+    if (ClientManager::instance().validate_client_name(params[0]))
+        context.client().set_name(params[0]);
+    else if (context.client().name() != params[0])
+        throw runtime_error("client name '" + params[0] + "' is not unique");
 }
 
 void set_register(CommandParameters params, Context& context)

@@ -19,16 +19,7 @@ String ClientManager::generate_name() const
     for (int i = 0; true; ++i)
     {
         String name = "unnamed" + to_string(i);
-        bool found = false;
-        for (auto& client : m_clients)
-        {
-            if (client->m_name == name)
-            {
-                found = true;
-                break;
-            }
-        }
-        if (not found)
+        if (validate_client_name(name))
             return name;
     }
 }
@@ -123,7 +114,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             continue;
 
         if (client->context().editor().is_editing())
-            throw runtime_error("client '" + client->m_name + "' is inserting in '" +
+            throw runtime_error("client '" + client->name() + "' is inserting in '" +
                                 buffer.display_name() + '\'');
 
         // change client context to edit the first buffer which is not the
@@ -145,30 +136,18 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_windows.erase(end, m_windows.end());
 }
 
-void ClientManager::set_client_name(Client& client, String name)
+bool ClientManager::validate_client_name(const String& name) const
 {
-    auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
-                                 { return client->m_name == name; });
-    if (it != m_clients.end() and it->get() != &client)
-        throw runtime_error("name not unique: " + name);
-    client.m_name = std::move(name);
-}
-
-Client& ClientManager::get_client(const Context& context)
-{
-    for (auto& client : m_clients)
-    {
-        if (&client->context() == &context)
-            return *client;
-    }
-    throw runtime_error("no client for current context");
+    auto it = find_if(m_clients, [&](const std::unique_ptr<Client>& client)
+                                 { return client->name() == name; });
+    return it == m_clients.end();
 }
 
 Client& ClientManager::get_client(const String& name)
 {
     for (auto& client : m_clients)
     {
-        if (client->m_name == name)
+        if (client->name() == name)
             return *client;
     }
     throw runtime_error("no client named: " + name);
