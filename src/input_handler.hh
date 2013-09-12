@@ -37,7 +37,7 @@ enum class InsertMode : unsigned;
 class InputHandler : public SafeCountable
 {
 public:
-    InputHandler(UserInterface& ui);
+    InputHandler(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name);
     ~InputHandler();
 
     // switch to insert mode
@@ -72,11 +72,18 @@ public:
     void stop_recording();
 
     Context& context() { return m_context; }
+    const String& name() const { return m_name; }
+
+    UserInterface& ui() const { return *m_ui; }
 private:
     Context m_context;
     friend class InputMode;
+    friend class ClientManager;
+    std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<InputMode> m_mode;
     std::vector<std::unique_ptr<InputMode>> m_mode_trash;
+
+    String m_name;
 
     using Insertion = std::pair<InsertMode, std::vector<Key>>;
     Insertion m_last_insert = {InsertMode::Insert, {}};

@@ -12,8 +12,8 @@ Context::Context() = default;
 Context::Context(Editor& editor)
     : m_editor(&editor) {}
 
-Context::Context(InputHandler& input_handler, UserInterface& ui)
-    : m_input_handler(&input_handler), m_ui(&ui) {}
+Context::Context(InputHandler& input_handler, Editor& editor)
+    : m_input_handler(&input_handler), m_editor(&editor) {}
 
 Context::~Context() = default;
 
@@ -54,7 +54,7 @@ UserInterface& Context::ui() const
 {
     if (not has_ui())
         throw runtime_error("no user interface in context");
-    return *m_ui;
+    return m_input_handler->ui();
 }
 
 OptionManager& Context::options() const

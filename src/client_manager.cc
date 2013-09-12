@@ -11,16 +11,6 @@
 namespace Kakoune
 {
 
-Client::Client(std::unique_ptr<UserInterface>&& ui,
-               Window& window, String name)
-    : m_user_interface(std::move(ui)),
-      m_input_handler(*m_user_interface),
-      m_name(std::move(name))
-{
-    kak_assert(not m_name.empty());
-    context().change_editor(window);
-}
-
 ClientManager::ClientManager() = default;
 ClientManager::~ClientManager() = default;
 
@@ -43,12 +33,12 @@ String ClientManager::generate_name() const
     }
 }
 
-Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
-                                     const String& init_commands)
+InputHandler* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
+                                           const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
-    Client* client = new Client{std::move(ui), get_unused_window_for_buffer(buffer),
-                                generate_name()};
+    InputHandler* client = new InputHandler{std::move(ui), get_unused_window_for_buffer(buffer),
+                                            generate_name()};
     m_clients.emplace_back(client);
     try
     {
@@ -66,11 +56,11 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         return nullptr;
     }
 
-    client->m_user_interface->set_input_callback([client, this]() {
+    client->ui().set_input_callback([client, this]() {
         try
         {
-            while (client->m_user_interface->is_key_available())
-                client->m_input_handler.handle_key(client->m_user_interface->get_key());
+            while (client->ui().is_key_available())
+                client->handle_key(client->ui().get_key());
             client->context().window().forget_timestamp();
         }
         catch (Kakoune::runtime_error& error)
@@ -90,7 +80,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     return client;
 }
 
-void ClientManager::remove_client(Client& client)
+void ClientManager::remove_client(InputHandler& client)
 {
     for (auto it = m_clients.begin(); it != m_clients.end(); ++it)
     {
@@ -111,7 +101,7 @@ Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)
            continue;
 
         auto it = std::find_if(m_clients.begin(), m_clients.end(),
-                               [&](const std::unique_ptr<Client>& client)
+                               [&](const std::unique_ptr<InputHandler>& client)
                                { return &client->context().window() == w.get(); });
         if (it == m_clients.end())
         {
@@ -155,16 +145,16 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_windows.erase(end, m_windows.end());
 }
 
-void ClientManager::set_client_name(Client& client, String name)
+void ClientManager::set_client_name(InputHandler& client, String name)
 {
-    auto it = find_if(m_clients, [&name](std::unique_ptr<Client>& client)
+    auto it = find_if(m_clients, [&name](std::unique_ptr<InputHandler>& client)
                                  { return client->m_name == name; });
     if (it != m_clients.end() and it->get() != &client)
         throw runtime_error("name not unique: " + name);
     client.m_name = std::move(name);
 }
 
-Client& ClientManager::get_client(const Context& context)
+InputHandler& ClientManager::get_client(const Context& context)
 {
     for (auto& client : m_clients)
     {
@@ -174,7 +164,7 @@ Client& ClientManager::get_client(const Context& context)
     throw runtime_error("no client for current context");
 }
 
-Client& ClientManager::get_client(const String& name)
+InputHandler& ClientManager::get_client(const String& name)
 {
     for (auto& client : m_clients)
     {
@@ -184,7 +174,7 @@ Client& ClientManager::get_client(const String& name)
     throw runtime_error("no client named: " + name);
 }
 
-static DisplayLine generate_status_line(Client& client)
+static DisplayLine generate_status_line(InputHandler& client)
 {
     auto& context = client.context();
     auto pos = context.editor().main_selection().last();

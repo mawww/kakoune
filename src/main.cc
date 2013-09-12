@@ -150,7 +150,7 @@ void create_local_client(const String& init_command)
     };
 
     UserInterface* ui = new LocalNCursesUI{};
-    static Client* client = ClientManager::instance().create_client(
+    static InputHandler* client = ClientManager::instance().create_client(
         std::unique_ptr<UserInterface>{ui}, init_command);
     signal(SIGHUP, [](int) {
         if (client)

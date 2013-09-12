@@ -914,8 +914,8 @@ InputMode& InputMode::reset_normal_mode()
 }
 
 
-InputHandler::InputHandler(UserInterface& ui)
-    : m_context(*this, ui), m_mode(new InputModes::Normal(*this))
+InputHandler::InputHandler(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
+    : m_ui(std::move(ui)), m_context(*this, editor), m_mode(new InputModes::Normal(*this)), m_name(name)
 {
 }
 

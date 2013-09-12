@@ -23,7 +23,7 @@ struct Context
 {
     Context();
     explicit Context(Editor& editor);
-    Context(InputHandler& input_handler, UserInterface& ui);
+    Context(InputHandler& input_handler, Editor& editor);
     ~Context();
 
     Context(const Context&) = delete;
@@ -42,7 +42,7 @@ struct Context
     bool has_input_handler() const { return (bool)m_input_handler; }
 
     UserInterface& ui() const;
-    bool has_ui() const { return (bool)m_ui; }
+    bool has_ui() const { return (bool)m_input_handler; }
 
     void change_editor(Editor& editor);
 
@@ -60,7 +60,6 @@ struct Context
 private:
     safe_ptr<Editor>        m_editor;
     safe_ptr<InputHandler>  m_input_handler;
-    safe_ptr<UserInterface> m_ui;
 
     int m_numeric_param = 0;
 
