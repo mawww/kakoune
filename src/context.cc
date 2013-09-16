@@ -75,10 +75,10 @@ HookManager& Context::hooks() const
     return GlobalHooks::instance();
 }
 
-void Context::print_status(const DisplayLine& status) const
+void Context::print_status(DisplayLine status) const
 {
-    if (has_ui())
-        ui().print_status(status);
+    if (has_client())
+        client().print_status(std::move(status));
 }
 
 void Context::push_jump()

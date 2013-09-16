@@ -151,45 +151,10 @@ Client& ClientManager::get_client(const String& name)
     throw runtime_error("no client named: " + name);
 }
 
-static DisplayLine generate_status_line(Client& client)
-{
-    auto& context = client.context();
-    auto pos = context.editor().main_selection().last();
-    auto col = context.buffer()[pos.line].char_count_to(pos.column);
-
-    std::ostringstream oss;
-    oss << context.buffer().display_name()
-        << " " << (int)pos.line+1 << ":" << (int)col+1;
-    if (context.buffer().is_modified())
-        oss << " [+]";
-    if (context.client().is_recording())
-       oss << " [recording]";
-    if (context.buffer().flags() & Buffer::Flags::New)
-        oss << " [new file]";
-    oss << " [" << context.editor().selections().size() << " sel]";
-    if (context.editor().is_editing())
-        oss << " [insert]";
-    oss << " - " << client.name();
-    return { oss.str(), get_color("StatusLine") };
-}
-
 void ClientManager::redraw_clients() const
 {
     for (auto& client : m_clients)
-    {
-        Context& context = client->context();
-        if (context.window().timestamp() != context.buffer().timestamp())
-        {
-            DisplayCoord dimensions = context.ui().dimensions();
-            if (dimensions == DisplayCoord{0,0})
-                return;
-            context.window().set_dimensions(dimensions);
-            context.window().update_display_buffer();;
-
-            context.ui().draw(context.window().display_buffer(),
-                              generate_status_line(*client));
-        }
-    }
+        client->redraw_ifn();
 }
 
 }

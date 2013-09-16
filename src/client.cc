@@ -182,7 +182,7 @@ public:
         if (key == Key(Key::Modifiers::Control, 'm'))
         {
             context().ui().menu_hide();
-            context().ui().print_status(DisplayLine{});
+            context().print_status(DisplayLine{});
             reset_normal_mode();
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
@@ -195,7 +195,7 @@ public:
                 m_edit_filter = false;
                 m_filter = boost::regex(".*");
                 m_filter_editor.reset("");
-                context().ui().print_status(DisplayLine{});
+                context().print_status(DisplayLine{});
             }
             else
             {
@@ -246,7 +246,7 @@ public:
         {
             auto display_line = m_filter_editor.build_display_line();
             display_line.insert(display_line.begin(), { "filter:"_str, get_color("Prompt") });
-            context().ui().print_status(display_line);
+            context().print_status(display_line);
         }
    }
 
@@ -320,7 +320,7 @@ public:
                     history.erase(it);
                 history.push_back(line);
             }
-            context().ui().print_status(DisplayLine{});
+            context().print_status(DisplayLine{});
             context().ui().menu_hide();
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
@@ -330,7 +330,7 @@ public:
         }
         else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
         {
-            context().ui().print_status(DisplayLine{});
+            context().print_status(DisplayLine{});
             context().ui().menu_hide();
             reset_normal_mode();
             m_callback(line, PromptEvent::Abort, context());
@@ -453,7 +453,7 @@ private:
     {
         auto display_line = m_line_editor.build_display_line();
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_colors });
-        context().ui().print_status(display_line);
+        context().print_status(display_line);
     }
 
     PromptCallback m_callback;
@@ -1017,6 +1017,49 @@ void Client::stop_recording()
     kak_assert(m_recording_reg != 0);
     RegisterManager::instance()[m_recording_reg] = memoryview<String>(m_recorded_keys);
     m_recording_reg = 0;
+}
+
+void Client::print_status(DisplayLine status_line)
+{
+    m_status_line = std::move(status_line);
+    m_context.window().forget_timestamp();
+}
+
+static DisplayLine generate_mode_line(Client& client)
+{
+    auto& context = client.context();
+    auto pos = context.editor().main_selection().last();
+    auto col = context.buffer()[pos.line].char_count_to(pos.column);
+
+    std::ostringstream oss;
+    oss << context.buffer().display_name()
+        << " " << (int)pos.line+1 << ":" << (int)col+1;
+    if (context.buffer().is_modified())
+        oss << " [+]";
+    if (context.client().is_recording())
+       oss << " [recording]";
+    if (context.buffer().flags() & Buffer::Flags::New)
+        oss << " [new file]";
+    oss << " [" << context.editor().selections().size() << " sel]";
+    if (context.editor().is_editing())
+        oss << " [insert]";
+    oss << " - " << client.name();
+    return { oss.str(), get_color("StatusLine") };
+}
+
+void Client::redraw_ifn()
+{
+    if (m_context.window().timestamp() != m_context.buffer().timestamp())
+    {
+        DisplayCoord dimensions = m_context.ui().dimensions();
+        if (dimensions == DisplayCoord{0,0})
+            return;
+        m_context.window().set_dimensions(dimensions);
+        m_context.window().update_display_buffer();;
+
+        m_context.ui().draw(m_context.window().display_buffer(),
+                            m_status_line, generate_mode_line(*this));
+    }
 }
 
 }

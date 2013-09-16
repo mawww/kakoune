@@ -8,6 +8,7 @@
 #include "keys.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "display_buffer.hh"
 
 namespace Kakoune
 {
@@ -78,6 +79,10 @@ public:
     const String& name() const { return m_name; }
     void set_name(String name) { m_name = std::move(name); }
 
+    void print_status(DisplayLine status_line);
+
+    void redraw_ifn();
+
     UserInterface& ui() const { return *m_ui; }
 private:
     Context m_context;
@@ -87,6 +92,7 @@ private:
     std::vector<std::unique_ptr<InputMode>> m_mode_trash;
 
     String m_name;
+    DisplayLine m_status_line;
 
     using Insertion = std::pair<InsertMode, std::vector<Key>>;
     Insertion m_last_insert = {InsertMode::Insert, {}};

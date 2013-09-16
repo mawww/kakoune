@@ -49,7 +49,7 @@ struct Context
     OptionManager& options() const;
     HookManager& hooks() const;
 
-    void print_status(const DisplayLine& status) const;
+    void print_status(DisplayLine status) const;
 
     void push_jump();
     const DynamicSelectionList& jump_forward();

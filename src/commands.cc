@@ -540,8 +540,6 @@ void declare_option(CommandParameters params, Context& context)
 class DraftUI : public UserInterface
 {
 public:
-    void print_status(const DisplayLine&) override {}
-
     void menu_show(memoryview<String>, DisplayCoord, ColorPair, ColorPair, MenuStyle) override {}
     void menu_select(int) override {}
     void menu_hide() override {}
@@ -549,7 +547,7 @@ public:
     void info_show(const String&, DisplayCoord, ColorPair, MenuStyle) override {}
     void info_hide() override {}
 
-    void draw(const DisplayBuffer&, const DisplayLine&) override {}
+    void draw(const DisplayBuffer&, const DisplayLine&, const DisplayLine&) override {}
     DisplayCoord dimensions() override { return {0,0}; }
     bool is_key_available() override { return false; }
     Key  get_key() override { return 'a'; }
@@ -571,8 +569,7 @@ void context_wrap(CommandParameters params, Context& context, Func func)
     {
         Editor& editor = real_context.editor();
         Client client(std::unique_ptr<UserInterface>(new DraftUI()), editor,
-                                   real_context.has_client() ?
-                                   real_context.client().name() : "");
+                      real_context.has_client() ? real_context.client().name() : "");
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
         auto restore_sels = on_scope_end([&]{ editor.select(sels); });
         func(parser, client.context());

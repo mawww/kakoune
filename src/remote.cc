@@ -20,7 +20,6 @@ namespace Kakoune
 
 enum class RemoteUIMsg
 {
-    PrintStatus,
     MenuShow,
     MenuSelect,
     MenuHide,
@@ -217,8 +216,6 @@ public:
     RemoteUI(int socket);
     ~RemoteUI();
 
-    void print_status(const DisplayLine& status) override;
-
     void menu_show(memoryview<String> choices,
                    DisplayCoord anchor, ColorPair fg, ColorPair bg,
                    MenuStyle style) override;
@@ -230,6 +227,7 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
+              const DisplayLine& status_line,
               const DisplayLine& mode_line) override;
 
     bool is_key_available() override;
@@ -255,13 +253,6 @@ RemoteUI::~RemoteUI()
 {
     write_debug("remote client disconnected: " + to_string(m_socket_watcher.fd()));
     close(m_socket_watcher.fd());
-}
-
-void RemoteUI::print_status(const DisplayLine& status)
-{
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::PrintStatus);
-    msg.write(status);
 }
 
 void RemoteUI::menu_show(memoryview<String> choices,
@@ -308,11 +299,13 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
+                    const DisplayLine& status_line,
                     const DisplayLine& mode_line)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Draw);
     msg.write(display_buffer);
+    msg.write(status_line);
     msg.write(mode_line);
 }
 
@@ -385,12 +378,6 @@ void RemoteClient::process_next_message()
     RemoteUIMsg msg = read<RemoteUIMsg>(socket);
     switch (msg)
     {
-    case RemoteUIMsg::PrintStatus:
-    {
-        auto status = read<DisplayLine>(socket);
-        m_ui->print_status(status);
-        break;
-    }
     case RemoteUIMsg::MenuShow:
     {
         auto choices = read_vector<String>(socket);
@@ -422,8 +409,9 @@ void RemoteClient::process_next_message()
     case RemoteUIMsg::Draw:
     {
         auto display_buffer = read<DisplayBuffer>(socket);
+        auto status_line = read<DisplayLine>(socket);
         auto mode_line = read<DisplayLine>(socket);
-        m_ui->draw(display_buffer, mode_line);
+        m_ui->draw(display_buffer, status_line, mode_line);
         break;
     }
     }

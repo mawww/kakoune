@@ -20,8 +20,8 @@ public:
     NCursesUI& operator=(const NCursesUI&) = delete;
 
     void draw(const DisplayBuffer& display_buffer,
+              const DisplayLine& status_line,
               const DisplayLine& mode_line) override;
-    void print_status(const DisplayLine& status) override;
 
     bool   is_key_available() override;
     Key    get_key() override;
@@ -48,8 +48,6 @@ private:
 
     DisplayCoord m_dimensions;
     void update_dimensions();
-
-    DisplayLine m_status_line;
 
     NCursesWin* m_menu_win = nullptr;
     std::vector<String> m_choices;

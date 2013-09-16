@@ -240,6 +240,7 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
 }
 
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
+                     const DisplayLine& status_line,
                      const DisplayLine& mode_line)
 {
     LineCount line_index = 0;
@@ -265,10 +266,10 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     move((int)m_dimensions.line, 0);
     clrtoeol();
-    draw_line(m_status_line, 0);
+    draw_line(status_line, 0);
     CharCount status_len = mode_line.length();
     // only draw mode_line if it does not overlap one status line
-    if (m_dimensions.column - m_status_line.length() > status_len + 1)
+    if (m_dimensions.column - status_line.length() > status_len + 1)
     {
         CharCount col = m_dimensions.column - status_len;
         move((int)m_dimensions.line, (int)col);
@@ -356,15 +357,6 @@ Key NCursesUI::get_key()
        return utf8::codepoint(getch_iterator{});
     }
     return Key::Invalid;
-}
-
-void NCursesUI::print_status(const DisplayLine& status)
-{
-    m_status_line   = status;
-    move((int)m_dimensions.line, 0);
-    clrtoeol();
-    draw_line(status, 0);
-    redraw();
 }
 
 void NCursesUI::draw_menu()
