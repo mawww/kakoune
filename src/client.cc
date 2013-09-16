@@ -978,6 +978,13 @@ bool is_valid(Key key)
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }
 
+void Client::handle_available_input()
+{
+    while (m_ui->is_key_available())
+        handle_key(m_ui->get_key());
+    m_context.window().forget_timestamp();
+}
+
 void Client::handle_key(Key key)
 {
     if (is_valid(key))

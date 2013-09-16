@@ -64,6 +64,9 @@ public:
     // if callback does not change the mode itself
     void on_next_key(KeyCallback callback);
 
+
+    // handle all the keys currently available in the user interface
+    void handle_available_input();
     // process the given key
     void handle_key(Key key);
 

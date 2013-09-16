@@ -50,9 +50,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     client->ui().set_input_callback([client, this]() {
         try
         {
-            while (client->ui().is_key_available())
-                client->handle_key(client->ui().get_key());
-            client->context().window().forget_timestamp();
+            client->handle_available_input();
         }
         catch (Kakoune::runtime_error& error)
         {
