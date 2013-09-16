@@ -981,7 +981,10 @@ bool is_valid(Key key)
 void Client::handle_available_input()
 {
     while (m_ui->is_key_available())
+    {
         handle_key(m_ui->get_key());
+        m_mode_trash.clear();
+    }
     m_context.window().forget_timestamp();
 }
 
@@ -997,7 +1000,6 @@ void Client::handle_key(Key key)
         if (was_recording and is_recording())
             m_recorded_keys += key_to_str(key);
     }
-    m_mode_trash.clear();
 }
 
 void Client::start_recording(char reg)
