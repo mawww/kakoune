@@ -91,6 +91,8 @@ private:
     std::unique_ptr<InputMode> m_mode;
     std::vector<std::unique_ptr<InputMode>> m_mode_trash;
 
+    void change_input_mode(InputMode* new_mode);
+
     String m_name;
     DisplayLine m_status_line;
 

@@ -26,6 +26,7 @@ public:
     InputMode& operator=(const InputMode&) = delete;
 
     virtual void on_key(Key key) = 0;
+    virtual void on_replaced() {}
     Context& context() const { return m_client.context(); }
 
     using Insertion = Client::Insertion;
@@ -54,7 +55,7 @@ public:
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
-    ~Normal()
+    void on_replaced() override
     {
         context().hooks().run_hook("NormalEnd", "", context());
     }
@@ -908,11 +909,9 @@ private:
 
 InputMode& InputMode::reset_normal_mode()
 {
-    m_client.m_mode_trash.emplace_back(std::move(m_client.m_mode));
-    m_client.m_mode.reset(new InputModes::Normal(m_client));
+    m_client.change_input_mode(new InputModes::Normal(m_client));
     return *m_client.m_mode;
 }
-
 
 Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
     : m_ui(std::move(ui)), m_context(*this, editor), m_mode(new InputModes::Normal(*this)), m_name(name)
@@ -923,10 +922,16 @@ Client::~Client()
 {
 }
 
+void Client::change_input_mode(InputMode* new_mode)
+{
+    m_mode->on_replaced();
+    m_mode_trash.emplace_back(std::move(m_mode));
+    m_mode.reset(new_mode);
+}
+
 void Client::insert(InsertMode mode)
 {
-    m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Insert(*this, mode));
+    change_input_mode(new InputModes::Insert(*this, mode));
 }
 
 void Client::repeat_last_insert()
@@ -938,8 +943,7 @@ void Client::repeat_last_insert()
     swap(keys, m_last_insert.second);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Insert(*this, m_last_insert.first));
+    change_input_mode(new InputModes::Insert(*this, m_last_insert.first));
     for (auto& key : keys)
         m_mode->on_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
@@ -948,9 +952,8 @@ void Client::repeat_last_insert()
 void Client::prompt(const String& prompt, ColorPair prompt_colors,
                           Completer completer, PromptCallback callback)
 {
-    m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Prompt(*this, prompt, prompt_colors,
-                                        completer, callback));
+    change_input_mode(new InputModes::Prompt(*this, prompt, prompt_colors,
+                                             completer, callback));
 }
 
 void Client::set_prompt_colors(ColorPair prompt_colors)
@@ -963,14 +966,12 @@ void Client::set_prompt_colors(ColorPair prompt_colors)
 void Client::menu(memoryview<String> choices,
                         MenuCallback callback)
 {
-    m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::Menu(*this, choices, callback));
+    change_input_mode(new InputModes::Menu(*this, choices, callback));
 }
 
 void Client::on_next_key(KeyCallback callback)
 {
-    m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new InputModes::NextKey(*this, callback));
+    change_input_mode(new InputModes::NextKey(*this, callback));
 }
 
 bool is_valid(Key key)
