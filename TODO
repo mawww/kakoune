@@ -51,3 +51,13 @@
     update.
   - Accumulate all the modifications and update the selections with the
     whole knowledge -> try to remove this O(n2) behaviour.
+
+* deffilter/defhl -> add filter or hl to a global group +
+  'addhl ref ...' references a highlighter in the global group
+
+* other types of highlighters (like for correctly supporting nesting,
+  which regex are bad at)
+
+* Naming kakoune sessions at start, and changing name during execution
+
+* support multiple selections per line when aligning
