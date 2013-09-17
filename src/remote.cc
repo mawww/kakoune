@@ -484,7 +484,6 @@ private:
                     write_debug("error running command '" + m_buffer + "' : " + e.what());
                 }
                 catch (client_removed&) {}
-                ClientManager::instance().redraw_clients();
                 close(socket);
                 delete this;
                 return;

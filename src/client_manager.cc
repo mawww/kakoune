@@ -62,9 +62,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         {
             ClientManager::instance().remove_client(*client);
         }
-        ClientManager::instance().redraw_clients();
     });
-    redraw_clients();
 
     return client;
 }

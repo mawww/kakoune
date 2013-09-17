@@ -62,7 +62,6 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         ssize_t count = read(watcher.fd(), data, buffer_size);
         buffer->insert(buffer->end()-1, count > 0 ? String(data, data+count)
                                                   : "*** kak: fifo closed ***\n");
-        ClientManager::instance().redraw_clients();
         if (count <= 0)
         {
             kak_assert(buffer->flags() & Buffer::Flags::Fifo);

@@ -1,4 +1,5 @@
 #include "event_manager.hh"
+#include "client_manager.hh"
 
 #include <poll.h>
 
@@ -73,6 +74,9 @@ void EventManager::handle_next_events()
         if (timer->next_date() <= now)
             timer->run();
     }
+
+    if (ClientManager::has_instance())
+        ClientManager::instance().redraw_clients();
 }
 
 void EventManager::force_signal(int fd)
