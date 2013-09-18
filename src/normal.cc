@@ -756,19 +756,33 @@ void align(Context& context)
     auto get_column = [&buffer](BufferCoord coord)
     { return buffer[coord.line].char_count_to(coord.column); };
 
-    CharCount max_col = 0;
+    std::vector<std::vector<const Selection*>> columns;
+    LineCount last_line = -1;
+    size_t column = 0;
     for (auto& sel : selections)
     {
-        if (sel.first().line != sel.last().line)
+        auto line = sel.last().line;
+        if (sel.first().line != line)
             throw runtime_error("align cannot work with multi line selections");
-        max_col = std::max(get_column(sel.last()), max_col);
+
+        column = (line == last_line) ? column + 1 : 0;
+        if (column >= columns.size())
+            columns.resize(column+1);
+        columns[column].push_back(&sel);
+        last_line = line;
     }
 
-    for (auto& sel : selections)
+    for (auto& col : columns)
     {
-        CharCount padding = max_col - get_column(sel.last());
-        auto it = buffer.iterator_at(insert_at_begin ? sel.min() : sel.last());
-        buffer.insert(it, String{ ' ', padding });
+        CharCount max_col = 0;
+        for (auto& sel : col)
+            max_col = std::max(get_column(sel->last()), max_col);
+        for (auto& sel : col)
+        {
+            CharCount padding = max_col - get_column(sel->last());
+            auto it = buffer.iterator_at(insert_at_begin ? sel->min() : sel->last());
+            buffer.insert(it, String{ ' ', padding });
+        }
     }
 }
 
