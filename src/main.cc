@@ -174,44 +174,45 @@ void signal_handler(int signal)
     abort();
 }
 
-int main(int argc, char* argv[])
+int kakoune(memoryview<String> params)
 {
-    try
+    ParametersParser parser(params, { { "c", true },
+                                      { "e", true },
+                                      { "n", false } });
+
+    String init_command;
+    if (parser.has_option("e"))
+        init_command = parser.option_value("e");
+
+    if (parser.has_option("c"))
     {
-        setlocale(LC_ALL, "");
-
-        signal(SIGSEGV, signal_handler);
-        signal(SIGFPE,  signal_handler);
-        signal(SIGQUIT, signal_handler);
-        signal(SIGTERM, signal_handler);
-
-        std::vector<String> params;
-        for (size_t i = 1; i < argc; ++i)
-             params.push_back(argv[i]);
-        ParametersParser parser(params, { { "c", true }, { "e", true }, { "n", false } });
-        EventManager event_manager;
-
-        String init_command;
-        if (parser.has_option("e"))
-            init_command = parser.option_value("e");
-
-        if (parser.has_option("c"))
+        for (auto opt : { "n" })
         {
-            try
+            if (parser.has_option(opt))
             {
-                auto client = connect_to(parser.option_value("c"),
-                                         std::unique_ptr<UserInterface>{new NCursesUI{}},
-                                         init_command);
-                while (true)
-                    event_manager.handle_next_events();
+                fprintf(stderr, "error: -%s makes not sense with -c", opt);
+                return -1;
             }
-            catch (peer_disconnected&)
-            {
-                puts("disconnected");
-            }
-            return 0;
         }
-
+        try
+        {
+            EventManager event_manager;
+            auto client = connect_to(parser.option_value("c"),
+                                     std::unique_ptr<UserInterface>{new NCursesUI{}},
+                                     init_command);
+            while (true)
+                event_manager.handle_next_events();
+        }
+        catch (peer_disconnected&)
+        {
+            fputs("disconnected from server", stderr);
+            return -1;
+        }
+        return 0;
+    }
+    else
+    {
+        EventManager        event_manager;
         GlobalOptions       global_options;
         GlobalHooks         global_hooks;
         ShellManager        shell_manager;
@@ -284,6 +285,26 @@ int main(int argc, char* argv[])
             Context empty_context;
             global_hooks.run_hook("KakEnd", "", empty_context);
         }
+        return 0;
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    try
+    {
+        setlocale(LC_ALL, "");
+
+        signal(SIGSEGV, signal_handler);
+        signal(SIGFPE,  signal_handler);
+        signal(SIGQUIT, signal_handler);
+        signal(SIGTERM, signal_handler);
+
+        std::vector<String> params;
+        for (size_t i = 1; i < argc; ++i)
+             params.push_back(argv[i]);
+
+        kakoune(params);
     }
     catch (Kakoune::exception& error)
     {
