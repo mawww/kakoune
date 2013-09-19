@@ -178,15 +178,15 @@ int kakoune(memoryview<String> params)
 {
     ParametersParser parser(params, { { "c", true },
                                       { "e", true },
-                                      { "n", false } });
-
+                                      { "n", false },
+                                      { "s", true } });
     String init_command;
     if (parser.has_option("e"))
         init_command = parser.option_value("e");
 
     if (parser.has_option("c"))
     {
-        for (auto opt : { "n" })
+        for (auto opt : { "n", "s" })
         {
             if (parser.has_option(opt))
             {
@@ -236,7 +236,7 @@ int kakoune(memoryview<String> params)
         write_debug("pid: " + to_string(getpid()));
         write_debug("utf-8 test: é á ï");
 
-        Server server;
+        Server server(parser.has_option("s") ? parser.option_value("s") : to_string(getpid()));
 
         if (not parser.has_option("n")) try
         {

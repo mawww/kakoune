@@ -32,7 +32,7 @@ std::unique_ptr<RemoteClient> connect_to(const String& pid,
 
 struct Server : public Singleton<Server>
 {
-    Server();
+    Server(const String& session_name);
     ~Server();
     const String& filename() const { return m_filename; }
 

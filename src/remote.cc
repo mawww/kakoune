@@ -508,8 +508,8 @@ private:
     FDWatcher m_socket_watcher;
 };
 
-Server::Server()
-    : m_filename{"/tmp/kak-" + to_string(getpid())}
+Server::Server(const String& session_name)
+    : m_filename{"/tmp/kak-" + session_name}
 {
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
