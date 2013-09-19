@@ -22,6 +22,7 @@ Kakoune dependencies are:
  * GCC >= 4.7
  * boost
  * ncurses
+ * socat (used by kak scripts to write to kak control socket)
 
 To build, just type *make* in the src directory
 
@@ -35,10 +36,12 @@ Running
 Just running *kak* launch a new kak session with a client on local terminal.
 *kak* accepts some switches:
 
- * +-c <session>+: connect to given session (which is the pid of the
-       initial kak process), sessions are unix sockets +/tmp/kak-<session>+
+ * +-c <session>+: connect to given session, sessions are unix sockets
+       +/tmp/kak-<session>+
  * +-e <commands>+: execute commands on startup
  * +-n+: ignore kakrc file
+ * +-s <session>+: set the session name, by default it will be the pid
+       of the initial kak process.
 
 Basic Movement
 --------------
@@ -127,7 +130,9 @@ Changes
 
  * _r_: replace each character with the next entered one
  * _&_: align selection, align the last character of selections by
-        inserting spaces before
+        inserting spaces the last character
+ * _alt-&_: align selection, align the last character of selections by
+        inserting spaces before the selection begin
  * _`_: to lower case
  * _~_: to upper case
  * _alt-`_: swap case
