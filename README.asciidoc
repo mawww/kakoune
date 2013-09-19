@@ -42,6 +42,10 @@ Just running *kak* launch a new kak session with a client on local terminal.
  * +-n+: ignore kakrc file
  * +-s <session>+: set the session name, by default it will be the pid
        of the initial kak process.
+ * +-d+: run Kakoune in daemon mode, without user interface. This requires
+       the session name to be specified with -s. In this mode, the Kakoune
+       server will keep running even if there is no connected client, and
+       will quit when receiving SIGTERM.
 
 Basic Movement
 --------------

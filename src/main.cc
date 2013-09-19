@@ -179,14 +179,15 @@ int kakoune(memoryview<String> params)
     ParametersParser parser(params, { { "c", true },
                                       { "e", true },
                                       { "n", false },
-                                      { "s", true } });
+                                      { "s", true },
+                                      { "d", false } });
     String init_command;
     if (parser.has_option("e"))
         init_command = parser.option_value("e");
 
     if (parser.has_option("c"))
     {
-        for (auto opt : { "n", "s" })
+        for (auto opt : { "n", "s", "d" })
         {
             if (parser.has_option(opt))
             {
@@ -205,13 +206,32 @@ int kakoune(memoryview<String> params)
         }
         catch (peer_disconnected&)
         {
-            fputs("disconnected from server", stderr);
+            fputs("disconnected from server\n", stderr);
             return -1;
         }
         return 0;
     }
     else
     {
+        const bool daemon = parser.has_option("d");
+        static bool terminate = false;
+        if (daemon)
+        {
+            if (not parser.has_option("s"))
+            {
+                fputs("-d needs a session name to be specified with -s", stderr);
+                return -1;
+            }
+            if (pid_t child = fork())
+            {
+                printf("Kakoune forked to background, for session '%s'\n"
+                       "send SIGTERM to process %d for closing the session\n",
+                       parser.option_value("s").c_str(), child);
+                exit(0);
+            }
+            signal(SIGTERM, [](int) { terminate = true; });
+        }
+
         EventManager        event_manager;
         GlobalOptions       global_options;
         GlobalHooks         global_hooks;
@@ -276,9 +296,10 @@ int kakoune(memoryview<String> params)
         else
             new Buffer("*scratch*", Buffer::Flags::None);
 
-        create_local_client(init_command);
+        if (not daemon)
+            create_local_client(init_command);
 
-        while (not client_manager.empty())
+        while (not terminate and (not client_manager.empty() or daemon))
             event_manager.handle_next_events();
 
         {
