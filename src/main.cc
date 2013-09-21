@@ -191,7 +191,7 @@ int kakoune(memoryview<String> params)
         {
             if (parser.has_option(opt))
             {
-                fprintf(stderr, "error: -%s makes not sense with -c", opt);
+                fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
                 return -1;
             }
         }
@@ -219,7 +219,7 @@ int kakoune(memoryview<String> params)
         {
             if (not parser.has_option("s"))
             {
-                fputs("-d needs a session name to be specified with -s", stderr);
+                fputs("-d needs a session name to be specified with -s\n", stderr);
                 return -1;
             }
             if (pid_t child = fork())
