@@ -57,7 +57,3 @@
 
 * other types of highlighters (like for correctly supporting nesting,
   which regex are bad at)
-
-* Naming kakoune sessions at start, and changing name during execution
-
-* support multiple selections per line when aligning
