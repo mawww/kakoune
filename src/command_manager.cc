@@ -337,7 +337,7 @@ Completions CommandManager::complete(const Context& context,
 
         for (auto& command : m_commands)
         {
-            if (command.first.substr(0, prefix.length()) == prefix)
+            if (prefix_match(command.first, prefix))
                 result.candidates.push_back(command.first);
         }
         std::sort(result.candidates.begin(), result.candidates.end());

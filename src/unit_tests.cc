@@ -136,6 +136,11 @@ void test_string()
 
    String escaped = escape("youpi:matin:tchou:", ':', '\\');
    kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
+
+   kak_assert(prefix_match("tchou kanaky", "tchou"));
+   kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
+   kak_assert(prefix_match("tchou kanaky", "t"));
+   kak_assert(not prefix_match("tchou kanaky", "c"));
 }
 
 void test_keys()

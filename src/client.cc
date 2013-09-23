@@ -350,11 +350,10 @@ public:
                    m_prefix = line;
                 auto it = m_history_it;
                 // search for the previous history entry matching typed prefix
-                ByteCount prefix_length = m_prefix.length();
                 do
                 {
                     --it;
-                    if (it->substr(0, prefix_length) == m_prefix)
+                    if (prefix_match(*it, m_prefix))
                     {
                         m_history_it = it;
                         m_line_editor.reset(*it);
@@ -368,11 +367,10 @@ public:
         {
             if (m_history_it != history.end())
             {
-                ByteCount prefix_length = m_prefix.length();
                 // search for the next history entry matching typed prefix
                 ++m_history_it;
                 while (m_history_it != history.end() and
-                       m_history_it->substr(0, prefix_length) != m_prefix)
+                       prefix_match(*m_history_it, m_prefix))
                     ++m_history_it;
 
                 if (m_history_it != history.end())

@@ -112,6 +112,8 @@ String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
     return to_string((ValueType)val);
 }
 
+bool prefix_match(const String& str, const String& prefix);
+
 }
 
 namespace std

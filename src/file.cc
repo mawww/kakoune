@@ -74,7 +74,7 @@ String compact_path(const String& filename)
     char cwd[1024];
     getcwd(cwd, 1024);
     String real_cwd = real_path(cwd) + '/';
-    if (real_filename.substr(0, real_cwd.length()) == real_cwd)
+    if (prefix_match(real_filename, real_cwd))
         return real_filename.substr(real_cwd.length());
 
     const char* home = getenv("HOME");
@@ -302,7 +302,7 @@ std::vector<String> complete_filename(const String& prefix,
         if (check_ignored_regex and boost::regex_match(filename.c_str(), ignored_regex))
             continue;
 
-        const bool match_prefix = (filename.substr(0, fileprefix.length()) == fileprefix);
+        const bool match_prefix = prefix_match(filename, fileprefix);
         const bool match_regex  = not file_regex.empty() and
             boost::regex_match(filename.c_str(), file_regex);
 

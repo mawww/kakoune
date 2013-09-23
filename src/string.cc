@@ -83,4 +83,15 @@ void option_from_string(const String& str, Regex& re)
     }
 }
 
+bool prefix_match(const String& str, const String& prefix)
+{
+    auto it = str.begin();
+    for (auto& c : prefix)
+    {
+        if (it ==str.end() or *it++ != c)
+            return false;
+    }
+    return true;
+}
+
 }

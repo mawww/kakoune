@@ -73,8 +73,7 @@ CandidateList OptionManager::complete_option_name(const String& prefix,
     for (auto& option : m_options)
     {
         const auto& name = option->name();
-        if (name.substr(0, real_prefix.length()) == real_prefix and
-            not contains(result, name))
+        if (prefix_match(name, real_prefix) and not contains(result, name))
             result.push_back(name);
     }
     return result;

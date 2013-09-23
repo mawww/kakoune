@@ -103,7 +103,7 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
     for (auto& buffer : m_buffers)
     {
         String name = buffer->display_name();
-        if (name.substr(0, real_prefix.length()) == real_prefix)
+        if (prefix_match(name, real_prefix))
             result.push_back(escape(name));
     }
     // no prefix completion found, check regex matching

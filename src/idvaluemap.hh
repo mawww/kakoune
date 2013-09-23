@@ -78,7 +78,7 @@ public:
                 continue;
 
             String id_str = value.first;
-            if (id_str.substr(0, real_prefix.length()) == real_prefix)
+            if (prefix_match(id_str, real_prefix))
                 result.push_back(std::move(id_str));
         }
         return result;
