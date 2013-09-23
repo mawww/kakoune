@@ -174,6 +174,25 @@ void signal_handler(int signal)
     abort();
 }
 
+int run_client(const String& session, const String& init_command)
+{
+    try
+    {
+        EventManager event_manager;
+        auto client = connect_to(session,
+                                 std::unique_ptr<UserInterface>{new NCursesUI{}},
+                                 init_command);
+        while (true)
+            event_manager.handle_next_events();
+    }
+    catch (peer_disconnected&)
+    {
+        fputs("disconnected from server\n", stderr);
+        return -1;
+    }
+    return 0;
+}
+
 int kakoune(memoryview<String> params)
 {
     ParametersParser parser(params, { { "c", true },
@@ -195,119 +214,103 @@ int kakoune(memoryview<String> params)
                 return -1;
             }
         }
-        try
+        return run_client(parser.option_value("c"), init_command);
+    }
+
+    const bool daemon = parser.has_option("d");
+    static bool terminate = false;
+    if (daemon)
+    {
+        if (not parser.has_option("s"))
         {
-            EventManager event_manager;
-            auto client = connect_to(parser.option_value("c"),
-                                     std::unique_ptr<UserInterface>{new NCursesUI{}},
-                                     init_command);
-            while (true)
-                event_manager.handle_next_events();
-        }
-        catch (peer_disconnected&)
-        {
-            fputs("disconnected from server\n", stderr);
+            fputs("-d needs a session name to be specified with -s\n", stderr);
             return -1;
         }
-        return 0;
+        if (pid_t child = fork())
+        {
+            printf("Kakoune forked to background, for session '%s'\n"
+                   "send SIGTERM to process %d for closing the session\n",
+                   parser.option_value("s").c_str(), child);
+            exit(0);
+        }
+        signal(SIGTERM, [](int) { terminate = true; });
+    }
+
+    EventManager        event_manager;
+    GlobalOptions       global_options;
+    GlobalHooks         global_hooks;
+    ShellManager        shell_manager;
+    CommandManager      command_manager;
+    BufferManager       buffer_manager;
+    RegisterManager     register_manager;
+    HighlighterRegistry highlighter_registry;
+    FilterRegistry      filter_registry;
+    ColorRegistry       color_registry;
+    ClientManager       client_manager;
+
+    run_unit_tests();
+
+    register_env_vars();
+    register_registers();
+    register_commands();
+    register_highlighters();
+    register_filters();
+
+    write_debug("*** This is the debug buffer, where debug info will be written ***");
+    write_debug("pid: " + to_string(getpid()));
+    write_debug("utf-8 test: é á ï");
+
+    Server server(parser.has_option("s") ? parser.option_value("s") : to_string(getpid()));
+
+    if (not parser.has_option("n")) try
+    {
+        Context initialisation_context;
+        command_manager.execute("source " + runtime_directory() + "/kakrc",
+                                initialisation_context);
+    }
+    catch (Kakoune::runtime_error& error)
+    {
+         write_debug("error while parsing kakrc: "_str + error.what());
+    }
+    catch (Kakoune::client_removed&)
+    {
+         write_debug("error while parsing kakrc: asked to quit");
+    }
+
+    {
+        Context empty_context;
+        global_hooks.run_hook("KakBegin", "", empty_context);
+    }
+
+    if (parser.positional_count() != 0) try
+    {
+        // create buffers in reverse order so that the first given buffer
+        // is the most recently created one.
+        for (int i = parser.positional_count() - 1; i >= 0; --i)
+        {
+            const String& file = parser[i];
+            if (not create_buffer_from_file(file))
+                new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
+        }
+    }
+    catch (Kakoune::runtime_error& error)
+    {
+         write_debug("error while opening command line files: "_str + error.what());
     }
     else
+        new Buffer("*scratch*", Buffer::Flags::None);
+
+    if (not daemon)
+        create_local_client(init_command);
+
+    while (not terminate and (not client_manager.empty() or daemon))
+        event_manager.handle_next_events();
+
     {
-        const bool daemon = parser.has_option("d");
-        static bool terminate = false;
-        if (daemon)
-        {
-            if (not parser.has_option("s"))
-            {
-                fputs("-d needs a session name to be specified with -s\n", stderr);
-                return -1;
-            }
-            if (pid_t child = fork())
-            {
-                printf("Kakoune forked to background, for session '%s'\n"
-                       "send SIGTERM to process %d for closing the session\n",
-                       parser.option_value("s").c_str(), child);
-                exit(0);
-            }
-            signal(SIGTERM, [](int) { terminate = true; });
-        }
-
-        EventManager        event_manager;
-        GlobalOptions       global_options;
-        GlobalHooks         global_hooks;
-        ShellManager        shell_manager;
-        CommandManager      command_manager;
-        BufferManager       buffer_manager;
-        RegisterManager     register_manager;
-        HighlighterRegistry highlighter_registry;
-        FilterRegistry      filter_registry;
-        ColorRegistry       color_registry;
-        ClientManager       client_manager;
-
-        run_unit_tests();
-
-        register_env_vars();
-        register_registers();
-        register_commands();
-        register_highlighters();
-        register_filters();
-
-        write_debug("*** This is the debug buffer, where debug info will be written ***");
-        write_debug("pid: " + to_string(getpid()));
-        write_debug("utf-8 test: é á ï");
-
-        Server server(parser.has_option("s") ? parser.option_value("s") : to_string(getpid()));
-
-        if (not parser.has_option("n")) try
-        {
-            Context initialisation_context;
-            command_manager.execute("source " + runtime_directory() + "/kakrc",
-                                    initialisation_context);
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-             write_debug("error while parsing kakrc: "_str + error.what());
-        }
-        catch (Kakoune::client_removed&)
-        {
-             write_debug("error while parsing kakrc: asked to quit");
-        }
-
-        {
-            Context empty_context;
-            global_hooks.run_hook("KakBegin", "", empty_context);
-        }
-
-        if (parser.positional_count() != 0) try
-        {
-            // create buffers in reverse order so that the first given buffer
-            // is the most recently created one.
-            for (int i = parser.positional_count() - 1; i >= 0; --i)
-            {
-                const String& file = parser[i];
-                if (not create_buffer_from_file(file))
-                    new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
-            }
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-             write_debug("error while opening command line files: "_str + error.what());
-        }
-        else
-            new Buffer("*scratch*", Buffer::Flags::None);
-
-        if (not daemon)
-            create_local_client(init_command);
-
-        while (not terminate and (not client_manager.empty() or daemon))
-            event_manager.handle_next_events();
-
-        {
-            Context empty_context;
-            global_hooks.run_hook("KakEnd", "", empty_context);
-        }
-        return 0;
+        Context empty_context;
+        global_hooks.run_hook("KakEnd", "", empty_context);
     }
+    return 0;
 }
 
 int main(int argc, char* argv[])
