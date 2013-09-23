@@ -100,28 +100,16 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
 {
     String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;
+    CandidateList subsequence_result;
     for (auto& buffer : m_buffers)
     {
         String name = buffer->display_name();
         if (prefix_match(name, real_prefix))
             result.push_back(escape(name));
+        if (subsequence_match(name, real_prefix))
+            subsequence_result.push_back(escape(name));
     }
-    // no prefix completion found, check regex matching
-    if (result.empty())
-    {
-        try
-        {
-            Regex ex(real_prefix.begin(), real_prefix.end());
-            for (auto& buffer : m_buffers)
-            {
-                String name = buffer->display_name();
-                if (boost::regex_search(name.begin(), name.end(), ex))
-                    result.push_back(escape(name));
-            }
-        }
-        catch (boost::regex_error& err) {}
-    }
-    return result;
+    return result.empty() ? subsequence_result : result;
 }
 
 }
