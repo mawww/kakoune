@@ -113,6 +113,7 @@ String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 }
 
 bool prefix_match(const String& str, const String& prefix);
+bool subsequence_match(const String& str, const String& subseq);
 
 }
 

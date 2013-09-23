@@ -141,6 +141,11 @@ void test_string()
    kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
    kak_assert(prefix_match("tchou kanaky", "t"));
    kak_assert(not prefix_match("tchou kanaky", "c"));
+
+   kak_assert(subsequence_match("tchou kanaky", "tknky"));
+   kak_assert(subsequence_match("tchou kanaky", "knk"));
+   kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
+   kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
 }
 
 void test_keys()

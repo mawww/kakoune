@@ -94,4 +94,21 @@ bool prefix_match(const String& str, const String& prefix)
     return true;
 }
 
+bool subsequence_match(const String& str, const String& subseq)
+{
+    auto it = str.begin();
+    for (auto& c : subseq)
+    {
+        if (it == str.end())
+            return false;
+        while (*it != c)
+        {
+            if (++it == str.end())
+                return false;
+        }
+        ++it;
+    }
+    return true;
+}
+
 }
