@@ -52,8 +52,8 @@ void EventManager::handle_next_events()
     events.reserve(m_fd_watchers.size());
     for (auto& watcher : m_fd_watchers)
         events.emplace_back(pollfd{ watcher->fd(), POLLIN | POLLPRI, 0 });
-    std::vector<int> forced = m_forced_fd;
-    m_forced_fd.clear();
+    std::vector<int> forced;
+    std::swap(forced, m_forced_fd);
     poll(events.data(), events.size(), timeout_ms);
     for (size_t i = 0; i < events.size(); ++i)
     {
@@ -82,7 +82,6 @@ void EventManager::handle_next_events()
 void EventManager::force_signal(int fd)
 {
     m_forced_fd.push_back(fd);
-
 }
 
 }
