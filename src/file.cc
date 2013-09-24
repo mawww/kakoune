@@ -242,23 +242,6 @@ String find_file(const String& filename, memoryview<String> paths)
     return "";
 }
 
-static boost::regex make_regex_ifp(const String& ex)
-{
-    boost::regex result;
-    if (not ex.empty())
-    {
-        try
-        {
-            result = boost::regex(ex.c_str());
-        }
-        catch(boost::regex_error& err)
-        {
-            write_debug(err.what());
-        }
-    }
-    return result;
-}
-
 std::vector<String> complete_filename(const String& prefix,
                                       const Regex& ignored_regex,
                                       ByteCount cursor_pos)
@@ -291,8 +274,7 @@ std::vector<String> complete_filename(const String& prefix,
     const bool check_ignored_regex = not ignored_regex.empty() and
         not boost::regex_match(fileprefix.c_str(), ignored_regex);
 
-    boost::regex file_regex = make_regex_ifp(fileprefix);
-    std::vector<String> regex_result;
+    std::vector<String> subseq_result;
     while (dirent* entry = readdir(dir))
     {
         String filename = entry->d_name;
@@ -303,10 +285,8 @@ std::vector<String> complete_filename(const String& prefix,
             continue;
 
         const bool match_prefix = prefix_match(filename, fileprefix);
-        const bool match_regex  = not file_regex.empty() and
-            boost::regex_match(filename.c_str(), file_regex);
-
-        if (match_prefix or match_regex)
+        const bool match_subseq = subsequence_match(filename, fileprefix);
+        if (match_prefix or match_subseq)
         {
             String name = dirprefix + filename;
             if (entry->d_type == DT_DIR)
@@ -315,12 +295,12 @@ std::vector<String> complete_filename(const String& prefix,
             {
                 if (match_prefix)
                     result.push_back(escape(name));
-                if (match_regex)
-                    regex_result.push_back(escape(name));
+                if (match_subseq)
+                    subseq_result.push_back(escape(name));
             }
         }
     }
-    auto& real_result = result.empty() ? regex_result : result;
+    auto& real_result = result.empty() ? subseq_result : result;
     std::sort(real_result.begin(), real_result.end());
     return real_result;
 }
