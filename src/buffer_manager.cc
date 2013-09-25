@@ -99,14 +99,23 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
                                                  ByteCount cursor_pos)
 {
     String real_prefix = prefix.substr(0, cursor_pos);
+    const bool include_dirs = contains(real_prefix, '/');
     CandidateList result;
     CandidateList subsequence_result;
     for (auto& buffer : m_buffers)
     {
         String name = buffer->display_name();
-        if (prefix_match(name, real_prefix))
+        String match_name = name;
+        if (not include_dirs and buffer->flags() & Buffer::Flags::File)
+        {
+            ByteCount pos = name.find_last_of('/');
+            if (pos != String::npos)
+                match_name = name.substr(pos);
+        }
+
+        if (prefix_match(match_name, real_prefix))
             result.push_back(escape(name));
-        if (subsequence_match(name, real_prefix))
+        if (subsequence_match(match_name, real_prefix))
             subsequence_result.push_back(escape(name));
     }
     return result.empty() ? subsequence_result : result;
