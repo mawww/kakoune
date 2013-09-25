@@ -508,20 +508,21 @@ private:
     FDWatcher m_socket_watcher;
 };
 
-Server::Server(const String& session_name)
-    : m_filename{"/tmp/kak-" + session_name}
+Server::Server(String session_name)
+    : m_session{std::move(session_name)}
 {
+    String filename = "/tmp/kak-" + m_session;
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, m_filename.c_str(), sizeof(addr.sun_path) - 1);
+    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
 
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-       throw runtime_error("unable to bind listen socket " + m_filename);
+       throw runtime_error("unable to bind listen socket " + filename);
 
     if (listen(listen_sock, 4) == -1)
-       throw runtime_error("unable to listen on socket " + m_filename);
+       throw runtime_error("unable to listen on socket " + filename);
 
     auto accepter = [](FDWatcher& watcher) {
         sockaddr_un client_addr;
@@ -538,7 +539,7 @@ Server::Server(const String& session_name)
 
 Server::~Server()
 {
-    unlink(m_filename.c_str());
+    unlink(("/tmp/kak-" + m_session).c_str());
     close(m_listener->fd());
 }
 

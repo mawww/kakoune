@@ -32,12 +32,12 @@ std::unique_ptr<RemoteClient> connect_to(const String& pid,
 
 struct Server : public Singleton<Server>
 {
-    Server(const String& session_name);
+    Server(String session_name);
     ~Server();
-    const String& filename() const { return m_filename; }
+    const String& session() const { return m_session; }
 
 private:
-    String m_filename;
+    String m_session;
     std::unique_ptr<FDWatcher> m_listener;
 };
 

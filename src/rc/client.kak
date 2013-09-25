@@ -8,6 +8,6 @@ decl str termcmd %sh{
 
 def new -shell-params %{ nop %sh{
     if (( $# != 0 )); then kakoune_params="-e '$@'"; fi
-    ${kak_opt_termcmd} "kak -c ${kak_socket#/tmp/kak-} ${kakoune_params}" < /dev/null >& /dev/null &
+    ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null >& /dev/null &
     disown
 }}

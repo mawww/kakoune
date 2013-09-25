@@ -90,9 +90,9 @@ void register_env_vars()
     shell_manager.register_env_var("reg_.+",
                                    [](const String& name, const Context& context)
                                    { return RegisterManager::instance()[name[4]].values(context)[0]; });
-    shell_manager.register_env_var("socket",
+    shell_manager.register_env_var("session",
                                    [](const String& name, const Context& context)
-                                   { return Server::instance().filename(); });
+                                   { return Server::instance().session(); });
     shell_manager.register_env_var("client",
                                    [](const String& name, const Context& context)
                                    { return context.client().name(); });
