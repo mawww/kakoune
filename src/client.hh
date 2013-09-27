@@ -103,8 +103,6 @@ private:
     String m_recorded_keys;
 };
 
-struct prompt_aborted {};
-
 }
 
 #endif // client_hh_INCLUDED
