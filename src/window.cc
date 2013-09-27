@@ -112,27 +112,31 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
     return view_pos;
 }
 
-static CharCount adapt_view_pos(const DisplayLine& line, BufferCoord pos, CharCount view_pos, CharCount view_size)
+static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
+                                BufferCoord pos, CharCount view_pos, CharCount view_size)
 {
     CharCount buffer_column = 0;
     CharCount non_buffer_column = 0;
-    for (auto& atom : line)
+    for (auto& line : display_buffer.lines())
     {
-        if (atom.has_buffer_range())
+        for (auto& atom : line)
         {
-            if (atom.begin() <= pos and atom.end() > pos)
+            if (atom.has_buffer_range())
             {
-                if (buffer_column < view_pos)
-                    return buffer_column;
+                if (atom.begin() <= pos and atom.end() > pos)
+                {
+                    if (buffer_column < view_pos)
+                        return buffer_column;
 
-                auto last_column = buffer_column + atom.length();
-                if (last_column >= view_pos + view_size - non_buffer_column)
-                    return last_column - view_size + non_buffer_column;
+                    auto last_column = buffer_column + atom.length();
+                    if (last_column >= view_pos + view_size - non_buffer_column)
+                        return last_column - view_size + non_buffer_column;
+                }
+                buffer_column += atom.length();
             }
-            buffer_column += atom.length();
+            else
+                non_buffer_column += atom.length();
         }
-        else
-            non_buffer_column += atom.length();
     }
     return view_pos;
 }
@@ -164,11 +168,11 @@ void Window::scroll_to_keep_cursor_visible_ifn()
     // (this is only valid if highlighting one line and multiple lines put
     // the cursor in the same position, however I do not find any sane example
     // of highlighters not doing that)
-    m_position.column = adapt_view_pos(lines.back(),
+    m_position.column = adapt_view_pos(display_buffer,
                                        first.line == last.line ? first : last.line,
-                                        m_position.column, m_dimensions.column);
-    m_position.column = adapt_view_pos(lines.back(), last,
-                                        m_position.column, m_dimensions.column);
+                                       m_position.column, m_dimensions.column);
+    m_position.column = adapt_view_pos(display_buffer, last,
+                                       m_position.column, m_dimensions.column);
 }
 
 namespace
