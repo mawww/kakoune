@@ -344,8 +344,6 @@ void search_next(Context& context)
         try
         {
             Regex ex{str};
-            if (mode == SelectMode::Replace)
-                context.push_jump();
             int count = context.numeric_param();
             do {
                 context.editor().select(std::bind(select_next_match<direction>, _1, _2, ex), mode);
