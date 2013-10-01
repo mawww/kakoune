@@ -58,7 +58,7 @@ String runtime_directory()
 void register_env_vars()
 {
     struct EnvVarDesc { const char* name; String (*func)(const String&, const Context&); };
-    EnvVarDesc env_vars[] = { {
+    static const EnvVarDesc env_vars[] = { {
             "bufname",
             [](const String& name, const Context& context)
             { return context.buffer().display_name(); }
@@ -135,10 +135,18 @@ void register_env_vars()
 
 void register_registers()
 {
-    RegisterManager& register_manager = RegisterManager::instance();
+    using StringList = std::vector<String>;
+    struct DynRegDesc { char name; StringList (*func)(const Context&); };
+    static const DynRegDesc dyn_regs[] = {
+        { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
+        { '.', [](const Context& context) { return context.editor().selections_content(); } },
+        { '#', [](const Context& context) { return StringList{{to_string((int)context.editor().selections().size())}}; } },
+    };
 
-    register_manager.register_dynamic_register('%', [](const Context& context) { return std::vector<String>(1, context.buffer().display_name()); });
-    register_manager.register_dynamic_register('.', [](const Context& context) { return context.editor().selections_content(); });
+    RegisterManager& register_manager = RegisterManager::instance();
+    for (auto& dyn_reg : dyn_regs)
+        register_manager.register_dynamic_register(dyn_reg.name, dyn_reg.func);
+
     for (size_t i = 0; i < 10; ++i)
     {
         register_manager.register_dynamic_register('0'+i,
