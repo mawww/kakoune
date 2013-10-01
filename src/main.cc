@@ -57,63 +57,80 @@ String runtime_directory()
 
 void register_env_vars()
 {
-    ShellManager& shell_manager = ShellManager::instance();
+    struct EnvVarDesc { const char* name; String (*func)(const String&, const Context&); };
+    EnvVarDesc env_vars[] = { {
+            "bufname",
+            [](const String& name, const Context& context)
+            { return context.buffer().display_name(); }
+        }, {
+            "timestamp",
+            [](const String& name, const Context& context)
+            { return to_string(context.buffer().timestamp()); }
+        }, {
+            "selection",
+            [](const String& name, const Context& context)
+            { const Range& sel = context.editor().main_selection();
+              return content(context.buffer(), sel); }
+        }, {
+            "selections",
+            [](const String& name, const Context& context)
+            { auto sels = context.editor().selections_content();
+              String res;
+              for (size_t i = 0; i < sels.size(); ++i)
+              {
+                  res += escape(sels[i], ':', '\\');
+                  if (i != sels.size() - 1)
+                      res += ':';
+              }
+              return res; }
+        }, {
+            "runtime",
+            [](const String& name, const Context& context)
+            { return runtime_directory(); }
+        }, {
+            "opt_.+",
+            [](const String& name, const Context& context)
+            { return context.options()[name.substr(4_byte)].get_as_string(); }
+        }, {
+            "reg_.+",
+            [](const String& name, const Context& context)
+            { return RegisterManager::instance()[name[4]].values(context)[0]; }
+        }, {
+            "session",
+            [](const String& name, const Context& context)
+            { return Server::instance().session(); }
+        }, {
+            "client",
+            [](const String& name, const Context& context)
+            { return context.client().name(); }
+        }, {
+            "cursor_line",
+            [](const String& name, const Context& context)
+            { return to_string(context.editor().main_selection().last().line + 1); }
+        }, {
+            "cursor_column",
+            [](const String& name, const Context& context)
+            { return to_string(context.editor().main_selection().last().column + 1); }
+        }, {
+            "selection_desc",
+            [](const String& name, const Context& context)
+            { auto& sel = context.editor().main_selection();
+                auto beg = sel.min();
+                return to_string(beg.line + 1) + ':' + to_string(beg.column + 1) + '+' +
+                       to_string((int)context.buffer().distance(beg, sel.max())+1); }
+        }, {
+            "window_width",
+            [](const String& name, const Context& context)
+            { return to_string(context.window().dimensions().column); }
+        }, {
+            "window_height",
+            [](const String& name, const Context& context)
+            { return to_string(context.window().dimensions().line); }
+    } };
 
-    shell_manager.register_env_var("bufname",
-                                   [](const String& name, const Context& context)
-                                   { return context.buffer().display_name(); });
-    shell_manager.register_env_var("timestamp",
-                                   [](const String& name, const Context& context)
-                                   { return to_string(context.buffer().timestamp()); });
-    shell_manager.register_env_var("selection",
-                                   [](const String& name, const Context& context)
-                                   { const Range& sel = context.editor().main_selection();
-                                     return content(context.buffer(), sel); });
-    shell_manager.register_env_var("selections",
-                                   [](const String& name, const Context& context) {
-                                       auto sels = context.editor().selections_content();
-                                       String res;
-                                       for (size_t i = 0; i < sels.size(); ++i)
-                                       {
-                                           res += escape(sels[i], ':', '\\');
-                                           if (i != sels.size() - 1)
-                                               res += ':';
-                                       }
-                                       return res;
-                                   });
-    shell_manager.register_env_var("runtime",
-                                   [](const String& name, const Context& context)
-                                   { return runtime_directory(); });
-    shell_manager.register_env_var("opt_.+",
-                                   [](const String& name, const Context& context)
-                                   { return context.options()[name.substr(4_byte)].get_as_string(); });
-    shell_manager.register_env_var("reg_.+",
-                                   [](const String& name, const Context& context)
-                                   { return RegisterManager::instance()[name[4]].values(context)[0]; });
-    shell_manager.register_env_var("session",
-                                   [](const String& name, const Context& context)
-                                   { return Server::instance().session(); });
-    shell_manager.register_env_var("client",
-                                   [](const String& name, const Context& context)
-                                   { return context.client().name(); });
-    shell_manager.register_env_var("cursor_line",
-                                   [](const String& name, const Context& context)
-                                   { return to_string(context.editor().main_selection().last().line + 1); });
-    shell_manager.register_env_var("cursor_column",
-                                   [](const String& name, const Context& context)
-                                   { return to_string(context.editor().main_selection().last().column + 1); });
-    shell_manager.register_env_var("selection_desc",
-                                   [](const String& name, const Context& context)
-                                   { auto& sel = context.editor().main_selection();
-                                     auto beg = sel.min();
-                                     return to_string(beg.line + 1) + ':' + to_string(beg.column + 1) + '+' +
-                                            to_string((int)context.buffer().distance(beg, sel.max())+1); });
-    shell_manager.register_env_var("window_width",
-                                   [](const String& name, const Context& context)
-                                   { return to_string(context.window().dimensions().column); });
-    shell_manager.register_env_var("window_height",
-                                   [](const String& name, const Context& context)
-                                   { return to_string(context.window().dimensions().line); });
+    ShellManager& shell_manager = ShellManager::instance();
+    for (auto& env_var : env_vars)
+        shell_manager.register_env_var(env_var.name, env_var.func);
 }
 
 void register_registers()
