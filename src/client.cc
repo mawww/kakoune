@@ -889,6 +889,8 @@ public:
         }
         else if ( key == Key{ Key::Modifiers::Control, 'x' })
             m_mode = Mode::Complete;
+        else if ( key == Key{ Key::Modifiers::Control, 'u' })
+            context().buffer().commit_undo_group();
 
         if (update_completions)
             m_idle_timer.set_next_date(Clock::now() + idle_timeout);
