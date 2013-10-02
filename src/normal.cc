@@ -746,6 +746,13 @@ void jump(Context& context)
     context.editor().select(SelectionList{ jump });
 }
 
+void save_selections(Context& context)
+{
+	context.push_jump();
+	context.print_status({ "saved " + to_string(context.editor().selections().size()) +
+                           " selections", get_color("Information") });
+}
+
 template<bool insert_at_begin>
 void align(Context& context)
 {
@@ -941,6 +948,7 @@ KeyMap keymap =
 
     { { Key::Modifiers::Control, 'i' }, jump<Forward> },
     { { Key::Modifiers::Control, 'o' }, jump<Backward> },
+    { { Key::Modifiers::Control, 's' }, save_selections },
 
     { { Key::Modifiers::Alt,  'r' }, rotate_selections },
 

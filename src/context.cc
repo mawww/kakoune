@@ -108,6 +108,12 @@ const DynamicSelectionList& Context::jump_forward()
 
 const DynamicSelectionList& Context::jump_backward()
 {
+    if (m_current_jump != m_jump_list.end() and
+        *m_current_jump != editor().selections())
+    {
+        push_jump();
+        return *--m_current_jump;
+    }
     if (m_current_jump != m_jump_list.begin())
     {
         if (m_current_jump == m_jump_list.end())

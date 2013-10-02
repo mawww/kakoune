@@ -173,6 +173,17 @@ view.
  * _vk_: scroll the window count line upward
  * _vl_: scroll the window count columns right
 
+Jump list
+---------
+
+Some commands, like the goto commands, buffer switch or search commands,
+push the previous selections to the client's jump list. It is possible
+to forward or backward in the jump list using:
+
+ * _control-i_: Jump forward
+ * _control-o_: Jump backward
+ * _control-s_: save current selections
+
 Multi Selection
 ---------------
 
