@@ -80,9 +80,10 @@ Basic Movement
  * _N_: add a new selection with next match
  * _alt-n_: replace main selection with next match (preserving the others)
 
- * _alt-c_: center main selection in current window
  * _pageup_: scroll up
  * _pagedown_: scroll down
+
+ * _alt-r_: rotate selections (the main selection becomes the next one)
 
 Appending
 ---------
@@ -140,6 +141,8 @@ Changes
  * _`_: to lower case
  * _~_: to upper case
  * _alt-`_: swap case
+
+ * _alt-R_: rotate selections content
 
 Goto Commands
 -------------

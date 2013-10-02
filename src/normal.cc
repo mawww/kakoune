@@ -658,6 +658,19 @@ void rotate_selections(Context& context)
     context.editor().rotate_selections(count);
 }
 
+void rotate_selections_content(Context& context)
+{
+    int count = context.numeric_param();
+    if (count == 0)
+        count = 1;
+	Editor& editor = context.editor();
+    auto strings = editor.selections_content();
+    count = count % strings.size();
+    std::rotate(strings.begin(), strings.end()-count, strings.end());
+    editor.insert(strings, InsertMode::Replace);
+    editor.rotate_selections(count);
+}
+
 enum class SelectFlags
 {
     None = 0,
@@ -951,6 +964,7 @@ KeyMap keymap =
     { { Key::Modifiers::Control, 's' }, save_selections },
 
     { { Key::Modifiers::Alt,  'r' }, rotate_selections },
+    { { Key::Modifiers::Alt,  'R' }, rotate_selections_content },
 
     { { Key::Modifiers::None, 'q' }, start_or_end_macro_recording },
     { { Key::Modifiers::None, 'Q' }, replay_macro },
