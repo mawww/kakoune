@@ -7,13 +7,15 @@
 namespace Kakoune
 {
 
-template<bool punctuation_is_word>
+enum WordType { Word, WORD };
+
+template<WordType word_type>
 Selection select_to_next_word(const Buffer& buffer,
                               const Selection& selection);
-template<bool punctuation_is_word>
+template<WordType word_type>
 Selection select_to_next_word_end(const Buffer& buffer,
                                   const Selection& selection);
-template<bool punctuation_is_word>
+template<WordType word_type>
 Selection select_to_previous_word(const Buffer& buffer,
 const Selection& selection);
 
@@ -41,7 +43,7 @@ constexpr bool operator&(ObjectFlags lhs, ObjectFlags rhs)
 constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
 { return (ObjectFlags)((int)lhs | (int) rhs); }
 
-template<bool punctuation_is_word>
+template<WordType word_type>
 Selection select_whole_word(const Buffer& buffer, const Selection& selection,
                             ObjectFlags flags);
 Selection select_whole_sentence(const Buffer& buffer, const Selection& selection,
