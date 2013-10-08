@@ -227,7 +227,7 @@ using boost::optional;
 static optional<Range> find_surrounding(const Buffer& buffer,
                                         BufferCoord coord,
                                         CodepointPair matching,
-                                        ObjectFlags flags)
+                                        ObjectFlags flags, int init_level)
 {
     const bool to_begin = flags & ObjectFlags::ToBegin;
     const bool to_end   = flags & ObjectFlags::ToEnd;
@@ -236,7 +236,7 @@ static optional<Range> find_surrounding(const Buffer& buffer,
     Utf8Iterator first = pos;
     if (to_begin)
     {
-        int level = 0;
+        int level = nestable ? init_level : 0;
         while (first != buffer.begin())
         {
             if (nestable and first != pos and *first == matching.second)
@@ -257,11 +257,10 @@ static optional<Range> find_surrounding(const Buffer& buffer,
     Utf8Iterator last = pos;
     if (to_end)
     {
-        int level = 0;
-        last = first + 1;
+        int level = nestable ? init_level : 0;
         while (last != buffer.end())
         {
-            if (nestable and *last == matching.first)
+            if (nestable and last != pos and *last == matching.first)
                 ++level;
             else if (*last == matching.second)
             {
@@ -272,13 +271,13 @@ static optional<Range> find_surrounding(const Buffer& buffer,
             }
             ++last;
         }
-        if (level != 0 or *last != matching.second)
+        if (level != 0 or last == buffer.end())
             return optional<Range>{};
     }
 
     if (flags & ObjectFlags::Inner)
     {
-        if (to_begin)
+        if (to_begin and first != last)
             ++first;
         if (to_end and first != last)
             --last;
@@ -287,19 +286,32 @@ static optional<Range> find_surrounding(const Buffer& buffer,
 }
 
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
-                             CodepointPair matching,
+                             CodepointPair matching, int level,
                              ObjectFlags flags)
 {
-    auto res = find_surrounding(buffer, selection.last(), matching, flags);
+	const bool nestable = matching.first != matching.second;
+	auto pos = selection.last();
+	if (not nestable or flags & ObjectFlags::Inner)
+	{
+        if (auto res = find_surrounding(buffer, pos, matching, flags, level))
+            return *res;
+        return selection;
+	}
+
+	auto c = buffer.byte_at(pos);
+    if ((flags == ObjectFlags::ToBegin and c == matching.first) or
+        (flags == ObjectFlags::ToEnd and c == matching.second))
+        ++level;
+
+    auto res = find_surrounding(buffer, pos, matching, flags, level);
     if (not res)
         return selection;
 
     if (flags == (ObjectFlags::ToBegin | ObjectFlags::ToEnd) and
-        matching.first != matching.second and not buffer.is_end(res->last()) and
-        (*res == selection or Range{res->last(), res->first()} == selection))
+        res->min() == selection.min() and res->max() == selection.max())
     {
-        res = find_surrounding(buffer, buffer.next(res->last()), matching, flags);
-        return res ? Selection{*res} : selection;
+        if (auto res_parent = find_surrounding(buffer, pos, matching, flags, level+1))
+            return Selection{*res_parent};
     }
     return *res;
 }

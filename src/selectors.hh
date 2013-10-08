@@ -70,7 +70,7 @@ SelectionList split_selection(const Buffer& buffer, const Selection& selection,
 
 using CodepointPair = std::pair<Codepoint, Codepoint>;
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
-                             CodepointPair matching, ObjectFlags flags);
+                             CodepointPair matching, int level, ObjectFlags flags);
 
 }
 

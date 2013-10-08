@@ -580,33 +580,48 @@ void deindent(Context& context)
 template<ObjectFlags flags>
 void select_object(Context& context)
 {
-    on_next_key_with_autoinfo(context, [](Key key, Context& context) {
-        typedef std::function<Selection (const Buffer&, const Selection&)> Selector;
-        static const std::unordered_map<Key, Selector> key_to_selector =
-        {
-            { { Key::Modifiers::None, '(' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '(', ')' }, flags) },
-            { { Key::Modifiers::None, ')' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '(', ')' }, flags) },
-            { { Key::Modifiers::None, 'b' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '(', ')' }, flags) },
-            { { Key::Modifiers::None, '{' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '{', '}' }, flags) },
-            { { Key::Modifiers::None, '}' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '{', '}' }, flags) },
-            { { Key::Modifiers::None, 'B' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '{', '}' }, flags) },
-            { { Key::Modifiers::None, '[' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '[', ']' }, flags) },
-            { { Key::Modifiers::None, ']' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '[', ']' }, flags) },
-            { { Key::Modifiers::None, 'r' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '[', ']' }, flags) },
-            { { Key::Modifiers::None, '<' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '<', '>' }, flags) },
-            { { Key::Modifiers::None, '>' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '<', '>' }, flags) },
-            { { Key::Modifiers::None, '"' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '"', '"' }, flags) },
-            { { Key::Modifiers::None, '\'' }, std::bind(select_surrounding, _1, _2, CodepointPair{ '\'', '\'' }, flags) },
-            { { Key::Modifiers::None, 'w' }, std::bind(select_whole_word<Word>, _1, _2, flags) },
-            { { Key::Modifiers::None, 'W' }, std::bind(select_whole_word<WORD>, _1, _2, flags) },
-            { { Key::Modifiers::None, 's' }, std::bind(select_whole_sentence, _1, _2, flags) },
-            { { Key::Modifiers::None, 'p' }, std::bind(select_whole_paragraph, _1, _2, flags) },
-            { { Key::Modifiers::None, 'i' }, std::bind(select_whole_indent, _1, _2, flags) },
-        };
+    int level = context.numeric_param() <= 0 ? 0 : context.numeric_param() - 1;
+    on_next_key_with_autoinfo(context, [level](Key key, Context& context) {
+        if (key.modifiers != Key::Modifiers::None)
+            return;
+        const Codepoint c = key.key;
 
-        auto it = key_to_selector.find(key);
-        if (it != key_to_selector.end())
-            context.editor().select(it->second);
+        static constexpr struct
+        {
+            Codepoint key;
+            Selection (*func)(const Buffer&, const Selection&, ObjectFlags);
+        } selectors[] = {
+            { 'w', select_whole_word<Word> },
+            { 'W', select_whole_word<WORD> },
+            { 's', select_whole_sentence },
+            { 'p', select_whole_paragraph },
+            { 'i', select_whole_indent },
+        };
+        for (auto& sel : selectors)
+        {
+            if (c == sel.key)
+                return context.editor().select(std::bind(sel.func, _1, _2, flags));
+        }
+
+        static constexpr struct
+        {
+            CodepointPair pair;
+            Codepoint name;
+        } surrounding_pairs[] = {
+            { { '(', ')' }, 'b' },
+            { { '{', '}' }, 'B' },
+            { { '[', ']' }, 'r' },
+            { { '<', '>' }, '\0' },
+            { { '"', '"' }, '\0' },
+            { { '\'', '\'' }, '\0' },
+        };
+        for (auto& sur : surrounding_pairs )
+        {
+            if (sur.pair.first == c or sur.pair.second == c or
+                (sur.name != 0 and sur.name == c))
+                return context.editor().select(std::bind(select_surrounding, _1, _2,
+                                                         sur.pair, level, flags));
+        }
     },
     "╭──────┤select object├───────╮\n"
     "│ b,(,):  parenthesis block  │\n"
