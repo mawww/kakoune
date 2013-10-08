@@ -678,7 +678,7 @@ void rotate_selections_content(Context& context)
     int count = context.numeric_param();
     if (count == 0)
         count = 1;
-	Editor& editor = context.editor();
+    Editor& editor = context.editor();
     auto strings = editor.selections_content();
     count = count % strings.size();
     std::rotate(strings.begin(), strings.end()-count, strings.end());
@@ -776,8 +776,8 @@ void jump(Context& context)
 
 void save_selections(Context& context)
 {
-	context.push_jump();
-	context.print_status({ "saved " + to_string(context.editor().selections().size()) +
+    context.push_jump();
+    context.print_status({ "saved " + to_string(context.editor().selections().size()) +
                            " selections", get_color("Information") });
 }
 
