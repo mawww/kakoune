@@ -572,17 +572,47 @@ void indent(Context& context, int)
 
 void deindent(Context& context, int)
 {
-    int width = context.options()["indentwidth"].get<int>();
+    const auto& indent = context.options()["indent"].get<String>();
+    size_t width = 0;
+    size_t tabstop = context.options()["tabstop"].get<int>();
+    for (auto& c : indent)
+    {
+        if (c == '\t')
+            width = (width / tabstop + 1) * tabstop;
+        else
+            ++width;
+    }
+
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.select(select_whole_lines);
-    editor.multi_select(std::bind(select_all_matches, _1, _2,
-                                  Regex{"^\\h{1," + to_string(width) + "}"}));
+    editor.multi_select([width,tabstop](const Buffer& buf, const Selection& sel) {
+            SelectionList res;
+            for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+            {
+                size_t cur_width = 0;
+                auto& content = buf[line];
+                for (auto column = 0_byte; column < content.length(); ++column)
+                {
+                    if (content[column] == ' ')
+                        ++cur_width;
+                    else if (content[column] == '\t')
+                        cur_width = (cur_width / tabstop + 1) * tabstop;
+                    else
+                        break;
+                    if (cur_width == width)
+                    {
+                        res.emplace_back(line, BufferCoord{line, column});
+                        break;
+                    }
+                }
+            }
+            return res;
+        });
     editor.erase();
 }
 
-template<ObjectFlags flags>
+template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
 void select_object(Context& context, int param)
 {
     int level = param <= 0 ? 0 : param - 1;
@@ -605,7 +635,7 @@ void select_object(Context& context, int param)
         for (auto& sel : selectors)
         {
             if (c == sel.key)
-                return context.editor().select(std::bind(sel.func, _1, _2, flags));
+                return context.editor().select(std::bind(sel.func, _1, _2, flags), mode);
         }
 
         static constexpr struct
@@ -625,7 +655,7 @@ void select_object(Context& context, int param)
             if (sur.pair.first == c or sur.pair.second == c or
                 (sur.name != 0 and sur.name == c))
                 return context.editor().select(std::bind(select_surrounding, _1, _2,
-                                                         sur.pair, level, flags));
+                                                         sur.pair, level, flags), mode);
         }
     }, "select object",
     "b,(,):  parenthesis block\n"
@@ -950,6 +980,8 @@ KeyMap keymap =
     { { Key::Modifiers::Alt,  'a' }, select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },
     { { Key::Modifiers::None, ']' }, select_object<ObjectFlags::ToEnd> },
     { { Key::Modifiers::None, '[' }, select_object<ObjectFlags::ToBegin> },
+    { { Key::Modifiers::None, '}' }, select_object<ObjectFlags::ToEnd, SelectMode::Extend> },
+    { { Key::Modifiers::None, '{' }, select_object<ObjectFlags::ToBegin, SelectMode::Extend> },
 
     { { Key::Modifiers::Alt,  'j' }, join },
     { { Key::Modifiers::Alt,  'J' }, join_select_spaces },

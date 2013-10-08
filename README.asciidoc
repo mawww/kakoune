@@ -229,6 +229,8 @@ Some keys allow you to select a text object:
             for a word this will not select trailing spaces.
  * _[_: selects to object start
  * _]_: selects to object end
+ * _{_: extends selections to object start
+ * _}_: extends selections to object end
 
 After this key, you need to enter a second key in order to specify which
 object you want.
@@ -244,6 +246,9 @@ object you want.
  * _s_: select the sentence
  * _p_: select the paragraph
  * _i_: select the current indentation block
+
+For nestable objects, a count can be used in order to specify which surrounding
+level to select.
 
 Registers
 ---------
