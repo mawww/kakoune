@@ -10,45 +10,45 @@ Basic interaction
 For synchronous operations, +%sh{ ... }+ blocks are easy to use, they behave
 similarly to +$( ... )+ shell construct.
 
-For example, one can echo the current time in kakoune status line using:
+For example, one can echo the current time in Kakoune status line using:
 
 [source,bash]
 ----
 :echo %sh{ date }
 ----
 
-For asynchrounous operations, the kakoune unix stream socket can be used. This
-is the same socket that kakoune clients connect to. It is available in the
-+kak_socket+ environment variable.
+For asynchronous operations, the Kakoune Unix stream socket can be used. This
+is the same socket that Kakoune clients connect to. It is available through
++kak_session+ environment variable: the socket is +/tmp/kak-${kak_session}+
 
-For example, we can echo a message in kakoune in 10 seconds with:
+For example, we can echo a message in Kakoune in 10 seconds with:
 
 [source,bash]
 ----
 :nop %sh{ (
     sleep 10
     echo "eval -client '$kak_client' 'echo sleep ended'" |
-        socat stdin UNIX-CONNECT:${kak_socket}
+        socat stdin UNIX-CONNECT:/tmp/kak-${kak_session}
 ) >& /dev/null < /dev/null & }
 ----
 
  * The +nop+ command is used so that any eventual output from the
-   +%sh{ ... }+ is not interpreted by kakoune
- * When writing to the socket, kakoune has no way to guess in which
+   +%sh{ ... }+ is not interpreted by Kakoune
+ * When writing to the socket, Kakoune has no way to guess in which
    client's context the command should be evaluated. A temporary
    context is used, which does not have any user interface, so if we want
    to interact with the user, we need to use the +eval+ command, with
    it's +-client+ option to send commands to a specific client.
- * For the command to run asynchrounously, we wrap it in a subshell
+ * For the command to run asynchronously, we wrap it in a sub shell
    with parenthesis, redirect it's +std{in,err,out}+ to +/dev/null+, and
    run it in background with +&+. Using this pattern, the shell does
-   not wait for this subshell to finish before quitting.
+   not wait for this sub shell to finish before quitting.
 
 Interactive output
 ------------------
 
 It is a frequent interaction mode to run a program and display it's output
-in a kakoune buffer.
+in a Kakoune buffer.
 
 The common pattern to do that is to use a fifo buffer:
 
@@ -60,13 +60,13 @@ The common pattern to do that is to use a fifo buffer:
      mkfifo ${output}
      # run command detached from the shell
      ( run command here >& ${output} ) >& /dev/null < /dev/null &
-     # Open the file in kakoune and add a hook to remove the fifo
+     # Open the file in Kakoune and add a hook to remove the fifo
      echo "edit! -fifo %{output} *buffer-name*
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}} }"
 }
 -----
 
-This is a very simple exemple, most of the time, the echo command will as
+This is a very simple example, most of the time, the echo command will as
 well contains
 
 -----
@@ -92,19 +92,19 @@ the first element of this string list specify where and when this completions
 applies, the others are simply completion candidates.
 
 As a completion program may take some time to compute the candidates, it should
-run asynchrounously. In order to do that, the following pattern may be used:
+run asynchronously. In order to do that, the following pattern may be used:
 
 [source,bash]
 -----
 # Declare the option which will store the temporary filename
 decl str plugin_filename
 %sh{
-    # ask kakoune to write current buffer to temporary file
+    # ask Kakoune to write current buffer to temporary file
     filename=$(mktemp -t kak-temp.XXXXXXXX)
     echo "setb plugin_filename '$filename'
           write '$filename'"
 }
-# End the %sh{} so that it's output gets executed by kakoune.
+# End the %sh{} so that it's output gets executed by Kakoune.
 # Use a nop so that any eventual output of this %sh does not get interpreted.
 nop %sh{ ( # launch a detached shell
     buffer="${kak_opt_plugin_filename}"
@@ -116,8 +116,8 @@ nop %sh{ ( # launch a detached shell
     rm $buffer
     # generate completion option value
     completions="$line.$column@$kak_timestamp:$candidates"
-    # write to kakoune socket for the buffer that triggered the completion
+    # write to Kakoune socket for the buffer that triggered the completion
     echo "setb -buffer '${kak_bufname}' completions '$completions'" |
-        socat stdin UNIX-SOCKET:${kak_socket}
+        socat stdin UNIX-SOCKET:/tmp/kak-${kak_session}
 ) >& /dev/null < /dev/null & }
 -----
