@@ -29,6 +29,8 @@ public:
     virtual void on_replaced() {}
     Context& context() const { return m_client.context(); }
 
+    virtual String description() const = 0;
+
     using Insertion = Client::Insertion;
     Insertion& last_insert() { return m_client.m_last_insert; }
 
@@ -73,6 +75,12 @@ public:
         }
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+    }
+
+    String description() const override
+    {
+        return to_string(context().editor().selections().size()) +
+               (m_count != 0 ? " sel; param=" + to_string(m_count) : " sel");
     }
 
 private:
@@ -247,6 +255,12 @@ public:
             context().print_status(display_line);
         }
    }
+
+    String description() const override
+    {
+        return "menu";
+    }
+
 
 private:
     MenuCallback m_callback;
@@ -444,6 +458,12 @@ public:
         }
     }
 
+    String description() const override
+    {
+        return "prompt";
+    }
+
+
 private:
     void display() const
     {
@@ -477,7 +497,12 @@ public:
     {
         reset_normal_mode();
         m_callback(key, context());
-   }
+    }
+
+    String description() const override
+    {
+        return "enter key";
+    }
 
 private:
     KeyCallback m_callback;
@@ -894,6 +919,11 @@ public:
         if (moved)
             context().hooks().run_hook("InsertMove", key_to_str(key), context());
     }
+
+    String description() const override
+    {
+        return "insert";
+    }
 private:
     enum class Mode { Default, Complete, InsertReg };
     Mode m_mode = Mode::Default;
@@ -1025,25 +1055,21 @@ void Client::print_status(DisplayLine status_line)
     m_context.window().forget_timestamp();
 }
 
-static DisplayLine generate_mode_line(Client& client)
+DisplayLine Client::generate_mode_line() const
 {
-    auto& context = client.context();
-    auto pos = context.editor().main_selection().last();
-    auto col = context.buffer()[pos.line].char_count_to(pos.column);
+    auto pos = context().editor().main_selection().last();
+    auto col = context().buffer()[pos.line].char_count_to(pos.column);
 
     std::ostringstream oss;
-    oss << context.buffer().display_name()
+    oss << context().buffer().display_name()
         << " " << (int)pos.line+1 << ":" << (int)col+1;
-    if (context.buffer().is_modified())
+    if (context().buffer().is_modified())
         oss << " [+]";
-    if (context.client().is_recording())
+    if (is_recording())
        oss << " [recording]";
-    if (context.buffer().flags() & Buffer::Flags::New)
+    if (context().buffer().flags() & Buffer::Flags::New)
         oss << " [new file]";
-    oss << " [" << context.editor().selections().size() << " sel]";
-    if (context.editor().is_editing())
-        oss << " [insert]";
-    oss << " - " << client.name();
+    oss << " [" << m_mode->description() << "]" << " - " << name();
     return { oss.str(), get_color("StatusLine") };
 }
 
@@ -1058,7 +1084,7 @@ void Client::redraw_ifn()
         m_context.window().update_display_buffer();;
 
         m_context.ui().draw(m_context.window().display_buffer(),
-                            m_status_line, generate_mode_line(*this));
+                            m_status_line, generate_mode_line());
     }
 }
 

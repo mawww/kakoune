@@ -76,6 +76,7 @@ public:
     void stop_recording();
 
     Context& context() { return m_context; }
+    const Context& context() const { return m_context; }
     const String& name() const { return m_name; }
     void set_name(String name) { m_name = std::move(name); }
 
@@ -85,13 +86,15 @@ public:
 
     UserInterface& ui() const { return *m_ui; }
 private:
+    void change_input_mode(InputMode* new_mode);
+
+    DisplayLine generate_mode_line() const;
+
     Context m_context;
     friend class InputMode;
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<InputMode> m_mode;
     std::vector<std::unique_ptr<InputMode>> m_mode_trash;
-
-    void change_input_mode(InputMode* new_mode);
 
     String m_name;
     DisplayLine m_status_line;
