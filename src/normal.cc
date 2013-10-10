@@ -264,6 +264,18 @@ void pipe(Context& context, int)
             if (event != PromptEvent::Validate)
                 return;
 
+            String real_cmd;
+            if (cmdline.empty())
+                real_cmd = RegisterManager::instance()['|'].values(context)[0];
+            else
+            {
+                RegisterManager::instance()['|'] = cmdline;
+                real_cmd = cmdline;
+            }
+
+            if (real_cmd.empty())
+                return;
+
             Editor& editor = context.editor();
             std::vector<String> strings;
             for (auto& sel : context.editor().selections())
@@ -272,7 +284,7 @@ void pipe(Context& context, int)
                 bool insert_eol = str.back() != '\n';
                 if (insert_eol)
                     str += '\n';
-                str = ShellManager::instance().pipe(str, cmdline, context,
+                str = ShellManager::instance().pipe(str, real_cmd, context,
                                                     {}, EnvVarMap{});
                 if (insert_eol and str.back() == '\n')
                     str = str.substr(0, str.length()-1);
