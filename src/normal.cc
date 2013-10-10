@@ -716,7 +716,8 @@ void start_or_end_macro_recording(Context& context, int)
         context.client().stop_recording();
     else
         on_next_key_with_autoinfo(context, [](Key key, Context& context) {
-            if (key.modifiers == Key::Modifiers::None)
+            if (key.modifiers == Key::Modifiers::None and
+                key.key >= 'a' and key.key <= 'z')
                 context.client().start_recording(key.key);
         },
         "╭──┤record macro├──╮\n"
