@@ -1,9 +1,12 @@
-* encoding: support different encoding for files, make utf8 implementation
-  more robust
+* Improve unicode text edition
 
-* support multi column chars
+  - support reading/writing non utf8 encoded files
 
-* right-to-left, bidirectional text
+  - more robust utf8 implementation
+
+  - support multi column chars
+
+  - right-to-left, bidirectional text
 
 * key binding support
 
@@ -11,30 +14,66 @@
 
 * Crash recovery support (swap files)
 
+* Detect external file changes
+
 * Sanitize prompt history handling, hooks should not have side effects
   on history
 
-* More text objects: indent, user defined ?
+* improve input filters
 
-* automatic line splitting
+  - try to have a decent C++ input mode indenter
 
-* folding support
+  - automatic line splitting
+
+* improve highlighters
+
+  - folding support
+
+  - Support defining and reusing highlighters
+
+    . defhl -> add hl to a global group +
+      'addhl ref ...' references a highlighter in the global group
+
+    . Conditional ref highlighter (use php highlighter in <?php > blocks,
+      use html highlighter outside
+
+  - other types of highlighters (like for correctly supporting nesting,
+    which regex are bad at), faster as well.
+
+* improve info boxes
+
+  - More automatic hiding behaviour
+
+  - Pass more params to infos boxes: title, borders, move unicode borders
+    building to the ncurses UI, so that an eventual graphical UI can do better.
+
+* improve the option based completion
+
+  - Support different options
+    (setb completers word,option=cpp_completions,option=spell_completions)
+
+  - Support multiple completion points
+    (1.1@0:comp1:comp2:comp3:1.5@0:comp1:comp2:comp3)
+
+  - smarter behaviour to keep completion available longer
+
+    . keep per line timestamps
+
+    . update completion options when lines are added/deleted
 
 * spelling support
-
-* improve info boxes, use a sane hiding behaviour
 
 * allow colalias to reference another colalias
 
 * investigate 'kakdiff'
-
-* improve input filters, try to have a decent C++ input mode indenter
 
 * Tree based undo
 
 * incrementation/decrementation of integers support
 
 * more sane command line parsing, better shell interaction with quoting
+
+  - Real parsing of the command line ?
 
 * configurable evaluated (%sh{...}) strings ? use an option to define
   the interpreters, regex for finding used kak variables (ability to
@@ -45,15 +84,19 @@
 * %rec{...%opt{tchou}...%sh{echo kanaky}} ~= "...${kak_opt_tchou}...$(echo kanaky)..."
 
 * Optimize BufferModificationListener behaviour:
+
   - Editor should modify in reverse order, as a modification at one point does not
     impact the position of selections before it, so applying modification in reverse
     order removes the needs to have selection updated on the fly, and permit deferred
     update.
+
   - Accumulate all the modifications and update the selections with the
     whole knowledge -> try to remove this O(n2) behaviour.
 
-* deffilter/defhl -> add filter or hl to a global group +
-  'addhl ref ...' references a highlighter in the global group
+* More text objects: indent, user defined ?
 
-* other types of highlighters (like for correctly supporting nesting,
-  which regex are bad at)
+* multiple parameters support for normal mode commands ?
+
+  - 10,20g -> goto line 10, column 20
+
+  - 1,2,3<a-space> remove selections 1, 2 and 3
