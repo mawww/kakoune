@@ -1066,7 +1066,7 @@ DisplayLine Client::generate_mode_line() const
     if (context().buffer().is_modified())
         oss << " [+]";
     if (is_recording())
-       oss << " [recording]";
+       oss << " [recording (" << m_recording_reg << ")]";
     if (context().buffer().flags() & Buffer::Flags::New)
         oss << " [new file]";
     oss << " [" << m_mode->description() << "]" << " - " << name();
