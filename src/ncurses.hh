@@ -32,8 +32,9 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(const String& content, DisplayCoord anchor,
-                   ColorPair colors, MenuStyle style) override;
+    void info_show(const String& title, const String& content,
+                   DisplayCoord anchor, ColorPair colors,
+                   MenuStyle style) override;
     void info_hide() override;
 
     void set_input_callback(InputCallback callback) override;

@@ -33,21 +33,23 @@ void repeat_insert(Context& context, int)
     context.client().repeat_last_insert();
 }
 
-bool show_auto_info_ifn(const String& info, const Context& context)
+bool show_auto_info_ifn(const String& title, const String& info,
+                        const Context& context)
 {
     if (not context.options()["autoinfo"].get<bool>() or not context.has_ui())
         return false;
     ColorPair col = get_color("Information");
     DisplayCoord pos = context.window().dimensions();
     pos.column -= 1;
-    context.ui().info_show(info, pos , col, MenuStyle::Inline);
+    context.ui().info_show(title, info, pos , col, MenuStyle::Prompt);
     return true;
 }
 
 template<typename Cmd>
-void on_next_key_with_autoinfo(const Context& context, Cmd cmd, const std::string& info)
+void on_next_key_with_autoinfo(const Context& context, Cmd cmd,
+                               const String& title, const String& info)
 {
-    const bool hide = show_auto_info_ifn(info, context);
+    const bool hide = show_auto_info_ifn(title, info, context);
     context.client().on_next_key([hide,cmd](Key key, Context& context) mutable {
             if (hide)
                 context.ui().info_hide();
@@ -152,19 +154,17 @@ void goto_commands(Context& context, int line)
                 break;
             }
             }
-        },
-        "╭────────┤goto├───────╮\n"
-        "│ g,k:  buffer top    │\n"
-        "│ l:    line end      │\n"
-        "│ h:    line begin    │\n"
-        "│ j:    buffer bottom │\n"
-        "│ e:    buffer end    │\n"
-        "│ t:    window top    │\n"
-        "│ b:    window bottom │\n"
-        "│ c:    window center │\n"
-        "│ a:    last buffer   │\n"
-        "│ f:    file          │\n"
-        "╰─────────────────────╯\n");
+        }, "goto",
+        "g,k:  buffer top   \n"
+        "l:    line end     \n"
+        "h:    line begin   \n"
+        "j:    buffer bottom\n"
+        "e:    buffer end   \n"
+        "t:    window top   \n"
+        "b:    window bottom\n"
+        "c:    window center\n"
+        "a:    last buffer  \n"
+        "f:    file         \n");
     }
 }
 
@@ -200,16 +200,14 @@ void view_commands(Context& context, int param)
             context.window().scroll( std::max<CharCount>(1, param));
             break;
         }
-    },
-    "╭─────────┤view├─────────╮\n"
-    "│ v,c:  center cursor    │\n"
-    "│ t:    cursor on top    │\n"
-    "│ b:    cursor on bottom │\n"
-    "│ h:    scroll left      │\n"
-    "│ j:    scroll down      │\n"
-    "│ k:    scroll up        │\n"
-    "│ l:    scroll right     │\n"
-    "╰────────────────────────╯\n");
+    }, "view",
+    "v,c:  center cursor   \n"
+    "t:    cursor on top   \n"
+    "b:    cursor on bottom\n"
+    "h:    scroll left     \n"
+    "j:    scroll down     \n"
+    "k:    scroll up       \n"
+    "l:    scroll right    \n");
 }
 
 void replace_with_char(Context& context, int)
@@ -222,10 +220,7 @@ void replace_with_char(Context& context, int)
         auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
         editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"."}));
         editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
-    },
-    "╭────┤replace with char├─────╮\n"
-    "│ enter char to replace with │\n"
-    "╰────────────────────────────╯\n");
+    }, "replace with char", "enter char to replace with\n");
 }
 
 Codepoint to_lower(Codepoint cp) { return tolower(cp); }
@@ -620,20 +615,18 @@ void select_object(Context& context, int param)
                 return context.editor().select(std::bind(select_surrounding, _1, _2,
                                                          sur.pair, level, flags));
         }
-    },
-    "╭──────┤select object├───────╮\n"
-    "│ b,(,):  parenthesis block  │\n"
-    "│ B,{,}:  braces block       │\n"
-    "│ r,[,]:  brackets block     │\n"
-    "│ <,>:    angle block        │\n"
-    "│ \":    double quote string  │\n"
-    "│ ':    single quote string  │\n"
-    "│ w:    word                 │\n"
-    "│ W:    WORD                 │\n"
-    "│ s:    sentence             │\n"
-    "│ p:    paragraph            │\n"
-    "│ i:    indent               │\n"
-    "╰────────────────────────────╯\n");
+    }, "select object",
+    "b,(,):  parenthesis block\n"
+    "B,{,}:  braces block     \n"
+    "r,[,]:  brackets block   \n"
+    "<,>:    angle block      \n"
+    "\":    double quote string\n"
+    "':    single quote string\n"
+    "w:    word               \n"
+    "W:    WORD               \n"
+    "s:    sentence           \n"
+    "p:    paragraph          \n"
+    "i:    indent             \n");
 }
 
 template<Key::NamedKey key>
@@ -704,10 +697,7 @@ void select_to_next_char(Context& context, int param)
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
                       _1, _2, key.key, param, flags & SelectFlags::Inclusive),
             flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace);
-   },
-    "╭──┤select to next char├──╮\n"
-    "│ enter char to select to │\n"
-    "╰─────────────────────────╯\n");
+   }, "select to next char","enter char to select to");
 }
 
 void start_or_end_macro_recording(Context& context, int)
@@ -719,10 +709,7 @@ void start_or_end_macro_recording(Context& context, int)
             if (key.modifiers == Key::Modifiers::None and
                 key.key >= 'a' and key.key <= 'z')
                 context.client().start_recording(key.key);
-        },
-        "╭──┤record macro├──╮\n"
-        "│ enter macro name │\n"
-        "╰──────────────────╯\n");
+        }, "record macro", "enter macro name ");
 }
 
 void replay_macro(Context& context, int count)
@@ -745,10 +732,7 @@ void replay_macro(Context& context, int count)
                 do { exec_keys(keys, context); } while (--count > 0);
             }
         }
-    },
-    "╭──┤replay macro├──╮\n"
-    "│ enter macro name │\n"
-    "╰──────────────────╯\n");
+    }, "replay macro", "enter macro name");
 }
 
 template<Direction direction>

@@ -534,14 +534,112 @@ static DisplayCoord compute_pos(DisplayCoord anchor,
     return pos;
 }
 
-void NCursesUI::info_show(const String& content, DisplayCoord anchor,
-                          ColorPair colors, MenuStyle style)
+static std::vector<String> wrap_lines(const String& text, CharCount max_width)
+{
+    enum CharCategory { Word, Blank, Eol };
+    static const auto categorize = [](Codepoint c) {
+        return is_blank(c) ? Blank
+                           : is_eol(c) ? Eol : Word;
+    };
+
+    using Utf8It = utf8::utf8_iterator<String::const_iterator>;
+    Utf8It word_begin{text.begin()};
+    Utf8It word_end{word_begin};
+    Utf8It end{text.end()};
+    CharCount col = 0;
+    std::vector<String> lines;
+    String line;
+    while (word_begin != end)
+    {
+        CharCategory cat = categorize(*word_begin);
+        do
+        {
+            ++word_end;
+        } while (word_end != end and categorize(*word_end) == cat);
+
+        col += word_end - word_begin;
+        if (col > max_width or *word_begin == '\n')
+        {
+            lines.push_back(std::move(line));
+            line = "";
+            col = 0;
+        }
+        if (*word_begin != '\n')
+            line += String{word_begin.base(), word_end.base()};
+        word_begin = word_end;
+    }
+    if (not line.empty())
+        lines.push_back(std::move(line));
+    return lines;
+}
+
+template<bool assist = true>
+static String make_info_box(const String& title, const String& message,
+                            CharCount max_width)
+{
+    static const std::vector<String> assistant =
+        { " ╭──╮   ",
+          " │  │   ",
+          " @  @  ╭",
+          " ││ ││ │",
+          " ││ ││ ╯",
+          " │╰─╯│  ",
+          " ╰───╯  ",
+          "        " };
+    DisplayCoord assistant_size;
+    if (assist)
+        assistant_size = { (int)assistant.size(), assistant[0].char_length() };
+
+    const CharCount max_bubble_width = max_width - assistant_size.column - 6;
+    std::vector<String> lines = wrap_lines(message, max_bubble_width);
+
+    CharCount bubble_width = title.char_length() + 2;
+    for (auto& line : lines)
+        bubble_width = std::max(bubble_width, line.char_length());
+
+    String result;
+    auto lineCount = std::max<LineCount>(assistant_size.line-1, (int)lines.size() + 2);
+    for (LineCount i = 0; i < lineCount; ++i)
+    {
+        constexpr Codepoint dash{L'─'};
+        if (assist)
+            result += assistant[std::min((int)i, (int)assistant_size.line-1)];
+        if (i == 0)
+        {
+            if (title.empty())
+                result += "╭─" + String(dash, bubble_width) + "─╮";
+            else
+            {
+                CharCount dashCount = bubble_width - title.char_length() - 2_char;
+                CharCount leftCount =  dashCount / 2;
+                CharCount rightCount=  dashCount - leftCount;
+                result += "╭─" + String(dash, leftCount) + "┤" + title +"├" + String(dash, rightCount) +"─╮";
+            }
+        }
+        else if (i < lines.size() + 1)
+        {
+            auto& line = lines[(int)i - 1];
+            const CharCount padding = std::max(bubble_width - line.char_length(), 0_char);
+            result += "│ " + line + String(' ', padding) + " │";
+        }
+        else if (i == lines.size() + 1)
+            result += "╰─" + String(dash, bubble_width) + "─╯";
+
+        result += "\n";
+    }
+    return result;
+}
+
+void NCursesUI::info_show(const String& title, const String& content,
+                          DisplayCoord anchor, ColorPair colors,
+                          MenuStyle style)
 {
     kak_assert(m_info_win == nullptr);
 
-    DisplayCoord size = compute_needed_size(content);
-    if (style == MenuStyle::Prompt)
-        size.column = window_size(stdscr).column - anchor.column;
+    const String& info_box = style == MenuStyle::Inline ?
+         content : make_info_box(title, content, m_dimensions.column);
+
+    DisplayCoord size = compute_needed_size(info_box);
 
     DisplayCoord pos = compute_pos(anchor, size, m_menu_win);
 
@@ -550,7 +648,7 @@ void NCursesUI::info_show(const String& content, DisplayCoord anchor,
 
     wbkgd(m_info_win, COLOR_PAIR(get_color_pair(colors)));
     int line = 0;
-    auto it = content.begin(), end = content.end();
+    auto it = info_box.begin(), end = info_box.end();
     while (true)
     {
         wmove(m_info_win, line++, 0);

@@ -222,8 +222,9 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(const String& content, DisplayCoord anchor,
-                   ColorPair colors, MenuStyle style) override;
+    void info_show(const String& title, const String& content,
+                   DisplayCoord anchor, ColorPair colors,
+                   MenuStyle style) override;
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
@@ -281,11 +282,13 @@ void RemoteUI::menu_hide()
     msg.write(RemoteUIMsg::MenuHide);
 }
 
-void RemoteUI::info_show(const String& content, DisplayCoord anchor,
-                         ColorPair colors, MenuStyle style)
+void RemoteUI::info_show(const String& title, const String& content,
+                         DisplayCoord anchor, ColorPair colors,
+                         MenuStyle style)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::InfoShow);
+    msg.write(title);
     msg.write(content);
     msg.write(anchor);
     msg.write(colors);
@@ -396,11 +399,12 @@ void RemoteClient::process_next_message()
         break;
     case RemoteUIMsg::InfoShow:
     {
-        auto choices = read<String>(socket);
+        auto title = read<String>(socket);
+        auto content = read<String>(socket);
         auto anchor = read<DisplayCoord>(socket);
         auto colors = read<ColorPair>(socket);
         auto style = read<MenuStyle>(socket);
-        m_ui->info_show(choices, anchor, colors, style);
+        m_ui->info_show(title, content, anchor, colors, style);
         break;
     }
     case RemoteUIMsg::InfoHide:

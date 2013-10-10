@@ -543,7 +543,7 @@ public:
     void menu_select(int) override {}
     void menu_hide() override {}
 
-    void info_show(const String&, DisplayCoord, ColorPair, MenuStyle) override {}
+    void info_show(const String&, const String&, DisplayCoord, ColorPair, MenuStyle) override {}
     void info_hide() override {}
 
     void draw(const DisplayBuffer&, const DisplayLine&, const DisplayLine&) override {}
@@ -642,88 +642,17 @@ void menu(CommandParameters params, Context& context)
         });
 }
 
-static String assist(String message, CharCount maxWidth)
-{
-    static const std::vector<String> assistant =
-        { " ╭──╮   ",
-          " │  │   ",
-          " @  @  ╭",
-          " ││ ││ │",
-          " ││ ││ ╯",
-          " │╰─╯│  ",
-          " ╰───╯  ",
-          "        " };
-
-    const CharCount maxBubbleWidth = maxWidth - assistant[0].char_length() - 6;
-    CharCount bubbleWidth = 0;
-    std::vector<String> lines;
-    {
-        using Utf8It = utf8::utf8_iterator<String::iterator>;
-        Utf8It word_begin{message.begin()};
-        Utf8It word_end{word_begin};
-        Utf8It end{message.end()};
-        CharCount col = 0;
-        String line;
-        while (word_begin != end)
-        {
-            do
-            {
-                ++word_end;
-            } while (word_end != end and not is_blank(*word_end) and not is_eol(*word_end));
-
-            col += word_end - word_begin;
-            if (col > maxBubbleWidth or *word_begin == '\n')
-            {
-                bubbleWidth = std::max(bubbleWidth, line.char_length());
-                lines.push_back(std::move(line));
-                line = "";
-                col = 0;
-            }
-            if (*word_begin != '\n')
-                line += String{word_begin.base(), word_end.base()};
-            word_begin = word_end;
-        }
-        if (not line.empty())
-        {
-            bubbleWidth = std::max(bubbleWidth, line.char_length());
-            lines.push_back(std::move(line));
-        }
-    }
-
-    String result;
-    LineCount lineCount{std::max<int>(assistant.size()-1, lines.size() + 2)};
-    for (LineCount i = 0; i < lineCount; ++i)
-    {
-
-        result += assistant[std::min((int)i, (int)assistant.size()-1)];
-        if (i == 0)
-            result += "╭─" + String(Codepoint{L'─'}, bubbleWidth) + "─╮";
-        else if (i < lines.size() + 1)
-        {
-            auto& line = lines[(int)i - 1];
-            const CharCount padding = std::max(bubbleWidth - line.char_length(), 0_char);
-            result += "│ " + line + String(' ', padding) + " │";
-        }
-        else if (i == lines.size() + 1)
-            result += "╰─" + String(Codepoint{L'─'}, bubbleWidth) + "─╯";
-
-        result += "\n";
-    }
-    return result;
-}
-
-
 void info(CommandParameters params, Context& context)
 {
-    ParametersParser parser(params, { { "anchor", true }, { "assist", false } },
+    ParametersParser parser(params, { { "anchor", true }, { "title", true } },
                             ParametersParser::Flags::None, 0, 1);
 
     context.ui().info_hide();
     if (parser.positional_count() > 0)
     {
         MenuStyle style = MenuStyle::Prompt;
-        DisplayCoord dimensions = context.ui().dimensions();
-        DisplayCoord pos = { dimensions.line, 0 };
+        DisplayCoord pos = context.ui().dimensions();
+        pos.column -= 1;
         if (parser.has_option("anchor"))
         {
             style =  MenuStyle::Inline;
@@ -738,8 +667,8 @@ void info(CommandParameters params, Context& context)
                 throw runtime_error("anchor param must be one of [left, right, cursor]");
             pos = context.window().display_position(it);
         }
-        const String& message = parser.has_option("assist") ? assist(parser[0], dimensions.column) : parser[0];
-        context.ui().info_show(message, pos, get_color("Information"), style);
+        const String& title = parser.has_option("title") ? parser.option_value("title") : "";
+        context.ui().info_show(title, parser[0], pos, get_color("Information"), style);
     }
 }
 
