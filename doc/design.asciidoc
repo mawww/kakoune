@@ -1,0 +1,123 @@
+Kakoune design
+==============
+
+This document describes the design goals for Kakoune, including rationales.
+
+Interactivity
+-------------
+
+Unlike Vim, Kakoune does not have an underlying line-oriented editor, and
+is always expected to be used in an interactive (i.e. with the edited text
+being displayed in real time) fashion. That should not prevent Kakoune from
+being used non interactively (executing macro for example), but priority
+should be given to ease of interactive use.
+
+Limited scope
+-------------
+
+Kakoune is a code editor. It is not an IDE, not a file browser, not a word
+processor and not a window manager. It should be very efficient at editing code,
+and should, as a side effect, be very efficient at editing text in general.
+
+Composability
+-------------
+
+Being limited in scope to code edition should not isolate Kakoune from it's
+environment. On the contrary, Kakoune is expected to run on an Unix-like
+system, along with a lot of text-based tools, and should make it easy to
+interact with these tools.
+
+For example, sorting lines should be done using the Unix sort command, not
+with an internal implementation. Kakoune should make it easy to do that,
+hence the +|+ command for pipping selected text through a filter.
+
+The modern Unix environment is not limited to text filters, most people use
+a graphical interface nowadays, and Kakoune should be able to take advantage
+of that, without hindering text mode support. For example Kakoune supports
+multiple clients on the same editing session, so that multiple windows can
+be used, letting the system window manager handle it's responsibilities such
+as tiling or tabbing.
+
+Orthogonality
+-------------
+
+Kakoune features should be as orthogonal as possible, for example, in Vim,
+there is multiple ways for modifying the buffer: Through normal/insert
+mode, command mode, and Vim scripts. In Kakoune, modifying the buffer is the
+normal/insert mode job.
+
+That means there should be clear separation of concerns between modes:
+
+ * normal mode is for manipulating the selection and the selection contents.
+
+ * insert mode is for interactive insertion into the buffer.
+
+ * command mode is for non-editing features (opening a file, setting
+   options...).
+
+So modes should be orthogonal, and commands in modes should be as well. For
+example, Vim uses +d+ and +x+ for very similar things: deleting text. In
+Kakoune only +d+ exists, and things are done so that +x+ is not needed.
+
+Speed
+-----
+
+Kakoune should be fast, fast to use, as in a lot of editing in a few
+keystrokes, and fast to execute.
+
+ * Vim is the benchmark here, most editing tasks should be doable in less
+   or the same number of keys.
+
+ * Kakoune be designed with asynchronicity in mind, launching a background
+   process and using it's result when available should not block the editor.
+
+ * Kakoune should be implemented with speed in mind, a slow editor is a
+   useless one.
+
+Simplicity
+----------
+
+Simplicity is nice, simplicity correlates with orthogonality and speed, and makes
+things easier to understand, bugs easier to fix, and code easier to change.
+
+ * *No threading*: multithreading is a hard problem, and is not well suited
+   to a text editor:
+
+   - Either we want a direct result, and we need to be synchronous with
+     the user, so getting a 4x speed up is meaningless, we need to have an
+     algorithm which appears instantaneous the the user.
+
+   - Or we want an asynchronous result, and then the processing is best left
+     to a helper command which can be reused with other Unix tools.
+
+ * *No binary plugins*: shared object by themselves add a lot of
+   complexity. Plugins add another interface to Kakoune, and goes against
+   orthogonality. The +%sh{ ... }+ and socket interface should be made good
+   enough for most plugin use cases.
+  
+   - It is better to write Kakoune-independent helper tools (intelligent
+     code completer, source code navigation programs) that can interact with
+     Kakoune through the shell than write them in a plugin.
+
+ * *No integrated scripting language*: for the same reason as binary plugins.
+
+ * *Limited smartness*: Kakoune should not try to be too smart, being smart
+   is often unpredictable for the user, and makes things context dependent.
+   When Kakoune tries to be smart, it should provide the alternative, 'non
+   smart' version (+*+ tries to detect word boundaries on the selection, but
+   +alt-*+ permits to avoid this behavior).
+   
+
+Language agnostic
+-----------------
+
+Kakoune should not be tailored for writing a specific programming
+language. Support for different languages should be provided by a kak script
+file, built-in language support should be avoided.
+
+Vim compatibility
+-----------------
+
+Kakoune is inspired by Vim, and should try to keep it's commands close to Vim
+ones if there is no compelling reasons to change. However self consistency
+is more important than Vim compatibility.
