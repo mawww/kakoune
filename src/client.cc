@@ -68,10 +68,7 @@ public:
         {
             auto it = keymap.find(key);
             if (it != keymap.end())
-            {
-                context().numeric_param() = m_count;
-                it->second(context());
-            }
+                it->second(context(), m_count);
             m_count = 0;
         }
         context().hooks().run_hook("NormalKey", key_to_str(key), context());

@@ -56,12 +56,9 @@ struct Context
     const DynamicSelectionList& jump_backward();
     void forget_jumps_to_buffer(Buffer& buffer);
 
-    int& numeric_param() { return m_numeric_param; }
 private:
     safe_ptr<Editor>        m_editor;
     safe_ptr<Client>  m_client;
-
-    int m_numeric_param = 0;
 
     using JumpList = std::vector<DynamicSelectionList>;
     JumpList           m_jump_list;

@@ -23,12 +23,12 @@ namespace Kakoune
 using namespace std::placeholders;
 
 template<InsertMode mode>
-void insert(Context& context)
+void insert(Context& context, int)
 {
     context.client().insert(mode);
 }
 
-void repeat_insert(Context& context)
+void repeat_insert(Context& context, int)
 {
     context.client().repeat_last_insert();
 }
@@ -56,13 +56,12 @@ void on_next_key_with_autoinfo(const Context& context, Cmd cmd, const std::strin
 }
 
 template<SelectMode mode>
-void goto_commands(Context& context)
+void goto_commands(Context& context, int line)
 {
-    int count = context.numeric_param();
-    if (count != 0)
+    if (line != 0)
     {
         context.push_jump();
-        context.editor().select(BufferCoord{count - 1, 0});
+        context.editor().select(BufferCoord{line - 1, 0});
         if (context.has_window())
             context.window().center_selection();
     }
@@ -169,9 +168,9 @@ void goto_commands(Context& context)
     }
 }
 
-void view_commands(Context& context)
+void view_commands(Context& context, int param)
 {
-    on_next_key_with_autoinfo(context, [](Key key, Context& context) {
+    on_next_key_with_autoinfo(context, [param](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
             return;
 
@@ -189,16 +188,16 @@ void view_commands(Context& context)
             context.window().display_selection_at(window.dimensions().line-1);
             break;
         case 'h':
-            context.window().scroll(-std::max<CharCount>(1, context.numeric_param()));
+            context.window().scroll(-std::max<CharCount>(1, param));
             break;
         case 'j':
-            context.window().scroll( std::max<LineCount>(1, context.numeric_param()));
+            context.window().scroll( std::max<LineCount>(1, param));
             break;
         case 'k':
-            context.window().scroll(-std::max<LineCount>(1, context.numeric_param()));
+            context.window().scroll(-std::max<LineCount>(1, param));
             break;
         case 'l':
-            context.window().scroll( std::max<CharCount>(1, context.numeric_param()));
+            context.window().scroll( std::max<CharCount>(1, param));
             break;
         }
     },
@@ -213,7 +212,7 @@ void view_commands(Context& context)
     "╰────────────────────────╯\n");
 }
 
-void replace_with_char(Context& context)
+void replace_with_char(Context& context, int)
 {
     on_next_key_with_autoinfo(context, [](Key key, Context& context) {
         if (not isprint(key.key))
@@ -239,7 +238,7 @@ Codepoint swap_case(Codepoint cp)
 }
 
 template<Codepoint (*func)(Codepoint)>
-void for_each_char(Context& context)
+void for_each_char(Context& context, int)
 {
     Editor& editor = context.editor();
     std::vector<String> sels = editor.selections_content();
@@ -251,7 +250,7 @@ void for_each_char(Context& context)
     editor.insert(sels, InsertMode::Replace);
 }
 
-void command(Context& context)
+void command(Context& context, int)
 {
     context.client().prompt(
         ":", get_color("Prompt"),
@@ -262,7 +261,7 @@ void command(Context& context)
         });
 }
 
-void pipe(Context& context)
+void pipe(Context& context, int)
 {
     context.client().prompt("pipe:", get_color("Prompt"), complete_nothing,
         [](const String& cmdline, PromptEvent event, Context& context)
@@ -289,7 +288,7 @@ void pipe(Context& context)
 }
 
 template<SelectMode mode, Direction direction>
-void search(Context& context)
+void search(Context& context, int)
 {
     const char* prompt = direction == Forward ? "search:" : "reverse search:";
     DynamicSelectionList selections{context.buffer(), context.editor().selections()};
@@ -336,7 +335,7 @@ void search(Context& context)
 }
 
 template<SelectMode mode, Direction direction>
-void search_next(Context& context)
+void search_next(Context& context, int param)
 {
     const String& str = RegisterManager::instance()['/'].values(context)[0];
     if (not str.empty())
@@ -344,10 +343,9 @@ void search_next(Context& context)
         try
         {
             Regex ex{str};
-            int count = context.numeric_param();
             do {
                 context.editor().select(std::bind(select_next_match<direction>, _1, _2, ex), mode);
-            } while (--count > 0);
+            } while (--param > 0);
         }
         catch (boost::regex_error& err)
         {
@@ -359,7 +357,7 @@ void search_next(Context& context)
 }
 
 template<bool smart>
-void use_selection_as_search_pattern(Context& context)
+void use_selection_as_search_pattern(Context& context, int)
 {
     std::vector<String> patterns;
     auto& sels = context.editor().selections();
@@ -381,14 +379,14 @@ void use_selection_as_search_pattern(Context& context)
     RegisterManager::instance()['/'] = patterns;
 }
 
-void yank(Context& context)
+void yank(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
     context.print_status({ "yanked " + to_string(context.editor().selections().size()) +
                            " selections", get_color("Information") });
 }
 
-void cat_yank(Context& context)
+void cat_yank(Context& context, int)
 {
     auto sels = context.editor().selections_content();
     String str;
@@ -399,16 +397,16 @@ void cat_yank(Context& context)
                            to_string(sels.size()) + " selections", get_color("Information") });
 }
 
-void erase_selections(Context& context)
+void erase_selections(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
     context.editor().erase();
 }
 
-void change(Context& context)
+void change(Context& context, int param)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    insert<InsertMode::Replace>(context);
+    insert<InsertMode::Replace>(context, param);
 }
 
 static InsertMode adapt_for_linewise(InsertMode mode)
@@ -425,7 +423,7 @@ static InsertMode adapt_for_linewise(InsertMode mode)
 }
 
 template<InsertMode insert_mode>
-void paste(Context& context)
+void paste(Context& context, int)
 {
     Editor& editor = context.editor();
     auto strings = RegisterManager::instance()['"'].values(context);
@@ -465,7 +463,7 @@ void regex_prompt(Context& context, const String prompt, T on_validate)
         });
 }
 
-void select_regex(Context& context)
+void select_regex(Context& context, int)
 {
     regex_prompt(context, "select:", [](Regex ex, Context& context) {
         if (ex.empty())
@@ -477,7 +475,7 @@ void select_regex(Context& context)
     });
 }
 
-void split_regex(Context& context)
+void split_regex(Context& context, int)
 {
     regex_prompt(context, "split:", [](Regex ex, Context& context) {
         if (ex.empty())
@@ -489,7 +487,7 @@ void split_regex(Context& context)
     });
 }
 
-void split_lines(Context& context)
+void split_lines(Context& context, int)
 {
     context.editor().multi_select([](const Buffer& buffer, const Selection& sel) {
         if (sel.first().line == sel.last().line)
@@ -505,7 +503,7 @@ void split_lines(Context& context)
     });
 }
 
-void join_select_spaces(Context& context)
+void join_select_spaces(Context& context, int)
 {
     Editor& editor = context.editor();
     editor.select(select_whole_lines);
@@ -524,16 +522,16 @@ void join_select_spaces(Context& context)
     editor.insert(" ", InsertMode::Replace);
 }
 
-void join(Context& context)
+void join(Context& context, int param)
 {
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    join_select_spaces(context);
+    join_select_spaces(context, param);
 }
 
 template<bool matching>
-void keep(Context& context)
+void keep(Context& context, int)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
     regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
@@ -552,7 +550,7 @@ void keep(Context& context)
     });
 }
 
-void indent(Context& context)
+void indent(Context& context, int)
 {
     size_t width = context.options()["indentwidth"].get<int>();
     String indent(' ', width);
@@ -565,7 +563,7 @@ void indent(Context& context)
     editor.insert(indent, InsertMode::Insert);
 }
 
-void deindent(Context& context)
+void deindent(Context& context, int)
 {
     int width = context.options()["indentwidth"].get<int>();
     Editor& editor = context.editor();
@@ -578,9 +576,9 @@ void deindent(Context& context)
 }
 
 template<ObjectFlags flags>
-void select_object(Context& context)
+void select_object(Context& context, int param)
 {
-    int level = context.numeric_param() <= 0 ? 0 : context.numeric_param() - 1;
+    int level = param <= 0 ? 0 : param - 1;
     on_next_key_with_autoinfo(context, [level](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None)
             return;
@@ -639,7 +637,7 @@ void select_object(Context& context)
 }
 
 template<Key::NamedKey key>
-void scroll(Context& context)
+void scroll(Context& context, int)
 {
     static_assert(key == Key::PageUp or key == Key::PageDown,
                   "scrool only implements PageUp and PageDown");
@@ -665,17 +663,13 @@ void scroll(Context& context)
     window.set_position(position);
 }
 
-void rotate_selections(Context& context)
+void rotate_selections(Context& context, int count)
 {
-    int count = context.numeric_param();
-    if (count == 0)
-        count = 1;
-    context.editor().rotate_selections(count);
+    context.editor().rotate_selections(count != 0 ? count : 1);
 }
 
-void rotate_selections_content(Context& context)
+void rotate_selections_content(Context& context, int count)
 {
-    int count = context.numeric_param();
     if (count == 0)
         count = 1;
     Editor& editor = context.editor();
@@ -703,9 +697,8 @@ constexpr bool operator&(SelectFlags lhs, SelectFlags rhs)
 }
 
 template<SelectFlags flags>
-void select_to_next_char(Context& context)
+void select_to_next_char(Context& context, int param)
 {
-    int param = context.numeric_param();
     on_next_key_with_autoinfo(context, [param](Key key, Context& context) {
         context.editor().select(
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
@@ -717,7 +710,7 @@ void select_to_next_char(Context& context)
     "╰─────────────────────────╯\n");
 }
 
-void start_or_end_macro_recording(Context& context)
+void start_or_end_macro_recording(Context& context, int)
 {
     if (context.client().is_recording())
         context.client().stop_recording();
@@ -731,9 +724,8 @@ void start_or_end_macro_recording(Context& context)
         "╰──────────────────╯\n");
 }
 
-void replay_macro(Context& context)
+void replay_macro(Context& context, int count)
 {
-    int count = context.numeric_param();
     on_next_key_with_autoinfo(context, [count](Key key, Context& context) mutable {
         if (key.modifiers == Key::Modifiers::None)
         {
@@ -759,7 +751,7 @@ void replay_macro(Context& context)
 }
 
 template<Direction direction>
-void jump(Context& context)
+void jump(Context& context, int)
 {
     auto jump = (direction == Forward) ?
                  context.jump_forward() : context.jump_backward();
@@ -774,7 +766,7 @@ void jump(Context& context)
     context.editor().select(SelectionList{ jump });
 }
 
-void save_selections(Context& context)
+void save_selections(Context& context, int)
 {
     context.push_jump();
     context.print_status({ "saved " + to_string(context.editor().selections().size()) +
@@ -782,7 +774,7 @@ void save_selections(Context& context)
 }
 
 template<bool insert_at_begin>
-void align(Context& context)
+void align(Context& context, int)
 {
     auto& selections = context.editor().selections();
     auto& buffer = context.buffer();
@@ -825,11 +817,10 @@ class Repeated
 public:
     constexpr Repeated(T t) : m_func(t) {}
 
-    void operator() (Context& context)
+    void operator() (Context& context, int count)
     {
         scoped_edition edition(context.editor());
-        int count = context.numeric_param();
-        do { m_func(context); } while(--count > 0);
+        do { m_func(context, 0); } while(--count > 0);
     }
 private:
     T m_func;
@@ -844,7 +835,7 @@ class Select
 public:
     constexpr Select(T t) : m_func(t) {}
 
-    void operator() (Context& context)
+    void operator() (Context& context, int)
     {
         context.editor().select(m_func, mode);
     }
@@ -856,9 +847,9 @@ template<SelectMode mode, typename T>
 constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
-void move(Context& context)
+void move(Context& context, int count)
 {
-    Type offset(std::max(context.numeric_param(),1));
+    Type offset(std::max(count,1));
     context.editor().move_selections(direction == Backward ? -offset : offset, mode);
 }
 
@@ -910,16 +901,14 @@ KeyMap keymap =
 
     { { Key::Modifiers::None, '.' }, repeat_insert },
 
-    { { Key::Modifiers::None, '%' }, [](Context& context) { context.editor().clear_selections(); context.editor().select(select_whole_buffer); } },
+    { { Key::Modifiers::None, '%' }, [](Context& context, int) { context.editor().clear_selections(); context.editor().select(select_whole_buffer); } },
 
     { { Key::Modifiers::None, ':' }, command },
     { { Key::Modifiers::None, '|' }, pipe },
-    { { Key::Modifiers::None, ' ' }, [](Context& context) { int count = context.numeric_param();
-                                                            if (count == 0) context.editor().clear_selections();
-                                                            else context.editor().keep_selection(count-1); } },
-    { { Key::Modifiers::Alt,  ' ' }, [](Context& context) { int count = context.numeric_param();
-                                                            if (count == 0) context.editor().flip_selections();
-                                                            else context.editor().remove_selection(count-1); } },
+    { { Key::Modifiers::None, ' ' }, [](Context& context, int count) { if (count == 0) context.editor().clear_selections();
+                                                                       else context.editor().keep_selection(count-1); } },
+    { { Key::Modifiers::Alt,  ' ' }, [](Context& context, int count) { if (count == 0) context.editor().flip_selections();
+                                                                       else context.editor().remove_selection(count-1); } },
     { { Key::Modifiers::None, 'w' }, repeated(select<SelectMode::Replace>(select_to_next_word<Word>)) },
     { { Key::Modifiers::None, 'e' }, repeated(select<SelectMode::Replace>(select_to_next_word_end<Word>)) },
     { { Key::Modifiers::None, 'b' }, repeated(select<SelectMode::Replace>(select_to_previous_word<Word>)) },
@@ -957,8 +946,8 @@ KeyMap keymap =
     { { Key::Modifiers::None, '*' }, use_selection_as_search_pattern<true> },
     { { Key::Modifiers::Alt,  '*' }, use_selection_as_search_pattern<false> },
 
-    { { Key::Modifiers::None, 'u' }, repeated([](Context& context) { if (not context.editor().undo()) { context.print_status({ "nothing left to undo", get_color("Information") }); } }) },
-    { { Key::Modifiers::None, 'U' }, repeated([](Context& context) { if (not context.editor().redo()) { context.print_status({ "nothing left to redo", get_color("Information") }); } }) },
+    { { Key::Modifiers::None, 'u' }, repeated([](Context& context, int) { if (not context.editor().undo()) context.print_status({ "nothing left to undo", get_color("Information") }); }) },
+    { { Key::Modifiers::None, 'U' }, repeated([](Context& context, int) { if (not context.editor().redo()) context.print_status({ "nothing left to redo", get_color("Information") }); }) },
 
     { { Key::Modifiers::Alt,  'i' }, select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner> },
     { { Key::Modifiers::Alt,  'a' }, select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },

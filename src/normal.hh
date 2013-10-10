@@ -11,7 +11,7 @@ namespace Kakoune
 
 class Context;
 
-using KeyMap = std::unordered_map<Key, std::function<void (Context& context)>>;
+using KeyMap = std::unordered_map<Key, std::function<void (Context& context, int param)>>;
 extern KeyMap keymap;
 
 }
