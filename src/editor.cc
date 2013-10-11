@@ -250,7 +250,8 @@ void Editor::remove_selection(int index)
         size_t real_index = (index + m_main_sel + 1) % m_selections.size();
         m_selections.erase(m_selections.begin() + real_index);
         if (real_index <= m_main_sel)
-            --m_main_sel;
+            m_main_sel = (m_main_sel > 0 ? m_main_sel
+                                         : m_selections.size()) - 1;
     }
     check_invariant();
 }
