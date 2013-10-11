@@ -32,7 +32,7 @@ def funcinfo %{
             if [[ "$kak_selection" =~ [a-zA-Z_]+\( ]]; then
                 sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*(class|struct|namespace):(\S+).*signature:(.*)$/\4 [\3::\1]/')
                 if [[ -n "$sigs" ]]; then
-                    echo "info -anchor right '$sigs'"
+                    echo "eval -client ${kak_client} %{info -anchor right '$sigs'}"
                     exit
                 fi
             fi
@@ -44,6 +44,7 @@ def funcinfo %{
 def ctags-enable-autoinfo %{
      hook window -id ctags-autoinfo NormalIdle .* funcinfo
      hook window -id ctags-autoinfo NormalEnd  .* info
+     hook window -id ctags-autoinfo NormalKey  .* info
      hook window -id ctags-autoinfo InsertIdle .* funcinfo
 }
 
