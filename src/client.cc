@@ -11,6 +11,7 @@
 #include "utf8.hh"
 #include "window.hh"
 #include "file.hh"
+#include "remote.hh"
 
 #include <unordered_map>
 
@@ -1069,7 +1070,8 @@ DisplayLine Client::generate_mode_line() const
        oss << " [recording (" << m_recording_reg << ")]";
     if (context().buffer().flags() & Buffer::Flags::New)
         oss << " [new file]";
-    oss << " [" << m_mode->description() << "]" << " - " << name();
+    oss << " [" << m_mode->description() << "]" << " - " << name()
+        << "@[" << Server::instance().session() << "]";
     return { oss.str(), get_color("StatusLine") };
 }
 
