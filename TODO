@@ -44,9 +44,6 @@
 
   - More automatic hiding behaviour
 
-  - Pass more params to infos boxes: title, borders, move unicode borders
-    building to the ncurses UI, so that an eventual graphical UI can do better.
-
 * improve the option based completion
 
   - Support different options
@@ -93,7 +90,7 @@
   - Accumulate all the modifications and update the selections with the
     whole knowledge -> try to remove this O(n2) behaviour.
 
-* More text objects: indent, user defined ?
+* User defined text objects
 
 * multiple parameters support for normal mode commands ?
 
