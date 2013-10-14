@@ -377,7 +377,8 @@ New options can be declared using the +decl+ command:
 Some options are built in kakoune, and can be used to control it's behaviour:
 
  * +tabstop+ _int_: width of a tab character.
- * +indentwidth+ _int_: width used for indentation.
+ * +indentwidth+ _int_: width (in spaces) used for indentation.
+   0 means a tab character.
  * +scrolloff+ _int_: number of lines to keep visible above/below
    the cursor when scrolling.
  * +eolformat+ _string_ ('lf' or 'crlf'): the format of end of lines when

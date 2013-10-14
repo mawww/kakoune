@@ -559,48 +559,51 @@ void keep(Context& context, int)
 
 void indent(Context& context, int)
 {
-    size_t width = context.options()["indentwidth"].get<int>();
-    String indent(' ', width);
+    CharCount indent_width = context.options()["indentwidth"].get<int>();
+    String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.select(select_whole_lines);
-    editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"^[^\n]"}));
+    editor.multi_select([&indent](const Buffer& buf, const Selection& sel) {
+            SelectionList res;
+            for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+            {
+                if (buf[line].length() > 1)
+                    res.emplace_back(line, line);
+            }
+            return res;
+        });
     editor.insert(indent, InsertMode::Insert);
 }
 
 void deindent(Context& context, int)
 {
-    const auto& indent = context.options()["indent"].get<String>();
-    size_t width = 0;
-    size_t tabstop = context.options()["tabstop"].get<int>();
-    for (auto& c : indent)
-    {
-        if (c == '\t')
-            width = (width / tabstop + 1) * tabstop;
-        else
-            ++width;
-    }
+    CharCount tabstop = context.options()["tabstop"].get<int>();
+    CharCount indent_width = context.options()["indentwidth"].get<int>();
+    if (indent_width == 0)
+        indent_width = tabstop;
 
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.multi_select([width,tabstop](const Buffer& buf, const Selection& sel) {
+
+    editor.multi_select([indent_width,tabstop](const Buffer& buf, const Selection& sel) {
             SelectionList res;
             for (auto line = sel.min().line; line < sel.max().line+1; ++line)
             {
-                size_t cur_width = 0;
+                CharCount width = 0;
                 auto& content = buf[line];
                 for (auto column = 0_byte; column < content.length(); ++column)
                 {
-                    if (content[column] == ' ')
-                        ++cur_width;
-                    else if (content[column] == '\t')
-                        cur_width = (cur_width / tabstop + 1) * tabstop;
+                    const char c = content[column];
+                    if (c == '\t')
+                        width = (width / tabstop + 1) * tabstop;
+                    else if (c == ' ')
+                        ++width;
                     else
                         break;
-                    if (cur_width == width)
+                    if (width == indent_width)
                     {
                         res.emplace_back(line, BufferCoord{line, column});
                         break;
