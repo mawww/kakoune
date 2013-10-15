@@ -85,6 +85,8 @@ public:
     void redraw_ifn();
 
     UserInterface& ui() const { return *m_ui; }
+
+    void reset_normal_mode();
 private:
     void change_input_mode(InputMode* new_mode);
 

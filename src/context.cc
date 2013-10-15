@@ -153,6 +153,8 @@ void Context::change_editor(Editor& editor)
             window().set_dimensions(ui().dimensions());
         window().hooks().run_hook("WinDisplay", buffer().name(), *this);
     }
+    if (has_client())
+        client().reset_normal_mode();
 }
 
 }

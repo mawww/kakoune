@@ -937,7 +937,7 @@ private:
 
 InputMode& InputMode::reset_normal_mode()
 {
-    m_client.change_input_mode(new InputModes::Normal(m_client));
+    m_client.reset_normal_mode();
     return *m_client.m_mode;
 }
 
@@ -1088,6 +1088,11 @@ void Client::redraw_ifn()
         m_context.ui().draw(m_context.window().display_buffer(),
                             m_status_line, generate_mode_line());
     }
+}
+
+void Client::reset_normal_mode()
+{
+    change_input_mode(new InputModes::Normal(*this));
 }
 
 }

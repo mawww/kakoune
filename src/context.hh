@@ -57,7 +57,7 @@ struct Context
     void forget_jumps_to_buffer(Buffer& buffer);
 
 private:
-    safe_ptr<Editor>        m_editor;
+    safe_ptr<Editor>  m_editor;
     safe_ptr<Client>  m_client;
 
     using JumpList = std::vector<DynamicSelectionList>;
