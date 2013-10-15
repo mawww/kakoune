@@ -12,6 +12,7 @@
 #include "window.hh"
 #include "file.hh"
 #include "remote.hh"
+#include "client_manager.hh"
 
 #include <unordered_map>
 
@@ -45,6 +46,7 @@ namespace InputModes
 {
 
 static constexpr std::chrono::milliseconds idle_timeout{100};
+static constexpr std::chrono::milliseconds fs_check_timeout{500};
 
 class Normal : public InputMode
 {
@@ -53,8 +55,13 @@ public:
         : InputMode(client),
           m_idle_timer{Clock::now() + idle_timeout, [this](Timer& timer) {
               context().hooks().run_hook("NormalIdle", "", context());
+          }},
+          m_fs_check_timer{Clock::now() + fs_check_timeout, [this](Timer& timer) {
+              context().client().check_buffer_fs_timestamp();
+              timer.set_next_date(Clock::now() + fs_check_timeout);
           }}
     {
+        context().client().check_buffer_fs_timestamp();
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
@@ -87,6 +94,7 @@ public:
 private:
     int m_count = 0;
     Timer m_idle_timer;
+    Timer m_fs_check_timer;
 };
 
 class LineEditor
@@ -1093,6 +1101,46 @@ void Client::redraw_ifn()
 void Client::reset_normal_mode()
 {
     change_input_mode(new InputModes::Normal(*this));
+}
+
+void Client::check_buffer_fs_timestamp()
+{
+    Buffer& buffer = m_context.buffer();
+    const String& filename = buffer.name();
+    if (not (buffer.flags() & Buffer::Flags::File))
+        return;
+    time_t ts = get_fs_timestamp(filename);
+    if (ts != buffer.fs_timestamp())
+    {
+        print_status({"'" + buffer.display_name() + "' was modified externally, press r or y to reload, k or n to keep", get_color("Prompt")});
+        on_next_key([this, ts, filename](Key key, Context& context) {
+            Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
+            // buffer got deleted while waiting for the key, do nothing
+            if (not buf)
+            {
+                print_status({});
+                return;
+            }
+            if (key == 'r' or key == 'y')
+            {
+                DisplayCoord view_pos = context.window().position();
+                BufferCoord cursor_pos = context.editor().main_selection().last();
+                buf = create_buffer_from_file(filename);
+                Window& win = ClientManager::instance().get_unused_window_for_buffer(*buf);
+                win.select(cursor_pos);
+                win.set_position(view_pos);
+                context.change_editor(win);
+                print_status({"'" + buf->display_name() + "' reloaded", get_color("Information") });
+            }
+            if (key == 'k' or key == 'n')
+            {
+                buf->set_fs_timestamp(ts);
+                print_status({"'" + buf->display_name() + "' kept", get_color("Information") });
+            }
+            else
+                check_buffer_fs_timestamp();
+        });
+    }
 }
 
 }

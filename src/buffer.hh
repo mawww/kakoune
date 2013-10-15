@@ -104,6 +104,8 @@ public:
     BufferIterator erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const { return m_timestamp; }
+    time_t         fs_timestamp() const;
+    void           set_fs_timestamp(time_t ts);
 
     void           commit_undo_group();
     bool           undo();
@@ -196,6 +198,8 @@ private:
 
     size_t m_last_save_undo_index;
     size_t m_timestamp;
+
+    time_t m_fs_timestamp;
 
     // this is mutable as adding or removing listeners is not muting the
     // buffer observable state.

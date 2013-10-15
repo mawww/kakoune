@@ -30,8 +30,10 @@ String compact_path(const String& filename);
 
 String read_file(const String& filename);
 Buffer* create_buffer_from_file(String filename);
-void write_buffer_to_file(const Buffer& buffer, const String& filename);
+void write_buffer_to_file(Buffer& buffer, const String& filename);
 String find_file(const String& filename, memoryview<String> paths);
+
+time_t get_fs_timestamp(const String& filename);
 
 std::vector<String> complete_filename(const String& prefix,
                                       const Regex& ignore_regex,

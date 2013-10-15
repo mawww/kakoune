@@ -86,6 +86,8 @@ public:
 
     UserInterface& ui() const { return *m_ui; }
 
+    void check_buffer_fs_timestamp();
+
     void reset_normal_mode();
 private:
     void change_input_mode(InputMode* new_mode);

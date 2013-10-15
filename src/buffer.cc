@@ -708,4 +708,16 @@ char Buffer::byte_at(BufferCoord c) const
     return m_lines[c.line].content[c.column];
 }
 
+time_t Buffer::fs_timestamp() const
+{
+    kak_assert(m_flags & Flags::File);
+    return m_fs_timestamp;
+}
+
+void Buffer::set_fs_timestamp(time_t ts)
+{
+    kak_assert(m_flags & Flags::File);
+    m_fs_timestamp = ts;
+}
+
 }
