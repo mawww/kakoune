@@ -359,6 +359,12 @@ Key NCursesUI::get_key()
     return Key::Invalid;
 }
 
+template<typename T>
+T div_round_up(T a, T b)
+{
+    return (a - T(1)) / b + T(1);
+}
+
 void NCursesUI::draw_menu()
 {
     // menu show may have not created the window if it did not fit.
@@ -366,24 +372,31 @@ void NCursesUI::draw_menu()
     if (not m_menu_win)
         return;
 
-    auto menu_fg = get_color_pair(m_menu_fg);
-    auto menu_bg = get_color_pair(m_menu_bg);
+    const auto menu_fg = get_color_pair(m_menu_fg);
+    const auto menu_bg = get_color_pair(m_menu_bg);
 
-    auto scroll_fg = get_color_pair({ Colors::White, Colors::White });
-    auto scroll_bg = get_color_pair(m_menu_bg);
+    const auto scroll_fg = get_color_pair({ Colors::White, Colors::White });
+    const auto scroll_bg = get_color_pair(m_menu_bg);
 
     wattron(m_menu_win, COLOR_PAIR(menu_bg));
     wbkgdset(m_menu_win, COLOR_PAIR(menu_bg));
-    DisplayCoord menu_size = window_size(m_menu_win);
-    CharCount column_width = (menu_size.column - 1) / m_menu_columns;
-    LineCount mark_line = (menu_size.line * m_selected_choice) / (int)m_choices.size();
-    for (auto line = 0_line; line < menu_size.line; ++line)
+
+    const int choice_count = (int)m_choices.size();
+    const DisplayCoord win_size = window_size(m_menu_win);
+    const LineCount win_lines = win_size.line;
+
+    const CharCount column_width = (win_size.column - 1) / m_menu_columns;
+
+    const LineCount menu_lines = div_round_up(choice_count, m_menu_columns);
+    const LineCount mark_height = clamp(div_round_up(win_lines * win_lines, menu_lines), 1_line, win_lines);
+    const LineCount mark_line = (win_lines - mark_height) * m_menu_top_line / std::max(1_line, menu_lines - win_lines);
+    for (auto line = 0_line; line < win_lines; ++line)
     {
         wmove(m_menu_win, (int)line, 0);
         for (int col = 0; col < m_menu_columns; ++col)
         {
             int choice_idx = (int)(m_menu_top_line + line) * m_menu_columns + col;
-            if (choice_idx >= m_choices.size())
+            if (choice_idx >= choice_count)
                 break;
             if (choice_idx == m_selected_choice)
                 wattron(m_menu_win, COLOR_PAIR(menu_fg));
@@ -396,9 +409,10 @@ void NCursesUI::draw_menu()
                 waddch(m_menu_win, ' ');
             wattron(m_menu_win, COLOR_PAIR(menu_bg));
         }
+        const bool is_mark = line >= mark_line and line < mark_line + mark_height;
         wclrtoeol(m_menu_win);
-        wmove(m_menu_win, (int)line, (int)menu_size.column - 1);
-        wattron(m_menu_win, COLOR_PAIR(line == mark_line ? scroll_fg : scroll_bg));
+        wmove(m_menu_win, (int)line, (int)win_size.column - 1);
+        wattron(m_menu_win, COLOR_PAIR(is_mark ? scroll_fg : scroll_bg));
         waddch(m_menu_win, ' ');
         wattron(m_menu_win, COLOR_PAIR(menu_bg));
     }
@@ -430,8 +444,8 @@ void NCursesUI::menu_show(memoryview<String> choices,
     }
     longest += 1;
 
-    m_menu_columns = (style == MenuStyle::Prompt) ? (int)((maxsize.column -1) / longest) : 1;
-    int lines = std::min(10, (int)ceilf((float)m_choices.size()/m_menu_columns));
+    m_menu_columns = (style == MenuStyle::Prompt) ? (int)((maxsize.column - 1) / longest) : 1;
+    int lines = std::min(10, div_round_up((int)m_choices.size(), m_menu_columns));
 
     DisplayCoord pos = { anchor.line+1, anchor.column };
     if (pos.line + lines >= maxsize.line)
@@ -447,7 +461,9 @@ void NCursesUI::menu_show(memoryview<String> choices,
 
 void NCursesUI::menu_select(int selected)
 {
-    if (selected < 0 or selected >= m_choices.size())
+    const int choice_count = m_choices.size();
+    const LineCount menu_lines = (choice_count + m_menu_columns - 1) / m_menu_columns;
+    if (selected < 0 or selected >= choice_count)
     {
         m_selected_choice = -1;
         m_menu_top_line = 0;
@@ -455,12 +471,12 @@ void NCursesUI::menu_select(int selected)
     else
     {
         m_selected_choice = selected;
-        LineCount selected_line = m_selected_choice / m_menu_columns;
-        DisplayCoord menu_size = window_size(m_menu_win);
+        const LineCount selected_line = m_selected_choice / m_menu_columns;
+        const LineCount win_lines = window_size(m_menu_win).line;
         if (selected_line < m_menu_top_line)
             m_menu_top_line = selected_line;
-        if (selected_line >= m_menu_top_line + menu_size.line)
-            m_menu_top_line = selected_line;
+        if (selected_line >= m_menu_top_line + win_lines)
+            m_menu_top_line = std::min(selected_line, std::max(0_line, menu_lines - win_lines));
     }
 
     draw_menu();
