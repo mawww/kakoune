@@ -17,6 +17,8 @@ namespace Kakoune
 
 class Buffer;
 
+constexpr time_t InvalidTime = 0;
+
 struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 {
     constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
@@ -90,7 +92,8 @@ public:
         NoUndo = 8,
     };
 
-    Buffer(String name, Flags flags, std::vector<String> lines = { "\n" });
+    Buffer(String name, Flags flags, std::vector<String> lines = { "\n" },
+           time_t fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();

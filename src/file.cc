@@ -175,8 +175,8 @@ Buffer* create_buffer_from_file(String filename)
         else
             pos = line_end + 1;
     }
-    Buffer* buffer = new Buffer(filename, Buffer::Flags::File, std::move(lines));
-    buffer->set_fs_timestamp(st.st_mtime);
+    Buffer* buffer = new Buffer{filename, Buffer::Flags::File,
+                                std::move(lines), st.st_mtime};
 
     OptionManager& options = buffer->options();
     options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");
@@ -228,7 +228,7 @@ void write_buffer_to_file(Buffer& buffer, const String& filename)
         write(fd, eoldata, filename);
     }
     if ((buffer.flags() & Buffer::Flags::File) and filename == buffer.name())
-        buffer.set_fs_timestamp(get_fs_timestamp(filename));
+        buffer.notify_saved();
 }
 
 String find_file(const String& filename, memoryview<String> paths)
@@ -312,7 +312,7 @@ time_t get_fs_timestamp(const String& filename)
 {
     struct stat st;
     if (stat(filename.c_str(), &st) != 0)
-        throw runtime_error("stat failed on " + filename);
+        return InvalidTime;
     return st.st_mtime;
 }
 

@@ -147,9 +147,6 @@ void write_buffer(CommandParameters params, Context& context)
                                      : parse_filename(params[0]);
 
     write_buffer_to_file(buffer, filename);
-
-    if (filename == buffer.name())
-        buffer.notify_saved();
 }
 
 void write_all_buffers(CommandParameters params, Context& context)
@@ -160,10 +157,7 @@ void write_all_buffers(CommandParameters params, Context& context)
     for (auto& buffer : BufferManager::instance())
     {
         if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
-        {
             write_buffer_to_file(*buffer, buffer->name());
-            buffer->notify_saved();
-        }
     }
 }
 

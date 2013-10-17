@@ -12,11 +12,13 @@
 namespace Kakoune
 {
 
-Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
+Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
+               time_t fs_timestamp)
     : m_name(std::move(name)), m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_timestamp(0),
+      m_fs_timestamp(fs_timestamp),
       m_hooks(GlobalHooks::instance()),
       m_options(GlobalOptions::instance())
 {
@@ -44,7 +46,10 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines)
         if (flags & Flags::New)
             m_hooks.run_hook("BufNew", m_name, context);
         else
+        {
+            kak_assert(m_fs_timestamp != InvalidTime);
             m_hooks.run_hook("BufOpen", m_name, context);
+        }
     }
 
     m_hooks.run_hook("BufCreate", m_name, context);
@@ -607,6 +612,7 @@ void Buffer::notify_saved()
         ++m_timestamp;
         m_last_save_undo_index = history_cursor_index;
     }
+    m_fs_timestamp = get_fs_timestamp(m_name);
 }
 
 BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
