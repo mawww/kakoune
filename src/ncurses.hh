@@ -26,7 +26,7 @@ public:
     bool   is_key_available() override;
     Key    get_key() override;
 
-    void menu_show(memoryview<String> choices,
+    void menu_show(memoryview<String> items,
                    DisplayCoord anchor, ColorPair fg, ColorPair bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -51,10 +51,10 @@ private:
     void update_dimensions();
 
     NCursesWin* m_menu_win = nullptr;
-    std::vector<String> m_choices;
+    std::vector<String> m_items;
     ColorPair m_menu_fg;
     ColorPair m_menu_bg;
-    int m_selected_choice = 0;
+    int m_selected_item = 0;
     int m_menu_columns = 1;
     LineCount m_menu_top_line = 0;
     void draw_menu();

@@ -19,6 +19,9 @@
 namespace Kakoune
 {
 
+using std::min;
+using std::max;
+
 struct NCursesWin : WINDOW {};
 
 static void set_attribute(int attribute, bool on)
@@ -37,6 +40,8 @@ static bool operator<(Color lhs, Color rhs)
                               : lhs.r < rhs.r;
     return lhs.color < rhs.color;
 }
+
+template<typename T> T sq(T x) { return x * x; }
 
 static int nc_color(Color color)
 {
@@ -83,12 +88,13 @@ static int nc_color(Color color)
             { COLOR_CYAN,    0,   255, 255 },
             { COLOR_WHITE,   255, 255, 255 }
         };
-        auto sq = [](int x) { return x * x; };
         int lowestDist = INT_MAX;
         int closestCol = -1;
         for (auto& col : builtins)
         {
-            int dist = sq(color.r - col.r) + sq(color.g - col.g) + sq(color.b - col.b);
+            int dist = sq(color.r - col.r)
+                     + sq(color.g - col.g)
+                     + sq(color.b - col.b);
             if (dist < lowestDist)
             {
                 lowestDist = dist;
@@ -142,7 +148,8 @@ void on_sigint(int)
 }
 
 NCursesUI::NCursesUI()
-    : m_stdin_watcher{0, [this](FDWatcher&){ if (m_input_callback) m_input_callback(); }}
+    : m_stdin_watcher{0, [this](FDWatcher&){ if (m_input_callback)
+                                                 m_input_callback(); }}
 {
     initscr();
     cbreak();
@@ -225,12 +232,13 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
         if (content[content.length()-1] == '\n' and
             content.char_length() - 1 < m_dimensions.column - col_index)
         {
-            addutf8str(stdscr, Utf8Iterator(content.begin()), Utf8Iterator(content.end())-1);
+            addutf8str(stdscr, Utf8Iterator{content.begin()},
+                               Utf8Iterator{content.end()}-1);
             addch(' ');
         }
         else
         {
-            Utf8Iterator begin(content.begin()), end(content.end());
+            Utf8Iterator begin{content.begin()}, end{content.end()};
             if (end - begin > m_dimensions.column - col_index)
                 end = begin + (m_dimensions.column - col_index);
             addutf8str(stdscr, begin, end);
@@ -278,7 +286,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
     const char* tsl = tigetstr((char*)"tsl");
     const char* fsl = tigetstr((char*)"fsl");
-    if (tsl != 0 and (ptrdiff_t)tsl != -1 and fsl != 0 and (ptrdiff_t)fsl != -1)
+    if (tsl != 0 and (ptrdiff_t)tsl != -1 and
+        fsl != 0 and (ptrdiff_t)fsl != -1)
     {
         String title;
         for (auto& atom : mode_line)
@@ -381,35 +390,40 @@ void NCursesUI::draw_menu()
     wattron(m_menu_win, COLOR_PAIR(menu_bg));
     wbkgdset(m_menu_win, COLOR_PAIR(menu_bg));
 
-    const int choice_count = (int)m_choices.size();
+    const int item_count = (int)m_items.size();
+    const LineCount menu_lines = div_round_up(item_count, m_menu_columns);
     const DisplayCoord win_size = window_size(m_menu_win);
-    const LineCount win_lines = win_size.line;
+    const LineCount& win_height = win_size.line;
+    kak_assert(win_height <= menu_lines);
 
     const CharCount column_width = (win_size.column - 1) / m_menu_columns;
 
-    const LineCount menu_lines = div_round_up(choice_count, m_menu_columns);
-    const LineCount mark_height = clamp(div_round_up(win_lines * win_lines, menu_lines), 1_line, win_lines);
-    const LineCount mark_line = (win_lines - mark_height) * m_menu_top_line / std::max(1_line, menu_lines - win_lines);
-    for (auto line = 0_line; line < win_lines; ++line)
+    const LineCount mark_height = min(div_round_up(sq(win_height), menu_lines),
+                                      win_height);
+    const LineCount mark_line = (win_height - mark_height) * m_menu_top_line /
+                                max(1_line, menu_lines - win_height);
+    for (auto line = 0_line; line < win_height; ++line)
     {
         wmove(m_menu_win, (int)line, 0);
         for (int col = 0; col < m_menu_columns; ++col)
         {
-            int choice_idx = (int)(m_menu_top_line + line) * m_menu_columns + col;
-            if (choice_idx >= choice_count)
+            const int item_idx = (int)(m_menu_top_line + line) * m_menu_columns
+                                 + col;
+            if (item_idx >= item_count)
                 break;
-            if (choice_idx == m_selected_choice)
+            if (item_idx == m_selected_item)
                 wattron(m_menu_win, COLOR_PAIR(menu_fg));
 
-            auto& choice = m_choices[choice_idx];
-            auto begin = choice.cbegin();
-            auto end = utf8::advance(begin, choice.cend(), column_width);
+            auto& item = m_items[item_idx];
+            auto begin = item.cbegin();
+            auto end = utf8::advance(begin, item.cend(), column_width);
             addutf8str(m_menu_win, begin, end);
-            for (auto pad = column_width - utf8::distance(begin, end); pad > 0; --pad)
-                waddch(m_menu_win, ' ');
+            const CharCount pad = column_width - utf8::distance(begin, end);
+            waddstr(m_menu_win, String{' ' COMMA pad}.c_str());
             wattron(m_menu_win, COLOR_PAIR(menu_bg));
         }
-        const bool is_mark = line >= mark_line and line < mark_line + mark_height;
+        const bool is_mark = line >= mark_line and
+                             line < mark_line + mark_height;
         wclrtoeol(m_menu_win);
         wmove(m_menu_win, (int)line, (int)win_size.column - 1);
         wattron(m_menu_win, COLOR_PAIR(is_mark ? scroll_fg : scroll_bg));
@@ -419,12 +433,12 @@ void NCursesUI::draw_menu()
     redraw();
 }
 
-void NCursesUI::menu_show(memoryview<String> choices,
+void NCursesUI::menu_show(memoryview<String> items,
                           DisplayCoord anchor, ColorPair fg, ColorPair bg,
                           MenuStyle style)
 {
     kak_assert(m_menu_win == nullptr);
-    kak_assert(m_choices.empty());
+    kak_assert(m_items.empty());
 
     m_menu_fg = fg;
     m_menu_bg = bg;
@@ -434,51 +448,53 @@ void NCursesUI::menu_show(memoryview<String> choices,
     if (maxsize.column <= 2)
         return;
 
-    m_choices.reserve(choices.size());
+    const int item_count = items.size();
+    m_items.reserve(item_count);
     CharCount longest = 0;
-    const CharCount maxlen = std::min((int)maxsize.column-2, 200);
-    for (auto& choice : choices)
+    const CharCount maxlen = min((int)maxsize.column-2, 200);
+    for (auto& item : items)
     {
-        m_choices.push_back(choice.substr(0_char, maxlen));
-        longest = std::max(longest, m_choices.back().char_length());
+        m_items.push_back(item.substr(0_char, maxlen));
+        longest = max(longest, m_items.back().char_length());
     }
     longest += 1;
 
-    m_menu_columns = (style == MenuStyle::Prompt) ? (int)((maxsize.column - 1) / longest) : 1;
-    int lines = std::min(10, div_round_up((int)m_choices.size(), m_menu_columns));
+    const bool is_prompt = style == MenuStyle::Prompt;
+    m_menu_columns = is_prompt ? (int)((maxsize.column - 1) / longest) : 1;
 
-    DisplayCoord pos = { anchor.line+1, anchor.column };
-    if (pos.line + lines >= maxsize.line)
-        pos.line = anchor.line - lines;
-    DisplayCoord size = { lines, style == MenuStyle::Prompt ? maxsize.column : longest };
+    int height = min(10, div_round_up(item_count, m_menu_columns));
 
-    m_selected_choice = 0;
+    int line = (int)anchor.line + 1;
+    if (line + height >= (int)maxsize.line)
+        line = (int)anchor.line - height;
+    m_selected_item = 0;
     m_menu_top_line = 0;
-    m_menu_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
-                                     (int)pos.line,  (int)pos.column);
+
+    int width = is_prompt ? (int)maxsize.column : (int)longest;
+    m_menu_win = (NCursesWin*)newwin(height, width, line, (int)anchor.column);
     draw_menu();
 }
 
 void NCursesUI::menu_select(int selected)
 {
-    const int choice_count = m_choices.size();
-    const LineCount menu_lines = (choice_count + m_menu_columns - 1) / m_menu_columns;
-    if (selected < 0 or selected >= choice_count)
+    const int item_count = m_items.size();
+    const LineCount menu_lines = div_round_up(item_count, m_menu_columns);
+    if (selected < 0 or selected >= item_count)
     {
-        m_selected_choice = -1;
+        m_selected_item = -1;
         m_menu_top_line = 0;
     }
     else
     {
-        m_selected_choice = selected;
-        const LineCount selected_line = m_selected_choice / m_menu_columns;
-        const LineCount win_lines = window_size(m_menu_win).line;
+        m_selected_item = selected;
+        const LineCount selected_line = m_selected_item / m_menu_columns;
+        const LineCount win_height = window_size(m_menu_win).line;
+        kak_assert(menu_lines >= win_height);
         if (selected_line < m_menu_top_line)
             m_menu_top_line = selected_line;
-        if (selected_line >= m_menu_top_line + win_lines)
-            m_menu_top_line = std::min(selected_line, std::max(0_line, menu_lines - win_lines));
+        if (selected_line >= m_menu_top_line + win_height)
+            m_menu_top_line = min(selected_line, menu_lines - win_height);
     }
-
     draw_menu();
 }
 
@@ -486,8 +502,9 @@ void NCursesUI::menu_hide()
 {
     if (not m_menu_win)
         return;
-    m_choices.clear();
-    wredrawln(stdscr, (int)window_pos(m_menu_win).line, (int)window_size(m_menu_win).line);
+    m_items.clear();
+    wredrawln(stdscr, (int)window_pos(m_menu_win).line,
+                      (int)window_size(m_menu_win).line);
     delwin(m_menu_win);
     m_menu_win = nullptr;
     redraw();
@@ -497,7 +514,8 @@ static DisplayCoord compute_needed_size(const String& str)
 {
     DisplayCoord res{1,0};
     CharCount line_len = 0;
-    for (Utf8Iterator begin{str.begin()}, end{str.end()}; begin != end; ++begin)
+    for (Utf8Iterator begin{str.begin()}, end{str.end()};
+         begin != end; ++begin)
     {
         if (*begin == '\n')
         {
@@ -505,14 +523,14 @@ static DisplayCoord compute_needed_size(const String& str)
             if (begin+1 == end)
                 break;
 
-            res.column = std::max(res.column, line_len);
+            res.column = max(res.column, line_len);
             line_len = 0;
             ++res.line;
         }
         else
         {
             ++line_len;
-            res.column = std::max(res.column, line_len);
+            res.column = max(res.column, line_len);
         }
     }
     return res;
@@ -525,9 +543,9 @@ static DisplayCoord compute_pos(DisplayCoord anchor,
     DisplayCoord scrsize = window_size(stdscr);
     DisplayCoord pos = { anchor.line+1, anchor.column };
     if (pos.line + size.line >= scrsize.line)
-        pos.line = std::max(0_line, anchor.line - size.line);
+        pos.line = max(0_line, anchor.line - size.line);
     if (pos.column + size.column >= scrsize.column)
-        pos.column = std::max(0_char, anchor.column - size.column+1);
+        pos.column = max(0_char, anchor.column - size.column+1);
 
     if (opt_window_to_avoid)
     {
@@ -540,10 +558,10 @@ static DisplayCoord compute_pos(DisplayCoord anchor,
         if (not (end.line < winbeg.line or end.column < winbeg.column or
                  pos.line > winend.line or pos.column > winend.column))
         {
-            pos.line = std::min(winbeg.line, anchor.line) - size.line;
+            pos.line = min(winbeg.line, anchor.line) - size.line;
             // if above does not work, try below
             if (pos.line < 0)
-                pos.line = std::max(winend.line, anchor.line);
+                pos.line = max(winend.line, anchor.line);
         }
     }
 
@@ -611,32 +629,33 @@ static String make_info_box(const String& title, const String& message,
 
     CharCount bubble_width = title.char_length() + 2;
     for (auto& line : lines)
-        bubble_width = std::max(bubble_width, line.char_length());
+        bubble_width = max(bubble_width, line.char_length());
 
     String result;
-    auto lineCount = std::max<LineCount>(assistant_size.line-1, (int)lines.size() + 2);
-    for (LineCount i = 0; i < lineCount; ++i)
+    auto line_count = max(assistant_size.line-1,
+                          LineCount{(int)lines.size()} + 2);
+    for (LineCount i = 0; i < line_count; ++i)
     {
         constexpr Codepoint dash{L'─'};
         if (assist)
-            result += assistant[std::min((int)i, (int)assistant_size.line-1)];
+            result += assistant[min((int)i, (int)assistant_size.line-1)];
         if (i == 0)
         {
             if (title.empty())
-                result += "╭─" + String(dash, bubble_width) + "─╮";
+                result += "╭─" + String{dash, bubble_width} + "─╮";
             else
             {
-                CharCount dashCount = bubble_width - title.char_length() - 2_char;
-                CharCount leftCount =  dashCount / 2;
-                CharCount rightCount=  dashCount - leftCount;
-                result += "╭─" + String(dash, leftCount) + "┤" + title +"├" + String(dash, rightCount) +"─╮";
+                auto dash_count = bubble_width - title.char_length() - 2;
+                String left{dash, dash_count / 2};
+                String right{dash, dash_count - dash_count / 2};
+                result += "╭─" + left + "┤" + title +"├" + right +"─╮";
             }
         }
         else if (i < lines.size() + 1)
         {
             auto& line = lines[(int)i - 1];
-            const CharCount padding = std::max(bubble_width - line.char_length(), 0_char);
-            result += "│ " + line + String(' ', padding) + " │";
+            const CharCount padding = bubble_width - line.char_length();
+            result += "│ " + line + String{' ', padding} + " │";
         }
         else if (i == lines.size() + 1)
             result += "╰─" + String(dash, bubble_width) + "─╯";
@@ -681,7 +700,8 @@ void NCursesUI::info_hide()
 {
     if (not m_info_win)
         return;
-    wredrawln(stdscr, (int)window_pos(m_info_win).line, (int)window_size(m_info_win).line);
+    wredrawln(stdscr, (int)window_pos(m_info_win).line,
+                      (int)window_size(m_info_win).line);
     delwin(m_info_win);
     m_info_win = nullptr;
     redraw();
