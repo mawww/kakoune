@@ -163,6 +163,8 @@ public:
 
     std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
 
+    void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
+
     void check_invariant() const;
 private:
     struct Line

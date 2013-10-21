@@ -135,8 +135,6 @@ Buffer* create_buffer_from_file(String filename)
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     auto cleanup = on_scope_end([&]{ munmap((void*)data, st.st_size); close(fd); });
 
-    BufferManager::instance().delete_buffer_if_exists(filename);
-
     const char* pos = data;
     bool crlf = false;
     bool bom  = false;
@@ -175,8 +173,12 @@ Buffer* create_buffer_from_file(String filename)
         else
             pos = line_end + 1;
     }
-    Buffer* buffer = new Buffer{filename, Buffer::Flags::File,
-                                std::move(lines), st.st_mtime};
+    Buffer* buffer = BufferManager::instance().get_buffer_ifp(filename);
+    if (buffer)
+        buffer->reload(std::move(lines), st.st_mtime);
+    else
+        buffer = new Buffer{filename, Buffer::Flags::File,
+                            std::move(lines), st.st_mtime};
 
     OptionManager& options = buffer->options();
     options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");

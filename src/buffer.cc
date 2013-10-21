@@ -70,6 +70,35 @@ Buffer::~Buffer()
     kak_assert(m_change_listeners.empty());
 }
 
+void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
+{
+    for (auto listener : m_change_listeners)
+        listener->on_erase(*this, {0,0}, end_coord());
+
+	m_history.clear();
+	m_current_undo_group.clear();
+	m_history_cursor = m_history.begin();
+	m_last_save_undo_index = 0;
+	m_lines.clear();
+    ++m_timestamp;
+
+    if (lines.empty())
+        lines.emplace_back("\n");
+
+    ByteCount pos = 0;
+    m_lines.reserve(lines.size());
+    for (auto& line : lines)
+    {
+        kak_assert(not line.empty() and line.back() == '\n');
+        m_lines.emplace_back(Line{ pos, std::move(line) });
+        pos += m_lines.back().length();
+    }
+    m_fs_timestamp = fs_timestamp;
+
+    for (auto listener : m_change_listeners)
+        listener->on_insert(*this, {0,0}, end_coord());
+}
+
 String Buffer::display_name() const
 {
     if (m_flags & Flags::File)
