@@ -1103,14 +1103,33 @@ void Client::reset_normal_mode()
     change_input_mode(new InputModes::Normal(*this));
 }
 
+static void reload_buffer(Context& context, const String& filename)
+{
+    DisplayCoord view_pos = context.window().position();
+    BufferCoord cursor_pos = context.editor().main_selection().last();
+    Buffer* buf = create_buffer_from_file(filename);
+    if (not buf)
+        return;
+    Window& win = ClientManager::instance().get_unused_window_for_buffer(*buf);
+    win.select(cursor_pos);
+    win.set_position(view_pos);
+    context.change_editor(win);
+    context.print_status({ "'" + buf->display_name() + "' reloaded",
+                           get_color("Information") });
+}
+
 void Client::check_buffer_fs_timestamp()
 {
     Buffer& buffer = m_context.buffer();
-    const String& filename = buffer.name();
-    if (not (buffer.flags() & Buffer::Flags::File))
+    auto reload = context().options()["autoreload"].get<YesNoAsk>();
+    if (not (buffer.flags() & Buffer::Flags::File) or reload == No)
         return;
+
+    const String& filename = buffer.name();
     time_t ts = get_fs_timestamp(filename);
-    if (ts != buffer.fs_timestamp())
+    if (ts == buffer.fs_timestamp())
+        return;
+    if (reload == Ask)
     {
         print_status({"'" + buffer.display_name() + "' was modified externally, press r or y to reload, k or n to keep", get_color("Prompt")});
         on_next_key([this, ts, filename](Key key, Context& context) {
@@ -1122,16 +1141,7 @@ void Client::check_buffer_fs_timestamp()
                 return;
             }
             if (key == 'r' or key == 'y')
-            {
-                DisplayCoord view_pos = context.window().position();
-                BufferCoord cursor_pos = context.editor().main_selection().last();
-                buf = create_buffer_from_file(filename);
-                Window& win = ClientManager::instance().get_unused_window_for_buffer(*buf);
-                win.select(cursor_pos);
-                win.set_position(view_pos);
-                context.change_editor(win);
-                print_status({"'" + buf->display_name() + "' reloaded", get_color("Information") });
-            }
+                reload_buffer(context, filename);
             if (key == 'k' or key == 'n')
             {
                 buf->set_fs_timestamp(ts);
@@ -1141,6 +1151,8 @@ void Client::check_buffer_fs_timestamp()
                 check_buffer_fs_timestamp();
         });
     }
+    else
+        reload_buffer(context(), filename);
 }
 
 }
