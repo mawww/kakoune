@@ -171,6 +171,35 @@ bool option_add(T&, const T&)
     throw runtime_error("no add operation supported for this option type");
 }
 
+enum YesNoAsk
+{
+    Yes,
+    No,
+    Ask
+};
+
+inline String option_to_string(YesNoAsk opt)
+{
+    switch (opt)
+    {
+        case Yes: return "yes";
+        case No:  return "no";
+        case Ask: return "ask";
+    }
+    kak_assert(false);
+    return "ask";
+}
+
+inline void option_from_string(const String& str, YesNoAsk& opt)
+{
+    if (str == "yes" or str == "true")
+        opt = Yes;
+    else if (str == "no" or str == "false")
+        opt = No;
+    else if (str == "ask")
+        opt = Ask;
+}
+
 }
 
 #endif // option_types_hh_INCLUDED
