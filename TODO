@@ -14,8 +14,6 @@
 
 * Crash recovery support (swap files)
 
-* Detect external file changes
-
 * Sanitize prompt history handling, hooks should not have side effects
   on history
 
@@ -44,7 +42,9 @@
 
   - More automatic hiding behaviour
 
-* improve the option based completion
+* improve insert completion
+
+  - Detect when the following text is matching the inserted completion
 
   - Support different options
     (setb completers word,option=cpp_completions,option=spell_completions)
