@@ -8,6 +8,7 @@
 #include "highlighter.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"
+#include "keymap_manager.hh"
 
 namespace Kakoune
 {
@@ -46,6 +47,8 @@ public:
     const OptionManager& options() const { return m_options; }
     HookManager&         hooks()         { return m_hooks; }
     const HookManager&   hooks()   const { return m_hooks; }
+    KeymapManager&       keymaps()       { return m_keymaps; }
+    const KeymapManager& keymaps() const { return m_keymaps; }
 
     size_t timestamp() const { return m_timestamp; }
     void   forget_timestamp() { m_timestamp = -1; }
@@ -65,6 +68,7 @@ private:
 
     HookManager      m_hooks;
     OptionManager    m_options;
+    KeymapManager    m_keymaps;
 
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;

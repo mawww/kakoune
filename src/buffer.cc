@@ -20,7 +20,8 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
       m_timestamp(0),
       m_fs_timestamp(fs_timestamp),
       m_hooks(GlobalHooks::instance()),
-      m_options(GlobalOptions::instance())
+      m_options(GlobalOptions::instance()),
+      m_keymaps(GlobalKeymaps::instance())
 {
     BufferManager::instance().register_buffer(*this);
 

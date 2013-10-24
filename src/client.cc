@@ -33,6 +33,8 @@ public:
 
     virtual String description() const = 0;
 
+    virtual KeymapMode keymap_mode() const = 0;
+
     using Insertion = Client::Insertion;
     Insertion& last_insert() { return m_client.m_last_insert; }
 
@@ -90,6 +92,8 @@ public:
         return to_string(context().editor().selections().size()) +
                (m_count != 0 ? " sel; param=" + to_string(m_count) : " sel");
     }
+
+    KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
 
 private:
     int m_count = 0;
@@ -270,6 +274,7 @@ public:
         return "menu";
     }
 
+    KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
 
 private:
     MenuCallback m_callback;
@@ -472,6 +477,7 @@ public:
         return "prompt";
     }
 
+    KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
 
 private:
     void display() const
@@ -512,6 +518,8 @@ public:
     {
         return "enter key";
     }
+
+    KeymapMode keymap_mode() const override { return KeymapMode::None; }
 
 private:
     KeyCallback m_callback;
@@ -933,6 +941,9 @@ public:
     {
         return "insert";
     }
+
+    KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
+
 private:
     enum class Mode { Default, Complete, InsertReg };
     Mode m_mode = Mode::Default;
@@ -1010,7 +1021,7 @@ void Client::on_next_key(KeyCallback callback)
     change_input_mode(new InputModes::NextKey(*this, callback));
 }
 
-bool is_valid(Key key)
+static bool is_valid(Key key)
 {
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }
@@ -1031,7 +1042,15 @@ void Client::handle_key(Key key)
     {
         const bool was_recording = is_recording();
 
-        m_mode->on_key(key);
+        auto keymap_mode = m_mode->keymap_mode();
+        KeymapManager& keymaps = m_context.keymaps();
+        if (keymaps.is_mapped(key, keymap_mode))
+        {
+            for (auto& k : keymaps.get_mapping(key, keymap_mode))
+                m_mode->on_key(k);
+        }
+        else
+            m_mode->on_key(key);
 
         // do not record the key that made us enter or leave recording mode.
         if (was_recording and is_recording())

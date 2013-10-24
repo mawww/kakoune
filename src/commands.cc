@@ -530,6 +530,42 @@ void declare_option(CommandParameters params, Context& context)
         opt->set_from_string(params[2]);
 }
 
+
+KeymapManager& get_keymap_manager(const String& scope, Context& context)
+{
+    if (prefix_match("global", scope))
+        return GlobalKeymaps::instance();
+    else if (prefix_match("buffer", scope))
+        return context.buffer().keymaps();
+    else if (prefix_match("window", scope))
+        return context.window().keymaps();
+    throw runtime_error("error: no such keymap container " + scope);
+}
+
+KeymapMode parse_keymap_mode(const String& str)
+{
+    if (prefix_match("normal", str)) return KeymapMode::Normal;
+    if (prefix_match("insert", str)) return KeymapMode::Insert;
+    if (prefix_match("menu", str))   return KeymapMode::Menu;
+    if (prefix_match("prompt", str)) return KeymapMode::Prompt;
+    throw runtime_error("unknown keymap mode '" + str + "'");
+}
+
+void map_key(CommandParameters params, Context& context)
+{
+    ParametersParser parser(params, {}, ParametersParser::Flags::None, 4, 4);
+
+    KeymapManager& keymaps = get_keymap_manager(params[0], context);
+    KeymapMode keymap_mode = parse_keymap_mode(params[1]);
+
+    KeyList key = parse_keys(params[2]);
+    if (key.size() != 1)
+        throw runtime_error("only a single key can be mapped");
+
+    KeyList mapping = parse_keys(params[3]);
+    keymaps.map_key(key[0], keymap_mode, std::move(mapping));
+}
+
 class DraftUI : public UserInterface
 {
 public:
@@ -857,5 +893,6 @@ void register_commands()
     cm.register_commands({"nc", "nameclient"}, set_client_name);
 
     cm.register_command("cd", change_working_directory, filename_completer);
+    cm.register_command("map", map_key);
 }
 }

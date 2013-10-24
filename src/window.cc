@@ -19,7 +19,8 @@ void expand_unprintable(const Window& window, DisplayBuffer& display_buffer);
 Window::Window(Buffer& buffer)
     : Editor(buffer),
       m_hooks(buffer.hooks()),
-      m_options(buffer.options())
+      m_options(buffer.options()),
+      m_keymaps(buffer.keymaps())
 {
     Context hook_context{*this};
     m_hooks.run_hook("WinCreate", buffer.name(), hook_context);

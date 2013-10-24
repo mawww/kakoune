@@ -12,6 +12,7 @@ class Buffer;
 class Client;
 class UserInterface;
 class DisplayLine;
+class KeymapManager;
 
 // A Context is used to access non singleton objects for various services
 // in commands.
@@ -48,6 +49,7 @@ struct Context
 
     OptionManager& options() const;
     HookManager& hooks() const;
+    KeymapManager& keymaps() const;
 
     void print_status(DisplayLine status) const;
 

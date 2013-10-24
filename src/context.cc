@@ -75,6 +75,15 @@ HookManager& Context::hooks() const
     return GlobalHooks::instance();
 }
 
+KeymapManager& Context::keymaps() const
+{
+    if (has_window())
+        return window().keymaps();
+    if (has_buffer())
+        return buffer().keymaps();
+    return GlobalKeymaps::instance();
+}
+
 void Context::print_status(DisplayLine status) const
 {
     if (has_client())

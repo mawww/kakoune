@@ -1,9 +1,10 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
-#include "hook_manager.hh"
 #include "line_and_column.hh"
+#include "hook_manager.hh"
 #include "option_manager.hh"
+#include "keymap_manager.hh"
 #include "string.hh"
 #include "units.hh"
 
@@ -160,6 +161,8 @@ public:
     const OptionManager& options() const { return m_options; }
     HookManager&         hooks()         { return m_hooks; }
     const HookManager&   hooks()   const { return m_hooks; }
+    KeymapManager&       keymaps()       { return m_keymaps; }
+    const KeymapManager& keymaps() const { return m_keymaps; }
 
     std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
 
@@ -212,6 +215,7 @@ private:
 
     OptionManager m_options;
     HookManager   m_hooks;
+    KeymapManager m_keymaps;
 
     friend constexpr Flags operator|(Flags lhs, Flags rhs)
     {

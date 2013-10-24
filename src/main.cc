@@ -14,6 +14,7 @@
 #include "hook_manager.hh"
 #include "ncurses.hh"
 #include "option_manager.hh"
+#include "keymap_manager.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
@@ -264,6 +265,7 @@ int kakoune(memoryview<String> params)
     EventManager        event_manager;
     GlobalOptions       global_options;
     GlobalHooks         global_hooks;
+    GlobalKeymaps       global_keymaps;
     ShellManager        shell_manager;
     CommandManager      command_manager;
     BufferManager       buffer_manager;
