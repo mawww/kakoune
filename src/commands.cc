@@ -318,11 +318,11 @@ void rm_filter(CommandParameters params, Context& context)
 
 static HookManager& get_hook_manager(const String& scope, Context& context)
 {
-    if (scope == "global")
+    if (prefix_match("global", scope))
         return GlobalHooks::instance();
-    else if (scope == "buffer")
+    else if (prefix_match("buffer", scope))
         return context.buffer().hooks();
-    else if (scope == "window")
+    else if (prefix_match("window", scope))
         return context.window().hooks();
     throw runtime_error("error: no such hook container " + scope);
 }
