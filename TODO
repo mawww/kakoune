@@ -97,3 +97,20 @@
   - 10,20g -> goto line 10, column 20
 
   - 1,2,3<a-space> remove selections 1, 2 and 3
+
+* add a mimetype option always set by 'file', and add hooks for
+  setting filetype depending on mimetype.
+
+* Make kakoune self-documenting
+
+  - Add doc strings to commands, display them in info boxes when entering command
+
+  - Add doc strings to options as well
+
+  - Generate documentation from Kakoune source
+
+    . Write asciidoc from internal documentation
+
+    . make doc compiles kakoune, and run doc generation:
+      +./kak -help commands > ../doc/commands.asciidoc+
+      with README.asciidoc including commands ?
