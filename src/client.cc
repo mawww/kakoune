@@ -331,11 +331,11 @@ public:
         std::vector<String>& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
 
-        if (m_insert_reg)
+        if (m_mode == Mode::InsertReg)
         {
             String reg = RegisterManager::instance()[key.key].values(context())[0];
             m_line_editor.insert(reg);
-            m_insert_reg = false;
+            m_mode = Mode::Default;
         }
         else if (key == Key{Key::Modifiers::Control, 'm'}) // enter
         {
@@ -364,7 +364,7 @@ public:
         }
         else if (key == Key{Key::Modifiers::Control, 'r'})
         {
-            m_insert_reg = true;
+            m_mode = Mode::InsertReg;
         }
         else if (key == Key::Up or
                  key == Key{Key::Modifiers::Control, 'p'})
@@ -487,6 +487,8 @@ private:
         context().print_status(display_line);
     }
 
+    enum class Mode { Default, InsertReg };
+
     PromptCallback m_callback;
     Completer      m_completer;
     const String   m_prompt;
@@ -495,7 +497,7 @@ private:
     int            m_current_completion = -1;
     String         m_prefix;
     LineEditor     m_line_editor;
-    bool           m_insert_reg = false;
+    Mode           m_mode = Mode::Default;
 
     static std::unordered_map<String, std::vector<String>> ms_history;
     std::vector<String>::iterator m_history_it;
