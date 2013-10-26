@@ -36,6 +36,8 @@ Window::Window(Buffer& buffer)
 
 Window::~Window()
 {
+    Context hook_context{*this};
+    m_hooks.run_hook("WinClose", buffer().name(), hook_context);
     m_options.unregister_watcher(*this);
 }
 

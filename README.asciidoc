@@ -529,6 +529,7 @@ existing hooks are:
  * +InsertMove+: The cursor moved (without inserting) in insert mode, the key
        that triggered the move is used for filtering
  * +WinCreate+: A window was created, the filtering text is the buffer name
+ * +WinClose+: A window was detroyed, the filtering text is the buffer name
  * +WinDisplay+: A window was bound a client, the filtering text is the buffer
        name
  * +WinSetOption+: An option was set in a window context, the filtering text
