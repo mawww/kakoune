@@ -297,11 +297,11 @@ int kakoune(memoryview<String> params)
     }
     catch (Kakoune::runtime_error& error)
     {
-         write_debug("error while parsing kakrc: "_str + error.what());
+        write_debug("error while parsing kakrc: "_str + error.what());
     }
     catch (Kakoune::client_removed&)
     {
-         write_debug("error while parsing kakrc: asked to quit");
+        write_debug("error while parsing kakrc: asked to quit");
     }
 
     {
