@@ -39,7 +39,7 @@ public:
     Insertion& last_insert() { return m_client.m_last_insert; }
 
 protected:
-    InputMode& reset_normal_mode();
+    void reset_normal_mode();
 private:
     Client& m_client;
 };
@@ -850,9 +850,6 @@ public:
 
     void on_key(Key key) override
     {
-        if (&context().editor() != &m_inserter.editor())
-            return reset_normal_mode().on_key(key);
-
         last_insert().second.push_back(key);
         if (m_mode == Mode::InsertReg)
         {
@@ -954,10 +951,9 @@ private:
 
 }
 
-InputMode& InputMode::reset_normal_mode()
+void InputMode::reset_normal_mode()
 {
     m_client.reset_normal_mode();
-    return *m_client.m_mode;
 }
 
 Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
