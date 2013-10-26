@@ -542,6 +542,8 @@ void keep(Context& context, int)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
     regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
+        if (ex.empty())
+            return;
         Editor& editor = context.editor();
         const Buffer& buffer = context.buffer();
         SelectionList keep;
