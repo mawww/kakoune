@@ -56,6 +56,10 @@ typedef std::vector<Key> KeyList;
 KeyList parse_keys(const String& str);
 String  key_to_str(Key key);
 
+constexpr Key alt(Codepoint key) { return { Key::Modifiers::Alt, key }; }
+constexpr Key ctrl(Codepoint key) { return { Key::Modifiers::Control, key }; }
+constexpr Key ctrlalt(Codepoint key) { return { Key::Modifiers::ControlAlt, key }; }
+
 }
 
 namespace std

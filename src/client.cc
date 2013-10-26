@@ -207,7 +207,7 @@ public:
             m_callback(selected, MenuEvent::Validate, context());
             return;
         }
-        else if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
+        else if (key == Key::Escape or key == ctrl('c'))
         {
             if (m_edit_filter)
             {
@@ -876,7 +876,7 @@ public:
 
         bool update_completions = true;
         bool moved = false;
-        if (key == Key::Escape or key == Key{ Key::Modifiers::Control, 'c' })
+        if (key == Key::Escape or key == ctrl('c'))
         {
             context().hooks().run_hook("InsertEnd", "", context());
             m_completer.reset();
@@ -909,25 +909,25 @@ public:
             m_inserter.insert(codepoint_to_str(key.key));
             context().hooks().run_hook("InsertKey", key_to_str(key), context());
         }
-        else if (key == Key{ Key::Modifiers::Control, 'r' })
+        else if (key == ctrl('r'))
             m_mode = Mode::InsertReg;
-        else if ( key == Key{ Key::Modifiers::Control, 'm' })
+        else if ( key == ctrl('m'))
             m_inserter.insert(String() + '\n');
-        else if ( key == Key{ Key::Modifiers::Control, 'i' })
+        else if ( key == ctrl('i'))
             m_inserter.insert(String() + '\t');
-        else if ( key == Key{ Key::Modifiers::Control, 'n' })
+        else if ( key == ctrl('n'))
         {
             m_completer.select(1);
             update_completions = false;
         }
-        else if ( key == Key{ Key::Modifiers::Control, 'p' })
+        else if ( key == ctrl('p'))
         {
             m_completer.select(-1);
             update_completions = false;
         }
-        else if ( key == Key{ Key::Modifiers::Control, 'x' })
+        else if ( key == ctrl('x'))
             m_mode = Mode::Complete;
-        else if ( key == Key{ Key::Modifiers::Control, 'u' })
+        else if ( key == ctrl('u'))
             context().buffer().commit_undo_group();
 
         if (update_completions)

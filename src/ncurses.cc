@@ -316,7 +316,7 @@ Key NCursesUI::get_key()
     {
         if (c == CTRL('l'))
            redrawwin(stdscr);
-        return {Key::Modifiers::Control, Codepoint(c) - 1 + 'a'};
+        return ctrl(Codepoint(c) - 1 + 'a');
     }
     else if (c == 27)
     {
@@ -324,7 +324,7 @@ Key NCursesUI::get_key()
         const Codepoint new_c = getch();
         timeout(-1);
         if (new_c != ERR)
-            return {Key::Modifiers::Alt, new_c};
+            return alt(new_c);
         else
             return Key::Escape;
     }
