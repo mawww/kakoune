@@ -559,6 +559,7 @@ void keep(Context& context, int)
     });
 }
 
+template<bool indent_empty = false>
 void indent(Context& context, int)
 {
     CharCount indent_width = context.options()["indentwidth"].get<int>();
@@ -571,7 +572,7 @@ void indent(Context& context, int)
             SelectionList res;
             for (auto line = sel.min().line; line < sel.max().line+1; ++line)
             {
-                if (buf[line].length() > 1)
+                if (indent_empty or buf[line].length() > 1)
                     res.emplace_back(line, line);
             }
             return res;
@@ -996,6 +997,7 @@ KeyMap keymap =
 
     { '<', deindent },
     { '>', indent },
+    { alt('>'), indent<true> },
 
     { ctrl('i'), jump<Forward> },
     { ctrl('o'), jump<Backward> },
