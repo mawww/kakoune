@@ -982,14 +982,11 @@ private:
 
     void insert(Codepoint key)
     {
+        auto str = codepoint_to_str(key);
         auto& buffer = m_edition.editor().buffer();
-        for (auto& sel : m_edition.editor().m_selections)
-        {
-            auto content = codepoint_to_str(key);
-            m_edition.editor().filters()(buffer, sel, content);
-            buffer.insert(buffer.iterator_at(sel.last()), content);
-        }
-        context().hooks().run_hook("InsertKey", codepoint_to_str(key), context());
+        for (auto& sel : m_edition.editor().selections())
+            buffer.insert(buffer.iterator_at(sel.last()), str);
+        context().hooks().run_hook("InsertKey", str, context());
     }
 
     void prepare(InsertMode mode)

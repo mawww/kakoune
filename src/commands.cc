@@ -10,7 +10,6 @@
 #include "debug.hh"
 #include "event_manager.hh"
 #include "file.hh"
-#include "filter.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
 #include "client.hh"
@@ -279,39 +278,6 @@ void rm_highlighter(CommandParameters params, Context& context)
     HighlighterGroup& group = parser.has_option("group") ?
         get_group(window.highlighters(), parser.option_value("group"))
       : window.highlighters();
-
-    group.remove(parser[0]);
-}
-
-void add_filter(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1);
-
-    FilterRegistry& registry = FilterRegistry::instance();
-
-    auto begin = parser.begin();
-    const String& name = *begin;
-    std::vector<String> filter_params;
-    for (++begin; begin != parser.end(); ++begin)
-        filter_params.push_back(*begin);
-
-    Editor& editor = context.editor();
-    FilterGroup& group = parser.has_option("group") ?
-        get_group(editor.filters(), parser.option_value("group"))
-      : editor.filters();
-
-    auto& factory = registry[name];
-    group.append(factory(filter_params));
-}
-
-void rm_filter(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
-
-    Editor& editor = context.editor();
-    FilterGroup& group = parser.has_option("group") ?
-        get_group(editor.filters(), parser.option_value("group"))
-      : editor.filters();
 
     group.remove(parser[0]);
 }
@@ -838,11 +804,8 @@ void register_commands()
     cm.register_commands({"nb", "namebuf"}, set_buffer_name);
 
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
-    auto get_filters      = [](const Context& c) -> FilterGroup& { return c.window().filters(); };
     cm.register_commands({ "ah", "addhl" }, add_highlighter, group_add_completer<HighlighterRegistry>(get_highlighters));
     cm.register_commands({ "rh", "rmhl" }, rm_highlighter, group_rm_completer(get_highlighters));
-    cm.register_commands({ "af", "addfilter" }, add_filter, group_add_completer<FilterRegistry>(get_filters));
-    cm.register_commands({ "rf", "rmfilter" }, rm_filter, group_rm_completer(get_filters));
 
     cm.register_command("hook", add_hook);
     cm.register_command("rmhooks", rm_hooks);

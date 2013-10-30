@@ -9,7 +9,6 @@
 #include "debug.hh"
 #include "event_manager.hh"
 #include "file.hh"
-#include "filters.hh"
 #include "highlighters.hh"
 #include "hook_manager.hh"
 #include "ncurses.hh"
@@ -271,7 +270,6 @@ int kakoune(memoryview<String> params)
     BufferManager       buffer_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
-    FilterRegistry      filter_registry;
     ColorRegistry       color_registry;
     ClientManager       client_manager;
 
@@ -281,7 +279,6 @@ int kakoune(memoryview<String> params)
     register_registers();
     register_commands();
     register_highlighters();
-    register_filters();
 
     write_debug("*** This is the debug buffer, where debug info will be written ***");
     write_debug("pid: " + to_string(getpid()));

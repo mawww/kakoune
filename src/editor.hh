@@ -3,7 +3,6 @@
 
 #include "buffer.hh"
 #include "dynamic_selection_list.hh"
-#include "filter.hh"
 #include "memoryview.hh"
 
 namespace Kakoune
@@ -82,11 +81,6 @@ public:
     bool undo();
     bool redo();
 
-    FilterGroup& filters() { return m_filters; }
-
-    CandidateList complete_filterid(const String& prefix,
-                                    size_t cursor_pos = String::npos);
-
     bool is_editing() const { return m_edition_level!= 0; }
 private:
     friend struct scoped_edition;
@@ -104,7 +98,6 @@ private:
     safe_ptr<Buffer>         m_buffer;
     DynamicSelectionList     m_selections;
     size_t                   m_main_sel;
-    FilterGroup              m_filters;
 };
 
 struct scoped_edition

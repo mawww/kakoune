@@ -464,34 +464,6 @@ existing highlighters are:
        given flag in it for everly lines contained in the int-list option named
        <option_name>.
 
-Filters
--------
-
-Filters can be installed to interact with buffer modifications. They can be
-added or removed with
-
------------------------------------------------
-:addfilter <filter_name> <filter_parameters...>
------------------------------------------------
-
-and
-
----------------------
-:rmfilter <filter_id>
----------------------
-
-exisiting filters are:
-
- * +preserve_indent+: insert previous line indent when inserting a newline
- * +cleanup_whitespaces+: remove trailing whitespaces on the previous line
-       when inserting an end-of-line.
- * +expand_tabulations+: insert spaces instead of tab characters
- * +regex <line_regex> <insert_regex> <replacement>+: when the current line regex
-       and inserted text regex matches, replace insereted text with the
-       replacement text. Capture groups are available through $[0-9] escape
-       sequence, and cursor position can be specified with $c.
- * +group+: same as highlighters group
-
 Hooks
 -----
 
