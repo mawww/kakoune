@@ -9,6 +9,8 @@
 namespace Kakoune
 {
 
+namespace InputModes { class Insert; }
+
 class Register;
 
 enum class SelectMode
@@ -88,6 +90,7 @@ public:
     bool is_editing() const { return m_edition_level!= 0; }
 private:
     friend struct scoped_edition;
+    friend class InputModes::Insert;
     void begin_edition();
     void end_edition();
 
@@ -97,8 +100,6 @@ private:
     int m_edition_level;
 
     void check_invariant() const;
-
-    friend class IncrementalInserter;
 
     safe_ptr<Buffer>         m_buffer;
     DynamicSelectionList     m_selections;
@@ -114,31 +115,15 @@ struct scoped_edition
 
     ~scoped_edition()
     { m_editor.end_edition(); }
+
+    Editor& editor() const { return m_editor; }
 private:
     Editor& m_editor;
 };
 
-// An IncrementalInserter manage insert mode
-class IncrementalInserter
-{
-public:
-    IncrementalInserter(Editor& editor, InsertMode mode = InsertMode::Insert);
-    ~IncrementalInserter();
-
-    void insert(String content);
-    void insert(memoryview<String> strings);
-    void erase();
-    void move_cursors(CharCount move);
-    void move_cursors(LineCount move);
-
-    Buffer& buffer() const { return m_editor.buffer(); }
-    Editor& editor() const { return m_editor; }
-
-private:
-    InsertMode     m_mode;
-    Editor&        m_editor;
-    scoped_edition m_edition;
-};
+void avoid_eol(const Buffer& buffer, BufferCoord& coord);
+void avoid_eol(const Buffer& buffer, Range& sel);
+void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection);
 
 }
 

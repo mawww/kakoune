@@ -92,30 +92,6 @@ void test_editor()
     kak_assert(not buffer.is_end(editor.main_selection().first()));
 }
 
-void test_incremental_inserter()
-{
-    Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "yoüpi\n", "matin\n" });
-    Editor editor(buffer);
-
-    editor.select({0,0});
-    {
-        IncrementalInserter inserter(editor, InsertMode::OpenLineAbove);
-        kak_assert(editor.is_editing());
-        kak_assert(editor.selections().size() == 1);
-        kak_assert(editor.selections().front().first() == BufferCoord{0 COMMA 0});
-        kak_assert(editor.selections().front().last() == BufferCoord{0 COMMA 0});
-        kak_assert(*buffer.begin() == L'\n');
-    }
-    // check utf-8 erase
-    editor.select({3,4});
-    {
-        IncrementalInserter inserter(editor, InsertMode::Insert);
-        inserter.erase();
-        kak_assert(editor.selections().back().last() == BufferCoord{3 COMMA 2});
-    }
-    kak_assert(not editor.is_editing());
-}
-
 void test_utf8()
 {
     String str = "maïs mélange bientôt";
@@ -171,5 +147,4 @@ void run_unit_tests()
     test_buffer();
     test_undo_group_optimizer();
     test_editor();
-    test_incremental_inserter();
 }

@@ -850,7 +850,8 @@ class Insert : public InputMode
 public:
     Insert(Client& client, InsertMode mode)
         : InputMode(client),
-          m_inserter(context().editor(), mode),
+          m_insert_mode(mode),
+          m_edition(context().editor()),
           m_completer(context()),
           m_idle_timer{Clock::now() + idle_timeout,
                        [this](Timer& timer) {
@@ -861,6 +862,7 @@ public:
         last_insert().first = mode;
         last_insert().second.clear();
         context().hooks().run_hook("InsertBegin", "", context());
+        prepare(m_insert_mode);
     }
 
     void on_key(Key key) override
@@ -869,7 +871,7 @@ public:
         if (m_mode == Mode::InsertReg)
         {
             if (key.modifiers == Key::Modifiers::None)
-                m_inserter.insert(RegisterManager::instance()[key.key].values(context()));
+                insert(RegisterManager::instance()[key.key].values(context()));
             m_mode = Mode::Default;
             return;
         }
@@ -896,38 +898,35 @@ public:
             reset_normal_mode();
         }
         else if (key == Key::Backspace)
-            m_inserter.erase();
+            erase();
         else if (key == Key::Left)
         {
-            m_inserter.move_cursors(-1_char);
+            m_edition.editor().move_selections(-1_char, SelectMode::Replace);
             moved = true;
         }
         else if (key == Key::Right)
         {
-            m_inserter.move_cursors(1_char);
+            m_edition.editor().move_selections(1_char, SelectMode::Replace);
             moved = true;
         }
         else if (key == Key::Up)
         {
-            m_inserter.move_cursors(-1_line);
+            m_edition.editor().move_selections(-1_line, SelectMode::Replace);
             moved = true;
         }
         else if (key == Key::Down)
         {
-            m_inserter.move_cursors(1_line);
+            m_edition.editor().move_selections(1_line, SelectMode::Replace);
             moved = true;
         }
         else if (key.modifiers == Key::Modifiers::None)
-        {
-            m_inserter.insert(codepoint_to_str(key.key));
-            context().hooks().run_hook("InsertKey", key_to_str(key), context());
-        }
+            insert(key.key);
         else if (key == ctrl('r'))
             m_mode = Mode::InsertReg;
         else if ( key == ctrl('m'))
-            m_inserter.insert(String() + '\n');
+            insert('\n');
         else if ( key == ctrl('i'))
-            m_inserter.insert(String() + '\t');
+            insert('\t');
         else if ( key == ctrl('n'))
         {
             m_completer.select(1);
@@ -957,11 +956,131 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
 
 private:
+    void erase() const
+    {
+        auto& buffer = m_edition.editor().buffer();
+        for (auto& sel : m_edition.editor().selections())
+        {
+            if (sel.last() == BufferCoord{0,0})
+                continue;
+            auto pos = buffer.iterator_at(sel.last());
+            buffer.erase(utf8::previous(pos), pos);
+        }
+    }
+
+    void insert(memoryview<String> strings)
+    {
+        auto& buffer = m_edition.editor().buffer();
+        auto& selections = m_edition.editor().selections();
+        for (size_t i = 0; i < selections.size(); ++i)
+        {
+            size_t index = std::min(i, strings.size()-1);
+            buffer.insert(buffer.iterator_at(selections[i].last()),
+                          strings[index]);
+        }
+    }
+
+    void insert(Codepoint key)
+    {
+        auto& buffer = m_edition.editor().buffer();
+        for (auto& sel : m_edition.editor().m_selections)
+        {
+            auto content = codepoint_to_str(key);
+            m_edition.editor().filters()(buffer, sel, content);
+            buffer.insert(buffer.iterator_at(sel.last()), content);
+        }
+        context().hooks().run_hook("InsertKey", codepoint_to_str(key), context());
+    }
+
+    void prepare(InsertMode mode)
+    {
+        Editor& editor = m_edition.editor();
+        Buffer& buffer = editor.buffer();
+
+        for (auto& sel : editor.m_selections)
+        {
+            BufferCoord first, last;
+            switch (mode)
+            {
+            case InsertMode::Insert:
+                first = sel.max();
+                last = sel.min();
+                break;
+            case InsertMode::Replace:
+                first = last = Kakoune::erase(buffer, sel).coord();
+                break;
+            case InsertMode::Append:
+                first = sel.min();
+                last = sel.max();
+                // special case for end of lines, append to current line instead
+                if (last.column != buffer[last.line].length() - 1)
+                    last = buffer.char_next(last);
+                break;
+
+            case InsertMode::OpenLineBelow:
+            case InsertMode::AppendAtLineEnd:
+                first = last = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                break;
+
+            case InsertMode::OpenLineAbove:
+            case InsertMode::InsertAtLineBegin:
+                first = sel.min().line;
+                if (mode == InsertMode::OpenLineAbove)
+                    first = buffer.char_prev(first);
+                else
+                {
+                    auto first_non_blank = buffer.iterator_at(first);
+                    while (*first_non_blank == ' ' or *first_non_blank == '\t')
+                        ++first_non_blank;
+                    if (*first_non_blank != '\n')
+                        first = first_non_blank.coord();
+                }
+                last = first;
+                break;
+            case InsertMode::InsertAtNextLineBegin:
+                 kak_assert(false); // not implemented
+                 break;
+            }
+            if (buffer.is_end(first))
+               first = buffer.char_prev(first);
+            if (buffer.is_end(last))
+               last = buffer.char_prev(last);
+            sel.first() = first;
+            sel.last()  = last;
+        }
+        if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
+        {
+            insert('\n');
+            if (mode == InsertMode::OpenLineAbove)
+            {
+                for (auto& sel : editor.m_selections)
+                {
+                    // special case, the --first line above did nothing, so we need to compensate now
+                    if (sel.first() == buffer.char_next({0,0}))
+                        sel.first() = sel.last() = BufferCoord{0,0};
+                }
+            }
+        }
+        sort_and_merge_overlapping(editor.m_selections, editor.m_main_sel);
+        editor.check_invariant();
+    }
+
+    void on_replaced() override
+    {
+        for (auto& sel : m_edition.editor().m_selections)
+        {
+            if (m_insert_mode == InsertMode::Append and sel.last().column > 0)
+                sel.last() = m_edition.editor().buffer().char_prev(sel.last());
+            avoid_eol(m_edition.editor().buffer(), sel);
+        }
+    }
+
     enum class Mode { Default, Complete, InsertReg };
     Mode m_mode = Mode::Default;
-    IncrementalInserter m_inserter;
-    BufferCompleter     m_completer;
-    Timer               m_idle_timer;
+    InsertMode       m_insert_mode;
+    scoped_edition   m_edition;
+    BufferCompleter  m_completer;
+    Timer            m_idle_timer;
 };
 
 }
