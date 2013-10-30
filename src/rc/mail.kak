@@ -1,7 +1,7 @@
 hook global BufOpen .* %{ %sh{
      mimetype="$(file -b --mime-type ${kak_bufname})"
      if [[ "${mimetype}" == "message/rfc822" ]]; then
-         echo setb filetype mail;
+         echo set buffer filetype mail;
      fi
 } }
 

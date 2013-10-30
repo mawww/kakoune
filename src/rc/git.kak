@@ -1,5 +1,5 @@
 hook global BufCreate .*COMMIT_EDITMSG %{
-    setb filetype git-commit
+    set buffer filetype git-commit
 }
 
 hook global WinSetOption filetype=git-commit %{
@@ -13,7 +13,7 @@ hook global WinSetOption filetype=(?!git-commit).* %{
 }
 
 hook global BufCreate .*git-rebase-todo %{
-    setb filetype git-rebase
+    set buffer filetype git-rebase
 }
 
 hook global WinSetOption filetype=git-rebase %{

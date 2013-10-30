@@ -1,4 +1,4 @@
-hook global BufCreate .*\.asciidoc %{ setb filetype asciidoc }
+hook global BufCreate .*\.asciidoc %{ set buffer filetype asciidoc }
 
 hook global WinSetOption filetype=asciidoc %{
     addhl group asciidoc-highlight

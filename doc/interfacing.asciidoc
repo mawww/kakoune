@@ -70,7 +70,7 @@ This is a very simple example, most of the time, the echo command will as
 well contains
 
 -----
-setb filetype <...>
+set buffer filetype <...>
 -----
 
 and some hooks for this filetype will have been written
@@ -101,7 +101,7 @@ decl str plugin_filename
 %sh{
     # ask Kakoune to write current buffer to temporary file
     filename=$(mktemp -t kak-temp.XXXXXXXX)
-    echo "setb plugin_filename '$filename'
+    echo "set buffer plugin_filename '$filename'
           write '$filename'"
 }
 # End the %sh{} so that it's output gets executed by Kakoune.
@@ -117,7 +117,7 @@ nop %sh{ ( # launch a detached shell
     # generate completion option value
     completions="$line.$column@$kak_timestamp:$candidates"
     # write to Kakoune socket for the buffer that triggered the completion
-    echo "setb -buffer '${kak_bufname}' completions '$completions'" |
+    echo "set buffer=${kak_bufname} completions '$completions'" |
         socat stdin UNIX-SOCKET:/tmp/kak-${kak_session}
 ) >& /dev/null < /dev/null & }
 -----

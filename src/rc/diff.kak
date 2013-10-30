@@ -1,5 +1,5 @@
 hook global BufCreate .*\.(diff|patch) %{
-    setb filetype diff
+    set buffer filetype diff
 }
 
 hook global WinSetOption filetype=diff %{

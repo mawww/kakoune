@@ -1,11 +1,11 @@
 hook global BufCreate .*\.(sh) %{
-    setb filetype sh
+    set buffer filetype sh
 }
 
 hook global BufOpen .* %{ %sh{
      mimetype="$(file -b --mime-type ${kak_bufname})"
      if [[ "${mimetype}" == "text/x-shellscript" ]]; then
-         echo setb filetype sh;
+         echo set buffer filetype sh;
      fi
 } }
 

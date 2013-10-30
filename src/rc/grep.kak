@@ -14,7 +14,7 @@ def -shell-params -file-completion \
      [[ -n "$kak_opt_toolsclient" ]] && echo "eval -client '$kak_opt_toolsclient' %{"
 
      echo "edit! -fifo ${output} *grep*
-           setb filetype grep
+           set buffer filetype grep
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
 
      [[ -n "$kak_opt_toolsclient" ]] && echo "}"

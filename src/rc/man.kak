@@ -6,7 +6,7 @@ hook global WinSetOption filetype=man %{
     addhl -group man-highlight regex ^\h+-+[-a-zA-Z_]+ 0:yellow
     addhl -group man-highlight regex [-a-zA-Z_.]+\(\d\) 0:green
     hook window -id man-hooks NormalKey <c-m> man
-    setb tabstop 8
+    set buffer tabstop 8
 }
 
 hook global WinSetOption filetype=(?!man).* %{
@@ -28,7 +28,7 @@ def -shell-params man %{ %sh{
         echo "edit! -scratch '*man*'
               exec |cat<space>${tmpfile}<ret>gk
               nop %sh{rm ${tmpfile}}
-              setb filetype man"
+              set buffer filetype man"
     else
        echo "echo %{man '$@' failed: see *debug* buffer for details }"
        rm ${tmpfile}

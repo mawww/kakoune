@@ -1,11 +1,11 @@
 hook global BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) %{
-    setb filetype cpp
+    set buffer filetype cpp
 }
 
 hook global BufOpen .* %{ %sh{
      mimetype="$(file -b --mime-type ${kak_bufname})"
      if [[ "${mimetype}" == "text/x-c++" || "${mimetype}" == "text/x-c" ]]; then
-         echo setb filetype cpp;
+         echo set buffer filetype cpp;
      fi
 } }
 

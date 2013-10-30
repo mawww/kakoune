@@ -353,7 +353,7 @@ Options are typed, their type can be
 Options value can be changed using the +set+ commands:
 
 --------------------------------------------------------------
-:set{b,w,g} <option> <value> # buffer, window, or global scope
+:set [global,buffer,window] <option> <value> # buffer, window, or global scope
 --------------------------------------------------------------
 
 Option values can be different by scope, an option can have a global

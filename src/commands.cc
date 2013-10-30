@@ -460,47 +460,30 @@ void exec_commands_in_file(CommandParameters params,
     CommandManager::instance().execute(file_content, context);
 }
 
-void set_global_option(CommandParameters params, Context& context)
+static OptionManager& get_options(const String& scope, const Context& context)
+{
+    if (prefix_match("global", scope))
+        return GlobalOptions::instance();
+    else if (prefix_match("buffer", scope))
+        return context.buffer().options();
+    else if (prefix_match("window", scope))
+        return context.window().options();
+    else if (prefix_match(scope, "buffer="))
+        return BufferManager::instance().get_buffer(scope.substr(7_byte)).options();
+    throw runtime_error("error: no such option container " + scope);
+}
+
+void set_option(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "add", false } },
                             ParametersParser::Flags::OptionsOnlyAtStart,
-                            2, 2);
+                            3, 3);
 
-    Option& opt = GlobalOptions::instance().get_local_option(parser[0]);
+    Option& opt = get_options(parser[0], context).get_local_option(parser[1]);
     if (parser.has_option("add"))
-        opt.add_from_string(parser[1]);
+        opt.add_from_string(parser[2]);
     else
-        opt.set_from_string(parser[1]);
-}
-
-void set_buffer_option(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "buffer", true}, { "add", false } },
-                            ParametersParser::Flags::OptionsOnlyAtStart,
-                            2, 2);
-
-    OptionManager& options = parser.has_option("buffer") ?
-        BufferManager::instance().get_buffer(parser.option_value("buffer")).options()
-      : context.buffer().options();
-
-    Option& opt = options.get_local_option(parser[0]);
-    if (parser.has_option("add"))
-        opt.add_from_string(parser[1]);
-    else
-        opt.set_from_string(parser[1]);
-}
-
-void set_window_option(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "add", false } },
-                            ParametersParser::Flags::OptionsOnlyAtStart,
-                            2, 2);
-
-    Option& opt = context.window().options().get_local_option(parser[0]);
-    if (parser.has_option("add"))
-        opt.add_from_string(parser[1]);
-    else
-        opt.set_from_string(parser[1]);
+        opt.set_from_string(parser[2]);
 }
 
 void declare_option(CommandParameters params, Context& context)
@@ -873,21 +856,26 @@ void register_commands()
     cm.register_command("echo", echo_message);
     cm.register_command("debug", write_debug_message);
 
-    cm.register_commands({ "setg", "setglobal" }, set_global_option,
-                         PerArgumentCommandCompleter({
-                             [](const Context& context, const String& prefix, ByteCount cursor_pos)
-                             { return GlobalOptions::instance().complete_option_name(prefix, cursor_pos); }
-                         }));
-    cm.register_commands({ "setb", "setbuffer" }, set_buffer_option,
-                         PerArgumentCommandCompleter({
-                             [](const Context& context, const String& prefix, ByteCount cursor_pos)
-                             { return context.buffer().options().complete_option_name(prefix, cursor_pos); }
-                         }));
-    cm.register_commands({ "setw", "setwindow" }, set_window_option,
-                         PerArgumentCommandCompleter({
-                             [](const Context& context, const String& prefix, ByteCount cursor_pos)
-                             { return context.window().options().complete_option_name(prefix, cursor_pos); }
-                         }));
+    cm.register_command("set", set_option,
+                        [](const Context& context, CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+                        {
+                            if (token_to_complete == 0)
+                            {
+                                CandidateList res;
+                                for (auto scope : { "global", "buffer", "window" })
+                                {
+                                    if (params.size() == 0 or prefix_match(scope, params[0].substr(0_byte, pos_in_token)))
+                                        res.emplace_back(scope);
+                                }
+                                return res;
+                            }
+                            else if (token_to_complete == 1)
+                            {
+                                OptionManager& options = get_options(params[0], context);
+                                return options.complete_option_name(params[1], pos_in_token);
+                            }
+                            return CandidateList{};
+                        } );
 
     cm.register_commands({"ca", "colalias"}, define_color_alias);
     cm.register_commands({"nc", "nameclient"}, set_client_name);
