@@ -39,7 +39,7 @@ def -shell-params git %{ %sh{
     run_git_blame() {
         (
             echo "eval -client '$kak_client' %{
-                      try %{ addhl flag_lines magenta git_blame_flags } catch %{}
+                      try %{ addhl flag_lines magenta git_blame_flags }
                       set buffer=$kak_bufname git_blame_flags ''
                   }" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
             declare -A authors
@@ -92,7 +92,7 @@ def -shell-params git %{ %sh{
        show|log|diff) show_git_cmd_output "$@" ;;
        blame) run_git_blame ;;
        show-diff)
-           echo "try %{ addhl flag_lines black git_diff_flags } catch %{}"
+           echo "try %{ addhl flag_lines black git_diff_flags }"
            update_diff
            ;;
        update-diff) update_diff ;;

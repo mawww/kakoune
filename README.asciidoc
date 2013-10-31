@@ -654,7 +654,7 @@ Some helper commands can be used to define composite commands:
      specify where the info box should be anchored relative to the main selection.
  * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
-     instead.
+     instead. If nothing is to be done on error, the catch part can be ommitted.
  * +reg <name> <content>+: set register <name> to <content>
 
 Note that these commands are available in interactive command mode, but are

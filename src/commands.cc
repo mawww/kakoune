@@ -657,10 +657,12 @@ void info(CommandParameters params, Context& context)
 
 void try_catch(CommandParameters params, Context& context)
 {
-    if (params.size() != 3)
+    if (params.size() != 1 and params.size() != 3)
         throw wrong_argument_count();
-    if (params[1] != "catch")
-        throw runtime_error("try needs a catch");
+
+    const bool do_catch = params.size() == 3;
+    if (do_catch and params[1] != "catch")
+        throw runtime_error("usage: try <commands> [catch <on error commands>]");
 
     CommandManager& command_manager = CommandManager::instance();
     try
@@ -669,7 +671,8 @@ void try_catch(CommandParameters params, Context& context)
     }
     catch (Kakoune::runtime_error& e)
     {
-        command_manager.execute(params[2], context);
+        if (do_catch)
+            command_manager.execute(params[2], context);
     }
 }
 
