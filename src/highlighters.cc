@@ -161,7 +161,7 @@ public:
 
     void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
-        Regex regex = m_regex_getter();
+        Regex regex = m_regex_getter(window);
         if (regex != m_last_regex)
         {
             m_last_regex = regex;
@@ -186,7 +186,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params, const Wi
     try
     {
         ColorSpec colors { { 0, &get_color(params[0]) } };
-        auto get_regex = []{
+        auto get_regex = [](const Window&){
             auto s = RegisterManager::instance()['/'].values(Context{});
             return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
         };
@@ -198,18 +198,17 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params, const Wi
     }
 }
 
-HighlighterAndId highlight_regex_option_factory(HighlighterParameters params, const Window& window)
+HighlighterAndId highlight_regex_option_factory(HighlighterParameters params, const Window&)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
     ColorSpec colors { { 0, &get_color(params[1]) } };
     String option_name = params[0];
-    const OptionManager& options = window.options();
     // verify option type now
-    options[option_name].get<Regex>();
+    GlobalOptions::instance()[option_name].get<Regex>();
 
-    auto get_regex = [option_name, &options]{ return options[option_name].get<Regex>(); };
+    auto get_regex = [option_name](const Window& window){ return window.options()[option_name].get<Regex>(); };
     return {"hloption_" + option_name, DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
 }
 
