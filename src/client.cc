@@ -572,7 +572,7 @@ public:
         const String& candidate = m_matching_candidates[m_current_candidate];
         const auto& cursor_pos = m_context.editor().main_selection().last();
         const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
-        const auto suffix_len = buffer.distance(cursor_pos, m_completions.end);
+        const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
         const auto buffer_len = buffer.byte_count();
 
         auto ref = buffer.string(m_completions.begin, m_completions.end);
@@ -774,7 +774,7 @@ public:
                  longest_completion = std::max(longest_completion, it->length());
 
             if (timestamp == buffer.timestamp() and
-                cursor_pos.line == coord.line and cursor_pos.column <= coord.column and
+                cursor_pos.line == coord.line and cursor_pos.column >= coord.column and
                 buffer.distance(coord, cursor_pos) < longest_completion)
                 return { coord, end, { opt.begin() + 1, opt.end() }, timestamp };
         }
