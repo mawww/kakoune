@@ -942,6 +942,8 @@ public:
         else if ( key == ctrl('u'))
             context().buffer().commit_undo_group();
 
+        context().hooks().run_hook("InsertKey", key_to_str(key), context());
+
         if (update_completions)
             m_idle_timer.set_next_date(Clock::now() + idle_timeout);
         if (moved)
@@ -986,7 +988,7 @@ private:
         auto& buffer = m_edition.editor().buffer();
         for (auto& sel : m_edition.editor().selections())
             buffer.insert(buffer.iterator_at(sel.last()), str);
-        context().hooks().run_hook("InsertKey", str, context());
+        context().hooks().run_hook("InsertChar", str, context());
     }
 
     void prepare(InsertMode mode)

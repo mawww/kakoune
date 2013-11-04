@@ -18,11 +18,11 @@ hook global WinSetOption filetype=cpp %~
     addhl -group cpp-highlight regex "^\h*?#.*?(?<!\\)$" 0:macro
     addhl -group cpp-highlight regex "(?<!')\".*?(?<!\\)(\\\\)*\"" 0:string
     addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
-    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
-    hook window InsertKey \n -id cpp-hooks %[ try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P } ] # preserve previous line indent
-    hook window InsertKey \n -id cpp-hooks %[ try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ] ] # indent after lines ending with { or (
-    hook window InsertKey \} -id cpp-hooks %[ try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ] ] # deindent on insert } alone on a line
-    hook window InsertKey \n -id cpp-hooks %[ try %{ exec -draft k<a-x>s\h+$<ret>d } ] # cleanup trailing white space son previous line
+    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } } # cleanup trailing whitespaces when exiting insert mode
+    hook window InsertChar \n -id cpp-hooks %[ try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P } ] # preserve previous line indent
+    hook window InsertChar \n -id cpp-hooks %[ try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ] ] # indent after lines ending with { or (
+    hook window InsertChar \} -id cpp-hooks %[ try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ] ] # deindent on insert } alone on a line
+    hook window InsertChar \n -id cpp-hooks %[ try %{ exec -draft k<a-x>s\h+$<ret>d } ] # cleanup trailing white space son previous line
 ~
 
 hook global WinSetOption filetype=(?!cpp).* %{
