@@ -637,20 +637,18 @@ Selection select_next_match(const Buffer& buffer, const Selection& selection, co
 
     MatchResults matches;
 
-    if (find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex))
+    bool found = false;
+    if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex)))
     {
         begin = matches[0].first;
         end   = matches[0].second;
         for (auto& match : matches)
             captures.push_back(String(match.first, match.second));
     }
-    else
+    if (not found or begin == buffer.end())
         throw runtime_error("'" + regex.str() + "': no matches found");
 
-    if (begin == end)
-        ++end;
-
-    end = utf8::previous(end);
+    end = (begin == end) ? end : utf8::previous(end);
     if (direction == Backward)
         std::swap(begin, end);
     return Selection{begin.coord(), end.coord(), std::move(captures)};
