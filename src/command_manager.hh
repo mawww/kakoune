@@ -18,6 +18,7 @@ struct Context;
 using CommandParameters = memoryview<String>;
 using Command = std::function<void (CommandParameters, Context& context)>;
 using CommandCompleter = std::function<CandidateList (const Context& context,
+                                                      CompletionFlags,
                                                       CommandParameters,
                                                       size_t, ByteCount)>;
 
@@ -25,6 +26,7 @@ class PerArgumentCommandCompleter
 {
 public:
     using ArgumentCompleter = std::function<CandidateList (const Context&,
+                                            CompletionFlags flags,
                                             const String&, ByteCount)>;
     using ArgumentCompleterList = memoryview<ArgumentCompleter>;
 
@@ -32,6 +34,7 @@ public:
         : m_completers(completers.begin(), completers.end()) {}
 
     CandidateList operator()(const Context& context,
+                             CompletionFlags flags,
                              CommandParameters params,
                              size_t token_to_complete,
                              ByteCount pos_in_token) const;
@@ -47,7 +50,7 @@ public:
                  memoryview<String> shell_params = {},
                  const EnvVarMap& env_vars = EnvVarMap{});
 
-    Completions complete(const Context& context,
+    Completions complete(const Context& context, CompletionFlags flags,
                          const String& command_line, ByteCount cursor_pos);
 
     bool command_defined(const String& command_name) const;

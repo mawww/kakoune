@@ -405,7 +405,8 @@ void define_command(CommandParameters params, Context& context)
     CommandCompleter completer;
     if (parser.has_option("file-completion"))
     {
-        completer = [](const Context& context, CommandParameters params,
+        completer = [](const Context& context, CompletionFlags flags,
+                       CommandParameters params,
                        size_t token_to_complete, ByteCount pos_in_token)
         {
              const String& prefix = token_to_complete < params.size() ?
@@ -416,9 +417,12 @@ void define_command(CommandParameters params, Context& context)
     else if (parser.has_option("shell-completion"))
     {
         String shell_cmd = parser.option_value("shell-completion");
-        completer = [=](const Context& context, CommandParameters params,
+        completer = [=](const Context& context, CompletionFlags flags,
+                        CommandParameters params,
                         size_t token_to_complete, ByteCount pos_in_token)
         {
+            if (flags == CompletionFlags::Fast) // no shell on fast completion
+                return CandidateList{};
             EnvVarMap vars = {
                 { "token_to_complete", to_string(token_to_complete) },
                 { "pos_in_token",      to_string(pos_in_token) }
@@ -743,8 +747,9 @@ void change_working_directory(CommandParameters params, Context&)
 template<typename GetRootGroup>
 CommandCompleter group_rm_completer(GetRootGroup get_root_group)
 {
-    return [=](const Context& context, CommandParameters params,
-               size_t token_to_complete, ByteCount pos_in_token) {
+    return [=](const Context& context, CompletionFlags flags,
+               CommandParameters params, size_t token_to_complete,
+               ByteCount pos_in_token) {
         auto& root_group = get_root_group(context);
         const String& arg = token_to_complete < params.size() ?
                             params[token_to_complete] : String();
@@ -759,8 +764,9 @@ CommandCompleter group_rm_completer(GetRootGroup get_root_group)
 template<typename FactoryRegistry, typename GetRootGroup>
 CommandCompleter group_add_completer(GetRootGroup get_root_group)
 {
-    return [=](const Context& context, CommandParameters params,
-               size_t token_to_complete, ByteCount pos_in_token) {
+    return [=](const Context& context, CompletionFlags flags,
+               CommandParameters params, size_t token_to_complete,
+               ByteCount pos_in_token) {
         auto& root_group = get_root_group(context);
         const String& arg = token_to_complete < params.size() ?
                             params[token_to_complete] : String();
@@ -810,7 +816,7 @@ void register_commands()
     cm.register_commands({"nop"}, [](CommandParameters, Context&){});
 
     PerArgumentCommandCompleter filename_completer({
-         [](const Context& context, const String& prefix, ByteCount cursor_pos)
+         [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
          { return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), cursor_pos); }
     });
     cm.register_commands({ "e", "edit" }, edit<false>, filename_completer);
@@ -823,7 +829,7 @@ void register_commands()
     cm.register_command("wq!", write_and_quit<true>);
 
     PerArgumentCommandCompleter buffer_completer({
-        [](const Context& context, const String& prefix, ByteCount cursor_pos)
+        [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
     cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
@@ -857,7 +863,7 @@ void register_commands()
     cm.register_command("debug", write_debug_message);
 
     cm.register_command("set", set_option,
-                        [](const Context& context, CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+                        [](const Context& context, CompletionFlags, CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
                         {
                             if (token_to_complete == 0)
                             {

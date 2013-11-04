@@ -394,6 +394,8 @@ Some options are built in kakoune, and can be used to control it's behaviour:
    candidates exist, enable completion with common prefix.
  * +incsearch+ _bool_: execute search as it is typed
  * +autoinfo+ _bool_: display automatic information box for certain commands.
+ * +autoshowcompl+ _bool_: automatically display possible completions when
+   editing a prompt.
  * +ignored_files+ _regex_: filenames matching this regex wont be considered
    as candidates on filename completion (except if the text being completed
    already matches it).

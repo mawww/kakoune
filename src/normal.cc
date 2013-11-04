@@ -249,7 +249,7 @@ void command(Context& context, int)
 {
     context.client().prompt(
         ":", get_color("Prompt"),
-        std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3),
+        std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
         [](const String& cmdline, PromptEvent event, Context& context) {
              if (event == PromptEvent::Validate)
                  CommandManager::instance().execute(cmdline, context);

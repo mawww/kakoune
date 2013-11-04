@@ -26,10 +26,15 @@ struct Completions
         : start(start), end(end) {}
 };
 
-typedef std::function<Completions (const Context&,
-                                   const String&, ByteCount)> Completer;
+enum class CompletionFlags
+{
+    None,
+    Fast
+};
+using Completer = std::function<Completions (const Context&, CompletionFlags,
+                                             const String&, ByteCount)>;
 
-inline Completions complete_nothing(const Context& context,
+inline Completions complete_nothing(const Context& context, CompletionFlags,
                                     const String&, ByteCount cursor_pos)
 {
     return Completions(cursor_pos, cursor_pos);

@@ -267,7 +267,7 @@ public:
             display_line.insert(display_line.begin(), { "filter:"_str, get_color("Prompt") });
             context().print_status(display_line);
         }
-   }
+    }
 
     String description() const override
     {
@@ -410,9 +410,9 @@ public:
             const bool reverse = (key == Key::BackTab);
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
-            if (m_current_completion == -1)
+            if (candidates.empty())
             {
-                m_completions = m_completer(context(), line,
+                m_completions = m_completer(context(), CompletionFlags::None, line,
                                             line.byte_count_to(m_line_editor.cursor_pos()));
                 if (candidates.empty())
                     return;
@@ -451,13 +451,26 @@ public:
             // when we have only one completion candidate, make next tab complete
             // from the new content.
             if (candidates.size() == 1)
-                m_current_completion = -1;
+                candidates.clear();
         }
         else
         {
-            context().ui().menu_hide();
-            m_current_completion = -1;
             m_line_editor.handle_key(key);
+            m_current_completion = -1;
+            context().ui().menu_hide();
+
+            if (context().options()["autoshowcompl"].get<bool>()) try
+            {
+                m_completions = m_completer(context(), CompletionFlags::Fast, line,
+                                            line.byte_count_to(m_line_editor.cursor_pos()));
+                CandidateList& candidates = m_completions.candidates;
+                if (not candidates.empty())
+                {
+                    DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
+                    context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
+                                             get_color("MenuBackground"), MenuStyle::Prompt);
+                }
+            } catch (runtime_error&) {}
         }
         display();
         m_callback(line, PromptEvent::Change, context());
