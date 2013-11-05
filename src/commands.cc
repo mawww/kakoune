@@ -540,7 +540,7 @@ public:
 template<typename Func>
 void context_wrap(CommandParameters params, Context& context, Func func)
 {
-    ParametersParser parser(params, { { "client", true }, { "draft", false }},
+    ParametersParser parser(params, { { "client", true }, { "draft", false }, { "itersel", false } },
                             ParametersParser::Flags::OptionsOnlyAtStart, 1);
 
     Context& real_context = parser.has_option("client") ?
@@ -554,10 +554,24 @@ void context_wrap(CommandParameters params, Context& context, Func func)
                       real_context.has_client() ? real_context.client().name() : "");
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
         auto restore_sels = on_scope_end([&]{ editor.select(sels); });
-        func(parser, client.context());
+
+        if (parser.has_option("itersel"))
+        {
+            for (auto& sel : sels)
+            {
+                editor.select(sel);
+                func(parser, client.context());
+            }
+        }
+        else
+            func(parser, client.context());
     }
     else
+    {
+        if (parser.has_option("itersel"))
+            throw runtime_error("-itersel makes no sense without -draft");
         func(parser, real_context);
+    }
 
     // force redraw of this client window
     if (parser.has_option("client") and real_context.has_window())

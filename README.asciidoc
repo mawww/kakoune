@@ -299,10 +299,14 @@ Commands are entered using +:+.
       is relative to kak executable path.
  * +nameclient <name>+: set current client name
  * +namebuf <name>+: set current buffer name
- * +exec [-client <name>] <keys>+: execute <keys> as if pressed in normal mode.
-      if client if specified, exec keys in the named client context.
- * +eval [-client <name>] <command>+: execute <command> as if entered in command line
-      if client if specified, exec command in the named client context.
+ * +exec [-client <name>] [-draft [-itersel]] <keys>+: execute <keys> as if
+     pressed in normal mode. if +client+ if specified, exec keys in the named
+     client context. if +draft+ is specified, execute the keys in a draft
+     context. if +itersel+ is specified, apply the keys on each selection
+     separately.
+ * +eval [-client <name>] [-draft [-itersel]] <command>+: execute <command> as
+     if entered in command line. +draft+, +client+ and +itersel+ works the same
+     as for the +exec+ command.
  * +echo <text>+: show <text> in status line
  * +name <name>+: sets current client name to name
  * +nop+: does nothing, but as with every other commands, arguments may be
