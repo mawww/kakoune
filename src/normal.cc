@@ -806,13 +806,29 @@ void save_selections(Context& context, int)
                            " selections", get_color("Information") });
 }
 
+static CharCount get_column(const Buffer& buffer,
+                            CharCount tabstop, BufferCoord coord)
+{
+    auto& line = buffer[coord.line];
+    auto col = 0_char;
+    for (auto it = line.begin();
+         it != line.end() and ByteCount{it - line.begin()} < coord.column;
+         it = utf8::next(it))
+    {
+        if (*it == '\t')
+            col = (col / tabstop + 1) * tabstop;
+        else
+            ++col;
+    }
+    return col;
+}
+
 template<bool insert_at_begin>
 void align(Context& context, int)
 {
     auto& selections = context.editor().selections();
     auto& buffer = context.buffer();
-    auto get_column = [&buffer](BufferCoord coord)
-    { return buffer[coord.line].char_count_to(coord.column); };
+    const CharCount tabstop = context.options()["tabstop"].get<int>();
 
     std::vector<std::vector<const Selection*>> columns;
     LineCount last_line = -1;
@@ -830,16 +846,29 @@ void align(Context& context, int)
         last_line = line;
     }
 
+    const bool use_tabs = context.options()["aligntab"].get<bool>();
     for (auto& col : columns)
     {
-        CharCount max_col = 0;
+        CharCount maxcol = 0;
         for (auto& sel : col)
-            max_col = std::max(get_column(sel->last()), max_col);
+            maxcol = std::max(get_column(buffer, tabstop, sel->last()), maxcol);
         for (auto& sel : col)
         {
-            CharCount padding = max_col - get_column(sel->last());
-            auto it = buffer.iterator_at(insert_at_begin ? sel->min() : sel->last());
-            buffer.insert(it, String{ ' ', padding });
+            auto insert_coord = insert_at_begin ? sel->min() : sel->last();
+            auto lastcol = get_column(buffer, tabstop, sel->last());
+            String padstr;
+            if (not use_tabs)
+                padstr = String{ ' ', maxcol - lastcol };
+            else
+            {
+                auto inscol = get_column(buffer, tabstop, insert_coord);
+                auto targetcol = maxcol - (lastcol - inscol);
+                auto tabcol = inscol - (inscol % tabstop);
+                auto tabs = (targetcol - tabcol) / tabstop;
+                auto spaces = targetcol - (tabs ? (tabcol + tabs * tabstop) : inscol);
+                padstr = String{ '\t', tabs } + String{ ' ', spaces };
+            }
+            buffer.insert(buffer.iterator_at(insert_coord), std::move(padstr));
         }
     }
 }

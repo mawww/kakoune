@@ -397,6 +397,7 @@ Some options are built in kakoune, and can be used to control it's behaviour:
  * +complete_prefix+ _bool_: when completing in command line, and multiple
    candidates exist, enable completion with common prefix.
  * +incsearch+ _bool_: execute search as it is typed
+ * +aligntab+ _bool_: use tabs for alignement command
  * +autoinfo+ _bool_: display automatic information box for certain commands.
  * +autoshowcompl+ _bool_: automatically display possible completions when
    editing a prompt.
