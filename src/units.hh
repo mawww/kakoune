@@ -55,6 +55,12 @@ public:
 
     constexpr RealType operator-() { return RealType(-m_value); }
 
+    constexpr RealType operator%(RealType other) const
+    { return RealType(m_value % other.m_value); }
+
+    constexpr RealType operator%=(RealType other)
+    { m_value %= other.m_value; return static_cast<RealType&>(*this); }
+
     constexpr bool operator==(RealType other) const
     { return m_value == other.m_value; }
 
