@@ -14,7 +14,8 @@ namespace Kakoune
 
 Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
                time_t fs_timestamp)
-    : m_name(std::move(name)), m_flags(flags | Flags::NoUndo),
+    : m_name(flags & Flags::File ? real_path(parse_filename(name)) : std::move(name)),
+      m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
       m_timestamp(0),
@@ -24,9 +25,6 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
       m_keymaps(GlobalKeymaps::instance())
 {
     BufferManager::instance().register_buffer(*this);
-
-    if (flags & Flags::File)
-        m_name = real_path(m_name);
 
     if (lines.empty())
         lines.emplace_back("\n");
