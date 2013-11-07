@@ -299,14 +299,6 @@ Commands are entered using +:+.
       is relative to kak executable path.
  * +nameclient <name>+: set current client name
  * +namebuf <name>+: set current buffer name
- * +exec [-client <name>] [-draft [-itersel]] <keys>+: execute <keys> as if
-     pressed in normal mode. if +client+ if specified, exec keys in the named
-     client context. if +draft+ is specified, execute the keys in a draft
-     context. if +itersel+ is specified, apply the keys on each selection
-     separately.
- * +eval [-client <name>] [-draft [-itersel]] <command>+: execute <command> as
-     if entered in command line. +draft+, +client+ and +itersel+ works the same
-     as for the +exec+ command.
  * +echo <text>+: show <text> in status line
  * +name <name>+: sets current client name to name
  * +nop+: does nothing, but as with every other commands, arguments may be
@@ -315,6 +307,35 @@ Commands are entered using +:+.
       +:%sh{ echo echo tchou }+ will echo tchou in kakoune, whereas
       +:nop %sh{ echo echo tchou }+ will not, but both will execute the
       shell command.
+
+Exec and Eval
+-------------
+
+the +:exec+ and +:eval+ commands can be used for running kakoune commands.
++:exec+ keys as if they were pressed, whereas +:eval+ executes it's given
+paremeters as if they were entered in the command prompt. By default,
+they do their execution in the context of the current client.
+
+Some parameters provide a way to change the context of execution:
+
+ * +-client <name>+: execute in the context of the client named <name>
+ * +-draft+: execute in a copy of the context of the selected client
+     modifications to the selections or input state will not affect
+     the client. This permits to make some modification to the buffer
+     without modifying the user's selection.
+ * +-itersel+ (requires +-draft+): execute once per selection, in a
+     context with only the considered selection. This permits to avoid
+     cases where the selections may get merged.
+
+The execution stops when the last key/command is reached, or an error
+is raised.
+
+key parameters gets concatenated, so the following commands are equivalent.
+
+----------------------
+:exec otest<space>1
+:exec o test <space> 1
+----------------------
 
 String syntax
 -------------
