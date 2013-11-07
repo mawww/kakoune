@@ -3,7 +3,14 @@ objects := $(addprefix ., $(sources:.cc=.o))
 deps := $(addprefix ., $(sources:.cc=.d))
 
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
-LIBS += -lncursesw -lboost_regex
+LIBS += -lncursesw
+
+os := $(shell uname -o)
+ifeq ($(os),Cygwin)
+	LIBS += -lboost_regex-mt
+else
+	LIBS += -lboost_regex
+endif
 
 debug ?= yes
 ifeq ($(debug),yes)
