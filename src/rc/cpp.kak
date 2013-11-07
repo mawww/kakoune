@@ -25,8 +25,12 @@ hook global WinSetOption filetype=cpp %~
         try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ] # indent after lines ending with { or (
         try %{ exec -draft k<a-x>s\h+$<ret>d } # cleanup trailing white space son previous line
         try %{ exec -draft [(<a-k>\`\([^\n]+\n[^\n]*\n?\'<ret>s\`..|.\'<ret>& } # align to opening paren of previous line
+        try %{ exec -draft <c-s>k<a-x>s^\h*\K(/{2,})<ret>y<c-o>P } # copy // comments prefix
     _ @
-    hook window InsertChar \} -id cpp-indent %[ try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ] ] # deindent on insert } alone on a line
+    hook window InsertChar \} -id cpp-indent %[
+         try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ] # deindent on insert } alone on a line
+         try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ] # add ; after } if class or struct definition
+    ]
 ~
 
 hook global WinSetOption filetype=(?!cpp).* %{
