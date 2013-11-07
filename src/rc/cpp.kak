@@ -18,18 +18,28 @@ hook global WinSetOption filetype=cpp %~
     addhl -group cpp-highlight regex "^\h*?#.*?(?<!\\)$" 0:macro
     addhl -group cpp-highlight regex "(?<!')\".*?(?<!\\)(\\\\)*\"" 0:string
     addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
-    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } } # cleanup trailing whitespaces when exiting insert mode
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
 
     hook window InsertChar \n -id cpp-indent %@ eval -draft -itersel %_
-        try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P } # preserve previous line indent
-        try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ] # indent after lines ending with { or (
-        try %{ exec -draft k<a-x>s\h+$<ret>d } # cleanup trailing white space son previous line
-        try %{ exec -draft [(<a-k>\`\([^\n]+\n[^\n]*\n?\'<ret>s\`..|.\'<ret>& } # align to opening paren of previous line
-        try %{ exec -draft <c-s>k<a-x>s^\h*\K(/{2,})<ret>y<c-o>P } # copy // comments prefix
+        # preserve previous line indent
+        try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P }
+        # indent after lines ending with { or (
+        try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ]
+        # cleanup trailing white space son previous line
+        try %{ exec -draft k<a-x>s\h+$<ret>d }
+        # align to opening paren of previous line
+        try %{ exec -draft [(<a-k>\`\([^\n]+\n[^\n]*\n?\'<ret>s\`..|.\'<ret>& }
+        # copy // comments prefix
+        try %{ exec -draft <c-s>k<a-x>s^\h*\K(/{2,})<ret>y<c-o>P }
     _ @
+
     hook window InsertChar \} -id cpp-indent %[
-         try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ] # deindent on insert } alone on a line
-         try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ] # add ; after } if class or struct definition
+        # deindent on insert } alone on a line
+        try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ]
+        # add ; after } if class or struct definition
+        try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
     ]
 ~
 
