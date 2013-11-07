@@ -29,11 +29,11 @@ def clang-complete %{
 }
 
 def clang-enable-autocomplete %{
-    hook window -id clang-autocomplete InsertIdle .* %{
+    hook window -id clang-autocomplete InsertIdle .* %{ try %{
         exec -draft <space><a-h><a-k>(\.|->|::).$<ret>
         echo 'completing...'
         clang-complete
-    }
+    } }
 }
 
 def clang-disable-autocomplete %{ rmhooks window clang-autocomplete }
