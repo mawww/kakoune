@@ -396,7 +396,7 @@ Writing a file never uses the window options for example, so any
 options related to writing wont be taken into account if set in the
 window scope (+BOM+ or +eolformat+ for example).
 
-New options can be declared using the +decl+ command:
+New options can be declared using the +:decl+ command:
 
 -----------------------------
 :decl <type> <name> [<value>]
@@ -473,7 +473,7 @@ and
 existing highlighters are:
 
  * +number_lines+: show line numbers
- * +group <group_name>+: highlighter group, containing other highlighters. 
+ * +group <group_name>+: highlighter group, containing other highlighters.
        useful when multiple highlighters work together and need to be
        removed as one. Adding and removing from a group can be done using
        `:addhl -group <group> <highlighter_name> <highlighter_parameters...>`
@@ -603,7 +603,8 @@ for example: %sh{ ls } is replaced with the output of the ls command.
 Some of kakoune state is available through environment variables:
 
  * +kak_selection+: content of the main selection
- * +kak_selections+: content of the selection separated by commas
+ * +kak_selections+: content of the selection separated by colons, colons in
+    the selection contents are escapted with a backslash.
  * +kak_bufname+: name of the current buffer
  * +kak_timestamp+: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
@@ -615,6 +616,11 @@ Some of kakoune state is available through environment variables:
  * +kak_cursor_line+: line of the end of the main selection
  * +kak_cursor_cursor+: column of the end of the main selection
  * +kak_hook_param+: filtering text passed to the currently executing hook
+
+Note that in order to make only needed information available, Kakoune needs
+to find the environement variable reference in the shell script executed.
+Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environement will
+not work.
 
 for example you can print informations on the current file in the status
 line using:
@@ -638,7 +644,7 @@ for example you can display last search pattern with
 Defining Commands
 -----------------
 
-new commands can be defined using the +def+ command.
+new commands can be defined using the +:def+ command.
 
 ------------------------------
 :def <command_name> <commands>
@@ -669,19 +675,19 @@ kakoune state:
 
 Some helper commands can be used to define composite commands:
 
- * +menu <label1> <commands1> <label2> <commands2>...+: display a menu using
+ * +:menu <label1> <commands1> <label2> <commands2>...+: display a menu using
      labels, the selected label's commands are executed.
      +menu+ can take a -auto-single argument, to automatically run commands
      when only one choice is provided. and a -select-cmds argument, in which
      case menu takes three argument per item, the last one being a command
      to execute when the item is selected (but not validated).
- * +info <text>+: display text in an information box, at can take a -anchor
+ * +:info <text>+: display text in an information box, at can take a -anchor
      option, which accepts +left+, +right+ and +cursor+ as value, in order to
      specify where the info box should be anchored relative to the main selection.
- * +try <commands> catch <on_error_commands>+: prevent an error in <commands>
+ * +:try <commands> catch <on_error_commands>+: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead. If nothing is to be done on error, the catch part can be ommitted.
- * +reg <name> <content>+: set register <name> to <content>
+ * +:reg <name> <content>+: set register <name> to <content>
 
 Note that these commands are available in interactive command mode, but are
 not that useful in this context.
@@ -689,7 +695,7 @@ not that useful in this context.
 FIFO Buffer
 -----------
 
-the +edit+ command can take a -fifo parameter:
+the +:edit+ command can take a -fifo parameter:
 
 -----------------------------------
 :edit -fifo <filename> <buffername>
@@ -732,32 +738,32 @@ to the kak binary) to load them on demand.
 Existing commands files are:
 
  * *rc/kakrc.kak*: provides kak commands files autodetection and highlighting
- * *rc/cpp.kak*: provides c/c++ files autodetection and highlighting and the +alt+
-     command for switching from c/cpp file to h/hpp one.
+ * *rc/cpp.kak*: provides C/CPP files autodetection and highlighting and the
+     +:alt+ command for switching from C/CPP file to h/hpp one.
  * *rc/asciidoc.kak*: provides asciidoc files autodetection and highlighting
  * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
  * *rc/git.kak*: provides various git format highlighting (commit message editing,
      interactive rebase)
- * *rc/git-tools.kak*: provides some git integration, like +git-blame+, +git-show+
-     or +git-diff-show+
- * *rc/make.kak*: provides the +make+ and +errjump+ commands along with highlighting
-     for compiler output.
- * *rc/man.kak*: provides the +man+ command 
- * *rc/grep.kak*: provides the +grep+ and +gjump+ commands along with highlighting
+ * *rc/git-tools.kak*: provides some git integration, like +:git-blame+, +:git-show+
+     or +:git-diff-show+
+ * *rc/make.kak*: provides the +:make+ and +:errjump+ commands along with
+	 highlighting for compiler output.
+ * *rc/man.kak*: provides the +:man+ command
+ * *rc/grep.kak*: provides the +:grep+ and +:gjump+ commands along with highlighting
      for grep output.
- * *rc/global.kak*: provides the +tag+ command to jump on a tag definition using
+ * *rc/global.kak*: provides the +:tag+ command to jump on a tag definition using
      gnu global tagging system.
- * *rc/ctags.kak*: provides the +tag+ command to jump on a tag definition using
+ * *rc/ctags.kak*: provides the +:tag+ command to jump on a tag definition using
      exuberant ctags files, this script requires the *readtags* binary, available
      in the exuberant ctags package but not installed by default.
- * *rc/client.kak*: provides the +new+ command to launch a new client on the current
+ * *rc/client.kak*: provides the +:new+ command to launch a new client on the current
      session, if tmux is detected, launch the client in a new tmux split, else
      launch in a new terminal emulator.
- * *rc/clang.kak*: provides the +clang-enable-autocomplete+ command for C/C++ 
+ * *rc/clang.kak*: provides the +:clang-enable-autocomplete+ command for C/CPP
      insert mode completion support. This needs uses clang++ compiler.
 
-Certain command files defines options, such as +grepcmd+ (for :grep) +makecmd+
-(for :make) or +termcmd+ (for :new).
+Certain command files defines options, such as +grepcmd+ (for +:grep+) +makecmd+
+(for +:make+) or +termcmd+ (for +:new+).
 
 Some options are shared with commands. grep and make honor the +toolsclient+ option,
 if specified, to open their buffer in it rather than the current client. man honor
