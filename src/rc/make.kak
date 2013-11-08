@@ -4,7 +4,7 @@ decl str toolsclient
 def -shell-params make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
-     ( ${kak_opt_makecmd} $@ >& ${output} ) >& /dev/null < /dev/null &
+     ( eval ${kak_opt_makecmd} $@ >& ${output} ) >& /dev/null < /dev/null &
 
      [[ -n "$kak_opt_toolsclient" ]] && echo "eval -client '$kak_opt_toolsclient' %{"
 

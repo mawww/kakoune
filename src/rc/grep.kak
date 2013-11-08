@@ -6,9 +6,9 @@ def -shell-params -file-completion \
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      if (( $# > 0 )); then
-         ( ${kak_opt_grepcmd} "$@" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
+         ( eval ${kak_opt_grepcmd} "$@" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
      else
-         ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
+         ( eval ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
      fi
 
      [[ -n "$kak_opt_toolsclient" ]] && echo "eval -client '$kak_opt_toolsclient' %{"
