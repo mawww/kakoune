@@ -17,12 +17,6 @@
 * Sanitize prompt history handling, hooks should not have side effects
   on history
 
-* improve input filters
-
-  - try to have a decent C++ input mode indenter
-
-  - automatic line splitting
-
 * improve highlighters
 
   - folding support
@@ -66,8 +60,6 @@
 
 * Tree based undo
 
-* incrementation/decrementation of integers support
-
 * more sane command line parsing, better shell interaction with quoting
 
   - Real parsing of the command line ?
@@ -75,8 +67,6 @@
 * configurable evaluated (%sh{...}) strings ? use an option to define
   the interpreters, regex for finding used kak variables (ability to
   add direct python/perl/ruby/whatever evaluation).
-
-* tab support for indentation
 
 * %rec{...%opt{tchou}...%sh{echo kanaky}} ~= "...${kak_opt_tchou}...$(echo kanaky)..."
 
@@ -114,3 +104,7 @@
     . make doc compiles kakoune, and run doc generation:
       +./kak -help commands > ../doc/commands.asciidoc+
       with README.asciidoc including commands ?
+
+* Handle command lines larger than window
+
+* Support disabling hooks executions in :exec and :eval
