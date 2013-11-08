@@ -30,9 +30,11 @@ hook global WinSetOption filetype=cpp %~
         # cleanup trailing white space son previous line
         try %{ exec -draft k<a-x>s\h+$<ret>d }
         # align to opening paren of previous line
-        try %{ exec -draft [(<a-k>\`\([^\n]+\n[^\n]*\n?\'<ret>s\`..|.\'<ret>& }
+        try %{ exec -draft [(<a-k>\`\([^\n]+\n[^\n]*\n?\'<ret>s\`\(\h*.|.\'<ret>& }
         # copy // comments prefix
         try %{ exec -draft <c-s>k<a-x>s^\h*\K(/{2,})<ret>y<c-o>P }
+        # indent after visibility specifier
+        try %[ exec -draft k<a-x><a-k>^\h*(public|private|protected):\h*$<ret>j<a-gt> ]
     _ @
 
     hook window InsertChar \} -id cpp-indent %[
