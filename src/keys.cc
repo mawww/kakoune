@@ -80,6 +80,29 @@ KeyList parse_keys(const String& str)
                     pos = end_pos;
                     continue;
                 }
+                if ((keyname[0] == 'f' or keyname[0] == 'F') and
+                    keyname.length() <= 3)
+                {
+
+                    int val = 0;
+                    for (auto i = 1_byte; i < keyname.length(); ++i)
+                    {
+                        char c = keyname[i];
+                        if (c >= '0' and c <= '9')
+                            val = val*10 + c - '0';
+                        else
+                        {
+                            val = -1;
+                            break;
+                        }
+                    }
+                    if (val >= 1 and val <= 12)
+                    {
+                        result.push_back(Key{ modifier, Key::F1 + (val - 1) });
+                        pos = end_pos;
+                        continue;
+                    }
+                }
             }
         }
         result.push_back({Key::Modifiers::None, Codepoint(str[pos])});
@@ -97,6 +120,11 @@ String key_to_str(Key key)
     {
         named = true;
         res = it->first;
+    }
+    else if (key.key >= Key::F1 and key.key < Key::F12)
+    {
+        named = true;
+        res = "F" + to_string((int)(Codepoint)key.key - (int)(Codepoint)Key::F1 + 1);
     }
     else
         res = codepoint_to_str(key.key);

@@ -354,6 +354,12 @@ Key NCursesUI::get_key()
     case KEY_BTAB: return Key::BackTab;
     }
 
+    for (int i = 0; i < 12; ++i)
+    {
+        if (c == KEY_F(i+1))
+            return Key::F1 + i;
+    }
+
     if (c >= 0 and c < 256)
     {
        ungetch(c);
