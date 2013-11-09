@@ -7,9 +7,9 @@ LIBS += -lncursesw
 
 os := $(shell uname -o)
 ifeq ($(os),Cygwin)
-	LIBS += -lboost_regex-mt
+    LIBS += -lboost_regex-mt
 else
-	LIBS += -lboost_regex
+    LIBS += -lboost_regex
 endif
 
 debug ?= yes
