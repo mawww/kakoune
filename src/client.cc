@@ -106,14 +106,12 @@ class LineEditor
 public:
     void handle_key(Key key)
     {
-        if (key == Key::Left or
-            key == Key{Key::Modifiers::Control, 'b'})
+        if (key == Key::Left or key == ctrl('b'))
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key::Right or
-                 key == Key{Key::Modifiers::Control, 'f'})
+        else if (key == Key::Right or key == ctrl('f'))
         {
             if (m_cursor_pos < m_line.char_length())
                 ++m_cursor_pos;
@@ -198,7 +196,7 @@ public:
             return boost::regex_match(str.begin(), str.end(), m_filter);
         };
 
-        if (key == Key(Key::Modifiers::Control, 'm'))
+        if (key == ctrl('m'))
         {
             context().ui().menu_hide();
             context().print_status(DisplayLine{});
@@ -224,20 +222,16 @@ public:
                 m_callback(selected, MenuEvent::Abort, context());
             }
         }
-        else if (key == Key::Down or
-                 key == Key(Key::Modifiers::Control, 'i') or
-                 key == Key(Key::Modifiers::Control, 'n') or
-                 key == Key(Key::Modifiers::None, 'j'))
+        else if (key == Key::Down or key == ctrl('i') or
+                 key == ctrl('n') or key == 'j')
         {
             auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
             select(it);
         }
-        else if (key == Key::Up or
-                 key == Key::BackTab or
-                 key == Key(Key::Modifiers::Control, 'p') or
-                 key == Key(Key::Modifiers::None, 'k'))
+        else if (key == Key::Up or key == Key::BackTab or
+                 key == ctrl('p') or key == 'k')
         {
             ChoiceList::const_reverse_iterator selected(m_selected+1);
             auto it = std::find_if(selected+1, m_choices.rend(), match_filter);
@@ -337,7 +331,7 @@ public:
             m_line_editor.insert(reg);
             m_mode = Mode::Default;
         }
-        else if (key == Key{Key::Modifiers::Control, 'm'}) // enter
+        else if (key == ctrl('m')) // enter
         {
             if (not line.empty())
             {
@@ -354,7 +348,7 @@ public:
             m_callback(line, PromptEvent::Validate, context());
             return;
         }
-        else if (key == Key::Escape or key == Key { Key::Modifiers::Control, 'c' })
+        else if (key == Key::Escape or key == ctrl('c'))
         {
             context().print_status(DisplayLine{});
             context().ui().menu_hide();
@@ -362,12 +356,11 @@ public:
             m_callback(line, PromptEvent::Abort, context());
             return;
         }
-        else if (key == Key{Key::Modifiers::Control, 'r'})
+        else if (key == ctrl('r'))
         {
             m_mode = Mode::InsertReg;
         }
-        else if (key == Key::Up or
-                 key == Key{Key::Modifiers::Control, 'p'})
+        else if (key == Key::Up or key == ctrl('p'))
         {
             if (m_history_it != history.begin())
             {
@@ -387,8 +380,7 @@ public:
                 } while (it != history.begin());
             }
         }
-        else if (key == Key::Down or // next
-                 key == Key{Key::Modifiers::Control, 'n'})
+        else if (key == Key::Down or key == ctrl('n')) // next
         {
             if (m_history_it != history.end())
             {
@@ -404,8 +396,7 @@ public:
                     m_line_editor.reset(m_prefix);
             }
         }
-        else if (key == Key(Key::Modifiers::Control, 'i') or // tab completion
-                 key == Key::BackTab)
+        else if (key == ctrl('i') or key == Key::BackTab) // tab completion
         {
             const bool reverse = (key == Key::BackTab);
             CandidateList& candidates = m_completions.candidates;
