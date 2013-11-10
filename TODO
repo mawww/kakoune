@@ -8,8 +8,6 @@
 
   - right-to-left, bidirectional text
 
-* key binding support
-
 * Mouse support
 
 * Crash recovery support (swap files)
