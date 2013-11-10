@@ -109,7 +109,7 @@ CandidateList BufferManager::complete_buffername(const String& prefix,
         if (not include_dirs and buffer->flags() & Buffer::Flags::File)
         {
             ByteCount pos = name.find_last_of('/');
-            if (pos != String::npos)
+            if (pos != (int)String::npos)
                 match_name = name.substr(pos);
         }
 

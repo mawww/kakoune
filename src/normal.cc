@@ -812,7 +812,7 @@ static CharCount get_column(const Buffer& buffer,
     auto& line = buffer[coord.line];
     auto col = 0_char;
     for (auto it = line.begin();
-         it != line.end() and ByteCount{it - line.begin()} < coord.column;
+         it != line.end() and coord.column > (int)(it - line.begin());
          it = utf8::next(it))
     {
         if (*it == '\t')
