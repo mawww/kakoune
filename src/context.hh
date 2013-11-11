@@ -20,8 +20,9 @@ class KeymapManager;
 // The Context object links an Client, an Editor (which may be a Window),
 // and a UserInterface. It may represent an interactive user window, or
 // a hook execution or a macro replay.
-struct Context
+class Context
 {
+public:
     Context();
     explicit Context(Editor& editor);
     Context(Client& client, Editor& editor);

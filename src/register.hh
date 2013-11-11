@@ -7,7 +7,7 @@
 namespace Kakoune
 {
 
-struct Context;
+class Context;
 
 class Register
 {
