@@ -86,9 +86,6 @@
 
   - 1,2,3<a-space> remove selections 1, 2 and 3
 
-* add a mimetype option always set by 'file', and add hooks for
-  setting filetype depending on mimetype.
-
 * Make kakoune self-documenting
 
   - Add doc strings to commands, display them in info boxes when entering command
