@@ -25,6 +25,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
       m_keymaps(GlobalKeymaps::instance())
 {
     BufferManager::instance().register_buffer(*this);
+    m_options.register_watcher(*this);
 
     if (lines.empty())
         lines.emplace_back("\n");
@@ -55,6 +56,9 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
 
     // now we may begin to record undo data
     m_flags = flags;
+
+    for (auto& option : m_options.flatten_options())
+        on_option_changed(*option);
 }
 
 Buffer::~Buffer()
@@ -65,6 +69,7 @@ Buffer::~Buffer()
         m_hooks.run_hook("BufClose", m_name, hook_context);
     }
 
+    m_options.unregister_watcher(*this);
     BufferManager::instance().unregister_buffer(*this);
     kak_assert(m_change_listeners.empty());
 }
@@ -754,4 +759,11 @@ void Buffer::set_fs_timestamp(time_t ts)
     m_fs_timestamp = ts;
 }
 
+void Buffer::on_option_changed(const Option& option)
+{
+    String desc = option.name() + "=" + option.get_as_string();
+    Editor hook_editor{*this};
+    Context hook_context{hook_editor};
+    m_hooks.run_hook("BufSetOption", desc, hook_context);
+}
 }

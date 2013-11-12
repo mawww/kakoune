@@ -81,7 +81,7 @@ public:
 // The Buffer class permits to read and mutate this file
 // representation. It also manage modifications undo/redo and
 // provides tools to deal with the line/column nature of text.
-class Buffer : public SafeCountable
+class Buffer : public SafeCountable, public OptionManagerWatcher
 {
 public:
     enum class Flags
@@ -170,6 +170,9 @@ public:
 
     void check_invariant() const;
 private:
+
+    void on_option_changed(const Option& option) override;
+
     struct Line
     {
         ByteCount start;
