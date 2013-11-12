@@ -2,12 +2,9 @@ hook global BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) %{
     set buffer filetype cpp
 }
 
-hook global BufOpen .* %{ %sh{
-     mimetype="$(file -b --mime-type ${kak_bufname})"
-     if [[ "${mimetype}" == "text/x-c++" || "${mimetype}" == "text/x-c" ]]; then
-         echo set buffer filetype cpp;
-     fi
-} }
+hook global BufSetOption mimetype=text/x-c(\+\+)? %{
+    set buffer filetype cpp
+}
 
 hook global WinSetOption filetype=cpp %~
     addhl group cpp-highlight
@@ -35,6 +32,8 @@ hook global WinSetOption filetype=cpp %~
         try %{ exec -draft <c-s>k<a-x>s^\h*\K(/{2,})<ret>y<c-o>P }
         # indent after visibility specifier
         try %[ exec -draft k<a-x><a-k>^\h*(public|private|protected):\h*$<ret>j<a-gt> ]
+        # indent after if|else|while|for
+        try %[ exec -draft <a-F>)MB<a-k>\`(if|else|while|for)\h*\(.*\)\n\h*\n\'<ret><a-space><space><a-gt> ]
     _ @
 
     hook window InsertChar \} -id cpp-indent %[

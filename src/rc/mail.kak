@@ -1,9 +1,4 @@
-hook global BufOpen .* %{ %sh{
-     mimetype="$(file -b --mime-type ${kak_bufname})"
-     if [[ "${mimetype}" == "message/rfc822" ]]; then
-         echo set buffer filetype mail;
-     fi
-} }
+hook global BufSetOption mimetype=message/rfc822 %{ set buffer filetype mail }
 
 hook global WinSetOption filetype=mail %~
     addhl group mail-highlight

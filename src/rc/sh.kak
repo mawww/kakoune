@@ -2,12 +2,9 @@ hook global BufCreate .*\.(sh) %{
     set buffer filetype sh
 }
 
-hook global BufOpen .* %{ %sh{
-     mimetype="$(file -b --mime-type ${kak_bufname})"
-     if [[ "${mimetype}" == "text/x-shellscript" ]]; then
-         echo set buffer filetype sh;
-     fi
-} }
+hook global BufSetOption mimetype=text/x-shellscript %{
+    set buffer filetype sh
+}
 
 hook global WinSetOption filetype=sh %~
     addhl group sh-highlight
