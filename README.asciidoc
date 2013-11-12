@@ -668,6 +668,7 @@ def can also takes some flags:
                         completion candidate per line.
  * +-allow-override+: allow the new command to replace an exisiting one
                       with the same name.
+ * +-hidden+: do not show the command in command name completions
 
 Using shell expansion permits to define complex commands or to access
 kakoune state:

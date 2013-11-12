@@ -18,17 +18,19 @@ bool CommandManager::command_defined(const String& command_name) const
 
 void CommandManager::register_command(String command_name,
                                       Command command,
+                                      CommandFlags flags,
                                       CommandCompleter completer)
 {
-    m_commands[command_name] = { std::move(command), std::move(completer) };
+    m_commands[command_name] = { std::move(command), flags, std::move(completer) };
 }
 
 void CommandManager::register_commands(memoryview<String> command_names,
                                        Command command,
+                                       CommandFlags flags,
                                        CommandCompleter completer)
 {
     for (auto command_name : command_names)
-        m_commands[command_name] = { command, completer };
+        m_commands[command_name] = { command, flags, completer };
 }
 
 struct parse_error : runtime_error
@@ -337,7 +339,9 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
 
         for (auto& command : m_commands)
         {
-            if (prefix_match(command.first, prefix))
+            if (command.second.flags & CommandFlags::Hidden)
+                continue;
+            if ( prefix_match(command.first, prefix))
                 result.candidates.push_back(command.first);
         }
         std::sort(result.candidates.begin(), result.candidates.end());

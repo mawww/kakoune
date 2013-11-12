@@ -333,6 +333,7 @@ void define_command(CommandParameters params, Context& context)
                               { "shell-params", false },
                               { "allow-override", false },
                               { "file-completion", false },
+                              { "hidden", false },
                               { "shell-completion", true } },
                              ParametersParser::Flags::None,
                              2, 2);
@@ -343,6 +344,10 @@ void define_command(CommandParameters params, Context& context)
     if (CommandManager::instance().command_defined(cmd_name) and
         not parser.has_option("allow-override"))
         throw runtime_error("command '" + cmd_name + "' already defined");
+
+    CommandFlags flags = CommandFlags::None;
+    if (parser.has_option("hidden"))
+        flags = CommandFlags::Hidden;
 
     String commands = parser[1];
     Command cmd;
@@ -397,7 +402,7 @@ void define_command(CommandParameters params, Context& context)
             return split(output, '\n');
         };
     }
-    CommandManager::instance().register_command(cmd_name, cmd, completer);
+    CommandManager::instance().register_command(cmd_name, cmd, flags, completer);
 }
 
 void echo_message(CommandParameters params, Context& context)
@@ -809,9 +814,9 @@ void register_commands()
          [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
          { return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), cursor_pos); }
     });
-    cm.register_commands({ "e", "edit" }, edit<false>, filename_completer);
-    cm.register_commands({ "e!", "edit!" }, edit<true>, filename_completer);
-    cm.register_commands({ "w", "write" }, write_buffer, filename_completer);
+    cm.register_commands({ "e", "edit" }, edit<false>, CommandFlags::None, filename_completer);
+    cm.register_commands({ "e!", "edit!" }, edit<true>, CommandFlags::None, filename_completer);
+    cm.register_commands({ "w", "write" }, write_buffer, CommandFlags::None, filename_completer);
     cm.register_commands({ "wa", "writeall" }, write_all_buffers);
     cm.register_commands({ "q", "quit" }, quit<false>);
     cm.register_commands({ "q!", "quit!" }, quit<true>);
@@ -822,19 +827,19 @@ void register_commands()
         [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
-    cm.register_commands({ "b", "buffer" }, show_buffer, buffer_completer);
-    cm.register_commands({ "db", "delbuf" }, delete_buffer<false>, buffer_completer);
-    cm.register_commands({ "db!", "delbuf!" }, delete_buffer<true>, buffer_completer);
+    cm.register_commands({ "b", "buffer" }, show_buffer, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "db", "delbuf" }, delete_buffer<false>, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "db!", "delbuf!" }, delete_buffer<true>, CommandFlags::None, buffer_completer);
     cm.register_commands({"nb", "namebuf"}, set_buffer_name);
 
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
-    cm.register_commands({ "ah", "addhl" }, add_highlighter, group_add_completer<HighlighterRegistry>(get_highlighters));
-    cm.register_commands({ "rh", "rmhl" }, rm_highlighter, group_rm_completer(get_highlighters));
+    cm.register_commands({ "ah", "addhl" }, add_highlighter, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
+    cm.register_commands({ "rh", "rmhl" }, rm_highlighter, CommandFlags::None, group_rm_completer(get_highlighters));
 
     cm.register_command("hook", add_hook);
     cm.register_command("rmhooks", rm_hooks);
 
-    cm.register_command("source", exec_commands_in_file, filename_completer);
+    cm.register_command("source", exec_commands_in_file, CommandFlags::None, filename_completer);
 
     cm.register_command("exec", exec_string);
     cm.register_command("eval", eval_string);
@@ -849,7 +854,7 @@ void register_commands()
     cm.register_command("echo", echo_message);
     cm.register_command("debug", write_debug_message);
 
-    cm.register_command("set", set_option,
+    cm.register_command("set", set_option, CommandFlags::None,
                         [](const Context& context, CompletionFlags, CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
                         {
                             if (token_to_complete == 0)
@@ -873,7 +878,7 @@ void register_commands()
     cm.register_commands({"ca", "colalias"}, define_color_alias);
     cm.register_commands({"nc", "nameclient"}, set_client_name);
 
-    cm.register_command("cd", change_working_directory, filename_completer);
+    cm.register_command("cd", change_working_directory, CommandFlags::None, filename_completer);
     cm.register_command("map", map_key);
 }
 }

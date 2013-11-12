@@ -21,6 +21,19 @@ using CommandCompleter = std::function<CandidateList (const Context& context,
                                                       CompletionFlags,
                                                       CommandParameters,
                                                       size_t, ByteCount)>;
+enum class CommandFlags
+{
+    None   = 0,
+    Hidden = 1,
+};
+constexpr CommandFlags operator|(CommandFlags lhs, CommandFlags rhs)
+{
+    return (CommandFlags)((int)lhs | (int)rhs);
+}
+constexpr bool operator&(CommandFlags lhs, CommandFlags rhs)
+{
+    return (bool)((int)lhs & (int)rhs);
+}
 
 class PerArgumentCommandCompleter
 {
@@ -55,12 +68,12 @@ public:
 
     bool command_defined(const String& command_name) const;
 
-    void register_command(String command_name,
-                          Command command,
+    void register_command(String command_name, Command command,
+                          CommandFlags flags = CommandFlags::None,
                           CommandCompleter completer = CommandCompleter());
 
-    void register_commands(memoryview<String> command_names,
-                           Command command,
+    void register_commands(memoryview<String> command_names, Command command,
+                           CommandFlags flags = CommandFlags::None,
                            CommandCompleter completer = CommandCompleter());
 
 private:
@@ -69,6 +82,7 @@ private:
     struct CommandDescriptor
     {
         Command command;
+        CommandFlags flags;
         CommandCompleter completer;
     };
     std::unordered_map<String, CommandDescriptor> m_commands;
