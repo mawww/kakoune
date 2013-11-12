@@ -317,6 +317,8 @@ public:
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
+        if (context().options()["autoshowcompl"].get<bool>())
+            refresh_completions();
         display();
     }
 
@@ -324,6 +326,7 @@ public:
     {
         std::vector<String>& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
+        bool showcompl = false;
 
         if (m_mode == Mode::InsertReg)
         {
@@ -403,15 +406,10 @@ public:
             // first try, we need to ask our completer for completions
             if (candidates.empty())
             {
-                m_completions = m_completer(context(), CompletionFlags::None, line,
-                                            line.byte_count_to(m_line_editor.cursor_pos()));
+                refresh_completions();
+
                 if (candidates.empty())
                     return;
-
-                context().ui().menu_hide();
-                DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
-                context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
-                                         get_color("MenuBackground"), MenuStyle::Prompt);
 
                 bool use_common_prefix = context().options()["complete_prefix"].get<bool>();
                 String prefix = use_common_prefix ? common_prefix(candidates) : String();
@@ -442,27 +440,23 @@ public:
             // when we have only one completion candidate, make next tab complete
             // from the new content.
             if (candidates.size() == 1)
+            {
+                m_current_completion = -1;
                 candidates.clear();
+                showcompl = true;
+            }
         }
         else
         {
             m_line_editor.handle_key(key);
             m_current_completion = -1;
             context().ui().menu_hide();
-
-            if (context().options()["autoshowcompl"].get<bool>()) try
-            {
-                m_completions = m_completer(context(), CompletionFlags::Fast, line,
-                                            line.byte_count_to(m_line_editor.cursor_pos()));
-                CandidateList& candidates = m_completions.candidates;
-                if (not candidates.empty())
-                {
-                    DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
-                    context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
-                                             get_color("MenuBackground"), MenuStyle::Prompt);
-                }
-            } catch (runtime_error&) {}
+            showcompl = true;
         }
+
+        if (showcompl and context().options()["autoshowcompl"].get<bool>())
+            refresh_completions();
+
         display();
         m_callback(line, PromptEvent::Change, context());
     }
@@ -484,6 +478,23 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
 
 private:
+    void refresh_completions()
+    {
+        try
+        {
+            const String& line = m_line_editor.line();
+            m_completions = m_completer(context(), CompletionFlags::Fast, line,
+                                        line.byte_count_to(m_line_editor.cursor_pos()));
+            CandidateList& candidates = m_completions.candidates;
+            if (not candidates.empty())
+            {
+                DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
+                context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
+                                         get_color("MenuBackground"), MenuStyle::Prompt);
+            }
+        } catch (runtime_error&) {}
+    }
+
     void display() const
     {
         auto display_line = m_line_editor.build_display_line();
