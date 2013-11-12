@@ -131,7 +131,7 @@ template<WordType word_type>
 Selection select_to_previous_word(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator begin = buffer.iterator_at(selection.last());
-    if (begin+1 == buffer.end())
+    if (begin == buffer.begin())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
         --begin;
