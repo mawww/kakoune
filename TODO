@@ -106,3 +106,23 @@
 * Handle command lines larger than window
 
 * Support disabling hooks executions in :exec and :eval
+
+* Rewrite keymap support using options ? (map window insert a b -> set -add window insert_keymap a:b)
+
+* Change set command to use '=' ?
+
+  - set window tchou=kanaky
+
+  - set window tchou+=kanaky
+
+* support for :cnext :cprev
+
+  - save the current error line in a buffer option
+
+  - highlight the current error line (only it's bg)
+
+  - find next error from the line
+
+* Fix 'n' command with inverted selection
+
+* basic shell completion (complete commands from $PATH, then complete filenames)
