@@ -443,8 +443,9 @@ void NCursesUI::menu_show(memoryview<String> items,
                           DisplayCoord anchor, ColorPair fg, ColorPair bg,
                           MenuStyle style)
 {
-    kak_assert(m_menu_win == nullptr);
-    kak_assert(m_items.empty());
+    if (m_menu_win)
+        delwin(m_menu_win);
+    m_items.clear();
 
     m_menu_fg = fg;
     m_menu_bg = bg;
