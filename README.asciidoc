@@ -398,9 +398,12 @@ window scope (+BOM+ or +eolformat+ for example).
 
 New options can be declared using the +:decl+ command:
 
------------------------------
-:decl <type> <name> [<value>]
------------------------------
+---------------------------------------
+:decl [-hidden] <type> <name> [<value>]
+---------------------------------------
+
+the +-hidden+ parameter makes the option invisible in completion, but
+still modifiable.
 
 Some options are built in kakoune, and can be used to control it's behaviour:
 

@@ -7,8 +7,8 @@
 namespace Kakoune
 {
 
-Option::Option(OptionManager& manager, String name)
-    : m_manager(manager), m_name(std::move(name)) {}
+Option::Option(OptionManager& manager, String name, Flags flags)
+    : m_manager(manager), m_name(std::move(name)), m_flags(flags) {}
 
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
@@ -72,6 +72,9 @@ CandidateList OptionManager::complete_option_name(const String& prefix,
         result = m_parent->complete_option_name(prefix, cursor_pos);
     for (auto& option : m_options)
     {
+        if (option->flags() & Option::Flags::Hidden)
+            continue;
+
         const auto& name = option->name();
         if (prefix_match(name, real_prefix) and not contains(result, name))
             result.push_back(name);
@@ -123,6 +126,7 @@ GlobalOptions::GlobalOptions()
     declare_option<std::vector<String>>("completions", {});
     declare_option<std::vector<String>>("path", { "./", "/usr/include" });
     declare_option<std::vector<String>>("completers", {"option", "filename", "word=buffer"},
+                                        Option::Flags::None,
                                         [](const std::vector<String>& s) {
                                             static const auto values = {"option", "word=buffer", "word=all", "filename" };
                                             for (auto& v : s)

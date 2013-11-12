@@ -1,4 +1,4 @@
-decl str clang_filename
+decl -hidden str clang_filename
 decl str clang_options
 
 def clang-complete %{

@@ -22,7 +22,13 @@ class OptionManager;
 class Option : public SafeCountable
 {
 public:
-    Option(OptionManager& manager, String name);
+    enum class Flags
+    {
+        None   = 0,
+        Hidden = 1,
+    };
+
+    Option(OptionManager& manager, String name, Flags flags);
     virtual ~Option() {}
 
     template<typename T> const T& get() const;
@@ -37,9 +43,19 @@ public:
     OptionManager& manager() const { return m_manager; }
 
     virtual Option* clone(OptionManager& manager) const = 0;
+
+    Flags flags() const { return m_flags; }
+
+    friend constexpr Flags operator|(Flags lhs, Flags rhs)
+    { return (Flags)((int)lhs | (int)rhs); }
+
+    friend constexpr bool operator&(Flags lhs, Flags rhs)
+    { return (bool)((int)lhs & (int)rhs); }
+
 protected:
     OptionManager& m_manager;
     String m_name;
+    Flags  m_flags;
 };
 
 class OptionManagerWatcher
@@ -87,9 +103,9 @@ template<typename T>
 class TypedOption : public Option
 {
 public:
-    TypedOption(OptionManager& manager, String name, const T& value,
-                OptionChecker<T> checker)
-        : Option(manager, std::move(name)), m_value(value),
+    TypedOption(OptionManager& manager, String name, Option::Flags flags,
+                const T& value, OptionChecker<T> checker)
+        : Option(manager, std::move(name), flags), m_value(value),
           m_checker(std::move(checker)) {}
 
     void set(T value)
@@ -126,7 +142,7 @@ public:
 
     Option* clone(OptionManager& manager) const override
     {
-        return new TypedOption{manager, name(), m_value, m_checker};
+        return new TypedOption{manager, name(), flags(), m_value, m_checker};
     }
 private:
     T m_value;
@@ -169,16 +185,18 @@ public:
 
     template<typename T>
     Option& declare_option(const String& name, const T& value,
+                           Option::Flags flags = Option::Flags::None,
                            OptionChecker<T> checker = OptionChecker<T>{})
     {
         auto it = find_option(m_options, name);
         if (it != m_options.end())
         {
-            if ((*it)->is_of_type<T>())
+            if ((*it)->is_of_type<T>() and (*it)->flags() == flags)
                 return **it;
-            throw runtime_error("option " + name + " already declared with different type");
+            throw runtime_error("option " + name + " already declared with different type or flags");
         }
-        m_options.emplace_back(new TypedOption<T>{*this, name, value, std::move(checker)});
+        m_options.emplace_back(new TypedOption<T>{*this, name, flags, value,
+                                                  std::move(checker)});
         return *m_options.back();
     }
 };

@@ -458,29 +458,36 @@ void set_option(CommandParameters params, Context& context)
 
 void declare_option(CommandParameters params, Context& context)
 {
-    if (params.size() != 2 and params.size() != 3)
-        throw wrong_argument_count();
+    ParametersParser parser(params, { { "hidden", false } },
+                            ParametersParser::Flags::OptionsOnlyAtStart,
+                            2, 3);
     Option* opt = nullptr;
 
-    if (params[0] == "int")
-        opt = &GlobalOptions::instance().declare_option<int>(params[1], 0);
-    if (params[0] == "bool")
-        opt = &GlobalOptions::instance().declare_option<bool>(params[1], 0);
-    else if (params[0] == "str")
-        opt = &GlobalOptions::instance().declare_option<String>(params[1], "");
-    else if (params[0] == "regex")
-        opt = &GlobalOptions::instance().declare_option<Regex>(params[1], Regex{});
-    else if (params[0] == "int-list")
-        opt = &GlobalOptions::instance().declare_option<std::vector<int>>(params[1], {});
-    else if (params[0] == "str-list")
-        opt = &GlobalOptions::instance().declare_option<std::vector<String>>(params[1], {});
-    else if (params[0] == "line-flag-list")
-        opt = &GlobalOptions::instance().declare_option<std::vector<LineAndFlag>>(params[1], {});
-    else
-        throw runtime_error("unknown type " + params[0]);
+    Option::Flags flags = Option::Flags::None;
+    if (parser.has_option("hidden"))
+        flags = Option::Flags::Hidden;
 
-    if (params.size() == 3)
-        opt->set_from_string(params[2]);
+    GlobalOptions& opts = GlobalOptions::instance();
+
+    if (parser[0] == "int")
+        opt = &opts.declare_option<int>(parser[1], 0, flags);
+    if (parser[0] == "bool")
+        opt = &opts.declare_option<bool>(parser[1], 0, flags);
+    else if (parser[0] == "str")
+        opt = &opts.declare_option<String>(parser[1], "", flags);
+    else if (parser[0] == "regex")
+        opt = &opts.declare_option<Regex>(parser[1], Regex{}, flags);
+    else if (parser[0] == "int-list")
+        opt = &opts.declare_option<std::vector<int>>(parser[1], {}, flags);
+    else if (parser[0] == "str-list")
+        opt = &opts.declare_option<std::vector<String>>(parser[1], {}, flags);
+    else if (parser[0] == "line-flag-list")
+        opt = &opts.declare_option<std::vector<LineAndFlag>>(parser[1], {}, flags);
+    else
+        throw runtime_error("unknown type " + parser[0]);
+
+    if (parser.positional_count() == 3)
+        opt->set_from_string(parser[2]);
 }
 
 
