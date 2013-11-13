@@ -123,3 +123,7 @@
 * Fix 'n' command with inverted selection
 
 * basic shell completion (complete commands from $PATH, then complete filenames)
+
+* align to a specified selection (rather than le rightmost one) so that closing
+  curly braces can easily be made to align with their opening one.
+  
