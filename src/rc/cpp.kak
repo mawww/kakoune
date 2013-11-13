@@ -6,20 +6,8 @@ hook global BufSetOption mimetype=text/x-c(\+\+)? %{
     set buffer filetype cpp
 }
 
-hook global WinSetOption filetype=cpp %~
-    addhl group cpp-highlight
-    addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
-    addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
-    addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
-    addhl -group cpp-highlight regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
-    addhl -group cpp-highlight regex "^\h*?#.*?(?<!\\)$" 0:macro
-    addhl -group cpp-highlight regex "(?<!')\".*?(?<!\\)(\\\\)*\"" 0:string
-    addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
-
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
-
-    hook window InsertChar \n -id cpp-indent %@ eval -draft -itersel %_
+def -hidden _cpp_indent_on_new_line %@
+    eval -draft -itersel %_
         # preserve previous line indent
         try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P }
         # indent after lines ending with { or (
@@ -34,14 +22,31 @@ hook global WinSetOption filetype=cpp %~
         try %[ exec -draft k<a-x><a-k>^\h*(public|private|protected):\h*$<ret>j<a-gt> ]
         # indent after if|else|while|for
         try %[ exec -draft <a-F>)MB<a-k>\`(if|else|while|for)\h*\(.*\)\n\h*\n\'<ret><a-space><space><a-gt> ]
-    _ @
+    _
+@
 
-    hook window InsertChar \} -id cpp-indent %[
-        # deindent on insert } alone on a line
-        try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ]
-        # add ; after } if class or struct definition
-        try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
-    ]
+def -hidden _cpp_indent_on_closing_curly_brace %[
+    # deindent on insert } alone on a line
+    try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ]
+    # add ; after } if class or struct definition
+    try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
+]
+
+hook global WinSetOption filetype=cpp %~
+    addhl group cpp-highlight
+    addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
+    addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
+    addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
+    addhl -group cpp-highlight regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
+    addhl -group cpp-highlight regex "^\h*?#.*?(?<!\\)$" 0:macro
+    addhl -group cpp-highlight regex "(?<!')\".*?(?<!\\)(\\\\)*\"" 0:string
+    addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
+
+    # cleanup trailing whitespaces when exiting insert mode
+    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
+
+    hook window InsertChar \n -id cpp-indent _cpp_indent_on_new_line
+    hook window InsertChar \} -id cpp-indent _cpp_indent_on_closing_curly_brace
 ~
 
 hook global WinSetOption filetype=(?!cpp).* %{
@@ -50,9 +55,11 @@ hook global WinSetOption filetype=(?!cpp).* %{
     rmhooks window cpp-hooks
 }
 
-hook global BufNew .*\.(h|hh|hpp|hxx|H) %{
+def -hidden _cpp_insert_include_guards %{
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 }
+
+hook global BufNew .*\.(h|hh|hpp|hxx|H) _cpp_insert_include_guards
 
 decl str-list alt_dirs ".;.."
 
