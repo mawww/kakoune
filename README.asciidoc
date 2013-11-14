@@ -272,6 +272,17 @@ selection.
 Registers are lists, instead of simply text in order to interact well with
 multiselection. Each selection have it's own captures, or yank buffer.
 
+Macros
+------
+
+Kakoune can record and replay a sequence of key press.
+
+When pressing the _Q_ key, followed by an alphabetic key for the macro name, 
+Kakoune begins macro recording: every pressed keys will be added to the
+macro until the _Q_ key is pressed again.
+
+To replay a macro, use the _q_ key, followed by the macro name.
+
 Search selection
 ----------------
 

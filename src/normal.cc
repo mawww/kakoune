@@ -1040,8 +1040,8 @@ KeyMap keymap =
     { alt('r'), rotate_selections },
     { alt('R'), rotate_selections_content },
 
-    { 'q', start_or_end_macro_recording },
-    { 'Q', replay_macro },
+    { 'q', replay_macro },
+    { 'Q', start_or_end_macro_recording },
 
     { '`', for_each_char<to_lower> },
     { '~', for_each_char<to_upper> },
