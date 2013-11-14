@@ -6,7 +6,7 @@ hook global BufSetOption mimetype=text/x-c(\+\+)? %{
     set buffer filetype cpp
 }
 
-def -hidden _cpp_indent_on_new_line %@
+def -hidden _cpp_indent_on_new_line %~
     eval -draft -itersel %_
         # preserve previous line indent
         try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P }
@@ -23,7 +23,7 @@ def -hidden _cpp_indent_on_new_line %@
         # indent after if|else|while|for
         try %[ exec -draft <a-F>)MB<a-k>\`(if|else|while|for)\h*\(.*\)\n\h*\n\'<ret><a-space><space><a-gt> ]
     _
-@
+~
 
 def -hidden _cpp_indent_on_closing_curly_brace %[
     # deindent on insert } alone on a line
@@ -32,7 +32,7 @@ def -hidden _cpp_indent_on_closing_curly_brace %[
     try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]
 
-hook global WinSetOption filetype=cpp %~
+hook global WinSetOption filetype=cpp %[
     addhl group cpp-highlight
     addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
     addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
@@ -47,7 +47,7 @@ hook global WinSetOption filetype=cpp %~
 
     hook window InsertChar \n -id cpp-indent _cpp_indent_on_new_line
     hook window InsertChar \} -id cpp-indent _cpp_indent_on_closing_curly_brace
-~
+]
 
 hook global WinSetOption filetype=(?!cpp).* %{
     rmhl cpp-highlight
