@@ -102,7 +102,7 @@ void register_env_vars()
         }, {
             "client",
             [](const String& name, const Context& context)
-            { return context.client().name(); }
+            { return context.name(); }
         }, {
             "cursor_line",
             [](const String& name, const Context& context)

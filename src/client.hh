@@ -38,7 +38,7 @@ enum class InsertMode : unsigned;
 class InputHandler : public SafeCountable
 {
 public:
-    InputHandler(Editor& editor);
+    InputHandler(Editor& editor, String name = "");
     ~InputHandler();
 
     // switch to insert mode
@@ -105,9 +105,6 @@ public:
     // handle all the keys currently available in the user interface
     void handle_available_input();
 
-    const String& name() const { return m_name; }
-    void set_name(String name) { m_name = std::move(name); }
-
     void print_status(DisplayLine status_line);
 
     void redraw_ifn();
@@ -126,7 +123,6 @@ private:
 
     std::unique_ptr<UserInterface> m_ui;
 
-    String m_name;
     DisplayLine m_status_line;
 };
 

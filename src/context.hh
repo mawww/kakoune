@@ -25,7 +25,7 @@ class Context
 {
 public:
     Context();
-    Context(InputHandler& input_handler, Editor& editor);
+    Context(InputHandler& input_handler, Editor& editor, String name = "");
     ~Context();
 
     Context(const Context&) = delete;
@@ -64,10 +64,15 @@ public:
     const DynamicSelectionList& jump_backward();
     void forget_jumps_to_buffer(Buffer& buffer);
 
+    const String& name() const { return m_name; }
+    void set_name(String name) { m_name = std::move(name); }
+
 private:
     safe_ptr<Editor>       m_editor;
     safe_ptr<InputHandler> m_input_handler;
     safe_ptr<Client>       m_client;
+
+    String m_name;
 
     using JumpList = std::vector<DynamicSelectionList>;
     JumpList           m_jump_list;

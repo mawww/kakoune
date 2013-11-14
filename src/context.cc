@@ -9,8 +9,9 @@ namespace Kakoune
 
 Context::Context() = default;
 
-Context::Context(InputHandler& input_handler, Editor& editor)
-    : m_input_handler(&input_handler), m_editor(&editor) {}
+Context::Context(InputHandler& input_handler, Editor& editor, String name)
+    : m_input_handler(&input_handler), m_editor(&editor),
+      m_name(std::move(name)) {}
 
 Context::~Context() = default;
 

@@ -110,7 +110,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             continue;
 
         if (client->context().editor().is_editing())
-            throw runtime_error("client '" + client->name() + "' is inserting in '" +
+            throw runtime_error("client '" + client->context().name() + "' is inserting in '" +
                                 buffer.display_name() + '\'');
 
         // change client context to edit the first buffer which is not the
@@ -135,7 +135,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 bool ClientManager::validate_client_name(const String& name) const
 {
     auto it = find_if(m_clients, [&](const std::unique_ptr<Client>& client)
-                                 { return client->name() == name; });
+                                 { return client->context().name() == name; });
     return it == m_clients.end();
 }
 
@@ -143,7 +143,7 @@ Client& ClientManager::get_client(const String& name)
 {
     for (auto& client : m_clients)
     {
-        if (client->name() == name)
+        if (client->context().name() == name)
             return *client;
     }
     throw runtime_error("no client named: " + name);

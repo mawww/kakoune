@@ -1103,9 +1103,9 @@ void InputMode::reset_normal_mode()
     m_input_handler.reset_normal_mode();
 }
 
-InputHandler::InputHandler(Editor& editor)
+InputHandler::InputHandler(Editor& editor, String name)
     : m_mode(new InputModes::Normal(*this)),
-      m_context(*this, editor)
+      m_context(*this, editor, std::move(name))
 {
 }
 
@@ -1221,7 +1221,7 @@ void InputHandler::clear_mode_trash()
 }
 
 Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
-    : m_input_handler(editor), m_ui(std::move(ui)), m_name(name)
+    : m_input_handler(editor, std::move(name)), m_ui(std::move(ui))
 {
     context().set_client(*this);
 }
@@ -1260,8 +1260,8 @@ DisplayLine Client::generate_mode_line() const
        oss << " [recording (" << m_input_handler.recording_reg() << ")]";
     if (context().buffer().flags() & Buffer::Flags::New)
         oss << " [new file]";
-    oss << " [" << m_input_handler.mode().description() << "]" << " - " << name()
-        << "@[" << Server::instance().session() << "]";
+    oss << " [" << m_input_handler.mode().description() << "]" << " - "
+        << context().name() << "@[" << Server::instance().session() << "]";
     return { oss.str(), get_color("StatusLine") };
 }
 

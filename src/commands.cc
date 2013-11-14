@@ -531,24 +531,6 @@ void map_key(CommandParameters params, Context& context)
     keymaps.map_key(key[0], keymap_mode, std::move(mapping));
 }
 
-class DraftUI : public UserInterface
-{
-public:
-    void menu_show(memoryview<String>, DisplayCoord, ColorPair, ColorPair, MenuStyle) override {}
-    void menu_select(int) override {}
-    void menu_hide() override {}
-
-    void info_show(const String&, const String&, DisplayCoord, ColorPair, MenuStyle) override {}
-    void info_hide() override {}
-
-    void draw(const DisplayBuffer&, const DisplayLine&, const DisplayLine&) override {}
-    DisplayCoord dimensions() override { return {0,0}; }
-    bool is_key_available() override { return false; }
-    Key  get_key() override { return 'a'; }
-
-    void set_input_callback(InputCallback) override {}
-};
-
 template<typename Func>
 void context_wrap(CommandParameters params, Context& context, Func func)
 {
@@ -562,8 +544,7 @@ void context_wrap(CommandParameters params, Context& context, Func func)
     if (parser.has_option("draft"))
     {
         Editor& editor = real_context.editor();
-        Client client(std::unique_ptr<UserInterface>(new DraftUI()), editor,
-                      real_context.has_client() ? real_context.client().name() : "");
+        InputHandler input_handler(editor, real_context.name());
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
         auto restore_sels = on_scope_end([&]{ editor.select(sels); });
 
@@ -572,11 +553,11 @@ void context_wrap(CommandParameters params, Context& context, Func func)
             for (auto& sel : sels)
             {
                 editor.select(sel);
-                func(parser, client.context());
+                func(parser, input_handler.context());
             }
         }
         else
-            func(parser, client.context());
+            func(parser, input_handler.context());
     }
     else
     {
@@ -715,8 +696,8 @@ void set_client_name(CommandParameters params, Context& context)
     ParametersParser parser(params, OptionMap{},
                             ParametersParser::Flags::None, 1, 1);
     if (ClientManager::instance().validate_client_name(params[0]))
-        context.client().set_name(params[0]);
-    else if (context.client().name() != params[0])
+        context.set_name(params[0]);
+    else if (context.name() != params[0])
         throw runtime_error("client name '" + params[0] + "' is not unique");
 }
 
