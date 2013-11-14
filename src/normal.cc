@@ -580,6 +580,7 @@ void indent(Context& context, int)
     editor.insert(indent, InsertMode::Insert);
 }
 
+template<bool deindent_incomplete = true>
 void deindent(Context& context, int)
 {
     CharCount tabstop = context.options()["tabstop"].get<int>();
@@ -605,7 +606,11 @@ void deindent(Context& context, int)
                     else if (c == ' ')
                         ++width;
                     else
+                    {
+                        if (deindent_incomplete and width != 0)
+                            res.emplace_back(line, BufferCoord{line, column-1});
                         break;
+                    }
                     if (width == indent_width)
                     {
                         res.emplace_back(line, BufferCoord{line, column});
@@ -1027,6 +1032,7 @@ KeyMap keymap =
     { '<', deindent },
     { '>', indent },
     { alt('>'), indent<true> },
+    { alt('<'), deindent<false> },
 
     { ctrl('i'), jump<Forward> },
     { ctrl('o'), jump<Backward> },

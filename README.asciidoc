@@ -127,6 +127,10 @@ Changes
 
  * _>_: indent selected lines
  * _<_: deindent selected lines
+ * _alt->_: indent selected lines, including empty lines
+ * _<_: deindent selected lines
+ * _alt-<_: deindent selected lines, do not remove incomplete
+        indent (3 leading spaces when indent is 4)
 
  * _|_: pipe each selections through the given external filter program
         and replace with it's output.
