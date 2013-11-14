@@ -828,7 +828,6 @@ static CharCount get_column(const Buffer& buffer,
     return col;
 }
 
-template<bool insert_at_begin>
 void align(Context& context, int)
 {
     auto& selections = context.editor().selections();
@@ -859,7 +858,7 @@ void align(Context& context, int)
             maxcol = std::max(get_column(buffer, tabstop, sel->last()), maxcol);
         for (auto& sel : col)
         {
-            auto insert_coord = insert_at_begin ? sel->min() : sel->last();
+            auto insert_coord = sel->min();
             auto lastcol = get_column(buffer, tabstop, sel->last());
             String padstr;
             if (not use_tabs)
@@ -1048,8 +1047,7 @@ KeyMap keymap =
     { '~', for_each_char<to_upper> },
     { alt('`'),  for_each_char<swap_case> },
 
-    { '&', align<false> },
-    { alt('&'), align<true> },
+    { '&', align },
 
     { Key::Left,  move<CharCount, Backward> },
     { Key::Down,  move<LineCount, Forward> },
