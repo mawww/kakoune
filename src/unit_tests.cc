@@ -101,27 +101,27 @@ void test_utf8()
 
 void test_string()
 {
-   kak_assert(String("youpi ") + "matin" == "youpi matin");
+    kak_assert(String("youpi ") + "matin" == "youpi matin");
 
-   std::vector<String> splited = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':', '\\');
-   kak_assert(splited[0] == "youpi");
-   kak_assert(splited[1] == "matin");
-   kak_assert(splited[2] == "");
-   kak_assert(splited[3] == "tchou:kanaky");
-   kak_assert(splited[4] == "hihi:");
+    std::vector<String> splited = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':', '\\');
+    kak_assert(splited[0] == "youpi");
+    kak_assert(splited[1] == "matin");
+    kak_assert(splited[2] == "");
+    kak_assert(splited[3] == "tchou:kanaky");
+    kak_assert(splited[4] == "hihi:");
 
-   String escaped = escape("youpi:matin:tchou:", ':', '\\');
-   kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
+    String escaped = escape("youpi:matin:tchou:", ':', '\\');
+    kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
 
-   kak_assert(prefix_match("tchou kanaky", "tchou"));
-   kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
-   kak_assert(prefix_match("tchou kanaky", "t"));
-   kak_assert(not prefix_match("tchou kanaky", "c"));
+    kak_assert(prefix_match("tchou kanaky", "tchou"));
+    kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
+    kak_assert(prefix_match("tchou kanaky", "t"));
+    kak_assert(not prefix_match("tchou kanaky", "c"));
 
-   kak_assert(subsequence_match("tchou kanaky", "tknky"));
-   kak_assert(subsequence_match("tchou kanaky", "knk"));
-   kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
-   kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
+    kak_assert(subsequence_match("tchou kanaky", "tknky"));
+    kak_assert(subsequence_match("tchou kanaky", "knk"));
+    kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
+    kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
 }
 
 void test_keys()

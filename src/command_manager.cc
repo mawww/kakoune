@@ -78,7 +78,7 @@ bool is_command_separator(char c)
 
 bool is_horizontal_blank(char c)
 {
-   return c == ' ' or c == '\t';
+    return c == ' ' or c == '\t';
 }
 
 struct unterminated_string : parse_error

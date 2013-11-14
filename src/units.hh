@@ -85,7 +85,7 @@ public:
     explicit constexpr operator ValueType() const { return m_value; }
     explicit constexpr operator bool() const { return m_value; }
 private:
-   ValueType m_value;
+    ValueType m_value;
 };
 
 struct LineCount : public StronglyTypedNumber<LineCount, int>

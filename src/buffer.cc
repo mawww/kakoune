@@ -731,9 +731,9 @@ ByteCount Buffer::offset(BufferCoord c) const
 
 bool Buffer::is_valid(BufferCoord c) const
 {
-   return (c.line < line_count() and c.column < m_lines[c.line].length()) or
-          (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
-          (c.line == line_count() and c.column == 0);
+    return (c.line < line_count() and c.column < m_lines[c.line].length()) or
+           (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
+           (c.line == line_count() and c.column == 0);
 }
 
 bool Buffer::is_end(BufferCoord c) const

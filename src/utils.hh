@@ -96,52 +96,52 @@ public:
         #endif
         m_ptr = other.m_ptr;
         return *this;
-   }
+    }
 
-   safe_ptr& operator=(safe_ptr&& other)
-   {
-       #ifdef KAK_DEBUG
-       if (m_ptr)
-           m_ptr->dec_safe_count();
-       #endif
-       m_ptr = other.m_ptr;
-       other.m_ptr = nullptr;
-       return *this;
-   }
+    safe_ptr& operator=(safe_ptr&& other)
+    {
+        #ifdef KAK_DEBUG
+        if (m_ptr)
+            m_ptr->dec_safe_count();
+        #endif
+        m_ptr = other.m_ptr;
+        other.m_ptr = nullptr;
+        return *this;
+    }
 
-   void reset(T* ptr)
-   {
-       *this = safe_ptr(ptr);
-   }
+    void reset(T* ptr)
+    {
+        *this = safe_ptr(ptr);
+    }
 
-   bool operator== (const safe_ptr& other) const { return m_ptr == other.m_ptr; }
-   bool operator!= (const safe_ptr& other) const { return m_ptr != other.m_ptr; }
-   bool operator== (T* ptr) const { return m_ptr == ptr; }
-   bool operator!= (T* ptr) const { return m_ptr != ptr; }
+    bool operator== (const safe_ptr& other) const { return m_ptr == other.m_ptr; }
+    bool operator!= (const safe_ptr& other) const { return m_ptr != other.m_ptr; }
+    bool operator== (T* ptr) const { return m_ptr == ptr; }
+    bool operator!= (T* ptr) const { return m_ptr != ptr; }
 
-   T& operator*  () const { return *m_ptr; }
-   T* operator-> () const { return m_ptr; }
+    T& operator*  () const { return *m_ptr; }
+    T* operator-> () const { return m_ptr; }
 
-   T* get() const { return m_ptr; }
+    T* get() const { return m_ptr; }
 
-   explicit operator bool() const { return m_ptr; }
+    explicit operator bool() const { return m_ptr; }
 
 private:
-   T* m_ptr;
+    T* m_ptr;
 };
 
 class SafeCountable
 {
 public:
 #ifdef KAK_DEBUG
-   SafeCountable() : m_count(0) {}
-   ~SafeCountable() { kak_assert(m_count == 0); }
+    SafeCountable() : m_count(0) {}
+    ~SafeCountable() { kak_assert(m_count == 0); }
 
-   void inc_safe_count() const { ++m_count; }
-   void dec_safe_count() const { --m_count; kak_assert(m_count >= 0); }
+    void inc_safe_count() const { ++m_count; }
+    void dec_safe_count() const { --m_count; kak_assert(m_count >= 0); }
 
 private:
-   mutable int m_count;
+    mutable int m_count;
 #endif
 };
 

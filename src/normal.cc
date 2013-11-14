@@ -745,7 +745,7 @@ void select_to_next_char(Context& context, int param)
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
                       _1, _2, key.key, param, flags & SelectFlags::Inclusive),
             flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace);
-   }, "select to next char","enter char to select to");
+    }, "select to next char","enter char to select to");
 }
 
 void start_or_end_macro_recording(Context& context, int)
