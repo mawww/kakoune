@@ -1,7 +1,6 @@
 #ifndef client_manager_hh_INCLUDED
 #define client_manager_hh_INCLUDED
 
-#include "context.hh"
 #include "client.hh"
 
 namespace Kakoune

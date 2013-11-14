@@ -4,6 +4,7 @@
 #include "context.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
+#include "client.hh"
 
 #include <algorithm>
 #include <sstream>
@@ -22,8 +23,8 @@ Window::Window(Buffer& buffer)
       m_options(buffer.options()),
       m_keymaps(buffer.keymaps())
 {
-    Context hook_context{*this};
-    m_hooks.run_hook("WinCreate", buffer.name(), hook_context);
+    InputHandler hook_handler{*this};
+    m_hooks.run_hook("WinCreate", buffer.name(), hook_handler.context());
     m_options.register_watcher(*this);
 
     m_builtin_highlighters.append({"tabulations", expand_tabulations});
@@ -36,8 +37,8 @@ Window::Window(Buffer& buffer)
 
 Window::~Window()
 {
-    Context hook_context{*this};
-    m_hooks.run_hook("WinClose", buffer().name(), hook_context);
+    InputHandler hook_handler{*this};
+    m_hooks.run_hook("WinClose", buffer().name(), hook_handler.context());
     m_options.unregister_watcher(*this);
 }
 
@@ -250,8 +251,8 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
 void Window::on_option_changed(const Option& option)
 {
     String desc = option.name() + "=" + option.get_as_string();
-    Context hook_context{*this};
-    m_hooks.run_hook("WinSetOption", desc, hook_context);
+    InputHandler hook_handler{*this};
+    m_hooks.run_hook("WinSetOption", desc, hook_handler.context());
 }
 
 }

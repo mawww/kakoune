@@ -10,6 +10,7 @@ class Editor;
 class Window;
 class Buffer;
 class Client;
+class InputHandler;
 class UserInterface;
 class DisplayLine;
 class KeymapManager;
@@ -24,8 +25,7 @@ class Context
 {
 public:
     Context();
-    explicit Context(Editor& editor);
-    Context(Client& client, Editor& editor);
+    Context(InputHandler& input_handler, Editor& editor);
     ~Context();
 
     Context(const Context&) = delete;
@@ -43,10 +43,15 @@ public:
     Client& client() const;
     bool has_client() const { return (bool)m_client; }
 
+    InputHandler& input_handler() const;
+    bool has_input_handler() const { return (bool)m_input_handler; }
+
     UserInterface& ui() const;
-    bool has_ui() const { return (bool)m_client; }
+    bool has_ui() const { return has_client(); }
 
     void change_editor(Editor& editor);
+
+    void set_client(Client& client);
 
     OptionManager& options() const;
     HookManager& hooks() const;
@@ -60,8 +65,9 @@ public:
     void forget_jumps_to_buffer(Buffer& buffer);
 
 private:
-    safe_ptr<Editor>  m_editor;
-    safe_ptr<Client>  m_client;
+    safe_ptr<Editor>       m_editor;
+    safe_ptr<InputHandler> m_input_handler;
+    safe_ptr<Client>       m_client;
 
     using JumpList = std::vector<DynamicSelectionList>;
     JumpList           m_jump_list;

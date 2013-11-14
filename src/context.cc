@@ -9,11 +9,8 @@ namespace Kakoune
 
 Context::Context() = default;
 
-Context::Context(Editor& editor)
-    : m_editor(&editor) {}
-
-Context::Context(Client& client, Editor& editor)
-    : m_client(&client), m_editor(&editor) {}
+Context::Context(InputHandler& input_handler, Editor& editor)
+    : m_input_handler(&input_handler), m_editor(&editor) {}
 
 Context::~Context() = default;
 
@@ -43,10 +40,17 @@ bool Context::has_window() const
     return (bool)m_editor and dynamic_cast<Window*>(m_editor.get());
 }
 
+InputHandler& Context::input_handler() const
+{
+    if (not has_input_handler())
+        throw runtime_error("no input handler in context");
+    return *m_input_handler;
+}
+
 Client& Context::client() const
 {
     if (not has_client())
-        throw runtime_error("no input handler in context");
+        throw runtime_error("no client in context");
     return *m_client;
 }
 
@@ -54,7 +58,7 @@ UserInterface& Context::ui() const
 {
     if (not has_ui())
         throw runtime_error("no user interface in context");
-    return m_client->ui();
+    return client().ui();
 }
 
 OptionManager& Context::options() const
@@ -82,6 +86,12 @@ KeymapManager& Context::keymaps() const
     if (has_buffer())
         return buffer().keymaps();
     return GlobalKeymaps::instance();
+}
+
+void Context::set_client(Client& client)
+{
+    kak_assert(not has_client());
+    m_client.reset(&client);
 }
 
 void Context::print_status(DisplayLine status) const
@@ -162,8 +172,8 @@ void Context::change_editor(Editor& editor)
             window().set_dimensions(ui().dimensions());
         window().hooks().run_hook("WinDisplay", buffer().name(), *this);
     }
-    if (has_client())
-        client().reset_normal_mode();
+    if (has_input_handler())
+        input_handler().reset_normal_mode();
 }
 
 }

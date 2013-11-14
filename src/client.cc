@@ -22,26 +22,26 @@ namespace Kakoune
 class InputMode
 {
 public:
-    InputMode(Client& client) : m_client(client) {}
+    InputMode(InputHandler& input_handler) : m_input_handler(input_handler) {}
     virtual ~InputMode() {}
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
     virtual void on_key(Key key) = 0;
     virtual void on_replaced() {}
-    Context& context() const { return m_client.context(); }
+    Context& context() const { return m_input_handler.context(); }
 
     virtual String description() const = 0;
 
     virtual KeymapMode keymap_mode() const = 0;
 
-    using Insertion = Client::Insertion;
-    Insertion& last_insert() { return m_client.m_last_insert; }
+    using Insertion = InputHandler::Insertion;
+    Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
     void reset_normal_mode();
 private:
-    Client& m_client;
+    InputHandler& m_input_handler;
 };
 
 namespace InputModes
@@ -53,17 +53,18 @@ static constexpr std::chrono::milliseconds fs_check_timeout{500};
 class Normal : public InputMode
 {
 public:
-    Normal(Client& client)
-        : InputMode(client),
+    Normal(InputHandler& input_handler)
+        : InputMode(input_handler),
           m_idle_timer{Clock::now() + idle_timeout, [this](Timer& timer) {
               context().hooks().run_hook("NormalIdle", "", context());
           }},
           m_fs_check_timer{Clock::now() + fs_check_timeout, [this](Timer& timer) {
+              if (not context().has_client())
+                  return;
               context().client().check_buffer_fs_timestamp();
               timer.set_next_date(Clock::now() + fs_check_timeout);
           }}
     {
-        context().client().check_buffer_fs_timestamp();
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
@@ -179,12 +180,14 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(Client& client, memoryview<String> choices,
+    Menu(InputHandler& input_handler, memoryview<String> choices,
          MenuCallback callback)
-        : InputMode(client),
+        : InputMode(input_handler),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
+        if (not context().has_ui())
+            return;
         DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
         context().ui().menu_show(choices, menu_pos, get_color("MenuForeground"),
                                  get_color("MenuBackground"), MenuStyle::Prompt);
@@ -198,7 +201,8 @@ public:
 
         if (key == ctrl('m'))
         {
-            context().ui().menu_hide();
+            if (context().has_ui())
+                context().ui().menu_hide();
             context().print_status(DisplayLine{});
             reset_normal_mode();
             int selected = m_selected - m_choices.begin();
@@ -216,7 +220,8 @@ public:
             }
             else
             {
-                context().ui().menu_hide();
+                if (context().has_ui())
+                    context().ui().menu_hide();
                 reset_normal_mode();
                 int selected = m_selected - m_choices.begin();
                 m_callback(selected, MenuEvent::Abort, context());
@@ -281,7 +286,8 @@ private:
     {
         m_selected = it;
         int selected = m_selected - m_choices.begin();
-        context().ui().menu_select(selected);
+        if (context().has_ui())
+            context().ui().menu_select(selected);
         m_callback(selected, MenuEvent::Select, context());
     }
 
@@ -311,9 +317,9 @@ String common_prefix(memoryview<String> strings)
 class Prompt : public InputMode
 {
 public:
-    Prompt(Client& client, const String& prompt,
+    Prompt(InputHandler& input_handler, const String& prompt,
            ColorPair colors, Completer completer, PromptCallback callback)
-        : InputMode(client), m_prompt(prompt), m_prompt_colors(colors),
+        : InputMode(input_handler), m_prompt(prompt), m_prompt_colors(colors),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
@@ -344,7 +350,8 @@ public:
                 history.push_back(line);
             }
             context().print_status(DisplayLine{});
-            context().ui().menu_hide();
+            if (context().has_ui())
+                context().ui().menu_hide();
             reset_normal_mode();
             // call callback after reset_normal_mode so that callback
             // may change the mode
@@ -354,7 +361,8 @@ public:
         else if (key == Key::Escape or key == ctrl('c'))
         {
             context().print_status(DisplayLine{});
-            context().ui().menu_hide();
+            if (context().has_ui())
+                context().ui().menu_hide();
             reset_normal_mode();
             m_callback(line, PromptEvent::Abort, context());
             return;
@@ -432,7 +440,8 @@ public:
                 m_current_completion = candidates.size()-1;
 
             const String& completion = candidates[m_current_completion];
-            context().ui().menu_select(m_current_completion);
+            if (context().has_ui())
+                context().ui().menu_select(m_current_completion);
 
             m_line_editor.insert_from(line.char_count_to(m_completions.start),
                                       completion);
@@ -450,7 +459,8 @@ public:
         {
             m_line_editor.handle_key(key);
             m_current_completion = -1;
-            context().ui().menu_hide();
+            if (context().has_ui())
+                context().ui().menu_hide();
             showcompl = true;
         }
 
@@ -486,7 +496,7 @@ private:
             m_completions = m_completer(context(), CompletionFlags::Fast, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
             CandidateList& candidates = m_completions.candidates;
-            if (not candidates.empty())
+            if (context().has_ui() and not candidates.empty())
             {
                 DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
                 context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
@@ -522,8 +532,8 @@ std::unordered_map<String, std::vector<String>> Prompt::ms_history;
 class NextKey : public InputMode
 {
 public:
-    NextKey(Client& client, KeyCallback callback)
-        : InputMode(client), m_callback(callback) {}
+    NextKey(InputHandler& input_handler, KeyCallback callback)
+        : InputMode(input_handler), m_callback(callback) {}
 
     void on_key(Key key) override
     {
@@ -592,7 +602,8 @@ public:
         m_completions.end   = cursor_pos;
         m_completions.begin = buffer.advance(m_completions.end, -candidate.length());
         m_completions.timestamp = m_context.buffer().timestamp();
-        m_context.ui().menu_select(m_current_candidate);
+        if (m_context.has_ui())
+            m_context.ui().menu_select(m_current_candidate);
 
         // when we select a match, remove non displayed matches from the candidates
         // which are considered as invalid with the new completion timestamp
@@ -630,7 +641,6 @@ public:
                 }
                 if (not m_matching_candidates.empty())
                 {
-                    m_context.ui().menu_hide();
                     m_current_candidate = m_matching_candidates.size();
                     m_completions.end = cursor;
                     menu_show();
@@ -646,7 +656,8 @@ public:
     void reset()
     {
         m_completions = BufferCompletion{};
-        m_context.ui().menu_hide();
+        if (m_context.has_ui())
+            m_context.ui().menu_hide();
     }
 
     template<BufferCompletion (BufferCompleter::*complete_func)(const Buffer&, BufferCoord)>
@@ -661,7 +672,6 @@ public:
         kak_assert(cursor_pos >= m_completions.begin);
         m_matching_candidates = m_completions.candidates;
         m_current_candidate = m_matching_candidates.size();
-        m_context.ui().menu_hide();
         menu_show();
         m_matching_candidates.push_back(buffer.string(m_completions.begin, m_completions.end));
         return true;
@@ -814,6 +824,8 @@ private:
 
     void menu_show()
     {
+        if (m_context.has_ui())
+            return;
         DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
         m_context.ui().menu_show(m_matching_candidates, menu_pos,
                                  get_color("MenuForeground"),
@@ -850,8 +862,8 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(Client& client, InsertMode mode)
-        : InputMode(client),
+    Insert(InputHandler& input_handler, InsertMode mode)
+        : InputMode(input_handler),
           m_insert_mode(mode),
           m_edition(context().editor()),
           m_completer(context()),
@@ -1088,31 +1100,31 @@ private:
 
 void InputMode::reset_normal_mode()
 {
-    m_client.reset_normal_mode();
+    m_input_handler.reset_normal_mode();
 }
 
-Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
-    : m_ui(std::move(ui)), m_context(*this, editor), m_mode(new InputModes::Normal(*this)), m_name(name)
+InputHandler::InputHandler(Editor& editor)
+    : m_mode(new InputModes::Normal(*this)),
+      m_context(*this, editor)
 {
 }
 
-Client::~Client()
-{
-}
+InputHandler::~InputHandler()
+{}
 
-void Client::change_input_mode(InputMode* new_mode)
+void InputHandler::change_input_mode(InputMode* new_mode)
 {
     m_mode->on_replaced();
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new_mode);
 }
 
-void Client::insert(InsertMode mode)
+void InputHandler::insert(InsertMode mode)
 {
     change_input_mode(new InputModes::Insert(*this, mode));
 }
 
-void Client::repeat_last_insert()
+void InputHandler::repeat_last_insert()
 {
     if (m_last_insert.second.empty())
         return;
@@ -1127,27 +1139,27 @@ void Client::repeat_last_insert()
     kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
-void Client::prompt(const String& prompt, ColorPair prompt_colors,
+void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
                           Completer completer, PromptCallback callback)
 {
     change_input_mode(new InputModes::Prompt(*this, prompt, prompt_colors,
                                              completer, callback));
 }
 
-void Client::set_prompt_colors(ColorPair prompt_colors)
+void InputHandler::set_prompt_colors(ColorPair prompt_colors)
 {
     InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(m_mode.get());
     if (prompt)
         prompt->set_prompt_colors(prompt_colors);
 }
 
-void Client::menu(memoryview<String> choices,
-                        MenuCallback callback)
+void InputHandler::menu(memoryview<String> choices,
+                       MenuCallback callback)
 {
     change_input_mode(new InputModes::Menu(*this, choices, callback));
 }
 
-void Client::on_next_key(KeyCallback callback)
+void InputHandler::on_next_key(KeyCallback callback)
 {
     change_input_mode(new InputModes::NextKey(*this, callback));
 }
@@ -1157,17 +1169,7 @@ static bool is_valid(Key key)
     return key != Key::Invalid and key.key <= 0x10FFFF;
 }
 
-void Client::handle_available_input()
-{
-    while (m_ui->is_key_available())
-    {
-        handle_key(m_ui->get_key());
-        m_mode_trash.clear();
-    }
-    m_context.window().forget_timestamp();
-}
-
-void Client::handle_key(Key key)
+void InputHandler::handle_key(Key key)
 {
     if (is_valid(key))
     {
@@ -1189,29 +1191,59 @@ void Client::handle_key(Key key)
     }
 }
 
-void Client::start_recording(char reg)
+void InputHandler::start_recording(char reg)
 {
     kak_assert(m_recording_reg == 0);
     m_recorded_keys = "";
     m_recording_reg = reg;
 }
 
-bool Client::is_recording() const
+bool InputHandler::is_recording() const
 {
     return m_recording_reg != 0;
 }
 
-void Client::stop_recording()
+void InputHandler::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
     RegisterManager::instance()[m_recording_reg] = memoryview<String>(m_recorded_keys);
     m_recording_reg = 0;
 }
 
+void InputHandler::reset_normal_mode()
+{
+    change_input_mode(new InputModes::Normal(*this));
+}
+
+void InputHandler::clear_mode_trash()
+{
+    m_mode_trash.clear();
+}
+
+Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
+    : m_input_handler(editor), m_ui(std::move(ui)), m_name(name)
+{
+    context().set_client(*this);
+}
+
+Client::~Client()
+{
+}
+
+void Client::handle_available_input()
+{
+    while (m_ui->is_key_available())
+    {
+        m_input_handler.handle_key(m_ui->get_key());
+        m_input_handler.clear_mode_trash();
+    }
+    context().window().forget_timestamp();
+}
+
 void Client::print_status(DisplayLine status_line)
 {
     m_status_line = std::move(status_line);
-    m_context.window().forget_timestamp();
+    context().window().forget_timestamp();
 }
 
 DisplayLine Client::generate_mode_line() const
@@ -1224,33 +1256,28 @@ DisplayLine Client::generate_mode_line() const
         << " " << (int)pos.line+1 << ":" << (int)col+1;
     if (context().buffer().is_modified())
         oss << " [+]";
-    if (is_recording())
-       oss << " [recording (" << m_recording_reg << ")]";
+    if (m_input_handler.is_recording())
+       oss << " [recording (" << m_input_handler.recording_reg() << ")]";
     if (context().buffer().flags() & Buffer::Flags::New)
         oss << " [new file]";
-    oss << " [" << m_mode->description() << "]" << " - " << name()
+    oss << " [" << m_input_handler.mode().description() << "]" << " - " << name()
         << "@[" << Server::instance().session() << "]";
     return { oss.str(), get_color("StatusLine") };
 }
 
 void Client::redraw_ifn()
 {
-    if (m_context.window().timestamp() != m_context.buffer().timestamp())
+    if (context().window().timestamp() != context().buffer().timestamp())
     {
-        DisplayCoord dimensions = m_context.ui().dimensions();
+        DisplayCoord dimensions = context().ui().dimensions();
         if (dimensions == DisplayCoord{0,0})
             return;
-        m_context.window().set_dimensions(dimensions);
-        m_context.window().update_display_buffer();;
+        context().window().set_dimensions(dimensions);
+        context().window().update_display_buffer();;
 
-        m_context.ui().draw(m_context.window().display_buffer(),
+        context().ui().draw(context().window().display_buffer(),
                             m_status_line, generate_mode_line());
     }
-}
-
-void Client::reset_normal_mode()
-{
-    change_input_mode(new InputModes::Normal(*this));
 }
 
 static void reload_buffer(Context& context, const String& filename)
@@ -1270,7 +1297,7 @@ static void reload_buffer(Context& context, const String& filename)
 
 void Client::check_buffer_fs_timestamp()
 {
-    Buffer& buffer = m_context.buffer();
+    Buffer& buffer = context().buffer();
     auto reload = context().options()["autoreload"].get<YesNoAsk>();
     if (not (buffer.flags() & Buffer::Flags::File) or reload == No)
         return;
@@ -1282,7 +1309,7 @@ void Client::check_buffer_fs_timestamp()
     if (reload == Ask)
     {
         print_status({"'" + buffer.display_name() + "' was modified externally, press r or y to reload, k or n to keep", get_color("Prompt")});
-        on_next_key([this, ts, filename](Key key, Context& context) {
+        m_input_handler.on_next_key([this, ts, filename](Key key, Context& context) {
             Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
             // buffer got deleted while waiting for the key, do nothing
             if (not buf)

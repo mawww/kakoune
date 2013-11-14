@@ -6,6 +6,7 @@
 #include "file.hh"
 #include "utils.hh"
 #include "window.hh"
+#include "client.hh"
 
 #include <algorithm>
 
@@ -40,19 +41,19 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
     }
 
     Editor editor_for_hooks(*this);
-    Context context(editor_for_hooks);
+    InputHandler hook_handler(editor_for_hooks);
     if (flags & Flags::File)
     {
         if (flags & Flags::New)
-            m_hooks.run_hook("BufNew", m_name, context);
+            m_hooks.run_hook("BufNew", m_name, hook_handler.context());
         else
         {
             kak_assert(m_fs_timestamp != InvalidTime);
-            m_hooks.run_hook("BufOpen", m_name, context);
+            m_hooks.run_hook("BufOpen", m_name, hook_handler.context());
         }
     }
 
-    m_hooks.run_hook("BufCreate", m_name, context);
+    m_hooks.run_hook("BufCreate", m_name, hook_handler.context());
 
     // now we may begin to record undo data
     m_flags = flags;
@@ -65,8 +66,8 @@ Buffer::~Buffer()
 {
     {
         Editor hook_editor{*this};
-        Context hook_context{hook_editor};
-        m_hooks.run_hook("BufClose", m_name, hook_context);
+        InputHandler hook_handler(hook_editor);
+        m_hooks.run_hook("BufClose", m_name, hook_handler.context());
     }
 
     m_options.unregister_watcher(*this);
@@ -763,7 +764,7 @@ void Buffer::on_option_changed(const Option& option)
 {
     String desc = option.name() + "=" + option.get_as_string();
     Editor hook_editor{*this};
-    Context hook_context{hook_editor};
-    m_hooks.run_hook("BufSetOption", desc, hook_context);
+    InputHandler hook_handler(hook_editor);
+    m_hooks.run_hook("BufSetOption", desc, hook_handler.context());
 }
 }

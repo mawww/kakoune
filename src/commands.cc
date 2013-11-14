@@ -642,7 +642,7 @@ void menu(CommandParameters params, Context& context)
             select_cmds.push_back(parser[i+2]);
     }
 
-    context.client().menu(choices,
+    context.input_handler().menu(choices,
         [=](int choice, MenuEvent event, Context& context) {
             if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
               CommandManager::instance().execute(commands[choice], context);
@@ -801,7 +801,7 @@ void exec_keys(const KeyList& keys, Context& context)
     scoped_edition edition(context.editor());
 
     for (auto& key : keys)
-        context.client().handle_key(key);
+        context.input_handler().handle_key(key);
 }
 
 void register_commands()
