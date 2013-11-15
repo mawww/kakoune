@@ -282,9 +282,9 @@ int kakoune(memoryview<String> params)
 
     write_debug("*** This is the debug buffer, where debug info will be written ***");
     write_debug("pid: " + to_string(getpid()));
-    write_debug("utf-8 test: é á ï");
 
     Server server(parser.has_option("s") ? parser.option_value("s") : to_string(getpid()));
+    write_debug("session: " + server.session());
 
     if (not parser.has_option("n")) try
     {
