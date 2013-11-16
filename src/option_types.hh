@@ -198,6 +198,8 @@ inline void option_from_string(const String& str, YesNoAsk& opt)
         opt = No;
     else if (str == "ask")
         opt = Ask;
+    else
+        throw runtime_error("invalid value '" + str + "', expected yes, no or ask");
 }
 
 }
