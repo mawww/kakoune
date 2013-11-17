@@ -1,6 +1,7 @@
 #include "assert.hh"
 
 #include "exception.hh"
+#include "debug.hh"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -21,6 +22,8 @@ private:
 void on_assert_failed(const char* message)
 {
     String debug_info = "pid: " + to_string(getpid());
+    write_debug("assert failed: '"_str + message + "' " + debug_info);
+
     int res = system(("xmessage -buttons 'quit:0,ignore:1' '"_str +
                       message + "\n[Debug Infos]\n" + debug_info + "'").c_str());
     switch (res)
