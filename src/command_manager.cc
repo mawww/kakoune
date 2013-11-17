@@ -76,11 +76,6 @@ bool is_command_separator(char c)
     return c == ';' or c == '\n';
 }
 
-bool is_horizontal_blank(char c)
-{
-    return c == ' ' or c == '\t';
-}
-
 struct unterminated_string : parse_error
 {
     unterminated_string(const String& open, const String& close, int nest = 0)

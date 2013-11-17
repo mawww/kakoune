@@ -24,6 +24,11 @@ inline bool is_blank(Codepoint c)
     return c == ' ' or c == '\t';
 }
 
+inline bool is_horizontal_blank(Codepoint c)
+{
+    return c == ' ' or c == '\t';
+}
+
 }
 
 #endif // unicode_hh_INCLUDED
