@@ -8,7 +8,7 @@ namespace Kakoune
 void HookManager::add_hook(const String& hook_name, String id, HookFunc hook)
 {
     auto& hooks = m_hook[hook_name];
-    hooks.append({std::move(id), std::move(hook)});
+    hooks.insert({std::move(id), std::move(hook)});
 }
 
 void HookManager::remove_hooks(const String& id)
@@ -16,7 +16,7 @@ void HookManager::remove_hooks(const String& id)
     if (id.empty())
         throw runtime_error("invalid id");
     for (auto& hooks : m_hook)
-        hooks.second.remove_all(id);
+        hooks.second.erase(id);
 }
 
 void HookManager::run_hook(const String& hook_name,
