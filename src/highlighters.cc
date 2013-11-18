@@ -67,15 +67,15 @@ class RegexColorizer
 {
 public:
     RegexColorizer(Regex regex, ColorSpec colors)
-        : m_regex(std::move(regex)), m_colors(std::move(colors)),
-          m_cache_timestamp(0)
+        : m_regex(std::move(regex)), m_colors(std::move(colors))
     {
     }
 
     void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
-        update_cache_ifn(window.buffer(), display_buffer.range());
-        for (auto& match : m_cache_matches)
+        const Buffer& buffer = window.buffer();
+        update_cache_ifn(buffer, display_buffer.range());
+        for (auto& match : m_caches[&buffer].m_matches)
         {
             for (size_t n = 0; n < match.size(); ++n)
             {
@@ -83,37 +83,48 @@ public:
                 if (col_it == m_colors.end())
                     continue;
 
-                highlight_range(display_buffer, match[n].first.coord(), match[n].second.coord(), true,
+                highlight_range(display_buffer, match[n].first, match[n].second, true,
                                 [&](DisplayAtom& atom) { atom.colors = *col_it->second; });
             }
         }
     }
 
 private:
-    BufferRange m_cache_range;
-    size_t      m_cache_timestamp;
-    std::vector<boost::match_results<BufferIterator>> m_cache_matches;
+    struct MatchesCache
+    {
+        BufferRange m_range;
+        size_t      m_timestamp;
+        std::vector<std::vector<std::pair<BufferCoord, BufferCoord>>> m_matches;
+    };
+    std::unordered_map<const Buffer*, MatchesCache> m_caches;
 
     Regex     m_regex;
     ColorSpec m_colors;
 
     void update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
-        if (buffer.timestamp() == m_cache_timestamp and
-            range.first >= m_cache_range.first and
-            range.second <= m_cache_range.second)
+        MatchesCache& cache = m_caches[&buffer];
+
+        if (buffer.timestamp() == cache.m_timestamp and
+            range.first >= cache.m_range.first and
+            range.second <= cache.m_range.second)
            return;
 
-        m_cache_matches.clear();
-        m_cache_range.first  = buffer.clamp({range.first.line - 10, 0});
-        m_cache_range.second = buffer.next(buffer.clamp({range.second.line + 10, INT_MAX}));
-        m_cache_timestamp = buffer.timestamp();
+        cache.m_range.first  = buffer.clamp({range.first.line - 10, 0});
+        cache.m_range.second = buffer.next(buffer.clamp({range.second.line + 10, INT_MAX}));
+        cache.m_timestamp = buffer.timestamp();
 
-        RegexIterator re_it{buffer.iterator_at(m_cache_range.first),
-                            buffer.iterator_at(m_cache_range.second), m_regex};
+        cache.m_matches.clear();
+        RegexIterator re_it{buffer.iterator_at(cache.m_range.first),
+                            buffer.iterator_at(cache.m_range.second), m_regex};
         RegexIterator re_end;
         for (; re_it != re_end; ++re_it)
-            m_cache_matches.push_back(*re_it);
+        {
+            cache.m_matches.emplace_back();
+            auto& match = cache.m_matches.back();
+            for (auto& sub : *re_it)
+                match.emplace_back(sub.first.coord(), sub.second.coord());
+        }
     }
 };
 
