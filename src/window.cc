@@ -253,6 +253,9 @@ void Window::on_option_changed(const Option& option)
     String desc = option.name() + "=" + option.get_as_string();
     InputHandler hook_handler{*this};
     m_hooks.run_hook("WinSetOption", desc, hook_handler.context());
+
+    // an highlighter might depend on the option, so we need to redraw
+    forget_timestamp();
 }
 
 }
