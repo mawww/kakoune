@@ -321,7 +321,7 @@ public:
     {
         m_history_it = ms_history[m_prompt].end();
         if (context().options()["autoshowcompl"].get<bool>())
-            refresh_completions();
+            refresh_completions(CompletionFlags::Fast);
         display();
     }
 
@@ -411,7 +411,7 @@ public:
             // first try, we need to ask our completer for completions
             if (candidates.empty())
             {
-                refresh_completions();
+                refresh_completions(CompletionFlags::None);
 
                 if (candidates.empty())
                     return;
@@ -462,7 +462,7 @@ public:
         }
 
         if (showcompl and context().options()["autoshowcompl"].get<bool>())
-            refresh_completions();
+            refresh_completions(CompletionFlags::Fast);
 
         display();
         m_callback(line, PromptEvent::Change, context());
@@ -485,12 +485,12 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
 
 private:
-    void refresh_completions()
+    void refresh_completions(CompletionFlags flags)
     {
         try
         {
             const String& line = m_line_editor.line();
-            m_completions = m_completer(context(), CompletionFlags::Fast, line,
+            m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
             CandidateList& candidates = m_completions.candidates;
             if (context().has_ui() and not candidates.empty())
