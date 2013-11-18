@@ -267,8 +267,7 @@ void add_highlighter(CommandParameters params, Context& context)
         get_group(window.highlighters(), parser.option_value("group"))
       : window.highlighters();
 
-    auto& factory = registry[name];
-    group.append(factory(highlighter_params, window));
+    group.append(registry[name](highlighter_params));
 }
 
 void rm_highlighter(CommandParameters params, Context& context)

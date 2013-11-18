@@ -128,7 +128,7 @@ private:
     }
 };
 
-HighlighterAndId colorize_regex_factory(HighlighterParameters params, const Window&)
+HighlighterAndId colorize_regex_factory(HighlighterParameters params)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -190,7 +190,7 @@ private:
     RegexGetter    m_regex_getter;
 };
 
-HighlighterAndId highlight_search_factory(HighlighterParameters params, const Window&)
+HighlighterAndId highlight_search_factory(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -209,7 +209,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params, const Wi
     }
 }
 
-HighlighterAndId highlight_regex_option_factory(HighlighterParameters params, const Window&)
+HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -345,7 +345,7 @@ void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
     }
 }
 
-HighlighterAndId flag_lines_factory(HighlighterParameters params, Window& window)
+HighlighterAndId flag_lines_factory(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -387,7 +387,7 @@ class SimpleHighlighterFactory
 public:
     SimpleHighlighterFactory(const String& id) : m_id(id) {}
 
-    HighlighterAndId operator()(HighlighterParameters params, const Window&) const
+    HighlighterAndId operator()(HighlighterParameters params) const
     {
         return HighlighterAndId(m_id, HighlighterFunc(highlighter_func));
     }
@@ -395,7 +395,7 @@ private:
     String m_id;
 };
 
-HighlighterAndId highlighter_group_factory(HighlighterParameters params, const Window&)
+HighlighterAndId highlighter_group_factory(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");

@@ -24,8 +24,7 @@ typedef std::function<void (const Window& window, DisplayBuffer& display_buffer)
 typedef std::pair<String, HighlighterFunc> HighlighterAndId;
 typedef memoryview<String> HighlighterParameters;
 
-using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params,
-                                                           Window& window)>;
+using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
 using HighlighterGroup = FunctionGroup<const Window&, DisplayBuffer&>;
 
