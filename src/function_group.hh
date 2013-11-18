@@ -2,7 +2,7 @@
 #define function_group_hh_INCLUDED
 
 #include "exception.hh"
-#include "idvaluemap.hh"
+#include "id_map.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -58,7 +58,7 @@ public:
     }
 
 private:
-    idvaluemap<String, Function> m_functions;
+    id_map<Function> m_functions;
 };
 
 }

@@ -1,18 +1,19 @@
-#ifndef idvaluemap_hh_INCLUDED
-#define idvaluemap_hh_INCLUDED
+#ifndef id_map_hh_INCLUDED
+#define id_map_hh_INCLUDED
 
 #include "completion.hh"
+#include "string.hh"
 
 #include <vector>
 
 namespace Kakoune
 {
 
-template<typename Id, typename Value>
-class idvaluemap
+template<typename Value>
+class id_map
 {
 public:
-    typedef std::pair<Id, Value> value_type;
+    typedef std::pair<String, Value> value_type;
     typedef std::vector<value_type> container_type;
     typedef typename container_type::iterator iterator;
     typedef typename container_type::const_iterator const_iterator;
@@ -27,7 +28,7 @@ public:
         m_content.push_back(std::move(value));
     }
 
-    iterator find(const Id& id)
+    iterator find(const String& id)
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -37,7 +38,7 @@ public:
         return end();
     }
 
-    const_iterator find(const Id& id) const
+    const_iterator find(const String& id) const
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -47,19 +48,19 @@ public:
         return end();
     }
 
-    bool contains(const Id& id) const
+    bool contains(const String& id) const
     {
         return find(id) != end();
     }
 
-    void remove(const Id& id)
+    void remove(const String& id)
     {
         auto it = find(id);
         if (it != end())
             m_content.erase(it);
     }
 
-    void remove_all(const Id& id)
+    void remove_all(const String& id)
     {
         for (auto it = find(id); it != end(); it = find(id))
             m_content.erase(it);
@@ -77,9 +78,8 @@ public:
             if (not condition(value))
                 continue;
 
-            String id_str = value.first;
-            if (prefix_match(id_str, real_prefix))
-                result.push_back(std::move(id_str));
+            if (prefix_match(value.first, real_prefix))
+                result.push_back(value.first);
         }
         return result;
     }
@@ -102,4 +102,4 @@ private:
 
 }
 
-#endif // idvaluemap_hh_INCLUDED
+#endif // id_map_hh_INCLUDED

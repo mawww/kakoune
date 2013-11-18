@@ -1,7 +1,6 @@
 #ifndef keymap_manager_hh_INCLUDED
 #define keymap_manager_hh_INCLUDED
 
-#include "idvaluemap.hh"
 #include "keys.hh"
 #include "utils.hh"
 

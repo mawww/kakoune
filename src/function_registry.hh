@@ -2,7 +2,7 @@
 #define function_registry_h_INCLUDED
 
 #include "completion.hh"
-#include "idvaluemap.hh"
+#include "id_map.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -38,7 +38,7 @@ public:
     }
 
 private:
-    idvaluemap<String, FunctionType> m_functions;
+    id_map<FunctionType> m_functions;
 };
 
 }
