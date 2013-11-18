@@ -821,7 +821,7 @@ private:
 
     void menu_show()
     {
-        if (m_context.has_ui())
+        if (not m_context.has_ui())
             return;
         DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
         m_context.ui().menu_show(m_matching_candidates, menu_pos,
