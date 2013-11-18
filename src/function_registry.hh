@@ -2,9 +2,8 @@
 #define function_registry_h_INCLUDED
 
 #include "completion.hh"
+#include "idvaluemap.hh"
 #include "string.hh"
-
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -21,8 +20,8 @@ class FunctionRegistry
 public:
     void register_func(const String& name, const FunctionType& function)
     {
-        kak_assert(m_functions.find(name) == m_functions.end());
-        m_functions[name] = function;
+        kak_assert(not m_functions.contains(name));
+        m_functions.append(std::make_pair(name, function));
     }
 
     const FunctionType& operator[](const String& name) const
@@ -35,11 +34,11 @@ public:
 
     CandidateList complete_name(const String& prefix, ByteCount cursor_pos)
     {
-        return complete_key(m_functions, prefix, cursor_pos);
+        return m_functions.complete_id(prefix, cursor_pos);
     }
 
 private:
-    std::unordered_map<String, FunctionType> m_functions;
+    idvaluemap<String, FunctionType> m_functions;
 };
 
 }

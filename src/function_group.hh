@@ -2,10 +2,8 @@
 #define function_group_hh_INCLUDED
 
 #include "exception.hh"
+#include "idvaluemap.hh"
 #include "string.hh"
-#include "completion.hh"
-
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -25,14 +23,14 @@ public:
 
     void append(FunctionAndId&& function)
     {
-        if (m_functions.find(function.first) != m_functions.end())
+        if (m_functions.contains(function.first))
             throw runtime_error("duplicate id: " + function.first);
 
-        m_functions.insert(std::forward<FunctionAndId>(function));
+        m_functions.append(std::forward<FunctionAndId>(function));
     }
     void remove(const String& id)
     {
-        m_functions.erase(id);
+        m_functions.remove(id);
     }
 
     FunctionGroup& get_group(const String& id)
@@ -48,20 +46,19 @@ public:
 
     CandidateList complete_id(const String& prefix, ByteCount cursor_pos) const
     {
-        return complete_key(m_functions, prefix, cursor_pos);
+        return m_functions.complete_id(prefix, cursor_pos);
     }
 
     CandidateList complete_group_id(const String& prefix, ByteCount cursor_pos) const
     {
-        return complete_key_if(
-            m_functions, prefix, cursor_pos,
-            [](const FunctionAndId& func) {
+        return m_functions.complete_id_if(
+            prefix, cursor_pos, [](const FunctionAndId& func) {
                 return func.second.template target<FunctionGroup>() != nullptr;
             });
     }
 
 private:
-    std::unordered_map<String, Function> m_functions;
+    idvaluemap<String, Function> m_functions;
 };
 
 }

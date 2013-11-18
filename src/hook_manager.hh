@@ -1,6 +1,7 @@
 #ifndef hook_manager_hh_INCLUDED
 #define hook_manager_hh_INCLUDED
 
+#include "idvaluemap.hh"
 #include "utils.hh"
 
 #include <unordered_map>
@@ -28,7 +29,7 @@ private:
     friend class GlobalHooks;
 
     HookManager* m_parent;
-    std::unordered_map<String, std::unordered_multimap<String, HookFunc>> m_hook;
+    std::unordered_map<String, idvaluemap<String, HookFunc>> m_hook;
 };
 
 class GlobalHooks : public HookManager,
