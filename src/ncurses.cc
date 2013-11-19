@@ -444,7 +444,11 @@ void NCursesUI::menu_show(memoryview<String> items,
                           MenuStyle style)
 {
     if (m_menu_win)
+    {
+        wredrawln(stdscr, (int)window_pos(m_menu_win).line,
+                          (int)window_size(m_menu_win).line);
         delwin(m_menu_win);
+    }
     m_items.clear();
 
     m_menu_fg = fg;
