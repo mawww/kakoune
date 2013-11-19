@@ -680,7 +680,12 @@ void NCursesUI::info_show(const String& title, const String& content,
                           DisplayCoord anchor, ColorPair colors,
                           MenuStyle style)
 {
-    kak_assert(m_info_win == nullptr);
+    if (m_info_win)
+    {
+        wredrawln(stdscr, (int)window_pos(m_info_win).line,
+                          (int)window_size(m_info_win).line);
+        delwin(m_info_win);
+    }
 
     const String& info_box = style == MenuStyle::Inline ?
          content : make_info_box(title, content, m_dimensions.column);
