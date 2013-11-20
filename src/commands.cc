@@ -65,6 +65,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
         {
             kak_assert(buffer->flags() & Buffer::Flags::Fifo);
             buffer->flags() &= ~Buffer::Flags::Fifo;
+            buffer->flags() &= ~Buffer::Flags::NoUndo;
             close(watcher.fd());
             delete &watcher;
         }
