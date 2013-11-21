@@ -877,6 +877,40 @@ void align(Context& context, int)
     }
 }
 
+void align_indent(Context& context, int selection)
+{
+    auto& editor = context.editor();
+    auto& buffer = context.buffer();
+    auto& selections = editor.selections();
+    std::vector<LineCount> lines;
+    for (auto sel : selections)
+    {
+        for (LineCount l = sel.min().line; l < sel.max().line + 1; ++l)
+            lines.push_back(l);
+    }
+    if (selection > selections.size())
+        throw runtime_error("invalid selection index");
+    if (selection == 0)
+        selection  = editor.main_selection_index() + 1;
+
+    const String& line = buffer[selections[selection-1].min().line];
+    auto it = line.begin();
+    while (it != line.end() and is_horizontal_blank(*it))
+        ++it;
+    const String indent{line.begin(), it};
+
+    scoped_edition edition{editor};
+    for (auto& l : lines)
+    {
+        auto& line = buffer[l];
+        ByteCount i = 0;
+        while (i < line.length() and is_horizontal_blank(line[i]))
+            ++i;
+        buffer.erase(buffer.iterator_at(l), buffer.iterator_at({l, i}));
+        buffer.insert(buffer.iterator_at(l), indent);
+    }
+}
+
 template<typename T>
 class Repeated
 {
@@ -1048,6 +1082,7 @@ KeyMap keymap =
     { alt('`'),  for_each_char<swap_case> },
 
     { '&', align },
+    { alt('&'), align_indent },
 
     { Key::Left,  move<CharCount, Backward> },
     { Key::Down,  move<LineCount, Forward> },
