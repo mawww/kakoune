@@ -25,18 +25,25 @@ def -shell-params \
         fi
     }}
 
+def tag-complete %{ eval -draft %{
+    exec <space>hb<a-k>^\w+$<ret>
+    %sh{ (
+        compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq)
+        compl=${compl//:/\\:}
+        compl=${compl//$'\n'/:}
+        compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
+        echo "set buffer=$kak_bufname completions '${compl}'" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+    ) >& /dev/null < /dev/null & }
+}}
+
 def funcinfo %{
     eval -draft %{
-        exec [(<space>B;
+        exec [(<space>B<a-k>[a-zA-Z_]+\(<ret>
         %sh{
-            if [[ "$kak_selection" =~ [a-zA-Z_]+\( ]]; then
-                sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*(class|struct|namespace):(\S+).*signature:(.*)$/\4 [\3::\1]/')
-                if [[ -n "$sigs" ]]; then
-                    echo "eval -client ${kak_client} %{info -anchor right '$sigs'}"
-                    exit
-                fi
+            sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*(class|struct|namespace):(\S+).*signature:(.*)$/\4 [\3::\1]/')
+            if [[ -n "$sigs" ]]; then
+                echo "eval -client ${kak_client} %{info -anchor right '$sigs'}"
             fi
-            echo info
         }
     }
 }
@@ -49,3 +56,18 @@ def ctags-enable-autoinfo %{
 }
 
 def ctags-disable-autoinfo %{ rmhooks window ctags-autoinfo }
+
+decl str ctagsopts "-R ."
+
+def gentags %{
+    echo launching tag generation in the background
+    %sh{ (
+        if ctags -f .tags.kaktmp ${kak_opt_ctagsopts}; then
+            mv .tags.kaktmp tags
+            msg="tags generation complete"
+        else
+            msg="tags generation failed"
+        fi
+        echo "eval -client $kak_client echo ${msg}" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+    ) >& /dev/null < /dev/null & }
+}
