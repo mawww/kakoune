@@ -386,6 +386,9 @@ public:
                         break;
                     }
                 } while (it != history.begin());
+
+                clear_completions();
+                showcompl = true;
             }
         }
         else if (key == Key::Down or key == ctrl('n')) // next
@@ -402,6 +405,9 @@ public:
                     m_line_editor.reset(*m_history_it);
                 else
                     m_line_editor.reset(m_prefix);
+
+                clear_completions();
+                showcompl = true;
             }
         }
         else if (key == ctrl('i') or key == Key::BackTab) // tab completion
@@ -455,9 +461,7 @@ public:
         else
         {
             m_line_editor.handle_key(key);
-            m_current_completion = -1;
-            if (context().has_ui())
-                context().ui().menu_hide();
+            clear_completions();
             showcompl = true;
         }
 
@@ -500,6 +504,13 @@ private:
                                          get_color("MenuBackground"), MenuStyle::Prompt);
             }
         } catch (runtime_error&) {}
+    }
+
+    void clear_completions()
+    {
+        m_current_completion = -1;
+        if (context().has_ui())
+            context().ui().menu_hide();
     }
 
     void display() const
