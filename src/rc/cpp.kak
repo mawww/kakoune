@@ -27,7 +27,7 @@ def -hidden _cpp_indent_on_new_line %~
 
 def -hidden _cpp_indent_on_opening_curly_brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
-    try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{ <ret> s \`|.\' <ret> 1<a-&> ]
+    try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
 def -hidden _cpp_indent_on_closing_curly_brace %[
