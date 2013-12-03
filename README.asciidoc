@@ -508,6 +508,27 @@ existing highlighters are:
        given flag in it for everly lines contained in the int-list option named
        <option_name>.
 
+Shared Highlighters
+~~~~~~~~~~~~~~~~~~~
+
+Highlighters are often defined for a specific filetype, and it makes then sense to
+share the highlighters between all the windows on the same filetypes.
+
+A shared highlighter can be defined with
+
+-----------------------
+defhl <shared_hl_name>
+-----------------------
+
+Highlighters can be added to it using the regular +:addhl+ command, with the
++-def-group <shared_hl_name>+ option.
+
+It can then be referenced in a window using the +ref+ highlighter.
+
+--------------------------
+addhl ref <shared_hl_name>
+--------------------------
+
 Hooks
 -----
 
