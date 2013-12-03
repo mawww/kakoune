@@ -403,6 +403,21 @@ HighlighterAndId highlighter_group_factory(HighlighterParameters params)
     return HighlighterAndId(params[0], HighlighterGroup());
 }
 
+HighlighterAndId reference_factory(HighlighterParameters params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+
+    const String& name = params[0];
+
+    // throw if not found
+    DefinedHighlighters::instance().get_group(name, '/');
+
+    return HighlighterAndId(name,
+                            [name](const Window& window, DisplayBuffer& display_buffer)
+                            { DefinedHighlighters::instance().get_group(name, '/')(window, display_buffer); });
+}
+
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -413,6 +428,7 @@ void register_highlighters()
     registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
     registry.register_func("flag_lines", flag_lines_factory);
+    registry.register_func("ref", reference_factory);
 }
 
 }

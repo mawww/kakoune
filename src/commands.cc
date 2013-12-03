@@ -240,20 +240,18 @@ void set_buffer_name(CommandParameters params, Context& context)
         throw runtime_error("unable to change buffer name to " + parser[0]);
 }
 
-template<typename Group>
-Group& get_group(Group& root, const String& group_path)
+void define_highlighter(CommandParameters params, Context& context)
 {
-    auto it = find(group_path, '/');
-    Group& group = root.get_group(String(group_path.begin(), it));
-    if (it != group_path.end())
-        return get_group(group, String(it+1, group_path.end()));
-    else
-        return group;
+    if (params.size() != 1)
+        throw wrong_argument_count();
+
+    const String& name = params[0];
+    DefinedHighlighters::instance().append({name, HighlighterGroup{}});
 }
 
 void add_highlighter(CommandParameters params, Context& context)
 {
-    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1);
+    ParametersParser parser(params, { { "group", true }, { "def-group", true } }, ParametersParser::Flags::None, 1);
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     auto begin = parser.begin();
@@ -262,22 +260,32 @@ void add_highlighter(CommandParameters params, Context& context)
     for (++begin; begin != parser.end(); ++begin)
         highlighter_params.push_back(*begin);
 
-    Window& window = context.window();
-    HighlighterGroup& group = parser.has_option("group") ?
-        get_group(window.highlighters(), parser.option_value("group"))
-      : window.highlighters();
+    if (parser.has_option("group") and parser.has_option("def-group"))
+        throw runtime_error("-group and -def-group cannot be specified together");
 
-    group.append(registry[name](highlighter_params));
+    HighlighterGroup* group = nullptr;
+
+    if (parser.has_option("def-group"))
+        group = &DefinedHighlighters::instance().get_group(parser.option_value("def-group"), '/');
+    else
+    {
+        HighlighterGroup& window_hl = context.window().highlighters();
+        group = parser.has_option("group") ?
+                &window_hl.get_group(parser.option_value("group"), '/')
+              : &window_hl;
+    }
+
+    group->append(registry[name](highlighter_params));
 }
 
 void rm_highlighter(CommandParameters params, Context& context)
 {
     ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
 
-    Window& window = context.window();
+    HighlighterGroup& window_hl = context.window().highlighters();
     HighlighterGroup& group = parser.has_option("group") ?
-        get_group(window.highlighters(), parser.option_value("group"))
-      : window.highlighters();
+        window_hl.get_group(parser.option_value("group"), '/')
+      : window_hl;
 
     group.remove(parser[0]);
 }
@@ -732,7 +740,7 @@ CommandCompleter group_rm_completer(GetRootGroup get_root_group)
         if (token_to_complete == 1 and params[0] == "-group")
             return root_group.complete_group_id(arg, pos_in_token);
         else if (token_to_complete == 2 and params[0] == "-group")
-            return get_group(root_group, params[1]).complete_id(arg, pos_in_token);
+            return root_group.get_group(params[1], '/').complete_id(arg, pos_in_token);
         return root_group.complete_id(arg, pos_in_token);
     };
 }
@@ -816,6 +824,7 @@ void register_commands()
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
     cm.register_commands({ "ah", "addhl" }, add_highlighter, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
     cm.register_commands({ "rh", "rmhl" }, rm_highlighter, CommandFlags::None, group_rm_completer(get_highlighters));
+    cm.register_commands({ "dh", "defhl" }, define_highlighter);
 
     cm.register_command("hook", add_hook);
     cm.register_command("rmhooks", rm_hooks);

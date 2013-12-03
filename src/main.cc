@@ -270,6 +270,7 @@ int kakoune(memoryview<String> params)
     BufferManager       buffer_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
+    DefinedHighlighters defined_highlighters;
     ColorRegistry       color_registry;
     ClientManager       client_manager;
 

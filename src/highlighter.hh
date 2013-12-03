@@ -32,6 +32,11 @@ struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
                              Singleton<HighlighterRegistry>
 {};
 
+struct DefinedHighlighters : public HighlighterGroup,
+                             public Singleton<DefinedHighlighters>
+{
+};
+
 }
 
 #endif // highlighter_hh_INCLUDED
