@@ -9,25 +9,30 @@ hook global BufSetOption mimetype=text/x-c(\+\+)? %{
 def -hidden _cpp_indent_on_new_line %~
     eval -draft -itersel %_
         # preserve previous line indent
-        try %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P }
+        try %{ exec -draft <space>K<a-&> }
         # indent after lines ending with { or (
-        try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ]
+        try %[ exec -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white space son previous line
-        try %{ exec -draft k<a-x>s\h+$<ret>d }
+        try %{ exec -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
-        try %{ exec -draft [(<a-k>\`\([^\n]+\n[^\n]*\n?\'<ret>s\`\(\h*.|.\'<ret>& }
+        try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> s \`\(\h*.|.\' <ret> & }
         # copy // comments prefix
-        try %{ exec -draft <c-s>k<a-x>s^\h*\K(/{2,})<ret>y<c-o>P }
+        try %{ exec -draft <c-s>k<a-x> s ^\h*\K(/{2,}) <ret> y<c-o>P }
         # indent after visibility specifier
-        try %[ exec -draft k<a-x><a-k>^\h*(public|private|protected):\h*$<ret>j<a-gt> ]
+        try %[ exec -draft k<a-x> <a-k> ^\h*(public|private|protected):\h*$ <ret> j<a-gt> ]
         # indent after if|else|while|for
-        try %[ exec -draft <a-F>)MB<a-k>\`(if|else|while|for)\h*\(.*\)\n\h*\n\'<ret><a-space><space><a-gt> ]
+        try %[ exec -draft <space><a-F>)MB <a-k> \`(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\' <ret> s \`|.\' <ret> 1<a-&>1<a-space><a-gt> ]
     _
 ~
 
+def -hidden _cpp_indent_on_opening_curly_brace %[
+    # align indent with opening paren when { is entered on a new line after the closing paren
+    try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{ <ret> s \`|.\' <ret> 1<a-&> ]
+]
+
 def -hidden _cpp_indent_on_closing_curly_brace %[
     # deindent on insert } alone on a line
-    try %[ exec -draft <a-h><a-k>^\h+\}$<ret>< ]
+    try %[ exec -draft <a-h><a-k> ^\h+\}$ <ret> < ]
     # add ; after } if class or struct definition
     try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]
@@ -46,6 +51,7 @@ hook global WinSetOption filetype=cpp %[
     hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
 
     hook window InsertChar \n -id cpp-indent _cpp_indent_on_new_line
+    hook window InsertChar \{ -id cpp-indent _cpp_indent_on_opening_curly_brace
     hook window InsertChar \} -id cpp-indent _cpp_indent_on_closing_curly_brace
 ]
 
