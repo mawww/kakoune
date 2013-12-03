@@ -25,7 +25,7 @@ void ColorRegistry::register_alias(const String& name, const String& colordesc,
                                    bool override)
 {
     if (not override and m_aliases.find(name) != m_aliases.end())
-       throw runtime_error("alias '" + name + "' already defined");
+        throw runtime_error("alias '" + name + "' already defined");
 
     if (name.empty() or
         find_if(name, [](char c){ return not isalnum(c); }) != name.end())

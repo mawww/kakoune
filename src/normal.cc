@@ -251,8 +251,8 @@ void command(Context& context, int)
         ":", get_color("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
         [](const String& cmdline, PromptEvent event, Context& context) {
-             if (event == PromptEvent::Validate)
-                 CommandManager::instance().execute(cmdline, context);
+            if (event == PromptEvent::Validate)
+                CommandManager::instance().execute(cmdline, context);
         });
 }
 

@@ -350,7 +350,7 @@ int main(int argc, char* argv[])
 
         std::vector<String> params;
         for (size_t i = 1; i < argc; ++i)
-             params.push_back(argv[i]);
+            params.push_back(argv[i]);
 
         kakoune(params);
     }

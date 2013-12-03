@@ -56,7 +56,7 @@ public:
     utf8_iterator operator+(CharCount count) const
     {
         if (count < 0)
-           return operator-(-count);
+            return operator-(-count);
 
         utf8_iterator res = *this;
         while (count--)
@@ -67,7 +67,7 @@ public:
     utf8_iterator operator-(CharCount count) const
     {
         if (count < 0)
-           return operator+(-count);
+            return operator+(-count);
 
         utf8_iterator res = *this;
         while (count--)
