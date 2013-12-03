@@ -37,15 +37,17 @@ def -hidden _cpp_indent_on_closing_curly_brace %[
     try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]
 
+defhl cpp
+addhl -def-group cpp regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
+addhl -def-group cpp regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
+addhl -def-group cpp regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
+addhl -def-group cpp regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
+addhl -def-group cpp regex "^\h*?#.*?(?<!\\)$" 0:macro
+addhl -def-group cpp regex "(?<!')\".*?(?<!\\)(\\\\)*\"" 0:string
+addhl -def-group cpp regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
+
 hook global WinSetOption filetype=cpp %[
-    addhl group cpp-highlight
-    addhl -group cpp-highlight regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
-    addhl -group cpp-highlight regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
-    addhl -group cpp-highlight regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
-    addhl -group cpp-highlight regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
-    addhl -group cpp-highlight regex "^\h*?#.*?(?<!\\)$" 0:macro
-    addhl -group cpp-highlight regex "(?<!')\".*?(?<!\\)(\\\\)*\"" 0:string
-    addhl -group cpp-highlight regex "(//[^\n]*\n)|(/\*.*?(\*/|\'))" 0:comment
+    addhl ref cpp
 
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
@@ -56,7 +58,7 @@ hook global WinSetOption filetype=cpp %[
 ]
 
 hook global WinSetOption filetype=(?!cpp).* %{
-    rmhl cpp-highlight
+    rmhl cpp
     rmhooks window cpp-indent
     rmhooks window cpp-hooks
 }
