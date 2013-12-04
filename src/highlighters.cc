@@ -73,9 +73,8 @@ public:
 
     void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
-        const Buffer& buffer = window.buffer();
-        update_cache_ifn(buffer, display_buffer.range());
-        for (auto& match : m_caches[&buffer].m_matches)
+        auto& cache = update_cache_ifn(window.buffer(), display_buffer.range());
+        for (auto& match : cache.m_matches)
         {
             for (size_t n = 0; n < match.size(); ++n)
             {
@@ -101,14 +100,14 @@ private:
     Regex     m_regex;
     ColorSpec m_colors;
 
-    void update_cache_ifn(const Buffer& buffer, const BufferRange& range)
+    MatchesCache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
         MatchesCache& cache = m_caches[&buffer];
 
         if (buffer.timestamp() == cache.m_timestamp and
             range.first >= cache.m_range.first and
             range.second <= cache.m_range.second)
-           return;
+           return cache;
 
         cache.m_range.first  = buffer.clamp({range.first.line - 10, 0});
         cache.m_range.second = buffer.next(buffer.clamp({range.second.line + 10, INT_MAX}));
@@ -125,6 +124,7 @@ private:
             for (auto& sub : *re_it)
                 match.emplace_back(sub.first.coord(), sub.second.coord());
         }
+        return cache;
     }
 };
 
@@ -431,10 +431,34 @@ public:
 
     void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
-        auto& buffer = window.buffer();
+        auto& cache = update_cache_ifn(window.buffer());
+        for (auto& pair : cache.regions)
+            highlight_range(display_buffer, pair.first, pair.second, true,
+                            [this](DisplayAtom& atom) { atom.colors = m_colors; });
+    }
+private:
+    String m_begin;
+    String m_end;
+    String m_ignore_prefix;
+    ColorPair m_colors;
+
+    struct RegionCache
+    {
+        size_t timestamp = -1;
+        std::vector<std::pair<BufferCoord, BufferCoord>> regions;
+    };
+    std::unordered_map<const Buffer*, RegionCache> m_cache;
+
+    RegionCache& update_cache_ifn(const Buffer& buffer)
+    {
+        RegionCache& cache = m_cache[&buffer];
+        if (cache.timestamp == buffer.timestamp())
+            return cache;
+
+        cache.regions.clear();
         auto end = buffer.end();
         auto reg_beg = std::search(buffer.begin(), end,
-                                    m_begin.begin(), m_begin.end());
+                                   m_begin.begin(), m_begin.end());
         while (reg_beg != end)
         {
             auto reg_end = reg_beg + m_begin.length();
@@ -448,18 +472,14 @@ public:
                    std::equal(m_ignore_prefix.begin(), m_ignore_prefix.end(),
                               reg_end - m_end.length() - m_ignore_prefix.length()));
 
-            highlight_range(display_buffer, reg_beg.coord(), reg_end.coord(), true,
-                            [this](DisplayAtom& atom) { atom.colors = m_colors; });
+            cache.regions.emplace_back(reg_beg.coord(), reg_end.coord());
             if (reg_end == end)
                 break;
             reg_beg = std::search(reg_end, end, m_begin.begin(), m_begin.end());
         }
+        cache.timestamp = buffer.timestamp();
+        return cache;
     }
-private:
-    String m_begin;
-    String m_end;
-    String m_ignore_prefix;
-    ColorPair m_colors;
 };
 
 HighlighterAndId region_factory(HighlighterParameters params)
