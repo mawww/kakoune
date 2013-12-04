@@ -418,6 +418,65 @@ HighlighterAndId reference_factory(HighlighterParameters params)
                             { DefinedHighlighters::instance().get_group(name, '/')(window, display_buffer); });
 }
 
+struct RegionHighlighter
+{
+public:
+    RegionHighlighter(String begin, String end, String ignore_prefix,
+                      ColorPair colors)
+        : m_begin(std::move(begin)),
+          m_end(std::move(end)),
+          m_ignore_prefix(std::move(ignore_prefix)),
+          m_colors(colors)
+    {}
+
+    void operator()(const Window& window, DisplayBuffer& display_buffer)
+    {
+        auto& buffer = window.buffer();
+        auto end = buffer.end();
+        auto reg_beg = std::search(buffer.begin(), end,
+                                    m_begin.begin(), m_begin.end());
+        while (reg_beg != end)
+        {
+            auto reg_end = reg_beg + m_begin.length();
+            do
+            {
+                reg_end = std::search(reg_end, end, m_end.begin(), m_end.end());
+                if (reg_end != end)
+                    reg_end += m_end.length();
+            }
+            while (reg_end != end and not m_ignore_prefix.empty() and
+                   std::equal(m_ignore_prefix.begin(), m_ignore_prefix.end(),
+                              reg_end - m_end.length() - m_ignore_prefix.length()));
+
+            highlight_range(display_buffer, reg_beg.coord(), reg_end.coord(), true,
+                            [this](DisplayAtom& atom) { atom.colors = m_colors; });
+            if (reg_end == end)
+                break;
+            reg_beg = std::search(reg_end, end, m_begin.begin(), m_begin.end());
+        }
+    }
+private:
+    String m_begin;
+    String m_end;
+    String m_ignore_prefix;
+    ColorPair m_colors;
+};
+
+HighlighterAndId region_factory(HighlighterParameters params)
+{
+    if (params.size() != 3 and params.size() != 4)
+        throw runtime_error("wrong parameter count");
+
+    const String& begin = params[0];
+    const String& end = params[1];
+    const String& ignore_prefix = params.size() == 4 ? params[2] : "";
+    const ColorPair colors = get_color(params.back());
+
+    return HighlighterAndId("region("+begin+","+end+","+ignore_prefix+")",
+                            RegionHighlighter{begin, end, ignore_prefix, colors});
+}
+
+
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -429,6 +488,7 @@ void register_highlighters()
     registry.register_func("group", highlighter_group_factory);
     registry.register_func("flag_lines", flag_lines_factory);
     registry.register_func("ref", reference_factory);
+    registry.register_func("region", region_factory);
 }
 
 }
