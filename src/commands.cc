@@ -440,7 +440,16 @@ void exec_commands_in_file(CommandParameters params,
         throw wrong_argument_count();
 
     String file_content = read_file(parse_filename(params[0]));
-    CommandManager::instance().execute(file_content, context);
+    try
+    {
+        CommandManager::instance().execute(file_content, context);
+    }
+    catch (Kakoune::runtime_error& err)
+    {
+        write_debug("error while executing commands in file '" + params[0]
+                    + "'\n    " + err.what());
+        throw;
+    }
 }
 
 static OptionManager& get_options(const String& scope, const Context& context)
