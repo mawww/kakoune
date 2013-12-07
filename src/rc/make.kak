@@ -6,13 +6,11 @@ def -shell-params make %{ %sh{
      mkfifo ${output}
      ( eval ${kak_opt_makecmd} $@ >& ${output} ) >& /dev/null < /dev/null &
 
-     [[ -n "$kak_opt_toolsclient" ]] && echo "eval -client '$kak_opt_toolsclient' %{"
-
-     echo "edit! -fifo ${output} *make*
-           set buffer filetype make
-           hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
-
-     [[ -n "$kak_opt_toolsclient" ]] && echo "}"
+     echo "eval -try-client '$kak_opt_toolsclient' %{
+               edit! -fifo ${output} *make*
+               set buffer filetype make
+               hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+           }"
 }}
 
 defhl make

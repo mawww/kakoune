@@ -14,14 +14,7 @@ hook global WinSetOption filetype=(?!man).* %{
     rmhooks window man-hooks
 }
 
-def -shell-params man %{ %sh{
-    [[ -z "$@" ]] && set -- "$kak_selection"
-    # eval in the docsclient context so that kak_window_width is the good one
-    if [[ -n "$kak_opt_docsclient" && "$kak_client" != "$kak_opt_docsclient" ]]; then
-        echo "eval -client $kak_opt_docsclient %{ man $@ }"
-        exit
-    fi
-
+def -hidden -shell-params _man %{ %sh{
     tmpfile=$(mktemp /tmp/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" | col -b > ${tmpfile}
     if (( ${PIPESTATUS[0]} == 0 )); then
@@ -33,4 +26,9 @@ def -shell-params man %{ %sh{
        echo "echo %{man '$@' failed: see *debug* buffer for details }"
        rm ${tmpfile}
     fi
-}}
+} }
+
+def -shell-params man %{ %sh{
+    [[ -z "$@" ]] && set -- "$kak_selection"
+    echo "eval -try-client %opt{docsclient} _man $@"
+} }

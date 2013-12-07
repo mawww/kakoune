@@ -11,13 +11,11 @@ def -shell-params -file-completion \
          ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
      fi
 
-     [[ -n "$kak_opt_toolsclient" ]] && echo "eval -client '$kak_opt_toolsclient' %{"
-
-     echo "edit! -fifo ${output} *grep*
-           set buffer filetype grep
-           hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }"
-
-     [[ -n "$kak_opt_toolsclient" ]] && echo "}"
+     echo "eval -try-client '$kak_opt_toolsclient' %{
+               edit! -fifo ${output} *grep*
+               set buffer filetype grep
+               hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+           }"
 }}
 
 hook global WinSetOption filetype=grep %{
