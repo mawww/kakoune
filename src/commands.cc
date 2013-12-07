@@ -551,17 +551,25 @@ void map_key(CommandParameters params, Context& context)
 template<typename Func>
 void context_wrap(CommandParameters params, Context& context, Func func)
 {
-    ParametersParser parser(params, { { "client", true }, { "draft", false }, { "itersel", false } },
+    ParametersParser parser(params, { { "client", true }, { "try-client", true },
+                                      { "draft", false }, { "itersel", false } },
                             ParametersParser::Flags::OptionsOnlyAtStart, 1);
 
-    Context& real_context = parser.has_option("client") ?
-        ClientManager::instance().get_client(parser.option_value("client")).context()
-      : context;
+    ClientManager& cm = ClientManager::instance();
+    Context* real_context = &context;
+    if (parser.has_option("client"))
+        real_context = &cm.get_client(parser.option_value("client")).context();
+    else if (parser.has_option("try-client"))
+    {
+        Client* client = cm.get_client_ifp(parser.option_value("try-client"));
+        if (client)
+            real_context = &client->context();
+    }
 
     if (parser.has_option("draft"))
     {
-        Editor& editor = real_context.editor();
-        InputHandler input_handler(editor, real_context.name());
+        Editor& editor = real_context->editor();
+        InputHandler input_handler(editor, real_context->name());
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
         auto restore_sels = on_scope_end([&]{ editor.select(sels); });
 
@@ -580,12 +588,12 @@ void context_wrap(CommandParameters params, Context& context, Func func)
     {
         if (parser.has_option("itersel"))
             throw runtime_error("-itersel makes no sense without -draft");
-        func(parser, real_context);
+        func(parser, *real_context);
     }
 
     // force redraw of this client window
-    if (parser.has_option("client") and real_context.has_window())
-        real_context.window().forget_timestamp();
+    if (real_context != &context and real_context->has_window())
+        real_context->window().forget_timestamp();
 }
 
 void exec_string(CommandParameters params, Context& context)
