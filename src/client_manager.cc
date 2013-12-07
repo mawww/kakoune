@@ -139,14 +139,22 @@ bool ClientManager::validate_client_name(const String& name) const
     return it == m_clients.end();
 }
 
-Client& ClientManager::get_client(const String& name)
+Client* ClientManager::get_client_ifp(const String& name)
 {
     for (auto& client : m_clients)
     {
         if (client->context().name() == name)
-            return *client;
+            return client.get();
     }
-    throw runtime_error("no client named: " + name);
+    return nullptr;
+}
+
+Client& ClientManager::get_client(const String& name)
+{
+    Client* client = get_client_ifp(name);
+    if (not client)
+        throw runtime_error("no client named: " + name);
+    return *client;
 }
 
 void ClientManager::redraw_clients() const

@@ -25,6 +25,7 @@ public:
 
     void redraw_clients() const;
 
+    Client*  get_client_ifp(const String& name);
     Client&  get_client(const String& name);
     bool validate_client_name(const String& name) const;
     void remove_client(Client& client);
