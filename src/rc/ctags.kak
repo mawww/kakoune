@@ -60,7 +60,7 @@ def ctags-disable-autoinfo %{ rmhooks window ctags-autoinfo }
 decl str ctagsopts "-R ."
 
 def gentags %{
-    echo launching tag generation in the background
+    echo -color Information "launching tag generation in the background"
     %sh{ (
         if ctags -f .tags.kaktmp ${kak_opt_ctagsopts}; then
             mv .tags.kaktmp tags
@@ -68,6 +68,6 @@ def gentags %{
         else
             msg="tags generation failed"
         fi
-        echo "eval -client $kak_client echo ${msg}" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+        echo "eval -client $kak_client echo -color Information '${msg}'" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
     ) >& /dev/null < /dev/null & }
 }
