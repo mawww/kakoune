@@ -122,6 +122,7 @@ class DisplayLine
 public:
     using iterator = AtomList::iterator;
     using const_iterator = AtomList::const_iterator;
+    using value_type = AtomList::value_type;
 
     DisplayLine() = default;
     DisplayLine(AtomList atoms);
@@ -143,6 +144,7 @@ public:
     iterator split(iterator it, BufferCoord pos);
 
     iterator insert(iterator it, DisplayAtom atom);
+    iterator erase(iterator beg, iterator end);
     void     push_back(DisplayAtom atom);
 
     // remove first_char from the begining of the line, and make sure

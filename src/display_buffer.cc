@@ -61,6 +61,13 @@ void DisplayLine::push_back(DisplayAtom atom)
     m_atoms.push_back(std::move(atom));
 }
 
+DisplayLine::iterator DisplayLine::erase(iterator beg, iterator end)
+{
+    iterator res = m_atoms.erase(beg, end);
+    compute_range();
+    return res;
+}
+
 void DisplayLine::optimize()
 {
     if (m_atoms.empty())
@@ -142,9 +149,11 @@ void DisplayLine::trim(CharCount first_char, CharCount char_count)
     compute_range();
 }
 
+constexpr BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
+
 void DisplayLine::compute_range()
 {
-    m_range = { {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
+    m_range = init_range;
     for (auto& atom : m_atoms)
     {
         if (not atom.has_buffer_range())
@@ -152,17 +161,21 @@ void DisplayLine::compute_range()
         m_range.first  = std::min(m_range.first, atom.begin());
         m_range.second = std::max(m_range.second, atom.end());
     }
+    if (m_range == init_range)
+        m_range = { { 0, 0 }, { 0, 0 } };
+    kak_assert(m_range.first <= m_range.second);
 }
 
 void DisplayBuffer::compute_range()
 {
-    m_range.first  = {INT_MAX,INT_MAX};
-    m_range.second = {0,0};
+    m_range = init_range;
     for (auto& line : m_lines)
     {
         m_range.first  = std::min(line.range().first, m_range.first);
         m_range.second = std::max(line.range().second, m_range.second);
     }
+    if (m_range == init_range)
+        m_range = { { 0, 0 }, { 0, 0 } };
     kak_assert(m_range.first <= m_range.second);
 }
 

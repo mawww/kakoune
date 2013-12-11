@@ -61,6 +61,89 @@ void highlight_range(DisplayBuffer& display_buffer,
     }
 }
 
+template<typename T>
+void apply_highlighter(const Window& window,
+                       DisplayBuffer& display_buffer,
+                       BufferCoord begin, BufferCoord end,
+                       T&& highlighter)
+{
+    using LineIterator = DisplayBuffer::LineList::iterator;
+    LineIterator first_line;
+    std::vector<DisplayLine::iterator> insert_pos;
+    auto line_end = display_buffer.lines().end();
+
+    DisplayBuffer region_display;
+    auto& region_lines = region_display.lines();
+    for (auto line_it = display_buffer.lines().begin(); line_it != line_end; ++line_it)
+    {
+        auto& line = *line_it;
+        auto& range = line.range();
+        if (range.second <= begin or  end < range.first)
+            continue;
+
+        if (region_lines.empty())
+            first_line = line_it;
+        region_lines.emplace_back();
+        insert_pos.emplace_back();
+
+        if (range.first < begin or range.second > end)
+        {
+            size_t beg_idx = 0;
+            size_t end_idx = line.atoms().size();
+
+            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+            {
+                if (not atom_it->has_buffer_range() or end <= atom_it->begin() or begin >= atom_it->end())
+                    continue;
+
+                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedBufferRange;
+                if (atom_it->begin() <= begin)
+                {
+                    if (is_replaced or atom_it->begin() == begin)
+                        beg_idx = atom_it - line.begin();
+                    else
+                    {
+                        atom_it = ++line.split(atom_it, begin);
+                        beg_idx = atom_it - line.begin();
+                        ++end_idx;
+                    }
+                }
+
+                if (atom_it->end() >= end)
+                {
+                    if (is_replaced or atom_it->end() == end)
+                        beg_idx = atom_it - line.begin();
+                    else
+                    {
+                        atom_it = ++line.split(atom_it, end);
+                        end_idx = atom_it - line.begin();
+                    }
+                }
+            }
+            std::move(line.begin() + beg_idx, line.begin() + end_idx,
+                      std::back_inserter(region_lines.back()));
+            insert_pos.back() = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
+        }
+        else
+        {
+            region_lines.back() = std::move(line);
+            insert_pos.back() = line.begin();
+        }
+    }
+
+    region_display.compute_range();
+    highlighter(window, region_display);
+
+    for (size_t i = 0; i < region_lines.size(); ++i)
+    {
+        auto& line = *(first_line + i);
+        auto pos = insert_pos[i];
+        for (auto& atom : region_lines[i])
+            pos = ++line.insert(pos, std::move(atom));
+    }
+    display_buffer.compute_range();
+}
+
 typedef std::unordered_map<size_t, const ColorPair*> ColorSpec;
 
 class RegexColorizer
@@ -418,29 +501,29 @@ HighlighterAndId reference_factory(HighlighterParameters params)
                             { DefinedHighlighters::instance().get_group(name, '/')(window, display_buffer); });
 }
 
+template<typename HighlightFunc>
 struct RegionHighlighter
 {
 public:
     RegionHighlighter(String begin, String end, String ignore_prefix,
-                      ColorPair colors)
+                      HighlightFunc func)
         : m_begin(std::move(begin)),
           m_end(std::move(end)),
           m_ignore_prefix(std::move(ignore_prefix)),
-          m_colors(colors)
+          m_func(std::move(func))
     {}
 
     void operator()(const Window& window, DisplayBuffer& display_buffer)
     {
         auto& cache = update_cache_ifn(window.buffer());
         for (auto& pair : cache.regions)
-            highlight_range(display_buffer, pair.first, pair.second, true,
-                            [this](DisplayAtom& atom) { atom.colors = m_colors; });
+            m_func(window, display_buffer, pair.first, pair.second);
     }
 private:
     String m_begin;
     String m_end;
     String m_ignore_prefix;
-    ColorPair m_colors;
+    HighlightFunc m_func;
 
     struct RegionCache
     {
@@ -482,6 +565,15 @@ private:
     }
 };
 
+template<typename HighlightFunc>
+RegionHighlighter<HighlightFunc>
+make_region_highlighter(String begin, String end, String ignore_prefix,
+                        HighlightFunc func)
+{
+    return RegionHighlighter<HighlightFunc>(std::move(begin), std::move(end),
+                                            std::move(ignore_prefix), std::move(func));
+}
+
 HighlighterAndId region_factory(HighlighterParameters params)
 {
     if (params.size() != 3 and params.size() != 4)
@@ -492,10 +584,37 @@ HighlighterAndId region_factory(HighlighterParameters params)
     const String& ignore_prefix = params.size() == 4 ? params[2] : "";
     const ColorPair colors = get_color(params.back());
 
-    return HighlighterAndId("region("+begin+","+end+","+ignore_prefix+")",
-                            RegionHighlighter{begin, end, ignore_prefix, colors});
+    auto func = [colors](const Window&, DisplayBuffer& display_buffer,
+                         BufferCoord begin, BufferCoord end)
+    {
+        highlight_range(display_buffer, begin, end, true,
+                        [&colors](DisplayAtom& atom) { atom.colors = colors; });
+    };
+
+    return HighlighterAndId("region(" + begin + "," + end + "," + ignore_prefix + ")",
+                            make_region_highlighter(begin, end, ignore_prefix, func));
 }
 
+HighlighterAndId region_ref_factory(HighlighterParameters params)
+{
+    if (params.size() != 3 and params.size() != 4)
+        throw runtime_error("wrong parameter count");
+
+    const String& begin = params[0];
+    const String& end = params[1];
+    const String& ignore_prefix = params.size() == 4 ? params[2] : "";
+    const String& name = params.back();
+
+    auto func = [name](const Window& window, DisplayBuffer& display_buffer,
+                      BufferCoord begin, BufferCoord end)
+    {
+        HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
+        apply_highlighter(window, display_buffer, begin, end, ref);
+    };
+
+    return HighlighterAndId("regionref(" + begin + "," + end + "," + ignore_prefix + "," + name + ")",
+                            make_region_highlighter(begin, end, ignore_prefix, func));
+}
 
 void register_highlighters()
 {
@@ -509,6 +628,7 @@ void register_highlighters()
     registry.register_func("flag_lines", flag_lines_factory);
     registry.register_func("ref", reference_factory);
     registry.register_func("region", region_factory);
+    registry.register_func("region_ref", region_ref_factory);
 }
 
 }
