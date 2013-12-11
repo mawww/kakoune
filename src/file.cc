@@ -205,6 +205,8 @@ static void write(int fd, memoryview<char> data, const String& filename)
 
 void write_buffer_to_file(Buffer& buffer, const String& filename)
 {
+    buffer.run_hook_in_own_context("BufWritePre", buffer.name());
+
     String eolformat = buffer.options()["eolformat"].get<String>();
     if (eolformat == "crlf")
         eolformat = "\r\n";
@@ -231,6 +233,8 @@ void write_buffer_to_file(Buffer& buffer, const String& filename)
     }
     if ((buffer.flags() & Buffer::Flags::File) and filename == buffer.name())
         buffer.notify_saved();
+
+    buffer.run_hook_in_own_context("BufWritePost", buffer.name());
 }
 
 String find_file(const String& filename, memoryview<String> paths)

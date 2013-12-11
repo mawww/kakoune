@@ -580,6 +580,10 @@ existing hooks are:
  * +BufOpen+: A buffer for an existing file has been created, filename is
        used for filtering
  * +BufCreate+: A buffer has been created, filename is used for filtering
+ * +BufWritePre+: Executre just before a buffer is written, filename is
+       used for filtering.
+ * +BufWritePost+: Executre just after a buffer is written, filename is
+       used for filtering.
  * +RuntimeError+: an error was encountered while executing an user command
        the error message is used for filtering
  * +KakBegin+: Kakoune started, this is called just after reading the user
