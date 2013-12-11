@@ -112,6 +112,11 @@ void register_env_vars()
             [](const String& name, const Context& context)
             { return to_string(context.editor().main_selection().last().column + 1); }
         }, {
+            "cursor_char_column",
+            [](const String& name, const Context& context)
+            { auto coord = context.editor().main_selection().last();
+              return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
+        }, {
             "selection_desc",
             [](const String& name, const Context& context)
             { auto& sel = context.editor().main_selection();
