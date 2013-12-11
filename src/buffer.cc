@@ -45,15 +45,15 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
     if (flags & Flags::File)
     {
         if (flags & Flags::New)
-            m_hooks.run_hook("BufNew", m_name, hook_handler.context());
+            run_hook_in_own_context("BufNew", m_name);
         else
         {
             kak_assert(m_fs_timestamp != InvalidTime);
-            m_hooks.run_hook("BufOpen", m_name, hook_handler.context());
+            run_hook_in_own_context("BufOpen", m_name);
         }
     }
 
-    m_hooks.run_hook("BufCreate", m_name, hook_handler.context());
+    run_hook_in_own_context("BufCreate", m_name);
 
     // now we may begin to record undo data
     m_flags = flags;
@@ -64,11 +64,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
 
 Buffer::~Buffer()
 {
-    {
-        Editor hook_editor{*this};
-        InputHandler hook_handler(hook_editor);
-        m_hooks.run_hook("BufClose", m_name, hook_handler.context());
-    }
+    run_hook_in_own_context("BufClose", m_name);
 
     m_options.unregister_watcher(*this);
     BufferManager::instance().unregister_buffer(*this);
@@ -762,9 +758,15 @@ void Buffer::set_fs_timestamp(time_t ts)
 
 void Buffer::on_option_changed(const Option& option)
 {
-    String desc = option.name() + "=" + option.get_as_string();
+    run_hook_in_own_context("BufSetOption",
+                            option.name() + "=" + option.get_as_string());
+}
+
+void Buffer::run_hook_in_own_context(const String& hook_name, const String& param)
+{
     Editor hook_editor{*this};
     InputHandler hook_handler(hook_editor);
-    m_hooks.run_hook("BufSetOption", desc, hook_handler.context());
+    m_hooks.run_hook(hook_name, param, hook_handler.context());
 }
+
 }

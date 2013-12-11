@@ -164,6 +164,8 @@ public:
     KeymapManager&       keymaps()       { return m_keymaps; }
     const KeymapManager& keymaps() const { return m_keymaps; }
 
+    void run_hook_in_own_context(const String& hook_name, const String& param);
+
     std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
 
     void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
