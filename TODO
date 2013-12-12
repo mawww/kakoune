@@ -19,13 +19,7 @@
 
   - folding support
 
-  - Support defining and reusing highlighters
-
-    . defhl -> add hl to a global group +
-      'addhl ref ...' references a highlighter in the global group
-
-    . Conditional ref highlighter (use php highlighter in <?php > blocks,
-      use html highlighter outside
+  - Hierarchical, highlight some way inside a region, another way outside
 
   - other types of highlighters (like for correctly supporting nesting,
     which regex are bad at), faster as well.
@@ -123,7 +117,3 @@
 * Fix 'n' command with inverted selection
 
 * basic shell completion (complete commands from $PATH, then complete filenames)
-
-* align to a specified selection (rather than le rightmost one) so that closing
-  curly braces can easily be made to align with their opening one.
-  
