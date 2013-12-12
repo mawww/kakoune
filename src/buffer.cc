@@ -673,6 +673,12 @@ BufferCoord Buffer::char_next(BufferCoord coord) const
     {
         auto& line = m_lines[coord.line].content;
         coord.column += utf8::codepoint_size(line.begin() + (int)coord.column);
+        // Handle invalid utf-8
+        if (coord.column >= line.length())
+        {
+            ++coord.line;
+            coord.column = 0;
+        }
     }
     else if (coord.line == m_lines.size() - 1)
         coord.column = m_lines.back().length();
