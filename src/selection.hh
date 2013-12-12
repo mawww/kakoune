@@ -71,6 +71,11 @@ private:
     CaptureList m_captures;
 };
 
+static bool compare_selections(const Selection& lhs, const Selection& rhs)
+{
+    return lhs.min() < rhs.min();
+}
+
 struct SelectionList : std::vector<Selection>
 {
     SelectionList() = default;
@@ -80,6 +85,52 @@ struct SelectionList : std::vector<Selection>
     void update_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end);
 
     void check_invariant() const;
+
+    const Selection& main() const { return (*this)[m_main]; }
+    Selection& main() { return (*this)[m_main]; }
+    size_t main_index() const { return m_main; }
+    void set_main_index(size_t main) { kak_assert(main < size()); m_main = main; }
+
+    void rotate_main(int count) { m_main = (m_main + count) % size(); }
+
+    template<typename OverlapsFunc>
+    void merge_overlapping(OverlapsFunc overlaps)
+    {
+        kak_assert(std::is_sorted(begin(), end(), compare_selections));
+        for (size_t i = 0; i+1 < size() and size() > 1;)
+        {
+            if (overlaps((*this)[i], (*this)[i+1]))
+            {
+                (*this)[i].merge_with((*this)[i+1]);
+                erase(begin() + i + 1);
+                if (i + 1 <= m_main)
+                    --m_main;
+            }
+            else
+               ++i;
+        }
+    }
+
+    void sort_and_merge_overlapping()
+    {
+        if (size() == 1)
+            return;
+
+        const auto& main = this->main();
+        const auto main_begin = main.min();
+        m_main = std::count_if(begin(), end(), [&](const Selection& sel) {
+                                   auto begin = sel.min();
+                                   if (begin == main_begin)
+                                       return &sel < &main;
+                                   else
+                                       return begin < main_begin;
+                               });
+        std::stable_sort(begin(), end(), compare_selections);
+        merge_overlapping(overlaps);
+    }
+
+private:
+    size_t m_main = 0;
 };
 
 }

@@ -1082,7 +1082,7 @@ private:
                 }
             }
         }
-        sort_and_merge_overlapping(editor.m_selections, editor.m_main_sel);
+        editor.m_selections.sort_and_merge_overlapping();
         editor.check_invariant();
     }
 

@@ -14,11 +14,8 @@ namespace Kakoune
 Editor::Editor(Buffer& buffer)
     : m_buffer(&buffer),
       m_edition_level(0),
-      m_selections(buffer)
-{
-    m_selections.push_back(Selection({}, {}));
-    m_main_sel = 0;
-}
+      m_selections(buffer, { {{},{}} })
+{}
 
 void avoid_eol(const Buffer& buffer, BufferCoord& coord)
 {
@@ -124,50 +121,6 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-static bool compare_selections(const Selection& lhs, const Selection& rhs)
-{
-    return lhs.min() < rhs.min();
-}
-
-template<typename OverlapsFunc>
-void merge_overlapping(SelectionList& selections, size_t& main_selection,
-                       OverlapsFunc overlaps)
-{
-    kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
-    for (size_t i = 0; i+1 < selections.size() and selections.size() > 1;)
-    {
-        if (overlaps(selections[i], selections[i+1]))
-        {
-            selections[i].merge_with(selections[i+1]);
-            selections.erase(selections.begin() + i + 1);
-            if (i + 1 <= main_selection)
-                --main_selection;
-        }
-        else
-           ++i;
-    }
-}
-
-void sort_and_merge_overlapping(SelectionList& selections, size_t& main_selection)
-{
-    if (selections.size() == 1)
-        return;
-
-    const auto& main = selections[main_selection];
-    const auto main_begin = main.min();
-    main_selection = std::count_if(selections.begin(), selections.end(),
-                                   [&](const Selection& sel) {
-                                       auto begin = sel.min();
-                                       if (begin == main_begin)
-                                           return &sel < &main;
-                                       else
-                                           return begin < main_begin;
-                                   });
-    std::stable_sort(selections.begin(), selections.end(), compare_selections);
-
-    merge_overlapping(selections, main_selection, overlaps);
-}
-
 BufferCoord Editor::offset_coord(BufferCoord coord, CharCount offset)
 {
     auto& line = buffer()[coord.line];
@@ -186,7 +139,7 @@ void Editor::move_selections(CharCount offset, SelectMode mode)
         sel.last()  = last;
         avoid_eol(*m_buffer, sel);
     }
-    sort_and_merge_overlapping(m_selections, m_main_sel);
+    m_selections.sort_and_merge_overlapping();
 }
 
 BufferCoord Editor::offset_coord(BufferCoord coord, LineCount offset)
@@ -209,19 +162,17 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         sel.last()  = pos;
         avoid_eol(*m_buffer, sel);
     }
-    sort_and_merge_overlapping(m_selections, m_main_sel);
+    m_selections.sort_and_merge_overlapping();
 }
 
 void Editor::clear_selections()
 {
-    auto& sel = m_selections[m_main_sel];
+    auto& sel = m_selections.main();
     auto& pos = sel.last();
     avoid_eol(*m_buffer, pos);
     sel.first() = pos;
 
-    m_selections.erase(m_selections.begin(), m_selections.begin() + m_main_sel);
-    m_selections.erase(m_selections.begin() + 1, m_selections.end());
-    m_main_sel = 0;
+    m_selections = SelectionList{ std::move(sel) };
     check_invariant();
 }
 
@@ -236,9 +187,8 @@ void Editor::keep_selection(int index)
 {
     if (index < m_selections.size())
     {
-        size_t real_index = (index + m_main_sel + 1) % m_selections.size();
+        size_t real_index = (index + m_selections.main_index() + 1) % m_selections.size();
         m_selections = SelectionList{ std::move(m_selections[real_index]) };
-        m_main_sel = 0;
     }
     check_invariant();
 }
@@ -247,11 +197,12 @@ void Editor::remove_selection(int index)
 {
     if (m_selections.size() > 1 and index < m_selections.size())
     {
-        size_t real_index = (index + m_main_sel + 1) % m_selections.size();
+        size_t real_index = (index + m_selections.main_index() + 1) % m_selections.size();
         m_selections.erase(m_selections.begin() + real_index);
-        if (real_index <= m_main_sel)
-            m_main_sel = (m_main_sel > 0 ? m_main_sel
-                                         : m_selections.size()) - 1;
+        size_t main_index = m_selections.main_index();
+        if (real_index <= main_index)
+            m_selections.set_main_index((main_index > 0 ? main_index
+                                         : m_selections.size()) - 1);
     }
     check_invariant();
 }
@@ -259,21 +210,17 @@ void Editor::remove_selection(int index)
 void Editor::select(const Selection& selection, SelectMode mode)
 {
     if (mode == SelectMode::Replace)
-    {
         m_selections = SelectionList{ selection };
-        m_main_sel = 0;
-    }
     else if (mode == SelectMode::Extend)
     {
-        m_selections[m_main_sel].merge_with(selection);
-        m_selections = SelectionList{ std::move(m_selections[m_main_sel]) };
-        m_main_sel = 0;
+        m_selections.main().merge_with(selection);
+        m_selections = SelectionList{ std::move(m_selections.main()) };
     }
     else if (mode == SelectMode::Append)
     {
-        m_main_sel = m_selections.size();
         m_selections.push_back(selection);
-        sort_and_merge_overlapping(m_selections, m_main_sel);
+        m_selections.set_main_index(m_selections.size()-1);
+        m_selections.sort_and_merge_overlapping();
     }
     else
         kak_assert(false);
@@ -285,7 +232,6 @@ void Editor::select(SelectionList selections)
     if (selections.empty())
         throw runtime_error("no selections");
     m_selections = std::move(selections);
-    m_main_sel = m_selections.size() - 1;
     check_invariant();
 }
 
@@ -293,16 +239,16 @@ void Editor::select(const Selector& selector, SelectMode mode)
 {
     if (mode == SelectMode::Append)
     {
-        auto& sel = m_selections[m_main_sel];
+        auto& sel = m_selections.main();
         auto  res = selector(*m_buffer, sel);
         if (res.captures().empty())
             res.captures() = sel.captures();
-        m_main_sel = m_selections.size();
         m_selections.push_back(res);
+        m_selections.set_main_index(m_selections.size() - 1);
     }
     else if (mode == SelectMode::ReplaceMain)
     {
-        auto& sel = m_selections[m_main_sel];
+        auto& sel = m_selections.main();
         auto  res = selector(*m_buffer, sel);
         sel.first() = res.first();
         sel.last()  = res.last();
@@ -325,7 +271,7 @@ void Editor::select(const Selector& selector, SelectMode mode)
                 sel.captures() = std::move(res.captures());
         }
     }
-    sort_and_merge_overlapping(m_selections, m_main_sel);
+    m_selections.sort_and_merge_overlapping();
     check_invariant();
 }
 
@@ -353,8 +299,8 @@ void Editor::multi_select(const MultiSelector& selector)
     }
     if (new_selections.empty())
         throw nothing_selected();
-    m_main_sel = new_selections.size() - 1;
-    sort_and_merge_overlapping(new_selections, m_main_sel);
+    new_selections.set_main_index(new_selections.size() - 1);
+    new_selections.sort_and_merge_overlapping();
     m_selections = std::move(new_selections);
     check_invariant();
 }
@@ -403,8 +349,8 @@ bool Editor::undo()
     if (res and not listener.ranges().empty())
     {
         m_selections = std::move(listener.ranges());
-        m_main_sel = m_selections.size() - 1;
-        merge_overlapping(m_selections, m_main_sel, std::bind(touches, std::ref(buffer()), _1, _2));
+        m_selections.set_main_index(m_selections.size() - 1);
+        m_selections.merge_overlapping(std::bind(touches, std::ref(buffer()), _1, _2));
     }
     check_invariant();
     return res;
@@ -418,8 +364,8 @@ bool Editor::redo()
     if (res and not listener.ranges().empty())
     {
         m_selections = std::move(listener.ranges());
-        m_main_sel = m_selections.size() - 1;
-        merge_overlapping(m_selections, m_main_sel, std::bind(touches, std::ref(buffer()), _1, _2));
+        m_selections.set_main_index(m_selections.size() - 1);
+        m_selections.merge_overlapping(std::bind(touches, std::ref(buffer()), _1, _2));
     }
     check_invariant();
     return res;
@@ -429,10 +375,8 @@ void Editor::check_invariant() const
 {
 #ifdef KAK_DEBUG
     kak_assert(not m_selections.empty());
-    kak_assert(m_main_sel < m_selections.size());
     m_selections.check_invariant();
     buffer().check_invariant();
-    kak_assert(std::is_sorted(m_selections.begin(), m_selections.end(), compare_selections));
 #endif
 }
 
