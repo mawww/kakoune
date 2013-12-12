@@ -35,11 +35,13 @@ public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
 
     DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-        : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end) {}
+        : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end)
+     { check_invariant(); }
 
     DisplayAtom(String str, ColorPair colors = { Colors::Default, Colors::Default },
                 Attribute attribute = Normal)
-        : m_type(Text), m_text(std::move(str)), colors(colors), attribute(attribute) {}
+        : m_type(Text), m_text(std::move(str)), colors(colors), attribute(attribute)
+     { check_invariant(); }
 
     String content() const
     {
@@ -99,6 +101,7 @@ public:
     void trim_begin(CharCount count);
     void trim_end(CharCount count);
 
+    void check_invariant() const;
 public:
     ColorPair      colors = {Colors::Default, Colors::Default};
     Attribute      attribute = Normal;

@@ -12,6 +12,7 @@ void DisplayAtom::trim_begin(CharCount count)
                                 m_buffer->iterator_at(m_end), count).coord();
     else
         m_text = m_text.substr(count);
+    check_invariant();
 }
 
 void DisplayAtom::trim_end(CharCount count)
@@ -21,6 +22,18 @@ void DisplayAtom::trim_end(CharCount count)
                               m_buffer->iterator_at(m_begin), -count).coord();
     else
         m_text = m_text.substr(0, m_text.char_length() - count);
+    check_invariant();
+}
+
+void DisplayAtom::check_invariant() const
+{
+#ifdef KAK_DEBUG
+    if (has_buffer_range())
+    {
+        kak_assert(m_buffer->is_valid(m_begin));
+        kak_assert(m_buffer->is_valid(m_end));
+    }
+#endif
 }
 
 DisplayLine::DisplayLine(AtomList atoms)
@@ -38,6 +51,8 @@ DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
     DisplayAtom atom = *it;
     atom.m_end = pos;
     it->m_begin = pos;
+    atom.check_invariant();
+    it->check_invariant();
     return m_atoms.insert(it, std::move(atom));
 }
 
@@ -105,6 +120,7 @@ void DisplayLine::optimize()
             next_atom_it = m_atoms.erase(next_atom_it);
         else
             atom_it = next_atom_it++;
+        atom_it->check_invariant();
     }
 }
 
