@@ -282,26 +282,7 @@ struct nothing_selected : public runtime_error
 
 void Editor::multi_select(const MultiSelector& selector)
 {
-    SelectionList new_selections;
-    for (auto& sel : m_selections)
-    {
-        SelectionList res = selector(*m_buffer, sel);
-        new_selections.reserve(new_selections.size() + res.size());
-        for (auto& new_sel : res)
-        {
-            // preserve captures when selectors captures nothing.
-            if (new_sel.captures().empty())
-                new_selections.emplace_back(new_sel.first(), new_sel.last(),
-                                            sel.captures());
-            else
-                new_selections.push_back(std::move(new_sel));
-        }
-    }
-    if (new_selections.empty())
-        throw nothing_selected();
-    new_selections.set_main_index(new_selections.size() - 1);
-    new_selections.sort_and_merge_overlapping();
-    m_selections = std::move(new_selections);
+    m_selections = selector(*m_buffer, std::move(m_selections));
     check_invariant();
 }
 

@@ -597,107 +597,57 @@ Selection select_whole_buffer(const Buffer& buffer, const Selection&)
     return Selection({0,0}, buffer.back_coord());
 }
 
-using MatchResults = boost::match_results<BufferIterator>;
-
-static bool find_last_match(BufferIterator begin, const BufferIterator& end,
-                            MatchResults& res, const Regex& regex)
+SelectionList select_all_matches(const Buffer& buffer, SelectionList selections,
+                                 const Regex& regex)
 {
-    MatchResults matches;
-    while (boost::regex_search(begin, end, matches, regex))
-    {
-        if (begin == matches[0].second)
-            break;
-        begin = matches[0].second;
-        res.swap(matches);
-    }
-    return not res.empty();
-}
-
-template<Direction direction>
-bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
-                          MatchResults& matches, const Regex& ex)
-{
-    if (direction == Forward)
-        return (boost::regex_search(pos, buffer.end(), matches, ex) or
-                boost::regex_search(buffer.begin(), pos, matches, ex));
-    else
-        return (find_last_match(buffer.begin(), pos, matches, ex) or
-                find_last_match(pos, buffer.end(), matches, ex));
-}
-
-
-template<Direction direction>
-Selection select_next_match(const Buffer& buffer, const Selection& selection, const Regex& regex)
-{
-    // regex matching do not use Utf8Iterator as boost::regex handle utf8
-    // decoding itself
-    BufferIterator begin = buffer.iterator_at(selection.last());
-    BufferIterator end = begin;
-    CaptureList captures;
-
-    MatchResults matches;
-
-    bool found = false;
-    if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex)))
-    {
-        begin = matches[0].first;
-        end   = matches[0].second;
-        for (auto& match : matches)
-            captures.push_back(String(match.first, match.second));
-    }
-    if (not found or begin == buffer.end())
-        throw runtime_error("'" + regex.str() + "': no matches found");
-
-    end = (begin == end) ? end : utf8::previous(end);
-    if (direction == Backward)
-        std::swap(begin, end);
-    return Selection{begin.coord(), end.coord(), std::move(captures)};
-}
-template Selection select_next_match<Forward>(const Buffer&, const Selection&, const Regex&);
-template Selection select_next_match<Backward>(const Buffer&, const Selection&, const Regex&);
-
-SelectionList select_all_matches(const Buffer& buffer, const Selection& selection, const Regex& regex)
-{
-    auto sel_end = utf8::next(buffer.iterator_at(selection.max()));
-    RegexIterator re_it(buffer.iterator_at(selection.min()), sel_end, regex);
-    RegexIterator re_end;
-
     SelectionList result;
-    for (; re_it != re_end; ++re_it)
+    for (auto& sel : selections)
     {
-        BufferIterator begin = (*re_it)[0].first;
-        BufferIterator end   = (*re_it)[0].second;
+        auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
+        RegexIterator re_it(buffer.iterator_at(sel.min()), sel_end, regex);
+        RegexIterator re_end;
 
-        if (begin == sel_end)
-            continue;
+        for (; re_it != re_end; ++re_it)
+        {
+            auto& begin = (*re_it)[0].first;
+            auto& end   = (*re_it)[0].second;
 
-        CaptureList captures;
-        for (auto& match : *re_it)
-            captures.push_back(String(match.first, match.second));
+            if (begin == sel_end)
+                continue;
 
-        result.push_back(Selection(begin.coord(), (begin == end ? end : utf8::previous(end)).coord(),
-                                   std::move(captures)));
+            CaptureList captures;
+            for (auto& match : *re_it)
+                captures.emplace_back(match.first, match.second);
+
+            result.emplace_back(begin.coord(),
+                                (begin == end ? end : utf8::previous(end)).coord(),
+                                std::move(captures));
+        }
     }
     return result;
 }
 
-SelectionList split_selection(const Buffer& buffer, const Selection& selection,
+SelectionList split_selection(const Buffer& buffer, SelectionList selections,
                               const Regex& regex)
 {
-    auto begin = buffer.iterator_at(selection.min());
-    auto sel_end = utf8::next(buffer.iterator_at(selection.max()));
-    RegexIterator re_it(begin, sel_end, regex, boost::regex_constants::match_nosubs);
-    RegexIterator re_end;
-
     SelectionList result;
-    for (; re_it != re_end; ++re_it)
+    for (auto& sel : selections)
     {
-        BufferIterator end = (*re_it)[0].first;
+        auto begin = buffer.iterator_at(sel.min());
+        auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
+        RegexIterator re_it(begin, sel_end, regex,
+                            boost::regex_constants::match_nosubs);
+        RegexIterator re_end;
 
-        result.push_back(Selection(begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord()));
-        begin = (*re_it)[0].second;
+        for (; re_it != re_end; ++re_it)
+        {
+            BufferIterator end = (*re_it)[0].first;
+
+            result.emplace_back(begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord());
+            begin = (*re_it)[0].second;
+        }
+        result.emplace_back(begin.coord(), sel.max());
     }
-    result.push_back(Selection(begin.coord(), selection.max()));
     return result;
 }
 

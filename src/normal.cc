@@ -321,7 +321,7 @@ void search(Context& context, int)
                 else if (str.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
-                context.editor().select(std::bind(select_next_match<direction>, _1, _2, ex), mode);
+                context.editor().multi_select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
             }
             catch (boost::regex_error& err)
             {
@@ -351,7 +351,7 @@ void search_next(Context& context, int param)
         {
             Regex ex{str};
             do {
-                context.editor().select(std::bind(select_next_match<direction>, _1, _2, ex), mode);
+                context.editor().multi_select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
             } while (--param > 0);
         }
         catch (boost::regex_error& err)
@@ -496,16 +496,20 @@ void split_regex(Context& context, int)
 
 void split_lines(Context& context, int)
 {
-    context.editor().multi_select([](const Buffer& buffer, const Selection& sel) {
-        if (sel.first().line == sel.last().line)
-            return SelectionList{ sel };
+    context.editor().multi_select([](const Buffer& buffer,
+                                     SelectionList selections) {
         SelectionList res;
-        auto min = sel.min();
-        auto max = sel.max();
-        res.push_back({min, {min.line, buffer[min.line].length()-1}});
-        for (auto line = min.line+1; line < max.line; ++line)
-            res.push_back({line, {line, buffer[line].length()-1}});
-        res.push_back({max.line, max});
+        for (auto& sel : selections)
+        {
+            if (sel.first().line == sel.last().line)
+                return SelectionList{ sel };
+            auto min = sel.min();
+            auto max = sel.max();
+            res.push_back({min, {min.line, buffer[min.line].length()-1}});
+            for (auto line = min.line+1; line < max.line; ++line)
+                res.push_back({line, {line, buffer[line].length()-1}});
+            res.push_back({max.line, max});
+        }
         return res;
     });
 }
@@ -515,9 +519,10 @@ void join_select_spaces(Context& context, int)
     Editor& editor = context.editor();
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
-    editor.multi_select([](const Buffer& buffer, const Selection& sel)
+    editor.multi_select([](const Buffer& buffer, SelectionList sel)
     {
-        SelectionList res = select_all_matches(buffer, sel, Regex{"(\n\\h*)+"});
+        SelectionList res = select_all_matches(buffer, std::move(sel),
+                                               Regex{"(\n\\h*)+"});
         // remove last end of line if selected
         kak_assert(std::is_sorted(res.begin(), res.end(),
                    [](const Selection& lhs, const Selection& rhs)
@@ -568,12 +573,15 @@ void indent(Context& context, int)
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.multi_select([&indent](const Buffer& buf, const Selection& sel) {
+    editor.multi_select([&indent](const Buffer& buf, SelectionList selections) {
             SelectionList res;
-            for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+            for (auto& sel : selections)
             {
-                if (indent_empty or buf[line].length() > 1)
-                    res.emplace_back(line, line);
+                for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+                {
+                    if (indent_empty or buf[line].length() > 1)
+                        res.emplace_back(line, line);
+                }
             }
             return res;
         });
@@ -592,29 +600,32 @@ void deindent(Context& context, int)
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
 
-    editor.multi_select([indent_width,tabstop](const Buffer& buf, const Selection& sel) {
+    editor.multi_select([indent_width,tabstop](const Buffer& buf, SelectionList selections) {
             SelectionList res;
-            for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+            for (auto& sel : selections)
             {
-                CharCount width = 0;
-                auto& content = buf[line];
-                for (auto column = 0_byte; column < content.length(); ++column)
+                for (auto line = sel.min().line; line < sel.max().line+1; ++line)
                 {
-                    const char c = content[column];
-                    if (c == '\t')
-                        width = (width / tabstop + 1) * tabstop;
-                    else if (c == ' ')
-                        ++width;
-                    else
+                    CharCount width = 0;
+                    auto& content = buf[line];
+                    for (auto column = 0_byte; column < content.length(); ++column)
                     {
-                        if (deindent_incomplete and width != 0)
-                            res.emplace_back(line, BufferCoord{line, column-1});
-                        break;
-                    }
-                    if (width == indent_width)
-                    {
-                        res.emplace_back(line, BufferCoord{line, column});
-                        break;
+                        const char c = content[column];
+                        if (c == '\t')
+                            width = (width / tabstop + 1) * tabstop;
+                        else if (c == ' ')
+                            ++width;
+                        else
+                        {
+                            if (deindent_incomplete and width != 0)
+                                res.emplace_back(line, BufferCoord{line, column-1});
+                            break;
+                        }
+                        if (width == indent_width)
+                        {
+                            res.emplace_back(line, BufferCoord{line, column});
+                            break;
+                        }
                     }
                 }
             }

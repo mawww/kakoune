@@ -3,6 +3,7 @@
 
 #include "selection.hh"
 #include "unicode.hh"
+#include "editor.hh"
 
 namespace Kakoune
 {
@@ -58,14 +59,78 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
 
 enum Direction { Forward, Backward };
 
-template<Direction direction>
-Selection select_next_match(const Buffer& buffer, const Selection& selection,
-                            const Regex& regex);
+using MatchResults = boost::match_results<BufferIterator>;
 
-SelectionList select_all_matches(const Buffer& buffer, const Selection& selection,
+static bool find_last_match(BufferIterator begin, const BufferIterator& end,
+                            MatchResults& res, const Regex& regex)
+{
+    MatchResults matches;
+    while (boost::regex_search(begin, end, matches, regex))
+    {
+        if (begin == matches[0].second)
+            break;
+        begin = matches[0].second;
+        res.swap(matches);
+    }
+    return not res.empty();
+}
+
+template<Direction direction>
+bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
+                          MatchResults& matches, const Regex& ex)
+{
+    if (direction == Forward)
+        return (boost::regex_search(pos, buffer.end(), matches, ex) or
+                boost::regex_search(buffer.begin(), pos, matches, ex));
+    else
+        return (find_last_match(buffer.begin(), pos, matches, ex) or
+                find_last_match(pos, buffer.end(), matches, ex));
+}
+
+template<Direction direction, SelectMode mode>
+SelectionList select_next_match(const Buffer& buffer, SelectionList selections,
+                                const Regex& regex)
+{
+    auto& sel = selections.main();
+    auto begin = buffer.iterator_at(sel.last());
+    auto end = begin;
+    CaptureList captures;
+
+    MatchResults matches;
+
+    bool found = false;
+    if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex)))
+    {
+        begin = matches[0].first;
+        end   = matches[0].second;
+        for (auto& match : matches)
+            captures.emplace_back(match.first, match.second);
+    }
+    if (not found or begin == buffer.end())
+        throw runtime_error("'" + regex.str() + "': no matches found");
+
+    end = (begin == end) ? end : utf8::previous(end);
+    if (direction == Backward)
+        std::swap(begin, end);
+
+    Selection res{begin.coord(), end.coord(), std::move(captures)};
+    if (mode == SelectMode::Replace)
+        return SelectionList{ std::move(res) };
+    else if (mode == SelectMode::ReplaceMain)
+        sel = std::move(res);
+    else if (mode == SelectMode::Append)
+    {
+        selections.push_back(std::move(res));
+        selections.set_main_index(selections.size() - 1);
+    }
+    selections.sort_and_merge_overlapping();
+    return selections;
+}
+
+SelectionList select_all_matches(const Buffer& buffer, SelectionList selection,
                                  const Regex& regex);
 
-SelectionList split_selection(const Buffer& buffer, const Selection& selection,
+SelectionList split_selection(const Buffer& buffer, SelectionList selection,
                               const Regex& separator_regex);
 
 using CodepointPair = std::pair<Codepoint, Codepoint>;
