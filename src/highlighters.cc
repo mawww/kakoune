@@ -505,11 +505,9 @@ template<typename HighlightFunc>
 struct RegionHighlighter
 {
 public:
-    RegionHighlighter(String begin, String end, String ignore_prefix,
-                      HighlightFunc func)
+    RegionHighlighter(Regex begin, Regex end, HighlightFunc func)
         : m_begin(std::move(begin)),
           m_end(std::move(end)),
-          m_ignore_prefix(std::move(ignore_prefix)),
           m_func(std::move(func))
     {}
 
@@ -520,9 +518,8 @@ public:
             m_func(window, display_buffer, pair.first, pair.second);
     }
 private:
-    String m_begin;
-    String m_end;
-    String m_ignore_prefix;
+    Regex m_begin;
+    Regex m_end;
     HighlightFunc m_func;
 
     struct RegionCache
@@ -539,26 +536,20 @@ private:
             return cache;
 
         cache.regions.clear();
-        auto end = buffer.end();
-        auto reg_beg = std::search(buffer.begin(), end,
-                                   m_begin.begin(), m_begin.end());
-        while (reg_beg != end)
-        {
-            auto reg_end = reg_beg + m_begin.length();
-            do
-            {
-                reg_end = std::search(reg_end, end, m_end.begin(), m_end.end());
-                if (reg_end != end)
-                    reg_end += m_end.length();
-            }
-            while (reg_end != end and not m_ignore_prefix.empty() and
-                   std::equal(m_ignore_prefix.begin(), m_ignore_prefix.end(),
-                              reg_end - m_end.length() - m_ignore_prefix.length()));
 
-            cache.regions.emplace_back(reg_beg.coord(), reg_end.coord());
-            if (reg_end == end)
+        boost::match_results<BufferIterator> results;
+        auto pos = buffer.begin();
+        auto end = buffer.end();
+        while (boost::regex_search(pos, end, results, m_begin))
+        {
+            pos = results[0].first;
+            if (boost::regex_search(results[0].second, end, results, m_end))
+            {
+                cache.regions.emplace_back(pos.coord(), results[0].second.coord());
+                pos = results[0].second;
+            }
+            else
                 break;
-            reg_beg = std::search(reg_end, end, m_begin.begin(), m_begin.end());
         }
         cache.timestamp = buffer.timestamp();
         return cache;
@@ -567,53 +558,63 @@ private:
 
 template<typename HighlightFunc>
 RegionHighlighter<HighlightFunc>
-make_region_highlighter(String begin, String end, String ignore_prefix,
-                        HighlightFunc func)
+make_region_highlighter(Regex begin, Regex end, HighlightFunc func)
 {
-    return RegionHighlighter<HighlightFunc>(std::move(begin), std::move(end),
-                                            std::move(ignore_prefix), std::move(func));
+    return RegionHighlighter<HighlightFunc>(std::move(begin), std::move(end), std::move(func));
 }
 
 HighlighterAndId region_factory(HighlighterParameters params)
 {
-    if (params.size() != 3 and params.size() != 4)
-        throw runtime_error("wrong parameter count");
-
-    const String& begin = params[0];
-    const String& end = params[1];
-    const String& ignore_prefix = params.size() == 4 ? params[2] : "";
-    const ColorPair colors = get_color(params.back());
-
-    auto func = [colors](const Window&, DisplayBuffer& display_buffer,
-                         BufferCoord begin, BufferCoord end)
+    try
     {
-        highlight_range(display_buffer, begin, end, true,
-                        [&colors](DisplayAtom& atom) { atom.colors = colors; });
-    };
+        if (params.size() != 3)
+            throw runtime_error("wrong parameter count");
 
-    return HighlighterAndId("region(" + begin + "," + end + "," + ignore_prefix + ")",
-                            make_region_highlighter(begin, end, ignore_prefix, func));
+        Regex begin{params[0]};
+        Regex end{params[1]};
+        const ColorPair colors = get_color(params[2]);
+
+        auto func = [colors](const Window&, DisplayBuffer& display_buffer,
+                             BufferCoord begin, BufferCoord end)
+        {
+            highlight_range(display_buffer, begin, end, true,
+                            [&colors](DisplayAtom& atom) { atom.colors = colors; });
+        };
+
+        return HighlighterAndId("region(" + params[0] + "," + params[1] + ")",
+                                make_region_highlighter(std::move(begin), std::move(end), func));
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(String("regex error: ") + err.what());
+    }
 }
 
 HighlighterAndId region_ref_factory(HighlighterParameters params)
 {
-    if (params.size() != 3 and params.size() != 4)
-        throw runtime_error("wrong parameter count");
-
-    const String& begin = params[0];
-    const String& end = params[1];
-    const String& ignore_prefix = params.size() == 4 ? params[2] : "";
-    const String& name = params.back();
-
-    auto func = [name](const Window& window, DisplayBuffer& display_buffer,
-                      BufferCoord begin, BufferCoord end)
+    try
     {
-        HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
-        apply_highlighter(window, display_buffer, begin, end, ref);
-    };
+        if (params.size() != 3 and params.size() != 4)
+            throw runtime_error("wrong parameter count");
 
-    return HighlighterAndId("regionref(" + begin + "," + end + "," + ignore_prefix + "," + name + ")",
-                            make_region_highlighter(begin, end, ignore_prefix, func));
+        Regex begin{params[0]};
+        Regex end{params[1]};
+        const String& name = params[2];
+
+        auto func = [name](const Window& window, DisplayBuffer& display_buffer,
+                          BufferCoord begin, BufferCoord end)
+        {
+            HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
+            apply_highlighter(window, display_buffer, begin, end, ref);
+        };
+
+        return HighlighterAndId("regionref(" + params[0] + "," + params[1] + "," + name + ")",
+                                make_region_highlighter(std::move(begin), std::move(end), func));
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(String("regex error: ") + err.what());
+    }
 }
 
 void register_highlighters()
