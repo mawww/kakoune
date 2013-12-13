@@ -26,4 +26,9 @@ hook global WinSetOption filetype=grep %{
 
 hook global WinSetOption filetype=(?!grep).* %{ rmhl grep-highlight; rmhooks buffer grep-hooks }
 
-def jump %{ exec 'xs^([^:]+):(\d+):(\d+)?<ret>'; edit %reg{1} %reg{2} %reg{3} }
+decl str jumpclient
+
+def jump %{
+    exec 'xs^([^:]+):(\d+):(\d+)?<ret>'
+    eval -try-client %opt{jumpclient} edit %reg{1} %reg{2} %reg{3}
+}
