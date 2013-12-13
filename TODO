@@ -28,6 +28,13 @@
 
   - More automatic hiding behaviour
 
+  - Move info handling to client
+
+    . remove direct ui access from context
+
+    . Add support for 'transient' info, displayed for a certain
+      amount of time
+
 * improve insert completion
 
   - Detect when the following text is matching the inserted completion
