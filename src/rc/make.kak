@@ -23,4 +23,14 @@ hook global WinSetOption filetype=make %{
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }
 
-def errjump %{ exec 'xs^([^:\n]+):(\d+)(?::(\d+))?:(.*?)$<ret><a-h><space>'; edit %reg{1} %reg{2} %reg{3}; echo %reg{4} }
+def errjump %{
+    try %{
+        exec gll<a-?> "Entering directory" <ret>
+        exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l
+        #edit "%reg{1}/%reg{2}" %reg{3} %reg{4}
+        exec :edit<space><c-r>1/<c-r>2<space><c-r>3<space><c-r>4<ret>
+    } catch %{
+        exec ghgl s "([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l
+        edit %reg{1} %reg{2} %reg{3}
+    }
+}
