@@ -597,8 +597,8 @@ Selection select_whole_buffer(const Buffer& buffer, const Selection&)
     return Selection({0,0}, buffer.back_coord());
 }
 
-SelectionList select_all_matches(const Buffer& buffer, SelectionList selections,
-                                 const Regex& regex)
+void select_all_matches(const Buffer& buffer, SelectionList& selections,
+                        const Regex& regex)
 {
     SelectionList result;
     for (auto& sel : selections)
@@ -624,11 +624,13 @@ SelectionList select_all_matches(const Buffer& buffer, SelectionList selections,
                                 std::move(captures));
         }
     }
-    return result;
+    if (result.empty())
+        throw runtime_error("nothing selected");
+    selections = std::move(result);
 }
 
-SelectionList split_selection(const Buffer& buffer, SelectionList selections,
-                              const Regex& regex)
+void split_selection(const Buffer& buffer, SelectionList& selections,
+                     const Regex& regex)
 {
     SelectionList result;
     for (auto& sel : selections)
@@ -648,7 +650,7 @@ SelectionList split_selection(const Buffer& buffer, SelectionList selections,
         }
         result.emplace_back(begin.coord(), sel.max());
     }
-    return result;
+    selections = std::move(result);
 }
 
 }

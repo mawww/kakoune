@@ -497,12 +497,15 @@ void split_regex(Context& context, int)
 void split_lines(Context& context, int)
 {
     context.editor().multi_select([](const Buffer& buffer,
-                                     SelectionList selections) {
+                                     SelectionList& selections) {
         SelectionList res;
         for (auto& sel : selections)
         {
             if (sel.first().line == sel.last().line)
-                return SelectionList{ sel };
+            {
+                 res.push_back(std::move(sel));
+                 continue;
+            }
             auto min = sel.min();
             auto max = sel.max();
             res.push_back({min, {min.line, buffer[min.line].length()-1}});
@@ -510,7 +513,7 @@ void split_lines(Context& context, int)
                 res.push_back({line, {line, buffer[line].length()-1}});
             res.push_back({max.line, max});
         }
-        return res;
+        selections = std::move(res);
     });
 }
 
@@ -519,17 +522,15 @@ void join_select_spaces(Context& context, int)
     Editor& editor = context.editor();
     editor.select(select_whole_lines);
     editor.select(select_to_eol, SelectMode::Extend);
-    editor.multi_select([](const Buffer& buffer, SelectionList sel)
+    editor.multi_select([](const Buffer& buffer, SelectionList& sel)
     {
-        SelectionList res = select_all_matches(buffer, std::move(sel),
-                                               Regex{"(\n\\h*)+"});
+        select_all_matches(buffer, sel, Regex{"(\n\\h*)+"});
         // remove last end of line if selected
-        kak_assert(std::is_sorted(res.begin(), res.end(),
+        kak_assert(std::is_sorted(sel.begin(), sel.end(),
                    [](const Selection& lhs, const Selection& rhs)
                    { return lhs.min() < rhs.min(); }));
-        if (not res.empty() and res.back().max() == buffer.back_coord())
-            res.pop_back();
-        return res;
+        if (not sel.empty() and sel.back().max() == buffer.back_coord())
+            sel.pop_back();
     });
     editor.insert(" ", InsertMode::Replace);
 }
@@ -573,7 +574,7 @@ void indent(Context& context, int)
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.multi_select([&indent](const Buffer& buf, SelectionList selections) {
+    editor.multi_select([&indent](const Buffer& buf, SelectionList& selections) {
             SelectionList res;
             for (auto& sel : selections)
             {
@@ -583,7 +584,7 @@ void indent(Context& context, int)
                         res.emplace_back(line, line);
                 }
             }
-            return res;
+            selections = std::move(res);
         });
     editor.insert(indent, InsertMode::Insert);
 }
@@ -600,7 +601,7 @@ void deindent(Context& context, int)
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
 
-    editor.multi_select([indent_width,tabstop](const Buffer& buf, SelectionList selections) {
+    editor.multi_select([indent_width,tabstop](const Buffer& buf, SelectionList& selections) {
             SelectionList res;
             for (auto& sel : selections)
             {
@@ -629,7 +630,7 @@ void deindent(Context& context, int)
                     }
                 }
             }
-            return res;
+            selections = std::move(res);
         });
     editor.erase();
 }

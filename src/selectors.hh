@@ -88,7 +88,7 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
 }
 
 template<Direction direction, SelectMode mode>
-SelectionList select_next_match(const Buffer& buffer, SelectionList selections,
+void select_next_match(const Buffer& buffer, SelectionList& selections,
                                 const Regex& regex)
 {
     auto& sel = selections.main();
@@ -115,7 +115,7 @@ SelectionList select_next_match(const Buffer& buffer, SelectionList selections,
 
     Selection res{begin.coord(), end.coord(), std::move(captures)};
     if (mode == SelectMode::Replace)
-        return SelectionList{ std::move(res) };
+        selections = SelectionList{ std::move(res) };
     else if (mode == SelectMode::ReplaceMain)
         sel = std::move(res);
     else if (mode == SelectMode::Append)
@@ -124,13 +124,12 @@ SelectionList select_next_match(const Buffer& buffer, SelectionList selections,
         selections.set_main_index(selections.size() - 1);
     }
     selections.sort_and_merge_overlapping();
-    return selections;
 }
 
-SelectionList select_all_matches(const Buffer& buffer, SelectionList selection,
+void select_all_matches(const Buffer& buffer, SelectionList& selection,
                                  const Regex& regex);
 
-SelectionList split_selection(const Buffer& buffer, SelectionList selection,
+void split_selection(const Buffer& buffer, SelectionList& selection,
                               const Regex& separator_regex);
 
 using CodepointPair = std::pair<Codepoint, Codepoint>;

@@ -40,7 +40,7 @@ class Editor : public SafeCountable
 {
 public:
     typedef std::function<Selection (const Buffer&, const Selection&)> Selector;
-    typedef std::function<SelectionList (const Buffer&, SelectionList)>  MultiSelector;
+    typedef std::function<void (const Buffer&, SelectionList&)>  MultiSelector;
 
     Editor(Buffer& buffer);
     virtual ~Editor() {}

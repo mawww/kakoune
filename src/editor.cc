@@ -282,7 +282,7 @@ struct nothing_selected : public runtime_error
 
 void Editor::multi_select(const MultiSelector& selector)
 {
-    m_selections = selector(*m_buffer, std::move(m_selections));
+    selector(*m_buffer, m_selections);
     check_invariant();
 }
 
