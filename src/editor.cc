@@ -184,7 +184,7 @@ struct nothing_selected : public runtime_error
     nothing_selected() : runtime_error("nothing was selected") {}
 };
 
-void Editor::select(const MultiSelector& selector)
+void Editor::select(const Selector& selector)
 {
     selector(*m_buffer, m_selections);
     check_invariant();
