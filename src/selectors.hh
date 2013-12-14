@@ -54,7 +54,7 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
 Selection select_whole_indent(const Buffer& buffer, const Selection& selection,
                               ObjectFlags flags);
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection);
-Selection select_whole_buffer(const Buffer& buffer, const Selection& selection);
+void select_whole_buffer(const Buffer& buffer, SelectionList& selections);
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
 
 enum Direction { Forward, Backward };
@@ -126,10 +126,10 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
     selections.sort_and_merge_overlapping();
 }
 
-void select_all_matches(const Buffer& buffer, SelectionList& selection,
+void select_all_matches(const Buffer& buffer, SelectionList& selections,
                                  const Regex& regex);
 
-void split_selection(const Buffer& buffer, SelectionList& selection,
+void split_selection(const Buffer& buffer, SelectionList& selections,
                               const Regex& separator_regex);
 
 using CodepointPair = std::pair<Codepoint, Codepoint>;

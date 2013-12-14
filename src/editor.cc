@@ -235,52 +235,12 @@ void Editor::select(SelectionList selections)
     check_invariant();
 }
 
-void Editor::select(const Selector& selector, SelectMode mode)
-{
-    if (mode == SelectMode::Append)
-    {
-        auto& sel = m_selections.main();
-        auto  res = selector(*m_buffer, sel);
-        if (res.captures().empty())
-            res.captures() = sel.captures();
-        m_selections.push_back(res);
-        m_selections.set_main_index(m_selections.size() - 1);
-    }
-    else if (mode == SelectMode::ReplaceMain)
-    {
-        auto& sel = m_selections.main();
-        auto  res = selector(*m_buffer, sel);
-        sel.first() = res.first();
-        sel.last()  = res.last();
-        if (not res.captures().empty())
-            sel.captures() = std::move(res.captures());
-    }
-    else
-    {
-        for (auto& sel : m_selections)
-        {
-            auto res = selector(*m_buffer, sel);
-            if (mode == SelectMode::Extend)
-                sel.merge_with(res);
-            else
-            {
-                sel.first() = res.first();
-                sel.last()  = res.last();
-            }
-            if (not res.captures().empty())
-                sel.captures() = std::move(res.captures());
-        }
-    }
-    m_selections.sort_and_merge_overlapping();
-    check_invariant();
-}
-
 struct nothing_selected : public runtime_error
 {
     nothing_selected() : runtime_error("nothing was selected") {}
 };
 
-void Editor::multi_select(const MultiSelector& selector)
+void Editor::select(const MultiSelector& selector)
 {
     selector(*m_buffer, m_selections);
     check_invariant();

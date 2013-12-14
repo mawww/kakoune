@@ -39,7 +39,6 @@ enum class InsertMode : unsigned
 class Editor : public SafeCountable
 {
 public:
-    typedef std::function<Selection (const Buffer&, const Selection&)> Selector;
     typedef std::function<void (const Buffer&, SelectionList&)>  MultiSelector;
 
     Editor(Buffer& buffer);
@@ -66,10 +65,8 @@ public:
     { select(Selection{ buffer().clamp(c) }, mode); }
     void select(const Selection& sel,
                 SelectMode mode = SelectMode::Replace);
-    void select(const Selector& selector,
-                SelectMode mode = SelectMode::Replace);
     void select(SelectionList selections);
-    void multi_select(const MultiSelector& selector);
+    void select(const MultiSelector& selector);
 
     void rotate_selections(int count) { m_selections.rotate_main(count); }
 

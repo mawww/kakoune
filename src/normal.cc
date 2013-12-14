@@ -22,6 +22,62 @@ namespace Kakoune
 
 using namespace std::placeholders;
 
+template<SelectMode mode, typename T>
+class Select
+{
+public:
+    constexpr Select(T t) : m_func(t) {}
+
+    void operator() (Context& context, int)
+    {
+        context.editor().select([this](const Buffer& buffer, SelectionList& selections)
+        {
+            if (mode == SelectMode::Append)
+            {
+                auto& sel = selections.main();
+                auto  res = m_func(buffer, sel);
+                if (res.captures().empty())
+                    res.captures() = sel.captures();
+                selections.push_back(res);
+                selections.set_main_index(selections.size() - 1);
+            }
+            else if (mode == SelectMode::ReplaceMain)
+            {
+                auto& sel = selections.main();
+                auto  res = m_func(buffer, sel);
+                sel.first() = res.first();
+                sel.last()  = res.last();
+                if (not res.captures().empty())
+                    sel.captures() = std::move(res.captures());
+            }
+            else
+            {
+                for (auto& sel : selections)
+                {
+                    auto res = m_func(buffer, sel);
+                    if (mode == SelectMode::Extend)
+                        sel.merge_with(res);
+                    else
+                    {
+                        sel.first() = res.first();
+                        sel.last()  = res.last();
+                    }
+                    if (not res.captures().empty())
+                        sel.captures() = std::move(res.captures());
+                }
+            }
+            selections.sort_and_merge_overlapping();
+            selections.check_invariant();
+        });
+    }
+private:
+    T m_func;
+};
+
+template<SelectMode mode = SelectMode::Replace, typename T>
+constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
+
+
 template<InsertMode mode>
 void insert(Context& context, int)
 {
@@ -82,10 +138,10 @@ void goto_commands(Context& context, int line)
                 editor.select(BufferCoord{0,0}, mode);
                 break;
             case 'l':
-                editor.select(select_to_eol, mode);
+                select<mode>(select_to_eol)(context, 0);
                 break;
             case 'h':
-                editor.select(select_to_eol_reverse, mode);
+                select<mode>(select_to_eol_reverse)(context, 0);
                 break;
             case 'j':
             {
@@ -218,7 +274,7 @@ void replace_with_char(Context& context, int)
         Editor& editor = context.editor();
         SelectionList sels = editor.selections();
         auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
-        editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"."}));
+        editor.select(std::bind(select_all_matches, _1, _2, Regex{"."}));
         editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
 }
@@ -321,7 +377,7 @@ void search(Context& context, int)
                 else if (str.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
-                context.editor().multi_select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
+                context.editor().select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
             }
             catch (boost::regex_error& err)
             {
@@ -351,7 +407,7 @@ void search_next(Context& context, int param)
         {
             Regex ex{str};
             do {
-                context.editor().multi_select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
+                context.editor().select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
             } while (--param > 0);
         }
         catch (boost::regex_error& err)
@@ -478,7 +534,7 @@ void select_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            context.editor().multi_select(std::bind(select_all_matches, _1, _2, ex));
+            context.editor().select(std::bind(select_all_matches, _1, _2, ex));
     });
 }
 
@@ -490,13 +546,13 @@ void split_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            context.editor().multi_select(std::bind(split_selection, _1, _2, ex));
+            context.editor().select(std::bind(split_selection, _1, _2, ex));
     });
 }
 
 void split_lines(Context& context, int)
 {
-    context.editor().multi_select([](const Buffer& buffer,
+    context.editor().select([](const Buffer& buffer,
                                      SelectionList& selections) {
         SelectionList res;
         for (auto& sel : selections)
@@ -519,10 +575,10 @@ void split_lines(Context& context, int)
 
 void join_select_spaces(Context& context, int)
 {
+    select(select_whole_lines)(context, 0);
+    select<SelectMode::Extend>(select_to_eol)(context, 0);
     Editor& editor = context.editor();
-    editor.select(select_whole_lines);
-    editor.select(select_to_eol, SelectMode::Extend);
-    editor.multi_select([](const Buffer& buffer, SelectionList& sel)
+    editor.select([](const Buffer& buffer, SelectionList& sel)
     {
         select_all_matches(buffer, sel, Regex{"(\n\\h*)+"});
         // remove last end of line if selected
@@ -574,7 +630,7 @@ void indent(Context& context, int)
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.multi_select([&indent](const Buffer& buf, SelectionList& selections) {
+    editor.select([&indent](const Buffer& buf, SelectionList& selections) {
             SelectionList res;
             for (auto& sel : selections)
             {
@@ -601,7 +657,7 @@ void deindent(Context& context, int)
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
     auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
 
-    editor.multi_select([indent_width,tabstop](const Buffer& buf, SelectionList& selections) {
+    editor.select([indent_width,tabstop](const Buffer& buf, SelectionList& selections) {
             SelectionList res;
             for (auto& sel : selections)
             {
@@ -658,7 +714,7 @@ void select_object(Context& context, int param)
         for (auto& sel : selectors)
         {
             if (c == sel.key)
-                return context.editor().select(std::bind(sel.func, _1, _2, flags), mode);
+                return select<mode>(std::bind(sel.func, _1, _2, flags))(context, 0);
         }
 
         static constexpr struct
@@ -677,8 +733,8 @@ void select_object(Context& context, int param)
         {
             if (sur.pair.first == c or sur.pair.second == c or
                 (sur.name != 0 and sur.name == c))
-                return context.editor().select(std::bind(select_surrounding, _1, _2,
-                                                         sur.pair, level, flags), mode);
+                return select<mode>(std::bind(select_surrounding, _1, _2,
+                                              sur.pair, level, flags))(context, 0);
         }
     }, "select object",
     "b,(,):  parenthesis block\n"
@@ -758,10 +814,9 @@ template<SelectFlags flags>
 void select_to_next_char(Context& context, int param)
 {
     on_next_key_with_autoinfo(context, [param](Key key, Context& context) {
-        context.editor().select(
+        select<flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace>(
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
-                      _1, _2, key.key, param, flags & SelectFlags::Inclusive),
-            flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace);
+                      _1, _2, key.key, param, flags & SelectFlags::Inclusive))(context, 0);
     }, "select to next char","enter char to select to");
 }
 
@@ -941,23 +996,6 @@ private:
 template<typename T>
 constexpr Repeated<T> repeated(T func) { return Repeated<T>(func); }
 
-template<SelectMode mode, typename T>
-class Select
-{
-public:
-    constexpr Select(T t) : m_func(t) {}
-
-    void operator() (Context& context, int)
-    {
-        context.editor().select(m_func, mode);
-    }
-private:
-    T m_func;
-};
-
-template<SelectMode mode, typename T>
-constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
-
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
 void move(Context& context, int count)
 {
@@ -1013,7 +1051,7 @@ KeyMap keymap =
 
     { '.', repeat_insert },
 
-    { '%', [](Context& context, int) { context.editor().clear_selections(); context.editor().select(select_whole_buffer); } },
+    { '%', [](Context& context, int) { context.editor().select(select_whole_buffer); } },
 
     { ':', command },
     { '|', pipe },

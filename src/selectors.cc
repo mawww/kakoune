@@ -592,9 +592,9 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
     return Selection(first.coord(), last.coord());
 }
 
-Selection select_whole_buffer(const Buffer& buffer, const Selection&)
+void select_whole_buffer(const Buffer& buffer, SelectionList& selections)
 {
-    return Selection({0,0}, buffer.back_coord());
+    selections = SelectionList{ Selection({0,0}, buffer.back_coord()) };
 }
 
 void select_all_matches(const Buffer& buffer, SelectionList& selections,

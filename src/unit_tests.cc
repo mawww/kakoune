@@ -77,7 +77,7 @@ void test_editor()
     {
         scoped_edition edition{editor};
         editor.select(select_whole_buffer);
-        editor.multi_select(std::bind(select_all_matches, _1, _2, Regex{"\\n\\h*"}));
+        editor.select(std::bind(select_all_matches, _1, _2, Regex{"\\n\\h*"}));
         for (auto& sel : editor.selections())
         {
             kak_assert(buffer.byte_at(sel.min()) == '\n');
