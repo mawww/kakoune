@@ -4,6 +4,7 @@
 #include "selection.hh"
 #include "unicode.hh"
 #include "editor.hh"
+#include "utf8_iterator.hh"
 
 namespace Kakoune
 {
@@ -49,17 +50,89 @@ inline void remove_selection(const Buffer&, SelectionList& selections, int index
     selections.check_invariant();
 }
 
-enum WordType { Word, WORD };
+using Utf8Iterator = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
+
+inline Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
+{
+    return {first.base().coord(), last.base().coord()};
+}
+
+typedef boost::regex_iterator<BufferIterator> RegexIterator;
 
 template<WordType word_type>
-Selection select_to_next_word(const Buffer& buffer,
-                              const Selection& selection);
+Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
+{
+    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    if (begin+1 == buffer.end())
+        return selection;
+    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
+        ++begin;
+
+    skip_while(begin, buffer.end(), is_eol);
+    if (begin == buffer.end())
+        return selection;
+    Utf8Iterator end = begin+1;
+
+    if (word_type == Word and is_punctuation(*begin))
+        skip_while(end, buffer.end(), is_punctuation);
+    else if (is_word<word_type>(*begin))
+        skip_while(end, buffer.end(), is_word<word_type>);
+
+    skip_while(end, buffer.end(), is_blank);
+
+    return utf8_range(begin, end-1);
+}
+
 template<WordType word_type>
-Selection select_to_next_word_end(const Buffer& buffer,
-                                  const Selection& selection);
+Selection select_to_next_word_end(const Buffer& buffer, const Selection& selection)
+{
+    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    if (begin+1 == buffer.end())
+        return selection;
+    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
+        ++begin;
+
+    skip_while(begin, buffer.end(), is_eol);
+    if (begin == buffer.end())
+        return selection;
+    Utf8Iterator end = begin;
+    skip_while(end, buffer.end(), is_blank);
+
+    if (word_type == Word and is_punctuation(*end))
+        skip_while(end, buffer.end(), is_punctuation);
+    else if (is_word<word_type>(*end))
+        skip_while(end, buffer.end(), is_word<word_type>);
+
+    return utf8_range(begin, end-1);
+}
+
 template<WordType word_type>
-Selection select_to_previous_word(const Buffer& buffer,
-const Selection& selection);
+Selection select_to_previous_word(const Buffer& buffer, const Selection& selection)
+{
+    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    if (begin == buffer.begin())
+        return selection;
+    if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
+        --begin;
+
+    skip_while_reverse(begin, buffer.begin(), is_eol);
+    Utf8Iterator end = begin;
+    skip_while_reverse(end, buffer.begin(), is_blank);
+
+    bool with_end = false;
+    if (word_type == Word and is_punctuation(*end))
+    {
+        skip_while_reverse(end, buffer.begin(), is_punctuation);
+        with_end = is_punctuation(*end);
+    }
+    else if (is_word<word_type>(*end))
+    {
+        skip_while_reverse(end, buffer.begin(), is_word<word_type>);
+        with_end = is_word<word_type>(*end);
+    }
+
+    return utf8_range(begin, with_end ? end : end+1);
+}
 
 Selection select_line(const Buffer& buffer,
 const Selection& selection);
@@ -86,8 +159,47 @@ constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
 { return (ObjectFlags)((int)lhs | (int) rhs); }
 
 template<WordType word_type>
-Selection select_whole_word(const Buffer& buffer, const Selection& selection,
-                            ObjectFlags flags);
+Selection select_whole_word(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+{
+    Utf8Iterator first = buffer.iterator_at(selection.last());
+    Utf8Iterator last = first;
+    if (is_word<word_type>(*first))
+    {
+        if (flags & ObjectFlags::ToBegin)
+        {
+            skip_while_reverse(first, buffer.begin(), is_word<word_type>);
+            if (not is_word<word_type>(*first))
+                ++first;
+        }
+        if (flags & ObjectFlags::ToEnd)
+        {
+            skip_while(last, buffer.end(), is_word<word_type>);
+            if (not (flags & ObjectFlags::Inner))
+                skip_while(last, buffer.end(), is_blank);
+            --last;
+        }
+    }
+    else if (not (flags & ObjectFlags::Inner))
+    {
+        if (flags & ObjectFlags::ToBegin)
+        {
+            skip_while_reverse(first, buffer.begin(), is_blank);
+            if (not is_word<word_type>(*first))
+                return selection;
+            skip_while_reverse(first, buffer.begin(), is_word<word_type>);
+            if (not is_word<word_type>(*first))
+                ++first;
+        }
+        if (flags & ObjectFlags::ToEnd)
+        {
+            skip_while(last, buffer.end(), is_blank);
+            --last;
+        }
+    }
+    return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
+                                        : utf8_range(last, first);
+}
+
 Selection select_whole_sentence(const Buffer& buffer, const Selection& selection,
                                 ObjectFlags flags);
 Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection,
