@@ -76,8 +76,8 @@ void test_editor()
 
     {
         scoped_edition edition{editor};
-        editor.select(select_whole_buffer);
-        editor.select(std::bind(select_all_matches, _1, _2, Regex{"\\n\\h*"}));
+        select_whole_buffer(buffer, editor.selections());
+        select_all_matches(buffer, editor.selections(), Regex{"\\n\\h*"});
         for (auto& sel : editor.selections())
         {
             kak_assert(buffer.byte_at(sel.min()) == '\n');
@@ -87,7 +87,7 @@ void test_editor()
     editor.undo();
 
     Selection sel{ 2_line, buffer.back_coord() };
-    editor.select(sel, SelectMode::Replace);
+    editor.selections() = SelectionList{sel};
     editor.insert("",InsertMode::Replace);
     kak_assert(not buffer.is_end(editor.selections().main().first()));
 }

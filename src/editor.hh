@@ -57,16 +57,11 @@ public:
                          SelectMode mode = SelectMode::Replace);
     void move_selections(CharCount move,
                          SelectMode mode = SelectMode::Replace);
-    void select(BufferCoord c, SelectMode mode = SelectMode::Replace)
-    { select(Selection{ buffer().clamp(c) }, mode); }
-    void select(const Selection& sel,
-                SelectMode mode = SelectMode::Replace);
-    void select(SelectionList selections);
-    void select(const Selector& selector);
 
     void rotate_selections(int count) { m_selections.rotate_main(count); }
 
     const SelectionList& selections() const { return m_selections; }
+    SelectionList& selections() { return m_selections; }
     std::vector<String>  selections_content() const;
 
     bool undo();

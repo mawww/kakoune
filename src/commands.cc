@@ -127,7 +127,7 @@ void edit(CommandParameters params, Context& context)
         int column = param_count > 2 and not parser[2].empty() ?
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        context.editor().select(context.buffer().clamp({ line,  column }));
+        context.editor().selections() = context.buffer().clamp({ line,  column });
         if (context.has_window())
             context.window().center_selection();
     }
@@ -571,13 +571,13 @@ void context_wrap(CommandParameters params, Context& context, Func func)
         Editor& editor = real_context->editor();
         InputHandler input_handler(editor, real_context->name());
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
-        auto restore_sels = on_scope_end([&]{ editor.select(sels); });
+        auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
 
         if (parser.has_option("itersel"))
         {
             for (auto& sel : sels)
             {
-                editor.select(sel);
+                editor.selections() = sel;
                 func(parser, input_handler.context());
             }
         }

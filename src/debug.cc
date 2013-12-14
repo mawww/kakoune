@@ -21,10 +21,8 @@ static Buffer& get_or_create_debug_buffer()
 
 void write_debug(const String& str)
 {
-    Buffer& debug_buffer = get_or_create_debug_buffer();
-    Editor editor(debug_buffer);
-    editor.select(debug_buffer.back_coord());
-    editor.insert(str + "\n");
+    Buffer& buffer = get_or_create_debug_buffer();
+    buffer.insert(buffer.end(), str);
 }
 
 }

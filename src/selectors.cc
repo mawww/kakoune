@@ -438,8 +438,8 @@ void select_all_matches(const Buffer& buffer, SelectionList& selections,
     selections = std::move(result);
 }
 
-void split_selection(const Buffer& buffer, SelectionList& selections,
-                     const Regex& regex)
+void split_selections(const Buffer& buffer, SelectionList& selections,
+                      const Regex& regex)
 {
     SelectionList result;
     for (auto& sel : selections)

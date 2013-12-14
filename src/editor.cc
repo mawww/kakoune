@@ -14,7 +14,7 @@ namespace Kakoune
 Editor::Editor(Buffer& buffer)
     : m_buffer(&buffer),
       m_edition_level(0),
-      m_selections(buffer, { {{},{}} })
+      m_selections(buffer, {BufferCoord{}})
 {}
 
 void Editor::erase()
@@ -149,45 +149,6 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         avoid_eol(*m_buffer, sel);
     }
     m_selections.sort_and_merge_overlapping();
-}
-
-void Editor::select(const Selection& selection, SelectMode mode)
-{
-    if (mode == SelectMode::Replace)
-        m_selections = SelectionList{ selection };
-    else if (mode == SelectMode::Extend)
-    {
-        m_selections.main().merge_with(selection);
-        m_selections = SelectionList{ std::move(m_selections.main()) };
-    }
-    else if (mode == SelectMode::Append)
-    {
-        m_selections.push_back(selection);
-        m_selections.set_main_index(m_selections.size()-1);
-        m_selections.sort_and_merge_overlapping();
-    }
-    else
-        kak_assert(false);
-    check_invariant();
-}
-
-void Editor::select(SelectionList selections)
-{
-    if (selections.empty())
-        throw runtime_error("no selections");
-    m_selections = std::move(selections);
-    check_invariant();
-}
-
-struct nothing_selected : public runtime_error
-{
-    nothing_selected() : runtime_error("nothing was selected") {}
-};
-
-void Editor::select(const Selector& selector)
-{
-    selector(*m_buffer, m_selections);
-    check_invariant();
 }
 
 class ModifiedRangesListener : public BufferChangeListener_AutoRegister

@@ -81,7 +81,7 @@ static void reload_buffer(Context& context, const String& filename)
     if (not buf)
         return;
     Window& win = ClientManager::instance().get_unused_window_for_buffer(*buf);
-    win.select(cursor_pos);
+    win.selections() = SelectionList{cursor_pos};
     win.set_position(view_pos);
     context.change_editor(win);
     context.print_status({ "'" + buf->display_name() + "' reloaded",

@@ -94,6 +94,7 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
 struct SelectionList : std::vector<Selection>
 {
     SelectionList() = default;
+    SelectionList(BufferCoord c) : std::vector<Selection>{Selection{c,c}} {}
     SelectionList(Selection s) : std::vector<Selection>{s} {}
 
     void update_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end);

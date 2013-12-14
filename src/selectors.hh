@@ -19,14 +19,14 @@ inline void clear_selections(const Buffer& buffer, SelectionList& selections)
     selections = SelectionList{ std::move(sel) };
 }
 
-inline void flip_selections(const Buffer&, SelectionList& selections)
+inline void flip_selections(SelectionList& selections)
 {
     for (auto& sel : selections)
         std::swap(sel.first(), sel.last());
     selections.check_invariant();
 }
 
-inline void keep_selection(const Buffer&, SelectionList& selections, int index)
+inline void keep_selection(SelectionList& selections, int index)
 {
     if (index < selections.size())
     {
@@ -36,7 +36,7 @@ inline void keep_selection(const Buffer&, SelectionList& selections, int index)
     selections.check_invariant();
 }
 
-inline void remove_selection(const Buffer&, SelectionList& selections, int index)
+inline void remove_selection(SelectionList& selections, int index)
 {
     if (selections.size() > 1 and index < selections.size())
     {
@@ -282,8 +282,8 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
 void select_all_matches(const Buffer& buffer, SelectionList& selections,
                         const Regex& regex);
 
-void split_selection(const Buffer& buffer, SelectionList& selections,
-                              const Regex& separator_regex);
+void split_selections(const Buffer& buffer, SelectionList& selections,
+                      const Regex& separator_regex);
 
 using CodepointPair = std::pair<Codepoint, Codepoint>;
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,

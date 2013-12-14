@@ -30,45 +30,44 @@ public:
 
     void operator() (Context& context, int)
     {
-        context.editor().select([this](const Buffer& buffer, SelectionList& selections)
+        auto& buffer = context.buffer();
+        auto& selections = context.editor().selections();
+        if (mode == SelectMode::Append)
         {
-            if (mode == SelectMode::Append)
+            auto& sel = selections.main();
+            auto  res = m_func(buffer, sel);
+            if (res.captures().empty())
+                res.captures() = sel.captures();
+            selections.push_back(res);
+            selections.set_main_index(selections.size() - 1);
+        }
+        else if (mode == SelectMode::ReplaceMain)
+        {
+            auto& sel = selections.main();
+            auto  res = m_func(buffer, sel);
+            sel.first() = res.first();
+            sel.last()  = res.last();
+            if (not res.captures().empty())
+                sel.captures() = std::move(res.captures());
+        }
+        else
+        {
+            for (auto& sel : selections)
             {
-                auto& sel = selections.main();
-                auto  res = m_func(buffer, sel);
-                if (res.captures().empty())
-                    res.captures() = sel.captures();
-                selections.push_back(res);
-                selections.set_main_index(selections.size() - 1);
-            }
-            else if (mode == SelectMode::ReplaceMain)
-            {
-                auto& sel = selections.main();
-                auto  res = m_func(buffer, sel);
-                sel.first() = res.first();
-                sel.last()  = res.last();
+                auto res = m_func(buffer, sel);
+                if (mode == SelectMode::Extend)
+                    sel.merge_with(res);
+                else
+                {
+                    sel.first() = res.first();
+                    sel.last()  = res.last();
+                }
                 if (not res.captures().empty())
                     sel.captures() = std::move(res.captures());
             }
-            else
-            {
-                for (auto& sel : selections)
-                {
-                    auto res = m_func(buffer, sel);
-                    if (mode == SelectMode::Extend)
-                        sel.merge_with(res);
-                    else
-                    {
-                        sel.first() = res.first();
-                        sel.last()  = res.last();
-                    }
-                    if (not res.captures().empty())
-                        sel.captures() = std::move(res.captures());
-                }
-            }
-            selections.sort_and_merge_overlapping();
-            selections.check_invariant();
-        });
+        }
+        selections.sort_and_merge_overlapping();
+        selections.check_invariant();
     }
 private:
     T m_func;
@@ -77,6 +76,18 @@ private:
 template<SelectMode mode = SelectMode::Replace, typename T>
 constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
 
+template<SelectMode mode = SelectMode::Replace>
+void select_coord(BufferCoord coord, SelectionList& selections)
+{
+    if (mode == SelectMode::Replace)
+        selections = SelectionList { coord };
+    else if (mode == SelectMode::Extend)
+    {
+        for (auto& sel : selections)
+            sel.last() = coord;
+        selections.sort_and_merge_overlapping();
+    }
+}
 
 template<InsertMode mode>
 void insert(Context& context, int)
@@ -119,7 +130,7 @@ void goto_commands(Context& context, int line)
     if (line != 0)
     {
         context.push_jump();
-        context.editor().select(BufferCoord{line - 1, 0});
+        select_coord<mode>(LineCount{line - 1}, context.editor().selections());
         if (context.has_window())
             context.window().center_selection();
     }
@@ -135,7 +146,7 @@ void goto_commands(Context& context, int line)
             case 'g':
             case 'k':
                 context.push_jump();
-                editor.select(BufferCoord{0,0}, mode);
+                select_coord<mode>(BufferCoord{0,0}, context.editor().selections());
                 break;
             case 'l':
                 select<mode>(select_to_eol)(context, 0);
@@ -146,18 +157,18 @@ void goto_commands(Context& context, int line)
             case 'j':
             {
                 context.push_jump();
-                editor.select({editor.buffer().line_count() - 1, 0}, mode);
+                select_coord<mode>({editor.buffer().line_count() - 1, 0}, editor.selections());
                 break;
             }
             case 'e':
                 context.push_jump();
-                editor.select(editor.buffer().back_coord(), mode);
+                select_coord<mode>(editor.buffer().back_coord(), editor.selections());
                 break;
             case 't':
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    editor.select({line, 0}, mode);
+                    select_coord<mode>(line, editor.selections());
                 }
                 break;
             case 'b':
@@ -165,7 +176,7 @@ void goto_commands(Context& context, int line)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    editor.select({line, 0}, mode);
+                    select_coord<mode>(line, editor.selections());
                 }
                 break;
             case 'c':
@@ -173,7 +184,7 @@ void goto_commands(Context& context, int line)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    editor.select({line, 0}, mode);
+                    select_coord<mode>(line, editor.selections());
                 }
                 break;
             case 'a':
@@ -273,8 +284,8 @@ void replace_with_char(Context& context, int)
             return;
         Editor& editor = context.editor();
         SelectionList sels = editor.selections();
-        auto restore_sels = on_scope_end([&]{ editor.select(std::move(sels)); });
-        editor.select(std::bind(select_all_matches, _1, _2, Regex{"."}));
+        auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
+        select_all_matches(editor.buffer(), editor.selections(), Regex{"."});
         editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
 }
@@ -359,7 +370,7 @@ void search(Context& context, int)
         [selections](const String& str, PromptEvent event, Context& context) {
             try
             {
-                context.editor().select(selections);
+                context.editor().selections() = selections;
 
                 if (event == PromptEvent::Abort)
                     return;
@@ -377,7 +388,7 @@ void search(Context& context, int)
                 else if (str.empty() or not context.options()["incsearch"].get<bool>())
                     return;
 
-                context.editor().select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
+                select_next_match<direction, mode>(context.buffer(), context.editor().selections(), ex);
             }
             catch (boost::regex_error& err)
             {
@@ -388,7 +399,7 @@ void search(Context& context, int)
             }
             catch (runtime_error&)
             {
-                context.editor().select(selections);
+                context.editor().selections() = selections;
                 // only validation should propagate errors,
                 // incremental search should not.
                 if (event == PromptEvent::Validate)
@@ -407,7 +418,7 @@ void search_next(Context& context, int param)
         {
             Regex ex{str};
             do {
-                context.editor().select(std::bind(select_next_match<direction, mode>, _1, _2, ex));
+                select_next_match<direction, mode>(context.buffer(), context.editor().selections(), ex);
             } while (--param > 0);
         }
         catch (boost::regex_error& err)
@@ -534,7 +545,7 @@ void select_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            context.editor().select(std::bind(select_all_matches, _1, _2, ex));
+            select_all_matches(context.buffer(), context.editor().selections(), ex);
     });
 }
 
@@ -546,48 +557,46 @@ void split_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            context.editor().select(std::bind(split_selection, _1, _2, ex));
+            split_selections(context.buffer(), context.editor().selections(), ex);
     });
 }
 
 void split_lines(Context& context, int)
 {
-    context.editor().select([](const Buffer& buffer,
-                                     SelectionList& selections) {
-        SelectionList res;
-        for (auto& sel : selections)
+    auto& selections = context.editor().selections();
+    auto& buffer = context.buffer();
+    SelectionList res;
+    for (auto& sel : selections)
+    {
+        if (sel.first().line == sel.last().line)
         {
-            if (sel.first().line == sel.last().line)
-            {
-                 res.push_back(std::move(sel));
-                 continue;
-            }
-            auto min = sel.min();
-            auto max = sel.max();
-            res.push_back({min, {min.line, buffer[min.line].length()-1}});
-            for (auto line = min.line+1; line < max.line; ++line)
-                res.push_back({line, {line, buffer[line].length()-1}});
-            res.push_back({max.line, max});
+             res.push_back(std::move(sel));
+             continue;
         }
-        selections = std::move(res);
-    });
+        auto min = sel.min();
+        auto max = sel.max();
+        res.push_back({min, {min.line, buffer[min.line].length()-1}});
+        for (auto line = min.line+1; line < max.line; ++line)
+            res.push_back({line, {line, buffer[line].length()-1}});
+        res.push_back({max.line, max});
+    }
+    selections = std::move(res);
 }
 
 void join_select_spaces(Context& context, int)
 {
     select(select_whole_lines)(context, 0);
     select<SelectMode::Extend>(select_to_eol)(context, 0);
-    Editor& editor = context.editor();
-    editor.select([](const Buffer& buffer, SelectionList& sel)
-    {
-        select_all_matches(buffer, sel, Regex{"(\n\\h*)+"});
-        // remove last end of line if selected
-        kak_assert(std::is_sorted(sel.begin(), sel.end(),
-                   [](const Selection& lhs, const Selection& rhs)
-                   { return lhs.min() < rhs.min(); }));
-        if (not sel.empty() and sel.back().max() == buffer.back_coord())
-            sel.pop_back();
-    });
+    auto& editor = context.editor();
+    auto& buffer = context.buffer();
+    auto& selections = editor.selections();
+    select_all_matches(buffer, editor.selections(), Regex{"(\n\\h*)+"});
+    // remove last end of line if selected
+    kak_assert(std::is_sorted(selections.begin(), selections.end(),
+               [](const Selection& lhs, const Selection& rhs)
+               { return lhs.min() < rhs.min(); }));
+    if (not selections.empty() and selections.back().max() == buffer.back_coord())
+        selections.pop_back();
     editor.insert(" ", InsertMode::Replace);
 }
 
@@ -595,7 +604,7 @@ void join(Context& context, int param)
 {
     Editor& editor = context.editor();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
-    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
+    auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
     join_select_spaces(context, param);
 }
 
@@ -617,7 +626,7 @@ void keep(Context& context, int)
         }
         if (keep.empty())
             throw runtime_error("no selections remaining");
-        editor.select(std::move(keep));
+        editor.selections() = std::move(keep);
     });
 }
 
@@ -627,21 +636,20 @@ void indent(Context& context, int)
     CharCount indent_width = context.options()["indentwidth"].get<int>();
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
-    Editor& editor = context.editor();
+    auto& editor = context.editor();
+    auto& buffer = context.buffer();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
-    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
-    editor.select([&indent](const Buffer& buf, SelectionList& selections) {
-            SelectionList res;
-            for (auto& sel : selections)
-            {
-                for (auto line = sel.min().line; line < sel.max().line+1; ++line)
-                {
-                    if (indent_empty or buf[line].length() > 1)
-                        res.emplace_back(line, line);
-                }
-            }
-            selections = std::move(res);
-        });
+    auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
+    SelectionList res;
+    for (auto& sel : editor.selections())
+    {
+        for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+        {
+            if (indent_empty or buffer[line].length() > 1)
+                res.emplace_back(line, line);
+        }
+    }
+    editor.selections() = std::move(res);
     editor.insert(indent, InsertMode::Insert);
 }
 
@@ -653,41 +661,40 @@ void deindent(Context& context, int)
     if (indent_width == 0)
         indent_width = tabstop;
 
-    Editor& editor = context.editor();
+    auto& editor = context.editor();
+    auto& buffer = context.buffer();
     DynamicSelectionList sels{editor.buffer(), editor.selections()};
-    auto restore_sels = on_scope_end([&]{ editor.select((SelectionList)std::move(sels)); });
+    auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
 
-    editor.select([indent_width,tabstop](const Buffer& buf, SelectionList& selections) {
-            SelectionList res;
-            for (auto& sel : selections)
+    SelectionList res;
+    for (auto& sel : editor.selections())
+    {
+        for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+        {
+            CharCount width = 0;
+            auto& content = buffer[line];
+            for (auto column = 0_byte; column < content.length(); ++column)
             {
-                for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+                const char c = content[column];
+                if (c == '\t')
+                    width = (width / tabstop + 1) * tabstop;
+                else if (c == ' ')
+                    ++width;
+                else
                 {
-                    CharCount width = 0;
-                    auto& content = buf[line];
-                    for (auto column = 0_byte; column < content.length(); ++column)
-                    {
-                        const char c = content[column];
-                        if (c == '\t')
-                            width = (width / tabstop + 1) * tabstop;
-                        else if (c == ' ')
-                            ++width;
-                        else
-                        {
-                            if (deindent_incomplete and width != 0)
-                                res.emplace_back(line, BufferCoord{line, column-1});
-                            break;
-                        }
-                        if (width == indent_width)
-                        {
-                            res.emplace_back(line, BufferCoord{line, column});
-                            break;
-                        }
-                    }
+                    if (deindent_incomplete and width != 0)
+                        res.emplace_back(line, BufferCoord{line, column-1});
+                    break;
+                }
+                if (width == indent_width)
+                {
+                    res.emplace_back(line, BufferCoord{line, column});
+                    break;
                 }
             }
-            selections = std::move(res);
-        });
+        }
+    }
+    editor.selections() = std::move(res);
     editor.erase();
 }
 
@@ -773,7 +780,7 @@ void scroll(Context& context, int)
     auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
                                     buffer.iterator_at(position.line+1),
                                     position.column);
-    window.select(cursor_pos.coord());
+    select_coord(cursor_pos.coord(), window.selections());
     window.set_position(position);
 }
 
@@ -868,7 +875,7 @@ void jump(Context& context, int)
         auto& manager = ClientManager::instance();
         context.change_editor(manager.get_unused_window_for_buffer(buffer));
     }
-    context.editor().select(SelectionList{ jump });
+    context.editor().selections() = jump;
 }
 
 void save_selections(Context& context, int)
@@ -1051,14 +1058,14 @@ KeyMap keymap =
 
     { '.', repeat_insert },
 
-    { '%', [](Context& context, int) { context.editor().select(select_whole_buffer); } },
+    { '%', [](Context& context, int) { select_whole_buffer(context.buffer(), context.editor().selections()); } },
 
     { ':', command },
     { '|', pipe },
-    { ' ', [](Context& context, int count) { if (count == 0) context.editor().select(clear_selections);
-                                             else context.editor().select(std::bind(keep_selection, _1, _2, count-1)); } },
-    { alt(' '), [](Context& context, int count) { if (count == 0) context.editor().select(flip_selections);
-                                                                       else context.editor().select(std::bind(remove_selection, _1, _2, count-1)); } },
+    { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.buffer(), context.editor().selections());
+                                             else keep_selection(context.editor().selections(), count-1); } },
+    { alt(' '), [](Context& context, int count) { if (count == 0) flip_selections(context.editor().selections());
+                                                  else remove_selection(context.editor().selections(), count-1); } },
     { 'w', repeated(select<SelectMode::Replace>(select_to_next_word<Word>)) },
     { 'e', repeated(select<SelectMode::Replace>(select_to_next_word_end<Word>)) },
     { 'b', repeated(select<SelectMode::Replace>(select_to_previous_word<Word>)) },
