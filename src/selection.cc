@@ -103,6 +103,7 @@ void SelectionList::update_erase(const Buffer& buffer, BufferCoord begin, Buffer
 
 void SelectionList::check_invariant() const
 {
+    kak_assert(size() > 0);
     kak_assert(m_main < size());
     for (size_t i = 0; i+1 < size(); ++ i)
         kak_assert((*this)[i].min() <= (*this)[i+1].min());
