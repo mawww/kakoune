@@ -17,20 +17,6 @@ Editor::Editor(Buffer& buffer)
       m_selections(buffer, { {{},{}} })
 {}
 
-void avoid_eol(const Buffer& buffer, BufferCoord& coord)
-{
-    const auto column = coord.column;
-    const auto& line = buffer[coord.line];
-    if (column != 0 and column == line.length() - 1)
-        coord.column = line.byte_count_to(line.char_length() - 2);
-}
-
-void avoid_eol(const Buffer& buffer, Range& sel)
-{
-    avoid_eol(buffer, sel.first());
-    avoid_eol(buffer, sel.last());
-}
-
 void Editor::erase()
 {
     scoped_edition edition(*this);
@@ -163,48 +149,6 @@ void Editor::move_selections(LineCount offset, SelectMode mode)
         avoid_eol(*m_buffer, sel);
     }
     m_selections.sort_and_merge_overlapping();
-}
-
-void Editor::clear_selections()
-{
-    auto& sel = m_selections.main();
-    auto& pos = sel.last();
-    avoid_eol(*m_buffer, pos);
-    sel.first() = pos;
-
-    m_selections = SelectionList{ std::move(sel) };
-    check_invariant();
-}
-
-void Editor::flip_selections()
-{
-    for (auto& sel : m_selections)
-        std::swap(sel.first(), sel.last());
-    check_invariant();
-}
-
-void Editor::keep_selection(int index)
-{
-    if (index < m_selections.size())
-    {
-        size_t real_index = (index + m_selections.main_index() + 1) % m_selections.size();
-        m_selections = SelectionList{ std::move(m_selections[real_index]) };
-    }
-    check_invariant();
-}
-
-void Editor::remove_selection(int index)
-{
-    if (m_selections.size() > 1 and index < m_selections.size())
-    {
-        size_t real_index = (index + m_selections.main_index() + 1) % m_selections.size();
-        m_selections.erase(m_selections.begin() + real_index);
-        size_t main_index = m_selections.main_index();
-        if (real_index <= main_index)
-            m_selections.set_main_index((main_index > 0 ? main_index
-                                         : m_selections.size()) - 1);
-    }
-    check_invariant();
 }
 
 void Editor::select(const Selection& selection, SelectMode mode)

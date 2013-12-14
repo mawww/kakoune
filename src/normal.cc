@@ -1055,10 +1055,10 @@ KeyMap keymap =
 
     { ':', command },
     { '|', pipe },
-    { ' ', [](Context& context, int count) { if (count == 0) context.editor().clear_selections();
-                                                                       else context.editor().keep_selection(count-1); } },
-    { alt(' '), [](Context& context, int count) { if (count == 0) context.editor().flip_selections();
-                                                                       else context.editor().remove_selection(count-1); } },
+    { ' ', [](Context& context, int count) { if (count == 0) context.editor().select(clear_selections);
+                                             else context.editor().select(std::bind(keep_selection, _1, _2, count-1)); } },
+    { alt(' '), [](Context& context, int count) { if (count == 0) context.editor().select(flip_selections);
+                                                                       else context.editor().select(std::bind(remove_selection, _1, _2, count-1)); } },
     { 'w', repeated(select<SelectMode::Replace>(select_to_next_word<Word>)) },
     { 'e', repeated(select<SelectMode::Replace>(select_to_next_word_end<Word>)) },
     { 'b', repeated(select<SelectMode::Replace>(select_to_previous_word<Word>)) },

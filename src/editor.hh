@@ -57,10 +57,6 @@ public:
                          SelectMode mode = SelectMode::Replace);
     void move_selections(CharCount move,
                          SelectMode mode = SelectMode::Replace);
-    void clear_selections();
-    void flip_selections();
-    void keep_selection(int index);
-    void remove_selection(int index);
     void select(BufferCoord c, SelectMode mode = SelectMode::Replace)
     { select(Selection{ buffer().clamp(c) }, mode); }
     void select(const Selection& sel,

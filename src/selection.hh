@@ -51,6 +51,21 @@ inline BufferIterator erase(Buffer& buffer, const Range& range)
                         utf8::next(buffer.iterator_at(range.max())));
 }
 
+inline void avoid_eol(const Buffer& buffer, BufferCoord& coord)
+{
+    const auto column = coord.column;
+    const auto& line = buffer[coord.line];
+    if (column != 0 and column == line.length() - 1)
+        coord.column = line.byte_count_to(line.char_length() - 2);
+}
+
+inline void avoid_eol(const Buffer& buffer, Range& sel)
+{
+    avoid_eol(buffer, sel.first());
+    avoid_eol(buffer, sel.last());
+}
+
+
 using CaptureList = std::vector<String>;
 
 // A selection is a Range, associated with a CaptureList

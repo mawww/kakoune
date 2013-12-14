@@ -626,6 +626,7 @@ void select_all_matches(const Buffer& buffer, SelectionList& selections,
     }
     if (result.empty())
         throw runtime_error("nothing selected");
+    result.set_main_index(result.size() - 1);
     selections = std::move(result);
 }
 
@@ -650,6 +651,7 @@ void split_selection(const Buffer& buffer, SelectionList& selections,
         }
         result.emplace_back(begin.coord(), sel.max());
     }
+    result.set_main_index(result.size() - 1);
     selections = std::move(result);
 }
 

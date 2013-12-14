@@ -8,6 +8,47 @@
 namespace Kakoune
 {
 
+inline void clear_selections(const Buffer& buffer, SelectionList& selections)
+{
+    auto& sel = selections.main();
+    auto& pos = sel.last();
+    avoid_eol(buffer, pos);
+    sel.first() = pos;
+
+    selections = SelectionList{ std::move(sel) };
+}
+
+inline void flip_selections(const Buffer&, SelectionList& selections)
+{
+    for (auto& sel : selections)
+        std::swap(sel.first(), sel.last());
+    selections.check_invariant();
+}
+
+inline void keep_selection(const Buffer&, SelectionList& selections, int index)
+{
+    if (index < selections.size())
+    {
+        size_t real_index = (index + selections.main_index() + 1) % selections.size();
+        selections = SelectionList{ std::move(selections[real_index]) };
+    }
+    selections.check_invariant();
+}
+
+inline void remove_selection(const Buffer&, SelectionList& selections, int index)
+{
+    if (selections.size() > 1 and index < selections.size())
+    {
+        size_t real_index = (index + selections.main_index() + 1) % selections.size();
+        selections.erase(selections.begin() + real_index);
+        size_t main_index = selections.main_index();
+        if (real_index <= main_index)
+            selections.set_main_index((main_index > 0 ? main_index
+                                         : selections.size()) - 1);
+    }
+    selections.check_invariant();
+}
+
 enum WordType { Word, WORD };
 
 template<WordType word_type>
@@ -127,7 +168,7 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
 }
 
 void select_all_matches(const Buffer& buffer, SelectionList& selections,
-                                 const Regex& regex);
+                        const Regex& regex);
 
 void split_selection(const Buffer& buffer, SelectionList& selections,
                               const Regex& separator_regex);
