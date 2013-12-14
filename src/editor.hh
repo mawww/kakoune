@@ -58,8 +58,6 @@ public:
     void move_selections(CharCount move,
                          SelectMode mode = SelectMode::Replace);
 
-    void rotate_selections(int count) { m_selections.rotate_main(count); }
-
     const SelectionList& selections() const { return m_selections; }
     SelectionList& selections() { return m_selections; }
     std::vector<String>  selections_content() const;

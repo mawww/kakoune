@@ -786,7 +786,7 @@ void scroll(Context& context, int)
 
 void rotate_selections(Context& context, int count)
 {
-    context.editor().rotate_selections(count != 0 ? count : 1);
+    context.editor().selections().rotate_main(count != 0 ? count : 1);
 }
 
 void rotate_selections_content(Context& context, int count)
@@ -798,7 +798,7 @@ void rotate_selections_content(Context& context, int count)
     count = count % strings.size();
     std::rotate(strings.begin(), strings.end()-count, strings.end());
     editor.insert(strings, InsertMode::Replace);
-    editor.rotate_selections(count);
+    editor.selections().rotate_main(count);
 }
 
 enum class SelectFlags
