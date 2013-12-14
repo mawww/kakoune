@@ -240,17 +240,14 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
                 find_last_match(pos, buffer.end(), matches, ex));
 }
 
-template<Direction direction, SelectMode mode>
-void select_next_match(const Buffer& buffer, SelectionList& selections,
-                                const Regex& regex)
+template<Direction direction>
+Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex)
 {
-    auto& sel = selections.main();
     auto begin = buffer.iterator_at(sel.last());
     auto end = begin;
+
     CaptureList captures;
-
     MatchResults matches;
-
     bool found = false;
     if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex)))
     {
@@ -266,14 +263,28 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
     if (direction == Backward)
         std::swap(begin, end);
 
-    Selection res{begin.coord(), end.coord(), std::move(captures)};
+    return {begin.coord(), end.coord(), std::move(captures)};
+}
+
+template<Direction direction, SelectMode mode>
+void select_next_match(const Buffer& buffer, SelectionList& selections,
+                                const Regex& regex)
+{
     if (mode == SelectMode::Replace)
-        selections = SelectionList{ std::move(res) };
+    {
+        for (auto& sel : selections)
+            sel = find_next_match<direction>(buffer, sel, regex);
+    }
+    if (mode == SelectMode::Extend)
+    {
+        for (auto& sel : selections)
+            sel.merge_with(find_next_match<direction>(buffer, sel, regex));
+    }
     else if (mode == SelectMode::ReplaceMain)
-        sel = std::move(res);
+        selections.main() = find_next_match<direction>(buffer, selections.main(), regex);
     else if (mode == SelectMode::Append)
     {
-        selections.push_back(std::move(res));
+        selections.push_back(find_next_match<direction>(buffer, selections.main(), regex));
         selections.set_main_index(selections.size() - 1);
     }
     selections.sort_and_merge_overlapping();
