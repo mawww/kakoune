@@ -580,6 +580,7 @@ void split_lines(Context& context, int)
             res.push_back({line, {line, buffer[line].length()-1}});
         res.push_back({max.line, max});
     }
+    res.set_main_index(res.size() - 1);
     selections = std::move(res);
 }
 
