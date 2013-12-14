@@ -69,7 +69,7 @@ void register_env_vars()
         }, {
             "selection",
             [](const String& name, const Context& context)
-            { const Range& sel = context.editor().main_selection();
+            { const Range& sel = context.editor().selections().main();
               return content(context.buffer(), sel); }
         }, {
             "selections",
@@ -106,20 +106,20 @@ void register_env_vars()
         }, {
             "cursor_line",
             [](const String& name, const Context& context)
-            { return to_string(context.editor().main_selection().last().line + 1); }
+            { return to_string(context.editor().selections().main().last().line + 1); }
         }, {
             "cursor_column",
             [](const String& name, const Context& context)
-            { return to_string(context.editor().main_selection().last().column + 1); }
+            { return to_string(context.editor().selections().main().last().column + 1); }
         }, {
             "cursor_char_column",
             [](const String& name, const Context& context)
-            { auto coord = context.editor().main_selection().last();
+            { auto coord = context.editor().selections().main().last();
               return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
         }, {
             "selection_desc",
             [](const String& name, const Context& context)
-            { auto& sel = context.editor().main_selection();
+            { auto& sel = context.editor().selections().main();
                 auto beg = sel.min();
                 return to_string(beg.line + 1) + ':' + to_string(beg.column + 1) + '+' +
                        to_string((int)context.buffer().distance(beg, sel.max())+1); }

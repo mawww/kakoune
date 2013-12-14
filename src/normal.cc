@@ -189,7 +189,7 @@ void goto_commands(Context& context, int line)
             }
             case 'f':
             {
-                const Range& sel = context.editor().main_selection();
+                const Range& sel = context.editor().selections().main();
                 const Buffer& buffer = context.buffer();
                 String filename = content(buffer, sel);
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
@@ -958,7 +958,7 @@ void align_indent(Context& context, int selection)
     if (selection > selections.size())
         throw runtime_error("invalid selection index");
     if (selection == 0)
-        selection  = editor.main_selection_index() + 1;
+        selection  = editor.selections().main_index() + 1;
 
     const String& line = buffer[selections[selection-1].min().line];
     auto it = line.begin();

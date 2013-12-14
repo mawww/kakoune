@@ -671,7 +671,7 @@ void info(CommandParameters params, Context& context)
         if (parser.has_option("anchor"))
         {
             style =  MenuStyle::Inline;
-            const auto& sel = context.editor().main_selection();
+            const auto& sel = context.editor().selections().main();
             auto it = sel.last();
             String anchor = parser.option_value("anchor");
             if (anchor == "left")

@@ -46,7 +46,7 @@ void Window::display_selection_at(LineCount line)
 {
     if (line >= 0 or line < m_dimensions.line)
     {
-        auto cursor_line = main_selection().last().line;
+        auto cursor_line = selections().main().last().line;
         m_position.line = std::max(0_line, cursor_line - line);
     }
 }
@@ -147,8 +147,8 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
 
 void Window::scroll_to_keep_cursor_visible_ifn()
 {
-    const auto& first = main_selection().first();
-    const auto& last  = main_selection().last();
+    const auto& first = selections().main().first();
+    const auto& last  = selections().main().last();
 
     const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
                                                  (m_dimensions.line - 1) / 2);

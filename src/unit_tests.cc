@@ -89,7 +89,7 @@ void test_editor()
     Selection sel{ 2_line, buffer.back_coord() };
     editor.select(sel, SelectMode::Replace);
     editor.insert("",InsertMode::Replace);
-    kak_assert(not buffer.is_end(editor.main_selection().first()));
+    kak_assert(not buffer.is_end(editor.selections().main().first()));
 }
 
 void test_utf8()

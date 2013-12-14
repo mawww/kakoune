@@ -67,8 +67,6 @@ public:
     void rotate_selections(int count) { m_selections.rotate_main(count); }
 
     const SelectionList& selections() const { return m_selections; }
-    const Selection& main_selection() const { return m_selections.main(); }
-    size_t main_selection_index() const { return m_selections.main_index(); }
     std::vector<String>  selections_content() const;
 
     bool undo();
@@ -105,9 +103,6 @@ struct scoped_edition
 private:
     Editor& m_editor;
 };
-
-void avoid_eol(const Buffer& buffer, BufferCoord& coord);
-void avoid_eol(const Buffer& buffer, Range& sel);
 
 }
 

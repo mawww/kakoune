@@ -41,7 +41,7 @@ void Client::print_status(DisplayLine status_line)
 
 DisplayLine Client::generate_mode_line() const
 {
-    auto pos = context().editor().main_selection().last();
+    auto pos = context().editor().selections().main().last();
     auto col = context().buffer()[pos.line].char_count_to(pos.column);
 
     std::ostringstream oss;
@@ -76,7 +76,7 @@ void Client::redraw_ifn()
 static void reload_buffer(Context& context, const String& filename)
 {
     DisplayCoord view_pos = context.window().position();
-    BufferCoord cursor_pos = context.editor().main_selection().last();
+    BufferCoord cursor_pos = context.editor().selections().main().last();
     Buffer* buf = create_buffer_from_file(filename);
     if (not buf)
         return;

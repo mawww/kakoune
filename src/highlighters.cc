@@ -382,7 +382,7 @@ void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
         BufferCoord begin = forward ? sel.first() : buffer.char_next(sel.last());
         BufferCoord end   = forward ? sel.last() : buffer.char_next(sel.first());
 
-        const bool primary = (i == window.main_selection_index());
+        const bool primary = (i == window.selections().main_index());
         if (not only_cursor)
         {
             ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
