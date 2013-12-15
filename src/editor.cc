@@ -13,91 +13,8 @@ namespace Kakoune
 
 Editor::Editor(Buffer& buffer)
     : m_buffer(&buffer),
-      m_edition_level(0),
       m_selections(buffer, {BufferCoord{}})
 {}
-
-void Editor::erase()
-{
-    scoped_edition edition(*this);
-    for (auto& sel : m_selections)
-    {
-        Kakoune::erase(*m_buffer, sel);
-        avoid_eol(*m_buffer, sel);
-    }
-}
-
-static BufferIterator prepare_insert(Buffer& buffer, const Selection& sel,
-                                     InsertMode mode)
-{
-    switch (mode)
-    {
-    case InsertMode::Insert:
-        return buffer.iterator_at(sel.min());
-    case InsertMode::Replace:
-        return Kakoune::erase(buffer, sel);
-    case InsertMode::Append:
-    {
-        // special case for end of lines, append to current line instead
-        auto pos = buffer.iterator_at(sel.max());
-        return *pos == '\n' ? pos : utf8::next(pos);
-    }
-    case InsertMode::InsertAtLineBegin:
-        return buffer.iterator_at(sel.min().line);
-    case InsertMode::AppendAtLineEnd:
-        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
-    case InsertMode::InsertAtNextLineBegin:
-        return buffer.iterator_at(sel.max().line+1);
-    case InsertMode::OpenLineBelow:
-        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
-    case InsertMode::OpenLineAbove:
-        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
-    }
-    kak_assert(false);
-    return {};
-}
-
-void Editor::insert(const String& str, InsertMode mode)
-{
-    scoped_edition edition(*this);
-
-    for (auto& sel : m_selections)
-    {
-        auto pos = prepare_insert(*m_buffer, sel, mode);
-        pos = m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace and pos != m_buffer->end())
-        {
-            sel.first() = pos.coord();
-            sel.last()  = str.empty() ?
-                 pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
-        }
-        avoid_eol(*m_buffer, sel);
-    }
-    check_invariant();
-}
-
-void Editor::insert(memoryview<String> strings, InsertMode mode)
-{
-    scoped_edition edition(*this);
-    if (strings.empty())
-        return;
-
-    for (size_t i = 0; i < selections().size(); ++i)
-    {
-        auto& sel = m_selections[i];
-        auto pos = prepare_insert(*m_buffer, sel, mode);
-        const String& str = strings[std::min(i, strings.size()-1)];
-        pos = m_buffer->insert(pos, str);
-        if (mode == InsertMode::Replace and pos != m_buffer->end())
-        {
-            sel.first() = pos.coord();
-            sel.last()  = (str.empty() ?
-                           pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
-        }
-        avoid_eol(*m_buffer, sel);
-    }
-    check_invariant();
-}
 
 std::vector<String> Editor::selections_content() const
 {
@@ -180,20 +97,6 @@ void Editor::check_invariant() const
     m_selections.check_invariant();
     buffer().check_invariant();
 #endif
-}
-
-void Editor::begin_edition()
-{
-    ++m_edition_level;
-}
-
-void Editor::end_edition()
-{
-    kak_assert(m_edition_level > 0);
-    if (m_edition_level == 1)
-        m_buffer->commit_undo_group();
-
-    --m_edition_level;
 }
 
 }

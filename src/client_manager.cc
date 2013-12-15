@@ -109,7 +109,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
         if (&client->context().buffer() != &buffer)
             continue;
 
-        if (client->context().editor().is_editing())
+        if (client->context().is_editing())
             throw runtime_error("client '" + client->context().name() + "' is inserting in '" +
                                 buffer.display_name() + '\'');
 

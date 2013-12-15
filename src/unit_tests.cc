@@ -68,30 +68,6 @@ void test_undo_group_optimizer()
         kak_assert(lines[i] == buffer[LineCount((int)i)]);
 }
 
-void test_editor()
-{
-    using namespace std::placeholders;
-    Buffer buffer("test", Buffer::Flags::None, { "test\n", "\n", "youpi\n" });
-    Editor editor(buffer);
-
-    {
-        scoped_edition edition{editor};
-        select_whole_buffer(buffer, editor.selections());
-        select_all_matches(buffer, editor.selections(), Regex{"\\n\\h*"});
-        for (auto& sel : editor.selections())
-        {
-            kak_assert(buffer.byte_at(sel.min()) == '\n');
-            erase(buffer, sel);
-        }
-    }
-    editor.undo();
-
-    Selection sel{ 2_line, buffer.back_coord() };
-    editor.selections() = SelectionList{sel};
-    editor.insert("",InsertMode::Replace);
-    kak_assert(not buffer.is_end(editor.selections().main().first()));
-}
-
 void test_utf8()
 {
     String str = "maïs mélange bientôt";
@@ -146,5 +122,4 @@ void run_unit_tests()
     test_keys();
     test_buffer();
     test_undo_group_optimizer();
-    test_editor();
 }

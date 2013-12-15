@@ -20,6 +20,89 @@
 namespace Kakoune
 {
 
+void erase(Buffer& buffer, SelectionList& selections)
+{
+    for (auto& sel : selections)
+    {
+        erase(buffer, sel);
+        avoid_eol(buffer, sel);
+    }
+    selections.check_invariant();
+    buffer.check_invariant();
+}
+
+template<InsertMode mode>
+BufferIterator prepare_insert(Buffer& buffer, const Selection& sel)
+{
+    switch (mode)
+    {
+    case InsertMode::Insert:
+        return buffer.iterator_at(sel.min());
+    case InsertMode::Replace:
+        return Kakoune::erase(buffer, sel);
+    case InsertMode::Append:
+    {
+        // special case for end of lines, append to current line instead
+        auto pos = buffer.iterator_at(sel.max());
+        return *pos == '\n' ? pos : utf8::next(pos);
+    }
+    case InsertMode::InsertAtLineBegin:
+        return buffer.iterator_at(sel.min().line);
+    case InsertMode::AppendAtLineEnd:
+        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
+    case InsertMode::InsertAtNextLineBegin:
+        return buffer.iterator_at(sel.max().line+1);
+    case InsertMode::OpenLineBelow:
+        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
+    case InsertMode::OpenLineAbove:
+        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
+    }
+    kak_assert(false);
+    return {};
+}
+
+template<InsertMode mode>
+void insert(Buffer& buffer, SelectionList& selections, const String& str)
+{
+    for (auto& sel : selections)
+    {
+        auto pos = prepare_insert<mode>(buffer, sel);
+        pos = buffer.insert(pos, str);
+        if (mode == InsertMode::Replace and pos != buffer.end())
+        {
+            sel.first() = pos.coord();
+            sel.last()  = str.empty() ?
+                 pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
+        }
+        avoid_eol(buffer, sel);
+    }
+    selections.check_invariant();
+    buffer.check_invariant();
+}
+
+template<InsertMode mode>
+void insert(Buffer& buffer, SelectionList& selections, memoryview<String> strings)
+{
+    if (strings.empty())
+        return;
+    for (size_t i = 0; i < selections.size(); ++i)
+    {
+        auto& sel = selections[i];
+        auto pos = prepare_insert<mode>(buffer, sel);
+        const String& str = strings[std::min(i, strings.size()-1)];
+        pos = buffer.insert(pos, str);
+        if (mode == InsertMode::Replace and pos != buffer.end())
+        {
+            sel.first() = pos.coord();
+            sel.last()  = (str.empty() ?
+                           pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
+        }
+        avoid_eol(buffer, sel);
+    }
+    selections.check_invariant();
+    buffer.check_invariant();
+}
+
 using namespace std::placeholders;
 
 enum class SelectMode
@@ -98,12 +181,12 @@ void select_coord(BufferCoord coord, SelectionList& selections)
 }
 
 template<InsertMode mode>
-void insert(Context& context, int)
+void enter_insert_mode(Context& context, int)
 {
     context.input_handler().insert(mode);
 }
 
-void repeat_insert(Context& context, int)
+void repeat_last_insert(Context& context, int)
 {
     context.input_handler().repeat_last_insert();
 }
@@ -289,11 +372,11 @@ void replace_with_char(Context& context, int)
     on_next_key_with_autoinfo(context, [](Key key, Context& context) {
         if (not isprint(key.key))
             return;
-        Editor& editor = context.editor();
-        SelectionList sels = context.selections();
-        auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
-        select_all_matches(context.buffer(), context.selections(), Regex{"."});
-        editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
+        ScopedEdition edition(context);
+        Buffer& buffer = context.buffer();
+        SelectionList selections = context.selections();
+        select_all_matches(buffer, selections, Regex{"."});
+        insert<InsertMode::Replace>(buffer, selections, codepoint_to_str(key.key));
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -309,6 +392,7 @@ Codepoint swap_case(Codepoint cp)
 template<Codepoint (*func)(Codepoint)>
 void for_each_char(Context& context, int)
 {
+    ScopedEdition edition(context);
     Editor& editor = context.editor();
     std::vector<String> sels = editor.selections_content();
     for (auto& sel : sels)
@@ -316,7 +400,7 @@ void for_each_char(Context& context, int)
         for (auto& c : sel)
             c = func(c);
     }
-    editor.insert(sels, InsertMode::Replace);
+    insert<InsertMode::Replace>(context.buffer(), context.selections(), sels);
 }
 
 void command(Context& context, int)
@@ -350,11 +434,12 @@ void pipe(Context& context, int)
             if (real_cmd.empty())
                 return;
 
-            Editor& editor = context.editor();
+            Buffer& buffer = context.buffer();
+            SelectionList& selections = context.selections();
             std::vector<String> strings;
-            for (auto& sel : context.selections())
+            for (auto& sel : selections)
             {
-                auto str = content(context.buffer(), sel);
+                auto str = content(buffer, sel);
                 bool insert_eol = str.back() != '\n';
                 if (insert_eol)
                     str += '\n';
@@ -364,7 +449,8 @@ void pipe(Context& context, int)
                     str = str.substr(0, str.length()-1);
                 strings.push_back(str);
             }
-            editor.insert(strings, InsertMode::Replace);
+            ScopedEdition edition(context);
+            insert<InsertMode::Replace>(buffer, selections, strings);
         });
 }
 
@@ -505,43 +591,43 @@ void cat_yank(Context& context, int)
 void erase_selections(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    context.editor().erase();
+    ScopedEdition edition(context);
+    erase(context.buffer(), context.selections());
 }
 
 void change(Context& context, int param)
 {
     RegisterManager::instance()['"'] = context.editor().selections_content();
-    insert<InsertMode::Replace>(context, param);
+    enter_insert_mode<InsertMode::Replace>(context, param);
 }
 
-static InsertMode adapt_for_linewise(InsertMode mode)
+constexpr InsertMode adapt_for_linewise(InsertMode mode)
 {
-    if (mode == InsertMode::Append)
-        return InsertMode::InsertAtNextLineBegin;
-    if (mode == InsertMode::Insert)
-        return InsertMode::InsertAtLineBegin;
-    if (mode == InsertMode::Replace)
-        return InsertMode::Replace;
-
-    kak_assert(false);
-    return InsertMode::Insert;
+    return ((mode == InsertMode::Append) ?
+             InsertMode::InsertAtNextLineBegin :
+             ((mode == InsertMode::Insert) ?
+               InsertMode::InsertAtLineBegin :
+               ((mode == InsertMode::Replace) ?
+                 InsertMode::Replace : InsertMode::Insert)));
 }
 
-template<InsertMode insert_mode>
+template<InsertMode mode>
 void paste(Context& context, int)
 {
-    Editor& editor = context.editor();
     auto strings = RegisterManager::instance()['"'].values(context);
-    InsertMode mode = insert_mode;
+    bool linewise = false;
     for (auto& str : strings)
     {
         if (not str.empty() and str.back() == '\n')
         {
-            mode = adapt_for_linewise(mode);
+            linewise = true;
             break;
         }
     }
-    editor.insert(strings, mode);
+    if (linewise)
+        insert<adapt_for_linewise(mode)>(context.buffer(), context.selections(), strings);
+    else
+        insert<mode>(context.buffer(), context.selections(), strings);
 }
 
 template<typename T>
@@ -619,17 +705,17 @@ void join_select_spaces(Context& context, int)
 {
     select(select_whole_lines)(context, 0);
     select<SelectMode::Extend>(select_to_eol)(context, 0);
-    auto& editor = context.editor();
     auto& buffer = context.buffer();
     auto& selections = context.selections();
-    select_all_matches(buffer, context.selections(), Regex{"(\n\\h*)+"});
+    select_all_matches(buffer, selections, Regex{"(\n\\h*)+"});
     // remove last end of line if selected
     kak_assert(std::is_sorted(selections.begin(), selections.end(),
                [](const Selection& lhs, const Selection& rhs)
                { return lhs.min() < rhs.min(); }));
     if (not selections.empty() and selections.back().max() == buffer.back_coord())
         selections.pop_back();
-    editor.insert(" ", InsertMode::Replace);
+    ScopedEdition edition(context);
+    insert<InsertMode::Replace>(buffer, selections, " ");
 }
 
 void join(Context& context, int param)
@@ -666,21 +752,18 @@ void indent(Context& context, int)
     CharCount indent_width = context.options()["indentwidth"].get<int>();
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
-    auto& editor = context.editor();
     auto& buffer = context.buffer();
-    DynamicSelectionList sels{context.buffer(), context.selections()};
-    auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
-    SelectionList res;
+    SelectionList sels;
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
         {
             if (indent_empty or buffer[line].length() > 1)
-                res.emplace_back(line, line);
+                sels.emplace_back(line, line);
         }
     }
-    context.selections() = std::move(res);
-    editor.insert(indent, InsertMode::Insert);
+    ScopedEdition edition(context);
+    insert<InsertMode::Insert>(buffer, sels, indent);
 }
 
 template<bool deindent_incomplete = true>
@@ -691,12 +774,8 @@ void deindent(Context& context, int)
     if (indent_width == 0)
         indent_width = tabstop;
 
-    auto& editor = context.editor();
     auto& buffer = context.buffer();
-    DynamicSelectionList sels{context.buffer(), context.selections()};
-    auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
-
-    SelectionList res;
+    SelectionList sels;
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -713,19 +792,19 @@ void deindent(Context& context, int)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        res.emplace_back(line, BufferCoord{line, column-1});
+                        sels.emplace_back(line, BufferCoord{line, column-1});
                     break;
                 }
                 if (width == indent_width)
                 {
-                    res.emplace_back(line, BufferCoord{line, column});
+                    sels.emplace_back(line, BufferCoord{line, column});
                     break;
                 }
             }
         }
     }
-    context.selections() = std::move(res);
-    editor.erase();
+    ScopedEdition edition(context);
+    erase(context.buffer(), sels);
 }
 
 template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
@@ -827,8 +906,9 @@ void rotate_selections_content(Context& context, int count)
     auto strings = editor.selections_content();
     count = count % strings.size();
     std::rotate(strings.begin(), strings.end()-count, strings.end());
-    editor.insert(strings, InsertMode::Replace);
     context.selections().rotate_main(count);
+    ScopedEdition edition(context);
+    insert<InsertMode::Replace>(context.buffer(), context.selections(), strings);
 }
 
 enum class SelectFlags
@@ -885,7 +965,7 @@ void replay_macro(Context& context, int count)
                 auto stop = on_scope_end([&]{ running_macros.erase(key.key); });
 
                 auto keys = parse_keys(reg_val[0]);
-                scoped_edition edition(context.editor());
+                ScopedEdition edition(context);
                 do { exec_keys(keys, context); } while (--count > 0);
             }
         }
@@ -983,7 +1063,6 @@ void align(Context& context, int)
 
 void align_indent(Context& context, int selection)
 {
-    auto& editor = context.editor();
     auto& buffer = context.buffer();
     auto& selections = context.selections();
     std::vector<LineCount> lines;
@@ -1003,7 +1082,7 @@ void align_indent(Context& context, int selection)
         ++it;
     const String indent{line.begin(), it};
 
-    scoped_edition edition{editor};
+    ScopedEdition edition{context};
     for (auto& l : lines)
     {
         auto& line = buffer[l];
@@ -1023,7 +1102,7 @@ public:
 
     void operator() (Context& context, int count)
     {
-        scoped_edition edition(context.editor());
+        ScopedEdition edition(context);
         do { m_func(context, 0); } while(--count > 0);
     }
 private:
@@ -1076,12 +1155,12 @@ KeyMap keymap =
 
     { 'd', erase_selections },
     { 'c', change },
-    { 'i', insert<InsertMode::Insert> },
-    { 'I', insert<InsertMode::InsertAtLineBegin> },
-    { 'a', insert<InsertMode::Append> },
-    { 'A', insert<InsertMode::AppendAtLineEnd> },
-    { 'o', insert<InsertMode::OpenLineBelow> },
-    { 'O', insert<InsertMode::OpenLineAbove> },
+    { 'i', enter_insert_mode<InsertMode::Insert> },
+    { 'I', enter_insert_mode<InsertMode::InsertAtLineBegin> },
+    { 'a', enter_insert_mode<InsertMode::Append> },
+    { 'A', enter_insert_mode<InsertMode::AppendAtLineEnd> },
+    { 'o', enter_insert_mode<InsertMode::OpenLineBelow> },
+    { 'O', enter_insert_mode<InsertMode::OpenLineAbove> },
     { 'r', replace_with_char },
 
     { 'g', goto_commands<SelectMode::Replace> },
@@ -1099,7 +1178,7 @@ KeyMap keymap =
     { 'S', split_regex },
     { alt('s'), split_lines },
 
-    { '.', repeat_insert },
+    { '.', repeat_last_insert },
 
     { '%', [](Context& context, int) { select_whole_buffer(context.buffer(), context.selections()); } },
 

@@ -70,7 +70,15 @@ public:
     const String& name() const { return m_name; }
     void set_name(String name) { m_name = std::move(name); }
 
+    bool is_editing() const { return m_edition_level!= 0; }
+    void disable_undo_handling() { ++m_edition_level; }
 private:
+    void begin_edition();
+    void end_edition();
+    int m_edition_level = 0;
+
+    friend struct ScopedEdition;
+
     safe_ptr<Editor>       m_editor;
     safe_ptr<InputHandler> m_input_handler;
     safe_ptr<Client>       m_client;
@@ -80,6 +88,20 @@ private:
     using JumpList = std::vector<DynamicSelectionList>;
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
+};
+
+struct ScopedEdition
+{
+    ScopedEdition(Context& context)
+        : m_context(context)
+    { m_context.begin_edition(); }
+
+    ~ScopedEdition()
+    { m_context.end_edition(); }
+
+    Context& context() const { return m_context; }
+private:
+    Context& m_context;
 };
 
 }

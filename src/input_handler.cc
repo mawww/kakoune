@@ -873,7 +873,7 @@ public:
     Insert(InputHandler& input_handler, InsertMode mode)
         : InputMode(input_handler),
           m_insert_mode(mode),
-          m_edition(context().editor()),
+          m_edition(context()),
           m_completer(context()),
           m_idle_timer{Clock::now() + idle_timeout,
                        [this](Timer& timer) {
@@ -982,8 +982,8 @@ public:
 private:
     void erase() const
     {
-        auto& buffer = m_edition.editor().buffer();
-        for (auto& sel : m_edition.editor().selections())
+        auto& buffer = context().buffer();
+        for (auto& sel : context().selections())
         {
             if (sel.last() == BufferCoord{0,0})
                 continue;
@@ -1007,8 +1007,8 @@ private:
 
     void insert(memoryview<String> strings)
     {
-        auto& buffer = m_edition.editor().buffer();
-        auto& selections = m_edition.editor().selections();
+        auto& buffer = context().buffer();
+        auto& selections = context().selections();
         for (size_t i = 0; i < selections.size(); ++i)
         {
             size_t index = std::min(i, strings.size()-1);
@@ -1020,18 +1020,18 @@ private:
     void insert(Codepoint key)
     {
         auto str = codepoint_to_str(key);
-        auto& buffer = m_edition.editor().buffer();
-        for (auto& sel : m_edition.editor().selections())
+        auto& buffer = context().buffer();
+        for (auto& sel : context().selections())
             buffer.insert(buffer.iterator_at(sel.last()), str);
         context().hooks().run_hook("InsertChar", str, context());
     }
 
     void prepare(InsertMode mode)
     {
-        Editor& editor = m_edition.editor();
-        Buffer& buffer = editor.buffer();
+        SelectionList& selections = context().selections();
+        Buffer& buffer = context().buffer();
 
-        for (auto& sel : editor.m_selections)
+        for (auto& sel : selections)
         {
             BufferCoord first, last;
             switch (mode)
@@ -1087,7 +1087,7 @@ private:
             insert('\n');
             if (mode == InsertMode::OpenLineAbove)
             {
-                for (auto& sel : editor.m_selections)
+                for (auto& sel : selections)
                 {
                     // special case, the --first line above did nothing, so we need to compensate now
                     if (sel.first() == buffer.char_next({0,0}))
@@ -1095,24 +1095,25 @@ private:
                 }
             }
         }
-        editor.m_selections.sort_and_merge_overlapping();
-        editor.check_invariant();
+        selections.sort_and_merge_overlapping();
+        selections.check_invariant();
+        buffer.check_invariant();
     }
 
     void on_replaced() override
     {
-        for (auto& sel : m_edition.editor().m_selections)
+        for (auto& sel : context().selections())
         {
             if (m_insert_mode == InsertMode::Append and sel.last().column > 0)
-                sel.last() = m_edition.editor().buffer().char_prev(sel.last());
-            avoid_eol(m_edition.editor().buffer(), sel);
+                sel.last() = context().buffer().char_prev(sel.last());
+            avoid_eol(context().buffer(), sel);
         }
     }
 
     enum class Mode { Default, Complete, InsertReg };
     Mode m_mode = Mode::Default;
     InsertMode       m_insert_mode;
-    scoped_edition   m_edition;
+    ScopedEdition    m_edition;
     BufferCompleter  m_completer;
     Timer            m_idle_timer;
 };

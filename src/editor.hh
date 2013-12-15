@@ -38,13 +38,6 @@ public:
 
     Buffer& buffer() const { return *m_buffer; }
 
-    void erase();
-
-    void insert(const String& string,
-                InsertMode mode = InsertMode::Insert);
-    void insert(memoryview<String> strings,
-                InsertMode mode = InsertMode::Insert);
-
     const SelectionList& selections() const { return m_selections; }
     SelectionList& selections() { return m_selections; }
     std::vector<String>  selections_content() const;
@@ -52,33 +45,14 @@ public:
     bool undo();
     bool redo();
 
-    bool is_editing() const { return m_edition_level!= 0; }
 private:
     friend struct scoped_edition;
     friend class InputModes::Insert;
-    void begin_edition();
-    void end_edition();
-
-    int m_edition_level;
 
     void check_invariant() const;
 
     safe_ptr<Buffer>         m_buffer;
     DynamicSelectionList     m_selections;
-};
-
-struct scoped_edition
-{
-    scoped_edition(Editor& editor)
-        : m_editor(editor)
-    { m_editor.begin_edition(); }
-
-    ~scoped_edition()
-    { m_editor.end_edition(); }
-
-    Editor& editor() const { return m_editor; }
-private:
-    Editor& m_editor;
 };
 
 }

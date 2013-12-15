@@ -187,4 +187,18 @@ const SelectionList& Context::selections() const
     return editor().selections();
 }
 
+void Context::begin_edition()
+{
+    ++m_edition_level;
+}
+
+void Context::end_edition()
+{
+    kak_assert(m_edition_level > 0);
+    if (m_edition_level == 1)
+        buffer().commit_undo_group();
+
+    --m_edition_level;
+}
+
 }

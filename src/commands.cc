@@ -573,6 +573,11 @@ void context_wrap(CommandParameters params, Context& context, Func func)
         DynamicSelectionList sels{editor.buffer(), editor.selections()};
         auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
 
+        // We do not want this draft context to commit undo groups if the real one is
+        // going to commit the whole thing later
+        if (real_context->is_editing())
+            input_handler.context().disable_undo_handling();
+
         if (parser.has_option("itersel"))
         {
             for (auto& sel : sels)
@@ -804,7 +809,7 @@ void exec_keys(const KeyList& keys, Context& context)
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);
 
-    scoped_edition edition(context.editor());
+    ScopedEdition edition(context);
 
     for (auto& key : keys)
         context.input_handler().handle_key(key);
