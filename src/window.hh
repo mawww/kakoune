@@ -53,14 +53,14 @@ public:
     size_t timestamp() const { return m_timestamp; }
     void   forget_timestamp() { m_timestamp = -1; }
 
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
+    BufferCoord offset_coord(BufferCoord coord, LineCount offset);
 private:
     Window(const Window&) = delete;
 
     void on_option_changed(const Option& option) override;
 
     void scroll_to_keep_cursor_visible_ifn();
-
-    BufferCoord offset_coord(BufferCoord coord, LineCount move) override;
 
     DisplayCoord  m_position;
     DisplayCoord  m_dimensions;

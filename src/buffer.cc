@@ -137,6 +137,24 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset)
+{
+    auto& line = m_lines[coord.line].content;
+    auto character = std::max(0_char, std::min(line.char_count_to(coord.column) + offset,
+                                               line.char_length() - 1));
+    return {coord.line, line.byte_count_to(character)};
+}
+
+BufferCoord Buffer::offset_coord(BufferCoord coord, LineCount offset)
+{
+    auto character = m_lines[coord.line].content.char_count_to(coord.column);
+    auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
+    auto& content = m_lines[line].content;
+
+    character = std::max(0_char, std::min(character, content.char_length() - 2));
+    return {line, content.byte_count_to(character)};
+}
+
 BufferIterator Buffer::begin() const
 {
     return BufferIterator(*this, { 0_line, 0 });

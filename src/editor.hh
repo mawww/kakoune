@@ -53,11 +53,6 @@ public:
     void insert(memoryview<String> strings,
                 InsertMode mode = InsertMode::Insert);
 
-    void move_selections(LineCount move,
-                         SelectMode mode = SelectMode::Replace);
-    void move_selections(CharCount move,
-                         SelectMode mode = SelectMode::Replace);
-
     const SelectionList& selections() const { return m_selections; }
     SelectionList& selections() { return m_selections; }
     std::vector<String>  selections_content() const;
@@ -71,9 +66,6 @@ private:
     friend class InputModes::Insert;
     void begin_edition();
     void end_edition();
-
-    virtual BufferCoord offset_coord(BufferCoord coord, LineCount move);
-    virtual BufferCoord offset_coord(BufferCoord coord, CharCount move);
 
     int m_edition_level;
 

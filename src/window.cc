@@ -233,6 +233,11 @@ DisplayCoord Window::display_position(BufferCoord coord)
     return { 0, 0 };
 }
 
+BufferCoord Window::offset_coord(BufferCoord coord, CharCount offset)
+{
+    return buffer().offset_coord(coord, offset);
+}
+
 BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
 {
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);

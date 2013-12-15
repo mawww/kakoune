@@ -1007,8 +1007,21 @@ constexpr Repeated<T> repeated(T func) { return Repeated<T>(func); }
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
 void move(Context& context, int count)
 {
+    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     Type offset(std::max(count,1));
-    context.editor().move_selections(direction == Backward ? -offset : offset, mode);
+    if (direction == Backward)
+        offset = -offset;
+    auto& selections = context.editor().selections();
+    for (auto& sel : selections)
+    {
+        auto last = context.has_window() ? context.window().offset_coord(sel.last(), offset)
+                                         : context.buffer().offset_coord(sel.last(), offset);
+
+        sel.first() = mode == SelectMode::Extend ? sel.first() : last;
+        sel.last()  = last;
+        avoid_eol(context.buffer(), sel);
+    }
+    selections.sort_and_merge_overlapping();
 }
 
 KeyMap keymap =

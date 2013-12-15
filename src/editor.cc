@@ -107,50 +107,6 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-BufferCoord Editor::offset_coord(BufferCoord coord, CharCount offset)
-{
-    auto& line = buffer()[coord.line];
-    auto character = std::max(0_char, std::min(line.char_count_to(coord.column) + offset,
-                                               line.char_length() - 2));
-    return {coord.line, line.byte_count_to(character)};
-}
-
-void Editor::move_selections(CharCount offset, SelectMode mode)
-{
-    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    for (auto& sel : m_selections)
-    {
-        auto last = offset_coord(sel.last(), offset);
-        sel.first() = mode == SelectMode::Extend ? sel.first() : last;
-        sel.last()  = last;
-        avoid_eol(*m_buffer, sel);
-    }
-    m_selections.sort_and_merge_overlapping();
-}
-
-BufferCoord Editor::offset_coord(BufferCoord coord, LineCount offset)
-{
-    auto character = (*m_buffer)[coord.line].char_count_to(coord.column);
-    auto line = clamp(coord.line + offset, 0_line, m_buffer->line_count()-1);
-    auto& content = (*m_buffer)[line];
-
-    character = std::max(0_char, std::min(character, content.char_length() - 2));
-    return {line, content.byte_count_to(character)};
-}
-
-void Editor::move_selections(LineCount offset, SelectMode mode)
-{
-    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    for (auto& sel : m_selections)
-    {
-        auto pos = offset_coord(sel.last(), offset);
-        sel.first() = mode == SelectMode::Extend ? sel.first() : pos;
-        sel.last()  = pos;
-        avoid_eol(*m_buffer, sel);
-    }
-    m_selections.sort_and_merge_overlapping();
-}
-
 class ModifiedRangesListener : public BufferChangeListener_AutoRegister
 {
 public:

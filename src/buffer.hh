@@ -147,6 +147,9 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord    clamp(BufferCoord coord) const;
 
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
+    BufferCoord offset_coord(BufferCoord coord, LineCount offset);
+
     const String& name() const { return m_name; }
     String display_name() const;
 

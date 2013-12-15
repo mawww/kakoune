@@ -923,22 +923,22 @@ public:
             erase();
         else if (key == Key::Left)
         {
-            m_edition.editor().move_selections(-1_char, SelectMode::Replace);
+            move(-1_char);
             moved = true;
         }
         else if (key == Key::Right)
         {
-            m_edition.editor().move_selections(1_char, SelectMode::Replace);
+            move(1_char);
             moved = true;
         }
         else if (key == Key::Up)
         {
-            m_edition.editor().move_selections(-1_line, SelectMode::Replace);
+            move(-1_line);
             moved = true;
         }
         else if (key == Key::Down)
         {
-            m_edition.editor().move_selections(1_line, SelectMode::Replace);
+            move(1_line);
             moved = true;
         }
         else if (key.modifiers == Key::Modifiers::None)
@@ -990,6 +990,19 @@ private:
             auto pos = buffer.iterator_at(sel.last());
             buffer.erase(utf8::previous(pos), pos);
         }
+    }
+
+    template<typename Type>
+    void move(Type offset)
+    {
+        auto& selections = context().editor().selections();
+        for (auto& sel : selections)
+        {
+            auto last = context().has_window() ? context().window().offset_coord(sel.last(), offset)
+                                               : context().buffer().offset_coord(sel.last(), offset);
+            sel.first() = sel.last()  = last;
+        }
+        selections.sort_and_merge_overlapping();
     }
 
     void insert(memoryview<String> strings)
