@@ -30,9 +30,6 @@ public:
     SelectionList& selections() { return m_selections; }
     std::vector<String>  selections_content() const;
 
-    bool undo();
-    bool redo();
-
 private:
     friend struct scoped_edition;
     friend class InputModes::Insert;

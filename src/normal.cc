@@ -1094,6 +1094,73 @@ void align_indent(Context& context, int selection)
     }
 }
 
+class ModifiedRangesListener : public BufferChangeListener_AutoRegister
+{
+public:
+    ModifiedRangesListener(Buffer& buffer)
+        : BufferChangeListener_AutoRegister(buffer) {}
+
+    void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+    {
+        m_ranges.update_insert(buffer, begin, end);
+        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
+                                   [](BufferCoord c, const Selection& sel)
+                                   { return c < sel.min(); });
+        m_ranges.emplace(it, begin, buffer.char_prev(end));
+    }
+
+    void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+    {
+        m_ranges.update_erase(buffer, begin, end);
+        auto pos = std::min(begin, buffer.back_coord());
+        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
+                                   [](BufferCoord c, const Selection& sel)
+                                   { return c < sel.min(); });
+        m_ranges.emplace(it, pos, pos);
+    }
+    SelectionList& ranges() { return m_ranges; }
+
+private:
+    SelectionList m_ranges;
+};
+
+inline bool touches(const Buffer& buffer, const Range& lhs, const Range& rhs)
+{
+    return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
+                                  : lhs.min() <= buffer.char_next(rhs.max());
+}
+
+void undo(Context& context, int)
+{
+    ModifiedRangesListener listener(context.buffer());
+    bool res = context.buffer().undo();
+    if (res and not listener.ranges().empty())
+    {
+        auto& selections = context.selections();
+        selections = std::move(listener.ranges());
+        selections.set_main_index(selections.size() - 1);
+        selections.merge_overlapping(std::bind(touches, std::ref(context.buffer()), _1, _2));
+    }
+    else if (not res)
+        context.print_status({ "nothing left to undo", get_color("Information") });
+}
+
+void redo(Context& context, int)
+{
+    using namespace std::placeholders;
+    ModifiedRangesListener listener(context.buffer());
+    bool res = context.buffer().redo();
+    if (res and not listener.ranges().empty())
+    {
+        auto& selections = context.selections();
+        selections = std::move(listener.ranges());
+        selections.set_main_index(selections.size() - 1);
+        selections.merge_overlapping(std::bind(touches, std::ref(context.buffer()), _1, _2));
+    }
+    else if (not res)
+        context.print_status({ "nothing left to redo", get_color("Information") });
+}
+
 template<typename T>
 class Repeated
 {
@@ -1225,8 +1292,8 @@ KeyMap keymap =
     { '*', use_selection_as_search_pattern<true> },
     { alt('*'), use_selection_as_search_pattern<false> },
 
-    { 'u', repeated([](Context& context, int) { if (not context.editor().undo()) context.print_status({ "nothing left to undo", get_color("Information") }); }) },
-    { 'U', repeated([](Context& context, int) { if (not context.editor().redo()) context.print_status({ "nothing left to redo", get_color("Information") }); }) },
+    { 'u', undo },
+    { 'U', redo },
 
     { alt('i'), select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner> },
     { alt('a'), select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },
