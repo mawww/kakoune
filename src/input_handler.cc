@@ -87,7 +87,7 @@ public:
 
     String description() const override
     {
-        return to_string(context().editor().selections().size()) +
+        return to_string(context().selections().size()) +
                (m_count != 0 ? " sel; param=" + to_string(m_count) : " sel");
     }
 
@@ -590,13 +590,13 @@ public:
         if (m_current_candidate < 0)
             m_current_candidate += m_matching_candidates.size();
         const String& candidate = m_matching_candidates[m_current_candidate];
-        const auto& cursor_pos = m_context.editor().selections().main().last();
+        const auto& cursor_pos = m_context.selections().main().last();
         const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
         const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
         const auto buffer_len = buffer.byte_count();
 
         auto ref = buffer.string(m_completions.begin, m_completions.end);
-        for (auto& sel : m_context.editor().selections())
+        for (auto& sel : m_context.selections())
         {
             auto offset = buffer.offset(sel.last());
             auto pos = buffer.iterator_at(sel.last());
@@ -628,7 +628,7 @@ public:
             for (auto& candidate : m_completions.candidates)
                  longest_completion = std::max(longest_completion, candidate.length());
 
-            BufferCoord cursor = m_context.editor().selections().main().last();
+            BufferCoord cursor = m_context.selections().main().last();
             BufferCoord compl_beg = m_completions.begin;
             if (cursor.line == compl_beg.line and
                 is_in_range(cursor.column - compl_beg.column,
@@ -672,7 +672,7 @@ public:
     bool try_complete()
     {
         auto& buffer = m_context.buffer();
-        BufferCoord cursor_pos = m_context.editor().selections().main().last();
+        BufferCoord cursor_pos = m_context.selections().main().last();
         m_completions = (this->*complete_func)(buffer, cursor_pos);
         if (not m_completions.is_valid())
             return false;

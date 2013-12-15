@@ -103,7 +103,7 @@ void Context::print_status(DisplayLine status) const
 
 void Context::push_jump()
 {
-    const SelectionList& jump = editor().selections();
+    const SelectionList& jump = selections();
     if (m_current_jump != m_jump_list.end())
     {
         auto begin = m_current_jump;
@@ -129,7 +129,7 @@ const DynamicSelectionList& Context::jump_forward()
 const DynamicSelectionList& Context::jump_backward()
 {
     if (m_current_jump != m_jump_list.end() and
-        *m_current_jump != editor().selections())
+        *m_current_jump != selections())
     {
         push_jump();
         return *--m_current_jump;
@@ -175,6 +175,16 @@ void Context::change_editor(Editor& editor)
     }
     if (has_input_handler())
         input_handler().reset_normal_mode();
+}
+
+SelectionList& Context::selections()
+{
+    return editor().selections();
+}
+
+const SelectionList& Context::selections() const
+{
+    return editor().selections();
 }
 
 }

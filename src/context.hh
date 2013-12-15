@@ -49,6 +49,9 @@ public:
     UserInterface& ui() const;
     bool has_ui() const { return has_client(); }
 
+    SelectionList& selections();
+    const SelectionList& selections() const;
+
     void change_editor(Editor& editor);
 
     void set_client(Client& client);

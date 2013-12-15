@@ -127,7 +127,7 @@ void edit(CommandParameters params, Context& context)
         int column = param_count > 2 and not parser[2].empty() ?
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        context.editor().selections() = context.buffer().clamp({ line,  column });
+        context.selections() = context.buffer().clamp({ line,  column });
         if (context.has_window())
             context.window().center_selection();
     }
@@ -671,7 +671,7 @@ void info(CommandParameters params, Context& context)
         if (parser.has_option("anchor"))
         {
             style =  MenuStyle::Inline;
-            const auto& sel = context.editor().selections().main();
+            const auto& sel = context.selections().main();
             auto it = sel.last();
             String anchor = parser.option_value("anchor");
             if (anchor == "left")

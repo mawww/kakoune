@@ -69,7 +69,7 @@ void register_env_vars()
         }, {
             "selection",
             [](const String& name, const Context& context)
-            { const Range& sel = context.editor().selections().main();
+            { const Range& sel = context.selections().main();
               return content(context.buffer(), sel); }
         }, {
             "selections",
@@ -106,20 +106,20 @@ void register_env_vars()
         }, {
             "cursor_line",
             [](const String& name, const Context& context)
-            { return to_string(context.editor().selections().main().last().line + 1); }
+            { return to_string(context.selections().main().last().line + 1); }
         }, {
             "cursor_column",
             [](const String& name, const Context& context)
-            { return to_string(context.editor().selections().main().last().column + 1); }
+            { return to_string(context.selections().main().last().column + 1); }
         }, {
             "cursor_char_column",
             [](const String& name, const Context& context)
-            { auto coord = context.editor().selections().main().last();
+            { auto coord = context.selections().main().last();
               return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
         }, {
             "selection_desc",
             [](const String& name, const Context& context)
-            { auto& sel = context.editor().selections().main();
+            { auto& sel = context.selections().main();
                 auto beg = sel.min();
                 return to_string(beg.line + 1) + ':' + to_string(beg.column + 1) + '+' +
                        to_string((int)context.buffer().distance(beg, sel.max())+1); }
@@ -145,7 +145,7 @@ void register_registers()
     static const DynRegDesc dyn_regs[] = {
         { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
         { '.', [](const Context& context) { return context.editor().selections_content(); } },
-        { '#', [](const Context& context) { return StringList{{to_string((int)context.editor().selections().size())}}; } },
+        { '#', [](const Context& context) { return StringList{{to_string((int)context.selections().size())}}; } },
     };
 
     RegisterManager& register_manager = RegisterManager::instance();
@@ -157,7 +157,7 @@ void register_registers()
         register_manager.register_dynamic_register('0'+i,
             [i](const Context& context) {
                 std::vector<String> result;
-                for (auto& sel : context.editor().selections())
+                for (auto& sel : context.selections())
                     result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
                 return result;
             });
