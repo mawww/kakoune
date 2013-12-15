@@ -4,7 +4,7 @@
 #include "color.hh"
 #include "completion.hh"
 #include "context.hh"
-#include "editor.hh"
+#include "normal.hh"
 #include "keys.hh"
 #include "string.hh"
 #include "utils.hh"

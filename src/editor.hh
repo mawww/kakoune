@@ -12,18 +12,6 @@ namespace InputModes { class Insert; }
 
 class Register;
 
-enum class InsertMode : unsigned
-{
-    Insert,
-    Append,
-    Replace,
-    InsertAtLineBegin,
-    InsertAtNextLineBegin,
-    AppendAtLineEnd,
-    OpenLineBelow,
-    OpenLineAbove
-};
-
 // An Editor is a buffer mutator
 //
 // The Editor class provides methods to manipulate a set of selections
