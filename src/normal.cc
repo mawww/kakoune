@@ -22,6 +22,14 @@ namespace Kakoune
 
 using namespace std::placeholders;
 
+enum class SelectMode
+{
+    Replace,
+    Extend,
+    Append,
+    ReplaceMain,
+};
+
 template<SelectMode mode, typename T>
 class Select
 {
@@ -358,6 +366,30 @@ void pipe(Context& context, int)
             }
             editor.insert(strings, InsertMode::Replace);
         });
+}
+
+template<Direction direction, SelectMode mode>
+void select_next_match(const Buffer& buffer, SelectionList& selections,
+                       const Regex& regex)
+{
+    if (mode == SelectMode::Replace)
+    {
+        for (auto& sel : selections)
+            sel = find_next_match<direction>(buffer, sel, regex);
+    }
+    if (mode == SelectMode::Extend)
+    {
+        for (auto& sel : selections)
+            sel.merge_with(find_next_match<direction>(buffer, sel, regex));
+    }
+    else if (mode == SelectMode::ReplaceMain)
+        selections.main() = find_next_match<direction>(buffer, selections.main(), regex);
+    else if (mode == SelectMode::Append)
+    {
+        selections.push_back(find_next_match<direction>(buffer, selections.main(), regex));
+        selections.set_main_index(selections.size() - 1);
+    }
+    selections.sort_and_merge_overlapping();
 }
 
 template<SelectMode mode, Direction direction>

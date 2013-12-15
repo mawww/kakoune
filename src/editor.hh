@@ -12,14 +12,6 @@ namespace InputModes { class Insert; }
 
 class Register;
 
-enum class SelectMode
-{
-    Replace,
-    Extend,
-    Append,
-    ReplaceMain,
-};
-
 enum class InsertMode : unsigned
 {
     Insert,
