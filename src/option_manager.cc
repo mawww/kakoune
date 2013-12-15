@@ -133,7 +133,6 @@ GlobalOptions::GlobalOptions()
                                                 if (not contains(values, v))
                                                     throw runtime_error(v + " is not a recognised value for completers");
                                         });
-    declare_option<bool>("insert_hide_sel", false);
     declare_option<YesNoAsk>("autoreload", Ask);
 }
 

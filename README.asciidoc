@@ -455,8 +455,6 @@ Some options are built in kakoune, and can be used to control it's behaviour:
    completion. Support +option+ which use the +completions+ option, and
    +word=all+ or +word=buffer+ which complete using words in all buffers
    (+word=all+) or only the current one (+word=buffer+)
- * +insert_hide_sel+ _bool_: hide the selection (except the last
-   element) in insert mode
  * +autoreload+ _yesnoask_: auto reload the buffers when an external
    modification is detected.
 
