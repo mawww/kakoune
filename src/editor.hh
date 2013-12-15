@@ -28,7 +28,6 @@ public:
 
     const SelectionList& selections() const { return m_selections; }
     SelectionList& selections() { return m_selections; }
-    std::vector<String>  selections_content() const;
 
 private:
     safe_ptr<Buffer>         m_buffer;

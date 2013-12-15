@@ -51,6 +51,7 @@ public:
 
     SelectionList& selections();
     const SelectionList& selections() const;
+    std::vector<String>  selections_content() const;
 
     void change_editor(Editor& editor);
 

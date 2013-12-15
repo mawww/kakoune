@@ -74,7 +74,7 @@ void register_env_vars()
         }, {
             "selections",
             [](const String& name, const Context& context)
-            { auto sels = context.editor().selections_content();
+            { auto sels = context.selections_content();
               String res;
               for (size_t i = 0; i < sels.size(); ++i)
               {
@@ -144,7 +144,7 @@ void register_registers()
     struct DynRegDesc { char name; StringList (*func)(const Context&); };
     static const DynRegDesc dyn_regs[] = {
         { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
-        { '.', [](const Context& context) { return context.editor().selections_content(); } },
+        { '.', [](const Context& context) { return context.selections_content(); } },
         { '#', [](const Context& context) { return StringList{{to_string((int)context.selections().size())}}; } },
     };
 

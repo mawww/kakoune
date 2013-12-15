@@ -187,6 +187,14 @@ const SelectionList& Context::selections() const
     return editor().selections();
 }
 
+std::vector<String> Context::selections_content() const
+{
+    std::vector<String> contents;
+    for (auto& sel : selections())
+        contents.push_back(buffer().string(sel.min(), buffer().char_next(sel.max())));
+    return contents;
+}
+
 void Context::begin_edition()
 {
     ++m_edition_level;

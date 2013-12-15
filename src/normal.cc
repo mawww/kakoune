@@ -393,8 +393,7 @@ template<Codepoint (*func)(Codepoint)>
 void for_each_char(Context& context, int)
 {
     ScopedEdition edition(context);
-    Editor& editor = context.editor();
-    std::vector<String> sels = editor.selections_content();
+    std::vector<String> sels = context.selections_content();
     for (auto& sel : sels)
     {
         for (auto& c : sel)
@@ -572,14 +571,14 @@ void use_selection_as_search_pattern(Context& context, int)
 
 void yank(Context& context, int)
 {
-    RegisterManager::instance()['"'] = context.editor().selections_content();
+    RegisterManager::instance()['"'] = context.selections_content();
     context.print_status({ "yanked " + to_string(context.selections().size()) +
                            " selections", get_color("Information") });
 }
 
 void cat_yank(Context& context, int)
 {
-    auto sels = context.editor().selections_content();
+    auto sels = context.selections_content();
     String str;
     for (auto& sel : sels)
         str += sel;
@@ -590,14 +589,14 @@ void cat_yank(Context& context, int)
 
 void erase_selections(Context& context, int)
 {
-    RegisterManager::instance()['"'] = context.editor().selections_content();
+    RegisterManager::instance()['"'] = context.selections_content();
     ScopedEdition edition(context);
     erase(context.buffer(), context.selections());
 }
 
 void change(Context& context, int param)
 {
-    RegisterManager::instance()['"'] = context.editor().selections_content();
+    RegisterManager::instance()['"'] = context.selections_content();
     enter_insert_mode<InsertMode::Replace>(context, param);
 }
 
@@ -902,8 +901,7 @@ void rotate_selections_content(Context& context, int count)
 {
     if (count == 0)
         count = 1;
-    Editor& editor = context.editor();
-    auto strings = editor.selections_content();
+    auto strings = context.selections_content();
     count = count % strings.size();
     std::rotate(strings.begin(), strings.end()-count, strings.end());
     context.selections().rotate_main(count);

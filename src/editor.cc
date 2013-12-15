@@ -16,12 +16,4 @@ Editor::Editor(Buffer& buffer)
       m_selections(buffer, {BufferCoord{}})
 {}
 
-std::vector<String> Editor::selections_content() const
-{
-    std::vector<String> contents;
-    for (auto& sel : m_selections)
-        contents.push_back(m_buffer->string(sel.min(), m_buffer->char_next(sel.max())));
-    return contents;
-}
-
 }
