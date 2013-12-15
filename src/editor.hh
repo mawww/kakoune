@@ -31,11 +31,6 @@ public:
     std::vector<String>  selections_content() const;
 
 private:
-    friend struct scoped_edition;
-    friend class InputModes::Insert;
-
-    void check_invariant() const;
-
     safe_ptr<Buffer>         m_buffer;
     DynamicSelectionList     m_selections;
 };

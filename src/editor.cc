@@ -24,13 +24,4 @@ std::vector<String> Editor::selections_content() const
     return contents;
 }
 
-void Editor::check_invariant() const
-{
-#ifdef KAK_DEBUG
-    kak_assert(not m_selections.empty());
-    m_selections.check_invariant();
-    buffer().check_invariant();
-#endif
-}
-
 }
