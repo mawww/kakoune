@@ -140,7 +140,6 @@ void goto_commands(Context& context, int line)
             if (key.modifiers != Key::Modifiers::None)
                 return;
 
-            Editor& editor = context.editor();
             switch (tolower(key.key))
             {
             case 'g':
@@ -157,12 +156,12 @@ void goto_commands(Context& context, int line)
             case 'j':
             {
                 context.push_jump();
-                select_coord<mode>({editor.buffer().line_count() - 1, 0}, context.selections());
+                select_coord<mode>({context.buffer().line_count() - 1, 0}, context.selections());
                 break;
             }
             case 'e':
                 context.push_jump();
-                select_coord<mode>(editor.buffer().back_coord(), context.selections());
+                select_coord<mode>(context.buffer().back_coord(), context.selections());
                 break;
             case 't':
                 if (context.has_window())
@@ -285,7 +284,7 @@ void replace_with_char(Context& context, int)
         Editor& editor = context.editor();
         SelectionList sels = context.selections();
         auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
-        select_all_matches(editor.buffer(), context.selections(), Regex{"."});
+        select_all_matches(context.buffer(), context.selections(), Regex{"."});
         editor.insert(codepoint_to_str(key.key), InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
 }
@@ -603,8 +602,7 @@ void join_select_spaces(Context& context, int)
 
 void join(Context& context, int param)
 {
-    Editor& editor = context.editor();
-    DynamicSelectionList sels{editor.buffer(), context.selections()};
+    DynamicSelectionList sels{context.buffer(), context.selections()};
     auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
     join_select_spaces(context, param);
 }
@@ -638,7 +636,7 @@ void indent(Context& context, int)
 
     auto& editor = context.editor();
     auto& buffer = context.buffer();
-    DynamicSelectionList sels{editor.buffer(), context.selections()};
+    DynamicSelectionList sels{context.buffer(), context.selections()};
     auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
     SelectionList res;
     for (auto& sel : context.selections())
@@ -663,7 +661,7 @@ void deindent(Context& context, int)
 
     auto& editor = context.editor();
     auto& buffer = context.buffer();
-    DynamicSelectionList sels{editor.buffer(), context.selections()};
+    DynamicSelectionList sels{context.buffer(), context.selections()};
     auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
 
     SelectionList res;
