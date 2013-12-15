@@ -8,20 +8,15 @@
 namespace Kakoune
 {
 
-namespace InputModes { class Insert; }
-
-class Register;
-
-// An Editor is a buffer mutator
-//
-// The Editor class provides methods to manipulate a set of selections
-// and to use these selections to mutate it's buffer.
+// An Editor is a to be removed class from the past
 class Editor : public SafeCountable
 {
 public:
-    typedef std::function<void (const Buffer&, SelectionList&)>  Selector;
+    Editor(Buffer& buffer)
+    : m_buffer(&buffer),
+      m_selections(buffer, {BufferCoord{}})
+    {}
 
-    Editor(Buffer& buffer);
     virtual ~Editor() {}
 
     Buffer& buffer() const { return *m_buffer; }
