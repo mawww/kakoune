@@ -51,6 +51,13 @@ inline BufferIterator erase(Buffer& buffer, const Range& range)
                         utf8::next(buffer.iterator_at(range.max())));
 }
 
+inline CharCount char_length(const Buffer& buffer, const Range& range)
+{
+    return utf8::distance(buffer.iterator_at(range.min()),
+                          utf8::next(buffer.iterator_at(range.max())));
+}
+
+
 inline void avoid_eol(const Buffer& buffer, BufferCoord& coord)
 {
     const auto column = coord.column;

@@ -374,9 +374,14 @@ void replace_with_char(Context& context, int)
             return;
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
-        SelectionList selections = context.selections();
-        select_all_matches(buffer, selections, Regex{"."});
-        insert<InsertMode::Replace>(buffer, selections, codepoint_to_str(key.key));
+        SelectionList& selections = context.selections();
+        std::vector<String> strings;
+        for (auto& sel : selections)
+        {
+            CharCount count = char_length(buffer, sel);
+            strings.emplace_back(key.key, count);
+        }
+        insert<InsertMode::Replace>(buffer, selections, strings);
     }, "replace with char", "enter char to replace with\n");
 }
 
