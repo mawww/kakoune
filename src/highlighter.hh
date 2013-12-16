@@ -13,20 +13,20 @@ namespace Kakoune
 {
 
 class DisplayBuffer;
-class Window;
+class Context;
 
 // An Highlighter is a function which mutates a DisplayBuffer in order to
 // change the visual representation of a file. It could be changing text
 // color, adding information text (line numbering for example) or replacing
 // buffer content (folding for example)
 
-typedef std::function<void (const Window& window, DisplayBuffer& display_buffer)> HighlighterFunc;
+typedef std::function<void (const Context& context, DisplayBuffer& display_buffer)> HighlighterFunc;
 typedef std::pair<String, HighlighterFunc> HighlighterAndId;
 typedef memoryview<String> HighlighterParameters;
 
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
-using HighlighterGroup = FunctionGroup<const Window&, DisplayBuffer&>;
+using HighlighterGroup = FunctionGroup<const Context&, DisplayBuffer&>;
 
 struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
                              Singleton<HighlighterRegistry>

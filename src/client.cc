@@ -66,7 +66,7 @@ void Client::redraw_ifn()
         if (dimensions == DisplayCoord{0,0})
             return;
         context().window().set_dimensions(dimensions);
-        context().window().update_display_buffer();;
+        context().window().update_display_buffer(context());
 
         context().ui().draw(context().window().display_buffer(),
                             m_status_line, generate_mode_line());

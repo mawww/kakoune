@@ -13,6 +13,10 @@ Context::Context(InputHandler& input_handler, Editor& editor, String name)
     : m_input_handler(&input_handler), m_editor(&editor),
       m_name(std::move(name)) {}
 
+Context::Context(Editor& editor, String name)
+    : m_editor(&editor),
+      m_name(std::move(name)) {}
+
 Context::~Context() = default;
 
 Buffer& Context::buffer() const

@@ -26,6 +26,7 @@ class Context
 public:
     Context();
     Context(InputHandler& input_handler, Editor& editor, String name = "");
+    Context(Editor& editor, String name = "");
     ~Context();
 
     Context(const Context&) = delete;

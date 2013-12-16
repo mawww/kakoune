@@ -13,9 +13,9 @@ namespace Kakoune
 {
 
 // Implementation in highlighters.cc
-void highlight_selections(const Window& window, DisplayBuffer& display_buffer);
-void expand_tabulations(const Window& window, DisplayBuffer& display_buffer);
-void expand_unprintable(const Window& window, DisplayBuffer& display_buffer);
+void highlight_selections(const Context& context, DisplayBuffer& display_buffer);
+void expand_tabulations(const Context& context, DisplayBuffer& display_buffer);
+void expand_unprintable(const Context& context, DisplayBuffer& display_buffer);
 
 Window::Window(Buffer& buffer)
     : Editor(buffer),
@@ -63,9 +63,10 @@ void Window::scroll(CharCount offset)
     m_position.column = std::max(0_char, m_position.column + offset);
 }
 
-void Window::update_display_buffer()
+void Window::update_display_buffer(const Context& context)
 {
-    scroll_to_keep_cursor_visible_ifn();
+    kak_assert(&buffer() == &context.buffer());
+    scroll_to_keep_selection_visible_ifn(context.selections().main());
 
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
@@ -79,8 +80,8 @@ void Window::update_display_buffer()
     }
 
     m_display_buffer.compute_range();
-    m_highlighters(*this, m_display_buffer);
-    m_builtin_highlighters(*this, m_display_buffer);
+    m_highlighters(context, m_display_buffer);
+    m_builtin_highlighters(context, m_display_buffer);
 
     // cut the start of the line before m_position.column
     for (auto& line : lines)
@@ -142,10 +143,10 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
     return view_pos;
 }
 
-void Window::scroll_to_keep_cursor_visible_ifn()
+void Window::scroll_to_keep_selection_visible_ifn(const Range& selection)
 {
-    const auto& first = selections().main().first();
-    const auto& last  = selections().main().last();
+    const auto& first = selection.first();
+    const auto& last  = selection.last();
 
     const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
                                                  (m_dimensions.line - 1) / 2);
@@ -243,6 +244,8 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
     lines.emplace_back(AtomList{ {buffer(), coord.line, coord.line+1} });
     lines.emplace_back(AtomList{ {buffer(), line, line+1} });
     display_buffer.compute_range();
+
+    Context context(*this);
     m_highlighters(*this, display_buffer);
     m_builtin_highlighters(*this, display_buffer);
 

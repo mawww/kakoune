@@ -37,7 +37,7 @@ public:
     void display_line_at(LineCount buffer_line, LineCount display_line);
     void scroll(LineCount offset);
     void scroll(CharCount offset);
-    void update_display_buffer();
+    void update_display_buffer(const Context& context);
 
     DisplayCoord display_position(BufferCoord coord);
 
@@ -60,7 +60,7 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    void scroll_to_keep_cursor_visible_ifn();
+    void scroll_to_keep_selection_visible_ifn(const Range& selection);
 
     DisplayCoord  m_position;
     DisplayCoord  m_dimensions;

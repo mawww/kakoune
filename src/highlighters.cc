@@ -3,12 +3,12 @@
 #include "assert.hh"
 #include "color_registry.hh"
 #include "context.hh"
+#include "display_buffer.hh"
 #include "option_types.hh"
 #include "register_manager.hh"
 #include "string.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "window.hh"
 
 #include <sstream>
 #include <locale>
@@ -62,7 +62,7 @@ void highlight_range(DisplayBuffer& display_buffer,
 }
 
 template<typename T>
-void apply_highlighter(const Window& window,
+void apply_highlighter(const Context& context,
                        DisplayBuffer& display_buffer,
                        BufferCoord begin, BufferCoord end,
                        T&& highlighter)
@@ -132,7 +132,7 @@ void apply_highlighter(const Window& window,
     }
 
     region_display.compute_range();
-    highlighter(window, region_display);
+    highlighter(context, region_display);
 
     for (size_t i = 0; i < region_lines.size(); ++i)
     {
@@ -154,9 +154,9 @@ public:
     {
     }
 
-    void operator()(const Window& window, DisplayBuffer& display_buffer)
+    void operator()(const Context& context, DisplayBuffer& display_buffer)
     {
-        auto& cache = update_cache_ifn(window.buffer(), display_buffer.range());
+        auto& cache = update_cache_ifn(context.buffer(), display_buffer.range());
         for (auto& match : cache.m_matches)
         {
             for (size_t n = 0; n < match.size(); ++n)
@@ -253,9 +253,9 @@ public:
     DynamicRegexHighlighter(const ColorSpec& colors, RegexGetter getter)
         : m_regex_getter(getter), m_colors(colors), m_colorizer(Regex(), m_colors) {}
 
-    void operator()(const Window& window, DisplayBuffer& display_buffer)
+    void operator()(const Context& context, DisplayBuffer& display_buffer)
     {
-        Regex regex = m_regex_getter(window);
+        Regex regex = m_regex_getter(context);
         if (regex != m_last_regex)
         {
             m_last_regex = regex;
@@ -263,7 +263,7 @@ public:
                 m_colorizer = RegexColorizer{m_last_regex, m_colors};
         }
         if (not m_last_regex.empty())
-            m_colorizer(window, display_buffer);
+            m_colorizer(context, display_buffer);
     }
 
 private:
@@ -280,7 +280,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
     try
     {
         ColorSpec colors { { 0, &get_color(params[0]) } };
-        auto get_regex = [](const Window&){
+        auto get_regex = [](const Context&){
             auto s = RegisterManager::instance()['/'].values(Context{});
             return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
         };
@@ -302,14 +302,14 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     // verify option type now
     GlobalOptions::instance()[option_name].get<Regex>();
 
-    auto get_regex = [option_name](const Window& window){ return window.options()[option_name].get<Regex>(); };
+    auto get_regex = [option_name](const Context& context){ return context.options()[option_name].get<Regex>(); };
     return {"hloption_" + option_name, DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
 }
 
-void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
+void expand_tabulations(const Context& context, DisplayBuffer& display_buffer)
 {
-    const int tabstop = window.options()["tabstop"].get<int>();
-    auto& buffer = window.buffer();
+    const int tabstop = context.options()["tabstop"].get<int>();
+    auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -351,9 +351,9 @@ void expand_tabulations(const Window& window, DisplayBuffer& display_buffer)
     }
 }
 
-void show_line_numbers(const Window& window, DisplayBuffer& display_buffer)
+void show_line_numbers(const Context& context, DisplayBuffer& display_buffer)
 {
-    LineCount last_line = window.buffer().line_count();
+    LineCount last_line = context.buffer().line_count();
     int digit_count = 0;
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
@@ -371,17 +371,17 @@ void show_line_numbers(const Window& window, DisplayBuffer& display_buffer)
     }
 }
 
-void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
+void highlight_selections(const Context& context, DisplayBuffer& display_buffer)
 {
-    const auto& buffer = window.buffer();
-    for (size_t i = 0; i < window.selections().size(); ++i)
+    const auto& buffer = context.buffer();
+    for (size_t i = 0; i < context.selections().size(); ++i)
     {
-        auto& sel = window.selections()[i];
+        auto& sel = context.selections()[i];
         const bool forward = sel.first() <= sel.last();
         BufferCoord begin = forward ? sel.first() : buffer.char_next(sel.last());
         BufferCoord end   = forward ? sel.last() : buffer.char_next(sel.first());
 
-        const bool primary = (i == window.selections().main_index());
+        const bool primary = (i == context.selections().main_index());
         ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
         highlight_range(display_buffer, begin, end, false,
                         [&](DisplayAtom& atom) { atom.colors = sel_colors; });
@@ -391,9 +391,9 @@ void highlight_selections(const Window& window, DisplayBuffer& display_buffer)
     }
 }
 
-void expand_unprintable(const Window& window, DisplayBuffer& display_buffer)
+void expand_unprintable(const Context& context, DisplayBuffer& display_buffer)
 {
-    auto& buffer = window.buffer();
+    auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -436,9 +436,9 @@ HighlighterAndId flag_lines_factory(HighlighterParameters params)
     GlobalOptions::instance()[option_name].get<std::vector<LineAndFlag>>();
 
     return {"hlflags_" + params[1],
-            [=](const Window& window, DisplayBuffer& display_buffer)
+            [=](const Context& context, DisplayBuffer& display_buffer)
             {
-                auto& lines_opt = window.options()[option_name];
+                auto& lines_opt = context.options()[option_name];
                 auto& lines = lines_opt.get<std::vector<LineAndFlag>>();
 
                 CharCount width = 0;
@@ -460,7 +460,7 @@ HighlighterAndId flag_lines_factory(HighlighterParameters params)
             }};
 }
 
-template<void (*highlighter_func)(const Window&, DisplayBuffer&)>
+template<void (*highlighter_func)(const Context&, DisplayBuffer&)>
 class SimpleHighlighterFactory
 {
 public:
@@ -493,8 +493,8 @@ HighlighterAndId reference_factory(HighlighterParameters params)
     DefinedHighlighters::instance().get_group(name, '/');
 
     return HighlighterAndId(name,
-                            [name](const Window& window, DisplayBuffer& display_buffer)
-                            { DefinedHighlighters::instance().get_group(name, '/')(window, display_buffer); });
+                            [name](const Context& context, DisplayBuffer& display_buffer)
+                            { DefinedHighlighters::instance().get_group(name, '/')(context, display_buffer); });
 }
 
 template<typename HighlightFunc>
@@ -507,11 +507,11 @@ public:
           m_func(std::move(func))
     {}
 
-    void operator()(const Window& window, DisplayBuffer& display_buffer)
+    void operator()(const Context& context, DisplayBuffer& display_buffer)
     {
-        auto& cache = update_cache_ifn(window.buffer());
+        auto& cache = update_cache_ifn(context.buffer());
         for (auto& pair : cache.regions)
-            m_func(window, display_buffer, pair.first, pair.second);
+            m_func(context, display_buffer, pair.first, pair.second);
     }
 private:
     Regex m_begin;
@@ -570,7 +570,7 @@ HighlighterAndId region_factory(HighlighterParameters params)
         Regex end{params[1]};
         const ColorPair colors = get_color(params[2]);
 
-        auto func = [colors](const Window&, DisplayBuffer& display_buffer,
+        auto func = [colors](const Context&, DisplayBuffer& display_buffer,
                              BufferCoord begin, BufferCoord end)
         {
             highlight_range(display_buffer, begin, end, true,
@@ -597,11 +597,11 @@ HighlighterAndId region_ref_factory(HighlighterParameters params)
         Regex end{params[1]};
         const String& name = params[2];
 
-        auto func = [name](const Window& window, DisplayBuffer& display_buffer,
+        auto func = [name](const Context& context, DisplayBuffer& display_buffer,
                           BufferCoord begin, BufferCoord end)
         {
             HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
-            apply_highlighter(window, display_buffer, begin, end, ref);
+            apply_highlighter(context, display_buffer, begin, end, ref);
         };
 
         return HighlighterAndId("regionref(" + params[0] + "," + params[1] + "," + name + ")",
