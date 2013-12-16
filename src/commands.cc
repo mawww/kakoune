@@ -568,10 +568,9 @@ void context_wrap(CommandParameters params, Context& context, Func func)
 
     if (parser.has_option("draft"))
     {
-        Editor& editor = real_context->editor();
-        InputHandler input_handler(editor, real_context->name());
-        DynamicSelectionList sels{editor.buffer(), editor.selections()};
-        auto restore_sels = on_scope_end([&]{ editor.selections() = std::move(sels); });
+        InputHandler input_handler(real_context->editor(), real_context->name());
+        DynamicSelectionList sels{real_context->buffer(), real_context->selections()};
+        auto restore_sels = on_scope_end([&]{ real_context->selections() = std::move(sels); });
 
         // We do not want this draft context to commit undo groups if the real one is
         // going to commit the whole thing later
@@ -582,7 +581,7 @@ void context_wrap(CommandParameters params, Context& context, Func func)
         {
             for (auto& sel : sels)
             {
-                editor.selections() = sel;
+                input_handler.context().selections() = sel;
                 func(parser, input_handler.context());
             }
         }
