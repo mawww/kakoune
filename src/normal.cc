@@ -168,8 +168,9 @@ template<SelectMode mode = SelectMode::Replace, typename T>
 constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(BufferCoord coord, SelectionList& selections)
+void select_coord(const Buffer& buffer, BufferCoord coord, SelectionList& selections)
 {
+    coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
         selections = SelectionList { coord };
     else if (mode == SelectMode::Extend)
@@ -221,7 +222,7 @@ void goto_commands(Context& context, int line)
     if (line != 0)
     {
         context.push_jump();
-        select_coord<mode>(LineCount{line - 1}, context.selections());
+        select_coord<mode>(context.buffer(), LineCount{line - 1}, context.selections());
         if (context.has_window())
             context.window().center_selection();
     }
@@ -230,13 +231,13 @@ void goto_commands(Context& context, int line)
         on_next_key_with_autoinfo(context, [](Key key, Context& context) {
             if (key.modifiers != Key::Modifiers::None)
                 return;
-
+            auto& buffer = context.buffer();
             switch (tolower(key.key))
             {
             case 'g':
             case 'k':
                 context.push_jump();
-                select_coord<mode>(BufferCoord{0,0}, context.selections());
+                select_coord<mode>(buffer, BufferCoord{0,0}, context.selections());
                 break;
             case 'l':
                 select<mode>(select_to_eol)(context, 0);
@@ -247,18 +248,18 @@ void goto_commands(Context& context, int line)
             case 'j':
             {
                 context.push_jump();
-                select_coord<mode>({context.buffer().line_count() - 1, 0}, context.selections());
+                select_coord<mode>(buffer, buffer.line_count() - 1, context.selections());
                 break;
             }
             case 'e':
                 context.push_jump();
-                select_coord<mode>(context.buffer().back_coord(), context.selections());
+                select_coord<mode>(buffer, buffer.back_coord(), context.selections());
                 break;
             case 't':
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    select_coord<mode>(line, context.selections());
+                    select_coord<mode>(buffer, line, context.selections());
                 }
                 break;
             case 'b':
@@ -266,7 +267,7 @@ void goto_commands(Context& context, int line)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    select_coord<mode>(line, context.selections());
+                    select_coord<mode>(buffer, line, context.selections());
                 }
                 break;
             case 'c':
@@ -274,14 +275,14 @@ void goto_commands(Context& context, int line)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    select_coord<mode>(line, context.selections());
+                    select_coord<mode>(buffer, line, context.selections());
                 }
                 break;
             case 'a':
             {
                 auto& buffer_manager = BufferManager::instance();
                 auto it = buffer_manager.begin();
-                if (it->get() == &context.buffer() and ++it == buffer_manager.end())
+                if (it->get() == &buffer and ++it == buffer_manager.end())
                     break;
                 context.push_jump();
                 auto& client_manager = ClientManager::instance();
@@ -291,7 +292,6 @@ void goto_commands(Context& context, int line)
             case 'f':
             {
                 const Range& sel = context.selections().main();
-                const Buffer& buffer = context.buffer();
                 String filename = content(buffer, sel);
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
                 for (auto c : forbidden)
@@ -893,7 +893,7 @@ void scroll(Context& context, int)
     auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
                                     buffer.iterator_at(position.line+1),
                                     position.column);
-    select_coord(cursor_pos.coord(), window.selections());
+    select_coord(buffer, cursor_pos.coord(), window.selections());
     window.set_position(position);
 }
 
