@@ -129,7 +129,7 @@ void edit(CommandParameters params, Context& context)
 
         context.selections() = context.buffer().clamp({ line,  column });
         if (context.has_window())
-            context.window().center_selection();
+            context.window().center_line(context.selections().main().last().line);
     }
 }
 

@@ -33,8 +33,8 @@ public:
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
-    void center_selection();
-    void display_selection_at(LineCount line);
+    void center_line(LineCount buffer_line);
+    void display_line_at(LineCount buffer_line, LineCount display_line);
     void scroll(LineCount offset);
     void scroll(CharCount offset);
     void update_display_buffer();

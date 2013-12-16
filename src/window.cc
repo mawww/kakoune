@@ -42,18 +42,15 @@ Window::~Window()
     m_options.unregister_watcher(*this);
 }
 
-void Window::display_selection_at(LineCount line)
+void Window::display_line_at(LineCount buffer_line, LineCount display_line)
 {
-    if (line >= 0 or line < m_dimensions.line)
-    {
-        auto cursor_line = selections().main().last().line;
-        m_position.line = std::max(0_line, cursor_line - line);
-    }
+    if (display_line >= 0 or display_line < m_dimensions.line)
+        m_position.line = std::max(0_line, buffer_line - display_line);
 }
 
-void Window::center_selection()
+void Window::center_line(LineCount buffer_line)
 {
-    display_selection_at(m_dimensions.line/2_line);
+    display_line_at(buffer_line, m_dimensions.line/2_line);
 }
 
 void Window::scroll(LineCount offset)

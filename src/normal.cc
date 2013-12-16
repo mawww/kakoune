@@ -224,7 +224,7 @@ void goto_commands(Context& context, int line)
         context.push_jump();
         select_coord<mode>(context.buffer(), LineCount{line - 1}, context.selections());
         if (context.has_window())
-            context.window().center_selection();
+            context.window().center_line(LineCount{line-1});
     }
     else
     {
@@ -331,18 +331,19 @@ void view_commands(Context& context, int param)
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
             return;
 
+        LineCount cursor_line = context.selections().main().last().line;
         Window& window = context.window();
         switch (tolower(key.key))
         {
         case 'v':
         case 'c':
-            context.window().center_selection();
+            context.window().center_line(cursor_line);
             break;
         case 't':
-            context.window().display_selection_at(0);
+            context.window().display_line_at(cursor_line, 0);
             break;
         case 'b':
-            context.window().display_selection_at(window.dimensions().line-1);
+            context.window().display_line_at(cursor_line, window.dimensions().line-1);
             break;
         case 'h':
             context.window().scroll(-std::max<CharCount>(1, param));
