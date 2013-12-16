@@ -40,8 +40,6 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
         pos += m_lines.back().length();
     }
 
-    Editor editor_for_hooks(*this);
-    InputHandler hook_handler(editor_for_hooks);
     if (flags & Flags::File)
     {
         if (flags & Flags::New)
