@@ -234,8 +234,7 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
 
         String id = "colre'" + params[0] + "'";
 
-        Regex ex(params[0].begin(), params[0].end(),
-                 boost::regex::perl | boost::regex::optimize);
+        Regex ex{params[0].begin(), params[0].end(), boost::regex::optimize};
 
         return HighlighterAndId(id, RegexColorizer(std::move(ex),
                                                    std::move(colors)));
@@ -566,8 +565,8 @@ HighlighterAndId region_factory(HighlighterParameters params)
         if (params.size() != 3)
             throw runtime_error("wrong parameter count");
 
-        Regex begin{params[0]};
-        Regex end{params[1]};
+        Regex begin{params[0], boost::regex::nosubs | boost::regex::optimize };
+        Regex end{params[1], boost::regex::nosubs | boost::regex::optimize };
         const ColorPair colors = get_color(params[2]);
 
         auto func = [colors](const Context&, DisplayBuffer& display_buffer,
@@ -593,8 +592,8 @@ HighlighterAndId region_ref_factory(HighlighterParameters params)
         if (params.size() != 3 and params.size() != 4)
             throw runtime_error("wrong parameter count");
 
-        Regex begin{params[0]};
-        Regex end{params[1]};
+        Regex begin{params[0], boost::regex::nosubs | boost::regex::optimize };
+        Regex end{params[1], boost::regex::nosubs | boost::regex::optimize };
         const String& name = params[2];
 
         auto func = [name](const Context& context, DisplayBuffer& display_buffer,
