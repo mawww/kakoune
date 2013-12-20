@@ -3,6 +3,8 @@
 
 #include "dynamic_selection_list.hh"
 
+#include <boost/optional.hpp>
+
 namespace Kakoune
 {
 
@@ -25,21 +27,17 @@ class Context
 {
 public:
     Context();
-    Context(InputHandler& input_handler, Editor& editor, String name = "");
-    Context(Editor& editor, String name = "");
+    Context(InputHandler& input_handler, Buffer& buffer, SelectionList selections, String name = "");
     ~Context();
 
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const;
-    bool has_buffer() const { return (bool)m_editor; }
-
-    Editor& editor() const;
-    bool has_editor() const { return (bool)m_editor; }
+    bool has_buffer() const { return m_selections; }
 
     Window& window() const;
-    bool has_window() const;
+    bool has_window() const { return (bool)m_window; }
 
     Client& client() const;
     bool has_client() const { return (bool)m_client; }
@@ -54,9 +52,10 @@ public:
     const SelectionList& selections() const;
     std::vector<String>  selections_content() const;
 
-    void change_editor(Editor& editor);
+    void change_buffer(Buffer& buffer);
 
     void set_client(Client& client);
+    void set_window(Window& window);
 
     OptionManager& options() const;
     HookManager& hooks() const;
@@ -81,9 +80,12 @@ private:
 
     friend struct ScopedEdition;
 
-    safe_ptr<Editor>       m_editor;
     safe_ptr<InputHandler> m_input_handler;
+    safe_ptr<Window>       m_window;
     safe_ptr<Client>       m_client;
+
+    friend class Client;
+    boost::optional<DynamicSelectionList> m_selections;
 
     String m_name;
 

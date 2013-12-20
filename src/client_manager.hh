@@ -8,6 +8,9 @@ namespace Kakoune
 
 struct client_removed{};
 
+using WindowAndSelections = std::tuple<std::unique_ptr<Window>,
+                                       DynamicSelectionList>;
+
 class ClientManager : public Singleton<ClientManager>
 {
 public:
@@ -20,8 +23,10 @@ public:
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
-    Window& get_unused_window_for_buffer(Buffer& buffer);
     void    ensure_no_client_uses_buffer(Buffer& buffer);
+
+    WindowAndSelections get_free_window(Buffer& buffer);
+    void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
 
     void redraw_clients() const;
 
@@ -34,7 +39,7 @@ private:
     String generate_name() const;
 
     std::vector<std::unique_ptr<Client>> m_clients;
-    std::vector<std::unique_ptr<Window>> m_windows;
+    std::vector<WindowAndSelections> m_free_windows;
 };
 
 }

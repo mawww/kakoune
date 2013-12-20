@@ -2,7 +2,6 @@
 
 #include "color_registry.hh"
 #include "context.hh"
-#include "editor.hh"
 #include "buffer_manager.hh"
 #include "user_interface.hh"
 #include "file.hh"
@@ -13,10 +12,14 @@
 namespace Kakoune
 {
 
-Client::Client(std::unique_ptr<UserInterface>&& ui, Editor& editor, String name)
-    : m_input_handler(editor, std::move(name)), m_ui(std::move(ui))
+Client::Client(std::unique_ptr<UserInterface>&& ui,
+               std::unique_ptr<Window>&& window,
+               SelectionList selections, String name)
+    : m_ui{std::move(ui)}, m_window{std::move(window)},
+      m_input_handler{m_window->buffer(), std::move(selections), std::move(name)}
 {
     context().set_client(*this);
+    context().set_window(*m_window);
 }
 
 Client::~Client()
@@ -58,6 +61,15 @@ DisplayLine Client::generate_mode_line() const
     return { oss.str(), get_color("StatusLine") };
 }
 
+void Client::change_buffer(Buffer& buffer)
+{
+    ClientManager::instance().add_free_window(std::move(m_window), std::move(context().selections()));
+    std::tie(m_window, context().m_selections) = ClientManager::instance().get_free_window(buffer);
+    context().set_window(*m_window);
+    m_window->set_dimensions(ui().dimensions());
+    m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
+}
+
 void Client::redraw_ifn()
 {
     if (context().window().timestamp() != context().buffer().timestamp())
@@ -80,10 +92,9 @@ static void reload_buffer(Context& context, const String& filename)
     Buffer* buf = create_buffer_from_file(filename);
     if (not buf)
         return;
-    Window& win = ClientManager::instance().get_unused_window_for_buffer(*buf);
-    win.selections() = SelectionList{cursor_pos};
-    win.set_position(view_pos);
-    context.change_editor(win);
+    context.change_buffer(*buf);
+    context.selections() = SelectionList{cursor_pos};
+    context.window().set_position(view_pos);
     context.print_status({ "'" + buf->display_name() + "' reloaded",
                            get_color("Information") });
 }

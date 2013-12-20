@@ -18,12 +18,13 @@ void expand_tabulations(const Context& context, DisplayBuffer& display_buffer);
 void expand_unprintable(const Context& context, DisplayBuffer& display_buffer);
 
 Window::Window(Buffer& buffer)
-    : Editor(buffer),
+    : m_buffer(&buffer),
       m_hooks(buffer.hooks()),
       m_options(buffer.options()),
       m_keymaps(buffer.keymaps())
 {
-    InputHandler hook_handler{*this};
+    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    hook_handler.context().set_window(*this);
     m_hooks.run_hook("WinCreate", buffer.name(), hook_handler.context());
     m_options.register_watcher(*this);
 
@@ -37,7 +38,8 @@ Window::Window(Buffer& buffer)
 
 Window::~Window()
 {
-    InputHandler hook_handler{*this};
+    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    hook_handler.context().set_window(*this);
     m_hooks.run_hook("WinClose", buffer().name(), hook_handler.context());
     m_options.unregister_watcher(*this);
 }
@@ -66,7 +68,7 @@ void Window::scroll(CharCount offset)
 void Window::update_display_buffer(const Context& context)
 {
     kak_assert(&buffer() == &context.buffer());
-    scroll_to_keep_selection_visible_ifn(context.selections().main());
+    scroll_to_keep_selection_visible_ifn(context);
 
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
@@ -143,8 +145,9 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
     return view_pos;
 }
 
-void Window::scroll_to_keep_selection_visible_ifn(const Range& selection)
+void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
 {
+    auto& selection = context.selections().main();
     const auto& first = selection.first();
     const auto& last  = selection.last();
 
@@ -163,8 +166,8 @@ void Window::scroll_to_keep_selection_visible_ifn(const Range& selection)
     lines.emplace_back(AtomList{ {buffer(), last.line, last.line+1} });
 
     display_buffer.compute_range();
-    m_highlighters(*this, display_buffer);
-    m_builtin_highlighters(*this, display_buffer);
+    m_highlighters(context, display_buffer);
+    m_builtin_highlighters(context, display_buffer);
 
     // now we can compute where the cursor is in display columns
     // (this is only valid if highlighting one line and multiple lines put
@@ -245,9 +248,10 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
     lines.emplace_back(AtomList{ {buffer(), line, line+1} });
     display_buffer.compute_range();
 
-    Context context(*this);
-    m_highlighters(*this, display_buffer);
-    m_builtin_highlighters(*this, display_buffer);
+    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    hook_handler.context().set_window(*this);
+    m_highlighters(hook_handler.context(), display_buffer);
+    m_builtin_highlighters(hook_handler.context(), display_buffer);
 
     CharCount column = find_display_column(lines[0], buffer(), coord);
     return find_buffer_coord(lines[1], buffer(), column);
@@ -256,7 +260,8 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
 void Window::on_option_changed(const Option& option)
 {
     String desc = option.name() + "=" + option.get_as_string();
-    InputHandler hook_handler{*this};
+    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    hook_handler.context().set_window(*this);
     m_hooks.run_hook("WinSetOption", desc, hook_handler.context());
 
     // an highlighter might depend on the option, so we need to redraw

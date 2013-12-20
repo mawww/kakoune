@@ -8,41 +8,24 @@ namespace Kakoune
 {
 
 Context::Context() = default;
-
-Context::Context(InputHandler& input_handler, Editor& editor, String name)
-    : m_input_handler(&input_handler), m_editor(&editor),
-      m_name(std::move(name)) {}
-
-Context::Context(Editor& editor, String name)
-    : m_editor(&editor),
-      m_name(std::move(name)) {}
-
 Context::~Context() = default;
+
+Context::Context(InputHandler& input_handler, Buffer& buffer, SelectionList selections, String name)
+    : m_input_handler{&input_handler}, m_selections{{buffer, std::move(selections)}},
+      m_name(std::move(name)) {}
 
 Buffer& Context::buffer() const
 {
     if (not has_buffer())
         throw runtime_error("no buffer in context");
-    return m_editor->buffer();
-}
-
-Editor& Context::editor() const
-{
-    if (not has_editor())
-        throw runtime_error("no editor in context");
-    return *m_editor.get();
+    return (*m_selections).registry();
 }
 
 Window& Context::window() const
 {
     if (not has_window())
         throw runtime_error("no window in context");
-    return *dynamic_cast<Window*>(m_editor.get());
-}
-
-bool Context::has_window() const
-{
-    return (bool)m_editor and dynamic_cast<Window*>(m_editor.get());
+    return *m_window;
 }
 
 InputHandler& Context::input_handler() const
@@ -99,6 +82,12 @@ void Context::set_client(Client& client)
     m_client.reset(&client);
 }
 
+void Context::set_window(Window& window)
+{
+    kak_assert(&window.buffer() == &buffer());
+    m_window.reset(&window);
+}
+
 void Context::print_status(DisplayLine status) const
 {
     if (has_client())
@@ -111,14 +100,14 @@ void Context::push_jump()
     if (m_current_jump != m_jump_list.end())
     {
         auto begin = m_current_jump;
-        if (&editor().buffer() != &begin->buffer() or
+        if (&buffer() != &begin->buffer() or
             (const SelectionList&)(*begin) != jump)
             ++begin;
         m_jump_list.erase(begin, m_jump_list.end());
     }
     m_jump_list.erase(std::remove(begin(m_jump_list), end(m_jump_list), jump),
                       end(m_jump_list));
-    m_jump_list.push_back({editor().buffer(), jump});
+    m_jump_list.push_back({buffer(), jump});
     m_current_jump = m_jump_list.end();
 }
 
@@ -168,27 +157,29 @@ void Context::forget_jumps_to_buffer(Buffer& buffer)
     }
 }
 
-void Context::change_editor(Editor& editor)
+void Context::change_buffer(Buffer& buffer)
 {
-    m_editor.reset(&editor);
-    if (has_window())
-    {
-        if (has_ui())
-            window().set_dimensions(ui().dimensions());
-        window().hooks().run_hook("WinDisplay", buffer().name(), *this);
-    }
+    m_window.reset();
+    if (has_client())
+        client().change_buffer(buffer);
+    else
+        m_selections = DynamicSelectionList{ buffer };
     if (has_input_handler())
         input_handler().reset_normal_mode();
 }
 
 SelectionList& Context::selections()
 {
-    return editor().selections();
+    if (not m_selections)
+        throw runtime_error("no selections in context");
+    return *m_selections;
 }
 
 const SelectionList& Context::selections() const
 {
-    return editor().selections();
+    if (not m_selections)
+        throw runtime_error("no selections in context");
+    return *m_selections;
 }
 
 std::vector<String> Context::selections_content() const

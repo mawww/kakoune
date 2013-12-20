@@ -28,8 +28,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                      const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
-    Client* client = new Client{std::move(ui), get_unused_window_for_buffer(buffer),
-                                            generate_name()};
+    WindowAndSelections ws = get_free_window(buffer);
+    Client* client = new Client{std::move(ui), std::move(std::get<0>(ws)),
+                                std::move(std::get<1>(ws)), generate_name()};
     m_clients.emplace_back(client);
     try
     {
@@ -80,24 +81,27 @@ void ClientManager::remove_client(Client& client)
     kak_assert(false);
 }
 
-Window& ClientManager::get_unused_window_for_buffer(Buffer& buffer)
+WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 {
-    for (auto& w : m_windows)
+    for (auto it = m_free_windows.begin(), end = m_free_windows.end();
+         it != end; ++it)
     {
-        if (&w->buffer() != &buffer)
-           continue;
-
-        auto it = std::find_if(m_clients.begin(), m_clients.end(),
-                               [&](const std::unique_ptr<Client>& client)
-                               { return &client->context().window() == w.get(); });
-        if (it == m_clients.end())
+        auto& w = std::get<0>(*it);
+        if (&w->buffer() == &buffer)
         {
             w->forget_timestamp();
-            return *w;
+            WindowAndSelections res = std::move(*it);
+            m_free_windows.erase(it);
+            return res;
         }
     }
-    m_windows.emplace_back(new Window(buffer));
-    return *m_windows.back();
+    return WindowAndSelections{ std::unique_ptr<Window>{new Window{buffer}}, DynamicSelectionList{buffer, { Selection{ {}, {} } } } };
+}
+
+void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
+{
+    Buffer& buffer = window->buffer();
+    m_free_windows.emplace_back(std::move(window), DynamicSelectionList{ buffer, std::move(selections) });
 }
 
 void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
@@ -120,16 +124,15 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
         {
             if (buf != &buffer)
             {
-               Window& w = get_unused_window_for_buffer(*buf);
-               client->context().change_editor(w);
+               client->context().change_buffer(*buf);
                break;
             }
         }
     }
-    auto end = std::remove_if(m_windows.begin(), m_windows.end(),
-                              [&buffer](const std::unique_ptr<Window>& w)
-                              { return &w->buffer() == &buffer; });
-    m_windows.erase(end, m_windows.end());
+    auto end = std::remove_if(m_free_windows.begin(), m_free_windows.end(),
+                              [&buffer](const WindowAndSelections& ws)
+                              { return &std::get<0>(ws)->buffer() == &buffer; });
+    m_free_windows.erase(end, m_free_windows.end());
 }
 
 bool ClientManager::validate_client_name(const String& name) const

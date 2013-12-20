@@ -3,9 +3,8 @@
 
 #include "completion.hh"
 #include "display_buffer.hh"
-#include "editor.hh"
 #include "highlighter.hh"
-#include "highlighter.hh"
+#include "selection.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"
 #include "keymap_manager.hh"
@@ -13,13 +12,8 @@
 namespace Kakoune
 {
 
-// A Window is an editing view onto a Buffer
-//
-// The Window class is an interactive Editor adding display functionalities
-// to the editing ones already provided by the Editor class.
-// Display can be customized through the use of highlighters handled by
-// the window's HighlighterGroup
-class Window : public Editor, public OptionManagerWatcher
+// A Window is a view onto a Buffer
+class Window : public SafeCountable, public OptionManagerWatcher
 {
 public:
     Window(Buffer& buffer);
@@ -50,6 +44,8 @@ public:
     KeymapManager&       keymaps()       { return m_keymaps; }
     const KeymapManager& keymaps() const { return m_keymaps; }
 
+    Buffer& buffer() const { return *m_buffer; }
+
     size_t timestamp() const { return m_timestamp; }
     void   forget_timestamp() { m_timestamp = -1; }
 
@@ -59,8 +55,9 @@ private:
     Window(const Window&) = delete;
 
     void on_option_changed(const Option& option) override;
+    void scroll_to_keep_selection_visible_ifn(const Context& context);
 
-    void scroll_to_keep_selection_visible_ifn(const Range& selection);
+    safe_ptr<Buffer> m_buffer;
 
     DisplayCoord  m_position;
     DisplayCoord  m_dimensions;

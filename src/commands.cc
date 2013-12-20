@@ -116,10 +116,7 @@ void edit(CommandParameters params, Context& context)
         context.push_jump();
 
     if (buffer != &context.buffer())
-    {
-        auto& manager = ClientManager::instance();
-        context.change_editor(manager.get_unused_window_for_buffer(*buffer));
-    }
+        context.change_buffer(*buffer);
 
     if (param_count > 1 and not parser[1].empty())
     {
@@ -210,8 +207,7 @@ void show_buffer(CommandParameters params, Context& context)
     if (&buffer != &context.buffer())
     {
         context.push_jump();
-        auto& manager = ClientManager::instance();
-        context.change_editor(manager.get_unused_window_for_buffer(buffer));
+        context.change_buffer(buffer);
     }
 }
 
@@ -568,9 +564,7 @@ void context_wrap(CommandParameters params, Context& context, Func func)
 
     if (parser.has_option("draft"))
     {
-        InputHandler input_handler(real_context->editor(), real_context->name());
-        DynamicSelectionList sels{real_context->buffer(), real_context->selections()};
-        auto restore_sels = on_scope_end([&]{ real_context->selections() = std::move(sels); });
+        InputHandler input_handler(real_context->buffer(), real_context->selections(), real_context->name());
 
         // We do not want this draft context to commit undo groups if the real one is
         // going to commit the whole thing later
@@ -579,6 +573,7 @@ void context_wrap(CommandParameters params, Context& context, Func func)
 
         if (parser.has_option("itersel"))
         {
+            DynamicSelectionList sels{real_context->buffer(), real_context->selections()};
             for (auto& sel : sels)
             {
                 input_handler.context().selections() = sel;

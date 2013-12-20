@@ -109,7 +109,7 @@ public:
         return *this;
     }
 
-    void reset(T* ptr)
+    void reset(T* ptr = nullptr)
     {
         *this = safe_ptr(ptr);
     }

@@ -1,6 +1,5 @@
 #include "assert.hh"
 #include "buffer.hh"
-#include "editor.hh"
 #include "keys.hh"
 #include "selectors.hh"
 

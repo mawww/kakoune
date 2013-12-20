@@ -1,8 +1,8 @@
 #include "debug.hh"
 
 #include "assert.hh"
+#include "buffer.hh"
 #include "buffer_manager.hh"
-#include "editor.hh"
 
 namespace Kakoune
 {

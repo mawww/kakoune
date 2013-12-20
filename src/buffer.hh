@@ -268,13 +268,13 @@ struct BufferListenerRegisterFuncs
 class BufferChangeListener_AutoRegister
     : public BufferChangeListener,
       public AutoRegister<BufferChangeListener_AutoRegister,
-                          BufferListenerRegisterFuncs, const Buffer>
+                          BufferListenerRegisterFuncs, Buffer>
 {
 public:
-    BufferChangeListener_AutoRegister(const Buffer& buffer)
+    BufferChangeListener_AutoRegister(Buffer& buffer)
         : AutoRegister(buffer) {}
 
-    const Buffer& buffer() const { return registry(); }
+    Buffer& buffer() const { return registry(); }
 };
 
 }

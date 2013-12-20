@@ -786,8 +786,7 @@ void Buffer::on_option_changed(const Option& option)
 
 void Buffer::run_hook_in_own_context(const String& hook_name, const String& param)
 {
-    Editor hook_editor{*this};
-    InputHandler hook_handler(hook_editor);
+    InputHandler hook_handler(*this, SelectionList{ {} });
     m_hooks.run_hook(hook_name, param, hook_handler.context());
 }
 

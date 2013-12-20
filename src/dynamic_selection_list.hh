@@ -13,7 +13,7 @@ public:
     using iterator = SelectionList::iterator;
     using const_iterator = SelectionList::const_iterator;
 
-    DynamicSelectionList(const Buffer& buffer, SelectionList selections = {});
+    DynamicSelectionList(Buffer& buffer, SelectionList selections = {});
 
     DynamicSelectionList& operator=(SelectionList selections);
     void check_invariant() const;

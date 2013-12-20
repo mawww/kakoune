@@ -995,7 +995,7 @@ private:
     template<typename Type>
     void move(Type offset)
     {
-        auto& selections = context().editor().selections();
+        auto& selections = context().selections();
         for (auto& sel : selections)
         {
             auto last = context().has_window() ? context().window().offset_coord(sel.last(), offset)
@@ -1125,9 +1125,9 @@ void InputMode::reset_normal_mode()
     m_input_handler.reset_normal_mode();
 }
 
-InputHandler::InputHandler(Editor& editor, String name)
+InputHandler::InputHandler(Buffer& buffer, SelectionList selections, String name)
     : m_mode(new InputModes::Normal(*this)),
-      m_context(*this, editor, std::move(name))
+      m_context(*this, buffer, std::move(selections), std::move(name))
 {
 }
 

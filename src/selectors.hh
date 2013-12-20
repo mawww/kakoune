@@ -3,7 +3,6 @@
 
 #include "selection.hh"
 #include "unicode.hh"
-#include "editor.hh"
 #include "utf8_iterator.hh"
 
 namespace Kakoune

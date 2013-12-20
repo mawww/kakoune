@@ -285,8 +285,7 @@ void goto_commands(Context& context, int line)
                 if (it->get() == &buffer and ++it == buffer_manager.end())
                     break;
                 context.push_jump();
-                auto& client_manager = ClientManager::instance();
-                context.change_editor(client_manager.get_unused_window_for_buffer(**it));
+                context.change_buffer(**it);
                 break;
             }
             case 'f':
@@ -894,7 +893,7 @@ void scroll(Context& context, int)
     auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
                                     buffer.iterator_at(position.line+1),
                                     position.column);
-    select_coord(buffer, cursor_pos.coord(), window.selections());
+    select_coord(buffer, cursor_pos.coord(), context.selections());
     window.set_position(position);
 }
 
@@ -985,10 +984,7 @@ void jump(Context& context, int)
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
     BufferManager::instance().set_last_used_buffer(buffer);
     if (&buffer != &context.buffer())
-    {
-        auto& manager = ClientManager::instance();
-        context.change_editor(manager.get_unused_window_for_buffer(buffer));
-    }
+        context.change_buffer(buffer);
     context.selections() = jump;
 }
 

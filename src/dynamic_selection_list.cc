@@ -3,7 +3,7 @@
 namespace Kakoune
 {
 
-DynamicSelectionList::DynamicSelectionList(const Buffer& buffer,
+DynamicSelectionList::DynamicSelectionList(Buffer& buffer,
                                            SelectionList selections)
     : SelectionList(std::move(selections)),
       BufferChangeListener_AutoRegister(buffer)
