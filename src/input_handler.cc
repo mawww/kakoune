@@ -421,26 +421,40 @@ public:
 
                 if (candidates.empty())
                     return;
-
-                bool use_common_prefix = context().options()["complete_prefix"].get<bool>();
-                String prefix = use_common_prefix ? common_prefix(candidates) : String();
+            }
+            bool did_prefix = false;
+            if (m_current_completion == -1 and
+                context().options()["complete_prefix"].get<bool>())
+            {
+                const String& line = m_line_editor.line();
+                CandidateList& candidates = m_completions.candidates;
+                String prefix = common_prefix(candidates);
                 if (m_completions.end - m_completions.start > prefix.length())
                     prefix = line.substr(m_completions.start,
                                          m_completions.end - m_completions.start);
 
-                auto it = find(candidates, prefix);
-                if (it == candidates.end())
+                if (not prefix.empty())
                 {
-                    m_current_completion = use_common_prefix ? candidates.size() : 0;
-                    candidates.push_back(std::move(prefix));
+                    auto it = find(candidates, prefix);
+                    if (it == candidates.end())
+                    {
+                        m_current_completion = candidates.size();
+                        candidates.push_back(prefix);
+                    }
+                    else
+                        m_current_completion = it - candidates.begin();
+
+                    CharCount start = line.char_count_to(m_completions.start);
+                    did_prefix = prefix != line.substr(start, m_line_editor.cursor_pos() - start);
                 }
-                else
-                    m_current_completion = use_common_prefix ? it - candidates.begin() : 0;
             }
-            else if (not reverse and ++m_current_completion >= candidates.size())
-                m_current_completion = 0;
-            else if (reverse and --m_current_completion < 0)
-                m_current_completion = candidates.size()-1;
+            if (not did_prefix)
+            {
+                if (not reverse and ++m_current_completion >= candidates.size())
+                    m_current_completion = 0;
+                else if (reverse and --m_current_completion < 0)
+                    m_current_completion = candidates.size()-1;
+            }
 
             const String& completion = candidates[m_current_completion];
             if (context().has_ui())
