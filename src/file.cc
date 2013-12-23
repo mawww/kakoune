@@ -251,13 +251,54 @@ String find_file(const String& filename, memoryview<String> paths)
     return "";
 }
 
+template<typename Filter>
+std::vector<String> list_files(const String& prefix,
+                               const String& dirname,
+                               Filter filter)
+{
+    kak_assert(dirname.empty() or dirname.back() == '/');
+    DIR* dir = opendir(dirname.empty() ? "./" : dirname.c_str());
+    auto closeDir = on_scope_end([=]{ closedir(dir); });
+
+    std::vector<String> result;
+    if (not dir)
+        return result;
+
+    std::vector<String> subseq_result;
+    while (dirent* entry = readdir(dir))
+    {
+        if (not filter(*entry))
+            continue;
+
+        String filename = entry->d_name;
+        if (filename.empty())
+            continue;
+
+        const bool match_prefix = prefix_match(filename, prefix);
+        const bool match_subseq = subsequence_match(filename, prefix);
+        if (match_prefix or match_subseq)
+        {
+            if (entry->d_type == DT_DIR)
+                filename += '/';
+            if (prefix.length() != 0 or filename[0] != '.')
+            {
+                if (match_prefix)
+                    result.push_back(filename);
+                if (match_subseq)
+                    subseq_result.push_back(filename);
+            }
+        }
+    }
+    auto& real_result = result.empty() ? subseq_result : result;
+    return real_result;
+}
+
 std::vector<String> complete_filename(const String& prefix,
                                       const Regex& ignored_regex,
                                       ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
-    String dirname = "./";
-    String dirprefix;
+    String dirname;
     String fileprefix = real_prefix;
 
     ByteCount dir_end = -1;
@@ -269,49 +310,68 @@ std::vector<String> complete_filename(const String& prefix,
     if (dir_end != -1)
     {
         dirname = real_prefix.substr(0, dir_end + 1);
-        dirprefix = dirname;
         fileprefix = real_prefix.substr(dir_end + 1);
     }
-
-    DIR* dir = opendir(dirname.c_str());
-    auto closeDir = on_scope_end([=]{ closedir(dir); });
-
-    std::vector<String> result;
-    if (not dir)
-        return result;
 
     const bool check_ignored_regex = not ignored_regex.empty() and
         not boost::regex_match(fileprefix.c_str(), ignored_regex);
 
-    std::vector<String> subseq_result;
-    while (dirent* entry = readdir(dir))
+    auto filter = [&](const dirent& entry)
     {
-        String filename = entry->d_name;
-        if (filename.empty())
-            continue;
+        return not check_ignored_regex or
+               not boost::regex_match(entry.d_name, ignored_regex);
+    };
+    std::vector<String> res = list_files(fileprefix, dirname, filter);
+    for (auto& file : res)
+        file = escape(dirname + file);
+    std::sort(res.begin(), res.end());
+    return res;
+}
 
-        if (check_ignored_regex and boost::regex_match(filename.c_str(), ignored_regex))
-            continue;
+std::vector<String> complete_command(const String& prefix, ByteCount cursor_pos)
+{
+    String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
+    String dirname;
+    String fileprefix = real_prefix;
 
-        const bool match_prefix = prefix_match(filename, fileprefix);
-        const bool match_subseq = subsequence_match(filename, fileprefix);
-        if (match_prefix or match_subseq)
-        {
-            String name = dirprefix + filename;
-            if (entry->d_type == DT_DIR)
-                name += '/';
-            if (fileprefix.length() != 0 or filename[0] != '.')
-            {
-                if (match_prefix)
-                    result.push_back(escape(name));
-                if (match_subseq)
-                    subseq_result.push_back(escape(name));
-            }
-        }
+    ByteCount dir_end = -1;
+    for (ByteCount i = 0; i < real_prefix.length(); ++i)
+    {
+        if (real_prefix[i] == '/')
+            dir_end = i;
     }
-    auto& real_result = result.empty() ? subseq_result : result;
-    std::sort(real_result.begin(), real_result.end());
-    return real_result;
+
+    std::vector<String> path;
+    if (dir_end != -1)
+    {
+        path.emplace_back(real_prefix.substr(0, dir_end + 1));
+        fileprefix = real_prefix.substr(dir_end + 1);
+    }
+    else
+        path = split(getenv("PATH"), ':');
+
+    std::vector<String> res;
+    for (auto dirname : path)
+    {
+        if (not dirname.empty() and dirname.back() != '/')
+            dirname += '/';
+
+        auto filter = [&](const dirent& entry) {
+            struct stat st;
+            if (stat((dirname + entry.d_name).c_str(), &st))
+                return false;
+            bool executable = (st.st_mode & S_IXUSR)
+                            | (st.st_mode & S_IXGRP)
+                            | (st.st_mode & S_IXOTH);
+            return S_ISREG(st.st_mode) and executable;
+        };
+        auto completion = list_files(prefix, dirname, filter);
+        std::move(completion.begin(), completion.end(), std::back_inserter(res));
+    }
+    std::sort(res.begin(), res.end());
+    auto it = std::unique(res.begin(), res.end());
+    res.erase(it, res.end());
+    return res;
 }
 
 time_t get_fs_timestamp(const String& filename)
