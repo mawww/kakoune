@@ -16,6 +16,8 @@ def -hidden _cpp_indent_on_new_line %~
         try %{ exec -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> s \`\(\h*.|.\' <ret> & }
+        # align to previous statement start when previous line closed a parenthesis
+        # try %{ exec -draft <a-?>\)M<a-k>\`\(.*\)[^\n()]*\n\h*\n?\'<ret>s\`|.\'<ret>1<a-&> }
         # copy // comments prefix
         try %{ exec -draft <c-s>k<a-x> s ^\h*\K(/{2,}) <ret> y<c-o>P }
         # indent after visibility specifier
@@ -31,8 +33,8 @@ def -hidden _cpp_indent_on_opening_curly_brace %[
 ]
 
 def -hidden _cpp_indent_on_closing_curly_brace %[
-    # deindent on insert } alone on a line
-    try %[ exec -draft <a-h><a-k> ^\h+\}$ <ret> < ]
+    # align to opening curly brace when alone on a line
+    try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
     # add ; after } if class or struct definition
     try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]

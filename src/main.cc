@@ -52,7 +52,7 @@ String runtime_directory()
     char* ptr = strrchr(buffer, '/');
     if (not ptr)
         throw runtime_error("unable to determine runtime directory");
-    return String(buffer, ptr);
+    return String(buffer, ptr) + "/../share/kak";
 }
 
 void register_env_vars()
