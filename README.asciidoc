@@ -31,6 +31,24 @@ To setup a basic configuration on your account, type *make userconfig* in the
 src directory, this will setup an initial $XDG_CONFIG_HOME/kak directory. See
 the _Kakrc_ section for more information.
 
+Installing
+----------
+
+In order to install kak on your system, rather than running it directly from
+it's source directory, type *make install*, you can specify the +PREFIX+ and
++DESTDIR+ if needed.
+
+Note that by default, no script files will be read if you do not add links
+to them in $XDG_CONFIG_HOME/kak/autoload. Available script files will be
+installed in $PREFIX/share/kak/rc
+
+If you want to enable all files, set $XDG_CONFIG_HOME/kak/autoload to be
+a symbolic link to the $PREFIX/share/kak/rc directory.
+
+----------------------------------------------
+ln -s /usr/share/kak/rc ~/.config/kak/autoload
+----------------------------------------------
+
 Running
 -------
 
@@ -47,6 +65,14 @@ Just running *kak* launch a new kak session with a client on local terminal.
        the session name to be specified with -s. In this mode, the Kakoune
        server will keep running even if there is no connected client, and
        will quit when receiving SIGTERM.
+
+At startup, if +-n+ is not specified, Kakoune will try to source the file
+../share/kak/kakrc relative to the kak binary. This kak file will then try
+to source $XDG_CONFIG_HOME/kak/kakrc (with $XDG_CONFIG_HOME defaulting to
+$HOME/.config), and any files in $XDG_CONFIG_HOME/kak/autoload.
+
+The common pattern is to add links to $XDG_CONFIG_HOME/kak/autoload to the
+scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
 
 Basic Movement
 --------------
