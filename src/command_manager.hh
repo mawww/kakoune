@@ -79,13 +79,18 @@ public:
 private:
     void execute_single_command(CommandParameters params,
                                 Context& context) const;
+
     struct CommandDescriptor
     {
         Command command;
         CommandFlags flags;
         CommandCompleter completer;
     };
-    std::unordered_map<String, CommandDescriptor> m_commands;
+    using CommandMap = std::unordered_map<String, CommandDescriptor>;
+    CommandMap m_commands;
+    std::unordered_map<String, String> m_aliases;
+
+    CommandMap::const_iterator find_command(const String& name) const;
 };
 
 }

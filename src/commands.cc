@@ -819,12 +819,12 @@ void register_commands()
          [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
          { return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), cursor_pos); }
     });
-    cm.register_commands({ "e", "edit" }, edit<false>, CommandFlags::None, filename_completer);
-    cm.register_commands({ "e!", "edit!" }, edit<true>, CommandFlags::None, filename_completer);
-    cm.register_commands({ "w", "write" }, write_buffer, CommandFlags::None, filename_completer);
-    cm.register_commands({ "wa", "writeall" }, write_all_buffers);
-    cm.register_commands({ "q", "quit" }, quit<false>);
-    cm.register_commands({ "q!", "quit!" }, quit<true>);
+    cm.register_commands({ "edit", "e" }, edit<false>, CommandFlags::None, filename_completer);
+    cm.register_commands({ "edit!", "e!" }, edit<true>, CommandFlags::None, filename_completer);
+    cm.register_commands({ "write", "w" }, write_buffer, CommandFlags::None, filename_completer);
+    cm.register_commands({ "writeall", "wa" }, write_all_buffers);
+    cm.register_commands({ "quit", "q" }, quit<false>);
+    cm.register_commands({ "quit!", "q!" }, quit<true>);
     cm.register_command("wq", write_and_quit<false>);
     cm.register_command("wq!", write_and_quit<true>);
 
@@ -832,15 +832,15 @@ void register_commands()
         [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
         { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
     });
-    cm.register_commands({ "b", "buffer" }, show_buffer, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "db", "delbuf" }, delete_buffer<false>, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "db!", "delbuf!" }, delete_buffer<true>, CommandFlags::None, buffer_completer);
-    cm.register_commands({"nb", "namebuf"}, set_buffer_name);
+    cm.register_commands({ "buffer", "b" }, show_buffer, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "delbuf", "db" }, delete_buffer<false>, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "delbuf!", "db!" }, delete_buffer<true>, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "namebuf", "nb" }, set_buffer_name);
 
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
-    cm.register_commands({ "ah", "addhl" }, add_highlighter, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
-    cm.register_commands({ "rh", "rmhl" }, rm_highlighter, CommandFlags::None, group_rm_completer(get_highlighters));
-    cm.register_commands({ "dh", "defhl" }, define_highlighter);
+    cm.register_commands({ "addhl", "ah" }, add_highlighter, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
+    cm.register_commands({ "rmhl", "rh" }, rm_highlighter, CommandFlags::None, group_rm_completer(get_highlighters));
+    cm.register_commands({ "defhl", "dh" }, define_highlighter);
 
     cm.register_command("hook", add_hook);
     cm.register_command("rmhooks", rm_hooks);
@@ -881,8 +881,8 @@ void register_commands()
                             return CandidateList{};
                         } );
 
-    cm.register_commands({"ca", "colalias"}, define_color_alias);
-    cm.register_commands({"nc", "nameclient"}, set_client_name);
+    cm.register_commands({ "colalias", "ca" }, define_color_alias);
+    cm.register_commands({ "nameclient", "nc" }, set_client_name);
 
     cm.register_command("cd", change_working_directory, CommandFlags::None, filename_completer);
     cm.register_command("map", map_key);

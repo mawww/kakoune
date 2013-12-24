@@ -13,7 +13,7 @@ namespace Kakoune
 
 bool CommandManager::command_defined(const String& command_name) const
 {
-    return m_commands.find(command_name) != m_commands.end();
+    return find_command(command_name) != m_commands.end();
 }
 
 void CommandManager::register_command(String command_name,
@@ -29,8 +29,10 @@ void CommandManager::register_commands(memoryview<String> command_names,
                                        CommandFlags flags,
                                        CommandCompleter completer)
 {
-    for (auto command_name : command_names)
-        m_commands[command_name] = { command, flags, completer };
+    kak_assert(not command_names.empty());
+    m_commands[command_names[0]] = { std::move(command), flags, completer };
+    for (size_t i = 1; i < command_names.size(); ++i)
+        m_aliases[command_names[i]] = command_names[0];
 }
 
 struct parse_error : runtime_error
@@ -246,16 +248,24 @@ struct command_not_found : runtime_error
         : runtime_error(command + " : no such command") {}
 };
 
+CommandManager::CommandMap::const_iterator CommandManager::find_command(const String& name) const
+{
+    auto it = m_aliases.find(name);
+    const String& cmd_name = it == m_aliases.end() ? name : it->second;
+
+    return m_commands.find(cmd_name);
+}
+
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context) const
 {
     if (params.empty())
         return;
 
-    auto command_it = m_commands.find(params[0]);
+    memoryview<String> param_view(params.begin()+1, params.end());
+    auto command_it = find_command(params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
-    memoryview<String> param_view(params.begin()+1, params.end());
     command_it->second.command(param_view, context);
 }
 
@@ -350,7 +360,7 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
 
     const String& command_name = tokens[0].content();
 
-    auto command_it = m_commands.find(command_name);
+    auto command_it = find_command(command_name);
     if (command_it == m_commands.end() or not command_it->second.completer)
         return Completions();
 
