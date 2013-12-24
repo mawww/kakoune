@@ -123,4 +123,5 @@
 
 * Fix 'n' command with inverted selection
 
-* basic shell completion (complete commands from $PATH, then complete filenames)
+* Comments and strings should be more integrated than just highlighting, matching chars
+  for example should be strings and comments aware
