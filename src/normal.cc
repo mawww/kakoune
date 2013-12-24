@@ -418,6 +418,7 @@ void command(Context& context, int)
         });
 }
 
+template<InsertMode mode>
 void pipe(Context& context, int)
 {
     auto completer = [](const Context& context, CompletionFlags flags,
@@ -450,7 +451,8 @@ void pipe(Context& context, int)
         return completions;
     };
 
-    context.input_handler().prompt("pipe:", get_color("Prompt"), completer,
+    const char* prompt = mode == InsertMode::Replace ? "pipe:" : "pipe (ins):";
+    context.input_handler().prompt(prompt, get_color("Prompt"), completer,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -484,7 +486,7 @@ void pipe(Context& context, int)
                 strings.push_back(str);
             }
             ScopedEdition edition(context);
-            insert<InsertMode::Replace>(buffer, selections, strings);
+            insert<mode>(buffer, selections, strings);
         });
 }
 
@@ -1280,7 +1282,8 @@ KeyMap keymap =
     { '%', [](Context& context, int) { select_whole_buffer(context.buffer(), context.selections()); } },
 
     { ':', command },
-    { '|', pipe },
+    { '|', pipe<InsertMode::Replace> },
+    { alt('|'), pipe<InsertMode::Append> },
     { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.buffer(), context.selections());
                                              else keep_selection(context.selections(), count-1); } },
     { alt(' '), [](Context& context, int count) { if (count == 0) flip_selections(context.selections());

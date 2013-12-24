@@ -159,7 +159,9 @@ Changes
         indent (3 leading spaces when indent is 4)
 
  * _|_: pipe each selections through the given external filter program
-        and replace with it's output.
+        and replace the selection with it's output.
+ * _alt-|_: pipe each selections through the given external filter program
+        and append the selection with it's output.
 
  * _u_: undo last change
  * _U_: redo last change
