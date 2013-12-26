@@ -631,6 +631,17 @@ void erase_selections(Context& context, int)
     erase(context.buffer(), context.selections());
 }
 
+void cat_erase_selections(Context& context, int)
+{
+    auto sels = context.selections_content();
+    String str;
+    for (auto& sel : sels)
+        str += sel;
+    RegisterManager::instance()['"'] = memoryview<String>(str);
+    erase(context.buffer(), context.selections());
+}
+
+
 void change(Context& context, int param)
 {
     RegisterManager::instance()['"'] = context.selections_content();
@@ -1253,6 +1264,7 @@ KeyMap keymap =
     { alt('F'), select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend | SelectFlags::Reverse> },
 
     { 'd', erase_selections },
+    { 'D', cat_erase_selections },
     { 'c', change },
     { 'i', enter_insert_mode<InsertMode::Insert> },
     { 'I', enter_insert_mode<InsertMode::InsertAtLineBegin> },
