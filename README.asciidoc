@@ -136,6 +136,7 @@ Changes
  * _i_: insert before current selection
  * _a_: insert after current selection
  * _d_: yank and delete current selection
+ * _D_: yank concatenated and delete current selection (see _Y_)
  * _c_: yank and delete current selection and insert
 
  * _I_: insert at current selection begin line start
@@ -143,6 +144,9 @@ Changes
  * _o_: insert in a new line below current selection end
  * _O_: insert in a new line above current selection begin
 
+ * _y_: yank selections
+ * _Y_: yank selections concatenated (only one yank, containing
+        all selection concatenated)
  * _p_: paste after current selection end
  * _P_: paste before current selection begin
  * _alt-p_: replace current selection with yanked text
