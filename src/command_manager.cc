@@ -56,16 +56,18 @@ struct Token
     };
     Token() : m_type(Type::Raw) {}
 
-    explicit Token(const String& string) : m_content(string), m_type(Type::Raw) {}
-    explicit Token(Type type) : m_type(type) {}
-    Token(Type type, String str) : m_content(str), m_type(type) {}
+    Token(Type type, ByteCount b, ByteCount e, String str = "")
+    : m_type(type), m_begin(b), m_end(e), m_content(str) {}
 
     Type type() const { return m_type; }
-
+    ByteCount begin() const { return m_begin; }
+    ByteCount end() const { return m_end; }
     const String& content() const { return m_content; }
 
 private:
     Type   m_type;
+    ByteCount m_begin;
+    ByteCount m_end;
     String m_content;
 };
 
@@ -92,7 +94,7 @@ struct unknown_expand : parse_error
         : parse_error{"unknown expand '" + name + "'"} {}
 };
 
-static String get_until_delimiter(const String& base, ByteCount& pos, char delimiter)
+String get_until_delimiter(const String& base, ByteCount& pos, char delimiter)
 {
     const ByteCount length = base.length();
     String str;
@@ -112,8 +114,63 @@ static String get_until_delimiter(const String& base, ByteCount& pos, char delim
     }
 }
 
-TokenList parse(const String& line,
-                TokenPosList* opt_token_pos_info = nullptr)
+String get_until_delimiter(const String& base, ByteCount& pos,
+                           char opening_delimiter, char closing_delimiter)
+{
+    kak_assert(base[pos-1] == opening_delimiter);
+    const ByteCount length = base.length();
+    int level = 0;
+    ByteCount start = pos;
+    while (pos != length)
+    {
+        if (base[pos] == opening_delimiter)
+            ++level;
+        else if (base[pos] == closing_delimiter)
+        {
+            if (level > 0)
+                --level;
+            else
+                break;
+        }
+        ++pos;
+    }
+    return base.substr(start, pos - start);
+}
+
+Token::Type token_type(const String& type_name)
+{
+    if (type_name == "")
+        return Token::Type::Raw;
+    else if (type_name == "sh")
+        return Token::Type::ShellExpand;
+    else if (type_name == "reg")
+        return Token::Type::RegisterExpand;
+    else if (type_name == "opt")
+        return Token::Type::OptionExpand;
+    else
+        throw unknown_expand{type_name};
+}
+
+void skip_blanks_and_comments(const String& base, ByteCount& pos)
+{
+    const ByteCount length = base.length();
+    while (pos != length)
+    {
+        if (is_horizontal_blank(base[pos]))
+            ++pos;
+        else if (base[pos] == '\\' and pos+1 < length and base[pos+1] == '\n')
+            pos += 2;
+        else if (base[pos] == '#')
+        {
+            while (pos != length and base[pos] != '\n')
+                ++pos;
+        }
+        else
+            break;
+    }
+}
+
+TokenList parse(const String& line)
 {
     TokenList result;
 
@@ -121,20 +178,7 @@ TokenList parse(const String& line,
     ByteCount pos = 0;
     while (pos < length)
     {
-        while (pos != length)
-        {
-            if (is_horizontal_blank(line[pos]))
-                ++pos;
-            else if (line[pos] == '\\' and pos+1 < length and line[pos+1] == '\n')
-                pos += 2;
-            else if (line[pos] == '#')
-            {
-                while (pos != length and line[pos] != '\n')
-                    ++pos;
-            }
-            else
-                break;
-        }
+        skip_blanks_and_comments(line, pos);
 
         ByteCount token_start = pos;
         ByteCount start_pos = pos;
@@ -145,9 +189,7 @@ TokenList parse(const String& line,
 
             token_start = ++pos;
             String token = get_until_delimiter(line, pos, delimiter);
-            result.emplace_back(Token::Type::Raw, std::move(token));
-            if (opt_token_pos_info)
-                opt_token_pos_info->push_back({token_start, pos});
+            result.emplace_back(Token::Type::Raw, token_start, pos, std::move(token));
         }
         else if (line[pos] == '%')
         {
@@ -159,16 +201,7 @@ TokenList parse(const String& line,
             if (pos == length)
                 throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
 
-            Token::Type type = Token::Type::Raw;
-            if (type_name == "sh")
-                type = Token::Type::ShellExpand;
-            else if (type_name == "reg")
-                type = Token::Type::RegisterExpand;
-            else if (type_name == "opt")
-                type = Token::Type::OptionExpand;
-            else if (type_name != "")
-                throw unknown_expand{type_name};
-
+            Token::Type type = token_type(type_name);
             static const std::unordered_map<char, char> matching_delimiters = {
                 { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
             };
@@ -180,32 +213,17 @@ TokenList parse(const String& line,
             if (delim_it != matching_delimiters.end())
             {
                 char closing_delimiter = delim_it->second;
-                int level = 0;
-                while (pos != length)
-                {
-                    if (line[pos] == opening_delimiter)
-                        ++level;
-                    else if (line[pos] == closing_delimiter)
-                    {
-                        if (level > 0)
-                            --level;
-                        else
-                            break;
-                    }
-                    ++pos;
-                }
+                String token = get_until_delimiter(line, pos, opening_delimiter, closing_delimiter);
                 if (pos == length)
                     throw unterminated_string("%" + type_name + opening_delimiter,
-                                              String{closing_delimiter}, level);
-                result.emplace_back(type, line.substr(token_start, pos - token_start));
+                                              String{closing_delimiter}, 0);
+                result.emplace_back(type, token_start, pos, std::move(token));
             }
             else
             {
                 String token = get_until_delimiter(line, pos, opening_delimiter);
-                result.emplace_back(type, std::move(token));
+                result.emplace_back(type, token_start, pos, std::move(token));
             }
-            if (opt_token_pos_info)
-                opt_token_pos_info->push_back({token_start, pos});
         }
         else
         {
@@ -216,21 +234,15 @@ TokenList parse(const String& line,
                 ++pos;
             if (start_pos != pos)
             {
-                if (opt_token_pos_info)
-                    opt_token_pos_info->push_back({token_start, pos});
                 auto token = line.substr(token_start, pos - token_start);
                 static const Regex regex{R"(\\([ \t;\n]))"};
-                result.emplace_back(Token::Type::Raw,
+                result.emplace_back(Token::Type::Raw, token_start, pos,
                                     boost::regex_replace(token, regex, "\\1"));
             }
         }
 
         if (is_command_separator(line[pos]))
-        {
-            if (opt_token_pos_info)
-                opt_token_pos_info->push_back({pos, pos+1});
-            result.push_back(Token{ Token::Type::CommandSeparator });
-        }
+            result.push_back(Token{ Token::Type::CommandSeparator, pos, pos+1 });
 
         ++pos;
     }
@@ -322,13 +334,12 @@ void CommandManager::execute(const String& command_line,
 Completions CommandManager::complete(const Context& context, CompletionFlags flags,
                                      const String& command_line, ByteCount cursor_pos)
 {
-    TokenPosList pos_info;
-    TokenList tokens = parse(command_line, &pos_info);
+    TokenList tokens = parse(command_line);
 
     size_t token_to_complete = tokens.size();
     for (size_t i = 0; i < tokens.size(); ++i)
     {
-        if (pos_info[i].first <= cursor_pos and pos_info[i].second >= cursor_pos)
+        if (tokens[i].begin() <= cursor_pos and tokens[i].end() >= cursor_pos)
         {
             token_to_complete = i;
             break;
@@ -337,7 +348,7 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
 
     if (token_to_complete == 0 or tokens.empty()) // command name completion
     {
-        ByteCount cmd_start = tokens.empty() ? 0 : pos_info[0].first;
+        ByteCount cmd_start = tokens.empty() ? 0 : tokens[0].begin();
         Completions result(cmd_start, cursor_pos);
         String prefix = command_line.substr(cmd_start,
                                             cursor_pos - cmd_start);
@@ -365,7 +376,7 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
         return Completions();
 
     ByteCount start = token_to_complete < tokens.size() ?
-                      pos_info[token_to_complete].first : cursor_pos;
+                      tokens[token_to_complete].begin() : cursor_pos;
     Completions result(start , cursor_pos);
     ByteCount cursor_pos_in_token = cursor_pos - start;
 
