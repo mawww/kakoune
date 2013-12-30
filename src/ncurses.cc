@@ -478,7 +478,7 @@ void NCursesUI::menu_show(memoryview<String> items,
     int line = (int)anchor.line + 1;
     if (line + height >= (int)maxsize.line)
         line = (int)anchor.line - height;
-    m_selected_item = 0;
+    m_selected_item = item_count;
     m_menu_top_line = 0;
 
     int width = is_prompt ? (int)maxsize.column : (int)longest;
