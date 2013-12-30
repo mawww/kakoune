@@ -40,5 +40,8 @@ inline Completions complete_nothing(const Context& context, CompletionFlags,
     return Completions(cursor_pos, cursor_pos);
 }
 
+Completions shell_complete(const Context& context, CompletionFlags,
+                           const String&, ByteCount cursor_pos);
+
 }
 #endif // completion_hh_INCLUDED
