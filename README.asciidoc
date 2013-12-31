@@ -12,9 +12,31 @@ keys are directly inserted into the current buffer. In normal mode, keys
 are used to manipulate the current selection and to enter insertion mode.
 
 There is no concept of cursor in kakoune, only selections, a single character
-selection can be seen as a cursor but there is no difference internally.
+selection can be seen as a cursor but there is no difference internally. A
+selection is an oriented, inclusive range of characters.
 
 see http://vimeo.com/82711574
+
+Features
+--------
+
+ * Multiple selection as a central way of interacting
+ * Powerful selection manipulation primitives
+   - Select all regex matches in current selections
+   - Keep selections containing/not containing a
+     match for a given regex
+   - Split current selections with a regex
+   - Text objects (paragraph, sentence, nestable blocks)
+ * Powerful text manipulation primitives
+   - Align selections
+   - Rotate selection contents
+   - Case manipulation
+   - Indentation
+   - Piping each selection to external filter
+ * Simple interaction with external programs
+ * Macros
+ * Hooks
+ * Syntax Highlighting
 
 Building
 --------
@@ -28,6 +50,9 @@ Kakoune dependencies are:
  * socat (used by kak scripts to write to kak control socket)
 
 To build, just type *make* in the src directory
+
+Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
+on being in an Unix like environment, no native Windows version is planned.
 
 To setup a basic configuration on your account, type *make userconfig* in the
 src directory, this will setup an initial $XDG_CONFIG_HOME/kak directory. See
@@ -421,7 +446,7 @@ Options are typed, their type can be
  * +regex+: as a string but the +set+ commands will complain
    if the entered text is not a valid regex.
  * +{int,str}-list+: a list, elements are separated by a colon (:)
-   if an element needs to contain a colon, it can be escaped with a
+  if an element needs to contain a colon, it can be escaped with a
    backslash.
 
 Options value can be changed using the +set+ commands:
@@ -696,8 +721,8 @@ Some of kakoune state is available through environment variables:
  * +kak_hook_param+: filtering text passed to the currently executing hook
 
 Note that in order to make only needed information available, Kakoune needs
-to find the environement variable reference in the shell script executed.
-Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environement will
+to find the environment variable reference in the shell script executed.
+Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environment will
 not work.
 
 for example you can print informations on the current file in the status
@@ -732,7 +757,7 @@ new commands can be defined using the +:def+ command.
 
 def can also takes some flags:
 
- * +-env-params+: pass parameters given to commands in the environement as
+ * +-env-params+: pass parameters given to commands in the environment as
                   kak_paramN with N the parameter number
  * +-shell-params+: pass parameters given to commands as positional parameters
                     to any shell expansions used in the command.
@@ -826,7 +851,7 @@ Existing commands files are:
  * *rc/git-tools.kak*: provides some git integration, like +:git-blame+, +:git-show+
      or +:git-diff-show+
  * *rc/make.kak*: provides the +:make+ and +:errjump+ commands along with
-	 highlighting for compiler output.
+     highlighting for compiler output.
  * *rc/man.kak*: provides the +:man+ command
  * *rc/grep.kak*: provides the +:grep+ and +:gjump+ commands along with highlighting
      for grep output.
