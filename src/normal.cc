@@ -859,8 +859,8 @@ void select_object(Context& context, int param)
             { { '{', '}' }, 'B' },
             { { '[', ']' }, 'r' },
             { { '<', '>' }, '\0' },
-            { { '"', '"' }, '\0' },
-            { { '\'', '\'' }, '\0' },
+            { { '"', '"' }, 'Q' },
+            { { '\'', '\'' }, 'q' },
         };
         for (auto& sur : surrounding_pairs )
         {
@@ -874,8 +874,8 @@ void select_object(Context& context, int param)
     "B,{,}:  braces block     \n"
     "r,[,]:  brackets block   \n"
     "<,>:    angle block      \n"
-    "\":    double quote string\n"
-    "':    single quote string\n"
+    "\",Q:  double quote string\n"
+    "',q:  single quote string\n"
     "w:    word               \n"
     "W:    WORD               \n"
     "s:    sentence           \n"
