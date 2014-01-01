@@ -113,59 +113,64 @@ enum class SelectMode
     ReplaceMain,
 };
 
+template<SelectMode mode = SelectMode::Replace, typename Func>
+void select(Context& context, Func func)
+{
+    auto& buffer = context.buffer();
+    auto& selections = context.selections();
+    if (mode == SelectMode::Append)
+    {
+        auto& sel = selections.main();
+        auto  res = func(buffer, sel);
+        if (res.captures().empty())
+            res.captures() = sel.captures();
+        selections.push_back(res);
+        selections.set_main_index(selections.size() - 1);
+    }
+    else if (mode == SelectMode::ReplaceMain)
+    {
+        auto& sel = selections.main();
+        auto  res = func(buffer, sel);
+        sel.first() = res.first();
+        sel.last()  = res.last();
+        if (not res.captures().empty())
+            sel.captures() = std::move(res.captures());
+    }
+    else
+    {
+        for (auto& sel : selections)
+        {
+            auto res = func(buffer, sel);
+            if (mode == SelectMode::Extend)
+                sel.merge_with(res);
+            else
+            {
+                sel.first() = res.first();
+                sel.last()  = res.last();
+            }
+            if (not res.captures().empty())
+                sel.captures() = std::move(res.captures());
+        }
+    }
+    selections.sort_and_merge_overlapping();
+    selections.check_invariant();
+}
+
 template<SelectMode mode, typename T>
 class Select
 {
 public:
     constexpr Select(T t) : m_func(t) {}
-
-    void operator() (Context& context, int)
-    {
-        auto& buffer = context.buffer();
-        auto& selections = context.selections();
-        if (mode == SelectMode::Append)
-        {
-            auto& sel = selections.main();
-            auto  res = m_func(buffer, sel);
-            if (res.captures().empty())
-                res.captures() = sel.captures();
-            selections.push_back(res);
-            selections.set_main_index(selections.size() - 1);
-        }
-        else if (mode == SelectMode::ReplaceMain)
-        {
-            auto& sel = selections.main();
-            auto  res = m_func(buffer, sel);
-            sel.first() = res.first();
-            sel.last()  = res.last();
-            if (not res.captures().empty())
-                sel.captures() = std::move(res.captures());
-        }
-        else
-        {
-            for (auto& sel : selections)
-            {
-                auto res = m_func(buffer, sel);
-                if (mode == SelectMode::Extend)
-                    sel.merge_with(res);
-                else
-                {
-                    sel.first() = res.first();
-                    sel.last()  = res.last();
-                }
-                if (not res.captures().empty())
-                    sel.captures() = std::move(res.captures());
-            }
-        }
-        selections.sort_and_merge_overlapping();
-        selections.check_invariant();
-    }
+    void operator() (Context& context, int) { select<mode>(context, m_func); }
 private:
     T m_func;
 };
 
 template<SelectMode mode = SelectMode::Replace, typename T>
-constexpr Select<mode, T> select(T func) { return Select<mode, T>(func); }
+constexpr Select<mode, T> make_select(T func)
+{
+    return Select<mode, T>(func);
+}
 
 template<SelectMode mode = SelectMode::Replace>
 void select_coord(const Buffer& buffer, BufferCoord coord, SelectionList& selections)
@@ -240,10 +245,10 @@ void goto_commands(Context& context, int line)
                 select_coord<mode>(buffer, BufferCoord{0,0}, context.selections());
                 break;
             case 'l':
-                select<mode>(select_to_eol)(context, 0);
+                select<mode>(context, select_to_eol);
                 break;
             case 'h':
-                select<mode>(select_to_eol_reverse)(context, 0);
+                select<mode>(context, select_to_eol_reverse);
                 break;
             case 'j':
             {
@@ -720,8 +725,8 @@ void split_lines(Context& context, int)
 
 void join_select_spaces(Context& context, int)
 {
-    select(select_whole_lines)(context, 0);
-    select<SelectMode::Extend>(select_to_eol)(context, 0);
+    select(context, select_whole_lines);
+    select<SelectMode::Extend>(context, select_to_eol);
     auto& buffer = context.buffer();
     auto& selections = context.selections();
     select_all_matches(buffer, selections, Regex{"(\n\\h*)+"});
@@ -847,7 +852,7 @@ void select_object(Context& context, int param)
         for (auto& sel : selectors)
         {
             if (c == sel.key)
-                return select<mode>(std::bind(sel.func, _1, _2, flags))(context, 0);
+                return select<mode>(context, std::bind(sel.func, _1, _2, flags));
         }
 
         static constexpr struct
@@ -862,12 +867,12 @@ void select_object(Context& context, int param)
             { { '"', '"' }, 'Q' },
             { { '\'', '\'' }, 'q' },
         };
-        for (auto& sur : surrounding_pairs )
+        for (auto& sur : surrounding_pairs)
         {
             if (sur.pair.first == c or sur.pair.second == c or
                 (sur.name != 0 and sur.name == c))
-                return select<mode>(std::bind(select_surrounding, _1, _2,
-                                              sur.pair, level, flags))(context, 0);
+                return select<mode>(context, std::bind(select_surrounding, _1, _2,
+                                                       sur.pair, level, flags));
         }
     }, "select object",
     "b,(,):  parenthesis block\n"
@@ -948,8 +953,9 @@ void select_to_next_char(Context& context, int param)
 {
     on_next_key_with_autoinfo(context, [param](Key key, Context& context) {
         select<flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace>(
+            context,
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
-                      _1, _2, key.key, param, flags & SelectFlags::Inclusive))(context, 0);
+                      _1, _2, key.key, param, flags & SelectFlags::Inclusive));
     }, "select to next char","enter char to select to");
 }
 
@@ -1270,32 +1276,32 @@ KeyMap keymap =
                                              else keep_selection(context.selections(), count-1); } },
     { alt(' '), [](Context& context, int count) { if (count == 0) flip_selections(context.selections());
                                                   else remove_selection(context.selections(), count-1); } },
-    { 'w', repeated(select<SelectMode::Replace>(select_to_next_word<Word>)) },
-    { 'e', repeated(select<SelectMode::Replace>(select_to_next_word_end<Word>)) },
-    { 'b', repeated(select<SelectMode::Replace>(select_to_previous_word<Word>)) },
-    { 'W', repeated(select<SelectMode::Extend>(select_to_next_word<Word>)) },
-    { 'E', repeated(select<SelectMode::Extend>(select_to_next_word_end<Word>)) },
-    { 'B', repeated(select<SelectMode::Extend>(select_to_previous_word<Word>)) },
+    { 'w', repeated(make_select<SelectMode::Replace>(select_to_next_word<Word>)) },
+    { 'e', repeated(make_select<SelectMode::Replace>(select_to_next_word_end<Word>)) },
+    { 'b', repeated(make_select<SelectMode::Replace>(select_to_previous_word<Word>)) },
+    { 'W', repeated(make_select<SelectMode::Extend>(select_to_next_word<Word>)) },
+    { 'E', repeated(make_select<SelectMode::Extend>(select_to_next_word_end<Word>)) },
+    { 'B', repeated(make_select<SelectMode::Extend>(select_to_previous_word<Word>)) },
 
-    { alt('w'), repeated(select<SelectMode::Replace>(select_to_next_word<WORD>)) },
-    { alt('e'), repeated(select<SelectMode::Replace>(select_to_next_word_end<WORD>)) },
-    { alt('b'), repeated(select<SelectMode::Replace>(select_to_previous_word<WORD>)) },
-    { alt('W'), repeated(select<SelectMode::Extend>(select_to_next_word<WORD>)) },
-    { alt('E'), repeated(select<SelectMode::Extend>(select_to_next_word_end<WORD>)) },
-    { alt('B'), repeated(select<SelectMode::Extend>(select_to_previous_word<WORD>)) },
+    { alt('w'), repeated(make_select<SelectMode::Replace>(select_to_next_word<WORD>)) },
+    { alt('e'), repeated(make_select<SelectMode::Replace>(select_to_next_word_end<WORD>)) },
+    { alt('b'), repeated(make_select<SelectMode::Replace>(select_to_previous_word<WORD>)) },
+    { alt('W'), repeated(make_select<SelectMode::Extend>(select_to_next_word<WORD>)) },
+    { alt('E'), repeated(make_select<SelectMode::Extend>(select_to_next_word_end<WORD>)) },
+    { alt('B'), repeated(make_select<SelectMode::Extend>(select_to_previous_word<WORD>)) },
 
-    { alt('l'), repeated(select<SelectMode::Replace>(select_to_eol)) },
-    { alt('L'), repeated(select<SelectMode::Extend>(select_to_eol)) },
-    { alt('h'), repeated(select<SelectMode::Replace>(select_to_eol_reverse)) },
-    { alt('H'), repeated(select<SelectMode::Extend>(select_to_eol_reverse)) },
+    { alt('l'), repeated(make_select<SelectMode::Replace>(select_to_eol)) },
+    { alt('L'), repeated(make_select<SelectMode::Extend>(select_to_eol)) },
+    { alt('h'), repeated(make_select<SelectMode::Replace>(select_to_eol_reverse)) },
+    { alt('H'), repeated(make_select<SelectMode::Extend>(select_to_eol_reverse)) },
 
-    { 'x', repeated(select<SelectMode::Replace>(select_line)) },
-    { 'X', repeated(select<SelectMode::Extend>(select_line)) },
-    { alt('x'), select<SelectMode::Replace>(select_whole_lines) },
-    { alt('X'), select<SelectMode::Replace>(trim_partial_lines) },
+    { 'x', repeated(make_select<SelectMode::Replace>(select_line)) },
+    { 'X', repeated(make_select<SelectMode::Extend>(select_line)) },
+    { alt('x'), make_select<SelectMode::Replace>(select_whole_lines) },
+    { alt('X'), make_select<SelectMode::Replace>(trim_partial_lines) },
 
-    { 'm', select<SelectMode::Replace>(select_matching) },
-    { 'M', select<SelectMode::Extend>(select_matching) },
+    { 'm', make_select<SelectMode::Replace>(select_matching) },
+    { 'M', make_select<SelectMode::Extend>(select_matching) },
 
     { '/', search<SelectMode::Replace, Forward> },
     { '?', search<SelectMode::Extend, Forward> },
