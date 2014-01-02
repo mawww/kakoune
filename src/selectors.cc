@@ -205,9 +205,9 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
 Selection select_to_eol(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator begin = buffer.iterator_at(selection.last());
-    Utf8Iterator end = begin + 1;
+    Utf8Iterator end = begin;
     skip_while(end, buffer.end(), [](Codepoint cur) { return not is_eol(cur); });
-    return utf8_range(begin, end-1);
+    return utf8_range(begin, end != begin ? end-1 : end);
 }
 
 Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection)
