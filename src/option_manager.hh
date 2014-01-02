@@ -91,6 +91,9 @@ private:
     // the only one allowed to construct a root option manager
     friend class GlobalOptions;
 
+    template<typename MatchingFunc>
+    CandidateList get_matching_names(MatchingFunc func);
+
     std::vector<std::unique_ptr<Option>> m_options;
     OptionManager* m_parent;
 

@@ -63,22 +63,32 @@ const Option& OptionManager::operator[](const String& name) const
         throw option_not_found(name);
 }
 
-CandidateList OptionManager::complete_option_name(const String& prefix,
-                                                  ByteCount cursor_pos)
+template<typename MatchingFunc>
+CandidateList OptionManager::get_matching_names(MatchingFunc func)
 {
-    String real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;
     if (m_parent)
-        result = m_parent->complete_option_name(prefix, cursor_pos);
+        result = m_parent->get_matching_names(func);
     for (auto& option : m_options)
     {
         if (option->flags() & Option::Flags::Hidden)
             continue;
 
         const auto& name = option->name();
-        if (prefix_match(name, real_prefix) and not contains(result, name))
+        if (func(name) and not contains(result, name))
             result.push_back(name);
     }
+    return result;
+}
+
+CandidateList OptionManager::complete_option_name(const String& prefix,
+                                                  ByteCount cursor_pos)
+{
+    using namespace std::placeholders;
+    String real_prefix = prefix.substr(0, cursor_pos);
+    auto result = get_matching_names(std::bind(prefix_match, _1, std::ref(real_prefix)));
+    if (result.empty())
+        result = get_matching_names(std::bind(subsequence_match, _1, std::ref(real_prefix)));
     return result;
 }
 
