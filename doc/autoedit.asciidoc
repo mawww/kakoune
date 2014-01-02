@@ -1,0 +1,83 @@
+Edition auto insertion in Kakoune
+=================================
+
+It is a quite common feature for code editor to help the programmer by 
+automatically inserting some text in certain contexts. This document
+goal is to explain how this is done in Kakoune.
+
+There is no special support in Kakoune for this problem, hooks are
+expected to be used in order to manage that, and the normal kakoune
+editing command are expected to be expressive enough so that relatively
+complex indentation can be written concisely.
+
+The main hook is *InsertChar*, which gets called immediately _after_ a
+character has been inserted in insertion mode due to the user pressing
+the corresponding key.
+
+Previous line indentation
+-------------------------
+
+Let's see a simple indent hook: preserving the previous line indentation.
+
+Here is the Kakoune normal mode key list in order to do that: 
+
+----------------------------------------------------------------
+k<a-x>      # 1. go to previous line and select it
+s^\h+<ret>y # 2. select the leading spaces and copy them
+j<a-h>P     # 3. go back to next line start and paste the spaces
+----------------------------------------------------------------
+
+note that if nothing gets selected on phase *2.*, an error will be raised.
+
+We want to do that each time the user jumps a line, just after the new line
+is inserted. So the hook would be:
+
+------------------------------------------------------
+:hook InsertChar \n %{ exec k<a-x>s^\h+<ret>yj<a-h>P }
+------------------------------------------------------
+
+That works, however if the phase *2.* raises an error, the +:exec+ will stop
+and the user will get it's selections on the previous line. the solution
+is to use a *draft* context, instead of the one the user is interacting with.
+
+-------------------------------------------------------------
+:hook InsertChar \n %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P }
+-------------------------------------------------------------
+
+That way, exec is executed in a *copy* of the user's context, which means it
+manipulates a *copy* of the user's selections.
+
+Increasing indentation
+----------------------
+
+A little bit more complicated is to increase indentation whenever we insert a 
+new line after a +{+ or a +(+.
+
+The complexity arises from the presence of a condition. We want to increase 
+the indentation *only* if the previous line ends with +{+ or +(+.
+
+Fortunately, Kakoune provides us with a command for that: the +<a-k>+ command,
+which keeps selections where a certain regex can be found.
+
+Here is how we can do that:
+
+-------------------------------------------------------------------------------
+k<a-x>             # 1. select the previous line
+<a-k>[{(]\h*$<ret> # 2. keep selections that end with { or ( followed by blanks
+j<a-gt>            # 3. go back to next line and indent it even if it is empty
+-------------------------------------------------------------------------------
+
+Note that if no previous lines end with a +{+ or +(+, the +<a-k>+ command will
+raise an error, and stop the execution. This is what we want: it is similar to
+what would happend if we would continue with no selections; the following 
+commands would have no effects.
+
+However, the error would end up being catched by the hook execution code, and
+it will write informations about it in the debug buffer, which we do not want,
+as this is actually expected. In order to prevent that, the exec should be
+wrapped in a try command. So we would have:
+
+-----------------------------------------------------------------------------
+:hook InsertChar \n %[ try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ] ]
+-----------------------------------------------------------------------------
+
