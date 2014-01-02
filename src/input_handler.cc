@@ -188,6 +188,7 @@ public:
         DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
         context().ui().menu_show(choices, menu_pos, get_color("MenuForeground"),
                                  get_color("MenuBackground"), MenuStyle::Prompt);
+        context().ui().menu_select(0);
     }
 
     void on_key(Key key) override
