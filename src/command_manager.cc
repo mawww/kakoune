@@ -249,9 +249,6 @@ TokenList parse(const String& line)
 
         ++pos;
     }
-    if (not result.empty() and result.back().type() == Token::Type::CommandSeparator)
-        result.pop_back();
-
     return result;
 }
 
@@ -339,21 +336,27 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
 {
     TokenList tokens = parse<false>(command_line);
 
-    size_t token_to_complete = tokens.size();
+    size_t cmd_idx = 0;
+    size_t tok_idx = tokens.size();
     for (size_t i = 0; i < tokens.size(); ++i)
     {
+        if (tokens[i].type() == Token::Type::CommandSeparator)
+            cmd_idx = i+1;
+
         if (tokens[i].begin() <= cursor_pos and tokens[i].end() >= cursor_pos)
         {
-            token_to_complete = i;
+            tok_idx = i;
             break;
         }
     }
 
+     // command name completion
     if (tokens.empty() or
-        (token_to_complete == 0 and
-         tokens[0].type() == Token::Type::Raw)) // command name completion
+        (tok_idx == cmd_idx and (tok_idx == tokens.size() or
+                                 tokens[tok_idx].type() == Token::Type::Raw)))
     {
-        ByteCount cmd_start = tokens.empty() ? 0 : tokens[0].begin();
+        ByteCount cmd_start = tok_idx == tokens.size() ? cursor_pos
+                                                       : tokens[tok_idx].begin();
         Completions result(cmd_start, cursor_pos);
         String prefix = command_line.substr(cmd_start,
                                             cursor_pos - cmd_start);
@@ -366,27 +369,26 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
                 result.candidates.push_back(command.first);
         }
         std::sort(result.candidates.begin(), result.candidates.end());
-
         return result;
     }
 
     kak_assert(not tokens.empty());
 
-    ByteCount start = token_to_complete < tokens.size() ?
-                      tokens[token_to_complete].begin() : cursor_pos;
+    ByteCount start = tok_idx < tokens.size() ?
+                      tokens[tok_idx].begin() : cursor_pos;
     Completions result(start , cursor_pos);
     ByteCount cursor_pos_in_token = cursor_pos - start;
 
-    const Token::Type token_type = token_to_complete < tokens.size() ?
-                                   tokens[token_to_complete].type() : Token::Type::Raw;
+    const Token::Type token_type = tok_idx < tokens.size() ?
+                                   tokens[tok_idx].type() : Token::Type::Raw;
     switch (token_type)
     {
     case Token::Type::OptionExpand:
-        result.candidates = context.options().complete_option_name(tokens[token_to_complete].content(), cursor_pos_in_token);
+        result.candidates = context.options().complete_option_name(tokens[tok_idx].content(), cursor_pos_in_token);
         return result;
     case Token::Type::ShellExpand:
     {
-        Completions shell_completion = shell_complete(context, flags, tokens[token_to_complete].content(), cursor_pos_in_token);
+        Completions shell_completion = shell_complete(context, flags, tokens[tok_idx].content(), cursor_pos_in_token);
         result.start = start + shell_completion.start;
         result.end = start + shell_completion.end;
         result.candidates = std::move(shell_completion.candidates);
@@ -394,22 +396,22 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
     }
     case Token::Type::Raw:
     {
-        if (tokens[0].type() != Token::Type::Raw)
+        if (tokens[cmd_idx].type() != Token::Type::Raw)
             return Completions{};
 
-        const String& command_name = tokens[0].content();
+        const String& command_name = tokens[cmd_idx].content();
 
         auto command_it = find_command(command_name);
         if (command_it == m_commands.end() or not command_it->second.completer)
             return Completions();
 
         std::vector<String> params;
-        for (auto token_it = tokens.begin()+1; token_it != tokens.end(); ++token_it)
+        for (auto token_it = tokens.begin() + cmd_idx + 1; token_it != tokens.end(); ++token_it)
             params.push_back(token_it->content());
-        if (token_to_complete == tokens.size())
+        if (tok_idx == tokens.size())
             params.push_back("");
         result.candidates = command_it->second.completer(context, flags, params,
-                                                         token_to_complete - 1,
+                                                         tok_idx - cmd_idx - 1,
                                                          cursor_pos_in_token);
         return result;
     }
