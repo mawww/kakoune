@@ -725,19 +725,26 @@ void split_lines(Context& context, int)
 
 void join_select_spaces(Context& context, int)
 {
-    select(context, select_whole_lines);
-    select<SelectMode::Extend>(context, select_to_eol);
     auto& buffer = context.buffer();
-    auto& selections = context.selections();
-    select_all_matches(buffer, selections, Regex{"(\n\\h*)+"});
-    // remove last end of line if selected
-    kak_assert(std::is_sorted(selections.begin(), selections.end(),
-               [](const Selection& lhs, const Selection& rhs)
-               { return lhs.min() < rhs.min(); }));
-    if (not selections.empty() and selections.back().max() == buffer.back_coord())
-        selections.pop_back();
+    SelectionList selections;
+    for (auto& sel : context.selections())
+    {
+        for (LineCount line = sel.min().line; line <= sel.max().line; ++line)
+        {
+            if (line == buffer.line_count() - 1)
+                continue;
+            auto begin = buffer.iterator_at({line, buffer[line].length()-1});
+            auto end = begin+1;
+            skip_while(end, buffer.end(), is_horizontal_blank);
+            selections.push_back({begin.coord(), (end-1).coord()});
+        }
+    }
+    if (selections.empty())
+        return;
+    selections.sort_and_merge_overlapping();
+    context.selections() = selections;
     ScopedEdition edition(context);
-    insert<InsertMode::Replace>(buffer, selections, " ");
+    insert<InsertMode::Replace>(buffer, context.selections(), " ");
 }
 
 void join(Context& context, int param)
