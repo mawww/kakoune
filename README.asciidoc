@@ -17,6 +17,8 @@ selection is an oriented, inclusive range of characters.
 
 see http://vimeo.com/82711574
 
+Join us on freenode IRC +#kakoune+
+
 Features
 --------
 
