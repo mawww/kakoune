@@ -11,12 +11,11 @@ Completions shell_complete(const Context& context, CompletionFlags flags,
     ByteCount word_start = 0;
     ByteCount word_end = 0;
 
-    bool first = true;
+    bool command = true;
     const ByteCount len = prefix.length();
     for (ByteCount pos = 0; pos < cursor_pos;)
     {
-        if (pos != 0)
-            first = false;
+        command = (pos == 0 or prefix[pos-1] == ';');
         while (pos != len and is_blank(prefix[pos]))
             ++pos;
         word_start = pos;
@@ -25,7 +24,7 @@ Completions shell_complete(const Context& context, CompletionFlags flags,
         word_end = pos;
     }
     Completions completions{word_start, word_end};
-    if (first)
+    if (command)
         completions.candidates = complete_command(prefix.substr(word_start, word_end),
                                                   cursor_pos - word_start);
     else
