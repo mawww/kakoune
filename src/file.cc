@@ -239,12 +239,27 @@ void write_buffer_to_file(Buffer& buffer, const String& filename)
 
 String find_file(const String& filename, memoryview<String> paths)
 {
+    struct stat buf;
+    if (filename.size() > 1 and filename[0] == '/')
+    {
+        if (stat(filename.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
+            return filename;
+         return "";
+    }
+    if (filename.size() > 2 and
+             filename[0] == '~' and filename[1] == '/')
+    {
+        String candidate = getenv("HOME") + filename.substr(1_byte);
+        if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
+            return candidate;
+        return "";
+    }
+
     for (auto candidate : paths)
     {
         if (not candidate.empty() and candidate.back() != '/')
             candidate += '/';
         candidate += filename;
-        struct stat buf;
         if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
             return candidate;
     }
