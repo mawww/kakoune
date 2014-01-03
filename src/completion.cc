@@ -15,7 +15,8 @@ Completions shell_complete(const Context& context, CompletionFlags flags,
     const ByteCount len = prefix.length();
     for (ByteCount pos = 0; pos < cursor_pos;)
     {
-        command = (pos == 0 or prefix[pos-1] == ';');
+        command = (pos == 0 or prefix[pos-1] == ';' or prefix[pos-1] == '|' or
+                   (pos > 1 and prefix[pos-1] == '&' and prefix[pos-2] == '&'));
         while (pos != len and is_blank(prefix[pos]))
             ++pos;
         word_start = pos;
