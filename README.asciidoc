@@ -857,8 +857,6 @@ Existing commands files are:
  * *rc/man.kak*: provides the +:man+ command
  * *rc/grep.kak*: provides the +:grep+ and +:gjump+ commands along with highlighting
      for grep output.
- * *rc/global.kak*: provides the +:tag+ command to jump on a tag definition using
-     gnu global tagging system.
  * *rc/ctags.kak*: provides the +:tag+ command to jump on a tag definition using
      exuberant ctags files, this script requires the *readtags* binary, available
      in the exuberant ctags package but not installed by default.
