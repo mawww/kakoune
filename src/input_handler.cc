@@ -128,6 +128,12 @@ public:
                 --m_cursor_pos;
             }
         }
+        else if (key == Key::Erase)
+        {
+            if (m_cursor_pos != m_line.char_length())
+                m_line = m_line.substr(0, m_cursor_pos)
+                       + m_line.substr(m_cursor_pos+1);
+        }
         else
         {
             m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(key.key)
@@ -904,6 +910,7 @@ public:
 
     void on_key(Key key) override
     {
+        auto& buffer = context().buffer();
         last_insert().second.push_back(key);
         if (m_mode == Mode::InsertReg)
         {
@@ -935,7 +942,23 @@ public:
             reset_normal_mode();
         }
         else if (key == Key::Backspace)
-            erase();
+        {
+            for (auto& sel : context().selections())
+            {
+                if (sel.last() == BufferCoord{0,0})
+                    continue;
+                auto pos = buffer.iterator_at(sel.last());
+                buffer.erase(utf8::previous(pos), pos);
+            }
+        }
+        else if (key == Key::Erase)
+        {
+            for (auto& sel : context().selections())
+            {
+                auto pos = buffer.iterator_at(sel.last());
+                buffer.erase(pos, utf8::next(pos));
+            }
+        }
         else if (key == Key::Left)
         {
             move(-1_char);
@@ -995,18 +1018,6 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
 
 private:
-    void erase() const
-    {
-        auto& buffer = context().buffer();
-        for (auto& sel : context().selections())
-        {
-            if (sel.last() == BufferCoord{0,0})
-                continue;
-            auto pos = buffer.iterator_at(sel.last());
-            buffer.erase(utf8::previous(pos), pos);
-        }
-    }
-
     template<typename Type>
     void move(Type offset)
     {

@@ -22,6 +22,7 @@ struct Key
     {
         // use UTF-16 surrogate pairs range
         Backspace = 0xD800,
+        Erase,
         Escape,
         Up,
         Down,

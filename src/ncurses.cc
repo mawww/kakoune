@@ -343,6 +343,7 @@ Key NCursesUI::get_key()
     else switch (c)
     {
     case KEY_BACKSPACE: case 127: return Key::Backspace;
+    case KEY_DC: return Key::Erase;
     case KEY_UP: return Key::Up;
     case KEY_DOWN: return Key::Down;
     case KEY_LEFT: return Key::Left;
