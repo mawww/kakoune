@@ -457,7 +457,8 @@ void split_selections(const Buffer& buffer, SelectionList& selections,
             result.emplace_back(begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord());
             begin = (*re_it)[0].second;
         }
-        result.emplace_back(begin.coord(), sel.max());
+        if (begin.coord() <= sel.max())
+            result.emplace_back(begin.coord(), sel.max());
     }
     result.set_main_index(result.size() - 1);
     selections = std::move(result);
