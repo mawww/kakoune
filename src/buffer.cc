@@ -74,11 +74,11 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, {0,0}, end_coord());
 
-	m_history.clear();
-	m_current_undo_group.clear();
-	m_history_cursor = m_history.begin();
-	m_last_save_undo_index = 0;
-	m_lines.clear();
+    m_history.clear();
+    m_current_undo_group.clear();
+    m_history_cursor = m_history.begin();
+    m_last_save_undo_index = 0;
+    m_lines.clear();
     ++m_timestamp;
 
     if (lines.empty())

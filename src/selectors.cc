@@ -141,16 +141,16 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
                              CodepointPair matching, int level,
                              ObjectFlags flags)
 {
-	const bool nestable = matching.first != matching.second;
-	auto pos = selection.last();
-	if (not nestable or flags & ObjectFlags::Inner)
-	{
+    const bool nestable = matching.first != matching.second;
+    auto pos = selection.last();
+    if (not nestable or flags & ObjectFlags::Inner)
+    {
         if (auto res = find_surrounding(buffer, pos, matching, flags, level))
             return *res;
         return selection;
-	}
+    }
 
-	auto c = buffer.byte_at(pos);
+    auto c = buffer.byte_at(pos);
     if ((flags == ObjectFlags::ToBegin and c == matching.first) or
         (flags == ObjectFlags::ToEnd and c == matching.second))
         ++level;
