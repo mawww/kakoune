@@ -404,7 +404,7 @@ void expand_unprintable(const Context& context, DisplayBuffer& display_buffer)
                             end = buffer.iterator_at(atom_it->end()); it != end; ++it)
                 {
                     Codepoint cp = *it;
-                    if (cp != '\n' and iscntrl((int)cp))
+                    if (cp != '\n' and not iswprint(cp))
                     {
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;

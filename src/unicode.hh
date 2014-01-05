@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <ctype.h>
+#include <wctype.h>
 
 namespace Kakoune
 {
@@ -29,13 +30,13 @@ enum WordType { Word, WORD };
 template<WordType word_type = Word>
 inline bool is_word(Codepoint c)
 {
-    return c == '_' or isalnum(c);
+    return c == '_' or iswalnum(c);
 }
 
 template<>
 inline bool is_word<WORD>(Codepoint c)
 {
-    return !is_blank(c) and !is_eol(c);
+    return not is_blank(c) and not is_eol(c);
 }
 
 inline bool is_punctuation(Codepoint c)

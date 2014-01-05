@@ -375,7 +375,7 @@ void view_commands(Context& context, int param)
 void replace_with_char(Context& context, int)
 {
     on_next_key_with_autoinfo(context, [](Key key, Context& context) {
-        if (not isprint(key.key))
+        if (not iswprint(key.key))
             return;
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
