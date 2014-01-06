@@ -159,6 +159,8 @@ void Context::forget_jumps_to_buffer(Buffer& buffer)
 
 void Context::change_buffer(Buffer& buffer)
 {
+    if (m_edition_level > 0)
+        throw runtime_error("the current buffer is still being edited");
     m_window.reset();
     if (has_client())
         client().change_buffer(buffer);
@@ -192,12 +194,16 @@ std::vector<String> Context::selections_content() const
 
 void Context::begin_edition()
 {
-    ++m_edition_level;
+    if (m_edition_level >= 0)
+        ++m_edition_level;
 }
 
 void Context::end_edition()
 {
-    kak_assert(m_edition_level > 0);
+    if (m_edition_level < 0)
+        return;
+
+    kak_assert(m_edition_level != 0);
     if (m_edition_level == 1)
         buffer().commit_undo_group();
 

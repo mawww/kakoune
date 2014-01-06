@@ -72,7 +72,7 @@ public:
     void set_name(String name) { m_name = std::move(name); }
 
     bool is_editing() const { return m_edition_level!= 0; }
-    void disable_undo_handling() { ++m_edition_level; }
+    void disable_undo_handling() { m_edition_level = -1; }
 private:
     void begin_edition();
     void end_edition();
