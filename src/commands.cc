@@ -574,6 +574,7 @@ void context_wrap(CommandParameters params, Context& context, Func func)
         if (parser.has_option("itersel"))
         {
             DynamicSelectionList sels{real_context->buffer(), real_context->selections()};
+            ScopedEdition edition{input_handler.context()};
             for (auto& sel : sels)
             {
                 input_handler.context().selections() = sel;
