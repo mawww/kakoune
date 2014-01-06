@@ -45,7 +45,7 @@ addhl -def-group cpp regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:ty
 addhl -def-group cpp regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
 addhl -def-group cpp regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
 addhl -def-group cpp regex "^\h*?#.*?(?<!\\)$" 0:macro
-addhl -def-group cpp region %{(?<!')"} %{(\`|[^\\])(\\\\)*"} string
+addhl -def-group cpp region %{(?<!')"} %{(?<!\\)(\\\\)*"} string
 addhl -def-group cpp region /\* \*/ comment
 addhl -def-group cpp regex "(//[^\n]*\n)" 0:comment
 
