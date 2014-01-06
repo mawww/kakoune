@@ -19,7 +19,8 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
       m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
-      m_timestamp(0),
+      // start buffer timestamp at 1 so that caches can init to 0
+      m_timestamp(1),
       m_fs_timestamp(fs_timestamp),
       m_hooks(GlobalHooks::instance()),
       m_options(GlobalOptions::instance()),
@@ -36,7 +37,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(Line{ pos, std::move(line) });
+        m_lines.emplace_back(Line{ m_timestamp, pos, std::move(line) });
         pos += m_lines.back().length();
     }
 
@@ -91,7 +92,7 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(Line{ pos, std::move(line) });
+        m_lines.emplace_back(Line{ m_timestamp, pos, std::move(line) });
         pos += m_lines.back().length();
     }
     m_fs_timestamp = fs_timestamp;
@@ -495,12 +496,12 @@ BufferCoord Buffer::do_insert(BufferCoord pos, const String& content)
         {
             if (content[i] == '\n')
             {
-                m_lines.push_back({ offset + start, content.substr(start, i + 1 - start) });
+                m_lines.push_back({ m_timestamp, offset + start, content.substr(start, i + 1 - start) });
                 start = i + 1;
             }
         }
         if (start != content.length())
-            m_lines.push_back({ offset + start, content.substr(start) });
+            m_lines.push_back({ m_timestamp, offset + start, content.substr(start) });
 
         begin = pos.column == 0 ? pos : BufferCoord{ pos.line + 1, 0 };
         end = BufferCoord{ line_count()-1, m_lines.back().length() };
@@ -521,23 +522,29 @@ BufferCoord Buffer::do_insert(BufferCoord pos, const String& content)
                 if (start == 0)
                 {
                     line_content = prefix + line_content;
-                    new_lines.push_back({ offset + start - prefix.length(),
+                    new_lines.push_back({ m_timestamp, offset + start - prefix.length(),
                                           std::move(line_content) });
                 }
                 else
-                    new_lines.push_back({ offset + start, std::move(line_content) });
+                    new_lines.push_back({ m_timestamp, offset + start, std::move(line_content) });
                 start = i + 1;
             }
         }
         if (start == 0)
-            new_lines.push_back({ offset + start - prefix.length(), prefix + content + suffix });
+            new_lines.push_back({ m_timestamp, offset + start - prefix.length(), prefix + content + suffix });
         else if (start != content.length() or not suffix.empty())
-            new_lines.push_back({ offset + start, content.substr(start) + suffix });
+            new_lines.push_back({ m_timestamp, offset + start, content.substr(start) + suffix });
 
         LineCount last_line = pos.line + new_lines.size() - 1;
 
         auto line_it = m_lines.begin() + (int)pos.line;
         *line_it = std::move(*new_lines.begin());
+        if (new_lines.size() > 1)
+        {
+            for (auto it = line_it + 1; it != m_lines.end(); ++it)
+                it->timestamp = m_timestamp;
+        }
+
         m_lines.insert(line_it+1, std::make_move_iterator(new_lines.begin() + 1),
                        std::make_move_iterator(new_lines.end()));
 
@@ -558,7 +565,7 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     const ByteCount length = distance(begin, end);
     String prefix = m_lines[begin.line].content.substr(0, begin.column);
     String suffix = m_lines[end.line].content.substr(end.column);
-    Line new_line = { m_lines[begin.line].start, prefix + suffix };
+    Line new_line = { m_timestamp, m_lines[begin.line].start, prefix + suffix };
 
     BufferCoord next;
     if (new_line.length() != 0)
@@ -575,6 +582,13 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
 
     for (LineCount i = begin.line+1; i < line_count(); ++i)
         m_lines[i].start -= length;
+
+    // all following lines have conceptually changed if we removed a line
+    if (begin.line != end.line)
+    {
+        for (LineCount i = begin.line; i < line_count(); ++i)
+            m_lines[i].timestamp = m_timestamp;
+    }
 
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, begin, end);
