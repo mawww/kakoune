@@ -864,7 +864,7 @@ Existing commands files are:
      session, if tmux is detected, launch the client in a new tmux split, else
      launch in a new terminal emulator.
  * *rc/clang.kak*: provides the +:clang-enable-autocomplete+ command for C/CPP
-     insert mode completion support. This needs uses clang++ compiler.
+     insert mode completion support. This needs clang++ compiler.
 
 Certain command files defines options, such as +grepcmd+ (for +:grep+) +makecmd+
 (for +:make+) or +termcmd+ (for +:new+).
