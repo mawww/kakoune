@@ -71,8 +71,10 @@ Buffer::~Buffer()
 
 void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
 {
+    // use back coord to simulate the persistance of the last end of line
+    // as buffers are expected to never be empty.
     for (auto listener : m_change_listeners)
-        listener->on_erase(*this, {0,0}, end_coord());
+        listener->on_erase(*this, {0,0}, back_coord());
 
     m_history.clear();
     m_current_undo_group.clear();
@@ -95,7 +97,7 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     m_fs_timestamp = fs_timestamp;
 
     for (auto listener : m_change_listeners)
-        listener->on_insert(*this, {0,0}, end_coord());
+        listener->on_insert(*this, {0,0}, back_coord());
 }
 
 String Buffer::display_name() const
