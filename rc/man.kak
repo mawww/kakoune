@@ -23,7 +23,7 @@ def -hidden -shell-params _man %{ %sh{
               nop %sh{rm ${tmpfile}}
               set buffer filetype man"
     else
-       echo "echo %{man '$@' failed: see *debug* buffer for details }"
+       echo "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
        rm ${tmpfile}
     fi
 } }
