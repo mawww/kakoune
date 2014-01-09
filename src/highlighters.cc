@@ -150,7 +150,8 @@ class RegexColorizer
 {
 public:
     RegexColorizer(Regex regex, ColorSpec colors)
-        : m_regex(std::move(regex)), m_colors(std::move(colors))
+        : m_regex{std::move(regex)}, m_colors{std::move(colors)},
+          m_cache_id{ValueId::get_free_id()}
     {
     }
 
@@ -175,17 +176,20 @@ private:
     struct MatchesCache
     {
         BufferRange m_range;
-        size_t      m_timestamp;
+        size_t      m_timestamp = 0;
         std::vector<std::vector<std::pair<BufferCoord, BufferCoord>>> m_matches;
     };
-    std::unordered_map<const Buffer*, MatchesCache> m_caches;
 
     Regex     m_regex;
     ColorSpec m_colors;
+    ValueId   m_cache_id;
 
     MatchesCache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
-        MatchesCache& cache = m_caches[&buffer];
+        Value& cache_val = buffer.values()[m_cache_id];
+        if (not cache_val)
+            cache_val = Value(MatchesCache{});
+        MatchesCache& cache = cache_val.as<MatchesCache>();
 
         if (buffer.timestamp() == cache.m_timestamp and
             range.first >= cache.m_range.first and
@@ -503,7 +507,8 @@ public:
     RegionHighlighter(Regex begin, Regex end, HighlightFunc func)
         : m_begin(std::move(begin)),
           m_end(std::move(end)),
-          m_func(std::move(func))
+          m_func(std::move(func)),
+          m_cache_id{ValueId::get_free_id()}
     {}
 
     void operator()(const Context& context, DisplayBuffer& display_buffer)
@@ -516,17 +521,21 @@ private:
     Regex m_begin;
     Regex m_end;
     HighlightFunc m_func;
+    ValueId m_cache_id;
 
     struct RegionCache
     {
         size_t timestamp = -1;
         std::vector<std::pair<BufferCoord, BufferCoord>> regions;
     };
-    std::unordered_map<const Buffer*, RegionCache> m_cache;
 
     RegionCache& update_cache_ifn(const Buffer& buffer)
     {
-        RegionCache& cache = m_cache[&buffer];
+        Value& cache_val = buffer.values()[m_cache_id];
+        if (not cache_val)
+            cache_val = Value(RegionCache{});
+        RegionCache& cache = cache_val.as<RegionCache>();
+
         if (cache.timestamp == buffer.timestamp())
             return cache;
 
