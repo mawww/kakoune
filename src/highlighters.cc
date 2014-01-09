@@ -146,12 +146,27 @@ void apply_highlighter(const Context& context,
 
 typedef std::unordered_map<size_t, const ColorPair*> ColorSpec;
 
+template<typename T>
+struct BufferSideCache
+{
+    BufferSideCache() : m_id{ValueId::get_free_id()} {}
+
+    T& get(const Buffer& buffer)
+    {
+        Value& cache_val = buffer.values()[m_id];
+        if (not cache_val)
+            cache_val = Value(T{});
+        return cache_val.as<T>();
+    }
+private:
+    ValueId m_id;
+};
+
 class RegexColorizer
 {
 public:
     RegexColorizer(Regex regex, ColorSpec colors)
-        : m_regex{std::move(regex)}, m_colors{std::move(colors)},
-          m_cache_id{ValueId::get_free_id()}
+        : m_regex{std::move(regex)}, m_colors{std::move(colors)}
     {
     }
 
@@ -179,17 +194,14 @@ private:
         size_t      m_timestamp = 0;
         std::vector<std::vector<std::pair<BufferCoord, BufferCoord>>> m_matches;
     };
+    BufferSideCache<MatchesCache> m_cache;
 
     Regex     m_regex;
     ColorSpec m_colors;
-    ValueId   m_cache_id;
 
     MatchesCache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
-        Value& cache_val = buffer.values()[m_cache_id];
-        if (not cache_val)
-            cache_val = Value(MatchesCache{});
-        MatchesCache& cache = cache_val.as<MatchesCache>();
+        MatchesCache& cache = m_cache.get(buffer);
 
         if (buffer.timestamp() == cache.m_timestamp and
             range.first >= cache.m_range.first and
@@ -507,8 +519,7 @@ public:
     RegionHighlighter(Regex begin, Regex end, HighlightFunc func)
         : m_begin(std::move(begin)),
           m_end(std::move(end)),
-          m_func(std::move(func)),
-          m_cache_id{ValueId::get_free_id()}
+          m_func(std::move(func))
     {}
 
     void operator()(const Context& context, DisplayBuffer& display_buffer)
@@ -521,20 +532,17 @@ private:
     Regex m_begin;
     Regex m_end;
     HighlightFunc m_func;
-    ValueId m_cache_id;
 
     struct RegionCache
     {
         size_t timestamp = -1;
         std::vector<std::pair<BufferCoord, BufferCoord>> regions;
     };
+    BufferSideCache<RegionCache> m_cache;
 
     RegionCache& update_cache_ifn(const Buffer& buffer)
     {
-        Value& cache_val = buffer.values()[m_cache_id];
-        if (not cache_val)
-            cache_val = Value(RegionCache{});
-        RegionCache& cache = cache_val.as<RegionCache>();
+        RegionCache& cache = m_cache.get(buffer);
 
         if (cache.timestamp == buffer.timestamp())
             return cache;
