@@ -10,8 +10,8 @@ namespace Kakoune
 {
 
 struct Context;
-typedef std::function<String (const String& name, const Context&)> EnvVarRetriever;
-typedef std::unordered_map<String, String>     EnvVarMap;
+using EnvVarRetriever = std::function<String (const String& name, const Context&)>;
+using EnvVarMap = std::unordered_map<String, String>;
 
 class ShellManager : public Singleton<ShellManager>
 {

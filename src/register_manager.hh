@@ -11,7 +11,7 @@
 namespace Kakoune
 {
 
-typedef std::function<std::vector<String> (const Context&)> RegisterRetriever;
+using RegisterRetriever = std::function<std::vector<String> (const Context&)>;
 
 class RegisterManager : public Singleton<RegisterManager>
 {

@@ -20,12 +20,10 @@ class Context;
 // color, adding information text (line numbering for example) or replacing
 // buffer content (folding for example)
 
-typedef std::function<void (const Context& context, DisplayBuffer& display_buffer)> HighlighterFunc;
-typedef std::pair<String, HighlighterFunc> HighlighterAndId;
-typedef memoryview<String> HighlighterParameters;
-
+using HighlighterFunc = std::function<void (const Context& context, DisplayBuffer& display_buffer)>;
+using HighlighterAndId = std::pair<String, HighlighterFunc>;
+using HighlighterParameters = memoryview<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
-
 using HighlighterGroup = FunctionGroup<const Context&, DisplayBuffer&>;
 
 struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,

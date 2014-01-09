@@ -11,7 +11,7 @@
 namespace Kakoune
 {
 
-typedef boost::regex Regex;
+using Regex = boost::regex;
 
 class String : public std::string
 {

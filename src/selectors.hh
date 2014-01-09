@@ -56,7 +56,7 @@ inline Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
     return {first.base().coord(), last.base().coord()};
 }
 
-typedef boost::regex_iterator<BufferIterator> RegexIterator;
+using RegexIterator = boost::regex_iterator<BufferIterator>;
 
 template<WordType word_type>
 Selection select_to_next_word(const Buffer& buffer, const Selection& selection)

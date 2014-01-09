@@ -10,7 +10,7 @@ namespace Kakoune
 {
 
 class Context;
-typedef std::function<void (const String&, Context&)> HookFunc;
+using HookFunc = std::function<void (const String&, Context&)>;
 
 class HookManager
 {

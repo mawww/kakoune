@@ -18,7 +18,7 @@ struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, CharCount>
         : LineAndColumn(line, column) {}
 };
 
-typedef char Attribute;
+using Attribute = char;
 
 enum Attributes
 {

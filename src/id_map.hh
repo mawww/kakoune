@@ -13,10 +13,10 @@ template<typename Value>
 class id_map
 {
 public:
-    typedef std::pair<String, Value> value_type;
-    typedef std::vector<value_type> container_type;
-    typedef typename container_type::iterator iterator;
-    typedef typename container_type::const_iterator const_iterator;
+    using value_type = std::pair<String, Value>;
+    using container_type = std::vector<value_type>;
+    using iterator = typename container_type::iterator;
+    using const_iterator = typename container_type::const_iterator;
 
     void append(const value_type& value)
     {

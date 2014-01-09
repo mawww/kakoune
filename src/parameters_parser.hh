@@ -74,11 +74,11 @@ struct ParametersParser
     struct iterator
     {
     public:
-        typedef String            value_type;
-        typedef const value_type* pointer;
-        typedef const value_type& reference;
-        typedef size_t            difference_type;
-        typedef std::forward_iterator_tag iterator_category;
+        using value_type = String;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+        using difference_type = size_t;
+        using iterator_category = std::forward_iterator_tag;
 
         iterator(const ParametersParser& parser, size_t index)
             : m_parser(parser), m_index(index) {}

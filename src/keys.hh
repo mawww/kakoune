@@ -64,7 +64,7 @@ struct Key
     { return modifiers != other.modifiers or key != other.key; }
 };
 
-typedef std::vector<Key> KeyList;
+using KeyList = std::vector<Key>;
 
 KeyList parse_keys(const String& str);
 String  key_to_str(Key key);

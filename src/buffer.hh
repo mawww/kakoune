@@ -6,7 +6,6 @@
 #include "option_manager.hh"
 #include "keymap_manager.hh"
 #include "string.hh"
-#include "units.hh"
 
 #include <vector>
 #include <list>
@@ -30,11 +29,11 @@ struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 class BufferIterator
 {
 public:
-    typedef char value_type;
-    typedef size_t difference_type;
-    typedef const value_type* pointer;
-    typedef const value_type& reference;
-    typedef std::random_access_iterator_tag iterator_category;
+    using value_type = char;
+    using difference_type = size_t;
+    using pointer = const value_type*;
+    using reference = const value_type&;
+    using iterator_category = std::random_access_iterator_tag;
 
     BufferIterator() : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, BufferCoord coord);
@@ -202,7 +201,7 @@ private:
     Flags   m_flags;
 
     struct Modification;
-    typedef std::vector<Modification> UndoGroup;
+    using  UndoGroup = std::vector<Modification>;
     friend class UndoGroupOptimizer;
 
     std::vector<UndoGroup>           m_history;

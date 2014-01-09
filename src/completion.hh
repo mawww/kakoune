@@ -1,17 +1,18 @@
 #ifndef completion_hh_INCLUDED
 #define completion_hh_INCLUDED
 
-#include "string.hh"
-
 #include <vector>
 #include <functional>
+
+#include "units.hh"
 
 namespace Kakoune
 {
 
 class Context;
 
-typedef std::vector<String> CandidateList;
+class String;
+using CandidateList = std::vector<String>;
 
 struct Completions
 {
