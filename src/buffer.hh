@@ -6,6 +6,7 @@
 #include "option_manager.hh"
 #include "keymap_manager.hh"
 #include "string.hh"
+#include "value.hh"
 
 #include <vector>
 #include <list>
@@ -166,6 +167,8 @@ public:
     KeymapManager&       keymaps()       { return m_keymaps; }
     const KeymapManager& keymaps() const { return m_keymaps; }
 
+    ValueMap& values() const { return m_values; }
+
     void run_hook_in_own_context(const String& hook_name, const String& param);
 
     std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
@@ -223,6 +226,10 @@ private:
     OptionManager m_options;
     HookManager   m_hooks;
     KeymapManager m_keymaps;
+
+    // Values are just data holding by the buffer, so it is part of its
+    // observable state
+    mutable ValueMap m_values;
 
     friend constexpr Flags operator|(Flags lhs, Flags rhs)
     {
