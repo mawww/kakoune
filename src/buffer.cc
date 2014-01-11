@@ -67,6 +67,7 @@ Buffer::~Buffer()
 
     m_options.unregister_watcher(*this);
     BufferManager::instance().unregister_buffer(*this);
+    m_values.clear();
     kak_assert(m_change_listeners.empty());
 }
 
