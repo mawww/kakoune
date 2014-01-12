@@ -188,21 +188,21 @@ public:
     }
 
 private:
-    struct MatchesCache
+    struct Cache
     {
-        MatchesCache(const Buffer&){}
+        Cache(const Buffer&){}
         BufferRange m_range;
         size_t      m_timestamp = 0;
         std::vector<std::vector<std::pair<BufferCoord, BufferCoord>>> m_matches;
     };
-    BufferSideCache<MatchesCache> m_cache;
+    BufferSideCache<Cache> m_cache;
 
     Regex     m_regex;
     ColorSpec m_colors;
 
-    MatchesCache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
+    Cache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
-        MatchesCache& cache = m_cache.get(buffer);
+        Cache& cache = m_cache.get(buffer);
 
         if (buffer.timestamp() == cache.m_timestamp and
             range.first >= cache.m_range.first and
