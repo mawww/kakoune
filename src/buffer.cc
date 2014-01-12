@@ -540,11 +540,6 @@ BufferCoord Buffer::do_insert(BufferCoord pos, const String& content)
 
         auto line_it = m_lines.begin() + (int)pos.line;
         *line_it = std::move(*new_lines.begin());
-        if (new_lines.size() > 1)
-        {
-            for (auto it = line_it + 1; it != m_lines.end(); ++it)
-                it->timestamp = m_timestamp;
-        }
 
         m_lines.insert(line_it+1, std::make_move_iterator(new_lines.begin() + 1),
                        std::make_move_iterator(new_lines.end()));
@@ -583,13 +578,6 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
 
     for (LineCount i = begin.line+1; i < line_count(); ++i)
         m_lines[i].start -= length;
-
-    // all following lines have conceptually changed if we removed a line
-    if (begin.line != end.line)
-    {
-        for (LineCount i = begin.line; i < line_count(); ++i)
-            m_lines[i].timestamp = m_timestamp;
-    }
 
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, begin, end);
