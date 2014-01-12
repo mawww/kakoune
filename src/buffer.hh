@@ -287,6 +287,6 @@ public:
 
 }
 
-#include "buffer_iterator.inl.hh"
+#include "buffer.inl.hh"
 
 #endif // buffer_hh_INCLUDED

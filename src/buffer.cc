@@ -157,30 +157,6 @@ BufferCoord Buffer::offset_coord(BufferCoord coord, LineCount offset)
     return {line, content.byte_count_to(character)};
 }
 
-BufferIterator Buffer::begin() const
-{
-    return BufferIterator(*this, { 0_line, 0 });
-}
-
-BufferIterator Buffer::end() const
-{
-    if (m_lines.empty())
-        return BufferIterator(*this, { 0_line, 0 });
-    return BufferIterator(*this, { line_count()-1, m_lines.back().length() });
-}
-
-ByteCount Buffer::byte_count() const
-{
-    if (m_lines.empty())
-        return 0;
-    return m_lines.back().start + m_lines.back().length();
-}
-
-LineCount Buffer::line_count() const
-{
-    return LineCount(m_lines.size());
-}
-
 String Buffer::string(BufferCoord begin, BufferCoord end) const
 {
     String res;
@@ -674,20 +650,6 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
     return { LineCount{ (int)(it - m_lines.begin()) }, off - it->start };
 }
 
-BufferCoord Buffer::next(BufferCoord coord) const
-{
-    if (coord.column < m_lines[coord.line].length() - 1)
-        ++coord.column;
-    else if (coord.line == m_lines.size() - 1)
-        coord.column = m_lines.back().length();
-    else
-    {
-        ++coord.line;
-        coord.column = 0;
-    }
-    return coord;
-}
-
 BufferCoord Buffer::char_next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
@@ -711,18 +673,6 @@ BufferCoord Buffer::char_next(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord Buffer::prev(BufferCoord coord) const
-{
-    if (coord.column == 0)
-    {
-        if (coord.line > 0)
-            coord.column = m_lines[--coord.line].length() - 1;
-    }
-    else
-       --coord.column;
-    return coord;
-}
-
 BufferCoord Buffer::char_prev(BufferCoord coord) const
 {
     kak_assert(is_valid(coord));
@@ -739,36 +689,6 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
         coord.column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1) - line.begin());
     }
     return coord;
-}
-
-ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
-{
-    return offset(end) - offset(begin);
-}
-
-ByteCount Buffer::offset(BufferCoord c) const
-{
-    if (c.line == line_count())
-        return m_lines.back().start + m_lines.back().length();
-    return m_lines[c.line].start + c.column;
-}
-
-bool Buffer::is_valid(BufferCoord c) const
-{
-    return (c.line < line_count() and c.column < m_lines[c.line].length()) or
-           (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
-           (c.line == line_count() and c.column == 0);
-}
-
-bool Buffer::is_end(BufferCoord c) const
-{
-    return c >= BufferCoord{line_count() - 1, m_lines.back().length()};
-}
-
-char Buffer::byte_at(BufferCoord c) const
-{
-    kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
-    return m_lines[c.line].content[c.column];
 }
 
 time_t Buffer::fs_timestamp() const
