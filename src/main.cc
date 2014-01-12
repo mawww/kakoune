@@ -57,8 +57,10 @@ String runtime_directory()
 
 void register_env_vars()
 {
-    struct EnvVarDesc { const char* name; String (*func)(const String&, const Context&); };
-    static const EnvVarDesc env_vars[] = { {
+    static const struct {
+        const char* name;
+        String (*func)(const String&, const Context&);
+    } env_vars[] = { {
             "bufname",
             [](const String& name, const Context& context)
             { return context.buffer().display_name(); }
