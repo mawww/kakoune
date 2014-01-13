@@ -550,6 +550,18 @@ private:
     };
     using MatchList = std::vector<Match>;
 
+    static bool compare_matches_end(const Match& lhs, const Match& rhs)
+    {
+        return (lhs.line != rhs.line) ? lhs.line < rhs.line
+                                      : lhs.end < rhs.end;
+    }
+
+    static bool compare_matches_begin(const Match& lhs, const Match& rhs)
+    {
+        return (lhs.line != rhs.line) ? lhs.line < rhs.line
+                                      : lhs.begin < rhs.begin;
+    }
+
     struct LineChange
     {
         LineCount pos;
@@ -587,43 +599,31 @@ private:
         if (cache.timestamp == buf_timestamp)
             return cache.regions;
 
-        {
-            std::sort(cache.changes.begin(), cache.changes.end(),
-                      [](const LineChange& lhs, const LineChange& rhs) {
-                          return lhs.pos < rhs.pos;
-                      });
-            for (size_t i = 1; i < cache.changes.size(); ++i)
-                cache.changes[i].num += cache.changes[i-1].num;
-
-            update_matches(buffer, cache, cache.begin_matches, m_begin);
-            update_matches(buffer, cache, cache.end_matches, m_end);
-
-            cache.changes.clear();
-        }
+        std::sort(cache.changes.begin(), cache.changes.end(),
+                  [](const LineChange& lhs, const LineChange& rhs)
+                  { return lhs.pos < rhs.pos; });
+        for (size_t i = 1; i < cache.changes.size(); ++i)
+            cache.changes[i].num += cache.changes[i-1].num;
+        update_matches(buffer, cache, cache.begin_matches, m_begin);
+        update_matches(buffer, cache, cache.end_matches, m_end);
+        cache.changes.clear();
 
         cache.regions.clear();
         for (auto beg_it = cache.begin_matches.begin(), end_it = cache.end_matches.begin();
              beg_it != cache.begin_matches.end(); )
         {
-            auto compare_matches = [&](const Match& lhs, const Match& rhs) {
-                if (lhs.line != rhs.line)
-                    return lhs.line < rhs.line;
-                return lhs.end < rhs.end;
-            };
             end_it = std::upper_bound(end_it, cache.end_matches.end(),
-                                      *beg_it, compare_matches);
+                                      *beg_it, compare_matches_end);
             if (end_it == cache.end_matches.end())
             {
-                cache.regions.push_back({{beg_it->line, beg_it->begin}, buffer.end_coord()});
+                cache.regions.push_back({ {beg_it->line, beg_it->begin},
+                                          buffer.end_coord() });
                 break;
             }
-            else
-            {
-                cache.regions.push_back({{beg_it->line, beg_it->begin},
-                                        {end_it->line, end_it->end}});
-                beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
-                                          *end_it, compare_matches);
-            }
+            cache.regions.push_back({ {beg_it->line, beg_it->begin},
+                                      {end_it->line, end_it->end} });
+            beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
+                                      *end_it, compare_matches_end);
         }
         cache.timestamp = buffer.timestamp();
         return cache.regions;
@@ -636,20 +636,24 @@ private:
         for (auto it = matches.begin(); it != matches.end();)
         {
             auto change_it = std::lower_bound(cache.changes.begin(), cache.changes.end(), it->line,
-                                              [](const LineChange& c, const LineCount& l) {
-                                                  return c.pos < l; });
+                                              [](const LineChange& c, const LineCount& l)
+                                              { return c.pos < l; });
             if (change_it != cache.changes.begin())
             {
                 it->line += (change_it-1)->num;
                 if (it->line <= (change_it-1)->pos)
                 {
-                    it = matches.erase(it);
+                    std::swap(*it, matches.back());
+                    matches.pop_back();
                     continue;
                 }
             }
             if (it->line >= buffer.line_count() or
                 it->timestamp < buffer.line_timestamp(it->line))
-                it = matches.erase(it);
+            {
+                std::swap(*it, matches.back());
+                matches.pop_back();
+            }
             else
             {
                 it->timestamp = buf_timestamp;
@@ -659,7 +663,7 @@ private:
             }
         }
         // try to find new matches in each updated lines
-        for (auto line = 0_line; line < buffer.line_count(); ++line)
+        for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
         {
             if (buffer.line_timestamp(line) > cache.timestamp)
             {
@@ -672,12 +676,7 @@ private:
                 }
             }
         }
-        std::sort(matches.begin(), matches.end(),
-                  [](const Match& lhs, const Match& rhs) {
-                      if (lhs.line != rhs.line)
-                          return lhs.line < rhs.line;
-                      return lhs.begin < rhs.begin;
-                  });
+        std::sort(matches.begin(), matches.end(), compare_matches_begin);
     }
 };
 
