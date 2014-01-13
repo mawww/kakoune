@@ -120,18 +120,24 @@ struct SelectionList : std::vector<Selection>
     void merge_overlapping(OverlapsFunc overlaps)
     {
         kak_assert(std::is_sorted(begin(), end(), compare_selections));
-        for (size_t i = 0; i+1 < size() and size() > 1;)
+        size_t i = 0;
+        for (size_t j = 1; j < size(); ++j)
         {
-            if (overlaps((*this)[i], (*this)[i+1]))
+            if (overlaps((*this)[i], (*this)[j]))
             {
-                (*this)[i].merge_with((*this)[i+1]);
-                erase(begin() + i + 1);
-                if (i + 1 <= m_main)
+                (*this)[i].merge_with((*this)[j]);
+                if (i < m_main)
                     --m_main;
             }
             else
-               ++i;
+            {
+                ++i;
+                if (i != j)
+                    (*this)[i] = std::move((*this)[j]);
+            }
         }
+        erase(begin() + i + 1, end());
+        kak_assert(std::is_sorted(begin(), end(), compare_selections));
     }
 
     void sort_and_merge_overlapping()
