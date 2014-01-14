@@ -633,35 +633,35 @@ private:
     {
         const size_t buf_timestamp = buffer.timestamp();
         // remove out of date matches and update line for others
-        for (auto it = matches.begin(); it != matches.end();)
+        auto ins_pos = matches.begin();
+        for (auto it = ins_pos; it != matches.end(); ++it)
         {
             auto change_it = std::lower_bound(cache.changes.begin(), cache.changes.end(), it->line,
                                               [](const LineChange& c, const LineCount& l)
                                               { return c.pos < l; });
+            bool erase = false;
             if (change_it != cache.changes.begin())
             {
                 it->line += (change_it-1)->num;
-                if (it->line <= (change_it-1)->pos)
-                {
-                    std::swap(*it, matches.back());
-                    matches.pop_back();
-                    continue;
-                }
+                erase = it->line <= (change_it-1)->pos;
             }
-            if (it->line >= buffer.line_count() or
-                it->timestamp < buffer.line_timestamp(it->line))
-            {
-                std::swap(*it, matches.back());
-                matches.pop_back();
-            }
-            else
+            erase = erase or (it->line >= buffer.line_count() or
+                              it->timestamp < buffer.line_timestamp(it->line));
+
+            if (not erase)
             {
                 it->timestamp = buf_timestamp;
                 kak_assert(buffer.is_valid({it->line, it->begin}));
                 kak_assert(buffer.is_valid({it->line, it->end}));
-                ++it;
+
+                if (ins_pos != it)
+                    *ins_pos = std::move(*it);
+                ++ins_pos;
             }
         }
+        matches.erase(ins_pos, matches.end());
+        size_t pivot = matches.size();
+
         // try to find new matches in each updated lines
         for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
         {
@@ -676,7 +676,8 @@ private:
                 }
             }
         }
-        std::sort(matches.begin(), matches.end(), compare_matches_begin);
+        std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
+                           compare_matches_begin);
     }
 };
 
