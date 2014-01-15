@@ -592,6 +592,48 @@ private:
     };
     BufferSideCache<Cache> m_cache;
 
+    static std::vector<LineCount> compute_lines_to_update(const std::vector<LineChange>& changes)
+    {
+        std::vector<LineCount> res;
+        for (auto& change : changes)
+        {
+            if (change.num == 0)
+                res.push_back(change.pos);
+            else if (change.num > 0)
+            {
+                for (auto& l : res)
+                {
+                    if (l > change.pos)
+                        l += change.num;
+                }
+                for (LineCount i = 0; i <= change.num; ++i)
+                    res.push_back(change.pos + i);
+            }
+            else
+            {
+                for (auto it = res.begin(); it != res.end(); )
+                {
+                    auto& line = *it;
+                    if (line > change.pos)
+                    {
+                        line += change.num;
+                        if (line < change.pos)
+                        {
+                            std::swap(line, res.back());
+                            res.pop_back();
+                            continue;
+                        }
+                    }
+                    ++it;
+                }
+                res.push_back(change.pos);
+            }
+        }
+        std::sort(res.begin(), res.end());
+        res.erase(std::unique(res.begin(), res.end()), res.end());
+        return res;
+    }
+
     const RegionList& update_cache_ifn(const Buffer& buffer)
     {
         Cache& cache = m_cache.get(buffer);
@@ -599,14 +641,23 @@ private:
         if (cache.timestamp == buf_timestamp)
             return cache.regions;
 
-        std::sort(cache.changes.begin(), cache.changes.end(),
-                  [](const LineChange& lhs, const LineChange& rhs)
-                  { return lhs.pos < rhs.pos; });
-        for (size_t i = 1; i < cache.changes.size(); ++i)
-            cache.changes[i].num += cache.changes[i-1].num;
-        update_matches(buffer, cache, cache.begin_matches, m_begin);
-        update_matches(buffer, cache, cache.end_matches, m_end);
-        cache.changes.clear();
+        if (cache.timestamp == 0)
+        {
+            find_matches(buffer, cache.begin_matches, m_begin);
+            find_matches(buffer, cache.end_matches, m_end);
+        }
+        else
+        {
+            auto to_update = compute_lines_to_update(cache.changes);
+            std::sort(cache.changes.begin(), cache.changes.end(),
+                      [](const LineChange& lhs, const LineChange& rhs)
+                      { return lhs.pos < rhs.pos; });
+            for (size_t i = 1; i < cache.changes.size(); ++i)
+                cache.changes[i].num += cache.changes[i-1].num;
+            update_matches(buffer, cache, to_update, cache.begin_matches, m_begin);
+            update_matches(buffer, cache, to_update, cache.end_matches, m_end);
+            cache.changes.clear();
+        }
 
         cache.regions.clear();
         for (auto beg_it = cache.begin_matches.begin(), end_it = cache.end_matches.begin();
@@ -629,7 +680,22 @@ private:
         return cache.regions;
     }
 
-    void update_matches(const Buffer& buffer, const Cache& cache, MatchList& matches, const Regex& regex)
+    void find_matches(const Buffer& buffer, MatchList& matches, const Regex& regex)
+    {
+        const size_t buf_timestamp = buffer.timestamp();
+        for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
+        {
+            auto& l = buffer[line];
+            for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+            {
+                ByteCount b = (int)((*it)[0].first - l.begin());
+                ByteCount e = (int)((*it)[0].second - l.begin());
+                matches.push_back({ buf_timestamp, line, b, e });
+            }
+        }
+    }
+
+    void update_matches(const Buffer& buffer, const Cache& cache, memoryview<LineCount> to_update, MatchList& matches, const Regex& regex)
     {
         const size_t buf_timestamp = buffer.timestamp();
         // remove out of date matches and update line for others
@@ -663,17 +729,15 @@ private:
         size_t pivot = matches.size();
 
         // try to find new matches in each updated lines
-        for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
+        for (auto line : to_update)
         {
-            if (buffer.line_timestamp(line) > cache.timestamp)
+            kak_assert(buffer.line_timestamp(line) > cache.timestamp);
+            auto& l = buffer[line];
+            for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
             {
-                auto& l = buffer[line];
-                for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
-                {
-                    ByteCount b = (int)((*it)[0].first - l.begin());
-                    ByteCount e = (int)((*it)[0].second - l.begin());
-                    matches.push_back({ buf_timestamp, line, b, e });
-                }
+                ByteCount b = (int)((*it)[0].first - l.begin());
+                ByteCount e = (int)((*it)[0].second - l.begin());
+                matches.push_back({ buf_timestamp, line, b, e });
             }
         }
         std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
