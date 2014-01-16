@@ -10,6 +10,7 @@
 #include "client.hh"
 #include "color_registry.hh"
 #include "file.hh"
+#include "word_db.hh"
 
 #include <unordered_map>
 
@@ -707,6 +708,15 @@ public:
     }
     using StringList = std::vector<String>;
 
+    static WordDB& get_word_db(const Buffer& buffer)
+    {
+        static const ValueId word_db_id = ValueId::get_free_id();
+        Value& cache_val = buffer.values()[word_db_id];
+        if (not cache_val)
+            cache_val = Value(WordDB{buffer});
+        return cache_val.as<WordDB>();
+    }
+
     template<bool other_buffers>
     BufferCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
     {
@@ -721,31 +731,24 @@ public:
         if (not is_word(*begin))
             ++begin;
 
-        String ex = R"(\<\Q)" + String{begin, end} + R"(\E\w+\>)";
-        Regex re(ex.begin(), ex.end());
-        using RegexIt = boost::regex_iterator<BufferIterator>;
+        String prefix{begin, end};
+
 
         std::unordered_set<String> matches;
-        for (RegexIt it(buffer.begin(), buffer.end(), re), re_end; it != re_end; ++it)
-        {
-            auto& match = (*it)[0];
-            if (match.first <= pos and pos < match.second)
-                continue;
-            matches.insert(String{match.first, match.second});
-        }
+        auto bufmatches = get_word_db(buffer).find_prefix(prefix);
+        matches.insert(bufmatches.begin(), bufmatches.end());
+
         if (other_buffers)
         {
             for (const auto& buf : BufferManager::instance())
             {
                 if (buf.get() == &buffer)
                     continue;
-                for (RegexIt it(buf->begin(), buf->end(), re), re_end; it != re_end; ++it)
-                {
-                    auto& match = (*it)[0];
-                    matches.insert(String{match.first, match.second});
-                }
+                bufmatches = get_word_db(*buf).find_prefix(prefix);
+                matches.insert(bufmatches.begin(), bufmatches.end());
             }
         }
+        matches.erase(prefix);
         CandidateList result;
         std::copy(make_move_iterator(matches.begin()),
                   make_move_iterator(matches.end()),

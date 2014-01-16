@@ -2,6 +2,7 @@
 #include "buffer.hh"
 #include "keys.hh"
 #include "selectors.hh"
+#include "word_db.hh"
 
 using namespace Kakoune;
 
@@ -67,6 +68,28 @@ void test_undo_group_optimizer()
         kak_assert(lines[i] == buffer[LineCount((int)i)]);
 }
 
+void test_word_db()
+{
+    Buffer buffer("test", Buffer::Flags::None,
+                  { "tchou mutch\n",
+                    "tchou kanaky tchou\n",
+                    "\n",
+                    "tchaa tchaa\n",
+                    "allo\n"});
+    WordDB word_db(buffer);
+    auto res = word_db.find_prefix("");
+    std::sort(res.begin(), res.end());
+    kak_assert(res == std::vector<String>{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" });
+    buffer.erase(buffer.iterator_at({1, 6}), buffer.iterator_at({4, 0}));
+    res = word_db.find_prefix("");
+    std::sort(res.begin(), res.end());
+    kak_assert(res == std::vector<String>{ "allo" COMMA "mutch" COMMA "tchou" });
+    buffer.insert(buffer.iterator_at({1, 0}), "re");
+    res = word_db.find_prefix("");
+    std::sort(res.begin(), res.end());
+    kak_assert(res == std::vector<String>{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" });
+}
+
 void test_utf8()
 {
     String str = "maïs mélange bientôt";
@@ -121,4 +144,5 @@ void run_unit_tests()
     test_keys();
     test_buffer();
     test_undo_group_optimizer();
+    test_word_db();
 }
