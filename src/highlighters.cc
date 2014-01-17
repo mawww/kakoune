@@ -525,9 +525,14 @@ public:
 
     void operator()(const Context& context, DisplayBuffer& display_buffer)
     {
+        auto range = display_buffer.range();
         auto& regions = update_cache_ifn(context.buffer());
-        for (auto& region : regions)
-            m_func(context, display_buffer, region.begin, region.end);
+        auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
+                                      [](const Region& r, const BufferCoord& c) { return r.end < c; });
+        auto end = std::lower_bound(begin, regions.end(), range.second,
+                                    [](const Region& r, const BufferCoord& c) { return r.begin < c; });
+        for (; begin != end; ++begin)
+            m_func(context, display_buffer, begin->begin, begin->end);
     }
 private:
     Regex m_begin;
