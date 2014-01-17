@@ -15,7 +15,7 @@ public:
     using Function = std::function<void (Args...)>;
     using FunctionAndId = std::pair<String, std::function<void (Args...)>>;
 
-    void operator()(Args&&... args)
+    void operator()(Args... args)
     {
         for (auto& func : m_functions)
            func.second(std::forward<Args>(args)...);
