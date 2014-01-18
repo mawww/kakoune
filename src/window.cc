@@ -13,9 +13,9 @@ namespace Kakoune
 {
 
 // Implementation in highlighters.cc
-void highlight_selections(const Context& context, DisplayBuffer& display_buffer);
-void expand_tabulations(const Context& context, DisplayBuffer& display_buffer);
-void expand_unprintable(const Context& context, DisplayBuffer& display_buffer);
+void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
+void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
+void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
 
 Window::Window(Buffer& buffer)
     : m_buffer(&buffer),
@@ -82,8 +82,8 @@ void Window::update_display_buffer(const Context& context)
     }
 
     m_display_buffer.compute_range();
-    m_highlighters(context, m_display_buffer);
-    m_builtin_highlighters(context, m_display_buffer);
+    m_highlighters(context, HighlightFlags::Highlight, m_display_buffer);
+    m_builtin_highlighters(context, HighlightFlags::Highlight, m_display_buffer);
 
     // cut the start of the line before m_position.column
     for (auto& line : lines)
@@ -166,8 +166,8 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     lines.emplace_back(AtomList{ {buffer(), last.line, last.line+1} });
 
     display_buffer.compute_range();
-    m_highlighters(context, display_buffer);
-    m_builtin_highlighters(context, display_buffer);
+    m_highlighters(context, HighlightFlags::MoveOnly, display_buffer);
+    m_builtin_highlighters(context, HighlightFlags::MoveOnly, display_buffer);
 
     // now we can compute where the cursor is in display columns
     // (this is only valid if highlighting one line and multiple lines put
@@ -250,8 +250,8 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
 
     InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
     hook_handler.context().set_window(*this);
-    m_highlighters(hook_handler.context(), display_buffer);
-    m_builtin_highlighters(hook_handler.context(), display_buffer);
+    m_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
+    m_builtin_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
 
     CharCount column = find_display_column(lines[0], buffer(), coord);
     return find_buffer_coord(lines[1], buffer(), column);
