@@ -536,13 +536,20 @@ public:
         if (flags != HighlightFlags::Highlight)
             return;
         auto range = display_buffer.range();
-        auto& regions = update_cache_ifn(context.buffer());
+        const auto& buffer = context.buffer();
+        auto& regions = update_cache_ifn(buffer);
         auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
                                       [](const Region& r, const BufferCoord& c) { return r.end < c; });
         auto end = std::lower_bound(begin, regions.end(), range.second,
                                     [](const Region& r, const BufferCoord& c) { return r.begin < c; });
+        auto correct = [&](const BufferCoord& c) {
+            if (buffer[c.line].length() == c.column)
+                return BufferCoord{c.line+1, 0};
+            return c;
+        };
         for (; begin != end; ++begin)
-            m_func(context, flags, display_buffer, begin->begin, begin->end);
+            m_func(context, flags, display_buffer,
+                   correct(begin->begin), correct(begin->end));
     }
 private:
     Regex m_begin;
@@ -732,8 +739,10 @@ private:
             if (not erase)
             {
                 it->timestamp = buf_timestamp;
-                kak_assert(buffer.is_valid({it->line, it->begin}));
-                kak_assert(buffer.is_valid({it->line, it->end}));
+                kak_assert(buffer.is_valid({it->line, it->begin}) or
+                           buffer[it->line].length() == it->begin);
+                kak_assert(buffer.is_valid({it->line, it->end}) or
+                           buffer[it->line].length() == it->end);
 
                 if (ins_pos != it)
                     *ins_pos = std::move(*it);
