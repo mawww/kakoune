@@ -103,10 +103,11 @@ void WordDB::on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
 std::vector<String> WordDB::find_prefix(const String& prefix) const
 {
     std::vector<String> res;
-    for (auto& word : m_word_to_lines)
+    for (auto it = m_word_to_lines.lower_bound(prefix); it != m_word_to_lines.end(); ++it)
     {
-        if (prefix_match(word.first, prefix))
-            res.push_back(word.first);
+        if (not prefix_match(it->first, prefix))
+            break;
+        res.push_back(it->first);
     }
     return res;
 }

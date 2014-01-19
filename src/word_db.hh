@@ -22,7 +22,7 @@ public:
     std::vector<String> find_prefix(const String& prefix) const;
 
 private:
-    using WordToLines = std::unordered_map<String, std::vector<LineCount>>;
+    using WordToLines = std::map<String, std::vector<LineCount>>;
     using LineToWords = std::map<LineCount, std::vector<String>>;
 
     void add_words(LineCount line, const String& content);
