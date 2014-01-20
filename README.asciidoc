@@ -566,6 +566,8 @@ existing highlighters are:
  * +flag_lines <flag> <option_name>+: add a column in front of text, and display the
        given flag in it for everly lines contained in the int-list option named
        <option_name>.
+ * +show_matching+: highlight matching char of the character under the selections
+       last char using +MatchingChar+ color alias.
 
 Shared Highlighters
 ~~~~~~~~~~~~~~~~~~~

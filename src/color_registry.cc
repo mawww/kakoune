@@ -49,7 +49,8 @@ ColorRegistry::ColorRegistry()
         { "Error", { Colors::Black, Colors::Red } },
         { "StatusLine", { Colors::Cyan, Colors::Default } },
         { "StatusCursor", { Colors::Black, Colors::Cyan } },
-        { "Prompt", { Colors::Yellow, Colors::Default} },
+        { "Prompt", { Colors::Yellow, Colors::Default } },
+        { "MatchingChar", { Colors::Default, Colors::Magenta } },
       }
 {}
 

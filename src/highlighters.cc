@@ -393,6 +393,58 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
     }
 }
 
+void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+{
+    auto& colors = get_color("MatchingChar");
+    using CodepointPair = std::pair<Codepoint, Codepoint>;
+    constexpr CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
+    const auto range = display_buffer.range();
+    const auto& buffer = context.buffer();
+    for (auto& sel : context.selections())
+    {
+        auto pos = sel.last();
+        if (pos < range.first or pos >= range.second)
+            continue;
+        auto c = buffer.byte_at(pos);
+        for (auto& pair : matching_chars)
+        {
+            int level = 1;
+            if (c == pair.first)
+            {
+                auto it = buffer.iterator_at(pos)+1;
+                auto end = buffer.iterator_at(range.second);
+                skip_while(it, end, [&](char c) {
+                    if (c == pair.first)
+                        ++level;
+                    else if (c == pair.second and --level == 0)
+                        return false;
+                    return true;
+                });
+                if (it != end)
+                    highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
+                                    [&](DisplayAtom& atom) { atom.colors = colors; });
+                break;
+            }
+            else if (c == pair.second)
+            {
+                auto it = buffer.iterator_at(pos)-1;
+                auto end = buffer.iterator_at(range.first);
+                skip_while_reverse(it, end, [&](char c) {
+                    if (c == pair.second)
+                        ++level;
+                    else if (c == pair.first and --level == 0)
+                        return false;
+                    return true;
+                });
+                if (it != end)
+                    highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
+                                    [&](DisplayAtom& atom) { atom.colors = colors; });
+                break;
+            }
+        }
+    }
+}
+
 void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
 {
     if (flags != HighlightFlags::Highlight)
@@ -835,6 +887,7 @@ void register_highlighters()
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
+    registry.register_func("show_matching", SimpleHighlighterFactory<show_matching_char>("show_matching"));
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("regex_option", highlight_regex_option_factory);
     registry.register_func("search", highlight_search_factory);
