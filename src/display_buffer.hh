@@ -96,6 +96,8 @@ public:
         return m_type == BufferRange or m_type == ReplacedBufferRange;
     }
 
+    const Buffer& buffer() const { kak_assert(m_buffer); return *m_buffer; }
+
     Type type() const { return m_type; }
 
     void trim_begin(CharCount count);

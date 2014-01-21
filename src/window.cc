@@ -129,12 +129,26 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
             {
                 if (atom.begin() <= pos and atom.end() > pos)
                 {
-                    if (buffer_column < view_pos)
-                        return buffer_column;
+                    CharCount pos_beg, pos_end;
+                    if (atom.type() == DisplayAtom::BufferRange)
+                    {
+                        auto& buf = atom.buffer();
+                        pos_beg = buffer_column
+                                + utf8::distance(buf.iterator_at(atom.begin()),
+                                                 buf.iterator_at(pos));
+                        pos_end = pos_beg+1;
+                    }
+                    else
+                    {
+                        pos_beg = buffer_column;
+                        pos_end = pos_beg + atom.length();
+                    }
 
-                    auto last_column = buffer_column + atom.length();
-                    if (last_column >= view_pos + view_size - non_buffer_column)
-                        return last_column - view_size + non_buffer_column;
+                    if (pos_beg < view_pos)
+                        return pos_beg;
+
+                    if (pos_end >= view_pos + view_size - non_buffer_column)
+                        return pos_end - view_size + non_buffer_column;
                 }
                 buffer_column += atom.length();
             }
