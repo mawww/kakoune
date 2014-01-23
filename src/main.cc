@@ -362,6 +362,18 @@ int main(int argc, char* argv[])
 
         kakoune(params);
     }
+    catch (Kakoune::parameter_error& error)
+    {
+        printf("Error: %s\n"
+               "Valid options:\n"
+               "    -e <commands>: execute commands on initialisation\n"
+               "    -c <session>: connect to the given session\n"
+               "    -s <session>: set session name\n"
+               "    -d: run as a headless session (requires -s)\n"
+               "    -n: do not source kakrc files on startup\n",
+               error.what());
+       return -1;
+    }
     catch (Kakoune::exception& error)
     {
         on_assert_failed(("uncaught exception:\n"_str + error.what()).c_str());

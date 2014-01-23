@@ -12,21 +12,26 @@ namespace Kakoune
 
 using ParameterList = memoryview<String>;
 
-struct unknown_option : public runtime_error
+struct parameter_error : public runtime_error
+{
+    using runtime_error::runtime_error;
+};
+
+struct unknown_option : public parameter_error
 {
     unknown_option(const String& name)
-        : runtime_error("unknown option '" + name + "'") {}
+        : parameter_error("unknown option '" + name + "'") {}
 };
 
-struct missing_option_value: public runtime_error
+struct missing_option_value: public parameter_error
 {
     missing_option_value(const String& name)
-        : runtime_error("missing value for option '" + name + "'") {}
+        : parameter_error("missing value for option '" + name + "'") {}
 };
 
-struct wrong_argument_count : runtime_error
+struct wrong_argument_count : public parameter_error
 {
-    wrong_argument_count() : runtime_error("wrong argument count") {}
+    wrong_argument_count() : parameter_error("wrong argument count") {}
 };
 
 using OptionMap = std::unordered_map<String, bool>;
