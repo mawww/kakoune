@@ -9,6 +9,7 @@
 #include "string.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
+#include "line_change_watcher.hh"
 
 #include <sstream>
 #include <locale>
@@ -636,77 +637,16 @@ private:
                                       : lhs.begin < rhs.begin;
     }
 
-    struct LineChange
+    struct Cache : public LineChangeWatcher
     {
-        LineCount pos;
-        LineCount num;
-    };
-
-    struct Cache : public BufferChangeListener_AutoRegister
-    {
-        Cache(const Buffer& buffer)
-            : BufferChangeListener_AutoRegister(const_cast<Buffer&>(buffer))
-        {}
-
-        void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end) override
-        {
-            changes.push_back({begin.line, end.line - begin.line});
-        }
-
-        void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end) override
-        {
-            changes.push_back({begin.line, begin.line - end.line});
-        }
+        Cache(const Buffer& buffer) : LineChangeWatcher(buffer) {}
 
         size_t timestamp = 0;
         MatchList begin_matches;
         MatchList end_matches;
         RegionList regions;
-        std::vector<LineChange> changes;
     };
     BufferSideCache<Cache> m_cache;
-
-    static std::vector<LineCount> compute_lines_to_update(const std::vector<LineChange>& changes)
-    {
-        std::vector<LineCount> res;
-        for (auto& change : changes)
-        {
-            if (change.num == 0)
-                res.push_back(change.pos);
-            else if (change.num > 0)
-            {
-                for (auto& l : res)
-                {
-                    if (l > change.pos)
-                        l += change.num;
-                }
-                for (LineCount i = 0; i <= change.num; ++i)
-                    res.push_back(change.pos + i);
-            }
-            else
-            {
-                for (auto it = res.begin(); it != res.end(); )
-                {
-                    auto& line = *it;
-                    if (line > change.pos)
-                    {
-                        line += change.num;
-                        if (line < change.pos)
-                        {
-                            std::swap(line, res.back());
-                            res.pop_back();
-                            continue;
-                        }
-                    }
-                    ++it;
-                }
-                res.push_back(change.pos);
-            }
-        }
-        std::sort(res.begin(), res.end());
-        res.erase(std::unique(res.begin(), res.end()), res.end());
-        return res;
-    }
 
     const RegionList& update_cache_ifn(const Buffer& buffer)
     {
@@ -722,15 +662,9 @@ private:
         }
         else
         {
-            auto to_update = compute_lines_to_update(cache.changes);
-            std::sort(cache.changes.begin(), cache.changes.end(),
-                      [](const LineChange& lhs, const LineChange& rhs)
-                      { return lhs.pos < rhs.pos; });
-            for (size_t i = 1; i < cache.changes.size(); ++i)
-                cache.changes[i].num += cache.changes[i-1].num;
-            update_matches(buffer, cache, to_update, cache.begin_matches, m_begin);
-            update_matches(buffer, cache, to_update, cache.end_matches, m_end);
-            cache.changes.clear();
+            auto modifs = cache.compute_modifications();
+            update_matches(buffer, modifs, cache.begin_matches, m_begin);
+            update_matches(buffer, modifs, cache.end_matches, m_end);
         }
 
         cache.regions.clear();
@@ -769,21 +703,22 @@ private:
         }
     }
 
-    void update_matches(const Buffer& buffer, const Cache& cache, memoryview<LineCount> to_update, MatchList& matches, const Regex& regex)
+    void update_matches(const Buffer& buffer, memoryview<LineModification> modifs, MatchList& matches, const Regex& regex)
     {
         const size_t buf_timestamp = buffer.timestamp();
         // remove out of date matches and update line for others
         auto ins_pos = matches.begin();
         for (auto it = ins_pos; it != matches.end(); ++it)
         {
-            auto change_it = std::lower_bound(cache.changes.begin(), cache.changes.end(), it->line,
-                                              [](const LineChange& c, const LineCount& l)
-                                              { return c.pos < l; });
+            auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
+                                              [](const LineModification& c, const LineCount& l)
+                                              { return c.old_line < l; });
             bool erase = false;
-            if (change_it != cache.changes.begin())
+            if (modif_it != modifs.begin())
             {
-                it->line += (change_it-1)->num;
-                erase = it->line <= (change_it-1)->pos;
+                auto& prev = *(modif_it-1);
+                erase = it->line <= prev.old_line + prev.num_removed;
+                it->line += prev.diff();
             }
             erase = erase or (it->line >= buffer.line_count() or
                               it->timestamp < buffer.line_timestamp(it->line));
@@ -805,15 +740,18 @@ private:
         size_t pivot = matches.size();
 
         // try to find new matches in each updated lines
-        for (auto line : to_update)
+        for (auto& modif : modifs)
         {
-            kak_assert(buffer.line_timestamp(line) > cache.timestamp);
-            auto& l = buffer[line];
-            for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+            for (auto line = modif.new_line; line < modif.new_line + modif.num_added+1; ++line)
             {
-                ByteCount b = (int)((*it)[0].first - l.begin());
-                ByteCount e = (int)((*it)[0].second - l.begin());
-                matches.push_back({ buf_timestamp, line, b, e });
+                kak_assert(line < buffer.line_count());
+                auto& l = buffer[line];
+                for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+                {
+                    ByteCount b = (int)((*it)[0].first - l.begin());
+                    ByteCount e = (int)((*it)[0].second - l.begin());
+                    matches.push_back({ buf_timestamp, line, b, e });
+                }
             }
         }
         std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
