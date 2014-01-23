@@ -7,8 +7,14 @@
 namespace Kakoune
 {
 
-static Buffer& get_or_create_debug_buffer()
+void write_debug(const String& str)
 {
+    if (not BufferManager::has_instance())
+    {
+        fprintf(stderr, "%s\n", str.c_str());
+        return;
+    }
+
     static const String debug_buffer_name("*debug*");
     Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name);
 
@@ -16,13 +22,7 @@ static Buffer& get_or_create_debug_buffer()
         buffer = new Buffer(debug_buffer_name, Buffer::Flags::NoUndo);
 
     kak_assert(buffer);
-    return *buffer;
-}
-
-void write_debug(const String& str)
-{
-    Buffer& buffer = get_or_create_debug_buffer();
-    buffer.insert(buffer.end(), str);
+    buffer->insert(buffer->end(), str);
 }
 
 }
