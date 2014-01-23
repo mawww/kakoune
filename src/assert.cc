@@ -26,7 +26,26 @@ private:
 void on_assert_failed(const char* message)
 {
     String debug_info = "pid: " + to_string(getpid());
-    write_debug("assert failed: '"_str + message + "' " + debug_info);
+
+    thread_local static unsigned int nesting_level = 0;
+
+    if (nesting_level > 0)
+    {
+        throw assert_failed(message);
+    }
+
+    nesting_level++;
+
+    try
+    {
+        write_debug("assert failed: '"_str + message + "' " + debug_info);
+    }
+    catch (assert_failed&)
+    {
+        // TODO: can we fall back to something else?
+    }
+
+    nesting_level--;
 
     const auto msg = message + "\n[Debug Infos]\n"_str + debug_info;
 #if defined(__CYGWIN__)
