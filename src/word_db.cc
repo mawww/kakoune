@@ -6,15 +6,9 @@
 namespace Kakoune
 {
 
-WordDB::WordDB(const Buffer& buffer)
-    : BufferChangeListener_AutoRegister{const_cast<Buffer&>(buffer)}
+static std::vector<String> get_words(const String& content)
 {
-    for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
-        add_words(line, buffer[line]);
-}
-
-void WordDB::add_words(LineCount line, const String& content)
-{
+    std::vector<String> res;
     using Iterator = utf8::utf8_iterator<String::const_iterator,
                                          utf8::InvalidBytePolicy::Pass>;
     auto word_start = content.begin();
@@ -30,80 +24,86 @@ void WordDB::add_words(LineCount line, const String& content)
         }
         else if (in_word and not word)
         {
-            String w{word_start, it.base()};
-            m_word_to_lines[w].push_back(line);
-            m_line_to_words[line].push_back(w);
+            res.push_back({word_start, it.base()});
             in_word = false;
         }
     }
+    return res;
 }
 
-WordDB::LineToWords::iterator WordDB::remove_line(LineToWords::iterator it)
+static void add_words(WordDB::WordList& wl, const std::vector<String>& words)
 {
-    if (it == m_line_to_words.end())
-        return it;
+    for (auto& w : words)
+        ++wl[w];
+}
 
-    for (auto& word : it->second)
+static void remove_words(WordDB::WordList& wl, const std::vector<String>& words)
+{
+    for (auto& w : words)
     {
-        auto wtl_it = m_word_to_lines.find(word);
-        auto& lines = wtl_it->second;
-        lines.erase(find(lines, it->first));
-        if (lines.empty())
-            m_word_to_lines.erase(wtl_it);
+        auto it = wl.find(w);
+        kak_assert(it != wl.end() and it->second > 0);
+        if (--it->second == 0)
+            wl.erase(it);
     }
-    return m_line_to_words.erase(it);
 }
 
-void WordDB::update_lines(LineToWords::iterator begin, LineToWords::iterator end,
-                          LineCount num)
+WordDB::WordDB(const Buffer& buffer)
+    : m_change_watcher{buffer}
 {
-    std::vector<std::pair<LineCount, std::vector<String>>>
-        to_update{std::make_move_iterator(begin), std::make_move_iterator(end)};
-    m_line_to_words.erase(begin, end);
-
-    for (auto& elem : to_update)
+    m_line_to_words.reserve((int)buffer.line_count());
+    for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
-        for (auto& word : elem.second)
+        m_line_to_words.push_back(get_words(buffer[line]));
+        add_words(m_words, m_line_to_words.back());
+    }
+}
+
+void WordDB::update_db()
+{
+    auto modifs = m_change_watcher.compute_modifications();
+    if (modifs.empty())
+        return;
+
+    auto& buffer = m_change_watcher.registry();
+
+    LineToWords new_lines;
+    new_lines.reserve((int)buffer.line_count());
+
+    auto old_line = 0_line;
+    for (auto& modif : modifs)
+    {
+        kak_assert(0_line <= modif.new_line and modif.new_line < buffer.line_count());
+        kak_assert(old_line <= modif.old_line);
+        while (old_line < modif.old_line)
+            new_lines.push_back(std::move(m_line_to_words[(int)old_line++]));
+
+        kak_assert((int)new_lines.size() == (int)modif.new_line);
+
+        while (old_line <= modif.old_line + modif.num_removed)
         {
-            auto& lines = m_word_to_lines[word];
-            *find(lines, elem.first) += num;
+            kak_assert(old_line < m_line_to_words.size());
+            remove_words(m_words, m_line_to_words[(int)old_line++]);
         }
-        elem.first += num;
+
+        for (auto l = 0_line; l <= modif.num_added; ++l)
+        {
+            new_lines.push_back(get_words(buffer[modif.new_line + l]));
+            add_words(m_words, new_lines.back());
+        }
     }
-    m_line_to_words.insert(std::make_move_iterator(to_update.begin()),
-                           std::make_move_iterator(to_update.end()));
+    while (old_line != (int)m_line_to_words.size())
+        new_lines.push_back(std::move(m_line_to_words[(int)old_line++]));
+
+    m_line_to_words = std::move(new_lines);
 }
 
-void WordDB::on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+std::vector<String> WordDB::find_prefix(const String& prefix)
 {
-    auto num = end.line - begin.line;
-    if (num > 0)
-        update_lines(m_line_to_words.upper_bound(begin.line),
-                     m_line_to_words.end(), num);
+    update_db();
 
-    remove_line(m_line_to_words.find(begin.line));
-    for (auto line = begin.line; line <= end.line; ++line)
-        add_words(line, buffer[line]);
-}
-
-void WordDB::on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-{
-    auto first = m_line_to_words.lower_bound(begin.line);
-    auto last = m_line_to_words.upper_bound(end.line);
-    while (first != last)
-        first = remove_line(first);
-
-    auto num = end.line - begin.line;
-    if (num > 0)
-        update_lines(last, m_line_to_words.end(), -num);
-
-    add_words(begin.line, buffer[begin.line]);
-}
-
-std::vector<String> WordDB::find_prefix(const String& prefix) const
-{
     std::vector<String> res;
-    for (auto it = m_word_to_lines.lower_bound(prefix); it != m_word_to_lines.end(); ++it)
+    for (auto it = m_words.lower_bound(prefix); it != m_words.end(); ++it)
     {
         if (not prefix_match(it->first, prefix))
             break;

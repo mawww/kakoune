@@ -2,8 +2,9 @@
 #define word_db_hh_INCLUDED
 
 #include "buffer.hh"
+#include "line_change_watcher.hh"
 
-#include <set>
+#include <map>
 
 namespace Kakoune
 {
@@ -11,26 +12,21 @@ namespace Kakoune
 class String;
 
 // maintain a database of words available in a buffer
-class WordDB : public BufferChangeListener_AutoRegister
+class WordDB
 {
 public:
     WordDB(const Buffer& buffer);
 
-    void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end) override;
-    void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end) override;
+    std::vector<String> find_prefix(const String& prefix);
 
-    std::vector<String> find_prefix(const String& prefix) const;
-
+    using WordList = std::map<String, int>;
 private:
-    using WordToLines = std::map<String, std::vector<LineCount>>;
-    using LineToWords = std::map<LineCount, std::vector<String>>;
+    using LineToWords = std::vector<std::vector<String>>;
 
-    void add_words(LineCount line, const String& content);
-    LineToWords::iterator remove_line(LineToWords::iterator it);
-    void update_lines(LineToWords::iterator begin, LineToWords::iterator end,
-                      LineCount num);
+    void update_db();
 
-    WordToLines m_word_to_lines;
+    LineChangeWatcher m_change_watcher;
+    WordList m_words;
     LineToWords m_line_to_words;
 };
 
