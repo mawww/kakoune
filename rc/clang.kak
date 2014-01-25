@@ -16,7 +16,7 @@ def clang-complete %{
         (
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_bufname})
-            output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} |
+            output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} |& tee /tmp/kak-clang-out |
                      grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/:/\\:/g; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
             rm -r $(dirname ${kak_opt_clang_filename})
             completions="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
@@ -30,7 +30,7 @@ def clang-complete %{
 
 def clang-enable-autocomplete %{
     hook window -id clang-autocomplete InsertIdle .* %{ try %{
-        exec -draft <space><a-h><a-k>(\.|->|::).$<ret>
+        exec -draft <a-h><a-k>(\.|->|::).$<ret>
         echo 'completing...'
         clang-complete
     } }
