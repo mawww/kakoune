@@ -489,98 +489,6 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
     selections.sort_and_merge_overlapping();
 }
 
-template<SelectMode mode, Direction direction>
-void search(Context& context, int)
-{
-    const char* prompt = direction == Forward ? "search:" : "reverse search:";
-    DynamicSelectionList selections{context.buffer(), context.selections()};
-    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
-        [selections](const String& str, PromptEvent event, Context& context) {
-            try
-            {
-                context.selections() = selections;
-
-                if (event == PromptEvent::Abort)
-                    return;
-
-                Regex ex{str};
-                context.input_handler().set_prompt_colors(get_color("Prompt"));
-                if (event == PromptEvent::Validate)
-                {
-                    if (str.empty())
-                        ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
-                    else
-                        RegisterManager::instance()['/'] = str;
-                    context.push_jump();
-                }
-                else if (str.empty() or not context.options()["incsearch"].get<bool>())
-                    return;
-
-                select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
-            }
-            catch (boost::regex_error& err)
-            {
-                if (event == PromptEvent::Validate)
-                    throw runtime_error("regex error: "_str + err.what());
-                else
-                    context.input_handler().set_prompt_colors(get_color("Error"));
-            }
-            catch (runtime_error&)
-            {
-                context.selections() = selections;
-                // only validation should propagate errors,
-                // incremental search should not.
-                if (event == PromptEvent::Validate)
-                    throw;
-            }
-        });
-}
-
-template<SelectMode mode, Direction direction>
-void search_next(Context& context, int param)
-{
-    const String& str = RegisterManager::instance()['/'].values(context)[0];
-    if (not str.empty())
-    {
-        try
-        {
-            Regex ex{str};
-            do {
-                select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
-            } while (--param > 0);
-        }
-        catch (boost::regex_error& err)
-        {
-            throw runtime_error("regex error: "_str + err.what());
-        }
-    }
-    else
-        throw runtime_error("no search pattern");
-}
-
-template<bool smart>
-void use_selection_as_search_pattern(Context& context, int)
-{
-    std::vector<String> patterns;
-    auto& sels = context.selections();
-    const auto& buffer = context.buffer();
-    for (auto& sel : sels)
-    {
-        auto begin = utf8::make_iterator(buffer.iterator_at(sel.min()));
-        auto end   = utf8::make_iterator(buffer.iterator_at(sel.max()))+1;
-        auto content = "\\Q" + String{begin.base(), end.base()} + "\\E";
-        if (smart)
-        {
-            if (begin == buffer.begin() or (is_word(*begin) and not is_word(*(begin-1))))
-                content = "\\b" + content;
-            if (end == buffer.end() or (is_word(*(end-1)) and not is_word(*end)))
-                content = content + "\\b";
-        }
-        patterns.push_back(std::move(content));
-    }
-    RegisterManager::instance()['/'] = patterns;
-}
-
 void yank(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.selections_content();
@@ -653,27 +561,100 @@ void paste(Context& context, int)
 }
 
 template<typename T>
-void regex_prompt(Context& context, const String prompt, T on_validate)
+void regex_prompt(Context& context, const String prompt, T func)
 {
+    DynamicSelectionList selections{context.buffer(), context.selections()};
     context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
         [=](const String& str, PromptEvent event, Context& context) {
-            if (event == PromptEvent::Validate)
+            try
             {
-                try
-                {
-                    on_validate(str.empty() ? Regex{} : Regex{str}, context);
-                }
-                catch (boost::regex_error& err)
-                {
-                    throw runtime_error("regex error: "_str + err.what());
-                }
+                context.selections() = selections;
+                context.input_handler().set_prompt_colors(get_color("Prompt"));
+                if (event == PromptEvent::Abort)
+                    return;
+                if (event == PromptEvent::Change and
+                    (str.empty() or not context.options()["incsearch"].get<bool>()))
+                    return;
+
+                if (event == PromptEvent::Validate)
+                    context.push_jump();
+                func(str.empty() ? Regex{} : Regex{str}, context);
             }
-            else if (event == PromptEvent::Change)
+            catch (boost::regex_error& err)
             {
-                const bool ok = Regex{str, boost::regex_constants::no_except}.status() == 0;
-                context.input_handler().set_prompt_colors(get_color(ok ? "Prompt" : "Error"));
+                if (event == PromptEvent::Validate)
+                    throw runtime_error("regex error: "_str + err.what());
+                else
+                    context.input_handler().set_prompt_colors(get_color("Error"));
+            }
+            catch (runtime_error&)
+            {
+                context.selections() = selections;
+                // only validation should propagate errors,
+                // incremental search should not.
+                if (event == PromptEvent::Validate)
+                    throw;
             }
         });
+}
+
+template<SelectMode mode, Direction direction>
+void search(Context& context, int)
+{
+    regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
+                 [](Regex ex, Context& context) {
+                     if (ex.empty())
+                         ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
+                     else
+                         RegisterManager::instance()['/'] = String{ex.str()};
+                     if (not ex.empty() and not ex.str().empty())
+                         select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+                 });
+}
+
+template<SelectMode mode, Direction direction>
+void search_next(Context& context, int param)
+{
+    const String& str = RegisterManager::instance()['/'].values(context)[0];
+    if (not str.empty())
+    {
+        try
+        {
+            Regex ex{str};
+            do {
+                select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+            } while (--param > 0);
+        }
+        catch (boost::regex_error& err)
+        {
+            throw runtime_error("regex error: "_str + err.what());
+        }
+    }
+    else
+        throw runtime_error("no search pattern");
+}
+
+template<bool smart>
+void use_selection_as_search_pattern(Context& context, int)
+{
+    std::vector<String> patterns;
+    auto& sels = context.selections();
+    const auto& buffer = context.buffer();
+    for (auto& sel : sels)
+    {
+        auto begin = utf8::make_iterator(buffer.iterator_at(sel.min()));
+        auto end   = utf8::make_iterator(buffer.iterator_at(sel.max()))+1;
+        auto content = "\\Q" + String{begin.base(), end.base()} + "\\E";
+        if (smart)
+        {
+            if (begin == buffer.begin() or (is_word(*begin) and not is_word(*(begin-1))))
+                content = "\\b" + content;
+            if (end == buffer.end() or (is_word(*(end-1)) and not is_word(*end)))
+                content = content + "\\b";
+        }
+        patterns.push_back(std::move(content));
+    }
+    RegisterManager::instance()['/'] = patterns;
 }
 
 void select_regex(Context& context, int)
