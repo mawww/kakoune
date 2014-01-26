@@ -17,10 +17,10 @@ namespace Kakoune
 struct Context;
 using CommandParameters = memoryview<String>;
 using Command = std::function<void (CommandParameters, Context& context)>;
-using CommandCompleter = std::function<CandidateList (const Context& context,
-                                                      CompletionFlags,
-                                                      CommandParameters,
-                                                      size_t, ByteCount)>;
+using CommandCompleter = std::function<Completions (const Context& context,
+                                                    CompletionFlags,
+                                                    CommandParameters,
+                                                    size_t, ByteCount)>;
 enum class CommandFlags
 {
     None   = 0,
@@ -38,7 +38,7 @@ constexpr bool operator&(CommandFlags lhs, CommandFlags rhs)
 class PerArgumentCommandCompleter
 {
 public:
-    using ArgumentCompleter = std::function<CandidateList (const Context&,
+    using ArgumentCompleter = std::function<Completions (const Context&,
                                             CompletionFlags flags,
                                             const String&, ByteCount)>;
     using ArgumentCompleterList = memoryview<ArgumentCompleter>;
@@ -46,11 +46,11 @@ public:
     PerArgumentCommandCompleter(ArgumentCompleterList completers)
         : m_completers(completers.begin(), completers.end()) {}
 
-    CandidateList operator()(const Context& context,
-                             CompletionFlags flags,
-                             CommandParameters params,
-                             size_t token_to_complete,
-                             ByteCount pos_in_token) const;
+    Completions operator()(const Context& context,
+                           CompletionFlags flags,
+                           CommandParameters params,
+                           size_t token_to_complete,
+                           ByteCount pos_in_token) const;
 
 private:
     std::vector<ArgumentCompleter> m_completers;

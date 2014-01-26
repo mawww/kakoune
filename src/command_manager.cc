@@ -376,7 +376,6 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
 
     ByteCount start = tok_idx < tokens.size() ?
                       tokens[tok_idx].begin() : cursor_pos;
-    Completions result(start , cursor_pos);
     ByteCount cursor_pos_in_token = cursor_pos - start;
 
     const Token::Type token_type = tok_idx < tokens.size() ?
@@ -384,15 +383,17 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
     switch (token_type)
     {
     case Token::Type::OptionExpand:
+    {
+        Completions result(start , cursor_pos);
         result.candidates = context.options().complete_option_name(tokens[tok_idx].content(), cursor_pos_in_token);
         return result;
+    }
     case Token::Type::ShellExpand:
     {
-        Completions shell_completion = shell_complete(context, flags, tokens[tok_idx].content(), cursor_pos_in_token);
-        result.start = start + shell_completion.start;
-        result.end = start + shell_completion.end;
-        result.candidates = std::move(shell_completion.candidates);
-        return result;
+        Completions shell_completions = shell_complete(context, flags, tokens[tok_idx].content(), cursor_pos_in_token);
+        shell_completions.start += start;
+        shell_completions.end += start;
+        return shell_completions;
     }
     case Token::Type::Raw:
     {
@@ -410,10 +411,12 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
             params.push_back(token_it->content());
         if (tok_idx == tokens.size())
             params.push_back("");
-        result.candidates = command_it->second.completer(context, flags, params,
-                                                         tok_idx - cmd_idx - 1,
-                                                         cursor_pos_in_token);
-        return result;
+        Completions completions = command_it->second.completer(context, flags, params,
+                                                               tok_idx - cmd_idx - 1,
+                                                               cursor_pos_in_token);
+        completions.start += start;
+        completions.end += start;
+        return completions;
     }
     default:
         break;
@@ -421,14 +424,14 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
     return Completions{};
 }
 
-CandidateList PerArgumentCommandCompleter::operator()(const Context& context,
-                                                      CompletionFlags flags,
-                                                      CommandParameters params,
-                                                      size_t token_to_complete,
-                                                      ByteCount pos_in_token) const
+Completions PerArgumentCommandCompleter::operator()(const Context& context,
+                                                    CompletionFlags flags,
+                                                    CommandParameters params,
+                                                    size_t token_to_complete,
+                                                    ByteCount pos_in_token) const
 {
     if (token_to_complete >= m_completers.size())
-        return CandidateList();
+        return Completions{};
 
     // it is possible to try to complete a new argument
     kak_assert(token_to_complete <= params.size());

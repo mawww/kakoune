@@ -25,6 +25,9 @@ struct Completions
 
     Completions(ByteCount start, ByteCount end)
         : start(start), end(end) {}
+
+    Completions(ByteCount start, ByteCount end, CandidateList candidates)
+        : start(start), end(end), candidates(std::move(candidates)) {}
 };
 
 enum class CompletionFlags

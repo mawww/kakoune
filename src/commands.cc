@@ -384,9 +384,11 @@ void define_command(CommandParameters params, Context& context)
                        CommandParameters params,
                        size_t token_to_complete, ByteCount pos_in_token)
         {
-             const String& prefix = token_to_complete < params.size() ?
-                                    params[token_to_complete] : String();
-             return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), pos_in_token);
+             const String& prefix = params[token_to_complete];
+             auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+             return Completions{ 0_byte, prefix.length(),
+                                 complete_filename(prefix, ignored_files,
+                                                   pos_in_token) };
         };
     }
     else if (parser.has_option("shell-completion"))
@@ -397,13 +399,13 @@ void define_command(CommandParameters params, Context& context)
                         size_t token_to_complete, ByteCount pos_in_token)
         {
             if (flags == CompletionFlags::Fast) // no shell on fast completion
-                return CandidateList{};
+                return Completions{};
             EnvVarMap vars = {
                 { "token_to_complete", to_string(token_to_complete) },
                 { "pos_in_token",      to_string(pos_in_token) }
             };
             String output = ShellManager::instance().eval(shell_cmd, context, params, vars);
-            return split(output, '\n');
+            return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n') };
         };
     }
     CommandManager::instance().register_command(cmd_name, cmd, flags, completer);
@@ -750,15 +752,14 @@ CommandCompleter group_rm_completer(GetRootGroup get_root_group)
 {
     return [=](const Context& context, CompletionFlags flags,
                CommandParameters params, size_t token_to_complete,
-               ByteCount pos_in_token) {
+               ByteCount pos_in_token) -> Completions {
         auto& root_group = get_root_group(context);
-        const String& arg = token_to_complete < params.size() ?
-                            params[token_to_complete] : String();
+        const String& arg = params[token_to_complete];
         if (token_to_complete == 1 and params[0] == "-group")
-            return root_group.complete_group_id(arg, pos_in_token);
+            return { 0_byte, arg.length(), root_group.complete_group_id(arg, pos_in_token) };
         else if (token_to_complete == 2 and params[0] == "-group")
-            return root_group.get_group(params[1], '/').complete_id(arg, pos_in_token);
-        return root_group.complete_id(arg, pos_in_token);
+            return { 0_byte, arg.length(), root_group.get_group(params[1], '/').complete_id(arg, pos_in_token) };
+        return { 0_byte, arg.length(), root_group.complete_id(arg, pos_in_token) };
     };
 }
 
@@ -767,15 +768,14 @@ CommandCompleter group_add_completer(GetRootGroup get_root_group)
 {
     return [=](const Context& context, CompletionFlags flags,
                CommandParameters params, size_t token_to_complete,
-               ByteCount pos_in_token) {
+               ByteCount pos_in_token) -> Completions {
         auto& root_group = get_root_group(context);
-        const String& arg = token_to_complete < params.size() ?
-                            params[token_to_complete] : String();
+        const String& arg = params[token_to_complete];
         if (token_to_complete == 1 and params[0] == "-group")
-            return root_group.complete_group_id(arg, pos_in_token);
+            return { 0_byte, arg.length(), root_group.complete_group_id(arg, pos_in_token) };
         else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-            return FactoryRegistry::instance().complete_name(arg, pos_in_token);
-        return CandidateList();
+            return { 0_byte, arg.length(), FactoryRegistry::instance().complete_name(arg, pos_in_token) };
+        return Completions{};
     };
 }
 
@@ -810,6 +810,17 @@ void exec_keys(const KeyList& keys, Context& context)
         context.input_handler().handle_key(key);
 }
 
+CandidateList complete_scope(const String& prefix)
+{
+    CandidateList res;
+    for (auto scope : { "global", "buffer", "window" })
+    {
+        if (prefix_match(scope, prefix))
+            res.emplace_back(scope);
+    }
+    return res;
+}
+
 void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
@@ -818,7 +829,10 @@ void register_commands()
 
     PerArgumentCommandCompleter filename_completer({
          [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-         { return complete_filename(prefix, context.options()["ignored_files"].get<Regex>(), cursor_pos); }
+         { return Completions{ 0_byte, prefix.length(),
+                               complete_filename(prefix,
+                                                 context.options()["ignored_files"].get<Regex>(),
+                                                 cursor_pos) }; }
     });
     cm.register_commands({ "edit", "e" }, edit<false>, CommandFlags::None, filename_completer);
     cm.register_commands({ "edit!", "e!" }, edit<true>, CommandFlags::None, filename_completer);
@@ -831,7 +845,8 @@ void register_commands()
 
     PerArgumentCommandCompleter buffer_completer({
         [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-        { return BufferManager::instance().complete_buffername(prefix, cursor_pos); }
+        { return Completions{ 0_byte, prefix.length(),
+                              BufferManager::instance().complete_buffername(prefix, cursor_pos) }; }
     });
     cm.register_commands({ "buffer", "b" }, show_buffer, CommandFlags::None, buffer_completer);
     cm.register_commands({ "delbuf", "db" }, delete_buffer<false>, CommandFlags::None, buffer_completer);
@@ -843,7 +858,20 @@ void register_commands()
     cm.register_commands({ "rmhl", "rh" }, rm_highlighter, CommandFlags::None, group_rm_completer(get_highlighters));
     cm.register_commands({ "defhl", "dh" }, define_highlighter);
 
-    cm.register_command("hook", add_hook);
+    cm.register_command("hook", add_hook, CommandFlags::None,
+                        [](const Context& context, CompletionFlags flags,
+                           CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+                        {
+                            if (token_to_complete == 0)
+                                return Completions{ 0_byte, params[0].length(),
+                                                    complete_scope(params[0].substr(0_byte, pos_in_token)) };
+                            else if (token_to_complete == 3)
+                            {
+                                auto& cm = CommandManager::instance();
+                                return cm.complete(context, flags, params[3], pos_in_token);
+                            }
+                            return Completions{};
+                        });
     cm.register_command("rmhooks", rm_hooks);
 
     cm.register_command("source", exec_commands_in_file, CommandFlags::None, filename_completer);
@@ -862,24 +890,20 @@ void register_commands()
     cm.register_command("debug", write_debug_message);
 
     cm.register_command("set", set_option, CommandFlags::None,
-                        [](const Context& context, CompletionFlags, CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+                        [](const Context& context, CompletionFlags,
+                           CommandParameters params, size_t token_to_complete,
+                           ByteCount pos_in_token) -> Completions
                         {
                             if (token_to_complete == 0)
-                            {
-                                CandidateList res;
-                                for (auto scope : { "global", "buffer", "window" })
-                                {
-                                    if (params.size() == 0 or prefix_match(scope, params[0].substr(0_byte, pos_in_token)))
-                                        res.emplace_back(scope);
-                                }
-                                return res;
-                            }
+                                return { 0_byte, params[0].length(),
+                                         complete_scope(params[0].substr(0_byte, pos_in_token)) };
                             else if (token_to_complete == 1)
                             {
                                 OptionManager& options = get_options(params[0], context);
-                                return options.complete_option_name(params[1], pos_in_token);
+                                return { 0_byte, params[1].length(),
+                                         options.complete_option_name(params[1], pos_in_token) };
                             }
-                            return CandidateList{};
+                            return Completions{};
                         } );
 
     cm.register_commands({ "colalias", "ca" }, define_color_alias);
