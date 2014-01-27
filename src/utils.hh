@@ -28,12 +28,6 @@ public:
         return *ms_instance;
     }
 
-    static void delete_instance()
-    {
-        delete ms_instance;
-        ms_instance = nullptr;
-    }
-
     static bool has_instance()
     {
         return ms_instance != nullptr;
