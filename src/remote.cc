@@ -541,10 +541,16 @@ Server::Server(String session_name)
     m_listener.reset(new FDWatcher{listen_sock, accepter});
 }
 
-Server::~Server()
+void Server::close_session()
 {
     unlink(("/tmp/kak-" + m_session).c_str());
     close(m_listener->fd());
+    m_listener.reset();
+}
+
+Server::~Server()
+{
+    close_session();
 }
 
 }

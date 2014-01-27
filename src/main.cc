@@ -203,6 +203,8 @@ void signal_handler(int signal)
         case SIGTERM: text = "SIGTERM"; break;
     }
     on_assert_failed(text);
+    if (Server::has_instance())
+        Server::instance().close_session();
     abort();
 }
 

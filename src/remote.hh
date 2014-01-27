@@ -36,6 +36,8 @@ struct Server : public Singleton<Server>
     ~Server();
     const String& session() const { return m_session; }
 
+    void close_session();
+
 private:
     String m_session;
     std::unique_ptr<FDWatcher> m_listener;
