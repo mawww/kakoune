@@ -45,7 +45,7 @@ Building
 
 Kakoune dependencies are:
 
- * GCC >= 4.7
+ * A C++11 compliant compiler (GCC >= 4.8.1 or clang >= 3.4)
  * boost
  * ncurses
  * bash (kak scripts use some bash specific features)
