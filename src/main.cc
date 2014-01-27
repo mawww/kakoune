@@ -95,15 +95,15 @@ void register_env_vars()
             { return context.options()[name.substr(4_byte)].get_as_string(); }
         }, {
             "reg_.+",
-            [](const String& name, const Context& context)
+            [](const String& name, const Context& context) -> String
             { return RegisterManager::instance()[name[4]].values(context)[0]; }
         }, {
             "session",
-            [](const String& name, const Context& context)
+            [](const String& name, const Context& context) -> String
             { return Server::instance().session(); }
         }, {
             "client",
-            [](const String& name, const Context& context)
+            [](const String& name, const Context& context) -> String
             { return context.name(); }
         }, {
             "cursor_line",

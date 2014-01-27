@@ -8,8 +8,11 @@ namespace Kakoune
 
 struct client_removed{};
 
-using WindowAndSelections = std::tuple<std::unique_ptr<Window>,
-                                       DynamicSelectionList>;
+struct WindowAndSelections
+{
+    std::unique_ptr<Window> window;
+    DynamicSelectionList selections;
+};
 
 class ClientManager : public Singleton<ClientManager>
 {

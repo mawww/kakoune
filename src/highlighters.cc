@@ -595,9 +595,9 @@ public:
                                       [](const Region& r, const BufferCoord& c) { return r.end < c; });
         auto end = std::lower_bound(begin, regions.end(), range.second,
                                     [](const Region& r, const BufferCoord& c) { return r.begin < c; });
-        auto correct = [&](const BufferCoord& c) {
+        auto correct = [&](const BufferCoord& c) -> BufferCoord {
             if (buffer[c.line].length() == c.column)
-                return BufferCoord{c.line+1, 0};
+                return {c.line+1, 0};
             return c;
         };
         for (; begin != end; ++begin)

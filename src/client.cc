@@ -64,7 +64,9 @@ DisplayLine Client::generate_mode_line() const
 void Client::change_buffer(Buffer& buffer)
 {
     ClientManager::instance().add_free_window(std::move(m_window), std::move(context().selections()));
-    std::tie(m_window, context().m_selections) = ClientManager::instance().get_free_window(buffer);
+    WindowAndSelections ws = ClientManager::instance().get_free_window(buffer);
+    m_window = std::move(ws.window);
+    context().m_selections = std::move(ws.selections);
     context().set_window(*m_window);
     m_window->set_dimensions(ui().dimensions());
     m_window->hooks().run_hook("WinDisplay", buffer.name(), context());

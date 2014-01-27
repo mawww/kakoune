@@ -14,7 +14,7 @@
 namespace Kakoune
 {
 
-struct Context;
+class Context;
 using CommandParameters = memoryview<String>;
 using Command = std::function<void (CommandParameters, Context& context)>;
 using CommandCompleter = std::function<Completions (const Context& context,

@@ -1308,8 +1308,8 @@ KeyMap keymap =
     { alt('a'), select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },
     { ']', select_object<ObjectFlags::ToEnd> },
     { '[', select_object<ObjectFlags::ToBegin> },
-    { '}', select_object<ObjectFlags::ToEnd, SelectMode::Extend> },
     { '{', select_object<ObjectFlags::ToBegin, SelectMode::Extend> },
+    { '}', select_object<ObjectFlags::ToEnd, SelectMode::Extend> },
 
     { alt('j'), join },
     { alt('J'), join_select_spaces },
@@ -1317,8 +1317,8 @@ KeyMap keymap =
     { alt('k'), keep<true> },
     { alt('K'), keep<false> },
 
-    { '<', deindent },
-    { '>', indent },
+    { '<', deindent<true> },
+    { '>', indent<false> },
     { alt('>'), indent<true> },
     { alt('<'), deindent<false> },
 

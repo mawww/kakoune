@@ -314,7 +314,7 @@ void add_hook(CommandParameters params, Context& context)
 
 void rm_hooks(CommandParameters params, Context& context)
 {
-    ParametersParser parser(params, {}, ParametersParser::Flags::None, 2, 2);
+    ParametersParser parser(params, OptionMap{}, ParametersParser::Flags::None, 2, 2);
     get_hook_manager(parser[0], context).remove_hooks(parser[1]);
 }
 
@@ -533,7 +533,7 @@ KeymapMode parse_keymap_mode(const String& str)
 
 void map_key(CommandParameters params, Context& context)
 {
-    ParametersParser parser(params, {}, ParametersParser::Flags::None, 4, 4);
+    ParametersParser parser(params, OptionMap{}, ParametersParser::Flags::None, 4, 4);
 
     KeymapManager& keymaps = get_keymap_manager(params[0], context);
     KeymapMode keymap_mode = parse_keymap_mode(params[1]);

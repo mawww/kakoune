@@ -213,7 +213,7 @@ enum Direction { Forward, Backward };
 
 using MatchResults = boost::match_results<BufferIterator>;
 
-static bool find_last_match(BufferIterator begin, const BufferIterator& end,
+inline bool find_last_match(BufferIterator begin, const BufferIterator& end,
                             MatchResults& res, const Regex& regex)
 {
     MatchResults matches;

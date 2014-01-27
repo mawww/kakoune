@@ -9,7 +9,7 @@
 namespace Kakoune
 {
 
-struct Context;
+class Context;
 using EnvVarRetriever = std::function<String (const String& name, const Context&)>;
 using EnvVarMap = std::unordered_map<String, String>;
 

@@ -6,7 +6,7 @@
 namespace Kakoune
 {
 
-struct Context;
+class Context;
 
 void register_commands();
 void exec_keys(const KeyList& keys, Context& context);
