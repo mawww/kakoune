@@ -866,7 +866,7 @@ void select_object(Context& context, int param)
     "b,(,):  parenthesis block\n"
     "B,{,}:  braces block     \n"
     "r,[,]:  brackets block   \n"
-    "<,>:    angle block      \n"
+    "a,<,>:  angle block      \n"
     "\",Q:  double quote string\n"
     "',q:  single quote string\n"
     "w:    word               \n"
