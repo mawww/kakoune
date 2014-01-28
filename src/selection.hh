@@ -10,28 +10,28 @@ namespace Kakoune
 struct Range
 {
 public:
-    Range(BufferCoord first, BufferCoord last)
-        : m_first{first}, m_last{last} {}
+    Range(BufferCoord anchor, BufferCoord cursor)
+        : m_anchor{anchor}, m_cursor{cursor} {}
 
     void merge_with(const Range& range);
 
-    BufferCoord& first() { return m_first; }
-    BufferCoord& last() { return m_last; }
+    BufferCoord& anchor() { return m_anchor; }
+    BufferCoord& cursor() { return m_cursor; }
 
-    const BufferCoord& first() const { return m_first; }
-    const BufferCoord& last() const { return m_last; }
+    const BufferCoord& anchor() const { return m_anchor; }
+    const BufferCoord& cursor() const { return m_cursor; }
 
     bool operator== (const Range& other) const
     {
-        return m_first == other.m_first and m_last == other.m_last;
+        return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    const BufferCoord& min() const { return std::min(m_first, m_last); }
-    const BufferCoord& max() const { return std::max(m_first, m_last); }
+    const BufferCoord& min() const { return std::min(m_anchor, m_cursor); }
+    const BufferCoord& max() const { return std::max(m_anchor, m_cursor); }
 
 private:
-    BufferCoord m_first;
-    BufferCoord m_last;
+    BufferCoord m_anchor;
+    BufferCoord m_cursor;
 };
 
 inline bool overlaps(const Range& lhs, const Range& rhs)
@@ -68,8 +68,8 @@ inline void avoid_eol(const Buffer& buffer, BufferCoord& coord)
 
 inline void avoid_eol(const Buffer& buffer, Range& sel)
 {
-    avoid_eol(buffer, sel.first());
-    avoid_eol(buffer, sel.last());
+    avoid_eol(buffer, sel.anchor());
+    avoid_eol(buffer, sel.cursor());
 }
 
 
@@ -79,9 +79,9 @@ using CaptureList = std::vector<String>;
 struct Selection : public Range
 {
     explicit Selection(BufferCoord pos) : Range(pos,pos) {}
-    Selection(BufferCoord first, BufferCoord last,
+    Selection(BufferCoord anchor, BufferCoord cursor,
               CaptureList captures = {})
-        : Range(first, last), m_captures(std::move(captures)) {}
+        : Range(anchor, cursor), m_captures(std::move(captures)) {}
 
     Selection(const Range& range)
         : Range(range) {}

@@ -11,9 +11,9 @@ namespace Kakoune
 inline void clear_selections(const Buffer& buffer, SelectionList& selections)
 {
     auto& sel = selections.main();
-    auto& pos = sel.last();
+    auto& pos = sel.cursor();
     avoid_eol(buffer, pos);
-    sel.first() = pos;
+    sel.anchor() = pos;
 
     selections = SelectionList{ std::move(sel) };
 }
@@ -21,7 +21,7 @@ inline void clear_selections(const Buffer& buffer, SelectionList& selections)
 inline void flip_selections(SelectionList& selections)
 {
     for (auto& sel : selections)
-        std::swap(sel.first(), sel.last());
+        std::swap(sel.anchor(), sel.cursor());
     selections.check_invariant();
 }
 
@@ -61,7 +61,7 @@ using RegexIterator = boost::regex_iterator<BufferIterator>;
 template<WordType word_type>
 Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     if (begin+1 == buffer.end())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
@@ -85,7 +85,7 @@ Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
 template<WordType word_type>
 Selection select_to_next_word_end(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     if (begin+1 == buffer.end())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
@@ -108,7 +108,7 @@ Selection select_to_next_word_end(const Buffer& buffer, const Selection& selecti
 template<WordType word_type>
 Selection select_to_previous_word(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     if (begin == buffer.begin())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
@@ -160,7 +160,7 @@ constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
 template<WordType word_type>
 Selection select_whole_word(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
-    Utf8Iterator first = buffer.iterator_at(selection.last());
+    Utf8Iterator first = buffer.iterator_at(selection.cursor());
     Utf8Iterator last = first;
     if (is_word<word_type>(*first))
     {
@@ -242,7 +242,7 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
 template<Direction direction>
 Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex)
 {
-    auto begin = buffer.iterator_at(sel.last());
+    auto begin = buffer.iterator_at(sel.cursor());
     auto end = begin;
 
     CaptureList captures;

@@ -403,7 +403,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
     const auto& buffer = context.buffer();
     for (auto& sel : context.selections())
     {
-        auto pos = sel.last();
+        auto pos = sel.cursor();
         if (pos < range.first or pos >= range.second)
             continue;
         auto c = buffer.byte_at(pos);
@@ -454,16 +454,16 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
     for (size_t i = 0; i < context.selections().size(); ++i)
     {
         auto& sel = context.selections()[i];
-        const bool forward = sel.first() <= sel.last();
-        BufferCoord begin = forward ? sel.first() : buffer.char_next(sel.last());
-        BufferCoord end   = forward ? sel.last() : buffer.char_next(sel.first());
+        const bool forward = sel.anchor() <= sel.cursor();
+        BufferCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
+        BufferCoord end   = forward ? sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == context.selections().main_index());
         ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
         highlight_range(display_buffer, begin, end, false,
                         [&](DisplayAtom& atom) { atom.colors = sel_colors; });
         ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
-        highlight_range(display_buffer, sel.last(), buffer.char_next(sel.last()), false,
+        highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
                         [&](DisplayAtom& atom) { atom.colors = cur_colors; });
     }
 }

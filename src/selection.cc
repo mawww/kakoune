@@ -7,11 +7,11 @@ namespace Kakoune
 
 void Range::merge_with(const Range& range)
 {
-    m_last = range.m_last;
-    if (m_first < m_last)
-        m_first = std::min(m_first, range.m_first);
-    if (m_first > m_last)
-        m_first = std::max(m_first, range.m_first);
+    m_cursor = range.m_cursor;
+    if (m_anchor < m_cursor)
+        m_anchor = std::min(m_anchor, range.m_anchor);
+    if (m_anchor > m_cursor)
+        m_anchor = std::max(m_anchor, range.m_anchor);
 }
 
 namespace
@@ -22,27 +22,27 @@ void on_buffer_change(const Buffer& buffer, SelectionList& sels,
                       BufferCoord begin, BufferCoord end, LineCount end_line)
 {
     auto update_beg = std::lower_bound(sels.begin(), sels.end(), begin,
-                                       [](const Selection& s, BufferCoord c) { return std::max(s.first(), s.last()) < c; });
+                                       [](const Selection& s, BufferCoord c) { return std::max(s.anchor(), s.cursor()) < c; });
     auto update_only_line_beg = std::upper_bound(sels.begin(), sels.end(), end_line,
-                                                 [](LineCount l, const Selection& s) { return l < std::min(s.first(), s.last()).line; });
+                                                 [](LineCount l, const Selection& s) { return l < std::min(s.anchor(), s.cursor()).line; });
 
     if (update_beg != update_only_line_beg)
     {
         // for the first one, we are not sure if min < begin
-        UpdateFunc<false, false>{}(buffer, update_beg->first(), begin, end);
-        UpdateFunc<false, false>{}(buffer, update_beg->last(), begin, end);
+        UpdateFunc<false, false>{}(buffer, update_beg->anchor(), begin, end);
+        UpdateFunc<false, false>{}(buffer, update_beg->cursor(), begin, end);
     }
     for (auto it = update_beg+1; it < update_only_line_beg; ++it)
     {
-        UpdateFunc<false, true>{}(buffer, it->first(), begin, end);
-        UpdateFunc<false, true>{}(buffer, it->last(), begin, end);
+        UpdateFunc<false, true>{}(buffer, it->anchor(), begin, end);
+        UpdateFunc<false, true>{}(buffer, it->cursor(), begin, end);
     }
     if (end.line > begin.line)
     {
         for (auto it = update_only_line_beg; it != sels.end(); ++it)
         {
-            UpdateFunc<true, true>{}(buffer, it->first(), begin, end);
-            UpdateFunc<true, true>{}(buffer, it->last(), begin, end);
+            UpdateFunc<true, true>{}(buffer, it->anchor(), begin, end);
+            UpdateFunc<true, true>{}(buffer, it->cursor(), begin, end);
         }
     }
 }

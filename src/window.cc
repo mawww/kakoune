@@ -162,22 +162,22 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
 void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
 {
     auto& selection = context.selections().main();
-    const auto& first = selection.first();
-    const auto& last  = selection.last();
+    const auto& anchor = selection.anchor();
+    const auto& cursor  = selection.cursor();
 
     const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
                                                  (m_dimensions.line - 1) / 2);
 
     // scroll lines if needed, try to get as much of the selection visible as possible
-    m_position.line = adapt_view_pos(first.line, offset, m_position.line,
+    m_position.line = adapt_view_pos(anchor.line, offset, m_position.line,
                                      m_dimensions.line, buffer().line_count());
-    m_position.line = adapt_view_pos(last.line,  offset, m_position.line,
+    m_position.line = adapt_view_pos(cursor.line,  offset, m_position.line,
                                      m_dimensions.line, buffer().line_count());
 
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
     DisplayBuffer::LineList& lines = display_buffer.lines();
-    lines.emplace_back(AtomList{ {buffer(), last.line, last.line+1} });
+    lines.emplace_back(AtomList{ {buffer(), cursor.line, cursor.line+1} });
 
     display_buffer.compute_range();
     m_highlighters(context, HighlightFlags::MoveOnly, display_buffer);
@@ -188,9 +188,9 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     // the cursor in the same position, however I do not find any sane example
     // of highlighters not doing that)
     m_position.column = adapt_view_pos(display_buffer,
-                                       first.line == last.line ? first : last.line,
+                                       anchor.line == cursor.line ? anchor : cursor.line,
                                        m_position.column, m_dimensions.column);
-    m_position.column = adapt_view_pos(display_buffer, last,
+    m_position.column = adapt_view_pos(display_buffer, cursor,
                                        m_position.column, m_dimensions.column);
 }
 

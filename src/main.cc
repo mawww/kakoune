@@ -108,15 +108,15 @@ void register_env_vars()
         }, {
             "cursor_line",
             [](const String& name, const Context& context)
-            { return to_string(context.selections().main().last().line + 1); }
+            { return to_string(context.selections().main().cursor().line + 1); }
         }, {
             "cursor_column",
             [](const String& name, const Context& context)
-            { return to_string(context.selections().main().last().column + 1); }
+            { return to_string(context.selections().main().cursor().column + 1); }
         }, {
             "cursor_char_column",
             [](const String& name, const Context& context)
-            { auto coord = context.selections().main().last();
+            { auto coord = context.selections().main().cursor();
               return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
         }, {
             "selection_desc",

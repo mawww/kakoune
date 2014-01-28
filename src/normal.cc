@@ -70,9 +70,9 @@ void insert(Buffer& buffer, SelectionList& selections, const String& str)
         pos = buffer.insert(pos, str);
         if (mode == InsertMode::Replace and pos != buffer.end())
         {
-            sel.first() = pos.coord();
-            sel.last()  = str.empty() ?
-                 pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
+            sel.anchor() = pos.coord();
+            sel.cursor() = str.empty() ?
+                pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
         avoid_eol(buffer, sel);
     }
@@ -93,9 +93,9 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
         pos = buffer.insert(pos, str);
         if (mode == InsertMode::Replace and pos != buffer.end())
         {
-            sel.first() = pos.coord();
-            sel.last()  = (str.empty() ?
-                           pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
+            sel.anchor() = pos.coord();
+            sel.cursor() = (str.empty() ?
+                pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
         avoid_eol(buffer, sel);
     }
@@ -131,8 +131,8 @@ void select(Context& context, Func func)
     {
         auto& sel = selections.main();
         auto  res = func(buffer, sel);
-        sel.first() = res.first();
-        sel.last()  = res.last();
+        sel.anchor() = res.anchor();
+        sel.cursor() = res.cursor();
         if (not res.captures().empty())
             sel.captures() = std::move(res.captures());
     }
@@ -145,8 +145,8 @@ void select(Context& context, Func func)
                 sel.merge_with(res);
             else
             {
-                sel.first() = res.first();
-                sel.last()  = res.last();
+                sel.anchor() = res.anchor();
+                sel.cursor() = res.cursor();
             }
             if (not res.captures().empty())
                 sel.captures() = std::move(res.captures());
@@ -181,7 +181,7 @@ void select_coord(const Buffer& buffer, BufferCoord coord, SelectionList& select
     else if (mode == SelectMode::Extend)
     {
         for (auto& sel : selections)
-            sel.last() = coord;
+            sel.cursor() = coord;
         selections.sort_and_merge_overlapping();
     }
 }
@@ -335,7 +335,7 @@ void view_commands(Context& context, int param)
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
             return;
 
-        LineCount cursor_line = context.selections().main().last().line;
+        LineCount cursor_line = context.selections().main().cursor().line;
         Window& window = context.window();
         switch (tolower(key.key))
         {
@@ -688,7 +688,7 @@ void split_lines(Context& context, int)
     SelectionList res;
     for (auto& sel : selections)
     {
-        if (sel.first().line == sel.last().line)
+        if (sel.anchor().line == sel.cursor().line)
         {
              res.push_back(std::move(sel));
              continue;
@@ -1030,8 +1030,8 @@ void align(Context& context, int)
     size_t column = 0;
     for (auto& sel : selections)
     {
-        auto line = sel.last().line;
-        if (sel.first().line != line)
+        auto line = sel.cursor().line;
+        if (sel.anchor().line != line)
             throw runtime_error("align cannot work with multi line selections");
 
         column = (line == last_line) ? column + 1 : 0;
@@ -1046,11 +1046,11 @@ void align(Context& context, int)
     {
         CharCount maxcol = 0;
         for (auto& sel : col)
-            maxcol = std::max(get_column(buffer, tabstop, sel->last()), maxcol);
+            maxcol = std::max(get_column(buffer, tabstop, sel->cursor()), maxcol);
         for (auto& sel : col)
         {
             auto insert_coord = sel->min();
-            auto lastcol = get_column(buffer, tabstop, sel->last());
+            auto lastcol = get_column(buffer, tabstop, sel->cursor());
             String padstr;
             if (not use_tabs)
                 padstr = String{ ' ', maxcol - lastcol };
@@ -1196,11 +1196,11 @@ void move(Context& context, int count)
     auto& selections = context.selections();
     for (auto& sel : selections)
     {
-        auto last = context.has_window() ? context.window().offset_coord(sel.last(), offset)
-                                         : context.buffer().offset_coord(sel.last(), offset);
+        auto cursor = context.has_window() ? context.window().offset_coord(sel.cursor(), offset)
+                                           : context.buffer().offset_coord(sel.cursor(), offset);
 
-        sel.first() = mode == SelectMode::Extend ? sel.first() : last;
-        sel.last()  = last;
+        sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
+        sel.cursor()  = cursor;
         avoid_eol(context.buffer(), sel);
     }
     selections.sort_and_merge_overlapping();

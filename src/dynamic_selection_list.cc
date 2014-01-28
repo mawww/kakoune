@@ -26,12 +26,12 @@ void DynamicSelectionList::check_invariant() const
     for (size_t i = 0; i < size(); ++i)
     {
         auto& sel = (*this)[i];
-        kak_assert(buffer.is_valid(sel.first()));
-        kak_assert(buffer.is_valid(sel.last()));
-        kak_assert(not buffer.is_end(sel.first()));
-        kak_assert(not buffer.is_end(sel.last()));
-        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.first())));
-        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.last())));
+        kak_assert(buffer.is_valid(sel.anchor()));
+        kak_assert(buffer.is_valid(sel.cursor()));
+        kak_assert(not buffer.is_end(sel.anchor()));
+        kak_assert(not buffer.is_end(sel.cursor()));
+        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.anchor())));
+        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.cursor())));
     }
 #endif
 }

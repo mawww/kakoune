@@ -126,7 +126,7 @@ void edit(CommandParameters params, Context& context)
 
         context.selections() = context.buffer().clamp({ line,  column });
         if (context.has_window())
-            context.window().center_line(context.selections().main().last().line);
+            context.window().center_line(context.selections().main().cursor().line);
     }
 }
 
@@ -674,7 +674,7 @@ void info(CommandParameters params, Context& context)
         {
             style =  MenuStyle::Inline;
             const auto& sel = context.selections().main();
-            auto it = sel.last();
+            auto it = sel.cursor();
             String anchor = parser.option_value("anchor");
             if (anchor == "left")
                 it = sel.min();

@@ -11,7 +11,7 @@ namespace Kakoune
 
 Selection select_line(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator first = buffer.iterator_at(selection.last());
+    Utf8Iterator first = buffer.iterator_at(selection.cursor());
     if (*first == '\n' and first + 1 != buffer.end())
         ++first;
 
@@ -27,7 +27,7 @@ Selection select_line(const Buffer& buffer, const Selection& selection)
 Selection select_matching(const Buffer& buffer, const Selection& selection)
 {
     std::vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
-    Utf8Iterator it = buffer.iterator_at(selection.last());
+    Utf8Iterator it = buffer.iterator_at(selection.cursor());
     std::vector<Codepoint>::iterator match = matching_pairs.end();
     while (not is_eol(*it))
     {
@@ -142,7 +142,7 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
                              ObjectFlags flags)
 {
     const bool nestable = matching.first != matching.second;
-    auto pos = selection.last();
+    auto pos = selection.cursor();
     if (not nestable or flags & ObjectFlags::Inner)
     {
         if (auto res = find_surrounding(buffer, pos, matching, flags, level))
@@ -171,7 +171,7 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
 Selection select_to(const Buffer& buffer, const Selection& selection,
                     Codepoint c, int count, bool inclusive)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     Utf8Iterator end = begin;
     do
     {
@@ -188,7 +188,7 @@ Selection select_to(const Buffer& buffer, const Selection& selection,
 Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
                             Codepoint c, int count, bool inclusive)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     Utf8Iterator end = begin;
     do
     {
@@ -204,7 +204,7 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
 
 Selection select_to_eol(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     Utf8Iterator end = begin;
     skip_while(end, buffer.end(), [](Codepoint cur) { return not is_eol(cur); });
     return utf8_range(begin, end != begin ? end-1 : end);
@@ -212,7 +212,7 @@ Selection select_to_eol(const Buffer& buffer, const Selection& selection)
 
 Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.last());
+    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     Utf8Iterator end = begin - 1;
     skip_while_reverse(end, buffer.begin(), [](Codepoint cur) { return not is_eol(cur); });
     return utf8_range(begin, end == buffer.begin() ? end : end+1);
@@ -220,7 +220,7 @@ Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection
 
 Selection select_whole_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
-    BufferIterator first = buffer.iterator_at(selection.last());
+    BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last = first;
 
     if (flags & ObjectFlags::ToBegin)
@@ -271,7 +271,7 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
 
 Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
-    BufferIterator first = buffer.iterator_at(selection.last());
+    BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last = first;
 
     if (flags & ObjectFlags::ToBegin and first != buffer.begin())
@@ -329,7 +329,7 @@ static CharCount get_indent(const String& str, int tabstop)
 Selection select_whole_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     int tabstop = buffer.options()["tabstop"].get<int>();
-    LineCount line = selection.last().line;
+    LineCount line = selection.cursor().line;
     auto indent = get_indent(buffer[line], tabstop);
 
     LineCount begin_line = line - 1;
@@ -367,8 +367,8 @@ Selection select_whole_indent(const Buffer& buffer, const Selection& selection, 
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator
-    BufferIterator first = buffer.iterator_at(selection.first());
-    BufferIterator last  = buffer.iterator_at(selection.last());
+    BufferIterator first = buffer.iterator_at(selection.anchor());
+    BufferIterator last  = buffer.iterator_at(selection.cursor());
     BufferIterator& to_line_start = first <= last ? first : last;
     BufferIterator& to_line_end = first <= last ? last : first;
 
@@ -387,8 +387,8 @@ Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 {
     // same as select_whole_lines
-    BufferIterator first = buffer.iterator_at(selection.first());
-    BufferIterator last =  buffer.iterator_at(selection.last());
+    BufferIterator first = buffer.iterator_at(selection.anchor());
+    BufferIterator last =  buffer.iterator_at(selection.cursor());
     BufferIterator& to_line_start = first <= last ? first : last;
     BufferIterator& to_line_end = first <= last ? last : first;
 

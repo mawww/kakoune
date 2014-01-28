@@ -612,7 +612,7 @@ public:
         if (m_current_candidate < 0)
             m_current_candidate += m_matching_candidates.size();
         const String& candidate = m_matching_candidates[m_current_candidate];
-        const auto& cursor_pos = m_context.selections().main().last();
+        const auto& cursor_pos = m_context.selections().main().cursor();
         const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
         const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
         const auto buffer_len = buffer.byte_count();
@@ -620,8 +620,8 @@ public:
         auto ref = buffer.string(m_completions.begin, m_completions.end);
         for (auto& sel : m_context.selections())
         {
-            auto offset = buffer.offset(sel.last());
-            auto pos = buffer.iterator_at(sel.last());
+            auto offset = buffer.offset(sel.cursor());
+            auto pos = buffer.iterator_at(sel.cursor());
             if (offset >= prefix_len and offset + suffix_len < buffer_len and
                 std::equal(ref.begin(), ref.end(), pos - prefix_len))
             {
@@ -650,7 +650,7 @@ public:
             for (auto& candidate : m_completions.candidates)
                  longest_completion = std::max(longest_completion, candidate.length());
 
-            BufferCoord cursor = m_context.selections().main().last();
+            BufferCoord cursor = m_context.selections().main().cursor();
             BufferCoord compl_beg = m_completions.begin;
             if (cursor.line == compl_beg.line and
                 is_in_range(cursor.column - compl_beg.column,
@@ -694,7 +694,7 @@ public:
     bool try_complete()
     {
         auto& buffer = m_context.buffer();
-        BufferCoord cursor_pos = m_context.selections().main().last();
+        BufferCoord cursor_pos = m_context.selections().main().cursor();
         m_completions = (this->*complete_func)(buffer, cursor_pos);
         if (not m_completions.is_valid())
             return false;
@@ -948,9 +948,9 @@ public:
         {
             for (auto& sel : context().selections())
             {
-                if (sel.last() == BufferCoord{0,0})
+                if (sel.cursor() == BufferCoord{0,0})
                     continue;
-                auto pos = buffer.iterator_at(sel.last());
+                auto pos = buffer.iterator_at(sel.cursor());
                 buffer.erase(utf8::previous(pos), pos);
             }
         }
@@ -958,7 +958,7 @@ public:
         {
             for (auto& sel : context().selections())
             {
-                auto pos = buffer.iterator_at(sel.last());
+                auto pos = buffer.iterator_at(sel.cursor());
                 buffer.erase(pos, utf8::next(pos));
             }
         }
@@ -1027,9 +1027,9 @@ private:
         auto& selections = context().selections();
         for (auto& sel : selections)
         {
-            auto last = context().has_window() ? context().window().offset_coord(sel.last(), offset)
-                                               : context().buffer().offset_coord(sel.last(), offset);
-            sel.first() = sel.last()  = last;
+            auto cursor = context().has_window() ? context().window().offset_coord(sel.cursor(), offset)
+                                                 : context().buffer().offset_coord(sel.cursor(), offset);
+            sel.anchor() = sel.cursor() = cursor;
         }
         selections.sort_and_merge_overlapping();
     }
@@ -1041,7 +1041,7 @@ private:
         for (size_t i = 0; i < selections.size(); ++i)
         {
             size_t index = std::min(i, strings.size()-1);
-            buffer.insert(buffer.iterator_at(selections[i].last()),
+            buffer.insert(buffer.iterator_at(selections[i].cursor()),
                           strings[index]);
         }
     }
@@ -1051,7 +1051,7 @@ private:
         auto str = codepoint_to_str(key);
         auto& buffer = context().buffer();
         for (auto& sel : context().selections())
-            buffer.insert(buffer.iterator_at(sel.last()), str);
+            buffer.insert(buffer.iterator_at(sel.cursor()), str);
         context().hooks().run_hook("InsertChar", str, context());
     }
 
@@ -1062,54 +1062,54 @@ private:
 
         for (auto& sel : selections)
         {
-            BufferCoord first, last;
+            BufferCoord anchor, cursor;
             switch (mode)
             {
             case InsertMode::Insert:
-                first = sel.max();
-                last = sel.min();
+                anchor = sel.max();
+                cursor = sel.min();
                 break;
             case InsertMode::Replace:
-                first = last = Kakoune::erase(buffer, sel).coord();
+                anchor = cursor = Kakoune::erase(buffer, sel).coord();
                 break;
             case InsertMode::Append:
-                first = sel.min();
-                last = sel.max();
+                anchor = sel.min();
+                cursor = sel.max();
                 // special case for end of lines, append to current line instead
-                if (last.column != buffer[last.line].length() - 1)
-                    last = buffer.char_next(last);
+                if (cursor.column != buffer[cursor.line].length() - 1)
+                    cursor = buffer.char_next(cursor);
                 break;
 
             case InsertMode::OpenLineBelow:
             case InsertMode::AppendAtLineEnd:
-                first = last = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                anchor = cursor = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
                 break;
 
             case InsertMode::OpenLineAbove:
             case InsertMode::InsertAtLineBegin:
-                first = sel.min().line;
+                anchor = sel.min().line;
                 if (mode == InsertMode::OpenLineAbove)
-                    first = buffer.char_prev(first);
+                    anchor = buffer.char_prev(anchor);
                 else
                 {
-                    auto first_non_blank = buffer.iterator_at(first);
-                    while (*first_non_blank == ' ' or *first_non_blank == '\t')
-                        ++first_non_blank;
-                    if (*first_non_blank != '\n')
-                        first = first_non_blank.coord();
+                    auto anchor_non_blank = buffer.iterator_at(anchor);
+                    while (*anchor_non_blank == ' ' or *anchor_non_blank == '\t')
+                        ++anchor_non_blank;
+                    if (*anchor_non_blank != '\n')
+                        anchor = anchor_non_blank.coord();
                 }
-                last = first;
+                cursor = anchor;
                 break;
             case InsertMode::InsertAtNextLineBegin:
                  kak_assert(false); // not implemented
                  break;
             }
-            if (buffer.is_end(first))
-               first = buffer.char_prev(first);
-            if (buffer.is_end(last))
-               last = buffer.char_prev(last);
-            sel.first() = first;
-            sel.last()  = last;
+            if (buffer.is_end(anchor))
+               anchor = buffer.char_prev(anchor);
+            if (buffer.is_end(cursor))
+               cursor = buffer.char_prev(cursor);
+            sel.anchor() = anchor;
+            sel.cursor() = cursor;
         }
         if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
         {
@@ -1119,8 +1119,8 @@ private:
                 for (auto& sel : selections)
                 {
                     // special case, the --first line above did nothing, so we need to compensate now
-                    if (sel.first() == buffer.char_next({0,0}))
-                        sel.first() = sel.last() = BufferCoord{0,0};
+                    if (sel.anchor() == buffer.char_next({0,0}))
+                        sel.anchor() = sel.cursor() = BufferCoord{0,0};
                 }
             }
         }
@@ -1133,8 +1133,8 @@ private:
     {
         for (auto& sel : context().selections())
         {
-            if (m_insert_mode == InsertMode::Append and sel.last().column > 0)
-                sel.last() = context().buffer().char_prev(sel.last());
+            if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
+                sel.cursor() = context().buffer().char_prev(sel.cursor());
             avoid_eol(context().buffer(), sel);
         }
     }
