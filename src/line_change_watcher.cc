@@ -61,6 +61,11 @@ std::vector<LineModification> LineChangeWatcher::compute_modifications()
 
 void LineChangeWatcher::on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
 {
+    if (buffer.is_end(end))
+    {
+        kak_assert(begin.column == 0);
+        --begin.line;
+    }
     m_changes.push_back({begin.line, end.line - begin.line});
 }
 
