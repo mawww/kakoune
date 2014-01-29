@@ -83,7 +83,7 @@ void ClientManager::remove_client(Client& client)
 
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 {
-    for (auto it = m_free_windows.begin(), end = m_free_windows.end();
+    for (auto it = m_free_windows.rbegin(), end = m_free_windows.rend();
          it != end; ++it)
     {
         auto& w = it->window;
@@ -91,7 +91,7 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
         {
             w->forget_timestamp();
             WindowAndSelections res = std::move(*it);
-            m_free_windows.erase(it);
+            m_free_windows.erase(it.base()-1);
             return res;
         }
     }
