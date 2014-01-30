@@ -554,6 +554,7 @@ void paste(Context& context, int)
             break;
         }
     }
+    ScopedEdition edition(context);
     if (linewise)
         insert<adapt_for_linewise(mode)>(context.buffer(), context.selections(), strings);
     else
