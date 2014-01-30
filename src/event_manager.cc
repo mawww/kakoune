@@ -47,14 +47,22 @@ EventManager::~EventManager()
 
 void EventManager::handle_next_events()
 {
-    const int timeout_ms = 100;
     std::vector<pollfd> events;
     events.reserve(m_fd_watchers.size());
     for (auto& watcher : m_fd_watchers)
         events.emplace_back(pollfd{ watcher->fd(), POLLIN | POLLPRI, 0 });
     std::vector<int> forced;
     std::swap(forced, m_forced_fd);
-    poll(events.data(), events.size(), timeout_ms);
+
+    TimePoint next_timer = TimePoint::max();
+    for (auto& timer : m_timers)
+    {
+        if (timer->next_date() <= next_timer)
+            next_timer = timer->next_date();
+    }
+    auto timeout = std::chrono::duration_cast<std::chrono::milliseconds>(next_timer - Clock::now());
+
+    poll(events.data(), events.size(), std::max(0, (int)timeout.count()));
     for (size_t i = 0; i < events.size(); ++i)
     {
         auto& event = events[i];
