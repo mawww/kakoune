@@ -26,7 +26,8 @@ public:
     InputMode& operator=(const InputMode&) = delete;
 
     virtual void on_key(Key key) = 0;
-    virtual void on_replaced() {}
+    virtual void on_enabled() {}
+    virtual void on_disabled() {}
     Context& context() const { return m_input_handler.context(); }
 
     virtual String description() const = 0;
@@ -62,11 +63,19 @@ public:
               context().client().check_buffer_fs_timestamp();
               timer.set_next_date(Clock::now() + fs_check_timeout);
           }}
+    {}
+
+    void on_enabled() override
     {
+        if (not context().has_client())
+            return;
+        context().client().check_buffer_fs_timestamp();
+        m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
+
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
-    void on_replaced() override
+    void on_disabled() override
     {
         context().hooks().run_hook("NormalEnd", "", context());
     }
@@ -1141,7 +1150,7 @@ private:
         buffer.check_invariant();
     }
 
-    void on_replaced() override
+    void on_disabled() override
     {
         for (auto& sel : context().selections())
         {
@@ -1177,9 +1186,10 @@ InputHandler::~InputHandler()
 
 void InputHandler::change_input_mode(InputMode* new_mode)
 {
-    m_mode->on_replaced();
+    m_mode->on_disabled();
     m_mode_trash.emplace_back(std::move(m_mode));
     m_mode.reset(new_mode);
+    new_mode->on_enabled();
 }
 
 void InputHandler::insert(InsertMode mode)
