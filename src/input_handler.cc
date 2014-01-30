@@ -165,19 +165,25 @@ public:
     const String& line() const { return m_line; }
     CharCount cursor_pos() const { return m_cursor_pos; }
 
-    DisplayLine build_display_line() const
+    DisplayLine build_display_line(CharCount width)
     {
         kak_assert(m_cursor_pos <= m_line.char_length());
+        if (m_cursor_pos < m_display_pos)
+            m_display_pos = m_cursor_pos;
+        if (m_cursor_pos >= m_display_pos + width)
+            m_display_pos = m_cursor_pos + 1 - width;
+
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ {m_line, get_color("StatusLine")},
+            return DisplayLine{{ {m_line.substr(m_display_pos, width-1), get_color("StatusLine")},
                                  {" "_str, get_color("StatusCursor")} }};
         else
-            return DisplayLine({ { m_line.substr(0, m_cursor_pos), get_color("StatusLine") },
-                                 { m_line.substr(m_cursor_pos, 1), get_color("StatusCursor") },
-                                 { m_line.substr(m_cursor_pos+1), get_color("StatusLine") } });
+            return DisplayLine({ { m_line.substr(m_display_pos, m_cursor_pos - m_display_pos), get_color("StatusLine") },
+                                 { m_line.substr(m_cursor_pos,1), get_color("StatusCursor") },
+                                 { m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1), get_color("StatusLine") } });
     }
 private:
     CharCount      m_cursor_pos = 0;
+    CharCount      m_display_pos = 0;
     String         m_line;
 };
 
@@ -265,10 +271,12 @@ public:
             select(it);
         }
 
-        if (m_edit_filter)
+        if (m_edit_filter and context().has_ui())
         {
-            auto display_line = m_filter_editor.build_display_line();
-            display_line.insert(display_line.begin(), { "filter:"_str, get_color("Prompt") });
+            auto prompt = "filter:"_str;
+            auto width = context().ui().dimensions().column - prompt.char_length();
+            auto display_line = m_filter_editor.build_display_line(width);
+            display_line.insert(display_line.begin(), { prompt, get_color("Prompt") });
             context().print_status(display_line);
         }
     }
@@ -535,9 +543,13 @@ private:
             context().ui().menu_hide();
     }
 
-    void display() const
+    void display()
     {
-        auto display_line = m_line_editor.build_display_line();
+        if (not context().has_ui())
+            return;
+
+        auto width = context().ui().dimensions().column - m_prompt.char_length();
+        auto display_line = m_line_editor.build_display_line(width);
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_colors });
         context().print_status(display_line);
     }
