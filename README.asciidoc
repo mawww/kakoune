@@ -536,6 +536,7 @@ using *control-x*, followed, by:
 
  * *f* : filename completion
  * *w* : buffer word completion
+ * *l* : buffer line completion
  * *o* : option based completion
 
 Highlighters
@@ -878,6 +879,6 @@ Existing commands files are:
 Certain command files defines options, such as +grepcmd+ (for +:grep+) +makecmd+
 (for +:make+) or +termcmd+ (for +:new+).
 
-Some options are shared with commands. grep and make honor the +toolsclient+ option,
+Some options are shared with commands. +:grep+ and +:make+ honor the +toolsclient+ option,
 if specified, to open their buffer in it rather than the current client. man honor
 the +docsclient+ option for the same purpose.
