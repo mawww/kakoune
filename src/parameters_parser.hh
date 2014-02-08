@@ -36,12 +36,7 @@ struct wrong_argument_count : public parameter_error
 
 using OptionMap = std::unordered_map<String, bool>;
 
-// ParameterParser provides tools to parse command parameters.
-// There are 3 types of parameters:
-//  * unnamed options, which are accessed by position (ignoring named ones)
-//  * named boolean options, which are enabled using '-name' syntax
-//  * named string options,  which are defined using '-name value' syntax
-struct ParametersParser
+struct ParameterDesc
 {
     enum class Flags
     {
@@ -57,14 +52,29 @@ struct ParametersParser
         return ((int) lhs & (int) rhs) != 0;
     }
 
+    ParameterDesc() = default;
+    ParameterDesc(OptionMap options, Flags flags = Flags::None,
+                  size_t min_positionals = 0, size_t max_positionals = -1)
+        : options(std::move(options)), flags(flags),
+          min_positionals(min_positionals), max_positionals(max_positionals) {}
+
+    OptionMap options;
+    Flags flags = Flags::None;
+    size_t min_positionals = 0;
+    size_t max_positionals = -1;
+};
+
+// ParametersParser provides tools to parse command parameters.
+// There are 3 types of parameters:
+//  * unnamed options, which are accessed by position (ignoring named ones)
+//  * named boolean options, which are enabled using '-name' syntax
+//  * named string options,  which are defined using '-name value' syntax
+struct ParametersParser
+{
     // the options defines named options, if they map to true, then
     // they are understood as string options, else they are understood as
     // boolean option.
-    ParametersParser(const ParameterList& params,
-                     OptionMap options,
-                     Flags flags = Flags::None,
-                     size_t min_positionals = 0,
-                     size_t max_positionals = -1);
+    ParametersParser(ParameterList params, const ParameterDesc& desc);
 
     // check if a named option (either string or boolean) is specified
     bool has_option(const String& name) const;
@@ -131,9 +141,9 @@ struct ParametersParser
     iterator end() const;
 
 private:
-    ParameterList     m_params;
-    std::vector<size_t> m_positional_indices;
-    std::unordered_map<String, bool> m_options;
+    ParameterList         m_params;
+    std::vector<size_t>   m_positional_indices;
+    const ParameterDesc& m_desc;
 };
 
 }

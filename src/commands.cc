@@ -84,13 +84,14 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
     return buffer;
 }
 
-template<bool force_reload>
-void edit(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "scratch", false },
-                                      { "fifo", true } },
-                            ParametersParser::Flags::None, 1, 3);
+static const ParameterDesc edit_params{
+    OptionMap{ { "scratch", false }, { "fifo", true } },
+    ParameterDesc::Flags::None, 1, 3
+};
 
+template<bool force_reload>
+void edit(const ParametersParser& parser, Context& context)
+{
     const String name = parser[0];
 
     Buffer* buffer = nullptr;
@@ -130,27 +131,32 @@ void edit(CommandParameters params, Context& context)
     }
 }
 
-void write_buffer(CommandParameters params, Context& context)
-{
-    if (params.size() > 1)
-        throw wrong_argument_count();
+static const ParameterDesc write_params{
+    OptionMap{},
+    ParameterDesc::Flags::None, 0, 1
+};
 
+void write_buffer(const ParametersParser& parser, Context& context)
+{
     Buffer& buffer = context.buffer();
 
-    if (params.empty() and !(buffer.flags() & Buffer::Flags::File))
+    if (parser.positional_count() == 0 and !(buffer.flags() & Buffer::Flags::File))
         throw runtime_error("cannot write a non file buffer without a filename");
 
-    String filename = params.empty() ? buffer.name()
-                                     : parse_filename(params[0]);
+    String filename = parser.positional_count() == 0 ? buffer.name()
+                                     : parse_filename(parser[0]);
 
     write_buffer_to_file(buffer, filename);
 }
 
-void write_all_buffers(CommandParameters params, Context& context)
-{
-    if (params.size() != 0)
-        throw wrong_argument_count();
+static const ParameterDesc no_params{
+    OptionMap{},
+    ParameterDesc::Flags::None, 0, 0
+};
 
+
+void write_all_buffers(const ParametersParser& parser, Context& context)
+{
     for (auto& buffer : BufferManager::instance())
     {
         if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
@@ -159,11 +165,8 @@ void write_all_buffers(CommandParameters params, Context& context)
 }
 
 template<bool force>
-void quit(CommandParameters params, Context& context)
+void quit(const ParametersParser& parser, Context& context)
 {
-    if (params.size() != 0)
-        throw wrong_argument_count();
-
     if (not force and ClientManager::instance().count() == 1)
     {
         std::vector<String> names;
@@ -190,18 +193,17 @@ void quit(CommandParameters params, Context& context)
 }
 
 template<bool force>
-void write_and_quit(CommandParameters params, Context& context)
+void write_and_quit(const ParametersParser& parser, Context& context)
 {
-    write_buffer(params, context);
-    quit<force>(CommandParameters(), context);
+    write_buffer(parser, context);
+    quit<force>(ParametersParser{memoryview<String>{}, no_params}, context);
 }
 
-void show_buffer(CommandParameters params, Context& context)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
+static const ParameterDesc single_name_params{ OptionMap{}, ParameterDesc::Flags::None, 1, 1 };
 
-    Buffer& buffer = BufferManager::instance().get_buffer(params[0]);
+void show_buffer(const ParametersParser& parser, Context& context)
+{
+    Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
     BufferManager::instance().set_last_used_buffer(buffer);
 
     if (&buffer != &context.buffer())
@@ -211,14 +213,13 @@ void show_buffer(CommandParameters params, Context& context)
     }
 }
 
-template<bool force>
-void delete_buffer(CommandParameters params, Context& context)
-{
-    if (params.size() > 1)
-        throw wrong_argument_count();
+static const ParameterDesc single_opt_name_params{ OptionMap{}, ParameterDesc::Flags::None, 0, 1 };
 
+template<bool force>
+void delete_buffer(const ParametersParser& parser, Context& context)
+{
     BufferManager& manager = BufferManager::instance();
-    Buffer& buffer = params.empty() ? context.buffer() : manager.get_buffer(params[0]);
+    Buffer& buffer = parser.positional_count() == 0 ? context.buffer() : manager.get_buffer(parser[0]);
     if (not force and (buffer.flags() & Buffer::Flags::File) and buffer.is_modified())
         throw runtime_error("buffer " + buffer.name() + " is modified");
 
@@ -228,26 +229,25 @@ void delete_buffer(CommandParameters params, Context& context)
     manager.delete_buffer(buffer);
 }
 
-void set_buffer_name(CommandParameters params, Context& context)
+void set_buffer_name(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, OptionMap{},
-                            ParametersParser::Flags::None, 1, 1);
     if (not context.buffer().set_name(parser[0]))
         throw runtime_error("unable to change buffer name to " + parser[0]);
 }
 
-void define_highlighter(CommandParameters params, Context& context)
+void define_highlighter(const ParametersParser& parser, Context& context)
 {
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    const String& name = params[0];
+    const String& name = parser[0];
     DefinedHighlighters::instance().append({name, HighlighterGroup{}});
 }
 
-void add_highlighter(CommandParameters params, Context& context)
+static const ParameterDesc add_highlighter_params{
+    OptionMap{ { "group", true }, { "def-group", true } },
+    ParameterDesc::Flags::None, 1
+};
+
+void add_highlighter(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, { { "group", true }, { "def-group", true } }, ParametersParser::Flags::None, 1);
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     auto begin = parser.begin();
@@ -274,10 +274,12 @@ void add_highlighter(CommandParameters params, Context& context)
     group->append(registry[name](highlighter_params));
 }
 
-void rm_highlighter(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "group", true } }, ParametersParser::Flags::None, 1, 1);
+static const ParameterDesc rm_highlighter_params{
+    OptionMap{ { "group", true } }, ParameterDesc::Flags::None, 1, 1
+};
 
+void rm_highlighter(const ParametersParser& parser, Context& context)
+{
     HighlighterGroup& window_hl = context.window().highlighters();
     HighlighterGroup& group = parser.has_option("group") ?
         window_hl.get_group(parser.option_value("group"), '/')
@@ -297,9 +299,12 @@ static HookManager& get_hook_manager(const String& scope, Context& context)
     throw runtime_error("error: no such hook container " + scope);
 }
 
-void add_hook(CommandParameters params, Context& context)
+static const ParameterDesc add_hook_params{
+    OptionMap{ { "id", true } }, ParameterDesc::Flags::None, 4, 4
+};
+
+void add_hook(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, { { "id", true } }, ParametersParser::Flags::None, 4, 4);
     // copy so that the lambda gets a copy as well
     Regex regex(parser[2].begin(), parser[2].end());
     String command = parser[3];
@@ -312,36 +317,48 @@ void add_hook(CommandParameters params, Context& context)
     get_hook_manager(parser[0], context).add_hook(parser[1], id, hook_func);
 }
 
-void rm_hooks(CommandParameters params, Context& context)
+static const ParameterDesc rm_hooks_params{
+    OptionMap{}, ParameterDesc::Flags::None, 2, 2
+};
+
+void rm_hooks(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, OptionMap{}, ParametersParser::Flags::None, 2, 2);
     get_hook_manager(parser[0], context).remove_hooks(parser[1]);
 }
 
-EnvVarMap params_to_env_var_map(CommandParameters params)
+EnvVarMap params_to_env_var_map(const ParametersParser& parser)
 {
     std::unordered_map<String, String> vars;
     char param_name[] = "param0";
-    for (size_t i = 0; i < params.size(); ++i)
+    for (size_t i = 0; i < parser.positional_count(); ++i)
     {
         param_name[sizeof(param_name) - 2] = '0' + i;
-        vars[param_name] = params[i];
+        vars[param_name] = parser[i];
     }
     return vars;
 }
 
-void define_command(CommandParameters params, Context& context)
+std::vector<String> params_to_shell(const ParametersParser& parser)
 {
-    ParametersParser parser(params,
-                            { { "env-params", false },
-                              { "shell-params", false },
-                              { "allow-override", false },
-                              { "file-completion", false },
-                              { "hidden", false },
-                              { "shell-completion", true } },
-                             ParametersParser::Flags::None,
-                             2, 2);
+    std::vector<String> vars;
+    for (size_t i = 0; i < parser.positional_count(); ++i)
+        vars.push_back(parser[i]);
+    return vars;
+}
 
+static const ParameterDesc define_command_params{
+    OptionMap{ { "env-params", false },
+               { "shell-params", false },
+               { "allow-override", false },
+               { "file-completion", false },
+               { "hidden", false },
+               { "shell-completion", true } },
+    ParameterDesc::Flags::None,
+    2, 2
+};
+
+void define_command(const ParametersParser& parser, Context& context)
+{
     auto begin = parser.begin();
     const String& cmd_name = *begin;
 
@@ -355,24 +372,26 @@ void define_command(CommandParameters params, Context& context)
 
     String commands = parser[1];
     Command cmd;
+    ParameterDesc desc;
     if (parser.has_option("env-params"))
     {
-        cmd = [=](CommandParameters params, Context& context) {
+        desc = ParameterDesc{ OptionMap{}, ParameterDesc::Flags::None };
+        cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context, {},
-                                               params_to_env_var_map(params));
+                                               params_to_env_var_map(parser));
         };
     }
     if (parser.has_option("shell-params"))
     {
-        cmd = [=](CommandParameters params, Context& context) {
-            CommandManager::instance().execute(commands, context, params);
+        desc = ParameterDesc{ OptionMap{}, ParameterDesc::Flags::None };
+        cmd = [=](const ParametersParser& parser, Context& context) {
+            CommandManager::instance().execute(commands, context, params_to_shell(parser));
         };
     }
     else
     {
-        cmd = [=](CommandParameters params, Context& context) {
-            if (not params.empty())
-                throw wrong_argument_count();
+        desc = ParameterDesc{ OptionMap{}, ParameterDesc::Flags::None, 0, 0 };
+        cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context);
         };
     }
@@ -408,13 +427,16 @@ void define_command(CommandParameters params, Context& context)
             return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n') };
         };
     }
-    CommandManager::instance().register_command(cmd_name, cmd, flags, completer);
+    CommandManager::instance().register_command(cmd_name, cmd, desc, flags, completer);
 }
 
-void echo_message(CommandParameters params, Context& context)
+static const ParameterDesc echo_message_params{
+    { { "color", true } },
+    ParameterDesc::Flags::OptionsOnlyAtStart
+};
+
+void echo_message(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, { { "color", true } },
-                            ParametersParser::Flags::OptionsOnlyAtStart);
     String message;
     for (auto& param : parser)
         message += param + " ";
@@ -423,28 +445,36 @@ void echo_message(CommandParameters params, Context& context)
     context.print_status({ std::move(message), color } );
 }
 
-void write_debug_message(CommandParameters params, Context&)
+static const ParameterDesc write_debug_message_params{
+    OptionMap{},
+    ParameterDesc::Flags::OptionsOnlyAtStart
+};
+
+void write_debug_message(const ParametersParser& parser, Context&)
 {
     String message;
-    for (auto& param : params)
+    for (auto& param : parser)
         message += param + " ";
     write_debug(message);
 }
 
-void exec_commands_in_file(CommandParameters params,
+static const ParameterDesc exec_commands_in_file_params{
+    OptionMap{},
+    ParameterDesc::Flags::None,
+    1, 1
+};
+
+void exec_commands_in_file(const ParametersParser& parser,
                            Context& context)
 {
-    if (params.size() != 1)
-        throw wrong_argument_count();
-
-    String file_content = read_file(parse_filename(params[0]));
+    String file_content = read_file(parse_filename(parser[0]));
     try
     {
         CommandManager::instance().execute(file_content, context);
     }
     catch (Kakoune::runtime_error& err)
     {
-        write_debug("error while executing commands in file '" + params[0]
+        write_debug("error while executing commands in file '" + parser[0]
                     + "'\n    " + err.what());
         throw;
     }
@@ -463,12 +493,15 @@ static OptionManager& get_options(const String& scope, const Context& context)
     throw runtime_error("error: no such option container " + scope);
 }
 
-void set_option(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "add", false } },
-                            ParametersParser::Flags::OptionsOnlyAtStart,
-                            3, 3);
 
+static const ParameterDesc set_option_params{
+    { { "add", false } },
+    ParameterDesc::Flags::OptionsOnlyAtStart,
+    3, 3
+};
+
+void set_option(const ParametersParser& parser, Context& context)
+{
     Option& opt = get_options(parser[0], context).get_local_option(parser[1]);
     if (parser.has_option("add"))
         opt.add_from_string(parser[2]);
@@ -476,11 +509,14 @@ void set_option(CommandParameters params, Context& context)
         opt.set_from_string(parser[2]);
 }
 
-void declare_option(CommandParameters params, Context& context)
+static const ParameterDesc declare_option_params{
+    { { "hidden", false } },
+    ParameterDesc::Flags::OptionsOnlyAtStart,
+    2, 3
+};
+
+void declare_option(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, { { "hidden", false } },
-                            ParametersParser::Flags::OptionsOnlyAtStart,
-                            2, 3);
     Option* opt = nullptr;
 
     Option::Flags flags = Option::Flags::None;
@@ -531,28 +567,32 @@ KeymapMode parse_keymap_mode(const String& str)
     throw runtime_error("unknown keymap mode '" + str + "'");
 }
 
-void map_key(CommandParameters params, Context& context)
+static const ParameterDesc map_key_params{
+    OptionMap{}, ParameterDesc::Flags::None, 4, 4
+};
+
+void map_key(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, OptionMap{}, ParametersParser::Flags::None, 4, 4);
+    KeymapManager& keymaps = get_keymap_manager(parser[0], context);
+    KeymapMode keymap_mode = parse_keymap_mode(parser[1]);
 
-    KeymapManager& keymaps = get_keymap_manager(params[0], context);
-    KeymapMode keymap_mode = parse_keymap_mode(params[1]);
-
-    KeyList key = parse_keys(params[2]);
+    KeyList key = parse_keys(parser[2]);
     if (key.size() != 1)
         throw runtime_error("only a single key can be mapped");
 
-    KeyList mapping = parse_keys(params[3]);
+    KeyList mapping = parse_keys(parser[3]);
     keymaps.map_key(key[0], keymap_mode, std::move(mapping));
 }
 
-template<typename Func>
-void context_wrap(CommandParameters params, Context& context, Func func)
-{
-    ParametersParser parser(params, { { "client", true }, { "try-client", true },
-                                      { "draft", false }, { "itersel", false } },
-                            ParametersParser::Flags::OptionsOnlyAtStart, 1);
+const ParameterDesc context_wrap_params = {
+    { { "client", true }, { "try-client", true },
+      { "draft", false }, { "itersel", false } },
+    ParameterDesc::Flags::OptionsOnlyAtStart, 1
+};
 
+template<typename Func>
+void context_wrap(const ParametersParser& parser, Context& context, Func func)
+{
     ClientManager& cm = ClientManager::instance();
     Context* real_context = &context;
     if (parser.has_option("client"))
@@ -598,9 +638,9 @@ void context_wrap(CommandParameters params, Context& context, Func func)
         real_context->window().forget_timestamp();
 }
 
-void exec_string(CommandParameters params, Context& context)
+void exec_string(const ParametersParser& parser, Context& context)
 {
-    context_wrap(params, context, [](const ParametersParser& parser, Context& context) {
+    context_wrap(parser, context, [](const ParametersParser& parser, Context& context) {
         KeyList keys;
         for (auto& param : parser)
         {
@@ -611,9 +651,9 @@ void exec_string(CommandParameters params, Context& context)
     });
 }
 
-void eval_string(CommandParameters params, Context& context)
+void eval_string(const ParametersParser& parser, Context& context)
 {
-    context_wrap(params, context, [](const ParametersParser& parser, Context& context) {
+    context_wrap(parser, context, [](const ParametersParser& parser, Context& context) {
         String command;
         for (auto& param : parser)
             command += param + " ";
@@ -621,11 +661,11 @@ void eval_string(CommandParameters params, Context& context)
     });
 }
 
-void menu(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "auto-single", false },
-                                      { "select-cmds", false } });
+static const ParameterDesc menu_params{ { { "auto-single", false },
+                                { "select-cmds", false } } };
 
+void menu(const ParametersParser& parser, Context& context)
+{
     const bool with_select_cmds = parser.has_option("select-cmds");
     const size_t modulo = with_select_cmds ? 3 : 2;
 
@@ -659,11 +699,13 @@ void menu(CommandParameters params, Context& context)
         });
 }
 
-void info(CommandParameters params, Context& context)
-{
-    ParametersParser parser(params, { { "anchor", true }, { "title", true } },
-                            ParametersParser::Flags::None, 0, 1);
+static const ParameterDesc info_params{
+    { { "anchor", true }, { "title", true } },
+    ParameterDesc::Flags::None, 0, 1
+};
 
+void info(const ParametersParser& parser, Context& context)
+{
     context.ui().info_hide();
     if (parser.positional_count() > 0)
     {
@@ -689,62 +731,71 @@ void info(CommandParameters params, Context& context)
     }
 }
 
-void try_catch(CommandParameters params, Context& context)
+static const ParameterDesc try_catch_params{
+    OptionMap{}, ParameterDesc::Flags::None, 1, 3
+};
+
+void try_catch(const ParametersParser& parser, Context& context)
 {
-    if (params.size() != 1 and params.size() != 3)
+    if (parser.positional_count() == 2)
         throw wrong_argument_count();
 
-    const bool do_catch = params.size() == 3;
-    if (do_catch and params[1] != "catch")
+    const bool do_catch = parser.positional_count() == 3;
+    if (do_catch and parser[1] != "catch")
         throw runtime_error("usage: try <commands> [catch <on error commands>]");
 
     CommandManager& command_manager = CommandManager::instance();
     try
     {
-        command_manager.execute(params[0], context);
+        command_manager.execute(parser[0], context);
     }
     catch (Kakoune::runtime_error& e)
     {
         if (do_catch)
-            command_manager.execute(params[2], context);
+            command_manager.execute(parser[2], context);
     }
 }
 
-void define_color_alias(CommandParameters params, Context& context)
+static const ParameterDesc define_color_alias_params{
+    OptionMap{}, ParameterDesc::Flags::None, 2, 2
+};
+
+void define_color_alias(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, OptionMap{},
-                            ParametersParser::Flags::None, 2, 2);
-    ColorRegistry::instance().register_alias(
-        parser[0], parser[1], true);
+    ColorRegistry::instance().register_alias(parser[0], parser[1], true);
 }
 
-void set_client_name(CommandParameters params, Context& context)
+static const ParameterDesc set_client_name_params{
+    OptionMap{}, ParameterDesc::Flags::None, 1, 1
+};
+
+void set_client_name(const ParametersParser& parser, Context& context)
 {
-    ParametersParser parser(params, OptionMap{},
-                            ParametersParser::Flags::None, 1, 1);
-    if (ClientManager::instance().validate_client_name(params[0]))
-        context.set_name(params[0]);
-    else if (context.name() != params[0])
-        throw runtime_error("client name '" + params[0] + "' is not unique");
+    if (ClientManager::instance().validate_client_name(parser[0]))
+        context.set_name(parser[0]);
+    else if (context.name() != parser[0])
+        throw runtime_error("client name '" + parser[0] + "' is not unique");
 }
 
-void set_register(CommandParameters params, Context& context)
-{
-    if (params.size() != 2)
-        throw wrong_argument_count();
+static const ParameterDesc set_register_params{
+    OptionMap{}, ParameterDesc::Flags::None, 2, 2
+};
 
-    if (params[0].length() != 1)
+void set_register(const ParametersParser& parser, Context& context)
+{
+    if (parser[0].length() != 1)
         throw runtime_error("register names are single character");
-    RegisterManager::instance()[params[0][0]] = memoryview<String>(params[1]);
+    RegisterManager::instance()[parser[0][0]] = memoryview<String>(parser[1]);
 }
 
-void change_working_directory(CommandParameters params, Context&)
-{
-    if (params.size() != 1)
-        throw wrong_argument_count();
+static const ParameterDesc change_working_directory_params{
+    OptionMap{}, ParameterDesc::Flags::None, 1, 1
+};
 
-    if (chdir(parse_filename(params[0]).c_str()) != 0)
-        throw runtime_error("cannot change to directory " + params[0]);
+void change_working_directory(const ParametersParser& parser, Context&)
+{
+    if (chdir(parse_filename(parser[0]).c_str()) != 0)
+        throw runtime_error("cannot change to directory " + parser[0]);
 }
 
 template<typename GetRootGroup>
@@ -825,7 +876,7 @@ void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
 
-    cm.register_commands({"nop"}, [](CommandParameters, Context&){});
+    cm.register_commands({"nop"}, [](const ParametersParser&, Context&){}, {});
 
     PerArgumentCommandCompleter filename_completer({
          [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
@@ -834,31 +885,31 @@ void register_commands()
                                                  context.options()["ignored_files"].get<Regex>(),
                                                  cursor_pos) }; }
     });
-    cm.register_commands({ "edit", "e" }, edit<false>, CommandFlags::None, filename_completer);
-    cm.register_commands({ "edit!", "e!" }, edit<true>, CommandFlags::None, filename_completer);
-    cm.register_commands({ "write", "w" }, write_buffer, CommandFlags::None, filename_completer);
-    cm.register_commands({ "writeall", "wa" }, write_all_buffers);
-    cm.register_commands({ "quit", "q" }, quit<false>);
-    cm.register_commands({ "quit!", "q!" }, quit<true>);
-    cm.register_command("wq", write_and_quit<false>);
-    cm.register_command("wq!", write_and_quit<true>);
+    cm.register_commands({ "edit", "e" }, edit<false>, edit_params, CommandFlags::None, filename_completer);
+    cm.register_commands({ "edit!", "e!" }, edit<true>, edit_params, CommandFlags::None, filename_completer);
+    cm.register_commands({ "write", "w" }, write_buffer, write_params, CommandFlags::None, filename_completer);
+    cm.register_commands({ "writeall", "wa" }, write_all_buffers, no_params);
+    cm.register_commands({ "quit", "q" }, quit<false>, no_params);
+    cm.register_commands({ "quit!", "q!" }, quit<true>, no_params);
+    cm.register_command("wq", write_and_quit<false>, no_params);
+    cm.register_command("wq!", write_and_quit<true>, no_params);
 
     PerArgumentCommandCompleter buffer_completer({
         [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
         { return Completions{ 0_byte, prefix.length(),
                               BufferManager::instance().complete_buffername(prefix, cursor_pos) }; }
     });
-    cm.register_commands({ "buffer", "b" }, show_buffer, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "delbuf", "db" }, delete_buffer<false>, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "delbuf!", "db!" }, delete_buffer<true>, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "namebuf", "nb" }, set_buffer_name);
+    cm.register_commands({ "buffer", "b" }, show_buffer, single_name_params, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "delbuf", "db" }, delete_buffer<false>, single_opt_name_params, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "delbuf!", "db!" }, delete_buffer<true>, single_opt_name_params, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "namebuf", "nb" }, set_buffer_name, single_name_params);
 
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
-    cm.register_commands({ "addhl", "ah" }, add_highlighter, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
-    cm.register_commands({ "rmhl", "rh" }, rm_highlighter, CommandFlags::None, group_rm_completer(get_highlighters));
-    cm.register_commands({ "defhl", "dh" }, define_highlighter);
+    cm.register_commands({ "addhl", "ah" }, add_highlighter, add_highlighter_params, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
+    cm.register_commands({ "rmhl", "rh" }, rm_highlighter, rm_highlighter_params, CommandFlags::None, group_rm_completer(get_highlighters));
+    cm.register_commands({ "defhl", "dh" }, define_highlighter, single_name_params);
 
-    cm.register_command("hook", add_hook, CommandFlags::None,
+    cm.register_command("hook", add_hook, add_hook_params, CommandFlags::None,
                         [](const Context& context, CompletionFlags flags,
                            CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
                         {
@@ -872,24 +923,24 @@ void register_commands()
                             }
                             return Completions{};
                         });
-    cm.register_command("rmhooks", rm_hooks);
+    cm.register_command("rmhooks", rm_hooks, rm_hooks_params);
 
-    cm.register_command("source", exec_commands_in_file, CommandFlags::None, filename_completer);
+    cm.register_command("source", exec_commands_in_file, exec_commands_in_file_params, CommandFlags::None, filename_completer);
 
-    cm.register_command("exec", exec_string);
-    cm.register_command("eval", eval_string);
-    cm.register_command("menu", menu);
-    cm.register_command("info", info);
-    cm.register_command("try",  try_catch);
-    cm.register_command("reg", set_register);
+    cm.register_command("exec", exec_string, context_wrap_params);
+    cm.register_command("eval", eval_string, context_wrap_params);
+    cm.register_command("menu", menu, menu_params);
+    cm.register_command("info", info, info_params);
+    cm.register_command("try",  try_catch, try_catch_params);
+    cm.register_command("reg", set_register, set_register_params);
 
-    cm.register_command("def",  define_command);
-    cm.register_command("decl", declare_option);
+    cm.register_command("def",  define_command, define_command_params);
+    cm.register_command("decl", declare_option, declare_option_params);
 
-    cm.register_command("echo", echo_message);
-    cm.register_command("debug", write_debug_message);
+    cm.register_command("echo", echo_message, echo_message_params);
+    cm.register_command("debug", write_debug_message, write_debug_message_params);
 
-    cm.register_command("set", set_option, CommandFlags::None,
+    cm.register_command("set", set_option, set_option_params, CommandFlags::None,
                         [](const Context& context, CompletionFlags,
                            CommandParameters params, size_t token_to_complete,
                            ByteCount pos_in_token) -> Completions
@@ -906,10 +957,10 @@ void register_commands()
                             return Completions{};
                         } );
 
-    cm.register_commands({ "colalias", "ca" }, define_color_alias);
-    cm.register_commands({ "nameclient", "nc" }, set_client_name);
+    cm.register_commands({ "colalias", "ca" }, define_color_alias, define_color_alias_params);
+    cm.register_commands({ "nameclient", "nc" }, set_client_name, set_client_name_params);
 
-    cm.register_command("cd", change_working_directory, CommandFlags::None, filename_completer);
-    cm.register_command("map", map_key);
+    cm.register_command("cd", change_working_directory, change_working_directory_params, CommandFlags::None, filename_completer);
+    cm.register_command("map", map_key, map_key_params);
 }
 }

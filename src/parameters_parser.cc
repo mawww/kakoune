@@ -3,13 +3,10 @@
 namespace Kakoune
 {
 
-ParametersParser::ParametersParser(const ParameterList& params,
-                                   std::unordered_map<String, bool> options,
-                                   Flags flags,
-                                   size_t min_positionals,
-                                   size_t max_positionals)
+ParametersParser::ParametersParser(ParameterList params,
+                                   const ParameterDesc& desc)
     : m_params(params),
-      m_options(std::move(options))
+      m_desc(desc)
 {
     bool only_pos = false;
     for (size_t i = 0; i < params.size(); ++i)
@@ -18,8 +15,8 @@ ParametersParser::ParametersParser(const ParameterList& params,
             only_pos = true;
         else if (not only_pos and params[i][0] == '-')
         {
-            auto it = m_options.find(params[i].substr(1_byte));
-            if (it == m_options.end())
+            auto it = m_desc.options.find(params[i].substr(1_byte));
+            if (it == m_desc.options.end())
                 throw unknown_option(params[i]);
 
             if (it->second)
@@ -31,19 +28,19 @@ ParametersParser::ParametersParser(const ParameterList& params,
         }
         else
         {
-            if (flags & Flags::OptionsOnlyAtStart)
+            if (desc.flags & ParameterDesc::Flags::OptionsOnlyAtStart)
                 only_pos = true;
             m_positional_indices.push_back(i);
         }
     }
     size_t count = m_positional_indices.size();
-    if (count > max_positionals or count < min_positionals)
+    if (count > desc.max_positionals or count < desc.min_positionals)
         throw wrong_argument_count();
 }
 
 bool ParametersParser::has_option(const String& name) const
 {
-    kak_assert(m_options.find(name) != m_options.end());
+    kak_assert(m_desc.options.find(name) != m_desc.options.end());
     for (auto& param : m_params)
     {
         if (param[0] == '-' and param.substr(1_byte) == name)
@@ -58,8 +55,8 @@ bool ParametersParser::has_option(const String& name) const
 const String& ParametersParser::option_value(const String& name) const
 {
 #ifdef KAK_DEBUG
-    auto it = m_options.find(name);
-    kak_assert(it != m_options.end());
+    auto it = m_desc.options.find(name);
+    kak_assert(it != m_desc.options.end());
     kak_assert(it->second == true);
 #endif
 

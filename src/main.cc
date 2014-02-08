@@ -233,11 +233,14 @@ int run_client(const String& session, const String& init_command)
 
 int kakoune(memoryview<String> params)
 {
-    ParametersParser parser(params, { { "c", true },
-                                      { "e", true },
-                                      { "n", false },
-                                      { "s", true },
-                                      { "d", false } });
+    const ParameterDesc param_desc{
+        OptionMap{ { "c", true },
+                   { "e", true },
+                   { "n", false },
+                   { "s", true },
+                   { "d", false } }
+    };
+    ParametersParser parser(params, param_desc);
     String init_command;
     if (parser.has_option("e"))
         init_command = parser.option_value("e");

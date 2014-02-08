@@ -4,6 +4,7 @@
 #include "completion.hh"
 #include "memoryview.hh"
 #include "shell_manager.hh"
+#include "parameters_parser.hh"
 #include "string.hh"
 #include "utils.hh"
 
@@ -16,7 +17,7 @@ namespace Kakoune
 
 class Context;
 using CommandParameters = memoryview<String>;
-using Command = std::function<void (CommandParameters, Context& context)>;
+using Command = std::function<void (const ParametersParser& parser, Context& context)>;
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
                                                     CommandParameters,
@@ -69,10 +70,12 @@ public:
     bool command_defined(const String& command_name) const;
 
     void register_command(String command_name, Command command,
+                          ParameterDesc param_desc,
                           CommandFlags flags = CommandFlags::None,
                           CommandCompleter completer = CommandCompleter());
 
     void register_commands(memoryview<String> command_names, Command command,
+                           ParameterDesc param_desc,
                            CommandFlags flags = CommandFlags::None,
                            CommandCompleter completer = CommandCompleter());
 
@@ -83,6 +86,7 @@ private:
     struct CommandDescriptor
     {
         Command command;
+        ParameterDesc param_desc;
         CommandFlags flags;
         CommandCompleter completer;
     };

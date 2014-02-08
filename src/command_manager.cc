@@ -18,19 +18,21 @@ bool CommandManager::command_defined(const String& command_name) const
 
 void CommandManager::register_command(String command_name,
                                       Command command,
+                                      ParameterDesc param_desc,
                                       CommandFlags flags,
                                       CommandCompleter completer)
 {
-    m_commands[command_name] = { std::move(command), flags, std::move(completer) };
+    m_commands[command_name] = { std::move(command), std::move(param_desc), flags, std::move(completer) };
 }
 
 void CommandManager::register_commands(memoryview<String> command_names,
                                        Command command,
+                                       ParameterDesc param_desc,
                                        CommandFlags flags,
                                        CommandCompleter completer)
 {
     kak_assert(not command_names.empty());
-    m_commands[command_names[0]] = { std::move(command), flags, completer };
+    m_commands[command_names[0]] = { std::move(command), std::move(param_desc), flags, completer };
     for (size_t i = 1; i < command_names.size(); ++i)
         m_aliases[command_names[i]] = command_names[0];
 }
@@ -281,7 +283,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     auto command_it = find_command(params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
-    command_it->second.command(param_view, context);
+    command_it->second.command(ParametersParser(param_view, command_it->second.param_desc), context);
 }
 
 void CommandManager::execute(const String& command_line,
