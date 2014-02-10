@@ -52,8 +52,8 @@ Building
 Kakoune dependencies are:
 
  * A C++11 compliant compiler (GCC >= 4.8.1 or clang >= 3.4)
- * boost
- * ncurses
+ * boost (>= 1.50)
+ * ncurses with wide-characters support (>= 5.3, generally refered as libncursesw)
  * bash (kak scripts use some bash specific features)
  * socat (used by kak scripts to write to kak control socket)
 
