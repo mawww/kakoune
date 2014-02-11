@@ -85,7 +85,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
 }
 
 static const ParameterDesc edit_params{
-    OptionMap{ { "scratch", { false, "create a scratch buffer, not linked to a file" } },
+    SwitchMap{ { "scratch", { false, "create a scratch buffer, not linked to a file" } },
                { "fifo", { true, "create a buffer reading its content from a named fifo" } } },
     ParameterDesc::Flags::None, 1, 3
 };
@@ -133,7 +133,7 @@ void edit(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc write_params{
-    OptionMap{},
+    SwitchMap{},
     ParameterDesc::Flags::None, 0, 1
 };
 
@@ -151,7 +151,7 @@ void write_buffer(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc no_params{
-    OptionMap{},
+    SwitchMap{},
     ParameterDesc::Flags::None, 0, 0
 };
 
@@ -200,7 +200,7 @@ void write_and_quit(const ParametersParser& parser, Context& context)
     quit<force>(ParametersParser{memoryview<String>{}, no_params}, context);
 }
 
-static const ParameterDesc single_name_params{ OptionMap{}, ParameterDesc::Flags::None, 1, 1 };
+static const ParameterDesc single_name_params{ SwitchMap{}, ParameterDesc::Flags::None, 1, 1 };
 
 void show_buffer(const ParametersParser& parser, Context& context)
 {
@@ -214,7 +214,7 @@ void show_buffer(const ParametersParser& parser, Context& context)
     }
 }
 
-static const ParameterDesc single_opt_name_params{ OptionMap{}, ParameterDesc::Flags::None, 0, 1 };
+static const ParameterDesc single_opt_name_params{ SwitchMap{}, ParameterDesc::Flags::None, 0, 1 };
 
 template<bool force>
 void delete_buffer(const ParametersParser& parser, Context& context)
@@ -243,7 +243,7 @@ void define_highlighter(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc add_highlighter_params{
-    OptionMap{ { "group", { true, "add highlighter to named group" } },
+    SwitchMap{ { "group", { true, "add highlighter to named group" } },
                { "def-group", { true, "add highlighter to reusable defined group" } } },
     ParameterDesc::Flags::None, 1
 };
@@ -277,7 +277,7 @@ void add_highlighter(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc rm_highlighter_params{
-    OptionMap{ { "group", { true, "remove highlighter from given group" } } },
+    SwitchMap{ { "group", { true, "remove highlighter from given group" } } },
     ParameterDesc::Flags::None, 1, 1
 };
 
@@ -303,7 +303,7 @@ static HookManager& get_hook_manager(const String& scope, Context& context)
 }
 
 static const ParameterDesc add_hook_params{
-    OptionMap{ { "id", { true, "set hook id" } } }, ParameterDesc::Flags::None, 4, 4
+    SwitchMap{ { "id", { true, "set hook id" } } }, ParameterDesc::Flags::None, 4, 4
 };
 
 void add_hook(const ParametersParser& parser, Context& context)
@@ -321,7 +321,7 @@ void add_hook(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc rm_hooks_params{
-    OptionMap{}, ParameterDesc::Flags::None, 2, 2
+    SwitchMap{}, ParameterDesc::Flags::None, 2, 2
 };
 
 void rm_hooks(const ParametersParser& parser, Context& context)
@@ -350,7 +350,7 @@ std::vector<String> params_to_shell(const ParametersParser& parser)
 }
 
 static const ParameterDesc define_command_params{
-    OptionMap{ { "env-params", { false, "pass parameters as env variables param0..paramN" } },
+    SwitchMap{ { "env-params", { false, "pass parameters as env variables param0..paramN" } },
                { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
                { "allow-override", { false, "allow overriding existing command" } },
                { "file-completion", { false, "complete parameters using filename completion" } },
@@ -378,7 +378,7 @@ void define_command(const ParametersParser& parser, Context& context)
     ParameterDesc desc;
     if (parser.has_option("env-params"))
     {
-        desc = ParameterDesc{ OptionMap{}, ParameterDesc::Flags::None };
+        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context, {},
                                                params_to_env_var_map(parser));
@@ -386,14 +386,14 @@ void define_command(const ParametersParser& parser, Context& context)
     }
     if (parser.has_option("shell-params"))
     {
-        desc = ParameterDesc{ OptionMap{}, ParameterDesc::Flags::None };
+        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context, params_to_shell(parser));
         };
     }
     else
     {
-        desc = ParameterDesc{ OptionMap{}, ParameterDesc::Flags::None, 0, 0 };
+        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 0, 0 };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context);
         };
@@ -434,8 +434,8 @@ void define_command(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc echo_message_params{
-    OptionMap{ { "color", { true, "set message color" } } },
-    ParameterDesc::Flags::OptionsOnlyAtStart
+    SwitchMap{ { "color", { true, "set message color" } } },
+    ParameterDesc::Flags::SwitchesOnlyAtStart
 };
 
 void echo_message(const ParametersParser& parser, Context& context)
@@ -449,8 +449,8 @@ void echo_message(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc write_debug_message_params{
-    OptionMap{},
-    ParameterDesc::Flags::OptionsOnlyAtStart
+    SwitchMap{},
+    ParameterDesc::Flags::SwitchesOnlyAtStart
 };
 
 void write_debug_message(const ParametersParser& parser, Context&)
@@ -462,7 +462,7 @@ void write_debug_message(const ParametersParser& parser, Context&)
 }
 
 static const ParameterDesc exec_commands_in_file_params{
-    OptionMap{},
+    SwitchMap{},
     ParameterDesc::Flags::None,
     1, 1
 };
@@ -498,8 +498,8 @@ static OptionManager& get_options(const String& scope, const Context& context)
 
 
 static const ParameterDesc set_option_params{
-    OptionMap{ { "add", { false, "add to option rather than replacing it" } } },
-    ParameterDesc::Flags::OptionsOnlyAtStart,
+    SwitchMap{ { "add", { false, "add to option rather than replacing it" } } },
+    ParameterDesc::Flags::SwitchesOnlyAtStart,
     3, 3
 };
 
@@ -513,8 +513,8 @@ void set_option(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc declare_option_params{
-    OptionMap{ { "hidden", { false, "do not display option name when completing" } } },
-    ParameterDesc::Flags::OptionsOnlyAtStart,
+    SwitchMap{ { "hidden", { false, "do not display option name when completing" } } },
+    ParameterDesc::Flags::SwitchesOnlyAtStart,
     2, 3
 };
 
@@ -571,7 +571,7 @@ KeymapMode parse_keymap_mode(const String& str)
 }
 
 static const ParameterDesc map_key_params{
-    OptionMap{}, ParameterDesc::Flags::None, 4, 4
+    SwitchMap{}, ParameterDesc::Flags::None, 4, 4
 };
 
 void map_key(const ParametersParser& parser, Context& context)
@@ -588,11 +588,11 @@ void map_key(const ParametersParser& parser, Context& context)
 }
 
 const ParameterDesc context_wrap_params = {
-    OptionMap{ { "client", { true, "run in given client context" } },
+    SwitchMap{ { "client", { true, "run in given client context" } },
                { "try-client", { true, "run in given client context if it exists, or else in the current one" } },
                { "draft", { false, "run in a disposable context" } },
                { "itersel", { false, "run once for each selection with that selection as the only one" } } },
-    ParameterDesc::Flags::OptionsOnlyAtStart, 1
+    ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
 template<typename Func>
@@ -667,7 +667,7 @@ void eval_string(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc menu_params{
-    OptionMap{ { "auto-single", { false, "instantly validate if only one item is available" } },
+    SwitchMap{ { "auto-single", { false, "instantly validate if only one item is available" } },
                { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
 };
 
@@ -707,7 +707,7 @@ void menu(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc info_params{
-    OptionMap{ { "anchor", { true, "set info anchoring (left, right, or cursor)" } },
+    SwitchMap{ { "anchor", { true, "set info anchoring (left, right, or cursor)" } },
                { "title", { true, "set info title" } } },
     ParameterDesc::Flags::None, 0, 1
 };
@@ -740,7 +740,7 @@ void info(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc try_catch_params{
-    OptionMap{}, ParameterDesc::Flags::None, 1, 3
+    SwitchMap{}, ParameterDesc::Flags::None, 1, 3
 };
 
 void try_catch(const ParametersParser& parser, Context& context)
@@ -765,7 +765,7 @@ void try_catch(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc define_color_alias_params{
-    OptionMap{}, ParameterDesc::Flags::None, 2, 2
+    SwitchMap{}, ParameterDesc::Flags::None, 2, 2
 };
 
 void define_color_alias(const ParametersParser& parser, Context& context)
@@ -774,7 +774,7 @@ void define_color_alias(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc set_client_name_params{
-    OptionMap{}, ParameterDesc::Flags::None, 1, 1
+    SwitchMap{}, ParameterDesc::Flags::None, 1, 1
 };
 
 void set_client_name(const ParametersParser& parser, Context& context)
@@ -786,7 +786,7 @@ void set_client_name(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc set_register_params{
-    OptionMap{}, ParameterDesc::Flags::None, 2, 2
+    SwitchMap{}, ParameterDesc::Flags::None, 2, 2
 };
 
 void set_register(const ParametersParser& parser, Context& context)
@@ -797,7 +797,7 @@ void set_register(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc change_working_directory_params{
-    OptionMap{}, ParameterDesc::Flags::None, 1, 1
+    SwitchMap{}, ParameterDesc::Flags::None, 1, 1
 };
 
 void change_working_directory(const ParametersParser& parser, Context&)

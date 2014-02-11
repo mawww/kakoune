@@ -3,11 +3,11 @@
 namespace Kakoune
 {
 
-String generate_flags_doc(const OptionMap& opts)
+String generate_switches_doc(const SwitchMap& switches)
 {
     String res;
-    for (auto& opt : opts)
-        res += " -" + opt.first + (opt.second.takes_arg ? " <arg>: " : ": ") + opt.second.description + "\n";
+    for (auto& sw : switches)
+        res += " -" + sw.first + (sw.second.takes_arg ? " <arg>: " : ": ") + sw.second.description + "\n";
     return res;
 }
 
@@ -23,8 +23,8 @@ ParametersParser::ParametersParser(ParameterList params,
             only_pos = true;
         else if (not only_pos and params[i][0] == '-')
         {
-            auto it = m_desc.options.find(params[i].substr(1_byte));
-            if (it == m_desc.options.end())
+            auto it = m_desc.switches.find(params[i].substr(1_byte));
+            if (it == m_desc.switches.end())
                 throw unknown_option(params[i]);
 
             if (it->second.takes_arg)
@@ -36,7 +36,7 @@ ParametersParser::ParametersParser(ParameterList params,
         }
         else
         {
-            if (desc.flags & ParameterDesc::Flags::OptionsOnlyAtStart)
+            if (desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart)
                 only_pos = true;
             m_positional_indices.push_back(i);
         }
@@ -48,7 +48,7 @@ ParametersParser::ParametersParser(ParameterList params,
 
 bool ParametersParser::has_option(const String& name) const
 {
-    kak_assert(m_desc.options.find(name) != m_desc.options.end());
+    kak_assert(m_desc.switches.find(name) != m_desc.switches.end());
     for (auto& param : m_params)
     {
         if (param[0] == '-' and param.substr(1_byte) == name)
@@ -63,8 +63,8 @@ bool ParametersParser::has_option(const String& name) const
 const String& ParametersParser::option_value(const String& name) const
 {
 #ifdef KAK_DEBUG
-    auto it = m_desc.options.find(name);
-    kak_assert(it != m_desc.options.end());
+    auto it = m_desc.switches.find(name);
+    kak_assert(it != m_desc.switches.end());
     kak_assert(it->second.takes_arg);
 #endif
 

@@ -360,7 +360,7 @@ int main(int argc, char* argv[])
         params.push_back(argv[i]);
 
     const ParameterDesc param_desc{
-        OptionMap{ { "c", { true, "connect to given session" } },
+        SwitchMap{ { "c", { true, "connect to given session" } },
                    { "e", { true, "execute argument on initialisation" } },
                    { "n", { false, "do not source kakrc files on startup" } },
                    { "s", { true, "set session name" } },
@@ -373,9 +373,9 @@ int main(int argc, char* argv[])
     catch (Kakoune::parameter_error& error)
     {
         printf("Error: %s\n"
-               "Valid options:\n"
+               "Valid switches:\n"
                "%s",
-               error.what(), generate_flags_doc(param_desc.options).c_str());
+               error.what(), generate_switches_doc(param_desc.switches).c_str());
        return -1;
     }
     catch (Kakoune::exception& error)

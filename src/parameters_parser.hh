@@ -34,22 +34,22 @@ struct wrong_argument_count : public parameter_error
     wrong_argument_count() : parameter_error("wrong argument count") {}
 };
 
-struct OptionDesc
+struct SwitchDesc
 {
     bool takes_arg;
     String description;
 };
 
-using OptionMap = std::unordered_map<String, OptionDesc>;
+using SwitchMap = std::unordered_map<String, SwitchDesc>;
 
-String generate_flags_doc(const OptionMap& opts);
+String generate_switches_doc(const SwitchMap& opts);
 
 struct ParameterDesc
 {
     enum class Flags
     {
         None = 0,
-        OptionsOnlyAtStart = 1,
+        SwitchesOnlyAtStart = 1,
     };
     friend constexpr Flags operator|(Flags lhs, Flags rhs)
     {
@@ -61,12 +61,12 @@ struct ParameterDesc
     }
 
     ParameterDesc() = default;
-    ParameterDesc(OptionMap options, Flags flags = Flags::None,
+    ParameterDesc(SwitchMap switches, Flags flags = Flags::None,
                   size_t min_positionals = 0, size_t max_positionals = -1)
-        : options(std::move(options)), flags(flags),
+        : switches(std::move(switches)), flags(flags),
           min_positionals(min_positionals), max_positionals(max_positionals) {}
 
-    OptionMap options;
+    SwitchMap switches;
     Flags flags = Flags::None;
     size_t min_positionals = 0;
     size_t max_positionals = -1;

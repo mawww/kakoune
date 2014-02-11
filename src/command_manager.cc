@@ -355,11 +355,11 @@ std::pair<String, String> CommandManager::command_info(const String& command_lin
         return res;
 
     res.first = cmd->first;
-    auto& opts = cmd->second.param_desc.options;
-    if (not opts.empty())
+    auto& switches = cmd->second.param_desc.switches;
+    if (not switches.empty())
     {
-        res.second += "Flags:\n";
-        res.second += generate_flags_doc(opts);
+        res.second += "Switches:\n";
+        res.second += generate_switches_doc(switches);
     }
 
     return res;
