@@ -231,16 +231,8 @@ int run_client(const String& session, const String& init_command)
     return 0;
 }
 
-int kakoune(memoryview<String> params)
+int kakoune(const ParametersParser& parser)
 {
-    const ParameterDesc param_desc{
-        OptionMap{ { "c", true },
-                   { "e", true },
-                   { "n", false },
-                   { "s", true },
-                   { "d", false } }
-    };
-    ParametersParser parser(params, param_desc);
     String init_command;
     if (parser.has_option("e"))
         init_command = parser.option_value("e");
@@ -356,31 +348,34 @@ int kakoune(memoryview<String> params)
 
 int main(int argc, char* argv[])
 {
+    setlocale(LC_ALL, "");
+
+    signal(SIGSEGV, signal_handler);
+    signal(SIGFPE,  signal_handler);
+    signal(SIGQUIT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    std::vector<String> params;
+    for (size_t i = 1; i < argc; ++i)
+        params.push_back(argv[i]);
+
+    const ParameterDesc param_desc{
+        OptionMap{ { "c", { true, "connect to given session" } },
+                   { "e", { true, "execute argument on initialisation" } },
+                   { "n", { false, "do not source kakrc files on startup" } },
+                   { "s", { true, "set session name" } },
+                   { "d", { false, "run as a headless session (requires -s)" } } }
+    };
     try
     {
-        setlocale(LC_ALL, "");
-
-        signal(SIGSEGV, signal_handler);
-        signal(SIGFPE,  signal_handler);
-        signal(SIGQUIT, signal_handler);
-        signal(SIGTERM, signal_handler);
-
-        std::vector<String> params;
-        for (size_t i = 1; i < argc; ++i)
-            params.push_back(argv[i]);
-
-        kakoune(params);
+        kakoune(ParametersParser(params, param_desc));
     }
     catch (Kakoune::parameter_error& error)
     {
         printf("Error: %s\n"
                "Valid options:\n"
-               "    -e <commands>: execute commands on initialisation\n"
-               "    -c <session>: connect to the given session\n"
-               "    -s <session>: set session name\n"
-               "    -d: run as a headless session (requires -s)\n"
-               "    -n: do not source kakrc files on startup\n",
-               error.what());
+               "%s",
+               error.what(), generate_flags_doc(param_desc.options).c_str());
        return -1;
     }
     catch (Kakoune::exception& error)

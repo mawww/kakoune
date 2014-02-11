@@ -34,7 +34,15 @@ struct wrong_argument_count : public parameter_error
     wrong_argument_count() : parameter_error("wrong argument count") {}
 };
 
-using OptionMap = std::unordered_map<String, bool>;
+struct OptionDesc
+{
+    bool takes_arg;
+    String description;
+};
+
+using OptionMap = std::unordered_map<String, OptionDesc>;
+
+String generate_flags_doc(const OptionMap& opts);
 
 struct ParameterDesc
 {

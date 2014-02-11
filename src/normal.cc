@@ -418,6 +418,19 @@ void command(Context& context, int)
         ":", get_color("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
         [](const String& cmdline, PromptEvent event, Context& context) {
+            if (context.has_ui())
+            {
+                context.ui().info_hide();
+                if (event == PromptEvent::Change)
+                {
+                    auto info = CommandManager::instance().command_info(cmdline);
+                    ColorPair col = get_color("Information");
+                    DisplayCoord pos = context.window().dimensions();
+                    pos.column -= 1;
+                    if (not info.first.empty() and not info.second.empty())
+                        context.ui().info_show(info.first, info.second, pos , col, MenuStyle::Prompt);
+                }
+            }
             if (event == PromptEvent::Validate)
                 CommandManager::instance().execute(cmdline, context);
         });

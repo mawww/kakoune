@@ -67,6 +67,8 @@ public:
     Completions complete(const Context& context, CompletionFlags flags,
                          const String& command_line, ByteCount cursor_pos);
 
+    std::pair<String, String> command_info(const String& command_line) const;
+
     bool command_defined(const String& command_name) const;
 
     void register_command(String command_name, Command command,

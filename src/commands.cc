@@ -85,7 +85,8 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
 }
 
 static const ParameterDesc edit_params{
-    OptionMap{ { "scratch", false }, { "fifo", true } },
+    OptionMap{ { "scratch", { false, "create a scratch buffer, not linked to a file" } },
+               { "fifo", { true, "create a buffer reading its content from a named fifo" } } },
     ParameterDesc::Flags::None, 1, 3
 };
 
@@ -242,7 +243,8 @@ void define_highlighter(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc add_highlighter_params{
-    OptionMap{ { "group", true }, { "def-group", true } },
+    OptionMap{ { "group", { true, "add highlighter to named group" } },
+               { "def-group", { true, "add highlighter to reusable defined group" } } },
     ParameterDesc::Flags::None, 1
 };
 
@@ -275,7 +277,8 @@ void add_highlighter(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc rm_highlighter_params{
-    OptionMap{ { "group", true } }, ParameterDesc::Flags::None, 1, 1
+    OptionMap{ { "group", { true, "remove highlighter from given group" } } },
+    ParameterDesc::Flags::None, 1, 1
 };
 
 void rm_highlighter(const ParametersParser& parser, Context& context)
@@ -300,7 +303,7 @@ static HookManager& get_hook_manager(const String& scope, Context& context)
 }
 
 static const ParameterDesc add_hook_params{
-    OptionMap{ { "id", true } }, ParameterDesc::Flags::None, 4, 4
+    OptionMap{ { "id", { true, "set hook id" } } }, ParameterDesc::Flags::None, 4, 4
 };
 
 void add_hook(const ParametersParser& parser, Context& context)
@@ -347,12 +350,12 @@ std::vector<String> params_to_shell(const ParametersParser& parser)
 }
 
 static const ParameterDesc define_command_params{
-    OptionMap{ { "env-params", false },
-               { "shell-params", false },
-               { "allow-override", false },
-               { "file-completion", false },
-               { "hidden", false },
-               { "shell-completion", true } },
+    OptionMap{ { "env-params", { false, "pass parameters as env variables param0..paramN" } },
+               { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
+               { "allow-override", { false, "allow overriding existing command" } },
+               { "file-completion", { false, "complete parameters using filename completion" } },
+               { "hidden", { false, "do not display the command as completion candidate" } },
+               { "shell-completion", { true, "complete the parameters using the given shell-script" } } },
     ParameterDesc::Flags::None,
     2, 2
 };
@@ -431,7 +434,7 @@ void define_command(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc echo_message_params{
-    { { "color", true } },
+    OptionMap{ { "color", { true, "set message color" } } },
     ParameterDesc::Flags::OptionsOnlyAtStart
 };
 
@@ -495,7 +498,7 @@ static OptionManager& get_options(const String& scope, const Context& context)
 
 
 static const ParameterDesc set_option_params{
-    { { "add", false } },
+    OptionMap{ { "add", { false, "add to option rather than replacing it" } } },
     ParameterDesc::Flags::OptionsOnlyAtStart,
     3, 3
 };
@@ -510,7 +513,7 @@ void set_option(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc declare_option_params{
-    { { "hidden", false } },
+    OptionMap{ { "hidden", { false, "do not display option name when completing" } } },
     ParameterDesc::Flags::OptionsOnlyAtStart,
     2, 3
 };
@@ -585,8 +588,10 @@ void map_key(const ParametersParser& parser, Context& context)
 }
 
 const ParameterDesc context_wrap_params = {
-    { { "client", true }, { "try-client", true },
-      { "draft", false }, { "itersel", false } },
+    OptionMap{ { "client", { true, "run in given client context" } },
+               { "try-client", { true, "run in given client context if it exists, or else in the current one" } },
+               { "draft", { false, "run in a disposable context" } },
+               { "itersel", { false, "run once for each selection with that selection as the only one" } } },
     ParameterDesc::Flags::OptionsOnlyAtStart, 1
 };
 
@@ -661,8 +666,10 @@ void eval_string(const ParametersParser& parser, Context& context)
     });
 }
 
-static const ParameterDesc menu_params{ { { "auto-single", false },
-                                { "select-cmds", false } } };
+static const ParameterDesc menu_params{
+    OptionMap{ { "auto-single", { false, "instantly validate if only one item is available" } },
+               { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
+};
 
 void menu(const ParametersParser& parser, Context& context)
 {
@@ -700,7 +707,8 @@ void menu(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc info_params{
-    { { "anchor", true }, { "title", true } },
+    OptionMap{ { "anchor", { true, "set info anchoring (left, right, or cursor)" } },
+               { "title", { true, "set info title" } } },
     ParameterDesc::Flags::None, 0, 1
 };
 

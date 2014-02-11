@@ -3,6 +3,14 @@
 namespace Kakoune
 {
 
+String generate_flags_doc(const OptionMap& opts)
+{
+    String res;
+    for (auto& opt : opts)
+        res += " -" + opt.first + (opt.second.takes_arg ? " <arg>: " : ": ") + opt.second.description + "\n";
+    return res;
+}
+
 ParametersParser::ParametersParser(ParameterList params,
                                    const ParameterDesc& desc)
     : m_params(params),
@@ -19,7 +27,7 @@ ParametersParser::ParametersParser(ParameterList params,
             if (it == m_desc.options.end())
                 throw unknown_option(params[i]);
 
-            if (it->second)
+            if (it->second.takes_arg)
             {
                 ++i;
                 if (i == params.size() or params[i][0] == '-')
@@ -57,7 +65,7 @@ const String& ParametersParser::option_value(const String& name) const
 #ifdef KAK_DEBUG
     auto it = m_desc.options.find(name);
     kak_assert(it != m_desc.options.end());
-    kak_assert(it->second == true);
+    kak_assert(it->second.takes_arg);
 #endif
 
     for (size_t i = 0; i < m_params.size(); ++i)

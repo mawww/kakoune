@@ -336,6 +336,35 @@ void CommandManager::execute(const String& command_line,
     execute_single_command(params, context);
 }
 
+std::pair<String, String> CommandManager::command_info(const String& command_line) const
+{
+    TokenList tokens = parse<false>(command_line);
+    size_t cmd_idx = 0;
+    for (size_t i = 0; i < tokens.size(); ++i)
+    {
+        if (tokens[i].type() == Token::Type::CommandSeparator)
+            cmd_idx = i+1;
+    }
+
+    std::pair<String, String> res;
+    if (cmd_idx == tokens.size() or tokens[cmd_idx].type() != Token::Type::Raw)
+        return res;
+
+    auto cmd = find_command(tokens[cmd_idx].content());
+    if (cmd == m_commands.end())
+        return res;
+
+    res.first = cmd->first;
+    auto& opts = cmd->second.param_desc.options;
+    if (not opts.empty())
+    {
+        res.second += "Flags:\n";
+        res.second += generate_flags_doc(opts);
+    }
+
+    return res;
+}
+
 Completions CommandManager::complete(const Context& context, CompletionFlags flags,
                                      const String& command_line, ByteCount cursor_pos)
 {
