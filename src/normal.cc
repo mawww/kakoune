@@ -421,7 +421,7 @@ void command(Context& context, int)
             if (context.has_ui())
             {
                 context.ui().info_hide();
-                if (event == PromptEvent::Change)
+                if (event == PromptEvent::Change and context.options()["autoinfo"].get<bool>())
                 {
                     auto info = CommandManager::instance().command_info(cmdline);
                     ColorPair col = get_color("Information");
