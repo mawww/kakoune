@@ -90,6 +90,8 @@ static const ParameterDesc edit_params{
     ParameterDesc::Flags::None, 1, 3
 };
 
+static const char* edit_desc = "edit <switches> <filename>: open the given filename in a buffer";
+
 template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context)
 {
@@ -137,6 +139,8 @@ static const ParameterDesc write_params{
     ParameterDesc::Flags::None, 0, 1
 };
 
+static const char* write_desc = "write [filename]: write the current buffer to it's file or to [filename] if specified";
+
 void write_buffer(const ParametersParser& parser, Context& context)
 {
     Buffer& buffer = context.buffer();
@@ -155,6 +159,7 @@ static const ParameterDesc no_params{
     ParameterDesc::Flags::None, 0, 0
 };
 
+static const char* write_all_desc = "write all buffers that are associated to a file";
 
 void write_all_buffers(const ParametersParser& parser, Context& context)
 {
@@ -164,6 +169,8 @@ void write_all_buffers(const ParametersParser& parser, Context& context)
             write_buffer_to_file(*buffer, buffer->name());
     }
 }
+
+static const char* quit_desc = "quit current client, and the kakoune session if the client is the last (if not running in daemon mode)";
 
 template<bool force>
 void quit(const ParametersParser& parser, Context& context)
@@ -193,6 +200,8 @@ void quit(const ParametersParser& parser, Context& context)
     throw client_removed{};
 }
 
+static const char* write_and_quit_desc = "write current buffer and quit current client";
+
 template<bool force>
 void write_and_quit(const ParametersParser& parser, Context& context)
 {
@@ -201,6 +210,8 @@ void write_and_quit(const ParametersParser& parser, Context& context)
 }
 
 static const ParameterDesc single_name_params{ SwitchMap{}, ParameterDesc::Flags::None, 1, 1 };
+
+static const char* show_buffer_desc = "buffer <name>: set buffer to edit in current client";
 
 void show_buffer(const ParametersParser& parser, Context& context)
 {
@@ -216,6 +227,8 @@ void show_buffer(const ParametersParser& parser, Context& context)
 
 static const ParameterDesc single_opt_name_params{ SwitchMap{}, ParameterDesc::Flags::None, 0, 1 };
 
+static const char* delete_buffer_desc = "delbuf [name]: delete the current buffer or the buffer named <name> if given";
+
 template<bool force>
 void delete_buffer(const ParametersParser& parser, Context& context)
 {
@@ -230,11 +243,15 @@ void delete_buffer(const ParametersParser& parser, Context& context)
     manager.delete_buffer(buffer);
 }
 
+static const char* set_buffer_name_desc = "namebuf <name>: change current buffer name";
+
 void set_buffer_name(const ParametersParser& parser, Context& context)
 {
     if (not context.buffer().set_name(parser[0]))
         throw runtime_error("unable to change buffer name to " + parser[0]);
 }
+
+static const char* define_highlighter_desc = "defhl <name>: define a new reusable highlighter";
 
 void define_highlighter(const ParametersParser& parser, Context& context)
 {
@@ -245,8 +262,10 @@ void define_highlighter(const ParametersParser& parser, Context& context)
 static const ParameterDesc add_highlighter_params{
     SwitchMap{ { "group", { true, "add highlighter to named group" } },
                { "def-group", { true, "add highlighter to reusable defined group" } } },
-    ParameterDesc::Flags::None, 1
+    ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
+
+static const char* add_highlighter_desc = "addhl <switches> <type> <type params>...: add an highlighter to current window";
 
 void add_highlighter(const ParametersParser& parser, Context& context)
 {
@@ -281,6 +300,8 @@ static const ParameterDesc rm_highlighter_params{
     ParameterDesc::Flags::None, 1, 1
 };
 
+static const char* rm_highlighter_desc = "rmhl <switches> <name>: remove highlighter <name> from current window";
+
 void rm_highlighter(const ParametersParser& parser, Context& context)
 {
     HighlighterGroup& window_hl = context.window().highlighters();
@@ -306,6 +327,8 @@ static const ParameterDesc add_hook_params{
     SwitchMap{ { "id", { true, "set hook id" } } }, ParameterDesc::Flags::None, 4, 4
 };
 
+static const char* add_hook_desc = "hook <switches> <scope> <hook_name> <command>: add <command> to be executed on hook <hook_name> in <scope> context";
+
 void add_hook(const ParametersParser& parser, Context& context)
 {
     // copy so that the lambda gets a copy as well
@@ -323,6 +346,8 @@ void add_hook(const ParametersParser& parser, Context& context)
 static const ParameterDesc rm_hooks_params{
     SwitchMap{}, ParameterDesc::Flags::None, 2, 2
 };
+
+static const char* rm_hooks_desc = "rmhooks <id>: remove all hooks that whose id is <id>";
 
 void rm_hooks(const ParametersParser& parser, Context& context)
 {
@@ -359,6 +384,8 @@ static const ParameterDesc define_command_params{
     ParameterDesc::Flags::None,
     2, 2
 };
+
+static const char* define_command_desc = "def <switches> <name> <commands>: define a command named <name> corresponding to <commands>";
 
 void define_command(const ParametersParser& parser, Context& context)
 {
@@ -430,13 +457,15 @@ void define_command(const ParametersParser& parser, Context& context)
             return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n') };
         };
     }
-    CommandManager::instance().register_command(cmd_name, cmd, desc, flags, completer);
+    CommandManager::instance().register_command(cmd_name, cmd, "", desc, flags, completer);
 }
 
 static const ParameterDesc echo_message_params{
     SwitchMap{ { "color", { true, "set message color" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart
 };
+
+static const char* echo_message_desc = "echo <params>...: display given parameters in the status line";
 
 void echo_message(const ParametersParser& parser, Context& context)
 {
@@ -453,6 +482,8 @@ static const ParameterDesc write_debug_message_params{
     ParameterDesc::Flags::SwitchesOnlyAtStart
 };
 
+static const char* write_debug_message_desc = "debug <params>...: write given parameters in the debug buffer";
+
 void write_debug_message(const ParametersParser& parser, Context&)
 {
     String message;
@@ -466,6 +497,8 @@ static const ParameterDesc exec_commands_in_file_params{
     ParameterDesc::Flags::None,
     1, 1
 };
+
+static const char* exec_commands_in_file_desc = "source <filename>: execute commands contained in <filename>";
 
 void exec_commands_in_file(const ParametersParser& parser,
                            Context& context)
@@ -503,6 +536,8 @@ static const ParameterDesc set_option_params{
     3, 3
 };
 
+static const char* set_option_desc = "set <switches> <scope> <name> <value>: set option <name> in <scope> to <value>";
+
 void set_option(const ParametersParser& parser, Context& context)
 {
     Option& opt = get_options(parser[0], context).get_local_option(parser[1]);
@@ -517,6 +552,17 @@ static const ParameterDesc declare_option_params{
     ParameterDesc::Flags::SwitchesOnlyAtStart,
     2, 3
 };
+
+static const char* declare_option_desc =
+"decl <type> <name> [value]: declare option <name> of type <type>, with initial value <value> if given\n"
+"Available types:\n"
+"    int: integer\n"
+"    bool: boolean (true/false or yes/no)\n"
+"    str: character string\n"
+"    regex: regular expression\n"
+"    int-list: list of integers\n"
+"    str-list: list of character strings\n"
+"    line-flag-list: list of line flags\n";
 
 void declare_option(const ParametersParser& parser, Context& context)
 {
@@ -573,6 +619,14 @@ KeymapMode parse_keymap_mode(const String& str)
 static const ParameterDesc map_key_params{
     SwitchMap{}, ParameterDesc::Flags::None, 4, 4
 };
+
+static const char* map_key_desc =
+"map <mode> <key> <keys>: map <key> to <keys> in given mode.\n"
+"Valid modes:\n"
+"    normal\n"
+"    insert\n"
+"    menu\n"
+"    prompt\n";
 
 void map_key(const ParametersParser& parser, Context& context)
 {
@@ -643,6 +697,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         real_context->window().forget_timestamp();
 }
 
+static const char* exec_string_desc = "exec <switches> <keys>: execute given keys as if entered by user";
+
 void exec_string(const ParametersParser& parser, Context& context)
 {
     context_wrap(parser, context, [](const ParametersParser& parser, Context& context) {
@@ -655,6 +711,8 @@ void exec_string(const ParametersParser& parser, Context& context)
         exec_keys(keys, context);
     });
 }
+
+static const char* eval_string_desc = "eval <switches> <keys>: execute commands as if entered by user";
 
 void eval_string(const ParametersParser& parser, Context& context)
 {
@@ -670,6 +728,9 @@ static const ParameterDesc menu_params{
     SwitchMap{ { "auto-single", { false, "instantly validate if only one item is available" } },
                { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
 };
+
+static const char* menu_desc = "menu <switches> <name1> <commands1> <name2> <commands2>...: display a menu and execute commands for the selected item";
+
 
 void menu(const ParametersParser& parser, Context& context)
 {
@@ -712,6 +773,8 @@ static const ParameterDesc info_params{
     ParameterDesc::Flags::None, 0, 1
 };
 
+static const char* info_desc = "info <switches> <params>...: display an info box with the params as content";
+
 void info(const ParametersParser& parser, Context& context)
 {
     context.ui().info_hide();
@@ -743,6 +806,8 @@ static const ParameterDesc try_catch_params{
     SwitchMap{}, ParameterDesc::Flags::None, 1, 3
 };
 
+static const char* try_catch_desc = "try <command> [catch <error_command>]: execute command in current context, and if an error is raised, execute <error_command> if specified.\nThe error is not propagated further.";
+
 void try_catch(const ParametersParser& parser, Context& context)
 {
     if (parser.positional_count() == 2)
@@ -768,6 +833,8 @@ static const ParameterDesc define_color_alias_params{
     SwitchMap{}, ParameterDesc::Flags::None, 2, 2
 };
 
+static const char* define_color_alias_desc = "colalias <name> <color>: set <name> to refer to color <color> (which can be an alias itself)";
+
 void define_color_alias(const ParametersParser& parser, Context& context)
 {
     ColorRegistry::instance().register_alias(parser[0], parser[1], true);
@@ -776,6 +843,8 @@ void define_color_alias(const ParametersParser& parser, Context& context)
 static const ParameterDesc set_client_name_params{
     SwitchMap{}, ParameterDesc::Flags::None, 1, 1
 };
+
+static const char* set_client_name_desc = "nameclient <name>: set current client name to <name>";
 
 void set_client_name(const ParametersParser& parser, Context& context)
 {
@@ -789,6 +858,8 @@ static const ParameterDesc set_register_params{
     SwitchMap{}, ParameterDesc::Flags::None, 2, 2
 };
 
+static const char* set_register_desc = "reg <name> <value>: set register <name> to <value>";
+
 void set_register(const ParametersParser& parser, Context& context)
 {
     if (parser[0].length() != 1)
@@ -799,6 +870,8 @@ void set_register(const ParametersParser& parser, Context& context)
 static const ParameterDesc change_working_directory_params{
     SwitchMap{}, ParameterDesc::Flags::None, 1, 1
 };
+
+static const char* change_working_directory_desc = "cd <dir>: change server working directory to <dir>";
 
 void change_working_directory(const ParametersParser& parser, Context&)
 {
@@ -884,7 +957,7 @@ void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
 
-    cm.register_commands({"nop"}, [](const ParametersParser&, Context&){}, {});
+    cm.register_commands({"nop"}, [](const ParametersParser&, Context&){}, "do nothing", {});
 
     PerArgumentCommandCompleter filename_completer({
          [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
@@ -893,31 +966,31 @@ void register_commands()
                                                  context.options()["ignored_files"].get<Regex>(),
                                                  cursor_pos) }; }
     });
-    cm.register_commands({ "edit", "e" }, edit<false>, edit_params, CommandFlags::None, filename_completer);
-    cm.register_commands({ "edit!", "e!" }, edit<true>, edit_params, CommandFlags::None, filename_completer);
-    cm.register_commands({ "write", "w" }, write_buffer, write_params, CommandFlags::None, filename_completer);
-    cm.register_commands({ "writeall", "wa" }, write_all_buffers, no_params);
-    cm.register_commands({ "quit", "q" }, quit<false>, no_params);
-    cm.register_commands({ "quit!", "q!" }, quit<true>, no_params);
-    cm.register_command("wq", write_and_quit<false>, no_params);
-    cm.register_command("wq!", write_and_quit<true>, no_params);
+    cm.register_commands({ "edit", "e" }, edit<false>, edit_desc, edit_params, CommandFlags::None, filename_completer);
+    cm.register_commands({ "edit!", "e!" }, edit<true>, edit_desc, edit_params, CommandFlags::None, filename_completer);
+    cm.register_commands({ "write", "w" }, write_buffer, write_desc, write_params, CommandFlags::None, filename_completer);
+    cm.register_commands({ "writeall", "wa" }, write_all_buffers, write_all_desc, no_params);
+    cm.register_commands({ "quit", "q" }, quit<false>, quit_desc, no_params);
+    cm.register_commands({ "quit!", "q!" }, quit<true>, quit_desc, no_params);
+    cm.register_command("wq", write_and_quit<false>, write_and_quit_desc, no_params);
+    cm.register_command("wq!", write_and_quit<true>, write_and_quit_desc, no_params);
 
     PerArgumentCommandCompleter buffer_completer({
         [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
         { return Completions{ 0_byte, prefix.length(),
                               BufferManager::instance().complete_buffername(prefix, cursor_pos) }; }
     });
-    cm.register_commands({ "buffer", "b" }, show_buffer, single_name_params, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "delbuf", "db" }, delete_buffer<false>, single_opt_name_params, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "delbuf!", "db!" }, delete_buffer<true>, single_opt_name_params, CommandFlags::None, buffer_completer);
-    cm.register_commands({ "namebuf", "nb" }, set_buffer_name, single_name_params);
+    cm.register_commands({ "buffer", "b" }, show_buffer, show_buffer_desc, single_name_params, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "delbuf", "db" }, delete_buffer<false>, delete_buffer_desc, single_opt_name_params, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "delbuf!", "db!" }, delete_buffer<true>, delete_buffer_desc, single_opt_name_params, CommandFlags::None, buffer_completer);
+    cm.register_commands({ "namebuf", "nb" }, set_buffer_name, set_buffer_name_desc, single_name_params);
 
     auto get_highlighters = [](const Context& c) -> HighlighterGroup& { return c.window().highlighters(); };
-    cm.register_commands({ "addhl", "ah" }, add_highlighter, add_highlighter_params, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
-    cm.register_commands({ "rmhl", "rh" }, rm_highlighter, rm_highlighter_params, CommandFlags::None, group_rm_completer(get_highlighters));
-    cm.register_commands({ "defhl", "dh" }, define_highlighter, single_name_params);
+    cm.register_commands({ "addhl", "ah" }, add_highlighter, add_highlighter_desc, add_highlighter_params, CommandFlags::None, group_add_completer<HighlighterRegistry>(get_highlighters));
+    cm.register_commands({ "rmhl", "rh" }, rm_highlighter, rm_highlighter_desc, rm_highlighter_params, CommandFlags::None, group_rm_completer(get_highlighters));
+    cm.register_commands({ "defhl", "dh" }, define_highlighter, define_highlighter_desc, single_name_params);
 
-    cm.register_command("hook", add_hook, add_hook_params, CommandFlags::None,
+    cm.register_command("hook", add_hook, add_hook_desc, add_hook_params, CommandFlags::None,
                         [](const Context& context, CompletionFlags flags,
                            CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
                         {
@@ -931,24 +1004,24 @@ void register_commands()
                             }
                             return Completions{};
                         });
-    cm.register_command("rmhooks", rm_hooks, rm_hooks_params);
+    cm.register_command("rmhooks", rm_hooks, rm_hooks_desc, rm_hooks_params);
 
-    cm.register_command("source", exec_commands_in_file, exec_commands_in_file_params, CommandFlags::None, filename_completer);
+    cm.register_command("source", exec_commands_in_file, exec_commands_in_file_desc, exec_commands_in_file_params, CommandFlags::None, filename_completer);
 
-    cm.register_command("exec", exec_string, context_wrap_params);
-    cm.register_command("eval", eval_string, context_wrap_params);
-    cm.register_command("menu", menu, menu_params);
-    cm.register_command("info", info, info_params);
-    cm.register_command("try",  try_catch, try_catch_params);
-    cm.register_command("reg", set_register, set_register_params);
+    cm.register_command("exec", exec_string, exec_string_desc, context_wrap_params);
+    cm.register_command("eval", eval_string, eval_string_desc, context_wrap_params);
+    cm.register_command("menu", menu, menu_desc, menu_params);
+    cm.register_command("info", info, info_desc, info_params);
+    cm.register_command("try",  try_catch, try_catch_desc, try_catch_params);
+    cm.register_command("reg", set_register, set_register_desc, set_register_params);
 
-    cm.register_command("def",  define_command, define_command_params);
-    cm.register_command("decl", declare_option, declare_option_params);
+    cm.register_command("def",  define_command, define_command_desc, define_command_params);
+    cm.register_command("decl", declare_option, declare_option_desc, declare_option_params);
 
-    cm.register_command("echo", echo_message, echo_message_params);
-    cm.register_command("debug", write_debug_message, write_debug_message_params);
+    cm.register_command("echo", echo_message, echo_message_desc, echo_message_params);
+    cm.register_command("debug", write_debug_message, write_debug_message_desc, write_debug_message_params);
 
-    cm.register_command("set", set_option, set_option_params, CommandFlags::None,
+    cm.register_command("set", set_option, set_option_desc, set_option_params, CommandFlags::None,
                         [](const Context& context, CompletionFlags,
                            CommandParameters params, size_t token_to_complete,
                            ByteCount pos_in_token) -> Completions
@@ -965,10 +1038,10 @@ void register_commands()
                             return Completions{};
                         } );
 
-    cm.register_commands({ "colalias", "ca" }, define_color_alias, define_color_alias_params);
-    cm.register_commands({ "nameclient", "nc" }, set_client_name, set_client_name_params);
+    cm.register_commands({ "colalias", "ca" }, define_color_alias, define_color_alias_desc, define_color_alias_params);
+    cm.register_commands({ "nameclient", "nc" }, set_client_name, set_client_name_desc, set_client_name_params);
 
-    cm.register_command("cd", change_working_directory, change_working_directory_params, CommandFlags::None, filename_completer);
-    cm.register_command("map", map_key, map_key_params);
+    cm.register_command("cd", change_working_directory, change_working_directory_desc, change_working_directory_params, CommandFlags::None, filename_completer);
+    cm.register_command("map", map_key, map_key_desc, map_key_params);
 }
 }

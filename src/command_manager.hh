@@ -72,11 +72,13 @@ public:
     bool command_defined(const String& command_name) const;
 
     void register_command(String command_name, Command command,
+                          String docstring,
                           ParameterDesc param_desc,
                           CommandFlags flags = CommandFlags::None,
                           CommandCompleter completer = CommandCompleter());
 
     void register_commands(memoryview<String> command_names, Command command,
+                           String docstring,
                            ParameterDesc param_desc,
                            CommandFlags flags = CommandFlags::None,
                            CommandCompleter completer = CommandCompleter());
@@ -88,6 +90,7 @@ private:
     struct CommandDescriptor
     {
         Command command;
+        String docstring;
         ParameterDesc param_desc;
         CommandFlags flags;
         CommandCompleter completer;

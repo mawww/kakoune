@@ -18,21 +18,23 @@ bool CommandManager::command_defined(const String& command_name) const
 
 void CommandManager::register_command(String command_name,
                                       Command command,
+                                      String docstring,
                                       ParameterDesc param_desc,
                                       CommandFlags flags,
                                       CommandCompleter completer)
 {
-    m_commands[command_name] = { std::move(command), std::move(param_desc), flags, std::move(completer) };
+    m_commands[command_name] = { std::move(command), std::move(docstring), std::move(param_desc), flags, std::move(completer) };
 }
 
 void CommandManager::register_commands(memoryview<String> command_names,
                                        Command command,
+                                       String docstring,
                                        ParameterDesc param_desc,
                                        CommandFlags flags,
                                        CommandCompleter completer)
 {
     kak_assert(not command_names.empty());
-    m_commands[command_names[0]] = { std::move(command), std::move(param_desc), flags, completer };
+    m_commands[command_names[0]] = { std::move(command), std::move(docstring), std::move(param_desc), flags, completer };
     for (size_t i = 1; i < command_names.size(); ++i)
         m_aliases[command_names[i]] = command_names[0];
 }
@@ -355,6 +357,8 @@ std::pair<String, String> CommandManager::command_info(const String& command_lin
         return res;
 
     res.first = cmd->first;
+    if (not cmd->second.docstring.empty())
+        res.second += cmd->second.docstring + "\n";
     auto& switches = cmd->second.param_desc.switches;
     if (not switches.empty())
     {
