@@ -314,6 +314,7 @@ object you want.
  * _a_, _<_ or _>_: select the enclosing <> block
  * _"_: select the enclosing double quoted string
  * _'_: select the enclosing single quoted string
+ * _`_: select the enclosing grave quoted string
  * _w_: select the whole word
  * _W_: select the whole WORD
  * _s_: select the sentence

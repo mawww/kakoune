@@ -855,6 +855,7 @@ void select_object(Context& context, int param)
             { { '<', '>' }, 'a' },
             { { '"', '"' }, 'Q' },
             { { '\'', '\'' }, 'q' },
+            { { '`', '`' }, 'g' },
         };
         for (auto& sur : surrounding_pairs)
         {
@@ -870,6 +871,7 @@ void select_object(Context& context, int param)
     "a,<,>:  angle block      \n"
     "\",Q:  double quote string\n"
     "',q:  single quote string\n"
+    "`,g:  grave quote string \n"
     "w:    word               \n"
     "W:    WORD               \n"
     "s:    sentence           \n"
