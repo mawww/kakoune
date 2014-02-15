@@ -779,7 +779,8 @@ const CommandDesc set_option_cmd = {
 const CommandDesc declare_option_cmd = {
     "decl",
     nullptr,
-    "decl <type> <name> [value]: declare option <name> of type <type>, with initial value <value> if given\n"
+    "decl <type> <name> [value]: declare option <name> of type <type>.\n"
+    "set its initial value to <value> if given\n"
     "Available types:\n"
     "    int: integer\n"
     "    bool: boolean (true/false or yes/no)\n"
