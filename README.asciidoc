@@ -789,6 +789,7 @@ def can also takes some flags:
  * +-allow-override+: allow the new command to replace an exisiting one
                       with the same name.
  * +-hidden+: do not show the command in command name completions
+ * +-docstring+: define the documentation string for the command
 
 Using shell expansion permits to define complex commands or to access
 Kakoune state:

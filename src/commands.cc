@@ -588,6 +588,10 @@ void define_command(const ParametersParser& parser, Context& context)
     if (parser.has_option("hidden"))
         flags = CommandFlags::Hidden;
 
+    String docstring;
+    if (parser.has_option("docstring"))
+        docstring = parser.option_value("docstring");
+
     String commands = parser[1];
     Command cmd;
     ParameterDesc desc;
@@ -645,7 +649,7 @@ void define_command(const ParametersParser& parser, Context& context)
             return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n') };
         };
     }
-    CommandManager::instance().register_command(cmd_name, cmd, "", desc, flags, completer);
+    CommandManager::instance().register_command(cmd_name, cmd, std::move(docstring), desc, flags, completer);
 }
 
 const CommandDesc define_command_cmd = {
@@ -658,6 +662,7 @@ const CommandDesc define_command_cmd = {
                    { "allow-override", { false, "allow overriding existing command" } },
                    { "file-completion", { false, "complete parameters using filename completion" } },
                    { "hidden", { false, "do not display the command as completion candidate" } },
+                   { "docstring", { true, "set docstring for command" } },
                    { "shell-completion", { true, "complete the parameters using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
