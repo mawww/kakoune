@@ -23,7 +23,7 @@ hook global WinSetOption filetype=make %{
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }
 
-def errjump %{
+def errjump -docstring 'Jump to error location' %{
     try %{
         exec gll<a-?> "Entering directory" <ret>
         exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l

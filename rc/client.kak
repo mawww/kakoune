@@ -6,7 +6,8 @@ decl str termcmd %sh{
     fi
 }
 
-def new -shell-params %{ nop %sh{
+def new -docstring 'create a new kak client for current session' \
+        -shell-params %{ nop %sh{
     if (( $# != 0 )); then kakoune_params="-e '$@'"; fi
     setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null >& /dev/null &
 }}

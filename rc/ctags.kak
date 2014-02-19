@@ -5,6 +5,7 @@
 
 def -shell-params \
     -shell-completion 'readtags -p "$1" | cut -f 1 | sort | uniq' \
+    -docstring 'jump to tag definition' \
     tag \
     %{ %sh{
         if [[ -z "$1" ]]; then tagname=${kak_selection}; else tagname=$1; fi
@@ -59,7 +60,7 @@ def ctags-disable-autoinfo %{ rmhooks window ctags-autoinfo }
 
 decl str ctagsopts "-R ."
 
-def gentags %{
+def gentags -docstring 'generate tag file asynchronously' %{
     echo -color Information "launching tag generation in the background"
     %sh{ (
         if ctags -f .tags.kaktmp ${kak_opt_ctagsopts}; then

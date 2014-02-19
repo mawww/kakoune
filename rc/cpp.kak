@@ -74,7 +74,7 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) _cpp_insert_include_guards
 
 decl str-list alt_dirs ".;.."
 
-def alt %{ %sh{
+def alt -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     shopt -s extglob
     alt_dirs=${kak_opt_alt_dirs//;/ }
     file=$(basename ${kak_buffile})
