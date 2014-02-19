@@ -415,6 +415,8 @@ Some parameters provide a way to change the context of execution:
  * +-itersel+ (requires +-draft+): execute once per selection, in a
      context with only the considered selection. This permits to avoid
      cases where the selections may get merged.
+ * +-buffer <names>+: execute in the context of each buffers in the
+     comma separated list <names>
 
 The execution stops when the last key/command is reached, or an error
 is raised.

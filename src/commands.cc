@@ -878,6 +878,7 @@ const CommandDesc map_key_cmd = {
 const ParameterDesc context_wrap_params = {
     SwitchMap{ { "client", { true, "run in given client context" } },
                { "try-client", { true, "run in given client context if it exists, or else in the current one" } },
+               { "buffer", { true, "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft", { false, "run in a disposable context" } },
                { "itersel", { false, "run once for each selection with that selection as the only one" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
@@ -887,6 +888,18 @@ template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
     ClientManager& cm = ClientManager::instance();
+    if (parser.has_option("buffer"))
+    {
+        auto names = split(parser.option_value("buffer"), ',');
+        for (auto& name : names)
+        {
+            Buffer& buffer = BufferManager::instance().get_buffer(name);
+            InputHandler input_handler(buffer, SelectionList{ {} });
+            func(parser, input_handler.context());
+        }
+        return;
+    }
+
     Context* real_context = &context;
     if (parser.has_option("client"))
         real_context = &cm.get_client(parser.option_value("client")).context();
