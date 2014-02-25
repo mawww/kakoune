@@ -8,6 +8,11 @@
 namespace Kakoune
 {
 
+struct group_not_found : public runtime_error
+{
+    using runtime_error::runtime_error;
+};
+
 template<typename... Args>
 class FunctionGroup
 {
@@ -39,10 +44,10 @@ public:
         String id(path.begin(), sep_it);
         auto it = m_functions.find(id);
         if (it == m_functions.end())
-            throw runtime_error("no such id: " + id);
+            throw group_not_found("no such id: " + id);
         FunctionGroup* group = it->second.template target<FunctionGroup>();
         if (not group)
-            throw runtime_error("not a group: " + id);
+            throw group_not_found("not a group: " + id);
         if (sep_it != path.end())
             return group->get_group(String(sep_it+1, path.end()), path_separator);
         else

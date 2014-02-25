@@ -807,8 +807,12 @@ HighlighterAndId region_ref_factory(HighlighterParameters params)
         auto func = [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer,
                           BufferCoord begin, BufferCoord end)
         {
-            HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
-            apply_highlighter(context, flags, display_buffer, begin, end, ref);
+            try
+            {
+                HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
+                apply_highlighter(context, flags, display_buffer, begin, end, ref);
+            }
+            catch (group_not_found&) {}
         };
 
         return HighlighterAndId("regionref(" + params[0] + "," + params[1] + "," + name + ")",
