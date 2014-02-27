@@ -137,6 +137,7 @@ String get_until_delimiter(const String& base, ByteCount& pos,
     return base.substr(start, pos - start);
 }
 
+template<bool throw_on_invalid>
 Token::Type token_type(const String& type_name)
 {
     if (type_name == "")
@@ -147,8 +148,10 @@ Token::Type token_type(const String& type_name)
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
         return Token::Type::OptionExpand;
-    else
+    else if (throw_on_invalid)
         throw unknown_expand{type_name};
+    else
+        return Token::Type::Raw;
 }
 
 void skip_blanks_and_comments(const String& base, ByteCount& pos)
@@ -204,7 +207,7 @@ TokenList parse(const String& line)
             if (throw_on_unterminated and pos == length)
                 throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
 
-            Token::Type type = token_type(type_name);
+            Token::Type type = token_type<throw_on_unterminated>(type_name);
             static const std::unordered_map<char, char> matching_delimiters = {
                 { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
             };
