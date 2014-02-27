@@ -65,6 +65,10 @@ void register_env_vars()
             [](const String& name, const Context& context)
             { return context.buffer().display_name(); }
         }, {
+            "buffile",
+            [](const String& name, const Context& context)
+            { return context.buffer().name(); }
+        }, {
             "timestamp",
             [](const String& name, const Context& context)
             { return to_string(context.buffer().timestamp()); }
