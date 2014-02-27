@@ -208,7 +208,7 @@ Changes
  * _r_: replace each character with the next entered one
  * _&_: align selection, align the cursor of selections by inserting
         spaces before the first character of the selection
- * _alt-&_: align indent, copy the indentation of the main selection
+ * _alt-&_: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
 
  * _`_: to lower case

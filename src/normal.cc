@@ -1071,7 +1071,7 @@ void align(Context& context, int)
     }
 }
 
-void align_indent(Context& context, int selection)
+void copy_indent(Context& context, int selection)
 {
     auto& buffer = context.buffer();
     auto& selections = context.selections();
@@ -1084,7 +1084,7 @@ void align_indent(Context& context, int selection)
     if (selection > selections.size())
         throw runtime_error("invalid selection index");
     if (selection == 0)
-        selection  = context.selections().main_index() + 1;
+        selection = context.selections().main_index() + 1;
 
     const String& line = buffer[selections[selection-1].min().line];
     auto it = line.begin();
@@ -1340,7 +1340,7 @@ KeyMap keymap =
     { alt('`'),  for_each_char<swap_case> },
 
     { '&', align },
-    { alt('&'), align_indent },
+    { alt('&'), copy_indent },
 
     { Key::Left,  move<CharCount, Backward> },
     { Key::Down,  move<LineCount, Forward> },
