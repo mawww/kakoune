@@ -33,7 +33,7 @@ def tag-complete %{ eval -draft %{
         compl=${compl//:/\\:}
         compl=${compl//$'\n'/:}
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
-        echo "set buffer=$kak_bufname completions '${compl}'" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+        echo "set buffer=$kak_bufname completions '${compl}'" | kak -p ${kak_session}
     ) >& /dev/null < /dev/null & }
 }}
 
@@ -69,6 +69,6 @@ def gentags -docstring 'generate tag file asynchronously' %{
         else
             msg="tags generation failed"
         fi
-        echo "eval -client $kak_client echo -color Information '${msg}'" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+        echo "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
     ) >& /dev/null < /dev/null & }
 }

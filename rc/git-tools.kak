@@ -41,7 +41,7 @@ def -shell-params git %{ %sh{
             echo "eval -client '$kak_client' %{
                       try %{ addhl flag_lines magenta git_blame_flags }
                       set buffer=$kak_buffile git_blame_flags ''
-                  }" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+                  }" | kak -p ${kak_session}
             declare -A authors
             declare -A dates
             send_flags() {
@@ -51,7 +51,7 @@ def -shell-params git %{ %sh{
                 for (( i=1; $i < $count; i++ )); do
                     flag="$flag:$(($line+$i))|black|$text"
                 done
-                echo "set -add buffer=$kak_buffile git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+                echo "set -add buffer=$kak_buffile git_blame_flags %{${flag}}" | kak -p ${kak_session}
             }
             git blame --incremental $kak_buffile | ( while read blame_line; do
                 if [[ $blame_line =~ ([0-9a-f]{40}).([0-9]+).([0-9]+).([0-9]+) ]]; then

@@ -23,7 +23,7 @@ def clang-complete %{
             for cmp in ${output}; do
                 completions="${completions}:${cmp}"
             done
-            echo "eval -client $kak_client %[ echo completed; set buffer completions '${completions}' ]" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+            echo "eval -client $kak_client %[ echo completed; set buffer completions '${completions}' ]" | kak -p ${kak_session}
         ) >& /dev/null < /dev/null &
     }
 }
