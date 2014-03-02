@@ -1104,6 +1104,64 @@ void copy_indent(Context& context, int selection)
     }
 }
 
+void tabs_to_spaces(Context& context, int ts)
+{
+    auto& buffer = context.buffer();
+    const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
+    const CharCount tabstop = ts == 0 ? opt_tabstop : ts;
+    for (auto& sel : context.selections())
+    {
+        for (auto it = buffer.iterator_at(sel.min()),
+                  end = buffer.iterator_at(sel.max())+1; it != end; ++it)
+        {
+            if (*it == '\t')
+            {
+                CharCount col = get_column(buffer, opt_tabstop, it.coord());
+                CharCount end_col = (col / tabstop + 1) * tabstop;
+                it = buffer.erase(it, it+1);
+                it = buffer.insert(it, String{ ' ', end_col - col }) + (int)(end_col - col);
+                end = buffer.iterator_at(sel.max())+1;
+            }
+        }
+    }
+}
+
+void spaces_to_tabs(Context& context, int ts)
+{
+    auto& buffer = context.buffer();
+    const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
+    const CharCount tabstop = ts == 0 ? opt_tabstop : ts;
+    for (auto& sel : context.selections())
+    {
+        for (auto it = buffer.iterator_at(sel.min()),
+                  end = buffer.iterator_at(sel.max())+1; it != end;)
+        {
+            if (*it == ' ')
+            {
+                auto spaces_beg = it;
+                auto spaces_end = spaces_beg+1;
+                CharCount col = get_column(buffer, opt_tabstop, spaces_end.coord());
+                while (*spaces_end == ' ' and (col % tabstop) != 0)
+                {
+                    ++spaces_end;
+                    ++col;
+                }
+
+                if ((col % tabstop) == 0)
+                {
+                    it = buffer.erase(spaces_beg, spaces_end);
+                    it = buffer.insert(it, "\t") + 1;
+                    end = buffer.iterator_at(sel.max())+1;
+                }
+                else
+                    it = spaces_end;
+            }
+            else
+                ++it;
+        }
+    }
+}
+
 class ModifiedRangesListener : public BufferChangeListener_AutoRegister
 {
 public:
@@ -1341,6 +1399,9 @@ KeyMap keymap =
 
     { '&', align },
     { alt('&'), copy_indent },
+
+    { '@', tabs_to_spaces },
+    { alt('@'), spaces_to_tabs },
 
     { Key::Left,  move<CharCount, Backward> },
     { Key::Down,  move<LineCount, Forward> },

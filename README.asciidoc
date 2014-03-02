@@ -215,6 +215,11 @@ Changes
  * _~_: to upper case
  * _alt-`_: swap case
 
+ * _@_: convert tabs to spaces in current selections, uses the buffer
+        tabstop option or the count parameter for tabstop.
+ * _alt-@_: convert spaces to tabs in current selections, uses the buffer
+            tabstop option or the count parameter for tabstop.
+
  * _alt-R_: rotate selections content
 
 Goto Commands
