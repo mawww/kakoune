@@ -15,7 +15,7 @@ def clang-complete %{
         # displayed.
         (
             pos=-:${kak_cursor_line}:${kak_cursor_column}
-            cd $(dirname ${kak_bufname})
+            cd $(dirname ${kak_buffile})
             output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} |& tee /tmp/kak-clang-out |
                      grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/:/\\:/g; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
             rm -r $(dirname ${kak_opt_clang_filename})

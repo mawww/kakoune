@@ -77,8 +77,8 @@ decl str-list alt_dirs ".;.."
 def alt %{ %sh{
     shopt -s extglob
     alt_dirs=${kak_opt_alt_dirs//;/ }
-    file=$(basename ${kak_bufname})
-    dir=$(dirname ${kak_bufname})
+    file=$(basename ${kak_buffile})
+    dir=$(dirname ${kak_buffile})
 
     case ${file} in
          *.c|*.cc|*.cpp|*.cxx|*.C)
