@@ -40,7 +40,7 @@ def -shell-params git %{ %sh{
         (
             echo "eval -client '$kak_client' %{
                       try %{ addhl flag_lines magenta git_blame_flags }
-                      set buffer=$kak_bufname git_blame_flags ''
+                      set buffer=$kak_buffile git_blame_flags ''
                   }" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
             declare -A authors
             declare -A dates
@@ -51,9 +51,9 @@ def -shell-params git %{ %sh{
                 for (( i=1; $i < $count; i++ )); do
                     flag="$flag:$(($line+$i))|black|$text"
                 done
-                echo "set -add buffer=$kak_bufname git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+                echo "set -add buffer=$kak_buffile git_blame_flags %{${flag}}" | socat -u stdin UNIX-CONNECT:/tmp/kak-${kak_session}
             }
-            git blame --incremental $kak_bufname | ( while read blame_line; do
+            git blame --incremental $kak_buffile | ( while read blame_line; do
                 if [[ $blame_line =~ ([0-9a-f]{40}).([0-9]+).([0-9]+).([0-9]+) ]]; then
                     send_flags
                     sha=${BASH_REMATCH[1]}
@@ -69,7 +69,7 @@ def -shell-params git %{ %sh{
     }
 
     update_diff() {
-        git diff -U0 $kak_bufname | {
+        git diff -U0 $kak_buffile | {
             local line=0
             local flags="0|red|."
             while read; do
@@ -97,7 +97,7 @@ def -shell-params git %{ %sh{
            ;;
        update-diff) update_diff ;;
        add)
-           name="${2:-${kak_bufname}}"
+           name="${2:-${kak_buffile}}"
            if git add -- "${name}"; then
               echo "echo -color Information 'git: added ${name}'"
            else
