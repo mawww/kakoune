@@ -453,6 +453,25 @@ std::unique_ptr<RemoteClient> connect_to(const String& session, std::unique_ptr<
     return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui), init_command}};
 }
 
+void send_command(const String& session, const String& command)
+{
+    auto filename = "/tmp/kak-" + session;
+
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
+        throw runtime_error("connect to " + filename + " failed");
+
+    {
+        Message msg(sock);
+        msg.write(command.c_str(), (int)command.length()+1);
+    }
+    close(sock);
+}
+
 
 // A client accepter handle a connection until it closes or a nul byte is
 // recieved. Everything recieved before is considered to be a command.

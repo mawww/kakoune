@@ -233,6 +233,31 @@ int run_client(const String& session, const String& init_command)
 
 int kakoune(const ParametersParser& parser)
 {
+    if (parser.has_option("p"))
+    {
+        for (auto opt : { "c", "n", "s", "d", "e" })
+        {
+            if (parser.has_option(opt))
+            {
+                fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
+                return -1;
+            }
+        }
+        char buf[512];
+        String command;
+        while (ssize_t count = read(0, buf, 512))
+        {
+            if (count < 0)
+            {
+                fprintf(stderr, "error while reading stdin\n");
+                return -1;
+            }
+            command += String{buf, buf + count};
+        }
+        send_command(parser.option_value("p"), command);
+        return 0;
+    }
+
     String init_command;
     if (parser.has_option("e"))
         init_command = parser.option_value("e");
@@ -364,7 +389,8 @@ int main(int argc, char* argv[])
                    { "e", { true, "execute argument on initialisation" } },
                    { "n", { false, "do not source kakrc files on startup" } },
                    { "s", { true, "set session name" } },
-                   { "d", { false, "run as a headless session (requires -s)" } } }
+                   { "d", { false, "run as a headless session (requires -s)" } },
+                   { "p", { true, "just send stdin as commands to the given session" } } }
     };
     try
     {

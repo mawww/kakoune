@@ -30,6 +30,8 @@ std::unique_ptr<RemoteClient> connect_to(const String& session,
                                          std::unique_ptr<UserInterface>&& ui,
                                          const String& init_command);
 
+void send_command(const String& session, const String& command);
+
 struct Server : public Singleton<Server>
 {
     Server(String session_name);
