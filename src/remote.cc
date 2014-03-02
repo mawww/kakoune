@@ -437,10 +437,10 @@ void RemoteClient::write_next_key()
     }
 }
 
-std::unique_ptr<RemoteClient> connect_to(const String& pid, std::unique_ptr<UserInterface>&& ui,
+std::unique_ptr<RemoteClient> connect_to(const String& session, std::unique_ptr<UserInterface>&& ui,
                                          const String& init_command)
 {
-    auto filename = "/tmp/kak-" + pid;
+    auto filename = "/tmp/kak-" + session;
 
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(sock, F_SETFD, FD_CLOEXEC);

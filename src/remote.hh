@@ -26,7 +26,7 @@ private:
     DisplayCoord                   m_dimensions;
     FDWatcher                      m_socket_watcher;
 };
-std::unique_ptr<RemoteClient> connect_to(const String& pid,
+std::unique_ptr<RemoteClient> connect_to(const String& session,
                                          std::unique_ptr<UserInterface>&& ui,
                                          const String& init_command);
 
