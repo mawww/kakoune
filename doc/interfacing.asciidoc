@@ -28,7 +28,7 @@ For example, we can echo a message in Kakoune in 10 seconds with:
 :nop %sh{ (
     sleep 10
     echo "eval -client '$kak_client' 'echo sleep ended'" |
-        socat stdin UNIX-CONNECT:/tmp/kak-${kak_session}
+        kak -p ${kak_session}
 ) >& /dev/null < /dev/null & }
 ----
 
@@ -118,6 +118,6 @@ nop %sh{ ( # launch a detached shell
     completions="$line.$column@$kak_timestamp:$candidates"
     # write to Kakoune socket for the buffer that triggered the completion
     echo "set buffer=${kak_bufname} completions '$completions'" |
-        socat stdin UNIX-SOCKET:/tmp/kak-${kak_session}
+        kak -p ${kak_session}
 ) >& /dev/null < /dev/null & }
 -----

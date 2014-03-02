@@ -55,7 +55,6 @@ Kakoune dependencies are:
  * boost (>= 1.50)
  * ncurses with wide-characters support (>= 5.3, generally refered as libncursesw)
  * bash (kak scripts use some bash specific features)
- * socat (used by kak scripts to write to kak control socket)
 
 To build, just type *make* in the src directory
 
@@ -100,6 +99,8 @@ Just running *kak* launch a new kak session with a client on local terminal.
        the session name to be specified with -s. In this mode, the Kakoune
        server will keep running even if there is no connected client, and
        will quit when receiving SIGTERM.
+ * +-p <session>+: read stdin, and then send its content to the given session
+       this way kak act as a remote control.
 
 At startup, if +-n+ is not specified, Kakoune will try to source the file
 ../share/kak/kakrc relative to the kak binary. This kak file will then try
