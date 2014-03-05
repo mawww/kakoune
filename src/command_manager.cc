@@ -102,20 +102,20 @@ String get_until_delimiter(const String& base, ByteCount& pos, char delimiter)
 {
     const ByteCount length = base.length();
     String str;
-    while (true)
+    while (pos < length)
     {
         char c = base[pos];
         if (c == delimiter)
         {
             if (base[pos-1] != '\\')
-                return str;
+                break;
             str.back() = delimiter;
         }
         else
             str += c;
-        if (++pos == length)
-            return str;
+        ++pos;
     }
+    return str;
 }
 
 String get_until_delimiter(const String& base, ByteCount& pos,
