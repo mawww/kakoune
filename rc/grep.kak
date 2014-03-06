@@ -5,10 +5,10 @@ def -shell-params -file-completion \
     grep %{ %sh{
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
-     if (( $# > 0 )); then
-         ( ${kak_opt_grepcmd} "$@" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
+     if [ $# -gt 0 ]; then
+         ( ${kak_opt_grepcmd} "$@" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
      else
-         ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' >& ${output} ) >& /dev/null < /dev/null &
+         ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
      fi
 
      echo "eval -try-client '$kak_opt_toolsclient' %{

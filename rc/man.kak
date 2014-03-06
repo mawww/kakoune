@@ -16,8 +16,9 @@ hook global WinSetOption filetype=(?!man).* %{
 
 def -hidden -shell-params _man %{ %sh{
     tmpfile=$(mktemp /tmp/kak-man-XXXXXX)
-    MANWIDTH=${kak_window_width} man "$@" | col -b > ${tmpfile}
-    if (( ${PIPESTATUS[0]} == 0 )); then
+    output=$(MANWIDTH=${kak_window_width} man "$@")
+    if [ $? -eq 0 ]; then
+        echo "${output}" | col -b > ${tmpfile}
         echo "edit! -scratch '*man*'
               exec |cat<space>${tmpfile}<ret>gk
               nop %sh{rm ${tmpfile}}
@@ -29,6 +30,6 @@ def -hidden -shell-params _man %{ %sh{
 } }
 
 def -shell-params man %{ %sh{
-    [[ -z "$@" ]] && set -- "$kak_selection"
+    [ -z "$@" ] && set -- "$kak_selection"
     echo "eval -try-client %opt{docsclient} _man $@"
 } }

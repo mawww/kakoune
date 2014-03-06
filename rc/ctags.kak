@@ -8,20 +8,20 @@ def -shell-params \
     -docstring 'jump to tag definition' \
     tag \
     %{ %sh{
-        if [[ -z "$1" ]]; then tagname=${kak_selection}; else tagname=$1; fi
+        if [ -z "$1" ]; then tagname=${kak_selection}; else tagname="$1"; fi
         matches=$(readtags ${tagname})
-        if [[ -z "${matches}" ]]; then
+        if [ -z "${matches}" ]; then
             echo "echo tag not found ${tagname}"
         else
             menuparam=$(readtags ${tagname} | perl -i -ne '
                 /([^\t]+)\t([^\t]+)\t\/\^([^{}]*).*\$\// and print "%{$2 [$3]} %{try %{ edit %{$2}; exec %{/\\Q$3<ret>vc} } catch %{ echo %{unable to find tag} } } ";
                 /([^\t]+)\t([^\t]+)\t(\d+)/              and print "%{$2:$3} %{edit %{$2} %{$3}}";
-            ')
+            ' | sed -e 's/\n/ /g')
 
-            if [[ -z "${menuparam}" ]]; then
+            if [ -z "${menuparam}" ]; then
                 echo "echo no such tag ${tagname}";
             else
-                echo "menu -auto-single ${menuparam//$'\n'/ }";
+                echo "menu -auto-single ${menuparam}";
             fi
         fi
     }}
@@ -29,12 +29,10 @@ def -shell-params \
 def tag-complete %{ eval -draft %{
     exec <space>hb<a-k>^\w+$<ret>
     %sh{ (
-        compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq)
-        compl=${compl//:/\\:}
-        compl=${compl//$'\n'/:}
+        compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
         echo "set buffer=$kak_bufname completions '${compl}'" | kak -p ${kak_session}
-    ) >& /dev/null < /dev/null & }
+    ) > /dev/null 2>&1 < /dev/null & }
 }}
 
 def funcinfo %{
@@ -42,7 +40,7 @@ def funcinfo %{
         exec [(<space>B<a-k>[a-zA-Z_]+\(<ret>
         %sh{
             sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*(class|struct|namespace):(\S+).*signature:(.*)$/\4 [\3::\1]/')
-            if [[ -n "$sigs" ]]; then
+            if [ -n "$sigs" ]; then
                 echo "eval -client ${kak_client} %{info -anchor right '$sigs'}"
             fi
         }
@@ -70,5 +68,5 @@ def gentags -docstring 'generate tag file asynchronously' %{
             msg="tags generation failed"
         fi
         echo "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
-    ) >& /dev/null < /dev/null & }
+    ) > /dev/null 2>&1 < /dev/null & }
 }

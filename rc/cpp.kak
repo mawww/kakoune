@@ -75,26 +75,32 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) _cpp_insert_include_guards
 decl str-list alt_dirs ".;.."
 
 def alt -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
-    shopt -s extglob
-    alt_dirs=${kak_opt_alt_dirs//;/ }
+    alt_dirs=$(echo ${kak_opt_alt_dirs} | sed -e 's/;/ /g')
     file=$(basename ${kak_buffile})
     dir=$(dirname ${kak_buffile})
 
     case ${file} in
          *.c|*.cc|*.cpp|*.cxx|*.C)
              for alt_dir in ${alt_dirs}; do
-                 altname=$(ls -1 "${dir}/${alt_dir}/${file%.*}".@(h|hh|hpp|hxx|H) 2> /dev/null | head -n 1)
-                 [[ -e ${altname} ]] && break
+                 for ext in h hh hpp hxx H; do
+                     altname="${dir}/${alt_dir}/${file%.*}.${ext}"
+                     [ -f ${altname} ] && break
+                 done
+                 [ -f ${altname} ] && break
              done
          ;;
          *.h|*.hh|*.hpp|*.hxx|*.H)
              for alt_dir in ${alt_dirs}; do
-                 altname=$(ls -1 "${dir}/${alt_dir}/${file%.*}".@(c|cc|cpp|cxx|C) 2> /dev/null | head -n 1)
-                 [[ -e ${altname} ]] && break
+                 for ext in c cc cpp cxx C; do
+                     altname="${dir}/${alt_dir}/${file%.*}.${ext}"
+                     [ -f ${altname} ] && break
+                 done
+                 [ -f ${altname} ] && break
              done
          ;;
     esac
-    if [[ -e ${altname} ]]; then
+    echo debug ${altname}
+    if [ -f ${altname} ]; then
        echo edit "'${altname}'"
     else
        echo echo "'alternative file not found'"

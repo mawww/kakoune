@@ -16,7 +16,7 @@ def clang-complete %{
         (
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
-            output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} |& tee /tmp/kak-clang-out |
+            output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} 2>&1 | tee /tmp/kak-clang-out |
                      grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/:/\\:/g; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
             rm -r $(dirname ${kak_opt_clang_filename})
             completions="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
@@ -24,7 +24,7 @@ def clang-complete %{
                 completions="${completions}:${cmp}"
             done
             echo "eval -client $kak_client %[ echo completed; set buffer completions '${completions}' ]" | kak -p ${kak_session}
-        ) >& /dev/null < /dev/null &
+        ) > /dev/null 2>&1 < /dev/null &
     }
 }
 

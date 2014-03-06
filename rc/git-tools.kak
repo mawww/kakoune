@@ -22,14 +22,14 @@ def -shell-params git %{ %sh{
         esac
         tmpfile=$(mktemp /tmp/kak-git-XXXXXX)
         if git "$@" > ${tmpfile}; then
-            [[ -n "$kak_opt_docsclient" ]] && echo "eval -client '$kak_opt_docsclient' %{"
+            [ -n "$kak_opt_docsclient" ] && echo "eval -client '$kak_opt_docsclient' %{"
 
             echo "edit! -scratch *git*
                   exec |cat<space>${tmpfile}<ret>gk
                   nop %sh{rm ${tmpfile}}
                   set buffer filetype '${filetype}'"
 
-            [[ -n "$kak_opt_docsclient" ]] && echo "}"
+            [ -n "$kak_opt_docsclient" ] && echo "}"
         else
            echo "echo %{git $@ failed, see *debug* buffer}"
            rm ${tmpfile}
@@ -45,7 +45,7 @@ def -shell-params git %{ %sh{
             declare -A authors
             declare -A dates
             send_flags() {
-                if [[ -z "$line" ]]; then return; fi
+                if [ -z "$line" ]; then return; fi
                 text=$(echo "${sha:0:8} ${dates[$sha]} ${authors[$sha]}" | sed -e 's/:/\\:/g')
                 flag="$line|black|$text"
                 for (( i=1; $i < $count; i++ )); do
