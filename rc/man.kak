@@ -15,17 +15,21 @@ hook global WinSetOption filetype=(?!man).* %{
 }
 
 def -hidden -shell-params _man %{ %sh{
-    tmpfile=$(mktemp /tmp/kak-man-XXXXXX)
-    output=$(MANWIDTH=${kak_window_width} man "$@")
-    if [ $? -eq 0 ]; then
-        echo "${output}" | col -b > ${tmpfile}
+    manout=$(mktemp /tmp/kak-man-XXXXXX)
+    colout=$(mktemp /tmp/kak-man-XXXXXX)
+    MANWIDTH=${kak_window_width} man "$@" > $manout
+    retval=$?
+    col -b > ${colout} < ${manout}
+    rm ${manout}
+    if [ "${retval}" -eq 0 ]; then
+        echo "${output}" |
         echo "edit! -scratch '*man*'
-              exec |cat<space>${tmpfile}<ret>gk
-              nop %sh{rm ${tmpfile}}
+              exec |cat<space>${colout}<ret>gk
+              nop %sh{rm ${colout}}
               set buffer filetype man"
     else
        echo "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
-       rm ${tmpfile}
+       rm ${colout}
     fi
 } }
 
