@@ -95,7 +95,7 @@ static void reload_buffer(Context& context, const String& filename)
     if (not buf)
         return;
     context.change_buffer(*buf);
-    context.selections() = SelectionList{cursor_pos};
+    context.selections() = SelectionList{buf->clamp(cursor_pos)};
     context.window().set_position(view_pos);
     context.print_status({ "'" + buf->display_name() + "' reloaded",
                            get_color("Information") });
