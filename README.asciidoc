@@ -523,15 +523,18 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * +filetype+ _str_: arbitrary string defining the type of the file
    filetype dependant actions should hook on this option changing for
    activation/deactivation.
- * +completions+ _str-list_: option used for external completion, the
-   first string should follow the format
-   _<line>.<column>[+<length>]@<timestamp>_ to define where the completion
-   apply in the buffer, and the other strings are the candidates.
  * +path+ _str-list_: directories to search for gf command.
  * +completers+ _str-list_: completion systems to use for insert mode
-   completion. Support +option+ which use the +completions+ option, and
-   +word=all+ or +word=buffer+ which complete using words in all buffers
-   (+word=all+) or only the current one (+word=buffer+)
+   completion. given completers are tried in order until one generate some
+   completion candidates. Existing completers are:
+   - +word=all+ or +word=buffer+ which complete using words in all buffers
+     (+word=all+) or only the current one (+word=buffer+)
+   - +filename+ which tries to detect when a filename is being entered and
+     provides completion based on local filesystem.
+   - +option=<opt-name>+ where <opt-name> is a _str-list_ option. The first
+     element of the list should follow the format:
+     _<line>.<column>[+<length>]@<timestamp>_ to define where the completion
+     apply in the buffer, and the other strings are the candidates.
  * +autoreload+ _yesnoask_: auto reload the buffers when an external
    modification is detected.
 

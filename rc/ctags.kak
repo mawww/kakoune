@@ -31,7 +31,7 @@ def tag-complete %{ eval -draft %{
     %sh{ (
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
-        echo "set buffer=$kak_bufname completions '${compl}'" | kak -p ${kak_session}
+        echo "set buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
     ) > /dev/null 2>&1 < /dev/null & }
 }}
 

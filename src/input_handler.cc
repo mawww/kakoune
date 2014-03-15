@@ -11,6 +11,7 @@
 #include "color_registry.hh"
 #include "file.hh"
 #include "word_db.hh"
+#include "debug.hh"
 
 #include <unordered_map>
 
@@ -711,12 +712,20 @@ public:
             m_context.ui().menu_hide();
     }
 
-    template<BufferCompletion (BufferCompleter::*complete_func)(const Buffer&, BufferCoord)>
-    bool try_complete()
+    template<typename CompleteFunc>
+    bool try_complete(CompleteFunc complete_func)
     {
         auto& buffer = m_context.buffer();
         BufferCoord cursor_pos = m_context.selections().main().cursor();
-        m_completions = (this->*complete_func)(buffer, cursor_pos);
+        try
+        {
+            m_completions = complete_func(buffer, cursor_pos);
+        }
+        catch (runtime_error& e)
+        {
+            write_debug("error while trying to run completer: "_str + e.what());
+            return false;
+        }
         if (not m_completions.is_valid())
             return false;
 
@@ -812,9 +821,9 @@ public:
         return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
     }
 
-    BufferCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos)
+    BufferCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos, const String& option_name)
     {
-        const StringList& opt = options()["completions"].get<StringList>();
+        const StringList& opt = options()[option_name].get<StringList>();;
         if (opt.empty())
             return {};
 
@@ -868,7 +877,14 @@ public:
 private:
     void on_option_changed(const Option& opt) override
     {
-        if (opt.name() == "completions")
+        auto& completers = options()["completers"].get<StringList>();
+        StringList option_names;
+        for (auto& completer : completers)
+        {
+            if (completer.substr(0_byte, 7_byte) == "option=")
+                option_names.emplace_back(completer.substr(7_byte));
+        }
+        if (contains(option_names, opt.name()))
         {
             reset();
             setup_ifn();
@@ -889,18 +905,29 @@ private:
 
     bool setup_ifn()
     {
+        using namespace std::placeholders;
         if (not m_completions.is_valid())
         {
             auto& completers = options()["completers"].get<StringList>();
-            if (contains(completers, "option") and try_complete<&BufferCompleter::complete_option>())
-                return true;
-            if (contains(completers, "word=buffer") and try_complete<&BufferCompleter::complete_word<false>>())
-                return true;
-            if (contains(completers, "word=all") and try_complete<&BufferCompleter::complete_word<true>>())
-                return true;
-            if (contains(completers, "filename") and try_complete<&BufferCompleter::complete_filename>())
-                return true;
-
+            for (auto& completer : completers)
+            {
+                if (completer == "filename" and
+                    try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
+                                 { return complete_filename(buffer, cursor_pos); }))
+                    return true;
+                if (completer.substr(0_byte, 7_byte) == "option=" and
+                    try_complete([&, this](const Buffer& buffer, BufferCoord cursor_pos)
+                                 { return complete_option(buffer, cursor_pos, completer.substr(7_byte)); }))
+                    return true;
+                if (completer == "word=buffer" and
+                    try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
+                                 { return complete_word<false>(buffer, cursor_pos); }))
+                    return true;
+                if (completer == "word=all" and
+                    try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
+                                 { return complete_word<true>(buffer, cursor_pos); }))
+                    return true;
+            }
             return false;
         }
         return true;
@@ -946,13 +973,14 @@ public:
         if (m_mode == Mode::Complete)
         {
             if (key.key == 'f')
-                m_completer.try_complete<&BufferCompleter::complete_filename>();
+                m_completer.try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
+                                         { return m_completer.complete_filename(buffer, cursor_pos); });
             if (key.key == 'w')
-                m_completer.try_complete<&BufferCompleter::complete_word<true>>();
-            if (key.key == 'o')
-                m_completer.try_complete<&BufferCompleter::complete_option>();
+                m_completer.try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
+                                         { return m_completer.complete_word<true>(buffer, cursor_pos); });
             if (key.key == 'l')
-                m_completer.try_complete<&BufferCompleter::complete_line>();
+                m_completer.try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
+                                         { return m_completer.complete_line(buffer, cursor_pos); });
             m_mode = Mode::Default;
             return;
         }

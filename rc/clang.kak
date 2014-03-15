@@ -1,5 +1,6 @@
 decl -hidden str clang_filename
 decl str clang_options
+decl str-list clang_completions
 
 def clang-complete %{
     %sh{
@@ -23,12 +24,13 @@ def clang-complete %{
             for cmp in ${output}; do
                 completions="${completions}:${cmp}"
             done
-            echo "eval -client $kak_client %[ echo completed; set buffer completions '${completions}' ]" | kak -p ${kak_session}
+            echo "eval -client $kak_client %[ echo completed; set buffer clang_completions '${completions}' ]" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
 
 def clang-enable-autocomplete %{
+    set window completers %sh{ echo "'option=clang_completions:${kak_opt_completers}'" }
     hook window -id clang-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>(\.|->|::).$<ret>
         echo 'completing...'
@@ -36,4 +38,7 @@ def clang-enable-autocomplete %{
     } }
 }
 
-def clang-disable-autocomplete %{ rmhooks window clang-autocomplete }
+def clang-disable-autocomplete %{
+    set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
+    rmhooks window clang-autocomplete
+}

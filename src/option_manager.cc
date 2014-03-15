@@ -133,15 +133,18 @@ GlobalOptions::GlobalOptions()
     declare_option<bool>("aligntab", false);
     declare_option<Regex>("ignored_files", Regex{R"(^(\..*|.*\.(o|so|a))$)"});
     declare_option<String>("filetype", "");
-    declare_option<std::vector<String>>("completions", {});
     declare_option<std::vector<String>>("path", { "./", "/usr/include" });
-    declare_option<std::vector<String>>("completers", {"option", "filename", "word=buffer"},
+    declare_option<std::vector<String>>("completers", {"filename", "word=buffer"},
                                         Option::Flags::None,
                                         [](const std::vector<String>& s) {
-                                            static const auto values = {"option", "word=buffer", "word=all", "filename" };
+                                            static const auto values = {"word=buffer", "word=all", "filename" };
                                             for (auto& v : s)
+                                            {
+                                                if (v.substr(0_byte, 7_byte) == "option=")
+                                                    continue;
                                                 if (not contains(values, v))
                                                     throw runtime_error(v + " is not a recognised value for completers");
+                                            }
                                         });
     declare_option<YesNoAsk>("autoreload", Ask);
 }
