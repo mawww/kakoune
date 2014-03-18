@@ -60,9 +60,9 @@ void EventManager::handle_next_events()
         if (timer->next_date() <= next_timer)
             next_timer = timer->next_date();
     }
-    auto timeout = std::chrono::duration_cast<std::chrono::milliseconds>(next_timer - Clock::now());
-
-    poll(events.data(), events.size(), std::max(0, (int)timeout.count()));
+    using namespace std::chrono;
+    auto timeout = duration_cast<milliseconds>(next_timer - Clock::now()).count();
+    poll(events.data(), events.size(), timeout < INT_MAX ? (int)timeout : INT_MAX);
     for (size_t i = 0; i < events.size(); ++i)
     {
         auto& event = events[i];
