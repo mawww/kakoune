@@ -39,9 +39,6 @@
 
   - Detect when the following text is matching the inserted completion
 
-  - Support different options
-    (setb completers word,option=cpp_completions,option=spell_completions)
-
   - Support multiple completion points
     (1.1@0:comp1:comp2:comp3:1.5@0:comp1:comp2:comp3)
 
@@ -89,9 +86,7 @@
 
 * Make kakoune self-documenting
 
-  - Add doc strings to commands, display them in info boxes when entering command
-
-  - Add doc strings to options as well
+  - Add doc strings to options
 
   - Generate documentation from Kakoune source
 
@@ -100,8 +95,6 @@
     . make doc compiles kakoune, and run doc generation:
       +./kak -help commands > ../doc/commands.asciidoc+
       with README.asciidoc including commands ?
-
-* Handle command lines larger than window
 
 * Support disabling hooks executions in :exec and :eval
 
