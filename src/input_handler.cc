@@ -787,6 +787,7 @@ public:
         return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
     }
 
+    template<bool require_slash>
     BufferCompletion complete_filename(const Buffer& buffer, BufferCoord cursor_pos)
     {
         auto pos = buffer.iterator_at(cursor_pos);
@@ -803,6 +804,9 @@ public:
             return {};
 
         String prefix{begin, pos};
+        if (require_slash and not contains(prefix, '/'))
+            return {};
+
         StringList res;
         if (prefix.front() == '/')
             res = Kakoune::complete_filename(prefix, Regex{});
@@ -913,7 +917,7 @@ private:
             {
                 if (completer == "filename" and
                     try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
-                                 { return complete_filename(buffer, cursor_pos); }))
+                                 { return complete_filename<true>(buffer, cursor_pos); }))
                     return true;
                 if (completer.substr(0_byte, 7_byte) == "option=" and
                     try_complete([&, this](const Buffer& buffer, BufferCoord cursor_pos)
@@ -974,7 +978,7 @@ public:
         {
             if (key.key == 'f')
                 m_completer.try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
-                                         { return m_completer.complete_filename(buffer, cursor_pos); });
+                                         { return m_completer.complete_filename<false>(buffer, cursor_pos); });
             if (key.key == 'w')
                 m_completer.try_complete([this](const Buffer& buffer, BufferCoord cursor_pos)
                                          { return m_completer.complete_word<true>(buffer, cursor_pos); });
