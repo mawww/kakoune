@@ -50,6 +50,7 @@ struct ParameterDesc
     {
         None = 0,
         SwitchesOnlyAtStart = 1,
+        SwitchesAsPositional = 2,
     };
     friend constexpr Flags operator|(Flags lhs, Flags rhs)
     {

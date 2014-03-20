@@ -597,7 +597,7 @@ void define_command(const ParametersParser& parser, Context& context)
     ParameterDesc desc;
     if (parser.has_option("env-params"))
     {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None };
+        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context, {},
                                                params_to_env_var_map(parser));
@@ -605,14 +605,14 @@ void define_command(const ParametersParser& parser, Context& context)
     }
     if (parser.has_option("shell-params"))
     {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None };
+        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context, params_to_shell(parser));
         };
     }
     else
     {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 0, 0 };
+        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context);
         };
