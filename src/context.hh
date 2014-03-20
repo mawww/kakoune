@@ -8,7 +8,6 @@
 namespace Kakoune
 {
 
-class Editor;
 class Window;
 class Buffer;
 class Client;

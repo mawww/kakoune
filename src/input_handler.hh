@@ -12,8 +12,6 @@
 namespace Kakoune
 {
 
-class Editor;
-
 enum class MenuEvent
 {
     Select,
