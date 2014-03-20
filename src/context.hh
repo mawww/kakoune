@@ -20,9 +20,9 @@ class KeymapManager;
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
-// The Context object links an Client, an Editor (which may be a Window),
-// and a UserInterface. It may represent an interactive user window, or
-// a hook execution or a macro replay.
+// The Context object links a Client, a Window, an InputHandler and a
+// SelectionList. It may represent an interactive user window, a hook
+// execution or a macro replay context.
 class Context
 {
 public:
