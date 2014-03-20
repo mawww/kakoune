@@ -159,22 +159,22 @@ ReversedContainer<Container> reversed(Container&& container)
 
 
 template<typename Container, typename T>
-auto find(Container&& container, const T& value) -> decltype(container.begin())
+auto find(Container&& container, const T& value) -> decltype(begin(container))
 {
-    return std::find(container.begin(), container.end(), value);
+    return std::find(begin(container), end(container), value);
 }
 
 template<typename Container, typename T>
-auto find_if(Container&& container, T op) -> decltype(container.begin())
+auto find_if(Container&& container, T op) -> decltype(begin(container))
 {
-    return std::find_if(container.begin(), container.end(), op);
+    return std::find_if(begin(container), end(container), op);
 }
 
 
 template<typename Container, typename T>
 bool contains(Container&& container, const T& value)
 {
-    return find(container, value) != container.end();
+    return find(container, value) != end(container);
 }
 
 template<typename T1, typename T2>
