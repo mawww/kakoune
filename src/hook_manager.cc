@@ -23,6 +23,9 @@ void HookManager::run_hook(const String& hook_name,
                            const String& param,
                            Context& context) const
 {
+    if (GlobalHooks::instance().are_hooks_disabled())
+        return;
+
     if (m_parent)
         m_parent->run_hook(hook_name, param, context);
 
@@ -43,5 +46,12 @@ void HookManager::run_hook(const String& hook_name,
         }
     }
 }
+
+bool GlobalHooks::are_hooks_disabled() const
+{
+    kak_assert(m_disabled >= 0);
+    return m_disabled > 0;
+}
+
 
 }

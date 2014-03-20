@@ -885,6 +885,7 @@ const ParameterDesc context_wrap_params = {
                { "try-client", { true, "run in given client context if it exists, or else in the current one" } },
                { "buffer", { true, "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft", { false, "run in a disposable context" } },
+               { "no-hooks", { false, "disable hooks" } },
                { "itersel", { false, "run once for each selection with that selection as the only one" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
@@ -892,6 +893,14 @@ const ParameterDesc context_wrap_params = {
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
+    const bool disable_hooks = parser.has_option("no-hooks");
+    if (disable_hooks)
+        GlobalHooks::instance().disable_hooks();
+    auto restore_hooks = on_scope_end([&](){
+        if (disable_hooks)
+            GlobalHooks::instance().enable_hooks();
+    });
+
     ClientManager& cm = ClientManager::instance();
     if (parser.has_option("buffer"))
     {
