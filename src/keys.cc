@@ -16,8 +16,8 @@ Key canonicalize_ifn(Key key)
     return key;
 }
 
-using KeyAndName = std::pair<String, Codepoint>;
-static std::vector<KeyAndName> keynamemap = {
+using KeyAndName = std::pair<const char*, Codepoint>;
+static constexpr KeyAndName keynamemap[] = {
     { "ret", '\r' },
     { "space", ' ' },
     { "tab", '\t' },
@@ -73,7 +73,7 @@ KeyList parse_keys(const String& str)
                 }
                 auto it = find_if(keynamemap, [&keyname](const KeyAndName& item)
                                               { return item.first == keyname; });
-                if (it != keynamemap.end())
+                if (it != end(keynamemap))
                 {
                     Key key = canonicalize_ifn(Key{ modifier, it->second });
                     result.push_back(key);
@@ -116,7 +116,7 @@ String key_to_str(Key key)
     String res;
     auto it = find_if(keynamemap, [&key](const KeyAndName& item)
                                   { return item.second == key.key; });
-    if (it != keynamemap.end())
+    if (it != end(keynamemap))
     {
         named = true;
         res = it->first;
