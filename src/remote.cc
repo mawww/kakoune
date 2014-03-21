@@ -448,7 +448,7 @@ std::unique_ptr<RemoteClient> connect_to(const String& session, std::unique_ptr<
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
     if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw runtime_error("connect to " + filename + " failed");
+        throw connection_failed(filename);
 
     return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui), init_command}};
 }
@@ -463,7 +463,7 @@ void send_command(const String& session, const String& command)
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
     if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw runtime_error("connect to " + filename + " failed");
+        throw connection_failed(filename);
 
     {
         Message msg(sock);

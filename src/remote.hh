@@ -10,6 +10,13 @@ namespace Kakoune
 
 struct peer_disconnected {};
 
+struct connection_failed : runtime_error
+{
+    connection_failed(const String& filename)
+        : runtime_error{"connect to " + filename + " failed"}
+    {}
+};
+
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.
 class RemoteClient

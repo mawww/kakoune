@@ -228,6 +228,11 @@ int run_client(const String& session, const String& init_command)
         fputs("disconnected from server\n", stderr);
         return -1;
     }
+    catch (connection_failed& e)
+    {
+        fputs(e.what(), stderr);
+        return -1;
+    }
     return 0;
 }
 
@@ -254,7 +259,15 @@ int kakoune(const ParametersParser& parser)
             }
             command += String{buf, buf + count};
         }
-        send_command(parser.option_value("p"), command);
+        try
+        {
+            send_command(parser.option_value("p"), command);
+        }
+        catch (connection_failed& e)
+        {
+            fputs(e.what(), stderr);
+            return -1;
+        }
         return 0;
     }
 
