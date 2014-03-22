@@ -147,8 +147,10 @@ void register_env_vars()
 void register_registers()
 {
     using StringList = std::vector<String>;
-    struct DynRegDesc { char name; StringList (*func)(const Context&); };
-    static const DynRegDesc dyn_regs[] = {
+    static const struct {
+        char name;
+        StringList (*func)(const Context&);
+    } dyn_regs[] = {
         { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
         { '.', [](const Context& context) { return context.selections_content(); } },
         { '#', [](const Context& context) { return StringList{{to_string((int)context.selections().size())}}; } },
