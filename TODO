@@ -96,8 +96,6 @@
       +./kak -help commands > ../doc/commands.asciidoc+
       with README.asciidoc including commands ?
 
-* Support disabling hooks executions in :exec and :eval
-
 * Rewrite keymap support using options ? (map window insert a b -> set -add window insert_keymap a:b)
 
 * Change set command to use '=' ?
