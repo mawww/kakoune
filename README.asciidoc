@@ -27,7 +27,7 @@ Join us on freenode IRC +#Kakoune+
 Features
 --------
 
- * Multiple selection as a central way of interacting
+ * Multiple selections as a central way of interacting
  * Powerful selection manipulation primitives
    - Select all regex matches in current selections
    - Keep selections containing/not containing a match for a given regex
@@ -147,6 +147,9 @@ Basic Movement
  * _pagedown_: scroll down
 
  * _alt-r_: rotate selections (the main selection becomes the next one)
+
+A word is a sequence of alphanumeric characters or underscore, a WORD is a
+sequence of non whitespace characters.
 
 Appending
 ---------
@@ -352,7 +355,7 @@ Macros
 
 Kakoune can record and replay a sequence of key press.
 
-When pressing the _Q_ key, followed by an alphabetic key for the macro name, 
+When pressing the _Q_ key, followed by an alphabetic key for the macro name,
 Kakoune begins macro recording: every pressed keys will be added to the
 macro until the _Q_ key is pressed again.
 
@@ -390,7 +393,6 @@ Commands are entered using +:+.
  * +nameclient <name>+: set current client name
  * +namebuf <name>+: set current buffer name
  * +echo <text>+: show <text> in status line
- * +name <name>+: sets current client name to name
  * +nop+: does nothing, but as with every other commands, arguments may be
       evaluated. So nop can be used for example to execute a shell command
       while being sure that it's output will not be interpreted by kak.
@@ -409,6 +411,8 @@ they do their execution in the context of the current client.
 Some parameters provide a way to change the context of execution:
 
  * +-client <name>+: execute in the context of the client named <name>
+ * +-try-client <name>+: execute in the context of the client named
+     <name> if such client exists, or else in the current context.
  * +-draft+: execute in a copy of the context of the selected client
      modifications to the selections or input state will not affect
      the client. This permits to make some modification to the buffer
@@ -418,6 +422,7 @@ Some parameters provide a way to change the context of execution:
      cases where the selections may get merged.
  * +-buffer <names>+: execute in the context of each buffers in the
      comma separated list <names>
+ * +-no-hooks+: disable hook execution while executing the keys/commands
 
 The execution stops when the last key/command is reached, or an error
 is raised.
@@ -887,7 +892,9 @@ Existing commands files are:
      session, if tmux is detected, launch the client in a new tmux split, else
      launch in a new terminal emulator.
  * *rc/clang.kak*: provides the +:clang-enable-autocomplete+ command for C/CPP
-     insert mode completion support. This needs clang++ compiler.
+     insert mode completion support. This requires the clang++ compiler to be
+     available. You can use the +clang_options+ option to specify switches to
+     be passed to the compiler.
 
 Certain command files defines options, such as +grepcmd+ (for +:grep+) +makecmd+
 (for +:make+) or +termcmd+ (for +:new+).
