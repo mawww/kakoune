@@ -391,9 +391,6 @@ void NCursesUI::draw_menu()
     const auto menu_fg = get_color_pair(m_menu_fg);
     const auto menu_bg = get_color_pair(m_menu_bg);
 
-    const auto scroll_fg = get_color_pair({ Colors::White, Colors::White });
-    const auto scroll_bg = get_color_pair(m_menu_bg);
-
     wattron(m_menu_win, COLOR_PAIR(menu_bg));
     wbkgdset(m_menu_win, COLOR_PAIR(menu_bg));
 
@@ -433,9 +430,8 @@ void NCursesUI::draw_menu()
                              line < mark_line + mark_height;
         wclrtoeol(m_menu_win);
         wmove(m_menu_win, (int)line, (int)win_size.column - 1);
-        wattron(m_menu_win, COLOR_PAIR(is_mark ? scroll_fg : scroll_bg));
-        waddch(m_menu_win, ' ');
         wattron(m_menu_win, COLOR_PAIR(menu_bg));
+        waddstr(m_menu_win, is_mark ? "┃" : "│");
     }
     redraw();
 }
