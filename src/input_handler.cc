@@ -337,6 +337,18 @@ String common_prefix(memoryview<String> strings)
     return res;
 }
 
+void history_push(std::vector<String>& history, const String& entry)
+{
+    if(entry.empty())
+    {
+        return;
+    }
+    std::vector<String>::iterator it;
+    while ((it = find(history, entry)) != history.end())
+        history.erase(it);
+    history.push_back(entry);
+}
+
 class Prompt : public InputMode
 {
 public:
@@ -365,13 +377,7 @@ public:
         }
         else if (key == ctrl('m')) // enter
         {
-            if (not line.empty())
-            {
-                std::vector<String>::iterator it;
-                while ((it = find(history, line)) != history.end())
-                    history.erase(it);
-                history.push_back(line);
-            }
+            history_push(history, line);
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
@@ -383,6 +389,7 @@ public:
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
+            history_push(history, line);
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
