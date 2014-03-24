@@ -114,15 +114,19 @@ void Client::check_buffer_fs_timestamp()
         return;
     if (reload == Ask)
     {
-        print_status({"'" + buffer.display_name() + "' was modified externally, press r or y to reload, k or n to keep", get_color("Prompt")});
+        DisplayCoord pos = context().window().dimensions();
+        pos.column -= 1;
+        m_ui->info_show("reload '" + buffer.display_name() + "' ?",
+                        "'" + buffer.display_name() + "' was modified externally\n"
+                        "press r or y to reload, k or n to keep",
+                        pos, get_color("Information"), MenuStyle::Prompt);
+
         m_input_handler.on_next_key([this, ts, filename](Key key, Context& context) {
             Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
+            m_ui->info_hide();
             // buffer got deleted while waiting for the key, do nothing
             if (not buf)
-            {
-                print_status({});
                 return;
-            }
             if (key == 'r' or key == 'y')
                 reload_buffer(context, filename);
             if (key == 'k' or key == 'n')
@@ -131,7 +135,10 @@ void Client::check_buffer_fs_timestamp()
                 print_status({"'" + buf->display_name() + "' kept", get_color("Information") });
             }
             else
+            {
+                print_status({"'" + key_to_str(key) + "' is not a valid choice", get_color("Error")});
                 check_buffer_fs_timestamp();
+            }
         });
     }
     else
