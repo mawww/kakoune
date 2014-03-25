@@ -467,7 +467,7 @@ void send_command(const String& session, const String& command)
 
     {
         Message msg(sock);
-        msg.write(command.c_str(), (int)command.length()+1);
+        msg.write(command.c_str(), (int)command.length());
     }
     close(sock);
 }
