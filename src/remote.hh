@@ -48,8 +48,12 @@ struct Server : public Singleton<Server>
     void close_session();
 
 private:
+    class Accepter;
+    void remove_accepter(Accepter* accepter);
+
     String m_session;
     std::unique_ptr<FDWatcher> m_listener;
+    std::vector<std::unique_ptr<Accepter>> m_accepters;
 };
 
 }

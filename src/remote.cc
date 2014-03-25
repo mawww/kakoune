@@ -479,10 +479,10 @@ void send_command(const String& session, const String& command)
 // * When a nul byte is recieved, the socket is handed to a new Client along
 //   with the command.
 // * When the connection is closed, the command is run in an empty context.
-class ClientAccepter
+class Server::Accepter
 {
 public:
-    ClientAccepter(int socket)
+    Accepter(int socket)
         : m_socket_watcher(socket, [this](FDWatcher&) { handle_available_input(); }) {}
 
 private:
@@ -508,14 +508,14 @@ private:
                 }
                 catch (client_removed&) {}
                 close(socket);
-                delete this;
+                Server::instance().remove_accepter(this);
                 return;
             }
             if (c == 0) // end of initial command stream, go to interactive ui mode
             {
                 ClientManager::instance().create_client(
                     std::unique_ptr<UserInterface>{new RemoteUI{socket}}, m_buffer);
-                delete this;
+                Server::instance().remove_accepter(this);
                 return;
             }
             else
@@ -547,7 +547,7 @@ Server::Server(String session_name)
     if (listen(listen_sock, 4) == -1)
        throw runtime_error("unable to listen on socket " + filename);
 
-    auto accepter = [](FDWatcher& watcher) {
+    auto accepter = [this](FDWatcher& watcher) {
         sockaddr_un client_addr;
         socklen_t   client_addr_len = sizeof(sockaddr_un);
         int sock = accept(watcher.fd(), (sockaddr*) &client_addr, &client_addr_len);
@@ -555,7 +555,7 @@ Server::Server(String session_name)
             throw runtime_error("accept failed");
         fcntl(sock, F_SETFD, FD_CLOEXEC);
 
-        new ClientAccepter{sock};
+        m_accepters.emplace_back(new Accepter{sock});
     };
     m_listener.reset(new FDWatcher{listen_sock, accepter});
 }
@@ -570,6 +570,13 @@ void Server::close_session()
 Server::~Server()
 {
     close_session();
+}
+
+void Server::remove_accepter(Accepter* accepter)
+{
+    auto it = find(m_accepters, accepter);
+    kak_assert(it != m_accepters.end());
+    m_accepters.erase(it);
 }
 
 }
