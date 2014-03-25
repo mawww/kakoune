@@ -40,52 +40,57 @@ def -shell-params git %{ %sh{
         (
             echo "eval -client '$kak_client' %{
                       try %{ addhl flag_lines magenta git_blame_flags }
-                      set buffer=$kak_buffile git_blame_flags ''
+                      set buffer=$kak_bufname git_blame_flags ''
                   }" | kak -p ${kak_session}
-            declare -A authors
-            declare -A dates
-            send_flags() {
-                if [ -z "$line" ]; then return; fi
-                text=$(echo "${sha:0:8} ${dates[$sha]} ${authors[$sha]}" | sed -e 's/:/\\:/g')
-                flag="$line|black|$text"
-                for (( i=1; $i < $count; i++ )); do
-                    flag="$flag:$(($line+$i))|black|$text"
-                done
-                echo "set -add buffer=$kak_buffile git_blame_flags %{${flag}}" | kak -p ${kak_session}
-            }
-            git blame --incremental $kak_buffile | ( while read blame_line; do
-                if [[ $blame_line =~ ([0-9a-f]{40}).([0-9]+).([0-9]+).([0-9]+) ]]; then
-                    send_flags
-                    sha=${BASH_REMATCH[1]}
-                    line=${BASH_REMATCH[3]}
-                    count=${BASH_REMATCH[4]}
-                elif [[ $blame_line =~ author[^-](.*) ]]; then
-                    authors[$sha]=${BASH_REMATCH[1]}
-                elif [[ $blame_line =~ author-time.([0-9]*) ]]; then
-                    dates[$sha]="$(date -d @${BASH_REMATCH[1]} +'%F %T')"
-                fi
-            done; send_flags )
-        ) >& /dev/null < /dev/null &
+                  git blame --incremental ${kak_buffile} | awk -e '
+                  function send_flags(text, flag, i) {
+                      if (line == "") { return; }
+                      text=substr(sha,1,8) " " dates[sha] " " authors[sha]
+                      gsub(":", "\\:", text)
+                      flag=line "|black|" text
+                      for ( i=1; i < count; i++ ) {
+                          flag=flag ":" line+i "|black|" text
+                      }
+                      cmd = "kak -p " ENVIRON["kak_session"]
+                      print "set -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags %{" flag "}" | cmd
+                      close(cmd)
+                  }
+                  /^([0-9a-f]{40}) ([0-9]+) ([0-9]+) ([0-9]+)/ {
+                      send_flags()
+                      sha=$1
+                      line=$3
+                      count=$4
+                  }
+                  /^author / { authors[sha]=substr($0,8) }
+                  /^author-time ([0-9]*)/ {
+                       cmd = "date -d @" $2 " +\"%F %T\""
+                       cmd | getline dates[sha]
+                  }
+                  END { send_flags(); }'
+        ) > /dev/null 2>&1 < /dev/null &
     }
 
     update_diff() {
-        git diff -U0 $kak_buffile | {
-            local line=0
-            local flags="0|red|."
-            while read; do
-                if [[ $REPLY =~ ^---.* ]]; then
-                    continue
-                elif [[ $REPLY =~ ^@@.-[0-9]+(,[0-9]+)?.\+([0-9]+)(,[0-9]+)?.@@.* ]]; then
-                    line=${BASH_REMATCH[2]}
-                elif [[ $REPLY =~ ^\+ ]]; then
-                    flags="$flags:$line|green|+"
-                    ((line++))
-                elif [[ $REPLY =~ ^\- ]]; then
-                    flags="$flags:$line|red|-"
-                fi
-            done
-            echo "set buffer git_diff_flags '$flags'"
-        }
+        git diff -U0 $kak_buffile | awk -e '
+            BEGIN {
+                line=0
+                flags="0|red|."
+            }
+            /^---.*/ {}
+            /^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@.*/ {
+                 if ((x=index($3, ",")) > 0) {
+                     line=substr($3, 2, x-1)
+                 } else {
+                     line=substr($3, 2)
+                 }
+            }
+            /^\+/ {
+                 flags=flags ":" line "|green|+"
+                 line++
+            }
+            /^\-/ { flags=flags ":" line "|red|-" }
+            END { print "set buffer git_diff_flags ", flags }
+        '
     }
 
     case "$1" in
