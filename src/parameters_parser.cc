@@ -31,7 +31,7 @@ ParametersParser::ParametersParser(ParameterList params,
             {
                 ++i;
                 if (i == params.size() or params[i][0] == '-')
-                   throw missing_option_value(params[i]);
+                   throw missing_option_value(it->first);
             }
         }
         else
