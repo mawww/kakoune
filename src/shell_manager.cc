@@ -119,7 +119,7 @@ String ShellManager::pipe(const String& input,
 
             ++it;
         }
-        String shell = context.options()["shell"].get<String>();
+        String shell = "/bin/sh";
         std::vector<const char*> execparams = { shell.c_str(), "-c", cmdline.c_str() };
         if (not params.empty())
             execparams.push_back(shell.c_str());

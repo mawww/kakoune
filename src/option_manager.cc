@@ -125,7 +125,6 @@ GlobalOptions::GlobalOptions()
     declare_option<int>("scrolloff", 0);
     declare_option<String>("eolformat", "lf");
     declare_option<String>("BOM", "no");
-    declare_option<String>("shell", "bash");
     declare_option<bool>("complete_prefix", true);
     declare_option<bool>("incsearch", true);
     declare_option<bool>("autoinfo", true);

@@ -512,8 +512,6 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    writing a buffer, this is autodetected on load.
  * +BOM+ _string_ ("no" or "utf-8"): define if the file should be written
    with an unicode byte order mark.
- * +shell+ _string_ ("bash" by default): what command to run to evaluate
-   shell commands.
  * +complete_prefix+ _bool_: when completing in command line, and multiple
    candidates exist, enable completion with common prefix.
  * +incsearch+ _bool_: execute search as it is typed
