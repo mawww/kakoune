@@ -19,6 +19,8 @@ public:
     int fd() const { return m_fd; }
     void run() { m_callback(*this); }
 private:
+    FDWatcher(const FDWatcher&) = delete;
+
     int      m_fd;
     Callback m_callback;
 };
