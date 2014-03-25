@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-static const Regex env_var_regex(R"(\$\{kak_(\w+)[^}]*\}|\$kak_(\w+))");
+static const Regex env_var_regex(R"(\bkak_(\w+)\b)");
 
 ShellManager::ShellManager()
 {
