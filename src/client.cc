@@ -129,7 +129,7 @@ void Client::check_buffer_fs_timestamp()
                 return;
             if (key == 'r' or key == 'y')
                 reload_buffer(context, filename);
-            if (key == 'k' or key == 'n')
+            else if (key == 'k' or key == 'n')
             {
                 buf->set_fs_timestamp(ts);
                 print_status({"'" + buf->display_name() + "' kept", get_color("Information") });
