@@ -214,22 +214,24 @@ void write_buffer_to_file(Buffer& buffer, const String& filename)
         eolformat = "\n";
     auto eoldata = eolformat.data();
 
-    int fd = open(parse_filename(filename).c_str(),
-                  O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd == -1)
-        throw file_access_error(filename, strerror(errno));
-    auto close_fd = on_scope_end([fd]{ close(fd); });
-
-    if (buffer.options()["BOM"].get<String>() == "utf-8")
-        ::write(fd, "\xEF\xBB\xBF", 3);
-
-    for (LineCount i = 0; i < buffer.line_count(); ++i)
     {
-        // end of lines are written according to eolformat but always
-        // stored as \n
-        memoryview<char> linedata = buffer[i].data();
-        write(fd, linedata.subrange(0, linedata.size()-1), filename);
-        write(fd, eoldata, filename);
+        int fd = open(parse_filename(filename).c_str(),
+                      O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        if (fd == -1)
+            throw file_access_error(filename, strerror(errno));
+        auto close_fd = on_scope_end([fd]{ close(fd); });
+
+        if (buffer.options()["BOM"].get<String>() == "utf-8")
+            ::write(fd, "\xEF\xBB\xBF", 3);
+
+        for (LineCount i = 0; i < buffer.line_count(); ++i)
+        {
+            // end of lines are written according to eolformat but always
+            // stored as \n
+            memoryview<char> linedata = buffer[i].data();
+            write(fd, linedata.subrange(0, linedata.size()-1), filename);
+            write(fd, eoldata, filename);
+        }
     }
     if ((buffer.flags() & Buffer::Flags::File) and filename == buffer.name())
         buffer.notify_saved();
