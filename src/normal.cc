@@ -16,6 +16,7 @@
 #include "window.hh"
 #include "user_interface.hh"
 #include "utf8_iterator.hh"
+#include "debug.hh"
 
 namespace Kakoune
 {
@@ -924,16 +925,21 @@ void rotate_selections(Context& context, int count)
     context.selections().rotate_main(count != 0 ? count : 1);
 }
 
-void rotate_selections_content(Context& context, int count)
+void rotate_selections_content(Context& context, int group)
 {
-    if (count == 0)
-        count = 1;
+    int count = 1;
     auto strings = context.selections_content();
-    count = count % strings.size();
-    std::rotate(strings.begin(), strings.end()-count, strings.end());
-    context.selections().rotate_main(count);
-    ScopedEdition edition(context);
+    if (group == 0 or group > (int)strings.size())
+        group = (int)strings.size();
+    count = count % group;
+    for (auto it = strings.begin(); it != strings.end(); )
+    {
+        auto end = std::min(strings.end(), it + group);
+        std::rotate(it, end-count, end);
+        it = end;
+    }
     insert<InsertMode::Replace>(context.buffer(), context.selections(), strings);
+    context.selections().rotate_main(count);
 }
 
 enum class SelectFlags

@@ -223,7 +223,9 @@ Changes
  * _alt-@_: convert spaces to tabs in current selections, uses the buffer
             tabstop option or the count parameter for tabstop.
 
- * _alt-R_: rotate selections content
+ * _alt-R_: rotate selections content, if specified, the count groups
+            selections, so +3<a-R>+ rotate (1, 2, 3) and (3, 4, 6)
+            independently.
 
 Goto Commands
 -------------
