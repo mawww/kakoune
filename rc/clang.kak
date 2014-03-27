@@ -17,14 +17,28 @@ def clang-complete %{
         (
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
-            output=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} 2>&1 | tee /tmp/kak-clang-out |
-                     grep -E "^COMPLETION:[^:]+:" | perl -pe 's/^COMPLETION:[^:]+: +//; s/:/\\:/g; s/\[#.*?#\]|<#.*?#>(, *|\))?|\{#.*?#\}\)?//g')
+            clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${kak_opt_clang_filename} 2>&1 | awk -e '
+              function rmblocks(opening, closing, val, res) {
+                  while (match(val, opening)) {
+                      res = res substr(val, 1, RSTART-1)
+                      val = substr(val, RSTART + RLENGTH)
+                      if (match(val, closing))
+                          val = substr(val, RSTART + RLENGTH)
+                  }
+                  return res val
+              }
+              BEGIN { out = ENVIRON["kak_cursor_line"] "." ENVIRON["kak_cursor_column"] "@" ENVIRON["kak_timestamp"] }
+              /^COMPLETION:[^:]+:/ {
+                  gsub("^COMPLETION:[^:]+: +", ""); gsub(":", "\\:")
+                  c = rmblocks("\\[#", "#\\]", rmblocks("<#", "#>", rmblocks("\\{#", "#\\}", $0)))
+                  gsub("\\((, )+\\)", "(", c)
+                  out = out ":" c
+              }
+              END {
+                  cmd = "kak -p " ENVIRON["kak_session"]
+                  print "eval -client " ENVIRON["kak_client"] " %[ echo completed; set buffer clang_completions %[" out "] ]" | cmd
+              }'
             rm -r $(dirname ${kak_opt_clang_filename})
-            completions="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
-            for cmp in ${output}; do
-                completions="${completions}:${cmp}"
-            done
-            echo "eval -client $kak_client %[ echo completed; set buffer clang_completions '${completions}' ]" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
