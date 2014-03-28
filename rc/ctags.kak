@@ -8,22 +8,14 @@ def -shell-params \
     -docstring 'jump to tag definition' \
     tag \
     %{ %sh{
-        if [ -z "$1" ]; then tagname=${kak_selection}; else tagname="$1"; fi
-        matches=$(readtags ${tagname})
-        if [ -z "${matches}" ]; then
-            echo "echo tag not found ${tagname}"
-        else
-            menuparam=$(readtags ${tagname} | perl -i -ne '
-                /([^\t]+)\t([^\t]+)\t\/\^([^{}]*).*\$\// and print "%{$2 [$3]} %{try %{ edit %{$2}; exec %{/\\Q$3<ret>vc} } catch %{ echo %{unable to find tag} } } ";
-                /([^\t]+)\t([^\t]+)\t(\d+)/              and print "%{$2:$3} %{edit %{$2} %{$3}}";
-            ' | sed -e 's/\n/ /g')
-
-            if [ -z "${menuparam}" ]; then
-                echo "echo no such tag ${tagname}";
-            else
-                echo "menu -auto-single ${menuparam}";
-            fi
-        fi
+        export tagname=${1:-${kak_selection}}
+        readtags ${tagname} | awk -F '\t|\n' -e '
+            /[^\t]+\t[^\t]+\t\/\^.*\$\// {
+                gsub("^/\\^", "", $3); gsub("\\$/$", "", $3); gsub("(\\{|\\}).*$", "", $3);
+                out = out " %{" $2 " [" $3 "]} %{try %{ edit %{" $2 "}; exec %{/\\Q" $3 "<ret>vc} } catch %{ debug %{" $3 "}; echo %{unable to find tag} } }"
+            }
+            /[^\t]+\t[^\t]+\t([0-9]+)/ { out = out " %{" $2 ":" $3 "} %{edit %{" $2 "} %{" $3 "}}" }
+            END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -auto-single " out }'
     }}
 
 def tag-complete %{ eval -draft %{
