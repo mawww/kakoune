@@ -3,6 +3,7 @@
 
 #include "color.hh"
 #include "utils.hh"
+#include "completion.hh"
 
 #include <unordered_map>
 
@@ -18,6 +19,8 @@ public:
     void register_alias(const String& name, const String& colordesc,
                         bool override = false);
 
+    CandidateList complete_alias_name(const String& prefix,
+                                      ByteCount cursor_pos) const;
 private:
     std::unordered_map<String, ColorPair>    m_aliases;
 };
