@@ -31,7 +31,7 @@ def clang-complete %{
               /^COMPLETION:[^:]+:/ {
                   gsub("^COMPLETION:[^:]+: +", ""); gsub(":", "\\:")
                   c = rmblocks("\\[#", "#\\]", rmblocks("<#", "#>", rmblocks("\\{#", "#\\}", $0)))
-                  gsub("\\((, )+\\)", "(", c)
+                  gsub("\\((, )+\\)", "(", c); gsub("<(, )+>", "<", c)
                   out = out ":" c
               }
               END {
