@@ -787,8 +787,11 @@ void indent(Context& context, int)
                 sels.emplace_back(line, line);
         }
     }
-    ScopedEdition edition(context);
-    insert<InsertMode::Insert>(buffer, sels, indent);
+    if (not sels.empty())
+    {
+        ScopedEdition edition(context);
+        insert<InsertMode::Insert>(buffer, sels, indent);
+    }
 }
 
 template<bool deindent_incomplete = true>
@@ -828,8 +831,11 @@ void deindent(Context& context, int)
             }
         }
     }
-    ScopedEdition edition(context);
-    erase(context.buffer(), sels);
+    if (not sels.empty())
+    {
+        ScopedEdition edition(context);
+        erase(context.buffer(), sels);
+    }
 }
 
 template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
