@@ -296,7 +296,7 @@ void goto_commands(Context& context, int line)
             }
             case 'f':
             {
-                const Range& sel = context.selections().main();
+                const Selection& sel = context.selections().main();
                 String filename = content(buffer, sel);
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
                 for (auto c : forbidden)
@@ -1211,7 +1211,7 @@ private:
     SelectionList m_ranges;
 };
 
-inline bool touches(const Buffer& buffer, const Range& lhs, const Range& rhs)
+inline bool touches(const Buffer& buffer, const Selection& lhs, const Selection& rhs)
 {
     return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
                                   : lhs.min() <= buffer.char_next(rhs.max());

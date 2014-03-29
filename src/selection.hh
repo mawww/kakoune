@@ -6,14 +6,18 @@
 namespace Kakoune
 {
 
-// An oriented, inclusive buffer range
-struct Range
-{
-public:
-    Range(BufferCoord anchor, BufferCoord cursor)
-        : m_anchor{anchor}, m_cursor{cursor} {}
+using CaptureList = std::vector<String>;
 
-    void merge_with(const Range& range);
+// A selection is a Selection, associated with a CaptureList
+struct Selection
+{
+    explicit Selection(BufferCoord pos) : Selection(pos,pos) {}
+    Selection(BufferCoord anchor, BufferCoord cursor,
+              CaptureList captures = {})
+        : m_anchor{anchor}, m_cursor{cursor},
+          m_captures(std::move(captures)) {}
+
+    void merge_with(const Selection& range);
 
     BufferCoord& anchor() { return m_anchor; }
     BufferCoord& cursor() { return m_cursor; }
@@ -21,7 +25,10 @@ public:
     const BufferCoord& anchor() const { return m_anchor; }
     const BufferCoord& cursor() const { return m_cursor; }
 
-    bool operator== (const Range& other) const
+    CaptureList& captures() { return m_captures; }
+    const CaptureList& captures() const { return m_captures; }
+
+    bool operator== (const Selection& other) const
     {
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
@@ -32,26 +39,28 @@ public:
 private:
     BufferCoord m_anchor;
     BufferCoord m_cursor;
+
+    CaptureList m_captures;
 };
 
-inline bool overlaps(const Range& lhs, const Range& rhs)
+inline bool overlaps(const Selection& lhs, const Selection& rhs)
 {
     return lhs.min() <= rhs.min() ? lhs.max() >= rhs.min()
                                   : lhs.min() <= rhs.max();
 }
 
-inline String content(const Buffer& buffer, const Range& range)
+inline String content(const Buffer& buffer, const Selection& range)
 {
     return buffer.string(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferIterator erase(Buffer& buffer, const Range& range)
+inline BufferIterator erase(Buffer& buffer, const Selection& range)
 {
     return buffer.erase(buffer.iterator_at(range.min()),
                         utf8::next(buffer.iterator_at(range.max())));
 }
 
-inline CharCount char_length(const Buffer& buffer, const Range& range)
+inline CharCount char_length(const Buffer& buffer, const Selection& range)
 {
     return utf8::distance(buffer.iterator_at(range.min()),
                           utf8::next(buffer.iterator_at(range.max())));
@@ -66,32 +75,11 @@ inline void avoid_eol(const Buffer& buffer, BufferCoord& coord)
         coord.column = line.byte_count_to(line.char_length() - 2);
 }
 
-inline void avoid_eol(const Buffer& buffer, Range& sel)
+inline void avoid_eol(const Buffer& buffer, Selection& sel)
 {
     avoid_eol(buffer, sel.anchor());
     avoid_eol(buffer, sel.cursor());
 }
-
-
-using CaptureList = std::vector<String>;
-
-// A selection is a Range, associated with a CaptureList
-struct Selection : public Range
-{
-    explicit Selection(BufferCoord pos) : Range(pos,pos) {}
-    Selection(BufferCoord anchor, BufferCoord cursor,
-              CaptureList captures = {})
-        : Range(anchor, cursor), m_captures(std::move(captures)) {}
-
-    Selection(const Range& range)
-        : Range(range) {}
-
-    CaptureList& captures() { return m_captures; }
-    const CaptureList& captures() const { return m_captures; }
-
-private:
-    CaptureList m_captures;
-};
 
 static bool compare_selections(const Selection& lhs, const Selection& rhs)
 {

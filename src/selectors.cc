@@ -76,10 +76,10 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
 
 // c++14 will add std::optional, so we use boost::optional until then
 using boost::optional;
-static optional<Range> find_surrounding(const Buffer& buffer,
-                                        BufferCoord coord,
-                                        CodepointPair matching,
-                                        ObjectFlags flags, int init_level)
+static optional<Selection> find_surrounding(const Buffer& buffer,
+                                            BufferCoord coord,
+                                            CodepointPair matching,
+                                            ObjectFlags flags, int init_level)
 {
     const bool to_begin = flags & ObjectFlags::ToBegin;
     const bool to_end   = flags & ObjectFlags::ToEnd;
@@ -103,7 +103,7 @@ static optional<Range> find_surrounding(const Buffer& buffer,
             --first;
         }
         if (level != 0 or *first != matching.first)
-            return optional<Range>{};
+            return optional<Selection>{};
     }
 
     Utf8Iterator last = pos;
@@ -124,7 +124,7 @@ static optional<Range> find_surrounding(const Buffer& buffer,
             ++last;
         }
         if (level != 0 or last == buffer.end())
-            return optional<Range>{};
+            return optional<Selection>{};
     }
 
     if (flags & ObjectFlags::Inner)

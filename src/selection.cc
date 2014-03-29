@@ -5,7 +5,7 @@
 namespace Kakoune
 {
 
-void Range::merge_with(const Range& range)
+void Selection::merge_with(const Selection& range)
 {
     m_cursor = range.m_cursor;
     if (m_anchor < m_cursor)

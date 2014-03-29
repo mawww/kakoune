@@ -51,7 +51,7 @@ inline void remove_selection(SelectionList& selections, int index)
 
 using Utf8Iterator = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
 
-inline Range utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
+inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
     return {first.base().coord(), last.base().coord()};
 }

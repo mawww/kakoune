@@ -75,7 +75,7 @@ void register_env_vars()
         }, {
             "selection",
             [](const String& name, const Context& context)
-            { const Range& sel = context.selections().main();
+            { const Selection& sel = context.selections().main();
               return content(context.buffer(), sel); }
         }, {
             "selections",
