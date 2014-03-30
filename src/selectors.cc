@@ -298,6 +298,8 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
     }
     if (flags & ObjectFlags::ToEnd)
     {
+        if (last != buffer.end() && is_eol(*last))
+            ++last;
         while (last != buffer.end())
         {
             char cur = *last;
