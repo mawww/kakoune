@@ -218,6 +218,11 @@ Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection
     return utf8_range(begin, end == buffer.begin() ? end : end+1);
 }
 
+static bool is_end_of_sentence(char c)
+{
+    return c == '.' or c == ';' or c == '!' or c == '?';
+}
+
 Selection select_whole_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
@@ -237,7 +242,7 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
                 ++first;
                 break;
             }
-            else if (prev == '.' or prev == ';' or prev == '!' or prev == '?')
+            else if (is_end_of_sentence(prev))
             {
                 if (saw_non_blank)
                     break;
@@ -253,7 +258,7 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
         while (last != buffer.end())
         {
             char cur = *last;
-            if (cur == '.' or cur == ';' or cur == '!' or cur == '?' or
+            if (is_end_of_sentence(cur) or
                 (is_eol(cur) and (last+1 == buffer.end() or is_eol(*(last+1)))))
                 break;
             ++last;
