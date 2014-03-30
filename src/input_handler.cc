@@ -660,7 +660,7 @@ public:
         }
         m_completions.end   = cursor_pos;
         m_completions.begin = buffer.advance(m_completions.end, -candidate.length());
-        m_completions.timestamp = m_context.buffer().timestamp();
+        m_completions.timestamp = buffer.timestamp();
         if (m_context.has_ui())
             m_context.ui().menu_select(m_current_candidate);
 
