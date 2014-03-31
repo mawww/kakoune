@@ -677,7 +677,8 @@ const CommandDesc echo_cmd = {
     nullptr,
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
-        SwitchMap{ { "color", { true, "set message color" } } },
+        SwitchMap{ { "color", { true, "set message color" } },
+                   { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
     CommandFlags::None,
@@ -687,9 +688,14 @@ const CommandDesc echo_cmd = {
         String message;
         for (auto& param : parser)
             message += param + " ";
-        ColorPair color = get_color(parser.has_option("color") ?
-                                    parser.option_value("color") : "StatusLine");
-        context.print_status({ std::move(message), color } );
+        if (parser.has_option("debug"))
+            write_debug(message);
+        else
+        {
+            auto color = get_color(parser.has_option("color") ?
+                                   parser.option_value("color") : "StatusLine");
+            context.print_status({ std::move(message), color } );
+        }
     }
 };
 
