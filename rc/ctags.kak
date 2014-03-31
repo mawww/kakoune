@@ -12,7 +12,7 @@ def -shell-params \
         readtags ${tagname} | awk -F '\t|\n' -e '
             /[^\t]+\t[^\t]+\t\/\^.*\$\// {
                 gsub("^/\\^", "", $3); gsub("\\$/$", "", $3); gsub("(\\{|\\}).*$", "", $3);
-                out = out " %{" $2 " [" $3 "]} %{try %{ edit %{" $2 "}; exec %{/\\Q" $3 "<ret>vc} } catch %{ debug %{" $3 "}; echo %{unable to find tag} } }"
+                out = out " %{" $2 " [" $3 "]} %{try %{ edit %{" $2 "}; exec %{/\\Q" $3 "<ret>vc} } catch %{ echo %{unable to find tag} } }"
             }
             /[^\t]+\t[^\t]+\t([0-9]+)/ { out = out " %{" $2 ":" $3 "} %{edit %{" $2 "} %{" $3 "}}" }
             END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -auto-single " out }'

@@ -99,7 +99,6 @@ def alt -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
              done
          ;;
     esac
-    echo debug ${altname}
     if [ -f ${altname} ]; then
        echo edit "'${altname}'"
     else
