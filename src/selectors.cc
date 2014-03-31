@@ -226,6 +226,16 @@ static bool is_end_of_sentence(char c)
 Selection select_whole_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
+
+    if (not (flags & ObjectFlags::ToEnd))
+    {
+        BufferIterator prev_non_blank = first-1;
+        skip_while_reverse(prev_non_blank, buffer.begin(),
+                           [](char c) { return is_blank(c) or is_eol(c); });
+        if (is_end_of_sentence(*prev_non_blank))
+            first = prev_non_blank;
+    }
+
     BufferIterator last = first;
 
     if (flags & ObjectFlags::ToBegin)
@@ -277,9 +287,14 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
 Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
+
+    if (not (flags & ObjectFlags::ToEnd) and buffer.offset(first.coord()) > 1 and
+        *(first-1) == '\n' and *(first-2) == '\n')
+        --first;
+
     BufferIterator last = first;
 
-    if (flags & ObjectFlags::ToBegin and first != buffer.begin())
+    if ((flags & ObjectFlags::ToBegin) and first != buffer.begin())
     {
         skip_while_reverse(first, buffer.begin(), is_eol);
         if (flags & ObjectFlags::ToEnd)
