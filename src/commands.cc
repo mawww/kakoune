@@ -2,6 +2,7 @@
 
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "client.hh"
 #include "client_manager.hh"
 #include "color_registry.hh"
 #include "command_manager.hh"
@@ -12,11 +13,11 @@
 #include "file.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
-#include "client.hh"
 #include "option_manager.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
+#include "remote.hh"
 #include "shell_manager.hh"
 #include "string.hh"
 #include "user_interface.hh"
@@ -703,16 +704,19 @@ const CommandDesc echo_cmd = {
 const CommandDesc debug_cmd = {
     "debug",
     nullptr,
-    "debug <params>...: write given parameters in the debug buffer",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart },
+    "debug <params>...: write debug informations in debug buffer",
+    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     CommandCompleter{},
     [](const ParametersParser& parser, Context&)
     {
-        String message;
-        for (auto& param : parser)
-            message += param + " ";
-        write_debug(message);
+        if (parser[0] == "info")
+        {
+            write_debug("pid: " + to_string(getpid()));
+            write_debug("session: " + Server::instance().session());
+        }
+        else
+            throw runtime_error("unknown debug command '" + parser[0] + "'");
     }
 };
 
