@@ -112,8 +112,8 @@ scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
 Basic Movement
 --------------
 
- * _space_: select the character under selection end
- * _alt-space_: flip the selections
+ * _space_: select the character under last selection end
+ * _alt-space_: flip the selections direction
 
  * _h_: select the character on the right of selection end
  * _j_: select the character below the selection end
