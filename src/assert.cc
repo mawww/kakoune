@@ -40,8 +40,8 @@ void on_assert_failed(const char* message)
         return;
     }
 #else
-    int res = system(("xmessage -buttons 'quit:0,ignore:1' '" + msg + "'").c_str());
-    switch (res)
+    auto cmd = "xmessage -buttons 'quit:0,ignore:1' '" + msg + "'";
+    switch (system(cmd.c_str()))
     {
     case -1:
     case  0:

@@ -16,7 +16,8 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
                std::unique_ptr<Window>&& window,
                SelectionList selections, String name)
     : m_ui{std::move(ui)}, m_window{std::move(window)},
-      m_input_handler{m_window->buffer(), std::move(selections), std::move(name)}
+      m_input_handler{m_window->buffer(), std::move(selections),
+                      std::move(name)}
 {
     context().set_client(*this);
     context().set_window(*m_window);
@@ -63,8 +64,10 @@ DisplayLine Client::generate_mode_line() const
 
 void Client::change_buffer(Buffer& buffer)
 {
-    ClientManager::instance().add_free_window(std::move(m_window), std::move(context().selections()));
-    WindowAndSelections ws = ClientManager::instance().get_free_window(buffer);
+    auto& client_manager = ClientManager::instance();
+    client_manager.add_free_window(std::move(m_window),
+                                   std::move(context().selections()));
+    WindowAndSelections ws = client_manager.get_free_window(buffer);
     m_window = std::move(ws.window);
     context().m_selections = std::move(ws.selections);
     context().set_window(*m_window);
@@ -116,12 +119,13 @@ void Client::check_buffer_fs_timestamp()
     {
         DisplayCoord pos = context().window().dimensions();
         pos.column -= 1;
-        m_ui->info_show("reload '" + buffer.display_name() + "' ?",
-                        "'" + buffer.display_name() + "' was modified externally\n"
-                        "press r or y to reload, k or n to keep",
-                        pos, get_color("Information"), MenuStyle::Prompt);
+        m_ui->info_show(
+            "reload '" + buffer.display_name() + "' ?",
+            "'" + buffer.display_name() + "' was modified externally\n"
+            "press r or y to reload, k or n to keep",
+            pos, get_color("Information"), MenuStyle::Prompt);
 
-        m_input_handler.on_next_key([this, ts, filename](Key key, Context& context) {
+        m_input_handler.on_next_key([=, this](Key key, Context& context) {
             Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
             m_ui->info_hide();
             // buffer got deleted while waiting for the key, do nothing
@@ -132,11 +136,13 @@ void Client::check_buffer_fs_timestamp()
             else if (key == 'k' or key == 'n')
             {
                 buf->set_fs_timestamp(ts);
-                print_status({"'" + buf->display_name() + "' kept", get_color("Information") });
+                print_status({ "'" + buf->display_name() + "' kept",
+                               get_color("Information") });
             }
             else
             {
-                print_status({"'" + key_to_str(key) + "' is not a valid choice", get_color("Error")});
+                print_status({ "'" + key_to_str(key) + "' is not a valid choice",
+                               get_color("Error") });
                 check_buffer_fs_timestamp();
             }
         });

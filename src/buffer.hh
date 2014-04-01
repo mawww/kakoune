@@ -72,8 +72,10 @@ private:
 class BufferChangeListener
 {
 public:
-    virtual void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end) = 0;
-    virtual void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end) = 0;
+    virtual void on_insert(const Buffer& buffer,
+                           BufferCoord begin, BufferCoord end) = 0;
+    virtual void on_erase(const Buffer& buffer,
+                          BufferCoord begin, BufferCoord end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file
@@ -107,8 +109,8 @@ public:
     BufferIterator insert(const BufferIterator& pos, String content);
     BufferIterator erase(BufferIterator begin, BufferIterator end);
 
-    size_t         timestamp() const { return m_timestamp; }
-    size_t         line_timestamp(LineCount line) const { return m_lines[line].timestamp; }
+    size_t         timestamp() const;
+    size_t         line_timestamp(LineCount line) const;
     time_t         fs_timestamp() const;
     void           set_fs_timestamp(time_t ts);
 
@@ -128,8 +130,8 @@ public:
     BufferCoord    char_next(BufferCoord coord) const;
     BufferCoord    char_prev(BufferCoord coord) const;
 
-    BufferCoord    back_coord() const { return { line_count() - 1, m_lines.back().length() - 1 }; }
-    BufferCoord    end_coord() const { return { line_count() - 1, m_lines.back().length() }; }
+    BufferCoord    back_coord() const;
+    BufferCoord    end_coord() const;
 
     bool           is_valid(BufferCoord c) const;
     bool           is_end(BufferCoord c) const;

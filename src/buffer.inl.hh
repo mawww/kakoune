@@ -71,7 +71,7 @@ inline BufferIterator Buffer::end() const
 {
     if (m_lines.empty())
         return BufferIterator(*this, { 0_line, 0 });
-    return BufferIterator(*this, { line_count()-1, m_lines.back().length() });
+    return BufferIterator(*this, { line_count() - 1, m_lines.back().length() });
 }
 
 inline ByteCount Buffer::byte_count() const
@@ -84,6 +84,26 @@ inline ByteCount Buffer::byte_count() const
 inline LineCount Buffer::line_count() const
 {
     return LineCount(m_lines.size());
+}
+
+inline size_t Buffer::timestamp() const
+{
+    return m_timestamp;
+}
+
+inline size_t Buffer::line_timestamp(LineCount line) const
+{
+    return m_lines[line].timestamp;
+}
+
+inline BufferCoord Buffer::back_coord() const
+{
+    return { line_count() - 1, m_lines.back().length() - 1 };
+}
+
+inline BufferCoord Buffer::end_coord() const
+{
+    return { line_count() - 1, m_lines.back().length() };
 }
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
