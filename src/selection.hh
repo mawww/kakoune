@@ -11,6 +11,7 @@ using CaptureList = std::vector<String>;
 // A selection is a Selection, associated with a CaptureList
 struct Selection
 {
+    Selection() = default;
     explicit Selection(BufferCoord pos) : Selection(pos,pos) {}
     Selection(BufferCoord anchor, BufferCoord cursor,
               CaptureList captures = {})

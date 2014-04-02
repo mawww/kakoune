@@ -23,7 +23,7 @@ Window::Window(Buffer& buffer)
       m_options(buffer.options()),
       m_keymaps(buffer.keymaps())
 {
-    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    InputHandler hook_handler{*m_buffer, { Selection{} } };
     hook_handler.context().set_window(*this);
     m_hooks.run_hook("WinCreate", buffer.name(), hook_handler.context());
     m_options.register_watcher(*this);
@@ -38,7 +38,7 @@ Window::Window(Buffer& buffer)
 
 Window::~Window()
 {
-    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    InputHandler hook_handler{*m_buffer, { Selection{} } };
     hook_handler.context().set_window(*this);
     m_hooks.run_hook("WinClose", buffer().name(), hook_handler.context());
     m_options.unregister_watcher(*this);
@@ -262,7 +262,7 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
     lines.emplace_back(AtomList{ {buffer(), line, line+1} });
     display_buffer.compute_range();
 
-    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    InputHandler hook_handler{*m_buffer, { Selection{} } };
     hook_handler.context().set_window(*this);
     m_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
     m_builtin_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
@@ -274,7 +274,7 @@ BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
 void Window::on_option_changed(const Option& option)
 {
     String desc = option.name() + "=" + option.get_as_string();
-    InputHandler hook_handler{*m_buffer, SelectionList{ {} } };
+    InputHandler hook_handler{*m_buffer, { Selection{} } };
     hook_handler.context().set_window(*this);
     m_hooks.run_hook("WinSetOption", desc, hook_handler.context());
 

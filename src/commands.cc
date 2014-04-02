@@ -918,7 +918,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         for (auto& name : names)
         {
             Buffer& buffer = BufferManager::instance().get_buffer(name);
-            InputHandler input_handler(buffer, SelectionList{ {} });
+            InputHandler input_handler{buffer, ( Selection{} )};
             func(parser, input_handler.context());
         }
         return;
