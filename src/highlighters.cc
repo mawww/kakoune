@@ -398,7 +398,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
 {
     auto& colors = get_color("MatchingChar");
     using CodepointPair = std::pair<Codepoint, Codepoint>;
-    constexpr CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
+    static const CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
     const auto range = display_buffer.range();
     const auto& buffer = context.buffer();
     for (auto& sel : context.selections())

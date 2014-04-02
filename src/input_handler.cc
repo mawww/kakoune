@@ -787,8 +787,7 @@ public:
         }
         matches.erase(prefix);
         CandidateList result;
-        std::copy(make_move_iterator(matches.begin()),
-                  make_move_iterator(matches.end()),
+        std::copy(matches.begin(), matches.end(),
                   inserter(result, result.begin()));
         std::sort(result.begin(), result.end());
         return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
