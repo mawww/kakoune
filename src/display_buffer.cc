@@ -165,7 +165,7 @@ void DisplayLine::trim(CharCount first_char, CharCount char_count)
     compute_range();
 }
 
-constexpr BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
+const BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
 
 void DisplayLine::compute_range()
 {
