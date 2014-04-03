@@ -10,7 +10,12 @@
 #define NCURSES_OPAQUE 0
 #define NCURSES_INTERNALS
 
+#ifdef __APPLE__
+#include <ncurses.h>
+#else
 #include <ncursesw/ncurses.h>
+#endif
+
 #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>

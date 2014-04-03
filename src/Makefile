@@ -10,14 +10,23 @@ sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
 
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
-LIBS += -lncursesw
 
-os := $(shell uname -o)
+os := $(shell uname)
+
+ifeq ($(os),Darwin)
+    LIBS += -lncurses
+else
+    LIBS += -lncursesw
+endif
+
 ifeq ($(os),Cygwin)
+    LIBS += -lboost_regex-mt
+else ifeq ($(os),Darwin)
     LIBS += -lboost_regex-mt
 else
     LIBS += -lboost_regex
 endif
+
 
 debug ?= yes
 ifeq ($(debug),yes)
