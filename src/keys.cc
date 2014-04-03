@@ -17,7 +17,7 @@ Key canonicalize_ifn(Key key)
 }
 
 using KeyAndName = std::pair<const char*, Codepoint>;
-static constexpr KeyAndName keynamemap[] = {
+static const KeyAndName keynamemap[] = {
     { "ret", '\r' },
     { "space", ' ' },
     { "tab", '\t' },

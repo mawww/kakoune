@@ -864,7 +864,7 @@ void select_object(Context& context, int param)
                 return select<mode>(context, std::bind(sel.func, _1, _2, flags));
         }
 
-        static constexpr struct
+        static const struct
         {
             CodepointPair pair;
             Codepoint name;
