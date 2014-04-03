@@ -10,9 +10,12 @@ namespace Kakoune
 Context::Context() = default;
 Context::~Context() = default;
 
-Context::Context(InputHandler& input_handler, Buffer& buffer, SelectionList selections, String name)
-    : m_input_handler{&input_handler}, m_selections{{buffer, std::move(selections)}},
-      m_name(std::move(name)) {}
+Context::Context(InputHandler& input_handler, Buffer& buffer,
+                 SelectionList selections, String name)
+    : m_input_handler{&input_handler},
+      m_selections{{buffer, std::move(selections)}},
+      m_name(std::move(name))
+{}
 
 Buffer& Context::buffer() const
 {
@@ -186,9 +189,10 @@ const SelectionList& Context::selections() const
 
 std::vector<String> Context::selections_content() const
 {
+    auto& buf = buffer();
     std::vector<String> contents;
     for (auto& sel : selections())
-        contents.push_back(buffer().string(sel.min(), buffer().char_next(sel.max())));
+        contents.push_back(buf.string(sel.min(), buf.char_next(sel.max())));
     return contents;
 }
 
