@@ -61,12 +61,12 @@ userconfig:
 
 install: kak
 	mkdir -p $(bindir)
-	install -D -m 0755 kak $(bindir)
+	install -m 0755 kak $(bindir)
 	mkdir -p $(sharedir)/rc
-	install -D -m 0644 ../share/kak/kakrc $(sharedir)
-	install -D -m 0644 ../rc/* $(sharedir)/rc
+	install -m 0644 ../share/kak/kakrc $(sharedir)
+	install -m 0644 ../rc/* $(sharedir)/rc
 	mkdir -p $(docdir)
-	install -D -m 0644 ../README.asciidoc $(docdir)
-	install -D -m 0644 ../doc/* $(docdir)
+	install -m 0644 ../README.asciidoc $(docdir)
+	install -m 0644 ../doc/* $(docdir)
 
 .PHONY: tags userconfig install
