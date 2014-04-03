@@ -53,6 +53,7 @@ struct Token
     enum class Type
     {
         Raw,
+        RawEval,
         ShellExpand,
         RegisterExpand,
         OptionExpand,
@@ -152,6 +153,8 @@ Token::Type token_type(const String& type_name)
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
         return Token::Type::OptionExpand;
+    else if (type_name == "rec")
+        return Token::Type::RawEval;
     else if (throw_on_invalid)
         throw unknown_expand{type_name};
     else
@@ -178,11 +181,49 @@ void skip_blanks_and_comments(const String& base, ByteCount& pos)
 }
 
 template<bool throw_on_unterminated>
+Token parse_percent_token(const String& line, ByteCount& pos)
+{
+    const ByteCount length = line.length();
+    const ByteCount type_start = ++pos;
+    while (isalpha(line[pos]))
+        ++pos;
+    String type_name = line.substr(type_start, pos - type_start);
+
+    if (throw_on_unterminated and pos == length)
+        throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
+
+    Token::Type type = token_type<throw_on_unterminated>(type_name);
+    static const std::unordered_map<char, char> matching_delimiters = {
+        { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
+    };
+
+    char opening_delimiter = line[pos];
+    ByteCount token_start = ++pos;
+
+    auto delim_it = matching_delimiters.find(opening_delimiter);
+    if (delim_it != matching_delimiters.end())
+    {
+        char closing_delimiter = delim_it->second;
+        String token = get_until_delimiter(line, pos, opening_delimiter,
+                                           closing_delimiter);
+        if (throw_on_unterminated and pos == length)
+            throw unterminated_string("%" + type_name + opening_delimiter,
+                                      String{closing_delimiter}, 0);
+        return {type, token_start, pos, std::move(token)};
+    }
+    else
+    {
+        String token = get_until_delimiter(line, pos, opening_delimiter);
+        return {type, token_start, pos, std::move(token)};
+    }
+}
+
+template<bool throw_on_unterminated>
 TokenList parse(const String& line)
 {
     TokenList result;
 
-    ByteCount length = line.length();
+    const ByteCount length = line.length();
     ByteCount pos = 0;
     while (pos < length)
     {
@@ -199,42 +240,11 @@ TokenList parse(const String& line)
             String token = get_until_delimiter(line, pos, delimiter);
             if (throw_on_unterminated and pos == length)
                 throw unterminated_string(String{delimiter}, String{delimiter});
-            result.emplace_back(Token::Type::Raw, token_start, pos, std::move(token));
+            result.emplace_back(Token::Type::Raw, token_start,
+                                pos, std::move(token));
         }
         else if (line[pos] == '%')
-        {
-            ByteCount type_start = ++pos;
-            while (isalpha(line[pos]))
-                ++pos;
-            String type_name = line.substr(type_start, pos - type_start);
-
-            if (throw_on_unterminated and pos == length)
-                throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
-
-            Token::Type type = token_type<throw_on_unterminated>(type_name);
-            static const std::unordered_map<char, char> matching_delimiters = {
-                { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
-            };
-
-            char opening_delimiter = line[pos];
-            token_start = ++pos;
-
-            auto delim_it = matching_delimiters.find(opening_delimiter);
-            if (delim_it != matching_delimiters.end())
-            {
-                char closing_delimiter = delim_it->second;
-                String token = get_until_delimiter(line, pos, opening_delimiter, closing_delimiter);
-                if (throw_on_unterminated and pos == length)
-                    throw unterminated_string("%" + type_name + opening_delimiter,
-                                              String{closing_delimiter}, 0);
-                result.emplace_back(type, token_start, pos, std::move(token));
-            }
-            else
-            {
-                String token = get_until_delimiter(line, pos, opening_delimiter);
-                result.emplace_back(type, token_start, pos, std::move(token));
-            }
-        }
+            result.push_back(parse_percent_token<throw_on_unterminated>(line, pos));
         else
         {
             while (pos != length and
@@ -257,6 +267,62 @@ TokenList parse(const String& line)
         ++pos;
     }
     return result;
+}
+
+String eval_token(const Token& token, Context& context,
+                  memoryview<String> shell_params,
+                  const EnvVarMap& env_vars);
+
+String eval(const String& str, Context& context,
+            memoryview<String> shell_params,
+            const EnvVarMap& env_vars)
+{
+    String res;
+    auto pos = 0_byte;
+    auto length = str.length();
+    while (pos < length)
+    {
+        if (str[pos] == '\\')
+        {
+            char c = str[++pos];
+            if (c != '%' and c != '\\')
+                res += '\\';
+            res += c;
+        }
+        else if (str[pos] == '%')
+        {
+            Token token = parse_percent_token<true>(str, pos);
+            res += eval_token(token, context, shell_params, env_vars);
+            ++pos;
+        }
+        else
+            res += str[pos++];
+    }
+    return res;
+}
+
+String eval_token(const Token& token, Context& context,
+                  memoryview<String> shell_params,
+                  const EnvVarMap& env_vars)
+{
+    switch (token.type())
+    {
+    case Token::Type::ShellExpand:
+        return ShellManager::instance().eval(token.content(), context,
+                                             shell_params, env_vars);
+    case Token::Type::RegisterExpand:
+        if (token.content().length() != 1)
+            throw runtime_error("wrong register name: " + token.content());
+        return RegisterManager::instance()[token.content()[0]].values(context)[0];
+    case Token::Type::OptionExpand:
+        return context.options()[token.content()].get_as_string();
+    case Token::Type::RawEval:
+        return eval(token.content(), context, shell_params, env_vars);
+    case Token::Type::Raw:
+        return token.content();
+    default: kak_assert(false);
+    }
+    return {};
 }
 
 }
@@ -300,40 +366,27 @@ void CommandManager::execute(const String& command_line,
     std::vector<String> params;
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
-        if (it->type() == Token::Type::ShellExpand)
-        {
-            String output = ShellManager::instance().eval(it->content(),
-                                                          context, shell_params,
-                                                          env_vars);
-            TokenList shell_tokens = parse<true>(output);
-            it = tokens.erase(it);
-            for (auto& token : shell_tokens)
-                it = ++tokens.insert(it, std::move(token));
-            it -= shell_tokens.size();
-
-            // when last token is a ShellExpand which produces no output
-            if (it == tokens.end())
-                break;
-        }
-        if (it->type() == Token::Type::RegisterExpand)
-        {
-            if (it->content().length() != 1)
-                throw runtime_error("wrong register name: " + it->content());
-            Register& reg = RegisterManager::instance()[it->content()[0]];
-            params.push_back(reg.values(context)[0]);
-        }
-        if (it->type() == Token::Type::OptionExpand)
-        {
-            const Option& option = context.options()[it->content()];
-            params.push_back(option.get_as_string());
-        }
         if (it->type() == Token::Type::CommandSeparator)
         {
             execute_single_command(params, context);
             params.clear();
         }
-        if (it->type() == Token::Type::Raw)
-            params.push_back(it->content());
+        // Shell expand are retokenized
+        else if (it->type() == Token::Type::ShellExpand)
+        {
+            auto shell_tokens = parse<true>(eval_token(*it, context,
+                                                       shell_params, env_vars));
+            it = tokens.erase(it);
+            for (auto& token : shell_tokens)
+                it = ++tokens.insert(it, std::move(token));
+
+            if (tokens.empty())
+                break;
+
+            it -= shell_tokens.size() + 1;
+        }
+        else
+            params.push_back(eval_token(*it, context, shell_params, env_vars));
     }
     execute_single_command(params, context);
 }
