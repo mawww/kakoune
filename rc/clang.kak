@@ -1,6 +1,7 @@
-decl -hidden str clang_filename
 decl str clang_options
-decl str-list clang_completions
+
+decl -hidden str clang_filename
+decl -hidden str-list clang_completions
 
 def clang-complete %{
     %sh{
