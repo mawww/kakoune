@@ -19,7 +19,7 @@ else
     LIBS += -lncursesw
 endif
 
-ifeq ($(os),Cygwin)
+ifneq (,$(findstring CYGWIN,$(os)))
     LIBS += -lboost_regex-mt
 else ifeq ($(os),Darwin)
     LIBS += -lboost_regex-mt
