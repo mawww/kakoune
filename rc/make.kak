@@ -23,13 +23,15 @@ hook global WinSetOption filetype=make %{
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }
 
+decl str jumpclient
+
 def errjump -docstring 'Jump to error location' %{
     try %{
         exec gll<a-?> "Entering directory" <ret>
         exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l
-        edit %rec{%reg{1}/%reg{2}} %reg{3} %reg{4}
+        eval -try-client %opt{jumpclient} edit %rec{%reg{1}/%reg{2}} %reg{3} %reg{4}
     } catch %{
         exec ghgl s "([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l
-        edit %reg{1} %reg{2} %reg{3}
+        eval -try-client %opt{jumpclient} edit %reg{1} %reg{2} %reg{3}
     }
 }
