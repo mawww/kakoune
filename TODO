@@ -64,8 +64,6 @@
   the interpreters, regex for finding used kak variables (ability to
   add direct python/perl/ruby/whatever evaluation).
 
-* %rec{...%opt{tchou}...%sh{echo kanaky}} ~= "...${kak_opt_tchou}...$(echo kanaky)..."
-
 * Optimize BufferModificationListener behaviour:
 
   - Editor should modify in reverse order, as a modification at one point does not
@@ -116,3 +114,5 @@
 
 * Comments and strings should be more integrated than just highlighting, matching chars
   for example should be strings and comments aware
+
+* Access to clients env vars (kak_client_env_WINDOWID)
