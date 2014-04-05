@@ -275,7 +275,10 @@ std::vector<String> list_files(const String& prefix,
 {
     kak_assert(dirname.empty() or dirname.back() == '/');
     DIR* dir = opendir(dirname.empty() ? "./" : dirname.c_str());
-    auto closeDir = on_scope_end([=]{ closedir(dir); });
+    auto closeDir = on_scope_end([=]{
+                                   if (dir != NULL)
+                                       closedir(dir);
+                                 });
 
     std::vector<String> result;
     if (not dir)
