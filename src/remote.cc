@@ -245,14 +245,19 @@ private:
 
 
 RemoteUI::RemoteUI(int socket)
-    : m_socket_watcher(socket, [this](FDWatcher&) { if (m_input_callback) m_input_callback(); })
+    : m_socket_watcher(socket, [this](FDWatcher&) {
+                           if (m_input_callback)
+                               m_input_callback();
+                       })
 {
-    write_debug("remote client connected: " + to_string(m_socket_watcher.fd()));
+    write_debug("remote client connected: " +
+                to_string(m_socket_watcher.fd()));
 }
 
 RemoteUI::~RemoteUI()
 {
-    write_debug("remote client disconnected: " + to_string(m_socket_watcher.fd()));
+    write_debug("remote client disconnected: " +
+                to_string(m_socket_watcher.fd()));
     close(m_socket_watcher.fd());
 }
 
@@ -369,7 +374,8 @@ RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
 {
     Message msg(socket);
     msg.write(init_command.c_str(), (int)init_command.length()+1);
-    Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) | (int)m_dimensions.column) };
+    Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) |
+                                        (int)m_dimensions.column) };
     msg.write(key);
 
     m_ui->set_input_callback([this]{ write_next_key(); });
@@ -432,12 +438,14 @@ void RemoteClient::write_next_key()
     if (dimensions != m_dimensions)
     {
         m_dimensions = dimensions;
-        Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) | (int)dimensions.column) };
+        Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) |
+                                            (int)dimensions.column) };
         msg.write(key);
     }
 }
 
-std::unique_ptr<RemoteClient> connect_to(const String& session, std::unique_ptr<UserInterface>&& ui,
+std::unique_ptr<RemoteClient> connect_to(const String& session,
+                                         std::unique_ptr<UserInterface>&& ui,
                                          const String& init_command)
 {
     auto filename = "/tmp/kak-" + session;
@@ -450,7 +458,8 @@ std::unique_ptr<RemoteClient> connect_to(const String& session, std::unique_ptr<
     if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
         throw connection_failed(filename);
 
-    return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui), init_command}};
+    return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui),
+                                                          init_command}};
 }
 
 void send_command(const String& session, const String& command)
@@ -483,7 +492,9 @@ class Server::Accepter
 {
 public:
     Accepter(int socket)
-        : m_socket_watcher(socket, [this](FDWatcher&) { handle_available_input(); }) {}
+        : m_socket_watcher(socket,
+                           [this](FDWatcher&) { handle_available_input(); })
+    {}
 
 private:
     void handle_available_input()
@@ -504,17 +515,19 @@ private:
                 }
                 catch (runtime_error& e)
                 {
-                    write_debug("error running command '" + m_buffer + "' : " + e.what());
+                    write_debug("error running command '" + m_buffer +
+                                "' : " + e.what());
                 }
                 catch (client_removed&) {}
                 close(socket);
                 Server::instance().remove_accepter(this);
                 return;
             }
-            if (c == 0) // end of initial command stream, go to interactive ui mode
+            if (c == 0) // end of initial command stream, go to interactive ui
             {
-                ClientManager::instance().create_client(
-                    std::unique_ptr<UserInterface>{new RemoteUI{socket}}, m_buffer);
+                std::unique_ptr<UserInterface> ui{new RemoteUI{socket}};
+                ClientManager::instance().create_client(std::move(ui),
+                                                        m_buffer);
                 Server::instance().remove_accepter(this);
                 return;
             }
@@ -550,7 +563,8 @@ Server::Server(String session_name)
     auto accepter = [this](FDWatcher& watcher) {
         sockaddr_un client_addr;
         socklen_t   client_addr_len = sizeof(sockaddr_un);
-        int sock = accept(watcher.fd(), (sockaddr*) &client_addr, &client_addr_len);
+        int sock = accept(watcher.fd(), (sockaddr*) &client_addr,
+                          &client_addr_len);
         if (sock == -1)
             throw runtime_error("accept failed");
         fcntl(sock, F_SETFD, FD_CLOEXEC);
