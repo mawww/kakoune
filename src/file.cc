@@ -275,15 +275,12 @@ std::vector<String> list_files(const String& prefix,
 {
     kak_assert(dirname.empty() or dirname.back() == '/');
     DIR* dir = opendir(dirname.empty() ? "./" : dirname.c_str());
-    auto closeDir = on_scope_end([=]{
-                                   if (dir != NULL)
-                                       closedir(dir);
-                                 });
+    if (not dir)
+        return {};
+
+    auto closeDir = on_scope_end([=]{ closedir(dir); });
 
     std::vector<String> result;
-    if (not dir)
-        return result;
-
     std::vector<String> subseq_result;
     while (dirent* entry = readdir(dir))
     {
@@ -309,8 +306,7 @@ std::vector<String> list_files(const String& prefix,
             }
         }
     }
-    auto& real_result = result.empty() ? subseq_result : result;
-    return real_result;
+    return result.empty() ? subseq_result : result;
 }
 
 std::vector<String> complete_filename(const String& prefix,
