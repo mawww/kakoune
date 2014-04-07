@@ -633,6 +633,30 @@ void define_command(const ParametersParser& parser, Context& context)
                                                    pos_in_token) };
         };
     }
+    if (parser.has_option("client-completion"))
+    {
+        completer = [](const Context& context, CompletionFlags flags,
+                       CommandParameters params,
+                       size_t token_to_complete, ByteCount pos_in_token)
+        {
+             const String& prefix = params[token_to_complete];
+             auto& cm = ClientManager::instance();
+             return Completions{ 0_byte, prefix.length(),
+                                 cm.complete_client_name(prefix, pos_in_token) };
+        };
+    }
+    if (parser.has_option("buffer-completion"))
+    {
+        completer = [](const Context& context, CompletionFlags flags,
+                       CommandParameters params,
+                       size_t token_to_complete, ByteCount pos_in_token)
+        {
+             const String& prefix = params[token_to_complete];
+             auto& bm = BufferManager::instance();
+             return Completions{ 0_byte, prefix.length(),
+                                 bm.complete_buffer_name(prefix, pos_in_token) };
+        };
+    }
     else if (parser.has_option("shell-completion"))
     {
         String shell_cmd = parser.option_value("shell-completion");
@@ -662,9 +686,11 @@ const CommandDesc define_command_cmd = {
                    { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
                    { "allow-override", { false, "allow overriding existing command" } },
                    { "file-completion", { false, "complete parameters using filename completion" } },
+                   { "client-completion", { false, "complete parameters using client name completion" } },
+                   { "buffer-completion", { false, "complete parameters using buffer name completion" } },
+                   { "shell-completion", { true, "complete the parameters using the given shell-script" } },
                    { "hidden", { false, "do not display the command as completion candidate" } },
-                   { "docstring", { true, "set docstring for command" } },
-                   { "shell-completion", { true, "complete the parameters using the given shell-script" } } },
+                   { "docstring", { true, "set docstring for command" } } },
         ParameterDesc::Flags::None,
         2, 2
     },
