@@ -715,4 +715,11 @@ void Buffer::run_hook_in_own_context(const String& hook_name, const String& para
     m_hooks.run_hook(hook_name, param, hook_handler.context());
 }
 
+BufferCoord Buffer::last_modification_coord() const
+{
+    if (m_history.empty())
+        return {};
+    return m_history.back().back().coord;
+}
+
 }

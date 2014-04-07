@@ -245,6 +245,8 @@ Commands begining with g are used to goto certain position and or buffer:
  * _ga_: go to the previous (alternate) buffer
  * _gf_: open the file whose name is selected
 
+ * _g._: go to last buffer modifiction position
+
 View commands
 -------------
 

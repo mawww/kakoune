@@ -315,18 +315,28 @@ void goto_commands(Context& context, int line)
                 CommandManager::instance().execute("edit '" + path + "'", context);
                 break;
             }
+            case '.':
+            {
+                context.push_jump();
+                auto pos = buffer.last_modification_coord();
+                if (buffer[pos.line].length() == pos.column + 1)
+                    pos = BufferCoord{ pos.line+1, 0 };
+                select_coord<mode>(buffer, pos, context.selections());
+                break;
+            }
             }
         }, "goto",
-        "g,k:  buffer top   \n"
-        "l:    line end     \n"
-        "h:    line begin   \n"
-        "j:    buffer bottom\n"
-        "e:    buffer end   \n"
-        "t:    window top   \n"
-        "b:    window bottom\n"
-        "c:    window center\n"
-        "a:    last buffer  \n"
-        "f:    file         \n");
+        "g,k:  buffer top        \n"
+        "l:    line end          \n"
+        "h:    line begin        \n"
+        "j:    buffer bottom     \n"
+        "e:    buffer end        \n"
+        "t:    window top        \n"
+        "b:    window bottom     \n"
+        "c:    window center     \n"
+        "a:    last buffer       \n"
+        "f:    file              \n"
+        ".:    last buffer change\n");
     }
 }
 

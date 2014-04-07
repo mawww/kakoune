@@ -136,6 +136,8 @@ public:
     bool           is_valid(BufferCoord c) const;
     bool           is_end(BufferCoord c) const;
 
+    BufferCoord    last_modification_coord() const;
+
     BufferIterator begin() const;
     BufferIterator end() const;
     ByteCount      byte_count() const;
