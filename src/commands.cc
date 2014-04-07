@@ -96,7 +96,7 @@ const PerArgumentCommandCompleter filename_completer({
 const PerArgumentCommandCompleter buffer_completer({
     [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
     { return Completions{ 0_byte, prefix.length(),
-                          BufferManager::instance().complete_buffername(prefix, cursor_pos) }; }
+                          BufferManager::instance().complete_buffer_name(prefix, cursor_pos) }; }
 });
 
 const ParameterDesc no_params{
