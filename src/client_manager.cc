@@ -166,4 +166,22 @@ void ClientManager::redraw_clients() const
         client->redraw_ifn();
 }
 
+CandidateList ClientManager::complete_client_name(const String& prefix,
+                                                  ByteCount cursor_pos) const
+{
+    String real_prefix = prefix.substr(0, cursor_pos);
+    CandidateList result;
+    CandidateList subsequence_result;
+    for (auto& client : m_clients)
+    {
+        const String& name = client->context().name();
+
+        if (prefix_match(name, real_prefix))
+            result.push_back(escape(name));
+        if (subsequence_match(name, real_prefix))
+            subsequence_result.push_back(escape(name));
+    }
+    return result.empty() ? subsequence_result : result;
+}
+
 }
