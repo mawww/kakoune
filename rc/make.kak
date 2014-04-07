@@ -30,8 +30,10 @@ def errjump -docstring 'Jump to error location' %{
         exec gll<a-?> "Entering directory" <ret>
         exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l
         eval -try-client %opt{jumpclient} edit %rec{%reg{1}/%reg{2}} %reg{3} %reg{4}
+        try %{ focus %opt{jumpclient} }
     } catch %{
         exec ghgl s "([^:]+):(\d+):(\d+):[^\n]+\'" <ret>l
         eval -try-client %opt{jumpclient} edit %reg{1} %reg{2} %reg{3}
+        try %{ focus %opt{jumpclient} }
     }
 }

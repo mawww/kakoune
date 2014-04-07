@@ -31,4 +31,5 @@ decl str jumpclient
 def jump %{
     exec 'xs^([^:]+):(\d+):(\d+)?<ret>'
     eval -try-client %opt{jumpclient} edit %reg{1} %reg{2} %reg{3}
+    try %{ focus %opt{jumpclient} }
 }
