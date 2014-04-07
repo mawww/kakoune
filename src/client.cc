@@ -14,10 +14,13 @@ namespace Kakoune
 
 Client::Client(std::unique_ptr<UserInterface>&& ui,
                std::unique_ptr<Window>&& window,
-               SelectionList selections, String name)
+               SelectionList selections,
+               EnvVarMap env_vars,
+               String name)
     : m_ui{std::move(ui)}, m_window{std::move(window)},
       m_input_handler{m_window->buffer(), std::move(selections),
-                      std::move(name)}
+                      std::move(name)},
+      m_env_vars(env_vars)
 {
     context().set_client(*this);
     context().set_window(*m_window);
@@ -149,6 +152,15 @@ void Client::check_buffer_fs_timestamp()
     }
     else
         reload_buffer(context(), filename);
+}
+
+const String& Client::get_env_var(const String& name) const
+{
+    auto it = m_env_vars.find(name);
+    static String empty{};
+    if (it == m_env_vars.end())
+        return empty;
+    return it->second;
 }
 
 }

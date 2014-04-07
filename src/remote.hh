@@ -4,6 +4,7 @@
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "user_interface.hh"
+#include "env_vars.hh"
 
 namespace Kakoune
 {
@@ -23,7 +24,7 @@ class RemoteClient
 {
 public:
     RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
-                 const String& init_command);
+                 const EnvVarMap& env_vars, const String& init_command);
 
 private:
     void process_next_message();
@@ -35,6 +36,7 @@ private:
 };
 std::unique_ptr<RemoteClient> connect_to(const String& session,
                                          std::unique_ptr<UserInterface>&& ui,
+                                         const EnvVarMap& env_vars,
                                          const String& init_command);
 
 void send_command(const String& session, const String& command);

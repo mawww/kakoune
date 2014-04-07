@@ -102,6 +102,10 @@ void register_env_vars()
             [](const String& name, const Context& context) -> String
             { return RegisterManager::instance()[name[4]].values(context)[0]; }
         }, {
+            "client_env_.+",
+            [](const String& name, const Context& context) -> String
+            { return context.client().get_env_var(name.substr(11_byte)); }
+        }, {
             "session",
             [](const String& name, const Context& context) -> String
             { return Server::instance().session(); }
@@ -189,7 +193,7 @@ void create_local_client(const String& init_command)
 
     UserInterface* ui = new LocalNCursesUI{};
     static Client* client = ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, init_command);
+        std::unique_ptr<UserInterface>{ui}, get_env_vars(), init_command);
     signal(SIGHUP, [](int) {
         if (client)
             ClientManager::instance().remove_client(*client);
@@ -221,6 +225,7 @@ int run_client(const String& session, const String& init_command)
         EventManager event_manager;
         auto client = connect_to(session,
                                  std::unique_ptr<UserInterface>{new NCursesUI{}},
+                                 get_env_vars(),
                                  init_command);
         while (true)
             event_manager.handle_next_events();

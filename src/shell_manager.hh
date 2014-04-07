@@ -3,15 +3,13 @@
 
 #include "string.hh"
 #include "utils.hh"
-
-#include <unordered_map>
+#include "env_vars.hh"
 
 namespace Kakoune
 {
 
 class Context;
 using EnvVarRetriever = std::function<String (const String& name, const Context&)>;
-using EnvVarMap = std::unordered_map<String, String>;
 
 class ShellManager : public Singleton<ShellManager>
 {

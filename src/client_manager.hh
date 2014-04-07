@@ -22,7 +22,7 @@ public:
     ~ClientManager();
 
     Client* create_client(std::unique_ptr<UserInterface>&& ui,
-                          const String& init_cmd);
+                          EnvVarMap env_vars, const String& init_cmd);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }

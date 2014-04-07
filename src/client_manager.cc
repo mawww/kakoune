@@ -25,12 +25,14 @@ String ClientManager::generate_name() const
 }
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
+                                     EnvVarMap env_vars,
                                      const String& init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
     WindowAndSelections ws = get_free_window(buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
-                                std::move(ws.selections), generate_name()};
+                                std::move(ws.selections), std::move(env_vars),
+                                generate_name()};
     m_clients.emplace_back(client);
     try
     {

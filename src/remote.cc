@@ -74,6 +74,17 @@ public:
         write(memoryview<T>(vec));
     }
 
+    template<typename Key, typename Val>
+    void write(const std::unordered_map<Key, Val>& map)
+    {
+        write<uint32_t>(map.size());
+        for (auto& val : map)
+        {
+            write(val.first);
+            write(val.second);
+        }
+    }
+
     void write(Color color)
     {
         write(color.color);
@@ -208,6 +219,20 @@ DisplayBuffer read<DisplayBuffer>(int socket)
     DisplayBuffer db;
     db.lines() = read_vector<DisplayLine>(socket);
     return db;
+}
+
+template<typename Key, typename Val>
+std::unordered_map<Key, Val> read_map(int socket)
+{
+    uint32_t size = read<uint32_t>(socket);
+    std::unordered_map<Key, Val> res;
+    while (size--)
+    {
+        auto key = read<Key>(socket);
+        auto val = read<Val>(socket);
+        res.insert({std::move(key), std::move(val)});
+    }
+    return res;
 }
 
 class RemoteUI : public UserInterface
@@ -368,12 +393,15 @@ void RemoteUI::set_input_callback(InputCallback callback)
 }
 
 RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
+                           const EnvVarMap& env_vars,
                            const String& init_command)
     : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions()),
       m_socket_watcher{socket, [this](FDWatcher&){ process_next_message(); }}
 {
     Message msg(socket);
     msg.write(init_command.c_str(), (int)init_command.length()+1);
+    msg.write(env_vars);
+
     Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) |
                                         (int)m_dimensions.column) };
     msg.write(key);
@@ -446,6 +474,7 @@ void RemoteClient::write_next_key()
 
 std::unique_ptr<RemoteClient> connect_to(const String& session,
                                          std::unique_ptr<UserInterface>&& ui,
+                                         const EnvVarMap& env_vars,
                                          const String& init_command)
 {
     auto filename = "/tmp/kak-" + session;
@@ -459,6 +488,7 @@ std::unique_ptr<RemoteClient> connect_to(const String& session,
         throw connection_failed(filename);
 
     return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui),
+                                                          env_vars,
                                                           init_command}};
 }
 
@@ -525,8 +555,10 @@ private:
             }
             if (c == 0) // end of initial command stream, go to interactive ui
             {
+                EnvVarMap env_vars = read_map<String, String>(socket);
                 std::unique_ptr<UserInterface> ui{new RemoteUI{socket}};
                 ClientManager::instance().create_client(std::move(ui),
+                                                        std::move(env_vars),
                                                         m_buffer);
                 Server::instance().remove_accepter(this);
                 return;
