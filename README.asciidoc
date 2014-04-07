@@ -750,8 +750,8 @@ Some of Kakoune state is available through environment variables:
 
 Note that in order to make only needed information available, Kakoune needs
 to find the environment variable reference in the shell script executed.
-Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environment will
-not work.
+Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environment
+variable will not work.
 
 for example you can print informations on the current file in the status
 line using:
