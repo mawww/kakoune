@@ -23,7 +23,11 @@ void CommandManager::register_command(String command_name,
                                       CommandFlags flags,
                                       CommandCompleter completer)
 {
-    m_commands[command_name] = { std::move(command), std::move(docstring), std::move(param_desc), flags, std::move(completer) };
+    m_commands[command_name] = { std::move(command),
+                                 std::move(docstring),
+                                 std::move(param_desc),
+                                 flags,
+                                 std::move(completer) };
 }
 
 void CommandManager::register_commands(memoryview<String> command_names,
@@ -34,7 +38,11 @@ void CommandManager::register_commands(memoryview<String> command_names,
                                        CommandCompleter completer)
 {
     kak_assert(not command_names.empty());
-    m_commands[command_names[0]] = { std::move(command), std::move(docstring), std::move(param_desc), flags, completer };
+    m_commands[command_names[0]] = { std::move(command),
+                                     std::move(docstring),
+                                     std::move(param_desc),
+                                     flags,
+                                     completer };
     for (size_t i = 1; i < command_names.size(); ++i)
         m_aliases[command_names[i]] = command_names[0];
 }
@@ -190,7 +198,8 @@ Token parse_percent_token(const String& line, ByteCount& pos)
     String type_name = line.substr(type_start, pos - type_start);
 
     if (throw_on_unterminated and pos == length)
-        throw parse_error{"expected a string delimiter after '%" + type_name + "'"};
+        throw parse_error{"expected a string delimiter after '%" +
+                          type_name + "'"};
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
     static const std::unordered_map<char, char> matching_delimiters = {
@@ -239,12 +248,14 @@ TokenList parse(const String& line)
             token_start = ++pos;
             String token = get_until_delimiter(line, pos, delimiter);
             if (throw_on_unterminated and pos == length)
-                throw unterminated_string(String{delimiter}, String{delimiter});
+                throw unterminated_string(String{delimiter},
+                                          String{delimiter});
             result.emplace_back(Token::Type::Raw, token_start,
                                 pos, std::move(token));
         }
         else if (line[pos] == '%')
-            result.push_back(parse_percent_token<throw_on_unterminated>(line, pos));
+            result.push_back(
+                parse_percent_token<throw_on_unterminated>(line, pos));
         else
         {
             while (pos != length and
@@ -257,12 +268,13 @@ TokenList parse(const String& line)
                 auto token = line.substr(token_start, pos - token_start);
                 static const Regex regex{R"(\\([ \t;\n]))"};
                 result.emplace_back(Token::Type::Raw, token_start, pos,
-                                    boost::regex_replace(token, regex, "\\1"));
+                                    boost::regex_replace(token, regex,
+                                                         "\\1"));
             }
         }
 
         if (is_command_separator(line[pos]))
-            result.push_back(Token{ Token::Type::CommandSeparator, pos, pos+1 });
+            result.emplace_back(Token::Type::CommandSeparator, pos, pos+1);
 
         ++pos;
     }
@@ -305,21 +317,22 @@ String eval_token(const Token& token, Context& context,
                   memoryview<String> shell_params,
                   const EnvVarMap& env_vars)
 {
+    auto& content = token.content();
     switch (token.type())
     {
     case Token::Type::ShellExpand:
-        return ShellManager::instance().eval(token.content(), context,
-                                             shell_params, env_vars);
+        return ShellManager::instance().eval(content, context, shell_params,
+                                             env_vars);
     case Token::Type::RegisterExpand:
-        if (token.content().length() != 1)
-            throw runtime_error("wrong register name: " + token.content());
-        return RegisterManager::instance()[token.content()[0]].values(context)[0];
+        if (content.length() != 1)
+            throw runtime_error("wrong register name: " + content);
+        return RegisterManager::instance()[content[0]].values(context)[0];
     case Token::Type::OptionExpand:
-        return context.options()[token.content()].get_as_string();
+        return context.options()[content].get_as_string();
     case Token::Type::RawEval:
-        return eval(token.content(), context, shell_params, env_vars);
+        return eval(content, context, shell_params, env_vars);
     case Token::Type::Raw:
-        return token.content();
+        return content;
     default: kak_assert(false);
     }
     return {};
@@ -333,7 +346,8 @@ struct command_not_found : runtime_error
         : runtime_error(command + " : no such command") {}
 };
 
-CommandManager::CommandMap::const_iterator CommandManager::find_command(const String& name) const
+CommandManager::CommandMap::const_iterator
+CommandManager::find_command(const String& name) const
 {
     auto it = m_aliases.find(name);
     const String& cmd_name = it == m_aliases.end() ? name : it->second;
@@ -351,7 +365,10 @@ void CommandManager::execute_single_command(CommandParameters params,
     auto command_it = find_command(params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
-    command_it->second.command(ParametersParser(param_view, command_it->second.param_desc), context);
+
+    ParametersParser parameter_parser(param_view,
+                                      command_it->second.param_desc);
+    command_it->second.command(parameter_parser, context);
 }
 
 void CommandManager::execute(const String& command_line,
@@ -375,7 +392,8 @@ void CommandManager::execute(const String& command_line,
         else if (it->type() == Token::Type::ShellExpand)
         {
             auto shell_tokens = parse<true>(eval_token(*it, context,
-                                                       shell_params, env_vars));
+                                                       shell_params,
+                                                       env_vars));
             it = tokens.erase(it);
             for (auto& token : shell_tokens)
                 it = ++tokens.insert(it, std::move(token));
@@ -386,12 +404,13 @@ void CommandManager::execute(const String& command_line,
             it -= shell_tokens.size() + 1;
         }
         else
-            params.push_back(eval_token(*it, context, shell_params, env_vars));
+            params.push_back(eval_token(*it, context, shell_params,
+                                        env_vars));
     }
     execute_single_command(params, context);
 }
 
-std::pair<String, String> CommandManager::command_info(const String& command_line) const
+CommandInfo CommandManager::command_info(const String& command_line) const
 {
     TokenList tokens = parse<false>(command_line);
     size_t cmd_idx = 0;
@@ -402,7 +421,8 @@ std::pair<String, String> CommandManager::command_info(const String& command_lin
     }
 
     std::pair<String, String> res;
-    if (cmd_idx == tokens.size() or tokens[cmd_idx].type() != Token::Type::Raw)
+    if (cmd_idx == tokens.size() or
+        tokens[cmd_idx].type() != Token::Type::Raw)
         return res;
 
     auto cmd = find_command(tokens[cmd_idx].content());
@@ -422,8 +442,10 @@ std::pair<String, String> CommandManager::command_info(const String& command_lin
     return res;
 }
 
-Completions CommandManager::complete(const Context& context, CompletionFlags flags,
-                                     const String& command_line, ByteCount cursor_pos)
+Completions CommandManager::complete(const Context& context,
+                                     CompletionFlags flags,
+                                     const String& command_line,
+                                     ByteCount cursor_pos)
 {
     TokenList tokens = parse<false>(command_line);
 
@@ -446,8 +468,9 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
         (tok_idx == cmd_idx and (tok_idx == tokens.size() or
                                  tokens[tok_idx].type() == Token::Type::Raw)))
     {
-        ByteCount cmd_start = tok_idx == tokens.size() ? cursor_pos
-                                                       : tokens[tok_idx].begin();
+        const bool is_end_token = tok_idx == tokens.size();
+        ByteCount cmd_start =  is_end_token ? cursor_pos
+                                            : tokens[tok_idx].begin();
         Completions result(cmd_start, cursor_pos);
         String prefix = command_line.substr(cmd_start,
                                             cursor_pos - cmd_start);
@@ -476,12 +499,14 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
     case Token::Type::OptionExpand:
     {
         Completions result(start , cursor_pos);
-        result.candidates = context.options().complete_option_name(tokens[tok_idx].content(), cursor_pos_in_token);
+        result.candidates = context.options().complete_option_name(
+            tokens[tok_idx].content(), cursor_pos_in_token);
         return result;
     }
     case Token::Type::ShellExpand:
     {
-        Completions shell_completions = shell_complete(context, flags, tokens[tok_idx].content(), cursor_pos_in_token);
+        Completions shell_completions = shell_complete(
+            context, flags, tokens[tok_idx].content(), cursor_pos_in_token);
         shell_completions.start += start;
         shell_completions.end += start;
         return shell_completions;
@@ -494,17 +519,19 @@ Completions CommandManager::complete(const Context& context, CompletionFlags fla
         const String& command_name = tokens[cmd_idx].content();
 
         auto command_it = find_command(command_name);
-        if (command_it == m_commands.end() or not command_it->second.completer)
+        if (command_it == m_commands.end() or
+            not command_it->second.completer)
             return Completions();
 
         std::vector<String> params;
-        for (auto token_it = tokens.begin() + cmd_idx + 1; token_it != tokens.end(); ++token_it)
+        for (auto token_it = tokens.begin() + cmd_idx + 1;
+             token_it != tokens.end(); ++token_it)
             params.push_back(token_it->content());
         if (tok_idx == tokens.size())
             params.push_back("");
-        Completions completions = command_it->second.completer(context, flags, params,
-                                                               tok_idx - cmd_idx - 1,
-                                                               cursor_pos_in_token);
+        Completions completions = command_it->second.completer(
+            context, flags, params, tok_idx - cmd_idx - 1,
+            cursor_pos_in_token);
         completions.start += start;
         completions.end += start;
         return completions;
@@ -519,7 +546,8 @@ Completions PerArgumentCommandCompleter::operator()(const Context& context,
                                                     CompletionFlags flags,
                                                     CommandParameters params,
                                                     size_t token_to_complete,
-                                                    ByteCount pos_in_token) const
+                                                    ByteCount pos_in_token)
+                                                    const
 {
     if (token_to_complete >= m_completers.size())
         return Completions{};
@@ -529,7 +557,8 @@ Completions PerArgumentCommandCompleter::operator()(const Context& context,
 
     const String& argument = token_to_complete < params.size() ?
                              params[token_to_complete] : String();
-    return m_completers[token_to_complete](context, flags, argument, pos_in_token);
+    return m_completers[token_to_complete](context, flags, argument,
+                                           pos_in_token);
 }
 
 }

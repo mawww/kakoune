@@ -57,6 +57,8 @@ private:
     std::vector<ArgumentCompleter> m_completers;
 };
 
+using CommandInfo = std::pair<String, String>;
+
 class CommandManager : public Singleton<CommandManager>
 {
 public:
@@ -67,7 +69,7 @@ public:
     Completions complete(const Context& context, CompletionFlags flags,
                          const String& command_line, ByteCount cursor_pos);
 
-    std::pair<String, String> command_info(const String& command_line) const;
+    CommandInfo command_info(const String& command_line) const;
 
     bool command_defined(const String& command_name) const;
 
