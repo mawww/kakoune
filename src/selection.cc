@@ -22,9 +22,11 @@ void on_buffer_change(const Buffer& buffer, SelectionList& sels,
                       BufferCoord begin, BufferCoord end, LineCount end_line)
 {
     auto update_beg = std::lower_bound(sels.begin(), sels.end(), begin,
-                                       [](const Selection& s, BufferCoord c) { return std::max(s.anchor(), s.cursor()) < c; });
+                                       [](const Selection& s, BufferCoord c)
+                                       { return s.max() < c; });
     auto update_only_line_beg = std::upper_bound(sels.begin(), sels.end(), end_line,
-                                                 [](LineCount l, const Selection& s) { return l < std::min(s.anchor(), s.cursor()).line; });
+                                                 [](LineCount l, const Selection& s)
+                                                 { return l < s.min().line; });
 
     if (update_beg != update_only_line_beg)
     {

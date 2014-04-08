@@ -49,7 +49,10 @@ public:
 
     memoryview<char> data()  const { return memoryview<char>(std::string::data(), size()); }
 
-    String substr(ByteCount pos, ByteCount length = -1) const { return String{std::string::substr((int)pos, (int)length)}; }
+    String substr(ByteCount pos, ByteCount length = -1) const
+    {
+        return String{std::string::substr((int)pos, (int)length)};
+    }
     String substr(CharCount pos, CharCount length = INT_MAX) const
     {
         auto b = utf8::advance(begin(), end(), (int)pos);

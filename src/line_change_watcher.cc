@@ -47,7 +47,10 @@ std::vector<LineModification> LineChangeWatcher::compute_modifications()
             }
             next = res.erase(next, delend);
 
-            const LineCount num_removed_from_added = std::min(num_removed, modif.new_line + modif.num_added - change.pos);
+            const LineCount num_added_after_pos =
+                modif.new_line + modif.num_added - change.pos;
+            const LineCount num_removed_from_added =
+                std::min(num_removed, num_added_after_pos);
             modif.num_added -= num_removed_from_added;
             modif.num_removed += num_removed - num_removed_from_added;
 

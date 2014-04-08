@@ -97,7 +97,9 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
             return res;
         }
     }
-    return WindowAndSelections{ std::unique_ptr<Window>{new Window{buffer}}, DynamicSelectionList{buffer, { Selection{ {}, {} } } } };
+    return WindowAndSelections{ std::unique_ptr<Window>{new Window{buffer}},
+                                DynamicSelectionList{buffer,
+                                { Selection{ {}, {} } } } };
 }
 
 void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
