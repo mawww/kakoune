@@ -56,10 +56,6 @@
 
 * Tree based undo
 
-* more sane command line parsing, better shell interaction with quoting
-
-  - Real parsing of the command line ?
-
 * configurable evaluated (%sh{...}) strings ? use an option to define
   the interpreters, regex for finding used kak variables (ability to
   add direct python/perl/ruby/whatever evaluation).
@@ -96,12 +92,6 @@
 
 * Rewrite keymap support using options ? (map window insert a b -> set -add window insert_keymap a:b)
 
-* Change set command to use '=' ?
-
-  - set window tchou=kanaky
-
-  - set window tchou+=kanaky
-
 * support for :cnext :cprev
 
   - save the current error line in a buffer option
@@ -114,5 +104,3 @@
 
 * Comments and strings should be more integrated than just highlighting, matching chars
   for example should be strings and comments aware
-
-* Access to clients env vars (kak_client_env_WINDOWID)
