@@ -39,7 +39,7 @@ public:
     virtual void   set_from_string(const String& str) = 0;
     virtual void   add_from_string(const String& str) = 0;
 
-    String name() const { return m_name; }
+    const String& name() const { return m_name; }
     OptionManager& manager() const { return m_manager; }
 
     virtual Option* clone(OptionManager& manager) const = 0;
