@@ -7,8 +7,10 @@
 namespace Kakoune
 {
 
-Option::Option(OptionManager& manager, String name, Flags flags)
-    : m_manager(manager), m_name(std::move(name)), m_flags(flags) {}
+Option::Option(OptionManager& manager, String name, String docstring,
+               Flags flags)
+    : m_manager(manager), m_name(std::move(name)),
+      m_docstring(std::move(docstring)), m_flags(flags) {}
 
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
@@ -120,32 +122,51 @@ void OptionManager::on_option_changed(const Option& option)
 GlobalOptions::GlobalOptions()
     : OptionManager()
 {
-    declare_option<int>("tabstop", 8);
-    declare_option<int>("indentwidth", 4);
-    declare_option<int>("scrolloff", 0);
-    declare_option<String>("eolformat", "lf");
-    declare_option<String>("BOM", "no");
-    declare_option<bool>("complete_prefix", true);
-    declare_option<bool>("incsearch", true);
-    declare_option<bool>("autoinfo", true);
-    declare_option<bool>("autoshowcompl", true);
-    declare_option<bool>("aligntab", false);
-    declare_option<Regex>("ignored_files", Regex{R"(^(\..*|.*\.(o|so|a))$)"});
-    declare_option<String>("filetype", "");
-    declare_option<std::vector<String>>("path", { "./", "/usr/include" });
-    declare_option<std::vector<String>>("completers", {"filename", "word=buffer"},
-                                        Option::Flags::None,
-                                        [](const std::vector<String>& s) {
-                                            static const auto values = {"word=buffer", "word=all", "filename" };
-                                            for (auto& v : s)
-                                            {
-                                                if (v.substr(0_byte, 7_byte) == "option=")
-                                                    continue;
-                                                if (not contains(values, v))
-                                                    throw runtime_error(v + " is not a recognised value for completers");
-                                            }
-                                        });
-    declare_option<YesNoAsk>("autoreload", Ask);
+    declare_option("tabstop", "size of a tab character", 8);
+    declare_option("indentwidth", "indentation width", 4);
+    declare_option("scrolloff",
+                   "number of lines to keep visible main cursor when scrolling",
+                   0);
+    declare_option("eolformat", "end of line format: 'crlf' or 'lf'", "lf"_str);
+    declare_option("BOM", "insert a byte order mark when writing buffer",
+                   "no"_str);
+    declare_option("complete_prefix",
+                   "complete up to common prefix in tab completion",
+                   true);
+    declare_option("incsearch",
+                   "incrementaly apply search/select/split regex",
+                   true);
+    declare_option("autoinfo",
+                   "automatically display contextual help",
+                   true);
+    declare_option("autoshowcompl",
+                   "automatically display possible completions for prompts",
+                   true);
+    declare_option("aligntab",
+                   "use tab characters when possible for alignement",
+                   false);
+    declare_option("ignored_files",
+                   "patterns to ignore when completing filenames",
+                   Regex{R"(^(\..*|.*\.(o|so|a))$)"});
+    declare_option("filetype", "buffer filetype", ""_str);
+    declare_option("path", "path to consider when trying to find a file",
+                   std::vector<String>({ "./", "/usr/include" }));
+    declare_option("completers", "insert mode completers to execute.",
+                    std::vector<String>({"filename", "word=buffer"}),
+                    Option::Flags::None,
+                    OptionChecker<std::vector<String>>([](const std::vector<String>& s) {
+                        static const auto values = {"word=buffer", "word=all", "filename"};
+                        for (auto& v : s)
+                        {
+                            if (v.substr(0_byte, 7_byte) == "option=")
+                                continue;
+                            if (not contains(values, v))
+                                throw runtime_error(v + " is not a recognised value for completers");
+                        }
+                    }));
+    declare_option("autoreload",
+                   "autoreload buffer when a filesystem modification is detected",
+                    Ask);
 }
 
 }

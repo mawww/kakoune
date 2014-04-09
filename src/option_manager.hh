@@ -28,7 +28,7 @@ public:
         Hidden = 1,
     };
 
-    Option(OptionManager& manager, String name, Flags flags);
+    Option(OptionManager& manager, String name, String docstring, Flags flags);
     virtual ~Option() {}
 
     template<typename T> const T& get() const;
@@ -40,6 +40,7 @@ public:
     virtual void   add_from_string(const String& str) = 0;
 
     const String& name() const { return m_name; }
+    const String& docstring() const { return m_docstring; }
     OptionManager& manager() const { return m_manager; }
 
     virtual Option* clone(OptionManager& manager) const = 0;
@@ -55,6 +56,7 @@ public:
 protected:
     OptionManager& m_manager;
     String m_name;
+    String m_docstring;
     Flags  m_flags;
 };
 
@@ -106,10 +108,10 @@ template<typename T>
 class TypedOption : public Option
 {
 public:
-    TypedOption(OptionManager& manager, String name, Option::Flags flags,
-                const T& value, OptionChecker<T> checker)
-        : Option(manager, std::move(name), flags), m_value(value),
-          m_checker(std::move(checker)) {}
+    TypedOption(OptionManager& manager, String name, String docstring,
+                Option::Flags flags, const T& value, OptionChecker<T> checker)
+        : Option(manager, std::move(name), std::move(docstring), flags),
+          m_value(value), m_checker(std::move(checker)) {}
 
     void set(T value)
     {
@@ -145,7 +147,8 @@ public:
 
     Option* clone(OptionManager& manager) const override
     {
-        return new TypedOption{manager, name(), flags(), m_value, m_checker};
+        return new TypedOption{manager, name(), docstring(), flags(),
+                               m_value, m_checker};
     }
 private:
     T m_value;
@@ -187,7 +190,8 @@ public:
     GlobalOptions();
 
     template<typename T>
-    Option& declare_option(const String& name, const T& value,
+    Option& declare_option(const String& name, const String& docstring,
+                           const T& value,
                            Option::Flags flags = Option::Flags::None,
                            OptionChecker<T> checker = OptionChecker<T>{})
     {
@@ -198,7 +202,8 @@ public:
                 return **it;
             throw runtime_error("option " + name + " already declared with different type or flags");
         }
-        m_options.emplace_back(new TypedOption<T>{*this, name, flags, value,
+        m_options.emplace_back(new TypedOption<T>{*this, name, docstring,
+                                                  flags, value,
                                                   std::move(checker)});
         return *m_options.back();
     }

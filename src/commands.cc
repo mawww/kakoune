@@ -831,7 +831,8 @@ const CommandDesc declare_option_cmd = {
     "    str-list: list of character strings\n"
     "    line-flag-list: list of line flags\n",
     ParameterDesc{
-        SwitchMap{ { "hidden", { false, "do not display option name when completing" } } },
+        SwitchMap{ { "hidden", { false, "do not display option name when completing" } },
+                   { "docstring", { true, "specify option description" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart,
         2, 3
     },
@@ -845,22 +846,26 @@ const CommandDesc declare_option_cmd = {
         if (parser.has_option("hidden"))
             flags = Option::Flags::Hidden;
 
+        String docstring;
+        if (parser.has_option("docstring"))
+            docstring = parser.option_value("docstring");
+
         GlobalOptions& opts = GlobalOptions::instance();
 
         if (parser[0] == "int")
-            opt = &opts.declare_option<int>(parser[1], 0, flags);
+            opt = &opts.declare_option<int>(parser[1], docstring, 0, flags);
         if (parser[0] == "bool")
-            opt = &opts.declare_option<bool>(parser[1], 0, flags);
+            opt = &opts.declare_option<bool>(parser[1], docstring, 0, flags);
         else if (parser[0] == "str")
-            opt = &opts.declare_option<String>(parser[1], "", flags);
+            opt = &opts.declare_option<String>(parser[1], docstring, "", flags);
         else if (parser[0] == "regex")
-            opt = &opts.declare_option<Regex>(parser[1], Regex{}, flags);
+            opt = &opts.declare_option<Regex>(parser[1], docstring, {}, flags);
         else if (parser[0] == "int-list")
-            opt = &opts.declare_option<std::vector<int>>(parser[1], {}, flags);
+            opt = &opts.declare_option<std::vector<int>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
-            opt = &opts.declare_option<std::vector<String>>(parser[1], {}, flags);
+            opt = &opts.declare_option<std::vector<String>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "line-flag-list")
-            opt = &opts.declare_option<std::vector<LineAndFlag>>(parser[1], {}, flags);
+            opt = &opts.declare_option<std::vector<LineAndFlag>>(parser[1], docstring, {}, flags);
         else
             throw runtime_error("unknown type " + parser[0]);
 
