@@ -397,7 +397,10 @@ Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
     --to_line_start;
     skip_while_reverse(to_line_start, buffer.begin(), [](char cur) { return not is_eol(cur); });
     if (is_eol(*to_line_start))
-        ++to_line_start;
+    {
+        if (++to_line_start == buffer.end())
+            --to_line_start;
+    }
 
     skip_while(to_line_end, buffer.end(), [](char cur) { return not is_eol(cur); });
     if (to_line_end == buffer.end())
