@@ -1,16 +1,33 @@
+# termcmd should be set such as the next argument is the whole
+# command line to execute
 decl str termcmd %sh{
     if [ -n "$TMUX" ]; then
         echo "'tmux split-window -h'"
     else
-        echo "'urxvt -e sh -c'"
+        for terminal in urxvt rxvt xterm roxterm mintty; do
+            if which $terminal > /dev/null 2>&1; then
+                        echo "'$terminal -e sh -c'"
+                exit
+            fi
+        done
+        for terminal in gnome-terminal xfce4-terminal; do
+            if which $terminal > /dev/null 2>&1; then
+                        echo "'$terminal -e'"
+                exit
+            fi
+        done
     fi
 }
 
 def -docstring 'create a new kak client for current session' \
     -shell-params \
-    new %{ nop %sh{
-    if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
-    setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
+    new %{ %sh{
+            if [ -z "${kak_opt_termcmd}" ]; then
+               echo "echo -color Error 'termcmd option is not set'"
+               exit
+            fi
+            if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
+            setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
 }}
 
 def -docstring 'focus given client' \
