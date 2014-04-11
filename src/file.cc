@@ -293,9 +293,11 @@ std::vector<String> list_files(const String& prefix,
 
         const bool match_prefix = prefix_match(filename, prefix);
         const bool match_subseq = subsequence_match(filename, prefix);
-        if (match_prefix or match_subseq)
+        struct stat st;
+        if ((match_prefix or match_subseq) and
+            stat((dirname + filename).c_str(), &st) == 0)
         {
-            if (entry->d_type == DT_DIR)
+            if (S_ISDIR(st.st_mode))
                 filename += '/';
             if (prefix.length() != 0 or filename[0] != '.')
             {
