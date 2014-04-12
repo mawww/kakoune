@@ -842,9 +842,9 @@ const CommandDesc declare_option_cmd = {
     {
         Option* opt = nullptr;
 
-        Option::Flags flags = Option::Flags::None;
+        OptionFlags flags = OptionFlags::None;
         if (parser.has_option("hidden"))
-            flags = Option::Flags::Hidden;
+            flags = OptionFlags::Hidden;
 
         String docstring;
         if (parser.has_option("docstring"))

@@ -7,10 +7,12 @@
 namespace Kakoune
 {
 
-Option::Option(OptionManager& manager, String name, String docstring,
-               Flags flags)
-    : m_manager(manager), m_name(std::move(name)),
-      m_docstring(std::move(docstring)), m_flags(flags) {}
+OptionDesc::OptionDesc(String name, String docstring, OptionFlags flags)
+    : m_name(std::move(name)), m_docstring(std::move(docstring)),
+    m_flags(flags) {}
+
+Option::Option(const OptionDesc& desc, OptionManager& manager)
+    : m_manager(manager), m_desc(desc) {}
 
 OptionManager::OptionManager(OptionManager& parent)
     : m_parent(&parent)
@@ -73,7 +75,7 @@ CandidateList OptionManager::get_matching_names(MatchingFunc func)
         result = m_parent->get_matching_names(func);
     for (auto& option : m_options)
     {
-        if (option->flags() & Option::Flags::Hidden)
+        if (option->flags() & OptionFlags::Hidden)
             continue;
 
         const auto& name = option->name();
@@ -153,7 +155,7 @@ GlobalOptions::GlobalOptions()
                    std::vector<String>({ "./", "/usr/include" }));
     declare_option("completers", "insert mode completers to execute.",
                     std::vector<String>({"filename", "word=buffer"}),
-                    Option::Flags::None,
+                    OptionFlags::None,
                     OptionChecker<std::vector<String>>([](const std::vector<String>& s) {
                         static const auto values = {"word=buffer", "word=all", "filename"};
                         for (auto& v : s)

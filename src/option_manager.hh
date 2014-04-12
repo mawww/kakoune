@@ -19,18 +19,37 @@ struct option_not_found : public runtime_error
 
 class OptionManager;
 
-class Option : public SafeCountable
+enum class OptionFlags
+{
+    None   = 0,
+    Hidden = 1,
+};
+constexpr OptionFlags operator|(OptionFlags lhs, OptionFlags rhs)
+{ return (OptionFlags)((int)lhs | (int)rhs); }
+
+constexpr bool operator&(OptionFlags lhs, OptionFlags rhs)
+{ return (bool)((int)lhs & (int)rhs); }
+
+
+class OptionDesc
 {
 public:
-    enum class Flags
-    {
-        None   = 0,
-        Hidden = 1,
-    };
+    OptionDesc(String name, String docstring, OptionFlags flags);
 
-    Option(OptionManager& manager, String name, String docstring, Flags flags);
-    virtual ~Option() {}
+    const String& name() const { return m_name; }
+    const String& docstring() const { return m_docstring; }
 
+    OptionFlags flags() const { return m_flags; }
+
+private:
+    String m_name;
+    String m_docstring;
+    OptionFlags  m_flags;
+};
+
+class Option
+{
+public:
     template<typename T> const T& get() const;
     template<typename T> void set(const T& val);
     template<typename T> bool is_of_type() const;
@@ -39,25 +58,18 @@ public:
     virtual void   set_from_string(const String& str) = 0;
     virtual void   add_from_string(const String& str) = 0;
 
-    const String& name() const { return m_name; }
-    const String& docstring() const { return m_docstring; }
+    virtual Option* clone(OptionManager& manager) const = 0;
     OptionManager& manager() const { return m_manager; }
 
-    virtual Option* clone(OptionManager& manager) const = 0;
-
-    Flags flags() const { return m_flags; }
-
-    friend constexpr Flags operator|(Flags lhs, Flags rhs)
-    { return (Flags)((int)lhs | (int)rhs); }
-
-    friend constexpr bool operator&(Flags lhs, Flags rhs)
-    { return (bool)((int)lhs & (int)rhs); }
+    const String& name() const { return m_desc.name(); }
+    const String& docstring() const { return m_desc.docstring(); }
+    OptionFlags flags() const { return m_desc.flags(); }
 
 protected:
+    Option(const OptionDesc& desc, OptionManager& manager);
+
     OptionManager& m_manager;
-    String m_name;
-    String m_docstring;
-    Flags  m_flags;
+    const OptionDesc& m_desc;
 };
 
 class OptionManagerWatcher
@@ -108,9 +120,9 @@ template<typename T>
 class TypedOption : public Option
 {
 public:
-    TypedOption(OptionManager& manager, String name, String docstring,
-                Option::Flags flags, const T& value, OptionChecker<T> checker)
-        : Option(manager, std::move(name), std::move(docstring), flags),
+    TypedOption(OptionManager& manager, const OptionDesc& desc,
+                const T& value, OptionChecker<T> checker)
+        : Option(desc, manager),
           m_value(value), m_checker(std::move(checker)) {}
 
     void set(T value)
@@ -120,7 +132,7 @@ public:
             if (m_checker)
                 m_checker(value);
             m_value = std::move(value);
-            m_manager.on_option_changed(*this);
+            manager().on_option_changed(*this);
         }
     }
     const T& get() const { return m_value; }
@@ -147,8 +159,7 @@ public:
 
     Option* clone(OptionManager& manager) const override
     {
-        return new TypedOption{manager, name(), docstring(), flags(),
-                               m_value, m_checker};
+        return new TypedOption{manager, m_desc, m_value, m_checker};
     }
 private:
     T m_value;
@@ -192,7 +203,7 @@ public:
     template<typename T>
     Option& declare_option(const String& name, const String& docstring,
                            const T& value,
-                           Option::Flags flags = Option::Flags::None,
+                           OptionFlags flags = OptionFlags::None,
                            OptionChecker<T> checker = OptionChecker<T>{})
     {
         auto it = find_option(m_options, name);
@@ -202,11 +213,13 @@ public:
                 return **it;
             throw runtime_error("option " + name + " already declared with different type or flags");
         }
-        m_options.emplace_back(new TypedOption<T>{*this, name, docstring,
-                                                  flags, value,
-                                                  std::move(checker)});
+        m_descs.emplace_back(new OptionDesc{name, docstring, flags});
+        m_options.emplace_back(new TypedOption<T>{*this, *m_descs.back(),
+                                                  value, std::move(checker)});
         return *m_options.back();
     }
+private:
+    std::vector<std::unique_ptr<OptionDesc>> m_descs;
 };
 
 struct OptionManagerRegisterFuncs
