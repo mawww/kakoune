@@ -540,6 +540,8 @@ private:
     {
         try
         {
+            if (not m_completer)
+                return;
             const String& line = m_line_editor.line();
             m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
