@@ -1038,6 +1038,34 @@ const CommandDesc eval_string_cmd = {
     }
 };
 
+const CommandDesc prompt_cmd = {
+    "prompt",
+    nullptr,
+    "prompt <prompt> <register> <command>: prompt the use to enter a text string "
+    "stores it in <register> and then executes <command>",
+    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 3, 3 },
+    CommandFlags::None,
+    CommandCompleter{},
+    [](const ParametersParser& params, Context& context)
+    {
+        if (params[1].length() != 1)
+            throw runtime_error("register name should be a single character");
+        const char reg = params[1][0];
+        const String& command = params[2];
+
+        context.input_handler().prompt(
+            params[0], get_color("Prompt"), Completer{},
+            [=](const String& str, PromptEvent event, Context& context)
+            {
+                if (event != PromptEvent::Validate)
+                    return;
+                RegisterManager::instance()[reg] = memoryview<String>(str);
+
+                CommandManager::instance().execute(command, context);
+            });
+    }
+};
+
 const CommandDesc menu_cmd = {
     "menu",
     nullptr,
@@ -1290,6 +1318,7 @@ void register_commands()
     register_command(cm, map_key_cmd);
     register_command(cm, exec_string_cmd);
     register_command(cm, eval_string_cmd);
+    register_command(cm, prompt_cmd);
     register_command(cm, menu_cmd);
     register_command(cm, info_cmd);
     register_command(cm, try_catch_cmd);
