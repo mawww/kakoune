@@ -854,7 +854,7 @@ const CommandDesc declare_option_cmd = {
 
         if (parser[0] == "int")
             opt = &opts.declare_option<int>(parser[1], docstring, 0, flags);
-        if (parser[0] == "bool")
+        else if (parser[0] == "bool")
             opt = &opts.declare_option<bool>(parser[1], docstring, 0, flags);
         else if (parser[0] == "str")
             opt = &opts.declare_option<String>(parser[1], docstring, "", flags);
