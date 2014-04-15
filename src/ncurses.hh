@@ -37,6 +37,8 @@ public:
                    MenuStyle style) override;
     void info_hide() override;
 
+    void refresh() override;
+
     void set_input_callback(InputCallback callback) override;
 
     DisplayCoord dimensions() override;
@@ -63,6 +65,8 @@ private:
 
     FDWatcher     m_stdin_watcher;
     InputCallback m_input_callback;
+
+    bool m_dirty = false;
 };
 
 }

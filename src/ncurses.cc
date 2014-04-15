@@ -195,6 +195,14 @@ void NCursesUI::redraw()
     }
     doupdate();
 }
+
+void NCursesUI::refresh()
+{
+    if (m_dirty)
+        redraw();
+    m_dirty = false;
+}
+
 using Utf8Policy = utf8::InvalidBytePolicy::Pass;
 using Utf8Iterator = utf8::utf8_iterator<String::const_iterator, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
@@ -301,7 +309,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         printf("%s%s%s", tsl, title.c_str(), fsl);
     }
 
-    redraw();
+    m_dirty = true;
 }
 
 bool NCursesUI::is_key_available()
@@ -438,7 +446,7 @@ void NCursesUI::draw_menu()
         wattron(m_menu_win, COLOR_PAIR(menu_bg));
         waddstr(m_menu_win, is_mark ? "┃" : "│");
     }
-    redraw();
+    m_dirty = true;
 }
 
 void NCursesUI::menu_show(memoryview<String> items,
@@ -520,7 +528,7 @@ void NCursesUI::menu_hide()
                       (int)window_size(m_menu_win).line);
     delwin(m_menu_win);
     m_menu_win = nullptr;
-    redraw();
+    m_dirty = true;
 }
 
 static DisplayCoord compute_needed_size(const String& str)
@@ -711,7 +719,7 @@ void NCursesUI::info_show(const String& title, const String& content,
            break;
         it = eol + 1;
     }
-    redraw();
+    m_dirty = true;
 }
 
 void NCursesUI::info_hide()
@@ -722,7 +730,7 @@ void NCursesUI::info_hide()
                       (int)window_size(m_info_win).line);
     delwin(m_info_win);
     m_info_win = nullptr;
-    redraw();
+    m_dirty = true;
 }
 
 DisplayCoord NCursesUI::dimensions()

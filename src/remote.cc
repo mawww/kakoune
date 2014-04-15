@@ -25,7 +25,8 @@ enum class RemoteUIMsg
     MenuHide,
     InfoShow,
     InfoHide,
-    Draw
+    Draw,
+    Refresh
 };
 
 struct socket_error{};
@@ -256,6 +257,8 @@ public:
               const DisplayLine& status_line,
               const DisplayLine& mode_line) override;
 
+    void refresh() override;
+
     bool is_key_available() override;
     Key  get_key() override;
     DisplayCoord dimensions() override;
@@ -340,6 +343,12 @@ void RemoteUI::draw(const DisplayBuffer& display_buffer,
     msg.write(display_buffer);
     msg.write(status_line);
     msg.write(mode_line);
+}
+
+void RemoteUI::refresh()
+{
+    Message msg(m_socket_watcher.fd());
+    msg.write(RemoteUIMsg::Refresh);
 }
 
 static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
@@ -466,6 +475,9 @@ void RemoteClient::process_next_message()
         m_ui->draw(display_buffer, status_line, mode_line);
         break;
     }
+    case RemoteUIMsg::Refresh:
+        m_ui->refresh();
+        break;
     }
 }
 

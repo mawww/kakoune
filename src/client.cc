@@ -91,6 +91,7 @@ void Client::redraw_ifn()
         context().ui().draw(context().window().display_buffer(),
                             m_status_line, generate_mode_line());
     }
+    context().ui().refresh();
 }
 
 static void reload_buffer(Context& context, const String& filename)
