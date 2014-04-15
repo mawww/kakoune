@@ -396,7 +396,7 @@ RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
                            const EnvVarMap& env_vars,
                            const String& init_command)
     : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions()),
-      m_socket_watcher{socket, [this](FDWatcher&){ process_next_message(); }}
+      m_socket_watcher{socket, [this](FDWatcher&){ process_available_messages(); }}
 {
     Message msg(socket);
     msg.write(init_command.c_str(), (int)init_command.length()+1);
@@ -407,6 +407,20 @@ RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
     msg.write(key);
 
     m_ui->set_input_callback([this]{ write_next_key(); });
+}
+
+void RemoteClient::process_available_messages()
+{
+    int socket = m_socket_watcher.fd();
+    timeval tv{ 0, 0 };
+    fd_set  rfds;
+
+    do {
+        process_next_message();
+
+        FD_ZERO(&rfds);
+        FD_SET(socket, &rfds);
+    } while (select(socket+1, &rfds, nullptr, nullptr, &tv) == 1);
 }
 
 void RemoteClient::process_next_message()

@@ -27,6 +27,7 @@ public:
                  const EnvVarMap& env_vars, const String& init_command);
 
 private:
+    void process_available_messages();
     void process_next_message();
     void write_next_key();
 
