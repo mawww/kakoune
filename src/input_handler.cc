@@ -613,7 +613,7 @@ private:
     KeyCallback m_callback;
 };
 
-struct BufferCompletion
+struct InsertCompletion
 {
     BufferCoord begin;
     BufferCoord end;
@@ -623,15 +623,14 @@ struct BufferCompletion
     bool is_valid() const { return not candidates.empty(); }
 };
 
-
-class BufferCompleter : public OptionManagerWatcher_AutoRegister
+class InsertCompleter : public OptionManagerWatcher_AutoRegister
 {
 public:
-    BufferCompleter(const Context& context)
+    InsertCompleter(const Context& context)
         : OptionManagerWatcher_AutoRegister(context.options()), m_context(context)
     {}
-    BufferCompleter(const BufferCompleter&) = delete;
-    BufferCompleter& operator=(const BufferCompleter&) = delete;
+    InsertCompleter(const InsertCompleter&) = delete;
+    InsertCompleter& operator=(const InsertCompleter&) = delete;
 
     void select(int offset)
     {
@@ -716,7 +715,7 @@ public:
 
     void reset()
     {
-        m_completions = BufferCompletion{};
+        m_completions = InsertCompletion{};
         if (m_context.has_ui())
             m_context.ui().menu_hide();
     }
@@ -757,7 +756,7 @@ public:
     }
 
     template<bool other_buffers>
-    BufferCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
+    InsertCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
     {
        auto pos = buffer.iterator_at(cursor_pos);
        if (pos == buffer.begin() or not is_word(*utf8::previous(pos)))
@@ -796,7 +795,7 @@ public:
     }
 
     template<bool require_slash>
-    BufferCompletion complete_filename(const Buffer& buffer, BufferCoord cursor_pos)
+    InsertCompletion complete_filename(const Buffer& buffer, BufferCoord cursor_pos)
     {
         auto pos = buffer.iterator_at(cursor_pos);
         auto begin = pos;
@@ -833,7 +832,7 @@ public:
         return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
     }
 
-    BufferCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos, const String& option_name)
+    InsertCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos, const String& option_name)
     {
         const StringList& opt = options()[option_name].get<StringList>();;
         if (opt.empty())
@@ -867,7 +866,7 @@ public:
         return {};
     }
 
-    BufferCompletion complete_line(const Buffer& buffer, BufferCoord cursor_pos)
+    InsertCompletion complete_line(const Buffer& buffer, BufferCoord cursor_pos)
     {
         String prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
         StringList res;
@@ -946,7 +945,7 @@ private:
     }
 
     const Context&   m_context;
-    BufferCompletion m_completions;
+    InsertCompletion m_completions;
     CandidateList    m_matching_candidates;
     int              m_current_candidate = -1;
 };
@@ -1204,7 +1203,7 @@ private:
     Mode m_mode = Mode::Default;
     InsertMode       m_insert_mode;
     ScopedEdition    m_edition;
-    BufferCompleter  m_completer;
+    InsertCompleter  m_completer;
     Timer            m_idle_timer;
 };
 
