@@ -771,10 +771,16 @@ public:
 
         String prefix{begin, end};
 
+        while (end != buffer.end() and is_word(*end))
+            ++end;
+
+        String current_word{begin, end};
 
         std::unordered_set<String> matches;
         auto bufmatches = get_word_db(buffer).find_prefix(prefix);
         matches.insert(bufmatches.begin(), bufmatches.end());
+
+        matches.erase(current_word);
 
         if (other_buffers)
         {
