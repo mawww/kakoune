@@ -95,10 +95,10 @@ void BufferManager::set_last_used_buffer(Buffer& buffer)
     m_buffers.emplace(m_buffers.begin(), &buffer);
 }
 
-CandidateList BufferManager::complete_buffer_name(const String& prefix,
+CandidateList BufferManager::complete_buffer_name(StringView prefix,
                                                   ByteCount cursor_pos)
 {
-    String real_prefix = prefix.substr(0, cursor_pos);
+    auto real_prefix = prefix.substr(0, cursor_pos);
     const bool include_dirs = contains(real_prefix, '/');
     CandidateList result;
     CandidateList subsequence_result;

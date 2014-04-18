@@ -170,10 +170,10 @@ void ClientManager::redraw_clients() const
         client->redraw_ifn();
 }
 
-CandidateList ClientManager::complete_client_name(const String& prefix,
+CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {
-    String real_prefix = prefix.substr(0, cursor_pos);
+    auto real_prefix = prefix.substr(0, cursor_pos);
     CandidateList result;
     CandidateList subsequence_result;
     for (auto& client : m_clients)

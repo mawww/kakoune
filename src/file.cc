@@ -311,7 +311,7 @@ std::vector<String> list_files(const String& prefix,
     return result.empty() ? subseq_result : result;
 }
 
-std::vector<String> complete_filename(const String& prefix,
+std::vector<String> complete_filename(StringView prefix,
                                       const Regex& ignored_regex,
                                       ByteCount cursor_pos)
 {
@@ -346,7 +346,7 @@ std::vector<String> complete_filename(const String& prefix,
     return res;
 }
 
-std::vector<String> complete_command(const String& prefix, ByteCount cursor_pos)
+std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     String dirname;

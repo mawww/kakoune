@@ -495,7 +495,7 @@ HookManager& get_hook_manager(const String& scope, Context& context)
     throw runtime_error("error: no such hook container " + scope);
 }
 
-CandidateList complete_scope(const String& prefix)
+CandidateList complete_scope(StringView prefix)
 {
     CandidateList res;
     for (auto scope : { "global", "buffer", "window" })

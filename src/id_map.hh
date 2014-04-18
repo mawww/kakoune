@@ -67,11 +67,11 @@ public:
     }
 
     template<typename Condition>
-    CandidateList complete_id_if(const String& prefix,
+    CandidateList complete_id_if(StringView prefix,
                                  ByteCount cursor_pos,
                                  Condition condition) const
     {
-        String real_prefix = prefix.substr(0, cursor_pos);
+        auto real_prefix = prefix.substr(0, cursor_pos);
         CandidateList result;
         for (auto& value : m_content)
         {
@@ -84,7 +84,7 @@ public:
         return result;
     }
 
-    CandidateList complete_id(const String& prefix,
+    CandidateList complete_id(StringView prefix,
                               ByteCount cursor_pos) const
     {
         return complete_id_if(

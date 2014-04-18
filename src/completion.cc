@@ -6,7 +6,7 @@ namespace Kakoune
 {
 
 Completions shell_complete(const Context& context, CompletionFlags flags,
-                           const String& prefix, ByteCount cursor_pos)
+                           StringView prefix, ByteCount cursor_pos)
 {
     ByteCount word_start = 0;
     ByteCount word_end = 0;

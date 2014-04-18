@@ -5,13 +5,13 @@
 #include <functional>
 
 #include "units.hh"
+#include "string.hh"
 
 namespace Kakoune
 {
 
 class Context;
 
-class String;
 using CandidateList = std::vector<String>;
 
 struct Completions
@@ -36,16 +36,16 @@ enum class CompletionFlags
     Fast
 };
 using Completer = std::function<Completions (const Context&, CompletionFlags,
-                                             const String&, ByteCount)>;
+                                             StringView, ByteCount)>;
 
 inline Completions complete_nothing(const Context& context, CompletionFlags,
-                                    const String&, ByteCount cursor_pos)
+                                    StringView, ByteCount cursor_pos)
 {
     return Completions(cursor_pos, cursor_pos);
 }
 
 Completions shell_complete(const Context& context, CompletionFlags,
-                           const String&, ByteCount cursor_pos);
+                           StringView, ByteCount cursor_pos);
 
 }
 #endif // completion_hh_INCLUDED

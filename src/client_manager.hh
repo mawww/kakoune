@@ -39,7 +39,7 @@ public:
     bool validate_client_name(const String& name) const;
     void remove_client(Client& client);
 
-    CandidateList complete_client_name(const String& name,
+    CandidateList complete_client_name(StringView name,
                                        ByteCount cursor_pos = -1) const;
 
 private:

@@ -36,11 +36,11 @@ void ColorRegistry::register_alias(const String& name, const String& colordesc,
                       it->second : parse_color_pair(colordesc);
 }
 
-CandidateList ColorRegistry::complete_alias_name(const String& prefix,
+CandidateList ColorRegistry::complete_alias_name(StringView prefix,
                                                  ByteCount cursor_pos) const
 {
     CandidateList res;
-    String real_prefix = prefix.substr(0, cursor_pos);
+    auto real_prefix = prefix.substr(0, cursor_pos);
     for (auto& alias : m_aliases)
     {
         if (prefix_match(alias.first, real_prefix))

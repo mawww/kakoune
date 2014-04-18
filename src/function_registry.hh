@@ -32,7 +32,7 @@ public:
         return it->second;
     }
 
-    CandidateList complete_name(const String& prefix, ByteCount cursor_pos)
+    CandidateList complete_name(StringView prefix, ByteCount cursor_pos)
     {
         return m_functions.complete_id(prefix, cursor_pos);
     }

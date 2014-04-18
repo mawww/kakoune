@@ -89,7 +89,7 @@ public:
     const Option& operator[] (const String& name) const;
     Option& get_local_option(const String& name);
 
-    CandidateList complete_option_name(const String& prefix,
+    CandidateList complete_option_name(StringView prefix,
                                        ByteCount cursor_pos);
 
     using OptionList = std::vector<const Option*>;

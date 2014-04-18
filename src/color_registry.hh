@@ -19,7 +19,7 @@ public:
     void register_alias(const String& name, const String& colordesc,
                         bool override = false);
 
-    CandidateList complete_alias_name(const String& prefix,
+    CandidateList complete_alias_name(StringView prefix,
                                       ByteCount cursor_pos) const;
 private:
     std::unordered_map<String, ColorPair>    m_aliases;

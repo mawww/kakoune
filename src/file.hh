@@ -35,12 +35,12 @@ String find_file(const String& filename, memoryview<String> paths);
 
 time_t get_fs_timestamp(const String& filename);
 
-std::vector<String> complete_filename(const String& prefix,
+std::vector<String> complete_filename(StringView prefix,
                                       const Regex& ignore_regex,
                                       ByteCount cursor_pos = -1);
 
-std::vector<String> complete_command(const String& prefix,
-                                      ByteCount cursor_pos = -1);
+std::vector<String> complete_command(StringView prefix,
+                                     ByteCount cursor_pos = -1);
 }
 
 #endif // file_hh_INCLUDED

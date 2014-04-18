@@ -54,12 +54,12 @@ public:
             return  *group;
     }
 
-    CandidateList complete_id(const String& prefix, ByteCount cursor_pos) const
+    CandidateList complete_id(StringView prefix, ByteCount cursor_pos) const
     {
         return m_functions.complete_id(prefix, cursor_pos);
     }
 
-    CandidateList complete_group_id(const String& prefix, ByteCount cursor_pos) const
+    CandidateList complete_group_id(StringView prefix, ByteCount cursor_pos) const
     {
         return m_functions.complete_id_if(
             prefix, cursor_pos, [](const FunctionAndId& func) {

@@ -85,14 +85,14 @@ CandidateList OptionManager::get_matching_names(MatchingFunc func)
     return result;
 }
 
-CandidateList OptionManager::complete_option_name(const String& prefix,
+CandidateList OptionManager::complete_option_name(StringView prefix,
                                                   ByteCount cursor_pos)
 {
     using namespace std::placeholders;
-    String real_prefix = prefix.substr(0, cursor_pos);
-    auto result = get_matching_names(std::bind(prefix_match, _1, std::ref(real_prefix)));
+    auto real_prefix = prefix.substr(0, cursor_pos);
+    auto result = get_matching_names(std::bind(prefix_match, _1, real_prefix));
     if (result.empty())
-        result = get_matching_names(std::bind(subsequence_match, _1, std::ref(real_prefix)));
+        result = get_matching_names(std::bind(subsequence_match, _1, real_prefix));
     return result;
 }
 

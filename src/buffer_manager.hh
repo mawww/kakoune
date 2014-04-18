@@ -33,7 +33,7 @@ public:
     Buffer& get_buffer(const String& name);
     void    set_last_used_buffer(Buffer& buffer);
 
-    CandidateList complete_buffer_name(const String& prefix,
+    CandidateList complete_buffer_name(StringView prefix,
                                        ByteCount cursor_pos = -1);
 
 private:
