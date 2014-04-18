@@ -61,6 +61,114 @@ public:
     }
 };
 
+class StringView
+{
+public:
+    constexpr StringView() : m_data{nullptr}, m_length{0} {}
+    constexpr StringView(const char* data, ByteCount length)
+        : m_data{data}, m_length{length} {}
+    constexpr StringView(const char* data) : m_data{data}, m_length{(int)strlen(data)} {}
+    constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
+    StringView(const String& str) : m_data{str.data().pointer()}, m_length{str.length()} {}
+
+    bool operator==(StringView other) const;
+    bool operator!=(StringView other) const;
+
+    const char* data() const { return m_data; }
+
+    using iterator = const char*;
+    using reverse_iterator = std::reverse_iterator<const char*>;
+
+    iterator begin() const { return m_data; }
+    iterator end() const { return m_data + (int)m_length; }
+
+    reverse_iterator rbegin() const { return reverse_iterator{m_data + (int)m_length}; }
+    reverse_iterator rend() const { return reverse_iterator{m_data}; }
+
+    char front() const { return *m_data; }
+    char back() const { return m_data[(int)m_length - 1]; }
+
+    char operator[](ByteCount pos) const { return m_data[(int)pos]; }
+
+    ByteCount length() const { return m_length; }
+    CharCount char_length() const { return utf8::distance(begin(), end()); }
+    bool empty() { return m_length == 0_byte; }
+
+    ByteCount byte_count_to(CharCount count) const;
+    CharCount char_count_to(ByteCount count) const;
+
+    StringView substr(ByteCount from, ByteCount length = INT_MAX) const;
+    StringView substr(CharCount from, CharCount length = INT_MAX) const;
+
+    String str() const { return String{begin(), end()}; }
+
+    operator String() const { return str(); } // to remove
+
+private:
+    const char* m_data;
+    ByteCount m_length;
+};
+
+inline bool StringView::operator==(StringView other) const
+{
+    return m_length == other.m_length and memcmp(m_data, other.m_data, (int)m_length) == 0;
+}
+
+inline bool StringView::operator!=(StringView other) const
+{
+    return !this->operator==(other);
+}
+
+inline bool operator==(const char* lhs, StringView rhs)
+{
+    return StringView{lhs} == rhs;
+}
+
+inline bool operator!=(const char* lhs, StringView rhs)
+{
+    return StringView{lhs} != rhs;
+}
+
+inline bool operator==(const std::string& lhs, StringView rhs)
+{
+    return StringView{lhs} == rhs;
+}
+
+inline bool operator!=(const std::string& lhs, StringView rhs)
+{
+    return StringView{lhs} != rhs;
+}
+
+inline ByteCount StringView::byte_count_to(CharCount count) const
+{
+    return utf8::advance(begin(), end(), (int)count) - begin();
+}
+inline CharCount StringView::char_count_to(ByteCount count) const
+{
+    return utf8::distance(begin(), begin() + (int)count);
+}
+
+inline StringView StringView::substr(ByteCount from, ByteCount length) const
+{
+    return StringView{ m_data + (int)from, std::min(m_length - from, length) };
+}
+
+inline StringView StringView::substr(CharCount from, CharCount length) const
+{
+    auto beg = utf8::advance(begin(), end(), (int)from);
+    return StringView{ beg, utf8::advance(beg, end(), length) };
+}
+
+inline const char* begin(StringView str)
+{
+    return str.begin();
+}
+
+inline const char* end(StringView str)
+{
+    return str.end();
+}
+
 inline String operator+(const char* lhs, const String& rhs)
 {
     return String(lhs) + rhs;
@@ -74,6 +182,40 @@ inline String operator+(const std::string& lhs, const String& rhs)
 inline String operator+(const String& lhs, const std::string& rhs)
 {
     return lhs + String(rhs);
+}
+
+inline String& operator+=(String& lhs, StringView rhs)
+{
+    lhs.append(rhs.data(), (size_t)(int)rhs.length());
+    return lhs;
+}
+
+inline String operator+(const char* lhs, StringView rhs)
+{
+    String res = lhs;
+    res += rhs;
+    return res;
+}
+
+inline String operator+(const String& lhs, StringView rhs)
+{
+    String res = lhs;
+    res += rhs;
+    return res;
+}
+
+inline String operator+(StringView lhs, const String& rhs)
+{
+    String res{lhs.begin(), lhs.end()};
+    res.append(rhs);
+    return res;
+}
+
+inline String operator+(StringView lhs, const char* rhs)
+{
+    String res{lhs.begin(), lhs.end()};
+    res.append(rhs);
+    return res;
 }
 
 inline String operator+(char lhs, const String& rhs)
@@ -114,8 +256,8 @@ String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
     return to_string((ValueType)val);
 }
 
-bool prefix_match(const String& str, const String& prefix);
-bool subsequence_match(const String& str, const String& subseq);
+bool prefix_match(StringView str, StringView prefix);
+bool subsequence_match(StringView str, StringView subseq);
 
 }
 

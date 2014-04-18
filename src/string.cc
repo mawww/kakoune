@@ -83,7 +83,7 @@ void option_from_string(const String& str, Regex& re)
     }
 }
 
-bool prefix_match(const String& str, const String& prefix)
+bool prefix_match(StringView str, StringView prefix)
 {
     auto it = str.begin();
     for (auto& c : prefix)
@@ -94,7 +94,7 @@ bool prefix_match(const String& str, const String& prefix)
     return true;
 }
 
-bool subsequence_match(const String& str, const String& subseq)
+bool subsequence_match(StringView str, StringView subseq)
 {
     auto it = str.begin();
     for (auto& c : subseq)
