@@ -18,11 +18,11 @@
 namespace Kakoune
 {
 
-String parse_filename(const String& filename)
+String parse_filename(StringView filename)
 {
     if (filename.length() >= 1 and filename[0] == '~' and
         (filename.length() == 1 or filename[1] == '/'))
-        return parse_filename("$HOME" + filename.substr(1_byte));
+        return parse_filename("$HOME"_str + filename.substr(1_byte));
 
     ByteCount pos = 0;
     String result;
@@ -34,8 +34,8 @@ String parse_filename(const String& filename)
             ByteCount end = i+1;
             while (end != filename.length() and is_word(filename[end]))
                 ++end;
-            String var_name = filename.substr(i+1, end - i - 1);
-            const char* var_value = getenv(var_name.c_str());
+            StringView var_name = filename.substr(i+1, end - i - 1);
+            const char* var_value = getenv(var_name.str().c_str());
             if (var_value)
                 result += var_value;
 
@@ -48,26 +48,26 @@ String parse_filename(const String& filename)
     return result;
 }
 
-String real_path(const String& filename)
+String real_path(StringView filename)
 {
-    String dirname = ".";
-    String basename = filename;
+    StringView dirname = ".";
+    StringView basename = filename;
 
-    auto it = find(reversed(filename), '/');
+    auto it = find(filename.rbegin(), filename.rend(), '/');
     if (it != filename.rend())
     {
-        dirname = String{filename.begin(), it.base()};
-        basename = String{it.base(), filename.end()};
+        dirname = StringView{filename.begin(), it.base()};
+        basename = StringView{it.base(), filename.end()};
     }
 
     char buffer[PATH_MAX+1];
-    char* res = realpath(dirname.c_str(), buffer);
+    char* res = realpath(dirname.str().c_str(), buffer);
     if (not res)
         throw file_not_found{dirname};
     return res + "/"_str + basename;
 }
 
-String compact_path(const String& filename)
+String compact_path(StringView filename)
 {
     String real_filename = real_path(filename);
 
@@ -85,10 +85,10 @@ String compact_path(const String& filename)
             return "~" + real_filename.substr(home_len);
     }
 
-    return filename;
+    return filename.str();
 }
 
-String read_file(const String& filename)
+String read_file(StringView filename)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     if (fd == -1)
@@ -187,10 +187,10 @@ Buffer* create_buffer_from_file(String filename)
     return buffer;
 }
 
-static void write(int fd, memoryview<char> data, const String& filename)
+static void write(int fd, StringView data, StringView filename)
 {
-    const char* ptr = data.pointer();
-    ssize_t count   = data.size();
+    const char* ptr = data.data();
+    ssize_t count   = (int)data.length();
 
     while (count)
     {
@@ -203,16 +203,16 @@ static void write(int fd, memoryview<char> data, const String& filename)
     }
 }
 
-void write_buffer_to_file(Buffer& buffer, const String& filename)
+void write_buffer_to_file(Buffer& buffer, StringView filename)
 {
     buffer.run_hook_in_own_context("BufWritePre", buffer.name());
 
-    String eolformat = buffer.options()["eolformat"].get<String>();
+    const String& eolformat = buffer.options()["eolformat"].get<String>();
+    StringView eoldata;
     if (eolformat == "crlf")
-        eolformat = "\r\n";
+        eoldata = "\r\n";
     else
-        eolformat = "\n";
-    auto eoldata = eolformat.data();
+        eoldata = "\n";
 
     {
         int fd = open(parse_filename(filename).c_str(),
@@ -228,8 +228,8 @@ void write_buffer_to_file(Buffer& buffer, const String& filename)
         {
             // end of lines are written according to eolformat but always
             // stored as \n
-            memoryview<char> linedata = buffer[i].data();
-            write(fd, linedata.subrange(0, linedata.size()-1), filename);
+            StringView linedata = buffer[i];
+            write(fd, linedata.substr(0, linedata.length()-1), filename);
             write(fd, eoldata, filename);
         }
     }
@@ -239,19 +239,19 @@ void write_buffer_to_file(Buffer& buffer, const String& filename)
     buffer.run_hook_in_own_context("BufWritePost", buffer.name());
 }
 
-String find_file(const String& filename, memoryview<String> paths)
+String find_file(StringView filename, memoryview<String> paths)
 {
     struct stat buf;
-    if (filename.size() > 1 and filename[0] == '/')
+    if (filename.length() > 1 and filename[0] == '/')
     {
-        if (stat(filename.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
-            return filename;
+        if (stat(filename.str().c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
+            return filename.str();
          return "";
     }
-    if (filename.size() > 2 and
+    if (filename.length() > 2 and
              filename[0] == '~' and filename[1] == '/')
     {
-        String candidate = getenv("HOME") + filename.substr(1_byte);
+        String candidate = getenv("HOME") + filename.substr(1_byte).str();
         if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
             return candidate;
         return "";
@@ -269,12 +269,11 @@ String find_file(const String& filename, memoryview<String> paths)
 }
 
 template<typename Filter>
-std::vector<String> list_files(const String& prefix,
-                               const String& dirname,
+std::vector<String> list_files(StringView prefix, StringView dirname,
                                Filter filter)
 {
     kak_assert(dirname.empty() or dirname.back() == '/');
-    DIR* dir = opendir(dirname.empty() ? "./" : dirname.c_str());
+    DIR* dir = opendir(dirname.empty() ? "./" : dirname.str().c_str());
     if (not dir)
         return {};
 
@@ -392,10 +391,10 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     return res;
 }
 
-time_t get_fs_timestamp(const String& filename)
+time_t get_fs_timestamp(StringView filename)
 {
     struct stat st;
-    if (stat(filename.c_str(), &st) != 0)
+    if (stat(filename.str().c_str(), &st) != 0)
         return InvalidTime;
     return st.st_mtime;
 }
