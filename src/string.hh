@@ -59,7 +59,6 @@ public:
         auto e = utf8::advance(b, end(), (int)length);
         return String(b,e);
     }
-    String replace(const Regex& expression, const String& replacement) const;
 };
 
 inline String operator+(const char* lhs, const String& rhs)
