@@ -23,14 +23,14 @@ public:
     void unregister_buffer(Buffer& buffer);
 
     void delete_buffer(Buffer& buffer);
-    void delete_buffer_if_exists(const String& name);
+    void delete_buffer_if_exists(StringView name);
 
     iterator begin() const { return m_buffers.cbegin(); }
     iterator end() const { return m_buffers.cend(); }
     size_t   count() const { return m_buffers.size(); }
 
-    Buffer* get_buffer_ifp(const String& name);
-    Buffer& get_buffer(const String& name);
+    Buffer* get_buffer_ifp(StringView name);
+    Buffer& get_buffer(StringView name);
     void    set_last_used_buffer(Buffer& buffer);
 
     CandidateList complete_buffer_name(StringView prefix,

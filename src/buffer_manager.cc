@@ -21,7 +21,7 @@ BufferManager::~BufferManager()
 
 void BufferManager::register_buffer(Buffer& buffer)
 {
-    const String& name = buffer.name();
+    StringView name = buffer.name();
     for (auto& buf : m_buffers)
     {
         if (buf->name() == name)
@@ -59,13 +59,13 @@ void BufferManager::delete_buffer(Buffer& buffer)
     kak_assert(false);
 }
 
-void BufferManager::delete_buffer_if_exists(const String& name)
+void BufferManager::delete_buffer_if_exists(StringView name)
 {
     if (Buffer* buf = get_buffer_ifp(name))
         delete_buffer(*buf);
 }
 
-Buffer* BufferManager::get_buffer_ifp(const String& name)
+Buffer* BufferManager::get_buffer_ifp(StringView name)
 {
     for (auto& buf : m_buffers)
     {
@@ -77,11 +77,11 @@ Buffer* BufferManager::get_buffer_ifp(const String& name)
     return nullptr;
 }
 
-Buffer& BufferManager::get_buffer(const String& name)
+Buffer& BufferManager::get_buffer(StringView name)
 {
     Buffer* res = get_buffer_ifp(name);
     if (not res)
-        throw runtime_error("no such buffer '" + name + "'");
+        throw runtime_error("no such buffer '"_str + name + "'");
     return *res;
 }
 
