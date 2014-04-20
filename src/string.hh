@@ -104,6 +104,24 @@ public:
 
     operator String() const { return str(); } // to remove
 
+    struct ZeroTerminatedString
+    {
+        ZeroTerminatedString(const char* begin, const char* end)
+        {
+            if (*end == '\0')
+                unowned = begin;
+            else
+                owned = std::string(begin, end);
+        }
+        operator const char*() const { return unowned ? unowned : owned.c_str(); }
+
+    private:
+        std::string owned;
+        const char* unowned = nullptr;
+
+    };
+    ZeroTerminatedString zstr() const { return ZeroTerminatedString{begin(), end()}; }
+
 private:
     const char* m_data;
     ByteCount m_length;
