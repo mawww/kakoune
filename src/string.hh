@@ -150,11 +150,15 @@ inline CharCount StringView::char_count_to(ByteCount count) const
 
 inline StringView StringView::substr(ByteCount from, ByteCount length) const
 {
+    if (length < 0)
+        length = INT_MAX;
     return StringView{ m_data + (int)from, std::min(m_length - from, length) };
 }
 
 inline StringView StringView::substr(CharCount from, CharCount length) const
 {
+    if (length < 0)
+        length = INT_MAX;
     auto beg = utf8::advance(begin(), end(), (int)from);
     return StringView{ beg, utf8::advance(beg, end(), length) };
 }
