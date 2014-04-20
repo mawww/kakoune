@@ -47,8 +47,6 @@ public:
     String  operator+(Codepoint cp) const { String res = *this; utf8::dump(back_inserter(res), cp); return res; }
     String& operator+=(Codepoint cp) { utf8::dump(back_inserter(*this), cp); return *this; }
 
-    memoryview<char> data()  const { return memoryview<char>(std::string::data(), size()); }
-
     String substr(ByteCount pos, ByteCount length = -1) const
     {
         return String{std::string::substr((int)pos, (int)length)};
@@ -69,7 +67,7 @@ public:
         : m_data{data}, m_length{length} {}
     constexpr StringView(const char* data) : m_data{data}, m_length{(int)strlen(data)} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
-    StringView(const String& str) : m_data{str.data().pointer()}, m_length{str.length()} {}
+    StringView(const String& str) : m_data{str.data()}, m_length{str.length()} {}
 
     bool operator==(StringView other) const;
     bool operator!=(StringView other) const;
