@@ -35,7 +35,7 @@ String parse_filename(StringView filename)
             while (end != filename.length() and is_word(filename[end]))
                 ++end;
             StringView var_name = filename.substr(i+1, end - i - 1);
-            const char* var_value = getenv(var_name.str().c_str());
+            const char* var_value = getenv(var_name.zstr());
             if (var_value)
                 result += var_value;
 
@@ -61,7 +61,7 @@ String real_path(StringView filename)
     }
 
     char buffer[PATH_MAX+1];
-    char* res = realpath(dirname.str().c_str(), buffer);
+    char* res = realpath(dirname.zstr(), buffer);
     if (not res)
         throw file_not_found{dirname};
     return res + "/"_str + basename;
@@ -244,7 +244,7 @@ String find_file(StringView filename, memoryview<String> paths)
     struct stat buf;
     if (filename.length() > 1 and filename[0] == '/')
     {
-        if (stat(filename.str().c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
+        if (stat(filename.zstr(), &buf) == 0 and S_ISREG(buf.st_mode))
             return filename.str();
          return "";
     }
@@ -273,7 +273,7 @@ std::vector<String> list_files(StringView prefix, StringView dirname,
                                Filter filter)
 {
     kak_assert(dirname.empty() or dirname.back() == '/');
-    DIR* dir = opendir(dirname.empty() ? "./" : dirname.str().c_str());
+    DIR* dir = opendir(dirname.empty() ? "./" : dirname.zstr());
     if (not dir)
         return {};
 
@@ -394,7 +394,7 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 time_t get_fs_timestamp(StringView filename)
 {
     struct stat st;
-    if (stat(filename.str().c_str(), &st) != 0)
+    if (stat(filename.zstr(), &st) != 0)
         return InvalidTime;
     return st.st_mtime;
 }
