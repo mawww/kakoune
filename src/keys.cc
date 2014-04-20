@@ -36,7 +36,7 @@ static const KeyAndName keynamemap[] = {
     { "backtab", Key::BackTab },
 };
 
-KeyList parse_keys(const String& str)
+KeyList parse_keys(StringView str)
 {
     KeyList result;
     for (ByteCount pos = 0; pos < str.length(); ++pos)
@@ -51,7 +51,7 @@ KeyList parse_keys(const String& str)
             {
                 Key::Modifiers modifier = Key::Modifiers::None;
 
-                String keyname = str.substr(pos+1, end_pos - pos - 1);
+                auto keyname = str.substr(pos+1, end_pos - pos - 1);
                 if (keyname.length() > 2)
                 {
                     if (tolower(keyname[0]) == 'c' and keyname[1] == '-')

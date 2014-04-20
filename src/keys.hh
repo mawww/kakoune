@@ -66,7 +66,7 @@ struct Key
 
 using KeyList = std::vector<Key>;
 
-KeyList parse_keys(const String& str);
+KeyList parse_keys(StringView str);
 String  key_to_str(Key key);
 
 constexpr Key alt(Codepoint key) { return { Key::Modifiers::Alt, key }; }
