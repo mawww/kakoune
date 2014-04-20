@@ -16,15 +16,15 @@ ShellManager::ShellManager()
 {
 }
 
-String ShellManager::eval(const String& cmdline, const Context& context,
+String ShellManager::eval(StringView cmdline, const Context& context,
                           memoryview<String> params,
                           const EnvVarMap& env_vars)
 {
     return pipe("", cmdline, context, params, env_vars);
 }
 
-String ShellManager::pipe(const String& input,
-                          const String& cmdline, const Context& context,
+String ShellManager::pipe(StringView input,
+                          StringView cmdline, const Context& context,
                           memoryview<String> params,
                           const EnvVarMap& env_vars)
 {
@@ -43,8 +43,7 @@ String ShellManager::pipe(const String& input,
         close(read_pipe[1]);
         close(error_pipe[1]);
 
-        auto data = input.data();
-        write(write_pipe[1], data.pointer(), data.size());
+        write(write_pipe[1], input.data(), (int)input.length());
         close(write_pipe[1]);
 
         char buffer[1024];
@@ -79,18 +78,18 @@ String ShellManager::pipe(const String& input,
         dup2(error_pipe[1], 2); close(error_pipe[1]);
         dup2(write_pipe[0], 0); close(write_pipe[0]);
 
-        boost::regex_iterator<String::const_iterator> it(cmdline.begin(), cmdline.end(), env_var_regex);
-        boost::regex_iterator<String::const_iterator> end;
+        boost::regex_iterator<StringView::iterator> it(cmdline.begin(), cmdline.end(), env_var_regex);
+        boost::regex_iterator<StringView::iterator> end;
 
         while (it != end)
         {
             auto& match = *it;
 
-            String name;
+            StringView name;
             if (match[1].matched)
-                name = String(match[1].first, match[1].second);
+                name = StringView(match[1].first, match[1].second);
             else if (match[2].matched)
-                name = String(match[2].first, match[2].second);
+                name = StringView(match[2].first, match[2].second);
             else
                 kak_assert(false);
             kak_assert(name.length() > 0);
@@ -111,7 +110,7 @@ String ShellManager::pipe(const String& input,
                     try
                     {
                         String value = env_var->second(name, context);
-                        setenv(("kak_" + name).c_str(), value.c_str(), 1);
+                        setenv(("kak_"_str + name).c_str(), value.c_str(), 1);
                     }
                     catch (runtime_error&) {}
                 }
@@ -119,22 +118,23 @@ String ShellManager::pipe(const String& input,
 
             ++it;
         }
-        String shell = "/bin/sh";
-        std::vector<const char*> execparams = { shell.c_str(), "-c", cmdline.c_str() };
+        const char* shell = "/bin/sh";
+        auto cmdlinezstr = cmdline.zstr();
+        std::vector<const char*> execparams = { shell, "-c", cmdlinezstr };
         if (not params.empty())
-            execparams.push_back(shell.c_str());
+            execparams.push_back(shell);
         for (auto& param : params)
             execparams.push_back(param.c_str());
         execparams.push_back(nullptr);
 
-        execvp(shell.c_str(), (char* const*)execparams.data());
+        execvp(shell, (char* const*)execparams.data());
         exit(-1);
     }
     catch (...) { exit(-1); }
     return output;
 }
 
-void ShellManager::register_env_var(const String& regex,
+void ShellManager::register_env_var(StringView regex,
                                     EnvVarRetriever retriever)
 {
     m_env_vars.push_back({ Regex(regex.begin(), regex.end()), std::move(retriever) });

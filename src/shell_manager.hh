@@ -9,23 +9,23 @@ namespace Kakoune
 {
 
 class Context;
-using EnvVarRetriever = std::function<String (const String& name, const Context&)>;
+using EnvVarRetriever = std::function<String (StringView name, const Context&)>;
 
 class ShellManager : public Singleton<ShellManager>
 {
 public:
     ShellManager();
 
-    String eval(const String& cmdline, const Context& context,
+    String eval(StringView cmdline, const Context& context,
                 memoryview<String> params,
                 const EnvVarMap& env_vars);
 
-    String pipe(const String& input,
-                const String& cmdline, const Context& context,
+    String pipe(StringView input,
+                StringView cmdline, const Context& context,
                 memoryview<String> params,
                 const EnvVarMap& env_vars);
 
-    void register_env_var(const String& regex, EnvVarRetriever retriever);
+    void register_env_var(StringView regex, EnvVarRetriever retriever);
 
 private:
     std::vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
