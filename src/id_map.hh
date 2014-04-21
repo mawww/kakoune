@@ -28,7 +28,7 @@ public:
         m_content.push_back(std::move(value));
     }
 
-    iterator find(const String& id)
+    iterator find(StringView id)
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -38,7 +38,7 @@ public:
         return end();
     }
 
-    const_iterator find(const String& id) const
+    const_iterator find(StringView id) const
     {
         for (auto it = begin(); it != end(); ++it)
         {
@@ -48,19 +48,19 @@ public:
         return end();
     }
 
-    bool contains(const String& id) const
+    bool contains(StringView id) const
     {
         return find(id) != end();
     }
 
-    void remove(const String& id)
+    void remove(StringView id)
     {
         auto it = find(id);
         if (it != end())
             m_content.erase(it);
     }
 
-    void remove_all(const String& id)
+    void remove_all(StringView id)
     {
         for (auto it = find(id); it != end(); it = find(id))
             m_content.erase(it);
