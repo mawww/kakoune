@@ -33,23 +33,23 @@ public:
 
         m_functions.append(std::forward<FunctionAndId>(function));
     }
-    void remove(const String& id)
+    void remove(StringView id)
     {
         m_functions.remove(id);
     }
 
-    FunctionGroup& get_group(const String& path, Codepoint path_separator = 0)
+    FunctionGroup& get_group(StringView path, Codepoint path_separator = 0)
     {
         auto sep_it = std::find(path.begin(), path.end(), path_separator);
-        String id(path.begin(), sep_it);
+        StringView id(path.begin(), sep_it);
         auto it = m_functions.find(id);
         if (it == m_functions.end())
-            throw group_not_found("no such id: " + id);
+            throw group_not_found("no such id: "_str + id);
         FunctionGroup* group = it->second.template target<FunctionGroup>();
         if (not group)
-            throw group_not_found("not a group: " + id);
+            throw group_not_found("not a group: "_str + id);
         if (sep_it != path.end())
-            return group->get_group(String(sep_it+1, path.end()), path_separator);
+            return group->get_group(StringView(sep_it+1, path.end()), path_separator);
         else
             return  *group;
     }

@@ -18,13 +18,13 @@ template<typename FunctionType>
 class FunctionRegistry
 {
 public:
-    void register_func(const String& name, const FunctionType& function)
+    void register_func(StringView name, const FunctionType& function)
     {
         kak_assert(not m_functions.contains(name));
         m_functions.append(std::make_pair(name, function));
     }
 
-    const FunctionType& operator[](const String& name) const
+    const FunctionType& operator[](StringView name) const
     {
         auto it = m_functions.find(name);
         if (it == m_functions.end())
