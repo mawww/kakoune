@@ -62,14 +62,14 @@ using CommandInfo = std::pair<String, String>;
 class CommandManager : public Singleton<CommandManager>
 {
 public:
-    void execute(const String& command_line, Context& context,
+    void execute(StringView command_line, Context& context,
                  memoryview<String> shell_params = {},
                  const EnvVarMap& env_vars = EnvVarMap{});
 
     Completions complete(const Context& context, CompletionFlags flags,
-                         const String& command_line, ByteCount cursor_pos);
+                         StringView command_line, ByteCount cursor_pos);
 
-    CommandInfo command_info(const String& command_line) const;
+    CommandInfo command_info(StringView command_line) const;
 
     bool command_defined(const String& command_name) const;
 

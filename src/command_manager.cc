@@ -107,7 +107,7 @@ struct unknown_expand : parse_error
         : parse_error{"unknown expand '" + name + "'"} {}
 };
 
-String get_until_delimiter(const String& base, ByteCount& pos, char delimiter)
+String get_until_delimiter(StringView base, ByteCount& pos, char delimiter)
 {
     const ByteCount length = base.length();
     String str;
@@ -127,7 +127,7 @@ String get_until_delimiter(const String& base, ByteCount& pos, char delimiter)
     return str;
 }
 
-String get_until_delimiter(const String& base, ByteCount& pos,
+String get_until_delimiter(StringView base, ByteCount& pos,
                            char opening_delimiter, char closing_delimiter)
 {
     kak_assert(base[pos-1] == opening_delimiter);
@@ -151,7 +151,7 @@ String get_until_delimiter(const String& base, ByteCount& pos,
 }
 
 template<bool throw_on_invalid>
-Token::Type token_type(const String& type_name)
+Token::Type token_type(StringView type_name)
 {
     if (type_name == "")
         return Token::Type::Raw;
@@ -169,7 +169,7 @@ Token::Type token_type(const String& type_name)
         return Token::Type::Raw;
 }
 
-void skip_blanks_and_comments(const String& base, ByteCount& pos)
+void skip_blanks_and_comments(StringView base, ByteCount& pos)
 {
     const ByteCount length = base.length();
     while (pos != length)
@@ -189,13 +189,13 @@ void skip_blanks_and_comments(const String& base, ByteCount& pos)
 }
 
 template<bool throw_on_unterminated>
-Token parse_percent_token(const String& line, ByteCount& pos)
+Token parse_percent_token(StringView line, ByteCount& pos)
 {
     const ByteCount length = line.length();
     const ByteCount type_start = ++pos;
     while (isalpha(line[pos]))
         ++pos;
-    String type_name = line.substr(type_start, pos - type_start);
+    StringView type_name = line.substr(type_start, pos - type_start);
 
     if (throw_on_unterminated and pos == length)
         throw parse_error{"expected a string delimiter after '%" +
@@ -228,7 +228,7 @@ Token parse_percent_token(const String& line, ByteCount& pos)
 }
 
 template<bool throw_on_unterminated>
-TokenList parse(const String& line)
+TokenList parse(StringView line)
 {
     TokenList result;
 
@@ -265,7 +265,7 @@ TokenList parse(const String& line)
                 ++pos;
             if (start_pos != pos)
             {
-                auto token = line.substr(token_start, pos - token_start);
+                String token = line.substr(token_start, pos - token_start);
                 static const Regex regex{R"(\\([ \t;\n]))"};
                 result.emplace_back(Token::Type::Raw, token_start, pos,
                                     boost::regex_replace(token, regex,
@@ -371,7 +371,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     command_it->second.command(parameter_parser, context);
 }
 
-void CommandManager::execute(const String& command_line,
+void CommandManager::execute(StringView command_line,
                              Context& context,
                              memoryview<String> shell_params,
                              const EnvVarMap& env_vars)
@@ -410,7 +410,7 @@ void CommandManager::execute(const String& command_line,
     execute_single_command(params, context);
 }
 
-CommandInfo CommandManager::command_info(const String& command_line) const
+CommandInfo CommandManager::command_info(StringView command_line) const
 {
     TokenList tokens = parse<false>(command_line);
     size_t cmd_idx = 0;
@@ -420,7 +420,7 @@ CommandInfo CommandManager::command_info(const String& command_line) const
             cmd_idx = i+1;
     }
 
-    std::pair<String, String> res;
+    CommandInfo res;
     if (cmd_idx == tokens.size() or
         tokens[cmd_idx].type() != Token::Type::Raw)
         return res;
@@ -444,7 +444,7 @@ CommandInfo CommandManager::command_info(const String& command_line) const
 
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
-                                     const String& command_line,
+                                     StringView command_line,
                                      ByteCount cursor_pos)
 {
     TokenList tokens = parse<false>(command_line);
@@ -472,8 +472,8 @@ Completions CommandManager::complete(const Context& context,
         ByteCount cmd_start =  is_end_token ? cursor_pos
                                             : tokens[tok_idx].begin();
         Completions result(cmd_start, cursor_pos);
-        String prefix = command_line.substr(cmd_start,
-                                            cursor_pos - cmd_start);
+        StringView prefix = command_line.substr(cmd_start,
+                                                cursor_pos - cmd_start);
 
         for (auto& command : m_commands)
         {
