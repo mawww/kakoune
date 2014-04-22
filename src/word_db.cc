@@ -112,4 +112,12 @@ std::vector<String> WordDB::find_prefix(const String& prefix)
     return res;
 }
 
+int WordDB::get_word_occurences(const String& word) const
+{
+    auto it = m_words.find(word);
+    if (it != m_words.end())
+        return it->second;
+    return 0;
+}
+
 }

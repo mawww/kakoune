@@ -776,11 +776,13 @@ public:
 
         String current_word{begin, end};
 
+        auto& word_db = get_word_db(buffer);
         std::unordered_set<String> matches;
-        auto bufmatches = get_word_db(buffer).find_prefix(prefix);
+        auto bufmatches = word_db.find_prefix(prefix);
         matches.insert(bufmatches.begin(), bufmatches.end());
 
-        matches.erase(current_word);
+        if (word_db.get_word_occurences(current_word) <= 1)
+            matches.erase(current_word);
 
         if (other_buffers)
         {

@@ -80,6 +80,8 @@ void test_word_db()
     auto res = word_db.find_prefix("");
     std::sort(res.begin(), res.end());
     kak_assert(res == std::vector<String>{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" });
+    kak_assert(word_db.get_word_occurences("tchou") == 3);
+    kak_assert(word_db.get_word_occurences("allo") == 1);
     buffer.erase(buffer.iterator_at({1, 6}), buffer.iterator_at({4, 0}));
     res = word_db.find_prefix("");
     std::sort(res.begin(), res.end());
