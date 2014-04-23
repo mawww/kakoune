@@ -158,12 +158,13 @@ template<>
 String read<String>(int socket)
 {
     ByteCount length = read<ByteCount>(socket);
-    if (length == 0)
-        return String{};
-    char buffer[2048];
-    kak_assert(length < 2048);
-    read(socket, buffer, (int)length);
-    return String(buffer, buffer+(int)length);
+    String res;
+    if (length > 0)
+    {
+        res.resize((int)length);
+        read(socket, &res[0], (int)length);
+    }
+    return res;
 }
 
 template<typename T>
