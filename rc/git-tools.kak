@@ -10,15 +10,27 @@ hook global WinSetOption filetype=(?!git-log).* %{
     rmhl git-log-highlight
 }
 
+hook global WinSetOption filetype=git-status %{
+    addhl group git-status-highlight
+    addhl -group git-status-highlight regex '^#\h+((modified:)|(added:)|(deleted:)|(renamed:)|(copied:))(.*?)$' 2:yellow 3:green 4:red 5:cyan 6:blue 7:magenta
+}
+
+hook global WinSetOption filetype=(?!git-status).* %{
+    rmhl git-status-highlight
+}
+
 decl line-flag-list git_blame_flags
 decl line-flag-list git_diff_flags
 
-def -shell-params git %{ %sh{
+def -shell-params \
+  -docstring "git wrapping helper" \
+  git %{ %sh{
     show_git_cmd_output() {
         local filetype
         case "$1" in
            show|diff) filetype=diff ;;
            log)  filetype=git-log ;;
+           status)  filetype=git-status ;;
         esac
         tmpfile=$(mktemp /tmp/kak-git-XXXXXX)
         if git "$@" > ${tmpfile}; then
@@ -94,13 +106,17 @@ def -shell-params git %{ %sh{
     }
 
     case "$1" in
-       show|log|diff) show_git_cmd_output "$@" ;;
+       show|log|diff|status) show_git_cmd_output "$@" ;;
        blame) run_git_blame ;;
        show-diff)
            echo "try %{ addhl flag_lines black git_diff_flags }"
            update_diff
            ;;
        update-diff) update_diff ;;
+       checkout)
+           name="${2:-${kak_buffile}}"
+           git checkout "${name}"
+           ;;
        add)
            name="${2:-${kak_buffile}}"
            if git add -- "${name}"; then
@@ -109,7 +125,7 @@ def -shell-params git %{ %sh{
               echo "echo -color Error 'git: unable to add ${name}'"
            fi
            ;;
-       *) echo "echo %{unknown git command '$1'}"; exit ;;
+       *) echo "echo -color Error %{unknown git command '$1'}"; exit ;;
     esac
 
 }}
