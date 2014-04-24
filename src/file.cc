@@ -358,6 +358,13 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
             dir_end = i;
     }
 
+    struct CommandCache
+    {
+        timespec mtime = {};
+        std::vector<String> commands;
+    };
+    static std::unordered_map<String, CommandCache> command_cache;
+
     std::vector<String> path;
     if (dir_end != -1)
     {
@@ -373,6 +380,10 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         if (not dirname.empty() and dirname.back() != '/')
             dirname += '/';
 
+        struct stat st;
+        if (stat(dirname.substr(0_byte, dirname.length() - 1).c_str(), &st))
+            continue;
+
         auto filter = [&](const dirent& entry) {
             struct stat st;
             if (stat((dirname + entry.d_name).c_str(), &st))
@@ -382,8 +393,18 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
                             | (st.st_mode & S_IXOTH);
             return S_ISREG(st.st_mode) and executable;
         };
-        auto completion = list_files(prefix, dirname, filter);
-        std::move(completion.begin(), completion.end(), std::back_inserter(res));
+
+        auto& cache = command_cache[dirname];
+        if (memcmp(&cache.mtime, &st.st_mtim, sizeof(struct timespec)) != 0)
+        {
+            cache.mtime = st.st_mtim;
+            cache.commands = list_files("", dirname, filter);
+        }
+        for (auto& cmd : cache.commands)
+        {
+            if (prefix_match(cmd, fileprefix))
+                res.push_back(cmd);
+        }
     }
     std::sort(res.begin(), res.end());
     auto it = std::unique(res.begin(), res.end());
