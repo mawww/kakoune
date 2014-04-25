@@ -55,7 +55,12 @@ That means there should be clear separation of concerns between modes:
  * command mode is for non-editing features (opening a file, setting
    options...).
 
-So modes should be orthogonal, and commands in modes should be as well. For
+Orthogonality is an ideal, and should not prevent common sense pargmatism,
+the +gf+ and +ga+ commands are not strictly selection manipulation ones,
+but fit nicely with other +goto+ commands, and hence are acceptable in
+normal mode even though they could arguably be moved to command mode.
+
+Modes should be orthogonal, and commands in modes should be as well. For
 example, Vim uses +d+ and +x+ for very similar things: deleting text. In
 Kakoune only +d+ exists, and things are done so that +x+ is not needed.
 
@@ -114,6 +119,14 @@ Language agnostic
 Kakoune should not be tailored for writing a specific programming
 language. Support for different languages should be provided by a kak script
 file, built-in language support should be avoided.
+
+Self documenting
+----------------
+
+Kakoune should be able to document its features, live documentation along
+with an extensive suggestion/completion system provides the discoverability
+which is often lacking in non GUI tools. Documentation should as much as
+possible be integrated with the code so that it stays up to date.
 
 Vim compatibility
 -----------------
