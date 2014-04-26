@@ -353,13 +353,15 @@ class Prompt : public InputMode
 {
 public:
     Prompt(InputHandler& input_handler, const String& prompt,
-           ColorPair colors, Completer completer, PromptCallback callback)
+           String initstr, ColorPair colors, Completer completer,
+           PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt), m_prompt_colors(colors),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
         if (context().options()["autoshowcompl"].get<bool>())
             refresh_completions(CompletionFlags::Fast);
+        m_line_editor.reset(std::move(initstr));
         display();
     }
 
@@ -1259,11 +1261,13 @@ void InputHandler::repeat_last_insert()
     kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
-void InputHandler::prompt(const String& prompt, ColorPair prompt_colors,
-                          Completer completer, PromptCallback callback)
+void InputHandler::prompt(const String& prompt, String initstr,
+                          ColorPair prompt_colors, Completer completer,
+                          PromptCallback callback)
 {
-    change_input_mode(new InputModes::Prompt(*this, prompt, prompt_colors,
-                                             completer, callback));
+    change_input_mode(new InputModes::Prompt(*this, prompt, initstr,
+                                             prompt_colors, completer,
+                                             callback));
 }
 
 void InputHandler::set_prompt_colors(ColorPair prompt_colors)

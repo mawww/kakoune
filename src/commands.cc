@@ -1068,7 +1068,10 @@ const CommandDesc prompt_cmd = {
     nullptr,
     "prompt <prompt> <register> <command>: prompt the use to enter a text string "
     "stores it in <register> and then executes <command>",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 3, 3 },
+    ParameterDesc{
+        SwitchMap{ { "init", { true, "set initial prompt content" } } },
+        ParameterDesc::Flags::None, 3, 3
+    },
     CommandFlags::None,
     CommandCompleter{},
     [](const ParametersParser& params, Context& context)
@@ -1078,8 +1081,12 @@ const CommandDesc prompt_cmd = {
         const char reg = params[1][0];
         const String& command = params[2];
 
+        String initstr;
+        if (params.has_option("init"))
+            initstr = params.option_value("init");
+
         context.input_handler().prompt(
-            params[0], get_color("Prompt"), Completer{},
+            params[0], std::move(initstr), get_color("Prompt"), Completer{},
             [=](const String& str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)

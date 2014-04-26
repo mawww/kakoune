@@ -47,8 +47,9 @@ public:
     // abort or validation with corresponding PromptEvent value
     // returns to normal mode after validation if callback does
     // not change the mode itself
-    void prompt(const String& prompt, ColorPair prompt_colors,
-                Completer completer, PromptCallback callback);
+    void prompt(const String& prompt, String initstr,
+                ColorPair prompt_colors, Completer completer,
+                PromptCallback callback);
     void set_prompt_colors(ColorPair prompt_colors);
 
     // enter menu mode, callback is called on each selection change,

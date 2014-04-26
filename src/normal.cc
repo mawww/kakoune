@@ -426,7 +426,7 @@ void for_each_char(Context& context, int)
 void command(Context& context, int)
 {
     context.input_handler().prompt(
-        ":", get_color("Prompt"),
+        ":", "", get_color("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
         [](const String& cmdline, PromptEvent event, Context& context) {
             if (context.has_ui())
@@ -451,7 +451,7 @@ template<InsertMode mode>
 void pipe(Context& context, int)
 {
     const char* prompt = mode == InsertMode::Replace ? "pipe:" : "pipe (ins):";
-    context.input_handler().prompt(prompt, get_color("Prompt"), shell_complete,
+    context.input_handler().prompt(prompt, "", get_color("Prompt"), shell_complete,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -589,7 +589,7 @@ template<typename T>
 void regex_prompt(Context& context, const String prompt, T func)
 {
     DynamicSelectionList selections{context.buffer(), context.selections()};
-    context.input_handler().prompt(prompt, get_color("Prompt"), complete_nothing,
+    context.input_handler().prompt(prompt, "", get_color("Prompt"), complete_nothing,
         [=](const String& str, PromptEvent event, Context& context) {
             try
             {
