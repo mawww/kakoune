@@ -895,10 +895,25 @@ KeymapMode parse_keymap_mode(const String& str)
     throw runtime_error("unknown keymap mode '" + str + "'");
 }
 
+CandidateList complete_mode(StringView prefix)
+{
+    CandidateList res;
+    for (auto mode : { "normal", "insert", "menu", "prompt" })
+    {
+        if (prefix_match(mode, prefix))
+            res.emplace_back(mode);
+    }
+    return res;
+}
+
 const CommandDesc map_key_cmd = {
     "map",
     nullptr,
-    "map <mode> <key> <keys>: map <key> to <keys> in given mode.\n"
+    "map <scope> <mode> <key> <keys>: map <key> to <keys> in given mode at given scope.\n"
+    "Valid scopes:\n"
+    "    window\n"
+    "    buffer\n"
+    "    global\n"
     "Valid modes:\n"
     "    normal\n"
     "    insert\n"
@@ -906,7 +921,17 @@ const CommandDesc map_key_cmd = {
     "    prompt\n",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 4, 4 },
     CommandFlags::None,
-    CommandCompleter{},
+    [](const Context& context, CompletionFlags flags,
+       CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+    {
+        if (token_to_complete == 0)
+            return Completions{ 0_byte, params[0].length(),
+                                complete_scope(params[0].substr(0_byte, pos_in_token)) };
+        if (token_to_complete == 1)
+            return Completions{ 0_byte, params[0].length(),
+                                complete_mode(params[1].substr(0_byte, pos_in_token)) };
+        return Completions{};
+    },
     [](const ParametersParser& parser, Context& context)
     {
         KeymapManager& keymaps = get_keymap_manager(parser[0], context);
