@@ -711,8 +711,8 @@ private:
         for (auto it = ins_pos; it != matches.end(); ++it)
         {
             auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
-                                              [](const LineModification& c, const LineCount& l)
-                                              { return c.old_line < l; });
+                                             [](const LineModification& c, const LineCount& l)
+                                             { return c.old_line < l; });
             bool erase = false;
             if (modif_it != modifs.begin())
             {
