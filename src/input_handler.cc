@@ -11,6 +11,7 @@
 #include "color_registry.hh"
 #include "file.hh"
 #include "word_db.hh"
+#include "buffer_utils.hh"
 #include "debug.hh"
 
 #include <unordered_map>
@@ -917,7 +918,15 @@ private:
         if (not m_context.has_ui())
             return;
         DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
-        m_context.ui().menu_show(m_matching_candidates, menu_pos,
+
+        const CharCount tabstop = m_context.options()["tabstop"].get<int>();
+        const CharCount column = get_column(m_context.buffer(), tabstop,
+                                            m_completions.begin);
+        std::vector<String> menu_entries;
+        for (auto& candidate : m_matching_candidates)
+            menu_entries.push_back(expand_tabs(candidate, tabstop, column));
+
+        m_context.ui().menu_show(menu_entries, menu_pos,
                                  get_color("MenuForeground"),
                                  get_color("MenuBackground"),
                                  MenuStyle::Inline);
