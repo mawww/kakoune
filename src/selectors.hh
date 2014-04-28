@@ -2,6 +2,7 @@
 #define selectors_hh_INCLUDED
 
 #include "selection.hh"
+#include "buffer_utils.hh"
 #include "unicode.hh"
 #include "utf8_iterator.hh"
 

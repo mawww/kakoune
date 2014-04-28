@@ -1,6 +1,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "client_manager.hh"
 #include "color_registry.hh"
 #include "command_manager.hh"
