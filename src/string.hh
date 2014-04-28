@@ -279,6 +279,8 @@ String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 bool prefix_match(StringView str, StringView prefix);
 bool subsequence_match(StringView str, StringView subseq);
 
+String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
+
 }
 
 namespace std

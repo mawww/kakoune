@@ -1,6 +1,7 @@
 #include "string.hh"
 
 #include "exception.hh"
+#include "utf8_iterator.hh"
 
 namespace Kakoune
 {
@@ -109,6 +110,23 @@ bool subsequence_match(StringView str, StringView subseq)
         ++it;
     }
     return true;
+}
+
+String expand_tabs(StringView line, CharCount tabstop, CharCount col)
+{
+    String res;
+    using Utf8It = utf8::utf8_iterator<const char*>;
+    for (Utf8It it = line.begin(); it.base() < line.end(); ++it)
+    {
+        if (*it == '\t')
+        {
+            CharCount end_col = (col / tabstop + 1) * tabstop;
+            res += String{' ', end_col - col};
+        }
+        else
+            res += *it;
+    }
+    return res;
 }
 
 }
