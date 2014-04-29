@@ -2,6 +2,7 @@
 
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "client.hh"
 #include "client_manager.hh"
 #include "color_registry.hh"
@@ -45,7 +46,7 @@ Buffer* open_or_create(const String& filename, Context& context)
     return buffer;
 }
 
-Buffer* open_fifo(const String& name , const String& filename, Context& context)
+Buffer* open_fifo(const String& name , const String& filename)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
@@ -54,35 +55,7 @@ Buffer* open_fifo(const String& name , const String& filename, Context& context)
 
     BufferManager::instance().delete_buffer_if_exists(name);
 
-    Buffer* buffer = new Buffer(name, Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
-
-    auto watcher = new FDWatcher(fd, [buffer](FDWatcher& watcher) {
-        constexpr size_t buffer_size = 1024 * 16;
-        char data[buffer_size];
-        ssize_t count = read(watcher.fd(), data, buffer_size);
-        buffer->insert(buffer->end()-1, count > 0 ? String(data, data+count)
-                                                  : "*** kak: fifo closed ***\n");
-        if (count <= 0)
-        {
-            kak_assert(buffer->flags() & Buffer::Flags::Fifo);
-            buffer->flags() &= ~Buffer::Flags::Fifo;
-            buffer->flags() &= ~Buffer::Flags::NoUndo;
-            close(watcher.fd());
-            delete &watcher;
-        }
-    });
-
-    buffer->hooks().add_hook("BufClose", "",
-        [buffer, watcher](const String&, const Context&) {
-            // Check if fifo is still alive, else watcher is already dead
-            if (buffer->flags() & Buffer::Flags::Fifo)
-            {
-                close(watcher->fd());
-                delete watcher;
-            }
-        });
-
-    return buffer;
+    return create_fifo_buffer(std::move(name), fd);
 }
 
 const PerArgumentCommandCompleter filename_completer({
@@ -138,7 +111,7 @@ void edit(const ParametersParser& parser, Context& context)
             buffer = new Buffer(name, Buffer::Flags::None);
         }
         else if (parser.has_option("fifo"))
-            buffer = open_fifo(name, parser.option_value("fifo"), context);
+            buffer = open_fifo(name, parser.option_value("fifo"));
         else
             buffer = open_or_create(name, context);
     }

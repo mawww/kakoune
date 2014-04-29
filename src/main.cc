@@ -30,6 +30,10 @@
 #include <locale>
 #include <signal.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 using namespace Kakoune;
 
 void run_unit_tests();
@@ -191,6 +195,19 @@ void create_local_client(const String& init_command)
             }
         }
     };
+
+    if (not isatty(1))
+        throw runtime_error("stdout is not a tty");
+
+    if (not isatty(0))
+    {
+        // move stdin to another fd, and restore tty as stdin
+        int fd = dup(0);
+        int tty = open("/dev/tty", O_RDONLY);
+        dup2(tty, 0);
+        close(tty);
+        create_fifo_buffer("*stdin*", fd);
+    }
 
     UserInterface* ui = new LocalNCursesUI{};
     static Client* client = ClientManager::instance().create_client(
