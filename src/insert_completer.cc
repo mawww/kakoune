@@ -72,7 +72,7 @@ InsertCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
     std::copy(matches.begin(), matches.end(),
               inserter(result, result.begin()));
     std::sort(result.begin(), result.end());
-    return { begin.coord(), end.coord(), std::move(result), buffer.timestamp() };
+    return { begin.coord(), cursor_pos, std::move(result), buffer.timestamp() };
 }
 
 template<bool require_slash>
