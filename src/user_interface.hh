@@ -33,7 +33,7 @@ public:
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
 
-    virtual void info_show(const String& title, const String& content,
+    virtual void info_show(StringView title, StringView content,
                            DisplayCoord anchor, ColorPair colors,
                            MenuStyle style) = 0;
     virtual void info_hide() = 0;

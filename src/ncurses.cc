@@ -204,7 +204,7 @@ void NCursesUI::refresh()
 }
 
 using Utf8Policy = utf8::InvalidBytePolicy::Pass;
-using Utf8Iterator = utf8::utf8_iterator<String::const_iterator, Utf8Policy>;
+using Utf8Iterator = utf8::utf8_iterator<const char*, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
     waddstr(win, std::string(begin.base(), end.base()).c_str());
@@ -241,7 +241,8 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
 
         set_color(stdscr, atom.colors);
 
-        String content = atom.content();
+        String atom_content = atom.content();
+        StringView content = atom_content;
         if (content[content.length()-1] == '\n' and
             content.char_length() - 1 < m_dimensions.column - col_index)
         {
@@ -431,9 +432,9 @@ void NCursesUI::draw_menu()
             if (item_idx == m_selected_item)
                 wattron(m_menu_win, COLOR_PAIR(menu_fg));
 
-            auto& item = m_items[item_idx];
-            auto begin = item.cbegin();
-            auto end = utf8::advance(begin, item.cend(), column_width);
+            StringView item = m_items[item_idx];
+            auto begin = item.begin();
+            auto end = utf8::advance(begin, item.end(), column_width);
             addutf8str(m_menu_win, begin, end);
             const CharCount pad = column_width - utf8::distance(begin, end);
             waddstr(m_menu_win, String{' ' COMMA pad}.c_str());
@@ -531,7 +532,7 @@ void NCursesUI::menu_hide()
     m_dirty = true;
 }
 
-static DisplayCoord compute_needed_size(const String& str)
+static DisplayCoord compute_needed_size(StringView str)
 {
     DisplayCoord res{1,0};
     CharCount line_len = 0;
@@ -589,7 +590,7 @@ static DisplayCoord compute_pos(DisplayCoord anchor,
     return pos;
 }
 
-static std::vector<String> wrap_lines(const String& text, CharCount max_width)
+static std::vector<String> wrap_lines(StringView text, CharCount max_width)
 {
     enum CharCategory { Word, Blank, Eol };
     static const auto categorize = [](Codepoint c) {
@@ -597,7 +598,7 @@ static std::vector<String> wrap_lines(const String& text, CharCount max_width)
                            : is_eol(c) ? Eol : Word;
     };
 
-    using Utf8It = utf8::utf8_iterator<String::const_iterator>;
+    using Utf8It = utf8::utf8_iterator<const char*>;
     Utf8It word_begin{text.begin()};
     Utf8It word_end{word_begin};
     Utf8It end{text.end()};
@@ -629,7 +630,7 @@ static std::vector<String> wrap_lines(const String& text, CharCount max_width)
 }
 
 template<bool assist = true>
-static String make_info_box(const String& title, const String& message,
+static String make_info_box(StringView title, StringView message,
                             CharCount max_width)
 {
     static const std::vector<String> assistant =
@@ -686,7 +687,7 @@ static String make_info_box(const String& title, const String& message,
     return result;
 }
 
-void NCursesUI::info_show(const String& title, const String& content,
+void NCursesUI::info_show(StringView title, StringView content,
                           DisplayCoord anchor, ColorPair colors,
                           MenuStyle style)
 {
@@ -697,8 +698,13 @@ void NCursesUI::info_show(const String& title, const String& content,
         delwin(m_info_win);
     }
 
-    const String& info_box = style == MenuStyle::Inline ?
-         content : make_info_box(title, content, m_dimensions.column);
+    StringView info_box = content;
+    String fancy_info_box;
+    if (style == MenuStyle::Prompt)
+    {
+        fancy_info_box = make_info_box(title, content, m_dimensions.column);
+        info_box = fancy_info_box;
+    }
 
     DisplayCoord size = compute_needed_size(info_box);
 

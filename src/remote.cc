@@ -55,11 +55,16 @@ public:
         write((const char*)&val, sizeof(val));
     }
 
-    void write(const String& str)
+    void write(StringView str)
     {
         write(str.length());
-        write(str.c_str(), (int)str.length());
+        write(str.data(), (int)str.length());
     };
+
+    void write(const String& str)
+    {
+        write(StringView{str});
+    }
 
     template<typename T>
     void write(memoryview<T> view)
@@ -249,7 +254,7 @@ public:
     void menu_select(int selected) override;
     void menu_hide() override;
 
-    void info_show(const String& title, const String& content,
+    void info_show(StringView title, StringView content,
                    DisplayCoord anchor, ColorPair colors,
                    MenuStyle style) override;
     void info_hide() override;
@@ -316,7 +321,7 @@ void RemoteUI::menu_hide()
     msg.write(RemoteUIMsg::MenuHide);
 }
 
-void RemoteUI::info_show(const String& title, const String& content,
+void RemoteUI::info_show(StringView title, StringView content,
                          DisplayCoord anchor, ColorPair colors,
                          MenuStyle style)
 {
