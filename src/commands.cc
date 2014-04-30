@@ -832,7 +832,7 @@ const CommandDesc declare_option_cmd = {
         else if (parser[0] == "str")
             opt = &opts.declare_option<String>(parser[1], docstring, "", flags);
         else if (parser[0] == "regex")
-            opt = &opts.declare_option<Regex>(parser[1], docstring, {}, flags);
+            opt = &opts.declare_option<Regex>(parser[1], docstring, Regex{}, flags);
         else if (parser[0] == "int-list")
             opt = &opts.declare_option<std::vector<int>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
