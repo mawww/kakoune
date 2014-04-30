@@ -50,6 +50,8 @@ private:
 class Option
 {
 public:
+    virtual ~Option() = default;
+
     template<typename T> const T& get() const;
     template<typename T> void set(const T& val);
     template<typename T> bool is_of_type() const;
