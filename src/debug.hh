@@ -6,7 +6,7 @@
 namespace Kakoune
 {
 
-void write_debug(const String& str);
+void write_debug(StringView str);
 
 }
 

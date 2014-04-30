@@ -7,11 +7,11 @@
 namespace Kakoune
 {
 
-void write_debug(const String& str)
+void write_debug(StringView str)
 {
     if (not BufferManager::has_instance())
     {
-        fprintf(stderr, "%s\n", str.c_str());
+        fprintf(stderr, "%s\n", (const char*)str.zstr());
         return;
     }
 
