@@ -358,9 +358,11 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
             dir_end = i;
     }
 
+    typedef decltype(stat::st_mtime) TimeSpec;
+
     struct CommandCache
     {
-        timespec mtime = {};
+        TimeSpec mtime = {};
         std::vector<String> commands;
     };
     static std::unordered_map<String, CommandCache> command_cache;
@@ -395,9 +397,9 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         };
 
         auto& cache = command_cache[dirname];
-        if (memcmp(&cache.mtime, &st.st_mtim, sizeof(struct timespec)) != 0)
+        if (memcmp(&cache.mtime, &st.st_mtime, sizeof(TimeSpec)) != 0)
         {
-            cache.mtime = st.st_mtim;
+            memcpy(&cache.mtime, &st.st_mtime, sizeof(TimeSpec));
             cache.commands = list_files("", dirname, filter);
         }
         for (auto& cmd : cache.commands)
