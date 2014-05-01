@@ -19,7 +19,7 @@ namespace Kakoune
 
 using namespace std::placeholders;
 
-typedef boost::regex_iterator<BufferIterator> RegexIterator;
+using RegexIterator = boost::regex_iterator<BufferIterator>;
 
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
@@ -146,7 +146,7 @@ void apply_highlighter(const Context& context,
     display_buffer.compute_range();
 }
 
-typedef std::unordered_map<size_t, const ColorPair*> ColorSpec;
+using ColorSpec = std::unordered_map<size_t, const ColorPair*>;
 
 template<typename T>
 struct BufferSideCache
