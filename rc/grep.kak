@@ -12,7 +12,7 @@ def -shell-params -file-completion \
      fi
 
      echo "eval -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} *grep*
+               edit! -fifo ${output} -scroll *grep*
                set buffer filetype grep
                hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }
            }"

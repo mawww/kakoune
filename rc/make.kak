@@ -7,7 +7,7 @@ def -shell-params make %{ %sh{
      ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
      echo "eval -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} *make*
+               edit! -fifo ${output} -scroll *make*
                set buffer filetype make
                hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }
            }"

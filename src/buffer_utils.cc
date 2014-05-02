@@ -22,16 +22,29 @@ CharCount get_column(const Buffer& buffer,
     return col;
 }
 
-Buffer* create_fifo_buffer(String name, int fd)
+Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 {
     Buffer* buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
-    auto watcher = new FDWatcher(fd, [buffer](FDWatcher& watcher) {
+    auto watcher = new FDWatcher(fd, [buffer, scroll](FDWatcher& watcher) {
         constexpr size_t buffer_size = 1024 * 16;
         char data[buffer_size];
         ssize_t count = read(watcher.fd(), data, buffer_size);
-        buffer->insert(buffer->end()-1, count > 0 ? String(data, data+count)
-                                                  : "*** kak: fifo closed ***\n");
+        auto pos = buffer->end()-1;
+
+        bool prevent_scrolling = pos == buffer->begin() and not scroll;
+        if (prevent_scrolling)
+            ++pos;
+
+        buffer->insert(pos, count > 0 ? String(data, data+count)
+                                      : "*** kak: fifo closed ***\n");
+
+        if (prevent_scrolling)
+        {
+            buffer->erase(buffer->begin(), buffer->begin()+1);
+            buffer->insert(buffer->end(), "\n");
+        }
+
         if (count <= 0)
         {
             kak_assert(buffer->flags() & Buffer::Flags::Fifo);

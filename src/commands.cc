@@ -46,7 +46,7 @@ Buffer* open_or_create(const String& filename, Context& context)
     return buffer;
 }
 
-Buffer* open_fifo(const String& name , const String& filename)
+Buffer* open_fifo(const String& name , const String& filename, bool scroll)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
@@ -55,7 +55,7 @@ Buffer* open_fifo(const String& name , const String& filename)
 
     BufferManager::instance().delete_buffer_if_exists(name);
 
-    return create_fifo_buffer(std::move(name), fd);
+    return create_fifo_buffer(std::move(name), fd, scroll);
 }
 
 const PerArgumentCommandCompleter filename_completer({
@@ -111,7 +111,7 @@ void edit(const ParametersParser& parser, Context& context)
             buffer = new Buffer(name, Buffer::Flags::None);
         }
         else if (parser.has_option("fifo"))
-            buffer = open_fifo(name, parser.option_value("fifo"));
+            buffer = open_fifo(name, parser.option_value("fifo"), parser.has_option("scroll"));
         else
             buffer = open_or_create(name, context);
     }
@@ -139,7 +139,8 @@ void edit(const ParametersParser& parser, Context& context)
 
 ParameterDesc edit_params{
     SwitchMap{ { "scratch", { false, "create a scratch buffer, not linked to a file" } },
-               { "fifo", { true, "create a buffer reading its content from a named fifo" } } },
+               { "fifo", { true, "create a buffer reading its content from a named fifo" } },
+               { "scroll", { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
     ParameterDesc::Flags::None, 1, 3
 };
 

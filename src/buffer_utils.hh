@@ -41,7 +41,7 @@ inline void avoid_eol(const Buffer& buffer, Selection& sel)
 CharCount get_column(const Buffer& buffer,
                      CharCount tabstop, BufferCoord coord);
 
-Buffer* create_fifo_buffer(String name, int fd);
+Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
 
 }
 
