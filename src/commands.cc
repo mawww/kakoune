@@ -648,7 +648,13 @@ void define_command(const ParametersParser& parser, Context& context)
             return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n') };
         };
     }
-    CommandManager::instance().register_command(cmd_name, cmd, std::move(docstring), desc, flags, completer);
+    if (parser.has_option("alias"))
+        CommandManager::instance().register_commands(
+            { cmd_name, parser.option_value("alias") },
+            cmd, std::move(docstring), desc, flags, completer);
+    else
+        CommandManager::instance().register_command(
+            cmd_name, cmd, std::move(docstring), desc, flags, completer);
 }
 
 const CommandDesc define_command_cmd = {
@@ -664,6 +670,7 @@ const CommandDesc define_command_cmd = {
                    { "buffer-completion", { false, "complete parameters using buffer name completion" } },
                    { "shell-completion", { true, "complete the parameters using the given shell-script" } },
                    { "hidden", { false, "do not display the command as completion candidate" } },
+                   { "alias", { true, "define an alias for this command" } },
                    { "docstring", { true, "set docstring for command" } } },
         ParameterDesc::Flags::None,
         2, 2
