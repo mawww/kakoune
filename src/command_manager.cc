@@ -432,6 +432,17 @@ CommandInfo CommandManager::command_info(StringView command_line) const
     res.first = cmd->first;
     if (not cmd->second.docstring.empty())
         res.second += cmd->second.docstring + "\n";
+
+    String aliases;
+    for (auto& alias : m_aliases)
+    {
+        if (alias.second == cmd->first)
+            aliases += " " + alias.first;
+    }
+    if (not aliases.empty())
+        res.second += "Aliases:" + aliases + "\n";
+
+
     auto& switches = cmd->second.param_desc.switches;
     if (not switches.empty())
     {
