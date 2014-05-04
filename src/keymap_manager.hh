@@ -36,7 +36,8 @@ private:
 
     KeymapManager* m_parent;
 
-    using Keymap = std::unordered_map<std::pair<Key, KeymapMode>, std::vector<Key>>;
+    using KeyList = std::vector<Key>;
+    using Keymap = std::unordered_map<std::pair<Key, KeymapMode>, KeyList>;
     Keymap m_mapping;
 };
 
