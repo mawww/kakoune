@@ -291,6 +291,10 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
     if (not (flags & ObjectFlags::ToEnd) and buffer.offset(first.coord()) > 1 and
         *(first-1) == '\n' and *(first-2) == '\n')
         --first;
+    else if ((flags & ObjectFlags::ToEnd) and
+             first != buffer.begin() and (first+1) != buffer.end() and
+             *(first-1) == '\n' and *first == '\n')
+        ++first;
 
     BufferIterator last = first;
 
