@@ -312,7 +312,17 @@ void goto_commands(Context& context, int line)
                 String path = find_file(filename, paths);
                 if (path.empty())
                     throw runtime_error("unable to find file '" + filename + "'");
-                CommandManager::instance().execute("edit '" + path + "'", context);
+
+                Buffer* buffer = create_buffer_from_file(path);
+                if (buffer == nullptr)
+                    throw runtime_error("unable to open file '" + path + "'");
+
+                if (buffer != &context.buffer())
+                {
+                    BufferManager::instance().set_last_used_buffer(*buffer);
+                    context.push_jump();
+                    context.change_buffer(*buffer);
+                }
                 break;
             }
             case '.':
