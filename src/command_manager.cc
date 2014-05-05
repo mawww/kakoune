@@ -545,6 +545,13 @@ Completions CommandManager::complete(const Context& context,
             cursor_pos_in_token);
         completions.start += start;
         completions.end += start;
+
+        for (auto& candidate : completions.candidates)
+        {
+            if (candidate.find_first_of(" \t;\"'") != String::npos)
+                candidate = '"' + escape(candidate, '"', '\\') + '"';
+        }
+
         return completions;
     }
     default:
