@@ -786,6 +786,14 @@ const CommandDesc set_option_cmd = {
             return { 0_byte, params[1].length(),
                      options.complete_option_name(params[1], pos_in_token) };
         }
+        else if (token_to_complete == 2 and
+                 GlobalOptions::instance().option_exists(params[1]))
+        {
+            OptionManager& options = get_options(params[0], context);
+            String val = options[params[1]].get_as_string();
+            if (prefix_match(val, params[2]))
+                return { 0_byte, params[2].length(), { std::move(val) } };
+        }
         return Completions{};
     },
     [](const ParametersParser& parser, Context& context)

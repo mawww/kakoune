@@ -220,6 +220,11 @@ public:
                                                   value, std::move(checker)});
         return *m_options.back();
     }
+
+    bool option_exists(const String& name) const
+    {
+        return find_option(m_options, name) != m_options.end();
+    }
 private:
     std::vector<std::unique_ptr<OptionDesc>> m_descs;
 };
