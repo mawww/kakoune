@@ -176,6 +176,8 @@ Changes
  * _d_: yank and delete current selection
  * _D_: yank concatenated and delete current selection (see _Y_)
  * _c_: yank and delete current selection and insert
+ * _._: repeat last insert mode change (_i_, _a_, or _c_, including
+        the inserted text)
 
  * _I_: insert at current selection begin line start
  * _A_: insert at current selection end line end
