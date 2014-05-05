@@ -303,6 +303,9 @@ _alt-k_ allows you to enter a regex and keep only the selections that
 contains a match for this regex. using _alt-K_ you can keep the selections
 not containing a match.
 
+_$_ allows you to enter a shell command and pipe each selections to it.
+Selections whose shell command returns 0 will be kept, other will be dropped.
+
 Object Selection
 ----------------
 

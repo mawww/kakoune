@@ -18,15 +18,17 @@ ShellManager::ShellManager()
 
 String ShellManager::eval(StringView cmdline, const Context& context,
                           memoryview<String> params,
-                          const EnvVarMap& env_vars)
+                          const EnvVarMap& env_vars,
+                          int* exit_status)
 {
-    return pipe("", cmdline, context, params, env_vars);
+    return pipe("", cmdline, context, params, env_vars, exit_status);
 }
 
 String ShellManager::pipe(StringView input,
                           StringView cmdline, const Context& context,
                           memoryview<String> params,
-                          const EnvVarMap& env_vars)
+                          const EnvVarMap& env_vars,
+                          int* exit_status)
 {
     int write_pipe[2]; // child stdin
     int read_pipe[2];  // child stdout
@@ -66,7 +68,14 @@ String ShellManager::pipe(StringView input,
         if (not errorout.empty())
             write_debug("shell stderr: <<<\n" + errorout + ">>>");
 
-        waitpid(pid, nullptr, 0);
+        waitpid(pid, exit_status, 0);
+        if (exit_status)
+        {
+            if (WIFEXITED(*exit_status))
+                *exit_status = WEXITSTATUS(*exit_status);
+            else
+                *exit_status = -1;
+        }
     }
     else try
     {

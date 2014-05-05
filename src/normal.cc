@@ -791,6 +791,29 @@ void keep(Context& context, int)
     });
 }
 
+void keep_pipe(Context& context, int)
+{
+    context.input_handler().prompt(
+        "keep pipe:", "", get_color("Prompt"), shell_complete,
+        [](const String& cmdline, PromptEvent event, Context& context) {
+            if (event != PromptEvent::Validate)
+                return;
+            const Buffer& buffer = context.buffer();
+            auto& shell_manager = ShellManager::instance();
+            SelectionList keep;
+            for (auto& sel : context.selections())
+            {
+                int status = 0;
+                shell_manager.pipe(content(buffer, sel), cmdline, context,
+                                   {}, EnvVarMap{}, &status);
+                if (status == 0)
+                    keep.push_back(sel);
+            }
+            if (keep.empty())
+                throw runtime_error("no selections remaining");
+            context.selections() = std::move(keep);
+    });
+}
 template<bool indent_empty = false>
 void indent(Context& context, int)
 {
@@ -1405,6 +1428,7 @@ KeyMap keymap =
 
     { alt('k'), keep<true> },
     { alt('K'), keep<false> },
+    { '$', keep_pipe },
 
     { '<', deindent<true> },
     { '>', indent<false> },

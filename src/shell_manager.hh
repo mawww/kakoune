@@ -18,12 +18,14 @@ public:
 
     String eval(StringView cmdline, const Context& context,
                 memoryview<String> params,
-                const EnvVarMap& env_vars);
+                const EnvVarMap& env_vars,
+                int* exit_status = nullptr);
 
     String pipe(StringView input,
                 StringView cmdline, const Context& context,
                 memoryview<String> params,
-                const EnvVarMap& env_vars);
+                const EnvVarMap& env_vars,
+                int* exit_status = nullptr);
 
     void register_env_var(StringView regex, EnvVarRetriever retriever);
 
