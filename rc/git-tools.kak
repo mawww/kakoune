@@ -32,20 +32,15 @@ def -shell-params \
            log)  filetype=git-log ;;
            status)  filetype=git-status ;;
         esac
-        tmpfile=$(mktemp /tmp/kak-git-XXXXXX)
-        if git "$@" > ${tmpfile}; then
-            [ -n "$kak_opt_docsclient" ] && echo "eval -client '$kak_opt_docsclient' %{"
+        output=$(mktemp -d -t kak-git.XXXXXXXX)/fifo
+        mkfifo ${output}
+        ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
-            echo "edit! -scratch *git*
-                  exec |cat<space>${tmpfile}<ret>gk
-                  nop %sh{rm ${tmpfile}}
-                  set buffer filetype '${filetype}'"
-
-            [ -n "$kak_opt_docsclient" ] && echo "}"
-        else
-           echo "echo %{git $@ failed, see *debug* buffer}"
-           rm ${tmpfile}
-        fi
+        echo "eval -try-client '$kak_opt_docsclient' %{
+                  edit! -fifo ${output} *git*
+                  set buffer filetype '${filetype}'
+                  hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+              }"
     }
 
     run_git_blame() {
