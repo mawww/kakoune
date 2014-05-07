@@ -207,7 +207,7 @@ public:
     {
         if (not context().has_ui())
             return;
-        DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
+        CharCoord menu_pos{ context().ui().dimensions().line, 0_char };
         context().ui().menu_show(choices, menu_pos, get_color("MenuForeground"),
                                  get_color("MenuBackground"), MenuStyle::Prompt);
         context().ui().menu_select(0);
@@ -549,7 +549,7 @@ private:
             CandidateList& candidates = m_completions.candidates;
             if (context().has_ui() and not candidates.empty())
             {
-                DisplayCoord menu_pos{ context().ui().dimensions().line, 0_char };
+                CharCoord menu_pos{ context().ui().dimensions().line, 0_char };
                 context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
                                          get_color("MenuBackground"), MenuStyle::Prompt);
             }
@@ -669,7 +669,7 @@ public:
         {
             for (auto& sel : context().selections())
             {
-                if (sel.cursor() == BufferCoord{0,0})
+                if (sel.cursor() == ByteCoord{0,0})
                     continue;
                 auto pos = buffer.iterator_at(sel.cursor());
                 buffer.erase(utf8::previous(pos), pos);
@@ -783,7 +783,7 @@ private:
 
         for (auto& sel : selections)
         {
-            BufferCoord anchor, cursor;
+            ByteCoord anchor, cursor;
             switch (mode)
             {
             case InsertMode::Insert:
@@ -803,7 +803,7 @@ private:
 
             case InsertMode::OpenLineBelow:
             case InsertMode::AppendAtLineEnd:
-                anchor = cursor = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                anchor = cursor = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
                 break;
 
             case InsertMode::OpenLineAbove:
@@ -841,7 +841,7 @@ private:
                 {
                     // special case, the --first line above did nothing, so we need to compensate now
                     if (sel.anchor() == buffer.char_next({0,0}))
-                        sel.anchor() = sel.cursor() = BufferCoord{0,0};
+                        sel.anchor() = sel.cursor() = ByteCoord{0,0};
                 }
             }
         }

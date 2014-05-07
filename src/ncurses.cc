@@ -210,16 +210,16 @@ void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
     waddstr(win, std::string(begin.base(), end.base()).c_str());
 }
 
-static DisplayCoord window_size(WINDOW* win)
+static CharCoord window_size(WINDOW* win)
 {
-    DisplayCoord size;
+    CharCoord size;
     getmaxyx(win, (int&)size.line, (int&)size.column);
     return size;
 }
 
-static DisplayCoord window_pos(WINDOW* win)
+static CharCoord window_pos(WINDOW* win)
 {
-    DisplayCoord pos;
+    CharCoord pos;
     getbegyx(win, (int&)pos.line, (int&)pos.column);
     return pos;
 }
@@ -410,7 +410,7 @@ void NCursesUI::draw_menu()
 
     const int item_count = (int)m_items.size();
     const LineCount menu_lines = div_round_up(item_count, m_menu_columns);
-    const DisplayCoord win_size = window_size(m_menu_win);
+    const CharCoord win_size = window_size(m_menu_win);
     const LineCount& win_height = win_size.line;
     kak_assert(win_height <= menu_lines);
 
@@ -451,7 +451,7 @@ void NCursesUI::draw_menu()
 }
 
 void NCursesUI::menu_show(memoryview<String> items,
-                          DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                          CharCoord anchor, ColorPair fg, ColorPair bg,
                           MenuStyle style)
 {
     if (m_menu_win)
@@ -465,7 +465,7 @@ void NCursesUI::menu_show(memoryview<String> items,
     m_menu_fg = fg;
     m_menu_bg = bg;
 
-    DisplayCoord maxsize = window_size(stdscr);
+    CharCoord maxsize = window_size(stdscr);
     maxsize.column -= anchor.column;
     if (maxsize.column <= 2)
         return;
@@ -532,9 +532,9 @@ void NCursesUI::menu_hide()
     m_dirty = true;
 }
 
-static DisplayCoord compute_needed_size(StringView str)
+static CharCoord compute_needed_size(StringView str)
 {
-    DisplayCoord res{1,0};
+    CharCoord res{1,0};
     CharCount line_len = 0;
     for (Utf8Iterator begin{str.begin()}, end{str.end()};
          begin != end; ++begin)
@@ -558,12 +558,11 @@ static DisplayCoord compute_needed_size(StringView str)
     return res;
 }
 
-static DisplayCoord compute_pos(DisplayCoord anchor,
-                                DisplayCoord size,
-                                WINDOW* opt_window_to_avoid = nullptr)
+static CharCoord compute_pos(CharCoord anchor, CharCoord size,
+                             WINDOW* opt_window_to_avoid = nullptr)
 {
-    DisplayCoord scrsize = window_size(stdscr);
-    DisplayCoord pos = { anchor.line+1, anchor.column };
+    CharCoord scrsize = window_size(stdscr);
+    CharCoord pos = { anchor.line+1, anchor.column };
     if (pos.line + size.line >= scrsize.line)
         pos.line = max(0_line, anchor.line - size.line);
     if (pos.column + size.column >= scrsize.column)
@@ -571,10 +570,10 @@ static DisplayCoord compute_pos(DisplayCoord anchor,
 
     if (opt_window_to_avoid)
     {
-        DisplayCoord winbeg = window_pos(opt_window_to_avoid);
-        DisplayCoord winend = winbeg + window_size(opt_window_to_avoid);
+        CharCoord winbeg = window_pos(opt_window_to_avoid);
+        CharCoord winend = winbeg + window_size(opt_window_to_avoid);
 
-        DisplayCoord end = pos + size;
+        CharCoord end = pos + size;
 
         // check intersection
         if (not (end.line < winbeg.line or end.column < winbeg.column or
@@ -642,7 +641,7 @@ static String make_info_box(StringView title, StringView message,
           " │╰─╯│  ",
           " ╰───╯  ",
           "        " };
-    DisplayCoord assistant_size;
+    CharCoord assistant_size;
     if (assist)
         assistant_size = { (int)assistant.size(), assistant[0].char_length() };
 
@@ -688,7 +687,7 @@ static String make_info_box(StringView title, StringView message,
 }
 
 void NCursesUI::info_show(StringView title, StringView content,
-                          DisplayCoord anchor, ColorPair colors,
+                          CharCoord anchor, ColorPair colors,
                           MenuStyle style)
 {
     if (m_info_win)
@@ -706,9 +705,9 @@ void NCursesUI::info_show(StringView title, StringView content,
         info_box = fancy_info_box;
     }
 
-    DisplayCoord size = compute_needed_size(info_box);
+    CharCoord size = compute_needed_size(info_box);
 
-    DisplayCoord pos = compute_pos(anchor, size, m_menu_win);
+    CharCoord pos = compute_pos(anchor, size, m_menu_win);
 
     m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
                                      (int)pos.line,  (int)pos.column);
@@ -739,7 +738,7 @@ void NCursesUI::info_hide()
     m_dirty = true;
 }
 
-DisplayCoord NCursesUI::dimensions()
+CharCoord NCursesUI::dimensions()
 {
     return m_dimensions;
 }

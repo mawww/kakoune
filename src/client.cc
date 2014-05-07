@@ -82,8 +82,8 @@ void Client::redraw_ifn()
 {
     if (context().window().timestamp() != context().buffer().timestamp())
     {
-        DisplayCoord dimensions = context().ui().dimensions();
-        if (dimensions == DisplayCoord{0,0})
+        CharCoord dimensions = context().ui().dimensions();
+        if (dimensions == CharCoord{0,0})
             return;
         context().window().set_dimensions(dimensions);
         context().window().update_display_buffer(context());
@@ -96,8 +96,8 @@ void Client::redraw_ifn()
 
 static void reload_buffer(Context& context, const String& filename)
 {
-    DisplayCoord view_pos = context.window().position();
-    BufferCoord cursor_pos = context.selections().main().cursor();
+    CharCoord view_pos = context.window().position();
+    ByteCoord cursor_pos = context.selections().main().cursor();
     Buffer* buf = create_buffer_from_file(filename);
     if (not buf)
         return;
@@ -121,7 +121,7 @@ void Client::check_buffer_fs_timestamp()
         return;
     if (reload == Ask)
     {
-        DisplayCoord pos = context().window().dimensions();
+        CharCoord pos = context().window().dimensions();
         pos.column -= 1;
         m_ui->info_show(
             "reload '" + buffer.display_name() + "' ?",

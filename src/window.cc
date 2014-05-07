@@ -93,13 +93,13 @@ void Window::update_display_buffer(const Context& context)
     m_timestamp = buffer().timestamp();
 }
 
-void Window::set_position(DisplayCoord position)
+void Window::set_position(CharCoord position)
 {
     m_position.line = std::max(0_line, position.line);
     m_position.column = std::max(0_char, position.column);
 }
 
-void Window::set_dimensions(DisplayCoord dimensions)
+void Window::set_dimensions(CharCoord dimensions)
 {
     m_dimensions = dimensions;
 }
@@ -117,7 +117,7 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
 }
 
 static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
-                                BufferCoord pos, CharCount view_pos, CharCount view_size)
+                                ByteCoord pos, CharCount view_pos, CharCount view_size)
 {
     CharCount buffer_column = 0;
     CharCount non_buffer_column = 0;
@@ -197,7 +197,7 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
 namespace
 {
 CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
-                              BufferCoord coord)
+                              ByteCoord coord)
 {
     CharCount column = 0;
     for (auto& atom : line)
@@ -215,8 +215,8 @@ CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
     return column;
 }
 
-BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
-                              CharCount column)
+ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
+                            CharCount column)
 {
     auto& range = line.range();
     for (auto& atom : line)
@@ -235,7 +235,7 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 }
 }
 
-DisplayCoord Window::display_position(BufferCoord coord)
+CharCoord Window::display_position(ByteCoord coord)
 {
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
@@ -248,12 +248,12 @@ DisplayCoord Window::display_position(BufferCoord coord)
     return { 0, 0 };
 }
 
-BufferCoord Window::offset_coord(BufferCoord coord, CharCount offset)
+ByteCoord Window::offset_coord(ByteCoord coord, CharCount offset)
 {
     return buffer().offset_coord(coord, offset);
 }
 
-BufferCoord Window::offset_coord(BufferCoord coord, LineCount offset)
+ByteCoord Window::offset_coord(ByteCoord coord, LineCount offset)
 {
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
     DisplayBuffer display_buffer;

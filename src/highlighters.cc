@@ -23,7 +23,7 @@ using RegexIterator = boost::regex_iterator<BufferIterator>;
 
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
-                     BufferCoord begin, BufferCoord end,
+                     ByteCoord begin, ByteCoord end,
                      bool skip_replaced, T func)
 {
     if (begin == end or end <= display_buffer.range().first
@@ -66,7 +66,7 @@ template<typename T>
 void apply_highlighter(const Context& context,
                        HighlightFlags flags,
                        DisplayBuffer& display_buffer,
-                       BufferCoord begin, BufferCoord end,
+                       ByteCoord begin, ByteCoord end,
                        T&& highlighter)
 {
     using LineIterator = DisplayBuffer::LineList::iterator;
@@ -197,7 +197,7 @@ private:
         Cache(const Buffer&){}
         BufferRange m_range;
         size_t      m_timestamp = 0;
-        std::vector<std::vector<std::pair<BufferCoord, BufferCoord>>> m_matches;
+        std::vector<std::vector<std::pair<ByteCoord, ByteCoord>>> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -455,8 +455,8 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
     {
         auto& sel = context.selections()[i];
         const bool forward = sel.anchor() <= sel.cursor();
-        BufferCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
-        BufferCoord end   = forward ? sel.cursor() : buffer.char_next(sel.anchor());
+        ByteCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
+        ByteCoord end   = forward ? sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == context.selections().main_index());
         ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
@@ -592,10 +592,10 @@ public:
         const auto& buffer = context.buffer();
         auto& regions = update_cache_ifn(buffer);
         auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
-                                      [](const Region& r, const BufferCoord& c) { return r.end < c; });
+                                      [](const Region& r, const ByteCoord& c) { return r.end < c; });
         auto end = std::lower_bound(begin, regions.end(), range.second,
-                                    [](const Region& r, const BufferCoord& c) { return r.begin < c; });
-        auto correct = [&](const BufferCoord& c) -> BufferCoord {
+                                    [](const Region& r, const ByteCoord& c) { return r.begin < c; });
+        auto correct = [&](const ByteCoord& c) -> ByteCoord {
             if (buffer[c.line].length() == c.column)
                 return {c.line+1, 0};
             return c;
@@ -611,8 +611,8 @@ private:
 
     struct Region
     {
-        BufferCoord begin;
-        BufferCoord end;
+        ByteCoord begin;
+        ByteCoord end;
     };
     using RegionList = std::vector<Region>;
 
@@ -778,7 +778,7 @@ HighlighterAndId region_factory(HighlighterParameters params)
         const ColorPair colors = get_color(params[2]);
 
         auto func = [colors](const Context&, HighlightFlags flags, DisplayBuffer& display_buffer,
-                             BufferCoord begin, BufferCoord end)
+                             ByteCoord begin, ByteCoord end)
         {
             highlight_range(display_buffer, begin, end, true,
                             [&colors](DisplayAtom& atom) { atom.colors = colors; });
@@ -805,7 +805,7 @@ HighlighterAndId region_ref_factory(HighlighterParameters params)
         const String& name = params[2];
 
         auto func = [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer,
-                          BufferCoord begin, BufferCoord end)
+                          ByteCoord begin, ByteCoord end)
         {
             try
             {

@@ -42,7 +42,7 @@ DisplayLine::DisplayLine(AtomList atoms)
     compute_range();
 }
 
-DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
+DisplayLine::iterator DisplayLine::split(iterator it, ByteCoord pos)
 {
     kak_assert(it->type() == DisplayAtom::BufferRange);
     kak_assert(it->begin() < pos);

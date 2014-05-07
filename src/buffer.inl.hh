@@ -6,13 +6,13 @@
 namespace Kakoune
 {
 
-inline char Buffer::byte_at(BufferCoord c) const
+inline char Buffer::byte_at(ByteCoord c) const
 {
     kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
     return m_lines[c.line].content[c.column];
 }
 
-inline BufferCoord Buffer::next(BufferCoord coord) const
+inline ByteCoord Buffer::next(ByteCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
         ++coord.column;
@@ -26,7 +26,7 @@ inline BufferCoord Buffer::next(BufferCoord coord) const
     return coord;
 }
 
-inline BufferCoord Buffer::prev(BufferCoord coord) const
+inline ByteCoord Buffer::prev(ByteCoord coord) const
 {
     if (coord.column == 0)
     {
@@ -38,28 +38,28 @@ inline BufferCoord Buffer::prev(BufferCoord coord) const
     return coord;
 }
 
-inline ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
+inline ByteCount Buffer::distance(ByteCoord begin, ByteCoord end) const
 {
     return offset(end) - offset(begin);
 }
 
-inline ByteCount Buffer::offset(BufferCoord c) const
+inline ByteCount Buffer::offset(ByteCoord c) const
 {
     if (c.line == line_count())
         return m_lines.back().start + m_lines.back().length();
     return m_lines[c.line].start + c.column;
 }
 
-inline bool Buffer::is_valid(BufferCoord c) const
+inline bool Buffer::is_valid(ByteCoord c) const
 {
     return (c.line < line_count() and c.column < m_lines[c.line].length()) or
            (c.line == line_count() - 1 and c.column == m_lines.back().length()) or
            (c.line == line_count() and c.column == 0);
 }
 
-inline bool Buffer::is_end(BufferCoord c) const
+inline bool Buffer::is_end(ByteCoord c) const
 {
-    return c >= BufferCoord{line_count() - 1, m_lines.back().length()};
+    return c >= ByteCoord{line_count() - 1, m_lines.back().length()};
 }
 
 inline BufferIterator Buffer::begin() const
@@ -96,17 +96,17 @@ inline size_t Buffer::line_timestamp(LineCount line) const
     return m_lines[line].timestamp;
 }
 
-inline BufferCoord Buffer::back_coord() const
+inline ByteCoord Buffer::back_coord() const
 {
     return { line_count() - 1, m_lines.back().length() - 1 };
 }
 
-inline BufferCoord Buffer::end_coord() const
+inline ByteCoord Buffer::end_coord() const
 {
     return { line_count() - 1, m_lines.back().length() };
 }
 
-inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
+inline BufferIterator::BufferIterator(const Buffer& buffer, ByteCoord coord)
     : m_buffer(&buffer), m_coord(coord)
 {
     kak_assert(m_buffer and m_buffer->is_valid(m_coord));

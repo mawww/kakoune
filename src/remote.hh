@@ -32,7 +32,7 @@ private:
     void write_next_key();
 
     std::unique_ptr<UserInterface> m_ui;
-    DisplayCoord                   m_dimensions;
+    CharCoord                      m_dimensions;
     FDWatcher                      m_socket_watcher;
 };
 std::unique_ptr<RemoteClient> connect_to(const String& session,

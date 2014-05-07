@@ -77,7 +77,7 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
 // c++14 will add std::optional, so we use boost::optional until then
 using boost::optional;
 static optional<Selection> find_surrounding(const Buffer& buffer,
-                                            BufferCoord coord,
+                                            ByteCoord coord,
                                             CodepointPair matching,
                                             ObjectFlags flags, int init_level)
 {
@@ -373,7 +373,7 @@ Selection select_whole_indent(const Buffer& buffer, const Selection& selection, 
             ++end_line;
     }
     --end_line;
-    BufferCoord first = begin_line;
+    ByteCoord first = begin_line;
     // keep the first line indent in inner mode
     if (flags & ObjectFlags::Inner)
     {

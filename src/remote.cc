@@ -249,13 +249,13 @@ public:
     ~RemoteUI();
 
     void menu_show(memoryview<String> choices,
-                   DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                   CharCoord anchor, ColorPair fg, ColorPair bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   DisplayCoord anchor, ColorPair colors,
+                   CharCoord anchor, ColorPair colors,
                    MenuStyle style) override;
     void info_hide() override;
 
@@ -267,13 +267,13 @@ public:
 
     bool is_key_available() override;
     Key  get_key() override;
-    DisplayCoord dimensions() override;
+    CharCoord dimensions() override;
 
     void set_input_callback(InputCallback callback) override;
 
 private:
     FDWatcher    m_socket_watcher;
-    DisplayCoord m_dimensions;
+    CharCoord m_dimensions;
     InputCallback m_input_callback;
 };
 
@@ -296,7 +296,7 @@ RemoteUI::~RemoteUI()
 }
 
 void RemoteUI::menu_show(memoryview<String> choices,
-                         DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                         CharCoord anchor, ColorPair fg, ColorPair bg,
                          MenuStyle style)
 {
     Message msg(m_socket_watcher.fd());
@@ -322,7 +322,7 @@ void RemoteUI::menu_hide()
 }
 
 void RemoteUI::info_show(StringView title, StringView content,
-                         DisplayCoord anchor, ColorPair colors,
+                         CharCoord anchor, ColorPair colors,
                          MenuStyle style)
 {
     Message msg(m_socket_watcher.fd());
@@ -397,7 +397,7 @@ Key RemoteUI::get_key()
     }
 }
 
-DisplayCoord RemoteUI::dimensions()
+CharCoord RemoteUI::dimensions()
 {
     return m_dimensions;
 }
@@ -447,7 +447,7 @@ void RemoteClient::process_next_message()
     case RemoteUIMsg::MenuShow:
     {
         auto choices = read_vector<String>(socket);
-        auto anchor = read<DisplayCoord>(socket);
+        auto anchor = read<CharCoord>(socket);
         auto fg = read<ColorPair>(socket);
         auto bg = read<ColorPair>(socket);
         auto style = read<MenuStyle>(socket);
@@ -464,7 +464,7 @@ void RemoteClient::process_next_message()
     {
         auto title = read<String>(socket);
         auto content = read<String>(socket);
-        auto anchor = read<DisplayCoord>(socket);
+        auto anchor = read<CharCoord>(socket);
         auto colors = read<ColorPair>(socket);
         auto style = read<MenuStyle>(socket);
         m_ui->info_show(title, content, anchor, colors, style);
@@ -494,7 +494,7 @@ void RemoteClient::write_next_key()
     // handle a resize event.
     msg.write(m_ui->get_key());
 
-    DisplayCoord dimensions = m_ui->dimensions();
+    CharCoord dimensions = m_ui->dimensions();
     if (dimensions != m_dimensions)
     {
         m_dimensions = dimensions;

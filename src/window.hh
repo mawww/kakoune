@@ -19,11 +19,11 @@ public:
     Window(Buffer& buffer);
     ~Window();
 
-    const DisplayCoord& position() const { return m_position; }
-    void set_position(DisplayCoord position);
+    const CharCoord& position() const { return m_position; }
+    void set_position(CharCoord position);
 
-    const DisplayCoord& dimensions() const { return m_dimensions; }
-    void set_dimensions(DisplayCoord dimensions);
+    const CharCoord& dimensions() const { return m_dimensions; }
+    void set_dimensions(CharCoord dimensions);
 
     const DisplayBuffer& display_buffer() const { return m_display_buffer; }
 
@@ -33,7 +33,7 @@ public:
     void scroll(CharCount offset);
     void update_display_buffer(const Context& context);
 
-    DisplayCoord display_position(BufferCoord coord);
+    CharCoord display_position(ByteCoord coord);
 
     HighlighterGroup& highlighters() { return m_highlighters; }
 
@@ -49,8 +49,8 @@ public:
     size_t timestamp() const { return m_timestamp; }
     void   forget_timestamp() { m_timestamp = -1; }
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
-    BufferCoord offset_coord(BufferCoord coord, LineCount offset);
+    ByteCoord offset_coord(ByteCoord coord, CharCount offset);
+    ByteCoord offset_coord(ByteCoord coord, LineCount offset);
 private:
     Window(const Window&) = delete;
 
@@ -59,8 +59,8 @@ private:
 
     safe_ptr<Buffer> m_buffer;
 
-    DisplayCoord  m_position;
-    DisplayCoord  m_dimensions;
+    CharCoord m_position;
+    CharCoord m_dimensions;
     DisplayBuffer m_display_buffer;
 
     HookManager      m_hooks;

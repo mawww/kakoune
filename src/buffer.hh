@@ -1,7 +1,7 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
-#include "line_and_column.hh"
+#include "coord.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"
 #include "keymap_manager.hh"
@@ -20,12 +20,6 @@ class Buffer;
 
 constexpr time_t InvalidTime = 0;
 
-struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
-{
-    constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
-        : LineAndColumn(line, column) {}
-};
-
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
 {
@@ -37,7 +31,7 @@ public:
     using iterator_category = std::random_access_iterator_tag;
 
     BufferIterator() : m_buffer(nullptr) {}
-    BufferIterator(const Buffer& buffer, BufferCoord coord);
+    BufferIterator(const Buffer& buffer, ByteCoord coord);
 
     bool operator== (const BufferIterator& iterator) const;
     bool operator!= (const BufferIterator& iterator) const;
@@ -62,20 +56,20 @@ public:
     BufferIterator operator++ (int);
     BufferIterator operator-- (int);
 
-    const BufferCoord& coord() const { return m_coord; }
+    const ByteCoord& coord() const { return m_coord; }
 
 private:
     safe_ptr<const Buffer> m_buffer;
-    BufferCoord   m_coord;
+    ByteCoord m_coord;
 };
 
 class BufferChangeListener
 {
 public:
     virtual void on_insert(const Buffer& buffer,
-                           BufferCoord begin, BufferCoord end) = 0;
+                           ByteCoord begin, ByteCoord end) = 0;
     virtual void on_erase(const Buffer& buffer,
-                          BufferCoord begin, BufferCoord end) = 0;
+                          ByteCoord begin, ByteCoord end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file
@@ -118,25 +112,25 @@ public:
     bool           undo();
     bool           redo();
 
-    String         string(BufferCoord begin, BufferCoord end) const;
+    String         string(ByteCoord begin, ByteCoord end) const;
 
-    char           byte_at(BufferCoord c) const;
-    ByteCount      offset(BufferCoord c) const;
-    ByteCount      distance(BufferCoord begin, BufferCoord end) const;
-    BufferCoord    advance(BufferCoord coord, ByteCount count) const;
-    BufferCoord    next(BufferCoord coord) const;
-    BufferCoord    prev(BufferCoord coord) const;
+    char           byte_at(ByteCoord c) const;
+    ByteCount      offset(ByteCoord c) const;
+    ByteCount      distance(ByteCoord begin, ByteCoord end) const;
+    ByteCoord    advance(ByteCoord coord, ByteCount count) const;
+    ByteCoord    next(ByteCoord coord) const;
+    ByteCoord    prev(ByteCoord coord) const;
 
-    BufferCoord    char_next(BufferCoord coord) const;
-    BufferCoord    char_prev(BufferCoord coord) const;
+    ByteCoord    char_next(ByteCoord coord) const;
+    ByteCoord    char_prev(ByteCoord coord) const;
 
-    BufferCoord    back_coord() const;
-    BufferCoord    end_coord() const;
+    ByteCoord    back_coord() const;
+    ByteCoord    end_coord() const;
 
-    bool           is_valid(BufferCoord c) const;
-    bool           is_end(BufferCoord c) const;
+    bool           is_valid(ByteCoord c) const;
+    bool           is_end(ByteCoord c) const;
 
-    BufferCoord    last_modification_coord() const;
+    ByteCoord    last_modification_coord() const;
 
     BufferIterator begin() const;
     BufferIterator end() const;
@@ -147,13 +141,13 @@ public:
     { return m_lines[line].content; }
 
     // returns an iterator at given coordinates. clamp line_and_column
-    BufferIterator iterator_at(BufferCoord coord) const;
+    BufferIterator iterator_at(ByteCoord coord) const;
 
     // returns nearest valid coordinates from given ones
-    BufferCoord    clamp(BufferCoord coord) const;
+    ByteCoord    clamp(ByteCoord coord) const;
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
-    BufferCoord offset_coord(BufferCoord coord, LineCount offset);
+    ByteCoord offset_coord(ByteCoord coord, CharCount offset);
+    ByteCoord offset_coord(ByteCoord coord, LineCount offset);
 
     const String& name() const { return m_name; }
     String display_name() const;
@@ -203,8 +197,8 @@ private:
     };
     LineList m_lines;
 
-    BufferCoord do_insert(BufferCoord pos, const String& content);
-    BufferCoord do_erase(BufferCoord begin, BufferCoord end);
+    ByteCoord do_insert(ByteCoord pos, const String& content);
+    ByteCoord do_erase(ByteCoord begin, ByteCoord end);
 
     String  m_name;
     Flags   m_flags;

@@ -27,13 +27,13 @@ public:
     Key    get_key() override;
 
     void menu_show(memoryview<String> items,
-                   DisplayCoord anchor, ColorPair fg, ColorPair bg,
+                   CharCoord anchor, ColorPair fg, ColorPair bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   DisplayCoord anchor, ColorPair colors,
+                   CharCoord anchor, ColorPair colors,
                    MenuStyle style) override;
     void info_hide() override;
 
@@ -41,7 +41,7 @@ public:
 
     void set_input_callback(InputCallback callback) override;
 
-    DisplayCoord dimensions() override;
+    CharCoord dimensions() override;
 
     static void abort();
 private:
@@ -49,7 +49,7 @@ private:
     void redraw();
     void draw_line(const DisplayLine& line, CharCount col_index) const;
 
-    DisplayCoord m_dimensions;
+    CharCoord m_dimensions;
     void update_dimensions();
 
     NCursesWin* m_menu_win = nullptr;

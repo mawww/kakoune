@@ -24,8 +24,8 @@ public:
 
     std::vector<LineModification> compute_modifications();
 private:
-    void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end) override;
-    void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end) override;
+    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end) override;
+    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end) override;
 
     struct Change
     {

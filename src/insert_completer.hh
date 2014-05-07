@@ -9,10 +9,10 @@ namespace Kakoune
 
 struct InsertCompletion
 {
-    BufferCoord begin;
-    BufferCoord end;
-    CandidateList  candidates;
-    size_t         timestamp;
+    ByteCoord begin;
+    ByteCoord end;
+    CandidateList candidates;
+    size_t timestamp;
 
     bool is_valid() const { return not candidates.empty(); }
 };

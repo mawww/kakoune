@@ -29,7 +29,7 @@ WordDB& get_word_db(const Buffer& buffer)
 }
 
 template<bool other_buffers>
-InsertCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
+InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 {
    auto pos = buffer.iterator_at(cursor_pos);
    if (pos == buffer.begin() or not is_word(*utf8::previous(pos)))
@@ -76,7 +76,7 @@ InsertCompletion complete_word(const Buffer& buffer, BufferCoord cursor_pos)
 }
 
 template<bool require_slash>
-InsertCompletion complete_filename(const Buffer& buffer, BufferCoord cursor_pos,
+InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
                                    OptionManager& options)
 {
     auto pos = buffer.iterator_at(cursor_pos);
@@ -114,7 +114,7 @@ InsertCompletion complete_filename(const Buffer& buffer, BufferCoord cursor_pos,
     return { begin.coord(), pos.coord(), std::move(res), buffer.timestamp() };
 }
 
-InsertCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos,
+InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                                  OptionManager& options, const String& option_name)
 {
     const StringList& opt = options[option_name].get<StringList>();;
@@ -126,7 +126,7 @@ InsertCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos,
     boost::smatch match;
     if (boost::regex_match(desc.begin(), desc.end(), match, re))
     {
-        BufferCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
+        ByteCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
         if (not buffer.is_valid(coord))
             return {};
         auto end = coord;
@@ -149,7 +149,7 @@ InsertCompletion complete_option(const Buffer& buffer, BufferCoord cursor_pos,
     return {};
 }
 
-InsertCompletion complete_line(const Buffer& buffer, BufferCoord cursor_pos)
+InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
 {
     String prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
     StringList res;
@@ -223,8 +223,8 @@ void InsertCompleter::update()
         for (auto& candidate : m_completions.candidates)
              longest_completion = std::max(longest_completion, candidate.length());
 
-        BufferCoord cursor = m_context.selections().main().cursor();
-        BufferCoord compl_beg = m_completions.begin;
+        ByteCoord cursor = m_context.selections().main().cursor();
+        ByteCoord compl_beg = m_completions.begin;
         if (cursor.line == compl_beg.line and
             is_in_range(cursor.column - compl_beg.column,
                         ByteCount{0}, longest_completion-1))
@@ -272,24 +272,24 @@ bool InsertCompleter::setup_ifn()
         for (auto& completer : completers)
         {
             if (completer == "filename" and
-                try_complete([this](const Buffer& buffer, BufferCoord cursor_pos) {
+                try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
                     return complete_filename<true>(buffer, cursor_pos,
                                                    options());
                 }))
                 return true;
             if (completer.substr(0_byte, 7_byte) == "option=" and
-                try_complete([&,this](const Buffer& buffer, BufferCoord cursor_pos) {
+                try_complete([&,this](const Buffer& buffer, ByteCoord cursor_pos) {
                    return complete_option(buffer, cursor_pos,
                                           options(), completer.substr(7_byte));
                 }))
                 return true;
             if (completer == "word=buffer" and
-                try_complete([this](const Buffer& buffer, BufferCoord cursor_pos) {
+                try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
                     return complete_word<false>(buffer, cursor_pos);
                 }))
                 return true;
             if (completer == "word=all" and
-                try_complete([this](const Buffer& buffer, BufferCoord cursor_pos) {
+                try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
                     return complete_word<true>(buffer, cursor_pos);
                 }))
                 return true;
@@ -303,7 +303,7 @@ void InsertCompleter::menu_show()
 {
     if (not m_context.has_ui())
         return;
-    DisplayCoord menu_pos = m_context.window().display_position(m_completions.begin);
+    CharCoord menu_pos = m_context.window().display_position(m_completions.begin);
 
     const CharCount tabstop = m_context.options()["tabstop"].get<int>();
     const CharCount column = get_column(m_context.buffer(), tabstop,
@@ -339,7 +339,7 @@ template<typename CompleteFunc>
 bool InsertCompleter::try_complete(CompleteFunc complete_func)
 {
     auto& buffer = m_context.buffer();
-    BufferCoord cursor_pos = m_context.selections().main().cursor();
+    ByteCoord cursor_pos = m_context.selections().main().cursor();
     try
     {
         m_completions = complete_func(buffer, cursor_pos);
@@ -362,21 +362,21 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
 
 void InsertCompleter::explicit_file_complete()
 {
-    try_complete([this](const Buffer& buffer, BufferCoord cursor_pos) {
+    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_filename<false>(buffer, cursor_pos, options());
     });
 }
 
 void InsertCompleter::explicit_word_complete()
 {
-    try_complete([this](const Buffer& buffer, BufferCoord cursor_pos) {
+    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_word<true>(buffer, cursor_pos);
     });
 }
 
 void InsertCompleter::explicit_line_complete()
 {
-    try_complete([this](const Buffer& buffer, BufferCoord cursor_pos) {
+    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_line(buffer, cursor_pos);
     });
 }

@@ -6,7 +6,7 @@ namespace Kakoune
 {
 
 CharCount get_column(const Buffer& buffer,
-                     CharCount tabstop, BufferCoord coord)
+                     CharCount tabstop, ByteCoord coord)
 {
     auto& line = buffer[coord.line];
     auto col = 0_char;

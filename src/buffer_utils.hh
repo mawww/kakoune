@@ -24,7 +24,7 @@ inline CharCount char_length(const Buffer& buffer, const Selection& range)
                           utf8::next(buffer.iterator_at(range.max())));
 }
 
-inline void avoid_eol(const Buffer& buffer, BufferCoord& coord)
+inline void avoid_eol(const Buffer& buffer, ByteCoord& coord)
 {
     const auto column = coord.column;
     const auto& line = buffer[coord.line];
@@ -39,7 +39,7 @@ inline void avoid_eol(const Buffer& buffer, Selection& sel)
 }
 
 CharCount get_column(const Buffer& buffer,
-                     CharCount tabstop, BufferCoord coord);
+                     CharCount tabstop, ByteCoord coord);
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
 

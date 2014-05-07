@@ -174,7 +174,7 @@ constexpr Select<mode, T> make_select(T func)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(const Buffer& buffer, BufferCoord coord, SelectionList& selections)
+void select_coord(const Buffer& buffer, ByteCoord coord, SelectionList& selections)
 {
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
@@ -204,7 +204,7 @@ bool show_auto_info_ifn(const String& title, const String& info,
     if (not context.options()["autoinfo"].get<bool>() or not context.has_ui())
         return false;
     ColorPair col = get_color("Information");
-    DisplayCoord pos = context.window().dimensions();
+    CharCoord pos = context.window().dimensions();
     pos.column -= 1;
     context.ui().info_show(title, info, pos , col, MenuStyle::Prompt);
     return true;
@@ -243,7 +243,7 @@ void goto_commands(Context& context, int line)
             case 'g':
             case 'k':
                 context.push_jump();
-                select_coord<mode>(buffer, BufferCoord{0,0}, context.selections());
+                select_coord<mode>(buffer, ByteCoord{0,0}, context.selections());
                 break;
             case 'l':
                 select<mode>(context, select_to_eol);
@@ -330,7 +330,7 @@ void goto_commands(Context& context, int line)
                 context.push_jump();
                 auto pos = buffer.last_modification_coord();
                 if (buffer[pos.line].length() == pos.column + 1)
-                    pos = BufferCoord{ pos.line+1, 0 };
+                    pos = ByteCoord{ pos.line+1, 0 };
                 select_coord<mode>(buffer, pos, context.selections());
                 break;
             }
@@ -446,7 +446,7 @@ void command(Context& context, int)
                 {
                     auto info = CommandManager::instance().command_info(cmdline);
                     ColorPair col = get_color("Information");
-                    DisplayCoord pos = context.window().dimensions();
+                    CharCoord pos = context.window().dimensions();
                     pos.column -= 1;
                     if (not info.first.empty() and not info.second.empty())
                         context.ui().info_show(info.first, info.second, pos , col, MenuStyle::Prompt);
@@ -863,12 +863,12 @@ void deindent(Context& context, int)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        sels.emplace_back(line, BufferCoord{line, column-1});
+                        sels.emplace_back(line, ByteCoord{line, column-1});
                     break;
                 }
                 if (width == indent_width)
                 {
-                    sels.emplace_back(line, BufferCoord{line, column});
+                    sels.emplace_back(line, ByteCoord{line, column});
                     break;
                 }
             }
@@ -949,7 +949,7 @@ void scroll(Context& context, int)
                   "scrool only implements PageUp and PageDown");
     Window& window = context.window();
     Buffer& buffer = context.buffer();
-    DisplayCoord position = window.position();
+    CharCoord position = window.position();
     LineCount cursor_line = 0;
 
     if (key == Key::PageUp)
@@ -1219,21 +1219,21 @@ public:
     ModifiedRangesListener(Buffer& buffer)
         : BufferChangeListener_AutoRegister(buffer) {}
 
-    void on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end)
     {
         m_ranges.update_insert(buffer, begin, end);
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
-                                   [](BufferCoord c, const Selection& sel)
+                                   [](ByteCoord c, const Selection& sel)
                                    { return c < sel.min(); });
         m_ranges.emplace(it, begin, buffer.char_prev(end));
     }
 
-    void on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end)
     {
         m_ranges.update_erase(buffer, begin, end);
         auto pos = std::min(begin, buffer.back_coord());
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
-                                   [](BufferCoord c, const Selection& sel)
+                                   [](ByteCoord c, const Selection& sel)
                                    { return c < sel.min(); });
         m_ranges.emplace(it, pos, pos);
     }

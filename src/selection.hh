@@ -12,19 +12,19 @@ using CaptureList = std::vector<String>;
 struct Selection
 {
     Selection() = default;
-    explicit Selection(BufferCoord pos) : Selection(pos,pos) {}
-    Selection(BufferCoord anchor, BufferCoord cursor,
+    explicit Selection(ByteCoord pos) : Selection(pos,pos) {}
+    Selection(ByteCoord anchor, ByteCoord cursor,
               CaptureList captures = {})
         : m_anchor{anchor}, m_cursor{cursor},
           m_captures(std::move(captures)) {}
 
     void merge_with(const Selection& range);
 
-    BufferCoord& anchor() { return m_anchor; }
-    BufferCoord& cursor() { return m_cursor; }
+    ByteCoord& anchor() { return m_anchor; }
+    ByteCoord& cursor() { return m_cursor; }
 
-    const BufferCoord& anchor() const { return m_anchor; }
-    const BufferCoord& cursor() const { return m_cursor; }
+    const ByteCoord& anchor() const { return m_anchor; }
+    const ByteCoord& cursor() const { return m_cursor; }
 
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
@@ -34,12 +34,12 @@ struct Selection
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    const BufferCoord& min() const { return std::min(m_anchor, m_cursor); }
-    const BufferCoord& max() const { return std::max(m_anchor, m_cursor); }
+    const ByteCoord& min() const { return std::min(m_anchor, m_cursor); }
+    const ByteCoord& max() const { return std::max(m_anchor, m_cursor); }
 
 private:
-    BufferCoord m_anchor;
-    BufferCoord m_cursor;
+    ByteCoord m_anchor;
+    ByteCoord m_cursor;
 
     CaptureList m_captures;
 };
@@ -58,11 +58,11 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
 struct SelectionList : std::vector<Selection>
 {
     SelectionList() = default;
-    SelectionList(BufferCoord c) : std::vector<Selection>{Selection{c,c}} {}
+    SelectionList(ByteCoord c) : std::vector<Selection>{Selection{c,c}} {}
     SelectionList(Selection s) : std::vector<Selection>{s} {}
 
-    void update_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end);
-    void update_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end);
+    void update_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end);
+    void update_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end);
 
     void check_invariant() const;
 

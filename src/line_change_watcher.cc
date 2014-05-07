@@ -62,7 +62,7 @@ std::vector<LineModification> LineChangeWatcher::compute_modifications()
     return res;
 }
 
-void LineChangeWatcher::on_insert(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+void LineChangeWatcher::on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end)
 {
     if (buffer.is_end(end))
     {
@@ -72,7 +72,7 @@ void LineChangeWatcher::on_insert(const Buffer& buffer, BufferCoord begin, Buffe
     m_changes.push_back({begin.line, end.line - begin.line});
 }
 
-void LineChangeWatcher::on_erase(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+void LineChangeWatcher::on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end)
 {
     if (begin.line == buffer.line_count())
     {

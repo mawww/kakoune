@@ -1,5 +1,7 @@
-#ifndef line_and_column_hh_INCLUDED
-#define line_and_column_hh_INCLUDED
+#ifndef coord_hh_INCLUDED
+#define coord_hh_INCLUDED
+
+#include "units.hh"
 
 namespace Kakoune
 {
@@ -72,6 +74,18 @@ struct LineAndColumn
     }
 };
 
+struct ByteCoord : LineAndColumn<ByteCoord, LineCount, ByteCount>
+{
+    constexpr ByteCoord(LineCount line = 0, ByteCount column = 0)
+        : LineAndColumn(line, column) {}
+};
+
+struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
+{
+    constexpr CharCoord(LineCount line = 0, CharCount column = 0)
+        : LineAndColumn(line, column) {}
+};
+
 }
 
-#endif // line_and_column_hh_INCLUDED
+#endif // coord_hh_INCLUDED

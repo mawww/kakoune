@@ -3,7 +3,7 @@
 
 #include "buffer.hh"
 #include "color.hh"
-#include "line_and_column.hh"
+#include "coord.hh"
 #include "string.hh"
 #include "utf8.hh"
 
@@ -11,12 +11,6 @@
 
 namespace Kakoune
 {
-
-struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, CharCount>
-{
-    constexpr DisplayCoord(LineCount line = 0, CharCount column = 0)
-        : LineAndColumn(line, column) {}
-};
 
 using Attribute = char;
 
@@ -34,7 +28,7 @@ struct DisplayAtom
 public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
 
-    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
+    DisplayAtom(const Buffer& buffer, ByteCoord begin, ByteCoord end)
         : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end)
      { check_invariant(); }
 
@@ -72,13 +66,13 @@ public:
         return 0;
     }
 
-    const BufferCoord& begin() const
+    const ByteCoord& begin() const
     {
         kak_assert(has_buffer_range());
         return m_begin;
     }
 
-    const BufferCoord& end() const
+    const ByteCoord& end() const
     {
         kak_assert(has_buffer_range());
         return m_end;
@@ -114,12 +108,12 @@ private:
     Type m_type;
 
     const Buffer* m_buffer = nullptr;
-    BufferCoord m_begin;
-    BufferCoord m_end;
+    ByteCoord m_begin;
+    ByteCoord m_end;
     String m_text;
 };
 
-using BufferRange = std::pair<BufferCoord, BufferCoord>;
+using BufferRange = std::pair<ByteCoord, ByteCoord>;
 using AtomList = std::vector<DisplayAtom>;
 
 class DisplayLine
@@ -146,7 +140,7 @@ public:
     const BufferRange& range() const { return m_range; }
 
     // Split atom pointed by it at pos, returns an iterator to the first atom
-    iterator split(iterator it, BufferCoord pos);
+    iterator split(iterator it, ByteCoord pos);
 
     iterator insert(iterator it, DisplayAtom atom);
     iterator erase(iterator beg, iterator end);

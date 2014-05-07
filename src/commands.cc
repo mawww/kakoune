@@ -1150,7 +1150,7 @@ const CommandDesc info_cmd = {
         if (parser.positional_count() > 0)
         {
             MenuStyle style = MenuStyle::Prompt;
-            DisplayCoord pos = context.ui().dimensions();
+            CharCoord pos = context.ui().dimensions();
             pos.column -= 1;
             if (parser.has_option("anchor"))
             {
