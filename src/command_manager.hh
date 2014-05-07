@@ -1,6 +1,7 @@
 #ifndef command_manager_hh_INCLUDED
 #define command_manager_hh_INCLUDED
 
+#include "coord.hh"
 #include "completion.hh"
 #include "memoryview.hh"
 #include "shell_manager.hh"
@@ -87,7 +88,7 @@ public:
 
 private:
     void execute_single_command(CommandParameters params,
-                                Context& context) const;
+                                Context& context, CharCoord pos) const;
 
     struct CommandDescriptor
     {

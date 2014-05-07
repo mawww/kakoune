@@ -86,7 +86,6 @@ private:
 
 
 using TokenList = std::vector<Token>;
-using TokenPosList = std::vector<std::pair<ByteCount, ByteCount>>;
 
 bool is_command_separator(char c)
 {
@@ -356,7 +355,8 @@ CommandManager::find_command(const String& name) const
 }
 
 void CommandManager::execute_single_command(CommandParameters params,
-                                            Context& context) const
+                                            Context& context,
+                                            CharCoord pos) const
 {
     if (params.empty())
         return;
@@ -366,9 +366,37 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
-    ParametersParser parameter_parser(param_view,
-                                      command_it->second.param_desc);
-    command_it->second.command(parameter_parser, context);
+    try
+    {
+        ParametersParser parameter_parser(param_view,
+                                          command_it->second.param_desc);
+        command_it->second.command(parameter_parser, context);
+    }
+    catch (runtime_error& error)
+    {
+        String info = to_string(pos.line+1) + ":" + to_string(pos.column+1) +
+                      ": '" + command_it->first + "' " + error.what();
+        throw runtime_error(std::move(info));
+    }
+}
+
+static CharCoord find_coord(StringView str, ByteCount offset)
+{
+    CharCoord res;
+    auto it = str.begin();
+    auto line_start = it;
+    while (it != str.end() and offset > 0)
+    {
+        if (*it == '\n')
+        {
+            line_start = it + 1;
+            ++res.line;
+        }
+        ++it;
+        --offset;
+    }
+    res.column = utf8::distance(line_start, it);
+    return res;
 }
 
 void CommandManager::execute(StringView command_line,
@@ -380,12 +408,16 @@ void CommandManager::execute(StringView command_line,
     if (tokens.empty())
         return;
 
+    CharCoord command_coord;
     std::vector<String> params;
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
+        if (params.empty())
+            command_coord = find_coord(command_line, it->begin());
+
         if (it->type() == Token::Type::CommandSeparator)
         {
-            execute_single_command(params, context);
+            execute_single_command(params, context, command_coord);
             params.clear();
         }
         // Shell expand are retokenized
@@ -407,7 +439,7 @@ void CommandManager::execute(StringView command_line,
             params.push_back(eval_token(*it, context, shell_params,
                                         env_vars));
     }
-    execute_single_command(params, context);
+    execute_single_command(params, context, command_coord);
 }
 
 CommandInfo CommandManager::command_info(StringView command_line) const

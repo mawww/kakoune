@@ -367,7 +367,7 @@ int kakoune(const ParametersParser& parser)
     }
     catch (Kakoune::runtime_error& error)
     {
-        write_debug("error while parsing kakrc: "_str + error.what());
+        write_debug("error while parsing kakrc:\n    "_str + error.what());
     }
     catch (Kakoune::client_removed&)
     {

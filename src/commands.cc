@@ -743,8 +743,7 @@ const CommandDesc source_cmd = {
         }
         catch (Kakoune::runtime_error& err)
         {
-            write_debug("error while executing commands in file '" + parser[0]
-                        + "'\n    " + err.what());
+            write_debug(parser[0] + ":" + err.what());
             throw;
         }
     }
