@@ -1163,7 +1163,7 @@ void tabs_to_spaces(Context& context, int ts)
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
-                  end = buffer.iterator_at(sel.max())+1; it != end; ++it)
+                  end = buffer.iterator_at(sel.max())+1; it != end;)
         {
             if (*it == '\t')
             {
@@ -1173,6 +1173,8 @@ void tabs_to_spaces(Context& context, int ts)
                 it = buffer.insert(it, String{ ' ', end_col - col }) + (int)(end_col - col);
                 end = buffer.iterator_at(sel.max())+1;
             }
+            else
+                ++it;
         }
     }
 }
