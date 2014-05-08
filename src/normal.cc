@@ -603,6 +603,8 @@ void regex_prompt(Context& context, const String prompt, T func)
         [=](const String& str, PromptEvent event, Context& context) {
             try
             {
+                if (event != PromptEvent::Change and context.has_ui())
+                    context.ui().info_hide();
                 context.selections() = selections;
                 context.input_handler().set_prompt_colors(get_color("Prompt"));
                 if (event == PromptEvent::Abort)
@@ -621,6 +623,22 @@ void regex_prompt(Context& context, const String prompt, T func)
                     throw runtime_error("regex error: "_str + err.what());
                 else
                     context.input_handler().set_prompt_colors(get_color("Error"));
+            }
+            catch (std::runtime_error& err)
+            {
+                if (event == PromptEvent::Validate)
+                    throw runtime_error("regex error: "_str + err.what());
+                else
+                {
+                    context.input_handler().set_prompt_colors(get_color("Error"));
+                    if (context.has_ui())
+                    {
+                        ColorPair col = get_color("Information");
+                        CharCoord pos = context.window().dimensions();
+                        pos.column -= 1;
+                        context.ui().info_show("regex error", err.what(), pos, col, MenuStyle::Prompt);
+                    }
+                }
             }
             catch (runtime_error&)
             {
