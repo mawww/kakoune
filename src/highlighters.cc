@@ -1,15 +1,16 @@
 #include "highlighters.hh"
 
 #include "assert.hh"
+#include "buffer_utils.hh"
 #include "color_registry.hh"
 #include "context.hh"
 #include "display_buffer.hh"
+#include "line_change_watcher.hh"
 #include "option_types.hh"
 #include "register_manager.hh"
 #include "string.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "line_change_watcher.hh"
 
 #include <sstream>
 #include <locale>
@@ -351,22 +352,55 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
                     if (it+1 != end)
                         atom_it = line.split(atom_it, (it+1).coord());
 
-                    int column = 0;
-                    for (auto line_it = buffer.iterator_at(it.coord().line);
-                         line_it != it; ++line_it)
-                    {
-                        kak_assert(*line_it != '\n');
-                        if (*line_it == '\t')
-                            column += tabstop - (column % tabstop);
-                        else
-                           ++column;
-                    }
-
+                    int column = (int)get_column(buffer, tabstop, it.coord());
                     int count = tabstop - (column % tabstop);
                     String padding;
                     for (int i = 0; i < count; ++i)
                         padding += ' ';
                     atom_it->replace(padding);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+{
+    const int tabstop = context.options()["tabstop"].get<int>();
+    auto& buffer = context.buffer();
+    for (auto& line : display_buffer.lines())
+    {
+        for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+        {
+            if (atom_it->type() != DisplayAtom::BufferRange)
+                continue;
+
+            auto begin = buffer.iterator_at(atom_it->begin());
+            auto end = buffer.iterator_at(atom_it->end());
+            for (BufferIterator it = begin; it != end; ++it)
+            {
+                auto c = *it;
+                if (c == '\t' or c == ' ' or c == '\n')
+                {
+                    if (it != begin)
+                        atom_it = ++line.split(atom_it, it.coord());
+                    if (it+1 != end)
+                        atom_it = line.split(atom_it, (it+1).coord());
+
+                    if (c == '\t')
+                    {
+                        int column = (int)get_column(buffer, tabstop, it.coord());
+                        int count = tabstop - (column % tabstop);
+                        String padding = "→";
+                        for (int i = 0; i < count-1; ++i)
+                            padding += ' ';
+                        atom_it->replace(padding);
+                    }
+                    else if (c == ' ')
+                        atom_it->replace("·");
+                    else if (c == '\n')
+                        atom_it->replace("¬");
                     break;
                 }
             }
@@ -830,6 +864,7 @@ void register_highlighters()
 
     registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("show_matching", SimpleHighlighterFactory<show_matching_char>("show_matching"));
+    registry.register_func("show_whitespaces", SimpleHighlighterFactory<show_whitespaces>("show_whitespaces"));
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("regex_option", highlight_regex_option_factory);
     registry.register_func("search", highlight_search_factory);
