@@ -178,23 +178,16 @@ struct Buffer::Modification
 {
     enum Type { Insert, Erase };
 
-    Type        type;
+    Type      type;
     ByteCoord coord;
-    String      content;
+    String    content;
 
     Modification(Type type, ByteCoord coord, String content)
         : type(type), coord(coord), content(std::move(content)) {}
 
     Modification inverse() const
     {
-        Type inverse_type = Insert;
-        switch (type)
-        {
-        case Insert: inverse_type = Erase;  break;
-        case Erase:  inverse_type = Insert; break;
-        default: kak_assert(false);
-        }
-        return {inverse_type, coord, content};
+        return {type == Insert ? Erase : Insert, coord, content};
     }
 };
 

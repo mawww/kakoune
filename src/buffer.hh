@@ -117,20 +117,20 @@ public:
     char           byte_at(ByteCoord c) const;
     ByteCount      offset(ByteCoord c) const;
     ByteCount      distance(ByteCoord begin, ByteCoord end) const;
-    ByteCoord    advance(ByteCoord coord, ByteCount count) const;
-    ByteCoord    next(ByteCoord coord) const;
-    ByteCoord    prev(ByteCoord coord) const;
+    ByteCoord      advance(ByteCoord coord, ByteCount count) const;
+    ByteCoord      next(ByteCoord coord) const;
+    ByteCoord      prev(ByteCoord coord) const;
 
-    ByteCoord    char_next(ByteCoord coord) const;
-    ByteCoord    char_prev(ByteCoord coord) const;
+    ByteCoord      char_next(ByteCoord coord) const;
+    ByteCoord      char_prev(ByteCoord coord) const;
 
-    ByteCoord    back_coord() const;
-    ByteCoord    end_coord() const;
+    ByteCoord      back_coord() const;
+    ByteCoord      end_coord() const;
 
     bool           is_valid(ByteCoord c) const;
     bool           is_end(ByteCoord c) const;
 
-    ByteCoord    last_modification_coord() const;
+    ByteCoord      last_modification_coord() const;
 
     BufferIterator begin() const;
     BufferIterator end() const;
@@ -144,7 +144,7 @@ public:
     BufferIterator iterator_at(ByteCoord coord) const;
 
     // returns nearest valid coordinates from given ones
-    ByteCoord    clamp(ByteCoord coord) const;
+    ByteCoord clamp(ByteCoord coord) const;
 
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
     ByteCoord offset_coord(ByteCoord coord, LineCount offset);
