@@ -456,9 +456,9 @@ void select_all_matches(const Buffer& buffer, SelectionList& selections,
             for (auto& match : *re_it)
                 captures.emplace_back(match.first, match.second);
 
-            result.emplace_back(begin.coord(),
-                                (begin == end ? end : utf8::previous(end)).coord(),
-                                std::move(captures));
+            result.push_back({ begin.coord(),
+                               (begin == end ? end : utf8::previous(end)).coord(),
+                               std::move(captures) });
         }
     }
     if (result.empty())
@@ -483,11 +483,11 @@ void split_selections(const Buffer& buffer, SelectionList& selections,
         {
             BufferIterator end = (*re_it)[0].first;
 
-            result.emplace_back(begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord());
+            result.push_back({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord() });
             begin = (*re_it)[0].second;
         }
         if (begin.coord() <= sel.max())
-            result.emplace_back(begin.coord(), sel.max());
+            result.push_back({ begin.coord(), sel.max() });
     }
     result.set_main_index(result.size() - 1);
     selections = std::move(result);

@@ -55,11 +55,11 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
     return lhs.min() < rhs.min();
 }
 
-struct SelectionList : std::vector<Selection>
+struct SelectionList
 {
     SelectionList() = default;
-    SelectionList(ByteCoord c) : std::vector<Selection>{Selection{c,c}} {}
-    SelectionList(Selection s) : std::vector<Selection>{s} {}
+    SelectionList(ByteCoord c) : m_selections{Selection{c,c}} {}
+    SelectionList(Selection s) : m_selections{s} {}
 
     void update_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end);
     void update_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end);
@@ -72,6 +72,38 @@ struct SelectionList : std::vector<Selection>
     void set_main_index(size_t main) { kak_assert(main < size()); m_main = main; }
 
     void rotate_main(int count) { m_main = (m_main + count) % size(); }
+
+    void push_back(const Selection& sel) { m_selections.push_back(sel); }
+    void push_back(Selection&& sel) { m_selections.push_back(std::move(sel)); }
+
+    Selection& operator[](size_t i) { return m_selections[i]; }
+    const Selection& operator[](size_t i) const { return m_selections[i]; }
+
+    using iterator = std::vector<Selection>::iterator;
+    iterator begin() { return m_selections.begin(); }
+    iterator end() { return m_selections.end(); }
+
+    using const_iterator = std::vector<Selection>::const_iterator;
+    const_iterator begin() const { return m_selections.begin(); }
+    const_iterator end() const { return m_selections.end(); }
+
+    template<typename... Args>
+    iterator insert(Args... args)
+    {
+        return m_selections.insert(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    iterator erase(Args... args)
+    {
+        return m_selections.erase(std::forward<Args>(args)...);
+    }
+
+    size_t size() const { return m_selections.size(); }
+    bool empty() const { return m_selections.empty(); }
+
+    bool operator==(const SelectionList& other) const { return m_selections == other.m_selections; }
+    bool operator!=(const SelectionList& other) const { return m_selections != other.m_selections; }
 
     template<typename OverlapsFunc>
     void merge_overlapping(OverlapsFunc overlaps)
@@ -117,6 +149,7 @@ struct SelectionList : std::vector<Selection>
 
 private:
     size_t m_main = 0;
+    std::vector<Selection> m_selections;
 };
 
 }

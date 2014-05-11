@@ -845,7 +845,7 @@ void indent(Context& context, int)
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
         {
             if (indent_empty or buffer[line].length() > 1)
-                sels.emplace_back(line, line);
+                sels.push_back({line, line});
         }
     }
     if (not sels.empty())
@@ -881,12 +881,12 @@ void deindent(Context& context, int)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        sels.emplace_back(line, ByteCoord{line, column-1});
+                        sels.push_back({ line, ByteCoord{line, column-1} });
                     break;
                 }
                 if (width == indent_width)
                 {
-                    sels.emplace_back(line, ByteCoord{line, column});
+                    sels.push_back({ line, ByteCoord{line, column} });
                     break;
                 }
             }
@@ -1245,7 +1245,7 @@ public:
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](ByteCoord c, const Selection& sel)
                                    { return c < sel.min(); });
-        m_ranges.emplace(it, begin, buffer.char_prev(end));
+        m_ranges.insert(it, Selection{ begin, buffer.char_prev(end) });
     }
 
     void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end)
@@ -1255,7 +1255,7 @@ public:
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
                                    [](ByteCoord c, const Selection& sel)
                                    { return c < sel.min(); });
-        m_ranges.emplace(it, pos, pos);
+        m_ranges.insert(it, Selection{ pos, pos });
     }
     SelectionList& ranges() { return m_ranges; }
 
