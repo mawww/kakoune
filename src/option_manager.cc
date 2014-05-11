@@ -154,7 +154,7 @@ GlobalOptions::GlobalOptions()
     declare_option("path", "path to consider when trying to find a file",
                    std::vector<String>({ "./", "/usr/include" }));
     declare_option("completers", "insert mode completers to execute.",
-                    std::vector<String>({"filename", "word=buffer"}),
+                    std::vector<String>({"filename", "word=all"}),
                     OptionFlags::None,
                     OptionChecker<std::vector<String>>([](const std::vector<String>& s) {
                         static const auto values = {"word=buffer", "word=all", "filename"};
