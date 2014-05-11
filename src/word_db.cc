@@ -6,12 +6,12 @@
 namespace Kakoune
 {
 
-static std::vector<String> get_words(const String& content)
+static std::vector<String> get_words(StringView content)
 {
     std::vector<String> res;
-    using Iterator = utf8::utf8_iterator<String::const_iterator,
+    using Iterator = utf8::utf8_iterator<const char*,
                                          utf8::InvalidBytePolicy::Pass>;
-    auto word_start = content.begin();
+    const char* word_start = content.begin();
     bool in_word = false;
     for (Iterator it{word_start}, end{content.end()}; it != end; ++it)
     {
