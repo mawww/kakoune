@@ -383,7 +383,7 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
             dirname += '/';
 
         struct stat st;
-        if (stat(dirname.substr(0_byte, dirname.length() - 1).c_str(), &st))
+        if (stat(dirname.substr(0_byte, dirname.length() - 1).zstr(), &st))
             continue;
 
         auto filter = [&](const dirent& entry) {

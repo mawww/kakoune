@@ -13,6 +13,8 @@ namespace Kakoune
 
 using Regex = boost::regex;
 
+class StringView;
+
 class String : public std::string
 {
 public:
@@ -47,16 +49,8 @@ public:
     String  operator+(Codepoint cp) const { String res = *this; utf8::dump(back_inserter(res), cp); return res; }
     String& operator+=(Codepoint cp) { utf8::dump(back_inserter(*this), cp); return *this; }
 
-    String substr(ByteCount pos, ByteCount length = -1) const
-    {
-        return String{std::string::substr((int)pos, (int)length)};
-    }
-    String substr(CharCount pos, CharCount length = INT_MAX) const
-    {
-        auto b = utf8::advance(begin(), end(), (int)pos);
-        auto e = utf8::advance(b, end(), (int)length);
-        return String(b,e);
-    }
+    StringView substr(ByteCount pos, ByteCount length = INT_MAX) const;
+    StringView substr(CharCount pos, CharCount length = INT_MAX) const;
 };
 
 class StringView
@@ -179,6 +173,16 @@ inline StringView StringView::substr(CharCount from, CharCount length) const
     return StringView{ beg, utf8::advance(beg, end(), length) };
 }
 
+inline StringView String::substr(ByteCount pos, ByteCount length) const
+{
+    return StringView{*this}.substr(pos, length);
+}
+
+inline StringView String::substr(CharCount pos, CharCount length) const
+{
+    return StringView{*this}.substr(pos, length);
+}
+
 inline const char* begin(StringView str)
 {
     return str.begin();
@@ -246,6 +250,13 @@ inline String operator+(char lhs, const String& rhs)
 inline String operator+(Codepoint lhs, const String& rhs)
 {
     return String(lhs) + rhs;
+}
+
+inline String operator+(StringView lhs, StringView rhs)
+{
+    String res{lhs.begin(), lhs.end()};
+    res += rhs;
+    return res;
 }
 
 std::vector<String> split(const String& str, char separator, char escape = 0);
