@@ -39,7 +39,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
         pos += m_lines.back().length();
     }
 
-    m_changes.push_back({ Change::Insert, {0,0}, line_count() });
+    m_changes.push_back({ Change::Insert, {0,0}, line_count(), true });
 
     if (flags & Flags::File)
     {
@@ -78,7 +78,7 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, {0,0}, back_coord());
 
-    m_changes.push_back({ Change::Erase, {0,0}, back_coord() });
+    m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
 
     m_history.clear();
     m_current_undo_group.clear();
@@ -99,7 +99,7 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     }
     m_fs_timestamp = fs_timestamp;
 
-    m_changes.push_back({ Change::Insert, {0,0}, back_coord() });
+    m_changes.push_back({ Change::Insert, {0,0}, back_coord(), true });
 
     for (auto listener : m_change_listeners)
         listener->on_insert(*this, {0,0}, back_coord());
@@ -459,6 +459,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
 
     ByteCoord begin;
     ByteCoord end;
+    bool at_end = false;
     // if we inserted at the end of the buffer, we have created a new
     // line without inserting a '\n'
     if (is_end(pos))
@@ -477,6 +478,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
 
         begin = pos.column == 0 ? pos : ByteCoord{ pos.line + 1, 0 };
         end = ByteCoord{ line_count()-1, m_lines.back().length() };
+        at_end = true;
     }
     else
     {
@@ -519,7 +521,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
         end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
     }
 
-    m_changes.push_back({ Change::Insert, begin, end });
+    m_changes.push_back({ Change::Insert, begin, end, at_end });
     for (auto listener : m_change_listeners)
         listener->on_insert(*this, begin, end);
     return begin;
@@ -550,7 +552,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     for (LineCount i = begin.line+1; i < line_count(); ++i)
         m_lines[i].start -= length;
 
-    m_changes.push_back({ Change::Erase, begin, end });
+    m_changes.push_back({ Change::Erase, begin, end, is_end(begin) });
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, begin, end);
     return next;

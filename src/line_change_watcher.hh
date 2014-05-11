@@ -1,10 +1,13 @@
 #ifndef line_change_watcher_hh_INCLUDED
 #define line_change_watcher_hh_INCLUDED
 
-#include "buffer.hh"
+#include "units.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
+
+class Buffer;
 
 struct LineModification
 {
@@ -16,23 +19,17 @@ struct LineModification
     LineCount diff() const { return new_line - old_line + num_added - num_removed; }
 };
 
-class LineChangeWatcher : public BufferChangeListener_AutoRegister
+class LineChangeWatcher
 {
 public:
-    LineChangeWatcher (const Buffer& buffer)
-        : BufferChangeListener_AutoRegister(const_cast<Buffer&>(buffer)) {}
+    LineChangeWatcher (const Buffer& buffer);
 
     std::vector<LineModification> compute_modifications();
-private:
-    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end) override;
-    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end) override;
 
-    struct Change
-    {
-        LineCount pos;
-        LineCount num;
-    };
-    std::vector<Change> m_changes;
+    const Buffer& buffer() const { return *m_buffer; }
+private:
+    safe_ptr<const Buffer> m_buffer;
+    size_t m_timestamp;
 };
 
 }

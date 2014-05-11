@@ -1,12 +1,57 @@
 #include "line_change_watcher.hh"
 
+#include "buffer.hh"
+
 namespace Kakoune
 {
+
+namespace
+{
+
+struct Change
+{
+    LineCount pos;
+    LineCount num;
+};
+
+std::vector<Change> compute_changes(const Buffer& buffer, size_t timestamp)
+{
+    std::vector<Change> res;
+    for (auto& change : buffer.changes_since(timestamp))
+    {
+        ByteCoord begin = change.begin;
+        ByteCoord end = change.end;
+        if (change.type == Buffer::Change::Insert)
+        {
+            if (change.at_end and begin != ByteCoord{0,0})
+            {
+                kak_assert(begin.column == 0);
+                --begin.line;
+            }
+            res.push_back({begin.line, end.line - begin.line});
+        }
+        else
+        {
+            if (change.at_end and begin != ByteCoord{0,0})
+            {
+                kak_assert(begin.column == 0);
+                --begin.line;
+            }
+            res.push_back({begin.line, begin.line - end.line});
+        }
+    }
+    return res;
+}
+
+}
+
+LineChangeWatcher::LineChangeWatcher(const Buffer& buffer)
+    : m_buffer(&buffer), m_timestamp(buffer.timestamp()) {}
 
 std::vector<LineModification> LineChangeWatcher::compute_modifications()
 {
     std::vector<LineModification> res;
-    for (auto& change : m_changes)
+    for (auto& change : compute_changes(*m_buffer, m_timestamp))
     {
         auto pos = std::upper_bound(res.begin(), res.end(), change.pos,
                                     [](const LineCount& l, const LineModification& c)
@@ -58,28 +103,8 @@ std::vector<LineModification> LineChangeWatcher::compute_modifications()
                 it->new_line -= num_removed;
         }
     }
-    m_changes.clear();
+    m_timestamp = m_buffer->timestamp();
     return res;
-}
-
-void LineChangeWatcher::on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end)
-{
-    if (buffer.is_end(end))
-    {
-        kak_assert(begin.column == 0);
-        --begin.line;
-    }
-    m_changes.push_back({begin.line, end.line - begin.line});
-}
-
-void LineChangeWatcher::on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end)
-{
-    if (begin.line == buffer.line_count())
-    {
-        kak_assert(begin.column == 0);
-        --begin.line;
-    }
-    m_changes.push_back({begin.line, begin.line - end.line});
 }
 
 }

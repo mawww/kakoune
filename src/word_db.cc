@@ -65,7 +65,7 @@ void WordDB::update_db()
     if (modifs.empty())
         return;
 
-    auto& buffer = m_change_watcher.registry();
+    auto& buffer = m_change_watcher.buffer();
 
     LineToWords new_lines;
     new_lines.reserve((int)buffer.line_count());

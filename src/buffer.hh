@@ -182,6 +182,7 @@ public:
         Type type;
         ByteCoord begin;
         ByteCoord end;
+        bool at_end;
     };
     memoryview<Change> changes_since(size_t timestamp) const;
 private:
