@@ -19,8 +19,6 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
       m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
-      // start buffer timestamp at 1 so that caches can init to 0
-      m_timestamp(1),
       m_fs_timestamp(fs_timestamp),
       m_hooks(GlobalHooks::instance()),
       m_options(GlobalOptions::instance()),
@@ -37,9 +35,11 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(Line{ m_timestamp, pos, std::move(line) });
+        m_lines.emplace_back(Line{ m_changes.size()+1, pos, std::move(line) });
         pos += m_lines.back().length();
     }
+
+    m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
     if (flags & Flags::File)
     {
@@ -78,12 +78,13 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, {0,0}, back_coord());
 
+    m_changes.push_back({ Change::Erase, {0,0}, back_coord() });
+
     m_history.clear();
     m_current_undo_group.clear();
     m_history_cursor = m_history.begin();
     m_last_save_undo_index = 0;
     m_lines.clear();
-    ++m_timestamp;
 
     if (lines.empty())
         lines.emplace_back("\n");
@@ -93,10 +94,12 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(Line{ m_timestamp, pos, std::move(line) });
+        m_lines.emplace_back(Line{ m_changes.size()+1, pos, std::move(line) });
         pos += m_lines.back().length();
     }
     m_fs_timestamp = fs_timestamp;
+
+    m_changes.push_back({ Change::Insert, {0,0}, back_coord() });
 
     for (auto listener : m_change_listeners)
         listener->on_insert(*this, {0,0}, back_coord());
@@ -448,7 +451,6 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
     if (content.empty())
         return pos;
 
-    ++m_timestamp;
     ByteCount offset = this->offset(pos);
 
     // all following lines advanced by length
@@ -466,12 +468,12 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
         {
             if (content[i] == '\n')
             {
-                m_lines.push_back({ m_timestamp, offset + start, content.substr(start, i + 1 - start) });
+                m_lines.push_back({ m_changes.size()+1, offset + start, content.substr(start, i + 1 - start) });
                 start = i + 1;
             }
         }
         if (start != content.length())
-            m_lines.push_back({ m_timestamp, offset + start, content.substr(start) });
+            m_lines.push_back({ m_changes.size()+1, offset + start, content.substr(start) });
 
         begin = pos.column == 0 ? pos : ByteCoord{ pos.line + 1, 0 };
         end = ByteCoord{ line_count()-1, m_lines.back().length() };
@@ -492,18 +494,18 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
                 if (start == 0)
                 {
                     line_content = prefix + line_content;
-                    new_lines.push_back({ m_timestamp, offset + start - prefix.length(),
+                    new_lines.push_back({ m_changes.size()+1, offset + start - prefix.length(),
                                           std::move(line_content) });
                 }
                 else
-                    new_lines.push_back({ m_timestamp, offset + start, std::move(line_content) });
+                    new_lines.push_back({ m_changes.size()+1, offset + start, std::move(line_content) });
                 start = i + 1;
             }
         }
         if (start == 0)
-            new_lines.push_back({ m_timestamp, offset + start - prefix.length(), prefix + content + suffix });
+            new_lines.push_back({ m_changes.size()+1, offset + start - prefix.length(), prefix + content + suffix });
         else if (start != content.length() or not suffix.empty())
-            new_lines.push_back({ m_timestamp, offset + start, content.substr(start) + suffix });
+            new_lines.push_back({ m_changes.size()+1, offset + start, content.substr(start) + suffix });
 
         LineCount last_line = pos.line + new_lines.size() - 1;
 
@@ -517,6 +519,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
         end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
     }
 
+    m_changes.push_back({ Change::Insert, begin, end });
     for (auto listener : m_change_listeners)
         listener->on_insert(*this, begin, end);
     return begin;
@@ -526,11 +529,10 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
 {
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
-    ++m_timestamp;
     const ByteCount length = distance(begin, end);
     String prefix = m_lines[begin.line].content.substr(0, begin.column);
     String suffix = m_lines[end.line].content.substr(end.column);
-    Line new_line = { m_timestamp, m_lines[begin.line].start, prefix + suffix };
+    Line new_line = { m_changes.size()+1, m_lines[begin.line].start, prefix + suffix };
 
     ByteCoord next;
     if (new_line.length() != 0)
@@ -548,6 +550,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     for (LineCount i = begin.line+1; i < line_count(); ++i)
         m_lines[i].start -= length;
 
+    m_changes.push_back({ Change::Erase, begin, end });
     for (auto listener : m_change_listeners)
         listener->on_erase(*this, begin, end);
     return next;
@@ -628,10 +631,7 @@ void Buffer::notify_saved()
     m_flags &= ~Flags::New;
     size_t history_cursor_index = m_history_cursor - m_history.begin();
     if (m_last_save_undo_index != history_cursor_index)
-    {
-        ++m_timestamp;
         m_last_save_undo_index = history_cursor_index;
-    }
     m_fs_timestamp = get_fs_timestamp(m_name);
 }
 

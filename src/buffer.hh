@@ -175,6 +175,15 @@ public:
     void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
 
     void check_invariant() const;
+
+    struct Change
+    {
+        enum Type { Insert, Erase };
+        Type type;
+        ByteCoord begin;
+        ByteCoord end;
+    };
+    memoryview<Change> changes_since(size_t timestamp) const;
 private:
 
     void on_option_changed(const Option& option) override;
@@ -215,7 +224,8 @@ private:
     void revert_modification(const Modification& modification);
 
     size_t m_last_save_undo_index;
-    size_t m_timestamp;
+
+    std::vector<Change> m_changes;
 
     time_t m_fs_timestamp;
 

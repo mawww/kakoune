@@ -88,7 +88,13 @@ inline LineCount Buffer::line_count() const
 
 inline size_t Buffer::timestamp() const
 {
-    return m_timestamp;
+    return m_changes.size();
+}
+
+inline memoryview<Buffer::Change> Buffer::changes_since(size_t timestamp) const
+{
+    return { m_changes.data() + timestamp,
+             m_changes.data() + m_changes.size() };
 }
 
 inline size_t Buffer::line_timestamp(LineCount line) const
