@@ -10,10 +10,10 @@ namespace Kakoune
 Context::Context() = default;
 Context::~Context() = default;
 
-Context::Context(InputHandler& input_handler, Buffer& buffer,
-                 SelectionList selections, String name)
+Context::Context(InputHandler& input_handler, SelectionList selections,
+                 String name)
     : m_input_handler{&input_handler},
-      m_selections{{buffer, std::move(selections)}},
+      m_selections{std::move(selections)},
       m_name(std::move(name))
 {}
 
@@ -110,7 +110,7 @@ void Context::push_jump()
     }
     m_jump_list.erase(std::remove(begin(m_jump_list), end(m_jump_list), jump),
                       end(m_jump_list));
-    m_jump_list.push_back({buffer(), jump});
+    m_jump_list.push_back(jump);
     m_current_jump = m_jump_list.end();
 }
 
@@ -168,7 +168,7 @@ void Context::change_buffer(Buffer& buffer)
     if (has_client())
         client().change_buffer(buffer);
     else
-        m_selections = DynamicSelectionList{ buffer };
+        m_selections = DynamicSelectionList{ { buffer, Selection{} } };
     if (has_input_handler())
         input_handler().reset_normal_mode();
 }

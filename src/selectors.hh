@@ -16,7 +16,7 @@ inline void clear_selections(const Buffer& buffer, SelectionList& selections)
     avoid_eol(buffer, pos);
     sel.anchor() = pos;
 
-    selections = SelectionList{ std::move(sel) };
+    selections = SelectionList{ buffer, std::move(sel) };
 }
 
 inline void flip_selections(SelectionList& selections)
@@ -31,7 +31,7 @@ inline void keep_selection(SelectionList& selections, int index)
     if (index < selections.size())
     {
         size_t real_index = (index + selections.main_index() + 1) % selections.size();
-        selections = SelectionList{ std::move(selections[real_index]) };
+        selections = SelectionList{ selections.buffer(), std::move(selections[real_index]) };
     }
     selections.check_invariant();
 }

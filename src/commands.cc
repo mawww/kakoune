@@ -131,7 +131,8 @@ void edit(const ParametersParser& parser, Context& context)
         int column = param_count > 2 and not parser[2].empty() ?
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
-        context.selections() = context.buffer().clamp({ line,  column });
+        auto& buffer = context.buffer();
+        context.selections() = { buffer, buffer.clamp({ line,  column }) };
         if (context.has_window())
             context.window().center_line(context.selections().main().cursor().line);
     }
@@ -962,7 +963,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         for (auto& name : names)
         {
             Buffer& buffer = BufferManager::instance().get_buffer(name);
-            InputHandler input_handler{buffer, ( Selection{} )};
+            InputHandler input_handler{{ buffer, Selection{} }};
             func(parser, input_handler.context());
         }
         return;
@@ -980,7 +981,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
     if (parser.has_option("draft"))
     {
-        InputHandler input_handler(real_context->buffer(), real_context->selections(), real_context->name());
+        InputHandler input_handler(real_context->selections(), real_context->name());
 
         // We do not want this draft context to commit undo groups if the real one is
         // going to commit the whole thing later
@@ -989,12 +990,17 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         if (parser.has_option("itersel"))
         {
-            DynamicSelectionList sels{real_context->buffer(), real_context->selections()};
+            SelectionList sels{real_context->selections()};
             ScopedEdition edition{input_handler.context()};
             for (auto& sel : sels)
             {
-                input_handler.context().selections() = sel;
+                input_handler.context().selections() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
+                input_handler.context().selections().update();
+
                 func(parser, input_handler.context());
+
+                if (&sels.buffer() != &input_handler.context().buffer())
+                    throw runtime_error("the buffer has changed while iterating on selections");
             }
         }
         else

@@ -26,6 +26,7 @@ void erase(Buffer& buffer, SelectionList& selections)
     for (auto& sel : selections)
     {
         erase(buffer, sel);
+        selections.update();
         avoid_eol(buffer, sel);
     }
     selections.check_invariant();
@@ -178,7 +179,7 @@ void select_coord(const Buffer& buffer, ByteCoord coord, SelectionList& selectio
 {
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
-        selections = SelectionList { coord };
+        selections = SelectionList{ buffer, coord };
     else if (mode == SelectMode::Extend)
     {
         for (auto& sel : selections)
@@ -598,7 +599,7 @@ void paste(Context& context, int)
 template<typename T>
 void regex_prompt(Context& context, const String prompt, T func)
 {
-    DynamicSelectionList selections{context.buffer(), context.selections()};
+    DynamicSelectionList selections{context.selections()};
     context.input_handler().prompt(prompt, "", get_color("Prompt"), complete_nothing,
         [=](const String& str, PromptEvent event, Context& context) {
             try
@@ -738,7 +739,7 @@ void split_lines(Context& context, int)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
-    SelectionList res;
+    SelectionList res(context.buffer());
     for (auto& sel : selections)
     {
         if (sel.anchor().line == sel.cursor().line)
@@ -760,7 +761,7 @@ void split_lines(Context& context, int)
 void join_select_spaces(Context& context, int)
 {
     auto& buffer = context.buffer();
-    SelectionList selections;
+    SelectionList selections(buffer);
     for (auto& sel : context.selections())
     {
         for (LineCount line = sel.min().line; line <= sel.max().line; ++line)
@@ -783,8 +784,12 @@ void join_select_spaces(Context& context, int)
 
 void join(Context& context, int param)
 {
-    DynamicSelectionList sels{context.buffer(), context.selections()};
-    auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
+    SelectionList sels{context.selections()};
+    auto restore_sels = on_scope_end([&]{
+        sels.update();
+        context.selections() = std::move(sels);
+    });
+
     join_select_spaces(context, param);
 }
 
@@ -796,7 +801,7 @@ void keep(Context& context, int)
         if (ex.empty())
             return;
         const Buffer& buffer = context.buffer();
-        SelectionList keep;
+        SelectionList keep(buffer);
         for (auto& sel : context.selections())
         {
             if (boost::regex_search(buffer.iterator_at(sel.min()),
@@ -818,7 +823,7 @@ void keep_pipe(Context& context, int)
                 return;
             const Buffer& buffer = context.buffer();
             auto& shell_manager = ShellManager::instance();
-            SelectionList keep;
+            SelectionList keep(buffer);
             for (auto& sel : context.selections())
             {
                 int status = 0;
@@ -839,7 +844,7 @@ void indent(Context& context, int)
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
     auto& buffer = context.buffer();
-    SelectionList sels;
+    SelectionList sels(buffer);
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -864,7 +869,7 @@ void deindent(Context& context, int)
         indent_width = tabstop;
 
     auto& buffer = context.buffer();
-    SelectionList sels;
+    SelectionList sels(buffer);
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -1235,7 +1240,7 @@ void spaces_to_tabs(Context& context, int ts)
 
 static SelectionList compute_modified_ranges(const Buffer& buffer, size_t timestamp)
 {
-    SelectionList ranges;
+    SelectionList ranges(buffer);
     for (auto& change : buffer.changes_since(timestamp))
     {
         const ByteCoord& begin = change.begin;
@@ -1264,6 +1269,7 @@ static SelectionList compute_modified_ranges(const Buffer& buffer, size_t timest
     if (ranges.empty())
         return ranges;
 
+    ranges.set_timestamp(buffer.timestamp());
     ranges.set_main_index(ranges.size() - 1);
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {

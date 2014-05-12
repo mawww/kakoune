@@ -12,7 +12,7 @@ using CaptureList = std::vector<String>;
 struct Selection
 {
     Selection() = default;
-    explicit Selection(ByteCoord pos) : Selection(pos,pos) {}
+    Selection(ByteCoord pos) : Selection(pos,pos) {}
     Selection(ByteCoord anchor, ByteCoord cursor,
               CaptureList captures = {})
         : m_anchor{anchor}, m_cursor{cursor},
@@ -57,12 +57,16 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
 
 struct SelectionList
 {
-    SelectionList() = default;
-    SelectionList(ByteCoord c) : m_selections{Selection{c,c}} {}
-    SelectionList(Selection s) : m_selections{s} {}
+    SelectionList(const Buffer& buffer);
+    SelectionList(const Buffer& buffer, Selection s);
+    SelectionList(const Buffer& buffer, Selection s, size_t timestamp);
+    SelectionList(const Buffer& buffer, std::vector<Selection> s);
+    SelectionList(const Buffer& buffer, std::vector<Selection> s, size_t timestamp);
 
     void update_insert(ByteCoord begin, ByteCoord end, bool at_end);
     void update_erase(ByteCoord begin, ByteCoord end, bool at_end);
+
+    void update();
 
     void check_invariant() const;
 
@@ -102,8 +106,8 @@ struct SelectionList
     size_t size() const { return m_selections.size(); }
     bool empty() const { return m_selections.empty(); }
 
-    bool operator==(const SelectionList& other) const { return m_selections == other.m_selections; }
-    bool operator!=(const SelectionList& other) const { return m_selections != other.m_selections; }
+    bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
+    bool operator!=(const SelectionList& other) const { return !((*this) == other); }
 
     template<typename OverlapsFunc>
     void merge_overlapping(OverlapsFunc overlaps)
@@ -129,27 +133,19 @@ struct SelectionList
         kak_assert(std::is_sorted(begin(), end(), compare_selections));
     }
 
-    void sort_and_merge_overlapping()
-    {
-        if (size() == 1)
-            return;
+    void sort_and_merge_overlapping();
 
-        const auto& main = this->main();
-        const auto main_begin = main.min();
-        m_main = std::count_if(begin(), end(), [&](const Selection& sel) {
-                                   auto begin = sel.min();
-                                   if (begin == main_begin)
-                                       return &sel < &main;
-                                   else
-                                       return begin < main_begin;
-                               });
-        std::stable_sort(begin(), end(), compare_selections);
-        merge_overlapping(overlaps);
-    }
+    const Buffer& buffer() const { return *m_buffer; }
+
+    size_t timestamp() const { return m_timestamp; }
+    void set_timestamp(size_t timestamp) { m_timestamp = timestamp; }
 
 private:
     size_t m_main = 0;
     std::vector<Selection> m_selections;
+
+    safe_ptr<const Buffer> m_buffer;
+    size_t m_timestamp;
 };
 
 }

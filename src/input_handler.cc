@@ -875,9 +875,9 @@ void InputMode::reset_normal_mode()
     m_input_handler.reset_normal_mode();
 }
 
-InputHandler::InputHandler(Buffer& buffer, SelectionList selections, String name)
+InputHandler::InputHandler(SelectionList selections, String name)
     : m_mode(new InputModes::Normal(*this)),
-      m_context(*this, buffer, std::move(selections), std::move(name))
+      m_context(*this, std::move(selections), std::move(name))
 {
 }
 

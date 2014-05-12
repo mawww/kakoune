@@ -26,7 +26,8 @@ class Context
 {
 public:
     Context();
-    Context(InputHandler& input_handler, Buffer& buffer, SelectionList selections, String name = "");
+    Context(InputHandler& input_handler, SelectionList selections,
+            String name = "");
     ~Context();
 
     Context(const Context&) = delete;

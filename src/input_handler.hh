@@ -35,7 +35,7 @@ enum class InsertMode : unsigned;
 class InputHandler : public SafeCountable
 {
 public:
-    InputHandler(Buffer& buffer, SelectionList selections, String name = "");
+    InputHandler(SelectionList selections, String name = "");
     ~InputHandler();
 
     // switch to insert mode

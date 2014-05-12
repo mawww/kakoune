@@ -13,10 +13,11 @@ public:
     using iterator = SelectionList::iterator;
     using const_iterator = SelectionList::const_iterator;
 
-    DynamicSelectionList(Buffer& buffer, SelectionList selections = { Selection{} });
+    DynamicSelectionList(SelectionList selections);
 
     DynamicSelectionList& operator=(SelectionList selections);
-    void check_invariant() const;
+
+    using SelectionList::buffer;
 
 private:
     void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end) override;

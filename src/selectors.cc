@@ -431,13 +431,13 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 
 void select_whole_buffer(const Buffer& buffer, SelectionList& selections)
 {
-    selections = SelectionList{ Selection({0,0}, buffer.back_coord()) };
+    selections = SelectionList{ buffer, Selection({0,0}, buffer.back_coord()) };
 }
 
 void select_all_matches(const Buffer& buffer, SelectionList& selections,
                         const Regex& regex)
 {
-    SelectionList result;
+    SelectionList result(buffer);
     for (auto& sel : selections)
     {
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
@@ -470,7 +470,7 @@ void select_all_matches(const Buffer& buffer, SelectionList& selections,
 void split_selections(const Buffer& buffer, SelectionList& selections,
                       const Regex& regex)
 {
-    SelectionList result;
+    SelectionList result(buffer);
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());

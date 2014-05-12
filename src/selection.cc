@@ -63,6 +63,7 @@ struct UpdateInsert
             coord.column = end.column + coord.column - begin.column;
 
         coord.line += end.line - begin.line;
+        kak_assert(coord.line >= 0 and coord.column >= 0);
     }
 };
 
@@ -78,7 +79,7 @@ struct UpdateErase
             kak_assert(end.line < coord.line);
         if (not assume_different_line and coord <= end)
         {
-            if (not at_end)
+            if (not at_end or begin == ByteCoord{0,0})
                 coord = begin;
             else
                 coord = begin.column ? ByteCoord{begin.line, begin.column-1}
@@ -94,10 +95,32 @@ struct UpdateErase
             else
                 coord.line -= end.line - begin.line;
         }
+        kak_assert(coord.line >= 0 and coord.column >= 0);
     }
 };
 
 }
+
+SelectionList::SelectionList(const Buffer& buffer)
+    : m_buffer(&buffer), m_timestamp(buffer.timestamp())
+{
+}
+
+SelectionList::SelectionList(const Buffer& buffer, Selection s, size_t timestamp)
+    : m_buffer(&buffer), m_selections({ s }), m_timestamp(timestamp)
+{}
+
+SelectionList::SelectionList(const Buffer& buffer, Selection s)
+    : SelectionList(buffer, s, buffer.timestamp())
+{}
+
+SelectionList::SelectionList(const Buffer& buffer, std::vector<Selection> s, size_t timestamp)
+    : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
+{}
+
+SelectionList::SelectionList(const Buffer& buffer, std::vector<Selection> s)
+    : SelectionList(buffer, std::move(s), buffer.timestamp())
+{}
 
 void SelectionList::update_insert(ByteCoord begin, ByteCoord end, bool at_end)
 {
@@ -109,12 +132,58 @@ void SelectionList::update_erase(ByteCoord begin, ByteCoord end, bool at_end)
     on_buffer_change<UpdateErase>(*this, begin, end, at_end, end.line);
 }
 
+void SelectionList::update()
+{
+    for (auto& change : m_buffer->changes_since(m_timestamp))
+    {
+        if (change.type == Buffer::Change::Insert)
+            update_insert(change.begin, change.end, change.at_end);
+        else
+            update_erase(change.begin, change.end, change.at_end);
+    }
+    m_timestamp = m_buffer->timestamp();
+
+    check_invariant();
+}
+
 void SelectionList::check_invariant() const
 {
+#ifdef KAK_DEBUG
+    auto& buffer = this->buffer();
     kak_assert(size() > 0);
     kak_assert(m_main < size());
     for (size_t i = 0; i+1 < size(); ++ i)
         kak_assert((*this)[i].min() <= (*this)[i+1].min());
+
+    for (size_t i = 0; i < size(); ++i)
+    {
+        auto& sel = (*this)[i];
+        kak_assert(buffer.is_valid(sel.anchor()));
+        kak_assert(buffer.is_valid(sel.cursor()));
+        kak_assert(not buffer.is_end(sel.anchor()));
+        kak_assert(not buffer.is_end(sel.cursor()));
+        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.anchor())));
+        kak_assert(utf8::is_character_start(buffer.iterator_at(sel.cursor())));
+    }
+#endif
+}
+
+void SelectionList::sort_and_merge_overlapping()
+{
+    if (size() == 1)
+        return;
+
+    const auto& main = this->main();
+    const auto main_begin = main.min();
+    m_main = std::count_if(begin(), end(), [&](const Selection& sel) {
+                               auto begin = sel.min();
+                               if (begin == main_begin)
+                                   return &sel < &main;
+                               else
+                                   return begin < main_begin;
+                           });
+    std::stable_sort(begin(), end(), compare_selections);
+    merge_overlapping(overlaps);
 }
 
 }
