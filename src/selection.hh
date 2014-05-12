@@ -61,8 +61,8 @@ struct SelectionList
     SelectionList(ByteCoord c) : m_selections{Selection{c,c}} {}
     SelectionList(Selection s) : m_selections{s} {}
 
-    void update_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end);
-    void update_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end);
+    void update_insert(ByteCoord begin, ByteCoord end, bool at_end);
+    void update_erase(ByteCoord begin, ByteCoord end, bool at_end);
 
     void check_invariant() const;
 

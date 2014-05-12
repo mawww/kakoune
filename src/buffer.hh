@@ -67,9 +67,9 @@ class BufferChangeListener
 {
 public:
     virtual void on_insert(const Buffer& buffer,
-                           ByteCoord begin, ByteCoord end) = 0;
+                           ByteCoord begin, ByteCoord end, bool at_end) = 0;
     virtual void on_erase(const Buffer& buffer,
-                          ByteCoord begin, ByteCoord end) = 0;
+                          ByteCoord begin, ByteCoord end, bool at_end) = 0;
 };
 
 // A Buffer is a in-memory representation of a file

@@ -1239,18 +1239,18 @@ public:
     ModifiedRangesListener(Buffer& buffer)
         : BufferChangeListener_AutoRegister(buffer) {}
 
-    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end)
+    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end)
     {
-        m_ranges.update_insert(buffer, begin, end);
+        m_ranges.update_insert(begin, end, at_end);
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
                                    [](ByteCoord c, const Selection& sel)
                                    { return c < sel.min(); });
         m_ranges.insert(it, Selection{ begin, buffer.char_prev(end) });
     }
 
-    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end)
+    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end)
     {
-        m_ranges.update_erase(buffer, begin, end);
+        m_ranges.update_erase(begin, end, at_end);
         auto pos = std::min(begin, buffer.back_coord());
         auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
                                    [](ByteCoord c, const Selection& sel)
