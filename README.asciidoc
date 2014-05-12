@@ -39,6 +39,9 @@ Features
    - Case manipulation
    - Indentation
    - Piping each selection to external filter
+ * Client-Server architecture
+   - Multiple clients on the same editing session
+   - Use tmux or your X11 window manager to manage windows
  * Simple interaction with external programs
  * Automatic contextual help
  * Automatic as you type completion
