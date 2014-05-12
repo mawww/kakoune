@@ -1233,52 +1233,63 @@ void spaces_to_tabs(Context& context, int ts)
     }
 }
 
-class ModifiedRangesListener : public BufferChangeListener_AutoRegister
+static SelectionList compute_modified_ranges(const Buffer& buffer, size_t timestamp)
 {
-public:
-    ModifiedRangesListener(Buffer& buffer)
-        : BufferChangeListener_AutoRegister(buffer) {}
-
-    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end)
+    SelectionList ranges;
+    for (auto& change : buffer.changes_since(timestamp))
     {
-        m_ranges.update_insert(begin, end, at_end);
-        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
-                                   [](ByteCoord c, const Selection& sel)
-                                   { return c < sel.min(); });
-        m_ranges.insert(it, Selection{ begin, buffer.char_prev(end) });
+        const ByteCoord& begin = change.begin;
+        const ByteCoord& end = change.end;
+        if (change.type == Buffer::Change::Insert)
+        {
+            ranges.update_insert(begin, end, change.at_end);
+            auto it = std::upper_bound(ranges.begin(), ranges.end(), begin,
+                                       [](ByteCoord c, const Selection& sel)
+                                       { return c < sel.min(); });
+            ranges.insert(it, Selection{begin, end});
+        }
+        else
+        {
+            ranges.update_erase(begin, end, change.at_end);
+            auto pos = begin;
+            if (change.at_end)
+                pos = begin.column ? ByteCoord{begin.line, begin.column - 1}
+                                   : ByteCoord{begin.line - 1};
+            auto it = std::upper_bound(ranges.begin(), ranges.end(), pos,
+                                       [](ByteCoord c, const Selection& sel)
+                                       { return c < sel.min(); });
+            ranges.insert(it, Selection{pos, pos});
+        }
     }
+    if (ranges.empty())
+        return ranges;
 
-    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end)
+    ranges.set_main_index(ranges.size() - 1);
+
+    auto touches = [&](const Selection& lhs, const Selection& rhs) {
+        return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
+                                      : lhs.min() <= buffer.char_next(rhs.max());
+    };
+    ranges.merge_overlapping(touches);
+
+    for (auto& sel : ranges)
     {
-        m_ranges.update_erase(begin, end, at_end);
-        auto pos = std::min(begin, buffer.back_coord());
-        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
-                                   [](ByteCoord c, const Selection& sel)
-                                   { return c < sel.min(); });
-        m_ranges.insert(it, Selection{ pos, pos });
+        if (sel.anchor() != sel.cursor())
+            sel.cursor() = buffer.char_prev(sel.cursor());
     }
-    SelectionList& ranges() { return m_ranges; }
-
-private:
-    SelectionList m_ranges;
-};
-
-inline bool touches(const Buffer& buffer, const Selection& lhs, const Selection& rhs)
-{
-    return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
-                                  : lhs.min() <= buffer.char_next(rhs.max());
+    return ranges;
 }
 
 void undo(Context& context, int)
 {
-    ModifiedRangesListener listener(context.buffer());
-    bool res = context.buffer().undo();
-    if (res and not listener.ranges().empty())
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    bool res = buffer.undo();
+    if (res)
     {
-        auto& selections = context.selections();
-        selections = std::move(listener.ranges());
-        selections.set_main_index(selections.size() - 1);
-        selections.merge_overlapping(std::bind(touches, std::ref(context.buffer()), _1, _2));
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.selections() = std::move(ranges);
     }
     else if (not res)
         context.print_status({ "nothing left to undo", get_color("Information") });
@@ -1287,15 +1298,16 @@ void undo(Context& context, int)
 void redo(Context& context, int)
 {
     using namespace std::placeholders;
-    ModifiedRangesListener listener(context.buffer());
-    bool res = context.buffer().redo();
-    if (res and not listener.ranges().empty())
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    bool res = buffer.redo();
+    if (res)
     {
-        auto& selections = context.selections();
-        selections = std::move(listener.ranges());
-        selections.set_main_index(selections.size() - 1);
-        selections.merge_overlapping(std::bind(touches, std::ref(context.buffer()), _1, _2));
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.selections() = std::move(ranges);
     }
+
     else if (not res)
         context.print_status({ "nothing left to redo", get_color("Information") });
 }
