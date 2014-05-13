@@ -103,8 +103,7 @@ void Context::push_jump()
     if (m_current_jump != m_jump_list.end())
     {
         auto begin = m_current_jump;
-        if (&buffer() != &begin->buffer() or
-            (const SelectionList&)(*begin) != jump)
+        if (&buffer() != &begin->buffer() or *begin != jump)
             ++begin;
         m_jump_list.erase(begin, m_jump_list.end());
     }
@@ -114,21 +113,27 @@ void Context::push_jump()
     m_current_jump = m_jump_list.end();
 }
 
-const DynamicSelectionList& Context::jump_forward()
+const SelectionList& Context::jump_forward()
 {
     if (m_current_jump != m_jump_list.end() and
         m_current_jump + 1 != m_jump_list.end())
-        return *++m_current_jump;
+    {
+        SelectionList& res = *++m_current_jump;
+        res.update();
+        return res;
+    }
     throw runtime_error("no next jump");
 }
 
-const DynamicSelectionList& Context::jump_backward()
+const SelectionList& Context::jump_backward()
 {
     if (m_current_jump != m_jump_list.end() and
         *m_current_jump != selections())
     {
         push_jump();
-        return *--m_current_jump;
+        SelectionList& res = *--m_current_jump;
+        res.update();
+        return res;
     }
     if (m_current_jump != m_jump_list.begin())
     {
@@ -137,7 +142,9 @@ const DynamicSelectionList& Context::jump_backward()
             push_jump();
             --m_current_jump;
         }
-        return *--m_current_jump;
+        SelectionList& res = *--m_current_jump;
+        res.update();
+        return res;
     }
     throw runtime_error("no previous jump");
 }

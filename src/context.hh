@@ -64,8 +64,8 @@ public:
     void print_status(DisplayLine status) const;
 
     void push_jump();
-    const DynamicSelectionList& jump_forward();
-    const DynamicSelectionList& jump_backward();
+    const SelectionList& jump_forward();
+    const SelectionList& jump_backward();
     void forget_jumps_to_buffer(Buffer& buffer);
 
     const String& name() const { return m_name; }
@@ -89,7 +89,7 @@ private:
 
     String m_name;
 
-    using JumpList = std::vector<DynamicSelectionList>;
+    using JumpList = std::vector<SelectionList>;
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
 };
