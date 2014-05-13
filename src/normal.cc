@@ -599,13 +599,14 @@ void paste(Context& context, int)
 template<typename T>
 void regex_prompt(Context& context, const String prompt, T func)
 {
-    DynamicSelectionList selections{context.selections()};
+    SelectionList selections = context.selections();
     context.input_handler().prompt(prompt, "", get_color("Prompt"), complete_nothing,
-        [=](const String& str, PromptEvent event, Context& context) {
+        [=](const String& str, PromptEvent event, Context& context) mutable {
             try
             {
                 if (event != PromptEvent::Change and context.has_ui())
                     context.ui().info_hide();
+                selections.update();
                 context.selections() = selections;
                 context.input_handler().set_prompt_colors(get_color("Prompt"));
                 if (event == PromptEvent::Abort)
