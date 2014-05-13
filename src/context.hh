@@ -1,7 +1,7 @@
 #ifndef context_hh_INCLUDED
 #define context_hh_INCLUDED
 
-#include "dynamic_selection_list.hh"
+#include "selection.hh"
 
 #include <boost/optional.hpp>
 
@@ -85,7 +85,7 @@ private:
     safe_ptr<Client>       m_client;
 
     friend class Client;
-    boost::optional<DynamicSelectionList> m_selections;
+    boost::optional<SelectionList> m_selections;
 
     String m_name;
 

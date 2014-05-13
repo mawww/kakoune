@@ -70,6 +70,7 @@ void insert(Buffer& buffer, SelectionList& selections, const String& str)
     {
         auto pos = prepare_insert<mode>(buffer, sel);
         pos = buffer.insert(pos, str);
+        selections.update();
         if (mode == InsertMode::Replace and pos != buffer.end())
         {
             sel.anchor() = pos.coord();
@@ -93,6 +94,7 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
         auto pos = prepare_insert<mode>(buffer, sel);
         const String& str = strings[std::min(i, strings.size()-1)];
         pos = buffer.insert(pos, str);
+        selections.update();
         if (mode == InsertMode::Replace and pos != buffer.end())
         {
             sel.anchor() = pos.coord();

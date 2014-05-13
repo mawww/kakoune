@@ -134,6 +134,9 @@ void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, 
 
 void SelectionList::update()
 {
+    if (m_timestamp == m_buffer->timestamp())
+        return;
+
     for (auto& change : m_buffer->changes_since(m_timestamp))
     {
         if (change.type == Buffer::Change::Insert)
@@ -141,9 +144,10 @@ void SelectionList::update()
         else
             update_erase(m_selections, change.begin, change.end, change.at_end);
     }
-    m_timestamp = m_buffer->timestamp();
 
     check_invariant();
+
+    m_timestamp = m_buffer->timestamp();
 }
 
 void SelectionList::check_invariant() const
@@ -152,12 +156,11 @@ void SelectionList::check_invariant() const
     auto& buffer = this->buffer();
     kak_assert(size() > 0);
     kak_assert(m_main < size());
-    for (size_t i = 0; i+1 < size(); ++ i)
-        kak_assert((*this)[i].min() <= (*this)[i+1].min());
-
     for (size_t i = 0; i < size(); ++i)
     {
         auto& sel = (*this)[i];
+        if (i+1 < size())
+            kak_assert((*this)[i].min() <= (*this)[i+1].min());
         kak_assert(buffer.is_valid(sel.anchor()));
         kak_assert(buffer.is_valid(sel.cursor()));
         kak_assert(not buffer.is_end(sel.anchor()));

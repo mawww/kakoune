@@ -764,6 +764,7 @@ private:
             size_t index = std::min(i, strings.size()-1);
             buffer.insert(buffer.iterator_at(selections[i].cursor()),
                           strings[index]);
+           selections.update();
         }
     }
 
@@ -771,8 +772,12 @@ private:
     {
         auto str = codepoint_to_str(key);
         auto& buffer = context().buffer();
-        for (auto& sel : context().selections())
+        auto& selections = context().selections();
+        for (auto& sel : selections)
+        {
             buffer.insert(buffer.iterator_at(sel.cursor()), str);
+            selections.update();
+        }
         context().hooks().run_hook("InsertChar", str, context());
     }
 
@@ -829,6 +834,8 @@ private:
                anchor = buffer.char_prev(anchor);
             if (buffer.is_end(cursor))
                cursor = buffer.char_prev(cursor);
+
+            selections.update();
             sel.anchor() = anchor;
             sel.cursor() = cursor;
         }

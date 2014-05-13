@@ -185,13 +185,14 @@ void InsertCompleter::select(int offset)
     if (m_current_candidate < 0)
         m_current_candidate += m_matching_candidates.size();
     const String& candidate = m_matching_candidates[m_current_candidate];
-    const auto& cursor_pos = m_context.selections().main().cursor();
+    auto& selections = m_context.selections();
+    const auto& cursor_pos = selections.main().cursor();
     const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
     const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
     const auto buffer_len = buffer.byte_count();
 
     auto ref = buffer.string(m_completions.begin, m_completions.end);
-    for (auto& sel : m_context.selections())
+    for (auto& sel : selections)
     {
         auto offset = buffer.offset(sel.cursor());
         auto pos = buffer.iterator_at(sel.cursor());
@@ -200,6 +201,7 @@ void InsertCompleter::select(int offset)
         {
             pos = buffer.erase(pos - prefix_len, pos + suffix_len);
             buffer.insert(pos, candidate);
+            const_cast<SelectionList&>(selections).update();
         }
     }
     m_completions.end   = cursor_pos;

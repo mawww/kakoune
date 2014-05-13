@@ -21,7 +21,7 @@ Buffer& Context::buffer() const
 {
     if (not has_buffer())
         throw runtime_error("no buffer in context");
-    return (*m_selections).registry();
+    return const_cast<Buffer&>((*m_selections).buffer());
 }
 
 Window& Context::window() const
@@ -175,7 +175,7 @@ void Context::change_buffer(Buffer& buffer)
     if (has_client())
         client().change_buffer(buffer);
     else
-        m_selections = DynamicSelectionList{ { buffer, Selection{} } };
+        m_selections = SelectionList{buffer, Selection{}};
     if (has_input_handler())
         input_handler().reset_normal_mode();
 }
@@ -184,14 +184,13 @@ SelectionList& Context::selections()
 {
     if (not m_selections)
         throw runtime_error("no selections in context");
+    (*m_selections).update();
     return *m_selections;
 }
 
 const SelectionList& Context::selections() const
 {
-    if (not m_selections)
-        throw runtime_error("no selections in context");
-    return *m_selections;
+    return const_cast<Context&>(*this).selections();
 }
 
 std::vector<String> Context::selections_content() const
