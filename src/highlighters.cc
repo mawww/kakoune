@@ -267,12 +267,14 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
     }
 }
 
-template<typename RegexGetter>
+template<typename RegexGetter, typename ColorGetter>
 class DynamicRegexHighlighter
 {
 public:
-    DynamicRegexHighlighter(const ColorSpec& colors, RegexGetter getter)
-        : m_regex_getter(getter), m_colors(colors), m_colorizer(Regex(), m_colors) {}
+    DynamicRegexHighlighter(RegexGetter regex_getter, ColorGetter color_getter)
+        : m_regex_getter(std::move(regex_getter)),
+          m_color_getter(std::move(color_getter)),
+          m_colorizer(Regex(), ColorSpec{}) {}
 
     void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
     {
@@ -280,40 +282,56 @@ public:
             return;
 
         Regex regex = m_regex_getter(context);
-        if (regex != m_last_regex)
+        ColorSpec color = m_color_getter(context);
+        if (regex != m_last_regex or color != m_last_color)
         {
             m_last_regex = regex;
+            m_last_color = color;
             if (not m_last_regex.empty())
-                m_colorizer = RegexColorizer{m_last_regex, m_colors};
+                m_colorizer = RegexColorizer{m_last_regex, color};
         }
-        if (not m_last_regex.empty())
+        if (not m_last_regex.empty() and not m_last_color.empty())
             m_colorizer(context, flags, display_buffer);
     }
 
 private:
     Regex          m_last_regex;
-    ColorSpec      m_colors;
-    RegexColorizer m_colorizer;
     RegexGetter    m_regex_getter;
+
+    ColorSpec      m_last_color;
+    ColorGetter    m_color_getter;
+
+    RegexColorizer m_colorizer;
 };
+
+template<typename RegexGetter, typename ColorGetter>
+DynamicRegexHighlighter<RegexGetter, ColorGetter>
+make_dynamic_regex_highlighter(RegexGetter regex_getter, ColorGetter color_getter)
+{
+    return DynamicRegexHighlighter<RegexGetter, ColorGetter>(
+        std::move(regex_getter), std::move(color_getter));
+}
+
 
 HighlighterAndId highlight_search_factory(HighlighterParameters params)
 {
-    if (params.size() != 1)
+    if (params.size() != 0)
         throw runtime_error("wrong parameter count");
-    try
-    {
-        ColorSpec colors { { 0, &get_color(params[0]) } };
+        auto get_color = [](const Context& context){
+            return ColorSpec{ { 0, &Kakoune::get_color("Search") } };
+        };
         auto get_regex = [](const Context&){
             auto s = RegisterManager::instance()['/'].values(Context{});
-            return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
+            try
+            {
+                return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
+            }
+            catch (boost::regex_error& err)
+            {
+                return Regex{};
+            }
         };
-        return {"hlsearch", DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
-    }
-    catch (boost::regex_error& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
+        return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_color)};
 }
 
 HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
@@ -321,13 +339,19 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    ColorSpec colors { { 0, &get_color(params[1]) } };
+    const ColorPair& color = get_color(params[1]);
+    auto get_color = [&](const Context&){
+        return ColorSpec{ { 0, &color } };
+    };
+
     String option_name = params[0];
     // verify option type now
     GlobalOptions::instance()[option_name].get<Regex>();
 
-    auto get_regex = [option_name](const Context& context){ return context.options()[option_name].get<Regex>(); };
-    return {"hloption_" + option_name, DynamicRegexHighlighter<decltype(get_regex)>{colors, get_regex}};
+    auto get_regex = [option_name](const Context& context){
+        return context.options()[option_name].get<Regex>();
+    };
+    return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_color)};
 }
 
 void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
