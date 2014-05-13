@@ -19,14 +19,12 @@ DynamicSelectionList& DynamicSelectionList::operator=(SelectionList selections)
 
 void DynamicSelectionList::on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end)
 {
-    update_insert(begin, end, at_end);
-    set_timestamp(buffer.timestamp());
+    update();
 }
 
 void DynamicSelectionList::on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end, bool at_end)
 {
-    update_erase(begin, end, at_end);
-    set_timestamp(buffer.timestamp());
+    update();
 }
 
 }

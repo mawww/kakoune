@@ -437,7 +437,7 @@ void select_whole_buffer(const Buffer& buffer, SelectionList& selections)
 void select_all_matches(const Buffer& buffer, SelectionList& selections,
                         const Regex& regex)
 {
-    SelectionList result(buffer);
+    std::vector<Selection> result;
     for (auto& sel : selections)
     {
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
@@ -463,14 +463,13 @@ void select_all_matches(const Buffer& buffer, SelectionList& selections,
     }
     if (result.empty())
         throw runtime_error("nothing selected");
-    result.set_main_index(result.size() - 1);
     selections = std::move(result);
 }
 
 void split_selections(const Buffer& buffer, SelectionList& selections,
                       const Regex& regex)
 {
-    SelectionList result(buffer);
+    std::vector<Selection> result;
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
@@ -489,7 +488,6 @@ void split_selections(const Buffer& buffer, SelectionList& selections,
         if (begin.coord() <= sel.max())
             result.push_back({ begin.coord(), sel.max() });
     }
-    result.set_main_index(result.size() - 1);
     selections = std::move(result);
 }
 

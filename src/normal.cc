@@ -739,7 +739,7 @@ void split_lines(Context& context, int)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
-    SelectionList res(context.buffer());
+    std::vector<Selection> res;
     for (auto& sel : selections)
     {
         if (sel.anchor().line == sel.cursor().line)
@@ -754,14 +754,13 @@ void split_lines(Context& context, int)
             res.push_back({line, {line, buffer[line].length()-1}});
         res.push_back({max.line, max});
     }
-    res.set_main_index(res.size() - 1);
     selections = std::move(res);
 }
 
 void join_select_spaces(Context& context, int)
 {
     auto& buffer = context.buffer();
-    SelectionList selections(buffer);
+    std::vector<Selection> selections;
     for (auto& sel : context.selections())
     {
         for (LineCount line = sel.min().line; line <= sel.max().line; ++line)
@@ -776,7 +775,6 @@ void join_select_spaces(Context& context, int)
     }
     if (selections.empty())
         return;
-    selections.sort_and_merge_overlapping();
     context.selections() = selections;
     ScopedEdition edition(context);
     insert<InsertMode::Replace>(buffer, context.selections(), " ");
@@ -801,7 +799,7 @@ void keep(Context& context, int)
         if (ex.empty())
             return;
         const Buffer& buffer = context.buffer();
-        SelectionList keep(buffer);
+        std::vector<Selection> keep;
         for (auto& sel : context.selections())
         {
             if (boost::regex_search(buffer.iterator_at(sel.min()),
@@ -823,7 +821,7 @@ void keep_pipe(Context& context, int)
                 return;
             const Buffer& buffer = context.buffer();
             auto& shell_manager = ShellManager::instance();
-            SelectionList keep(buffer);
+            std::vector<Selection> keep;
             for (auto& sel : context.selections())
             {
                 int status = 0;
@@ -844,7 +842,7 @@ void indent(Context& context, int)
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
     auto& buffer = context.buffer();
-    SelectionList sels(buffer);
+    std::vector<Selection> sels;
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -856,7 +854,8 @@ void indent(Context& context, int)
     if (not sels.empty())
     {
         ScopedEdition edition(context);
-        insert<InsertMode::Insert>(buffer, sels, indent);
+        SelectionList selections{buffer, std::move(sels)};
+        insert<InsertMode::Insert>(buffer, selections, indent);
     }
 }
 
@@ -869,7 +868,7 @@ void deindent(Context& context, int)
         indent_width = tabstop;
 
     auto& buffer = context.buffer();
-    SelectionList sels(buffer);
+    std::vector<Selection> sels;
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -900,7 +899,8 @@ void deindent(Context& context, int)
     if (not sels.empty())
     {
         ScopedEdition edition(context);
-        erase(context.buffer(), sels);
+        SelectionList selections{context.buffer(), std::move(sels)};
+        erase(context.buffer(), selections);
     }
 }
 
@@ -1238,16 +1238,16 @@ void spaces_to_tabs(Context& context, int ts)
     }
 }
 
-static SelectionList compute_modified_ranges(const Buffer& buffer, size_t timestamp)
+static boost::optional<SelectionList> compute_modified_ranges(const Buffer& buffer, size_t timestamp)
 {
-    SelectionList ranges(buffer);
+    std::vector<Selection> ranges;
     for (auto& change : buffer.changes_since(timestamp))
     {
         const ByteCoord& begin = change.begin;
         const ByteCoord& end = change.end;
         if (change.type == Buffer::Change::Insert)
         {
-            ranges.update_insert(begin, end, change.at_end);
+            update_insert(ranges, begin, end, change.at_end);
             auto it = std::upper_bound(ranges.begin(), ranges.end(), begin,
                                        [](ByteCoord c, const Selection& sel)
                                        { return c < sel.min(); });
@@ -1255,7 +1255,7 @@ static SelectionList compute_modified_ranges(const Buffer& buffer, size_t timest
         }
         else
         {
-            ranges.update_erase(begin, end, change.at_end);
+            update_erase(ranges, begin, end, change.at_end);
             auto pos = begin;
             if (change.at_end)
                 pos = begin.column ? ByteCoord{begin.line, begin.column - 1}
@@ -1267,23 +1267,22 @@ static SelectionList compute_modified_ranges(const Buffer& buffer, size_t timest
         }
     }
     if (ranges.empty())
-        return ranges;
+        return {};
 
-    ranges.set_timestamp(buffer.timestamp());
-    ranges.set_main_index(ranges.size() - 1);
+    SelectionList result{buffer, std::move(ranges)};
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
         return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
                                       : lhs.min() <= buffer.char_next(rhs.max());
     };
-    ranges.merge_overlapping(touches);
+    result.merge_overlapping(touches);
 
-    for (auto& sel : ranges)
+    for (auto& sel : result)
     {
         if (sel.anchor() != sel.cursor())
             sel.cursor() = buffer.char_prev(sel.cursor());
     }
-    return ranges;
+    return result;
 }
 
 void undo(Context& context, int)
@@ -1294,8 +1293,8 @@ void undo(Context& context, int)
     if (res)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
-        if (not ranges.empty())
-            context.selections() = std::move(ranges);
+        if (ranges)
+            context.selections() = std::move(*ranges);
     }
     else if (not res)
         context.print_status({ "nothing left to undo", get_color("Information") });
@@ -1310,8 +1309,8 @@ void redo(Context& context, int)
     if (res)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
-        if (not ranges.empty())
-            context.selections() = std::move(ranges);
+        if (ranges)
+            context.selections() = std::move(*ranges);
     }
 
     else if (not res)

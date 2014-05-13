@@ -57,14 +57,10 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
 
 struct SelectionList
 {
-    SelectionList(const Buffer& buffer);
     SelectionList(const Buffer& buffer, Selection s);
     SelectionList(const Buffer& buffer, Selection s, size_t timestamp);
     SelectionList(const Buffer& buffer, std::vector<Selection> s);
     SelectionList(const Buffer& buffer, std::vector<Selection> s, size_t timestamp);
-
-    void update_insert(ByteCoord begin, ByteCoord end, bool at_end);
-    void update_erase(ByteCoord begin, ByteCoord end, bool at_end);
 
     void update();
 
@@ -82,6 +78,15 @@ struct SelectionList
 
     Selection& operator[](size_t i) { return m_selections[i]; }
     const Selection& operator[](size_t i) const { return m_selections[i]; }
+
+    SelectionList& operator=(std::vector<Selection> list)
+    {
+        m_selections = std::move(list);
+        m_main = size()-1;
+        sort_and_merge_overlapping();
+        check_invariant();
+        return *this;
+    }
 
     using iterator = std::vector<Selection>::iterator;
     iterator begin() { return m_selections.begin(); }
@@ -147,6 +152,9 @@ private:
     safe_ptr<const Buffer> m_buffer;
     size_t m_timestamp;
 };
+
+void update_insert(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, bool at_end);
+void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, bool at_end);
 
 }
 

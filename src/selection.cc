@@ -18,7 +18,7 @@ namespace
 {
 
 template<template <bool, bool> class UpdateFunc>
-void on_buffer_change(SelectionList& sels,
+void on_buffer_change(std::vector<Selection>& sels,
                       ByteCoord begin, ByteCoord end, bool at_end, LineCount end_line)
 {
     auto update_beg = std::lower_bound(sels.begin(), sels.end(), begin,
@@ -101,14 +101,11 @@ struct UpdateErase
 
 }
 
-SelectionList::SelectionList(const Buffer& buffer)
-    : m_buffer(&buffer), m_timestamp(buffer.timestamp())
-{
-}
-
 SelectionList::SelectionList(const Buffer& buffer, Selection s, size_t timestamp)
     : m_buffer(&buffer), m_selections({ s }), m_timestamp(timestamp)
-{}
+{
+    check_invariant();
+}
 
 SelectionList::SelectionList(const Buffer& buffer, Selection s)
     : SelectionList(buffer, s, buffer.timestamp())
@@ -116,20 +113,23 @@ SelectionList::SelectionList(const Buffer& buffer, Selection s)
 
 SelectionList::SelectionList(const Buffer& buffer, std::vector<Selection> s, size_t timestamp)
     : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
-{}
+{
+    kak_assert(size() > 0);
+    check_invariant();
+}
 
 SelectionList::SelectionList(const Buffer& buffer, std::vector<Selection> s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
 {}
 
-void SelectionList::update_insert(ByteCoord begin, ByteCoord end, bool at_end)
+void update_insert(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, bool at_end)
 {
-    on_buffer_change<UpdateInsert>(*this, begin, end, at_end, begin.line);
+    on_buffer_change<UpdateInsert>(sels, begin, end, at_end, begin.line);
 }
 
-void SelectionList::update_erase(ByteCoord begin, ByteCoord end, bool at_end)
+void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, bool at_end)
 {
-    on_buffer_change<UpdateErase>(*this, begin, end, at_end, end.line);
+    on_buffer_change<UpdateErase>(sels, begin, end, at_end, end.line);
 }
 
 void SelectionList::update()
@@ -137,9 +137,9 @@ void SelectionList::update()
     for (auto& change : m_buffer->changes_since(m_timestamp))
     {
         if (change.type == Buffer::Change::Insert)
-            update_insert(change.begin, change.end, change.at_end);
+            update_insert(m_selections, change.begin, change.end, change.at_end);
         else
-            update_erase(change.begin, change.end, change.at_end);
+            update_erase(m_selections, change.begin, change.end, change.at_end);
     }
     m_timestamp = m_buffer->timestamp();
 
