@@ -495,7 +495,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                         return false;
                     return true;
                 });
-                if (it != end)
+                if (it != end or (*end == pair.first and level == 1))
                     highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
                                     [&](DisplayAtom& atom) { atom.colors = colors; });
                 break;
