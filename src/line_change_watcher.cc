@@ -8,16 +8,9 @@ namespace Kakoune
 namespace
 {
 
-struct Change
+struct LineChange
 {
-    LineCount pos;
-    LineCount num;
-};
-
-std::vector<Change> compute_changes(const Buffer& buffer, size_t timestamp)
-{
-    std::vector<Change> res;
-    for (auto& change : buffer.changes_since(timestamp))
+    LineChange(const Buffer::Change& change)
     {
         ByteCoord begin = change.begin;
         ByteCoord end = change.end;
@@ -28,7 +21,8 @@ std::vector<Change> compute_changes(const Buffer& buffer, size_t timestamp)
                 kak_assert(begin.column == 0);
                 --begin.line;
             }
-            res.push_back({begin.line, end.line - begin.line});
+            pos = begin.line;
+            num = end.line - begin.line;
         }
         else
         {
@@ -37,11 +31,14 @@ std::vector<Change> compute_changes(const Buffer& buffer, size_t timestamp)
                 kak_assert(begin.column == 0);
                 --begin.line;
             }
-            res.push_back({begin.line, begin.line - end.line});
+            pos = begin.line;
+            num = begin.line - end.line;
         }
     }
-    return res;
-}
+
+    LineCount pos;
+    LineCount num;
+};
 
 }
 
@@ -51,8 +48,10 @@ LineChangeWatcher::LineChangeWatcher(const Buffer& buffer)
 std::vector<LineModification> LineChangeWatcher::compute_modifications()
 {
     std::vector<LineModification> res;
-    for (auto& change : compute_changes(*m_buffer, m_timestamp))
+    for (auto& buf_change : m_buffer->changes_since(m_timestamp))
     {
+        const LineChange change(buf_change);
+
         auto pos = std::upper_bound(res.begin(), res.end(), change.pos,
                                     [](const LineCount& l, const LineModification& c)
                                     { return l < c.new_line; });
