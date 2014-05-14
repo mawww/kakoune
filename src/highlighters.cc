@@ -196,8 +196,8 @@ private:
     struct Cache
     {
         Cache(const Buffer&){}
-        BufferRange m_range;
-        size_t      m_timestamp = 0;
+        std::pair<LineCount, LineCount> m_range;
+        size_t m_timestamp = 0;
         std::vector<std::vector<std::pair<ByteCoord, ByteCoord>>> m_matches;
     };
     BufferSideCache<Cache> m_cache;
@@ -209,18 +209,21 @@ private:
     {
         Cache& cache = m_cache.get(buffer);
 
+        LineCount first_line = range.first.line;
+        LineCount last_line = std::min(buffer.line_count()-1, range.second.line);
+
         if (buffer.timestamp() == cache.m_timestamp and
-            range.first >= cache.m_range.first and
-            range.second <= cache.m_range.second)
+            first_line >= cache.m_range.first and
+            last_line <= cache.m_range.second)
            return cache;
 
-        cache.m_range.first  = buffer.clamp({range.first.line - 10, 0});
-        cache.m_range.second = buffer.next(buffer.clamp({range.second.line + 10, INT_MAX}));
+        cache.m_range.first  = std::max(0_line, first_line - 10);
+        cache.m_range.second = std::min(buffer.line_count()-1, last_line+10);
         cache.m_timestamp = buffer.timestamp();
 
         cache.m_matches.clear();
         RegexIterator re_it{buffer.iterator_at(cache.m_range.first),
-                            buffer.iterator_at(cache.m_range.second), m_regex};
+                            buffer.iterator_at(cache.m_range.second+1), m_regex};
         RegexIterator re_end;
         for (; re_it != re_end; ++re_it)
         {
