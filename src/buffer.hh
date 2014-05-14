@@ -63,15 +63,6 @@ private:
     ByteCoord m_coord;
 };
 
-class BufferChangeListener
-{
-public:
-    virtual void on_insert(const Buffer& buffer,
-                           ByteCoord begin, ByteCoord end, bool at_end) = 0;
-    virtual void on_erase(const Buffer& buffer,
-                          ByteCoord begin, ByteCoord end, bool at_end) = 0;
-};
-
 // A Buffer is a in-memory representation of a file
 //
 // The Buffer class permits to read and mutate this file
@@ -170,8 +161,6 @@ public:
 
     void run_hook_in_own_context(const String& hook_name, const String& param);
 
-    std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
-
     void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
 
     void check_invariant() const;
@@ -230,10 +219,6 @@ private:
 
     time_t m_fs_timestamp;
 
-    // this is mutable as adding or removing listeners is not muting the
-    // buffer observable state.
-    mutable std::unordered_set<BufferChangeListener*> m_change_listeners;
-
     OptionManager m_options;
     HookManager   m_hooks;
     KeymapManager m_keymaps;
@@ -268,30 +253,6 @@ private:
     {
         return (Flags)(~(int)lhs);
     }
-};
-
-struct BufferListenerRegisterFuncs
-{
-    static void insert(const Buffer& buffer, BufferChangeListener& listener)
-    {
-        buffer.change_listeners().insert(&listener);
-    }
-    static void remove(const Buffer& buffer, BufferChangeListener& listener)
-    {
-        buffer.change_listeners().erase(&listener);
-    }
-};
-
-class BufferChangeListener_AutoRegister
-    : public BufferChangeListener,
-      public AutoRegister<BufferChangeListener_AutoRegister,
-                          BufferListenerRegisterFuncs, Buffer>
-{
-public:
-    BufferChangeListener_AutoRegister(Buffer& buffer)
-        : AutoRegister(buffer) {}
-
-    Buffer& buffer() const { return registry(); }
 };
 
 }

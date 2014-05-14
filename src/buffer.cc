@@ -68,16 +68,10 @@ Buffer::~Buffer()
     m_options.unregister_watcher(*this);
     BufferManager::instance().unregister_buffer(*this);
     m_values.clear();
-    kak_assert(m_change_listeners.empty());
 }
 
 void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
 {
-    // use back coord to simulate the persistance of the last end of line
-    // as buffers are expected to never be empty.
-    for (auto listener : m_change_listeners)
-        listener->on_erase(*this, {0,0}, back_coord(), true);
-
     m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
 
     m_history.clear();
@@ -100,9 +94,6 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     m_fs_timestamp = fs_timestamp;
 
     m_changes.push_back({ Change::Insert, {0,0}, back_coord(), true });
-
-    for (auto listener : m_change_listeners)
-        listener->on_insert(*this, {0,0}, back_coord(), true);
 }
 
 String Buffer::display_name() const
@@ -522,8 +513,6 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
     }
 
     m_changes.push_back({ Change::Insert, begin, end, at_end });
-    for (auto listener : m_change_listeners)
-        listener->on_insert(*this, begin, end, at_end);
     return begin;
 }
 
@@ -553,8 +542,6 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
         m_lines[i].start -= length;
 
     m_changes.push_back({ Change::Erase, begin, end, is_end(begin) });
-    for (auto listener : m_change_listeners)
-        listener->on_erase(*this, begin, end, is_end(begin));
     return next;
 }
 
