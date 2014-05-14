@@ -76,17 +76,16 @@ CharCount distance(Iterator begin, Iterator end)
 
 // return true if it points to the first byte of a (either single or
 // multibyte) character
-template<typename Iterator>
-bool is_character_start(Iterator it)
+inline bool is_character_start(char c)
 {
-    return (*it & 0xC0) != 0x80;
+    return (c & 0xC0) != 0x80;
 }
 
 // returns an iterator to the first byte of the character it is into
 template<typename Iterator>
 Iterator character_start(Iterator it)
 {
-    while (not is_character_start(it))
+    while (not is_character_start(*it))
         --it;
     return it;
 }
