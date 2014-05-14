@@ -13,8 +13,8 @@ inline void clear_selections(const Buffer& buffer, SelectionList& selections)
 {
     auto& sel = selections.main();
     auto& pos = sel.cursor();
-    avoid_eol(buffer, pos);
     sel.anchor() = pos;
+    selections.avoid_eol();
 
     selections = SelectionList{ buffer, std::move(sel) };
 }

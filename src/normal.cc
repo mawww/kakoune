@@ -23,13 +23,12 @@ namespace Kakoune
 
 void erase(Buffer& buffer, SelectionList& selections)
 {
-    for (auto& sel : selections)
+    for (auto& sel : reversed(selections))
     {
         erase(buffer, sel);
-        selections.update();
-        avoid_eol(buffer, sel);
     }
-    selections.check_invariant();
+    selections.update();
+    selections.avoid_eol();
     buffer.check_invariant();
 }
 
@@ -66,20 +65,24 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel)
 template<InsertMode mode>
 void insert(Buffer& buffer, SelectionList& selections, const String& str)
 {
-    for (auto& sel : selections)
+    for (auto& sel : reversed(selections))
     {
         auto pos = prepare_insert<mode>(buffer, sel);
         pos = buffer.insert(pos, str);
-        selections.update();
-        if (mode == InsertMode::Replace and pos != buffer.end())
+        if (mode == InsertMode::Replace)
         {
+            if (pos == buffer.end())
+                --pos;
             sel.anchor() = pos.coord();
             sel.cursor() = str.empty() ?
                 pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
-        avoid_eol(buffer, sel);
     }
-    selections.check_invariant();
+    if (mode == InsertMode::Replace)
+        selections.set_timestamp(buffer.timestamp());
+    else
+        selections.update();
+    selections.avoid_eol();
     buffer.check_invariant();
 }
 
@@ -90,20 +93,25 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
         return;
     for (size_t i = 0; i < selections.size(); ++i)
     {
-        auto& sel = selections[i];
+        size_t index = selections.size() - 1 - i;
+        auto& sel = selections[index];
         auto pos = prepare_insert<mode>(buffer, sel);
-        const String& str = strings[std::min(i, strings.size()-1)];
+        const String& str = strings[std::min(index, strings.size()-1)];
         pos = buffer.insert(pos, str);
-        selections.update();
-        if (mode == InsertMode::Replace and pos != buffer.end())
+        if (mode == InsertMode::Replace)
         {
+             if (pos == buffer.end())
+                 --pos;
             sel.anchor() = pos.coord();
             sel.cursor() = (str.empty() ?
                 pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
-        avoid_eol(buffer, sel);
     }
-    selections.check_invariant();
+    if (mode == InsertMode::Replace)
+        selections.set_timestamp(buffer.timestamp());
+    else
+        selections.update();
+    selections.avoid_eol();
     buffer.check_invariant();
 }
 
@@ -1352,9 +1360,9 @@ void move(Context& context, int count)
                                            : context.buffer().offset_coord(sel.cursor(), offset);
 
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
-        sel.cursor()  = cursor;
-        avoid_eol(context.buffer(), sel);
+        sel.cursor() = cursor;
     }
+    selections.avoid_eol();
     selections.sort_and_merge_overlapping();
 }
 

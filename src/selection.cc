@@ -188,5 +188,31 @@ void SelectionList::sort_and_merge_overlapping()
     std::stable_sort(begin(), end(), compare_selections);
     merge_overlapping(overlaps);
 }
+namespace
+{
+
+inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
+{
+    const auto column = coord.column;
+    const auto& line = buffer[coord.line];
+    if (column != 0 and column == line.length() - 1)
+        coord.column = line.byte_count_to(line.char_length() - 2);
+}
+
+
+inline void _avoid_eol(const Buffer& buffer, Selection& sel)
+{
+    _avoid_eol(buffer, sel.anchor());
+    _avoid_eol(buffer, sel.cursor());
+}
+
+}
+
+void SelectionList::avoid_eol()
+{
+    update();
+    for (auto& sel : m_selections)
+        _avoid_eol(buffer(), sel);
+}
 
 }

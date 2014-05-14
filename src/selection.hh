@@ -73,6 +73,8 @@ struct SelectionList
 
     void rotate_main(int count) { m_main = (m_main + count) % size(); }
 
+    void avoid_eol();
+
     void push_back(const Selection& sel) { m_selections.push_back(sel); }
     void push_back(Selection&& sel) { m_selections.push_back(std::move(sel)); }
 
@@ -91,6 +93,10 @@ struct SelectionList
     using iterator = std::vector<Selection>::iterator;
     iterator begin() { return m_selections.begin(); }
     iterator end() { return m_selections.end(); }
+
+    using reverse_iterator = std::vector<Selection>::reverse_iterator;
+    reverse_iterator rbegin() { return m_selections.rbegin(); }
+    reverse_iterator rend() { return m_selections.rend(); }
 
     using const_iterator = std::vector<Selection>::const_iterator;
     const_iterator begin() const { return m_selections.begin(); }

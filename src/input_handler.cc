@@ -667,7 +667,7 @@ public:
         }
         else if (key == Key::Backspace)
         {
-            for (auto& sel : context().selections())
+            for (auto& sel : reversed(context().selections()))
             {
                 if (sel.cursor() == ByteCoord{0,0})
                     continue;
@@ -677,7 +677,7 @@ public:
         }
         else if (key == Key::Erase)
         {
-            for (auto& sel : context().selections())
+            for (auto& sel : reversed(context().selections()))
             {
                 auto pos = buffer.iterator_at(sel.cursor());
                 buffer.erase(pos, utf8::next(pos));
@@ -761,11 +761,12 @@ private:
         auto& selections = context().selections();
         for (size_t i = 0; i < selections.size(); ++i)
         {
-            size_t index = std::min(i, strings.size()-1);
-            buffer.insert(buffer.iterator_at(selections[i].cursor()),
-                          strings[index]);
-           selections.update();
+            size_t index = selections.size() - 1 - i;
+            const String& str = strings[std::min(index, strings.size()-1)];
+            buffer.insert(buffer.iterator_at(selections[index].cursor()),
+                          str);
         }
+        selections.update();
     }
 
     void insert(Codepoint key)
@@ -773,11 +774,9 @@ private:
         auto str = codepoint_to_str(key);
         auto& buffer = context().buffer();
         auto& selections = context().selections();
-        for (auto& sel : selections)
-        {
+        for (auto& sel : reversed(selections))
             buffer.insert(buffer.iterator_at(sel.cursor()), str);
-            selections.update();
-        }
+        selections.update();
         context().hooks().run_hook("InsertChar", str, context());
     }
 
@@ -786,7 +785,7 @@ private:
         SelectionList& selections = context().selections();
         Buffer& buffer = context().buffer();
 
-        for (auto& sel : selections)
+        for (auto& sel : reversed(selections))
         {
             ByteCoord anchor, cursor;
             switch (mode)
@@ -835,10 +834,10 @@ private:
             if (buffer.is_end(cursor))
                cursor = buffer.char_prev(cursor);
 
-            selections.update();
             sel.anchor() = anchor;
             sel.cursor() = cursor;
         }
+        selections.update();
         if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
         {
             insert('\n');
@@ -859,12 +858,13 @@ private:
 
     void on_disabled() override
     {
-        for (auto& sel : context().selections())
+        auto& selections = context().selections();
+        for (auto& sel : selections)
         {
             if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
                 sel.cursor() = context().buffer().char_prev(sel.cursor());
-            avoid_eol(context().buffer(), sel);
         }
+        selections.avoid_eol();
     }
 
     enum class Mode { Default, Complete, InsertReg };
