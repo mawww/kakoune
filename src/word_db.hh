@@ -2,7 +2,6 @@
 #define word_db_hh_INCLUDED
 
 #include "buffer.hh"
-#include "line_change_watcher.hh"
 
 #include <map>
 
@@ -26,7 +25,8 @@ private:
 
     void update_db();
 
-    LineChangeWatcher m_change_watcher;
+    safe_ptr<const Buffer> m_buffer;
+    size_t m_timestamp;
     WordList m_words;
     LineToWords m_line_to_words;
 };

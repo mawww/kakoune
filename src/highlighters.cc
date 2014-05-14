@@ -5,7 +5,7 @@
 #include "color_registry.hh"
 #include "context.hh"
 #include "display_buffer.hh"
-#include "line_change_watcher.hh"
+#include "line_modification.hh"
 #include "option_types.hh"
 #include "register_manager.hh"
 #include "string.hh"
@@ -158,7 +158,7 @@ struct BufferSideCache
     {
         Value& cache_val = buffer.values()[m_id];
         if (not cache_val)
-            cache_val = Value(T{buffer});
+            cache_val = Value(T{});
         return cache_val.as<T>();
     }
 private:
@@ -195,7 +195,6 @@ public:
 private:
     struct Cache
     {
-        Cache(const Buffer&){}
         BufferRange m_range;
         size_t      m_timestamp = 0;
         std::vector<std::vector<std::pair<ByteCoord, ByteCoord>>> m_matches;
@@ -671,10 +670,8 @@ private:
                                       : lhs.begin < rhs.begin;
     }
 
-    struct Cache : public LineChangeWatcher
+    struct Cache
     {
-        Cache(const Buffer& buffer) : LineChangeWatcher(buffer) {}
-
         size_t timestamp = 0;
         MatchList begin_matches;
         MatchList end_matches;
@@ -696,7 +693,7 @@ private:
         }
         else
         {
-            auto modifs = cache.compute_modifications();
+            auto modifs = compute_line_modifications(buffer, cache.timestamp);
             update_matches(buffer, modifs, cache.begin_matches, m_begin);
             update_matches(buffer, modifs, cache.end_matches, m_end);
         }
@@ -718,7 +715,7 @@ private:
             beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
                                       *end_it, compare_matches_end);
         }
-        cache.timestamp = buffer.timestamp();
+        cache.timestamp = buf_timestamp;
         return cache.regions;
     }
 

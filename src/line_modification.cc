@@ -1,4 +1,4 @@
-#include "line_change_watcher.hh"
+#include "line_modification.hh"
 
 #include "buffer.hh"
 
@@ -42,13 +42,10 @@ struct LineChange
 
 }
 
-LineChangeWatcher::LineChangeWatcher(const Buffer& buffer)
-    : m_buffer(&buffer), m_timestamp(buffer.timestamp()) {}
-
-std::vector<LineModification> LineChangeWatcher::compute_modifications()
+std::vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp)
 {
     std::vector<LineModification> res;
-    for (auto& buf_change : m_buffer->changes_since(m_timestamp))
+    for (auto& buf_change : buffer.changes_since(timestamp))
     {
         const LineChange change(buf_change);
 
@@ -102,7 +99,6 @@ std::vector<LineModification> LineChangeWatcher::compute_modifications()
                 it->new_line -= num_removed;
         }
     }
-    m_timestamp = m_buffer->timestamp();
     return res;
 }
 

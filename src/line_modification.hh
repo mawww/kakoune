@@ -19,18 +19,7 @@ struct LineModification
     LineCount diff() const { return new_line - old_line + num_added - num_removed; }
 };
 
-class LineChangeWatcher
-{
-public:
-    LineChangeWatcher (const Buffer& buffer);
-
-    std::vector<LineModification> compute_modifications();
-
-    const Buffer& buffer() const { return *m_buffer; }
-private:
-    safe_ptr<const Buffer> m_buffer;
-    size_t m_timestamp;
-};
+std::vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp);
 
 }
 

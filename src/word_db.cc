@@ -1,6 +1,7 @@
 #include "word_db.hh"
 
 #include "utils.hh"
+#include "line_modification.hh"
 #include "utf8_iterator.hh"
 
 namespace Kakoune
@@ -49,7 +50,7 @@ static void remove_words(WordDB::WordList& wl, const std::vector<String>& words)
 }
 
 WordDB::WordDB(const Buffer& buffer)
-    : m_change_watcher{buffer}
+    : m_buffer{&buffer}, m_timestamp{buffer.timestamp()}
 {
     m_line_to_words.reserve((int)buffer.line_count());
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
@@ -61,11 +62,14 @@ WordDB::WordDB(const Buffer& buffer)
 
 void WordDB::update_db()
 {
-    auto modifs = m_change_watcher.compute_modifications();
+    auto& buffer = *m_buffer;
+
+    auto modifs = compute_line_modifications(buffer, m_timestamp);
+    m_timestamp = buffer.timestamp();
+
     if (modifs.empty())
         return;
 
-    auto& buffer = m_change_watcher.buffer();
 
     LineToWords new_lines;
     new_lines.reserve((int)buffer.line_count());
