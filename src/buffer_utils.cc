@@ -2,6 +2,8 @@
 
 #include "event_manager.hh"
 
+#include <sys/select.h>
+
 namespace Kakoune
 {
 
@@ -27,30 +29,41 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     Buffer* buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
     auto watcher = new FDWatcher(fd, [buffer, scroll](FDWatcher& watcher) {
-        constexpr size_t buffer_size = 1024 * 16;
+        constexpr size_t buffer_size = 2048;
         char data[buffer_size];
-        ssize_t count = read(watcher.fd(), data, buffer_size);
-        auto pos = buffer->end()-1;
-
-        bool prevent_scrolling = pos == buffer->begin() and not scroll;
-        if (prevent_scrolling)
-            ++pos;
-
-        buffer->insert(pos, count > 0 ? String(data, data+count)
-                                      : "*** kak: fifo closed ***\n");
-
-        if (prevent_scrolling)
+        const int fifo = watcher.fd();
+        timeval tv{ 0, 0 };
+        fd_set  rfds;
+        ssize_t count = 0;
+        do
         {
-            buffer->erase(buffer->begin(), buffer->begin()+1);
-            buffer->insert(buffer->end(), "\n");
+            count = read(fifo, data, buffer_size);
+            auto pos = buffer->end()-1;
+
+            bool prevent_scrolling = pos == buffer->begin() and not scroll;
+            if (prevent_scrolling)
+                ++pos;
+
+            buffer->insert(pos, count > 0 ? String(data, data+count)
+                                          : "*** kak: fifo closed ***\n");
+
+            if (prevent_scrolling)
+            {
+                buffer->erase(buffer->begin(), buffer->begin()+1);
+                buffer->insert(buffer->end(), "\n");
+            }
+
+            FD_ZERO(&rfds);
+            FD_SET(fifo, &rfds);
         }
+        while (count > 0 and select(fifo+1, &rfds, nullptr, nullptr, &tv) == 1);
 
         if (count <= 0)
         {
             kak_assert(buffer->flags() & Buffer::Flags::Fifo);
             buffer->flags() &= ~Buffer::Flags::Fifo;
             buffer->flags() &= ~Buffer::Flags::NoUndo;
-            close(watcher.fd());
+            close(fifo);
             delete &watcher;
         }
     });
