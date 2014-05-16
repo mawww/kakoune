@@ -37,18 +37,25 @@ public:
         : m_type(Text), m_text(std::move(str)), colors(colors), attribute(attribute)
      { check_invariant(); }
 
-    String content() const
+    StringView content() const
     {
         switch (m_type)
         {
             case BufferRange:
-               return m_buffer->string(m_begin, m_end);
+            {
+                auto& line = (*m_buffer)[m_begin.line];
+                if (m_begin.line == m_end.line)
+                    return line.substr(m_begin.column, m_end.column - m_begin.column);
+                else if (m_begin.line+1 == m_end.line and m_end.column == 0)
+                    return line.substr(m_begin.column);
+                break;
+            }
             case Text:
             case ReplacedBufferRange:
-               return m_text;
+                return m_text;
         }
         kak_assert(false);
-        return 0;
+        return {};
     }
 
     CharCount length() const

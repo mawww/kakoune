@@ -241,8 +241,10 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
 
         set_color(stdscr, atom.colors);
 
-        String atom_content = atom.content();
-        StringView content = atom_content;
+        StringView content = atom.content();
+        if (content.empty())
+            continue;
+
         if (content[content.length()-1] == '\n' and
             content.char_length() - 1 < m_dimensions.column - col_index)
         {
