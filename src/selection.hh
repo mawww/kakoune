@@ -86,6 +86,7 @@ struct SelectionList
         m_selections = std::move(list);
         m_main = size()-1;
         sort_and_merge_overlapping();
+        update_timestamp();
         check_invariant();
         return *this;
     }
@@ -115,7 +116,6 @@ struct SelectionList
     }
 
     size_t size() const { return m_selections.size(); }
-    bool empty() const { return m_selections.empty(); }
 
     bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
     bool operator!=(const SelectionList& other) const { return !((*this) == other); }
@@ -149,7 +149,7 @@ struct SelectionList
     const Buffer& buffer() const { return *m_buffer; }
 
     size_t timestamp() const { return m_timestamp; }
-    void set_timestamp(size_t timestamp) { m_timestamp = timestamp; }
+    void update_timestamp() { m_timestamp = m_buffer->timestamp(); }
 
 private:
     size_t m_main = 0;

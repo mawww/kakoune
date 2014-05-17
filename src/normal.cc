@@ -79,7 +79,7 @@ void insert(Buffer& buffer, SelectionList& selections, const String& str)
         }
     }
     if (mode == InsertMode::Replace)
-        selections.set_timestamp(buffer.timestamp());
+        selections.update_timestamp();
     else
         selections.update();
     selections.avoid_eol();
@@ -108,7 +108,7 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
         }
     }
     if (mode == InsertMode::Replace)
-        selections.set_timestamp(buffer.timestamp());
+        selections.update_timestamp();
     else
         selections.update();
     selections.avoid_eol();
