@@ -64,6 +64,7 @@ ColorRegistry::ColorRegistry()
         { "StatusCursor", { Colors::Black, Colors::Cyan } },
         { "Prompt", { Colors::Yellow, Colors::Default } },
         { "MatchingChar", { Colors::Default, Colors::Magenta } },
+        { "Search", { Colors::Default, Colors::Magenta } },
       }
 {}
 

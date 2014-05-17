@@ -333,7 +333,7 @@ const CommandDesc force_delbuf_cmd = {
     single_optional_name_param,
     CommandFlags::None,
     buffer_completer,
-    delete_buffer<false>
+    delete_buffer<true>
 };
 
 const CommandDesc namebuf_cmd = {
