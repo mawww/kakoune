@@ -35,7 +35,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(Line{ m_changes.size()+1, pos, std::move(line) });
+        m_lines.emplace_back(Line{ pos, std::move(line) });
         pos += m_lines.back().length();
     }
 
@@ -88,7 +88,7 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(Line{ m_changes.size()+1, pos, std::move(line) });
+        m_lines.emplace_back(Line{ pos, std::move(line) });
         pos += m_lines.back().length();
     }
     m_fs_timestamp = fs_timestamp;
@@ -460,12 +460,12 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
         {
             if (content[i] == '\n')
             {
-                m_lines.push_back({ m_changes.size()+1, offset + start, content.substr(start, i + 1 - start) });
+                m_lines.push_back({ offset + start, content.substr(start, i + 1 - start) });
                 start = i + 1;
             }
         }
         if (start != content.length())
-            m_lines.push_back({ m_changes.size()+1, offset + start, content.substr(start) });
+            m_lines.push_back({ offset + start, content.substr(start) });
 
         begin = pos.column == 0 ? pos : ByteCoord{ pos.line + 1, 0 };
         end = ByteCoord{ line_count()-1, m_lines.back().length() };
@@ -487,18 +487,18 @@ ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
                 if (start == 0)
                 {
                     line_content = prefix + line_content;
-                    new_lines.push_back({ m_changes.size()+1, offset + start - prefix.length(),
+                    new_lines.push_back({ offset + start - prefix.length(),
                                           std::move(line_content) });
                 }
                 else
-                    new_lines.push_back({ m_changes.size()+1, offset + start, std::move(line_content) });
+                    new_lines.push_back({ offset + start, std::move(line_content) });
                 start = i + 1;
             }
         }
         if (start == 0)
-            new_lines.push_back({ m_changes.size()+1, offset + start - prefix.length(), prefix + content + suffix });
+            new_lines.push_back({ offset + start - prefix.length(), prefix + content + suffix });
         else if (start != content.length() or not suffix.empty())
-            new_lines.push_back({ m_changes.size()+1, offset + start, content.substr(start) + suffix });
+            new_lines.push_back({ offset + start, content.substr(start) + suffix });
 
         LineCount last_line = pos.line + new_lines.size() - 1;
 
@@ -523,7 +523,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     const ByteCount length = distance(begin, end);
     String prefix = m_lines[begin.line].content.substr(0, begin.column);
     String suffix = m_lines[end.line].content.substr(end.column);
-    Line new_line = { m_changes.size()+1, m_lines[begin.line].start, prefix + suffix };
+    Line new_line = { m_lines[begin.line].start, prefix + suffix };
 
     ByteCoord next;
     if (new_line.length() != 0)

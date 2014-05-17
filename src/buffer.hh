@@ -95,7 +95,6 @@ public:
     BufferIterator erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const;
-    size_t         line_timestamp(LineCount line) const;
     time_t         fs_timestamp() const;
     void           set_fs_timestamp(time_t ts);
 
@@ -180,7 +179,6 @@ private:
 
     struct Line
     {
-        size_t    timestamp;
         ByteCount start;
         String    content;
 

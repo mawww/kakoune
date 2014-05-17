@@ -100,11 +100,6 @@ inline memoryview<Buffer::Change> Buffer::changes_since(size_t timestamp) const
              m_changes.data() + m_changes.size() };
 }
 
-inline size_t Buffer::line_timestamp(LineCount line) const
-{
-    return m_lines[line].timestamp;
-}
-
 inline ByteCoord Buffer::back_coord() const
 {
     return { line_count() - 1, m_lines.back().length() - 1 };

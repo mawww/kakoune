@@ -778,8 +778,9 @@ private:
                 erase = it->line <= prev.old_line + prev.num_removed;
                 it->line += prev.diff();
             }
-            erase = erase or (it->line >= buffer.line_count() or
-                              it->timestamp < buffer.line_timestamp(it->line));
+            if (modif_it != modifs.end() and modif_it->old_line == it->line)
+                erase = true;
+            erase = erase or (it->line >= buffer.line_count());
 
             if (not erase)
             {
