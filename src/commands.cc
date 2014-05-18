@@ -60,7 +60,7 @@ Buffer* open_fifo(const String& name , const String& filename, bool scroll)
 
 const PerArgumentCommandCompleter filename_completer({
      [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-     { return Completions{ 0_byte, prefix.length(),
+     { return Completions{ 0_byte, cursor_pos,
                            complete_filename(prefix,
                                              context.options()["ignored_files"].get<Regex>(),
                                              cursor_pos) }; }
@@ -68,7 +68,7 @@ const PerArgumentCommandCompleter filename_completer({
 
 const PerArgumentCommandCompleter buffer_completer({
     [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-    { return Completions{ 0_byte, prefix.length(),
+    { return Completions{ 0_byte, cursor_pos,
                           BufferManager::instance().complete_buffer_name(prefix, cursor_pos) }; }
 });
 
@@ -1205,7 +1205,7 @@ const CommandDesc try_catch_cmd = {
 static Completions complete_colalias(const Context&, CompletionFlags flags,
                                      const String& prefix, ByteCount cursor_pos)
 {
-    return {0_byte, prefix.length(),
+    return {0_byte, cursor_pos,
             ColorRegistry::instance().complete_alias_name(prefix, cursor_pos)};
 }
 
