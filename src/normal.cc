@@ -63,30 +63,6 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel)
 }
 
 template<InsertMode mode>
-void insert(Buffer& buffer, SelectionList& selections, const String& str)
-{
-    for (auto& sel : reversed(selections))
-    {
-        auto pos = prepare_insert<mode>(buffer, sel);
-        pos = buffer.insert(pos, str);
-        if (mode == InsertMode::Replace)
-        {
-            if (pos == buffer.end())
-                --pos;
-            sel.anchor() = pos.coord();
-            sel.cursor() = str.empty() ?
-                pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
-        }
-    }
-    if (mode == InsertMode::Replace)
-        selections.update_timestamp();
-    else
-        selections.update();
-    selections.avoid_eol();
-    buffer.check_invariant();
-}
-
-template<InsertMode mode>
 void insert(Buffer& buffer, SelectionList& selections, memoryview<String> strings)
 {
     if (strings.empty())
@@ -102,16 +78,15 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
         {
              if (pos == buffer.end())
                  --pos;
+            selections.update();
             sel.anchor() = pos.coord();
             sel.cursor() = (str.empty() ?
                 pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
         }
     }
-    if (mode == InsertMode::Replace)
-        selections.update_timestamp();
-    else
-        selections.update();
+    selections.update();
     selections.avoid_eol();
+    selections.check_invariant();
     buffer.check_invariant();
 }
 
@@ -788,7 +763,7 @@ void join_select_spaces(Context& context, int)
         return;
     context.selections() = selections;
     ScopedEdition edition(context);
-    insert<InsertMode::Replace>(buffer, context.selections(), " ");
+    insert<InsertMode::Replace>(buffer, context.selections(), " "_str);
 }
 
 void join(Context& context, int param)
