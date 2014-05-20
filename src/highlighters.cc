@@ -538,24 +538,25 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
         {
             if (atom_it->type() == DisplayAtom::BufferRange)
             {
-                using Utf8It = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
-                for (Utf8It it  = buffer.iterator_at(atom_it->begin()),
-                            end = buffer.iterator_at(atom_it->end()); it != end; ++it)
+                for (auto it  = buffer.iterator_at(atom_it->begin()),
+                          end = buffer.iterator_at(atom_it->end()); it < end;)
                 {
-                    Codepoint cp = *it;
+                    Codepoint cp = utf8::codepoint<utf8::InvalidBytePolicy::Pass>(it);
+                    auto next = utf8::next(it);
                     if (cp != '\n' and not iswprint(cp))
                     {
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
                         String str = oss.str();
-                        if (it.base().coord() != atom_it->begin())
-                            atom_it = ++line.split(atom_it, it.base().coord());
-                        if ((it+1).base().coord() != atom_it->end())
-                            atom_it = line.split(atom_it, (it+1).base().coord());
+                        if (it.coord() != atom_it->begin())
+                            atom_it = ++line.split(atom_it, it.coord());
+                        if (next.coord() < atom_it->end())
+                            atom_it = line.split(atom_it, next.coord());
                         atom_it->replace(str);
                         atom_it->colors = { Colors::Red, Colors::Black };
                         break;
                     }
+                    it = next;
                 }
             }
         }
