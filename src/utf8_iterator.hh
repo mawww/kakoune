@@ -104,7 +104,7 @@ public:
         check_invariant();
         other.check_invariant();
         CharCount dist = 0;
-        while (other.m_it != m_it)
+        while (other.m_it < m_it)
         {
             ++dist;
             ++other;
