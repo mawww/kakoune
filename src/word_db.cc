@@ -1,7 +1,7 @@
 #include "word_db.hh"
 
 #include "utils.hh"
-#include "line_modification.hh"
+#include "modification.hh"
 #include "utf8_iterator.hh"
 
 namespace Kakoune
@@ -64,7 +64,7 @@ void WordDB::update_db()
 {
     auto& buffer = *m_buffer;
 
-    auto modifs = compute_line_modifications(buffer, m_timestamp);
+    auto modifs = compute_modifications(buffer, m_timestamp);
     m_timestamp = buffer.timestamp();
 
     if (modifs.empty())
@@ -77,22 +77,22 @@ void WordDB::update_db()
     auto old_line = 0_line;
     for (auto& modif : modifs)
     {
-        kak_assert(0_line <= modif.new_line and modif.new_line < buffer.line_count());
-        kak_assert(old_line <= modif.old_line);
-        while (old_line < modif.old_line)
+        kak_assert(0_line <= modif.new_coord.line and
+                   modif.new_coord.line < buffer.line_count());
+
+        // copy unchanged lines between last modification and this one
+        while (old_line < modif.old_coord.line)
             new_lines.push_back(std::move(m_line_to_words[(int)old_line++]));
 
-        kak_assert((int)new_lines.size() == (int)modif.new_line);
-
-        while (old_line <= modif.old_line + modif.num_removed)
-        {
-            kak_assert(old_line < m_line_to_words.size());
+        // remove words from removed lines
+        while (old_line <= modif.old_coord.line + modif.num_removed.line
+               and old_line < m_line_to_words.size())
             remove_words(m_words, m_line_to_words[(int)old_line++]);
-        }
 
-        for (auto l = 0_line; l <= modif.num_added; ++l)
+        // add words from new lines
+        for (auto l = 0_line; l <= modif.num_added.line; ++l)
         {
-            new_lines.push_back(get_words(buffer[modif.new_line + l]));
+            new_lines.push_back(get_words(buffer[modif.new_coord.line + l]));
             add_words(m_words, new_lines.back());
         }
     }
