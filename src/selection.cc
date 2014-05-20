@@ -1,6 +1,7 @@
 #include "selection.hh"
 
 #include "utf8.hh"
+#include "modification.hh"
 
 namespace Kakoune
 {
@@ -132,17 +133,34 @@ void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, 
     on_buffer_change<UpdateErase>(sels, begin, end, at_end, end.line);
 }
 
+static ByteCoord update_pos(memoryview<Modification> modifs, ByteCoord pos)
+{
+    auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), pos,
+                                     [](const ByteCoord& c, const Modification& m)
+                                     { return c < m.old_coord; });
+    if (modif_it != modifs.begin())
+    {
+        auto& prev = *(modif_it-1);
+        return prev.get_new_coord(pos);
+    }
+    return pos;
+}
+
 void SelectionList::update()
 {
     if (m_timestamp == m_buffer->timestamp())
         return;
 
-    for (auto& change : m_buffer->changes_since(m_timestamp))
+    auto modifs = compute_modifications(*m_buffer, m_timestamp);
+    for (auto& sel : m_selections)
     {
-        if (change.type == Buffer::Change::Insert)
-            update_insert(m_selections, change.begin, change.end, change.at_end);
-        else
-            update_erase(m_selections, change.begin, change.end, change.at_end);
+        auto anchor = update_pos(modifs, sel.anchor());
+        kak_assert(m_buffer->is_valid(anchor));
+        sel.anchor() = anchor;
+
+        auto cursor = update_pos(modifs, sel.cursor());
+        kak_assert(m_buffer->is_valid(cursor));
+        sel.cursor() = cursor;
     }
 
     check_invariant();

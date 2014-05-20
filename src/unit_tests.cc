@@ -4,6 +4,8 @@
 #include "selectors.hh"
 #include "word_db.hh"
 
+#include "modification.hh"
+
 using namespace Kakoune;
 
 void test_buffer()
@@ -139,6 +141,69 @@ void test_keys()
     kak_assert(keys == parsed_keys);
 }
 
+void test_modification()
+{
+    {
+        Modification modif = { {5, 10}, {5, 10}, {0, 0}, {4, 17} };
+        auto pos = modif.get_new_coord({5, 10});
+        kak_assert(pos == ByteCoord{9 COMMA 17});
+    }
+    {
+        Modification modif = { {7, 10}, {7, 10}, {0, 5}, {0, 0} };
+        auto pos = modif.get_new_coord({7, 10});
+        kak_assert(pos == ByteCoord{7 COMMA 10});
+    }
+    {
+        std::vector<Buffer::Change> change = {
+            { Buffer::Change::Insert, {1, 0}, {5, 161}, false },
+            { Buffer::Change::Insert, {5, 161}, {30, 0}, false },
+            { Buffer::Change::Insert, {30, 0}, {35, 0}, false },
+        };
+        auto modifs = compute_modifications(change);
+        kak_assert(modifs.size() == 1);
+        auto& modif = modifs[0];
+        kak_assert(modif.old_coord == ByteCoord{1 COMMA 0});
+        kak_assert(modif.new_coord == ByteCoord{1 COMMA 0});
+        kak_assert(modif.num_added == ByteCoord{34 COMMA 0});
+        kak_assert(modif.num_removed == ByteCoord{0 COMMA 0});
+    }
+
+    Buffer buffer("test", Buffer::Flags::None,
+                  { "tchou mutch\n",
+                    "tchou kanaky tchou\n",
+                    "\n",
+                    "tchaa tchaa\n",
+                    "allo\n"});
+
+    size_t timestamp = buffer.timestamp();
+
+    buffer.erase(buffer.iterator_at({0,0}), buffer.iterator_at({3,0}));
+    buffer.insert(buffer.iterator_at({0,0}), "youuhou\nniahaha");
+
+    buffer.insert(buffer.iterator_at({2,4}), "yeehaah\n");
+
+    auto modifs = compute_modifications(buffer, timestamp);
+    kak_assert(modifs.size() == 2);
+    {
+        auto& modif = modifs[0];
+        kak_assert(modif.old_coord == ByteCoord{0 COMMA 0});
+        kak_assert(modif.new_coord == ByteCoord{0 COMMA 0});
+        kak_assert(modif.num_added == ByteCoord{1 COMMA 7});
+        kak_assert(modif.num_removed == ByteCoord{3 COMMA 0});
+        bool deleted;
+        auto new_coord = modif.get_new_coord({1, 10}, deleted);
+        kak_assert(new_coord == ByteCoord{1 COMMA 7});
+        kak_assert(deleted);
+    }
+    {
+        auto& modif = modifs[1];
+        kak_assert(modif.old_coord == ByteCoord{4 COMMA 4});
+        kak_assert(modif.new_coord == ByteCoord{2 COMMA 4});
+        kak_assert(modif.num_added == ByteCoord{1 COMMA 0});
+        kak_assert(modif.num_removed == ByteCoord{0 COMMA 0});
+    }
+}
+
 void run_unit_tests()
 {
     test_utf8();
@@ -146,5 +211,6 @@ void run_unit_tests()
     test_keys();
     test_buffer();
     test_undo_group_optimizer();
+    test_modification();
     test_word_db();
 }
