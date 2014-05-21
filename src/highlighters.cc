@@ -5,7 +5,7 @@
 #include "color_registry.hh"
 #include "context.hh"
 #include "display_buffer.hh"
-#include "line_modification.hh"
+#include "modification.hh"
 #include "option_types.hh"
 #include "register_manager.hh"
 #include "string.hh"
@@ -720,7 +720,7 @@ private:
         }
         else
         {
-            auto modifs = compute_line_modifications(buffer, cache.timestamp);
+            auto modifs = compute_modifications(buffer, cache.timestamp);
             update_matches(buffer, modifs, cache.begin_matches, m_begin);
             update_matches(buffer, modifs, cache.end_matches, m_end);
         }
@@ -761,26 +761,28 @@ private:
         }
     }
 
-    void update_matches(const Buffer& buffer, memoryview<LineModification> modifs, MatchList& matches, const Regex& regex)
+    void update_matches(const Buffer& buffer, memoryview<Modification> modifs, MatchList& matches, const Regex& regex)
     {
         const size_t buf_timestamp = buffer.timestamp();
         // remove out of date matches and update line for others
         auto ins_pos = matches.begin();
         for (auto it = ins_pos; it != matches.end(); ++it)
         {
-            auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
-                                             [](const LineModification& c, const LineCount& l)
-                                             { return c.old_line < l; });
+            const ByteCoord pos{ it->line, it->begin };
+            auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), pos,
+                                             [](const ByteCoord& c, const Modification& m)
+                                             { return c < m.old_coord; });
             bool erase = false;
             if (modif_it != modifs.begin())
             {
                 auto& prev = *(modif_it-1);
-                erase = it->line <= prev.old_line + prev.num_removed;
-                it->line += prev.diff();
+                erase = it->line <= prev.old_coord.line + prev.num_removed.line;
+                it->line += prev.new_coord.line - prev.old_coord.line +
+                            prev.num_added.line - prev.num_removed.line;
             }
-            if (modif_it != modifs.end() and modif_it->old_line == it->line)
+            if (modif_it != modifs.end() and modif_it->new_coord.line == it->line)
                 erase = true;
-            erase = erase or (it->line >= buffer.line_count());
+            kak_assert(it->line < buffer.line_count());
 
             if (not erase)
             {
@@ -799,19 +801,24 @@ private:
         size_t pivot = matches.size();
 
         // try to find new matches in each updated lines
+        LineCount last_line = -1;
         for (auto& modif : modifs)
         {
-            for (auto line = modif.new_line; line < modif.new_line + modif.num_added+1; ++line)
+            for (auto line = std::max(last_line + 1, modif.new_coord.line);
+                 line <= modif.new_coord.line + modif.num_added.line;
+                 ++line)
             {
                 kak_assert(line < buffer.line_count());
                 auto& l = buffer[line];
-                for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+                using RegexIt = boost::regex_iterator<String::const_iterator>;
+                for (RegexIt it{l.begin(), l.end(), regex}, end; it != end; ++it)
                 {
                     ByteCount b = (int)((*it)[0].first - l.begin());
                     ByteCount e = (int)((*it)[0].second - l.begin());
                     matches.push_back({ buf_timestamp, line, b, e });
                 }
             }
+            last_line = modif.new_coord.line + modif.num_added.line;
         }
         std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
                            compare_matches_begin);
