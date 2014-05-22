@@ -143,11 +143,11 @@ void SelectionList::update()
     {
         auto anchor = update_pos(modifs, sel.anchor());
         kak_assert(m_buffer->is_valid(anchor));
-        sel.anchor() = anchor;
+        sel.anchor() = m_buffer->clamp(anchor);
 
         auto cursor = update_pos(modifs, sel.cursor());
         kak_assert(m_buffer->is_valid(cursor));
-        sel.cursor() = cursor;
+        sel.cursor() = m_buffer->clamp(cursor);
     }
 
     merge_overlapping(overlaps);
