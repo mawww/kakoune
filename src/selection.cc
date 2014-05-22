@@ -133,19 +133,6 @@ void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, 
     on_buffer_change<UpdateErase>(sels, begin, end, at_end, end.line);
 }
 
-static ByteCoord update_pos(memoryview<Modification> modifs, ByteCoord pos)
-{
-    auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), pos,
-                                     [](const ByteCoord& c, const Modification& m)
-                                     { return c < m.old_coord; });
-    if (modif_it != modifs.begin())
-    {
-        auto& prev = *(modif_it-1);
-        return prev.get_new_coord(pos);
-    }
-    return pos;
-}
-
 void SelectionList::update()
 {
     if (m_timestamp == m_buffer->timestamp())
@@ -163,6 +150,7 @@ void SelectionList::update()
         sel.cursor() = cursor;
     }
 
+    merge_overlapping(overlaps);
     check_invariant();
 
     m_timestamp = m_buffer->timestamp();

@@ -154,6 +154,16 @@ void test_modification()
         kak_assert(pos == ByteCoord{7 COMMA 10});
     }
     {
+        Modification modif = { {8, 0}, {8, 0}, {1, 0}, {1, 0} };
+        auto pos = modif.get_new_coord({12, 31});
+        kak_assert(pos == ByteCoord{12 COMMA 31});
+    }
+    {
+        Modification modif = { {0, 7}, {0, 8}, {0, 0}, {0, 1} };
+        auto pos = modif.get_new_coord({1, 0});
+        kak_assert(pos == ByteCoord{1 COMMA 0});
+    }
+    {
         std::vector<Buffer::Change> change = {
             { Buffer::Change::Insert, {1, 0}, {5, 161}, false },
             { Buffer::Change::Insert, {5, 161}, {30, 0}, false },
@@ -166,6 +176,33 @@ void test_modification()
         kak_assert(modif.new_coord == ByteCoord{1 COMMA 0});
         kak_assert(modif.num_added == ByteCoord{34 COMMA 0});
         kak_assert(modif.num_removed == ByteCoord{0 COMMA 0});
+    }
+    {
+        std::vector<Buffer::Change> change = {
+            { Buffer::Change::Insert, {1, 20}, {2, 0}, false },
+            { Buffer::Change::Insert, {1, 10}, {2, 0}, false },
+            { Buffer::Change::Insert, {1, 0},  {2, 0}, false },
+        };
+        auto modifs = compute_modifications(change);
+        kak_assert(modifs.size() == 3);
+        auto& modif = modifs[2];
+        kak_assert(modif.old_coord == ByteCoord{1 COMMA 20});
+        kak_assert(modif.new_coord == ByteCoord{3 COMMA 10});
+        kak_assert(modif.num_added == ByteCoord{1 COMMA 0});
+        kak_assert(modif.num_removed == ByteCoord{0 COMMA 0});
+    }
+    {
+        std::vector<Buffer::Change> change = {
+            { Buffer::Change::Erase, {1, 10}, {2, 0}, false },
+            { Buffer::Change::Erase, {0, 10}, {1, 0}, false },
+        };
+        auto modifs = compute_modifications(change);
+        kak_assert(modifs.size() == 2);
+        auto& modif = modifs[1];
+        kak_assert(modif.old_coord == ByteCoord{1 COMMA 10});
+        kak_assert(modif.new_coord == ByteCoord{0 COMMA 20});
+        kak_assert(modif.num_added == ByteCoord{0 COMMA 0});
+        kak_assert(modif.num_removed == ByteCoord{1 COMMA 0});
     }
 
     Buffer buffer("test", Buffer::Flags::None,
@@ -190,10 +227,8 @@ void test_modification()
         kak_assert(modif.new_coord == ByteCoord{0 COMMA 0});
         kak_assert(modif.num_added == ByteCoord{1 COMMA 7});
         kak_assert(modif.num_removed == ByteCoord{3 COMMA 0});
-        bool deleted;
-        auto new_coord = modif.get_new_coord({1, 10}, deleted);
+        auto new_coord = modif.get_new_coord({1, 10});
         kak_assert(new_coord == ByteCoord{1 COMMA 7});
-        kak_assert(deleted);
     }
     {
         auto& modif = modifs[1];
