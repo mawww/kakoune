@@ -163,7 +163,12 @@ void register_registers()
     } dyn_regs[] = {
         { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
         { '.', [](const Context& context) { return context.selections_content(); } },
-        { '#', [](const Context& context) { return StringList{{to_string((int)context.selections().size())}}; } },
+        { '#', [](const Context& context) {
+            StringList res;
+            for (size_t i = 1; i < context.selections().size(); ++i)
+                res.push_back(to_string((int)i));
+            return res;
+        } }
     };
 
     RegisterManager& register_manager = RegisterManager::instance();
