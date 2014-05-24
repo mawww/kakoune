@@ -204,6 +204,19 @@ void test_modification()
         kak_assert(modif.num_added == ByteCoord{0 COMMA 0});
         kak_assert(modif.num_removed == ByteCoord{1 COMMA 0});
     }
+    {
+        std::vector<Buffer::Change> change = {
+            { Buffer::Change::Insert, {1, 10}, {2, 0}, false },
+            { Buffer::Change::Erase, {1, 20}, {2, 10}, false },
+        };
+        auto modifs = compute_modifications(change);
+        kak_assert(modifs.size() == 1);
+        auto& modif = modifs[0];
+        kak_assert(modif.old_coord == ByteCoord{1 COMMA 10});
+        kak_assert(modif.new_coord == ByteCoord{1 COMMA 10});
+        kak_assert(modif.num_added == ByteCoord{0 COMMA 10});
+        kak_assert(modif.num_removed == ByteCoord{0 COMMA 10});
+    }
 
     Buffer buffer("test", Buffer::Flags::None,
                   { "tchou mutch\n",

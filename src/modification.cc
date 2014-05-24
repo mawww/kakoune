@@ -165,6 +165,12 @@ std::vector<Modification> compute_modifications(memoryview<Buffer::Change> chang
             }
             ByteCoord num_removed_from_added = std::min(num_removed, num_added_after_pos);
             modif.num_added -= num_removed_from_added;
+
+            if (change.begin.line == modif.new_coord.line)
+                modif.num_added.column += change.begin.column - modif.new_coord.column;
+            else
+                modif.num_added.column += change.begin.column;
+
             modif.num_removed += num_removed - num_removed_from_added;
 
             for (auto it = next; it != res.end(); ++it)
