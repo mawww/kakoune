@@ -17,6 +17,7 @@
 #include "user_interface.hh"
 #include "utf8_iterator.hh"
 #include "debug.hh"
+#include "modification.hh"
 
 namespace Kakoune
 {
@@ -67,6 +68,8 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
 {
     if (strings.empty())
         return;
+
+    selections.update();
     for (size_t i = 0; i < selections.size(); ++i)
     {
         size_t index = selections.size() - 1 - i;
@@ -78,10 +81,19 @@ void insert(Buffer& buffer, SelectionList& selections, memoryview<String> string
         {
              if (pos == buffer.end())
                  --pos;
-            selections.update();
             sel.anchor() = pos.coord();
             sel.cursor() = (str.empty() ?
                 pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
+
+           // update following selections
+           auto changes = compute_modifications(buffer, selections.timestamp());
+           for (size_t j = index+1; j < selections.size(); ++j)
+           {
+               auto& sel = selections[j];
+               sel.anchor() = update_pos(changes, sel.anchor());
+               sel.cursor() = update_pos(changes, sel.cursor());
+           }
+           selections.update_timestamp();
         }
     }
     selections.update();
