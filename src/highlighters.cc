@@ -805,10 +805,10 @@ private:
         for (auto& modif : modifs)
         {
             for (auto line = std::max(last_line + 1, modif.new_coord.line);
-                 line <= modif.new_coord.line + modif.num_added.line;
+                 line <= modif.new_coord.line + modif.num_added.line and
+                 line < buffer.line_count();
                  ++line)
             {
-                kak_assert(line < buffer.line_count());
                 auto& l = buffer[line];
                 using RegexIt = boost::regex_iterator<String::const_iterator>;
                 for (RegexIt it{l.begin(), l.end(), regex}, end; it != end; ++it)
