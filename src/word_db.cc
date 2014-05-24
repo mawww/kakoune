@@ -92,6 +92,9 @@ void WordDB::update_db()
         // add words from new lines
         for (auto l = 0_line; l <= modif.num_added.line; ++l)
         {
+            if (modif.new_coord.line + l >= buffer.line_count())
+                break;
+
             new_lines.push_back(get_words(buffer[modif.new_coord.line + l]));
             add_words(m_words, new_lines.back());
         }
