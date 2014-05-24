@@ -134,6 +134,9 @@ std::vector<Modification> compute_modifications(memoryview<Buffer::Change> chang
             else
                 num_removed.column = change.end.column - change.begin.column;
 
+            ByteCoord num_added;
+
+            // merge modifications lying in the erased range.
             auto delend = std::upper_bound(next, res.end(), change.end,
                                            [](const ByteCoord& l, const Modification& c)
                                            { return l < c.new_coord; });
@@ -142,36 +145,44 @@ std::vector<Modification> compute_modifications(memoryview<Buffer::Change> chang
             {
                 {
                     LineCount removed_from_it = change.end.line - it->new_coord.line;
-                    modif.num_removed.line += it->num_removed.line - std::min(removed_from_it, it->num_added.line);
-                    modif.num_added.line += std::max(0_line, it->num_added.line - removed_from_it);
+                    num_removed.line += it->num_removed.line - std::min(removed_from_it, it->num_added.line);
+                    num_added.line += std::max(0_line, it->num_added.line - removed_from_it);
                 }
 
                 if (it->new_coord.line == change.end.line)
+                    num_removed.column += it->num_removed.column;
+                if (it->new_coord.line + it->num_added.line == change.end.line)
                 {
-                    ByteCount removed_from_it = num_removed.column - it->new_coord.column;
-                    modif.num_removed.column += it->num_removed.column - std::min(removed_from_it, it->num_added.column);
-                    modif.num_added.column += std::max(0_byte, it->num_added.column - removed_from_it);
+                    ByteCount removed_from_added = std::min(num_removed.column, it->num_added.column);
+                    num_added.column += std::max(0_byte, it->num_added.column - removed_from_added);
+                    num_removed.column -= removed_from_added;
                 }
+                if (it->new_coord.line == change.begin.line)
+                    num_removed.column += it->new_coord.column - change.begin.column;
             }
             next = res.erase(next, delend);
 
-            ByteCoord num_added_after_pos = { modif.new_coord.line + modif.num_added.line - change.begin.line, 0 };
-            if (change.begin.line == modif.new_coord.line + modif.num_added.line)
+            // update modification with changes
+            if (change.end.line == modif.new_coord.line + modif.num_added.line)
             {
-                if (modif.num_added.line == 0)
-                    num_added_after_pos.column = modif.new_coord.column + modif.num_added.column - change.begin.column;
-                else
-                    num_added_after_pos.column = modif.num_added.column - change.begin.column;
+                ByteCount removed_from_added = std::min(num_removed.column, modif.num_added.column);
+                modif.num_added.column = std::max(0_byte, modif.num_added.column - removed_from_added) + num_added.column;
+                modif.num_removed.column += num_removed.column - removed_from_added;
             }
-            ByteCoord num_removed_from_added = std::min(num_removed, num_added_after_pos);
-            modif.num_added -= num_removed_from_added;
-
+            else if (change.end.line > modif.new_coord.line + modif.num_added.line)
+            {
+                modif.num_added.column = num_added.column;
+                modif.num_removed.column = num_removed.column;
+            }
             if (change.begin.line == modif.new_coord.line)
                 modif.num_added.column += change.begin.column - modif.new_coord.column;
-            else
-                modif.num_added.column += change.begin.column;
 
-            modif.num_removed += num_removed - num_removed_from_added;
+            {
+                LineCount change_pos_in_modif = change.begin.line - modif.new_coord.line;
+                LineCount removed_from_added = std::min(num_removed.line, modif.num_added.line - change_pos_in_modif);
+                modif.num_added.line = std::max(0_line, modif.num_added.line - removed_from_added) + num_added.line;
+                modif.num_removed.line += num_removed.line - removed_from_added;
+            }
 
             for (auto it = next; it != res.end(); ++it)
             {
