@@ -189,14 +189,13 @@ void InsertCompleter::select(int offset)
     const auto& cursor_pos = selections.main().cursor();
     const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
     const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
-    const auto buffer_len = buffer.byte_count();
 
     auto ref = buffer.string(m_completions.begin, m_completions.end);
     for (auto& sel : selections)
     {
-        auto offset = buffer.offset(sel.cursor());
-        auto pos = buffer.iterator_at(sel.cursor());
-        if (offset >= prefix_len and offset + suffix_len < buffer_len and
+        const auto& cursor = sel.cursor();
+        auto pos = buffer.iterator_at(cursor);
+        if (cursor.column >= prefix_len and (pos + suffix_len) != buffer.end() and
             std::equal(ref.begin(), ref.end(), pos - prefix_len))
         {
             pos = buffer.erase(pos - prefix_len, pos + suffix_len);

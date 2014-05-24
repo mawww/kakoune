@@ -105,7 +105,6 @@ public:
     String         string(ByteCoord begin, ByteCoord end) const;
 
     char           byte_at(ByteCoord c) const;
-    ByteCount      offset(ByteCoord c) const;
     ByteCount      distance(ByteCoord begin, ByteCoord end) const;
     ByteCoord      advance(ByteCoord coord, ByteCount count) const;
     ByteCoord      next(ByteCoord coord) const;
@@ -124,11 +123,10 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    ByteCount      byte_count() const;
     LineCount      line_count() const;
 
     const String&  operator[](LineCount line) const
-    { return m_lines[line].content; }
+    { return m_lines[line]; }
 
     // returns an iterator at given coordinates. clamp line_and_column
     BufferIterator iterator_at(ByteCoord coord) const;
@@ -177,20 +175,13 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    struct Line
+    struct LineList : std::vector<String>
     {
-        ByteCount start;
-        String    content;
+        String& operator[](LineCount line)
+        { return std::vector<String>::operator[]((int)line); }
 
-        ByteCount length() const { return content.length(); }
-    };
-    struct LineList : std::vector<Line>
-    {
-        Line& operator[](LineCount line)
-        { return std::vector<Line>::operator[]((int)line); }
-
-        const Line& operator[](LineCount line) const
-        { return std::vector<Line>::operator[]((int)line); }
+        const String& operator[](LineCount line) const
+        { return std::vector<String>::operator[]((int)line); }
     };
     LineList m_lines;
 

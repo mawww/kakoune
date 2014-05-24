@@ -288,7 +288,7 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
-    if (not (flags & ObjectFlags::ToEnd) and buffer.offset(first.coord()) > 1 and
+    if (not (flags & ObjectFlags::ToEnd) and first.coord() > ByteCoord{0,1} and
         *(first-1) == '\n' and *(first-2) == '\n')
         --first;
     else if ((flags & ObjectFlags::ToEnd) and

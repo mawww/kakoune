@@ -9,7 +9,7 @@ namespace Kakoune
 inline char Buffer::byte_at(ByteCoord c) const
 {
     kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
-    return m_lines[c.line].content[c.column];
+    return m_lines[c.line][c.column];
 }
 
 inline ByteCoord Buffer::next(ByteCoord coord) const
@@ -40,14 +40,19 @@ inline ByteCoord Buffer::prev(ByteCoord coord) const
 
 inline ByteCount Buffer::distance(ByteCoord begin, ByteCoord end) const
 {
-    return offset(end) - offset(begin);
-}
-
-inline ByteCount Buffer::offset(ByteCoord c) const
-{
-    if (c.line == line_count())
-        return m_lines.back().start + m_lines.back().length();
-    return m_lines[c.line].start + c.column;
+    if (begin > end)
+        return -distance(end, begin);
+    ByteCount res = 0;
+    for (LineCount l = begin.line; l <= end.line; ++l)
+    {
+        ByteCount len = m_lines[l].length();
+        res += len;
+        if (l == begin.line)
+            res -= begin.column;
+        if (l == end.line)
+            res -= len - end.column;
+    }
+    return res;
 }
 
 inline bool Buffer::is_valid(ByteCoord c) const
@@ -75,13 +80,6 @@ inline BufferIterator Buffer::end() const
     if (m_lines.empty())
         return BufferIterator(*this, { 0_line, 0 });
     return BufferIterator(*this, { line_count() - 1, m_lines.back().length() });
-}
-
-inline ByteCount Buffer::byte_count() const
-{
-    if (m_lines.empty())
-        return 0;
-    return m_lines.back().start + m_lines.back().length();
 }
 
 inline LineCount Buffer::line_count() const

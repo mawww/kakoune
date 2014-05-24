@@ -27,6 +27,9 @@ void test_buffer()
     kak_assert(pos.coord() == ByteCoord{1 COMMA 0});
     buffer.insert(pos, "tchou kanaky\n");
     kak_assert(buffer.line_count() == 5);
+    BufferIterator pos2 = buffer.end();
+    pos2 -= 9;
+    kak_assert(*pos2 == '?');
 
     String str = buffer.string({ 4, 1 }, buffer.next({ 4, 5 }));
     kak_assert(str == "youpi");
