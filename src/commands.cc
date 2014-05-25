@@ -60,7 +60,7 @@ Buffer* open_fifo(const String& name , const String& filename, bool scroll)
 
 const PerArgumentCommandCompleter filename_completer({
      [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-     { return Completions{ 0_byte, prefix.length(),
+     { return Completions{ 0_byte, cursor_pos,
                            complete_filename(prefix,
                                              context.options()["ignored_files"].get<Regex>(),
                                              cursor_pos) }; }
@@ -68,7 +68,7 @@ const PerArgumentCommandCompleter filename_completer({
 
 const PerArgumentCommandCompleter buffer_completer({
     [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-    { return Completions{ 0_byte, prefix.length(),
+    { return Completions{ 0_byte, cursor_pos,
                           BufferManager::instance().complete_buffer_name(prefix, cursor_pos) }; }
 });
 
@@ -956,6 +956,22 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             GlobalHooks::instance().enable_hooks();
     });
 
+    struct DisableOption {
+        DisableOption(Context& context, const char* name)
+            : m_option(context.options()[name]),
+              m_prev_value(m_option.get<bool>())
+        { m_option.set(false); }
+
+        ~DisableOption() { m_option.set(m_prev_value); }
+
+        Option& m_option;
+        bool m_prev_value;
+    };
+    DisableOption disable_autoinfo(context, "autoinfo");
+    DisableOption disable_autoshowcompl(context, "autoshowcompl");
+    DisableOption disable_incsearch(context, "incsearch");
+
+
     ClientManager& cm = ClientManager::instance();
     if (parser.has_option("buffer"))
     {
@@ -1211,7 +1227,7 @@ const CommandDesc try_catch_cmd = {
 static Completions complete_colalias(const Context&, CompletionFlags flags,
                                      const String& prefix, ByteCount cursor_pos)
 {
-    return {0_byte, prefix.length(),
+    return {0_byte, cursor_pos,
             ColorRegistry::instance().complete_alias_name(prefix, cursor_pos)};
 }
 

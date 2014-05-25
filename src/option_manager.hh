@@ -88,6 +88,7 @@ public:
     OptionManager(OptionManager& parent);
     ~OptionManager();
 
+    Option& operator[] (const String& name);
     const Option& operator[] (const String& name) const;
     Option& get_local_option(const String& name);
 

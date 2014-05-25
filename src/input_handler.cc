@@ -84,6 +84,8 @@ public:
     {
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             m_count = m_count * 10 + key.key - '0';
+        else if (key == Key::Backspace)
+            m_count /= 10;
         else
         {
             auto it = keymap.find(key);
@@ -138,7 +140,7 @@ public:
                 --m_cursor_pos;
             }
         }
-        else if (key == Key::Erase)
+        else if (key == Key::Delete)
         {
             if (m_cursor_pos != m_line.char_length())
                 m_line = m_line.substr(0, m_cursor_pos)
@@ -675,7 +677,7 @@ public:
                 buffer.erase(utf8::previous(pos), pos);
             }
         }
-        else if (key == Key::Erase)
+        else if (key == Key::Delete)
         {
             for (auto& sel : reversed(context().selections()))
             {

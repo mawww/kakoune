@@ -56,7 +56,7 @@ Option& OptionManager::get_local_option(const String& name)
 
 }
 
-const Option& OptionManager::operator[](const String& name) const
+Option& OptionManager::operator[](const String& name)
 {
     auto it = find_option(m_options, name);
     if (it != m_options.end())
@@ -65,6 +65,11 @@ const Option& OptionManager::operator[](const String& name) const
         return (*m_parent)[name];
     else
         throw option_not_found(name);
+}
+
+const Option& OptionManager::operator[](const String& name) const
+{
+    return const_cast<OptionManager&>(*this)[name];
 }
 
 template<typename MatchingFunc>
