@@ -137,8 +137,23 @@ void register_env_vars()
             [](StringView name, const Context& context)
             { auto& sel = context.selections().main();
                 auto beg = sel.min();
-                return to_string(beg.line + 1) + ':' + to_string(beg.column + 1) + '+' +
+                return to_string(beg.line + 1) + '.' + to_string(beg.column + 1) + '+' +
                        to_string((int)context.buffer().distance(beg, sel.max())+1); }
+        }, {
+            "selections_desc",
+            [](StringView name, const Context& context)
+            {
+                String res;
+                for (auto& sel : context.selections())
+                {
+                    auto beg = sel.min();
+                    if (not res.empty())
+                        res += ':';
+                    res += to_string(beg.line + 1) + '.' + to_string(beg.column + 1) + '+' +
+                           to_string((int)context.buffer().distance(beg, sel.max())+1);
+                }
+                return res;
+            }
         }, {
             "window_width",
             [](StringView name, const Context& context)
