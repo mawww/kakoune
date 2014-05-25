@@ -955,6 +955,22 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             GlobalHooks::instance().enable_hooks();
     });
 
+    struct DisableOption {
+        DisableOption(Context& context, const char* name)
+            : m_option(context.options()[name]),
+              m_prev_value(m_option.get<bool>())
+        { m_option.set(false); }
+
+        ~DisableOption() { m_option.set(m_prev_value); }
+
+        Option& m_option;
+        bool m_prev_value;
+    };
+    DisableOption disable_autoinfo(context, "autoinfo");
+    DisableOption disable_autoshowcompl(context, "autoshowcompl");
+    DisableOption disable_incsearch(context, "incsearch");
+
+
     ClientManager& cm = ClientManager::instance();
     if (parser.has_option("buffer"))
     {
