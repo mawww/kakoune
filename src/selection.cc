@@ -2,6 +2,7 @@
 
 #include "utf8.hh"
 #include "modification.hh"
+#include "buffer_utils.hh"
 
 namespace Kakoune
 {
@@ -102,24 +103,24 @@ struct UpdateErase
 
 }
 
-SelectionList::SelectionList(const Buffer& buffer, Selection s, size_t timestamp)
+SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
     : m_buffer(&buffer), m_selections({ s }), m_timestamp(timestamp)
 {
     check_invariant();
 }
 
-SelectionList::SelectionList(const Buffer& buffer, Selection s)
+SelectionList::SelectionList(Buffer& buffer, Selection s)
     : SelectionList(buffer, s, buffer.timestamp())
 {}
 
-SelectionList::SelectionList(const Buffer& buffer, std::vector<Selection> s, size_t timestamp)
+SelectionList::SelectionList(Buffer& buffer, std::vector<Selection> s, size_t timestamp)
     : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
 {
     kak_assert(size() > 0);
     check_invariant();
 }
 
-SelectionList::SelectionList(const Buffer& buffer, std::vector<Selection> s)
+SelectionList::SelectionList(Buffer& buffer, std::vector<Selection> s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
 {}
 
@@ -220,5 +221,84 @@ void SelectionList::avoid_eol()
     for (auto& sel : m_selections)
         _avoid_eol(buffer(), sel);
 }
+
+void SelectionList::erase()
+{
+    for (auto& sel : reversed(m_selections))
+    {
+        Kakoune::erase(*m_buffer, sel);
+    }
+    update();
+    avoid_eol();
+    m_buffer->check_invariant();
+}
+
+BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
+{
+    switch (mode)
+    {
+    case InsertMode::Insert:
+        return buffer.iterator_at(sel.min());
+    case InsertMode::Replace:
+        return erase(buffer, sel);
+    case InsertMode::Append:
+    {
+        // special case for end of lines, append to current line instead
+        auto pos = buffer.iterator_at(sel.max());
+        return *pos == '\n' ? pos : utf8::next(pos);
+    }
+    case InsertMode::InsertAtLineBegin:
+        return buffer.iterator_at(sel.min().line);
+    case InsertMode::AppendAtLineEnd:
+        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
+    case InsertMode::InsertAtNextLineBegin:
+        return buffer.iterator_at(sel.max().line+1);
+    case InsertMode::OpenLineBelow:
+        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
+    case InsertMode::OpenLineAbove:
+        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
+    }
+    kak_assert(false);
+    return {};
+}
+
+void SelectionList::insert(memoryview<String> strings, InsertMode mode)
+{
+    if (strings.empty())
+        return;
+
+    update();
+    for (size_t i = 0; i < m_selections.size(); ++i)
+    {
+        size_t index = m_selections.size() - 1 - i;
+        auto& sel = m_selections[index];
+        auto pos = prepare_insert(*m_buffer, sel, mode);
+        const String& str = strings[std::min(index, strings.size()-1)];
+        pos = m_buffer->insert(pos, str);
+        if (mode == InsertMode::Replace)
+        {
+             if (pos == m_buffer->end())
+                 --pos;
+            sel.anchor() = pos.coord();
+            sel.cursor() = (str.empty() ?
+                pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
+
+           // update following selections
+           auto changes = compute_modifications(*m_buffer, timestamp());
+           for (size_t j = index+1; j < m_selections.size(); ++j)
+           {
+               auto& sel = m_selections[j];
+               sel.anchor() = update_pos(changes, sel.anchor());
+               sel.cursor() = update_pos(changes, sel.cursor());
+           }
+           update_timestamp();
+        }
+    }
+    update();
+    avoid_eol();
+    check_invariant();
+    m_buffer->check_invariant();
+}
+
 
 }

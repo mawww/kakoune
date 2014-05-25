@@ -55,12 +55,24 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
     return lhs.min() < rhs.min();
 }
 
+enum class InsertMode : unsigned
+{
+    Insert,
+    Append,
+    Replace,
+    InsertAtLineBegin,
+    InsertAtNextLineBegin,
+    AppendAtLineEnd,
+    OpenLineBelow,
+    OpenLineAbove
+};
+
 struct SelectionList
 {
-    SelectionList(const Buffer& buffer, Selection s);
-    SelectionList(const Buffer& buffer, Selection s, size_t timestamp);
-    SelectionList(const Buffer& buffer, std::vector<Selection> s);
-    SelectionList(const Buffer& buffer, std::vector<Selection> s, size_t timestamp);
+    SelectionList(Buffer& buffer, Selection s);
+    SelectionList(Buffer& buffer, Selection s, size_t timestamp);
+    SelectionList(Buffer& buffer, std::vector<Selection> s);
+    SelectionList(Buffer& buffer, std::vector<Selection> s, size_t timestamp);
 
     void update();
 
@@ -103,17 +115,7 @@ struct SelectionList
     const_iterator begin() const { return m_selections.begin(); }
     const_iterator end() const { return m_selections.end(); }
 
-    template<typename... Args>
-    iterator insert(Args... args)
-    {
-        return m_selections.insert(std::forward<Args>(args)...);
-    }
-
-    template<typename... Args>
-    iterator erase(Args... args)
-    {
-        return m_selections.erase(std::forward<Args>(args)...);
-    }
+    void remove(size_t index) { m_selections.erase(begin() + index); }
 
     size_t size() const { return m_selections.size(); }
 
@@ -140,22 +142,25 @@ struct SelectionList
                     (*this)[i] = std::move((*this)[j]);
             }
         }
-        erase(begin() + i + 1, end());
+        m_selections.erase(begin() + i + 1, end());
         kak_assert(std::is_sorted(begin(), end(), compare_selections));
     }
 
     void sort_and_merge_overlapping();
 
-    const Buffer& buffer() const { return *m_buffer; }
+    Buffer& buffer() const { return *m_buffer; }
 
     size_t timestamp() const { return m_timestamp; }
     void update_timestamp() { m_timestamp = m_buffer->timestamp(); }
+
+    void insert(memoryview<String> strings, InsertMode mode);
+    void erase();
 
 private:
     size_t m_main = 0;
     std::vector<Selection> m_selections;
 
-    safe_ptr<const Buffer> m_buffer;
+    safe_ptr<Buffer> m_buffer;
     size_t m_timestamp;
 };
 

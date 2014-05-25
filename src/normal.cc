@@ -22,86 +22,6 @@
 namespace Kakoune
 {
 
-void erase(Buffer& buffer, SelectionList& selections)
-{
-    for (auto& sel : reversed(selections))
-    {
-        erase(buffer, sel);
-    }
-    selections.update();
-    selections.avoid_eol();
-    buffer.check_invariant();
-}
-
-template<InsertMode mode>
-BufferIterator prepare_insert(Buffer& buffer, const Selection& sel)
-{
-    switch (mode)
-    {
-    case InsertMode::Insert:
-        return buffer.iterator_at(sel.min());
-    case InsertMode::Replace:
-        return Kakoune::erase(buffer, sel);
-    case InsertMode::Append:
-    {
-        // special case for end of lines, append to current line instead
-        auto pos = buffer.iterator_at(sel.max());
-        return *pos == '\n' ? pos : utf8::next(pos);
-    }
-    case InsertMode::InsertAtLineBegin:
-        return buffer.iterator_at(sel.min().line);
-    case InsertMode::AppendAtLineEnd:
-        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
-    case InsertMode::InsertAtNextLineBegin:
-        return buffer.iterator_at(sel.max().line+1);
-    case InsertMode::OpenLineBelow:
-        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
-    case InsertMode::OpenLineAbove:
-        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
-    }
-    kak_assert(false);
-    return {};
-}
-
-template<InsertMode mode>
-void insert(Buffer& buffer, SelectionList& selections, memoryview<String> strings)
-{
-    if (strings.empty())
-        return;
-
-    selections.update();
-    for (size_t i = 0; i < selections.size(); ++i)
-    {
-        size_t index = selections.size() - 1 - i;
-        auto& sel = selections[index];
-        auto pos = prepare_insert<mode>(buffer, sel);
-        const String& str = strings[std::min(index, strings.size()-1)];
-        pos = buffer.insert(pos, str);
-        if (mode == InsertMode::Replace)
-        {
-             if (pos == buffer.end())
-                 --pos;
-            sel.anchor() = pos.coord();
-            sel.cursor() = (str.empty() ?
-                pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
-
-           // update following selections
-           auto changes = compute_modifications(buffer, selections.timestamp());
-           for (size_t j = index+1; j < selections.size(); ++j)
-           {
-               auto& sel = selections[j];
-               sel.anchor() = update_pos(changes, sel.anchor());
-               sel.cursor() = update_pos(changes, sel.cursor());
-           }
-           selections.update_timestamp();
-        }
-    }
-    selections.update();
-    selections.avoid_eol();
-    selections.check_invariant();
-    buffer.check_invariant();
-}
-
 using namespace std::placeholders;
 
 enum class SelectMode
@@ -172,7 +92,7 @@ constexpr Select<mode, T> make_select(T func)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(const Buffer& buffer, ByteCoord coord, SelectionList& selections)
+void select_coord(Buffer& buffer, ByteCoord coord, SelectionList& selections)
 {
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
@@ -405,7 +325,7 @@ void replace_with_char(Context& context, int)
             CharCount count = char_length(buffer, sel);
             strings.emplace_back(key.key, count);
         }
-        insert<InsertMode::Replace>(buffer, selections, strings);
+        selections.insert(strings, InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -428,7 +348,7 @@ void for_each_char(Context& context, int)
         for (auto& c : sel)
             c = func(c);
     }
-    insert<InsertMode::Replace>(context.buffer(), context.selections(), sels);
+    context.selections().insert(sels, InsertMode::Replace);
 }
 
 void command(Context& context, int)
@@ -493,7 +413,7 @@ void pipe(Context& context, int)
                 strings.push_back(str);
             }
             ScopedEdition edition(context);
-            insert<mode>(buffer, selections, strings);
+            selections.insert(strings, mode);
         });
 }
 
@@ -543,7 +463,7 @@ void erase_selections(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.selections_content();
     ScopedEdition edition(context);
-    erase(context.buffer(), context.selections());
+    context.selections().erase();
 }
 
 void cat_erase_selections(Context& context, int)
@@ -553,7 +473,7 @@ void cat_erase_selections(Context& context, int)
     for (auto& sel : sels)
         str += sel;
     RegisterManager::instance()['"'] = memoryview<String>(str);
-    erase(context.buffer(), context.selections());
+    context.selections().erase();
 }
 
 
@@ -587,10 +507,8 @@ void paste(Context& context, int)
         }
     }
     ScopedEdition edition(context);
-    if (linewise)
-        insert<adapt_for_linewise(mode)>(context.buffer(), context.selections(), strings);
-    else
-        insert<mode>(context.buffer(), context.selections(), strings);
+    context.selections().insert(strings,
+                                linewise ? adapt_for_linewise(mode) : mode);
 }
 
 template<typename T>
@@ -717,7 +635,7 @@ void select_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            select_all_matches(context.buffer(), context.selections(), ex);
+            select_all_matches(context.selections(), ex);
     });
 }
 
@@ -729,7 +647,7 @@ void split_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            split_selections(context.buffer(), context.selections(), ex);
+            split_selections(context.selections(), ex);
     });
 }
 
@@ -775,7 +693,7 @@ void join_select_spaces(Context& context, int)
         return;
     context.selections() = selections;
     ScopedEdition edition(context);
-    insert<InsertMode::Replace>(buffer, context.selections(), " "_str);
+    context.selections().insert(" "_str, InsertMode::Replace);
 }
 
 void join(Context& context, int param)
@@ -853,7 +771,7 @@ void indent(Context& context, int)
     {
         ScopedEdition edition(context);
         SelectionList selections{buffer, std::move(sels)};
-        insert<InsertMode::Insert>(buffer, selections, indent);
+        selections.insert(indent, InsertMode::Insert);
     }
 }
 
@@ -898,7 +816,7 @@ void deindent(Context& context, int)
     {
         ScopedEdition edition(context);
         SelectionList selections{context.buffer(), std::move(sels)};
-        erase(context.buffer(), selections);
+        selections.erase();
     }
 }
 
@@ -1008,7 +926,7 @@ void rotate_selections_content(Context& context, int group)
         std::rotate(it, end-count, end);
         it = end;
     }
-    insert<InsertMode::Replace>(context.buffer(), context.selections(), strings);
+    context.selections().insert(strings, InsertMode::Replace);
     context.selections().rotate_main(count);
 }
 
@@ -1236,7 +1154,7 @@ void spaces_to_tabs(Context& context, int ts)
     }
 }
 
-static boost::optional<SelectionList> compute_modified_ranges(const Buffer& buffer, size_t timestamp)
+static boost::optional<SelectionList> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 {
     std::vector<Selection> ranges;
     for (auto& change : buffer.changes_since(timestamp))
@@ -1402,12 +1320,12 @@ KeyMap keymap =
 
     { '.', repeat_last_insert },
 
-    { '%', [](Context& context, int) { select_whole_buffer(context.buffer(), context.selections()); } },
+    { '%', [](Context& context, int) { select_whole_buffer(context.selections()); } },
 
     { ':', command },
     { '|', pipe<InsertMode::Replace> },
     { alt('|'), pipe<InsertMode::Append> },
-    { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.buffer(), context.selections());
+    { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.selections());
                                              else keep_selection(context.selections(), count-1); } },
     { alt(' '), [](Context& context, int count) { if (count == 0) flip_selections(context.selections());
                                                   else remove_selection(context.selections(), count-1); } },

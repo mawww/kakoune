@@ -9,14 +9,14 @@
 namespace Kakoune
 {
 
-inline void clear_selections(const Buffer& buffer, SelectionList& selections)
+inline void clear_selections(SelectionList& selections)
 {
     auto& sel = selections.main();
     auto& pos = sel.cursor();
     sel.anchor() = pos;
     selections.avoid_eol();
 
-    selections = SelectionList{ buffer, std::move(sel) };
+    selections = SelectionList{ selections.buffer(), std::move(sel) };
 }
 
 inline void flip_selections(SelectionList& selections)
@@ -41,7 +41,7 @@ inline void remove_selection(SelectionList& selections, int index)
     if (selections.size() > 1 and index < selections.size())
     {
         size_t real_index = (index + selections.main_index() + 1) % selections.size();
-        selections.erase(selections.begin() + real_index);
+        selections.remove(real_index);
         size_t main_index = selections.main_index();
         if (real_index <= main_index)
             selections.set_main_index((main_index > 0 ? main_index
@@ -207,7 +207,7 @@ Selection select_whole_paragraph(const Buffer& buffer, const Selection& selectio
 Selection select_whole_indent(const Buffer& buffer, const Selection& selection,
                               ObjectFlags flags);
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection);
-void select_whole_buffer(const Buffer& buffer, SelectionList& selections);
+void select_whole_buffer(SelectionList& selections);
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
 
 enum Direction { Forward, Backward };
@@ -266,10 +266,10 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     return {begin.coord(), end.coord(), std::move(captures)};
 }
 
-void select_all_matches(const Buffer& buffer, SelectionList& selections,
+void select_all_matches(SelectionList& selections,
                         const Regex& regex);
 
-void split_selections(const Buffer& buffer, SelectionList& selections,
+void split_selections(SelectionList& selections,
                       const Regex& separator_regex);
 
 using CodepointPair = std::pair<Codepoint, Codepoint>;
