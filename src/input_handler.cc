@@ -84,6 +84,8 @@ public:
     {
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             m_count = m_count * 10 + key.key - '0';
+        else if (key == Key::Backspace)
+            m_count /= 10;
         else
         {
             auto it = keymap.find(key);
