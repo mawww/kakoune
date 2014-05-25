@@ -34,6 +34,7 @@ static const KeyAndName keynamemap[] = {
     { "home", Key::Home },
     { "end", Key::End },
     { "backtab", Key::BackTab },
+    { "del", Key::Delete },
 };
 
 KeyList parse_keys(StringView str)

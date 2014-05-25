@@ -138,7 +138,7 @@ public:
                 --m_cursor_pos;
             }
         }
-        else if (key == Key::Erase)
+        else if (key == Key::Delete)
         {
             if (m_cursor_pos != m_line.char_length())
                 m_line = m_line.substr(0, m_cursor_pos)
@@ -675,7 +675,7 @@ public:
                 buffer.erase(utf8::previous(pos), pos);
             }
         }
-        else if (key == Key::Erase)
+        else if (key == Key::Delete)
         {
             for (auto& sel : context().selections())
             {
