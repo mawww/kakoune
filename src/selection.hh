@@ -58,6 +58,7 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
 enum class InsertMode : unsigned
 {
     Insert,
+    InsertCursor,
     Append,
     Replace,
     InsertAtLineBegin,

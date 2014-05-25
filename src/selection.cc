@@ -239,6 +239,8 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     {
     case InsertMode::Insert:
         return buffer.iterator_at(sel.min());
+    case InsertMode::InsertCursor:
+        return buffer.iterator_at(sel.cursor());
     case InsertMode::Replace:
         return erase(buffer, sel);
     case InsertMode::Append:
@@ -295,7 +297,6 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode)
         }
     }
     update();
-    avoid_eol();
     check_invariant();
     m_buffer->check_invariant();
 }

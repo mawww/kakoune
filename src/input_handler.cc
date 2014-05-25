@@ -759,26 +759,13 @@ private:
 
     void insert(memoryview<String> strings)
     {
-        auto& buffer = context().buffer();
-        auto& selections = context().selections();
-        for (size_t i = 0; i < selections.size(); ++i)
-        {
-            size_t index = selections.size() - 1 - i;
-            const String& str = strings[std::min(index, strings.size()-1)];
-            buffer.insert(buffer.iterator_at(selections[index].cursor()),
-                          str);
-        }
-        selections.update();
+        context().selections().insert(strings, InsertMode::InsertCursor);
     }
 
     void insert(Codepoint key)
     {
         auto str = codepoint_to_str(key);
-        auto& buffer = context().buffer();
-        auto& selections = context().selections();
-        for (auto& sel : reversed(selections))
-            buffer.insert(buffer.iterator_at(sel.cursor()), str);
-        selections.update();
+        context().selections().insert(str, InsertMode::InsertCursor);
         context().hooks().run_hook("InsertChar", str, context());
     }
 
@@ -828,6 +815,7 @@ private:
                 cursor = anchor;
                 break;
             case InsertMode::InsertAtNextLineBegin:
+            case InsertMode::InsertCursor:
                  kak_assert(false); // not implemented
                  break;
             }
