@@ -165,8 +165,8 @@ private:
     size_t m_timestamp;
 };
 
-void update_insert(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, bool at_end);
-void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end, bool at_end);
+void update_insert(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end);
+void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end);
 
 }
 

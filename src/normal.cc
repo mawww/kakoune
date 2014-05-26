@@ -1163,7 +1163,7 @@ static boost::optional<SelectionList> compute_modified_ranges(Buffer& buffer, si
         const ByteCoord& end = change.end;
         if (change.type == Buffer::Change::Insert)
         {
-            update_insert(ranges, begin, end, change.at_end);
+            update_insert(ranges, begin, end);
             auto it = std::upper_bound(ranges.begin(), ranges.end(), begin,
                                        [](ByteCoord c, const Selection& sel)
                                        { return c < sel.min(); });
@@ -1171,7 +1171,7 @@ static boost::optional<SelectionList> compute_modified_ranges(Buffer& buffer, si
         }
         else
         {
-            update_erase(ranges, begin, end, change.at_end);
+            update_erase(ranges, begin, end);
             auto pos = begin;
             if (change.at_end)
                 pos = begin.column ? ByteCoord{begin.line, begin.column - 1}
@@ -1184,6 +1184,12 @@ static boost::optional<SelectionList> compute_modified_ranges(Buffer& buffer, si
     }
     if (ranges.empty())
         return {};
+
+    for (auto& sel : ranges)
+    {
+        sel.anchor() = buffer.clamp(sel.anchor());
+        sel.cursor() = buffer.clamp(sel.cursor());
+    }
 
     SelectionList result{buffer, std::move(ranges)};
 
