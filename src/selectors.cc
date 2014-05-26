@@ -352,6 +352,14 @@ static CharCount get_indent(const String& str, int tabstop)
     return indent;
 }
 
+static bool is_only_whitespaces(const String& str)
+{
+    auto it = str.begin();
+    skip_while(it, str.end(),
+               [](char c){ return c == ' ' or c == '\t' or c == '\n'; });
+    return it == str.end();
+}
+
 Selection select_whole_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     int tabstop = buffer.options()["tabstop"].get<int>();
@@ -368,26 +376,22 @@ Selection select_whole_indent(const Buffer& buffer, const Selection& selection, 
     LineCount end_line = line + 1;
     if (flags & ObjectFlags::ToEnd)
     {
-        LineCount end = buffer.line_count();
+        const LineCount end = buffer.line_count();
         while (end_line < end and (buffer[end_line] == "\n" or get_indent(buffer[end_line], tabstop) >= indent))
             ++end_line;
     }
     --end_line;
-    ByteCoord first = begin_line;
-    // keep the first line indent in inner mode
+    // remove only whitespaces lines in inner mode
     if (flags & ObjectFlags::Inner)
     {
-        CharCount i = 0;
-        for (; i < indent; ++first.column)
-        {
-            auto c = buffer.byte_at(first);
-            if (c == ' ')
-                ++i;
-            if (c == '\t')
-                i = (i / tabstop + 1) * tabstop;
-        }
+        while (begin_line < end_line and
+               is_only_whitespaces(buffer[begin_line]))
+            ++begin_line;
+        while (begin_line < end_line and
+               is_only_whitespaces(buffer[end_line]))
+            --end_line;
     }
-    return Selection{first, {end_line, buffer[end_line].length() - 1}};
+    return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
 }
 
 Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
