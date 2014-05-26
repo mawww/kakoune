@@ -223,7 +223,7 @@ static bool is_end_of_sentence(char c)
     return c == '.' or c == ';' or c == '!' or c == '?';
 }
 
-Selection select_whole_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
@@ -284,7 +284,7 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
                                         : Selection{last.coord(), first.coord()};
 }
 
-Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
@@ -352,7 +352,15 @@ static CharCount get_indent(const String& str, int tabstop)
     return indent;
 }
 
-Selection select_whole_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+static bool is_only_whitespaces(const String& str)
+{
+    auto it = str.begin();
+    skip_while(it, str.end(),
+               [](char c){ return c == ' ' or c == '\t' or c == '\n'; });
+    return it == str.end();
+}
+
+Selection select_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     int tabstop = buffer.options()["tabstop"].get<int>();
     LineCount line = selection.cursor().line;
@@ -368,29 +376,25 @@ Selection select_whole_indent(const Buffer& buffer, const Selection& selection, 
     LineCount end_line = line + 1;
     if (flags & ObjectFlags::ToEnd)
     {
-        LineCount end = buffer.line_count();
+        const LineCount end = buffer.line_count();
         while (end_line < end and (buffer[end_line] == "\n" or get_indent(buffer[end_line], tabstop) >= indent))
             ++end_line;
     }
     --end_line;
-    ByteCoord first = begin_line;
-    // keep the first line indent in inner mode
+    // remove only whitespaces lines in inner mode
     if (flags & ObjectFlags::Inner)
     {
-        CharCount i = 0;
-        for (; i < indent; ++first.column)
-        {
-            auto c = buffer.byte_at(first);
-            if (c == ' ')
-                ++i;
-            if (c == '\t')
-                i = (i / tabstop + 1) * tabstop;
-        }
+        while (begin_line < end_line and
+               is_only_whitespaces(buffer[begin_line]))
+            ++begin_line;
+        while (begin_line < end_line and
+               is_only_whitespaces(buffer[end_line]))
+            --end_line;
     }
-    return Selection{first, {end_line, buffer[end_line].length() - 1}};
+    return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
 }
 
-Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
+Selection select_lines(const Buffer& buffer, const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator
     BufferIterator first = buffer.iterator_at(selection.anchor());
@@ -415,7 +419,7 @@ Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 {
-    // same as select_whole_lines
+    // same as select_lines
     BufferIterator first = buffer.iterator_at(selection.anchor());
     BufferIterator last =  buffer.iterator_at(selection.cursor());
     BufferIterator& to_line_start = first <= last ? first : last;
@@ -429,7 +433,7 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
     return Selection(first.coord(), last.coord());
 }
 
-void select_whole_buffer(SelectionList& selections)
+void select_buffer(SelectionList& selections)
 {
     auto& buffer = selections.buffer();
     selections = SelectionList{ buffer, Selection({0,0}, buffer.back_coord()) };

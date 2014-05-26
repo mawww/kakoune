@@ -159,7 +159,7 @@ constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
 { return (ObjectFlags)((int)lhs | (int) rhs); }
 
 template<WordType word_type>
-Selection select_whole_word(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_word(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     Utf8Iterator first = buffer.iterator_at(selection.cursor());
     Utf8Iterator last = first;
@@ -200,15 +200,23 @@ Selection select_whole_word(const Buffer& buffer, const Selection& selection, Ob
                                         : utf8_range(last, first);
 }
 
-Selection select_whole_sentence(const Buffer& buffer, const Selection& selection,
-                                ObjectFlags flags);
-Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection,
-                                 ObjectFlags flags);
-Selection select_whole_indent(const Buffer& buffer, const Selection& selection,
-                              ObjectFlags flags);
-Selection select_whole_lines(const Buffer& buffer, const Selection& selection);
-void select_whole_buffer(SelectionList& selections);
+Selection select_sentence(const Buffer& buffer,
+                          const Selection& selection,
+                          ObjectFlags flags);
+
+Selection select_paragraph(const Buffer& buffer,
+                           const Selection& selection,
+                           ObjectFlags flags);
+
+Selection select_indent(const Buffer& buffer,
+                        const Selection& selection,
+                        ObjectFlags flags);
+
+Selection select_lines(const Buffer& buffer, const Selection& selection);
+
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
+
+void select_buffer(SelectionList& selections);
 
 enum Direction { Forward, Backward };
 
