@@ -223,7 +223,7 @@ static bool is_end_of_sentence(char c)
     return c == '.' or c == ';' or c == '!' or c == '?';
 }
 
-Selection select_whole_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
@@ -284,7 +284,7 @@ Selection select_whole_sentence(const Buffer& buffer, const Selection& selection
                                         : Selection{last.coord(), first.coord()};
 }
 
-Selection select_whole_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
@@ -360,7 +360,7 @@ static bool is_only_whitespaces(const String& str)
     return it == str.end();
 }
 
-Selection select_whole_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     int tabstop = buffer.options()["tabstop"].get<int>();
     LineCount line = selection.cursor().line;
@@ -394,7 +394,7 @@ Selection select_whole_indent(const Buffer& buffer, const Selection& selection, 
     return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
 }
 
-Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
+Selection select_lines(const Buffer& buffer, const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator
     BufferIterator first = buffer.iterator_at(selection.anchor());
@@ -419,7 +419,7 @@ Selection select_whole_lines(const Buffer& buffer, const Selection& selection)
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 {
-    // same as select_whole_lines
+    // same as select_lines
     BufferIterator first = buffer.iterator_at(selection.anchor());
     BufferIterator last =  buffer.iterator_at(selection.cursor());
     BufferIterator& to_line_start = first <= last ? first : last;
@@ -433,7 +433,7 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
     return Selection(first.coord(), last.coord());
 }
 
-void select_whole_buffer(const Buffer& buffer, SelectionList& selections)
+void select_buffer(const Buffer& buffer, SelectionList& selections)
 {
     selections = SelectionList{ Selection({0,0}, buffer.back_coord()) };
 }

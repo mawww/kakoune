@@ -913,11 +913,11 @@ void select_object(Context& context, int param)
             Codepoint key;
             Selection (*func)(const Buffer&, const Selection&, ObjectFlags);
         } selectors[] = {
-            { 'w', select_whole_word<Word> },
-            { 'W', select_whole_word<WORD> },
-            { 's', select_whole_sentence },
-            { 'p', select_whole_paragraph },
-            { 'i', select_whole_indent },
+            { 'w', select_word<Word> },
+            { 'W', select_word<WORD> },
+            { 's', select_sentence },
+            { 'p', select_paragraph },
+            { 'i', select_indent },
         };
         for (auto& sel : selectors)
         {
@@ -1387,7 +1387,7 @@ KeyMap keymap =
 
     { '.', repeat_last_insert },
 
-    { '%', [](Context& context, int) { select_whole_buffer(context.buffer(), context.selections()); } },
+    { '%', [](Context& context, int) { select_buffer(context.buffer(), context.selections()); } },
 
     { ':', command },
     { '|', pipe<InsertMode::Replace> },
@@ -1417,7 +1417,7 @@ KeyMap keymap =
 
     { 'x', repeated(make_select<SelectMode::Replace>(select_line)) },
     { 'X', repeated(make_select<SelectMode::Extend>(select_line)) },
-    { alt('x'), make_select<SelectMode::Replace>(select_whole_lines) },
+    { alt('x'), make_select<SelectMode::Replace>(select_lines) },
     { alt('X'), make_select<SelectMode::Replace>(trim_partial_lines) },
 
     { 'm', make_select<SelectMode::Replace>(select_matching) },
