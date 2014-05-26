@@ -17,7 +17,6 @@
 #include "user_interface.hh"
 #include "utf8_iterator.hh"
 #include "debug.hh"
-#include "modification.hh"
 
 namespace Kakoune
 {
