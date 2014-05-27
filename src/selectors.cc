@@ -218,6 +218,31 @@ Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection
     return utf8_range(begin, end == buffer.begin() ? end : end+1);
 }
 
+Selection select_number(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+{
+    auto is_number = [&](char c) {
+        return (c >= '0' and c <= '9') or
+               (not (flags & ObjectFlags::Inner) and c == '.');
+    };
+
+    BufferIterator first = buffer.iterator_at(selection.cursor());
+    if (flags & ObjectFlags::ToBegin)
+    {
+        skip_while_reverse(first, buffer.begin(), is_number);
+        if (not is_number(*first) or not *first == '-')
+            ++first;
+    }
+    BufferIterator last = buffer.iterator_at(selection.cursor());
+    if (flags & ObjectFlags::ToEnd)
+    {
+        skip_while(last, buffer.end(), is_number);
+        --last;
+    }
+
+    return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
+                                        : Selection{last.coord(), first.coord()};
+}
+
 static bool is_end_of_sentence(char c)
 {
     return c == '.' or c == ';' or c == '!' or c == '?';

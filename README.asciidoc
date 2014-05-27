@@ -340,6 +340,7 @@ object you want.
  * _s_: select the sentence
  * _p_: select the paragraph
  * _i_: select the current indentation block
+ * _n_: select the number
 
 For nestable objects, a count can be used in order to specify which surrounding
 level to select.
