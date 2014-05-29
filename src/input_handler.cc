@@ -669,21 +669,23 @@ public:
         }
         else if (key == Key::Backspace)
         {
-            for (auto& sel : reversed(context().selections()))
+            std::vector<Selection> sels;
+            for (auto& sel : context().selections())
             {
                 if (sel.cursor() == ByteCoord{0,0})
                     continue;
-                auto pos = buffer.iterator_at(sel.cursor());
-                buffer.erase(utf8::previous(pos), pos);
+                auto pos = sel.cursor();
+                sels.push_back({ buffer.char_prev(pos) });
             }
+            if (not sels.empty())
+                SelectionList{buffer, std::move(sels)}.erase();
         }
         else if (key == Key::Delete)
         {
-            for (auto& sel : reversed(context().selections()))
-            {
-                auto pos = buffer.iterator_at(sel.cursor());
-                buffer.erase(pos, utf8::next(pos));
-            }
+            std::vector<Selection> sels;
+            for (auto& sel : context().selections())
+                sels.push_back({ sel.cursor() });
+            SelectionList{buffer, std::move(sels)}.erase();
         }
         else if (key == Key::Left)
         {
@@ -774,60 +776,55 @@ private:
         SelectionList& selections = context().selections();
         Buffer& buffer = context().buffer();
 
-        for (auto& sel : reversed(selections))
+        switch (mode)
         {
-            ByteCoord anchor, cursor;
-            switch (mode)
+        case InsertMode::Insert:
+            for (auto& sel : selections)
+                sel = Selection{sel.max(), sel.min()};
+            break;
+        case InsertMode::Replace:
+            selections.erase();
+            break;
+        case InsertMode::Append:
+            for (auto& sel : selections)
             {
-            case InsertMode::Insert:
-                anchor = sel.max();
-                cursor = sel.min();
-                break;
-            case InsertMode::Replace:
-                anchor = cursor = Kakoune::erase(buffer, sel).coord();
-                break;
-            case InsertMode::Append:
-                anchor = sel.min();
-                cursor = sel.max();
+                sel = Selection{sel.min(), sel.max()};
+                auto& cursor = sel.cursor();
                 // special case for end of lines, append to current line instead
                 if (cursor.column != buffer[cursor.line].length() - 1)
                     cursor = buffer.char_next(cursor);
-                break;
+            }
+            break;
 
-            case InsertMode::OpenLineBelow:
-            case InsertMode::AppendAtLineEnd:
-                anchor = cursor = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
-                break;
+        case InsertMode::OpenLineBelow:
+        case InsertMode::AppendAtLineEnd:
+            for (auto& sel : selections)
+                sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+            break;
 
-            case InsertMode::OpenLineAbove:
-            case InsertMode::InsertAtLineBegin:
-                anchor = sel.min().line;
+        case InsertMode::OpenLineAbove:
+        case InsertMode::InsertAtLineBegin:
+            for (auto& sel : selections)
+            {
+                ByteCoord pos = sel.min().line;
                 if (mode == InsertMode::OpenLineAbove)
-                    anchor = buffer.char_prev(anchor);
+                    pos = buffer.char_prev(pos);
                 else
                 {
-                    auto anchor_non_blank = buffer.iterator_at(anchor);
-                    while (*anchor_non_blank == ' ' or *anchor_non_blank == '\t')
-                        ++anchor_non_blank;
-                    if (*anchor_non_blank != '\n')
-                        anchor = anchor_non_blank.coord();
+                    auto pos_non_blank = buffer.iterator_at(pos);
+                    while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
+                        ++pos_non_blank;
+                    if (*pos_non_blank != '\n')
+                        pos = pos_non_blank.coord();
                 }
-                cursor = anchor;
-                break;
-            case InsertMode::InsertAtNextLineBegin:
-            case InsertMode::InsertCursor:
-                 kak_assert(false); // not implemented
-                 break;
+                sel = pos;
             }
-            if (buffer.is_end(anchor))
-               anchor = buffer.char_prev(anchor);
-            if (buffer.is_end(cursor))
-               cursor = buffer.char_prev(cursor);
-
-            sel.anchor() = anchor;
-            sel.cursor() = cursor;
+            break;
+        case InsertMode::InsertAtNextLineBegin:
+        case InsertMode::InsertCursor:
+             kak_assert(false); // not implemented
+             break;
         }
-        selections.update();
         if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
         {
             insert('\n');
@@ -837,7 +834,7 @@ private:
                 {
                     // special case, the --first line above did nothing, so we need to compensate now
                     if (sel.anchor() == buffer.char_next({0,0}))
-                        sel.anchor() = sel.cursor() = ByteCoord{0,0};
+                        sel = Selection{{0,0}};
                 }
             }
         }

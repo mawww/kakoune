@@ -67,9 +67,59 @@ ByteCoord update_pos(ByteCoord coord, const Buffer::Change& change)
 {
     if (change.type == Buffer::Change::Insert)
         return update_insert(coord, change.begin, change.end);
-    else  
+    else
         return update_erase(coord, change.begin, change.end);
 }
+
+// This tracks position changes for changes that are done
+// in a forward way (each change takes place at a position)
+// *after* the previous one.
+struct PositionChangesTracker
+{
+    ByteCoord last_pos;
+    ByteCoord pos_change;
+
+    void update(const Buffer::Change& change)
+    {
+        if (change.type == Buffer::Change::Insert)
+        {
+            pos_change.line += change.end.line - change.begin.line;
+            if (change.begin.line != last_pos.line)
+                pos_change.column = 0;
+            pos_change.column += change.end.column - change.begin.column;
+            last_pos = change.end;
+        }
+        else if (change.type == Buffer::Change::Erase)
+        {
+            pos_change.line -= change.end.line - change.begin.line;
+            if (last_pos.line != change.end.line)
+                pos_change.column = 0;
+            pos_change.column -= change.end.column - change.begin.column;
+            last_pos = change.begin;
+        }
+    }
+
+    void update(const Buffer& buffer, size_t& timestamp)
+    {
+        for (auto& change : buffer.changes_since(timestamp))
+            update(change);
+        timestamp = buffer.timestamp();
+    }
+
+    ByteCoord get_new_coord(ByteCoord coord)
+    {
+        if (last_pos.line - pos_change.line == coord.line)
+            coord.column += pos_change.column;
+        coord.line += pos_change.line;
+        return coord;
+    }
+
+    void update_sel(Selection& sel)
+    {
+        sel.anchor() = get_new_coord(sel.anchor());
+        sel.cursor() = get_new_coord(sel.cursor());
+    }
+};
 
 }
 
@@ -78,13 +128,38 @@ void SelectionList::update()
     if (m_timestamp == m_buffer->timestamp())
         return;
 
-    for (auto& change : m_buffer->changes_since(m_timestamp))
+    auto compare = [](const Buffer::Change& lhs, const Buffer::Change& rhs)
+        { return lhs.begin < rhs.begin; };
+    auto relevant = [](const Buffer::Change& change, const ByteCoord& coord)
+        { return change.type == Buffer::Change::Insert ? change.begin <= coord
+                                                       : change.begin < coord; };
+
+    auto changes = m_buffer->changes_since(m_timestamp);
+    auto change_it = changes.begin();
+    while (change_it != changes.end())
     {
+        auto change_end = std::is_sorted_until(change_it, changes.end(), compare);
+        PositionChangesTracker changes_tracker;
+
+        auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
+            while (relevant(*change_it, pos) and change_it != change_end)
+                changes_tracker.update(*change_it++);
+            while (change_it != change_end and
+                  change_it->begin == changes_tracker.last_pos)
+                changes_tracker.update(*change_it++);
+        };
+
         for (auto& sel : m_selections)
         {
-            sel.anchor() = update_pos(sel.anchor(), change);
-            sel.cursor() = update_pos(sel.cursor(), change);
+            auto& sel_min = sel.min();
+            auto& sel_max = sel.max();
+            advance_while_relevant(sel_min);
+            sel_min = changes_tracker.get_new_coord(sel_min);
+
+            advance_while_relevant(sel_max);
+            sel_max = changes_tracker.get_new_coord(sel_max);
         }
+        change_it = change_end;
     }
     for (auto& sel : m_selections)
     {
@@ -193,56 +268,6 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     return {};
 }
 
-// This tracks position changes for changes that are done
-// in a forward way (each change takes place at a position)
-// *after* the previous one.
-struct PositionChangesTracker 
-{
-    ByteCoord last_pos;
-    ByteCoord pos_change;
-
-    void update(const Buffer::Change& change)
-    {
-        if (change.type == Buffer::Change::Insert)
-        {
-            pos_change.line += change.end.line - change.begin.line;
-            if (change.begin.line != last_pos.line)
-                pos_change.column = 0;
-            pos_change.column += change.end.column - change.begin.column;
-            last_pos = change.end;
-        }
-        else if (change.type == Buffer::Change::Erase)
-        {
-            pos_change.line -= change.end.line - change.begin.line;
-            if (last_pos.line != change.end.line)
-                pos_change.column = 0;
-            pos_change.column -= change.end.column - change.begin.column;
-            last_pos = change.begin;
-        }
-    }
-
-    void update(const Buffer& buffer, size_t& timestamp)
-    {
-        for (auto& change : buffer.changes_since(timestamp))
-            update(change);
-        timestamp = buffer.timestamp();
-    }
-
-    ByteCoord get_new_coord(ByteCoord coord)
-    {
-        if (last_pos.line - pos_change.line == coord.line)
-            coord.column += pos_change.column;
-        coord.line += pos_change.line;
-        return coord;
-    }
-
-    void update_sel(Selection& sel)
-    {
-        sel.anchor() = get_new_coord(sel.anchor());
-        sel.cursor() = get_new_coord(sel.cursor());
-    }
-};
-
 void SelectionList::insert(memoryview<String> strings, InsertMode mode)
 {
     if (strings.empty())
@@ -294,7 +319,6 @@ void SelectionList::erase()
         sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
         changes_tracker.update(*m_buffer, m_timestamp);
     }
-    avoid_eol();
     m_buffer->check_invariant();
 }
 

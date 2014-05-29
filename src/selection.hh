@@ -34,8 +34,11 @@ struct Selection
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    const ByteCoord& min() const { return std::min(m_anchor, m_cursor); }
-    const ByteCoord& max() const { return std::max(m_anchor, m_cursor); }
+    const ByteCoord& min() const { return m_anchor < m_cursor ? m_anchor : m_cursor; }
+    const ByteCoord& max() const { return m_anchor < m_cursor ? m_cursor : m_anchor; }
+
+    ByteCoord& min() { return m_anchor < m_cursor ? m_anchor : m_cursor; }
+    ByteCoord& max() { return m_anchor < m_cursor ? m_cursor : m_anchor; }
 
 private:
     ByteCoord m_anchor;

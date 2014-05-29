@@ -463,6 +463,7 @@ void erase_selections(Context& context, int)
     RegisterManager::instance()['"'] = context.selections_content();
     ScopedEdition edition(context);
     context.selections().erase();
+    context.selections().avoid_eol();
 }
 
 void cat_erase_selections(Context& context, int)
@@ -473,6 +474,7 @@ void cat_erase_selections(Context& context, int)
         str += sel;
     RegisterManager::instance()['"'] = memoryview<String>(str);
     context.selections().erase();
+    context.selections().avoid_eol();
 }
 
 
