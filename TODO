@@ -60,16 +60,6 @@
   the interpreters, regex for finding used kak variables (ability to
   add direct python/perl/ruby/whatever evaluation).
 
-* Optimize BufferModificationListener behaviour:
-
-  - Editor should modify in reverse order, as a modification at one point does not
-    impact the position of selections before it, so applying modification in reverse
-    order removes the needs to have selection updated on the fly, and permit deferred
-    update.
-
-  - Accumulate all the modifications and update the selections with the
-    whole knowledge -> try to remove this O(n2) behaviour.
-
 * User defined text objects
 
 * multiple parameters support for normal mode commands ?
