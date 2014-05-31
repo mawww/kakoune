@@ -203,8 +203,8 @@ void InsertCompleter::select(int offset)
             const_cast<SelectionList&>(selections).update();
         }
     }
-    m_completions.end   = cursor_pos;
-    m_completions.begin = buffer.advance(m_completions.end, -candidate.length());
+    m_completions.end = cursor_pos;
+    m_completions.begin = buffer.advance(cursor_pos, -candidate.length());
     m_completions.timestamp = buffer.timestamp();
     if (m_context.has_ui())
         m_context.ui().menu_select(m_current_candidate);
@@ -227,8 +227,8 @@ void InsertCompleter::update()
         ByteCoord cursor = m_context.selections().main().cursor();
         ByteCoord compl_beg = m_completions.begin;
         if (cursor.line == compl_beg.line and
-            is_in_range(cursor.column - compl_beg.column,
-                        ByteCount{0}, longest_completion-1))
+            is_in_range(cursor.column, compl_beg.column,
+                        compl_beg.column + longest_completion-1))
         {
             String prefix = m_context.buffer().string(compl_beg, cursor);
 
