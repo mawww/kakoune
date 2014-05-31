@@ -111,10 +111,6 @@ struct SelectionList
     iterator begin() { return m_selections.begin(); }
     iterator end() { return m_selections.end(); }
 
-    using reverse_iterator = std::vector<Selection>::reverse_iterator;
-    reverse_iterator rbegin() { return m_selections.rbegin(); }
-    reverse_iterator rend() { return m_selections.rend(); }
-
     using const_iterator = std::vector<Selection>::const_iterator;
     const_iterator begin() const { return m_selections.begin(); }
     const_iterator end() const { return m_selections.end(); }
