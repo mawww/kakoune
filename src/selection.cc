@@ -145,7 +145,7 @@ void SelectionList::update()
             while (relevant(*change_it, pos) and change_it != change_end)
                 changes_tracker.update(*change_it++);
             while (change_it != change_end and
-                  change_it->begin == changes_tracker.last_pos)
+                   change_it->begin == changes_tracker.last_pos)
                 changes_tracker.update(*change_it++);
         };
 
