@@ -1155,7 +1155,7 @@ void spaces_to_tabs(Context& context, int ts)
     }
 }
 
-static boost::optional<SelectionList> compute_modified_ranges(Buffer& buffer, size_t timestamp)
+static std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 {
     std::vector<Selection> ranges;
     for (auto& change : buffer.changes_since(timestamp))
@@ -1183,29 +1183,25 @@ static boost::optional<SelectionList> compute_modified_ranges(Buffer& buffer, si
             ranges.insert(it, Selection{pos, pos});
         }
     }
-    if (ranges.empty())
-        return {};
-
     for (auto& sel : ranges)
     {
         sel.anchor() = buffer.clamp(sel.anchor());
         sel.cursor() = buffer.clamp(sel.cursor());
     }
 
-    SelectionList result{buffer, std::move(ranges)};
-
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
         return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
                                       : lhs.min() <= buffer.char_next(rhs.max());
     };
-    result.merge_overlapping(touches);
+    size_t main = 0;
+    merge_overlapping(ranges.begin(), ranges.end(), main, touches);
 
-    for (auto& sel : result)
+    for (auto& sel : ranges)
     {
         if (sel.anchor() != sel.cursor())
             sel.cursor() = buffer.char_prev(sel.cursor());
     }
-    return result;
+    return ranges;
 }
 
 void undo(Context& context, int)
@@ -1216,8 +1212,8 @@ void undo(Context& context, int)
     if (res)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
-        if (ranges)
-            context.selections() = std::move(*ranges);
+        if (not ranges.empty())
+            context.selections() = std::move(ranges);
     }
     else if (not res)
         context.print_status({ "nothing left to undo", get_color("Information") });
@@ -1232,8 +1228,8 @@ void redo(Context& context, int)
     if (res)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
-        if (ranges)
-            context.selections() = std::move(*ranges);
+        if (not ranges.empty())
+            context.selections() = std::move(ranges);
     }
 
     else if (not res)

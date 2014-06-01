@@ -166,7 +166,7 @@ void SelectionList::update()
         sel.anchor() = m_buffer->clamp(sel.anchor());
         sel.cursor() = m_buffer->clamp(sel.cursor());
     }
-    merge_overlapping(overlaps);
+    m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps), end());
     check_invariant();
 
     m_timestamp = m_buffer->timestamp();
@@ -208,7 +208,7 @@ void SelectionList::sort_and_merge_overlapping()
                                    return begin < main_begin;
                            });
     std::stable_sort(begin(), end(), compare_selections);
-    merge_overlapping(overlaps);
+    m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps), end());
 }
 namespace
 {

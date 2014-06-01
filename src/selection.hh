@@ -71,6 +71,30 @@ enum class InsertMode : unsigned
     OpenLineAbove
 };
 
+template<typename Iterator, typename OverlapsFunc>
+Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsFunc overlaps)
+{
+    kak_assert(std::is_sorted(begin, end, compare_selections));
+    size_t size = end - begin;
+    size_t i = 0;
+    for (size_t j = 1; j < size; ++j)
+    {
+        if (overlaps(begin[i], begin[j]))
+        {
+            begin[i].merge_with(begin[j]);
+            if (i < main)
+                --main;
+        }
+        else
+        {
+            ++i;
+            if (i != j)
+                begin[i] = std::move(begin[j]);
+        }
+    }
+    return begin + i + 1;
+}
+
 struct SelectionList
 {
     SelectionList(Buffer& buffer, Selection s);
@@ -121,30 +145,6 @@ struct SelectionList
 
     bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
     bool operator!=(const SelectionList& other) const { return !((*this) == other); }
-
-    template<typename OverlapsFunc>
-    void merge_overlapping(OverlapsFunc overlaps)
-    {
-        kak_assert(std::is_sorted(begin(), end(), compare_selections));
-        size_t i = 0;
-        for (size_t j = 1; j < size(); ++j)
-        {
-            if (overlaps((*this)[i], (*this)[j]))
-            {
-                (*this)[i].merge_with((*this)[j]);
-                if (i < m_main)
-                    --m_main;
-            }
-            else
-            {
-                ++i;
-                if (i != j)
-                    (*this)[i] = std::move((*this)[j]);
-            }
-        }
-        m_selections.erase(begin() + i + 1, end());
-        kak_assert(std::is_sorted(begin(), end(), compare_selections));
-    }
 
     void sort_and_merge_overlapping();
 
