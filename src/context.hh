@@ -51,6 +51,7 @@ public:
     SelectionList& selections();
     const SelectionList& selections() const;
     std::vector<String>  selections_content() const;
+    void set_selections(std::vector<Selection> sels);
 
     void change_buffer(Buffer& buffer);
 

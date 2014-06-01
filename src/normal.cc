@@ -725,7 +725,7 @@ void keep(Context& context, int)
         }
         if (keep.empty())
             throw runtime_error("no selections remaining");
-        context.selections() = std::move(keep);
+        context.set_selections(std::move(keep));
     });
 }
 
@@ -749,7 +749,7 @@ void keep_pipe(Context& context, int)
             }
             if (keep.empty())
                 throw runtime_error("no selections remaining");
-            context.selections() = std::move(keep);
+            context.set_selections(std::move(keep));
     });
 }
 template<bool indent_empty = false>
@@ -1213,7 +1213,7 @@ void undo(Context& context, int)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
-            context.selections() = std::move(ranges);
+            context.set_selections(std::move(ranges));
     }
     else if (not res)
         context.print_status({ "nothing left to undo", get_color("Information") });
@@ -1229,7 +1229,7 @@ void redo(Context& context, int)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
-            context.selections() = std::move(ranges);
+            context.set_selections(std::move(ranges));
     }
 
     else if (not res)
