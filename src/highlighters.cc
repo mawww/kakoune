@@ -772,15 +772,14 @@ private:
             auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
                                              [](const LineModification& c, const LineCount& l)
                                              { return c.old_line < l; });
-            bool erase = false;
-            if (modif_it != modifs.begin())
+
+            bool erase = (modif_it != modifs.end() and modif_it->old_line == it->line);
+            if (not erase and modif_it != modifs.begin())
             {
                 auto& prev = *(modif_it-1);
                 erase = it->line <= prev.old_line + prev.num_removed;
                 it->line += prev.diff();
             }
-            if (modif_it != modifs.end() and modif_it->old_line == it->line)
-                erase = true;
             erase = erase or (it->line >= buffer.line_count());
 
             if (not erase)
