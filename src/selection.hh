@@ -53,11 +53,6 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
                                   : lhs.min() <= rhs.max();
 }
 
-static bool compare_selections(const Selection& lhs, const Selection& rhs)
-{
-    return lhs.min() < rhs.min();
-}
-
 enum class InsertMode : unsigned
 {
     Insert,
@@ -70,30 +65,6 @@ enum class InsertMode : unsigned
     OpenLineBelow,
     OpenLineAbove
 };
-
-template<typename Iterator, typename OverlapsFunc>
-Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsFunc overlaps)
-{
-    kak_assert(std::is_sorted(begin, end, compare_selections));
-    size_t size = end - begin;
-    size_t i = 0;
-    for (size_t j = 1; j < size; ++j)
-    {
-        if (overlaps(begin[i], begin[j]))
-        {
-            begin[i].merge_with(begin[j]);
-            if (i < main)
-                --main;
-        }
-        else
-        {
-            ++i;
-            if (i != j)
-                begin[i] = std::move(begin[j]);
-        }
-    }
-    return begin + i + 1;
-}
 
 struct SelectionList
 {
@@ -164,8 +135,7 @@ private:
     size_t m_timestamp;
 };
 
-void update_insert(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end);
-void update_erase(std::vector<Selection>& sels, ByteCoord begin, ByteCoord end);
+std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 
 }
 

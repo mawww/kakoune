@@ -1155,55 +1155,6 @@ void spaces_to_tabs(Context& context, int ts)
     }
 }
 
-static std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
-{
-    std::vector<Selection> ranges;
-    for (auto& change : buffer.changes_since(timestamp))
-    {
-        const ByteCoord& begin = change.begin;
-        const ByteCoord& end = change.end;
-        if (change.type == Buffer::Change::Insert)
-        {
-            update_insert(ranges, begin, end);
-            auto it = std::upper_bound(ranges.begin(), ranges.end(), begin,
-                                       [](ByteCoord c, const Selection& sel)
-                                       { return c < sel.min(); });
-            ranges.insert(it, Selection{begin, end});
-        }
-        else
-        {
-            update_erase(ranges, begin, end);
-            auto pos = begin;
-            if (change.at_end)
-                pos = begin.column ? ByteCoord{begin.line, begin.column - 1}
-                                   : ByteCoord{begin.line - 1};
-            auto it = std::upper_bound(ranges.begin(), ranges.end(), pos,
-                                       [](ByteCoord c, const Selection& sel)
-                                       { return c < sel.min(); });
-            ranges.insert(it, Selection{pos, pos});
-        }
-    }
-    for (auto& sel : ranges)
-    {
-        sel.anchor() = buffer.clamp(sel.anchor());
-        sel.cursor() = buffer.clamp(sel.cursor());
-    }
-
-    auto touches = [&](const Selection& lhs, const Selection& rhs) {
-        return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
-                                      : lhs.min() <= buffer.char_next(rhs.max());
-    };
-    size_t main = 0;
-    merge_overlapping(ranges.begin(), ranges.end(), main, touches);
-
-    for (auto& sel : ranges)
-    {
-        if (sel.anchor() != sel.cursor())
-            sel.cursor() = buffer.char_prev(sel.cursor());
-    }
-    return ranges;
-}
-
 void undo(Context& context, int)
 {
     Buffer& buffer = context.buffer();
