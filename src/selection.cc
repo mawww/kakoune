@@ -71,6 +71,9 @@ static bool compare_selections(const Selection& lhs, const Selection& rhs)
 template<typename Iterator, typename OverlapsFunc>
 Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsFunc overlaps)
 {
+    if (begin == end)
+        return begin;
+
     kak_assert(std::is_sorted(begin, end, compare_selections));
     size_t size = end - begin;
     size_t i = 0;
@@ -148,17 +151,27 @@ bool relevant(const Buffer::Change& change, ByteCoord coord)
                                                  : change.begin < coord;
 }
 
-bool forward_sorted(const Buffer::Change& lhs, const Buffer::Change& rhs)
+const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Buffer::Change* last)
 {
-    return lhs.begin < rhs.begin;
+    return std::is_sorted_until(first, last,
+                                [](const Buffer::Change& lhs, const Buffer::Change& rhs)
+                                { return lhs.begin < rhs.begin; });
 }
 
-bool backward_sorted(const Buffer::Change& lhs, const Buffer::Change& rhs)
+const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const Buffer::Change* last)
 {
-    return lhs.begin > rhs.end;
+    if (first != last) {
+        const Buffer::Change* next = first;
+        while (++next != last) {
+            if (next->end >= first->begin)
+                return next;
+            first = next;
+        }
+    }
+    return last;
 }
 
-void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections)
+void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
 {
     PositionChangesTracker changes_tracker;
 
@@ -179,9 +192,12 @@ void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& 
         advance_while_relevant(sel_max);
         sel_max = changes_tracker.get_new_coord(sel_max);
     }
+    selections.erase(merge_overlapping(selections.begin(), selections.end(), main, overlaps),
+                     selections.end());
+    kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
 }
 
-void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections)
+void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
 {
     PositionChangesTracker changes_tracker;
 
@@ -211,6 +227,9 @@ void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>&
         advance_while_relevant(sel_max);
         sel_max = changes_tracker.get_new_coord(sel_max);
     }
+    selections.erase(merge_overlapping(selections.begin(), selections.end(), main, overlaps),
+                     selections.end());
+    kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
 }
 
 }
@@ -222,13 +241,15 @@ std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
     auto change_it = changes.begin();
     while (change_it != changes.end())
     {
-        auto forward_end = std::is_sorted_until(change_it, changes.end(), forward_sorted);
-        auto backward_end = std::is_sorted_until(change_it, changes.end(), backward_sorted);
+        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto backward_end = backward_sorted_until(change_it, changes.end());
 
-        size_t prev_size = ranges.size();
+        size_t prev_size;
+        size_t dummy = 0;
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, ranges);
+            update_forward({ change_it, forward_end }, ranges, dummy);
+            prev_size = ranges.size();
 
             PositionChangesTracker changes_tracker;
             for (; change_it != forward_end; ++change_it)
@@ -242,7 +263,8 @@ std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
         }
         else
         {
-            update_backward({ change_it, backward_end }, ranges);
+            update_backward({ change_it, backward_end }, ranges, dummy);
+            prev_size = ranges.size();
 
             using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
             PositionChangesTracker changes_tracker;
@@ -258,7 +280,6 @@ std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             change_it = backward_end;
         }
 
-        kak_assert(std::is_sorted(ranges.begin(), ranges.begin() + prev_size, compare_selections));
         kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(), compare_selections));
         std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
     }
@@ -291,17 +312,17 @@ void SelectionList::update()
     auto change_it = changes.begin();
     while (change_it != changes.end())
     {
-        auto forward_end = std::is_sorted_until(change_it, changes.end(), forward_sorted);
-        auto backward_end = std::is_sorted_until(change_it, changes.end(), backward_sorted);
+        auto forward_end = forward_sorted_until(change_it, changes.end());
+        auto backward_end = backward_sorted_until(change_it, changes.end());
 
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, m_selections);
+            update_forward({ change_it, forward_end }, m_selections, m_main);
             change_it = forward_end;
         }
         else
         {
-            update_backward({ change_it, backward_end }, m_selections);
+            update_backward({ change_it, backward_end }, m_selections, m_main);
             change_it = backward_end;
         }
         kak_assert(std::is_sorted(m_selections.begin(), m_selections.end(),
