@@ -121,6 +121,67 @@ struct PositionChangesTracker
     }
 };
 
+bool relevant(const Buffer::Change& change, ByteCoord coord)
+{
+    return change.type == Buffer::Change::Insert ? change.begin <= coord
+                                                 : change.begin < coord;
+}
+
+void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections)
+{
+    PositionChangesTracker changes_tracker;
+
+    auto change_it = changes.begin();
+    auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
+        while (relevant(*change_it, changes_tracker.get_new_coord(pos)) and
+               change_it != changes.end())
+            changes_tracker.update(*change_it++);
+    };
+
+    for (auto& sel : selections)
+    {
+        auto& sel_min = sel.min();
+        auto& sel_max = sel.max();
+        advance_while_relevant(sel_min);
+        sel_min = changes_tracker.get_new_coord(sel_min);
+
+        advance_while_relevant(sel_max);
+        sel_max = changes_tracker.get_new_coord(sel_max);
+    }
+}
+
+void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections)
+{
+    PositionChangesTracker changes_tracker;
+
+    using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
+    auto change_it = ReverseIt(changes.end());
+    auto change_end = ReverseIt(changes.begin());
+    auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
+        while (change_it != change_end)
+        {
+            auto change = *change_it;
+            change.begin = changes_tracker.get_new_coord(change.begin);
+            change.end = changes_tracker.get_new_coord(change.end);
+            if (not relevant(change, changes_tracker.get_new_coord(pos)))
+                break;
+            changes_tracker.update(change);
+            ++change_it;
+        }
+    };
+
+    for (auto& sel : selections)
+    {
+        auto& sel_min = sel.min();
+        auto& sel_max = sel.max();
+        advance_while_relevant(sel_min);
+        sel_min = changes_tracker.get_new_coord(sel_min);
+
+        advance_while_relevant(sel_max);
+        sel_max = changes_tracker.get_new_coord(sel_max);
+    }
+}
+
 }
 
 void SelectionList::update()
@@ -128,38 +189,30 @@ void SelectionList::update()
     if (m_timestamp == m_buffer->timestamp())
         return;
 
-    auto compare = [](const Buffer::Change& lhs, const Buffer::Change& rhs)
+    auto forward = [](const Buffer::Change& lhs, const Buffer::Change& rhs)
         { return lhs.begin < rhs.begin; };
-    auto relevant = [](const Buffer::Change& change, const ByteCoord& coord)
-        { return change.type == Buffer::Change::Insert ? change.begin <= coord
-                                                       : change.begin < coord; };
+    auto backward = [](const Buffer::Change& lhs, const Buffer::Change& rhs)
+        { return lhs.begin > rhs.end; };
 
     auto changes = m_buffer->changes_since(m_timestamp);
     auto change_it = changes.begin();
     while (change_it != changes.end())
     {
-        auto change_end = std::is_sorted_until(change_it, changes.end(), compare);
-        PositionChangesTracker changes_tracker;
+        auto forward_end = std::is_sorted_until(change_it, changes.end(), forward);
+        auto backward_end = std::is_sorted_until(change_it, changes.end(), backward);
 
-        auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
-            while (relevant(*change_it, pos) and change_it != change_end)
-                changes_tracker.update(*change_it++);
-            while (change_it != change_end and
-                   change_it->begin == changes_tracker.last_pos)
-                changes_tracker.update(*change_it++);
-        };
-
-        for (auto& sel : m_selections)
+        if (forward_end >= backward_end)
         {
-            auto& sel_min = sel.min();
-            auto& sel_max = sel.max();
-            advance_while_relevant(sel_min);
-            sel_min = changes_tracker.get_new_coord(sel_min);
-
-            advance_while_relevant(sel_max);
-            sel_max = changes_tracker.get_new_coord(sel_max);
+            update_forward({ change_it, forward_end }, m_selections);
+            change_it = forward_end;
         }
-        change_it = change_end;
+        else
+        {
+            update_backward({ change_it, backward_end }, m_selections);
+            change_it = backward_end;
+        }
+        kak_assert(std::is_sorted(m_selections.begin(), m_selections.end(),
+                                  compare_selections));
     }
     for (auto& sel : m_selections)
     {
