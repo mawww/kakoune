@@ -98,28 +98,24 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
 // This tracks position changes for changes that are done
 // in a forward way (each change takes place at a position)
 // *after* the previous one.
-struct PositionChangesTracker
+struct ForwardChangesTracker
 {
-    ByteCoord last_pos;
-    ByteCoord pos_change;
+    ByteCoord cur_pos; // last change position at current modification
+    ByteCoord old_pos; // last change position at start
 
     void update(const Buffer::Change& change)
     {
+        kak_assert(change.begin >= cur_pos);
+
         if (change.type == Buffer::Change::Insert)
         {
-            pos_change.line += change.end.line - change.begin.line;
-            if (change.begin.line != last_pos.line)
-                pos_change.column = 0;
-            pos_change.column += change.end.column - change.begin.column;
-            last_pos = change.end;
+            old_pos = get_old_coord(change.begin);
+            cur_pos = change.end;
         }
         else if (change.type == Buffer::Change::Erase)
         {
-            pos_change.line -= change.end.line - change.begin.line;
-            if (last_pos.line != change.end.line)
-                pos_change.column = 0;
-            pos_change.column -= change.end.column - change.begin.column;
-            last_pos = change.begin;
+            old_pos = get_old_coord(change.end);
+            cur_pos = change.begin;
         }
     }
 
@@ -130,32 +126,61 @@ struct PositionChangesTracker
         timestamp = buffer.timestamp();
     }
 
-    ByteCoord get_new_coord(ByteCoord coord)
+    ByteCoord get_old_coord(ByteCoord coord) const
     {
-        if (last_pos.line - pos_change.line == coord.line)
-            coord.column = std::max(0_byte, coord.column + pos_change.column);
-        coord.line += pos_change.line;
+        kak_assert(cur_pos <= coord);
+        auto pos_change = cur_pos - old_pos;
+        if (cur_pos.line == coord.line)
+        {
+            kak_assert(pos_change.column <= coord.column);
+            coord.column -= pos_change.column;
+        }
+        coord.line -= pos_change.line;
+        kak_assert(old_pos <= coord);
         return coord;
     }
 
-    void update_sel(Selection& sel)
+    ByteCoord get_new_coord(ByteCoord coord) const
     {
-        sel.anchor() = get_new_coord(sel.anchor());
-        sel.cursor() = get_new_coord(sel.cursor());
+        kak_assert(old_pos <= coord);
+        auto pos_change = cur_pos - old_pos;
+        if (old_pos.line == coord.line)
+        {
+            kak_assert(-pos_change.column <= coord.column);
+            coord.column += pos_change.column;
+        }
+        coord.line += pos_change.line;
+        kak_assert(cur_pos <= coord);
+        return coord;
+    }
+
+    ByteCoord get_new_coord_tolerant(ByteCoord coord) const
+    {
+        if (coord < old_pos)
+            return cur_pos;
+        return get_new_coord(coord);
+    }
+
+    bool relevant(const Buffer::Change& change, ByteCoord old_coord) const
+    {
+        auto new_coord = get_new_coord(old_coord);
+        return change.type == Buffer::Change::Insert ? change.begin <= new_coord
+                                                     : change.begin < new_coord;
     }
 };
 
-bool relevant(const Buffer::Change& change, ByteCoord coord)
-{
-    return change.type == Buffer::Change::Insert ? change.begin <= coord
-                                                 : change.begin < coord;
-}
-
 const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Buffer::Change* last)
 {
-    return std::is_sorted_until(first, last,
-                                [](const Buffer::Change& lhs, const Buffer::Change& rhs)
-                                { return lhs.begin < rhs.begin; });
+    if (first != last) {
+        const Buffer::Change* next = first;
+        while (++next != last) {
+            const auto& ref = first->type == Buffer::Change::Insert ? first->end : first->begin;
+            if (next->begin <= ref)
+                return next;
+            first = next;
+        }
+    }
+    return last;
 }
 
 const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const Buffer::Change* last)
@@ -163,7 +188,7 @@ const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const B
     if (first != last) {
         const Buffer::Change* next = first;
         while (++next != last) {
-            if (next->end >= first->begin)
+            if (first->begin <= next->end)
                 return next;
             first = next;
         }
@@ -173,12 +198,11 @@ const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const B
 
 void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
 {
-    PositionChangesTracker changes_tracker;
+    ForwardChangesTracker changes_tracker;
 
     auto change_it = changes.begin();
     auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
-        while (relevant(*change_it, changes_tracker.get_new_coord(pos)) and
-               change_it != changes.end())
+        while (change_it != changes.end() and changes_tracker.relevant(*change_it, pos))
             changes_tracker.update(*change_it++);
     };
 
@@ -187,10 +211,10 @@ void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& 
         auto& sel_min = sel.min();
         auto& sel_max = sel.max();
         advance_while_relevant(sel_min);
-        sel_min = changes_tracker.get_new_coord(sel_min);
+        sel_min = changes_tracker.get_new_coord_tolerant(sel_min);
 
         advance_while_relevant(sel_max);
-        sel_max = changes_tracker.get_new_coord(sel_max);
+        sel_max = changes_tracker.get_new_coord_tolerant(sel_max);
     }
     selections.erase(merge_overlapping(selections.begin(), selections.end(), main, overlaps),
                      selections.end());
@@ -199,7 +223,7 @@ void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& 
 
 void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
 {
-    PositionChangesTracker changes_tracker;
+    ForwardChangesTracker changes_tracker;
 
     using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
     auto change_it = ReverseIt(changes.end());
@@ -210,7 +234,7 @@ void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>&
             auto change = *change_it;
             change.begin = changes_tracker.get_new_coord(change.begin);
             change.end = changes_tracker.get_new_coord(change.end);
-            if (not relevant(change, changes_tracker.get_new_coord(pos)))
+            if (not changes_tracker.relevant(change, pos))
                 break;
             changes_tracker.update(change);
             ++change_it;
@@ -222,10 +246,10 @@ void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>&
         auto& sel_min = sel.min();
         auto& sel_max = sel.max();
         advance_while_relevant(sel_min);
-        sel_min = changes_tracker.get_new_coord(sel_min);
+        sel_min = changes_tracker.get_new_coord_tolerant(sel_min);
 
         advance_while_relevant(sel_max);
-        sel_max = changes_tracker.get_new_coord(sel_max);
+        sel_max = changes_tracker.get_new_coord_tolerant(sel_max);
     }
     selections.erase(merge_overlapping(selections.begin(), selections.end(), main, overlaps),
                      selections.end());
@@ -251,7 +275,7 @@ std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             update_forward({ change_it, forward_end }, ranges, dummy);
             prev_size = ranges.size();
 
-            PositionChangesTracker changes_tracker;
+            ForwardChangesTracker changes_tracker;
             for (; change_it != forward_end; ++change_it)
             {
                 if (change_it->type == Buffer::Change::Insert)
@@ -267,21 +291,25 @@ std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             prev_size = ranges.size();
 
             using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
-            PositionChangesTracker changes_tracker;
+            ForwardChangesTracker changes_tracker;
             for (ReverseIt it{backward_end}, end{change_it}; it != end; ++it)
             {
-                if (it->type == Buffer::Change::Insert)
-                    ranges.push_back({ changes_tracker.get_new_coord(it->begin),
-                                       changes_tracker.get_new_coord(it->end) });
+                auto change = *it;
+                change.begin = changes_tracker.get_new_coord(change.begin);
+                change.end = changes_tracker.get_new_coord(change.end);
+
+                if (change.type == Buffer::Change::Insert)
+                    ranges.push_back({ change.begin, change.end });
                 else
-                    ranges.push_back({ changes_tracker.get_new_coord(it->begin) });
-                changes_tracker.update(*it);
+                    ranges.push_back({ change.begin });
+                changes_tracker.update(change);
             }
             change_it = backward_end;
         }
 
         kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(), compare_selections));
         std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
+        ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
     }
     for (auto& sel : ranges)
     {
@@ -441,13 +469,14 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode)
         return;
 
     update();
-    PositionChangesTracker changes_tracker;
+    ForwardChangesTracker changes_tracker;
     for (size_t index = 0; index < m_selections.size(); ++index)
     {
         auto& sel = m_selections[index];
 
-        changes_tracker.update_sel(sel);
+        sel.anchor() = changes_tracker.get_new_coord(sel.anchor());
         kak_assert(m_buffer->is_valid(sel.anchor()));
+        sel.cursor() = changes_tracker.get_new_coord(sel.cursor());
         kak_assert(m_buffer->is_valid(sel.cursor()));
 
         auto pos = prepare_insert(*m_buffer, sel, mode);
@@ -478,10 +507,14 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode)
 void SelectionList::erase()
 {
     update();
-    PositionChangesTracker changes_tracker;
+    ForwardChangesTracker changes_tracker;
     for (auto& sel : m_selections)
     {
-        changes_tracker.update_sel(sel);
+        sel.anchor() = changes_tracker.get_new_coord(sel.anchor());
+        kak_assert(m_buffer->is_valid(sel.anchor()));
+        sel.cursor() = changes_tracker.get_new_coord(sel.cursor());
+        kak_assert(m_buffer->is_valid(sel.cursor()));
+
         auto pos = Kakoune::erase(*m_buffer, sel);
         sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
         changes_tracker.update(*m_buffer, m_timestamp);

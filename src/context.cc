@@ -205,6 +205,7 @@ std::vector<String> Context::selections_content() const
 void Context::set_selections(std::vector<Selection> sels)
 {
     *m_selections = std::move(sels);
+    (*m_selections).check_invariant();
 }
 
 void Context::begin_edition()
