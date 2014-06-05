@@ -1269,9 +1269,7 @@ const CommandDesc set_register_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        if (parser[0].length() != 1)
-            throw runtime_error("register names are single character");
-        RegisterManager::instance()[parser[0][0]] = memoryview<String>(parser[1]);
+        RegisterManager::instance()[parser[0]] = memoryview<String>(parser[1]);
     }
 };
 

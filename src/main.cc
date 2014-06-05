@@ -106,7 +106,7 @@ void register_env_vars()
         }, {
             "reg_.+",
             [](StringView name, const Context& context) -> String
-            { return RegisterManager::instance()[name[4]].values(context)[0]; }
+            { return RegisterManager::instance()[name.substr(4_byte)].values(context)[0]; }
         }, {
             "client_env_.+",
             [](StringView name, const Context& context) -> String

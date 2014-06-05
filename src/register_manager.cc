@@ -1,6 +1,7 @@
 #include "register_manager.hh"
 
 #include "assert.hh"
+#include "id_map.hh"
 #include "utils.hh"
 
 namespace Kakoune
@@ -55,9 +56,25 @@ private:
     RegisterRetriever   m_function;
 };
 
-Register& RegisterManager::operator[](char reg)
+Register& RegisterManager::operator[](StringView reg)
 {
-    auto& reg_ptr = m_registers[reg];
+    if (reg.length() == 1)
+        return (*this)[reg[0]];
+
+    static const id_map<Codepoint> reg_names = {
+        { "slash", '/' },
+        { "dquote", '"' },
+        { "pipe", '|' }
+    };
+    auto it = reg_names.find(reg);
+    if (it == reg_names.end())
+        throw runtime_error("no such register: " + reg);
+    return (*this)[it->second];
+}
+
+Register& RegisterManager::operator[](Codepoint c)
+{
+    auto& reg_ptr = m_registers[c];
     if (not reg_ptr)
         reg_ptr.reset(new StaticRegister());
     return *reg_ptr;
