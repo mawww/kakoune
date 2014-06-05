@@ -2,10 +2,9 @@
 #define parameters_parser_hh_INCLUDED
 
 #include "exception.hh"
+#include "id_map.hh"
 #include "memoryview.hh"
 #include "string.hh"
-
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -40,7 +39,7 @@ struct SwitchDesc
     String description;
 };
 
-using SwitchMap = std::unordered_map<String, SwitchDesc>;
+using SwitchMap = id_map<SwitchDesc>;
 
 String generate_switches_doc(const SwitchMap& opts);
 

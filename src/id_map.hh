@@ -18,6 +18,9 @@ public:
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
+    id_map() = default;
+    id_map(std::initializer_list<value_type> val) : m_content{val} {}
+
     void append(const value_type& value)
     {
         m_content.push_back(value);
@@ -90,6 +93,8 @@ public:
         return complete_id_if(
             prefix, cursor_pos, [](const value_type&) { return true; });
     }
+
+    bool empty() const { return m_content.empty(); }
 
     iterator       begin()       { return m_content.begin(); }
     iterator       end()         { return m_content.end(); }
