@@ -134,10 +134,8 @@ Selection select_to_previous_word(const Buffer& buffer, const Selection& selecti
     return utf8_range(begin, with_end ? end : end+1);
 }
 
-Selection select_line(const Buffer& buffer,
-const Selection& selection);
-Selection select_matching(const Buffer& buffer,
-                          const Selection& selection);
+Selection select_line(const Buffer& buffer, const Selection& selection);
+Selection select_matching(const Buffer& buffer, const Selection& selection);
 
 Selection select_to(const Buffer& buffer, const Selection& selection,
                     Codepoint c, int count, bool inclusive);
@@ -159,7 +157,9 @@ constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
 { return (ObjectFlags)((int)lhs | (int) rhs); }
 
 template<WordType word_type>
-Selection select_word(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_word(const Buffer& buffer,
+                      const Selection& selection,
+                      ObjectFlags flags)
 {
     Utf8Iterator first = buffer.iterator_at(selection.cursor());
     Utf8Iterator last = first;
@@ -199,6 +199,10 @@ Selection select_word(const Buffer& buffer, const Selection& selection, ObjectFl
     return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
                                         : utf8_range(last, first);
 }
+
+Selection select_number(const Buffer& buffer,
+                        const Selection& selection,
+                        ObjectFlags flags);
 
 Selection select_sentence(const Buffer& buffer,
                           const Selection& selection,

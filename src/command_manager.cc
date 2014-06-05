@@ -30,21 +30,11 @@ void CommandManager::register_command(String command_name,
                                  std::move(completer) };
 }
 
-void CommandManager::register_commands(memoryview<String> command_names,
-                                       Command command,
-                                       String docstring,
-                                       ParameterDesc param_desc,
-                                       CommandFlags flags,
-                                       CommandCompleter completer)
+void CommandManager::register_alias(String alias, String command)
 {
-    kak_assert(not command_names.empty());
-    m_commands[command_names[0]] = { std::move(command),
-                                     std::move(docstring),
-                                     std::move(param_desc),
-                                     flags,
-                                     completer };
-    for (size_t i = 1; i < command_names.size(); ++i)
-        m_aliases[command_names[i]] = command_names[0];
+    kak_assert(not alias.empty());
+    kak_assert(command_defined(command));
+    m_aliases[alias] = std::move(command);
 }
 
 struct parse_error : runtime_error

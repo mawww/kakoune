@@ -1,6 +1,7 @@
 #include "keys.hh"
 
 #include "utils.hh"
+#include "utf8_iterator.hh"
 
 namespace Kakoune
 {
@@ -40,19 +41,21 @@ static const KeyAndName keynamemap[] = {
 KeyList parse_keys(StringView str)
 {
     KeyList result;
-    for (ByteCount pos = 0; pos < str.length(); ++pos)
+    using PassPolicy = utf8::InvalidBytePolicy::Pass;
+    using Utf8It = utf8::utf8_iterator<const char*, PassPolicy>;
+    for (Utf8It it = str.begin(), str_end = str.end(); it < str_end; ++it)
     {
-        if (str[pos] == '<')
+        if (*it == '<')
         {
-            ByteCount end_pos = pos;
-            while (end_pos < str.length() and str[end_pos] != '>')
-                ++end_pos;
+            Utf8It end_it = it;
+            while (end_it < str_end and *end_it != '>')
+                ++end_it;
 
-            if (end_pos < str.length())
+            if (end_it < str_end)
             {
                 Key::Modifiers modifier = Key::Modifiers::None;
 
-                auto keyname = str.substr(pos+1, end_pos - pos - 1);
+                StringView keyname{it.base()+1, end_it.base()};
                 if (keyname.length() > 2)
                 {
                     if (tolower(keyname[0]) == 'c' and keyname[1] == '-')
@@ -66,19 +69,19 @@ KeyList parse_keys(StringView str)
                         keyname = keyname.substr(2_byte);
                     }
                 }
-                if (keyname.length() == 1)
+                if (keyname.char_length() == 1)
                 {
-                    result.push_back(Key{ modifier, Codepoint(keyname[0]) });
-                    pos = end_pos;
+                    result.push_back(Key{ modifier, utf8::codepoint<PassPolicy>(keyname.begin()) });
+                    it = end_it;
                     continue;
                 }
-                auto it = find_if(keynamemap, [&keyname](const KeyAndName& item)
-                                              { return item.first == keyname; });
-                if (it != end(keynamemap))
+                auto name_it = find_if(keynamemap, [&keyname](const KeyAndName& item)
+                                                   { return item.first == keyname; });
+                if (name_it != end(keynamemap))
                 {
-                    Key key = canonicalize_ifn(Key{ modifier, it->second });
+                    Key key = canonicalize_ifn(Key{ modifier, name_it->second });
                     result.push_back(key);
-                    pos = end_pos;
+                    it = end_it;
                     continue;
                 }
                 if ((keyname[0] == 'f' or keyname[0] == 'F') and
@@ -100,13 +103,13 @@ KeyList parse_keys(StringView str)
                     if (val >= 1 and val <= 12)
                     {
                         result.push_back(Key{ modifier, Key::F1 + (val - 1) });
-                        pos = end_pos;
+                        it = end_it;
                         continue;
                     }
                 }
             }
         }
-        result.push_back({Key::Modifiers::None, Codepoint(str[pos])});
+        result.push_back({Key::Modifiers::None, *it});
     }
     return result;
 }

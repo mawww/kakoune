@@ -840,6 +840,7 @@ void select_object(Context& context, int param)
             { 's', select_sentence },
             { 'p', select_paragraph },
             { 'i', select_indent },
+            { 'n', select_number },
         };
         for (auto& sel : selectors)
         {
