@@ -567,6 +567,14 @@ void define_command(const ParametersParser& parser, Context& context)
     if (parser.has_option("docstring"))
         docstring = parser.option_value("docstring");
 
+    String alias;
+    if (parser.has_option("alias"))
+    {
+        alias = parser.option_value("alias");
+        if (alias.empty())
+            throw runtime_error("alias should not be an empty string");
+    }
+
     String commands = parser[1];
     Command cmd;
     ParameterDesc desc;
@@ -648,13 +656,11 @@ void define_command(const ParametersParser& parser, Context& context)
             return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n') };
         };
     }
-    if (parser.has_option("alias"))
-        CommandManager::instance().register_commands(
-            { cmd_name, parser.option_value("alias") },
-            cmd, std::move(docstring), desc, flags, completer);
-    else
-        CommandManager::instance().register_command(
-            cmd_name, cmd, std::move(docstring), desc, flags, completer);
+
+    auto& cm = CommandManager::instance();
+    cm.register_command(cmd_name, cmd, std::move(docstring), desc, flags, completer);
+    if (not alias.empty())
+        cm.register_alias(std::move(alias), cmd_name);
 }
 
 const CommandDesc define_command_cmd = {
@@ -1316,10 +1322,9 @@ void exec_keys(const KeyList& keys, Context& context)
 
 static void register_command(CommandManager& cm, const CommandDesc& c)
 {
+    cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.completer);
     if (c.alias)
-        cm.register_commands({ c.name, c.alias }, c.func, c.docstring, c.params, c.flags, c.completer);
-    else
-        cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.completer);
+        cm.register_alias(c.alias, c.name);
 }
 
 void register_commands()

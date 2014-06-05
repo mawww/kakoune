@@ -79,12 +79,7 @@ public:
                           ParameterDesc param_desc,
                           CommandFlags flags = CommandFlags::None,
                           CommandCompleter completer = CommandCompleter());
-
-    void register_commands(memoryview<String> command_names, Command command,
-                           String docstring,
-                           ParameterDesc param_desc,
-                           CommandFlags flags = CommandFlags::None,
-                           CommandCompleter completer = CommandCompleter());
+   void register_alias(String alias, String command);
 
 private:
     void execute_single_command(CommandParameters params,
