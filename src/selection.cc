@@ -483,6 +483,13 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode)
         changes_tracker.update(*m_buffer, m_timestamp);
 
         const String& str = strings[std::min(index, strings.size()-1)];
+        if (str.empty())
+        {
+            if (mode == InsertMode::Replace)
+                sel.anchor() = sel.cursor() = pos.coord();
+            continue;
+        }
+
         pos = m_buffer->insert(pos, str);
 
         auto& change = m_buffer->changes_since(m_timestamp).back();
