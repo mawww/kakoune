@@ -530,18 +530,6 @@ const CommandDesc rm_hook_cmd = {
     }
 };
 
-EnvVarMap params_to_env_var_map(const ParametersParser& parser)
-{
-    std::unordered_map<String, String> vars;
-    char param_name[] = "param0";
-    for (size_t i = 0; i < parser.positional_count(); ++i)
-    {
-        param_name[sizeof(param_name) - 2] = '0' + i;
-        vars[param_name] = parser[i];
-    }
-    return vars;
-}
-
 std::vector<String> params_to_shell(const ParametersParser& parser)
 {
     std::vector<String> vars;
@@ -578,14 +566,6 @@ void define_command(const ParametersParser& parser, Context& context)
     String commands = parser[1];
     Command cmd;
     ParameterDesc desc;
-    if (parser.has_option("env-params"))
-    {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
-        cmd = [=](const ParametersParser& parser, Context& context) {
-            CommandManager::instance().execute(commands, context, {},
-                                               params_to_env_var_map(parser));
-        };
-    }
     if (parser.has_option("shell-params"))
     {
         desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
@@ -668,16 +648,15 @@ const CommandDesc define_command_cmd = {
     nullptr,
     "def <switches> <name> <commands>: define a command named <name> corresponding to <commands>",
     ParameterDesc{
-        SwitchMap{ { "env-params", { false, "pass parameters as env variables param0..paramN" } },
-                   { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
-                   { "allow-override", { false, "allow overriding existing command" } },
+        SwitchMap{ { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
+                   { "allow-override", { false, "allow overriding an existing command" } },
+                   { "hidden", { false, "do not display the command in completion candidates" } },
+                   { "alias", { true, "define an alias for this command" } },
+                   { "docstring", { true, "define the documentation string for command" } },
                    { "file-completion", { false, "complete parameters using filename completion" } },
                    { "client-completion", { false, "complete parameters using client name completion" } },
                    { "buffer-completion", { false, "complete parameters using buffer name completion" } },
-                   { "shell-completion", { true, "complete the parameters using the given shell-script" } },
-                   { "hidden", { false, "do not display the command as completion candidate" } },
-                   { "alias", { true, "define an alias for this command" } },
-                   { "docstring", { true, "set docstring for command" } } },
+                   { "shell-completion", { true, "complete the parameters using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
     },
