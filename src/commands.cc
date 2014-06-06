@@ -483,9 +483,14 @@ CandidateList complete_scope(StringView prefix)
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
-    "hook <switches> <scope> <hook_name> <command>: add <command> to be executed on hook <hook_name> in <scope> context",
+    "hook <switches> <scope> <hook_name> <command>: add <command> in <scope> to be executed on hook <hook_name>\n"
+    "scope can be: \n"
+    "  * global: hook is executed for any buffer or window\n"
+    "  * buffer: hook is executed only for the current buffer\n"
+    "            (and any window for that buffer)\n"
+    "  * window: hook is executed only for the current window\n",
     ParameterDesc{
-        SwitchMap{ { "id", { true, "set hook id" } } },
+        SwitchMap{ { "id", { true, "set hook id, see rmhooks" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -520,7 +525,7 @@ const CommandDesc add_hook_cmd = {
 const CommandDesc rm_hook_cmd = {
     "rmhooks",
     nullptr,
-    "rmhooks <id>: remove all hooks that whose id is <id>",
+    "rmhooks <id>: remove all hooks whose id is <id>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     CommandCompleter{},
@@ -696,7 +701,8 @@ const CommandDesc echo_cmd = {
 const CommandDesc debug_cmd = {
     "debug",
     nullptr,
-    "debug <params>...: write debug informations in debug buffer",
+    "debug <command>: write some debug informations in the debug buffer\n"
+    "    existing commands: info",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     CommandCompleter{},
@@ -794,7 +800,7 @@ const CommandDesc declare_option_cmd = {
     "decl",
     nullptr,
     "decl <type> <name> [value]: declare option <name> of type <type>.\n"
-    "set its initial value to <value> if given\n"
+    "set its initial value to <value> if given and if the option did not exist\n"
     "Available types:\n"
     "    int: integer\n"
     "    bool: boolean (true/false or yes/no)\n"
@@ -846,7 +852,6 @@ const CommandDesc declare_option_cmd = {
             opt->set_from_string(parser[2]);
     }
 };
-
 
 KeymapManager& get_keymap_manager(const String& scope, Context& context)
 {
@@ -1037,7 +1042,7 @@ const CommandDesc exec_string_cmd = {
 const CommandDesc eval_string_cmd = {
     "eval",
     nullptr,
-    "eval <switches> <keys>: execute commands as if entered by user",
+    "eval <switches> <commands>...: execute commands as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandCompleter{},
