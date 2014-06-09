@@ -1156,15 +1156,19 @@ void copy_indent(Context& context, int selection)
     if (selection == 0)
         selection = context.selections().main_index() + 1;
 
-    const String& line = buffer[selections[selection-1].min().line];
+    auto ref_line = selections[selection-1].min().line;
+    const String& line = buffer[ref_line];
     auto it = line.begin();
     while (it != line.end() and is_horizontal_blank(*it))
         ++it;
-    const String indent{line.begin(), it};
+    const StringView indent = line.substr(0_byte, (int)(it-line.begin()));
 
     ScopedEdition edition{context};
     for (auto& l : lines)
     {
+        if (l == ref_line)
+            continue;
+
         auto& line = buffer[l];
         ByteCount i = 0;
         while (i < line.length() and is_horizontal_blank(line[i]))
