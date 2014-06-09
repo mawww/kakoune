@@ -801,48 +801,46 @@ private:
                     cursor = buffer.char_next(cursor);
             }
             break;
-
-        case InsertMode::OpenLineBelow:
         case InsertMode::AppendAtLineEnd:
             for (auto& sel : selections)
                 sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
             break;
-
+        case InsertMode::OpenLineBelow:
+            for (auto& sel : selections)
+                sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+            insert('\n');
+            break;
         case InsertMode::OpenLineAbove:
+            for (auto& sel : selections)
+            {
+                auto line = sel.min().line;
+                sel = line > 0 ? ByteCoord{line - 1, buffer[line-1].length() - 1}
+                               : ByteCoord{0, 0};
+            }
+            insert('\n');
+            // fix case where we inserted at begining
+            for (auto& sel : selections)
+            {
+                if (sel.anchor() == buffer.char_next({0,0}))
+                    sel = Selection{{0,0}};
+            }
+            break;
         case InsertMode::InsertAtLineBegin:
             for (auto& sel : selections)
             {
                 ByteCoord pos = sel.min().line;
-                if (mode == InsertMode::OpenLineAbove)
-                    pos = buffer.char_prev(pos);
-                else
-                {
-                    auto pos_non_blank = buffer.iterator_at(pos);
-                    while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
-                        ++pos_non_blank;
-                    if (*pos_non_blank != '\n')
-                        pos = pos_non_blank.coord();
-                }
+                auto pos_non_blank = buffer.iterator_at(pos);
+                while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
+                    ++pos_non_blank;
+                if (*pos_non_blank != '\n')
+                    pos = pos_non_blank.coord();
                 sel = pos;
             }
             break;
         case InsertMode::InsertAtNextLineBegin:
         case InsertMode::InsertCursor:
-             kak_assert(false); // not implemented
+             kak_assert(false); // invalid for interactive insert
              break;
-        }
-        if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
-        {
-            insert('\n');
-            if (mode == InsertMode::OpenLineAbove)
-            {
-                for (auto& sel : selections)
-                {
-                    // special case, the --first line above did nothing, so we need to compensate now
-                    if (sel.anchor() == buffer.char_next({0,0}))
-                        sel = Selection{{0,0}};
-                }
-            }
         }
         selections.sort_and_merge_overlapping();
         selections.check_invariant();
