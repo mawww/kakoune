@@ -451,12 +451,14 @@ public:
             const bool reverse = (key == Key::BackTab);
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
+            bool updated_completions = false;
             if (candidates.empty())
             {
                 refresh_completions(CompletionFlags::None);
 
                 if (candidates.empty())
                     return;
+                updated_completions = true;
             }
             bool did_prefix = false;
             if (m_current_completion == -1 and
@@ -481,7 +483,10 @@ public:
                         m_current_completion = it - candidates.begin();
 
                     CharCount start = line.char_count_to(m_completions.start);
-                    did_prefix = prefix != line.substr(start, m_line_editor.cursor_pos() - start);
+                    // When we just updated completions, select the common
+                    // prefix even if it was the currently entered text.
+                    did_prefix = updated_completions or
+                                 prefix != line.substr(start, m_line_editor.cursor_pos() - start);
                 }
             }
             if (not did_prefix)
@@ -545,6 +550,7 @@ private:
         {
             if (not m_completer)
                 return;
+            m_current_completion = -1;
             const String& line = m_line_editor.line();
             m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
