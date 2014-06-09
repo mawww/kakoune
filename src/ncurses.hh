@@ -45,7 +45,7 @@ public:
 
     static void abort();
 private:
-    friend void on_term_resize(int);
+    void check_resize();
     void redraw();
     void draw_line(const DisplayLine& line, CharCount col_index) const;
 

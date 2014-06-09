@@ -140,15 +140,19 @@ static void set_color(WINDOW* window, ColorPair colors)
     }
 }
 
+static sig_atomic_t resize_pending = 0;
+
 void on_term_resize(int)
 {
-    ungetch(KEY_RESIZE);
+    resize_pending = 1;
     EventManager::instance().force_signal(0);
 }
 
+static sig_atomic_t ctrl_c_pending = 0;
+
 void on_sigint(int)
 {
-    ungetch(CTRL('c'));
+    ctrl_c_pending = 1;
     EventManager::instance().force_signal(0);
 }
 
@@ -267,6 +271,8 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
                      const DisplayLine& status_line,
                      const DisplayLine& mode_line)
 {
+    check_resize();
+
     LineCount line_index = 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
@@ -315,8 +321,29 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     m_dirty = true;
 }
 
+void NCursesUI::check_resize()
+{
+    if (resize_pending)
+    {
+        int fd = open("/dev/tty", O_RDWR);
+        winsize ws;
+        if (ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
+        {
+            close(fd);
+            resizeterm(ws.ws_row, ws.ws_col);
+            update_dimensions();
+        }
+        resize_pending = false;
+    }
+}
+
 bool NCursesUI::is_key_available()
 {
+    check_resize();
+
+    if (ctrl_c_pending)
+        return true;
+
     timeout(0);
     const int c = getch();
     if (c != ERR)
@@ -327,6 +354,14 @@ bool NCursesUI::is_key_available()
 
 Key NCursesUI::get_key()
 {
+    check_resize();
+
+    if (ctrl_c_pending)
+    {
+        ctrl_c_pending = false;
+        return ctrl('c');
+    }
+
     const int c = getch();
     if (c > 0 and c < 27)
     {
@@ -343,18 +378,6 @@ Key NCursesUI::get_key()
             return alt(new_c);
         else
             return Key::Escape;
-    }
-    else if (c == KEY_RESIZE)
-    {
-        int fd = open("/dev/tty", O_RDWR);
-        winsize ws;
-        if (fd != -1 and ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
-        {
-            close(fd);
-            resizeterm(ws.ws_row, ws.ws_col);
-            update_dimensions();
-        }
-        return Key::Invalid;
     }
     else switch (c)
     {
