@@ -94,18 +94,18 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
             w->forget_timestamp();
             WindowAndSelections res = std::move(*it);
             m_free_windows.erase(it.base()-1);
+            res.selections.update();
             return res;
         }
     }
     return WindowAndSelections{ std::unique_ptr<Window>{new Window{buffer}},
-                                DynamicSelectionList{buffer,
-                                { Selection{ {}, {} } } } };
+                                SelectionList{ buffer, Selection{} } };
 }
 
 void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
 {
     Buffer& buffer = window->buffer();
-    m_free_windows.push_back({ std::move(window), DynamicSelectionList{ buffer, std::move(selections) } });
+    m_free_windows.push_back({ std::move(window), SelectionList{ std::move(selections) }, buffer.timestamp() });
 }
 
 void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)

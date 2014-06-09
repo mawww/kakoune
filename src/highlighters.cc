@@ -5,7 +5,7 @@
 #include "color_registry.hh"
 #include "context.hh"
 #include "display_buffer.hh"
-#include "line_change_watcher.hh"
+#include "line_modification.hh"
 #include "option_types.hh"
 #include "register_manager.hh"
 #include "string.hh"
@@ -158,7 +158,7 @@ struct BufferSideCache
     {
         Value& cache_val = buffer.values()[m_id];
         if (not cache_val)
-            cache_val = Value(T{buffer});
+            cache_val = Value(T{});
         return cache_val.as<T>();
     }
 private:
@@ -195,7 +195,6 @@ public:
 private:
     struct Cache
     {
-        Cache(const Buffer&){}
         std::pair<LineCount, LineCount> m_range;
         size_t m_timestamp = 0;
         std::vector<std::vector<std::pair<ByteCoord, ByteCoord>>> m_matches;
@@ -699,10 +698,8 @@ private:
                                       : lhs.begin < rhs.begin;
     }
 
-    struct Cache : public LineChangeWatcher
+    struct Cache
     {
-        Cache(const Buffer& buffer) : LineChangeWatcher(buffer) {}
-
         size_t timestamp = 0;
         MatchList begin_matches;
         MatchList end_matches;
@@ -724,7 +721,7 @@ private:
         }
         else
         {
-            auto modifs = cache.compute_modifications();
+            auto modifs = compute_line_modifications(buffer, cache.timestamp);
             update_matches(buffer, modifs, cache.begin_matches, m_begin);
             update_matches(buffer, modifs, cache.end_matches, m_end);
         }
@@ -746,7 +743,7 @@ private:
             beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
                                       *end_it, compare_matches_end);
         }
-        cache.timestamp = buffer.timestamp();
+        cache.timestamp = buf_timestamp;
         return cache.regions;
     }
 
@@ -775,15 +772,15 @@ private:
             auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
                                              [](const LineModification& c, const LineCount& l)
                                              { return c.old_line < l; });
-            bool erase = false;
-            if (modif_it != modifs.begin())
+
+            bool erase = (modif_it != modifs.end() and modif_it->old_line == it->line);
+            if (not erase and modif_it != modifs.begin())
             {
                 auto& prev = *(modif_it-1);
                 erase = it->line <= prev.old_line + prev.num_removed;
                 it->line += prev.diff();
             }
-            erase = erase or (it->line >= buffer.line_count() or
-                              it->timestamp < buffer.line_timestamp(it->line));
+            erase = erase or (it->line >= buffer.line_count());
 
             if (not erase)
             {
@@ -804,9 +801,10 @@ private:
         // try to find new matches in each updated lines
         for (auto& modif : modifs)
         {
-            for (auto line = modif.new_line; line < modif.new_line + modif.num_added+1; ++line)
+            for (auto line = modif.new_line;
+                 line < modif.new_line + modif.num_added+1 and
+                 line < buffer.line_count(); ++line)
             {
-                kak_assert(line < buffer.line_count());
                 auto& l = buffer[line];
                 for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
                 {

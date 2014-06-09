@@ -21,89 +21,6 @@
 namespace Kakoune
 {
 
-void erase(Buffer& buffer, SelectionList& selections)
-{
-    for (auto& sel : selections)
-    {
-        erase(buffer, sel);
-        avoid_eol(buffer, sel);
-    }
-    selections.check_invariant();
-    buffer.check_invariant();
-}
-
-template<InsertMode mode>
-BufferIterator prepare_insert(Buffer& buffer, const Selection& sel)
-{
-    switch (mode)
-    {
-    case InsertMode::Insert:
-        return buffer.iterator_at(sel.min());
-    case InsertMode::Replace:
-        return Kakoune::erase(buffer, sel);
-    case InsertMode::Append:
-    {
-        // special case for end of lines, append to current line instead
-        auto pos = buffer.iterator_at(sel.max());
-        return *pos == '\n' ? pos : utf8::next(pos);
-    }
-    case InsertMode::InsertAtLineBegin:
-        return buffer.iterator_at(sel.min().line);
-    case InsertMode::AppendAtLineEnd:
-        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
-    case InsertMode::InsertAtNextLineBegin:
-        return buffer.iterator_at(sel.max().line+1);
-    case InsertMode::OpenLineBelow:
-        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
-    case InsertMode::OpenLineAbove:
-        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
-    }
-    kak_assert(false);
-    return {};
-}
-
-template<InsertMode mode>
-void insert(Buffer& buffer, SelectionList& selections, const String& str)
-{
-    for (auto& sel : selections)
-    {
-        auto pos = prepare_insert<mode>(buffer, sel);
-        pos = buffer.insert(pos, str);
-        if (mode == InsertMode::Replace and pos != buffer.end())
-        {
-            sel.anchor() = pos.coord();
-            sel.cursor() = str.empty() ?
-                pos.coord() : (pos + str.byte_count_to(str.char_length() - 1)).coord();
-        }
-        avoid_eol(buffer, sel);
-    }
-    selections.check_invariant();
-    buffer.check_invariant();
-}
-
-template<InsertMode mode>
-void insert(Buffer& buffer, SelectionList& selections, memoryview<String> strings)
-{
-    if (strings.empty())
-        return;
-    for (size_t i = 0; i < selections.size(); ++i)
-    {
-        auto& sel = selections[i];
-        auto pos = prepare_insert<mode>(buffer, sel);
-        const String& str = strings[std::min(i, strings.size()-1)];
-        pos = buffer.insert(pos, str);
-        if (mode == InsertMode::Replace and pos != buffer.end())
-        {
-            sel.anchor() = pos.coord();
-            sel.cursor() = (str.empty() ?
-                pos : pos + str.byte_count_to(str.char_length() - 1)).coord();
-        }
-        avoid_eol(buffer, sel);
-    }
-    selections.check_invariant();
-    buffer.check_invariant();
-}
-
 using namespace std::placeholders;
 
 enum class SelectMode
@@ -174,11 +91,11 @@ constexpr Select<mode, T> make_select(T func)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(const Buffer& buffer, ByteCoord coord, SelectionList& selections)
+void select_coord(Buffer& buffer, ByteCoord coord, SelectionList& selections)
 {
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
-        selections = SelectionList { coord };
+        selections = SelectionList{ buffer, coord };
     else if (mode == SelectMode::Extend)
     {
         for (auto& sel : selections)
@@ -407,7 +324,7 @@ void replace_with_char(Context& context, int)
             CharCount count = char_length(buffer, sel);
             strings.emplace_back(key.key, count);
         }
-        insert<InsertMode::Replace>(buffer, selections, strings);
+        selections.insert(strings, InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -430,7 +347,7 @@ void for_each_char(Context& context, int)
         for (auto& c : sel)
             c = func(c);
     }
-    insert<InsertMode::Replace>(context.buffer(), context.selections(), sels);
+    context.selections().insert(sels, InsertMode::Replace);
 }
 
 void command(Context& context, int)
@@ -495,7 +412,7 @@ void pipe(Context& context, int)
                 strings.push_back(str);
             }
             ScopedEdition edition(context);
-            insert<mode>(buffer, selections, strings);
+            selections.insert(strings, mode);
         });
 }
 
@@ -545,7 +462,8 @@ void erase_selections(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.selections_content();
     ScopedEdition edition(context);
-    erase(context.buffer(), context.selections());
+    context.selections().erase();
+    context.selections().avoid_eol();
 }
 
 void cat_erase_selections(Context& context, int)
@@ -555,7 +473,8 @@ void cat_erase_selections(Context& context, int)
     for (auto& sel : sels)
         str += sel;
     RegisterManager::instance()['"'] = memoryview<String>(str);
-    erase(context.buffer(), context.selections());
+    context.selections().erase();
+    context.selections().avoid_eol();
 }
 
 
@@ -589,22 +508,21 @@ void paste(Context& context, int)
         }
     }
     ScopedEdition edition(context);
-    if (linewise)
-        insert<adapt_for_linewise(mode)>(context.buffer(), context.selections(), strings);
-    else
-        insert<mode>(context.buffer(), context.selections(), strings);
+    context.selections().insert(strings,
+                                linewise ? adapt_for_linewise(mode) : mode);
 }
 
 template<typename T>
 void regex_prompt(Context& context, const String prompt, T func)
 {
-    DynamicSelectionList selections{context.buffer(), context.selections()};
+    SelectionList selections = context.selections();
     context.input_handler().prompt(prompt, "", get_color("Prompt"), complete_nothing,
-        [=](const String& str, PromptEvent event, Context& context) {
+        [=](const String& str, PromptEvent event, Context& context) mutable {
             try
             {
                 if (event != PromptEvent::Change and context.has_ui())
                     context.ui().info_hide();
+                selections.update();
                 context.selections() = selections;
                 context.input_handler().set_prompt_colors(get_color("Prompt"));
                 if (event == PromptEvent::Abort)
@@ -718,7 +636,7 @@ void select_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            select_all_matches(context.buffer(), context.selections(), ex);
+            select_all_matches(context.selections(), ex);
     });
 }
 
@@ -730,7 +648,7 @@ void split_regex(Context& context, int)
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
-            split_selections(context.buffer(), context.selections(), ex);
+            split_selections(context.selections(), ex);
     });
 }
 
@@ -738,7 +656,7 @@ void split_lines(Context& context, int)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
-    SelectionList res;
+    std::vector<Selection> res;
     for (auto& sel : selections)
     {
         if (sel.anchor().line == sel.cursor().line)
@@ -753,14 +671,13 @@ void split_lines(Context& context, int)
             res.push_back({line, {line, buffer[line].length()-1}});
         res.push_back({max.line, max});
     }
-    res.set_main_index(res.size() - 1);
     selections = std::move(res);
 }
 
 void join_select_spaces(Context& context, int)
 {
     auto& buffer = context.buffer();
-    SelectionList selections;
+    std::vector<Selection> selections;
     for (auto& sel : context.selections())
     {
         for (LineCount line = sel.min().line; line <= sel.max().line; ++line)
@@ -775,16 +692,19 @@ void join_select_spaces(Context& context, int)
     }
     if (selections.empty())
         return;
-    selections.sort_and_merge_overlapping();
     context.selections() = selections;
     ScopedEdition edition(context);
-    insert<InsertMode::Replace>(buffer, context.selections(), " ");
+    context.selections().insert(" "_str, InsertMode::Replace);
 }
 
 void join(Context& context, int param)
 {
-    DynamicSelectionList sels{context.buffer(), context.selections()};
-    auto restore_sels = on_scope_end([&]{ context.selections() = std::move(sels); });
+    SelectionList sels{context.selections()};
+    auto restore_sels = on_scope_end([&]{
+        sels.update();
+        context.selections() = std::move(sels);
+    });
+
     join_select_spaces(context, param);
 }
 
@@ -796,7 +716,7 @@ void keep(Context& context, int)
         if (ex.empty())
             return;
         const Buffer& buffer = context.buffer();
-        SelectionList keep;
+        std::vector<Selection> keep;
         for (auto& sel : context.selections())
         {
             if (boost::regex_search(buffer.iterator_at(sel.min()),
@@ -805,7 +725,7 @@ void keep(Context& context, int)
         }
         if (keep.empty())
             throw runtime_error("no selections remaining");
-        context.selections() = std::move(keep);
+        context.set_selections(std::move(keep));
     });
 }
 
@@ -818,7 +738,7 @@ void keep_pipe(Context& context, int)
                 return;
             const Buffer& buffer = context.buffer();
             auto& shell_manager = ShellManager::instance();
-            SelectionList keep;
+            std::vector<Selection> keep;
             for (auto& sel : context.selections())
             {
                 int status = 0;
@@ -829,7 +749,7 @@ void keep_pipe(Context& context, int)
             }
             if (keep.empty())
                 throw runtime_error("no selections remaining");
-            context.selections() = std::move(keep);
+            context.set_selections(std::move(keep));
     });
 }
 template<bool indent_empty = false>
@@ -839,7 +759,7 @@ void indent(Context& context, int)
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
     auto& buffer = context.buffer();
-    SelectionList sels;
+    std::vector<Selection> sels;
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -851,7 +771,8 @@ void indent(Context& context, int)
     if (not sels.empty())
     {
         ScopedEdition edition(context);
-        insert<InsertMode::Insert>(buffer, sels, indent);
+        SelectionList selections{buffer, std::move(sels)};
+        selections.insert(indent, InsertMode::Insert);
     }
 }
 
@@ -864,7 +785,7 @@ void deindent(Context& context, int)
         indent_width = tabstop;
 
     auto& buffer = context.buffer();
-    SelectionList sels;
+    std::vector<Selection> sels;
     for (auto& sel : context.selections())
     {
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
@@ -895,7 +816,8 @@ void deindent(Context& context, int)
     if (not sels.empty())
     {
         ScopedEdition edition(context);
-        erase(context.buffer(), sels);
+        SelectionList selections{context.buffer(), std::move(sels)};
+        selections.erase();
     }
 }
 
@@ -1006,7 +928,7 @@ void rotate_selections_content(Context& context, int group)
         std::rotate(it, end-count, end);
         it = end;
     }
-    insert<InsertMode::Replace>(context.buffer(), context.selections(), strings);
+    context.selections().insert(strings, InsertMode::Replace);
     context.selections().rotate_main(count);
 }
 
@@ -1238,52 +1160,16 @@ void spaces_to_tabs(Context& context, int ts)
     }
 }
 
-class ModifiedRangesListener : public BufferChangeListener_AutoRegister
-{
-public:
-    ModifiedRangesListener(Buffer& buffer)
-        : BufferChangeListener_AutoRegister(buffer) {}
-
-    void on_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end)
-    {
-        m_ranges.update_insert(buffer, begin, end);
-        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), begin,
-                                   [](ByteCoord c, const Selection& sel)
-                                   { return c < sel.min(); });
-        m_ranges.insert(it, Selection{ begin, buffer.char_prev(end) });
-    }
-
-    void on_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end)
-    {
-        m_ranges.update_erase(buffer, begin, end);
-        auto pos = std::min(begin, buffer.back_coord());
-        auto it = std::upper_bound(m_ranges.begin(), m_ranges.end(), pos,
-                                   [](ByteCoord c, const Selection& sel)
-                                   { return c < sel.min(); });
-        m_ranges.insert(it, Selection{ pos, pos });
-    }
-    SelectionList& ranges() { return m_ranges; }
-
-private:
-    SelectionList m_ranges;
-};
-
-inline bool touches(const Buffer& buffer, const Selection& lhs, const Selection& rhs)
-{
-    return lhs.min() <= rhs.min() ? buffer.char_next(lhs.max()) >= rhs.min()
-                                  : lhs.min() <= buffer.char_next(rhs.max());
-}
-
 void undo(Context& context, int)
 {
-    ModifiedRangesListener listener(context.buffer());
-    bool res = context.buffer().undo();
-    if (res and not listener.ranges().empty())
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    bool res = buffer.undo();
+    if (res)
     {
-        auto& selections = context.selections();
-        selections = std::move(listener.ranges());
-        selections.set_main_index(selections.size() - 1);
-        selections.merge_overlapping(std::bind(touches, std::ref(context.buffer()), _1, _2));
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.set_selections(std::move(ranges));
     }
     else if (not res)
         context.print_status({ "nothing left to undo", get_color("Information") });
@@ -1292,15 +1178,16 @@ void undo(Context& context, int)
 void redo(Context& context, int)
 {
     using namespace std::placeholders;
-    ModifiedRangesListener listener(context.buffer());
-    bool res = context.buffer().redo();
-    if (res and not listener.ranges().empty())
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    bool res = buffer.redo();
+    if (res)
     {
-        auto& selections = context.selections();
-        selections = std::move(listener.ranges());
-        selections.set_main_index(selections.size() - 1);
-        selections.merge_overlapping(std::bind(touches, std::ref(context.buffer()), _1, _2));
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.set_selections(std::move(ranges));
     }
+
     else if (not res)
         context.print_status({ "nothing left to redo", get_color("Information") });
 }
@@ -1337,9 +1224,9 @@ void move(Context& context, int count)
                                            : context.buffer().offset_coord(sel.cursor(), offset);
 
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
-        sel.cursor()  = cursor;
-        avoid_eol(context.buffer(), sel);
+        sel.cursor() = cursor;
     }
+    selections.avoid_eol();
     selections.sort_and_merge_overlapping();
 }
 
@@ -1392,12 +1279,12 @@ KeyMap keymap =
 
     { '.', repeat_last_insert },
 
-    { '%', [](Context& context, int) { select_buffer(context.buffer(), context.selections()); } },
+    { '%', [](Context& context, int) { select_buffer(context.selections()); } },
 
     { ':', command },
     { '|', pipe<InsertMode::Replace> },
     { alt('|'), pipe<InsertMode::Append> },
-    { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.buffer(), context.selections());
+    { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.selections());
                                              else keep_selection(context.selections(), count-1); } },
     { alt(' '), [](Context& context, int count) { if (count == 0) flip_selections(context.selections());
                                                   else remove_selection(context.selections(), count-1); } },

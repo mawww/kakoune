@@ -12,7 +12,8 @@ struct client_removed{};
 struct WindowAndSelections
 {
     std::unique_ptr<Window> window;
-    DynamicSelectionList selections;
+    SelectionList selections;
+    size_t timestamp;
 };
 
 class ClientManager : public Singleton<ClientManager>

@@ -18,7 +18,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
                EnvVarMap env_vars,
                String name)
     : m_ui{std::move(ui)}, m_window{std::move(window)},
-      m_input_handler{m_window->buffer(), std::move(selections),
+      m_input_handler{std::move(selections),
                       std::move(name)},
       m_env_vars(env_vars)
 {
@@ -102,7 +102,7 @@ static void reload_buffer(Context& context, const String& filename)
     if (not buf)
         return;
     context.change_buffer(*buf);
-    context.selections() = SelectionList{buf->clamp(cursor_pos)};
+    context.selections() = SelectionList{ *buf, buf->clamp(cursor_pos)};
     context.window().set_position(view_pos);
     context.print_status({ "'" + buf->display_name() + "' reloaded",
                            get_color("Information") });

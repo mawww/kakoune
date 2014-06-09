@@ -1,7 +1,7 @@
 #ifndef context_hh_INCLUDED
 #define context_hh_INCLUDED
 
-#include "dynamic_selection_list.hh"
+#include "selection.hh"
 
 #include <boost/optional.hpp>
 
@@ -26,7 +26,8 @@ class Context
 {
 public:
     Context();
-    Context(InputHandler& input_handler, Buffer& buffer, SelectionList selections, String name = "");
+    Context(InputHandler& input_handler, SelectionList selections,
+            String name = "");
     ~Context();
 
     Context(const Context&) = delete;
@@ -50,6 +51,7 @@ public:
     SelectionList& selections();
     const SelectionList& selections() const;
     std::vector<String>  selections_content() const;
+    void set_selections(std::vector<Selection> sels);
 
     void change_buffer(Buffer& buffer);
 
@@ -63,8 +65,8 @@ public:
     void print_status(DisplayLine status) const;
 
     void push_jump();
-    const DynamicSelectionList& jump_forward();
-    const DynamicSelectionList& jump_backward();
+    const SelectionList& jump_forward();
+    const SelectionList& jump_backward();
     void forget_jumps_to_buffer(Buffer& buffer);
 
     const String& name() const { return m_name; }
@@ -84,11 +86,11 @@ private:
     safe_ptr<Client>       m_client;
 
     friend class Client;
-    boost::optional<DynamicSelectionList> m_selections;
+    boost::optional<SelectionList> m_selections;
 
     String m_name;
 
-    using JumpList = std::vector<DynamicSelectionList>;
+    using JumpList = std::vector<SelectionList>;
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
 };

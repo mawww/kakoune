@@ -675,21 +675,23 @@ public:
         }
         else if (key == Key::Backspace)
         {
+            std::vector<Selection> sels;
             for (auto& sel : context().selections())
             {
                 if (sel.cursor() == ByteCoord{0,0})
                     continue;
-                auto pos = buffer.iterator_at(sel.cursor());
-                buffer.erase(utf8::previous(pos), pos);
+                auto pos = sel.cursor();
+                sels.push_back({ buffer.char_prev(pos) });
             }
+            if (not sels.empty())
+                SelectionList{buffer, std::move(sels)}.erase();
         }
         else if (key == Key::Delete)
         {
+            std::vector<Selection> sels;
             for (auto& sel : context().selections())
-            {
-                auto pos = buffer.iterator_at(sel.cursor());
-                buffer.erase(pos, utf8::next(pos));
-            }
+                sels.push_back({ sel.cursor() });
+            SelectionList{buffer, std::move(sels)}.erase();
         }
         else if (key == Key::Left)
         {
@@ -765,22 +767,13 @@ private:
 
     void insert(memoryview<String> strings)
     {
-        auto& buffer = context().buffer();
-        auto& selections = context().selections();
-        for (size_t i = 0; i < selections.size(); ++i)
-        {
-            size_t index = std::min(i, strings.size()-1);
-            buffer.insert(buffer.iterator_at(selections[i].cursor()),
-                          strings[index]);
-        }
+        context().selections().insert(strings, InsertMode::InsertCursor);
     }
 
     void insert(Codepoint key)
     {
         auto str = codepoint_to_str(key);
-        auto& buffer = context().buffer();
-        for (auto& sel : context().selections())
-            buffer.insert(buffer.iterator_at(sel.cursor()), str);
+        context().selections().insert(str, InsertMode::InsertCursor);
         context().hooks().run_hook("InsertChar", str, context());
     }
 
@@ -789,69 +782,65 @@ private:
         SelectionList& selections = context().selections();
         Buffer& buffer = context().buffer();
 
-        for (auto& sel : selections)
+        switch (mode)
         {
-            ByteCoord anchor, cursor;
-            switch (mode)
+        case InsertMode::Insert:
+            for (auto& sel : selections)
+                sel = Selection{sel.max(), sel.min()};
+            break;
+        case InsertMode::Replace:
+            selections.erase();
+            break;
+        case InsertMode::Append:
+            for (auto& sel : selections)
             {
-            case InsertMode::Insert:
-                anchor = sel.max();
-                cursor = sel.min();
-                break;
-            case InsertMode::Replace:
-                anchor = cursor = Kakoune::erase(buffer, sel).coord();
-                break;
-            case InsertMode::Append:
-                anchor = sel.min();
-                cursor = sel.max();
+                sel = Selection{sel.min(), sel.max()};
+                auto& cursor = sel.cursor();
                 // special case for end of lines, append to current line instead
                 if (cursor.column != buffer[cursor.line].length() - 1)
                     cursor = buffer.char_next(cursor);
-                break;
-
-            case InsertMode::OpenLineBelow:
-            case InsertMode::AppendAtLineEnd:
-                anchor = cursor = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
-                break;
-
-            case InsertMode::OpenLineAbove:
-            case InsertMode::InsertAtLineBegin:
-                anchor = sel.min().line;
-                if (mode == InsertMode::OpenLineAbove)
-                    anchor = buffer.char_prev(anchor);
-                else
-                {
-                    auto anchor_non_blank = buffer.iterator_at(anchor);
-                    while (*anchor_non_blank == ' ' or *anchor_non_blank == '\t')
-                        ++anchor_non_blank;
-                    if (*anchor_non_blank != '\n')
-                        anchor = anchor_non_blank.coord();
-                }
-                cursor = anchor;
-                break;
-            case InsertMode::InsertAtNextLineBegin:
-                 kak_assert(false); // not implemented
-                 break;
             }
-            if (buffer.is_end(anchor))
-               anchor = buffer.char_prev(anchor);
-            if (buffer.is_end(cursor))
-               cursor = buffer.char_prev(cursor);
-            sel.anchor() = anchor;
-            sel.cursor() = cursor;
-        }
-        if (mode == InsertMode::OpenLineBelow or mode == InsertMode::OpenLineAbove)
-        {
+            break;
+        case InsertMode::AppendAtLineEnd:
+            for (auto& sel : selections)
+                sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+            break;
+        case InsertMode::OpenLineBelow:
+            for (auto& sel : selections)
+                sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
             insert('\n');
-            if (mode == InsertMode::OpenLineAbove)
+            break;
+        case InsertMode::OpenLineAbove:
+            for (auto& sel : selections)
             {
-                for (auto& sel : selections)
-                {
-                    // special case, the --first line above did nothing, so we need to compensate now
-                    if (sel.anchor() == buffer.char_next({0,0}))
-                        sel.anchor() = sel.cursor() = ByteCoord{0,0};
-                }
+                auto line = sel.min().line;
+                sel = line > 0 ? ByteCoord{line - 1, buffer[line-1].length() - 1}
+                               : ByteCoord{0, 0};
             }
+            insert('\n');
+            // fix case where we inserted at begining
+            for (auto& sel : selections)
+            {
+                if (sel.anchor() == buffer.char_next({0,0}))
+                    sel = Selection{{0,0}};
+            }
+            break;
+        case InsertMode::InsertAtLineBegin:
+            for (auto& sel : selections)
+            {
+                ByteCoord pos = sel.min().line;
+                auto pos_non_blank = buffer.iterator_at(pos);
+                while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
+                    ++pos_non_blank;
+                if (*pos_non_blank != '\n')
+                    pos = pos_non_blank.coord();
+                sel = pos;
+            }
+            break;
+        case InsertMode::InsertAtNextLineBegin:
+        case InsertMode::InsertCursor:
+             kak_assert(false); // invalid for interactive insert
+             break;
         }
         selections.sort_and_merge_overlapping();
         selections.check_invariant();
@@ -860,12 +849,13 @@ private:
 
     void on_disabled() override
     {
-        for (auto& sel : context().selections())
+        auto& selections = context().selections();
+        for (auto& sel : selections)
         {
             if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
                 sel.cursor() = context().buffer().char_prev(sel.cursor());
-            avoid_eol(context().buffer(), sel);
         }
+        selections.avoid_eol();
     }
 
     enum class Mode { Default, Complete, InsertReg };
@@ -883,9 +873,9 @@ void InputMode::reset_normal_mode()
     m_input_handler.reset_normal_mode();
 }
 
-InputHandler::InputHandler(Buffer& buffer, SelectionList selections, String name)
+InputHandler::InputHandler(SelectionList selections, String name)
     : m_mode(new InputModes::Normal(*this)),
-      m_context(*this, buffer, std::move(selections), std::move(name))
+      m_context(*this, std::move(selections), std::move(name))
 {
 }
 

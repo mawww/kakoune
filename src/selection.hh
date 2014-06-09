@@ -12,7 +12,7 @@ using CaptureList = std::vector<String>;
 struct Selection
 {
     Selection() = default;
-    explicit Selection(ByteCoord pos) : Selection(pos,pos) {}
+    Selection(ByteCoord pos) : Selection(pos,pos) {}
     Selection(ByteCoord anchor, ByteCoord cursor,
               CaptureList captures = {})
         : m_anchor{anchor}, m_cursor{cursor},
@@ -34,8 +34,11 @@ struct Selection
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    const ByteCoord& min() const { return std::min(m_anchor, m_cursor); }
-    const ByteCoord& max() const { return std::max(m_anchor, m_cursor); }
+    const ByteCoord& min() const { return m_anchor < m_cursor ? m_anchor : m_cursor; }
+    const ByteCoord& max() const { return m_anchor < m_cursor ? m_cursor : m_anchor; }
+
+    ByteCoord& min() { return m_anchor < m_cursor ? m_anchor : m_cursor; }
+    ByteCoord& max() { return m_anchor < m_cursor ? m_cursor : m_anchor; }
 
 private:
     ByteCoord m_anchor;
@@ -50,19 +53,27 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
                                   : lhs.min() <= rhs.max();
 }
 
-static bool compare_selections(const Selection& lhs, const Selection& rhs)
+enum class InsertMode : unsigned
 {
-    return lhs.min() < rhs.min();
-}
+    Insert,
+    InsertCursor,
+    Append,
+    Replace,
+    InsertAtLineBegin,
+    InsertAtNextLineBegin,
+    AppendAtLineEnd,
+    OpenLineBelow,
+    OpenLineAbove
+};
 
 struct SelectionList
 {
-    SelectionList() = default;
-    SelectionList(ByteCoord c) : m_selections{Selection{c,c}} {}
-    SelectionList(Selection s) : m_selections{s} {}
+    SelectionList(Buffer& buffer, Selection s);
+    SelectionList(Buffer& buffer, Selection s, size_t timestamp);
+    SelectionList(Buffer& buffer, std::vector<Selection> s);
+    SelectionList(Buffer& buffer, std::vector<Selection> s, size_t timestamp);
 
-    void update_insert(const Buffer& buffer, ByteCoord begin, ByteCoord end);
-    void update_erase(const Buffer& buffer, ByteCoord begin, ByteCoord end);
+    void update();
 
     void check_invariant() const;
 
@@ -73,11 +84,23 @@ struct SelectionList
 
     void rotate_main(int count) { m_main = (m_main + count) % size(); }
 
+    void avoid_eol();
+
     void push_back(const Selection& sel) { m_selections.push_back(sel); }
     void push_back(Selection&& sel) { m_selections.push_back(std::move(sel)); }
 
     Selection& operator[](size_t i) { return m_selections[i]; }
     const Selection& operator[](size_t i) const { return m_selections[i]; }
+
+    SelectionList& operator=(std::vector<Selection> list)
+    {
+        m_selections = std::move(list);
+        m_main = size()-1;
+        sort_and_merge_overlapping();
+        update_timestamp();
+        check_invariant();
+        return *this;
+    }
 
     using iterator = std::vector<Selection>::iterator;
     iterator begin() { return m_selections.begin(); }
@@ -87,70 +110,32 @@ struct SelectionList
     const_iterator begin() const { return m_selections.begin(); }
     const_iterator end() const { return m_selections.end(); }
 
-    template<typename... Args>
-    iterator insert(Args... args)
-    {
-        return m_selections.insert(std::forward<Args>(args)...);
-    }
-
-    template<typename... Args>
-    iterator erase(Args... args)
-    {
-        return m_selections.erase(std::forward<Args>(args)...);
-    }
+    void remove(size_t index) { m_selections.erase(begin() + index); }
 
     size_t size() const { return m_selections.size(); }
-    bool empty() const { return m_selections.empty(); }
 
-    bool operator==(const SelectionList& other) const { return m_selections == other.m_selections; }
-    bool operator!=(const SelectionList& other) const { return m_selections != other.m_selections; }
+    bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
+    bool operator!=(const SelectionList& other) const { return !((*this) == other); }
 
-    template<typename OverlapsFunc>
-    void merge_overlapping(OverlapsFunc overlaps)
-    {
-        kak_assert(std::is_sorted(begin(), end(), compare_selections));
-        size_t i = 0;
-        for (size_t j = 1; j < size(); ++j)
-        {
-            if (overlaps((*this)[i], (*this)[j]))
-            {
-                (*this)[i].merge_with((*this)[j]);
-                if (i < m_main)
-                    --m_main;
-            }
-            else
-            {
-                ++i;
-                if (i != j)
-                    (*this)[i] = std::move((*this)[j]);
-            }
-        }
-        erase(begin() + i + 1, end());
-        kak_assert(std::is_sorted(begin(), end(), compare_selections));
-    }
+    void sort_and_merge_overlapping();
 
-    void sort_and_merge_overlapping()
-    {
-        if (size() == 1)
-            return;
+    Buffer& buffer() const { return *m_buffer; }
 
-        const auto& main = this->main();
-        const auto main_begin = main.min();
-        m_main = std::count_if(begin(), end(), [&](const Selection& sel) {
-                                   auto begin = sel.min();
-                                   if (begin == main_begin)
-                                       return &sel < &main;
-                                   else
-                                       return begin < main_begin;
-                               });
-        std::stable_sort(begin(), end(), compare_selections);
-        merge_overlapping(overlaps);
-    }
+    size_t timestamp() const { return m_timestamp; }
+    void update_timestamp() { m_timestamp = m_buffer->timestamp(); }
+
+    void insert(memoryview<String> strings, InsertMode mode);
+    void erase();
 
 private:
     size_t m_main = 0;
     std::vector<Selection> m_selections;
+
+    safe_ptr<Buffer> m_buffer;
+    size_t m_timestamp;
 };
+
+std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 
 }
 

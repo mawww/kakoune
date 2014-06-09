@@ -313,7 +313,7 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, Obj
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
-    if (not (flags & ObjectFlags::ToEnd) and buffer.offset(first.coord()) > 1 and
+    if (not (flags & ObjectFlags::ToEnd) and first.coord() > ByteCoord{0,1} and
         *(first-1) == '\n' and *(first-2) == '\n')
         --first;
     else if ((flags & ObjectFlags::ToEnd) and
@@ -458,15 +458,16 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
     return Selection(first.coord(), last.coord());
 }
 
-void select_buffer(const Buffer& buffer, SelectionList& selections)
+void select_buffer(SelectionList& selections)
 {
-    selections = SelectionList{ Selection({0,0}, buffer.back_coord()) };
+    auto& buffer = selections.buffer();
+    selections = SelectionList{ buffer, Selection({0,0}, buffer.back_coord()) };
 }
 
-void select_all_matches(const Buffer& buffer, SelectionList& selections,
-                        const Regex& regex)
+void select_all_matches(SelectionList& selections, const Regex& regex)
 {
-    SelectionList result;
+    std::vector<Selection> result;
+    auto& buffer = selections.buffer();
     for (auto& sel : selections)
     {
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
@@ -492,14 +493,13 @@ void select_all_matches(const Buffer& buffer, SelectionList& selections,
     }
     if (result.empty())
         throw runtime_error("nothing selected");
-    result.set_main_index(result.size() - 1);
     selections = std::move(result);
 }
 
-void split_selections(const Buffer& buffer, SelectionList& selections,
-                      const Regex& regex)
+void split_selections(SelectionList& selections, const Regex& regex)
 {
-    SelectionList result;
+    std::vector<Selection> result;
+    auto& buffer = selections.buffer();
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
@@ -518,7 +518,6 @@ void split_selections(const Buffer& buffer, SelectionList& selections,
         if (begin.coord() <= sel.max())
             result.push_back({ begin.coord(), sel.max() });
     }
-    result.set_main_index(result.size() - 1);
     selections = std::move(result);
 }
 

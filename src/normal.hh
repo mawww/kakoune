@@ -11,18 +11,6 @@ namespace Kakoune
 
 class Context;
 
-enum class InsertMode : unsigned
-{
-    Insert,
-    Append,
-    Replace,
-    InsertAtLineBegin,
-    InsertAtNextLineBegin,
-    AppendAtLineEnd,
-    OpenLineBelow,
-    OpenLineAbove
-};
-
 using KeyMap = std::unordered_map<Key, std::function<void (Context& context, int param)>>;
 extern KeyMap keymap;
 

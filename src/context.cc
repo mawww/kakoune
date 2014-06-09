@@ -10,10 +10,10 @@ namespace Kakoune
 Context::Context() = default;
 Context::~Context() = default;
 
-Context::Context(InputHandler& input_handler, Buffer& buffer,
-                 SelectionList selections, String name)
+Context::Context(InputHandler& input_handler, SelectionList selections,
+                 String name)
     : m_input_handler{&input_handler},
-      m_selections{{buffer, std::move(selections)}},
+      m_selections{std::move(selections)},
       m_name(std::move(name))
 {}
 
@@ -21,7 +21,7 @@ Buffer& Context::buffer() const
 {
     if (not has_buffer())
         throw runtime_error("no buffer in context");
-    return (*m_selections).registry();
+    return const_cast<Buffer&>((*m_selections).buffer());
 }
 
 Window& Context::window() const
@@ -103,32 +103,37 @@ void Context::push_jump()
     if (m_current_jump != m_jump_list.end())
     {
         auto begin = m_current_jump;
-        if (&buffer() != &begin->buffer() or
-            (const SelectionList&)(*begin) != jump)
+        if (&buffer() != &begin->buffer() or *begin != jump)
             ++begin;
         m_jump_list.erase(begin, m_jump_list.end());
     }
     m_jump_list.erase(std::remove(begin(m_jump_list), end(m_jump_list), jump),
                       end(m_jump_list));
-    m_jump_list.push_back({buffer(), jump});
+    m_jump_list.push_back(jump);
     m_current_jump = m_jump_list.end();
 }
 
-const DynamicSelectionList& Context::jump_forward()
+const SelectionList& Context::jump_forward()
 {
     if (m_current_jump != m_jump_list.end() and
         m_current_jump + 1 != m_jump_list.end())
-        return *++m_current_jump;
+    {
+        SelectionList& res = *++m_current_jump;
+        res.update();
+        return res;
+    }
     throw runtime_error("no next jump");
 }
 
-const DynamicSelectionList& Context::jump_backward()
+const SelectionList& Context::jump_backward()
 {
     if (m_current_jump != m_jump_list.end() and
         *m_current_jump != selections())
     {
         push_jump();
-        return *--m_current_jump;
+        SelectionList& res = *--m_current_jump;
+        res.update();
+        return res;
     }
     if (m_current_jump != m_jump_list.begin())
     {
@@ -137,7 +142,9 @@ const DynamicSelectionList& Context::jump_backward()
             push_jump();
             --m_current_jump;
         }
-        return *--m_current_jump;
+        SelectionList& res = *--m_current_jump;
+        res.update();
+        return res;
     }
     throw runtime_error("no previous jump");
 }
@@ -168,7 +175,7 @@ void Context::change_buffer(Buffer& buffer)
     if (has_client())
         client().change_buffer(buffer);
     else
-        m_selections = DynamicSelectionList{ buffer };
+        m_selections = SelectionList{buffer, Selection{}};
     if (has_input_handler())
         input_handler().reset_normal_mode();
 }
@@ -177,14 +184,13 @@ SelectionList& Context::selections()
 {
     if (not m_selections)
         throw runtime_error("no selections in context");
+    (*m_selections).update();
     return *m_selections;
 }
 
 const SelectionList& Context::selections() const
 {
-    if (not m_selections)
-        throw runtime_error("no selections in context");
-    return *m_selections;
+    return const_cast<Context&>(*this).selections();
 }
 
 std::vector<String> Context::selections_content() const
@@ -194,6 +200,12 @@ std::vector<String> Context::selections_content() const
     for (auto& sel : selections())
         contents.push_back(buf.string(sel.min(), buf.char_next(sel.max())));
     return contents;
+}
+
+void Context::set_selections(std::vector<Selection> sels)
+{
+    *m_selections = std::move(sels);
+    (*m_selections).check_invariant();
 }
 
 void Context::begin_edition()

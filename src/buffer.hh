@@ -63,15 +63,6 @@ private:
     ByteCoord m_coord;
 };
 
-class BufferChangeListener
-{
-public:
-    virtual void on_insert(const Buffer& buffer,
-                           ByteCoord begin, ByteCoord end) = 0;
-    virtual void on_erase(const Buffer& buffer,
-                          ByteCoord begin, ByteCoord end) = 0;
-};
-
 // A Buffer is a in-memory representation of a file
 //
 // The Buffer class permits to read and mutate this file
@@ -104,7 +95,6 @@ public:
     BufferIterator erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const;
-    size_t         line_timestamp(LineCount line) const;
     time_t         fs_timestamp() const;
     void           set_fs_timestamp(time_t ts);
 
@@ -115,7 +105,6 @@ public:
     String         string(ByteCoord begin, ByteCoord end) const;
 
     char           byte_at(ByteCoord c) const;
-    ByteCount      offset(ByteCoord c) const;
     ByteCount      distance(ByteCoord begin, ByteCoord end) const;
     ByteCoord      advance(ByteCoord coord, ByteCount count) const;
     ByteCoord      next(ByteCoord coord) const;
@@ -134,11 +123,10 @@ public:
 
     BufferIterator begin() const;
     BufferIterator end() const;
-    ByteCount      byte_count() const;
     LineCount      line_count() const;
 
     const String&  operator[](LineCount line) const
-    { return m_lines[line].content; }
+    { return m_lines[line]; }
 
     // returns an iterator at given coordinates. clamp line_and_column
     BufferIterator iterator_at(ByteCoord coord) const;
@@ -170,30 +158,30 @@ public:
 
     void run_hook_in_own_context(const String& hook_name, const String& param);
 
-    std::unordered_set<BufferChangeListener*>& change_listeners() const { return m_change_listeners; }
-
     void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
 
     void check_invariant() const;
+
+    struct Change
+    {
+        enum Type { Insert, Erase };
+        Type type;
+        ByteCoord begin;
+        ByteCoord end;
+        bool at_end;
+    };
+    memoryview<Change> changes_since(size_t timestamp) const;
 private:
 
     void on_option_changed(const Option& option) override;
 
-    struct Line
+    struct LineList : std::vector<String>
     {
-        size_t    timestamp;
-        ByteCount start;
-        String    content;
+        String& operator[](LineCount line)
+        { return std::vector<String>::operator[]((int)line); }
 
-        ByteCount length() const { return content.length(); }
-    };
-    struct LineList : std::vector<Line>
-    {
-        Line& operator[](LineCount line)
-        { return std::vector<Line>::operator[]((int)line); }
-
-        const Line& operator[](LineCount line) const
-        { return std::vector<Line>::operator[]((int)line); }
+        const String& operator[](LineCount line) const
+        { return std::vector<String>::operator[]((int)line); }
     };
     LineList m_lines;
 
@@ -215,13 +203,10 @@ private:
     void revert_modification(const Modification& modification);
 
     size_t m_last_save_undo_index;
-    size_t m_timestamp;
+
+    std::vector<Change> m_changes;
 
     time_t m_fs_timestamp;
-
-    // this is mutable as adding or removing listeners is not muting the
-    // buffer observable state.
-    mutable std::unordered_set<BufferChangeListener*> m_change_listeners;
 
     OptionManager m_options;
     HookManager   m_hooks;
@@ -257,30 +242,6 @@ private:
     {
         return (Flags)(~(int)lhs);
     }
-};
-
-struct BufferListenerRegisterFuncs
-{
-    static void insert(const Buffer& buffer, BufferChangeListener& listener)
-    {
-        buffer.change_listeners().insert(&listener);
-    }
-    static void remove(const Buffer& buffer, BufferChangeListener& listener)
-    {
-        buffer.change_listeners().erase(&listener);
-    }
-};
-
-class BufferChangeListener_AutoRegister
-    : public BufferChangeListener,
-      public AutoRegister<BufferChangeListener_AutoRegister,
-                          BufferListenerRegisterFuncs, Buffer>
-{
-public:
-    BufferChangeListener_AutoRegister(Buffer& buffer)
-        : AutoRegister(buffer) {}
-
-    Buffer& buffer() const { return registry(); }
 };
 
 }

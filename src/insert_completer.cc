@@ -185,25 +185,26 @@ void InsertCompleter::select(int offset)
     if (m_current_candidate < 0)
         m_current_candidate += m_matching_candidates.size();
     const String& candidate = m_matching_candidates[m_current_candidate];
-    const auto& cursor_pos = m_context.selections().main().cursor();
+    auto& selections = m_context.selections();
+    const auto& cursor_pos = selections.main().cursor();
     const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
     const auto suffix_len = std::max(0_byte, buffer.distance(cursor_pos, m_completions.end));
-    const auto buffer_len = buffer.byte_count();
 
     auto ref = buffer.string(m_completions.begin, m_completions.end);
-    for (auto& sel : m_context.selections())
+    for (auto& sel : selections)
     {
-        auto offset = buffer.offset(sel.cursor());
-        auto pos = buffer.iterator_at(sel.cursor());
-        if (offset >= prefix_len and offset + suffix_len < buffer_len and
+        const auto& cursor = sel.cursor();
+        auto pos = buffer.iterator_at(cursor);
+        if (cursor.column >= prefix_len and (pos + suffix_len) != buffer.end() and
             std::equal(ref.begin(), ref.end(), pos - prefix_len))
         {
             pos = buffer.erase(pos - prefix_len, pos + suffix_len);
             buffer.insert(pos, candidate);
+            const_cast<SelectionList&>(selections).update();
         }
     }
-    m_completions.end   = cursor_pos;
-    m_completions.begin = buffer.advance(m_completions.end, -candidate.length());
+    m_completions.end = cursor_pos;
+    m_completions.begin = buffer.advance(cursor_pos, -candidate.length());
     m_completions.timestamp = buffer.timestamp();
     if (m_context.has_ui())
         m_context.ui().menu_select(m_current_candidate);
@@ -226,8 +227,8 @@ void InsertCompleter::update()
         ByteCoord cursor = m_context.selections().main().cursor();
         ByteCoord compl_beg = m_completions.begin;
         if (cursor.line == compl_beg.line and
-            is_in_range(cursor.column - compl_beg.column,
-                        ByteCount{0}, longest_completion-1))
+            is_in_range(cursor.column, compl_beg.column,
+                        compl_beg.column + longest_completion-1))
         {
             String prefix = m_context.buffer().string(compl_beg, cursor);
 
