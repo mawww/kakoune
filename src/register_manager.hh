@@ -16,7 +16,8 @@ using RegisterRetriever = std::function<std::vector<String> (const Context&)>;
 class RegisterManager : public Singleton<RegisterManager>
 {
 public:
-    Register& operator[](char reg);
+    Register& operator[](StringView reg);
+    Register& operator[](Codepoint c);
     void register_dynamic_register(char reg, RegisterRetriever function);
 
 protected:

@@ -484,9 +484,14 @@ CandidateList complete_scope(StringView prefix)
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
-    "hook <switches> <scope> <hook_name> <command>: add <command> to be executed on hook <hook_name> in <scope> context",
+    "hook <switches> <scope> <hook_name> <command>: add <command> in <scope> to be executed on hook <hook_name>\n"
+    "scope can be: \n"
+    "  * global: hook is executed for any buffer or window\n"
+    "  * buffer: hook is executed only for the current buffer\n"
+    "            (and any window for that buffer)\n"
+    "  * window: hook is executed only for the current window\n",
     ParameterDesc{
-        SwitchMap{ { "id", { true, "set hook id" } } },
+        SwitchMap{ { "id", { true, "set hook id, see rmhooks" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -521,7 +526,7 @@ const CommandDesc add_hook_cmd = {
 const CommandDesc rm_hook_cmd = {
     "rmhooks",
     nullptr,
-    "rmhooks <id>: remove all hooks that whose id is <id>",
+    "rmhooks <id>: remove all hooks whose id is <id>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     CommandCompleter{},
@@ -530,18 +535,6 @@ const CommandDesc rm_hook_cmd = {
         get_hook_manager(parser[0], context).remove_hooks(parser[1]);
     }
 };
-
-EnvVarMap params_to_env_var_map(const ParametersParser& parser)
-{
-    std::unordered_map<String, String> vars;
-    char param_name[] = "param0";
-    for (size_t i = 0; i < parser.positional_count(); ++i)
-    {
-        param_name[sizeof(param_name) - 2] = '0' + i;
-        vars[param_name] = parser[i];
-    }
-    return vars;
-}
 
 std::vector<String> params_to_shell(const ParametersParser& parser)
 {
@@ -579,14 +572,6 @@ void define_command(const ParametersParser& parser, Context& context)
     String commands = parser[1];
     Command cmd;
     ParameterDesc desc;
-    if (parser.has_option("env-params"))
-    {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
-        cmd = [=](const ParametersParser& parser, Context& context) {
-            CommandManager::instance().execute(commands, context, {},
-                                               params_to_env_var_map(parser));
-        };
-    }
     if (parser.has_option("shell-params"))
     {
         desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
@@ -669,16 +654,15 @@ const CommandDesc define_command_cmd = {
     nullptr,
     "def <switches> <name> <commands>: define a command named <name> corresponding to <commands>",
     ParameterDesc{
-        SwitchMap{ { "env-params", { false, "pass parameters as env variables param0..paramN" } },
-                   { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
-                   { "allow-override", { false, "allow overriding existing command" } },
+        SwitchMap{ { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
+                   { "allow-override", { false, "allow overriding an existing command" } },
+                   { "hidden", { false, "do not display the command in completion candidates" } },
+                   { "alias", { true, "define an alias for this command" } },
+                   { "docstring", { true, "define the documentation string for command" } },
                    { "file-completion", { false, "complete parameters using filename completion" } },
                    { "client-completion", { false, "complete parameters using client name completion" } },
                    { "buffer-completion", { false, "complete parameters using buffer name completion" } },
-                   { "shell-completion", { true, "complete the parameters using the given shell-script" } },
-                   { "hidden", { false, "do not display the command as completion candidate" } },
-                   { "alias", { true, "define an alias for this command" } },
-                   { "docstring", { true, "set docstring for command" } } },
+                   { "shell-completion", { true, "complete the parameters using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
     },
@@ -718,7 +702,8 @@ const CommandDesc echo_cmd = {
 const CommandDesc debug_cmd = {
     "debug",
     nullptr,
-    "debug <params>...: write debug informations in debug buffer",
+    "debug <command>: write some debug informations in the debug buffer\n"
+    "    existing commands: info",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     CommandCompleter{},
@@ -816,7 +801,7 @@ const CommandDesc declare_option_cmd = {
     "decl",
     nullptr,
     "decl <type> <name> [value]: declare option <name> of type <type>.\n"
-    "set its initial value to <value> if given\n"
+    "set its initial value to <value> if given and if the option did not exist\n"
     "Available types:\n"
     "    int: integer\n"
     "    bool: boolean (true/false or yes/no)\n"
@@ -868,7 +853,6 @@ const CommandDesc declare_option_cmd = {
             opt->set_from_string(parser[2]);
     }
 };
-
 
 KeymapManager& get_keymap_manager(const String& scope, Context& context)
 {
@@ -1064,7 +1048,7 @@ const CommandDesc exec_string_cmd = {
 const CommandDesc eval_string_cmd = {
     "eval",
     nullptr,
-    "eval <switches> <keys>: execute commands as if entered by user",
+    "eval <switches> <commands>...: execute commands as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandCompleter{},
@@ -1275,9 +1259,7 @@ const CommandDesc set_register_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        if (parser[0].length() != 1)
-            throw runtime_error("register names are single character");
-        RegisterManager::instance()[parser[0][0]] = memoryview<String>(parser[1]);
+        RegisterManager::instance()[parser[0]] = memoryview<String>(parser[1]);
     }
 };
 

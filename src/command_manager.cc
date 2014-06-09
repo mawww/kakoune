@@ -313,9 +313,7 @@ String eval_token(const Token& token, Context& context,
         return ShellManager::instance().eval(content, context, shell_params,
                                              env_vars);
     case Token::Type::RegisterExpand:
-        if (content.length() != 1)
-            throw runtime_error("wrong register name: " + content);
-        return RegisterManager::instance()[content[0]].values(context)[0];
+        return RegisterManager::instance()[content].values(context)[0];
     case Token::Type::OptionExpand:
         return context.options()[content].get_as_string();
     case Token::Type::RawEval:
