@@ -667,20 +667,24 @@ HighlighterAndId reference_factory(HighlighterParameters params)
                             });
 }
 
-template<typename HighlightFunc>
 struct RegionHighlighter
 {
 public:
-    RegionHighlighter(Regex begin, Regex end, HighlightFunc func)
+    RegionHighlighter(Regex begin, Regex end)
         : m_begin(std::move(begin)),
-          m_end(std::move(end)),
-          m_func(std::move(func))
+          m_end(std::move(end))
     {}
 
-    void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+    void operator()(HierachicalHighlighter::GroupMap groups, const Context& context,
+                    HighlightFlags flags, DisplayBuffer& display_buffer)
     {
         if (flags != HighlightFlags::Highlight)
             return;
+
+        auto it = groups.find("content");
+        if (it == groups.end())
+            return;
+
         auto range = display_buffer.range();
         const auto& buffer = context.buffer();
         auto& regions = update_cache_ifn(buffer);
@@ -694,13 +698,13 @@ public:
             return c;
         };
         for (; begin != end; ++begin)
-            m_func(context, flags, display_buffer,
-                   correct(begin->begin), correct(begin->end));
+            apply_highlighter(context, flags, display_buffer,
+                              correct(begin->begin), correct(begin->end),
+                              it->second);
     }
 private:
     Regex m_begin;
     Regex m_end;
-    HighlightFunc m_func;
 
     struct Region
     {
@@ -851,13 +855,6 @@ private:
     }
 };
 
-template<typename HighlightFunc>
-RegionHighlighter<HighlightFunc>
-make_region_highlighter(Regex begin, Regex end, HighlightFunc func)
-{
-    return RegionHighlighter<HighlightFunc>(std::move(begin), std::move(end), std::move(func));
-}
-
 HighlighterAndId region_factory(HighlighterParameters params)
 {
     try
@@ -865,50 +862,12 @@ HighlighterAndId region_factory(HighlighterParameters params)
         if (params.size() != 3)
             throw runtime_error("wrong parameter count");
 
-        Regex begin{params[0], Regex::nosubs | Regex::optimize };
-        Regex end{params[1], Regex::nosubs | Regex::optimize };
-        const ColorPair colors = get_color(params[2]);
-
-        auto func = [colors](const Context&, HighlightFlags flags, DisplayBuffer& display_buffer,
-                             ByteCoord begin, ByteCoord end)
-        {
-            highlight_range(display_buffer, begin, end, true,
-                            [&colors](DisplayAtom& atom) { atom.colors = colors; });
-        };
-
-        return HighlighterAndId("region(" + params[0] + "," + params[1] + ")",
-                                make_region_highlighter(std::move(begin), std::move(end), func));
-    }
-    catch (boost::regex_error& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
-}
-
-HighlighterAndId region_ref_factory(HighlighterParameters params)
-{
-    try
-    {
-        if (params.size() != 3 and params.size() != 4)
-            throw runtime_error("wrong parameter count");
-
-        Regex begin{params[0], Regex::nosubs | Regex::optimize };
-        Regex end{params[1], Regex::nosubs | Regex::optimize };
-        const String& name = params[2];
-
-        auto func = [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer,
-                          ByteCoord begin, ByteCoord end)
-        {
-            try
-            {
-                HighlighterGroup& ref = DefinedHighlighters::instance().get_group(name, '/');
-                apply_highlighter(context, flags, display_buffer, begin, end, ref);
-            }
-            catch (group_not_found&) {}
-        };
-
-        return HighlighterAndId("regionref(" + params[0] + "," + params[1] + "," + name + ")",
-                                make_region_highlighter(std::move(begin), std::move(end), func));
+        Regex begin{params[1], Regex::nosubs | Regex::optimize };
+        Regex end{params[2], Regex::nosubs | Regex::optimize };
+        return {params[0],
+                HierachicalHighlighter(RegionHighlighter(std::move(begin),
+                                                         std::move(end)),
+                                       { { "content", HighlighterGroup{} } })};
     }
     catch (boost::regex_error& err)
     {
@@ -931,7 +890,6 @@ void register_highlighters()
     registry.register_func("flag_lines", flag_lines_factory);
     registry.register_func("ref", reference_factory);
     registry.register_func("region", region_factory);
-    registry.register_func("region_ref", region_ref_factory);
 }
 
 }
