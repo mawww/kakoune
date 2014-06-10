@@ -1,7 +1,6 @@
 #ifndef highlighter_hh_INCLUDED
 #define highlighter_hh_INCLUDED
 
-#include "function_group.hh"
 #include "function_registry.hh"
 #include "memoryview.hh"
 #include "string.hh"
@@ -30,16 +29,10 @@ using HighlighterFunc = std::function<void (const Context& context, HighlightFla
 using HighlighterAndId = std::pair<String, HighlighterFunc>;
 using HighlighterParameters = memoryview<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
-using HighlighterGroup = FunctionGroup<const Context&, HighlightFlags, DisplayBuffer&>;
 
 struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
                              Singleton<HighlighterRegistry>
 {};
-
-struct DefinedHighlighters : public HighlighterGroup,
-                             public Singleton<DefinedHighlighters>
-{
-};
 
 }
 

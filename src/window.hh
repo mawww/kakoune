@@ -3,7 +3,7 @@
 
 #include "completion.hh"
 #include "display_buffer.hh"
-#include "highlighter.hh"
+#include "highlighter_group.hh"
 #include "selection.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"

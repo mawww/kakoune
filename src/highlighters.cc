@@ -1,5 +1,6 @@
 #include "highlighters.hh"
 
+#include "highlighter_group.hh"
 #include "assert.hh"
 #include "buffer_utils.hh"
 #include "color_registry.hh"

@@ -4,6 +4,7 @@
 #include "completion.hh"
 #include "id_map.hh"
 #include "string.hh"
+#include "exception.hh"
 
 namespace Kakoune
 {
