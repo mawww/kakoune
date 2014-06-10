@@ -1105,23 +1105,24 @@ void tabs_to_spaces(Context& context, int ts)
     auto& buffer = context.buffer();
     const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
     const CharCount tabstop = ts == 0 ? opt_tabstop : ts;
+    std::vector<Selection> tabs;
+    std::vector<String> spaces;
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
-                  end = buffer.iterator_at(sel.max())+1; it != end;)
+                  end = buffer.iterator_at(sel.max())+1; it != end; ++it)
         {
             if (*it == '\t')
             {
                 CharCount col = get_column(buffer, opt_tabstop, it.coord());
                 CharCount end_col = (col / tabstop + 1) * tabstop;
-                it = buffer.erase(it, it+1);
-                it = buffer.insert(it, String{ ' ', end_col - col }) + (int)(end_col - col);
-                end = buffer.iterator_at(sel.max())+1;
+                tabs.push_back({ it.coord() });
+                spaces.push_back(String{ ' ', end_col - col });
             }
-            else
-                ++it;
         }
     }
+    if (not tabs.empty())
+        SelectionList{ buffer, std::move(tabs) }.insert(spaces, InsertMode::Replace);
 }
 
 void spaces_to_tabs(Context& context, int ts)
@@ -1129,6 +1130,7 @@ void spaces_to_tabs(Context& context, int ts)
     auto& buffer = context.buffer();
     const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
     const CharCount tabstop = ts == 0 ? opt_tabstop : ts;
+    std::vector<Selection> spaces;
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1144,20 +1146,16 @@ void spaces_to_tabs(Context& context, int ts)
                     ++spaces_end;
                     ++col;
                 }
-
                 if ((col % tabstop) == 0)
-                {
-                    it = buffer.erase(spaces_beg, spaces_end);
-                    it = buffer.insert(it, "\t") + 1;
-                    end = buffer.iterator_at(sel.max())+1;
-                }
-                else
-                    it = spaces_end;
+                    spaces.push_back({spaces_beg.coord(), (spaces_end-1).coord()});
+                it = spaces_end;
             }
             else
                 ++it;
         }
     }
+    if (not spaces.empty())
+        SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
 }
 
 void undo(Context& context, int)
