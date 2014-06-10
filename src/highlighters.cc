@@ -652,11 +652,19 @@ HighlighterAndId reference_factory(HighlighterParameters params)
     const String& name = params[0];
 
     // throw if not found
-    DefinedHighlighters::instance().get_group(name, '/');
+    //DefinedHighlighters::instance().get_group(name, '/');
 
     return HighlighterAndId(name,
                             [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
-                            { DefinedHighlighters::instance().get_group(name, '/')(context, flags, display_buffer); });
+                            {
+                                try
+                                {
+                                    DefinedHighlighters::instance().get_group(name, '/')(context, flags, display_buffer);
+                                }
+                                catch (group_not_found&)
+                                {
+                                }
+                            });
 }
 
 template<typename HighlightFunc>
