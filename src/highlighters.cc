@@ -670,10 +670,14 @@ HighlighterAndId reference_factory(HighlighterParameters params)
 struct RegionHighlighter
 {
 public:
-    RegionHighlighter(Regex begin, Regex end)
+    RegionHighlighter(Regex begin, Regex end, Regex recurse = Regex{})
         : m_begin(std::move(begin)),
-          m_end(std::move(end))
-    {}
+          m_end(std::move(end)),
+          m_recurse(std::move(recurse))
+    {
+        if (m_begin.empty() or m_end.empty())
+            throw runtime_error("invalid regex for region highlighter");
+    }
 
     void operator()(HierachicalHighlighter::GroupMap groups, const Context& context,
                     HighlightFlags flags, DisplayBuffer& display_buffer)
@@ -705,6 +709,7 @@ public:
 private:
     Regex m_begin;
     Regex m_end;
+    Regex m_recurse;
 
     struct Region
     {
@@ -719,26 +724,18 @@ private:
         LineCount line;
         ByteCount begin;
         ByteCount end;
+
+        ByteCoord begin_coord() const { return { line, begin }; }
+        ByteCoord end_coord() const { return { line, end }; }
     };
     using MatchList = std::vector<Match>;
-
-    static bool compare_matches_end(const Match& lhs, const Match& rhs)
-    {
-        return (lhs.line != rhs.line) ? lhs.line < rhs.line
-                                      : lhs.end < rhs.end;
-    }
-
-    static bool compare_matches_begin(const Match& lhs, const Match& rhs)
-    {
-        return (lhs.line != rhs.line) ? lhs.line < rhs.line
-                                      : lhs.begin < rhs.begin;
-    }
 
     struct Cache
     {
         size_t timestamp = 0;
         MatchList begin_matches;
         MatchList end_matches;
+        MatchList recurse_matches;
         RegionList regions;
     };
     BufferSideCache<Cache> m_cache;
@@ -754,30 +751,62 @@ private:
         {
             find_matches(buffer, cache.begin_matches, m_begin);
             find_matches(buffer, cache.end_matches, m_end);
+            if (not m_recurse.empty())
+                find_matches(buffer, cache.recurse_matches, m_recurse);
         }
         else
         {
             auto modifs = compute_line_modifications(buffer, cache.timestamp);
             update_matches(buffer, modifs, cache.begin_matches, m_begin);
             update_matches(buffer, modifs, cache.end_matches, m_end);
+            if (not m_recurse.empty())
+                update_matches(buffer, modifs, cache.recurse_matches, m_recurse);
         }
 
+        auto compare_matches_end = [](const Match& lhs, const Match& rhs) {
+            return lhs.end_coord() < rhs.end_coord();
+        };
+
         cache.regions.clear();
-        for (auto beg_it = cache.begin_matches.begin(), end_it = cache.end_matches.begin();
+        int recurse_level = 0;
+        auto ref_it = cache.begin_matches.begin();
+        for (auto beg_it = cache.begin_matches.begin(),
+                  end_it = cache.end_matches.begin(),
+                  rec_it = cache.recurse_matches.begin();
              beg_it != cache.begin_matches.end(); )
         {
             end_it = std::upper_bound(end_it, cache.end_matches.end(),
-                                      *beg_it, compare_matches_end);
+                                      *ref_it, compare_matches_end);
+            rec_it = std::upper_bound(rec_it, cache.recurse_matches.end(),
+                                      *ref_it, compare_matches_end);
+
             if (end_it == cache.end_matches.end())
             {
                 cache.regions.push_back({ {beg_it->line, beg_it->begin},
                                           buffer.end_coord() });
                 break;
             }
-            cache.regions.push_back({ {beg_it->line, beg_it->begin},
-                                      {end_it->line, end_it->end} });
-            beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
-                                      *end_it, compare_matches_end);
+
+            while (rec_it != cache.recurse_matches.end() and
+                   rec_it->end_coord() < end_it->begin_coord())
+            {
+                ++recurse_level;
+                ++rec_it;
+            }
+
+            if (recurse_level == 0)
+            {
+                cache.regions.push_back({ beg_it->begin_coord(),
+                                          end_it->end_coord() });
+                beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
+                                          *end_it, compare_matches_end);
+                ref_it = beg_it;
+            }
+            else
+            {
+                --recurse_level;
+                ref_it = end_it;
+            }
         }
         cache.timestamp = buf_timestamp;
         return cache.regions;
@@ -821,9 +850,9 @@ private:
             if (not erase)
             {
                 it->timestamp = buf_timestamp;
-                kak_assert(buffer.is_valid({it->line, it->begin}) or
+                kak_assert(buffer.is_valid(it->begin_coord()) or
                            buffer[it->line].length() == it->begin);
-                kak_assert(buffer.is_valid({it->line, it->end}) or
+                kak_assert(buffer.is_valid(it->end_coord()) or
                            buffer[it->line].length() == it->end);
 
                 if (ins_pos != it)
@@ -851,7 +880,9 @@ private:
             }
         }
         std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
-                           compare_matches_begin);
+                           [](const Match& lhs, const Match& rhs) {
+                               return lhs.begin_coord() < rhs.begin_coord();
+                           });
     }
 };
 
@@ -859,14 +890,19 @@ HighlighterAndId region_factory(HighlighterParameters params)
 {
     try
     {
-        if (params.size() != 3)
+        if (params.size() != 3 && params.size() != 4)
             throw runtime_error("wrong parameter count");
 
         Regex begin{params[1], Regex::nosubs | Regex::optimize };
         Regex end{params[2], Regex::nosubs | Regex::optimize };
+        Regex recurse;
+        if (params.size() == 4)
+            recurse = Regex{params[3], Regex::nosubs | Regex::optimize };
+
         return {params[0],
                 HierachicalHighlighter(RegionHighlighter(std::move(begin),
-                                                         std::move(end)),
+                                                         std::move(end),
+                                                         std::move(recurse)),
                                        { { "content", HighlighterGroup{} } })};
     }
     catch (boost::regex_error& err)

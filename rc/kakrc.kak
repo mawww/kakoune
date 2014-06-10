@@ -17,7 +17,7 @@ addhl -def-group kakrc/single_string/content fill string
 
 addhl -def-group kakrc regex (^|\h)\#[^\n]*\n 0:comment
 
-addhl -def-group kakrc region shell '%sh\{' '\}'
+addhl -def-group kakrc region shell '%sh\{' '\}' '\{'
 addhl -def-group kakrc/shell/content ref sh
 
 hook global WinSetOption filetype=kak %{ addhl ref kakrc }
