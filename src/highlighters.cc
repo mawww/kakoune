@@ -150,6 +150,29 @@ void apply_highlighter(const Context& context,
 
 using ColorSpec = std::unordered_map<size_t, const ColorPair*>;
 
+struct Fill
+{
+    Fill(ColorPair colors) : m_colors(colors) {}
+
+    void operator()(const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer)
+    {
+        auto range = display_buffer.range();
+        highlight_range(display_buffer, range.first, range.second, true,
+                        [this](DisplayAtom& atom) { atom.colors = m_colors; });
+    }
+
+    ColorPair m_colors;
+};
+
+HighlighterAndId fill_factory(HighlighterParameters params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+    ColorPair colors = get_color(params[0]);
+    return HighlighterAndId("fill_" + params[0], Fill(colors));
+}
+
 template<typename T>
 struct BufferSideCache
 {
@@ -892,6 +915,7 @@ void register_highlighters()
     registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
     registry.register_func("show_matching", SimpleHighlighterFactory<show_matching_char>("show_matching"));
     registry.register_func("show_whitespaces", SimpleHighlighterFactory<show_whitespaces>("show_whitespaces"));
+    registry.register_func("fill", fill_factory);
     registry.register_func("regex", colorize_regex_factory);
     registry.register_func("regex_option", highlight_regex_option_factory);
     registry.register_func("search", highlight_search_factory);
