@@ -28,13 +28,20 @@ HighlighterGroup& HighlighterGroup::get_group(StringView path, Codepoint path_se
     auto it = m_highlighters.find(id);
     if (it == m_highlighters.end())
         throw group_not_found("no such id: "_str + id);
-    HighlighterGroup* group = it->second.template target<HighlighterGroup>();
-    if (not group)
-        throw group_not_found("not a group: "_str + id);
-    if (sep_it != path.end())
-        return group->get_group(StringView(sep_it+1, path.end()), path_separator);
-    else
+    if (auto* group = it->second.target<HighlighterGroup>())
+    {
+        if (sep_it != path.end())
+            return group->get_group({sep_it+1, path.end()}, path_separator);
         return *group;
+    }
+    else if (auto* hier_group = it->second.target<HierachicalHighlighter>())
+    {
+        if (sep_it == path.end())
+            throw group_not_found("not a leaf group: "_str + id);
+        return hier_group->get_group({sep_it+1, path.end()}, path_separator);
+    }
+    else
+        throw group_not_found("not a group: "_str + id);
 }
 
 CandidateList HighlighterGroup::complete_id(StringView prefix, ByteCount cursor_pos) const
@@ -48,6 +55,19 @@ CandidateList HighlighterGroup::complete_group_id(StringView prefix, ByteCount c
         prefix, cursor_pos, [](const HighlighterAndId& func) {
             return func.second.template target<HighlighterGroup>() != nullptr;
         });
+}
+
+HighlighterGroup& HierachicalHighlighter::get_group(StringView path, Codepoint path_separator)
+{
+    auto sep_it = std::find(path.begin(), path.end(), path_separator);
+    StringView id(path.begin(), sep_it);
+    auto it = m_groups.find(id);
+    if (it == m_groups.end())
+        throw group_not_found("no such id: "_str + id);
+    if (sep_it != path.end())
+        return it->second.get_group(StringView(sep_it+1, path.end()), path_separator);
+    else
+        return it->second;
 }
 
 }
