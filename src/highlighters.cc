@@ -667,15 +667,178 @@ HighlighterAndId reference_factory(HighlighterParameters params)
                             });
 }
 
+namespace RegionHighlight
+{
+
+struct Match
+{
+    size_t timestamp;
+    LineCount line;
+    ByteCount begin;
+    ByteCount end;
+
+    ByteCoord begin_coord() const { return { line, begin }; }
+    ByteCoord end_coord() const { return { line, end }; }
+};
+using MatchList = std::vector<Match>;
+
+void find_matches(const Buffer& buffer, MatchList& matches, const Regex& regex)
+{
+    const size_t buf_timestamp = buffer.timestamp();
+    for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
+    {
+        auto& l = buffer[line];
+        for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+        {
+            ByteCount b = (int)((*it)[0].first - l.begin());
+            ByteCount e = (int)((*it)[0].second - l.begin());
+            matches.push_back({ buf_timestamp, line, b, e });
+        }
+    }
+}
+
+void update_matches(const Buffer& buffer, memoryview<LineModification> modifs,
+                    MatchList& matches, const Regex& regex)
+{
+    const size_t buf_timestamp = buffer.timestamp();
+    // remove out of date matches and update line for others
+    auto ins_pos = matches.begin();
+    for (auto it = ins_pos; it != matches.end(); ++it)
+    {
+        auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
+                                         [](const LineModification& c, const LineCount& l)
+                                         { return c.old_line < l; });
+
+        bool erase = (modif_it != modifs.end() and modif_it->old_line == it->line);
+        if (not erase and modif_it != modifs.begin())
+        {
+            auto& prev = *(modif_it-1);
+            erase = it->line <= prev.old_line + prev.num_removed;
+            it->line += prev.diff();
+        }
+        erase = erase or (it->line >= buffer.line_count());
+
+        if (not erase)
+        {
+            it->timestamp = buf_timestamp;
+            kak_assert(buffer.is_valid(it->begin_coord()) or
+                       buffer[it->line].length() == it->begin);
+            kak_assert(buffer.is_valid(it->end_coord()) or
+                       buffer[it->line].length() == it->end);
+
+            if (ins_pos != it)
+                *ins_pos = std::move(*it);
+            ++ins_pos;
+        }
+    }
+    matches.erase(ins_pos, matches.end());
+    size_t pivot = matches.size();
+
+    // try to find new matches in each updated lines
+    for (auto& modif : modifs)
+    {
+        for (auto line = modif.new_line;
+             line < modif.new_line + modif.num_added+1 and
+             line < buffer.line_count(); ++line)
+        {
+            auto& l = buffer[line];
+            for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+            {
+                ByteCount b = (int)((*it)[0].first - l.begin());
+                ByteCount e = (int)((*it)[0].second - l.begin());
+                matches.push_back({ buf_timestamp, line, b, e });
+            }
+        }
+    }
+    std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
+                       [](const Match& lhs, const Match& rhs) {
+                           return lhs.begin_coord() < rhs.begin_coord();
+                       });
+}
+
+struct RegionMatches
+{
+    MatchList begin_matches;
+    MatchList end_matches;
+    MatchList recurse_matches;
+
+    static bool compare_to_end(ByteCoord lhs, const Match& rhs)
+    {
+        return lhs < rhs.end_coord();
+    }
+
+    MatchList::const_iterator find_next_begin(ByteCoord pos) const
+    {
+        return std::upper_bound(begin_matches.begin(), begin_matches.end(),
+                                pos, compare_to_end);
+    }
+
+    MatchList::const_iterator find_matching_end(MatchList::const_iterator beg_it) const
+    {
+        auto end_it = end_matches.begin();
+        auto rec_it = recurse_matches.begin();
+        auto ref_pos = beg_it->end_coord();
+        int recurse_level = 0;
+        while (true)
+        {
+            end_it = std::upper_bound(end_it, end_matches.end(),
+                                      ref_pos, compare_to_end);
+            rec_it = std::upper_bound(rec_it, recurse_matches.end(),
+                                      ref_pos, compare_to_end);
+
+            if (end_it == end_matches.end())
+                return end_it;
+
+            while (rec_it != recurse_matches.end() and
+                   rec_it->end_coord() < end_it->begin_coord())
+            {
+                ++recurse_level;
+                ++rec_it;
+            }
+
+            if (recurse_level == 0)
+                return end_it;
+
+            --recurse_level;
+            ref_pos = end_it->end_coord();
+        }
+    }
+};
+
+struct RegionDesc
+{
+    Regex m_begin;
+    Regex m_end;
+    Regex m_recurse;
+
+    RegionMatches find_matches(const Buffer& buffer) const
+    {
+        RegionMatches res;
+        RegionHighlight::find_matches(buffer, res.begin_matches, m_begin);
+        RegionHighlight::find_matches(buffer, res.end_matches, m_end);
+        if (not m_recurse.empty())
+            RegionHighlight::find_matches(buffer, res.recurse_matches, m_recurse);
+        return res;
+    }
+
+    void update_matches(const Buffer& buffer,
+                        memoryview<LineModification> modifs,
+                        RegionMatches& matches) const
+    {
+        RegionHighlight::update_matches(buffer, modifs, matches.begin_matches, m_begin);
+        RegionHighlight::update_matches(buffer, modifs, matches.end_matches, m_end);
+        if (not m_recurse.empty())
+            RegionHighlight::update_matches(buffer, modifs, matches.recurse_matches, m_recurse);
+    }
+};
+
 struct RegionHighlighter
 {
 public:
     RegionHighlighter(Regex begin, Regex end, Regex recurse = Regex{})
-        : m_begin(std::move(begin)),
-          m_end(std::move(end)),
-          m_recurse(std::move(recurse))
+        : m_region{ std::move(begin), std::move(end), std::move(recurse) }
     {
-        if (m_begin.empty() or m_end.empty())
+        if (m_region.m_begin.empty() or m_region.m_end.empty())
             throw runtime_error("invalid regex for region highlighter");
     }
 
@@ -693,10 +856,10 @@ public:
         const auto& buffer = context.buffer();
         auto& regions = update_cache_ifn(buffer);
         auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
-                                      [](const Region& r, const ByteCoord& c) { return r.end < c; });
+                                      [](const Region& r, ByteCoord c) { return r.end < c; });
         auto end = std::lower_bound(begin, regions.end(), range.second,
-                                    [](const Region& r, const ByteCoord& c) { return r.begin < c; });
-        auto correct = [&](const ByteCoord& c) -> ByteCoord {
+                                    [](const Region& r, ByteCoord c) { return r.begin < c; });
+        auto correct = [&](ByteCoord c) -> ByteCoord {
             if (buffer[c.line].length() == c.column)
                 return {c.line+1, 0};
             return c;
@@ -707,9 +870,7 @@ public:
                               it->second);
     }
 private:
-    Regex m_begin;
-    Regex m_end;
-    Regex m_recurse;
+    RegionDesc m_region;
 
     struct Region
     {
@@ -718,24 +879,10 @@ private:
     };
     using RegionList = std::vector<Region>;
 
-    struct Match
-    {
-        size_t timestamp;
-        LineCount line;
-        ByteCount begin;
-        ByteCount end;
-
-        ByteCoord begin_coord() const { return { line, begin }; }
-        ByteCoord end_coord() const { return { line, end }; }
-    };
-    using MatchList = std::vector<Match>;
-
     struct Cache
     {
         size_t timestamp = 0;
-        MatchList begin_matches;
-        MatchList end_matches;
-        MatchList recurse_matches;
+        RegionMatches matches;
         RegionList regions;
     };
     BufferSideCache<Cache> m_cache;
@@ -748,141 +895,34 @@ private:
             return cache.regions;
 
         if (cache.timestamp == 0)
-        {
-            find_matches(buffer, cache.begin_matches, m_begin);
-            find_matches(buffer, cache.end_matches, m_end);
-            if (not m_recurse.empty())
-                find_matches(buffer, cache.recurse_matches, m_recurse);
-        }
+            cache.matches = m_region.find_matches(buffer);
         else
         {
             auto modifs = compute_line_modifications(buffer, cache.timestamp);
-            update_matches(buffer, modifs, cache.begin_matches, m_begin);
-            update_matches(buffer, modifs, cache.end_matches, m_end);
-            if (not m_recurse.empty())
-                update_matches(buffer, modifs, cache.recurse_matches, m_recurse);
+            m_region.update_matches(buffer, modifs, cache.matches);
         }
 
-        auto compare_matches_end = [](const Match& lhs, const Match& rhs) {
-            return lhs.end_coord() < rhs.end_coord();
-        };
-
         cache.regions.clear();
-        int recurse_level = 0;
-        auto ref_it = cache.begin_matches.begin();
-        for (auto beg_it = cache.begin_matches.begin(),
-                  end_it = cache.end_matches.begin(),
-                  rec_it = cache.recurse_matches.begin();
-             beg_it != cache.begin_matches.end(); )
+        for (auto beg_it = cache.matches.begin_matches.cbegin();
+             beg_it != cache.matches.begin_matches.end(); )
         {
-            end_it = std::upper_bound(end_it, cache.end_matches.end(),
-                                      *ref_it, compare_matches_end);
-            rec_it = std::upper_bound(rec_it, cache.recurse_matches.end(),
-                                      *ref_it, compare_matches_end);
+            auto end_it = cache.matches.find_matching_end(beg_it);
 
-            if (end_it == cache.end_matches.end())
+            if (end_it == cache.matches.end_matches.end())
             {
                 cache.regions.push_back({ {beg_it->line, beg_it->begin},
                                           buffer.end_coord() });
                 break;
             }
-
-            while (rec_it != cache.recurse_matches.end() and
-                   rec_it->end_coord() < end_it->begin_coord())
-            {
-                ++recurse_level;
-                ++rec_it;
-            }
-
-            if (recurse_level == 0)
+            else
             {
                 cache.regions.push_back({ beg_it->begin_coord(),
                                           end_it->end_coord() });
-                beg_it = std::upper_bound(beg_it, cache.begin_matches.end(),
-                                          *end_it, compare_matches_end);
-                ref_it = beg_it;
-            }
-            else
-            {
-                --recurse_level;
-                ref_it = end_it;
+                beg_it = cache.matches.find_next_begin(end_it->end_coord());
             }
         }
         cache.timestamp = buf_timestamp;
         return cache.regions;
-    }
-
-    void find_matches(const Buffer& buffer, MatchList& matches, const Regex& regex)
-    {
-        const size_t buf_timestamp = buffer.timestamp();
-        for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
-        {
-            auto& l = buffer[line];
-            for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
-            {
-                ByteCount b = (int)((*it)[0].first - l.begin());
-                ByteCount e = (int)((*it)[0].second - l.begin());
-                matches.push_back({ buf_timestamp, line, b, e });
-            }
-        }
-    }
-
-    void update_matches(const Buffer& buffer, memoryview<LineModification> modifs, MatchList& matches, const Regex& regex)
-    {
-        const size_t buf_timestamp = buffer.timestamp();
-        // remove out of date matches and update line for others
-        auto ins_pos = matches.begin();
-        for (auto it = ins_pos; it != matches.end(); ++it)
-        {
-            auto modif_it = std::lower_bound(modifs.begin(), modifs.end(), it->line,
-                                             [](const LineModification& c, const LineCount& l)
-                                             { return c.old_line < l; });
-
-            bool erase = (modif_it != modifs.end() and modif_it->old_line == it->line);
-            if (not erase and modif_it != modifs.begin())
-            {
-                auto& prev = *(modif_it-1);
-                erase = it->line <= prev.old_line + prev.num_removed;
-                it->line += prev.diff();
-            }
-            erase = erase or (it->line >= buffer.line_count());
-
-            if (not erase)
-            {
-                it->timestamp = buf_timestamp;
-                kak_assert(buffer.is_valid(it->begin_coord()) or
-                           buffer[it->line].length() == it->begin);
-                kak_assert(buffer.is_valid(it->end_coord()) or
-                           buffer[it->line].length() == it->end);
-
-                if (ins_pos != it)
-                    *ins_pos = std::move(*it);
-                ++ins_pos;
-            }
-        }
-        matches.erase(ins_pos, matches.end());
-        size_t pivot = matches.size();
-
-        // try to find new matches in each updated lines
-        for (auto& modif : modifs)
-        {
-            for (auto line = modif.new_line;
-                 line < modif.new_line + modif.num_added+1 and
-                 line < buffer.line_count(); ++line)
-            {
-                auto& l = buffer[line];
-                for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
-                {
-                    ByteCount b = (int)((*it)[0].first - l.begin());
-                    ByteCount e = (int)((*it)[0].second - l.begin());
-                    matches.push_back({ buf_timestamp, line, b, e });
-                }
-            }
-        }
-        std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
-                           [](const Match& lhs, const Match& rhs) {
-                               return lhs.begin_coord() < rhs.begin_coord();
-                           });
     }
 };
 
@@ -911,6 +951,8 @@ HighlighterAndId region_factory(HighlighterParameters params)
     }
 }
 
+}
+
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -925,7 +967,7 @@ void register_highlighters()
     registry.register_func("group", highlighter_group_factory);
     registry.register_func("flag_lines", flag_lines_factory);
     registry.register_func("ref", reference_factory);
-    registry.register_func("region", region_factory);
+    registry.register_func("region", RegionHighlight::region_factory);
 }
 
 }
