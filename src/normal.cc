@@ -839,6 +839,7 @@ void select_object(Context& context, int param)
             { 'W', select_word<WORD> },
             { 's', select_sentence },
             { 'p', select_paragraph },
+            { ' ', select_whitespaces },
             { 'i', select_indent },
             { 'n', select_number },
         };
@@ -880,6 +881,7 @@ void select_object(Context& context, int param)
     "W:    WORD               \n"
     "s:    sentence           \n"
     "p:    paragraph          \n"
+    "␣:    whitespaces        \n"
     "i:    indent             \n");
 }
 

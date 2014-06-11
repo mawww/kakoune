@@ -377,6 +377,35 @@ static CharCount get_indent(const String& str, int tabstop)
     return indent;
 }
 
+Selection select_whitespaces(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+{
+    auto is_whitespace = [&](char c) {
+        return c == ' ' or c == '\t' or
+            (not (flags & ObjectFlags::Inner) and c == '\n');
+    };
+    BufferIterator first = buffer.iterator_at(selection.cursor());
+    BufferIterator last  = first;
+    if (flags & ObjectFlags::ToBegin)
+    {
+        if (is_whitespace(*first))
+        {
+            skip_while_reverse(first, buffer.begin(), is_whitespace);
+            if (not is_whitespace(*first))
+                ++first;
+        }
+    }
+    if (flags & ObjectFlags::ToEnd)
+    {
+        if (is_whitespace(*last))
+        {
+            skip_while(last, buffer.end(), is_whitespace);
+            --last;
+        }
+    }
+    return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
+                                        : utf8_range(last, first);
+}
+
 static bool is_only_whitespaces(const String& str)
 {
     auto it = str.begin();
