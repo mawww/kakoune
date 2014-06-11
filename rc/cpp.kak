@@ -40,19 +40,21 @@ def -hidden _cpp_indent_on_closing_curly_brace %[
 ]
 
 defhl cpp
-addhl -def-group cpp regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
-addhl -def-group cpp regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
-addhl -def-group cpp regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
-addhl -def-group cpp regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
-addhl -def-group cpp regex "^\h*?#.*?(?<!\\)$" 0:macro
 
-addhl -def-group cpp region string %{(?<!')"} %{(?<!\\)(\\\\)*"}
-addhl -def-group cpp/string/content fill string
+addhl -def-group cpp multi_region -default code root \
+    string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
+    comment /\* \*/ ''
 
-addhl -def-group cpp region comment /\* \*/
-addhl -def-group cpp/comment/content fill comment
+addhl -def-group cpp/root/string fill string
+addhl -def-group cpp/root/comment fill comment
 
-addhl -def-group cpp regex "(//[^\n]*\n)" 0:comment
+addhl -def-group cpp/root/code regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
+addhl -def-group cpp/root/code regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
+addhl -def-group cpp/root/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
+addhl -def-group cpp/root/code regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
+addhl -def-group cpp/root/code regex "^\h*?#.*?(?<!\\)$" 0:macro
+
+addhl -def-group cpp/root/code regex "(//[^\n]*\n)" 0:comment
 
 hook global WinSetOption filetype=cpp %[
     addhl ref cpp

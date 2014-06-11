@@ -12,6 +12,7 @@
 #include "string.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
+#include "parameters_parser.hh"
 
 #include <sstream>
 #include <locale>
@@ -951,6 +952,202 @@ HighlighterAndId region_factory(HighlighterParameters params)
     }
 }
 
+struct MultiRegionHighlighter
+{
+public:
+    using NamedRegionDescList = std::vector<std::pair<String, RegionDesc>>;
+
+    MultiRegionHighlighter(NamedRegionDescList regions, String default_group)
+        : m_regions{std::move(regions)}, m_default_group{std::move(default_group)}
+    {
+        if (m_regions.empty())
+            throw runtime_error("at least one region must be defined");
+
+        for (auto& region : m_regions)
+            if (region.second.m_begin.empty() or region.second.m_end.empty())
+                throw runtime_error("invalid regex for region highlighter");
+    }
+
+    void operator()(HierachicalHighlighter::GroupMap groups, const Context& context,
+                    HighlightFlags flags, DisplayBuffer& display_buffer)
+    {
+        if (flags != HighlightFlags::Highlight)
+            return;
+
+        auto range = display_buffer.range();
+        const auto& buffer = context.buffer();
+        auto& regions = update_cache_ifn(buffer);
+
+        auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
+                                      [](const Region& r, ByteCoord c) { return r.end < c; });
+        auto end = std::lower_bound(begin, regions.end(), range.second,
+                                    [](const Region& r, ByteCoord c) { return r.begin < c; });
+        auto correct = [&](ByteCoord c) -> ByteCoord {
+            if (buffer[c.line].length() == c.column)
+                return {c.line+1, 0};
+            return c;
+        };
+
+        auto default_group_it = groups.find(m_default_group);
+        const bool apply_default = default_group_it != groups.end();
+
+        auto last_begin = range.first;
+        for (; begin != end; ++begin)
+        {
+            if (apply_default and last_begin < begin->begin)
+                apply_highlighter(context, flags, display_buffer,
+                                  correct(last_begin), correct(begin->begin),
+                                  default_group_it->second);
+
+            auto it = groups.find(begin->group);
+            if (it == groups.end())
+                continue;
+            apply_highlighter(context, flags, display_buffer,
+                              correct(begin->begin), correct(begin->end),
+                              it->second);
+            last_begin = begin->end;
+        }
+        if (apply_default and last_begin < range.second)
+            apply_highlighter(context, flags, display_buffer,
+                              correct(last_begin), range.second,
+                              default_group_it->second);
+
+    }
+private:
+    const NamedRegionDescList m_regions;
+    const String m_default_group;
+
+    struct Region
+    {
+        ByteCoord begin;
+        ByteCoord end;
+        StringView group;
+    };
+    using RegionList = std::vector<Region>;
+
+    struct Cache
+    {
+        size_t timestamp = 0;
+        std::vector<RegionMatches> matches;
+        RegionList regions;
+    };
+    BufferSideCache<Cache> m_cache;
+
+    using RegionAndMatch = std::pair<size_t, MatchList::const_iterator>;
+
+    // find the begin closest to pos in all matches
+    RegionAndMatch find_next_begin(const Cache& cache, ByteCoord pos) const
+    {
+        RegionAndMatch res{0, cache.matches[0].find_next_begin(pos)};
+        for (size_t i = 1; i < cache.matches.size(); ++i)
+        {
+            const auto& matches = cache.matches[i];
+            auto it = matches.find_next_begin(pos);
+            if (it != matches.begin_matches.end() and
+                (res.second == cache.matches[res.first].begin_matches.end() or
+                 it->begin_coord() < res.second->begin_coord()))
+                res = RegionAndMatch{i, it};
+        }
+        return res;
+    }
+
+    const RegionList& update_cache_ifn(const Buffer& buffer)
+    {
+        Cache& cache = m_cache.get(buffer);
+        const size_t buf_timestamp = buffer.timestamp();
+        if (cache.timestamp == buf_timestamp)
+            return cache.regions;
+
+        if (cache.timestamp == 0)
+        {
+            cache.matches.resize(m_regions.size());
+            for (size_t i = 0; i < m_regions.size(); ++i)
+                cache.matches[i] = m_regions[i].second.find_matches(buffer);
+        }
+        else
+        {
+            auto modifs = compute_line_modifications(buffer, cache.timestamp);
+            for (size_t i = 0; i < m_regions.size(); ++i)
+                m_regions[i].second.update_matches(buffer, modifs, cache.matches[i]);
+        }
+
+        cache.regions.clear();
+
+        for (auto begin = find_next_begin(cache, ByteCoord{-1, 0}),
+                  end = RegionAndMatch{ 0, cache.matches[0].begin_matches.end() };
+             begin != end; )
+        {
+            const RegionMatches& matches = cache.matches[begin.first];
+            auto& named_region = m_regions[begin.first];
+            auto beg_it = begin.second;
+            auto end_it = matches.find_matching_end(beg_it);
+
+            if (end_it == matches.end_matches.end())
+            {
+                cache.regions.push_back({ {beg_it->line, beg_it->begin},
+                                           buffer.end_coord(),
+                                           named_region.first });
+                break;
+            }
+            else
+            {
+                cache.regions.push_back({ beg_it->begin_coord(),
+                                          end_it->end_coord(),
+                                          named_region.first });
+                begin = find_next_begin(cache, end_it->end_coord());
+            }
+        }
+        cache.timestamp = buf_timestamp;
+        return cache.regions;
+    }
+};
+
+HighlighterAndId multi_region_factory(HighlighterParameters params)
+{
+    try
+    {
+        static const ParameterDesc param_desc{
+            SwitchMap{ { "default", { true, "" } } },
+            ParameterDesc::Flags::SwitchesOnlyAtStart,
+            5};
+
+        ParametersParser parser{params, param_desc};
+        if ((parser.positional_count() % 4) != 1)
+            throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
+
+        MultiRegionHighlighter::NamedRegionDescList regions;
+        id_map<HighlighterGroup> groups;
+        for (size_t i = 1; i < parser.positional_count(); i += 4)
+        {
+            if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
+                throw runtime_error("group id, begin and end must not be empty");
+
+            Regex begin{parser[i+1], Regex::nosubs | Regex::optimize };
+            Regex end{parser[i+2], Regex::nosubs | Regex::optimize };
+            Regex recurse;
+            if (not parser[i+3].empty())
+                recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
+
+            regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
+            groups.append({ parser[i], HighlighterGroup{} });
+        }
+        String default_group;
+        if (parser.has_option("default"))
+        {
+            default_group = parser.option_value("default");
+            groups.append({ default_group, HighlighterGroup{} });
+        }
+
+        return {parser[0],
+                HierachicalHighlighter(
+                    MultiRegionHighlighter(std::move(regions), std::move(default_group)), std::move(groups))};
+    }
+    catch (boost::regex_error& err)
+    {
+        throw runtime_error(String("regex error: ") + err.what());
+    }
+}
+
 }
 
 void register_highlighters()
@@ -968,6 +1165,7 @@ void register_highlighters()
     registry.register_func("flag_lines", flag_lines_factory);
     registry.register_func("ref", reference_factory);
     registry.register_func("region", RegionHighlight::region_factory);
+    registry.register_func("multi_region", RegionHighlight::multi_region_factory);
 }
 
 }
