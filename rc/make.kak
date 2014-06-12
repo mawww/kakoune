@@ -13,8 +13,8 @@ def -shell-params make %{ %sh{
            }"
 }}
 
-defhl make
-addhl -def-group make regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+addhl -group / group make
+addhl -group /make regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 
 hook global WinSetOption filetype=make %{
     addhl ref make

@@ -19,12 +19,13 @@ class HighlighterGroup
 public:
     void operator()(const Context& context,
                     HighlightFlags flags,
-                    DisplayBuffer& display_buffer);
+                    DisplayBuffer& display_buffer) const;
 
     void append(HighlighterAndId&& hl);
     void remove(StringView id);
 
     HighlighterGroup& get_group(StringView path, Codepoint path_separator = 0);
+    HighlighterFunc get_highlighter(StringView path, Codepoint path_separator = 0) const;
 
     CandidateList complete_id(StringView prefix, ByteCount cursor_pos) const;
     CandidateList complete_group_id(StringView prefix, ByteCount cursor_pos) const;
@@ -53,6 +54,7 @@ public:
     }
 
     HighlighterGroup& get_group(StringView path, Codepoint path_separator = 0);
+    HighlighterFunc get_highlighter(StringView path, Codepoint path_separator = 0) const;
 
 protected:
     Callback m_callback;

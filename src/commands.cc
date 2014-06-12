@@ -350,20 +350,6 @@ const CommandDesc namebuf_cmd = {
     }
 };
 
-const CommandDesc define_highlighter_cmd = {
-    "defhl",
-    "dh",
-    "defhl <name>: define a new reusable highlighter",
-    single_name_param,
-    CommandFlags::None,
-    CommandCompleter{},
-    [](const ParametersParser& parser, Context& context)
-    {
-        const String& name = parser[0];
-        DefinedHighlighters::instance().append({name, HighlighterGroup{}});
-    }
-};
-
 template<typename GetRootGroup>
 CommandCompleter group_rm_completer(GetRootGroup get_root_group)
 {
@@ -401,12 +387,11 @@ HighlighterGroup& get_highlighters(const Context& c) { return c.window().highlig
 const CommandDesc add_highlighter_cmd = {
     "addhl",
     "ah",
-    "addhl <switches> <type> <type params>...: add an highlighter to current window",
+    "addhl <scope>/<group>/<id> <type> <type params>...: add an highlighter\n"
+    "<scope> can be shared or window",
     ParameterDesc{
-        SwitchMap{ { "group", { true, "add highlighter to named group" } },
-                   { "def-group", { true, "add highlighter to reusable defined group" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1
-    },
+        SwitchMap{ { "group", { true, "specify the group in which to put the highlighter" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     group_add_completer<HighlighterRegistry>(get_highlighters),
     [](const ParametersParser& parser, Context& context)
@@ -414,26 +399,31 @@ const CommandDesc add_highlighter_cmd = {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
 
         auto begin = parser.begin();
-        const String& name = *begin;
+        const String& name = *begin++;
         std::vector<String> highlighter_params;
-        for (++begin; begin != parser.end(); ++begin)
+        for (; begin != parser.end(); ++begin)
             highlighter_params.push_back(*begin);
 
-        if (parser.has_option("group") and parser.has_option("def-group"))
-            throw runtime_error("-group and -def-group cannot be specified together");
-
         HighlighterGroup* group = nullptr;
-
-        if (parser.has_option("def-group"))
-            group = &DefinedHighlighters::instance().get_group(parser.option_value("def-group"), '/');
-        else
+        if (parser.has_option("group"))
         {
-            HighlighterGroup& window_hl = context.window().highlighters();
-            group = parser.has_option("group") ?
-                    &window_hl.get_group(parser.option_value("group"), '/')
-                  : &window_hl;
-        }
+            StringView path = parser.option_value("group");
+            if (path.empty())
+                throw runtime_error("group param should not be empty");
 
+            if (path[0] == '/')
+            {
+                group = &DefinedHighlighters::instance();
+                path = path.substr(1_byte);
+            }
+            else
+                group = &context.window().highlighters();
+
+            if (not path.empty())
+                group = &group->get_group(path, '/');
+        }
+        else
+            group = &context.window().highlighters();
         group->append(registry[name](highlighter_params));
     }
 };
@@ -1333,7 +1323,6 @@ void register_commands()
     register_command(cm, delbuf_cmd);
     register_command(cm, force_delbuf_cmd);
     register_command(cm, namebuf_cmd);
-    register_command(cm, define_highlighter_cmd);
     register_command(cm, add_highlighter_cmd);
     register_command(cm, rm_highlighter_cmd);
     register_command(cm, add_hook_cmd);

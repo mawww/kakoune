@@ -655,17 +655,17 @@ HighlighterAndId reference_factory(HighlighterParameters params)
     // throw if not found
     //DefinedHighlighters::instance().get_group(name, '/');
 
-    return HighlighterAndId(name,
-                            [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
-                            {
-                                try
-                                {
-                                    DefinedHighlighters::instance().get_group(name, '/')(context, flags, display_buffer);
-                                }
-                                catch (group_not_found&)
-                                {
-                                }
-                            });
+    return {name,
+            [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+            {
+                try
+                {
+                    DefinedHighlighters::instance().get_highlighter(name, '/')(context, flags, display_buffer);
+                }
+                catch (group_not_found&)
+                {
+                }
+            }};
 }
 
 namespace RegionHighlight
