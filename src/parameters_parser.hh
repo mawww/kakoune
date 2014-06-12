@@ -117,6 +117,7 @@ struct ParametersParser
         }
 
         iterator& operator++() { ++m_index; return *this; }
+        iterator operator++(int) { auto copy = *this; ++m_index; return copy; }
 
         bool operator==(const iterator& other) const
         {
