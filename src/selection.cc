@@ -163,7 +163,7 @@ struct ForwardChangesTracker
 
     bool relevant(const Buffer::Change& change, ByteCoord old_coord) const
     {
-        auto new_coord = get_new_coord(old_coord);
+        auto new_coord = get_new_coord_tolerant(old_coord);
         return change.type == Buffer::Change::Insert ? change.begin <= new_coord
                                                      : change.begin < new_coord;
     }
