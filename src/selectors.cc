@@ -346,9 +346,7 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, Obj
             ++last;
         while (last != buffer.end())
         {
-            char cur = *last;
-            char prev = *(last-1);
-            if (is_eol(cur) and is_eol(prev))
+            if (last != buffer.begin() and is_eol(*last) and is_eol(*(last-1)))
             {
                 if (not (flags & ObjectFlags::Inner))
                     skip_while(last, buffer.end(), is_eol);
