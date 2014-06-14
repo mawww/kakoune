@@ -582,14 +582,8 @@ and
 :rmhl <highlighter_id>
 ----------------------
 
-existing highlighters are:
+general highlighters are:
 
- * +number_lines+: show line numbers
- * +group <group_name>+: highlighter group, containing other highlighters.
-       useful when multiple highlighters work together and need to be
-       removed as one. Adding and removing from a group can be done using
-       `:addhl -group <group> <highlighter_name> <highlighter_parameters...>`
-       `:rmhl  -group <group> <highlighter_name>`
  * +regex <ex> <color>...+: highlight a regex, takes the regex as first parameter,
        followed by any number of color parameters. color format is:
        <capture_id>:<fg_color>[,<bg_color>]
@@ -603,6 +597,98 @@ existing highlighters are:
        <option_name>.
  * +show_matching+: highlight matching char of the character under the selections
        cursor using +MatchingChar+ color alias.
+ * +number_lines+: show line numbers
+ * +fill <color>+: fill with given color, mostly useful with region highlighters
+       (see below)
+
+Highlighting Groups
+~~~~~~~~~~~~~~~~~~~
+
+the +group+ highlighter is a container for other highlighters. You can add
+a group to the current window using
+
+------------------
+addhl group <name>
+------------------
+
+and then the +-group+ switch of +addhl+ provides a mean to add highlighters
+inside this group.
+
+--------------------------------------
+addhl -group <name> <type> <params>...
+--------------------------------------
+
+groups can contain other groups, the +-group+ switch can be used to define a path.
+
+------------------------------------------------
+addhl -group <name> group <subname>
+addhl -group <name>/<subname> <type> <params>...
+------------------------------------------------
+
+Region highlighters
+~~~~~~~~~~~~~~~~~~~
+
+The +region+ highlighters takes 3 to 4 parameters:
+
+---------------------------------------------------
+addhl region <name> <opening> <closing> [<recurse>]
+---------------------------------------------------
+
++name+ is user defined, but +opening+, +closing+ and +recurse+ are regexes.
+
+ * +opening+ defines the region start text
+ * +closing+ defines the region end text
+ * +recurse+ defines the text that matches recursively an end token into the region.
+
++recurse+ is useful for regions that can be nested, for example the +%sh{ ... }+
+construct in kakoune accept nested +{ ... }+ so +%sh{ ... { ... } ... }+ is valid.
+this region can be defined with:
+
+-------------------------------------
+addhl region shell_expand %sh\{ \} \{
+-------------------------------------
+
+It then provides a group named +content+ which can be filled with other highlighters
+that will only be applied on the given regions.
+
+-------------------------------------
+addhl -group shell_expand/content ...
+-------------------------------------
+
+The +multi_region+ highlighter is even more powerfull, it can segment the buffer
+in non overlapping regions.
+
+-------------------------------------------------------------------------
+addhl multi_region <name> <region_name1> <opening1> <closing1> <recurse1> \
+                          <region_name2> <opening2> <closing2> <recurse2>...
+-------------------------------------------------------------------------
+
+defines multiple regions in which other highlighters can be added
+
+-------------------------------------
+addhl -group <name>/<region_name> ...
+-------------------------------------
+
+Regions are matched using the left-most rule: the left-most region opening starts
+a new region. when a region closes, the closest next opening start another region.
+
+That matches the rule governing most programming language parsing.
+
++multi_region+ also supports a +-default <default_region>+ switch to define the
+default region, when no other region matches the current buffer range.
+
+most programming languages can then be properly highlighted using a +multi_region+
+highlighter as root:
+
+-----------------------------------------------------------------
+addhl multi_region -default code <lang> \
+    string <str_opening> <str_closing> <str_recurse> \
+    comment <comment_opening> <comment_closing> <comment_recurse>
+
+addhl -group <lang>/code ...
+addhl -group <lang>/string ...
+addhl -group <lang>/comment ...
+-----------------------------------------------------------------
 
 Shared Highlighters
 ~~~~~~~~~~~~~~~~~~~
@@ -610,20 +696,30 @@ Shared Highlighters
 Highlighters are often defined for a specific filetype, and it makes then sense to
 share the highlighters between all the windows on the same filetypes.
 
-A shared highlighter can be defined with
+A shared highlighter can be defined with the +:addhl+ command
 
------------------------
-defhl <shared_hl_name>
------------------------
+------------------------------
+addhl -group /<group_name> ...
+------------------------------
 
-Highlighters can be added to it using the regular +:addhl+ command, with the
-+-def-group <shared_hl_name>+ option.
+when the group switch values starts with a '/', it references a group in the
+shared highlighters, rather than the window highlighters.
+
+The common case would be to create a named shared group, and then fill it
+with highlighters:
+
+---------------------------
+addhl -group / group <name>
+addhl -group /name regex ...
+---------------------------
 
 It can then be referenced in a window using the +ref+ highlighter.
 
---------------------------
-addhl ref <shared_hl_name>
---------------------------
+----------------
+addhl ref <name>
+----------------
+
+the +ref+ can reference any named highlighter in the shared namespace.
 
 Hooks
 -----
@@ -844,13 +940,16 @@ FIFO Buffer
 
 the +:edit+ command can take a -fifo parameter:
 
------------------------------------
-:edit -fifo <filename> <buffername>
------------------------------------
+---------------------------------------------
+:edit -fifo <filename> [-scroll] <buffername>
+---------------------------------------------
 
 in this case, a buffer named +<buffername>+ is created which reads its content
 from fifo +<filename>+. When the fifo is written to, the buffer is automatically
 updated.
+
+if the +-scroll+ switch is specified, the initial cursor position will be made
+such as the window displaying the buffer will scroll as new data is read.
 
 This is very useful for running some commands asynchronously while displaying
 their result in a buffer. See rc/make.kak and rc/grep.kak for examples.
