@@ -24,11 +24,11 @@ public:
     void append(HighlighterAndId&& hl);
     void remove(StringView id);
 
-    HighlighterGroup& get_group(StringView path, Codepoint path_separator = 0);
-    HighlighterFunc get_highlighter(StringView path, Codepoint path_separator = 0) const;
+    HighlighterGroup& get_group(StringView path);
+    HighlighterFunc get_highlighter(StringView path) const;
 
-    CandidateList complete_id(StringView prefix, ByteCount cursor_pos) const;
-    CandidateList complete_group_id(StringView prefix, ByteCount cursor_pos) const;
+    Completions complete_id(StringView path, ByteCount cursor_pos) const;
+    Completions complete_group_id(StringView path, ByteCount cursor_pos) const;
 
 private:
     id_map<HighlighterFunc> m_highlighters;
@@ -53,8 +53,11 @@ public:
         m_callback(m_groups, context, flags, display_buffer);
     }
 
-    HighlighterGroup& get_group(StringView path, Codepoint path_separator = 0);
-    HighlighterFunc get_highlighter(StringView path, Codepoint path_separator = 0) const;
+    HighlighterGroup& get_group(StringView path);
+    HighlighterFunc get_highlighter(StringView path) const;
+
+    Completions complete_id(StringView path, ByteCount cursor_pos) const;
+    Completions complete_group_id(StringView path, ByteCount cursor_pos) const;
 
 protected:
     Callback m_callback;

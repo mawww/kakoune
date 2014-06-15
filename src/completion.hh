@@ -47,5 +47,11 @@ inline Completions complete_nothing(const Context& context, CompletionFlags,
 Completions shell_complete(const Context& context, CompletionFlags,
                            StringView, ByteCount cursor_pos);
 
+inline Completions offset_pos(Completions completion, ByteCount offset)
+{
+    return { completion.start + offset, completion.end + offset,
+             std::move(completion.candidates) };
+}
+
 }
 #endif // completion_hh_INCLUDED

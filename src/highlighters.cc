@@ -660,7 +660,7 @@ HighlighterAndId reference_factory(HighlighterParameters params)
             {
                 try
                 {
-                    DefinedHighlighters::instance().get_highlighter(name, '/')(context, flags, display_buffer);
+                    DefinedHighlighters::instance().get_highlighter(name)(context, flags, display_buffer);
                 }
                 catch (group_not_found&)
                 {

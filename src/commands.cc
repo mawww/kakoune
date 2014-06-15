@@ -350,39 +350,70 @@ const CommandDesc namebuf_cmd = {
     }
 };
 
-template<typename GetRootGroup>
-CommandCompleter group_rm_completer(GetRootGroup get_root_group)
+Completions complete_highlighter_group(const Context& context,
+                                       StringView arg, ByteCount pos_in_token)
 {
-    return [=](const Context& context, CompletionFlags flags,
-               CommandParameters params, size_t token_to_complete,
-               ByteCount pos_in_token) -> Completions {
-        auto& root_group = get_root_group(context);
-        const String& arg = params[token_to_complete];
-        if (token_to_complete == 1 and params[0] == "-group")
-            return { 0_byte, arg.length(), root_group.complete_group_id(arg, pos_in_token) };
-        else if (token_to_complete == 2 and params[0] == "-group")
-            return { 0_byte, arg.length(), root_group.get_group(params[1], '/').complete_id(arg, pos_in_token) };
-        return { 0_byte, arg.length(), root_group.complete_id(arg, pos_in_token) };
-    };
+    const bool shared = not arg.empty() and arg[0] == '/';
+    if (shared)
+    {
+        auto& group = DefinedHighlighters::instance();
+        return offset_pos(group.complete_group_id(arg.substr(1_byte), pos_in_token-1), 1);
+    }
+    else
+    {
+        auto& group = context.window().highlighters();
+        return group.complete_group_id(arg, pos_in_token);
+    }
 }
 
-template<typename FactoryRegistry, typename GetRootGroup>
-CommandCompleter group_add_completer(GetRootGroup get_root_group)
+Completions rm_highlighter_completer(
+    const Context& context, CompletionFlags flags, CommandParameters params,
+    size_t token_to_complete, ByteCount pos_in_token)
 {
-    return [=](const Context& context, CompletionFlags flags,
-               CommandParameters params, size_t token_to_complete,
-               ByteCount pos_in_token) -> Completions {
-        auto& root_group = get_root_group(context);
-        const String& arg = params[token_to_complete];
-        if (token_to_complete == 1 and params[0] == "-group")
-            return { 0_byte, arg.length(), root_group.complete_group_id(arg, pos_in_token) };
-        else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-            return { 0_byte, arg.length(), FactoryRegistry::instance().complete_name(arg, pos_in_token) };
-        return Completions{};
-    };
+    const String& arg = params[token_to_complete];
+    if (token_to_complete == 0 and not arg.empty() and arg.front() == '/')
+    {
+        auto& group = DefinedHighlighters::instance();
+        return offset_pos(group.complete_id(arg.substr(1_byte), pos_in_token-1), 1);
+    }
+    else if (token_to_complete == 0)
+        return context.window().highlighters().complete_id(arg, pos_in_token);
+    return {};
 }
 
-HighlighterGroup& get_highlighters(const Context& c) { return c.window().highlighters(); }
+Completions add_highlighter_completer(
+    const Context& context, CompletionFlags flags, CommandParameters params,
+    size_t token_to_complete, ByteCount pos_in_token)
+{
+    StringView arg = params[token_to_complete];
+    if (token_to_complete == 1 and params[0] == "-group")
+        return complete_highlighter_group(context, params[1], pos_in_token);
+    else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
+        return { 0_byte, arg.length(), HighlighterRegistry::instance().complete_name(arg, pos_in_token) };
+    return Completions{};
+}
+
+HighlighterGroup& get_highlighter_group(const Context& context, StringView path)
+{
+    if (path.empty())
+        throw runtime_error("group path should not be empty");
+
+    HighlighterGroup* group = nullptr;
+    if (path[0] == '/')
+    {
+        group = &DefinedHighlighters::instance();
+        path = path.substr(1_byte);
+    }
+    else
+        group = &context.window().highlighters();
+
+    if (path.back() == '/')
+        path = path.substr(0_byte, path.length() - 1);
+
+    if (not path.empty())
+        return group->get_group(path);
+    return *group;
+}
 
 const CommandDesc add_highlighter_cmd = {
     "addhl",
@@ -393,7 +424,7 @@ const CommandDesc add_highlighter_cmd = {
         SwitchMap{ { "group", { true, "specify the group in which to put the highlighter" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
-    group_add_completer<HighlighterRegistry>(get_highlighters),
+    add_highlighter_completer,
     [](const ParametersParser& parser, Context& context)
     {
         HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -404,48 +435,32 @@ const CommandDesc add_highlighter_cmd = {
         for (; begin != parser.end(); ++begin)
             highlighter_params.push_back(*begin);
 
-        HighlighterGroup* group = nullptr;
-        if (parser.has_option("group"))
-        {
-            StringView path = parser.option_value("group");
-            if (path.empty())
-                throw runtime_error("group param should not be empty");
-
-            if (path[0] == '/')
-            {
-                group = &DefinedHighlighters::instance();
-                path = path.substr(1_byte);
-            }
-            else
-                group = &context.window().highlighters();
-
-            if (not path.empty())
-                group = &group->get_group(path, '/');
-        }
-        else
-            group = &context.window().highlighters();
-        group->append(registry[name](highlighter_params));
+        auto& group = (parser.has_option("group")) ?
+            get_highlighter_group(context, parser.option_value("group"))
+          : context.window().highlighters();
+        group.append(registry[name](highlighter_params));
     }
 };
 
 const CommandDesc rm_highlighter_cmd = {
     "rmhl",
     "rh",
-    "rmhl <switches> <name>: remove highlighter <name> from current window",
+    "rmhl <path>: remove highlighter <name>",
     ParameterDesc{
-        SwitchMap{ { "group", { true, "remove highlighter from given group" } } },
+        SwitchMap{},
         ParameterDesc::Flags::None, 1, 1
     },
     CommandFlags::None,
-    group_rm_completer(get_highlighters),
+    rm_highlighter_completer,
     [](const ParametersParser& parser, Context& context)
     {
-        HighlighterGroup& window_hl = context.window().highlighters();
-        HighlighterGroup& group = parser.has_option("group") ?
-            window_hl.get_group(parser.option_value("group"), '/')
-          : window_hl;
+        StringView path = parser[0];
+        auto sep_it = find(reversed(path), '/');
+        auto& group = sep_it != path.rend() ?
+            get_highlighter_group(context, {path.begin(), sep_it.base()-1})
+          : context.window().highlighters();
 
-        group.remove(parser[0]);
+        group.remove({sep_it.base(), path.end()});
     }
 };
 

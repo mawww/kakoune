@@ -152,6 +152,18 @@ struct ReversedContainer
 };
 
 template<typename Container>
+auto begin(ReversedContainer<Container>& c) -> decltype(c.begin())
+{
+    return c.begin();
+}
+
+template<typename Container>
+auto end(ReversedContainer<Container>& c) -> decltype(c.end())
+{
+    return c.end();
+}
+
+template<typename Container>
 ReversedContainer<Container> reversed(Container&& container)
 {
     return ReversedContainer<Container>(container);
