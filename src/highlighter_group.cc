@@ -64,48 +64,47 @@ HighlighterFunc HighlighterGroup::get_highlighter(StringView path) const
         throw group_not_found("not a group: "_str + id);
 }
 
-Completions HighlighterGroup::complete_id(StringView path, ByteCount cursor_pos) const
+template<Completions (HighlighterGroup::*hg_complete)(StringView path, ByteCount cursor_pos) const,
+         Completions (HierachicalHighlighter::*hh_complete)(StringView path, ByteCount cursor_pos) const,
+         typename Condition>
+Completions complete_impl(const id_map<HighlighterFunc>& highlighters, Condition condition,
+                          StringView path, ByteCount cursor_pos)
 {
     auto sep_it = find(path, path_separator);
     StringView id(path.begin(), sep_it);
     if (sep_it == path.end())
-        return { 0_byte, id.length(), m_highlighters.complete_id(id, cursor_pos) };
+        return { 0_byte, path.length(), highlighters.complete_id_if(path, cursor_pos, condition) };
 
-    auto it = m_highlighters.find(id);
-    if (it != m_highlighters.end())
+    auto it = highlighters.find(id);
+    if (it != highlighters.end())
     {
         const ByteCount offset = (int)(sep_it + 1 - path.begin());
         cursor_pos -= offset;
         if (auto* group = it->second.target<HighlighterGroup>())
-            return offset_pos(group->complete_id({sep_it+1, path.end()}, cursor_pos), offset);
+            return offset_pos((group->*hg_complete)({sep_it+1, path.end()}, cursor_pos), offset);
         if (auto* hier_group = it->second.target<HierachicalHighlighter>())
-            return offset_pos(hier_group->complete_id({sep_it+1, path.end()}, cursor_pos), offset);
+            return offset_pos((hier_group->*hh_complete)({sep_it+1, path.end()}, cursor_pos), offset);
     }
     return {};
 }
 
+Completions HighlighterGroup::complete_id(StringView path, ByteCount cursor_pos) const
+{
+    return complete_impl<
+        &HighlighterGroup::complete_id,
+        &HierachicalHighlighter::complete_id
+    >(m_highlighters, [](const HighlighterAndId&) { return true; }, path, cursor_pos);
+}
+
 Completions HighlighterGroup::complete_group_id(StringView path, ByteCount cursor_pos) const
 {
-    auto sep_it = find(path, path_separator);
-    StringView id(path.begin(), sep_it);
-    if (sep_it == path.end())
-        return { 0_byte, path.length(), m_highlighters.complete_id_if(
-            path, cursor_pos, [](const HighlighterAndId& func) {
-                return func.second.template target<HighlighterGroup>() or
-                       func.second.template target<HierachicalHighlighter>();
-            }) };
-
-    auto it = m_highlighters.find(id);
-    if (it != m_highlighters.end())
-    {
-        const ByteCount offset = (int)(sep_it + 1 - path.begin());
-        cursor_pos -= offset;
-        if (auto* group = it->second.target<HighlighterGroup>())
-            return offset_pos(group->complete_group_id({sep_it+1, path.end()}, cursor_pos), offset);
-        if (auto* hier_group = it->second.target<HierachicalHighlighter>())
-            return offset_pos(hier_group->complete_group_id({sep_it+1, path.end()}, cursor_pos), offset);
-    }
-    return {};
+    return complete_impl<
+        &HighlighterGroup::complete_group_id,
+        &HierachicalHighlighter::complete_group_id
+    >(m_highlighters, [](const HighlighterAndId& func) {
+          return func.second.target<HighlighterGroup>() or
+                 func.second.target<HierachicalHighlighter>();
+      }, path, cursor_pos);
 }
 
 HighlighterGroup& HierachicalHighlighter::get_group(StringView path)
@@ -134,40 +133,34 @@ HighlighterFunc HierachicalHighlighter::get_highlighter(StringView path) const
         return HighlighterFunc(std::ref(it->second));
 }
 
-Completions HierachicalHighlighter::complete_id(StringView path, ByteCount cursor_pos) const
+template<Completions (HighlighterGroup::*complete)(StringView path, ByteCount cursor_pos) const>
+Completions complete_impl(const HierachicalHighlighter::GroupMap& groups,
+                          StringView path, ByteCount cursor_pos)
 {
     auto sep_it = find(path, path_separator);
     StringView id(path.begin(), sep_it);
-    auto it = m_groups.find(id);
+    auto it = groups.find(id);
     if (sep_it == path.end())
-        return { 0_byte, id.length(), m_groups.complete_id(id, cursor_pos) };
+        return { 0_byte, id.length(), groups.complete_id(id, cursor_pos) };
 
-    if (it != m_groups.end())
+    if (it != groups.end())
     {
-        const ByteCount offset = (int)(sep_it + 1 - path.begin());
+        const ByteCount offset = (int)(sep_it + 1- path.begin());
         return offset_pos(
-            it->second.complete_id({sep_it+1, path.end()},
+            (it->second.*complete)({sep_it+1, path.end()},
                                    cursor_pos - offset), offset);
     }
     return {};
 }
 
+Completions HierachicalHighlighter::complete_id(StringView path, ByteCount cursor_pos) const
+{
+    return complete_impl<&HighlighterGroup::complete_id>(m_groups, path, cursor_pos);
+}
+
 Completions HierachicalHighlighter::complete_group_id(StringView path, ByteCount cursor_pos) const
 {
-    auto sep_it = find(path, path_separator);
-    StringView id(path.begin(), sep_it);
-    auto it = m_groups.find(id);
-    if (sep_it == path.end())
-        return { 0_byte, id.length(), m_groups.complete_id(id, cursor_pos) };
-
-    if (it != m_groups.end())
-    {
-        const ByteCount offset = (int)(sep_it + 1- path.begin());
-        return offset_pos(
-            it->second.complete_group_id({sep_it+1, path.end()},
-                                         cursor_pos - offset), offset);
-    }
-    return {};
+    return complete_impl<&HighlighterGroup::complete_group_id>(m_groups, path, cursor_pos);
 }
 
 }
