@@ -730,9 +730,9 @@ Hooks
 commands can be registred to be executed when certain events arise.
 to register a hook, use the hook command.
 
-------------------------------------------------------
-:hook <scope> <hook_name> <filtering_regex> <commands>
-------------------------------------------------------
+-----------------------------------------------------------------------
+:hook [-group <group>] <scope> <hook_name> <filtering_regex> <commands>
+-----------------------------------------------------------------------
 
 <scope> can be either global, buffer or window (or any of their prefixes),
 the scope are hierarchical, meaning that a Window calling a hook will
@@ -747,6 +747,15 @@ use the following command:
 -----------------------------------------------------
 :hook global WinCreate .*\.cc %{ addhl number_lines }
 -----------------------------------------------------
+
+if <group> is given, make this hook part of the named group. groups
+are used for removing hooks with the +rmhooks+ command
+
+-----------------------
+rmhooks <scope> <group>
+-----------------------
+
+will remove every hooks in <scope> that are part of the given group.
 
 existing hooks are:
 
