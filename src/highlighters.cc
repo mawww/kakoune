@@ -83,7 +83,7 @@ void apply_highlighter(const Context& context,
     {
         auto& line = *line_it;
         auto& range = line.range();
-        if (range.second <= begin or  end < range.first)
+        if (range.second <= begin or end <= range.first)
             continue;
 
         if (region_lines.empty())
@@ -768,29 +768,28 @@ struct RegionMatches
     MatchList end_matches;
     MatchList recurse_matches;
 
-    static bool compare_to_end(ByteCoord lhs, const Match& rhs)
+    static bool compare_to_begin(const Match& lhs, ByteCoord rhs)
     {
-        return lhs < rhs.end_coord();
+        return lhs.begin_coord() < rhs;
     }
 
     MatchList::const_iterator find_next_begin(ByteCoord pos) const
     {
-        return std::upper_bound(begin_matches.begin(), begin_matches.end(),
-                                pos, compare_to_end);
+        return std::lower_bound(begin_matches.begin(), begin_matches.end(),
+                                pos, compare_to_begin);
     }
 
-    MatchList::const_iterator find_matching_end(MatchList::const_iterator beg_it) const
+    MatchList::const_iterator find_matching_end(ByteCoord beg_pos) const
     {
         auto end_it = end_matches.begin();
         auto rec_it = recurse_matches.begin();
-        auto ref_pos = beg_it->end_coord();
         int recurse_level = 0;
         while (true)
         {
-            end_it = std::upper_bound(end_it, end_matches.end(),
-                                      ref_pos, compare_to_end);
-            rec_it = std::upper_bound(rec_it, recurse_matches.end(),
-                                      ref_pos, compare_to_end);
+            end_it = std::lower_bound(end_it, end_matches.end(),
+                                      beg_pos, compare_to_begin);
+            rec_it = std::lower_bound(rec_it, recurse_matches.end(),
+                                      beg_pos, compare_to_begin);
 
             if (end_it == end_matches.end())
                 return end_it;
@@ -806,7 +805,7 @@ struct RegionMatches
                 return end_it;
 
             --recurse_level;
-            ref_pos = end_it->end_coord();
+            beg_pos = end_it->end_coord();
         }
     }
 };
@@ -912,7 +911,7 @@ private:
         for (auto beg_it = cache.matches.begin_matches.cbegin();
              beg_it != cache.matches.begin_matches.end(); )
         {
-            auto end_it = cache.matches.find_matching_end(beg_it);
+            auto end_it = cache.matches.find_matching_end(beg_it->end_coord());
 
             if (end_it == cache.matches.end_matches.end())
             {
@@ -1085,7 +1084,7 @@ private:
             const RegionMatches& matches = cache.matches[begin.first];
             auto& named_region = m_regions[begin.first];
             auto beg_it = begin.second;
-            auto end_it = matches.find_matching_end(beg_it);
+            auto end_it = matches.find_matching_end(beg_it->end_coord());
 
             if (end_it == matches.end_matches.end())
             {
