@@ -48,6 +48,8 @@ Features
  * Macros
  * Hooks
  * Syntax Highlighting
+   - Supports multiple languages in the same buffer
+   - Highlight a buffer differently in different windows
 
 Building
 --------
