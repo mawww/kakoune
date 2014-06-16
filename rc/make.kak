@@ -9,7 +9,7 @@ def -shell-params make %{ %sh{
      echo "eval -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *make*
                set buffer filetype make
-               hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+               hook buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
            }"
 }}
 
