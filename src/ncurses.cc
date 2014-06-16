@@ -211,7 +211,7 @@ using Utf8Policy = utf8::InvalidBytePolicy::Pass;
 using Utf8Iterator = utf8::utf8_iterator<const char*, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
-    waddstr(win, std::string(begin.base(), end.base()).c_str());
+    waddstr(win, StringView(begin.base(), end.base()).zstr());
 }
 
 static CharCoord window_size(WINDOW* win)

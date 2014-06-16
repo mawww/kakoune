@@ -212,6 +212,10 @@ Selection select_paragraph(const Buffer& buffer,
                            const Selection& selection,
                            ObjectFlags flags);
 
+Selection select_whitespaces(const Buffer& buffer,
+                             const Selection& selection,
+                             ObjectFlags flags);
+
 Selection select_indent(const Buffer& buffer,
                         const Selection& selection,
                         ObjectFlags flags);

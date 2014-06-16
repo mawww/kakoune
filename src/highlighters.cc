@@ -547,6 +547,11 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
         ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
         highlight_range(display_buffer, begin, end, false,
                         [&](DisplayAtom& atom) { atom.colors = sel_colors; });
+    }
+    for (size_t i = 0; i < context.selections().size(); ++i)
+    {
+        auto& sel = context.selections()[i];
+        const bool primary = (i == context.selections().main_index());
         ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
         highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
                         [&](DisplayAtom& atom) { atom.colors = cur_colors; });

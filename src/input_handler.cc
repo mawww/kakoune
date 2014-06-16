@@ -842,7 +842,8 @@ private:
              kak_assert(false); // invalid for interactive insert
              break;
         }
-        selections.sort_and_merge_overlapping();
+        if (mode != InsertMode::Append)
+            selections.sort_and_merge_overlapping();
         selections.check_invariant();
         buffer.check_invariant();
     }
