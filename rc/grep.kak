@@ -21,7 +21,7 @@ def -shell-params -file-completion \
 hook global WinSetOption filetype=grep %{
     addhl group grep
     addhl -group grep regex "^([^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
-    hook buffer -id grep-hooks NormalKey <c-m> jump
+    hook buffer -group grep-hooks NormalKey <c-m> jump
 }
 
 hook global WinSetOption filetype=(?!grep).* %{ rmhl grep; rmhooks buffer grep-hooks }

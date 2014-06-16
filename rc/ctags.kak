@@ -40,10 +40,10 @@ def funcinfo %{
 }
 
 def ctags-enable-autoinfo %{
-     hook window -id ctags-autoinfo NormalIdle .* funcinfo
-     hook window -id ctags-autoinfo NormalEnd  .* info
-     hook window -id ctags-autoinfo NormalKey  .* info
-     hook window -id ctags-autoinfo InsertIdle .* funcinfo
+     hook window -group ctags-autoinfo NormalIdle .* funcinfo
+     hook window -group ctags-autoinfo NormalEnd  .* info
+     hook window -group ctags-autoinfo NormalKey  .* info
+     hook window -group ctags-autoinfo InsertIdle .* funcinfo
 }
 
 def ctags-disable-autoinfo %{ rmhooks window ctags-autoinfo }

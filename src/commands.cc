@@ -496,7 +496,7 @@ const CommandDesc add_hook_cmd = {
     "            (and any window for that buffer)\n"
     "  * window: hook is executed only for the current window\n",
     ParameterDesc{
-        SwitchMap{ { "id", { true, "set hook id, see rmhooks" } } },
+        SwitchMap{ { "group", { true, "set hook group, see rmhooks" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -523,15 +523,17 @@ const CommandDesc add_hook_cmd = {
                 CommandManager::instance().execute(command, context, {},
                                                    { { "hook_param", param } });
         };
-        String id = parser.has_option("id") ? parser.option_value("id") : "";
-        get_hook_manager(parser[0], context).add_hook(parser[1], id, hook_func);
+        StringView group;
+        if (parser.has_option("group"))
+            group = parser.option_value("group");
+        get_hook_manager(parser[0], context).add_hook(parser[1], group, hook_func);
     }
 };
 
 const CommandDesc rm_hook_cmd = {
     "rmhooks",
     nullptr,
-    "rmhooks <id>: remove all hooks whose id is <id>",
+    "rmhooks <group>: remove all hooks whose group is <group>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     CommandCompleter{},

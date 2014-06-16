@@ -5,7 +5,7 @@ hook global WinSetOption filetype=man %{
     addhl -group man-highlight regex ^\S.*?$ 0:blue
     addhl -group man-highlight regex ^\h+-+[-a-zA-Z_]+ 0:yellow
     addhl -group man-highlight regex [-a-zA-Z_.]+\(\d\) 0:green
-    hook window -id man-hooks NormalKey <c-m> man
+    hook window -group man-hooks NormalKey <c-m> man
     set buffer tabstop 8
 }
 

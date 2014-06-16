@@ -57,11 +57,11 @@ hook global WinSetOption filetype=cpp %[
     addhl ref cpp
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -id cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
+    hook window InsertEnd .* -group cpp-hooks %{ try %{ exec -draft <a-x>s\h+$<ret>d } }
 
-    hook window InsertChar \n -id cpp-indent _cpp_indent_on_new_line
-    hook window InsertChar \{ -id cpp-indent _cpp_indent_on_opening_curly_brace
-    hook window InsertChar \} -id cpp-indent _cpp_indent_on_closing_curly_brace
+    hook window InsertChar \n -group cpp-indent _cpp_indent_on_new_line
+    hook window InsertChar \{ -group cpp-indent _cpp_indent_on_opening_curly_brace
+    hook window InsertChar \} -group cpp-indent _cpp_indent_on_closing_curly_brace
 ]
 
 hook global WinSetOption filetype=(?!cpp).* %{

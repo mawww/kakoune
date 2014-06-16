@@ -18,7 +18,7 @@ addhl -group /make regex "^([^:\n]+):(\d+):(\d+):\h+(?:((?:fatal )?error)|(warni
 
 hook global WinSetOption filetype=make %{
     addhl ref make
-    hook buffer -id make-hooks NormalKey <c-m> errjump
+    hook buffer -group make-hooks NormalKey <c-m> errjump
 }
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }

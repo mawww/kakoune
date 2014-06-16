@@ -17,8 +17,8 @@ class HookManager
 public:
     HookManager(HookManager& parent) : m_parent(&parent) {}
 
-    void add_hook(const String& hook_name, String id, HookFunc hook);
-    void remove_hooks(const String& id);
+    void add_hook(const String& hook_name, String group, HookFunc hook);
+    void remove_hooks(StringView group);
     void run_hook(const String& hook_name, const String& param,
                   Context& context) const;
 
