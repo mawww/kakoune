@@ -391,6 +391,28 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_color)};
 }
 
+HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
+{
+    if (params.size() != 2)
+        throw runtime_error("wrong parameter count");
+
+    const ColorPair& color = get_color(params[1]);
+
+    String option_name = params[0];
+    // verify option type now
+    GlobalOptions::instance()[option_name].get<int>();
+
+    auto highlighter = [=](const Context& context, HighlightFlags flags,
+                           DisplayBuffer& display_buffer)
+    {
+        int line = context.options()[option_name].get<int>();
+        highlight_range(display_buffer, {line-1, 0}, {line, 0}, false,
+                        apply_colors(color));
+    };
+
+    return {"hlline_" + option_name, std::move(highlighter)};
+}
+
 void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
 {
     const int tabstop = context.options()["tabstop"].get<int>();
@@ -1177,6 +1199,7 @@ void register_highlighters()
     registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
     registry.register_func("flag_lines", flag_lines_factory);
+    registry.register_func("line_option", highlight_line_option_factory);
     registry.register_func("ref", reference_factory);
     registry.register_func("region", RegionHighlight::region_factory);
     registry.register_func("multi_region", RegionHighlight::multi_region_factory);
