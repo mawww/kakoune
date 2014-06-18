@@ -149,6 +149,11 @@ void apply_highlighter(const Context& context,
     display_buffer.compute_range();
 }
 
+auto apply_colors = [](const ColorPair& colors)
+{
+    return [&colors](DisplayAtom& atom) { atom.colors = colors; };
+};
+
 using ColorSpec = std::unordered_map<size_t, const ColorPair*>;
 
 struct Fill
@@ -160,7 +165,7 @@ struct Fill
     {
         auto range = display_buffer.range();
         highlight_range(display_buffer, range.first, range.second, true,
-                        [this](DisplayAtom& atom) { atom.colors = m_colors; });
+                        apply_colors(m_colors));
     }
 
     ColorPair m_colors;
@@ -212,7 +217,7 @@ public:
                     continue;
 
                 highlight_range(display_buffer, match[n].first, match[n].second, true,
-                                [&](DisplayAtom& atom) { atom.colors = *col_it->second; });
+                                apply_colors(*col_it->second));
             }
         }
     }
@@ -508,7 +513,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                 });
                 if (it != end)
                     highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                    [&](DisplayAtom& atom) { atom.colors = colors; });
+                                    apply_colors(colors));
                 break;
             }
             else if (c == pair.second)
@@ -524,7 +529,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                 });
                 if (it != end or (*end == pair.first and level == 1))
                     highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                    [&](DisplayAtom& atom) { atom.colors = colors; });
+                                    apply_colors(colors));
                 break;
             }
         }
@@ -546,7 +551,7 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
         const bool primary = (i == context.selections().main_index());
         ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
         highlight_range(display_buffer, begin, end, false,
-                        [&](DisplayAtom& atom) { atom.colors = sel_colors; });
+                        apply_colors(sel_colors));
     }
     for (size_t i = 0; i < context.selections().size(); ++i)
     {
@@ -554,7 +559,7 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
         const bool primary = (i == context.selections().main_index());
         ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
         highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
-                        [&](DisplayAtom& atom) { atom.colors = cur_colors; });
+                        apply_colors(cur_colors));
     }
 }
 
