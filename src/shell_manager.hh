@@ -28,6 +28,7 @@ public:
                 int* exit_status = nullptr);
 
     void register_env_var(StringView regex, EnvVarRetriever retriever);
+    String get_val(StringView name, const Context& context) const;
 
 private:
     std::vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;

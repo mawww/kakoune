@@ -108,21 +108,12 @@ String ShellManager::pipe(StringView input,
                 setenv(("kak_" + name).c_str(), local_var->second.c_str(), 1);
             else
             {
-                auto env_var = std::find_if(
-                    m_env_vars.begin(), m_env_vars.end(),
-                    [&](const std::pair<Regex, EnvVarRetriever>& pair)
-                    { return boost::regex_match(name.begin(), name.end(),
-                                                pair.first); });
-
-                if (env_var != m_env_vars.end())
+                try
                 {
-                    try
-                    {
-                        String value = env_var->second(name, context);
-                        setenv(("kak_"_str + name).c_str(), value.c_str(), 1);
-                    }
-                    catch (runtime_error&) {}
+                    String value = get_val(name, context);
+                    setenv(("kak_"_str + name).c_str(), value.c_str(), 1);
                 }
+                catch (runtime_error&) {}
             }
 
             ++it;
@@ -147,6 +138,19 @@ void ShellManager::register_env_var(StringView regex,
                                     EnvVarRetriever retriever)
 {
     m_env_vars.push_back({ Regex(regex.begin(), regex.end()), std::move(retriever) });
+}
+
+String ShellManager::get_val(StringView name, const Context& context) const
+{
+    auto env_var = std::find_if(
+        m_env_vars.begin(), m_env_vars.end(),
+        [&](const std::pair<Regex, EnvVarRetriever>& pair)
+        { return boost::regex_match(name.begin(), name.end(),
+                                    pair.first); });
+
+    if (env_var == m_env_vars.end())
+        throw runtime_error("no such env var: " + name);
+    return env_var->second(name, context);
 }
 
 }
