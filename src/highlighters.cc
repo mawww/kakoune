@@ -151,7 +151,12 @@ void apply_highlighter(const Context& context,
 
 auto apply_colors = [](const ColorPair& colors)
 {
-    return [&colors](DisplayAtom& atom) { atom.colors = colors; };
+    return [&colors](DisplayAtom& atom) {
+        if (colors.first != Colors::Default)
+            atom.colors.first = colors.first;
+        if (colors.second != Colors::Default)
+            atom.colors.second = colors.second;
+    };
 };
 
 using ColorSpec = std::unordered_map<size_t, const ColorPair*>;
