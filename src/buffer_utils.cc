@@ -64,6 +64,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             buffer->flags() &= ~Buffer::Flags::Fifo;
             buffer->flags() &= ~Buffer::Flags::NoUndo;
             close(fifo);
+            buffer->run_hook_in_own_context("BufCloseFifo", "");
             delete &watcher;
         }
     });
@@ -74,6 +75,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             if (buffer->flags() & Buffer::Flags::Fifo)
             {
                 close(watcher->fd());
+                buffer->run_hook_in_own_context("BufCloseFifo", "");
                 delete watcher;
             }
         });

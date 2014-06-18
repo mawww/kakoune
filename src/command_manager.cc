@@ -55,6 +55,7 @@ struct Token
         ShellExpand,
         RegisterExpand,
         OptionExpand,
+        ValExpand,
         CommandSeparator
     };
     Token() : m_type(Type::Raw) {}
@@ -150,6 +151,8 @@ Token::Type token_type(StringView type_name)
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
         return Token::Type::OptionExpand;
+    else if (type_name == "val")
+        return Token::Type::ValExpand;
     else if (type_name == "rec")
         return Token::Type::RawEval;
     else if (throw_on_invalid)
@@ -316,6 +319,8 @@ String eval_token(const Token& token, Context& context,
         return RegisterManager::instance()[content].values(context)[0];
     case Token::Type::OptionExpand:
         return context.options()[content].get_as_string();
+    case Token::Type::ValExpand:
+        return ShellManager::instance().get_val(content, context);
     case Token::Type::RawEval:
         return eval(content, context, shell_params, env_vars);
     case Token::Type::Raw:
