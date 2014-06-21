@@ -519,6 +519,9 @@ const CommandDesc add_hook_cmd = {
         Regex regex(parser[2].begin(), parser[2].end());
         String command = parser[3];
         auto hook_func = [=](const String& param, Context& context) {
+            if (GlobalHooks::instance().are_user_hooks_disabled())
+                return;
+
             if (boost::regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
                                                    { { "hook_param", param } });
@@ -947,10 +950,10 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
     const bool disable_hooks = parser.has_option("no-hooks");
     if (disable_hooks)
-        GlobalHooks::instance().disable_hooks();
+        GlobalHooks::instance().disable_user_hooks();
     auto restore_hooks = on_scope_end([&](){
         if (disable_hooks)
-            GlobalHooks::instance().enable_hooks();
+            GlobalHooks::instance().enable_user_hooks();
     });
 
     struct DisableOption {
