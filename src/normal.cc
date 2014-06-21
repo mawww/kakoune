@@ -384,9 +384,9 @@ void pipe(Context& context, int)
             if (event != PromptEvent::Validate)
                 return;
 
-            String real_cmd;
+            StringView real_cmd;
             if (cmdline.empty())
-                real_cmd = RegisterManager::instance()['|'].values(context)[0];
+                real_cmd = context.main_sel_register_value("|");
             else
             {
                 RegisterManager::instance()['|'] = cmdline;
@@ -575,7 +575,7 @@ void search(Context& context, int)
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
                  [](Regex ex, Context& context) {
                      if (ex.empty())
-                         ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
+                         ex = Regex{context.main_sel_register_value("/").str()};
                      else
                          RegisterManager::instance()['/'] = String{ex.str()};
                      if (not ex.empty() and not ex.str().empty())
@@ -586,12 +586,12 @@ void search(Context& context, int)
 template<SelectMode mode, Direction direction>
 void search_next(Context& context, int param)
 {
-    const String& str = RegisterManager::instance()['/'].values(context)[0];
+    StringView str = context.main_sel_register_value("/");
     if (not str.empty())
     {
         try
         {
-            Regex ex{str};
+            Regex ex{str.begin(), str.end()};
             do {
                 select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
             } while (--param > 0);
@@ -632,7 +632,7 @@ void select_regex(Context& context, int)
 {
     regex_prompt(context, "select:", [](Regex ex, Context& context) {
         if (ex.empty())
-            ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
+            ex = Regex{context.main_sel_register_value("/").str()};
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
@@ -644,7 +644,7 @@ void split_regex(Context& context, int)
 {
     regex_prompt(context, "split:", [](Regex ex, Context& context) {
         if (ex.empty())
-            ex = Regex{RegisterManager::instance()['/'].values(context)[0]};
+            ex = Regex{context.main_sel_register_value("/").str()};
         else
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())

@@ -64,6 +64,8 @@ public:
 
     void print_status(DisplayLine status) const;
 
+    StringView main_sel_register_value(StringView reg) const;
+
     void push_jump();
     const SelectionList& jump_forward();
     const SelectionList& jump_backward();

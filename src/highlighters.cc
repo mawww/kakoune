@@ -358,10 +358,10 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
             return ColorSpec{ { 0, &Kakoune::get_color("Search") } };
         };
         auto get_regex = [](const Context&){
-            auto s = RegisterManager::instance()['/'].values(Context{});
+            auto s = Context().main_sel_register_value("/");
             try
             {
-                return s.empty() ? Regex{} : Regex{s[0].begin(), s[0].end()};
+                return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
             }
             catch (boost::regex_error& err)
             {

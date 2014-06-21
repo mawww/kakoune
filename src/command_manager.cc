@@ -316,7 +316,7 @@ String eval_token(const Token& token, Context& context,
         return ShellManager::instance().eval(content, context, shell_params,
                                              env_vars);
     case Token::Type::RegisterExpand:
-        return RegisterManager::instance()[content].values(context)[0];
+        return context.main_sel_register_value(content);
     case Token::Type::OptionExpand:
         return context.options()[content].get_as_string();
     case Token::Type::ValExpand:

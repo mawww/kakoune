@@ -374,7 +374,7 @@ public:
 
         if (m_mode == Mode::InsertReg)
         {
-            String reg = RegisterManager::instance()[key.key].values(context())[0];
+            StringView reg = context().main_sel_register_value(String{key.key});
             m_line_editor.insert(reg);
             m_mode = Mode::Default;
         }
