@@ -82,16 +82,33 @@ public:
 
     void on_key(Key key) override
     {
+        bool do_restore_hooks = false;
+        auto restore_hooks = on_scope_end([&, this]{
+            if (do_restore_hooks)
+            {
+                GlobalHooks::instance().enable_user_hooks();
+                m_disable_hooks = false;
+            }
+        });
+
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             m_count = m_count * 10 + key.key - '0';
         else if (key == Key::Backspace)
             m_count /= 10;
+        else if (key == '\\')
+            m_disable_hooks = true;
         else
         {
+            if (m_disable_hooks)
+            {
+                GlobalHooks::instance().disable_user_hooks();
+                do_restore_hooks = true;
+            }
             auto it = keymap.find(key);
             if (it != keymap.end())
                 it->second(context(), m_count);
             m_count = 0;
+
         }
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
@@ -107,6 +124,7 @@ public:
 
 private:
     int m_count = 0;
+    bool m_disable_hooks = false;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
 };
