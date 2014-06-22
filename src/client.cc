@@ -117,7 +117,7 @@ void Client::check_buffer_fs_timestamp()
 
     const String& filename = buffer.name();
     time_t ts = get_fs_timestamp(filename);
-    if (ts == buffer.fs_timestamp())
+    if (ts == InvalidTime or ts == buffer.fs_timestamp())
         return;
     if (reload == Ask)
     {
