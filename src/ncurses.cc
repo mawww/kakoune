@@ -208,7 +208,7 @@ void NCursesUI::refresh()
 }
 
 using Utf8Policy = utf8::InvalidBytePolicy::Pass;
-using Utf8Iterator = utf8::utf8_iterator<const char*, Utf8Policy>;
+using Utf8Iterator = utf8::iterator<const char*, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
     waddstr(win, StringView(begin.base(), end.base()).zstr());
@@ -622,7 +622,7 @@ static std::vector<String> wrap_lines(StringView text, CharCount max_width)
                            : is_eol(c) ? Eol : Word;
     };
 
-    using Utf8It = utf8::utf8_iterator<const char*>;
+    using Utf8It = utf8::iterator<const char*>;
     Utf8It word_begin{text.begin()};
     Utf8It word_end{word_begin};
     Utf8It end{text.end()};

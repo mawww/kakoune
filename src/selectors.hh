@@ -50,7 +50,7 @@ inline void remove_selection(SelectionList& selections, int index)
     selections.check_invariant();
 }
 
-using Utf8Iterator = utf8::utf8_iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
+using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
 
 inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {

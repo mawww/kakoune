@@ -15,7 +15,6 @@
 #include "string.hh"
 #include "window.hh"
 #include "user_interface.hh"
-#include "utf8_iterator.hh"
 #include "debug.hh"
 
 namespace Kakoune

@@ -22,7 +22,6 @@
 #include "shell_manager.hh"
 #include "string.hh"
 #include "user_interface.hh"
-#include "utf8_iterator.hh"
 #include "window.hh"
 
 #include <sys/types.h>

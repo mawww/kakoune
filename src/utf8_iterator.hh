@@ -13,92 +13,92 @@ namespace utf8
 // on unicode codepoints instead.
 template<typename Iterator,
          typename InvalidPolicy = InvalidBytePolicy::Assert>
-class utf8_iterator
+class iterator
 {
 public:
-    utf8_iterator() = default;
-    utf8_iterator(Iterator it) : m_it(std::move(it)) {}
+    iterator() = default;
+    iterator(Iterator it) : m_it(std::move(it)) {}
 
-    utf8_iterator& operator++()
+    iterator& operator++()
     {
         m_it = utf8::next(m_it);
         invalidate_value();
         return *this;
     }
 
-    utf8_iterator operator++(int)
+    iterator operator++(int)
     {
-        utf8_iterator save = *this;
+        iterator save = *this;
         ++*this;
         return save;
     }
 
-    void advance(CharCount count, const utf8_iterator& end)
+    void advance(CharCount count, const iterator& end)
     {
         while (*this != end and count-- > 0)
             ++*this;
     }
 
-    utf8_iterator& operator--()
+    iterator& operator--()
     {
         m_it = utf8::previous(m_it);
         invalidate_value();
         return *this;
     }
 
-    utf8_iterator operator--(int)
+    iterator operator--(int)
     {
-        utf8_iterator save = *this;
+        iterator save = *this;
         --*this;
         return save;
     }
 
-    utf8_iterator operator+(CharCount count) const
+    iterator operator+(CharCount count) const
     {
         if (count < 0)
             return operator-(-count);
 
-        utf8_iterator res = *this;
+        iterator res = *this;
         while (count--)
             ++res;
         return res;
     }
 
-    utf8_iterator operator-(CharCount count) const
+    iterator operator-(CharCount count) const
     {
         if (count < 0)
             return operator+(-count);
 
-        utf8_iterator res = *this;
+        iterator res = *this;
         while (count--)
             --res;
         return res;
     }
 
-    bool operator==(const utf8_iterator& other) { return m_it == other.m_it; }
-    bool operator!=(const utf8_iterator& other) { return m_it != other.m_it; }
+    bool operator==(const iterator& other) { return m_it == other.m_it; }
+    bool operator!=(const iterator& other) { return m_it != other.m_it; }
 
-    bool operator< (const utf8_iterator& other) const
+    bool operator< (const iterator& other) const
     {
         return m_it < other.m_it;
     }
 
-    bool operator<= (const utf8_iterator& other) const
+    bool operator<= (const iterator& other) const
     {
         return m_it <= other.m_it;
     }
 
-    bool operator> (const utf8_iterator& other) const
+    bool operator> (const iterator& other) const
     {
         return m_it > other.m_it;
     }
 
-    bool operator>= (const utf8_iterator& other) const
+    bool operator>= (const iterator& other) const
     {
         return m_it >= other.m_it;
     }
 
-    CharCount operator-(utf8_iterator other) const
+    CharCount operator-(iterator other) const
     {
         //kak_assert(other < *this);
         check_invariant();
@@ -141,9 +141,9 @@ private:
 };
 
 template<typename InvalidPolicy = InvalidBytePolicy::Assert, typename Iterator>
-utf8_iterator<Iterator, InvalidPolicy> make_iterator(Iterator it)
+iterator<Iterator, InvalidPolicy> make_iterator(Iterator it)
 {
-    return utf8_iterator<Iterator, InvalidPolicy>{std::move(it)};
+    return iterator<Iterator, InvalidPolicy>{std::move(it)};
 }
 
 }

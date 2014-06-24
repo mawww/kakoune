@@ -42,7 +42,7 @@ KeyList parse_keys(StringView str)
 {
     KeyList result;
     using PassPolicy = utf8::InvalidBytePolicy::Pass;
-    using Utf8It = utf8::utf8_iterator<const char*, PassPolicy>;
+    using Utf8It = utf8::iterator<const char*, PassPolicy>;
     for (Utf8It it = str.begin(), str_end = str.end(); it < str_end; ++it)
     {
         if (*it == '<')

@@ -115,7 +115,7 @@ bool subsequence_match(StringView str, StringView subseq)
 String expand_tabs(StringView line, CharCount tabstop, CharCount col)
 {
     String res;
-    using Utf8It = utf8::utf8_iterator<const char*>;
+    using Utf8It = utf8::iterator<const char*>;
     for (Utf8It it = line.begin(); it.base() < line.end(); ++it)
     {
         if (*it == '\t')
