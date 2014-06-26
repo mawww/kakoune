@@ -292,6 +292,7 @@ String eval(const String& str, Context& context,
             if (c != '%' and c != '\\')
                 res += '\\';
             res += c;
+            ++pos;
         }
         else if (str[pos] == '%')
         {
