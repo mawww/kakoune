@@ -115,7 +115,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
 }
 
 InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
-                                 OptionManager& options, const String& option_name)
+                                 OptionManager& options, StringView option_name)
 {
     const StringList& opt = options[option_name].get<StringList>();;
     if (opt.empty())
@@ -151,7 +151,7 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
 
 InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
 {
-    String prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
+    StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
     StringList res;
     for (LineCount l = 0_line; l < buffer.line_count(); ++l)
     {

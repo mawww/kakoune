@@ -318,8 +318,8 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
 {
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
-    String prefix = m_lines[begin.line].substr(0, begin.column);
-    String suffix = m_lines[end.line].substr(end.column);
+    StringView prefix = m_lines[begin.line].substr(0, begin.column);
+    StringView suffix = m_lines[end.line].substr(end.column);
     String new_line = prefix + suffix;
 
     ByteCoord next;
