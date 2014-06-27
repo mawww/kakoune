@@ -1,10 +1,9 @@
 #include "selectors.hh"
 
+#include "optional.hh"
 #include "string.hh"
 
 #include <algorithm>
-
-#include <boost/optional.hpp>
 
 namespace Kakoune
 {
@@ -74,9 +73,7 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
     return selection;
 }
 
-// c++14 will add std::optional, so we use boost::optional until then
-using boost::optional;
-static optional<Selection> find_surrounding(const Buffer& buffer,
+static Optional<Selection> find_surrounding(const Buffer& buffer,
                                             ByteCoord coord,
                                             CodepointPair matching,
                                             ObjectFlags flags, int init_level)
@@ -103,7 +100,7 @@ static optional<Selection> find_surrounding(const Buffer& buffer,
             --first;
         }
         if (level != 0 or *first != matching.first)
-            return optional<Selection>{};
+            return Optional<Selection>{};
     }
 
     Utf8Iterator last = pos;
@@ -124,7 +121,7 @@ static optional<Selection> find_surrounding(const Buffer& buffer,
             ++last;
         }
         if (level != 0 or last == buffer.end())
-            return optional<Selection>{};
+            return Optional<Selection>{};
     }
 
     if (flags & ObjectFlags::Inner)

@@ -2,8 +2,7 @@
 #define context_hh_INCLUDED
 
 #include "selection.hh"
-
-#include <boost/optional.hpp>
+#include "optional.hh"
 
 namespace Kakoune
 {
@@ -34,7 +33,7 @@ public:
     Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const;
-    bool has_buffer() const { return m_selections; }
+    bool has_buffer() const { return (bool)m_selections; }
 
     Window& window() const;
     bool has_window() const { return (bool)m_window; }
@@ -88,7 +87,7 @@ private:
     safe_ptr<Client>       m_client;
 
     friend class Client;
-    boost::optional<SelectionList> m_selections;
+    Optional<SelectionList> m_selections;
 
     String m_name;
 
