@@ -543,7 +543,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                                     apply_colors(colors));
                 break;
             }
-            else if (c == pair.second)
+            else if (c == pair.second and pos > range.first)
             {
                 auto it = buffer.iterator_at(pos)-1;
                 auto end = buffer.iterator_at(range.first);
