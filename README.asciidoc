@@ -396,6 +396,7 @@ Commands are entered using +:+.
      use edit! to force reloading.
  * +w[rite] [<filename>]+: write buffer to <filename> or use it's name if
       filename is not given.
+ * +w[rite]a[ll]+: write all buffers that are associated to a file.
  * +q[uit]+: exit Kakoune, use quit! to force quitting even if there is some
       unsaved buffers remaining.
  * +wq+: write current buffer and quit
