@@ -233,7 +233,8 @@ void write_buffer_to_file(Buffer& buffer, StringView filename)
             write(fd, eoldata, filename);
         }
     }
-    if ((buffer.flags() & Buffer::Flags::File) and filename == buffer.name())
+    if ((buffer.flags() & Buffer::Flags::File) and
+        real_path(filename) == real_path(buffer.name()))
         buffer.notify_saved();
 
     buffer.run_hook_in_own_context("BufWritePost", buffer.name());
