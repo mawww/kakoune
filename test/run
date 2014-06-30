@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# Main ├────────────────────────────────────────────────────────────────────────
+
+main() { number_tests=0 number_failures=0
+  dirs=$@
+  test=$(pwd)
+  work=$(mktemp --directory)
+  cp --recursive . $work
+  trap "rm --recursive $work" EXIT
+  for dir in $(find $dirs -type d); do
+    cd $test/$dir; test_files=$(find * | egrep 'out|selections|state')
+    cd $work/$dir; { IFS=¬
+      indent=$(repeat ' ' $(pwd | sed "s|$test||" | tr --delete --complement / | awk '{ print length }'))
+      name=$(basename $PWD)
+      ! exists cmd && {
+        echo $indent$name
+      } || { nop=$((number_tests++))
+        touch in; cp in out
+        kak_commands="set global autoreload yes
+                      try %{
+                        source rc
+                      }
+                      try %{
+                        exec '%s%[(](.+?)[)]<ret>i<del><del><esc>a<backspace><esc>'
+                      } \
+                      catch %{
+                        exec gg
+                      }
+                      exec '$(<cmd)'
+                      nop %sh{ IFS==
+                        echo \"\$kak_selections\"      > selections
+                        echo \"\$kak_selections_desc\" > state
+                      }
+                      write out; quit!
+        "
+        kak out -n -e $kak_commands
+        for expect in $test_files; do
+          cmp --quiet $test/$dir/$expect $expect && {
+            echo "$indent$name" | colorize green normal
+          } || { nop=$((number_failures++))
+            echo "$indent$name" | colorize red normal
+            echo
+            IFS=$'\n'
+            for line in $(diff --unified $test/$dir/$expect $expect); do IFS=¬
+              first_character=$(head --bytes 1 <<< $line)
+              color=$(match $first_character + green - red @ magenta none)
+              colorize $color normal <<< $line
+            done
+            echo
+          }
+        done
+      }
+    }
+  done
+  (( $number_failures > 0 )) && color=red ||
+                                color=green
+  echo
+  echo Resume:
+  echo $number_tests tests, $number_failures failures | colorize $color normal
+}
+
+# Utility ├─────────────────────────────────────────────────────────────────────
+
+match() {
+  expression=$1; shift
+  while [[ $@ ]]; do
+    pattern=$1; shift; value=$1 next=$1 default_value=$pattern
+    [[ $next ]] || {
+      echo $default_value
+      return 1
+    }
+    [[ $expression = $pattern ]] && {
+      echo $value
+      return 0
+    }
+    shift
+  done
+}
+
+repeat() { text=$1 count=${2:-0}
+  echo $(yes $text | head --lines $count | join)
+}
+
+join() {
+  tr --delete "\n"
+}
+
+exists() {
+  test -e $@
+}
+
+get_ansi_code() { color_name=${1:-none} style_name=${2:-none}
+  color='none    00
+         red     31
+         green   32
+         yellow  33
+         magenta 35'
+  style='none    00
+         bold    01'
+  color_nr=$(awk "/$color_name/ { print \$2 }" <<< $color)
+  style_nr=$(awk "/$style_name/ { print \$2 }" <<< $style)
+  sed s/COLOR_NR/$color_nr/';'s/STYLE_NR/$style_nr/ <<< '\e[STYLE_NR;COLOR_NRm'
+}
+
+colorize() { text=$(cat) color_name=${1:-none} style_name=${2:-none}
+  echo -e $(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)
+}
+
+
+main $@

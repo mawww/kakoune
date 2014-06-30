@@ -1,0 +1,28 @@
+Regression test
+===============
+
+:unified-context-diff: https://en.wikipedia.org/wiki/Diff#Unified_format
+
+Source structure
+----------------
+
+----------------------------------------------
+.
+├── unit
+│   └── …
+└── compose
+    └── …
+        ├── cmd          → command
+        ├── [in]         → start file
+        ├── [out]        → end file
+        ├── [selections] → selection contents
+        ├── [state]      → selection states
+        └── [rc]         → configuration
+----------------------------------------------
+
+Usage
+-----
+
+To test, just type +run [test]+ in the +test+ directory.
+It will print each passing test.  If a test fails, a {unified-context-diff}[unified context diff]
+is printed showing the test’s expected output and the actual output.
