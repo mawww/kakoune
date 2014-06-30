@@ -47,10 +47,13 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             buffer->insert(pos, count > 0 ? String(data, data+count)
                                           : "*** kak: fifo closed ***\n");
 
-            if (prevent_scrolling)
+            if (count > 0 and prevent_scrolling)
             {
                 buffer->erase(buffer->begin(), buffer->begin()+1);
-                buffer->insert(buffer->end(), "\n");
+                // in the other case, the buffer will have automatically
+                // inserted a \n to guarantee its invariant.
+                if (data[count-1] == '\n')
+                    buffer->insert(buffer->end(), "\n");
             }
 
             FD_ZERO(&rfds);
