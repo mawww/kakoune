@@ -297,6 +297,24 @@ const CommandDesc writeall_quit_cmd = {
     }
 };
 
+const CommandDesc writeall_quit_cmd = {
+    "waq",
+    nullptr,
+    "write all buffers that are associated to a file and quit current client",
+    no_params,
+    CommandFlags::None,
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context)
+    {
+        for (auto& buffer : BufferManager::instance())
+        {
+            if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
+                write_buffer_to_file(*buffer, buffer->name());
+        }
+        quit<false>(ParametersParser{memoryview<String>{}, no_params}, context);
+    }
+};
+
 const CommandDesc buffer_cmd = {
     "buffer",
     "b",
@@ -1355,6 +1373,7 @@ void register_commands()
     register_command(cm, force_quit_cmd);
     register_command(cm, write_quit_cmd);
     register_command(cm, force_write_quit_cmd);
+    register_command(cm, writeall_quit_cmd);
     register_command(cm, buffer_cmd);
     register_command(cm, delbuf_cmd);
     register_command(cm, force_delbuf_cmd);
