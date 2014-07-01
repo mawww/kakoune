@@ -966,26 +966,26 @@ void start_or_end_macro_recording(Context& context, int)
         context.input_handler().stop_recording();
     else
         on_next_key_with_autoinfo(context, [](Key key, Context& context) {
-            if (key.modifiers == Key::Modifiers::None and
-                key.key >= 'a' and key.key <= 'z')
-                context.input_handler().start_recording(key.key);
+            if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
+                context.input_handler().start_recording(tolower(key.key));
         }, "record macro", "enter macro name ");
 }
 
 void replay_macro(Context& context, int count)
 {
     on_next_key_with_autoinfo(context, [count](Key key, Context& context) mutable {
-        if (key.modifiers == Key::Modifiers::None)
+        if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
         {
             static std::unordered_set<char> running_macros;
-            if (contains(running_macros, key.key))
+            const char name = tolower(key.key);
+            if (contains(running_macros, name))
                 throw runtime_error("recursive macros call detected");
 
-            memoryview<String> reg_val = RegisterManager::instance()[key.key].values(context);
+            memoryview<String> reg_val = RegisterManager::instance()[name].values(context);
             if (not reg_val.empty())
             {
-                running_macros.insert(key.key);
-                auto stop = on_scope_end([&]{ running_macros.erase(key.key); });
+                running_macros.insert(name);
+                auto stop = on_scope_end([&]{ running_macros.erase(name); });
 
                 auto keys = parse_keys(reg_val[0]);
                 ScopedEdition edition(context);
