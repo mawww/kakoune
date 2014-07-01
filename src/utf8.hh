@@ -95,12 +95,12 @@ namespace InvalidBytePolicy
 
 struct Assert
 {
-    Codepoint operator()(char byte) const { kak_assert(false); return byte; }
+    Codepoint operator()(unsigned char byte) const { kak_assert(false); return byte; }
 };
 
 struct Pass
 {
-    Codepoint operator()(char byte) const { return byte; }
+    Codepoint operator()(unsigned char byte) const { return byte; }
 };
 
 }
@@ -114,7 +114,7 @@ Codepoint codepoint(Iterator it)
     // According to rfc3629, UTF-8 allows only up to 4 bytes.
     // (21 bits codepoint)
     Codepoint cp;
-    char byte = *it++;
+    unsigned char byte = *it++;
     if (not (byte & 0x80)) // 0xxxxxxx
         cp = byte;
     else if ((byte & 0xE0) == 0xC0) // 110xxxxx
@@ -141,7 +141,7 @@ template<typename InvalidPolicy = InvalidBytePolicy::Assert,
          typename Iterator>
 ByteCount codepoint_size(Iterator it)
 {
-    char byte = *it;
+    unsigned char byte = *it;
     if (not (byte & 0x80)) // 0xxxxxxx
         return 1;
     else if ((byte & 0xE0) == 0xC0) // 110xxxxx
