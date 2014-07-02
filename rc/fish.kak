@@ -33,10 +33,10 @@ addhl -group /fish/code regex %sh{ printf '\<(%s)\>' $(printf '\Q%s\\E|' $(fish 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _fish_clean_around_selections %{
+def -hidden _fish_filter_around_selections %{
     eval -draft -itersel %{
         exec <a-x>
-        # trailing white spaces
+        # remove trailing white spaces
         try %{ exec -draft s \h+$ <ret> d }
     }
 }
@@ -45,8 +45,8 @@ def -hidden _fish_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
-        # cleanup previous line
-        try %{ exec -draft k : _fish_clean_around_selections <ret> }
+        # filter previous line
+        try %{ exec -draft k : _fish_filter_around_selections <ret> }
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
         # indent after (begin|for|function|if|switch|while) commands and add 'end' command
@@ -60,7 +60,7 @@ def -hidden _fish_indent_on_new_line %{
 hook global WinSetOption filetype=fish %{
     addhl ref fish
 
-    hook window InsertEnd  .* -group fish-hooks  _fish_clean_around_selections
+    hook window InsertEnd  .* -group fish-hooks  _fish_filter_around_selections
     hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
 }
 
