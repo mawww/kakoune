@@ -35,8 +35,9 @@ addhl -group /fish/code regex %sh{ printf '\<(%s)\>' $(printf '\Q%s\\E|' $(fish 
 
 def -hidden _fish_clean_around_selections %{
     eval -draft -itersel %{
+        exec <a-x>
         # trailing white spaces
-        try %{ exec -draft <a-x> s \h+$ <ret> d }
+        try %{ exec -draft s \h+$ <ret> d }
     }
 }
 
