@@ -14,7 +14,7 @@ CharCount get_column(const Buffer& buffer,
     auto col = 0_char;
     for (auto it = line.begin();
          it != line.end() and coord.column > (int)(it - line.begin());
-         it = utf8::next(it))
+         it = utf8::next(it, line.end()))
     {
         if (*it == '\t')
             col = (col / tabstop + 1) * tabstop;

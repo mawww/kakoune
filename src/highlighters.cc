@@ -602,8 +602,8 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                 for (auto it  = buffer.iterator_at(atom_it->begin()),
                           end = buffer.iterator_at(atom_it->end()); it < end;)
                 {
-                    Codepoint cp = utf8::codepoint<utf8::InvalidBytePolicy::Pass>(it);
-                    auto next = utf8::next(it);
+                    Codepoint cp = utf8::codepoint<utf8::InvalidPolicy::Pass>(it, end);
+                    auto next = utf8::next(it, end);
                     if (cp != '\n' and not iswprint(cp))
                     {
                         std::ostringstream oss;

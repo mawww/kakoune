@@ -207,7 +207,7 @@ void NCursesUI::refresh()
     m_dirty = false;
 }
 
-using Utf8Policy = utf8::InvalidBytePolicy::Pass;
+using Utf8Policy = utf8::InvalidPolicy::Pass;
 using Utf8Iterator = utf8::iterator<const char*, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
@@ -408,8 +408,9 @@ Key NCursesUI::get_key()
             int operator*() { return getch(); }
             getch_iterator& operator++() { return *this; }
             getch_iterator& operator++(int) { return *this; }
+            bool operator== (const getch_iterator&) const { return false; }
        };
-       return utf8::codepoint(getch_iterator{});
+       return utf8::codepoint(getch_iterator{}, getch_iterator{});
     }
     return Key::Invalid;
 }

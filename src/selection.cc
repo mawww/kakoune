@@ -446,7 +446,7 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     {
         // special case for end of lines, append to current line instead
         auto pos = buffer.iterator_at(sel.max());
-        return *pos == '\n' ? pos : utf8::next(pos);
+        return *pos == '\n' ? pos : utf8::next(pos, buffer.end());
     }
     case InsertMode::InsertAtLineBegin:
         return buffer.iterator_at(sel.min().line);

@@ -719,7 +719,7 @@ void keep(Context& context, int)
         for (auto& sel : context.selections())
         {
             if (boost::regex_search(buffer.iterator_at(sel.min()),
-                                    utf8::next(buffer.iterator_at(sel.max())), ex) == matching)
+                                    utf8::next(buffer.iterator_at(sel.max()), buffer.end()), ex) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())

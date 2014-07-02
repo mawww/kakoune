@@ -494,7 +494,7 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
     auto& buffer = selections.buffer();
     for (auto& sel : selections)
     {
-        auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
+        auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
         RegexIterator re_it(buffer.iterator_at(sel.min()), sel_end, regex);
         RegexIterator re_end;
 
@@ -511,7 +511,7 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
                 captures.emplace_back(match.first, match.second);
 
             result.push_back({ begin.coord(),
-                               (begin == end ? end : utf8::previous(end)).coord(),
+                               (begin == end ? end : utf8::previous(end, begin)).coord(),
                                std::move(captures) });
         }
     }
@@ -527,7 +527,7 @@ void split_selections(SelectionList& selections, const Regex& regex)
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
-        auto sel_end = utf8::next(buffer.iterator_at(sel.max()));
+        auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
         RegexIterator re_it(begin, sel_end, regex,
                             boost::regex_constants::match_nosubs);
         RegexIterator re_end;
@@ -536,7 +536,7 @@ void split_selections(SelectionList& selections, const Regex& regex)
         {
             BufferIterator end = (*re_it)[0].first;
 
-            result.push_back({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end).coord() });
+            result.push_back({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() });
             begin = (*re_it)[0].second;
         }
         if (begin.coord() <= sel.max())

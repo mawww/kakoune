@@ -99,7 +99,7 @@ void test_utf8()
 {
     String str = "maïs mélange bientôt";
     kak_assert(utf8::distance(str.begin(), str.end()) == 20);
-    kak_assert(utf8::codepoint(str.begin() + 2) == 0x00EF);
+    kak_assert(utf8::codepoint(str.begin() + 2, str.end()) == 0x00EF);
 }
 
 void test_string()

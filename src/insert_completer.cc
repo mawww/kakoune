@@ -32,7 +32,7 @@ template<bool other_buffers>
 InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 {
    auto pos = buffer.iterator_at(cursor_pos);
-   if (pos == buffer.begin() or not is_word(*utf8::previous(pos)))
+   if (pos == buffer.begin() or not is_word(*utf8::previous(pos, buffer.begin())))
        return {};
 
     auto end = buffer.iterator_at(cursor_pos);

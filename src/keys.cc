@@ -41,7 +41,7 @@ static const KeyAndName keynamemap[] = {
 KeyList parse_keys(StringView str)
 {
     KeyList result;
-    using PassPolicy = utf8::InvalidBytePolicy::Pass;
+    using PassPolicy = utf8::InvalidPolicy::Pass;
     using Utf8It = utf8::iterator<const char*, PassPolicy>;
     for (Utf8It it = str.begin(), str_end = str.end(); it < str_end; ++it)
     {
@@ -71,7 +71,7 @@ KeyList parse_keys(StringView str)
                 }
                 if (keyname.char_length() == 1)
                 {
-                    result.push_back(Key{ modifier, utf8::codepoint<PassPolicy>(keyname.begin()) });
+                    result.push_back(Key{ modifier, utf8::codepoint<PassPolicy>(keyname.begin(),keyname.end()) });
                     it = end_it;
                     continue;
                 }

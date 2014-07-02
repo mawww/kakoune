@@ -50,7 +50,7 @@ inline void remove_selection(SelectionList& selections, int index)
     selections.check_invariant();
 }
 
-using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidBytePolicy::Pass>;
+using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
 
 inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
@@ -265,7 +265,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     CaptureList captures;
     MatchResults matches;
     bool found = false;
-    if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin), matches, regex)))
+    if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin, buffer.end()), matches, regex)))
     {
         begin = matches[0].first;
         end   = matches[0].second;
@@ -275,7 +275,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     if (not found or begin == buffer.end())
         throw runtime_error("'" + regex.str() + "': no matches found");
 
-    end = (begin == end) ? end : utf8::previous(end);
+    end = (begin == end) ? end : utf8::previous(end, begin);
     if (direction == Backward)
         std::swap(begin, end);
 
