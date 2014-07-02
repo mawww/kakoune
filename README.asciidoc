@@ -817,19 +817,27 @@ a single key name and +keys+ a list of keys.
 Color Aliases
 -------------
 
-Colorspec takes the form <fg_color>[,<bg_color>], they can be named using the
-following command.
+Color aliases give a name to a pair of foreground/background colors, and
+can be used in place of them.
 
 --------------------------
-:colalias <name> <colspec>
+:colalias <name> <fg_color[,bg_color]>
 --------------------------
 
-note that colspec can itself be a color alias.
+fg_color and bg_color can be:
+
+ * A named color: +black, red, green, yellow, blue, magenta, cyan, white+.
+ * +default+, which keeps the existing color
+ * An rgb color: +rgb:RRGGBB+, with RRGGBB the hexadecimal value of the color.
+
+not specifying bg_color uses +default+
+
+In place of +<fg_color[,bg_color]>+, another color alias name can be referenced.
 
 Using color alias instead of colorspec permits to change the effective colors
 afterward.
 
-there are some builtins color aliases:
+there are some builtins color aliases used by internal Kakoune functionalities:
 
  * +PrimarySelection+: main selection color for every selected character except
      the cursor
