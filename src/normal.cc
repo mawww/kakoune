@@ -497,18 +497,17 @@ template<InsertMode mode>
 void paste(Context& context, int)
 {
     auto strings = RegisterManager::instance()['"'].values(context);
-    bool linewise = false;
+    InsertMode effective_mode = mode;
     for (auto& str : strings)
     {
         if (not str.empty() and str.back() == '\n')
         {
-            linewise = true;
+            effective_mode = adapt_for_linewise(mode);
             break;
         }
     }
     ScopedEdition edition(context);
-    context.selections().insert(strings,
-                                linewise ? adapt_for_linewise(mode) : mode);
+    context.selections().insert(strings, effective_mode);
 }
 
 template<typename T>
