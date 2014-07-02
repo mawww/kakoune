@@ -463,7 +463,8 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     return {};
 }
 
-void SelectionList::insert(memoryview<String> strings, InsertMode mode)
+void SelectionList::insert(memoryview<String> strings, InsertMode mode,
+                           bool select_inserted)
 {
     if (strings.empty())
         return;
@@ -496,7 +497,7 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode)
         changes_tracker.update(change);
         m_timestamp = m_buffer->timestamp();
 
-        if (mode == InsertMode::Replace)
+        if (select_inserted or mode == InsertMode::Replace)
         {
             sel.anchor() = change.begin;
             sel.cursor() = m_buffer->char_prev(change.end);

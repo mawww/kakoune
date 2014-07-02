@@ -446,17 +446,6 @@ void yank(Context& context, int)
                            " selections", get_color("Information") });
 }
 
-void cat_yank(Context& context, int)
-{
-    auto sels = context.selections_content();
-    String str;
-    for (auto& sel : sels)
-        str += sel;
-    RegisterManager::instance()['"'] = memoryview<String>(str);
-    context.print_status({ "concatenated and yanked " +
-                           to_string(sels.size()) + " selections", get_color("Information") });
-}
-
 void erase_selections(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.selections_content();
@@ -464,18 +453,6 @@ void erase_selections(Context& context, int)
     context.selections().erase();
     context.selections().avoid_eol();
 }
-
-void cat_erase_selections(Context& context, int)
-{
-    auto sels = context.selections_content();
-    String str;
-    for (auto& sel : sels)
-        str += sel;
-    RegisterManager::instance()['"'] = memoryview<String>(str);
-    context.selections().erase();
-    context.selections().avoid_eol();
-}
-
 
 void change(Context& context, int param)
 {
@@ -508,6 +485,42 @@ void paste(Context& context, int)
     }
     ScopedEdition edition(context);
     context.selections().insert(strings, effective_mode);
+}
+
+template<InsertMode mode>
+void paste_all(Context& context, int)
+{
+    auto strings = RegisterManager::instance()['"'].values(context);
+    InsertMode effective_mode = mode;
+    String all;
+    std::vector<ByteCount> offsets;
+    for (auto& str : strings)
+    {
+        if (not str.empty() and str.back() == '\n')
+            effective_mode = adapt_for_linewise(mode);
+        all += str;
+        offsets.push_back(all.length());
+    }
+
+    auto& selections = context.selections();
+    {
+        ScopedEdition edition(context);
+        selections.insert(all, effective_mode, true);
+    }
+
+    const Buffer& buffer = context.buffer();
+    std::vector<Selection> result;
+    for (auto& selection : selections)
+    {
+        ByteCount pos = 0;
+        for (auto offset : offsets)
+        {
+            result.push_back({ buffer.advance(selection.min(), pos),
+                               buffer.advance(selection.min(), offset-1) });
+            pos = offset;
+        }
+    }
+    selections = std::move(result);
 }
 
 template<typename T>
@@ -1250,7 +1263,6 @@ KeyMap keymap =
     { alt('F'), select_to_next_char<SelectFlags::Inclusive | SelectFlags::Extend | SelectFlags::Reverse> },
 
     { 'd', erase_selections },
-    { 'D', cat_erase_selections },
     { 'c', change },
     { 'i', enter_insert_mode<InsertMode::Insert> },
     { 'I', enter_insert_mode<InsertMode::InsertAtLineBegin> },
@@ -1266,10 +1278,11 @@ KeyMap keymap =
     { 'v', view_commands },
 
     { 'y', yank },
-    { 'Y', cat_yank },
     { 'p', repeated(paste<InsertMode::Append>) },
     { 'P', repeated(paste<InsertMode::Insert>) },
-    { alt('p'), paste<InsertMode::Replace> },
+    { alt('p'), paste_all<InsertMode::Append> },
+    { alt('P'), paste_all<InsertMode::Insert> },
+    { 'R', paste<InsertMode::Replace> },
 
     { 's', select_regex },
     { 'S', split_regex },

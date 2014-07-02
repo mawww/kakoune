@@ -179,7 +179,6 @@ Changes
  * _i_: insert before current selection
  * _a_: insert after current selection
  * _d_: yank and delete current selection
- * _D_: yank concatenated and delete current selection (see _Y_)
  * _c_: yank and delete current selection and insert
  * _._: repeat last insert mode change (_i_, _a_, or _c_, including
         the inserted text)
@@ -190,11 +189,15 @@ Changes
  * _O_: insert in a new line above current selection begin
 
  * _y_: yank selections
- * _Y_: yank selections concatenated (only one yank, containing
-        all selection concatenated)
  * _p_: paste after current selection end
  * _P_: paste before current selection begin
- * _alt-p_: replace current selection with yanked text
+ * _alt-p_: paste all after current selection end, and
+            select each pasted string.
+ * _alt-P_: paste all before current selection begin, and
+            select each pasted string.
+ * _R_: replace current selection with yanked text
+
+ * _r_: replace each character with the next entered one
 
  * _alt-j_: join selected lines
  * _alt-J_: join selected lines and select spaces inserted
@@ -215,7 +218,6 @@ Changes
  * _u_: undo last change
  * _U_: redo last change
 
- * _r_: replace each character with the next entered one
  * _&_: align selection, align the cursor of selections by inserting
         spaces before the first character of the selection
  * _alt-&_: copy indent, copy the indentation of the main selection
