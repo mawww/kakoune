@@ -33,10 +33,18 @@ addhl -group /fish/code regex %sh{ printf '\<(%s)\>' $(printf '\Q%s\\E|' $(fish 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _fish_clean_around_selections %{
+def -hidden _fish_filter_around_selections %{
     eval -draft -itersel %{
-        # trailing white spaces
-        try %{ exec -draft <a-x> s \h+$ <ret> d }
+        exec <a-x>
+        # remove trailing white spaces
+        try %{ exec -draft s \h+$ <ret> d }
+    }
+}
+
+def -hidden _fish_indent_on_char %{
+    eval -draft -itersel %{
+        # deindent on (else|end) command insertion
+        try %{ exec -draft <space> <a-i>w <a-k> (else|end) <ret> <a-lt> }
     }
 }
 
@@ -44,12 +52,14 @@ def -hidden _fish_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
-        # cleanup previous line
-        try %{ exec -draft k : _fish_clean_around_selections <ret> }
+        # filter previous line
+        try %{ exec -draft k : _fish_filter_around_selections <ret> }
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
+        # indent after (case|else) commands
+        try %{ exec -draft <space> k x <a-k> (case|else) <ret> j <a-gt> }
         # indent after (begin|for|function|if|switch|while) commands and add 'end' command
-        try %{ exec -draft <space> k x <a-k> (begin|for|function|if|switch|while) <ret> x y p j a end <esc> k <a-gt> }
+        try %{ exec -draft <space> k x <a-k> (begin|for|function|(?<!(else)\h+)if|switch|while) <ret> x y p j a end <esc> k <a-gt> }
     }
 }
 
@@ -59,7 +69,8 @@ def -hidden _fish_indent_on_new_line %{
 hook global WinSetOption filetype=fish %{
     addhl ref fish
 
-    hook window InsertEnd  .* -group fish-hooks  _fish_clean_around_selections
+    hook window InsertEnd  .* -group fish-hooks  _fish_filter_around_selections
+    hook window InsertChar .* -group fish-indent _fish_indent_on_char
     hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
 }
 
