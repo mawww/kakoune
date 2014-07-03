@@ -41,6 +41,13 @@ def -hidden _fish_filter_around_selections %{
     }
 }
 
+def -hidden _fish_indent_on_char %{
+    eval -draft -itersel %{
+        # deindent on (else|end) command insertion
+        try %{ exec -draft <space> <a-i>w <a-k> (else|end) <ret> <a-lt> }
+    }
+}
+
 def -hidden _fish_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
@@ -63,6 +70,7 @@ hook global WinSetOption filetype=fish %{
     addhl ref fish
 
     hook window InsertEnd  .* -group fish-hooks  _fish_filter_around_selections
+    hook window InsertChar .* -group fish-indent _fish_indent_on_char
     hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
 }
 
