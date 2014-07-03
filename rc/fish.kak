@@ -50,7 +50,7 @@ def -hidden _fish_indent_on_new_line %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
         # indent after (begin|for|function|if|switch|while) commands and add 'end' command
-        try %{ exec -draft <space> k x <a-k> (begin|for|function|if|switch|while) <ret> x y p j a end <esc> k <a-gt> }
+        try %{ exec -draft <space> k x <a-k> (begin|for|function|(?<!(else)\h+)if|switch|while) <ret> x y p j a end <esc> k <a-gt> }
     }
 }
 
