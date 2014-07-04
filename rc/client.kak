@@ -4,7 +4,8 @@ decl str termcmd %sh{
     if [ -n "$TMUX" ]; then
         echo "'tmux split-window -h'"
     else
-        for termcmd in 'urxvt          -e sh -c' \
+        for termcmd in 'termite        -e      ' \
+                       'urxvt          -e sh -c' \
                        'rxvt           -e sh -c' \
                        'xterm          -e sh -c' \
                        'roxterm        -e sh -c' \
