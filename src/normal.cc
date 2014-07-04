@@ -1295,10 +1295,11 @@ KeyMap keymap =
     { ':', command },
     { '|', pipe<InsertMode::Replace> },
     { alt('|'), pipe<InsertMode::Append> },
-    { ' ', [](Context& context, int count) { if (count == 0) clear_selections(context.selections());
-                                             else keep_selection(context.selections(), count-1); } },
-    { alt(' '), [](Context& context, int count) { if (count == 0) flip_selections(context.selections());
-                                                  else remove_selection(context.selections(), count-1); } },
+    { ' ', [](Context& context, int count) { keep_selection(context.selections(), count ? count-1 : context.selections().main_index()); } },
+    { alt(' '), [](Context& context, int count) { remove_selection(context.selections(), count ? count-1 : context.selections().main_index()); } },
+    { ';', [](Context& context, int count) { clear_selections(context.selections()); } },
+    { alt(';'), [](Context& context, int count) { flip_selections(context.selections()); } },
+
     { 'w', repeated(make_select<SelectMode::Replace>(select_to_next_word<Word>)) },
     { 'e', repeated(make_select<SelectMode::Replace>(select_to_next_word_end<Word>)) },
     { 'b', repeated(make_select<SelectMode::Replace>(select_to_previous_word<Word>)) },

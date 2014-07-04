@@ -11,12 +11,8 @@ namespace Kakoune
 
 inline void clear_selections(SelectionList& selections)
 {
-    auto& sel = selections.main();
-    auto& pos = sel.cursor();
-    sel.anchor() = pos;
-    selections.avoid_eol();
-
-    selections = SelectionList{ selections.buffer(), std::move(sel) };
+    for (auto& sel : selections)
+        sel.anchor() = sel.cursor();
 }
 
 inline void flip_selections(SelectionList& selections)
@@ -29,10 +25,7 @@ inline void flip_selections(SelectionList& selections)
 inline void keep_selection(SelectionList& selections, int index)
 {
     if (index < selections.size())
-    {
-        size_t real_index = (index + selections.main_index() + 1) % selections.size();
-        selections = SelectionList{ selections.buffer(), std::move(selections[real_index]) };
-    }
+        selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
     selections.check_invariant();
 }
 
@@ -40,12 +33,10 @@ inline void remove_selection(SelectionList& selections, int index)
 {
     if (selections.size() > 1 and index < selections.size())
     {
-        size_t real_index = (index + selections.main_index() + 1) % selections.size();
-        selections.remove(real_index);
+        selections.remove(index);
         size_t main_index = selections.main_index();
-        if (real_index <= main_index)
-            selections.set_main_index((main_index > 0 ? main_index
-                                         : selections.size()) - 1);
+        if (index < main_index or main_index == selections.size())
+            selections.set_main_index(main_index - 1);
     }
     selections.check_invariant();
 }
