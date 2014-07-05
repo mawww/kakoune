@@ -1332,8 +1332,9 @@ KeyMap keymap =
     { alt('/'), search<SelectMode::Replace, Backward> },
     { alt('?'), search<SelectMode::Extend, Backward> },
     { 'n', search_next<SelectMode::Replace, Forward> },
-    { alt('n'), search_next<SelectMode::ReplaceMain, Forward> },
     { 'N', search_next<SelectMode::Append, Forward> },
+    { alt('n'), search_next<SelectMode::Replace, Backward> },
+    { alt('N'), search_next<SelectMode::Append, Backward> },
     { '*', use_selection_as_search_pattern<true> },
     { alt('*'), use_selection_as_search_pattern<false> },
 

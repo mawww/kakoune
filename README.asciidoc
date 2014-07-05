@@ -142,7 +142,8 @@ Basic Movement
  * _?_: search (extend to next match)
  * _n_: select next match
  * _N_: add a new selection with next match
- * _alt-n_: replace main selection with next match (preserving the others)
+ * _alt-n_: select previous match
+ * _alt-N_: add a new selection with previous match
 
  * _pageup_: scroll up
  * _pagedown_: scroll down
