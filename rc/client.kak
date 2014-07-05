@@ -4,15 +4,17 @@ decl str termcmd %sh{
     if [ -n "$TMUX" ]; then
         echo "'tmux split-window -h'"
     else
-        for terminal in urxvt rxvt xterm roxterm mintty; do
+        for termcmd in 'termite        -e      ' \
+                       'urxvt          -e sh -c' \
+                       'rxvt           -e sh -c' \
+                       'xterm          -e sh -c' \
+                       'roxterm        -e sh -c' \
+                       'mintty         -e sh -c' \
+                       'gnome-terminal -e      ' \
+                       'xfce4-terminal -e      ' ; do
+            terminal=${termcmd%% *}
             if which $terminal > /dev/null 2>&1; then
-                        echo "'$terminal -e sh -c'"
-                exit
-            fi
-        done
-        for terminal in gnome-terminal xfce4-terminal; do
-            if which $terminal > /dev/null 2>&1; then
-                        echo "'$terminal -e'"
+                echo "'$termcmd'"
                 exit
             fi
         done
