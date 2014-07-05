@@ -27,7 +27,6 @@ enum class SelectMode
     Replace,
     Extend,
     Append,
-    ReplaceMain,
 };
 
 template<SelectMode mode = SelectMode::Replace, typename Func>
@@ -43,15 +42,6 @@ void select(Context& context, Func func)
             res.captures() = sel.captures();
         selections.push_back(res);
         selections.set_main_index(selections.size() - 1);
-    }
-    else if (mode == SelectMode::ReplaceMain)
-    {
-        auto& sel = selections.main();
-        auto  res = func(buffer, sel);
-        sel.anchor() = res.anchor();
-        sel.cursor() = res.cursor();
-        if (not res.captures().empty())
-            sel.captures() = std::move(res.captures());
     }
     else
     {
@@ -429,8 +419,6 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
         for (auto& sel : selections)
             sel.merge_with(find_next_match<direction>(buffer, sel, regex));
     }
-    else if (mode == SelectMode::ReplaceMain)
-        selections.main() = find_next_match<direction>(buffer, selections.main(), regex);
     else if (mode == SelectMode::Append)
     {
         selections.push_back(find_next_match<direction>(buffer, selections.main(), regex));
