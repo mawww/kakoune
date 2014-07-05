@@ -117,9 +117,6 @@ scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
 Basic Movement
 --------------
 
- * _space_: select the character under last selection end
- * _alt-space_: flip the selections direction
-
  * _h_: select the character on the right of selection end
  * _j_: select the character below the selection end
  * _k_: select the character above the selection end
@@ -152,6 +149,10 @@ Basic Movement
 
  * _alt-r_: rotate selections (the main selection becomes the next one)
 
+ * _;_: reduce selections to their cursor
+ * _alt-;_: flip the selections direction
+
+
 A word is a sequence of alphanumeric characters or underscore, a WORD is a
 sequence of non whitespace characters.
 
@@ -169,9 +170,6 @@ command itself.
 
 for example, _3W_ selects 3 consecutive words and _3w_ select the third word on
 the right of selection end.
-
- * _space_: when used with count, keep only the counth selection
- * _alt-space_: when used with count, remove the counth selection
 
 Changes
 -------
@@ -305,8 +303,7 @@ As a convenience, _alt-s_ allows you to split the current selections on
 line boundaries.
 
 To clear multiple selections, use _space_. To keep only the nth selection
-use _n_ followed by _space_, to remove only the nth selection, use _n_
-followed by _alt-space_.
+use _n_ followed by _space_, in order to remove a selection, use _alt-space_.
 
 _alt-k_ allows you to enter a regex and keep only the selections that
 contains a match for this regex. using _alt-K_ you can keep the selections
