@@ -526,7 +526,7 @@ void NCursesUI::draw_menu()
         wclrtoeol(m_menu_win);
         wmove(m_menu_win, (int)line, (int)win_size.column - 1);
         wattron(m_menu_win, COLOR_PAIR(menu_bg));
-        waddstr(m_menu_win, is_mark ? "┃" : "│");
+        waddstr(m_menu_win, is_mark ? "█" : "░");
     }
     m_dirty = true;
 }
