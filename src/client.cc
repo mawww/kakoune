@@ -51,18 +51,26 @@ DisplayLine Client::generate_mode_line() const
     auto pos = context().selections().main().cursor();
     auto col = context().buffer()[pos.line].char_count_to(pos.column);
 
-    std::ostringstream oss;
-    oss << context().buffer().display_name()
-        << " " << (int)pos.line+1 << ":" << (int)col+1;
+    DisplayLine status;
+    ColorPair info_color = get_color("Information");
+    ColorPair status_color = get_color("StatusLine");
+    ColorPair prompt_color = get_color("Prompt");
+
+    status.push_back({ context().buffer().display_name(), status_color });
+    status.push_back({ " " + to_string((int)pos.line+1) + ":" + to_string((int)col+1) + " ", status_color });
     if (context().buffer().is_modified())
-        oss << " [+]";
+        status.push_back({ "[+]", info_color });
     if (m_input_handler.is_recording())
-       oss << " [recording (" << m_input_handler.recording_reg() << ")]";
+        status.push_back({ "[recording ("_str + m_input_handler.recording_reg() + ")]", info_color });
     if (context().buffer().flags() & Buffer::Flags::New)
-        oss << " [new file]";
-    oss << " [" << m_input_handler.mode_string() << "]" << " - "
-        << context().name() << "@[" << Server::instance().session() << "]";
-    return { oss.str(), get_color("StatusLine") };
+        status.push_back({ "[new file]", info_color });
+    if (context().buffer().flags() & Buffer::Flags::Fifo)
+        status.push_back({ "[fifo]", info_color });
+    status.push_back({ " ", status_color });
+    status.push_back({  m_input_handler.mode_string(), prompt_color });
+    status.push_back({ " - " + context().name() + "@[" + Server::instance().session() + "]", status_color });
+
+    return status;
 }
 
 void Client::change_buffer(Buffer& buffer)
