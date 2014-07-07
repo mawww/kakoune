@@ -44,8 +44,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             if (prevent_scrolling)
                 ++pos;
 
-            buffer->insert(pos, count > 0 ? String(data, data+count)
-                                          : "*** kak: fifo closed ***\n");
+            buffer->insert(pos, String(data, data+count));
 
             if (count > 0 and prevent_scrolling)
             {
