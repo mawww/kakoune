@@ -17,7 +17,7 @@ hook global BufCreate .*[.](fish) %{
 
 addhl -group / multi_region -default code fish \
     double_string '"' (?<!\\)(\\\\)*"       '' \
-    single_string "'" (?<!\\)(\\\\)*'       '' \
+    single_string "'" "'"                   '' \
     comment       '#' $                     ''
 
 addhl -group /fish/double_string fill string
