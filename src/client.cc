@@ -88,16 +88,21 @@ void Client::change_buffer(Buffer& buffer)
 
 void Client::redraw_ifn()
 {
-    if (context().window().timestamp() != context().buffer().timestamp())
+    DisplayLine mode_line = generate_mode_line();
+    const bool buffer_changed = context().window().timestamp() != context().buffer().timestamp();
+    if (buffer_changed or mode_line.atoms() != m_mode_line.atoms())
     {
-        CharCoord dimensions = context().ui().dimensions();
-        if (dimensions == CharCoord{0,0})
-            return;
-        context().window().set_dimensions(dimensions);
-        context().window().update_display_buffer(context());
-
+        if (buffer_changed)
+        {
+            CharCoord dimensions = context().ui().dimensions();
+            if (dimensions == CharCoord{0,0})
+                return;
+            context().window().set_dimensions(dimensions);
+            context().window().update_display_buffer(context());
+        }
+        m_mode_line = std::move(mode_line);
         context().ui().draw(context().window().display_buffer(),
-                            m_status_line, generate_mode_line());
+                            m_status_line, m_mode_line);
     }
     context().ui().refresh();
 }

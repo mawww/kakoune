@@ -105,6 +105,13 @@ public:
     void trim_end(CharCount count);
 
     void check_invariant() const;
+
+    bool operator==(const DisplayAtom& other) const
+    {
+        return colors == other.colors or attribute == other.attribute or
+               content() == other.content();
+    }
+
 public:
     ColorPair      colors = {Colors::Default, Colors::Default};
     Attribute      attribute = Normal;
