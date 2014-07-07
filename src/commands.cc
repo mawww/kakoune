@@ -932,7 +932,7 @@ const CommandDesc map_key_cmd = {
             return Completions{ 0_byte, params[0].length(),
                                 complete_scope(params[0].substr(0_byte, pos_in_token)) };
         if (token_to_complete == 1)
-            return Completions{ 0_byte, params[0].length(),
+            return Completions{ 0_byte, params[1].length(),
                                 complete_mode(params[1].substr(0_byte, pos_in_token)) };
         return Completions{};
     },
