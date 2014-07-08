@@ -107,7 +107,7 @@ void repeat_last_insert(Context& context, int)
 bool show_auto_info_ifn(const String& title, const String& info,
                         const Context& context)
 {
-    if (not context.options()["autoinfo"].get<bool>() or not context.has_ui())
+    if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
         return false;
     ColorPair col = get_color("Information");
     CharCoord pos = context.window().dimensions();
@@ -348,7 +348,7 @@ void command(Context& context, int)
             if (context.has_ui())
             {
                 context.ui().info_hide();
-                if (event == PromptEvent::Change and context.options()["autoinfo"].get<bool>())
+                if (event == PromptEvent::Change and context.options()["autoinfo"].get<int>() > 0)
                 {
                     auto info = CommandManager::instance().command_info(cmdline);
                     ColorPair col = get_color("Information");

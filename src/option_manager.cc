@@ -145,7 +145,7 @@ GlobalOptions::GlobalOptions()
                    true);
     declare_option("autoinfo",
                    "automatically display contextual help",
-                   true);
+                   1);
     declare_option("autoshowcompl",
                    "automatically display possible completions for prompts",
                    true);

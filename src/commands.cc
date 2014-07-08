@@ -964,6 +964,19 @@ const ParameterDesc context_wrap_params = {
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
+template<typename T>
+struct DisableOption {
+    DisableOption(Context& context, const char* name)
+        : m_option(context.options()[name]),
+          m_prev_value(m_option.get<T>())
+    { m_option.set(T{}); }
+
+    ~DisableOption() { m_option.set(m_prev_value); }
+
+    Option& m_option;
+    T m_prev_value;
+};
+
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
@@ -975,20 +988,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             GlobalHooks::instance().enable_user_hooks();
     });
 
-    struct DisableOption {
-        DisableOption(Context& context, const char* name)
-            : m_option(context.options()[name]),
-              m_prev_value(m_option.get<bool>())
-        { m_option.set(false); }
-
-        ~DisableOption() { m_option.set(m_prev_value); }
-
-        Option& m_option;
-        bool m_prev_value;
-    };
-    DisableOption disable_autoinfo(context, "autoinfo");
-    DisableOption disable_autoshowcompl(context, "autoshowcompl");
-    DisableOption disable_incsearch(context, "incsearch");
+    DisableOption<int> disable_autoinfo(context, "autoinfo");
+    DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
+    DisableOption<bool> disable_incsearch(context, "incsearch");
 
 
     ClientManager& cm = ClientManager::instance();
