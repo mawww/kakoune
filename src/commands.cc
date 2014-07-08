@@ -97,7 +97,11 @@ struct CommandDesc
 template<bool force_reload>
 void edit(const ParametersParser& parser, Context& context)
 {
-    const String name = parser[0];
+    if (parser.positional_count() == 0 and not force_reload)
+        throw wrong_argument_count();
+
+    auto& name = parser.positional_count() > 0 ? parser[0]
+                                               : context.buffer().name();
 
     Buffer* buffer = nullptr;
     if (not force_reload)
@@ -141,7 +145,7 @@ ParameterDesc edit_params{
     SwitchMap{ { "scratch", { false, "create a scratch buffer, not linked to a file" } },
                { "fifo", { true, "create a buffer reading its content from a named fifo" } },
                { "scroll", { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
-    ParameterDesc::Flags::None, 1, 3
+    ParameterDesc::Flags::None, 0, 3
 };
 
 const CommandDesc edit_cmd = {
