@@ -106,7 +106,16 @@ public:
             }
             auto it = keymap.find(key);
             if (it != keymap.end())
-                it->second(context(), m_count);
+            {
+                if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
+                {
+                    ColorPair col = get_color("Information");
+                    CharCoord pos = context().window().dimensions();
+                    pos.column -= 1;
+                    context().ui().info_show(key_to_str(key), it->second.docstring, pos, col, MenuStyle::Prompt);
+                }
+                it->second.func(context(), m_count);
+            }
             m_count = 0;
 
         }
