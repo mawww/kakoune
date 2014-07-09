@@ -16,6 +16,7 @@ addhl -group / multi_region -default code javascript \
     double_string '"' (?<!\\)(\\\\)*"             '' \
     single_string "'" "'"                         '' \
     comment       //  '$'                         '' \
+    comment      /[*] [*]/                        '' \
     regex         /   (?<!\\)(\\\\)*/[gimy]*      ''
 
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
