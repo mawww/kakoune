@@ -226,7 +226,7 @@ Selection select_number(const Buffer& buffer, const Selection& selection, Object
     if (flags & ObjectFlags::ToBegin)
     {
         skip_while_reverse(first, buffer.begin(), is_number);
-        if (not is_number(*first) or not *first == '-')
+        if (not is_number(*first) and *first != '-')
             ++first;
     }
     BufferIterator last = buffer.iterator_at(selection.cursor());
