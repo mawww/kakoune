@@ -15,8 +15,9 @@ hook global BufCreate .*[.](js) %{
 addhl -group / multi_region -default code javascript \
     double_string '"' (?<!\\)(\\\\)*"             '' \
     single_string "'" "'"                         '' \
-    regex         '/' (?<!\\)(\\\\)*/[gimy]*      '' \
-    comment       '#' '$'                         ''
+    comment       //  '$'                         '' \
+    comment      /[*] [*]/                        '' \
+    regex         /   (?<!\\)(\\\\)*/[gimy]*      ''
 
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
