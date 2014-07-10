@@ -43,8 +43,8 @@ addhl -group /ruby/regex/interpolation/content fill macro
 addhl -group /ruby/comment fill comment
 addhl -group /ruby/literal fill macro
 
-addhl -group /ruby/code regex ([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier
-addhl -group /ruby/code regex \<(require|include)\>|\<([a-z]\w+:) 0:macro
+addhl -group /ruby/code regex \<([a-z]\w+:)|([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier
+addhl -group /ruby/code regex \<(require|include)\> 0:macro
 addhl -group /ruby/code regex \<(attr_(reader|writer|accessor))\> 0:attribute
 
 # Keywords are collected searching for keyword_ at
