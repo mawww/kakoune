@@ -22,10 +22,10 @@ addhl -group / multi_region -default code ruby  \
     regex         '/' (?<!\\)(\\\\)*/[imox]* '' \
     comment       '#' '$'                    '' \
     comment       ^begin= ^=end              '' \
-    literal       '%[iqrswxIQRSWX]\Q(' '\Q)' '' \
-    literal       '%[iqrswxIQRSWX]\Q{' '\Q}' '' \
-    literal       '%[iqrswxIQRSWX]\Q[' '\Q]' '' \
-    literal       '%[iqrswxIQRSWX]\Q<' '\Q>' ''
+    literal       '%[iqrswxIQRSWX]\(' \)     \( \
+    literal       '%[iqrswxIQRSWX]\{' \}     \{ \
+    literal       '%[iqrswxIQRSWX]\[' \]     \[ \
+    literal       '%[iqrswxIQRSWX]<'   >      <
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
@@ -43,8 +43,8 @@ addhl -group /ruby/regex/interpolation/content fill macro
 addhl -group /ruby/comment fill comment
 addhl -group /ruby/literal fill macro
 
-addhl -group /ruby/code regex ([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier
-addhl -group /ruby/code regex \<(require|include)\>|\<([a-z]\w+:) 0:macro
+addhl -group /ruby/code regex \<([a-z]\w+:)|([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier
+addhl -group /ruby/code regex \<(require|include)\> 0:macro
 addhl -group /ruby/code regex \<(attr_(reader|writer|accessor))\> 0:attribute
 
 # Keywords are collected searching for keyword_ at
