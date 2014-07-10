@@ -5,12 +5,30 @@
 namespace Kakoune
 {
 
-static Face parse_face(const String& facedesc)
+static Face parse_face(StringView facedesc)
 {
-    auto it = std::find(facedesc.begin(), facedesc.end(), ',');
-    return { str_to_color({facedesc.begin(), it}),
-             it != facedesc.end() ? str_to_color({it+1, facedesc.end()})
-                                   : Colors::Default };
+    auto bg_it = std::find(facedesc.begin(), facedesc.end(), ',');
+    auto attr_it = std::find(facedesc.begin(), facedesc.end(), '+');
+    if (bg_it != facedesc.end() and attr_it < bg_it)
+        throw runtime_error("invalid face description, expected <fg>[,<bg>][+<attr>]");
+    Face res;
+    res.fg = str_to_color({facedesc.begin(), std::min(attr_it, bg_it)});
+    if (bg_it != facedesc.end())
+        res.bg = str_to_color({bg_it+1, attr_it});
+    if (attr_it != facedesc.end())
+    {
+        for (++attr_it; attr_it != facedesc.end(); ++attr_it)
+        {
+            switch (*attr_it)
+            {
+                case 'u': res.attributes |= Underline; break;
+                case 'r': res.attributes |= Reverse; break;
+                case 'b': res.attributes |= Bold; break;
+                default: throw runtime_error("unknown face attribute '" + String(*attr_it) + "'");
+            }
+        }
+    }
+    return res;
 }
 
 const Face& FaceRegistry::operator[](const String& facedesc)
