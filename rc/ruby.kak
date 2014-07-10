@@ -15,17 +15,17 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile)|(G
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code ruby     \
-    double_string '"' (?<!\\)(\\\\)*"           '' \
-    single_string "'" "'"                       '' \
-    backtick      '`' (?<!\\)(\\\\)*`           '' \
-    regex         '/' (?<!\\)(\\\\)*/[imox]*    '' \
-    comment       '#' '$'                       '' \
-    comment       ^begin= ^=end                 '' \
-    literal       '%[iqrswxIQRSWX]\Q(' '\Q)' '\Q(' \
-    literal       '%[iqrswxIQRSWX]\Q{' '\Q}' '\Q{' \
-    literal       '%[iqrswxIQRSWX]\Q[' '\Q]' '\Q[' \
-    literal       '%[iqrswxIQRSWX]\Q<' '\Q>' '\Q<'
+addhl -group / multi_region -default code ruby  \
+    double_string '"' (?<!\\)(\\\\)*"        '' \
+    single_string "'" "'"                    '' \
+    backtick      '`' (?<!\\)(\\\\)*`        '' \
+    regex         '/' (?<!\\)(\\\\)*/[imox]* '' \
+    comment       '#' '$'                    '' \
+    comment       ^begin= ^=end              '' \
+    literal       '%[iqrswxIQRSWX]\(' \)     \( \
+    literal       '%[iqrswxIQRSWX]\{' \}     \{ \
+    literal       '%[iqrswxIQRSWX]\[' \]     \[ \
+    literal       '%[iqrswxIQRSWX]<'   >      <
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
