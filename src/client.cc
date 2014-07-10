@@ -1,6 +1,6 @@
 #include "client.hh"
 
-#include "color_registry.hh"
+#include "face_registry.hh"
 #include "context.hh"
 #include "buffer_manager.hh"
 #include "user_interface.hh"
@@ -52,23 +52,23 @@ DisplayLine Client::generate_mode_line() const
     auto col = context().buffer()[pos.line].char_count_to(pos.column);
 
     DisplayLine status;
-    ColorPair info_color = get_color("Information");
-    ColorPair status_color = get_color("StatusLine");
-    ColorPair prompt_color = get_color("Prompt");
+    Face info_face = get_face("Information");
+    Face status_face = get_face("StatusLine");
+    Face prompt_face = get_face("Prompt");
 
-    status.push_back({ context().buffer().display_name(), status_color });
-    status.push_back({ " " + to_string((int)pos.line+1) + ":" + to_string((int)col+1) + " ", status_color });
+    status.push_back({ context().buffer().display_name(), status_face });
+    status.push_back({ " " + to_string((int)pos.line+1) + ":" + to_string((int)col+1) + " ", status_face });
     if (context().buffer().is_modified())
-        status.push_back({ "[+]", info_color });
+        status.push_back({ "[+]", info_face });
     if (m_input_handler.is_recording())
-        status.push_back({ "[recording ("_str + m_input_handler.recording_reg() + ")]", info_color });
+        status.push_back({ "[recording ("_str + m_input_handler.recording_reg() + ")]", info_face });
     if (context().buffer().flags() & Buffer::Flags::New)
-        status.push_back({ "[new file]", info_color });
+        status.push_back({ "[new file]", info_face });
     if (context().buffer().flags() & Buffer::Flags::Fifo)
-        status.push_back({ "[fifo]", info_color });
-    status.push_back({ " ", status_color });
-    status.push_back({  m_input_handler.mode_string(), prompt_color });
-    status.push_back({ " - " + context().name() + "@[" + Server::instance().session() + "]", status_color });
+        status.push_back({ "[fifo]", info_face });
+    status.push_back({ " ", status_face });
+    status.push_back({  m_input_handler.mode_string(), prompt_face });
+    status.push_back({ " - " + context().name() + "@[" + Server::instance().session() + "]", status_face });
 
     return status;
 }
@@ -118,7 +118,7 @@ static void reload_buffer(Context& context, const String& filename)
     context.selections() = SelectionList{ *buf, buf->clamp(cursor_pos)};
     context.window().set_position(view_pos);
     context.print_status({ "'" + buf->display_name() + "' reloaded",
-                           get_color("Information") });
+                           get_face("Information") });
 }
 
 void Client::check_buffer_fs_timestamp()
@@ -140,7 +140,7 @@ void Client::check_buffer_fs_timestamp()
             "reload '" + buffer.display_name() + "' ?",
             "'" + buffer.display_name() + "' was modified externally\n"
             "press r or y to reload, k or n to keep",
-            pos, get_color("Information"), MenuStyle::Prompt);
+            pos, get_face("Information"), MenuStyle::Prompt);
 
         m_input_handler.on_next_key([this, filename, ts](Key key, Context& context) {
             Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
@@ -154,12 +154,12 @@ void Client::check_buffer_fs_timestamp()
             {
                 buf->set_fs_timestamp(ts);
                 print_status({ "'" + buf->display_name() + "' kept",
-                               get_color("Information") });
+                               get_face("Information") });
             }
             else
             {
                 print_status({ "'" + key_to_str(key) + "' is not a valid choice",
-                               get_color("Error") });
+                               get_face("Error") });
                 check_buffer_fs_timestamp();
             }
         });

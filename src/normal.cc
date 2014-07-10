@@ -3,19 +3,19 @@
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "client_manager.hh"
-#include "color_registry.hh"
 #include "command_manager.hh"
 #include "commands.hh"
 #include "context.hh"
+#include "debug.hh"
+#include "face_registry.hh"
 #include "file.hh"
 #include "option_manager.hh"
 #include "register_manager.hh"
 #include "selectors.hh"
 #include "shell_manager.hh"
 #include "string.hh"
-#include "window.hh"
 #include "user_interface.hh"
-#include "debug.hh"
+#include "window.hh"
 
 namespace Kakoune
 {
@@ -109,10 +109,10 @@ bool show_auto_info_ifn(const String& title, const String& info,
 {
     if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
         return false;
-    ColorPair col = get_color("Information");
+    Face face = get_face("Information");
     CharCoord pos = context.window().dimensions();
     pos.column -= 1;
-    context.ui().info_show(title, info, pos , col, MenuStyle::Prompt);
+    context.ui().info_show(title, info, pos , face, MenuStyle::Prompt);
     return true;
 }
 
@@ -342,7 +342,7 @@ void for_each_char(Context& context, int)
 void command(Context& context, int)
 {
     context.input_handler().prompt(
-        ":", "", get_color("Prompt"),
+        ":", "", get_face("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
         [](const String& cmdline, PromptEvent event, Context& context) {
             if (context.has_ui())
@@ -351,7 +351,7 @@ void command(Context& context, int)
                 if (event == PromptEvent::Change and context.options()["autoinfo"].get<int>() > 0)
                 {
                     auto info = CommandManager::instance().command_info(cmdline);
-                    ColorPair col = get_color("Information");
+                    Face col = get_face("Information");
                     CharCoord pos = context.window().dimensions();
                     pos.column -= 1;
                     if (not info.first.empty() and not info.second.empty())
@@ -367,7 +367,7 @@ template<InsertMode mode>
 void pipe(Context& context, int)
 {
     const char* prompt = mode == InsertMode::Replace ? "pipe:" : "pipe (ins):";
-    context.input_handler().prompt(prompt, "", get_color("Prompt"), shell_complete,
+    context.input_handler().prompt(prompt, "", get_face("Prompt"), shell_complete,
         [](const String& cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -431,7 +431,7 @@ void yank(Context& context, int)
 {
     RegisterManager::instance()['"'] = context.selections_content();
     context.print_status({ "yanked " + to_string(context.selections().size()) +
-                           " selections", get_color("Information") });
+                           " selections", get_face("Information") });
 }
 
 void erase_selections(Context& context, int)
@@ -515,7 +515,7 @@ template<typename T>
 void regex_prompt(Context& context, const String prompt, T func)
 {
     SelectionList selections = context.selections();
-    context.input_handler().prompt(prompt, "", get_color("Prompt"), complete_nothing,
+    context.input_handler().prompt(prompt, "", get_face("Prompt"), complete_nothing,
         [=](const String& str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -523,7 +523,7 @@ void regex_prompt(Context& context, const String prompt, T func)
                     context.ui().info_hide();
                 selections.update();
                 context.selections() = selections;
-                context.input_handler().set_prompt_colors(get_color("Prompt"));
+                context.input_handler().set_prompt_face(get_face("Prompt"));
                 if (event == PromptEvent::Abort)
                     return;
                 if (event == PromptEvent::Change and
@@ -539,7 +539,7 @@ void regex_prompt(Context& context, const String prompt, T func)
                 if (event == PromptEvent::Validate)
                     throw runtime_error("regex error: "_str + err.what());
                 else
-                    context.input_handler().set_prompt_colors(get_color("Error"));
+                    context.input_handler().set_prompt_face(get_face("Error"));
             }
             catch (std::runtime_error& err)
             {
@@ -547,13 +547,13 @@ void regex_prompt(Context& context, const String prompt, T func)
                     throw runtime_error("regex error: "_str + err.what());
                 else
                 {
-                    context.input_handler().set_prompt_colors(get_color("Error"));
+                    context.input_handler().set_prompt_face(get_face("Error"));
                     if (context.has_ui())
                     {
-                        ColorPair col = get_color("Information");
+                        Face face = get_face("Information");
                         CharCoord pos = context.window().dimensions();
                         pos.column -= 1;
-                        context.ui().info_show("regex error", err.what(), pos, col, MenuStyle::Prompt);
+                        context.ui().info_show("regex error", err.what(), pos, face, MenuStyle::Prompt);
                     }
                 }
             }
@@ -731,7 +731,7 @@ void keep(Context& context, int)
 void keep_pipe(Context& context, int)
 {
     context.input_handler().prompt(
-        "keep pipe:", "", get_color("Prompt"), shell_complete,
+        "keep pipe:", "", get_face("Prompt"), shell_complete,
         [](const String& cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
@@ -1012,7 +1012,7 @@ void save_selections(Context& context, int)
 {
     context.push_jump();
     context.print_status({ "saved " + to_string(context.selections().size()) +
-                           " selections", get_color("Information") });
+                           " selections", get_face("Information") });
 }
 
 void align(Context& context, int)
@@ -1171,7 +1171,7 @@ void undo(Context& context, int)
             context.set_selections(std::move(ranges));
     }
     else if (not res)
-        context.print_status({ "nothing left to undo", get_color("Information") });
+        context.print_status({ "nothing left to undo", get_face("Information") });
 }
 
 void redo(Context& context, int)
@@ -1188,7 +1188,7 @@ void redo(Context& context, int)
     }
 
     else if (not res)
-        context.print_status({ "nothing left to redo", get_color("Information") });
+        context.print_status({ "nothing left to redo", get_face("Information") });
 }
 
 template<typename T>

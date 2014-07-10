@@ -96,8 +96,7 @@ void DisplayLine::optimize()
         auto& next_atom = *next_atom_it;
         bool merged = false;
 
-        if (atom.colors == next_atom.colors and
-            atom.attribute == next_atom.attribute and
+        if (atom.face == next_atom.face and
             atom.type() ==  next_atom.type())
         {
             auto type = atom.type();

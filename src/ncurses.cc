@@ -165,34 +165,41 @@ static int nc_color(Color color)
     }
 }
 
-static int get_color_pair(ColorPair colors)
+static int get_color_pair(const Face& face)
 {
+    using ColorPair = std::pair<Color, Color>;
     static std::map<ColorPair, int> colorpairs;
     static int next_pair = 1;
 
+    ColorPair colors{face.fg, face.bg};
     auto it = colorpairs.find(colors);
     if (it != colorpairs.end())
         return it->second;
     else
     {
-        init_pair(next_pair, nc_color(colors.first), nc_color(colors.second));
+        init_pair(next_pair, nc_color(face.fg), nc_color(face.bg));
         colorpairs[colors] = next_pair;
         return next_pair++;
     }
 }
 
-static void set_color(WINDOW* window, ColorPair colors)
+static void set_face(WINDOW* window, Face face)
 {
     static int current_pair = -1;
 
     if (current_pair != -1)
         wattroff(window, COLOR_PAIR(current_pair));
 
-    if (colors.first != Colors::Default or colors.second != Colors::Default)
+    if (face.fg != Colors::Default or face.bg != Colors::Default)
     {
-        current_pair = get_color_pair(colors);
+        current_pair = get_color_pair(face);
         wattron(window, COLOR_PAIR(current_pair));
     }
+
+    set_attribute(A_UNDERLINE, face.attributes & Underline);
+    set_attribute(A_REVERSE, face.attributes & Reverse);
+    set_attribute(A_BLINK, face.attributes & Blink);
+    set_attribute(A_BOLD, face.attributes & Bold);
 }
 
 static sig_atomic_t resize_pending = 0;
@@ -293,12 +300,7 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
 {
     for (const DisplayAtom& atom : line)
     {
-        set_attribute(A_UNDERLINE, atom.attribute & Underline);
-        set_attribute(A_REVERSE, atom.attribute & Reverse);
-        set_attribute(A_BLINK, atom.attribute & Blink);
-        set_attribute(A_BOLD, atom.attribute & Bold);
-
-        set_color(stdscr, atom.colors);
+        set_face(stdscr, atom.face);
 
         StringView content = atom.content();
         if (content.empty())
@@ -337,11 +339,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         ++line_index;
     }
 
-    set_attribute(A_UNDERLINE, 0);
-    set_attribute(A_REVERSE, 0);
-    set_attribute(A_BLINK, 0);
-    set_attribute(A_BOLD, 0);
-    set_color(stdscr, { Colors::Blue, Colors::Default });
+    set_face(stdscr, { Colors::Blue, Colors::Default });
     for (;line_index < m_dimensions.line; ++line_index)
     {
         move((int)line_index, 0);
@@ -532,7 +530,7 @@ void NCursesUI::draw_menu()
 }
 
 void NCursesUI::menu_show(memoryview<String> items,
-                          CharCoord anchor, ColorPair fg, ColorPair bg,
+                          CharCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
     if (m_menu_win)
@@ -768,8 +766,7 @@ static String make_info_box(StringView title, StringView message,
 }
 
 void NCursesUI::info_show(StringView title, StringView content,
-                          CharCoord anchor, ColorPair colors,
-                          MenuStyle style)
+                          CharCoord anchor, Face face, MenuStyle style)
 {
     if (m_info_win)
     {
@@ -793,7 +790,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
                                      (int)pos.line,  (int)pos.column);
 
-    wbkgd(m_info_win, COLOR_PAIR(get_color_pair(colors)));
+    wbkgd(m_info_win, COLOR_PAIR(get_color_pair(face)));
     int line = 0;
     auto it = info_box.begin(), end = info_box.end();
     while (true)

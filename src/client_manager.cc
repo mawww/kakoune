@@ -1,9 +1,9 @@
 #include "client_manager.hh"
 
 #include "buffer_manager.hh"
-#include "color_registry.hh"
 #include "command_manager.hh"
 #include "event_manager.hh"
+#include "face_registry.hh"
 #include "file.hh"
 #include "user_interface.hh"
 #include "window.hh"
@@ -40,7 +40,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     }
     catch (Kakoune::runtime_error& error)
     {
-        client->context().print_status({ error.what(), get_color("Error") });
+        client->context().print_status({ error.what(), get_face("Error") });
         client->context().hooks().run_hook("RuntimeError", error.what(),
                                            client->context());
     }
@@ -57,7 +57,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         }
         catch (Kakoune::runtime_error& error)
         {
-            client->context().print_status({ error.what(), get_color("Error") });
+            client->context().print_status({ error.what(), get_face("Error") });
             client->context().hooks().run_hook("RuntimeError", error.what(),
                                                client->context());
         }

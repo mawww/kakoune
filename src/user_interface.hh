@@ -28,13 +28,13 @@ public:
     virtual ~UserInterface() {}
 
     virtual void menu_show(memoryview<String> choices,
-                           CharCoord anchor, ColorPair fg, ColorPair bg,
+                           CharCoord anchor, Face fg, Face bg,
                            MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
 
     virtual void info_show(StringView title, StringView content,
-                           CharCoord anchor, ColorPair colors,
+                           CharCoord anchor, Face face,
                            MenuStyle style) = 0;
     virtual void info_hide() = 0;
 

@@ -2,7 +2,7 @@
 #define display_buffer_hh_INCLUDED
 
 #include "buffer.hh"
-#include "color.hh"
+#include "face.hh"
 #include "coord.hh"
 #include "string.hh"
 #include "utf8.hh"
@@ -11,17 +11,6 @@
 
 namespace Kakoune
 {
-
-using Attribute = char;
-
-enum Attributes
-{
-    Normal = 0,
-    Underline = 1,
-    Reverse = 2,
-    Blink = 4,
-    Bold = 8
-};
 
 struct DisplayAtom
 {
@@ -32,9 +21,8 @@ public:
         : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end)
      { check_invariant(); }
 
-    DisplayAtom(String str, ColorPair colors = { Colors::Default, Colors::Default },
-                Attribute attribute = Normal)
-        : m_type(Text), m_text(std::move(str)), colors(colors), attribute(attribute)
+    DisplayAtom(String str, Face face = Face{})
+        : m_type(Text), m_text(std::move(str)), face(face)
      { check_invariant(); }
 
     StringView content() const
@@ -108,13 +96,11 @@ public:
 
     bool operator==(const DisplayAtom& other) const
     {
-        return colors == other.colors or attribute == other.attribute or
-               content() == other.content();
+        return face == other.face and content() == other.content();
     }
 
 public:
-    ColorPair      colors = {Colors::Default, Colors::Default};
-    Attribute      attribute = Normal;
+    Face face;
 
 private:
     friend class DisplayLine;
@@ -139,8 +125,8 @@ public:
 
     DisplayLine() = default;
     DisplayLine(AtomList atoms);
-    DisplayLine(String str, ColorPair color)
-    { push_back({ std::move(str), color }); }
+    DisplayLine(String str, Face face)
+    { push_back({ std::move(str), face }); }
 
     iterator begin() { return m_atoms.begin(); }
     iterator end() { return m_atoms.end(); }

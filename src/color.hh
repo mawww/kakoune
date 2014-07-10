@@ -40,8 +40,6 @@ struct Color
     { return color != c.color or r != c.r or g != c.g or b != c.b; }
 };
 
-using ColorPair = std::pair<Color, Color>;
-
 Color str_to_color(const String& color);
 String color_to_str(Color color);
 

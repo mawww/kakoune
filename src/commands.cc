@@ -5,12 +5,12 @@
 #include "buffer_utils.hh"
 #include "client.hh"
 #include "client_manager.hh"
-#include "color_registry.hh"
 #include "command_manager.hh"
 #include "completion.hh"
 #include "context.hh"
 #include "debug.hh"
 #include "event_manager.hh"
+#include "face_registry.hh"
 #include "file.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
@@ -39,7 +39,7 @@ Buffer* open_or_create(const String& filename, Context& context)
     Buffer* buffer = create_buffer_from_file(filename);
     if (not buffer)
     {
-        context.print_status({ "new file " + filename, get_color("StatusLine") });
+        context.print_status({ "new file " + filename, get_face("StatusLine") });
         buffer = new Buffer(filename, Buffer::Flags::File | Buffer::Flags::New);
     }
     return buffer;
@@ -720,9 +720,9 @@ const CommandDesc echo_cmd = {
             write_debug(message);
         else
         {
-            auto color = get_color(parser.has_option("color") ?
-                                   parser.option_value("color") : "StatusLine");
-            context.print_status({ std::move(message), color } );
+            auto face = get_face(parser.has_option("color") ?
+                                 parser.option_value("color") : "StatusLine");
+            context.print_status({ std::move(message), face } );
         }
     }
 };
@@ -1117,7 +1117,7 @@ const CommandDesc prompt_cmd = {
             initstr = params.option_value("init");
 
         context.input_handler().prompt(
-            params[0], std::move(initstr), get_color("Prompt"), Completer{},
+            params[0], std::move(initstr), get_face("Prompt"), Completer{},
             [=](const String& str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)
@@ -1209,7 +1209,7 @@ const CommandDesc info_cmd = {
                 pos = context.window().display_position(it);
             }
             const String& title = parser.has_option("title") ? parser.option_value("title") : "";
-            context.ui().info_show(title, parser[0], pos, get_color("Information"), style);
+            context.ui().info_show(title, parser[0], pos, get_face("Information"), style);
         }
     }
 };
@@ -1249,7 +1249,7 @@ static Completions complete_colalias(const Context&, CompletionFlags flags,
                                      const String& prefix, ByteCount cursor_pos)
 {
     return {0_byte, cursor_pos,
-            ColorRegistry::instance().complete_alias_name(prefix, cursor_pos)};
+            FaceRegistry::instance().complete_alias_name(prefix, cursor_pos)};
 }
 
 const CommandDesc define_color_alias_cmd = {
@@ -1261,7 +1261,7 @@ const CommandDesc define_color_alias_cmd = {
     PerArgumentCommandCompleter({ complete_colalias, complete_colalias }),
     [](const ParametersParser& parser, Context& context)
     {
-        ColorRegistry::instance().register_alias(parser[0], parser[1], true);
+        FaceRegistry::instance().register_alias(parser[0], parser[1], true);
     }
 };
 

@@ -27,13 +27,13 @@ public:
     Key    get_key() override;
 
     void menu_show(memoryview<String> items,
-                   CharCoord anchor, ColorPair fg, ColorPair bg,
+                   CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   CharCoord anchor, ColorPair colors,
+                   CharCoord anchor, Face face,
                    MenuStyle style) override;
     void info_hide() override;
 
@@ -54,8 +54,8 @@ private:
 
     NCursesWin* m_menu_win = nullptr;
     std::vector<String> m_items;
-    ColorPair m_menu_fg;
-    ColorPair m_menu_bg;
+    Face m_menu_fg;
+    Face m_menu_bg;
     int m_selected_item = 0;
     int m_menu_columns = 1;
     LineCount m_menu_top_line = 0;

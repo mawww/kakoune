@@ -1,9 +1,9 @@
 #ifndef input_handler_hh_INCLUDED
 #define input_handler_hh_INCLUDED
 
-#include "color.hh"
 #include "completion.hh"
 #include "context.hh"
+#include "face.hh"
 #include "normal.hh"
 #include "keys.hh"
 #include "string.hh"
@@ -48,16 +48,15 @@ public:
     // returns to normal mode after validation if callback does
     // not change the mode itself
     void prompt(const String& prompt, String initstr,
-                ColorPair prompt_colors, Completer completer,
+                Face prompt_face, Completer completer,
                 PromptCallback callback);
-    void set_prompt_colors(ColorPair prompt_colors);
+    void set_prompt_face(Face prompt_face);
 
     // enter menu mode, callback is called on each selection change,
     // abort or validation with corresponding MenuEvent value
     // returns to normal mode after validation if callback does
     // not change the mode itself
-    void menu(memoryview<String> choices,
-              MenuCallback callback);
+    void menu(memoryview<String> choices, MenuCallback callback);
 
     // execute callback on next keypress and returns to normal mode
     // if callback does not change the mode itself

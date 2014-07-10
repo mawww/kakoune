@@ -1,18 +1,18 @@
 #include "highlighters.hh"
 
-#include "highlighter_group.hh"
 #include "assert.hh"
 #include "buffer_utils.hh"
-#include "color_registry.hh"
 #include "context.hh"
 #include "display_buffer.hh"
+#include "face_registry.hh"
+#include "highlighter_group.hh"
 #include "line_modification.hh"
 #include "option_types.hh"
+#include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "string.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "parameters_parser.hh"
 
 #include <sstream>
 #include <locale>
@@ -149,39 +149,41 @@ void apply_highlighter(const Context& context,
     display_buffer.compute_range();
 }
 
-auto apply_colors = [](const ColorPair& colors)
+auto apply_face = [](const Face& face)
 {
-    return [&colors](DisplayAtom& atom) {
-        if (colors.first != Colors::Default)
-            atom.colors.first = colors.first;
-        if (colors.second != Colors::Default)
-            atom.colors.second = colors.second;
+    return [&face](DisplayAtom& atom) {
+        if (face.fg != Colors::Default)
+            atom.face.fg = face.fg;
+        if (face.bg != Colors::Default)
+            atom.face.bg = face.bg;
+        if (face.attributes != Normal)
+            atom.face.attributes |= face.attributes;
     };
 };
 
-using ColorSpec = std::unordered_map<size_t, const ColorPair*>;
+using FaceSpec = std::unordered_map<size_t, const Face*>;
 
 struct Fill
 {
-    Fill(ColorPair colors) : m_colors(colors) {}
+    Fill(Face face) : m_face(face) {}
 
     void operator()(const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer)
     {
         auto range = display_buffer.range();
         highlight_range(display_buffer, range.first, range.second, true,
-                        apply_colors(m_colors));
+                        apply_face(m_face));
     }
 
-    ColorPair m_colors;
+    Face m_face;
 };
 
 HighlighterAndId fill_factory(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
-    ColorPair colors = get_color(params[0]);
-    return HighlighterAndId("fill_" + params[0], Fill(colors));
+    Face face = get_face(params[0]);
+    return HighlighterAndId("fill_" + params[0], Fill(face));
 }
 
 template<typename T>
@@ -203,8 +205,8 @@ private:
 class RegexColorizer
 {
 public:
-    RegexColorizer(Regex regex, ColorSpec colors)
-        : m_regex{std::move(regex)}, m_colors{std::move(colors)}
+    RegexColorizer(Regex regex, FaceSpec faces)
+        : m_regex{std::move(regex)}, m_faces{std::move(faces)}
     {
     }
 
@@ -217,12 +219,12 @@ public:
         {
             for (size_t n = 0; n < match.size(); ++n)
             {
-                auto col_it = m_colors.find(n);
-                if (col_it == m_colors.end())
+                auto face_it = m_faces.find(n);
+                if (face_it == m_faces.end())
                     continue;
 
                 highlight_range(display_buffer, match[n].first, match[n].second, true,
-                                apply_colors(*col_it->second));
+                                apply_face(*face_it->second));
             }
         }
     }
@@ -237,7 +239,7 @@ private:
     BufferSideCache<Cache> m_cache;
 
     Regex     m_regex;
-    ColorSpec m_colors;
+    FaceSpec m_faces;
 
     Cache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
@@ -277,18 +279,18 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
 
     try
     {
-        static Regex color_spec_ex(R"((\d+):(\w+(,\w+)?))");
-        ColorSpec colors;
+        static Regex face_spec_ex(R"((\d+):(\w+(,\w+)?))");
+        FaceSpec faces;
         for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
             boost::smatch res;
-            if (not boost::regex_match(it->begin(), it->end(), res, color_spec_ex))
-                throw runtime_error("wrong colorspec: '" + *it +
+            if (not boost::regex_match(it->begin(), it->end(), res, face_spec_ex))
+                throw runtime_error("wrong face spec: '" + *it +
                                      "' expected <capture>:<fgcolor>[,<bgcolor>]");
 
             int capture = str_to_int(res[1].str());
-            const ColorPair*& color = colors[capture];
-            color = &get_color(res[2].str());
+            const Face*& face = faces[capture];
+            face = &get_face(res[2].str());
         }
 
         String id = "colre'" + params[0] + "'";
@@ -296,7 +298,7 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
         Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
 
         return HighlighterAndId(id, RegexColorizer(std::move(ex),
-                                                   std::move(colors)));
+                                                   std::move(faces)));
     }
     catch (boost::regex_error& err)
     {
@@ -304,14 +306,14 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
     }
 }
 
-template<typename RegexGetter, typename ColorGetter>
+template<typename RegexGetter, typename FaceGetter>
 class DynamicRegexHighlighter
 {
 public:
-    DynamicRegexHighlighter(RegexGetter regex_getter, ColorGetter color_getter)
+    DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
         : m_regex_getter(std::move(regex_getter)),
-          m_color_getter(std::move(color_getter)),
-          m_colorizer(Regex(), ColorSpec{}) {}
+          m_face_getter(std::move(face_getter)),
+          m_colorizer(Regex(), FaceSpec{}) {}
 
     void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
     {
@@ -319,34 +321,34 @@ public:
             return;
 
         Regex regex = m_regex_getter(context);
-        ColorSpec color = m_color_getter(context);
-        if (regex != m_last_regex or color != m_last_color)
+        FaceSpec face = m_face_getter(context);
+        if (regex != m_last_regex or face != m_last_face)
         {
             m_last_regex = regex;
-            m_last_color = color;
+            m_last_face = face;
             if (not m_last_regex.empty())
-                m_colorizer = RegexColorizer{m_last_regex, color};
+                m_colorizer = RegexColorizer{m_last_regex, face};
         }
-        if (not m_last_regex.empty() and not m_last_color.empty())
+        if (not m_last_regex.empty() and not m_last_face.empty())
             m_colorizer(context, flags, display_buffer);
     }
 
 private:
-    Regex          m_last_regex;
-    RegexGetter    m_regex_getter;
+    Regex       m_last_regex;
+    RegexGetter m_regex_getter;
 
-    ColorSpec      m_last_color;
-    ColorGetter    m_color_getter;
+    FaceSpec    m_last_face;
+    FaceGetter  m_face_getter;
 
     RegexColorizer m_colorizer;
 };
 
-template<typename RegexGetter, typename ColorGetter>
-DynamicRegexHighlighter<RegexGetter, ColorGetter>
-make_dynamic_regex_highlighter(RegexGetter regex_getter, ColorGetter color_getter)
+template<typename RegexGetter, typename FaceGetter>
+DynamicRegexHighlighter<RegexGetter, FaceGetter>
+make_dynamic_regex_highlighter(RegexGetter regex_getter, FaceGetter face_getter)
 {
-    return DynamicRegexHighlighter<RegexGetter, ColorGetter>(
-        std::move(regex_getter), std::move(color_getter));
+    return DynamicRegexHighlighter<RegexGetter, FaceGetter>(
+        std::move(regex_getter), std::move(face_getter));
 }
 
 
@@ -354,8 +356,8 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
 {
     if (params.size() != 0)
         throw runtime_error("wrong parameter count");
-        auto get_color = [](const Context& context){
-            return ColorSpec{ { 0, &Kakoune::get_color("Search") } };
+        auto get_face = [](const Context& context){
+            return FaceSpec{ { 0, &Kakoune::get_face("Search") } };
         };
         auto get_regex = [](const Context&){
             auto s = Context().main_sel_register_value("/");
@@ -368,7 +370,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
                 return Regex{};
             }
         };
-        return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_color)};
+        return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
 HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
@@ -376,9 +378,9 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    const ColorPair& color = get_color(params[1]);
-    auto get_color = [&](const Context&){
-        return ColorSpec{ { 0, &color } };
+    const Face& face = get_face(params[1]);
+    auto get_face = [&](const Context&){
+        return FaceSpec{ { 0, &face } };
     };
 
     String option_name = params[0];
@@ -388,7 +390,7 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     auto get_regex = [option_name](const Context& context){
         return context.options()[option_name].get<Regex>();
     };
-    return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_color)};
+    return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
 HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
@@ -396,7 +398,7 @@ HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    const ColorPair& color = get_color(params[1]);
+    const Face& face = get_face(params[1]);
 
     String option_name = params[0];
     // verify option type now
@@ -407,7 +409,7 @@ HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
     {
         int line = context.options()[option_name].get<int>();
         highlight_range(display_buffer, {line-1, 0}, {line, 0}, false,
-                        apply_colors(color));
+                        apply_face(face));
     };
 
     return {"hlline_" + option_name, std::move(highlighter)};
@@ -500,20 +502,20 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
 
     char format[] = "%?d│";
     format[1] = '0' + digit_count;
-    auto& colors = get_color("LineNumbers");
+    auto& face = get_face("LineNumbers");
     for (auto& line : display_buffer.lines())
     {
         char buffer[10];
         snprintf(buffer, 10, format, (int)line.range().first.line + 1);
         DisplayAtom atom{buffer};
-        atom.colors = colors;
+        atom.face = face;
         line.insert(line.begin(), std::move(atom));
     }
 }
 
 void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
 {
-    auto& colors = get_color("MatchingChar");
+    auto& face = get_face("MatchingChar");
     using CodepointPair = std::pair<Codepoint, Codepoint>;
     static const CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
     const auto range = display_buffer.range();
@@ -540,7 +542,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                 });
                 if (it != end)
                     highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                    apply_colors(colors));
+                                    apply_face(face));
                 break;
             }
             else if (c == pair.second and pos > range.first)
@@ -556,7 +558,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                 });
                 if (it != end or (*end == pair.first and level == 1))
                     highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                    apply_colors(colors));
+                                    apply_face(face));
                 break;
             }
         }
@@ -576,17 +578,17 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
         ByteCoord end   = forward ? sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == context.selections().main_index());
-        ColorPair sel_colors = get_color(primary ? "PrimarySelection" : "SecondarySelection");
+        Face sel_face = get_face(primary ? "PrimarySelection" : "SecondarySelection");
         highlight_range(display_buffer, begin, end, false,
-                        apply_colors(sel_colors));
+                        apply_face(sel_face));
     }
     for (size_t i = 0; i < context.selections().size(); ++i)
     {
         auto& sel = context.selections()[i];
         const bool primary = (i == context.selections().main_index());
-        ColorPair cur_colors = get_color(primary ? "PrimaryCursor" : "SecondaryCursor");
+        Face cur_face = get_face(primary ? "PrimaryCursor" : "SecondaryCursor");
         highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
-                        apply_colors(cur_colors));
+                        apply_face(cur_face));
     }
 }
 
@@ -614,7 +616,7 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                         if (next.coord() < atom_it->end())
                             atom_it = line.split(atom_it, next.coord());
                         atom_it->replace(str);
-                        atom_it->colors = { Colors::Red, Colors::Black };
+                        atom_it->face = { Colors::Red, Colors::Black };
                         break;
                     }
                     it = next;
@@ -654,7 +656,7 @@ HighlighterAndId flag_lines_factory(HighlighterParameters params)
                     String content = it != lines.end() ? std::get<2>(*it) : empty;
                     content += String(' ', width - content.char_length());
                     DisplayAtom atom{std::move(content)};
-                    atom.colors = { it != lines.end() ? std::get<1>(*it) : Colors::Default , bg };
+                    atom.face = { it != lines.end() ? std::get<1>(*it) : Colors::Default , bg };
                     line.insert(line.begin(), std::move(atom));
                 }
             }};

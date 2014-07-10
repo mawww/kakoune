@@ -102,17 +102,17 @@ public:
         }
     }
 
-    void write(ColorPair colors)
+    void write(Face face)
     {
-        write(colors.first);
-        write(colors.second);
+        write(face.fg);
+        write(face.bg);
+        write(face.attributes);
     }
 
     void write(const DisplayAtom& atom)
     {
         write(atom.content());
-        write(atom.colors);
-        write(atom.attribute);
+        write(atom.face);
     }
 
     void write(const DisplayLine& line)
@@ -198,11 +198,12 @@ Color read<Color>(int socket)
 }
 
 template<>
-ColorPair read<ColorPair>(int socket)
+Face read<Face>(int socket)
 {
-    ColorPair res;
-    res.first = read<Color>(socket);
-    res.second = read<Color>(socket);
+    Face res;
+    res.fg = read<Color>(socket);
+    res.bg = read<Color>(socket);
+    res.attributes = read<Attribute>(socket);
     return res;
 }
 
@@ -210,8 +211,7 @@ template<>
 DisplayAtom read<DisplayAtom>(int socket)
 {
     DisplayAtom atom(read<String>(socket));
-    atom.colors = read<ColorPair>(socket);
-    atom.attribute = read<Attribute>(socket);
+    atom.face = read<Face>(socket);
     return atom;
 }
 template<>
@@ -249,13 +249,13 @@ public:
     ~RemoteUI();
 
     void menu_show(memoryview<String> choices,
-                   CharCoord anchor, ColorPair fg, ColorPair bg,
+                   CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   CharCoord anchor, ColorPair colors,
+                   CharCoord anchor, Face face,
                    MenuStyle style) override;
     void info_hide() override;
 
@@ -296,7 +296,7 @@ RemoteUI::~RemoteUI()
 }
 
 void RemoteUI::menu_show(memoryview<String> choices,
-                         CharCoord anchor, ColorPair fg, ColorPair bg,
+                         CharCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {
     Message msg(m_socket_watcher.fd());
@@ -322,7 +322,7 @@ void RemoteUI::menu_hide()
 }
 
 void RemoteUI::info_show(StringView title, StringView content,
-                         CharCoord anchor, ColorPair colors,
+                         CharCoord anchor, Face face,
                          MenuStyle style)
 {
     Message msg(m_socket_watcher.fd());
@@ -330,7 +330,7 @@ void RemoteUI::info_show(StringView title, StringView content,
     msg.write(title);
     msg.write(content);
     msg.write(anchor);
-    msg.write(colors);
+    msg.write(face);
     msg.write(style);
 }
 
@@ -448,8 +448,8 @@ void RemoteClient::process_next_message()
     {
         auto choices = read_vector<String>(socket);
         auto anchor = read<CharCoord>(socket);
-        auto fg = read<ColorPair>(socket);
-        auto bg = read<ColorPair>(socket);
+        auto fg = read<Face>(socket);
+        auto bg = read<Face>(socket);
         auto style = read<MenuStyle>(socket);
         m_ui->menu_show(choices, anchor, fg, bg, style);
         break;
@@ -465,9 +465,9 @@ void RemoteClient::process_next_message()
         auto title = read<String>(socket);
         auto content = read<String>(socket);
         auto anchor = read<CharCoord>(socket);
-        auto colors = read<ColorPair>(socket);
+        auto face = read<Face>(socket);
         auto style = read<MenuStyle>(socket);
-        m_ui->info_show(title, content, anchor, colors, style);
+        m_ui->info_show(title, content, anchor, face, style);
         break;
     }
     case RemoteUIMsg::InfoHide:

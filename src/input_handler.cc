@@ -3,8 +3,8 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "client.hh"
-#include "color_registry.hh"
 #include "event_manager.hh"
+#include "face_registry.hh"
 #include "insert_completer.hh"
 #include "normal.hh"
 #include "register_manager.hh"
@@ -109,7 +109,7 @@ public:
             {
                 if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
                 {
-                    ColorPair col = get_color("Information");
+                    Face col = get_face("Information");
                     CharCoord pos = context().window().dimensions();
                     pos.column -= 1;
                     context().ui().info_show(key_to_str(key), it->second.docstring, pos, col, MenuStyle::Prompt);
@@ -212,12 +212,12 @@ public:
             m_display_pos = m_cursor_pos + 1 - width;
 
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ {m_line.substr(m_display_pos, width-1), get_color("StatusLine")},
-                                 {" "_str, get_color("StatusCursor")} }};
+            return DisplayLine{{ {m_line.substr(m_display_pos, width-1), get_face("StatusLine")},
+                                 {" "_str, get_face("StatusCursor")} }};
         else
-            return DisplayLine({ { m_line.substr(m_display_pos, m_cursor_pos - m_display_pos), get_color("StatusLine") },
-                                 { m_line.substr(m_cursor_pos,1), get_color("StatusCursor") },
-                                 { m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1), get_color("StatusLine") } });
+            return DisplayLine({ { m_line.substr(m_display_pos, m_cursor_pos - m_display_pos), get_face("StatusLine") },
+                                 { m_line.substr(m_cursor_pos,1), get_face("StatusCursor") },
+                                 { m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1), get_face("StatusLine") } });
     }
 private:
     CharCount      m_cursor_pos = 0;
@@ -237,8 +237,8 @@ public:
         if (not context().has_ui())
             return;
         CharCoord menu_pos{ context().ui().dimensions().line, 0_char };
-        context().ui().menu_show(choices, menu_pos, get_color("MenuForeground"),
-                                 get_color("MenuBackground"), MenuStyle::Prompt);
+        context().ui().menu_show(choices, menu_pos, get_face("MenuForeground"),
+                                 get_face("MenuBackground"), MenuStyle::Prompt);
         context().ui().menu_select(0);
     }
 
@@ -314,7 +314,7 @@ public:
             auto prompt = "filter:"_str;
             auto width = context().ui().dimensions().column - prompt.char_length();
             auto display_line = m_filter_editor.build_display_line(width);
-            display_line.insert(display_line.begin(), { prompt, get_color("Prompt") });
+            display_line.insert(display_line.begin(), { prompt, get_face("Prompt") });
             context().print_status(display_line);
         }
     }
@@ -381,9 +381,9 @@ class Prompt : public InputMode
 {
 public:
     Prompt(InputHandler& input_handler, const String& prompt,
-           String initstr, ColorPair colors, Completer completer,
+           String initstr, Face face, Completer completer,
            PromptCallback callback)
-        : InputMode(input_handler), m_prompt(prompt), m_prompt_colors(colors),
+        : InputMode(input_handler), m_prompt(prompt), m_prompt_face(face),
           m_completer(completer), m_callback(callback)
     {
         m_history_it = ms_history[m_prompt].end();
@@ -554,11 +554,11 @@ public:
         m_callback(line, PromptEvent::Change, context());
     }
 
-    void set_prompt_colors(ColorPair colors)
+    void set_prompt_face(Face face)
     {
-        if (colors != m_prompt_colors)
+        if (face != m_prompt_face)
         {
-            m_prompt_colors = colors;
+            m_prompt_face = face;
             display();
         }
     }
@@ -585,8 +585,8 @@ private:
             if (context().has_ui() and not candidates.empty())
             {
                 CharCoord menu_pos{ context().ui().dimensions().line, 0_char };
-                context().ui().menu_show(candidates, menu_pos, get_color("MenuForeground"),
-                                         get_color("MenuBackground"), MenuStyle::Prompt);
+                context().ui().menu_show(candidates, menu_pos, get_face("MenuForeground"),
+                                         get_face("MenuBackground"), MenuStyle::Prompt);
             }
         } catch (runtime_error&) {}
     }
@@ -605,7 +605,7 @@ private:
 
         auto width = context().ui().dimensions().column - m_prompt.char_length();
         auto display_line = m_line_editor.build_display_line(width);
-        display_line.insert(display_line.begin(), { m_prompt, m_prompt_colors });
+        display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
     }
 
@@ -614,7 +614,7 @@ private:
     PromptCallback m_callback;
     Completer      m_completer;
     const String   m_prompt;
-    ColorPair      m_prompt_colors;
+    Face           m_prompt_face;
     Completions    m_completions;
     int            m_current_completion = -1;
     String         m_prefix;
@@ -939,19 +939,19 @@ void InputHandler::repeat_last_insert()
 }
 
 void InputHandler::prompt(const String& prompt, String initstr,
-                          ColorPair prompt_colors, Completer completer,
+                          Face prompt_face, Completer completer,
                           PromptCallback callback)
 {
     change_input_mode(new InputModes::Prompt(*this, prompt, initstr,
-                                             prompt_colors, completer,
+                                             prompt_face, completer,
                                              callback));
 }
 
-void InputHandler::set_prompt_colors(ColorPair prompt_colors)
+void InputHandler::set_prompt_face(Face prompt_face)
 {
     InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(m_mode.get());
     if (prompt)
-        prompt->set_prompt_colors(prompt_colors);
+        prompt->set_prompt_face(prompt_face);
 }
 
 void InputHandler::menu(memoryview<String> choices,

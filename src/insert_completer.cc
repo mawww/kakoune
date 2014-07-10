@@ -2,10 +2,10 @@
 
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
-#include "color_registry.hh"
 #include "context.hh"
 #include "debug.hh"
 #include "display_buffer.hh"
+#include "face_registry.hh"
 #include "file.hh"
 #include "user_interface.hh"
 #include "window.hh"
@@ -314,8 +314,8 @@ void InsertCompleter::menu_show()
         menu_entries.push_back(expand_tabs(candidate, tabstop, column));
 
     m_context.ui().menu_show(menu_entries, menu_pos,
-                             get_color("MenuForeground"),
-                             get_color("MenuBackground"),
+                             get_face("MenuForeground"),
+                             get_face("MenuBackground"),
                              MenuStyle::Inline);
     m_context.ui().menu_select(m_current_candidate);
 }

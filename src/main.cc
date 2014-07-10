@@ -3,18 +3,18 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "client_manager.hh"
-#include "color_registry.hh"
 #include "command_manager.hh"
 #include "commands.hh"
 #include "context.hh"
 #include "debug.hh"
 #include "event_manager.hh"
+#include "face_registry.hh"
 #include "file.hh"
 #include "highlighters.hh"
 #include "hook_manager.hh"
+#include "keymap_manager.hh"
 #include "ncurses.hh"
 #include "option_manager.hh"
-#include "keymap_manager.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
@@ -363,7 +363,7 @@ int kakoune(const ParametersParser& parser)
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     DefinedHighlighters defined_highlighters;
-    ColorRegistry       color_registry;
+    FaceRegistry        face_registry;
     ClientManager       client_manager;
 
     run_unit_tests();
