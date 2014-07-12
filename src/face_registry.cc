@@ -31,12 +31,12 @@ static Face parse_face(StringView facedesc)
     return res;
 }
 
-const Face& FaceRegistry::operator[](const String& facedesc)
+Face FaceRegistry::operator[](const String& facedesc)
 {
     auto it = m_aliases.find(facedesc);
     if (it != m_aliases.end())
         return it->second;
-    return (m_aliases[facedesc] = parse_face(facedesc));
+    return parse_face(facedesc);
 }
 
 void FaceRegistry::register_alias(const String& name, const String& facedesc,

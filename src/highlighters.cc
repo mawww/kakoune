@@ -161,7 +161,7 @@ auto apply_face = [](const Face& face)
     };
 };
 
-using FaceSpec = std::unordered_map<size_t, const Face*>;
+using FacesSpec = std::vector<String>;
 
 struct Fill
 {
@@ -205,7 +205,7 @@ private:
 class RegexColorizer
 {
 public:
-    RegexColorizer(Regex regex, FaceSpec faces)
+    RegexColorizer(Regex regex, FacesSpec faces)
         : m_regex{std::move(regex)}, m_faces{std::move(faces)}
     {
     }
@@ -214,17 +214,20 @@ public:
     {
         if (flags != HighlightFlags::Highlight)
             return;
+
+        std::vector<Optional<Face>> faces(m_faces.size());
         auto& cache = update_cache_ifn(context.buffer(), display_buffer.range());
         for (auto& match : cache.m_matches)
         {
             for (size_t n = 0; n < match.size(); ++n)
             {
-                auto face_it = m_faces.find(n);
-                if (face_it == m_faces.end())
+                if (n >= m_faces.size() or m_faces[n].empty())
                     continue;
+                if (not faces[n])
+                    faces[n] = get_face(m_faces[n]);
 
                 highlight_range(display_buffer, match[n].first, match[n].second, true,
-                                apply_face(*face_it->second));
+                                apply_face(*faces[n]));
             }
         }
     }
@@ -239,7 +242,7 @@ private:
     BufferSideCache<Cache> m_cache;
 
     Regex     m_regex;
-    FaceSpec m_faces;
+    FacesSpec m_faces;
 
     Cache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
@@ -279,21 +282,22 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
 
     try
     {
-        static Regex face_spec_ex(R"((\d+):(\w+(,\w+)?))");
-        FaceSpec faces;
+        static Regex face_spec_ex(R"((\d+):(.*))");
+        FacesSpec faces;
         for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
             boost::smatch res;
             if (not boost::regex_match(it->begin(), it->end(), res, face_spec_ex))
                 throw runtime_error("wrong face spec: '" + *it +
-                                     "' expected <capture>:<fgcolor>[,<bgcolor>]");
-
+                                     "' expected <capture>:<facespec>");
+            get_face(res[2].str()); // throw if wrong face spec
             int capture = str_to_int(res[1].str());
-            const Face*& face = faces[capture];
-            face = &get_face(res[2].str());
+            if (capture >= faces.size())
+                faces.resize(capture+1);
+            faces[capture] = res[2].str();
         }
 
-        String id = "colre'" + params[0] + "'";
+        String id = "hlregex'" + params[0] + "'";
 
         Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
 
@@ -313,7 +317,7 @@ public:
     DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
         : m_regex_getter(std::move(regex_getter)),
           m_face_getter(std::move(face_getter)),
-          m_colorizer(Regex(), FaceSpec{}) {}
+          m_colorizer(Regex(), FacesSpec{}) {}
 
     void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
     {
@@ -321,7 +325,7 @@ public:
             return;
 
         Regex regex = m_regex_getter(context);
-        FaceSpec face = m_face_getter(context);
+        FacesSpec face = m_face_getter(context);
         if (regex != m_last_regex or face != m_last_face)
         {
             m_last_regex = regex;
@@ -337,7 +341,7 @@ private:
     Regex       m_last_regex;
     RegexGetter m_regex_getter;
 
-    FaceSpec    m_last_face;
+    FacesSpec   m_last_face;
     FaceGetter  m_face_getter;
 
     RegexColorizer m_colorizer;
@@ -357,7 +361,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
     if (params.size() != 0)
         throw runtime_error("wrong parameter count");
         auto get_face = [](const Context& context){
-            return FaceSpec{ { 0, &Kakoune::get_face("Search") } };
+            return FacesSpec{ { "Search" } };
         };
         auto get_regex = [](const Context&){
             auto s = Context().main_sel_register_value("/");
@@ -378,9 +382,9 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    const Face& face = get_face(params[1]);
-    auto get_face = [&](const Context&){
-        return FaceSpec{ { 0, &face } };
+    String facespec = params[1];
+    auto get_face = [=](const Context&){
+        return FacesSpec{ { facespec } };
     };
 
     String option_name = params[0];
@@ -502,7 +506,7 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
 
     char format[] = "%?d│";
     format[1] = '0' + digit_count;
-    auto& face = get_face("LineNumbers");
+    const Face face = get_face("LineNumbers");
     for (auto& line : display_buffer.lines())
     {
         char buffer[10];
@@ -515,7 +519,7 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
 
 void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
 {
-    auto& face = get_face("MatchingChar");
+    const Face face = get_face("MatchingChar");
     using CodepointPair = std::pair<Codepoint, Codepoint>;
     static const CodepointPair matching_chars[] = { { '(', ')' }, { '{', '}' }, { '[', ']' }, { '<', '>' } };
     const auto range = display_buffer.range();
