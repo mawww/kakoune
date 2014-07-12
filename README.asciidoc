@@ -588,21 +588,20 @@ and
 
 general highlighters are:
 
- * +regex <ex> <color>...+: highlight a regex, takes the regex as first parameter,
-       followed by any number of color parameters. color format is:
-       <capture_id>:<fg_color>[,<bg_color>]
+ * +regex <ex> <capture_id>:<face>...+: highlight a regex, takes the regex as
+       first parameter, followed by any number of face parameters.
        For example: `:addhl regex //(\h+TODO:)?[^\n]+ 0:cyan 1:yellow,red`
        will highlight C++ style comments in cyan, with an eventual 'TODO:' in
        yellow on red background.
- * +search <color>+: highlight every matches to the current search pattern. takes
-       one parameter for the color to apply to highlighted elements.
+ * +search+: highlight every matches to the current search pattern with the
+       +Search+ face
  * +flag_lines <flag> <option_name>+: add a column in front of text, and display the
        given flag in it for everly lines contained in the int-list option named
        <option_name>.
  * +show_matching+: highlight matching char of the character under the selections
-       cursor using +MatchingChar+ color alias.
+       cursor using +MatchingChar+ face.
  * +number_lines+: show line numbers
- * +fill <color>+: fill with given color, mostly useful with region highlighters
+ * +fill <face>+: fill using given face, mostly useful with region highlighters
        (see below)
 
 Highlighting Groups
@@ -814,15 +813,25 @@ with +scope+ being one of +global, buffer or window+ (or any prefix),
 mode being +insert, normal, prompt or menu+ (or any prefix), +key+ being
 a single key name and +keys+ a list of keys.
 
-Color Aliases
--------------
+Faces
+-----
 
-Color aliases give a name to a pair of foreground/background colors, and
-can be used in place of them.
+A Face refer the how specified text is displayed, a Face has a foreground
+color, a background color, and some attributes.
 
---------------------------
-:colalias <name> <fg_color[,bg_color]>
---------------------------
+Faces can be defined and modified with the face command.
+
+-----------------------
+:face <name> <facespec>
+-----------------------
+
+Any place requiring a face can take either a face name defined with the +face+
+command or a direct face description (called _facespec_) with the following
+syntax:
+
+--------------------------------
+fg_color[,bg_color][+attributes]
+--------------------------------
 
 fg_color and bg_color can be:
 
@@ -832,27 +841,31 @@ fg_color and bg_color can be:
 
 not specifying bg_color uses +default+
 
-In place of +<fg_color[,bg_color]>+, another color alias name can be referenced.
+attributes is a string of letters each defining an attributes:
 
-Using color alias instead of colorspec permits to change the effective colors
+ * +u+: Underline
+ * +r+: Reverse
+ * +b+: Bold
+
+Using named faces instead of facespec permits to change the effective faces
 afterward.
 
-there are some builtins color aliases used by internal Kakoune functionalities:
+there are some builtins faces used by internal Kakoune functionalities:
 
- * +PrimarySelection+: main selection color for every selected character except
+ * +PrimarySelection+: main selection face for every selected character except
      the cursor
- * +SecondarySelection+: secondary selection color for every selected character
+ * +SecondarySelection+: secondary selection face for every selected character
      except the cursor
  * +PrimaryCursor+: cursor of the primary selection
  * +SecondaryCursor+: cursor of the secondary selection
- * +LineNumbers+: colors used by the number_lines highlighter
- * +MenuForeground+: colors for the selected element in menus
- * +MenuBackground+: colors for the not selected elements in menus
- * +Information+: colors the informations windows and information messages
- * +Error+: colors of error messages
- * +StatusLine+: colors used for the status line
- * +StatusCursor+: colors used for the status line cursor
- * +Prompt+: colors used prompt displayed on the status line
+ * +LineNumbers+: face used by the number_lines highlighter
+ * +MenuForeground+: face for the selected element in menus
+ * +MenuBackground+: face for the not selected elements in menus
+ * +Information+: face for the informations windows and information messages
+ * +Error+: face of error messages
+ * +StatusLine+: face used for the status line
+ * +StatusCursor+: face used for the status line cursor
+ * +Prompt+: face used prompt displayed on the status line
 
 Shell expansion
 ---------------

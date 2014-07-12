@@ -1245,20 +1245,20 @@ const CommandDesc try_catch_cmd = {
     }
 };
 
-static Completions complete_colalias(const Context&, CompletionFlags flags,
-                                     const String& prefix, ByteCount cursor_pos)
+static Completions complete_face(const Context&, CompletionFlags flags,
+                                 const String& prefix, ByteCount cursor_pos)
 {
     return {0_byte, cursor_pos,
             FaceRegistry::instance().complete_alias_name(prefix, cursor_pos)};
 }
 
-const CommandDesc define_color_alias_cmd = {
-    "colalias",
-    "ca",
-    "colalias <name> <color>: set <name> to refer to color <color> (which can be an alias itself)",
+const CommandDesc face_cmd = {
+    "face",
+    nullptr,
+    "face <name> <facespec>: set face <name> to refer to <facespec>\n",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
-    PerArgumentCommandCompleter({ complete_colalias, complete_colalias }),
+    PerArgumentCommandCompleter({ complete_face, complete_face }),
     [](const ParametersParser& parser, Context& context)
     {
         FaceRegistry::instance().register_alias(parser[0], parser[1], true);
@@ -1382,7 +1382,7 @@ void register_commands()
     register_command(cm, menu_cmd);
     register_command(cm, info_cmd);
     register_command(cm, try_catch_cmd);
-    register_command(cm, define_color_alias_cmd);
+    register_command(cm, face_cmd);
     register_command(cm, set_client_name_cmd);
     register_command(cm, set_register_cmd);
     register_command(cm, change_working_directory_cmd);

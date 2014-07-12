@@ -1,14 +1,14 @@
 # define color scheme
-colalias value red
-colalias type yellow
-colalias identifier cyan
-colalias string magenta
-colalias error default,red
-colalias keyword blue
-colalias operator yellow
-colalias attribute green
-colalias comment cyan
-colalias macro magenta
+face value red
+face type yellow
+face identifier cyan
+face string magenta
+face error default,red
+face keyword blue
+face operator yellow
+face attribute green
+face comment cyan
+face macro magenta
 
 def -shell-params runtime %{ %sh{
         while [ $# -gt 0 ]; do
