@@ -202,10 +202,10 @@ private:
     ValueId m_id;
 };
 
-class RegexColorizer
+class RegexHighlighter
 {
 public:
-    RegexColorizer(Regex regex, FacesSpec faces)
+    RegexHighlighter(Regex regex, FacesSpec faces)
         : m_regex{std::move(regex)}, m_faces{std::move(faces)}
     {
     }
@@ -275,7 +275,7 @@ private:
     }
 };
 
-HighlighterAndId colorize_regex_factory(HighlighterParameters params)
+HighlighterAndId highlight_regex_factory(HighlighterParameters params)
 {
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
@@ -301,7 +301,7 @@ HighlighterAndId colorize_regex_factory(HighlighterParameters params)
 
         Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
 
-        return HighlighterAndId(id, RegexColorizer(std::move(ex),
+        return HighlighterAndId(id, RegexHighlighter(std::move(ex),
                                                    std::move(faces)));
     }
     catch (boost::regex_error& err)
@@ -317,7 +317,7 @@ public:
     DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
         : m_regex_getter(std::move(regex_getter)),
           m_face_getter(std::move(face_getter)),
-          m_colorizer(Regex(), FacesSpec{}) {}
+          m_highlighter(Regex(), FacesSpec{}) {}
 
     void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
     {
@@ -331,10 +331,10 @@ public:
             m_last_regex = regex;
             m_last_face = face;
             if (not m_last_regex.empty())
-                m_colorizer = RegexColorizer{m_last_regex, face};
+                m_highlighter= RegexHighlighter{m_last_regex, face};
         }
         if (not m_last_regex.empty() and not m_last_face.empty())
-            m_colorizer(context, flags, display_buffer);
+            m_highlighter(context, flags, display_buffer);
     }
 
 private:
@@ -344,7 +344,7 @@ private:
     FacesSpec   m_last_face;
     FaceGetter  m_face_getter;
 
-    RegexColorizer m_colorizer;
+    RegexHighlighter m_highlighter;
 };
 
 template<typename RegexGetter, typename FaceGetter>
@@ -1200,7 +1200,7 @@ void register_highlighters()
     registry.register_func("show_matching", SimpleHighlighterFactory<show_matching_char>("show_matching"));
     registry.register_func("show_whitespaces", SimpleHighlighterFactory<show_whitespaces>("show_whitespaces"));
     registry.register_func("fill", fill_factory);
-    registry.register_func("regex", colorize_regex_factory);
+    registry.register_func("regex", highlight_regex_factory);
     registry.register_func("regex_option", highlight_regex_option_factory);
     registry.register_func("search", highlight_search_factory);
     registry.register_func("group", highlighter_group_factory);
