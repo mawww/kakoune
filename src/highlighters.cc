@@ -165,25 +165,25 @@ using FacesSpec = std::vector<String>;
 
 struct Fill
 {
-    Fill(Face face) : m_face(face) {}
+    Fill(String facespec) : m_facespec(facespec) {}
 
     void operator()(const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer)
     {
         auto range = display_buffer.range();
         highlight_range(display_buffer, range.first, range.second, true,
-                        apply_face(m_face));
+                        apply_face(get_face(m_facespec)));
     }
 
-    Face m_face;
+    String m_facespec;
 };
 
 HighlighterAndId fill_factory(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
-    Face face = get_face(params[0]);
-    return HighlighterAndId("fill_" + params[0], Fill(face));
+    get_face(params[0]); // validate param
+    return HighlighterAndId("fill_" + params[0], Fill(params[0]));
 }
 
 template<typename T>
@@ -402,7 +402,8 @@ HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    const Face& face = get_face(params[1]);
+    String facespec = params[1];
+    get_face(facespec); // validate facespec
 
     String option_name = params[0];
     // verify option type now
@@ -413,7 +414,7 @@ HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
     {
         int line = context.options()[option_name].get<int>();
         highlight_range(display_buffer, {line-1, 0}, {line, 0}, false,
-                        apply_face(face));
+                        apply_face(get_face(facespec)));
     };
 
     return {"hlline_" + option_name, std::move(highlighter)};
