@@ -47,7 +47,7 @@ addhl -group / multi_region -default code cpp \
 
 addhl -group /cpp/string fill string
 addhl -group /cpp/comment fill comment
-addhl -group /cpp/macro fill macro
+addhl -group /cpp/macro fill meta
 
 addhl -group /cpp/code regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
 addhl -group /cpp/code regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type

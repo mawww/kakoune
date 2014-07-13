@@ -24,7 +24,7 @@ addhl -group / multi_region -default code javascript \
 
 addhl -group /javascript/double_string fill string
 addhl -group /javascript/single_string fill string
-addhl -group /javascript/regex         fill macro
+addhl -group /javascript/regex         fill meta
 addhl -group /javascript/comment       fill comment
 
 addhl -group /javascript/code regex \<(document|false|null|parent|self|this|true|undefined|window)\> 0:value

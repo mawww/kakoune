@@ -8,7 +8,7 @@ face keyword blue
 face operator yellow
 face attribute green
 face comment cyan
-face macro magenta
+face meta magenta
 
 def -shell-params runtime %{ %sh{
         while [ $# -gt 0 ]; do

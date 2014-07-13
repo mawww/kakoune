@@ -32,19 +32,19 @@ addhl -group / multi_region -default code ruby  \
 
 addhl -group /ruby/double_string fill string
 addhl -group /ruby/double_string region interpolation \Q#{ \} \{
-addhl -group /ruby/double_string/interpolation/content fill macro
+addhl -group /ruby/double_string/interpolation/content fill meta
 addhl -group /ruby/single_string fill string
-addhl -group /ruby/backtick fill macro
+addhl -group /ruby/backtick fill meta
 addhl -group /ruby/backtick region interpolation \Q#{ \} \{
-addhl -group /ruby/backtick/interpolation/content fill macro
-addhl -group /ruby/regex fill macro
+addhl -group /ruby/backtick/interpolation/content fill meta
+addhl -group /ruby/regex fill meta
 addhl -group /ruby/regex region interpolation \Q#{ \} \{
-addhl -group /ruby/regex/interpolation/content fill macro
+addhl -group /ruby/regex/interpolation/content fill meta
 addhl -group /ruby/comment fill comment
-addhl -group /ruby/literal fill macro
+addhl -group /ruby/literal fill meta
 
 addhl -group /ruby/code regex \<([a-z]\w+:)|([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier
-addhl -group /ruby/code regex \<(require|include)\> 0:macro
+addhl -group /ruby/code regex \<(require|include)\> 0:meta
 addhl -group /ruby/code regex \<(attr_(reader|writer|accessor))\> 0:attribute
 
 # Keywords are collected searching for keyword_ at

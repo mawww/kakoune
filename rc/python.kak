@@ -27,7 +27,7 @@ addhl -group /python/single_string fill string
 addhl -group /python/comment       fill comment
 
 addhl -group /python/code regex \<(True|False|None)\> 0:value
-addhl -group /python/code regex \<(import|from)\> 0:macro
+addhl -group /python/code regex \<(import|from)\> 0:meta
 
 # Keyword list is collected using `keyword.kwlist` from `keyword`
 addhl -group /python/code regex \<(and|as|assert|break|class|continue|def|del|elif|else|except|exec|finally|for|global|if|in|is|lambda|not|or|pass|print|raise|return|try|while|with|yield)\> 0:keyword

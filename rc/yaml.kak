@@ -24,7 +24,7 @@ addhl -group /yaml/double_string fill string
 addhl -group /yaml/single_string fill string
 addhl -group /yaml/comment       fill comment
 
-addhl -group /yaml/code regex ^(---|\.\.\.)$ 0:macro
+addhl -group /yaml/code regex ^(---|\.\.\.)$ 0:meta
 addhl -group /yaml/code regex ^(\h*:\w*) 0:keyword
 addhl -group /yaml/code regex \<(true|false|null)\> 0:value
 
