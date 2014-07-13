@@ -42,16 +42,17 @@ def -hidden _cpp_indent_on_closing_curly_brace %[
 addhl -group / multi_region -default code cpp \
     string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
     comment /\* \*/ '' \
-    comment // $ ''
+    comment // $ '' \
+    macro ^\h*?\K# (?<!\\)\n ''
 
 addhl -group /cpp/string fill string
 addhl -group /cpp/comment fill comment
+addhl -group /cpp/macro fill macro
 
 addhl -group /cpp/code regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
 addhl -group /cpp/code regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
 addhl -group /cpp/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit)\>" 0:keyword
 addhl -group /cpp/code regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
-addhl -group /cpp/code regex "^\h*?#.*?(?<!\\)$" 0:macro
 
 hook global WinSetOption filetype=cpp %[
     addhl ref cpp
