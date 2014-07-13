@@ -27,6 +27,7 @@ addhl -group /javascript/single_string fill string
 addhl -group /javascript/regex         fill meta
 addhl -group /javascript/comment       fill comment
 
+addhl -group /javascript/code regex \$\w* 0:identifier
 addhl -group /javascript/code regex \<(document|false|null|parent|self|this|true|undefined|window)\> 0:value
 addhl -group /javascript/code regex \<(Array|Boolean|Date|Function|Number|Object|RegExp|String)\> 0:type
 
