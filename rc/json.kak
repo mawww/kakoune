@@ -15,7 +15,7 @@ hook global BufCreate .*[.](json) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code json \
+addhl -group / regions -default code json \
     string '"' (?<!\\)(\\\\)*" ''
 
 addhl -group /json/string fill string

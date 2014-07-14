@@ -15,7 +15,7 @@ hook global BufCreate .*[.](yaml) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code yaml \
+addhl -group / regions -default code yaml      \
     double_string '"' (?<!\\)(\\\\)*"       '' \
     single_string "'" "'"                   '' \
     comment       '#' '$'                   ''

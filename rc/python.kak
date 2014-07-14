@@ -15,12 +15,12 @@ hook global BufCreate .*[.](py) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code python \
-    double_string '"""' '"""'                 '' \
-    single_string "'''" "'''"                 '' \
-    double_string '"' (?<!\\)(\\\\)*"         '' \
-    single_string "'" "'"                     '' \
-    comment       '#' '$'                     ''
+addhl -group / regions -default code python \
+    double_string '"""' '"""'            '' \
+    single_string "'''" "'''"            '' \
+    double_string '"'   (?<!\\)(\\\\)*"  '' \
+    single_string "'"   "'"              '' \
+    comment       '#'   '$'              ''
 
 addhl -group /python/double_string fill string
 addhl -group /python/single_string fill string

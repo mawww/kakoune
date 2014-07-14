@@ -15,7 +15,7 @@ hook global BufCreate .*(([.](rb))|(irbrc)|(pryrc)|(Capfile|[.]cap)|(Gemfile)|(G
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code ruby  \
+addhl -group / regions -default code ruby       \
     double_string '"' (?<!\\)(\\\\)*"        '' \
     single_string "'" "'"                    '' \
     backtick      '`' (?<!\\)(\\\\)*`        '' \
@@ -31,16 +31,21 @@ addhl -group / multi_region -default code ruby  \
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
 
 addhl -group /ruby/double_string fill string
-addhl -group /ruby/double_string region interpolation \Q#{ \} \{
-addhl -group /ruby/double_string/interpolation/content fill meta
+addhl -group /ruby/double_string regions regions interpolation \Q#{ \} \{
+addhl -group /ruby/double_string/regions/interpolation fill meta
+
 addhl -group /ruby/single_string fill string
+
 addhl -group /ruby/backtick fill meta
-addhl -group /ruby/backtick region interpolation \Q#{ \} \{
-addhl -group /ruby/backtick/interpolation/content fill meta
+addhl -group /ruby/backtick regions regions interpolation \Q#{ \} \{
+addhl -group /ruby/backtick/regions/interpolation fill meta
+
 addhl -group /ruby/regex fill meta
-addhl -group /ruby/regex region interpolation \Q#{ \} \{
-addhl -group /ruby/regex/interpolation/content fill meta
+addhl -group /ruby/regex regions regions interpolation \Q#{ \} \{
+addhl -group /ruby/regex/regions/interpolation fill meta
+
 addhl -group /ruby/comment fill comment
+
 addhl -group /ruby/literal fill meta
 
 addhl -group /ruby/code regex \<([a-z]\w+:)|([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier

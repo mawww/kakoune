@@ -6,7 +6,7 @@ hook global BufSetOption mimetype=text/x-shellscript %{
     set buffer filetype sh
 }
 
-addhl -group / multi_region -default code sh \
+addhl -group / regions -default code sh \
     double_string  %{(^|\h)"} %{(?<!\\)(\\\\)*"} '' \
     single_string %{(^|\h)'} %{(?<!\\)(\\\\)*'} '' \
     comment '#' '$' ''

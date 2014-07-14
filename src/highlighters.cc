@@ -712,10 +712,7 @@ HighlighterAndId reference_factory(HighlighterParameters params)
             }};
 }
 
-namespace RegionHighlight
-{
-
-struct Match
+struct RegexMatch
 {
     size_t timestamp;
     LineCount line;
@@ -725,9 +722,9 @@ struct Match
     ByteCoord begin_coord() const { return { line, begin }; }
     ByteCoord end_coord() const { return { line, end }; }
 };
-using MatchList = std::vector<Match>;
+using RegexMatchList = std::vector<RegexMatch>;
 
-void find_matches(const Buffer& buffer, MatchList& matches, const Regex& regex)
+void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex)
 {
     const size_t buf_timestamp = buffer.timestamp();
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
@@ -743,7 +740,7 @@ void find_matches(const Buffer& buffer, MatchList& matches, const Regex& regex)
 }
 
 void update_matches(const Buffer& buffer, memoryview<LineModification> modifs,
-                    MatchList& matches, const Regex& regex)
+                    RegexMatchList& matches, const Regex& regex)
 {
     const size_t buf_timestamp = buffer.timestamp();
     // remove out of date matches and update line for others
@@ -796,29 +793,29 @@ void update_matches(const Buffer& buffer, memoryview<LineModification> modifs,
         }
     }
     std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
-                       [](const Match& lhs, const Match& rhs) {
+                       [](const RegexMatch& lhs, const RegexMatch& rhs) {
                            return lhs.begin_coord() < rhs.begin_coord();
                        });
 }
 
 struct RegionMatches
 {
-    MatchList begin_matches;
-    MatchList end_matches;
-    MatchList recurse_matches;
+    RegexMatchList begin_matches;
+    RegexMatchList end_matches;
+    RegexMatchList recurse_matches;
 
-    static bool compare_to_begin(const Match& lhs, ByteCoord rhs)
+    static bool compare_to_begin(const RegexMatch& lhs, ByteCoord rhs)
     {
         return lhs.begin_coord() < rhs;
     }
 
-    MatchList::const_iterator find_next_begin(ByteCoord pos) const
+    RegexMatchList::const_iterator find_next_begin(ByteCoord pos) const
     {
         return std::lower_bound(begin_matches.begin(), begin_matches.end(),
                                 pos, compare_to_begin);
     }
 
-    MatchList::const_iterator find_matching_end(ByteCoord beg_pos) const
+    RegexMatchList::const_iterator find_matching_end(ByteCoord beg_pos) const
     {
         auto end_it = end_matches.begin();
         auto rec_it = recurse_matches.begin();
@@ -858,10 +855,10 @@ struct RegionDesc
     RegionMatches find_matches(const Buffer& buffer) const
     {
         RegionMatches res;
-        RegionHighlight::find_matches(buffer, res.begin_matches, m_begin);
-        RegionHighlight::find_matches(buffer, res.end_matches, m_end);
+        Kakoune::find_matches(buffer, res.begin_matches, m_begin);
+        Kakoune::find_matches(buffer, res.end_matches, m_end);
         if (not m_recurse.empty())
-            RegionHighlight::find_matches(buffer, res.recurse_matches, m_recurse);
+            Kakoune::find_matches(buffer, res.recurse_matches, m_recurse);
         return res;
     }
 
@@ -869,138 +866,19 @@ struct RegionDesc
                         memoryview<LineModification> modifs,
                         RegionMatches& matches) const
     {
-        RegionHighlight::update_matches(buffer, modifs, matches.begin_matches, m_begin);
-        RegionHighlight::update_matches(buffer, modifs, matches.end_matches, m_end);
+        Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin);
+        Kakoune::update_matches(buffer, modifs, matches.end_matches, m_end);
         if (not m_recurse.empty())
-            RegionHighlight::update_matches(buffer, modifs, matches.recurse_matches, m_recurse);
+            Kakoune::update_matches(buffer, modifs, matches.recurse_matches, m_recurse);
     }
 };
 
-struct RegionHighlighter
-{
-public:
-    RegionHighlighter(Regex begin, Regex end, Regex recurse = Regex{})
-        : m_region{ std::move(begin), std::move(end), std::move(recurse) }
-    {
-        if (m_region.m_begin.empty() or m_region.m_end.empty())
-            throw runtime_error("invalid regex for region highlighter");
-    }
-
-    void operator()(HierachicalHighlighter::GroupMap groups, const Context& context,
-                    HighlightFlags flags, DisplayBuffer& display_buffer)
-    {
-        if (flags != HighlightFlags::Highlight)
-            return;
-
-        auto it = groups.find("content");
-        if (it == groups.end())
-            return;
-
-        auto range = display_buffer.range();
-        const auto& buffer = context.buffer();
-        auto& regions = update_cache_ifn(buffer);
-        auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
-                                      [](const Region& r, ByteCoord c) { return r.end < c; });
-        auto end = std::lower_bound(begin, regions.end(), range.second,
-                                    [](const Region& r, ByteCoord c) { return r.begin < c; });
-        auto correct = [&](ByteCoord c) -> ByteCoord {
-            if (buffer[c.line].length() == c.column)
-                return {c.line+1, 0};
-            return c;
-        };
-        for (; begin != end; ++begin)
-            apply_highlighter(context, flags, display_buffer,
-                              correct(begin->begin), correct(begin->end),
-                              it->second);
-    }
-private:
-    RegionDesc m_region;
-
-    struct Region
-    {
-        ByteCoord begin;
-        ByteCoord end;
-    };
-    using RegionList = std::vector<Region>;
-
-    struct Cache
-    {
-        size_t timestamp = 0;
-        RegionMatches matches;
-        RegionList regions;
-    };
-    BufferSideCache<Cache> m_cache;
-
-    const RegionList& update_cache_ifn(const Buffer& buffer)
-    {
-        Cache& cache = m_cache.get(buffer);
-        const size_t buf_timestamp = buffer.timestamp();
-        if (cache.timestamp == buf_timestamp)
-            return cache.regions;
-
-        if (cache.timestamp == 0)
-            cache.matches = m_region.find_matches(buffer);
-        else
-        {
-            auto modifs = compute_line_modifications(buffer, cache.timestamp);
-            m_region.update_matches(buffer, modifs, cache.matches);
-        }
-
-        cache.regions.clear();
-        for (auto beg_it = cache.matches.begin_matches.cbegin();
-             beg_it != cache.matches.begin_matches.end(); )
-        {
-            auto end_it = cache.matches.find_matching_end(beg_it->end_coord());
-
-            if (end_it == cache.matches.end_matches.end())
-            {
-                cache.regions.push_back({ {beg_it->line, beg_it->begin},
-                                          buffer.end_coord() });
-                break;
-            }
-            else
-            {
-                cache.regions.push_back({ beg_it->begin_coord(),
-                                          end_it->end_coord() });
-                beg_it = cache.matches.find_next_begin(end_it->end_coord());
-            }
-        }
-        cache.timestamp = buf_timestamp;
-        return cache.regions;
-    }
-};
-
-HighlighterAndId region_factory(HighlighterParameters params)
-{
-    try
-    {
-        if (params.size() != 3 && params.size() != 4)
-            throw runtime_error("wrong parameter count");
-
-        Regex begin{params[1], Regex::nosubs | Regex::optimize };
-        Regex end{params[2], Regex::nosubs | Regex::optimize };
-        Regex recurse;
-        if (params.size() == 4)
-            recurse = Regex{params[3], Regex::nosubs | Regex::optimize };
-
-        return {params[0],
-                HierachicalHighlighter(RegionHighlighter(std::move(begin),
-                                                         std::move(end),
-                                                         std::move(recurse)),
-                                       { { "content", HighlighterGroup{} } })};
-    }
-    catch (boost::regex_error& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
-}
-
-struct MultiRegionHighlighter
+struct RegionsHighlighter
 {
 public:
     using NamedRegionDescList = std::vector<std::pair<String, RegionDesc>>;
 
-    MultiRegionHighlighter(NamedRegionDescList regions, String default_group)
+    RegionsHighlighter(NamedRegionDescList regions, String default_group)
         : m_regions{std::move(regions)}, m_default_group{std::move(default_group)}
     {
         if (m_regions.empty())
@@ -1076,7 +954,7 @@ private:
     };
     BufferSideCache<Cache> m_cache;
 
-    using RegionAndMatch = std::pair<size_t, MatchList::const_iterator>;
+    using RegionAndMatch = std::pair<size_t, RegexMatchList::const_iterator>;
 
     // find the begin closest to pos in all matches
     RegionAndMatch find_next_begin(const Cache& cache, ByteCoord pos) const
@@ -1156,7 +1034,7 @@ private:
     }
 };
 
-HighlighterAndId multi_region_factory(HighlighterParameters params)
+HighlighterAndId regions_factory(HighlighterParameters params)
 {
     try
     {
@@ -1169,7 +1047,7 @@ HighlighterAndId multi_region_factory(HighlighterParameters params)
         if ((parser.positional_count() % 4) != 1)
             throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
 
-        MultiRegionHighlighter::NamedRegionDescList regions;
+        RegionsHighlighter::NamedRegionDescList regions;
         id_map<HighlighterGroup> groups;
         for (size_t i = 1; i < parser.positional_count(); i += 4)
         {
@@ -1194,14 +1072,12 @@ HighlighterAndId multi_region_factory(HighlighterParameters params)
 
         return {parser[0],
                 HierachicalHighlighter(
-                    MultiRegionHighlighter(std::move(regions), std::move(default_group)), std::move(groups))};
+                    RegionsHighlighter(std::move(regions), std::move(default_group)), std::move(groups))};
     }
     catch (boost::regex_error& err)
     {
         throw runtime_error(String("regex error: ") + err.what());
     }
-}
-
 }
 
 void register_highlighters()
@@ -1219,8 +1095,7 @@ void register_highlighters()
     registry.register_func("flag_lines", flag_lines_factory);
     registry.register_func("line_option", highlight_line_option_factory);
     registry.register_func("ref", reference_factory);
-    registry.register_func("region", RegionHighlight::region_factory);
-    registry.register_func("multi_region", RegionHighlight::multi_region_factory);
+    registry.register_func("regions", regions_factory);
 }
 
 }

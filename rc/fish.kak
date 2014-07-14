@@ -15,10 +15,10 @@ hook global BufCreate .*[.](fish) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code fish \
-    double_string '"' (?<!\\)(\\\\)*"       '' \
-    single_string "'" "'"                   '' \
-    comment       '#' '$'                   ''
+addhl -group / regions -default code fish \
+    double_string '"' (?<!\\)(\\\\)*"  '' \
+    single_string "'" "'"              '' \
+    comment       '#' '$'              ''
 
 addhl -group /fish/double_string fill string
 addhl -group /fish/double_string regex (\$\w+)|(\{\$\w+\}) 0:identifier

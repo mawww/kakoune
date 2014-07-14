@@ -1,7 +1,7 @@
 # define color scheme
 face value red
 face type yellow
-face identifier cyan
+face identifier green
 face string magenta
 face error default,red
 face keyword blue

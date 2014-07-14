@@ -2,7 +2,7 @@ hook global BufCreate (.*/)?(kakrc|.*.kak) %{
     set buffer filetype kak
 }
 
-addhl -group / multi_region -default code kakrc \
+addhl -group / regions -default code kakrc \
     comment (^|\h)\K\# $ '' \
     double_string %{(^|\h)"} %{(?<!\\)(\\\\)*"} '' \
     single_string %{(^|\h)'} %{(?<!\\)(\\\\)*'} '' \

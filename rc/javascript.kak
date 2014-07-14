@@ -12,12 +12,12 @@ hook global BufCreate .*[.](js) %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / multi_region -default code javascript \
-    double_string '"' (?<!\\)(\\\\)*"             '' \
-    single_string "'" "'"                         '' \
-    comment       //  '$'                         '' \
-    comment      /[*] [*]/                        '' \
-    regex         /   (?<!\\)(\\\\)*/[gimy]*      ''
+addhl -group / regions -default code javascript \
+    double_string '"' (?<!\\)(\\\\)*"        '' \
+    single_string "'" "'"                    '' \
+    comment       //  '$'                    '' \
+    comment      /[*] [*]/                   '' \
+    regex         /   (?<!\\)(\\\\)*/[gimy]* ''
 
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp

@@ -39,7 +39,7 @@ def -hidden _cpp_indent_on_closing_curly_brace %[
     try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]
 
-addhl -group / multi_region -default code cpp \
+addhl -group / regions -default code cpp \
     string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
     comment /\* \*/ '' \
     comment // $ '' \
