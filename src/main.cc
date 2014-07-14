@@ -180,7 +180,7 @@ void register_registers()
         { '.', [](const Context& context) { return context.selections_content(); } },
         { '#', [](const Context& context) {
             StringList res;
-            for (size_t i = 1; i < context.selections().size(); ++i)
+            for (size_t i = 1; i < context.selections().size()+1; ++i)
                 res.push_back(to_string((int)i));
             return res;
         } }
