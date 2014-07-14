@@ -117,7 +117,7 @@ void apply_highlighter(const Context& context,
                 if (atom_it->end() >= end)
                 {
                     if (is_replaced or atom_it->end() == end)
-                        beg_idx = atom_it - line.begin();
+                        end_idx = atom_it - line.begin() + 1;
                     else
                     {
                         atom_it = ++line.split(atom_it, end);
