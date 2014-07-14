@@ -1137,7 +1137,18 @@ private:
                 cache.regions.push_back({ beg_it->begin_coord(),
                                           end_it->end_coord(),
                                           named_region.first });
-                begin = find_next_begin(cache, end_it->end_coord());
+                auto end_coord = end_it->end_coord();
+
+                // With empty begin and end matches (for example if the regexes
+                // are /"\K/ and /(?=")/), that case can happen, and would
+                // result in an infinite loop.
+                if (end_coord == beg_it->begin_coord())
+                {
+                    kak_assert(beg_it->begin_coord() == beg_it->end_coord() and
+                               end_it->begin_coord() == end_it->end_coord());
+                    ++end_coord.column;
+                }
+                begin = find_next_begin(cache, end_coord);
             }
         }
         cache.timestamp = buf_timestamp;
