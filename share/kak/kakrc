@@ -24,7 +24,7 @@ def -shell-params runtime %{ %sh{
        localconfdir="$HOME/.config/kak"
     fi
     if [ -d "${localconfdir}/autoload" ]; then
-        for rcfile in ${localconfdir}/autoload/*; do
+        for rcfile in ${localconfdir}/autoload/*.kak; do
             echo "try %{ source '${rcfile}' } catch %{ }";
         done
     fi
