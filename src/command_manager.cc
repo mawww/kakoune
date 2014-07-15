@@ -172,8 +172,11 @@ void skip_blanks_and_comments(StringView base, ByteCount& pos)
             pos += 2;
         else if (base[pos] == '#')
         {
-            while (pos != length and base[pos] != '\n')
-                ++pos;
+            while (pos != length)
+            {
+                if (base[pos++] == '\n')
+                    break;
+            }
         }
         else
             break;
