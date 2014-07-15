@@ -6,15 +6,35 @@
 namespace Kakoune
 {
 
-using Attribute = char;
-enum Attributes
+enum class Attribute : int
 {
-    Normal = 0,
-    Underline = 1,
-    Reverse = 2,
-    Blink = 4,
-    Bold = 8
+    Normal    = 0,
+    Underline = 1 << 1,
+    Reverse   = 1 << 2,
+    Blink     = 1 << 3,
+    Bold      = 1 << 4,
+    Dim       = 1 << 5
 };
+
+inline constexpr Attribute operator|(Attribute lhs, Attribute rhs)
+{
+    return (Attribute)((int) lhs | (int) rhs);
+}
+
+inline Attribute& operator|=(Attribute& lhs, Attribute rhs)
+{
+    return (Attribute&)((int&) lhs |= (int) rhs);
+}
+
+inline constexpr bool operator&(Attribute lhs, Attribute rhs)
+{
+    return ((int) lhs & (int) rhs) != 0;
+}
+
+inline Attribute& operator&=(Attribute& lhs, Attribute rhs)
+{
+    return (Attribute&)((int&) lhs &= (int) rhs);
+}
 
 struct Face
 {
@@ -23,7 +43,7 @@ struct Face
     Attribute attributes;
 
     Face(Color fg = Colors::Default, Color bg = Colors::Default,
-         Attribute attributes = 0)
+         Attribute attributes = Attribute::Normal)
       : fg{fg}, bg{bg}, attributes{attributes} {}
 };
 

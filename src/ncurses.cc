@@ -196,10 +196,11 @@ static void set_face(WINDOW* window, Face face)
         wattron(window, COLOR_PAIR(current_pair));
     }
 
-    set_attribute(A_UNDERLINE, face.attributes & Underline);
-    set_attribute(A_REVERSE, face.attributes & Reverse);
-    set_attribute(A_BLINK, face.attributes & Blink);
-    set_attribute(A_BOLD, face.attributes & Bold);
+    set_attribute(A_UNDERLINE, face.attributes & Attribute::Underline);
+    set_attribute(A_REVERSE, face.attributes & Attribute::Reverse);
+    set_attribute(A_BLINK, face.attributes & Attribute::Blink);
+    set_attribute(A_BOLD, face.attributes & Attribute::Bold);
+    set_attribute(A_DIM, face.attributes & Attribute::Dim);
 }
 
 static sig_atomic_t resize_pending = 0;

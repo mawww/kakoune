@@ -156,7 +156,7 @@ auto apply_face = [](const Face& face)
             atom.face.fg = face.fg;
         if (face.bg != Colors::Default)
             atom.face.bg = face.bg;
-        if (face.attributes != Normal)
+        if (face.attributes != Attribute::Normal)
             atom.face.attributes |= face.attributes;
     };
 };

@@ -21,9 +21,11 @@ static Face parse_face(StringView facedesc)
         {
             switch (*attr_it)
             {
-                case 'u': res.attributes |= Underline; break;
-                case 'r': res.attributes |= Reverse; break;
-                case 'b': res.attributes |= Bold; break;
+                case 'u': res.attributes |= Attribute::Underline; break;
+                case 'r': res.attributes |= Attribute::Reverse; break;
+                case 'b': res.attributes |= Attribute::Bold; break;
+                case 'B': res.attributes |= Attribute::Blink; break;
+                case 'd': res.attributes |= Attribute::Dim; break;
                 default: throw runtime_error("unknown face attribute '" + String(*attr_it) + "'");
             }
         }
@@ -81,8 +83,8 @@ FaceRegistry::FaceRegistry()
         { "StatusLine", { Colors::Cyan, Colors::Default } },
         { "StatusCursor", { Colors::Black, Colors::Cyan } },
         { "Prompt", { Colors::Yellow, Colors::Default } },
-        { "MatchingChar", { Colors::Default, Colors::Default, Underline } },
-        { "Search", { Colors::Default, Colors::Default, Underline } },
+        { "MatchingChar", { Colors::Default, Colors::Default, Attribute::Underline } },
+        { "Search", { Colors::Default, Colors::Default, Attribute::Underline } },
       }
 {}
 
