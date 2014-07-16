@@ -34,10 +34,10 @@ def -hidden _json_filter_around_selections %{
 }
 
 def -hidden _json_indent_on_char "
-    eval -draft -itersel '
-        # indent closer token to its opener
-        try %_ exec -draft gh <a-k> ^\h*[]}] <ret> m <a-&> _
-    '
+    eval -draft -itersel %_
+        # align closer token to its opener when alone on a line
+        try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> /
+    _
 "
 
 def -hidden _json_indent_on_new_line "
