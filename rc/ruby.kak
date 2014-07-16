@@ -48,7 +48,7 @@ addhl -group /ruby/comment fill comment
 
 addhl -group /ruby/literal fill meta
 
-addhl -group /ruby/code regex \<([a-z]\w+:)|([$@][a-z]\w+)|(\W\K:[a-z]\w+[=?!]?) 0:identifier
+addhl -group /ruby/code regex \<([A-Za-z]\w+:)|([$@][A-Za-z]\w+)|(\W\K:[A-Za-z]\w+[=?!]?) 0:identifier
 addhl -group /ruby/code regex \<(require|include)\> 0:meta
 addhl -group /ruby/code regex \<(attr_(reader|writer|accessor))\> 0:attribute
 
