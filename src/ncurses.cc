@@ -29,12 +29,12 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
-static void set_attribute(int attribute, bool on)
+static void set_attribute(WINDOW* window, int attribute, bool on)
 {
     if (on)
-        attron(attribute);
+        wattron(window, attribute);
     else
-        attroff(attribute);
+        wattroff(window, attribute);
 }
 
 static bool operator<(Color lhs, Color rhs)
@@ -196,11 +196,11 @@ static void set_face(WINDOW* window, Face face)
         wattron(window, COLOR_PAIR(current_pair));
     }
 
-    set_attribute(A_UNDERLINE, face.attributes & Attribute::Underline);
-    set_attribute(A_REVERSE, face.attributes & Attribute::Reverse);
-    set_attribute(A_BLINK, face.attributes & Attribute::Blink);
-    set_attribute(A_BOLD, face.attributes & Attribute::Bold);
-    set_attribute(A_DIM, face.attributes & Attribute::Dim);
+    set_attribute(window, A_UNDERLINE, face.attributes & Attribute::Underline);
+    set_attribute(window, A_REVERSE, face.attributes & Attribute::Reverse);
+    set_attribute(window, A_BLINK, face.attributes & Attribute::Blink);
+    set_attribute(window, A_BOLD, face.attributes & Attribute::Bold);
+    set_attribute(window, A_DIM, face.attributes & Attribute::Dim);
 }
 
 static sig_atomic_t resize_pending = 0;
@@ -249,7 +249,8 @@ NCursesUI::~NCursesUI()
 
 void NCursesUI::redraw()
 {
-    wnoutrefresh(stdscr);
+    redrawwin(m_window);
+    wnoutrefresh(m_window);
     if (m_menu_win)
     {
         redrawwin(m_menu_win);
@@ -294,6 +295,11 @@ static CharCoord window_pos(WINDOW* win)
 void NCursesUI::update_dimensions()
 {
     m_dimensions = window_size(stdscr);
+
+    if (m_window)
+        delwin(m_window);
+    m_window = (NCursesWin*)newwin((int)m_dimensions.line, (int)m_dimensions.column, 0, 0);
+
     --m_dimensions.line;
 }
 
@@ -301,7 +307,7 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
 {
     for (const DisplayAtom& atom : line)
     {
-        set_face(stdscr, atom.face);
+        set_face(m_window, atom.face);
 
         StringView content = atom.content();
         if (content.empty())
@@ -310,16 +316,16 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
         if (content[content.length()-1] == '\n' and
             content.char_length() - 1 < m_dimensions.column - col_index)
         {
-            addutf8str(stdscr, Utf8Iterator{content.begin()},
-                               Utf8Iterator{content.end()}-1);
-            addch(' ');
+            addutf8str(m_window, Utf8Iterator{content.begin()},
+                                 Utf8Iterator{content.end()}-1);
+            waddch(m_window, ' ');
         }
         else
         {
             Utf8Iterator begin{content.begin()}, end{content.end()};
             if (end - begin > m_dimensions.column - col_index)
                 end = begin + (m_dimensions.column - col_index);
-            addutf8str(stdscr, begin, end);
+            addutf8str(m_window, begin, end);
             col_index += end - begin;
         }
     }
@@ -334,29 +340,29 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     LineCount line_index = 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
-        wmove(stdscr, (int)line_index, 0);
-        wclrtoeol(stdscr);
-            draw_line(line, 0);
+        wmove(m_window, (int)line_index, 0);
+        wclrtoeol(m_window);
+        draw_line(line, 0);
         ++line_index;
     }
 
-    set_face(stdscr, { Colors::Blue, Colors::Default });
+    set_face(m_window, { Colors::Blue, Colors::Default });
     for (;line_index < m_dimensions.line; ++line_index)
     {
-        move((int)line_index, 0);
-        clrtoeol();
-        addch('~');
+        wmove(m_window, (int)line_index, 0);
+        wclrtoeol(m_window);
+        waddch(m_window, '~');
     }
 
-    move((int)m_dimensions.line, 0);
-    clrtoeol();
+    wmove(m_window, (int)m_dimensions.line, 0);
+    wclrtoeol(m_window);
     draw_line(status_line, 0);
     CharCount status_len = mode_line.length();
     // only draw mode_line if it does not overlap one status line
     if (m_dimensions.column - status_line.length() > status_len + 1)
     {
         CharCount col = m_dimensions.column - status_len;
-        move((int)m_dimensions.line, (int)col);
+        wmove(m_window, (int)m_dimensions.line, (int)col);
         draw_line(mode_line, col);
     }
 
@@ -535,11 +541,7 @@ void NCursesUI::menu_show(memoryview<String> items,
                           MenuStyle style)
 {
     if (m_menu_win)
-    {
-        wredrawln(stdscr, (int)window_pos(m_menu_win).line,
-                          (int)window_size(m_menu_win).line);
         delwin(m_menu_win);
-    }
     m_items.clear();
 
     m_menu_fg = fg;
@@ -605,8 +607,6 @@ void NCursesUI::menu_hide()
     if (not m_menu_win)
         return;
     m_items.clear();
-    wredrawln(stdscr, (int)window_pos(m_menu_win).line,
-                      (int)window_size(m_menu_win).line);
     delwin(m_menu_win);
     m_menu_win = nullptr;
     m_dirty = true;
@@ -770,11 +770,7 @@ void NCursesUI::info_show(StringView title, StringView content,
                           CharCoord anchor, Face face, MenuStyle style)
 {
     if (m_info_win)
-    {
-        wredrawln(stdscr, (int)window_pos(m_info_win).line,
-                          (int)window_size(m_info_win).line);
         delwin(m_info_win);
-    }
 
     StringView info_box = content;
     String fancy_info_box;
@@ -810,8 +806,6 @@ void NCursesUI::info_hide()
 {
     if (not m_info_win)
         return;
-    wredrawln(stdscr, (int)window_pos(m_info_win).line,
-                      (int)window_size(m_info_win).line);
     delwin(m_info_win);
     m_info_win = nullptr;
     m_dirty = true;

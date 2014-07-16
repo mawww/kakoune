@@ -49,6 +49,8 @@ private:
     void redraw();
     void draw_line(const DisplayLine& line, CharCount col_index) const;
 
+    NCursesWin* m_window = nullptr;
+
     CharCoord m_dimensions;
     void update_dimensions();
 
