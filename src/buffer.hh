@@ -177,9 +177,11 @@ private:
 
     struct LineList : std::vector<String>
     {
+        [[gnu::always_inline]]
         String& operator[](LineCount line)
         { return std::vector<String>::operator[]((int)line); }
 
+        [[gnu::always_inline]]
         const String& operator[](LineCount line) const
         { return std::vector<String>::operator[]((int)line); }
     };
