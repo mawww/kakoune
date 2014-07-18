@@ -601,7 +601,7 @@ general highlighters are:
  * +show_matching+: highlight matching char of the character under the selections
        cursor using +MatchingChar+ face.
  * +number_lines+: show line numbers
- * +fill <face>+: fill using given face, mostly useful with region highlighters
+ * +fill <face>+: fill using given face, mostly useful with the +regions+ highlighter
        (see below)
 
 Highlighting Groups
@@ -628,16 +628,19 @@ addhl -group <name> group <subname>
 addhl -group <name>/<subname> <type> <params>...
 ------------------------------------------------
 
-Region highlighters
-~~~~~~~~~~~~~~~~~~~
+Regions highlighters
+~~~~~~~~~~~~~~~~~~~~
 
-The +region+ highlighters takes 3 to 4 parameters:
+A special highlighter provide a way to segment the buffer into regions, which are
+to be highlighted differently.
 
----------------------------------------------------
-addhl region <name> <opening> <closing> [<recurse>]
----------------------------------------------------
+A region is defined by 4 parametes:
 
-+name+ is user defined, but +opening+, +closing+ and +recurse+ are regexes.
+------------------------------------
+<name> <opening> <closing> <recurse>
+------------------------------------
+
++name+ is user defined, +opening+, +closing+ and +recurse+ are regexes.
 
  * +opening+ defines the region start text
  * +closing+ defines the region end text
@@ -647,24 +650,17 @@ addhl region <name> <opening> <closing> [<recurse>]
 construct in kakoune accept nested +{ ... }+ so +%sh{ ... { ... } ... }+ is valid.
 this region can be defined with:
 
--------------------------------------
-addhl region shell_expand %sh\{ \} \{
--------------------------------------
+------------------------
+shell_expand %sh\{ \} \{
+------------------------
 
-It then provides a group named +content+ which can be filled with other highlighters
-that will only be applied on the given regions.
+Regions are used in the +regions+ highlighter which can take any number
+of regions.
 
--------------------------------------
-addhl -group shell_expand/content ...
--------------------------------------
-
-The +multi_region+ highlighter is even more powerfull, it can segment the buffer
-in non overlapping regions.
-
--------------------------------------------------------------------------
-addhl multi_region <name> <region_name1> <opening1> <closing1> <recurse1> \
-                          <region_name2> <opening2> <closing2> <recurse2>...
--------------------------------------------------------------------------
+-----------------------------------------------------------------------
+addhl regions <name> <region_name1> <opening1> <closing1> <recurse1>  \
+                     <region_name2> <opening2> <closing2> <recurse2>...
+-----------------------------------------------------------------------
 
 defines multiple regions in which other highlighters can be added
 
@@ -677,10 +673,10 @@ a new region. when a region closes, the closest next opening start another regio
 
 That matches the rule governing most programming language parsing.
 
-+multi_region+ also supports a +-default <default_region>+ switch to define the
++regions+ also supports a +-default <default_region>+ switch to define the
 default region, when no other region matches the current buffer range.
 
-most programming languages can then be properly highlighted using a +multi_region+
+most programming languages can then be properly highlighted using a +regions+
 highlighter as root:
 
 -----------------------------------------------------------------
