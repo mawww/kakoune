@@ -19,6 +19,21 @@ void HookManager::remove_hooks(StringView group)
         hooks.second.remove_all(group);
 }
 
+CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_in_token)
+{
+    CandidateList res;
+    for (auto& list : m_hook)
+    {
+        auto candidates = list.second.complete_id(prefix, pos_in_token);
+        for (auto& c : candidates)
+        {
+            if (!contains(res, c))
+                res.push_back(c);
+        }
+    }
+    return res;
+}
+
 void HookManager::run_hook(const String& hook_name,
                            const String& param,
                            Context& context) const

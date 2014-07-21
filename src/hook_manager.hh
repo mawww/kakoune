@@ -19,6 +19,7 @@ public:
 
     void add_hook(const String& hook_name, String group, HookFunc hook);
     void remove_hooks(StringView group);
+    CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(const String& hook_name, const String& param,
                   Context& context) const;
 

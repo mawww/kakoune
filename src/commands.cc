@@ -483,14 +483,21 @@ const CommandDesc rm_highlighter_cmd = {
     }
 };
 
-HookManager& get_hook_manager(const String& scope, Context& context)
+HookManager* get_hook_manager_ifp(const String& scope, const Context& context)
 {
     if (prefix_match("global", scope))
-        return GlobalHooks::instance();
+        return &GlobalHooks::instance();
     else if (prefix_match("buffer", scope))
-        return context.buffer().hooks();
+        return &context.buffer().hooks();
     else if (prefix_match("window", scope))
-        return context.window().hooks();
+        return &context.window().hooks();
+    return nullptr;
+}
+
+HookManager& get_hook_manager(const String& scope, const Context& context)
+{
+    if (auto manager = get_hook_manager_ifp(scope, context))
+        return *manager;
     throw runtime_error("error: no such hook container " + scope);
 }
 
@@ -520,17 +527,18 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return Completions{ 0_byte, params[0].length(),
-                                complete_scope(params[0].substr(0_byte, pos_in_token)) };
+            return { 0_byte, params[0].length(),
+                     complete_scope(params[0].substr(0_byte, pos_in_token)) };
         else if (token_to_complete == 3)
         {
             auto& cm = CommandManager::instance();
             return cm.complete(context, flags, params[3], pos_in_token);
         }
-        return Completions{};
+        return {};
     },
     [](const ParametersParser& parser, Context& context)
     {
@@ -558,7 +566,21 @@ const CommandDesc rm_hook_cmd = {
     "rmhooks <group>: remove all hooks whose group is <group>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
-    CommandCompleter{},
+    [](const Context& context, CompletionFlags flags,
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
+    {
+        if (token_to_complete == 0)
+            return { 0_byte, params[0].length(),
+                     complete_scope(params[0].substr(0_byte, pos_in_token)) };
+        else if (token_to_complete == 1)
+        {
+            if (auto manager = get_hook_manager_ifp(params[0], context))
+                return { 0_byte, params[0].length(),
+                         manager->complete_hook_group(params[1], pos_in_token) };
+        }
+        return {};
+    },
     [](const ParametersParser& parser, Context& context)
     {
         get_hook_manager(parser[0], context).remove_hooks(parser[1]);
