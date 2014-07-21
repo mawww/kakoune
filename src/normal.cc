@@ -1061,6 +1061,7 @@ void align(Context& context, int)
             }
             buffer.insert(buffer.iterator_at(insert_coord), std::move(padstr));
         }
+        selections.update();
     }
 }
 
