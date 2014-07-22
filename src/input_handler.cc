@@ -279,7 +279,7 @@ public:
             }
         }
         else if (key == Key::Down or key == ctrl('i') or
-                 key == ctrl('n') or key == 'j')
+                 key == ctrl('n') or (not m_edit_filter and key == 'j'))
         {
             auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
             if (it == m_choices.end())
@@ -287,7 +287,7 @@ public:
             select(it);
         }
         else if (key == Key::Up or key == Key::BackTab or
-                 key == ctrl('p') or key == 'k')
+                 key == ctrl('p') or (not m_edit_filter and key == 'k'))
         {
             ChoiceList::const_reverse_iterator selected(m_selected+1);
             auto it = std::find_if(selected+1, m_choices.rend(), match_filter);
