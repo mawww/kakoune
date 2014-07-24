@@ -36,13 +36,6 @@ private:
 class GlobalHooks : public HookManager,
                     public Singleton<GlobalHooks>
 {
-public:
-    bool are_user_hooks_disabled() const;
-
-    void disable_user_hooks() { ++m_disabled; }
-    void enable_user_hooks() { --m_disabled; }
-private:
-   int m_disabled = 0;
 };
 
 }

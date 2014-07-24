@@ -86,12 +86,14 @@ public:
         auto restore_hooks = on_scope_end([&, this]{
             if (do_restore_hooks)
             {
-                GlobalHooks::instance().enable_user_hooks();
+                context().enable_user_hooks();
                 m_disable_hooks = false;
             }
         });
 
-        context().print_status({}); // clear status line
+        context().print_status({});
+        if (context().has_ui())
+            context().ui().info_hide();
 
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
             m_count = m_count * 10 + key.key - '0';
@@ -103,7 +105,7 @@ public:
         {
             if (m_disable_hooks)
             {
-                GlobalHooks::instance().disable_user_hooks();
+                context().disable_user_hooks();
                 do_restore_hooks = true;
             }
             auto it = keymap.find(key);
@@ -663,8 +665,13 @@ public:
                        [this](Timer& timer) {
                            context().hooks().run_hook("InsertIdle", "", context());
                            m_completer.update();
-                       }}
+                       }},
+          m_disable_hooks{context().are_user_hooks_disabled()}
     {
+        // Prolongate hook disabling for the whole insert session
+        if (m_disable_hooks)
+            context().disable_user_hooks();
+
         last_insert().first = mode;
         last_insert().second.clear();
         context().hooks().run_hook("InsertBegin", "", context());
@@ -886,6 +893,9 @@ private:
                 sel.cursor() = context().buffer().char_prev(sel.cursor());
         }
         selections.avoid_eol();
+
+        if (m_disable_hooks)
+            context().enable_user_hooks();
     }
 
     enum class Mode { Default, Complete, InsertReg };
@@ -894,6 +904,7 @@ private:
     ScopedEdition    m_edition;
     InsertCompleter  m_completer;
     Timer            m_idle_timer;
+    bool             m_disable_hooks;
 };
 
 }

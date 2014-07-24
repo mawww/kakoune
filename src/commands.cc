@@ -546,7 +546,7 @@ const CommandDesc add_hook_cmd = {
         Regex regex(parser[2].begin(), parser[2].end());
         String command = parser[3];
         auto hook_func = [=](const String& param, Context& context) {
-            if (GlobalHooks::instance().are_user_hooks_disabled())
+            if (context.are_user_hooks_disabled())
                 return;
 
             if (boost::regex_match(param.begin(), param.end(), regex))
@@ -1002,18 +1002,13 @@ struct DisableOption {
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
-    const bool disable_hooks = parser.has_option("no-hooks");
-    if (disable_hooks)
-        GlobalHooks::instance().disable_user_hooks();
-    auto restore_hooks = on_scope_end([&](){
-        if (disable_hooks)
-            GlobalHooks::instance().enable_user_hooks();
-    });
-
+    // Disable these options to avoid costly code paths (and potential screen
+    // redraws) That are useful only in interactive contexts.
     DisableOption<int> disable_autoinfo(context, "autoinfo");
     DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
+    const bool disable_hooks = parser.has_option("no-hooks") or context.are_user_hooks_disabled();
 
     ClientManager& cm = ClientManager::instance();
     if (parser.has_option("buffer"))
@@ -1023,6 +1018,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         {
             Buffer& buffer = BufferManager::instance().get_buffer(name);
             InputHandler input_handler{{ buffer, Selection{} }};
+            // Propagate user hooks disabled status to the temporary context
+            if (disable_hooks)
+                input_handler.context().disable_user_hooks();
             func(parser, input_handler.context());
         }
         return;
@@ -1047,6 +1045,10 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         if (real_context->is_editing())
             input_handler.context().disable_undo_handling();
 
+        // Propagate user hooks disabled status to the temporary context
+        if (disable_hooks)
+            input_handler.context().disable_user_hooks();
+
         if (parser.has_option("itersel"))
         {
             SelectionList sels{real_context->selections()};
@@ -1069,6 +1071,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     {
         if (parser.has_option("itersel"))
             throw runtime_error("-itersel makes no sense without -draft");
+
+        if (disable_hooks)
+            real_context->disable_user_hooks();
+        auto restore_hooks = on_scope_end([&](){
+            if (disable_hooks)
+                real_context->enable_user_hooks();
+        });
+
         func(parser, *real_context);
     }
 

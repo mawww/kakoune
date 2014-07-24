@@ -75,6 +75,12 @@ public:
 
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
+
+    bool are_user_hooks_disabled() const { return m_user_hooks_disabled; }
+
+    void disable_user_hooks() { ++m_user_hooks_disabled; }
+    void enable_user_hooks() { --m_user_hooks_disabled; }
+
 private:
     void begin_edition();
     void end_edition();
@@ -94,6 +100,8 @@ private:
     using JumpList = std::vector<SelectionList>;
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
+
+    int m_user_hooks_disabled = 0;
 };
 
 struct ScopedEdition

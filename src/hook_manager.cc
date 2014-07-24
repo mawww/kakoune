@@ -59,11 +59,4 @@ void HookManager::run_hook(const String& hook_name,
     }
 }
 
-bool GlobalHooks::are_user_hooks_disabled() const
-{
-    kak_assert(m_disabled >= 0);
-    return m_disabled > 0;
-}
-
-
 }
