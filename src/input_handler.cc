@@ -87,7 +87,7 @@ public:
             if (do_restore_hooks)
             {
                 context().enable_user_hooks();
-                m_disable_hooks = false;
+                m_hooks_disabled = false;
             }
         });
 
@@ -100,14 +100,14 @@ public:
         else if (key == Key::Backspace)
             m_count /= 10;
         else if (key == '\\')
-            m_disable_hooks = true;
+        {
+            m_hooks_disabled = true;
+            context().disable_user_hooks();
+        }
         else
         {
-            if (m_disable_hooks)
-            {
-                context().disable_user_hooks();
+            if (m_hooks_disabled)
                 do_restore_hooks = true;
-            }
             auto it = keymap.find(key);
             if (it != keymap.end())
             {
@@ -137,7 +137,7 @@ public:
 
 private:
     int m_count = 0;
-    bool m_disable_hooks = false;
+    bool m_hooks_disabled = false;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
 };
