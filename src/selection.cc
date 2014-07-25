@@ -487,7 +487,7 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode,
         if (str.empty())
         {
             if (mode == InsertMode::Replace)
-                sel.anchor() = sel.cursor() = pos.coord();
+                sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
             continue;
         }
 
