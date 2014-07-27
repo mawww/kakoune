@@ -49,10 +49,10 @@ addhl -group /c/string fill string
 addhl -group /c/comment fill comment
 addhl -group /c/macro fill meta
 
-addhl -group /c/code regex "\<(true|false|NULL|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
+addhl -group /c/code regex "\<(__FILE__|__FUNCTION__|__LINE__|__func__|NULL|true|false|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
 addhl -group /c/code regex "\<(_Bool|bool|char|double|float|int|short|s?size_t|struct|union|unsigned|void|w(char|int)_t|u?int(_fast|_least)?(8|16|32|64)_t|u?int(max|ptr)_t)\>" 0:type
 addhl -group /c/code regex "\<(break|case|continue|default|do|else|for|goto|if|return|switch|while)\>" 0:keyword
-addhl -group /c/code regex "\<(_Atomic|_Noreturn|const|enum|extern|inline|mutable|namespace|register|restrict|static|volatile|typedef)\>" 0:attribute
+addhl -group /c/code regex "\<(__attribute__|__cdecl|__forceinline|__inline|__inline__|__restrict|__restrict__|_Atomic|_Noreturn|const|enum|extern|inline|register|restrict|static|volatile|typedef)\>" 0:attribute
 
 hook global WinSetOption filetype=c %[
     addhl ref c

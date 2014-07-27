@@ -2,7 +2,7 @@ hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H) %{
     set buffer filetype cpp
 }
 
-hook global BufSetOption mimetype=text/x-c(\+\+) %{
+hook global BufSetOption mimetype=text/x-c\+\+ %{
     set buffer filetype cpp
 }
 
