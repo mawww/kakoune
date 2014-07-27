@@ -77,7 +77,7 @@ def -hidden _c_insert_include_guards %{
 }
 
 # This doesn't appear to be working:
-# hook global BufNew .*\.(h) _c_insert_include_guards
+# hook global BufNew .*\.h _c_insert_include_guards
 
 decl str-list alt_dirs ".;.."
 
