@@ -1,8 +1,8 @@
-hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H) %{
+hook global BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) %{
     set buffer filetype cpp
 }
 
-hook global BufSetOption mimetype=text/x-c\+\+ %{
+hook global BufSetOption mimetype=text/x-c(\+\+)? %{
     set buffer filetype cpp
 }
 
@@ -35,8 +35,8 @@ def -hidden _cpp_indent_on_opening_curly_brace %[
 def -hidden _cpp_indent_on_closing_curly_brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
-    # add ; after } if class, struct, or union definition
-    try %[ exec -draft "hm<space><a-?>(class|struct|union)<ret><a-k>\`(class|struct|union)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
+    # add ; after } if class or struct definition
+    try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]
 
 addhl -group / regions -default code cpp \
@@ -75,7 +75,7 @@ def -hidden _cpp_insert_include_guards %{
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
 }
 
-hook global BufNew .*\.(hh|hpp|hxx|H) _cpp_insert_include_guards
+hook global BufNew .*\.(h|hh|hpp|hxx|H) _cpp_insert_include_guards
 
 decl str-list alt_dirs ".;.."
 
@@ -85,10 +85,8 @@ def alt -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     dir=$(dirname ${kak_buffile})
 
     case ${file} in
-# Leave *.c here in case the user sets the filetype to cpp manually
          *.c|*.cc|*.cpp|*.cxx|*.C)
              for alt_dir in ${alt_dirs}; do
-# Definitely leave *.h here (manually set filetype to cpp or uses .h extension for hpp files)
                  for ext in h hh hpp hxx H; do
                      altname="${dir}/${alt_dir}/${file%.*}.${ext}"
                      [ -f ${altname} ] && break
@@ -96,10 +94,8 @@ def alt -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
                  [ -f ${altname} ] && break
              done
          ;;
-# Leave *.h here in case the user sets the filetype to cpp manually
          *.h|*.hh|*.hpp|*.hxx|*.H)
              for alt_dir in ${alt_dirs}; do
-# Leave *.c here in case the user sets the filetype to cpp manually
                  for ext in c cc cpp cxx C; do
                      altname="${dir}/${alt_dir}/${file%.*}.${ext}"
                      [ -f ${altname} ] && break
