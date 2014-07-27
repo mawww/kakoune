@@ -393,6 +393,8 @@ void NCursesUI::check_resize()
             resizeterm(ws.ws_row, ws.ws_col);
             update_dimensions();
         }
+        ungetch(KEY_RESIZE);
+        m_dirty = true;
         resize_pending = false;
     }
 }

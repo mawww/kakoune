@@ -991,7 +991,8 @@ void InputHandler::handle_key(Key key)
 
         auto keymap_mode = m_mode->keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
-        if (keymaps.is_mapped(key, keymap_mode))
+        if (keymaps.is_mapped(key, keymap_mode) and
+            not m_context.are_keymaps_disabled())
         {
             for (auto& k : keymaps.get_mapping(key, keymap_mode))
                 m_mode->on_key(k);

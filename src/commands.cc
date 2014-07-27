@@ -982,6 +982,7 @@ const ParameterDesc context_wrap_params = {
                { "buffer", { true, "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft", { false, "run in a disposable context" } },
                { "no-hooks", { false, "disable hooks" } },
+               { "with-maps", { false, "use user defined key mapping when executing keys" } },
                { "itersel", { false, "run once for each selection with that selection as the only one" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
@@ -1009,6 +1010,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
     const bool disable_hooks = parser.has_option("no-hooks") or context.are_user_hooks_disabled();
+    const bool disable_keymaps = not parser.has_option("with-maps");
 
     ClientManager& cm = ClientManager::instance();
     if (parser.has_option("buffer"))
@@ -1021,6 +1023,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             // Propagate user hooks disabled status to the temporary context
             if (disable_hooks)
                 input_handler.context().disable_user_hooks();
+            if (disable_keymaps)
+                input_handler.context().disable_keymaps();
             func(parser, input_handler.context());
         }
         return;
@@ -1048,6 +1052,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         // Propagate user hooks disabled status to the temporary context
         if (disable_hooks)
             input_handler.context().disable_user_hooks();
+        if (disable_keymaps)
+            input_handler.context().disable_keymaps();
 
         if (parser.has_option("itersel"))
         {
@@ -1074,9 +1080,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         if (disable_hooks)
             real_context->disable_user_hooks();
-        auto restore_hooks = on_scope_end([&](){
+        if (disable_keymaps)
+            real_context->disable_keymaps();
+
+        auto restore = on_scope_end([&](){
             if (disable_hooks)
                 real_context->enable_user_hooks();
+            if (disable_keymaps)
+                real_context->enable_keymaps();
         });
 
         func(parser, *real_context);
