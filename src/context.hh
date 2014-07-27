@@ -81,6 +81,11 @@ public:
     void disable_user_hooks() { ++m_user_hooks_disabled; }
     void enable_user_hooks() { --m_user_hooks_disabled; }
 
+    bool are_keymaps_disabled() const { return m_keymaps_disabled; }
+
+    void disable_keymaps() { ++m_keymaps_disabled; }
+    void enable_keymaps() { --m_keymaps_disabled; }
+
 private:
     void begin_edition();
     void end_edition();
@@ -102,6 +107,7 @@ private:
     JumpList::iterator m_current_jump = m_jump_list.begin();
 
     int m_user_hooks_disabled = 0;
+    int m_keymaps_disabled = 0;
 };
 
 struct ScopedEdition
