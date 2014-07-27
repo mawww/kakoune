@@ -35,8 +35,8 @@ def -hidden _cpp_indent_on_opening_curly_brace %[
 def -hidden _cpp_indent_on_closing_curly_brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
-    # add ; after } if class or struct definition
-    try %[ exec -draft "hm<space><a-?>(class|struct)<ret><a-k>\`(class|struct)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
+    # add ; after } if class, struct, or union definition
+    try %[ exec -draft "hm<space><a-?>(class|struct|union)<ret><a-k>\`(class|struct|union)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
 ]
 
 addhl -group / regions -default code cpp \
