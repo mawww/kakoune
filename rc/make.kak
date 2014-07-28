@@ -46,7 +46,7 @@ def errjump -docstring 'Jump to error location' %{
 def errnext -docstring 'Jump to next error' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*make*'
-        exec %rec{%opt{_make_current_error_line}ggl/[0-9]+: error:<ret>}
+        exec %rec{%opt{_make_current_error_line}ggl/[0-9]+: (?:fatal )?error:<ret>}
         errjump
     }
 }
@@ -54,7 +54,7 @@ def errnext -docstring 'Jump to next error' %{
 def errprev -docstring 'Jump to previous error' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*make*'
-        exec %rec{%opt{_make_current_error_line}ggh<a-/>[0-9]+: error:<ret>}
+        exec %rec{%opt{_make_current_error_line}ggh<a-/>[0-9]+: (?:fatal )?error:<ret>}
         errjump
     }
 }
