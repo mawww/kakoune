@@ -93,9 +93,10 @@ String read_file(StringView filename)
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     if (fd == -1)
     {
+#if ENOENT
         if (errno == ENOENT)
             throw file_not_found(filename);
-
+#endif
         throw file_access_error(filename, strerror(errno));
     }
     auto close_fd = on_scope_end([fd]{ close(fd); });
@@ -120,9 +121,10 @@ Buffer* create_buffer_from_file(String filename)
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
+#if ENOENT
         if (errno == ENOENT)
             return nullptr;
-
+#endif
         throw file_access_error(filename, strerror(errno));
     }
     struct stat st;
