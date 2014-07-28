@@ -63,7 +63,7 @@ install: kak
 	mkdir -p $(bindir)
 	install -m 0755 kak $(bindir)
 	mkdir -p $(sharedir)/rc
-	install -m 0644 ../share/kak/kakrc $(sharedir)
+	install -m 0644 ../share/kak/kakrc.default $(sharedir)
 	install -m 0644 ../rc/* $(sharedir)/rc
 	mkdir -p $(docdir)
 	install -m 0644 ../README.asciidoc $(docdir)
