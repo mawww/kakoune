@@ -6,33 +6,18 @@
 #   FOUND_NCURSES_H
 
 
-${CXX} -xc++ -o /dev/null - <<__EOF__ 2>/dev/null
-#include <ncursesw/ncurses.h>
-int main()
-{
- return 0;
-}
-__EOF__
+printf '%s\n%s\n\0' '#include <ncursesw/ncurses.h>' \
+       'int main() { return 0; }' | ${CXX} -xc++ -o /dev/null - 2>/dev/null
 if test "$?" -eq 0 ; then
   printf ' %s \0' '-DFOUND_NCURSESW_NCURSES_H=1'
 else
-  ${CXX} -xc++ -o /dev/null - <<__EOF__ 2>/dev/null
-#include <ncursesw.h>
-int main()
-{
- return 0;
-}
-__EOF__
+  printf '%s\n%s\n\0' '#include <ncursesw.h>' \
+         'int main() { return 0; }' | ${CXX} -xc++ -o /dev/null - 2>/dev/null
   if test "$?" -eq 0 ; then
     printf ' %s \0' '-DFOUND_NCURSESW_H=1'
   else
-    ${CXX} -xc++ -o /dev/null - <<__EOF__ 2>/dev/null
-#include <ncurses.h>
-int main()
-{
- return 0;
-}
-__EOF__
+    printf '%s\n%s\n\0' '#include <ncurses.h>' \
+           'int main() { return 0; }' | ${CXX} -xc++ -o /dev/null - 2>/dev/null
     if test "$?" -eq 0 ; then
       printf ' %s \0' '-DFOUND_NCURSES_H=1'
     fi
