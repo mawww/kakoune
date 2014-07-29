@@ -50,21 +50,28 @@ String parse_filename(StringView filename)
 
 String real_path(StringView filename)
 {
-    StringView dirname = ".";
-    StringView basename = filename;
-
-    auto it = find(filename.rbegin(), filename.rend(), '/');
-    if (it != filename.rend())
-    {
-        dirname = StringView{filename.begin(), it.base()};
-        basename = StringView{it.base(), filename.end()};
-    }
-
     char buffer[PATH_MAX+1];
-    char* res = realpath(dirname.zstr(), buffer);
-    if (not res)
-        throw file_not_found{dirname};
-    return res + "/"_str + basename;
+
+    StringView existing = filename;
+    StringView non_existing;
+
+    while (true)
+    {
+        char* res = realpath(existing.zstr(), buffer);
+        if (res)
+        {
+            if (non_existing.empty())
+                return res;
+            return res + "/"_str + non_existing;
+        }
+
+        auto it = find(existing.rbegin(), existing.rend(), '/');
+        if (it == existing.rend())
+            return filename;
+
+        existing = StringView{existing.begin(), it.base()-1};
+        non_existing = StringView{it.base(), filename.end()};
+    }
 }
 
 String compact_path(StringView filename)
