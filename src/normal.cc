@@ -532,7 +532,7 @@ void regex_prompt(Context& context, const String prompt, T func)
 
                 if (event == PromptEvent::Validate)
                     context.push_jump();
-                func(str.empty() ? Regex{} : Regex{str}, context);
+                func(str.empty() ? Regex{} : Regex{str}, event, context);
             }
             catch (boost::regex_error& err)
             {
@@ -572,10 +572,10 @@ template<SelectMode mode, Direction direction>
 void search(Context& context, int)
 {
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
-                 [](Regex ex, Context& context) {
+                 [](Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
                          ex = Regex{context.main_sel_register_value("/").str()};
-                     else
+                     else if (event == PromptEvent::Validate)
                          RegisterManager::instance()['/'] = String{ex.str()};
                      if (not ex.empty() and not ex.str().empty())
                          select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
@@ -629,10 +629,10 @@ void use_selection_as_search_pattern(Context& context, int)
 
 void select_regex(Context& context, int)
 {
-    regex_prompt(context, "select:", [](Regex ex, Context& context) {
+    regex_prompt(context, "select:", [](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value("/").str()};
-        else
+        else if (event == PromptEvent::Validate)
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
             select_all_matches(context.selections(), ex);
@@ -641,10 +641,10 @@ void select_regex(Context& context, int)
 
 void split_regex(Context& context, int)
 {
-    regex_prompt(context, "split:", [](Regex ex, Context& context) {
+    regex_prompt(context, "split:", [](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value("/").str()};
-        else
+        else if (event == PromptEvent::Validate)
             RegisterManager::instance()['/'] = String{ex.str()};
         if (not ex.empty() and not ex.str().empty())
             split_selections(context.selections(), ex);
@@ -711,7 +711,7 @@ template<bool matching>
 void keep(Context& context, int)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
-    regex_prompt(context, prompt, [](const Regex& ex, Context& context) {
+    regex_prompt(context, prompt, [](const Regex& ex, PromptEvent, Context& context) {
         if (ex.empty())
             return;
         const Buffer& buffer = context.buffer();
