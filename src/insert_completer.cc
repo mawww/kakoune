@@ -28,7 +28,7 @@ WordDB& get_word_db(const Buffer& buffer)
     return cache_val.as<WordDB>();
 }
 
-template<bool other_buffers>
+template<bool other_buffers, bool subseq>
 InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 {
    auto pos = buffer.iterator_at(cursor_pos);
@@ -51,7 +51,8 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 
     auto& word_db = get_word_db(buffer);
     std::unordered_set<String> matches;
-    auto bufmatches = word_db.find_prefix(prefix);
+    auto bufmatches = subseq ? word_db.find_subsequence(prefix)
+                             : word_db.find_prefix(prefix);
     matches.insert(bufmatches.begin(), bufmatches.end());
 
     if (word_db.get_word_occurences(current_word) <= 1)
@@ -63,7 +64,9 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         {
             if (buf.get() == &buffer)
                 continue;
-            bufmatches = get_word_db(*buf).find_prefix(prefix);
+            auto buf_word_db = get_word_db(*buf);
+            bufmatches = subseq ? buf_word_db.find_subsequence(prefix)
+                                : buf_word_db.find_prefix(prefix);
             matches.insert(bufmatches.begin(), bufmatches.end());
         }
     }
@@ -285,14 +288,12 @@ bool InsertCompleter::setup_ifn()
                 }))
                 return true;
             if (completer == "word=buffer" and
-                try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
-                    return complete_word<false>(buffer, cursor_pos);
-                }))
+                (try_complete(complete_word<false, false>) or
+                 try_complete(complete_word<false, true>)))
                 return true;
             if (completer == "word=all" and
-                try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
-                    return complete_word<true>(buffer, cursor_pos);
-                }))
+                (try_complete(complete_word<true, false>) or
+                 try_complete(complete_word<true, true>)))
                 return true;
         }
         return false;
@@ -370,9 +371,7 @@ void InsertCompleter::explicit_file_complete()
 
 void InsertCompleter::explicit_word_complete()
 {
-    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
-        return complete_word<true>(buffer, cursor_pos);
-    });
+    try_complete(complete_word<true, true>);
 }
 
 void InsertCompleter::explicit_line_complete()

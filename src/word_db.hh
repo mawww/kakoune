@@ -17,6 +17,7 @@ public:
     WordDB(const Buffer& buffer);
 
     std::vector<String> find_prefix(const String& prefix);
+    std::vector<String> find_subsequence(const String& subsequence);
     int get_word_occurences(const String& word) const;
 
     using WordList = std::map<String, int>;

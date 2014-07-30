@@ -118,6 +118,19 @@ std::vector<String> WordDB::find_prefix(const String& prefix)
     return res;
 }
 
+std::vector<String> WordDB::find_subsequence(const String& subsequence)
+{
+    update_db();
+
+    std::vector<String> res;
+    for (auto it = m_words.begin(); it != m_words.end(); ++it)
+    {
+        if (subsequence_match(it->first, subsequence))
+            res.push_back(it->first);
+    }
+    return res;
+}
+
 int WordDB::get_word_occurences(const String& word) const
 {
     auto it = m_words.find(word);
