@@ -971,6 +971,12 @@ void start_or_end_macro_recording(Context& context, int)
         }, "record macro", "enter macro name ");
 }
 
+void end_macro_recording(Context& context, int)
+{
+    if (context.input_handler().is_recording())
+        context.input_handler().stop_recording();
+}
+
 void replay_macro(Context& context, int count)
 {
     on_next_key_with_autoinfo(context, [count](Key key, Context& context) mutable {
@@ -1358,6 +1364,8 @@ KeyMap keymap =
 
     { 'q', { "replay recorded macro", replay_macro } },
     { 'Q', { "start or end macro recording", start_or_end_macro_recording } },
+
+    { Key::Escape, { "end macro recording", end_macro_recording } },
 
     { '`', { "convert to lower case in selections", for_each_char<to_lower> } },
     { '~', { "convert to upper case in selections", for_each_char<to_upper> } },
