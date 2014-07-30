@@ -1,6 +1,17 @@
 Kakoune
 =======
 
+TL;DR
+-----
+
+---
+git clone http://github.com/mawww/kakoune.git
+cd kakoune/src
+make
+make userconfig
+./kak
+---
+
 Introduction:
 -------------
 
