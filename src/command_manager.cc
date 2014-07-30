@@ -323,7 +323,12 @@ String eval_token(const Token& token, Context& context,
     case Token::Type::OptionExpand:
         return context.options()[content].get_as_string();
     case Token::Type::ValExpand:
+    {
+        auto it = env_vars.find(content);
+        if (it != env_vars.end())
+            return it->second;
         return ShellManager::instance().get_val(content, context);
+    }
     case Token::Type::RawEval:
         return eval(content, context, shell_params, env_vars);
     case Token::Type::Raw:
