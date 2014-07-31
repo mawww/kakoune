@@ -105,7 +105,7 @@ CandidateList BufferManager::complete_buffer_name(StringView prefix,
     for (auto& buffer : m_buffers)
     {
         String name = buffer->display_name();
-        String match_name = name;
+        StringView match_name = name;
         if (not include_dirs and buffer->flags() & Buffer::Flags::File)
         {
             ByteCount pos = name.find_last_of('/');
@@ -115,7 +115,7 @@ CandidateList BufferManager::complete_buffer_name(StringView prefix,
 
         if (prefix_match(match_name, real_prefix))
             result.push_back(escape(name));
-        if (subsequence_match(match_name, real_prefix))
+        if (subsequence_match(name, real_prefix))
             subsequence_result.push_back(escape(name));
     }
     return result.empty() ? subsequence_result : result;
