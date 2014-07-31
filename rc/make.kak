@@ -33,12 +33,12 @@ def errjump -docstring 'Jump to error location' %{
         exec gll<a-?> "Entering directory" <ret>
         exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(\d+):([^\n]+)\'" <ret>l
         set buffer _make_current_error_line %val{cursor_line}
-        eval -try-client %opt{jumpclient} %rec{edit %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information '%reg{5}'}
+        eval -try-client %opt{jumpclient} %rec{edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information '%reg{5}'}
         try %{ focus %opt{jumpclient} }
     } catch %{
         exec ghgl s "([^:]+):(\d+):(\d+):([^\n]+)\'" <ret>l
         set buffer _make_current_error_line %val{cursor_line}
-        eval -try-client %opt{jumpclient} %rec{edit %reg{1} %reg{2} %reg{3}; echo -color Information '%reg{4}'}
+        eval -try-client %opt{jumpclient} %rec{edit -existing %reg{1} %reg{2} %reg{3}; echo -color Information '%reg{4}'}
         try %{ focus %opt{jumpclient} }
     }
 }

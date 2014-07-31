@@ -34,17 +34,6 @@ namespace Kakoune
 namespace
 {
 
-Buffer* open_or_create(const String& filename, Context& context)
-{
-    Buffer* buffer = create_buffer_from_file(filename);
-    if (not buffer)
-    {
-        context.print_status({ "new file " + filename, get_face("StatusLine") });
-        buffer = new Buffer(filename, Buffer::Flags::File | Buffer::Flags::New);
-    }
-    return buffer;
-}
-
 Buffer* open_fifo(const String& name , const String& filename, bool scroll)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
@@ -116,7 +105,17 @@ void edit(const ParametersParser& parser, Context& context)
         else if (parser.has_option("fifo"))
             buffer = open_fifo(name, parser.option_value("fifo"), parser.has_option("scroll"));
         else
-            buffer = open_or_create(name, context);
+        {
+            buffer = create_buffer_from_file(name);
+            if (not buffer)
+            {
+                if (parser.has_option("existing"))
+                    throw runtime_error("unable to open " + name);
+
+                context.print_status({ "new file " + name, get_face("StatusLine") });
+                buffer = new Buffer(name, Buffer::Flags::File | Buffer::Flags::New);
+            }
+        }
     }
 
     BufferManager::instance().set_last_used_buffer(*buffer);
@@ -142,7 +141,8 @@ void edit(const ParametersParser& parser, Context& context)
 }
 
 ParameterDesc edit_params{
-    SwitchMap{ { "scratch", { false, "create a scratch buffer, not linked to a file" } },
+    SwitchMap{ { "existing", { false, "fail if the file does not exists, do not open a new file" } },
+               { "scratch", { false, "create a scratch buffer, not linked to a file" } },
                { "fifo", { true, "create a buffer reading its content from a named fifo" } },
                { "scroll", { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
     ParameterDesc::Flags::None, 0, 3

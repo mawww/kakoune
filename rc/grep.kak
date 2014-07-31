@@ -34,7 +34,7 @@ decl str jumpclient
 def jump %{
     exec 'xs^([^:]+):(\d+):(\d+)?<ret>'
     set buffer _grep_current_line %val{cursor_line}
-    eval -try-client %opt{jumpclient} edit %reg{1} %reg{2} %reg{3}
+    eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
     try %{ focus %opt{jumpclient} }
 }
 
