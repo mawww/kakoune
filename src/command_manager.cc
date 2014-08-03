@@ -580,10 +580,7 @@ Completions CommandManager::complete(const Context& context,
         completions.end += start;
 
         for (auto& candidate : completions.candidates)
-        {
-            if (candidate.find_first_of(" \t;\"'") != String::npos)
-                candidate = '"' + escape(candidate, '"', '\\') + '"';
-        }
+            candidate = escape(candidate, " \t;", '\\');
 
         return completions;
     }
