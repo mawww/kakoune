@@ -1,46 +1,44 @@
 #include "string.hh"
 
 #include "exception.hh"
+#include "utils.hh"
 #include "utf8_iterator.hh"
 
 namespace Kakoune
 {
 
-std::vector<String> split(const String& str, char separator, char escape)
+std::vector<String> split(StringView str, char separator, char escape)
 {
-    auto begin = str.begin();
-    auto end   = str.begin();
-
     std::vector<String> res;
-    while (end != str.end())
+    auto it = str.begin();
+    while (it != str.end())
     {
         res.emplace_back();
         String& element = res.back();
-        while (end != str.end())
+        while (it != str.end())
         {
-            auto c = *end;
-            if (c == escape and end + 1 != end and *(end+1) == separator)
+            auto c = *it;
+            if (c == escape and it + 1 != str.end() and *(it+1) == separator)
             {
                 element += separator;
-                end += 2;
+                it += 2;
             }
             else if (c == separator)
             {
-                ++end;
+                ++it;
                 break;
             }
             else
             {
                 element += c;
-                ++end;
+                ++it;
             }
         }
-        begin = end;
     }
     return res;
 }
 
-String escape(const String& str, char character, char escape)
+String escape(StringView str, char character, char escape)
 {
     String res;
     for (auto& c : str)
@@ -52,10 +50,22 @@ String escape(const String& str, char character, char escape)
     return res;
 }
 
-int str_to_int(const String& str)
+String escape(StringView str, StringView characters, char escape)
+{
+    String res;
+    for (auto& c : str)
+    {
+        if (contains(characters, c))
+            res += escape;
+        res += c;
+    }
+    return res;
+}
+
+int str_to_int(StringView str)
 {
     int res = 0;
-    if (sscanf(str.c_str(), "%i", &res) != 1)
+    if (sscanf(str.zstr(), "%i", &res) != 1)
         throw runtime_error(str + "is not a number");
     return res;
 }
@@ -72,7 +82,7 @@ String option_to_string(const Regex& re)
     return String{re.str()};
 }
 
-void option_from_string(const String& str, Regex& re)
+void option_from_string(StringView str, Regex& re)
 {
     try
     {

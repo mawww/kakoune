@@ -61,7 +61,7 @@ public:
         : m_data{data}, m_length{length} {}
     StringView(const char* data) : m_data{data}, m_length{(int)strlen(data)} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
-    StringView(const String& str) : m_data{str.data()}, m_length{str.length()} {}
+    StringView(const std::string& str) : m_data{str.data()}, m_length{(int)str.length()} {}
 
     bool operator==(StringView other) const;
     bool operator!=(StringView other) const;
@@ -259,8 +259,9 @@ inline String operator+(StringView lhs, StringView rhs)
     return res;
 }
 
-std::vector<String> split(const String& str, char separator, char escape = 0);
-String escape(const String& str, char character, char escape);
+std::vector<String> split(StringView str, char separator, char escape = 0);
+String escape(StringView str, char character, char escape);
+String escape(StringView str, StringView characters, char escape);
 
 inline String operator"" _str(const char* str, size_t)
 {
@@ -275,9 +276,9 @@ inline String codepoint_to_str(Codepoint cp)
 }
 
 String option_to_string(const Regex& re);
-void option_from_string(const String& str, Regex& re);
+void option_from_string(StringView str, Regex& re);
 
-int str_to_int(const String& str);
+int str_to_int(StringView str);
 
 String to_string(int val);
 
