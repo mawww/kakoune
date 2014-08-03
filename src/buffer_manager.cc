@@ -110,7 +110,7 @@ CandidateList BufferManager::complete_buffer_name(StringView prefix,
         {
             ByteCount pos = name.find_last_of('/');
             if (pos != (int)String::npos)
-                match_name = name.substr(pos);
+                match_name = name.substr(pos+1);
         }
 
         if (prefix_match(match_name, real_prefix))
