@@ -10,10 +10,14 @@
 #define NCURSES_OPAQUE 0
 #define NCURSES_INTERNALS
 
-#ifdef __APPLE__
+#if   FOUND_NCURSESW_NCURSES_H
+#include <ncursesw/ncurses.h>
+#elif FOUND_NCURSESW_H
+#include <ncursesw.h>
+#elif FOUND_NCURSES_H
 #include <ncurses.h>
 #else
-#include <ncursesw/ncurses.h>
+#error Could not find wide ncurses
 #endif
 
 #include <signal.h>
