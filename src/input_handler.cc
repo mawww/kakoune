@@ -69,7 +69,8 @@ public:
     {
         if (not context().has_client())
             return;
-        context().client().check_buffer_fs_timestamp();
+        // Do not check buffer timestamp, we might already be executing the
+        // on next key of a buffer timestamp check.
         m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
 
         context().hooks().run_hook("NormalBegin", "", context());
