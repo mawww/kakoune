@@ -4,7 +4,7 @@
 #include "color.hh"
 #include "keys.hh"
 #include "memoryview.hh"
-#include "utils.hh"
+#include "safe_ptr.hh"
 
 namespace Kakoune
 {

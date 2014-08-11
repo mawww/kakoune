@@ -8,6 +8,7 @@
 #include "hook_manager.hh"
 #include "option_manager.hh"
 #include "keymap_manager.hh"
+#include "safe_ptr.hh"
 
 namespace Kakoune
 {

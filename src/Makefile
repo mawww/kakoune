@@ -9,7 +9,7 @@ bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
 
-CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
+CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic -rdynamic
 
 os := $(shell uname)
 

@@ -3,6 +3,7 @@
 
 #include "completion.hh"
 #include "utils.hh"
+#include "safe_ptr.hh"
 
 #include <unordered_map>
 

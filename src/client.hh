@@ -1,11 +1,12 @@
 #ifndef client_hh_INCLUDED
 #define client_hh_INCLUDED
 
+#include "display_buffer.hh"
+#include "env_vars.hh"
+#include "input_handler.hh"
+#include "safe_ptr.hh"
 #include "string.hh"
 #include "utils.hh"
-#include "display_buffer.hh"
-#include "input_handler.hh"
-#include "env_vars.hh"
 
 namespace Kakoune
 {
