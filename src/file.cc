@@ -306,7 +306,7 @@ std::vector<String> list_files(StringView prefix, StringView dirname,
         {
             if (S_ISDIR(st.st_mode))
                 filename += '/';
-            if (prefix.length() != 0 or filename[0] != '.')
+            if (prefix.length() != 0 or filename[0_byte] != '.')
             {
                 if (match_prefix)
                     result.push_back(filename);

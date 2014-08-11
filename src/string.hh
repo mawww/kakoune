@@ -35,6 +35,7 @@ public:
 
     char      operator[](ByteCount pos) const { return std::string::operator[]((int)pos); }
     char&     operator[](ByteCount pos) { return std::string::operator[]((int)pos); }
+    Codepoint operator[](CharCount pos) { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
     ByteCount length() const { return ByteCount{(int)std::string::length()}; }
     CharCount char_length() const { return utf8::distance(begin(), end()); }
     ByteCount byte_count_to(CharCount count) const { return utf8::advance(begin(), end(), (int)count) - begin(); }
@@ -81,6 +82,7 @@ public:
     char back() const { return m_data[(int)m_length - 1]; }
 
     char operator[](ByteCount pos) const { return m_data[(int)pos]; }
+    Codepoint operator[](CharCount pos) { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
 
     ByteCount length() const { return m_length; }
     CharCount char_length() const { return utf8::distance(begin(), end()); }
