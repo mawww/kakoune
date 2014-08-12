@@ -54,6 +54,7 @@ private:
     InputHandler m_input_handler;
 
     DisplayLine m_status_line;
+    DisplayLine m_pending_status_line;
     DisplayLine m_mode_line;
 };
 

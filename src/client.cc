@@ -42,8 +42,7 @@ void Client::handle_available_input()
 
 void Client::print_status(DisplayLine status_line)
 {
-    m_status_line = std::move(status_line);
-    context().window().forget_timestamp();
+    m_pending_status_line = std::move(status_line);
 }
 
 DisplayLine Client::generate_mode_line() const
@@ -92,7 +91,9 @@ void Client::redraw_ifn()
 {
     DisplayLine mode_line = generate_mode_line();
     const bool buffer_changed = context().window().timestamp() != context().buffer().timestamp();
-    if (buffer_changed or mode_line.atoms() != m_mode_line.atoms())
+    const bool mode_line_changed = mode_line.atoms() != m_mode_line.atoms();
+    const bool status_line_changed = m_status_line.atoms() != m_pending_status_line.atoms();
+    if (buffer_changed or status_line_changed or mode_line_changed)
     {
         if (buffer_changed)
         {
@@ -103,6 +104,7 @@ void Client::redraw_ifn()
             context().window().update_display_buffer(context());
         }
         m_mode_line = std::move(mode_line);
+        m_status_line = m_pending_status_line;
         context().ui().draw(context().window().display_buffer(),
                             m_status_line, m_mode_line);
     }
