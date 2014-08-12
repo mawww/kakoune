@@ -39,6 +39,9 @@ public:
     Context& context() { return m_input_handler.context(); }
     const Context& context() const { return m_input_handler.context(); }
 
+    InputHandler& input_handler() { return m_input_handler; }
+    const InputHandler& input_handler() const { return m_input_handler; }
+
     void change_buffer(Buffer& buffer);
 
     const String& get_env_var(const String& name) const;

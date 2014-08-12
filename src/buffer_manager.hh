@@ -37,8 +37,10 @@ public:
     CandidateList complete_buffer_name(StringView prefix,
                                        ByteCount cursor_pos = -1);
 
+    void clear_buffer_trash();
 private:
     BufferList m_buffers;
+    BufferList m_buffer_trash;
 };
 
 }

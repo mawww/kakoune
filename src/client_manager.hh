@@ -34,6 +34,7 @@ public:
     void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
 
     void redraw_clients() const;
+    void clear_mode_trashes() const;
 
     Client*  get_client_ifp(const String& name);
     Client&  get_client(const String& name);

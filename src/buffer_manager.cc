@@ -41,6 +41,14 @@ void BufferManager::unregister_buffer(Buffer& buffer)
             return;
         }
     }
+    for (auto it = m_buffer_trash.begin(); it != m_buffer_trash.end(); ++it)
+    {
+        if (*it == &buffer)
+        {
+            m_buffer_trash.erase(it);
+            return;
+        }
+    }
     kak_assert(false);
 }
 
@@ -52,7 +60,9 @@ void BufferManager::delete_buffer(Buffer& buffer)
         {
             if (ClientManager::has_instance())
                 ClientManager::instance().ensure_no_client_uses_buffer(buffer);
-            delete it->get();
+
+            m_buffers.erase(it);
+            m_buffer_trash.emplace_back(&buffer);
             return;
         }
     }
@@ -119,6 +129,12 @@ CandidateList BufferManager::complete_buffer_name(StringView prefix,
             subsequence_result.push_back(escape(name));
     }
     return result.empty() ? subsequence_result : result;
+}
+
+void BufferManager::clear_buffer_trash()
+{
+    while (not m_buffer_trash.empty())
+        delete m_buffer_trash.back().get();
 }
 
 }

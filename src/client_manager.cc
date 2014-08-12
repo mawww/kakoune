@@ -170,6 +170,12 @@ void ClientManager::redraw_clients() const
         client->redraw_ifn();
 }
 
+void ClientManager::clear_mode_trashes() const
+{
+    for (auto& client : m_clients)
+        client->input_handler().clear_mode_trash();
+}
+
 CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {

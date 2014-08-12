@@ -421,7 +421,12 @@ int kakoune(const ParametersParser& parser)
         create_local_client(init_command);
 
     while (not terminate and (not client_manager.empty() or daemon))
+    {
         event_manager.handle_next_events();
+        client_manager.clear_mode_trashes();
+        buffer_manager.clear_buffer_trash();
+        client_manager.redraw_clients();
+    }
 
     {
         Context empty_context;
