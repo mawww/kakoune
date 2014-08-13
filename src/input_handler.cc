@@ -143,17 +143,87 @@ private:
     Timer m_fs_check_timer;
 };
 
+template<WordType word_type>
+void to_next_word_begin(CharCount& pos, StringView line)
+{
+    const CharCount len = line.char_length();
+    if (pos == len)
+        return;
+    if (word_type == Word and is_punctuation(line[pos]))
+    {
+        while (pos != len and is_punctuation(line[pos]))
+            ++pos;
+    }
+    else if (is_word<word_type>(line[pos]))
+    {
+        while (pos != len and is_word<word_type>(line[pos]))
+            ++pos;
+    }
+    while (pos != len and is_blank(line[pos]))
+        ++pos;
+}
+
+template<WordType word_type>
+void to_next_word_end(CharCount& pos, StringView line)
+{
+    const CharCount len = line.char_length();
+    if (pos + 1 >= len)
+        return;
+    ++pos;
+
+    while (pos != len and is_blank(line[pos]))
+        ++pos;
+
+    if (word_type == Word and is_punctuation(line[pos]))
+    {
+        while (pos != len and is_punctuation(line[pos]))
+            ++pos;
+    }
+    else if (is_word<word_type>(line[pos]))
+    {
+        while (pos != len and is_word<word_type>(line[pos]))
+            ++pos;
+    }
+    --pos;
+}
+
+template<WordType word_type>
+void to_prev_word_begin(CharCount& pos, StringView line)
+{
+    if (pos == 0_char)
+        return;
+    --pos;
+
+    while (pos != 0_char and is_blank(line[pos]))
+        --pos;
+
+    if (word_type == Word and is_punctuation(line[pos]))
+    {
+        while (pos != 0_char and is_punctuation(line[pos]))
+            --pos;
+        if (!is_punctuation(line[pos]))
+            ++pos;
+    }
+    else if (is_word<word_type>(line[pos]))
+    {
+        while (pos != 0_char and is_word<word_type>(line[pos]))
+            --pos;
+        if (!is_word<word_type>(line[pos]))
+            ++pos;
+     }
+}
+
 class LineEditor
 {
 public:
     void handle_key(Key key)
     {
-        if (key == Key::Left or key == ctrl('b'))
+        if (key == Key::Left)
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key::Right or key == ctrl('f'))
+        else if (key == Key::Right)
         {
             if (m_cursor_pos < m_line.char_length())
                 ++m_cursor_pos;
@@ -178,6 +248,18 @@ public:
                 m_line = m_line.substr(0, m_cursor_pos)
                        + m_line.substr(m_cursor_pos+1);
         }
+        else if (key == ctrl('w'))
+            to_next_word_begin<Word>(m_cursor_pos, m_line);
+        else if (key == ctrlalt('w'))
+            to_next_word_begin<WORD>(m_cursor_pos, m_line);
+        else if (key == ctrl('b'))
+            to_prev_word_begin<Word>(m_cursor_pos, m_line);
+        else if (key == ctrlalt('b'))
+            to_prev_word_begin<WORD>(m_cursor_pos, m_line);
+        else if (key == ctrl('e'))
+            to_next_word_end<Word>(m_cursor_pos, m_line);
+        else if (key == ctrlalt('e'))
+            to_next_word_end<WORD>(m_cursor_pos, m_line);
         else
         {
             m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(key.key)
@@ -227,6 +309,7 @@ public:
 private:
     CharCount      m_cursor_pos = 0;
     CharCount      m_display_pos = 0;
+
     String         m_line;
 };
 
