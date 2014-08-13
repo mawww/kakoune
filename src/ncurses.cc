@@ -437,7 +437,11 @@ Key NCursesUI::get_key()
         const Codepoint new_c = getch();
         timeout(-1);
         if (new_c != ERR)
+        {
+            if (new_c > 0 and new_c < 27)
+                return ctrlalt(Codepoint(new_c) - 1 + 'a');
             return alt(new_c);
+        }
         else
             return Key::Escape;
     }
