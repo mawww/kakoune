@@ -24,6 +24,15 @@ decl line-flag-list git_diff_flags
 
 def -shell-params \
   -docstring "git wrapping helper" \
+  -shell-completion %{
+    shift $(expr ${kak_token_to_complete})
+    prefix=${1:0:${kak_pos_in_token}}
+    (
+      for cmd in show log diff status blame hide-blame show-diff update-diff checkout add; do
+          expr "${cmd}" : "^\(${prefix}.*\)$"
+      done
+    ) | grep -v '^$'
+  } \
   git %{ %sh{
     show_git_cmd_output() {
         local filetype
