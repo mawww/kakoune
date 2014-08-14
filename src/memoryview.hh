@@ -44,6 +44,10 @@ public:
     const T* begin() const { return m_pointer; }
     const T* end()   const { return m_pointer+m_size; }
 
+    using reverse_iterator = std::reverse_iterator<const T*>;
+    reverse_iterator rbegin() const { return reverse_iterator(m_pointer+m_size); }
+    reverse_iterator rend()   const { return reverse_iterator(m_pointer); }
+
     const T& front() const { return *m_pointer; }
     const T& back()  const { return *(m_pointer + m_size - 1); }
 
