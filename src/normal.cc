@@ -341,6 +341,9 @@ void for_each_char(Context& context, int)
 
 void command(Context& context, int)
 {
+    if (not CommandManager::has_instance())
+        return;
+
     context.input_handler().prompt(
         ":", "", get_face("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),

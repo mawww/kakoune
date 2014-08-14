@@ -27,7 +27,9 @@ private:
 
 inline Face get_face(const String& facedesc)
 {
-    return FaceRegistry::instance()[facedesc];
+    if (FaceRegistry::has_instance())
+        return FaceRegistry::instance()[facedesc];
+    return Face{};
 }
 
 }

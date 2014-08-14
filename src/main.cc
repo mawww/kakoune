@@ -385,6 +385,36 @@ int run_server(StringView session, StringView init_command,
     return 0;
 }
 
+int run_filter(StringView keystr, memoryview<StringView> files)
+{
+    GlobalOptions       global_options;
+    GlobalHooks         global_hooks;
+    GlobalKeymaps       global_keymaps;
+    ShellManager        shell_manager;
+    BufferManager       buffer_manager;
+    RegisterManager     register_manager;
+
+    register_env_vars();
+    register_registers();
+
+    auto keys = parse_keys(keystr);
+
+    for (auto& file : files)
+    {
+        Buffer* buffer = create_buffer_from_file(file);
+        InputHandler input_handler{{ *buffer, Selection{} }};
+
+        for (auto& key : keys)
+            input_handler.handle_key(key);
+
+        write_buffer_to_file(*buffer, file + ".kak-out");
+
+        buffer_manager.delete_buffer(*buffer);
+    }
+    buffer_manager.clear_buffer_trash();
+    return 0;
+}
+
 int run_pipe(StringView session)
 {
     char buf[512];
@@ -423,6 +453,14 @@ int kakoune(const ParametersParser& parser)
             }
         }
         return run_pipe(parser.option_value("p"));
+    }
+    else if (parser.has_option("f"))
+    {
+        std::vector<StringView> files;
+        for (size_t i = 0; i < parser.positional_count(); ++i)
+            files.emplace_back(parser[i]);
+
+         return run_filter(parser.option_value("f"), files);
     }
 
     String init_command;
@@ -476,7 +514,8 @@ int main(int argc, char* argv[])
                    { "n", { false, "do not source kakrc files on startup" } },
                    { "s", { true, "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
-                   { "p", { true, "just send stdin as commands to the given session" } } }
+                   { "p", { true, "just send stdin as commands to the given session" } },
+                   { "f", { true, "act as a filter, executing given keys on given files" } } }
     };
     try
     {

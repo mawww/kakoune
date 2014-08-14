@@ -19,12 +19,14 @@ FDWatcher::~FDWatcher()
 Timer::Timer(TimePoint date, Callback callback)
     : m_date{date}, m_callback{std::move(callback)}
 {
-    EventManager::instance().m_timers.insert(this);
+    if (EventManager::has_instance())
+        EventManager::instance().m_timers.insert(this);
 }
 
 Timer::~Timer()
 {
-    EventManager::instance().m_timers.erase(this);
+    if (EventManager::has_instance())
+        EventManager::instance().m_timers.erase(this);
 }
 
 void Timer::run()
