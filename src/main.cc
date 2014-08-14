@@ -257,7 +257,7 @@ void signal_handler(int signal)
     abort();
 }
 
-int run_client(const String& session, const String& init_command)
+int run_client(StringView session, StringView init_command)
 {
     try
     {
@@ -282,63 +282,13 @@ int run_client(const String& session, const String& init_command)
     return 0;
 }
 
-int kakoune(const ParametersParser& parser)
+int run_server(StringView session, StringView init_command,
+               bool ignore_kakrc, bool daemon, memoryview<StringView> files)
 {
-    if (parser.has_option("p"))
-    {
-        for (auto opt : { "c", "n", "s", "d", "e" })
-        {
-            if (parser.has_option(opt))
-            {
-                fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
-                return -1;
-            }
-        }
-        char buf[512];
-        String command;
-        while (ssize_t count = read(0, buf, 512))
-        {
-            if (count < 0)
-            {
-                fprintf(stderr, "error while reading stdin\n");
-                return -1;
-            }
-            command += String{buf, buf + count};
-        }
-        try
-        {
-            send_command(parser.option_value("p"), command);
-        }
-        catch (connection_failed& e)
-        {
-            fputs(e.what(), stderr);
-            return -1;
-        }
-        return 0;
-    }
-
-    String init_command;
-    if (parser.has_option("e"))
-        init_command = parser.option_value("e");
-
-    if (parser.has_option("c"))
-    {
-        for (auto opt : { "n", "s", "d" })
-        {
-            if (parser.has_option(opt))
-            {
-                fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
-                return -1;
-            }
-        }
-        return run_client(parser.option_value("c"), init_command);
-    }
-
-    const bool daemon = parser.has_option("d");
     static bool terminate = false;
     if (daemon)
     {
-        if (not parser.has_option("s"))
+        if (session.empty())
         {
             fputs("-d needs a session name to be specified with -s\n", stderr);
             return -1;
@@ -347,7 +297,7 @@ int kakoune(const ParametersParser& parser)
         {
             printf("Kakoune forked to background, for session '%s'\n"
                    "send SIGTERM to process %d for closing the session\n",
-                   parser.option_value("s").c_str(), child);
+                   (const char*)session.zstr(), child);
             exit(0);
         }
         signal(SIGTERM, [](int) { terminate = true; });
@@ -376,10 +326,10 @@ int kakoune(const ParametersParser& parser)
     write_debug("*** This is the debug buffer, where debug info will be written ***");
     write_debug("pid: " + to_string(getpid()));
 
-    Server server(parser.has_option("s") ? parser.option_value("s") : to_string(getpid()));
+    Server server(session.empty() ? to_string(getpid()) : String{session});
     write_debug("session: " + server.session());
 
-    if (not parser.has_option("n")) try
+    if (not ignore_kakrc) try
     {
         Context initialisation_context;
         command_manager.execute("source " + runtime_directory() + "/kakrc",
@@ -399,13 +349,12 @@ int kakoune(const ParametersParser& parser)
         global_hooks.run_hook("KakBegin", "", empty_context);
     }
 
-    if (parser.positional_count() != 0) try
+    if (not files.empty()) try
     {
         // create buffers in reverse order so that the first given buffer
         // is the most recently created one.
-        for (int i = parser.positional_count() - 1; i >= 0; --i)
+        for (auto& file : reversed(files))
         {
-            const String& file = parser[i];
             if (not create_buffer_from_file(file))
                 new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
         }
@@ -432,7 +381,80 @@ int kakoune(const ParametersParser& parser)
         Context empty_context;
         global_hooks.run_hook("KakEnd", "", empty_context);
     }
+
     return 0;
+}
+
+int run_pipe(StringView session)
+{
+    char buf[512];
+    String command;
+    while (ssize_t count = read(0, buf, 512))
+    {
+        if (count < 0)
+        {
+            fprintf(stderr, "error while reading stdin\n");
+            return -1;
+        }
+        command += String{buf, buf + count};
+    }
+    try
+    {
+        send_command(session, command);
+    }
+    catch (connection_failed& e)
+    {
+        fputs(e.what(), stderr);
+        return -1;
+    }
+    return 0;
+}
+
+int kakoune(const ParametersParser& parser)
+{
+    if (parser.has_option("p"))
+    {
+        for (auto opt : { "c", "n", "s", "d", "e" })
+        {
+            if (parser.has_option(opt))
+            {
+                fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
+                return -1;
+            }
+        }
+        return run_pipe(parser.option_value("p"));
+    }
+
+    String init_command;
+    if (parser.has_option("e"))
+        init_command = parser.option_value("e");
+
+    if (parser.has_option("c"))
+    {
+        for (auto opt : { "n", "s", "d" })
+        {
+            if (parser.has_option(opt))
+            {
+                fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
+                return -1;
+            }
+        }
+        return run_client(parser.option_value("c"), init_command);
+    }
+    else
+    {
+        std::vector<StringView> files;
+        for (size_t i = 0; i < parser.positional_count(); ++i)
+            files.emplace_back(parser[i]);
+        StringView session;
+        if (parser.has_option("s"))
+            session = parser.option_value("s");
+
+        return run_server(session, init_command,
+                          parser.has_option("d"),
+                          parser.has_option("n"),
+                          files);
+    }
 }
 
 int main(int argc, char* argv[])
