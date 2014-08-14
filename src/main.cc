@@ -440,61 +440,6 @@ int run_pipe(StringView session)
     return 0;
 }
 
-int kakoune(const ParametersParser& parser)
-{
-    if (parser.has_option("p"))
-    {
-        for (auto opt : { "c", "n", "s", "d", "e" })
-        {
-            if (parser.has_option(opt))
-            {
-                fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
-                return -1;
-            }
-        }
-        return run_pipe(parser.option_value("p"));
-    }
-    else if (parser.has_option("f"))
-    {
-        std::vector<StringView> files;
-        for (size_t i = 0; i < parser.positional_count(); ++i)
-            files.emplace_back(parser[i]);
-
-         return run_filter(parser.option_value("f"), files);
-    }
-
-    String init_command;
-    if (parser.has_option("e"))
-        init_command = parser.option_value("e");
-
-    if (parser.has_option("c"))
-    {
-        for (auto opt : { "n", "s", "d" })
-        {
-            if (parser.has_option(opt))
-            {
-                fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
-                return -1;
-            }
-        }
-        return run_client(parser.option_value("c"), init_command);
-    }
-    else
-    {
-        std::vector<StringView> files;
-        for (size_t i = 0; i < parser.positional_count(); ++i)
-            files.emplace_back(parser[i]);
-        StringView session;
-        if (parser.has_option("s"))
-            session = parser.option_value("s");
-
-        return run_server(session, init_command,
-                          parser.has_option("d"),
-                          parser.has_option("n"),
-                          files);
-    }
-}
-
 int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "");
@@ -519,14 +464,67 @@ int main(int argc, char* argv[])
     };
     try
     {
-        kakoune(ParametersParser(params, param_desc));
+        ParametersParser parser(params, param_desc);
+
+        if (parser.has_option("p"))
+        {
+            for (auto opt : { "c", "n", "s", "d", "e" })
+            {
+                if (parser.has_option(opt))
+                {
+                    fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
+                    return -1;
+                }
+            }
+            return run_pipe(parser.option_value("p"));
+        }
+        else if (parser.has_option("f"))
+        {
+            std::vector<StringView> files;
+            for (size_t i = 0; i < parser.positional_count(); ++i)
+                files.emplace_back(parser[i]);
+
+             return run_filter(parser.option_value("f"), files);
+        }
+
+        String init_command;
+        if (parser.has_option("e"))
+            init_command = parser.option_value("e");
+
+        if (parser.has_option("c"))
+        {
+            for (auto opt : { "n", "s", "d" })
+            {
+                if (parser.has_option(opt))
+                {
+                    fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
+                    return -1;
+                }
+            }
+            return run_client(parser.option_value("c"), init_command);
+        }
+        else
+        {
+            std::vector<StringView> files;
+            for (size_t i = 0; i < parser.positional_count(); ++i)
+                files.emplace_back(parser[i]);
+            StringView session;
+            if (parser.has_option("s"))
+                session = parser.option_value("s");
+
+            return run_server(session, init_command,
+                              parser.has_option("d"),
+                              parser.has_option("n"),
+                              files);
+        }
     }
     catch (Kakoune::parameter_error& error)
     {
         printf("Error: %s\n"
                "Valid switches:\n"
                "%s",
-               error.what(), generate_switches_doc(param_desc.switches).c_str());
+               error.what(),
+               generate_switches_doc(param_desc.switches).c_str());
        return -1;
     }
     catch (Kakoune::exception& error)
