@@ -29,6 +29,10 @@ CharCount get_column(const Buffer& buffer,
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
 
+Buffer* create_buffer_from_data(StringView data, StringView name,
+                                Buffer::Flags flags,
+                                time_t fs_timestamp = InvalidTime);
+
 }
 
 #endif // buffer_utils_hh_INCLUDED

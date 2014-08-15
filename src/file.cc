@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "completion.hh"
 #include "debug.hh"
 #include "unicode.hh"
@@ -95,6 +96,21 @@ String compact_path(StringView filename)
     return filename.str();
 }
 
+String read_fd(int fd)
+{
+    String content;
+    char buf[256];
+    while (true)
+    {
+        ssize_t size = read(fd, buf, 256);
+        if (size == -1 or size == 0)
+            break;
+
+        content += String(buf, buf + size);
+    }
+    return content;
+}
+
 String read_file(StringView filename)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
@@ -107,17 +123,7 @@ String read_file(StringView filename)
     }
     auto close_fd = on_scope_end([fd]{ close(fd); });
 
-    String content;
-    char buf[256];
-    while (true)
-    {
-        ssize_t size = read(fd, buf, 256);
-        if (size == -1 or size == 0)
-            break;
-
-        content += String(buf, buf + size);
-    }
-    return content;
+    return read_fd(fd);
 }
 
 Buffer* create_buffer_from_file(String filename)
@@ -132,69 +138,20 @@ Buffer* create_buffer_from_file(String filename)
 
         throw file_access_error(filename, strerror(errno));
     }
+    auto close_fd = on_scope_end([&]{ close(fd); });
+
     struct stat st;
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
-    {
-        close(fd);
         throw file_access_error(filename, "is a directory");
-    }
+
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    auto cleanup = on_scope_end([&]{ munmap((void*)data, st.st_size); close(fd); });
+    auto unmap = on_scope_end([&]{ munmap((void*)data, st.st_size); });
 
-    const char* pos = data;
-    bool crlf = false;
-    bool bom  = false;
-    if (st.st_size >= 3 and
-       data[0] == '\xEF' and data[1] == '\xBB' and data[2] == '\xBF')
-    {
-        bom = true;
-        pos = data + 3;
-    }
-
-    std::vector<String> lines;
-    const char* end = data + st.st_size;
-    while (pos < end)
-    {
-        const char* line_end = pos;
-        while (line_end < end and *line_end != '\r' and *line_end != '\n')
-             ++line_end;
-
-        // this should happen only when opening a file which has no
-        // end of line as last character.
-        if (line_end == end)
-        {
-            lines.emplace_back(pos, line_end);
-            lines.back() += '\n';
-            break;
-        }
-
-        lines.emplace_back(pos, line_end + 1);
-        lines.back().back() = '\n';
-
-        if (line_end+1 != end and *line_end == '\r' and *(line_end+1) == '\n')
-        {
-            crlf = true;
-            pos = line_end + 2;
-        }
-        else
-            pos = line_end + 1;
-    }
-    Buffer* buffer = BufferManager::instance().get_buffer_ifp(filename);
-    if (buffer)
-        buffer->reload(std::move(lines), st.st_mtime);
-    else
-        buffer = new Buffer{filename, Buffer::Flags::File,
-                            std::move(lines), st.st_mtime};
-
-    OptionManager& options = buffer->options();
-    options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");
-    options.get_local_option("BOM").set<String>(bom ? "utf-8" : "no");
-
-    return buffer;
+    return create_buffer_from_data({data, data + st.st_size}, filename, Buffer::Flags::File, st.st_mtime);
 }
 
-static void write(int fd, StringView data, StringView filename)
+static void write(int fd, StringView data)
 {
     const char* ptr = data.data();
     ssize_t count   = (int)data.length();
@@ -206,14 +163,12 @@ static void write(int fd, StringView data, StringView filename)
         count -= written;
 
         if (written == -1)
-            throw file_access_error(filename, strerror(errno));
+            throw file_access_error("fd: " + to_string(fd), strerror(errno));
     }
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename)
+void write_buffer_to_fd(Buffer& buffer, int fd)
 {
-    buffer.run_hook_in_own_context("BufWritePre", buffer.name());
-
     const String& eolformat = buffer.options()["eolformat"].get<String>();
     StringView eoldata;
     if (eolformat == "crlf")
@@ -221,25 +176,31 @@ void write_buffer_to_file(Buffer& buffer, StringView filename)
     else
         eoldata = "\n";
 
+    if (buffer.options()["BOM"].get<String>() == "utf-8")
+        ::write(fd, "\xEF\xBB\xBF", 3);
+
+    for (LineCount i = 0; i < buffer.line_count(); ++i)
     {
-        int fd = open(parse_filename(filename).c_str(),
-                      O_CREAT | O_WRONLY | O_TRUNC, 0644);
-        if (fd == -1)
-            throw file_access_error(filename, strerror(errno));
-        auto close_fd = on_scope_end([fd]{ close(fd); });
-
-        if (buffer.options()["BOM"].get<String>() == "utf-8")
-            ::write(fd, "\xEF\xBB\xBF", 3);
-
-        for (LineCount i = 0; i < buffer.line_count(); ++i)
-        {
-            // end of lines are written according to eolformat but always
-            // stored as \n
-            StringView linedata = buffer[i];
-            write(fd, linedata.substr(0, linedata.length()-1), filename);
-            write(fd, eoldata, filename);
-        }
+        // end of lines are written according to eolformat but always
+        // stored as \n
+        StringView linedata = buffer[i];
+        write(fd, linedata.substr(0, linedata.length()-1));
+        write(fd, eoldata);
     }
+}
+
+void write_buffer_to_file(Buffer& buffer, StringView filename)
+{
+    buffer.run_hook_in_own_context("BufWritePre", buffer.name());
+
+    int fd = open(parse_filename(filename).c_str(),
+                  O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd == -1)
+        throw file_access_error(filename, strerror(errno));
+    auto close_fd = on_scope_end([fd]{ close(fd); });
+
+    write_buffer_to_fd(buffer, fd);
+
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
         buffer.notify_saved();

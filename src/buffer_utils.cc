@@ -1,5 +1,6 @@
 #include "buffer_utils.hh"
 
+#include "buffer_manager.hh"
 #include "event_manager.hh"
 
 #include <sys/select.h>
@@ -22,6 +23,60 @@ CharCount get_column(const Buffer& buffer,
             ++col;
     }
     return col;
+}
+
+Buffer* create_buffer_from_data(StringView data, StringView name,
+                                Buffer::Flags flags, time_t fs_timestamp)
+{
+    bool bom = false, crlf = false;
+
+    const char* pos = data.begin();
+    if (data.length() >= 3 and
+       data[0] == '\xEF' and data[1] == '\xBB' and data[2] == '\xBF')
+    {
+        bom = true;
+        pos = data.begin() + 3;
+    }
+
+    std::vector<String> lines;
+    while (pos < data.end())
+    {
+        const char* line_end = pos;
+        while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
+             ++line_end;
+
+        // this should happen only when opening a file which has no
+        // end of line as last character.
+        if (line_end == data.end())
+        {
+            lines.emplace_back(pos, line_end);
+            lines.back() += '\n';
+            break;
+        }
+
+        lines.emplace_back(pos, line_end + 1);
+        lines.back().back() = '\n';
+
+        if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
+        {
+            crlf = true;
+            pos = line_end + 2;
+        }
+        else
+            pos = line_end + 1;
+    }
+
+    Buffer* buffer = BufferManager::instance().get_buffer_ifp(name);
+    if (buffer)
+        buffer->reload(std::move(lines), fs_timestamp);
+    else
+        buffer = new Buffer{name, flags, std::move(lines), fs_timestamp};
+
+    OptionManager& options = buffer->options();
+    options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");
+    options.get_local_option("BOM").set<String>(bom ? "utf-8" : "no");
+
+    return buffer;
 }
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll)

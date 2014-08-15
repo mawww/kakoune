@@ -411,6 +411,19 @@ int run_filter(StringView keystr, memoryview<StringView> files)
 
         buffer_manager.delete_buffer(*buffer);
     }
+    if (not isatty(0))
+    {
+        Buffer* buffer = create_buffer_from_data(read_fd(0), "*stdin*", Buffer::Flags::None);
+        InputHandler input_handler{{ *buffer, Selection{} }};
+
+        for (auto& key : keys)
+            input_handler.handle_key(key);
+
+        write_buffer_to_fd(*buffer, 1);
+
+        buffer_manager.delete_buffer(*buffer);
+    }
+
     buffer_manager.clear_buffer_trash();
     return 0;
 }

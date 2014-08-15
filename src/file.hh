@@ -28,9 +28,14 @@ String parse_filename(StringView filename);
 String real_path(StringView filename);
 String compact_path(StringView filename);
 
+String read_fd(int fd);
 String read_file(StringView filename);
+
 Buffer* create_buffer_from_file(String filename);
+
 void write_buffer_to_file(Buffer& buffer, StringView filename);
+void write_buffer_to_fd(Buffer& buffer, int fd);
+
 String find_file(StringView filename, memoryview<String> paths);
 
 time_t get_fs_timestamp(StringView filename);
