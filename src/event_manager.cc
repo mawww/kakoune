@@ -52,8 +52,6 @@ void EventManager::handle_next_events()
     events.reserve(m_fd_watchers.size());
     for (auto& watcher : m_fd_watchers)
         events.emplace_back(pollfd{ watcher->fd(), POLLIN | POLLPRI, 0 });
-    std::vector<int> forced;
-    std::swap(forced, m_forced_fd);
 
     TimePoint next_timer = TimePoint::max();
     for (auto& timer : m_timers)
@@ -64,6 +62,12 @@ void EventManager::handle_next_events()
     using namespace std::chrono;
     auto timeout = duration_cast<milliseconds>(next_timer - Clock::now()).count();
     poll(events.data(), events.size(), timeout < INT_MAX ? (int)timeout : INT_MAX);
+
+    // gather forced fds *after* poll, so that signal handlers can write to
+    // m_forced_fd, interupt poll, and directly be serviced.
+    std::vector<int> forced;
+    std::swap(forced, m_forced_fd);
+
     for (size_t i = 0; i < events.size(); ++i)
     {
         auto& event = events[i];
