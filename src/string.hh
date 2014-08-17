@@ -33,9 +33,13 @@ public:
     std::string& stdstr() { return *this; }
     const std::string& stdstr() const { return *this; }
 
+    [[gnu::always_inline]]
     char      operator[](ByteCount pos) const { return std::string::operator[]((int)pos); }
+    [[gnu::always_inline]]
     char&     operator[](ByteCount pos) { return std::string::operator[]((int)pos); }
     Codepoint operator[](CharCount pos) { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
+
+    [[gnu::always_inline]]
     ByteCount length() const { return ByteCount{(int)std::string::length()}; }
     CharCount char_length() const { return utf8::distance(begin(), end()); }
     ByteCount byte_count_to(CharCount count) const { return utf8::advance(begin(), end(), (int)count) - begin(); }
@@ -67,6 +71,7 @@ public:
     bool operator==(StringView other) const;
     bool operator!=(StringView other) const;
 
+    [[gnu::always_inline]]
     const char* data() const { return m_data; }
 
     using iterator = const char*;
@@ -81,11 +86,15 @@ public:
     char front() const { return *m_data; }
     char back() const { return m_data[(int)m_length - 1]; }
 
+    [[gnu::always_inline]]
     char operator[](ByteCount pos) const { return m_data[(int)pos]; }
     Codepoint operator[](CharCount pos) { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
 
+    [[gnu::always_inline]]
     ByteCount length() const { return m_length; }
     CharCount char_length() const { return utf8::distance(begin(), end()); }
+
+    [[gnu::always_inline]]
     bool empty() { return m_length == 0_byte; }
 
     ByteCount byte_count_to(CharCount count) const;

@@ -188,6 +188,7 @@ inline BufferIterator& BufferIterator::operator-=(ByteCount size)
     return *this = (*this - size);
 }
 
+[[gnu::always_inline]]
 inline BufferIterator& BufferIterator::operator++()
 {
     m_coord = m_buffer->next(m_coord);
