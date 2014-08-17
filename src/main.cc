@@ -397,31 +397,45 @@ int run_filter(StringView keystr, memoryview<StringView> files)
     register_env_vars();
     register_registers();
 
-    auto keys = parse_keys(keystr);
-
-    for (auto& file : files)
+    try
     {
-        Buffer* buffer = create_buffer_from_file(file);
-        InputHandler input_handler{{ *buffer, Selection{} }};
+        auto keys = parse_keys(keystr);
 
-        for (auto& key : keys)
-            input_handler.handle_key(key);
+        auto apply_keys_to_buffer = [&](Buffer& buffer)
+        {
+            try
+            {
+                InputHandler input_handler{{ buffer, Selection{} }};
 
-        write_buffer_to_file(*buffer, file + ".kak-out");
+                for (auto& key : keys)
+                    input_handler.handle_key(key);
+            }
+            catch (Kakoune::runtime_error& err)
+            {
+                fprintf(stderr, "error while applying keys to buffer '%s': %s\n",
+                        buffer.display_name().c_str(), err.what());
+            }
+        };
 
-        buffer_manager.delete_buffer(*buffer);
+        for (auto& file : files)
+        {
+            Buffer* buffer = create_buffer_from_file(file);
+            apply_keys_to_buffer(*buffer);
+            write_buffer_to_file(*buffer, file + ".kak-out");
+            buffer_manager.delete_buffer(*buffer);
+        }
+        if (not isatty(0))
+        {
+            Buffer* buffer = create_buffer_from_data(read_fd(0), "*stdin*",
+                                                     Buffer::Flags::None);
+            apply_keys_to_buffer(*buffer);
+            write_buffer_to_fd(*buffer, 1);
+            buffer_manager.delete_buffer(*buffer);
+        }
     }
-    if (not isatty(0))
+    catch (Kakoune::runtime_error& err)
     {
-        Buffer* buffer = create_buffer_from_data(read_fd(0), "*stdin*", Buffer::Flags::None);
-        InputHandler input_handler{{ *buffer, Selection{} }};
-
-        for (auto& key : keys)
-            input_handler.handle_key(key);
-
-        write_buffer_to_fd(*buffer, 1);
-
-        buffer_manager.delete_buffer(*buffer);
+        fprintf(stderr, "error: %s\n", err.what());
     }
 
     buffer_manager.clear_buffer_trash();
