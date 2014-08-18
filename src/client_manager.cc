@@ -187,9 +187,9 @@ CandidateList ClientManager::complete_client_name(StringView prefix,
         const String& name = client->context().name();
 
         if (prefix_match(name, real_prefix))
-            result.push_back(escape(name));
+            result.push_back(name);
         if (subsequence_match(name, real_prefix))
-            subsequence_result.push_back(escape(name));
+            subsequence_result.push_back(name);
     }
     return result.empty() ? subsequence_result : result;
 }

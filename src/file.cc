@@ -309,7 +309,7 @@ std::vector<String> complete_filename(StringView prefix,
     };
     std::vector<String> res = list_files(fileprefix, dirname, filter);
     for (auto& file : res)
-        file = escape(dirname + file);
+        file = dirname + file;
     std::sort(res.begin(), res.end());
     return res;
 }

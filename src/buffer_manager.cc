@@ -124,9 +124,9 @@ CandidateList BufferManager::complete_buffer_name(StringView prefix,
         }
 
         if (prefix_match(match_name, real_prefix))
-            result.push_back(escape(name));
+            result.push_back(name);
         if (subsequence_match(name, real_prefix))
-            subsequence_result.push_back(escape(name));
+            subsequence_result.push_back(name);
     }
     return result.empty() ? subsequence_result : result;
 }
