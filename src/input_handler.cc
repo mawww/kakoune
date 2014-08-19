@@ -472,10 +472,11 @@ public:
            String initstr, Face face, Completer completer,
            PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt), m_prompt_face(face),
-          m_completer(completer), m_callback(callback)
+          m_completer(completer), m_callback(callback),
+          m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()}
     {
         m_history_it = ms_history[m_prompt].end();
-        if (context().options()["autoshowcompl"].get<bool>())
+        if (m_autoshowcompl)
             refresh_completions(CompletionFlags::Fast);
         m_line_editor.reset(std::move(initstr));
         display();
@@ -628,6 +629,11 @@ public:
                 showcompl = true;
             }
         }
+        else if (key == ctrl('o'))
+        {
+            m_autoshowcompl = false;
+            clear_completions();
+        }
         else
         {
             m_line_editor.handle_key(key);
@@ -635,7 +641,7 @@ public:
             showcompl = true;
         }
 
-        if (showcompl and context().options()["autoshowcompl"].get<bool>())
+        if (showcompl and m_autoshowcompl)
             refresh_completions(CompletionFlags::Fast);
 
         display();
@@ -682,6 +688,7 @@ private:
     void clear_completions()
     {
         m_current_completion = -1;
+        m_completions.candidates.clear();
         if (context().has_ui())
             context().ui().menu_hide();
     }
@@ -707,6 +714,7 @@ private:
     int            m_current_completion = -1;
     String         m_prefix;
     LineEditor     m_line_editor;
+    bool           m_autoshowcompl;
     Mode           m_mode = Mode::Default;
 
     static std::unordered_map<String, std::vector<String>> ms_history;
@@ -745,10 +753,12 @@ public:
           m_insert_mode(mode),
           m_edition(context()),
           m_completer(context()),
+          m_autoshowcompl(true),
           m_idle_timer{Clock::now() + idle_timeout,
                        [this](Timer& timer) {
                            context().hooks().run_hook("InsertIdle", "", context());
-                           m_completer.update();
+                           if (m_autoshowcompl)
+                               m_completer.update();
                        }},
           m_disable_hooks{context().are_user_hooks_disabled()}
     {
@@ -853,6 +863,11 @@ public:
         }
         else if ( key == ctrl('x'))
             m_mode = Mode::Complete;
+        else if ( key == ctrl('o'))
+        {
+            m_autoshowcompl = false;
+            m_completer.reset();
+        }
         else if ( key == ctrl('u'))
             context().buffer().commit_undo_group();
 
@@ -987,6 +1002,7 @@ private:
     InsertMode       m_insert_mode;
     ScopedEdition    m_edition;
     InsertCompleter  m_completer;
+    bool             m_autoshowcompl;
     Timer            m_idle_timer;
     bool             m_disable_hooks;
 };
