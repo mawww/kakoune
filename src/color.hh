@@ -7,6 +7,7 @@ namespace Kakoune
 {
 
 class String;
+class StringView;
 
 enum class Colors : char
 {
@@ -40,11 +41,13 @@ struct Color
     { return color != c.color or r != c.r or g != c.g or b != c.b; }
 };
 
-Color str_to_color(const String& color);
+Color str_to_color(StringView color);
 String color_to_str(Color color);
 
 String option_to_string(Color color);
-void option_from_string(const String& str, Color& color);
+void option_from_string(StringView str, Color& color);
+
+bool is_color_name(StringView color);
 
 }
 

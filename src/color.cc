@@ -5,7 +5,20 @@
 namespace Kakoune
 {
 
-Color str_to_color(const String& color)
+bool is_color_name(StringView color)
+{
+    return color == "default" or
+           color == "black" or
+           color == "red" or
+           color == "green" or
+           color == "yellow" or
+           color == "blue" or
+           color == "magenta" or
+           color == "cyan" or
+           color == "white";
+}
+
+Color str_to_color(StringView color)
 {
     if (color == "default") return Colors::Default;
     if (color == "black")   return Colors::Black;
@@ -18,10 +31,10 @@ Color str_to_color(const String& color)
     if (color == "white")   return Colors::White;
 
     static const Regex rgb_regex{"rgb:[0-9a-fA-F]{6}"};
-    if (boost::regex_match(color, rgb_regex))
+    if (boost::regex_match(color.begin(), color.end(), rgb_regex))
     {
         unsigned l;
-        sscanf(color.c_str() + 4, "%x", &l);
+        sscanf(color.zstr() + 4, "%x", &l);
         return { (unsigned char)((l >> 16) & 0xFF),
                  (unsigned char)((l >> 8) & 0xFF),
                  (unsigned char)(l & 0xFF) };
@@ -59,7 +72,7 @@ String option_to_string(Color color)
     return color_to_str(color);
 }
 
-void option_from_string(const String& str, Color& color)
+void option_from_string(StringView str, Color& color)
 {
     color = str_to_color(str);
 }

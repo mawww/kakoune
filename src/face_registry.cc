@@ -51,8 +51,9 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
     if (not override and m_aliases.find(name) != m_aliases.end())
         throw runtime_error("alias '" + name + "' already defined");
 
-    if (name.empty() or
-        find_if(name, [](char c){ return not isalnum(c); }) != name.end())
+    if (name.empty() or is_color_name(name) or
+        std::any_of(name.begin(), name.end(),
+                    [](char c){ return not isalnum(c); }))
         throw runtime_error("invalid alias name");
 
     FaceOrAlias& alias = m_aliases[name];
