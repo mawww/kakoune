@@ -1,5 +1,7 @@
 #include "option_manager.hh"
 
+#include "insert_completer.hh"
+
 #include "assert.hh"
 
 #include <sstream>
@@ -159,18 +161,10 @@ GlobalOptions::GlobalOptions()
     declare_option("path", "path to consider when trying to find a file",
                    std::vector<String>({ "./", "/usr/include" }));
     declare_option("completers", "insert mode completers to execute.",
-                    std::vector<String>({"filename", "word=all"}),
-                    OptionFlags::None,
-                    OptionChecker<std::vector<String>>([](const std::vector<String>& s) {
-                        static const auto values = {"word=buffer", "word=all", "filename"};
-                        for (auto& v : s)
-                        {
-                            if (v.substr(0_byte, 7_byte) == "option=")
-                                continue;
-                            if (not contains(values, v))
-                                throw runtime_error(v + " is not a recognised value for completers");
-                        }
-                    }));
+                    std::vector<InsertCompleterDesc>({
+                        InsertCompleterDesc{ InsertCompleterDesc::Filename },
+                        InsertCompleterDesc{ InsertCompleterDesc::Word, "all"_str }
+                    }), OptionFlags::None);
     declare_option("autoreload",
                    "autoreload buffer when a filesystem modification is detected",
                     Ask);

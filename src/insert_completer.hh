@@ -4,8 +4,40 @@
 #include "buffer.hh"
 #include "option_manager.hh"
 
+#include "optional.hh"
+
 namespace Kakoune
 {
+
+struct InsertCompleterDesc
+{
+    enum Mode
+    {
+        Word,
+        Option,
+        Filename
+    };
+
+    InsertCompleterDesc(Mode mode = Filename,
+                        Optional<String> param = Optional<String>{})
+        : mode{mode}, param{std::move(param)}
+    {}
+
+    bool operator==(const InsertCompleterDesc& other) const
+    { return mode == other.mode && param == other.param; }
+
+    bool operator!=(const InsertCompleterDesc& other) const
+    { return !(*this == other); }
+
+    Mode mode;
+    Optional<String> param;
+};
+
+using InsertCompleterDescList = std::vector<InsertCompleterDesc>;
+
+
+String option_to_string(const InsertCompleterDesc& opt);
+void option_from_string(const String& str, InsertCompleterDesc& opt);
 
 struct InsertCompletion
 {

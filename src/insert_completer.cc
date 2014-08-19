@@ -16,6 +16,48 @@ namespace Kakoune
 
 using StringList = std::vector<String>;
 
+String option_to_string(const InsertCompleterDesc& opt)
+{
+    switch (opt.mode)
+    {
+        case InsertCompleterDesc::Word:
+            return "word=" + (opt.param ? *opt.param : "");
+        case InsertCompleterDesc::Filename:
+            return "filename";
+        case InsertCompleterDesc::Option:
+            return "option=" + (opt.param ? *opt.param : "");
+    }
+    kak_assert(false);
+    return "";
+}
+
+void option_from_string(const String& str, InsertCompleterDesc& opt)
+{
+    if (str.substr(0_byte, 7_byte) == "option=")
+    {
+        opt.mode = InsertCompleterDesc::Option;
+        opt.param = str.substr(7_byte).str();
+        return;
+    }
+    else if (str.substr(0_byte, 5_byte) == "word=")
+    {
+        auto param = str.substr(5_byte);
+        if (param == "all" or param == "buffer")
+        {
+            opt.mode = InsertCompleterDesc::Word;
+            opt.param = param.str();
+            return;
+        }
+    }
+    else if (str == "filename")
+    {
+        opt.mode = InsertCompleterDesc::Filename;
+        opt.param = Optional<String>{};
+        return;
+    }
+    throw runtime_error("invalid completer description: " + str);;
+}
+
 namespace
 {
 
@@ -272,26 +314,28 @@ bool InsertCompleter::setup_ifn()
     using namespace std::placeholders;
     if (not m_completions.is_valid())
     {
-        auto& completers = options()["completers"].get<StringList>();
+        auto& completers = options()["completers"].get<InsertCompleterDescList>();
         for (auto& completer : completers)
         {
-            if (completer == "filename" and
+            if (completer.mode == InsertCompleterDesc::Filename and
                 try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
                     return complete_filename<true>(buffer, cursor_pos,
                                                    options());
                 }))
                 return true;
-            if (completer.substr(0_byte, 7_byte) == "option=" and
+            if (completer.mode == InsertCompleterDesc::Option and
                 try_complete([&,this](const Buffer& buffer, ByteCoord cursor_pos) {
                    return complete_option(buffer, cursor_pos,
-                                          options(), completer.substr(7_byte));
+                                          options(), *completer.param);
                 }))
                 return true;
-            if (completer == "word=buffer" and
+            if (completer.mode == InsertCompleterDesc::Word and
+                *completer.param == "buffer" and
                 (try_complete(complete_word<false, false>) or
                  try_complete(complete_word<false, true>)))
                 return true;
-            if (completer == "word=all" and
+            if (completer.mode == InsertCompleterDesc::Word and
+                *completer.param == "all" and
                 (try_complete(complete_word<true, false>) or
                  try_complete(complete_word<true, true>)))
                 return true;
@@ -323,12 +367,12 @@ void InsertCompleter::menu_show()
 
 void InsertCompleter::on_option_changed(const Option& opt)
 {
-    auto& completers = options()["completers"].get<StringList>();
-    StringList option_names;
+    auto& completers = options()["completers"].get<InsertCompleterDescList>();
+    std::vector<StringView> option_names;
     for (auto& completer : completers)
     {
-        if (completer.substr(0_byte, 7_byte) == "option=")
-            option_names.emplace_back(completer.substr(7_byte));
+        if (completer.mode == InsertCompleterDesc::Option)
+            option_names.emplace_back(*completer.param);
     }
     if (contains(option_names, opt.name()))
     {

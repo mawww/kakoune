@@ -117,23 +117,17 @@ private:
     std::vector<OptionManagerWatcher*> m_watchers;
 };
 
-template<typename T> using OptionChecker = std::function<void (const T&)>;
-
 template<typename T>
 class TypedOption : public Option
 {
 public:
-    TypedOption(OptionManager& manager, const OptionDesc& desc,
-                const T& value, OptionChecker<T> checker)
-        : Option(desc, manager),
-          m_value(value), m_checker(std::move(checker)) {}
+    TypedOption(OptionManager& manager, const OptionDesc& desc, const T& value)
+        : Option(desc, manager), m_value(value) {}
 
     void set(T value)
     {
         if (m_value != value)
         {
-            if (m_checker)
-                m_checker(value);
             m_value = std::move(value);
             manager().on_option_changed(*this);
         }
@@ -154,19 +148,16 @@ public:
     {
         T val;
         option_from_string(str, val);
-        if (m_checker)
-            m_checker(val);
         if (option_add(m_value, val))
             m_manager.on_option_changed(*this);
     }
 
     Option* clone(OptionManager& manager) const override
     {
-        return new TypedOption{manager, m_desc, m_value, m_checker};
+        return new TypedOption{manager, m_desc, m_value};
     }
 private:
     T m_value;
-    OptionChecker<T> m_checker;
 };
 
 template<typename T> const T& Option::get() const
@@ -206,8 +197,7 @@ public:
     template<typename T>
     Option& declare_option(const String& name, const String& docstring,
                            const T& value,
-                           OptionFlags flags = OptionFlags::None,
-                           OptionChecker<T> checker = OptionChecker<T>{})
+                           OptionFlags flags = OptionFlags::None)
     {
         auto it = find_option(m_options, name);
         if (it != m_options.end())
@@ -217,8 +207,7 @@ public:
             throw runtime_error("option " + name + " already declared with different type or flags");
         }
         m_descs.emplace_back(new OptionDesc{name, docstring, flags});
-        m_options.emplace_back(new TypedOption<T>{*this, *m_descs.back(),
-                                                  value, std::move(checker)});
+        m_options.emplace_back(new TypedOption<T>{*this, *m_descs.back(), value});
         return *m_options.back();
     }
 
