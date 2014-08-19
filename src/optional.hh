@@ -52,6 +52,17 @@ public:
 
     constexpr explicit operator bool() const noexcept { return m_valid; }
 
+    bool operator==(const Optional& other) const
+    {
+        if (m_valid == other.m_valid)
+        {
+            if (m_valid)
+                return m_value == other.m_value;
+            return true;
+        }
+        return false;
+    }
+
     T& operator*()
     {
         kak_assert(m_valid);
