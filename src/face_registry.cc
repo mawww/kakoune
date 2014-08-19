@@ -36,13 +36,17 @@ static Face parse_face(StringView facedesc)
 Face FaceRegistry::operator[](const String& facedesc)
 {
     auto it = m_aliases.find(facedesc);
-    if (it != m_aliases.end())
-        return it->second;
+    while (it != m_aliases.end())
+    {
+        if (it->second.alias.empty())
+            return it->second.face;
+        it = m_aliases.find(it->second.alias);
+    }
     return parse_face(facedesc);
 }
 
 void FaceRegistry::register_alias(const String& name, const String& facedesc,
-                                   bool override)
+                                  bool override)
 {
     if (not override and m_aliases.find(name) != m_aliases.end())
         throw runtime_error("alias '" + name + "' already defined");
@@ -51,9 +55,26 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
         find_if(name, [](char c){ return not isalnum(c); }) != name.end())
         throw runtime_error("invalid alias name");
 
+    FaceOrAlias& alias = m_aliases[name];
     auto it = m_aliases.find(facedesc);
-    m_aliases[name] = (it != m_aliases.end()) ?
-                      it->second : parse_face(facedesc);
+    if (it != m_aliases.end())
+    {
+        while (it != m_aliases.end())
+        {
+            if (it->second.alias.empty())
+                break;
+            if (it->second.alias == name)
+                throw runtime_error("face cycle detected");
+            it = m_aliases.find(it->second.alias);
+        }
+
+        alias.alias = facedesc;
+    }
+    else
+    {
+        alias.alias = "";
+        alias.face = parse_face(facedesc);
+    }
 }
 
 CandidateList FaceRegistry::complete_alias_name(StringView prefix,
@@ -71,20 +92,20 @@ CandidateList FaceRegistry::complete_alias_name(StringView prefix,
 
 FaceRegistry::FaceRegistry()
     : m_aliases{
-        { "PrimarySelection", { Colors::Cyan, Colors::Blue } },
-        { "SecondarySelection", { Colors::Black, Colors::Blue } },
-        { "PrimaryCursor", { Colors::Black, Colors::White } },
-        { "SecondaryCursor", { Colors::Black, Colors::White } },
-        { "LineNumbers", { Colors::Default, Colors::Default } },
-        { "MenuForeground", { Colors::White, Colors::Blue } },
-        { "MenuBackground", { Colors::Blue, Colors::White } },
-        { "Information", { Colors::Black, Colors::Yellow } },
-        { "Error", { Colors::Black, Colors::Red } },
-        { "StatusLine", { Colors::Cyan, Colors::Default } },
-        { "StatusCursor", { Colors::Black, Colors::Cyan } },
-        { "Prompt", { Colors::Yellow, Colors::Default } },
-        { "MatchingChar", { Colors::Default, Colors::Default, Attribute::Underline } },
-        { "Search", { Colors::Default, Colors::Default, Attribute::Underline } },
+        { "PrimarySelection", Face{ Colors::Cyan, Colors::Blue } },
+        { "SecondarySelection", Face{ Colors::Black, Colors::Blue } },
+        { "PrimaryCursor", Face{ Colors::Black, Colors::White } },
+        { "SecondaryCursor", Face{ Colors::Black, Colors::White } },
+        { "LineNumbers", Face{ Colors::Default, Colors::Default } },
+        { "MenuForeground", Face{ Colors::White, Colors::Blue } },
+        { "MenuBackground", Face{ Colors::Blue, Colors::White } },
+        { "Information", Face{ Colors::Black, Colors::Yellow } },
+        { "Error", Face{ Colors::Black, Colors::Red } },
+        { "StatusLine", Face{ Colors::Cyan, Colors::Default } },
+        { "StatusCursor", Face{ Colors::Black, Colors::Cyan } },
+        { "Prompt", Face{ Colors::Yellow, Colors::Default } },
+        { "MatchingChar", Face{ Colors::Default, Colors::Default, Attribute::Underline } },
+        { "Search", Face{ Colors::Default, Colors::Default, Attribute::Underline } },
       }
 {}
 

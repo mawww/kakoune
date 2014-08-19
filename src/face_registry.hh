@@ -22,7 +22,15 @@ public:
     CandidateList complete_alias_name(StringView prefix,
                                       ByteCount cursor_pos) const;
 private:
-    std::unordered_map<String, Face> m_aliases;
+    struct FaceOrAlias
+    {
+        Face face;
+        String alias;
+
+        FaceOrAlias(Face face = Face{}) : face(face) {}
+    };
+
+    std::unordered_map<String, FaceOrAlias> m_aliases;
 };
 
 inline Face get_face(const String& facedesc)
