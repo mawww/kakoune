@@ -157,6 +157,9 @@ GlobalOptions::GlobalOptions()
     declare_option("ignored_files",
                    "patterns to ignore when completing filenames",
                    Regex{R"(^(\..*|.*\.(o|so|a))$)"});
+    declare_option("disabled_hooks",
+                   "patterns to disable hooks whose group is matched",
+                   Regex{});
     declare_option("filetype", "buffer filetype", ""_str);
     declare_option("path", "path to consider when trying to find a file",
                    std::vector<String>({ "./", "/usr/include" }));

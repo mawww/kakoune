@@ -552,6 +552,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * +ignored_files+ _regex_: filenames matching this regex wont be considered
    as candidates on filename completion (except if the text being completed
    already matches it).
+ * +disabled_hooks+ _regex_: hooks whose group matches this regex wont be
+   executed. For example indentation hooks can be disabled with '.*-indent'. 
  * +filetype+ _str_: arbitrary string defining the type of the file
    filetype dependant actions should hook on this option changing for
    activation/deactivation.

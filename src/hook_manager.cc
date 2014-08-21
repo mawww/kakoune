@@ -1,5 +1,6 @@
 #include "hook_manager.hh"
 
+#include "context.hh"
 #include "debug.hh"
 
 namespace Kakoune
@@ -45,8 +46,13 @@ void HookManager::run_hook(const String& hook_name,
     if (hook_list_it == m_hook.end())
         return;
 
+    auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
     for (auto& hook : hook_list_it->second)
     {
+        if (not hook.first.empty() and not disabled_hooks.empty() and
+            boost::regex_match(hook.first, disabled_hooks))
+            continue;
+
         try
         {
             hook.second(param, context);
