@@ -19,7 +19,7 @@ ParametersParser::ParametersParser(ParameterList params,
     bool only_pos = desc.flags & ParameterDesc::Flags::SwitchesAsPositional;
     for (size_t i = 0; i < params.size(); ++i)
     {
-        if (params[i] == "--")
+        if (not only_pos and params[i] == "--")
             only_pos = true;
         else if (not only_pos and params[i][0] == '-')
         {
