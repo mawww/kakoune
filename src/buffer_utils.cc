@@ -85,6 +85,10 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 
     auto watcher = new FDWatcher(fd, [buffer, scroll](FDWatcher& watcher) {
         constexpr size_t buffer_size = 2048;
+        // if we read data slower than it arrives in the fifo, limiting the
+        // iteration number allows us to go back go back to the event loop and
+        // handle other events sources (such as input)
+        size_t loops = 16;
         char data[buffer_size];
         const int fifo = watcher.fd();
         timeval tv{ 0, 0 };
@@ -113,7 +117,8 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             FD_ZERO(&rfds);
             FD_SET(fifo, &rfds);
         }
-        while (count > 0 and select(fifo+1, &rfds, nullptr, nullptr, &tv) == 1);
+        while (--loops and count > 0 and
+               select(fifo+1, &rfds, nullptr, nullptr, &tv) == 1);
 
         if (count <= 0)
         {
