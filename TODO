@@ -19,14 +19,7 @@
 
   - folding support
 
-  - Hierarchical, highlight some way inside a region, another way outside
-
-  - other types of highlighters (like for correctly supporting nesting,
-    which regex are bad at), faster as well.
-
 * improve info boxes
-
-  - More automatic hiding behaviour
 
   - Move info handling to client
 
@@ -49,8 +42,6 @@
     . update completion options when lines are added/deleted
 
 * spelling support
-
-* allow colalias to reference another colalias
 
 * investigate 'kakdiff'
 
