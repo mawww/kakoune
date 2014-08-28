@@ -1159,6 +1159,8 @@ void spaces_to_tabs(Context& context, int ts)
                 }
                 if ((col % tabstop) == 0)
                     spaces.push_back({spaces_beg.coord(), (spaces_end-1).coord()});
+                else if (*spaces_end == '\t')
+                    spaces.push_back({spaces_beg.coord(), spaces_end.coord()});
                 it = spaces_end;
             }
             else
