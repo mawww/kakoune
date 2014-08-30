@@ -19,7 +19,7 @@ def -hidden _cpp_indent_on_new_line %~
         # align to previous statement start when previous line closed a parenthesis
         # try %{ exec -draft <a-?>\)M<a-k>\`\(.*\)[^\n()]*\n\h*\n?\'<ret>s\`|.\'<ret>1<a-&> }
         # copy // comments prefix
-        try %{ exec -draft k<a-x> s ^\h*\K(/{2,}) <ret> yjglp }
+        try %{ exec -draft \;<c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o><c-o>P<esc> }
         # indent after visibility specifier
         try %[ exec -draft k<a-x> <a-k> ^\h*(public|private|protected):\h*$ <ret> j<a-gt> ]
         # indent after if|else|while|for
