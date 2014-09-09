@@ -8,6 +8,12 @@
 namespace Kakoune
 {
 
+static Selection target_eol(Selection sel)
+{
+    sel.cursor().target = INT_MAX;
+    return sel;
+}
+
 Selection select_line(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator first = buffer.iterator_at(selection.cursor());
@@ -20,7 +26,7 @@ Selection select_line(const Buffer& buffer, const Selection& selection)
     Utf8Iterator last = first;
     while (last + 1 != buffer.end() and *last != '\n')
         ++last;
-    return utf8_range(first, last);
+    return target_eol(utf8_range(first, last));
 }
 
 Selection select_matching(const Buffer& buffer, const Selection& selection)
@@ -204,7 +210,7 @@ Selection select_to_eol(const Buffer& buffer, const Selection& selection)
     Utf8Iterator begin = buffer.iterator_at(selection.cursor());
     Utf8Iterator end = begin;
     skip_while(end, buffer.end(), [](Codepoint cur) { return not is_eol(cur); });
-    return utf8_range(begin, end != begin ? end-1 : end);
+    return target_eol(utf8_range(begin, end != begin ? end-1 : end));
 }
 
 Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection)
@@ -463,7 +469,7 @@ Selection select_lines(const Buffer& buffer, const Selection& selection)
     if (to_line_end == buffer.end())
         --to_line_end;
 
-    return Selection(first.coord(), last.coord());
+    return target_eol({first.coord(), last.coord()});
 }
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
@@ -479,13 +485,13 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
     while (*(to_line_end+1) != '\n' and to_line_end != to_line_start)
         --to_line_end;
 
-    return Selection(first.coord(), last.coord());
+    return target_eol({first.coord(), last.coord()});
 }
 
 void select_buffer(SelectionList& selections)
 {
     auto& buffer = selections.buffer();
-    selections = SelectionList{ buffer, Selection({0,0}, buffer.back_coord()) };
+    selections = SelectionList{ buffer, target_eol({{0,0}, buffer.back_coord()}) };
 }
 
 void select_all_matches(SelectionList& selections, const Regex& regex)
