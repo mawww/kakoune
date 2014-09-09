@@ -18,7 +18,11 @@ inline void clear_selections(SelectionList& selections)
 inline void flip_selections(SelectionList& selections)
 {
     for (auto& sel : selections)
-        std::swap(sel.anchor(), sel.cursor());
+    {
+        ByteCoord tmp = sel.anchor();
+        sel.anchor() = sel.cursor();
+        sel.cursor() = tmp;
+    }
     selections.check_invariant();
 }
 

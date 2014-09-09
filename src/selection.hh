@@ -21,10 +21,10 @@ struct Selection
     void merge_with(const Selection& range);
 
     ByteCoord& anchor() { return m_anchor; }
-    ByteCoord& cursor() { return m_cursor; }
+    ByteCoordAndTarget& cursor() { return m_cursor; }
 
     const ByteCoord& anchor() const { return m_anchor; }
-    const ByteCoord& cursor() const { return m_cursor; }
+    const ByteCoordAndTarget& cursor() const { return m_cursor; }
 
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
@@ -42,7 +42,7 @@ struct Selection
 
 private:
     ByteCoord m_anchor;
-    ByteCoord m_cursor;
+    ByteCoordAndTarget m_cursor;
 
     CaptureList m_captures;
 };

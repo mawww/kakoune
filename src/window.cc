@@ -253,7 +253,7 @@ ByteCoord Window::offset_coord(ByteCoord coord, CharCount offset)
     return buffer().offset_coord(coord, offset);
 }
 
-ByteCoord Window::offset_coord(ByteCoord coord, LineCount offset)
+ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offset)
 {
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
     DisplayBuffer display_buffer;
@@ -267,8 +267,8 @@ ByteCoord Window::offset_coord(ByteCoord coord, LineCount offset)
     m_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
     m_builtin_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
 
-    CharCount column = find_display_column(lines[0], buffer(), coord);
-    return find_buffer_coord(lines[1], buffer(), column);
+    CharCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
+    return { find_buffer_coord(lines[1], buffer(), column), column };
 }
 
 void Window::on_option_changed(const Option& option)

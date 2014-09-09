@@ -137,14 +137,14 @@ ByteCoord Buffer::offset_coord(ByteCoord coord, CharCount offset)
     return {coord.line, line.byte_count_to(character)};
 }
 
-ByteCoord Buffer::offset_coord(ByteCoord coord, LineCount offset)
+ByteCoordAndTarget Buffer::offset_coord(ByteCoordAndTarget coord, LineCount offset)
 {
-    auto character = m_lines[coord.line].char_count_to(coord.column);
+    auto character = coord.target == -1 ? m_lines[coord.line].char_count_to(coord.column) : coord.target;
     auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
     auto& content = m_lines[line];
 
     character = std::max(0_char, std::min(character, content.char_length() - 2));
-    return {line, content.byte_count_to(character)};
+    return {line, content.byte_count_to(character), character};
 }
 
 String Buffer::string(ByteCoord begin, ByteCoord end) const

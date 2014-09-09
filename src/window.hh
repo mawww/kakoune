@@ -51,7 +51,7 @@ public:
     void   forget_timestamp() { m_timestamp = -1; }
 
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
-    ByteCoord offset_coord(ByteCoord coord, LineCount offset);
+    ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
 private:
     Window(const Window&) = delete;
 

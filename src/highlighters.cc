@@ -580,7 +580,7 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
         auto& sel = context.selections()[i];
         const bool forward = sel.anchor() <= sel.cursor();
         ByteCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
-        ByteCoord end   = forward ? sel.cursor() : buffer.char_next(sel.anchor());
+        ByteCoord end   = forward ? (ByteCoord)sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == context.selections().main_index());
         Face sel_face = get_face(primary ? "PrimarySelection" : "SecondarySelection");

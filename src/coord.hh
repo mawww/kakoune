@@ -99,6 +99,19 @@ struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
         : LineAndColumn(line, column) {}
 };
 
+struct ByteCoordAndTarget : ByteCoord
+{
+    [[gnu::always_inline]]
+    constexpr ByteCoordAndTarget(LineCount line = 0, ByteCount column = 0, CharCount target = -1)
+        : ByteCoord(line, column), target(target) {}
+
+    [[gnu::always_inline]]
+    constexpr ByteCoordAndTarget(ByteCoord coord, CharCount target = -1)
+        : ByteCoord(coord), target(target) {}
+
+    CharCount target;
+};
+
 }
 
 #endif // coord_hh_INCLUDED

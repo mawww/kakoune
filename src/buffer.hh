@@ -136,7 +136,7 @@ public:
     ByteCoord clamp(ByteCoord coord) const;
 
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
-    ByteCoord offset_coord(ByteCoord coord, LineCount offset);
+    ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
 
     const String& name() const { return m_name; }
     String display_name() const;
