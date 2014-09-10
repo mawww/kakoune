@@ -53,7 +53,6 @@ DisplayLine Client::generate_mode_line() const
     DisplayLine status;
     Face info_face = get_face("Information");
     Face status_face = get_face("StatusLine");
-    Face prompt_face = get_face("Prompt");
 
     status.push_back({ context().buffer().display_name(), status_face });
     status.push_back({ " " + to_string((int)pos.line+1) + ":" + to_string((int)col+1) + " ", status_face });
@@ -68,7 +67,8 @@ DisplayLine Client::generate_mode_line() const
     if (context().buffer().flags() & Buffer::Flags::Fifo)
         status.push_back({ "[fifo]", info_face });
     status.push_back({ " ", status_face });
-    status.push_back({  m_input_handler.mode_string(), prompt_face });
+    for (auto& atom : m_input_handler.mode_line())
+        status.push_back(std::move(atom));
     status.push_back({ " - " + context().name() + "@[" + Server::instance().session() + "]", status_face });
 
     return status;

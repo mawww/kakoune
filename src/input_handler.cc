@@ -30,7 +30,7 @@ public:
     virtual void on_disabled() {}
     Context& context() const { return m_input_handler.context(); }
 
-    virtual String description() const = 0;
+    virtual DisplayLine mode_line() const = 0;
 
     virtual KeymapMode keymap_mode() const = 0;
 
@@ -128,10 +128,15 @@ public:
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
     }
 
-    String description() const override
+    DisplayLine mode_line() const override
     {
-        return to_string(context().selections().size()) +
-               (m_count != 0 ? " sel; param=" + to_string(m_count) : " sel");
+        AtomList atoms = { { to_string(context().selections().size()) + " sel", Face(Colors::Blue) } };
+        if (m_count != 0)
+        {
+            atoms.push_back({ "; param=", Face(Colors::Yellow) });
+            atoms.push_back({ to_string(m_count), Face(Colors::Green) });
+        }
+        return atoms;
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
@@ -407,9 +412,9 @@ public:
         }
     }
 
-    String description() const override
+    DisplayLine mode_line() const override
     {
-        return "menu";
+        return { "menu", Face(Colors::Yellow) };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
@@ -657,9 +662,9 @@ public:
         }
     }
 
-    String description() const override
+    DisplayLine mode_line() const override
     {
-        return "prompt";
+        return { "prompt", Face(Colors::Yellow) };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -734,9 +739,9 @@ public:
         m_callback(key, context());
     }
 
-    String description() const override
+    DisplayLine mode_line() const override
     {
-        return "enter key";
+        return { "enter key", Face(Colors::Yellow) };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::None; }
@@ -879,9 +884,9 @@ public:
             context().hooks().run_hook("InsertMove", key_to_str(key), context());
     }
 
-    String description() const override
+    DisplayLine mode_line() const override
     {
-        return "insert";
+        return { "insert", Face(Colors::Green) };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
@@ -1130,9 +1135,9 @@ void InputHandler::reset_normal_mode()
     change_input_mode(new InputModes::Normal(*this));
 }
 
-String InputHandler::mode_string() const
+DisplayLine InputHandler::mode_line() const
 {
-    return m_mode->description();
+    return m_mode->mode_line();
 }
 
 void InputHandler::clear_mode_trash()

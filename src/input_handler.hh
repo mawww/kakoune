@@ -31,6 +31,7 @@ using PromptCallback = std::function<void (const String&, PromptEvent, Context&)
 using KeyCallback = std::function<void (Key, Context&)>;
 
 class InputMode;
+class DisplayLine;
 enum class InsertMode : unsigned;
 
 class InputHandler : public SafeCountable
@@ -76,7 +77,7 @@ public:
     Context& context() { return m_context; }
     const Context& context() const { return m_context; }
 
-    String mode_string() const;
+    DisplayLine mode_line() const;
     void clear_mode_trash();
 private:
     Context m_context;
