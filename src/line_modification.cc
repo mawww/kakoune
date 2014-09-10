@@ -92,6 +92,9 @@ std::vector<LineModification> compute_line_modifications(const Buffer& buffer, s
                 modif.new_line + modif.num_added - change.pos;
             const LineCount num_removed_from_added =
                 std::min(num_removed, num_added_after_pos);
+
+            kak_assert(modif.num_added >= num_removed_from_added);
+
             modif.num_added -= num_removed_from_added;
             modif.num_removed += num_removed - num_removed_from_added;
 
