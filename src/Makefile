@@ -45,7 +45,7 @@ kak : $(objects)
 -include $(deps)
 
 .%.o: %.cc
-	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
 
 tags:
 	ctags -R
