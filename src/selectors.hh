@@ -9,6 +9,13 @@
 namespace Kakoune
 {
 
+inline Selection keep_direction(Selection res, const Selection& ref)
+{
+    if ((res.cursor() < res.anchor()) != (ref.cursor() < ref.anchor()))
+        std::swap<ByteCoord>(res.cursor(), res.anchor());
+    return res;
+}
+
 inline void clear_selections(SelectionList& selections)
 {
     for (auto& sel : selections)
@@ -274,7 +281,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     if (direction == Backward)
         std::swap(begin, end);
 
-    return {begin.coord(), end.coord(), std::move(captures)};
+    return keep_direction({begin.coord(), end.coord(), std::move(captures)}, sel);
 }
 
 void select_all_matches(SelectionList& selections,

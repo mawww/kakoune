@@ -516,9 +516,10 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
             for (auto& match : *re_it)
                 captures.emplace_back(match.first, match.second);
 
-            result.push_back({ begin.coord(),
-                               (begin == end ? end : utf8::previous(end, begin)).coord(),
-                               std::move(captures) });
+            result.push_back(
+                keep_direction({ begin.coord(),
+                                 (begin == end ? end : utf8::previous(end, begin)).coord(),
+                                 std::move(captures) }, sel));
         }
     }
     if (result.empty())
@@ -542,11 +543,11 @@ void split_selections(SelectionList& selections, const Regex& regex)
         {
             BufferIterator end = (*re_it)[0].first;
 
-            result.push_back({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() });
+            result.push_back(keep_direction({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() }, sel));
             begin = (*re_it)[0].second;
         }
         if (begin.coord() <= sel.max())
-            result.push_back({ begin.coord(), sel.max() });
+            result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));
     }
     selections = std::move(result);
 }
