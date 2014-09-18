@@ -540,8 +540,8 @@ int main(int argc, char* argv[])
                 session = parser.option_value("s");
 
             return run_server(session, init_command,
-                              parser.has_option("d"),
                               parser.has_option("n"),
+                              parser.has_option("d"),
                               files);
         }
     }
