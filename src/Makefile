@@ -20,7 +20,7 @@ else
 endif
 
 ifneq (,$(findstring CYGWIN,$(os)))
-    LIBS += -lboost_regex-mt
+    LIBS += -lboost_regex
 else ifeq ($(os),Darwin)
     LIBS += -lboost_regex-mt
 else
