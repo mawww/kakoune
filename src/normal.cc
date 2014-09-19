@@ -668,10 +668,10 @@ void split_lines(Context& context, int)
         }
         auto min = sel.min();
         auto max = sel.max();
-        res.push_back({min, {min.line, buffer[min.line].length()-1}});
+        res.push_back(keep_direction({min, {min.line, buffer[min.line].length()-1}}, sel));
         for (auto line = min.line+1; line < max.line; ++line)
-            res.push_back({line, {line, buffer[line].length()-1}});
-        res.push_back({max.line, max});
+            res.push_back(keep_direction({line, {line, buffer[line].length()-1}}, sel));
+        res.push_back(keep_direction({max.line, max}, sel));
     }
     selections = std::move(res);
 }
