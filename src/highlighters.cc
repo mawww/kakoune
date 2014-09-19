@@ -163,27 +163,22 @@ auto apply_face = [](const Face& face)
 
 using FacesSpec = std::vector<String>;
 
-struct Fill
-{
-    Fill(String facespec) : m_facespec(facespec) {}
-
-    void operator()(const Context& context, HighlightFlags flags,
-                    DisplayBuffer& display_buffer)
-    {
-        auto range = display_buffer.range();
-        highlight_range(display_buffer, range.first, range.second, true,
-                        apply_face(get_face(m_facespec)));
-    }
-
-    String m_facespec;
-};
-
 HighlighterAndId fill_factory(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
-    get_face(params[0]); // validate param
-    return HighlighterAndId("fill_" + params[0], Fill(params[0]));
+
+    const String& facespec = params[0];
+    get_face(facespec); // validate param
+
+    auto fill = [facespec](const Context& context, HighlightFlags flags,
+                            DisplayBuffer& display_buffer)
+    {
+        auto range = display_buffer.range();
+        highlight_range(display_buffer, range.first, range.second, true,
+                        apply_face(get_face(facespec)));
+    };
+    return HighlighterAndId("fill_" + params[0], fill);
 }
 
 template<typename T>
