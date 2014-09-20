@@ -211,12 +211,9 @@ void on_term_resize(int)
     EventManager::instance().force_signal(0);
 }
 
-static sig_atomic_t ctrl_c_pending = 0;
-
 void on_sigint(int)
 {
-    ctrl_c_pending = 1;
-    EventManager::instance().force_signal(0);
+    // do nothing
 }
 
 NCursesUI::NCursesUI()
@@ -224,7 +221,7 @@ NCursesUI::NCursesUI()
                                                  m_input_callback(); }}
 {
     initscr();
-    cbreak();
+    raw();
     noecho();
     nonl();
     intrflush(stdscr, false);
@@ -403,9 +400,6 @@ bool NCursesUI::is_key_available()
 {
     check_resize();
 
-    if (ctrl_c_pending)
-        return true;
-
     timeout(0);
     const int c = getch();
     if (c != ERR)
@@ -418,17 +412,16 @@ Key NCursesUI::get_key()
 {
     check_resize();
 
-    if (ctrl_c_pending)
-    {
-        ctrl_c_pending = false;
-        return ctrl('c');
-    }
-
     const int c = getch();
     if (c > 0 and c < 27)
     {
         if (c == CTRL('l'))
            redrawwin(stdscr);
+        if (c == CTRL('z'))
+        {
+            raise(SIGTSTP);
+            return Key::Invalid;
+        }
         return ctrl(Codepoint(c) - 1 + 'a');
     }
     else if (c == 27)
