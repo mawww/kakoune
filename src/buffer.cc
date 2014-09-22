@@ -519,4 +519,33 @@ ByteCoord Buffer::last_modification_coord() const
     return m_history.back().back().coord;
 }
 
+String Buffer::debug_description() const
+{
+    String res = display_name() + "\n";
+
+    res += "  Flags: ";
+    if (m_flags & Flags::File)
+        res += "File (" + name() + ") ";
+    if (m_flags & Flags::New)
+        res += "New ";
+    if (m_flags & Flags::Fifo)
+        res += "Fifo ";
+    if (m_flags & Flags::NoUndo)
+        res += "NoUndo ";
+    res += "\n";
+
+    size_t content_size = 0;
+    for (auto& line : m_lines)
+        content_size += (int)line.length();
+
+    size_t additional_size = 0;
+    for (auto& undo_group : m_history)
+        additional_size += undo_group.size() * sizeof(Modification);
+    additional_size += m_changes.size() * sizeof(Change);
+
+    res += "  Used mem: content=" + to_string(content_size) +
+           " additional=" + to_string(additional_size) + "\n";
+    return res;
+}
+
 }

@@ -172,6 +172,8 @@ public:
         bool at_end;
     };
     memoryview<Change> changes_since(size_t timestamp) const;
+
+    String debug_description() const;
 private:
 
     void on_option_changed(const Option& option) override;

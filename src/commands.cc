@@ -754,7 +754,7 @@ const CommandDesc debug_cmd = {
     "debug",
     nullptr,
     "debug <command>: write some debug informations in the debug buffer\n"
-    "    existing commands: info",
+    "    existing commands: info, buffers",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     CommandCompleter{},
@@ -764,6 +764,12 @@ const CommandDesc debug_cmd = {
         {
             write_debug("pid: " + to_string(getpid()));
             write_debug("session: " + Server::instance().session());
+        }
+        if (parser[0] == "buffers")
+        {
+            write_debug("Buffers:");
+            for (auto& buffer : BufferManager::instance())
+                write_debug(buffer->debug_description());
         }
         else
             throw runtime_error("unknown debug command '" + parser[0] + "'");
