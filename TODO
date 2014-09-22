@@ -73,15 +73,9 @@
 
 * Rewrite keymap support using options ? (map window insert a b -> set -add window insert_keymap a:b)
 
-* support for :cnext :cprev
-
-  - save the current error line in a buffer option
-
-  - highlight the current error line (only it's bg)
-
-  - find next error from the line
-
 * Fix 'n' command with inverted selection
 
 * Comments and strings should be more integrated than just highlighting, matching chars
   for example should be strings and comments aware
+
+* %val{opt_.*} == %opt{.*}, %val{reg_.*} == %reg{.*}, it might make sense to remove the %opt and %reg
