@@ -15,13 +15,13 @@ inline String content(const Buffer& buffer, const Selection& range)
 inline BufferIterator erase(Buffer& buffer, const Selection& range)
 {
     return buffer.erase(buffer.iterator_at(range.min()),
-                        utf8::next(buffer.iterator_at(range.max()), buffer.end()));
+                        buffer.iterator_at(buffer.char_next(range.max())));
 }
 
 inline CharCount char_length(const Buffer& buffer, const Selection& range)
 {
     return utf8::distance(buffer.iterator_at(range.min()),
-                          utf8::next(buffer.iterator_at(range.max()), buffer.end()));
+                          buffer.iterator_at(buffer.char_next(range.max())));
 }
 
 CharCount get_column(const Buffer& buffer,
