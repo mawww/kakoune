@@ -1349,6 +1349,10 @@ KeyMap keymap =
     { '[', { "select to object start", select_object<ObjectFlags::ToBegin> } },
     { '}', { "extend to object end", select_object<ObjectFlags::ToEnd, SelectMode::Extend> } },
     { '{', { "extend to object start", select_object<ObjectFlags::ToBegin, SelectMode::Extend> } },
+    { alt(']'), { "select to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner> } },
+    { alt('['), { "select to inner object start", select_object<ObjectFlags::ToBegin | ObjectFlags::Inner> } },
+    { alt('}'), { "extend to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner, SelectMode::Extend> } },
+    { alt('{'), { "extend to inner object start", select_object<ObjectFlags::ToBegin | ObjectFlags::Inner, SelectMode::Extend> } },
 
     { alt('j'), { "join lines", join } },
     { alt('J'), { "join lines and select spaces", join_select_spaces } },
