@@ -15,7 +15,9 @@ enum class KeymapMode : int
     Normal,
     Insert,
     Prompt,
-    Menu
+    Menu,
+    Goto,
+    View,
 };
 
 class KeymapManager

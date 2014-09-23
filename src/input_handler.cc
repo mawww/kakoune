@@ -730,8 +730,8 @@ std::unordered_map<String, std::vector<String>> Prompt::ms_history;
 class NextKey : public InputMode
 {
 public:
-    NextKey(InputHandler& input_handler, KeyCallback callback)
-        : InputMode(input_handler), m_callback(callback) {}
+    NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
+        : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(callback) {}
 
     void on_key(Key key) override
     {
@@ -744,10 +744,11 @@ public:
         return { "enter key", Face(Colors::Yellow) };
     }
 
-    KeymapMode keymap_mode() const override { return KeymapMode::None; }
+    KeymapMode keymap_mode() const override { return m_keymap_mode; }
 
 private:
     KeyCallback m_callback;
+    KeymapMode m_keymap_mode;
 };
 
 class Insert : public InputMode
@@ -1078,9 +1079,9 @@ void InputHandler::menu(memoryview<String> choices,
     change_input_mode(new InputModes::Menu(*this, choices, callback));
 }
 
-void InputHandler::on_next_key(KeyCallback callback)
+void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
 {
-    change_input_mode(new InputModes::NextKey(*this, callback));
+    change_input_mode(new InputModes::NextKey(*this, keymap_mode, callback));
 }
 
 static bool is_valid(Key key)

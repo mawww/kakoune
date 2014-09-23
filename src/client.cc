@@ -146,7 +146,8 @@ void Client::check_buffer_fs_timestamp()
             "press r or y to reload, k or n to keep",
             pos, get_face("Information"), MenuStyle::Prompt);
 
-        m_input_handler.on_next_key([this, filename, ts](Key key, Context& context) {
+        m_input_handler.on_next_key(KeymapMode::None,
+                                   [this, filename, ts](Key key, Context& context) {
             Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
             m_ui->info_hide();
             // buffer got deleted while waiting for the key, do nothing

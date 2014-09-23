@@ -928,13 +928,15 @@ KeymapMode parse_keymap_mode(const String& str)
     if (prefix_match("insert", str)) return KeymapMode::Insert;
     if (prefix_match("menu", str))   return KeymapMode::Menu;
     if (prefix_match("prompt", str)) return KeymapMode::Prompt;
+    if (prefix_match("goto", str)) return KeymapMode::Goto;
+    if (prefix_match("view", str)) return KeymapMode::View;
     throw runtime_error("unknown keymap mode '" + str + "'");
 }
 
 CandidateList complete_mode(StringView prefix)
 {
     CandidateList res;
-    for (auto mode : { "normal", "insert", "menu", "prompt" })
+    for (auto mode : { "normal", "insert", "menu", "prompt", "goto", "view" })
     {
         if (prefix_match(mode, prefix))
             res.emplace_back(mode);

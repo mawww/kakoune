@@ -119,11 +119,12 @@ bool show_auto_info_ifn(const String& title, const String& info,
 }
 
 template<typename Cmd>
-void on_next_key_with_autoinfo(const Context& context, Cmd cmd,
+void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
                                const String& title, const String& info)
 {
     const bool hide = show_auto_info_ifn(title, info, context);
-    context.input_handler().on_next_key([hide,cmd](Key key, Context& context) mutable {
+    context.input_handler().on_next_key(
+        keymap_mode, [hide,cmd](Key key, Context& context) mutable {
             if (hide)
                 context.ui().info_hide();
             cmd(key, context);
@@ -142,7 +143,8 @@ void goto_commands(Context& context, int line)
     }
     else
     {
-        on_next_key_with_autoinfo(context, [](Key key, Context& context) {
+        on_next_key_with_autoinfo(context, KeymapMode::Goto,
+                                 [](Key key, Context& context) {
             if (key.modifiers != Key::Modifiers::None)
                 return;
             auto& buffer = context.buffer();
@@ -260,7 +262,8 @@ void goto_commands(Context& context, int line)
 
 void view_commands(Context& context, int param)
 {
-    on_next_key_with_autoinfo(context, [param](Key key, Context& context) {
+    on_next_key_with_autoinfo(context, KeymapMode::View,
+                             [param](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
             return;
 
@@ -303,7 +306,8 @@ void view_commands(Context& context, int param)
 
 void replace_with_char(Context& context, int)
 {
-    on_next_key_with_autoinfo(context, [](Key key, Context& context) {
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [](Key key, Context& context) {
         if (not iswprint(key.key))
             return;
         ScopedEdition edition(context);
@@ -829,7 +833,8 @@ template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
 void select_object(Context& context, int param)
 {
     int level = param <= 0 ? 0 : param - 1;
-    on_next_key_with_autoinfo(context, [level](Key key, Context& context) {
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [level](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None)
             return;
         const Codepoint c = key.key;
@@ -957,7 +962,8 @@ constexpr bool operator&(SelectFlags lhs, SelectFlags rhs)
 template<SelectFlags flags>
 void select_to_next_char(Context& context, int param)
 {
-    on_next_key_with_autoinfo(context, [param](Key key, Context& context) {
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [param](Key key, Context& context) {
         select<flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace>(
             context,
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
@@ -970,7 +976,8 @@ void start_or_end_macro_recording(Context& context, int)
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
     else
-        on_next_key_with_autoinfo(context, [](Key key, Context& context) {
+        on_next_key_with_autoinfo(context, KeymapMode::None,
+                                 [](Key key, Context& context) {
             if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
                 context.input_handler().start_recording(tolower(key.key));
         }, "record macro", "enter macro name ");
@@ -984,7 +991,8 @@ void end_macro_recording(Context& context, int)
 
 void replay_macro(Context& context, int count)
 {
-    on_next_key_with_autoinfo(context, [count](Key key, Context& context) mutable {
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [count](Key key, Context& context) mutable {
         if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
         {
             static std::unordered_set<char> running_macros;

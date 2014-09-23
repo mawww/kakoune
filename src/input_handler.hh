@@ -33,6 +33,7 @@ using KeyCallback = std::function<void (Key, Context&)>;
 class InputMode;
 class DisplayLine;
 enum class InsertMode : unsigned;
+enum class KeymapMode : int;
 
 class InputHandler : public SafeCountable
 {
@@ -62,7 +63,7 @@ public:
 
     // execute callback on next keypress and returns to normal mode
     // if callback does not change the mode itself
-    void on_next_key(KeyCallback callback);
+    void on_next_key(KeymapMode mode, KeyCallback callback);
 
     // process the given key
     void handle_key(Key key);
