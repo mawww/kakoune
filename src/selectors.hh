@@ -281,7 +281,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     if (direction == Backward)
         std::swap(begin, end);
 
-    return keep_direction({begin.coord(), end.coord(), std::move(captures)}, sel);
+    return {begin.coord(), end.coord(), std::move(captures)};
 }
 
 void select_all_matches(SelectionList& selections,

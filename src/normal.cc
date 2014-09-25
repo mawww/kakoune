@@ -421,7 +421,7 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
     if (mode == SelectMode::Replace)
     {
         for (auto& sel : selections)
-            sel = find_next_match<direction>(buffer, sel, regex);
+            sel = keep_direction(find_next_match<direction>(buffer, sel, regex), sel);
     }
     if (mode == SelectMode::Extend)
     {
@@ -430,7 +430,10 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
     }
     else if (mode == SelectMode::Append)
     {
-        selections.push_back(find_next_match<direction>(buffer, selections.main(), regex));
+        auto sel = keep_direction(
+            find_next_match<direction>(buffer, selections.main(), regex),
+            selections.main());
+        selections.push_back(std::move(sel));
         selections.set_main_index(selections.size() - 1);
     }
     selections.sort_and_merge_overlapping();
