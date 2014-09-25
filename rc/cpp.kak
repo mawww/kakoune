@@ -43,10 +43,12 @@ addhl -group / regions -default code cpp \
     string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
     comment /\* \*/ '' \
     comment // $ '' \
+    disabled ^\h*?#if\h+(0|FALSE)\b '#endif' '#if(def)?' \
     macro ^\h*?\K# (?<!\\)\n ''
 
 addhl -group /cpp/string fill string
 addhl -group /cpp/comment fill comment
+addhl -group /cpp/disabled fill rgb:666666
 addhl -group /cpp/macro fill meta
 
 addhl -group /cpp/code regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
