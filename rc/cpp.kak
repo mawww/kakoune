@@ -9,7 +9,7 @@ hook global BufSetOption mimetype=text/x-c(\+\+)? %{
 def -hidden _cpp_indent_on_new_line %~
     eval -draft -itersel %_
         # preserve previous line indent
-        try %{ exec -draft <space>K<a-&> }
+        try %{ exec -draft \;K<a-&> }
         # indent after lines ending with { or (
         try %[ exec -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white space son previous line
@@ -23,7 +23,7 @@ def -hidden _cpp_indent_on_new_line %~
         # indent after visibility specifier
         try %[ exec -draft k<a-x> <a-k> ^\h*(public|private|protected):\h*$ <ret> j<a-gt> ]
         # indent after if|else|while|for
-        try %[ exec -draft <space><a-F>)MB <a-k> \`(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\' <ret> s \`|.\' <ret> 1<a-&>1<a-space><a-gt> ]
+        try %[ exec -draft \;<a-F>)MB <a-k> \`(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\' <ret> s \`|.\' <ret> 1<a-&>1<a-space><a-gt> ]
     _
 ~
 
@@ -36,7 +36,7 @@ def -hidden _cpp_indent_on_closing_curly_brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
     # add ; after } if class or struct definition
-    try %[ exec -draft "hm<space><a-?>(class|struct|union)<ret><a-k>\`(class|struct|union)[^{}\n]+(\n)?\s*\{\'<ret><a-space>ma;<esc>" ]
+    try %[ exec -draft "hm;<a-?>(class|struct|union)<ret><a-k>\`(class|struct|union)[^{}\n]+(\n)?\s*\{\'<ret><a-;>ma;<esc>" ]
 ]
 
 addhl -group / regions -default code cpp \
