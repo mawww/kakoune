@@ -691,10 +691,12 @@ void join_select_spaces(Context& context, int)
     std::vector<Selection> selections;
     for (auto& sel : context.selections())
     {
-        for (LineCount line = sel.min().line; line <= sel.max().line; ++line)
+        const LineCount min_line = sel.min().line;
+        const LineCount max_line = sel.max().line;
+        auto end_line = std::min(buffer.line_count()-1,
+                                 max_line + (min_line == max_line ? 1 : 0));
+        for (LineCount line = min_line; line < end_line; ++line)
         {
-            if (line == buffer.line_count() - 1)
-                continue;
             auto begin = buffer.iterator_at({line, buffer[line].length()-1});
             auto end = begin+1;
             skip_while(end, buffer.end(), is_horizontal_blank);
