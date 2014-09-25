@@ -261,7 +261,7 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
 template<Direction direction>
 Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex)
 {
-    auto begin = buffer.iterator_at(sel.cursor());
+    auto begin = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
     auto end = begin;
 
     CaptureList captures;
