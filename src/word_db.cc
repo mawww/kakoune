@@ -7,9 +7,9 @@
 namespace Kakoune
 {
 
-static std::vector<String> get_words(StringView content)
+static std::vector<InternedString> get_words(StringView content)
 {
-    std::vector<String> res;
+    std::vector<InternedString> res;
     using Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
     const char* word_start = content.begin();
     bool in_word = false;
@@ -24,20 +24,20 @@ static std::vector<String> get_words(StringView content)
         }
         else if (in_word and not word)
         {
-            res.push_back({word_start, it.base()});
+            res.push_back(StringView{word_start, it.base()});
             in_word = false;
         }
     }
     return res;
 }
 
-static void add_words(WordDB::WordList& wl, const std::vector<String>& words)
+static void add_words(WordDB::WordList& wl, const std::vector<InternedString>& words)
 {
     for (auto& w : words)
         ++wl[w];
 }
 
-static void remove_words(WordDB::WordList& wl, const std::vector<String>& words)
+static void remove_words(WordDB::WordList& wl, const std::vector<InternedString>& words)
 {
     for (auto& w : words)
     {
@@ -104,11 +104,11 @@ void WordDB::update_db()
     m_line_to_words = std::move(new_lines);
 }
 
-std::vector<String> WordDB::find_prefix(const String& prefix)
+std::vector<InternedString> WordDB::find_prefix(StringView prefix)
 {
     update_db();
 
-    std::vector<String> res;
+    std::vector<InternedString> res;
     for (auto it = m_words.lower_bound(prefix); it != m_words.end(); ++it)
     {
         if (not prefix_match(it->first, prefix))
@@ -118,11 +118,11 @@ std::vector<String> WordDB::find_prefix(const String& prefix)
     return res;
 }
 
-std::vector<String> WordDB::find_subsequence(const String& subsequence)
+std::vector<InternedString> WordDB::find_subsequence(StringView subsequence)
 {
     update_db();
 
-    std::vector<String> res;
+    std::vector<InternedString> res;
     for (auto it = m_words.begin(); it != m_words.end(); ++it)
     {
         if (subsequence_match(it->first, subsequence))
@@ -131,7 +131,7 @@ std::vector<String> WordDB::find_subsequence(const String& subsequence)
     return res;
 }
 
-int WordDB::get_word_occurences(const String& word) const
+int WordDB::get_word_occurences(StringView word) const
 {
     auto it = m_words.find(word);
     if (it != m_words.end())

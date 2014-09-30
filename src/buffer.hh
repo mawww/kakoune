@@ -190,7 +190,7 @@ private:
     };
     LineList m_lines;
 
-    ByteCoord do_insert(ByteCoord pos, const String& content);
+    ByteCoord do_insert(ByteCoord pos, StringView content);
     ByteCoord do_erase(ByteCoord begin, ByteCoord end);
 
     String  m_name;

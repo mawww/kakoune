@@ -140,6 +140,8 @@ inline bool StringView::operator!=(StringView other) const
     return !this->operator==(other);
 }
 
+bool operator<(StringView lhs, StringView rhs);
+
 inline bool operator==(const char* lhs, StringView rhs)
 {
     return StringView{lhs} == rhs;
@@ -304,6 +306,8 @@ bool subsequence_match(StringView str, StringView subseq);
 
 String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
 
+size_t hash_data(const char* data, size_t len);
+
 }
 
 namespace std
@@ -314,6 +318,15 @@ namespace std
         size_t operator()(const Kakoune::String& str) const
         {
             return hash<std::string>::operator()(str);
+        }
+    };
+
+    template<>
+    struct hash<Kakoune::StringView>
+    {
+        size_t operator()(Kakoune::StringView str) const
+        {
+            return Kakoune::hash_data(str.data(), (int)str.length());
         }
     };
 }

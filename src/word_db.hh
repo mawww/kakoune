@@ -2,13 +2,12 @@
 #define word_db_hh_INCLUDED
 
 #include "buffer.hh"
+#include "interned_string.hh"
 
 #include <map>
 
 namespace Kakoune
 {
-
-class String;
 
 // maintain a database of words available in a buffer
 class WordDB
@@ -16,13 +15,13 @@ class WordDB
 public:
     WordDB(const Buffer& buffer);
 
-    std::vector<String> find_prefix(const String& prefix);
-    std::vector<String> find_subsequence(const String& subsequence);
-    int get_word_occurences(const String& word) const;
+    std::vector<InternedString> find_prefix(StringView prefix);
+    std::vector<InternedString> find_subsequence(StringView subsequence);
+    int get_word_occurences(StringView word) const;
 
-    using WordList = std::map<String, int>;
+    using WordList = std::map<InternedString, int>;
 private:
-    using LineToWords = std::vector<std::vector<String>>;
+    using LineToWords = std::vector<std::vector<InternedString>>;
 
     void update_db();
 

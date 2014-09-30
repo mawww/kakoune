@@ -20,6 +20,7 @@
 #include "remote.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "interned_string.hh"
 #include "window.hh"
 
 #if defined(__APPLE__)
@@ -303,6 +304,7 @@ int run_server(StringView session, StringView init_command,
         signal(SIGTERM, [](int) { terminate = true; });
     }
 
+    StringRegistry      string_registry;
     EventManager        event_manager;
     GlobalOptions       global_options;
     GlobalHooks         global_hooks;

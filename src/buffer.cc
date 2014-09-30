@@ -2,11 +2,12 @@
 
 #include "assert.hh"
 #include "buffer_manager.hh"
+#include "client.hh"
 #include "context.hh"
 #include "file.hh"
+#include "interned_string.hh"
 #include "utils.hh"
 #include "window.hh"
-#include "client.hh"
 
 #include <algorithm>
 
@@ -170,9 +171,9 @@ struct Buffer::Modification
 
     Type      type;
     ByteCoord coord;
-    String    content;
+    InternedString content;
 
-    Modification(Type type, ByteCoord coord, String content)
+    Modification(Type type, ByteCoord coord, InternedString content)
         : type(type), coord(coord), content(std::move(content)) {}
 
     Modification inverse() const
@@ -240,7 +241,7 @@ void Buffer::check_invariant() const
 #endif
 }
 
-ByteCoord Buffer::do_insert(ByteCoord pos, const String& content)
+ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
 {
     kak_assert(is_valid(pos));
 
@@ -341,7 +342,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
 
 void Buffer::apply_modification(const Modification& modification)
 {
-    const String& content = modification.content;
+    StringView content = modification.content;
     ByteCoord coord = modification.coord;
 
     kak_assert(is_valid(coord));
