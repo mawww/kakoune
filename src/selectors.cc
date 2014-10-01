@@ -363,21 +363,6 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, Obj
                                         : Selection{last.coord(), first.coord()};
 }
 
-static CharCount get_indent(const String& str, int tabstop)
-{
-    CharCount indent = 0;
-    for (auto& c : str)
-    {
-    if (c == ' ')
-        ++indent;
-    else if (c =='\t')
-        indent = (indent / tabstop + 1) * tabstop;
-    else
-        break;
-    }
-    return indent;
-}
-
 Selection select_whitespaces(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
     auto is_whitespace = [&](char c) {
@@ -405,6 +390,21 @@ Selection select_whitespaces(const Buffer& buffer, const Selection& selection, O
     }
     return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
                                         : utf8_range(last, first);
+}
+
+static CharCount get_indent(const String& str, int tabstop)
+{
+    CharCount indent = 0;
+    for (auto& c : str)
+    {
+    if (c == ' ')
+        ++indent;
+    else if (c =='\t')
+        indent = (indent / tabstop + 1) * tabstop;
+    else
+        break;
+    }
+    return indent;
 }
 
 static bool is_only_whitespaces(const String& str)
