@@ -43,7 +43,7 @@ addhl -group / regions -default code cpp \
     string %{(?<!')"} %{(?<!\\)(\\\\)*"} '' \
     comment /\* \*/ '' \
     comment // $ '' \
-    disabled ^\h*?#if\h+(0|FALSE)\b '#endif' '#if(def)?' \
+    disabled ^\h*?#\h*if\h+(0|FALSE)\b '#\h*(else|elif|endif)' '#\h*if(def)?' \
     macro ^\h*?\K# (?<!\\)\n ''
 
 addhl -group /cpp/string fill string
