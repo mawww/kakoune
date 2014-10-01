@@ -252,10 +252,10 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
 {
     if (direction == Forward)
         return (boost::regex_search(pos, buffer.end(), matches, ex) or
-                boost::regex_search(buffer.begin(), pos, matches, ex));
+                boost::regex_search(buffer.begin(), buffer.end(), matches, ex));
     else
         return (find_last_match(buffer.begin(), pos, matches, ex) or
-                find_last_match(pos, buffer.end(), matches, ex));
+                find_last_match(buffer.begin(), buffer.end(), matches, ex));
 }
 
 template<Direction direction>
