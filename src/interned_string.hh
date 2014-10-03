@@ -39,7 +39,7 @@ public:
 
     InternedString(const char* str) : StringView() { acquire_ifn(str); }
     InternedString(StringView str) : StringView() { acquire_ifn(str); }
-    InternedString(const String& str) : StringView() { acquire_ifn(str); }
+    //InternedString(const String& str) : StringView() { acquire_ifn(str); }
 
     InternedString& operator=(const InternedString& str)
     {

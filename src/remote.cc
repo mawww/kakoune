@@ -35,7 +35,7 @@ class Message
 {
 public:
     Message(int sock) : m_socket(sock) {}
-    ~Message()
+    ~Message() noexcept(false)
     {
         if (m_stream.size() == 0)
             return;

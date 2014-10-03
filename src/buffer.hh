@@ -6,7 +6,7 @@
 #include "option_manager.hh"
 #include "keymap_manager.hh"
 #include "safe_ptr.hh"
-#include "string.hh"
+#include "interned_string.hh"
 #include "value.hh"
 
 #include <vector>
@@ -92,7 +92,7 @@ public:
 
     bool set_name(String name);
 
-    BufferIterator insert(const BufferIterator& pos, String content);
+    BufferIterator insert(const BufferIterator& pos, StringView content);
     BufferIterator erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const;
@@ -126,7 +126,7 @@ public:
     BufferIterator end() const;
     LineCount      line_count() const;
 
-    const String&  operator[](LineCount line) const
+    const StringView& operator[](LineCount line) const
     { return m_lines[line]; }
 
     // returns an iterator at given coordinates. clamp line_and_column
@@ -178,15 +178,15 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    struct LineList : std::vector<String>
+    struct LineList : std::vector<InternedString>
     {
         [[gnu::always_inline]]
-        String& operator[](LineCount line)
-        { return std::vector<String>::operator[]((int)line); }
+        InternedString& operator[](LineCount line)
+        { return std::vector<InternedString>::operator[]((int)line); }
 
         [[gnu::always_inline]]
-        const String& operator[](LineCount line) const
-        { return std::vector<String>::operator[]((int)line); }
+        const InternedString& operator[](LineCount line) const
+        { return std::vector<InternedString>::operator[]((int)line); }
     };
     LineList m_lines;
 

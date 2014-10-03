@@ -724,8 +724,8 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
     const size_t buf_timestamp = buffer.timestamp();
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
-        auto& l = buffer[line];
-        for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+        auto l = buffer[line];
+        for (boost::regex_iterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
         {
             ByteCount b = (int)((*it)[0].first - l.begin());
             ByteCount e = (int)((*it)[0].second - l.begin());
@@ -778,8 +778,8 @@ void update_matches(const Buffer& buffer, memoryview<LineModification> modifs,
              line < modif.new_line + modif.num_added+1 and
              line < buffer.line_count(); ++line)
         {
-            auto& l = buffer[line];
-            for (boost::regex_iterator<String::const_iterator> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+            auto l = buffer[line];
+            for (boost::regex_iterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
             {
                 ByteCount b = (int)((*it)[0].first - l.begin());
                 ByteCount e = (int)((*it)[0].second - l.begin());

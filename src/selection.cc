@@ -410,8 +410,8 @@ namespace
 
 inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
 {
-    const auto column = coord.column;
-    const auto& line = buffer[coord.line];
+    auto column = coord.column;
+    auto line = buffer[coord.line];
     if (column != 0 and column == line.length() - 1)
         coord.column = line.byte_count_to(line.char_length() - 2);
 }

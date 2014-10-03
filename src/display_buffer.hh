@@ -31,7 +31,7 @@ public:
         {
             case BufferRange:
             {
-                auto& line = (*m_buffer)[m_begin.line];
+                auto line = (*m_buffer)[m_begin.line];
                 if (m_begin.line == m_end.line)
                     return line.substr(m_begin.column, m_end.column - m_begin.column);
                 else if (m_begin.line+1 == m_end.line and m_end.column == 0)

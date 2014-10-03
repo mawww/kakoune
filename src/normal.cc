@@ -804,7 +804,7 @@ void deindent(Context& context, int)
         for (auto line = sel.min().line; line < sel.max().line+1; ++line)
         {
             CharCount width = 0;
-            auto& content = buffer[line];
+            auto content = buffer[line];
             for (auto column = 0_byte; column < content.length(); ++column)
             {
                 const char c = content[column];
@@ -1105,7 +1105,7 @@ void copy_indent(Context& context, int selection)
         selection = context.selections().main_index() + 1;
 
     auto ref_line = selections[selection-1].min().line;
-    const String& line = buffer[ref_line];
+    auto line = buffer[ref_line];
     auto it = line.begin();
     while (it != line.end() and is_horizontal_blank(*it))
         ++it;
@@ -1117,7 +1117,7 @@ void copy_indent(Context& context, int selection)
         if (l == ref_line)
             continue;
 
-        auto& line = buffer[l];
+        auto line = buffer[l];
         ByteCount i = 0;
         while (i < line.length() and is_horizontal_blank(line[i]))
             ++i;

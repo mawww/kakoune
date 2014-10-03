@@ -273,31 +273,28 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
     }
     else
     {
-        String prefix = m_lines[pos.line].substr(0, pos.column);
-        String suffix = m_lines[pos.line].substr(pos.column);
+        StringView prefix = m_lines[pos.line].substr(0, pos.column);
+        StringView suffix = m_lines[pos.line].substr(pos.column);
 
-        std::vector<String> new_lines;
+        std::vector<InternedString> new_lines;
 
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)
         {
             if (content[i] == '\n')
             {
-                String line_content = content.substr(start, i + 1 - start);
+                StringView line_content = content.substr(start, i + 1 - start);
                 if (start == 0)
-                {
-                    line_content = prefix + line_content;
-                    new_lines.push_back(std::move(line_content));
-                }
+                    new_lines.emplace_back(prefix + line_content);
                 else
-                    new_lines.push_back(std::move(line_content));
+                    new_lines.push_back(line_content);
                 start = i + 1;
             }
         }
         if (start == 0)
-            new_lines.push_back(prefix + content + suffix);
+            new_lines.emplace_back(prefix + content + suffix);
         else if (start != content.length() or not suffix.empty())
-            new_lines.push_back(content.substr(start) + suffix);
+            new_lines.emplace_back(content.substr(start) + suffix);
 
         LineCount last_line = pos.line + new_lines.size() - 1;
 
@@ -327,7 +324,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     if (new_line.length() != 0)
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines[begin.line] = std::move(new_line);
+        m_lines[begin.line] = InternedString(new_line);
         next = begin;
     }
     else
@@ -368,21 +365,24 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-BufferIterator Buffer::insert(const BufferIterator& pos, String content)
+BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
 {
     kak_assert(is_valid(pos.coord()));
     if (content.empty())
         return pos;
 
+    InternedString real_content;
     if (pos == end() and content.back() != '\n')
-        content += '\n';
+        real_content = InternedString(content + "\n");
+    else
+        real_content = content;
 
     // for undo and redo purpose it is better to use one past last line rather
     // than one past last char coord.
     auto coord = pos == end() ? ByteCoord{line_count()} : pos.coord();
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Insert, coord, content);
-    return {*this, do_insert(pos.coord(), content)};
+        m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
+    return {*this, do_insert(pos.coord(), real_content)};
 }
 
 BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
@@ -396,7 +396,7 @@ BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
 
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
-                                          string(begin.coord(), end.coord()));
+                                          InternedString(string(begin.coord(), end.coord())));
     return {*this, do_erase(begin.coord(), end.coord())};
 }
 
@@ -452,7 +452,7 @@ ByteCoord Buffer::char_next(ByteCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
     {
-        auto& line = m_lines[coord.line];
+        auto line = m_lines[coord.line];
         coord.column += utf8::codepoint_size(line[(int)coord.column]);
         // Handle invalid utf-8
         if (coord.column >= line.length())
@@ -483,7 +483,7 @@ ByteCoord Buffer::char_prev(ByteCoord coord) const
     }
     else
     {
-        auto& line = m_lines[coord.line];
+        auto line = m_lines[coord.line];
         coord.column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1, line.begin()) - line.begin());
     }
     return coord;
