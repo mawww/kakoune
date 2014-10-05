@@ -17,7 +17,8 @@ private:
     friend class InternedString;
 
     InternedString acquire(StringView str);
-    void release(StringView str);
+    void acquire(size_t slot);
+    void release(size_t slot);
 
     std::unordered_map<StringView, size_t> m_slot_map;
     std::vector<size_t> m_free_slots;
@@ -34,26 +35,34 @@ public:
 
     InternedString(InternedString&& str) : StringView(str)
     {
-        static_cast<StringView&>(str) = StringView{};
+        m_slot = str.m_slot;
+        str.m_slot = -1;
     }
 
     InternedString(const char* str) : StringView() { acquire_ifn(str); }
     InternedString(StringView str) : StringView() { acquire_ifn(str); }
-    //InternedString(const String& str) : StringView() { acquire_ifn(str); }
 
     InternedString& operator=(const InternedString& str)
     {
         if (str.data() == data() && str.length() == length())
             return *this;
-        release_ifn();
-        acquire_ifn(str);
+        static_cast<StringView&>(*this) = str;
+        if (str.m_slot != m_slot)
+        {
+            release_ifn();
+            m_slot = str.m_slot;
+            if (str.m_slot != -1)
+                StringRegistry::instance().acquire(str.m_slot);
+        }
+
         return *this;
     }
 
     InternedString& operator=(InternedString&& str)
     {
         static_cast<StringView&>(*this) = str;
-        static_cast<StringView&>(str) = StringView{};
+        m_slot = str.m_slot;
+        str.m_slot = -1;
         return *this;
     }
 
@@ -73,23 +82,27 @@ public:
 private:
     friend class StringRegistry;
 
-    struct AlreadyAcquired{};
-    InternedString(StringView str, AlreadyAcquired)
-        : StringView(str) {}
+    InternedString(StringView str, size_t slot)
+        : StringView(str), m_slot(slot) {}
 
     void acquire_ifn(StringView str)
     {
         if (str.empty())
+        {
             static_cast<StringView&>(*this) = StringView{};
+            m_slot = -1;
+        }
         else
             *this = StringRegistry::instance().acquire(str);
     }
 
     void release_ifn()
     {
-        if (!empty())
-            StringRegistry::instance().release(*this);
+        if (m_slot != -1)
+            StringRegistry::instance().release(m_slot);
     }
+
+    size_t m_slot = -1;
 };
 
 }

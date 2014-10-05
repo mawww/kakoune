@@ -453,7 +453,7 @@ ByteCoord Buffer::char_next(ByteCoord coord) const
     if (coord.column < m_lines[coord.line].length() - 1)
     {
         auto line = m_lines[coord.line];
-        coord.column += utf8::codepoint_size(line[(int)coord.column]);
+        coord.column += utf8::codepoint_size(line[coord.column]);
         // Handle invalid utf-8
         if (coord.column >= line.length())
         {
