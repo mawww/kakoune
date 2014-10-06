@@ -15,7 +15,7 @@ def -hidden _cpp_indent_on_new_line %~
         # cleanup trailing white space son previous line
         try %{ exec -draft k<a-x> s \h+$ <ret>d }
         # align to opening paren of previous line
-        try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> s \`\(\h*.|.\' <ret> & }
+        try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> s \`\(\h*.|.\' <ret> '<a-;>' & }
         # align to previous statement start when previous line closed a parenthesis
         # try %{ exec -draft <a-?>\)M<a-k>\`\(.*\)[^\n()]*\n\h*\n?\'<ret>s\`|.\'<ret>1<a-&> }
         # copy // comments prefix
