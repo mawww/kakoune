@@ -63,9 +63,10 @@ def -shell-params \
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
                       gsub(":", "\\:", text)
-                      flag=line "|black|" text
+                      gsub(",", "\\,", text)
+                      flag=line ",black," text
                       for ( i=1; i < count; i++ ) {
-                          flag=flag ":" line+i "|black|" text
+                          flag=flag ":" line+i ",black," text
                       }
                       cmd = "kak -p " ENVIRON["kak_session"]
                       print "set -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags %{" flag "}" | cmd
@@ -90,7 +91,7 @@ def -shell-params \
         git diff -U0 $kak_buffile | awk -e '
             BEGIN {
                 line=0
-                flags="0|red|."
+                flags="0,red,."
             }
             /^---.*/ {}
             /^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@.*/ {
@@ -101,10 +102,10 @@ def -shell-params \
                  }
             }
             /^\+/ {
-                 flags=flags ":" line "|green|+"
+                 flags=flags ":" line ",green,+"
                  line++
             }
-            /^\-/ { flags=flags ":" line "|red|-" }
+            /^\-/ { flags=flags ":" line ",red,-" }
             END { print "set buffer git_diff_flags ", flags }
         '
     }

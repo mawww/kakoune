@@ -99,7 +99,7 @@ bool option_add(std::unordered_set<T>& opt, const std::unordered_set<T>& set)
     return not set.empty();
 }
 
-constexpr Codepoint tuple_separator = '|';
+constexpr Codepoint tuple_separator = ',';
 
 template<size_t I, typename... Types>
 struct TupleOptionDetail
@@ -175,9 +175,9 @@ bool option_add(T&, const T&)
 template<typename EffectiveType, typename LineType, typename ColumnType>
 inline void option_from_string(const String& str, LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
 {
-    auto vals = split(str, '|');
+    auto vals = split(str, tuple_separator);
     if (vals.size() != 2)
-        throw runtime_error("expected <line>|<column>");
+        throw runtime_error("expected <line>"_str + tuple_separator + "<column>");
     opt.line = str_to_int(vals[0]);
     opt.column = str_to_int(vals[1]);
 }
@@ -185,7 +185,7 @@ inline void option_from_string(const String& str, LineAndColumn<EffectiveType, L
 template<typename EffectiveType, typename LineType, typename ColumnType>
 inline String option_to_string(const LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
 {
-    return to_string(opt.line) + '|' + to_string(opt.column);
+    return to_string(opt.line) + tuple_separator + to_string(opt.column);
 }
 
 enum YesNoAsk
