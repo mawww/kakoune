@@ -116,7 +116,7 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
     return view_pos;
 }
 
-static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
+static CharCount adapt_view_pos(const DisplayBuffer& display_buffer, CharCount offset,
                                 ByteCoord pos, CharCount view_pos, CharCount view_size)
 {
     CharCount buffer_column = 0;
@@ -144,11 +144,11 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer,
                         pos_end = pos_beg + atom.length();
                     }
 
-                    if (pos_beg < view_pos)
-                        return pos_beg;
+                    if (pos_beg - offset < view_pos)
+                        return std::max(0_char, pos_beg - offset);
 
-                    if (pos_end >= view_pos + view_size - non_buffer_column)
-                        return pos_end - view_size + non_buffer_column;
+                    if (pos_end + offset >= view_pos + view_size - non_buffer_column)
+                        return pos_end + offset - view_size + non_buffer_column;
                 }
                 buffer_column += atom.length();
             }
@@ -165,13 +165,15 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     const auto& anchor = selection.anchor();
     const auto& cursor  = selection.cursor();
 
-    const LineCount offset = std::min<LineCount>(options()["scrolloff"].get<int>(),
-                                                 (m_dimensions.line - 1) / 2);
+    const CharCoord max_offset{(m_dimensions.line - 1)/2,
+                               (m_dimensions.column - 1)/2};
+    const CharCoord offset = std::min(options()["scrolloff"].get<CharCoord>(),
+                                      max_offset);
 
     // scroll lines if needed, try to get as much of the selection visible as possible
-    m_position.line = adapt_view_pos(anchor.line, offset, m_position.line,
+    m_position.line = adapt_view_pos(anchor.line, offset.line, m_position.line,
                                      m_dimensions.line, buffer().line_count());
-    m_position.line = adapt_view_pos(cursor.line,  offset, m_position.line,
+    m_position.line = adapt_view_pos(cursor.line,  offset.line, m_position.line,
                                      m_dimensions.line, buffer().line_count());
 
     // highlight only the line containing the cursor
@@ -187,10 +189,10 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     // (this is only valid if highlighting one line and multiple lines put
     // the cursor in the same position, however I do not find any sane example
     // of highlighters not doing that)
-    m_position.column = adapt_view_pos(display_buffer,
+    m_position.column = adapt_view_pos(display_buffer, offset.column,
                                        anchor.line == cursor.line ? anchor : cursor.line,
                                        m_position.column, m_dimensions.column);
-    m_position.column = adapt_view_pos(display_buffer, cursor,
+    m_position.column = adapt_view_pos(display_buffer, offset.column, cursor,
                                        m_position.column, m_dimensions.column);
 }
 

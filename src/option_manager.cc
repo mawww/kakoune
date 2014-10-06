@@ -134,8 +134,8 @@ GlobalOptions::GlobalOptions()
     declare_option("tabstop", "size of a tab character", 8);
     declare_option("indentwidth", "indentation width", 4);
     declare_option("scrolloff",
-                   "number of lines to keep visible main cursor when scrolling",
-                   0);
+                   "number of lines and columns to keep visible main cursor when scrolling",
+                   CharCoord{0,0});
     declare_option("eolformat", "end of line format: 'crlf' or 'lf'", "lf"_str);
     declare_option("BOM", "insert a byte order mark when writing buffer",
                    "no"_str);

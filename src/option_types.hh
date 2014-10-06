@@ -4,6 +4,7 @@
 #include "exception.hh"
 #include "string.hh"
 #include "units.hh"
+#include "coord.hh"
 
 #include <tuple>
 #include <vector>
@@ -169,6 +170,22 @@ template<typename T>
 bool option_add(T&, const T&)
 {
     throw runtime_error("no add operation supported for this option type");
+}
+
+template<typename EffectiveType, typename LineType, typename ColumnType>
+inline void option_from_string(const String& str, LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
+{
+    auto vals = split(str, '|');
+    if (vals.size() != 2)
+        throw runtime_error("expected <line>|<column>");
+    opt.line = str_to_int(vals[0]);
+    opt.column = str_to_int(vals[1]);
+}
+
+template<typename EffectiveType, typename LineType, typename ColumnType>
+inline String option_to_string(const LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
+{
+    return to_string(opt.line) + '|' + to_string(opt.column);
 }
 
 enum YesNoAsk
