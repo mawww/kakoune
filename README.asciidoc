@@ -4,6 +4,9 @@ Kakoune
 TL;DR
 -----
 
+*Vim inspired* -- *Faster as in less keystrokes* --
+*Multiple selections* -- *Orthogonal design*
+
 ---------------------------------------------
 git clone http://github.com/mawww/kakoune.git
 cd kakoune/src
@@ -495,6 +498,7 @@ Options are typed, their type can be
  * +yesnoask+: similar to a boolean, but the additional
    value +ask+ is supported.
  * +str+: a string, some freeform text
+ * +coord+: a line,column pair (separated by comma)
  * +regex+: as a string but the +set+ commands will complain
    if the entered text is not a valid regex.
  * +{int,str}-list+: a list, elements are separated by a colon (:)
@@ -536,7 +540,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * +tabstop+ _int_: width of a tab character.
  * +indentwidth+ _int_: width (in spaces) used for indentation.
    0 means a tab character.
- * +scrolloff+ _int_: number of lines to keep visible above/below
+ * +scrolloff+ _coord_: number of lines,columns to keep visible around
    the cursor when scrolling.
  * +eolformat+ _string_ ('lf' or 'crlf'): the format of end of lines when
    writing a buffer, this is autodetected on load.
