@@ -28,9 +28,9 @@ InternedString StringRegistry::acquire(StringView str)
     }
 
     size_t slot = it->second;
-    m_storage[slot].second++;
-    StringView storage_view{m_storage[slot].first.data(), (int)m_storage[slot].first.size()};
-    return InternedString{storage_view, slot};
+    auto& data = m_storage[slot];
+    ++data.second;
+    return {{data.first.data(), (int)data.first.size()}, slot};
 }
 
 void StringRegistry::acquire(size_t slot)
