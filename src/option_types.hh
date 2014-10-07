@@ -13,15 +13,15 @@
 namespace Kakoune
 {
 
-inline String option_to_string(const String& opt) { return opt; }
-inline void option_from_string(const String& str, String& opt) { opt = str; }
+inline String option_to_string(StringView opt) { return opt; }
+inline void option_from_string(StringView str, String& opt) { opt = str; }
 
 inline String option_to_string(int opt) { return to_string(opt); }
-inline void option_from_string(const String& str, int& opt) { opt = str_to_int(str); }
+inline void option_from_string(StringView str, int& opt) { opt = str_to_int(str); }
 inline bool option_add(int& opt, int val) { opt += val; return val != 0; }
 
 inline String option_to_string(bool opt) { return opt ? "true" : "false"; }
-inline void option_from_string(const String& str, bool& opt)
+inline void option_from_string(StringView str, bool& opt)
 {
     if (str == "true" or str == "yes")
         opt = true;
@@ -47,7 +47,7 @@ String option_to_string(const std::vector<T>& opt)
 }
 
 template<typename T>
-void option_from_string(const String& str, std::vector<T>& opt)
+void option_from_string(StringView str, std::vector<T>& opt)
 {
     opt.clear();
     std::vector<String> elems = split(str, list_separator, '\\');
@@ -80,7 +80,7 @@ String option_to_string(const std::unordered_set<T>& opt)
 }
 
 template<typename T>
-void option_from_string(const String& str, std::unordered_set<T>& opt)
+void option_from_string(StringView str, std::unordered_set<T>& opt)
 {
     opt.clear();
     std::vector<String> elems = split(str, list_separator, '\\');
@@ -138,7 +138,7 @@ String option_to_string(const std::tuple<Types...>& opt)
 }
 
 template<typename... Types>
-void option_from_string(const String& str, std::tuple<Types...>& opt)
+void option_from_string(StringView str, std::tuple<Types...>& opt)
 {
     auto elems = split(str, tuple_separator, '\\');
     if (elems.size() != sizeof...(Types))
@@ -153,7 +153,7 @@ inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& o
 }
 
 template<typename RealType, typename ValueType>
-inline void option_from_string(const String& str, StronglyTypedNumber<RealType, ValueType>& opt)
+inline void option_from_string(StringView str, StronglyTypedNumber<RealType, ValueType>& opt)
 {
      opt = StronglyTypedNumber<RealType, ValueType>{str_to_int(str)};
 }
@@ -173,7 +173,7 @@ bool option_add(T&, const T&)
 }
 
 template<typename EffectiveType, typename LineType, typename ColumnType>
-inline void option_from_string(const String& str, LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
+inline void option_from_string(StringView str, LineAndColumn<EffectiveType, LineType, ColumnType>& opt)
 {
     auto vals = split(str, tuple_separator);
     if (vals.size() != 2)
@@ -207,7 +207,7 @@ inline String option_to_string(YesNoAsk opt)
     return "ask";
 }
 
-inline void option_from_string(const String& str, YesNoAsk& opt)
+inline void option_from_string(StringView str, YesNoAsk& opt)
 {
     if (str == "yes" or str == "true")
         opt = Yes;

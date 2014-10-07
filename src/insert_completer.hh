@@ -37,7 +37,7 @@ using InsertCompleterDescList = std::vector<InsertCompleterDesc>;
 
 
 String option_to_string(const InsertCompleterDesc& opt);
-void option_from_string(const String& str, InsertCompleterDesc& opt);
+void option_from_string(StringView str, InsertCompleterDesc& opt);
 
 struct InsertCompletion
 {
