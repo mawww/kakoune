@@ -1,0 +1,72 @@
+C++ Coding Style
+================
+
+Kakoune is written in C++11, here are the main coding style points:
+
+ * Avoid external dependencies besides posix/stdc++/ncurses
+
+   - That means avoid depending on boost, it is only allowed for regex
+     support until stdc++ regex are more widely available.
+
+ * 4 spaces for indentation, no tabs
+
+ * public interface before private methods/data when defining a class
+
+ * use +override+ keyword for overriden virtual methods
+
+ * opening brackets on their own lines by default, except when declaring
+   an object where the opening bracket follows the equal sign.
+
+-----
+int func()
+{
+    if (condition)
+    {
+        ...
+    }
+    else
+        statement;
+}
+
+int array[] = {
+...
+};
+-----
+
+ * End lines with an operator when continuing on the next line
+
+----
+if (condition1 ||
+    condition2)
+----
+
+ * Try to keep under 80 columns, even though this is not a strict limit.
+
+ * CamelCase for types, snake_case for variables/function names
+
+ * prefix fields with m_, static ones with ms_ except for dumb structs
+   (struct with every field public) where these prefixes can be dropped.
+
+ * use const and constexpr liberally
+
+Kakrc coding style
+==================
+
+ * kak scripts can depend on tools that can be reasonable expected for
+   their use context:
+
+   - mime.kak which handles file type detection uses the +file+ command
+     which is deemed ubiquitous enough.
+
+   - clang.kak provides c++ completion using clang,
+
+ * It is better to keep kak scripts POSIX. Consider %sh{...} blocks
+   as executed by a POSIX shell. Avoid non posix extensions to common
+   tools.
+
+ * Avoid too much comlexity/logic in kak scripts. They are not meant
+   to implement generic tools, only to transform a general tool output
+   to Kakoune commands.
+
+   - Write generic, editor independent tools as a separate project,
+     Add kakoune support as a kak script.
