@@ -79,6 +79,21 @@ public:
     using StringView::operator==;
     using StringView::operator!=;
 
+    InternedString acquire_substr(ByteCount from, ByteCount length = INT_MAX) const
+    {
+        if (m_slot == -1)
+            return InternedString{};
+        StringRegistry::instance().acquire(m_slot);
+        return InternedString{StringView::substr(from, length), m_slot};
+    }
+    InternedString acquire_substr(CharCount from, CharCount length = INT_MAX) const
+    {
+        if (m_slot == -1)
+            return InternedString{};
+        StringRegistry::instance().acquire(m_slot);
+        return InternedString{StringView::substr(from, length), m_slot};
+    }
+
 private:
     friend class StringRegistry;
 

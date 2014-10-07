@@ -126,7 +126,7 @@ public:
     BufferIterator end() const;
     LineCount      line_count() const;
 
-    const StringView& operator[](LineCount line) const
+    const InternedString& operator[](LineCount line) const
     { return m_lines[line]; }
 
     // returns an iterator at given coordinates. clamp line_and_column

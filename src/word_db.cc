@@ -7,7 +7,7 @@
 namespace Kakoune
 {
 
-static std::vector<InternedString> get_words(StringView content)
+static std::vector<InternedString> get_words(const InternedString& content)
 {
     std::vector<InternedString> res;
     using Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
@@ -24,7 +24,9 @@ static std::vector<InternedString> get_words(StringView content)
         }
         else if (in_word and not word)
         {
-            res.push_back(StringView{word_start, it.base()});
+            const ByteCount start = word_start - content.begin();
+            const ByteCount length = it.base() - word_start;
+            res.push_back(content.acquire_substr(start, length));
             in_word = false;
         }
     }

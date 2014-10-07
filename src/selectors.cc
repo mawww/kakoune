@@ -424,7 +424,8 @@ Selection select_indent(const Buffer& buffer, const Selection& selection, Object
     LineCount begin_line = line - 1;
     if (flags & ObjectFlags::ToBegin)
     {
-        while (begin_line >= 0 and (buffer[begin_line] == "\n" or get_indent(buffer[begin_line], tabstop) >= indent))
+        while (begin_line >= 0 and (buffer[begin_line] == StringView{"\n"} or
+                                    get_indent(buffer[begin_line], tabstop) >= indent))
             --begin_line;
     }
     ++begin_line;
@@ -432,7 +433,8 @@ Selection select_indent(const Buffer& buffer, const Selection& selection, Object
     if (flags & ObjectFlags::ToEnd)
     {
         const LineCount end = buffer.line_count();
-        while (end_line < end and (buffer[end_line] == "\n" or get_indent(buffer[end_line], tabstop) >= indent))
+        while (end_line < end and (buffer[end_line] == StringView{"\n"} or
+                                   get_indent(buffer[end_line], tabstop) >= indent))
             ++end_line;
     }
     --end_line;
