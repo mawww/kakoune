@@ -3,7 +3,7 @@ objects := $(addprefix ., $(sources:.cc=.o))
 deps := $(addprefix ., $(sources:.cc=.d))
 
 PREFIX ?= /usr/local
-DESTDIR ?= /
+DESTDIR ?= # root dir
 
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
