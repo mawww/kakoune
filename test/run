@@ -22,7 +22,7 @@ main() { number_tests=0 number_failures=0
                         source rc
                       }
                       try %{
-                        exec '%s%[(](.+?)[)]<ret>i<del><del><esc>a<backspace><esc>'
+                        exec '%s%[(](.+?)[)]<ret>i<del><del><esc>a<backspace><c-u><esc>'
                       } \
                       catch %{
                         exec gg
@@ -32,7 +32,8 @@ main() { number_tests=0 number_failures=0
                         echo \"\$kak_selections\"      > selections
                         echo \"\$kak_selections_desc\" > state
                       }
-                      write out; quit!
+                      write out
+                      quit!
         "
         kak out -n -e $kak_commands
         for expect in $test_files; do
