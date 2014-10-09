@@ -1,0 +1,3 @@
+add(a, %(b)) {
+    return a and b
+}

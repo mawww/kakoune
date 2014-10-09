@@ -1,0 +1,1 @@
+nop %sh{ printf pass > goto-file }
