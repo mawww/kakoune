@@ -267,7 +267,9 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     CaptureList captures;
     MatchResults matches;
     bool found = false;
-    if ((found = find_match_in_buffer<direction>(buffer, utf8::next(begin, buffer.end()), matches, regex)))
+    auto pos = direction == Forward ? utf8::next(begin, buffer.end())
+                                    : utf8::previous(begin, buffer.begin());
+    if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex)))
     {
         begin = matches[0].first;
         end   = matches[0].second;
