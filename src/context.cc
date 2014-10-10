@@ -170,8 +170,14 @@ void Context::forget_jumps_to_buffer(Buffer& buffer)
 
 void Context::change_buffer(Buffer& buffer)
 {
+    if (&buffer == &this->buffer())
+        return;
+
     if (m_edition_level > 0)
-        throw runtime_error("the current buffer is still being edited");
+    {
+       this->buffer().commit_undo_group();
+       m_edition_level = 0;
+    }
     m_window.reset();
     if (has_client())
         client().change_buffer(buffer);
