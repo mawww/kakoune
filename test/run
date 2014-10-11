@@ -14,7 +14,7 @@ main() { number_tests=0 number_failures=0
       indent=$(repeat ' ' $(pwd | sed "s|$test||" | tr --delete --complement / | awk '{ print length }'))
       name=$(basename $PWD)
       ! exists cmd && {
-        echo $indent$name
+        echo "$indent$name"
       } || { nop=$((number_tests++))
         touch in; cp in out
         kak_commands="set global autoreload yes
@@ -37,6 +37,7 @@ main() { number_tests=0 number_failures=0
                       quit!
         "
         kak out -n -e $kak_commands
+        IFS=$'\n'
         for expect in $test_files; do
           cmp --quiet $test/$dir/$expect $expect && {
             echo "$indent$name" | colorize green normal
@@ -103,13 +104,13 @@ get_ansi_code() { color_name=${1:-none} style_name=${2:-none}
          magenta 35'
   style='none    00
          bold    01'
-  color_nr=$(awk "/$color_name/ { print \$2 }" <<< $color)
-  style_nr=$(awk "/$style_name/ { print \$2 }" <<< $style)
+  color_nr=$(awk "/$color_name/ { print \$2 }" <<< "$color")
+  style_nr=$(awk "/$style_name/ { print \$2 }" <<< "$style")
   sed s/COLOR_NR/$color_nr/';'s/STYLE_NR/$style_nr/ <<< '\e[STYLE_NR;COLOR_NRm'
 }
 
 colorize() { text=$(cat) color_name=${1:-none} style_name=${2:-none}
-  echo -e $(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)
+  echo -e "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
 }
 
 
