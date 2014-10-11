@@ -48,6 +48,8 @@ kak : $(objects)
 .%.o: %.cc
 	$(CXX) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
 
+test:
+	cd ../test && ./run
 tags:
 	ctags -R
 
