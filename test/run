@@ -9,7 +9,7 @@ main() { number_tests=0 number_failures=0
   cp --recursive . $work
   trap "rm --recursive $work" EXIT
   for dir in $(find $dirs -type d); do
-    cd $test/$dir; test_files=$(find * | egrep 'out|selections|state')
+    cd $test/$dir; test_files=$(find * -name out -o -name selections -o -name state)
     cd $work/$dir; { IFS=¬
       indent=$(repeat ' ' $(pwd | sed "s|$test||" | tr --delete --complement / | awk '{ print length }'))
       name=$(basename $PWD)
@@ -28,6 +28,7 @@ main() { number_tests=0 number_failures=0
                         exec gg
                       }
                       exec '$(<cmd)'
+                      eval -buffer *debug* write debug
                       nop %sh{ IFS==
                         echo \"\$kak_selections\"      > selections
                         echo \"\$kak_selections_desc\" > state
@@ -48,6 +49,9 @@ main() { number_tests=0 number_failures=0
               color=$(match $first_character + green - red @ magenta none)
               colorize $color normal <<< $line
             done
+            echo
+            colorize yellow normal <<< "debug buffer:"
+            cat debug
             echo
           }
         done
