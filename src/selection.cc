@@ -499,8 +499,8 @@ void SelectionList::insert(memoryview<String> strings, InsertMode mode,
 
         if (select_inserted or mode == InsertMode::Replace)
         {
-            sel.anchor() = change.begin;
-            sel.cursor() = m_buffer->char_prev(change.end);
+            sel.min() = change.begin;
+            sel.max() = m_buffer->char_prev(change.end);
         }
         else
         {
