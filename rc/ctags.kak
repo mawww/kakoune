@@ -3,13 +3,20 @@
 # This script requires the readtags command available in ctags source but
 # not installed by default
 
+decl str-list ctagsfiles 'tags'
+
 def -shell-params \
     -shell-completion 'readtags -p "$1" | cut -f 1 | sort | uniq' \
     -docstring 'jump to tag definition' \
     tag \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
-        readtags ${tagname} | awk -F '\t|\n' -e '
+        (
+            IFS=':'
+            for tags in ${kak_opt_ctagsfiles}; do
+                readtags -t "${tags}" ${tagname}
+            done
+        ) | awk -F '\t|\n' -e '
             /[^\t]+\t[^\t]+\t\/\^.*\$\// {
                 re=$0; sub(".*\t/\\^", "", re); sub("\\$/.*", "", re); gsub("(\\{|\\}).*$", "", re);
                 out = out " %{" $2 " [" re "]} %{try %{ edit %{" $2 "}; exec %{/\\Q" re "<ret>vc} } catch %{ echo %{unable to find tag} } }"
