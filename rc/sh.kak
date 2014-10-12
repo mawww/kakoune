@@ -7,15 +7,15 @@ hook global BufSetOption mimetype=text/x-shellscript %{
 }
 
 addhl -group / regions -default code sh \
-    double_string  %{(^|\h)"} %{(?<!\\)(\\\\)*"} '' \
-    single_string %{(^|\h)'} %{(?<!\\)(\\\\)*'} '' \
+    double_string  %{"} %{(?<!\\)(\\\\)*"} '' \
+    single_string %{'} %{(?<!\\)(\\\\)*'} '' \
     comment '#' '$' ''
 
 addhl -group /sh/double_string fill string
 addhl -group /sh/single_string fill string
 addhl -group /sh/comment fill comment
 
-addhl -group /sh/code regex \<(if|then|fi|while|for|do|done|case|esac|echo|cd|shift|return|exit|local)\> 0:keyword
+addhl -group /sh/code regex \<(if|then|else|elif|fi|while|for|do|done|case|esac|echo|cd|shift|return|exit|local)\> 0:keyword
 addhl -group /sh/code regex [\[\]\(\)&|]{2} 0:operator
 addhl -group /sh/code regex (\w+)= 1:identifier
 addhl -group /sh/code regex ^\h*(\w+)\h*\(\) 1:identifier
