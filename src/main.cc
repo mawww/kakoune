@@ -252,10 +252,18 @@ void signal_handler(int signal)
         case SIGQUIT: text = "SIGQUIT"; break;
         case SIGTERM: text = "SIGTERM"; break;
     }
-    on_assert_failed(text);
+    if (signal != SIGTERM)
+        on_assert_failed(text);
+
     if (Server::has_instance())
         Server::instance().close_session();
-    abort();
+    if (BufferManager::has_instance())
+        BufferManager::instance().backup_modified_buffers();
+
+    if (signal == SIGTERM)
+        exit(-1);
+    else
+        abort();
 }
 
 int run_client(StringView session, StringView init_command)

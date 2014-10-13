@@ -36,6 +36,7 @@ Buffer* create_buffer_from_file(String filename);
 
 void write_buffer_to_file(Buffer& buffer, StringView filename);
 void write_buffer_to_fd(Buffer& buffer, int fd);
+void write_buffer_to_backup_file(Buffer& buffer);
 
 String find_file(StringView filename, memoryview<String> paths);
 

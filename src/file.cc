@@ -209,6 +209,19 @@ void write_buffer_to_file(Buffer& buffer, StringView filename)
     buffer.run_hook_in_own_context("BufWritePost", buffer.name());
 }
 
+void write_buffer_to_backup_file(Buffer& buffer)
+{
+    char pattern[PATH_MAX+1];
+    snprintf(pattern, PATH_MAX+1, ".%s.kak.XXXXXX",
+             real_path(buffer.name()).c_str());
+    int fd = mkstemp(pattern);
+    if (fd >= 0)
+    {
+        write_buffer_to_fd(buffer, fd);
+        close(fd);
+    }
+}
+
 String find_file(StringView filename, memoryview<String> paths)
 {
     struct stat buf;

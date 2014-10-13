@@ -34,6 +34,8 @@ public:
     Buffer& get_buffer(StringView name);
     void    set_last_used_buffer(Buffer& buffer);
 
+    void backup_modified_buffers();
+
     CandidateList complete_buffer_name(StringView prefix,
                                        ByteCount cursor_pos = -1);
 

@@ -105,6 +105,15 @@ void BufferManager::set_last_used_buffer(Buffer& buffer)
     m_buffers.emplace(m_buffers.begin(), &buffer);
 }
 
+void BufferManager::backup_modified_buffers()
+{
+    for (auto& buf : m_buffers)
+    {
+        if ((buf->flags() & Buffer::Flags::File) and buf->is_modified())
+            write_buffer_to_backup_file(*buf);
+    }
+}
+
 CandidateList BufferManager::complete_buffer_name(StringView prefix,
                                                   ByteCount cursor_pos)
 {
