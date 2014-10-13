@@ -5,6 +5,7 @@
 #include "buffer_utils.hh"
 #include "unicode.hh"
 #include "utf8_iterator.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
@@ -58,8 +59,6 @@ inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
     return {first.base().coord(), last.base().coord()};
 }
-
-using RegexIterator = boost::regex_iterator<BufferIterator>;
 
 template<WordType word_type>
 Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
@@ -230,13 +229,12 @@ void select_buffer(SelectionList& selections);
 
 enum Direction { Forward, Backward };
 
-using MatchResults = boost::match_results<BufferIterator>;
-
 inline bool find_last_match(BufferIterator begin, const BufferIterator& end,
-                            MatchResults& res, const Regex& regex)
+                            MatchResults<BufferIterator>& res,
+                            const Regex& regex)
 {
-    MatchResults matches;
-    while (boost::regex_search(begin, end, matches, regex))
+    MatchResults<BufferIterator> matches;
+    while (regex_search(begin, end, matches, regex))
     {
         if (begin == matches[0].second)
             break;
@@ -248,11 +246,12 @@ inline bool find_last_match(BufferIterator begin, const BufferIterator& end,
 
 template<Direction direction>
 bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
-                          MatchResults& matches, const Regex& ex)
+                          MatchResults<BufferIterator>& matches,
+                          const Regex& ex)
 {
     if (direction == Forward)
-        return (boost::regex_search(pos, buffer.end(), matches, ex) or
-                boost::regex_search(buffer.begin(), buffer.end(), matches, ex));
+        return (regex_search(pos, buffer.end(), matches, ex) or
+                regex_search(buffer.begin(), buffer.end(), matches, ex));
     else
         return (find_last_match(buffer.begin(), pos, matches, ex) or
                 find_last_match(buffer.begin(), buffer.end(), matches, ex));
@@ -265,7 +264,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     auto end = begin;
 
     CaptureList captures;
-    MatchResults matches;
+    MatchResults<BufferIterator> matches;
     bool found = false;
     auto pos = direction == Forward ? utf8::next(begin, buffer.end())
                                     : utf8::previous(begin, buffer.begin());

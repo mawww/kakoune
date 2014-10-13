@@ -496,6 +496,8 @@ void select_buffer(SelectionList& selections)
     selections = SelectionList{ buffer, target_eol({{0,0}, buffer.back_coord()}) };
 }
 
+using RegexIt = RegexIterator<BufferIterator>;
+
 void select_all_matches(SelectionList& selections, const Regex& regex)
 {
     std::vector<Selection> result;
@@ -503,8 +505,8 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
     for (auto& sel : selections)
     {
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        RegexIterator re_it(buffer.iterator_at(sel.min()), sel_end, regex);
-        RegexIterator re_end;
+        RegexIt re_it(buffer.iterator_at(sel.min()), sel_end, regex);
+        RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
         {
@@ -537,9 +539,8 @@ void split_selections(SelectionList& selections, const Regex& regex)
     {
         auto begin = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        RegexIterator re_it(begin, sel_end, regex,
-                            boost::regex_constants::match_nosubs);
-        RegexIterator re_end;
+        RegexIt re_it(begin, sel_end, regex);
+        RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
         {

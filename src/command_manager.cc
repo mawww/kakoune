@@ -263,7 +263,7 @@ TokenList parse(StringView line)
                 String token = line.substr(token_start, pos - token_start);
                 static const Regex regex{R"(\\([ \t;\n]))"};
                 result.emplace_back(Token::Type::Raw, token_start, pos,
-                                    boost::regex_replace(token, regex, "\\1"));
+                                    regex_replace(token, regex, "\\1"));
             }
         }
 

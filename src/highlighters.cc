@@ -22,8 +22,6 @@ namespace Kakoune
 
 using namespace std::placeholders;
 
-using RegexIterator = boost::regex_iterator<BufferIterator>;
-
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
                      ByteCoord begin, ByteCoord end,
@@ -256,9 +254,11 @@ private:
         cache.m_timestamp = buffer.timestamp();
 
         cache.m_matches.clear();
-        RegexIterator re_it{buffer.iterator_at(cache.m_range.first),
-                            buffer.iterator_at(cache.m_range.second+1), m_regex};
-        RegexIterator re_end;
+
+        using RegexIt = RegexIterator<BufferIterator>;
+        RegexIt re_it{buffer.iterator_at(cache.m_range.first),
+                      buffer.iterator_at(cache.m_range.second+1), m_regex};
+        RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
             cache.m_matches.emplace_back();
@@ -281,8 +281,8 @@ HighlighterAndId highlight_regex_factory(HighlighterParameters params)
         FacesSpec faces;
         for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
-            boost::smatch res;
-            if (not boost::regex_match(it->begin(), it->end(), res, face_spec_ex))
+            MatchResults<String::const_iterator> res;
+            if (not regex_match(it->begin(), it->end(), res, face_spec_ex))
                 throw runtime_error("wrong face spec: '" + *it +
                                      "' expected <capture>:<facespec>");
             get_face(res[2].str()); // throw if wrong face spec
@@ -299,7 +299,7 @@ HighlighterAndId highlight_regex_factory(HighlighterParameters params)
         return HighlighterAndId(id, RegexHighlighter(std::move(ex),
                                                    std::move(faces)));
     }
-    catch (boost::regex_error& err)
+    catch (RegexError& err)
     {
         throw runtime_error(String("regex error: ") + err.what());
     }
@@ -364,7 +364,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
             {
                 return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
             }
-            catch (boost::regex_error& err)
+            catch (RegexError& err)
             {
                 return Regex{};
             }
@@ -725,7 +725,7 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         auto l = buffer[line];
-        for (boost::regex_iterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+        for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
         {
             ByteCount b = (int)((*it)[0].first - l.begin());
             ByteCount e = (int)((*it)[0].second - l.begin());
@@ -779,7 +779,7 @@ void update_matches(const Buffer& buffer, memoryview<LineModification> modifs,
              line < buffer.line_count(); ++line)
         {
             auto l = buffer[line];
-            for (boost::regex_iterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
+            for (RegexIterator<const char*> it{l.begin(), l.end(), regex}, end{}; it != end; ++it)
             {
                 ByteCount b = (int)((*it)[0].first - l.begin());
                 ByteCount e = (int)((*it)[0].second - l.begin());
@@ -1069,7 +1069,7 @@ HighlighterAndId regions_factory(HighlighterParameters params)
                 HierachicalHighlighter(
                     RegionsHighlighter(std::move(regions), std::move(default_group)), std::move(groups))};
     }
-    catch (boost::regex_error& err)
+    catch (RegexError& err)
     {
         throw runtime_error(String("regex error: ") + err.what());
     }

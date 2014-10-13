@@ -5,6 +5,7 @@
 #include "exception.hh"
 #include "option_types.hh"
 #include "utils.hh"
+#include "regex.hh"
 
 #include <unordered_map>
 

@@ -7,6 +7,7 @@
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "file.hh"
+#include "regex.hh"
 #include "user_interface.hh"
 #include "window.hh"
 #include "word_db.hh"
@@ -162,14 +163,14 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
 InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                                  OptionManager& options, StringView option_name)
 {
-    const StringList& opt = options[option_name].get<StringList>();;
+    const StringList& opt = options[option_name].get<StringList>();
     if (opt.empty())
         return {};
 
     auto& desc = opt[0];
     static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
-    boost::smatch match;
-    if (boost::regex_match(desc.begin(), desc.end(), match, re))
+    MatchResults<String::const_iterator> match;
+    if (regex_match(desc.begin(), desc.end(), match, re))
     {
         ByteCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
         if (not buffer.is_valid(coord))

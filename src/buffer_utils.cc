@@ -3,6 +3,7 @@
 #include "buffer_manager.hh"
 #include "event_manager.hh"
 
+#include <unistd.h>
 #include <sys/select.h>
 
 namespace Kakoune

@@ -7,6 +7,7 @@
 #include "face_registry.hh"
 #include "insert_completer.hh"
 #include "normal.hh"
+#include "regex.hh"
 #include "register_manager.hh"
 #include "user_interface.hh"
 #include "utf8.hh"
@@ -338,7 +339,7 @@ public:
     void on_key(Key key) override
     {
         auto match_filter = [this](const String& str) {
-            return boost::regex_match(str.begin(), str.end(), m_filter);
+            return regex_match(str.begin(), str.end(), m_filter);
         };
 
         if (key == ctrl('m'))
@@ -356,7 +357,7 @@ public:
             if (m_edit_filter)
             {
                 m_edit_filter = false;
-                m_filter = boost::regex(".*");
+                m_filter = Regex(".*");
                 m_filter_editor.reset("");
                 context().print_status(DisplayLine{});
             }
@@ -395,7 +396,7 @@ public:
             m_filter_editor.handle_key(key);
 
             auto search = ".*" + m_filter_editor.line() + ".*";
-            m_filter = boost::regex(search.begin(), search.end());
+            m_filter = Regex(search.begin(), search.end());
             auto it = std::find_if(m_selected, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
@@ -435,9 +436,9 @@ private:
         m_callback(selected, MenuEvent::Select, context());
     }
 
-    boost::regex m_filter = boost::regex(".*");
-    bool         m_edit_filter = false;
-    LineEditor   m_filter_editor;
+    Regex      m_filter = Regex(".*");
+    bool       m_edit_filter = false;
+    LineEditor m_filter_editor;
 };
 
 String common_prefix(memoryview<String> strings)

@@ -87,8 +87,8 @@ String ShellManager::pipe(StringView input,
         dup2(error_pipe[1], 2); close(error_pipe[1]);
         dup2(write_pipe[0], 0); close(write_pipe[0]);
 
-        boost::regex_iterator<StringView::iterator> it(cmdline.begin(), cmdline.end(), env_var_regex);
-        boost::regex_iterator<StringView::iterator> end;
+        RegexIterator<StringView::iterator> it(cmdline.begin(), cmdline.end(), env_var_regex);
+        RegexIterator<StringView::iterator> end;
 
         while (it != end)
         {
@@ -145,8 +145,7 @@ String ShellManager::get_val(StringView name, const Context& context) const
     auto env_var = std::find_if(
         m_env_vars.begin(), m_env_vars.end(),
         [&](const std::pair<Regex, EnvVarRetriever>& pair)
-        { return boost::regex_match(name.begin(), name.end(),
-                                    pair.first); });
+        { return regex_match(name.begin(), name.end(), pair.first); });
 
     if (env_var == m_env_vars.end())
         throw runtime_error("no such env var: " + name);

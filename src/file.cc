@@ -7,6 +7,7 @@
 #include "completion.hh"
 #include "debug.hh"
 #include "unicode.hh"
+#include "regex.hh"
 
 #include <errno.h>
 #include <sys/types.h>
@@ -300,12 +301,12 @@ std::vector<String> complete_filename(StringView prefix,
     }
 
     const bool check_ignored_regex = not ignored_regex.empty() and
-        not boost::regex_match(fileprefix.c_str(), ignored_regex);
+        not regex_match(fileprefix.c_str(), ignored_regex);
 
     auto filter = [&](const dirent& entry)
     {
         return not check_ignored_regex or
-               not boost::regex_match(entry.d_name, ignored_regex);
+               not regex_match(entry.d_name, ignored_regex);
     };
     std::vector<String> res = list_files(fileprefix, dirname, filter);
     for (auto& file : res)

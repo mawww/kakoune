@@ -16,10 +16,11 @@
 #include <ncursesw/ncurses.h>
 #endif
 
-#include <signal.h>
-#include <termios.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
 
 namespace Kakoune
 {

@@ -85,23 +85,6 @@ String to_string(int val)
     return buf;
 }
 
-String option_to_string(const Regex& re)
-{
-    return String{re.str()};
-}
-
-void option_from_string(StringView str, Regex& re)
-{
-    try
-    {
-        re = Regex{str.begin(), str.end()};
-    }
-    catch (boost::regex_error& err)
-    {
-        throw runtime_error("unable to create regex: "_str + err.what());
-    }
-}
-
 bool prefix_match(StringView str, StringView prefix)
 {
     auto it = str.begin();

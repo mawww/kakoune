@@ -546,7 +546,7 @@ void regex_prompt(Context& context, const String prompt, T func)
                     context.push_jump();
                 func(str.empty() ? Regex{} : Regex{str}, event, context);
             }
-            catch (boost::regex_error& err)
+            catch (RegexError& err)
             {
                 if (event == PromptEvent::Validate)
                     throw runtime_error("regex error: "_str + err.what());
@@ -607,7 +607,7 @@ void search_next(Context& context, int param)
                 select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
             } while (--param > 0);
         }
-        catch (boost::regex_error& err)
+        catch (RegexError& err)
         {
             throw runtime_error("regex error: "_str + err.what());
         }
@@ -732,8 +732,8 @@ void keep(Context& context, int)
         std::vector<Selection> keep;
         for (auto& sel : context.selections())
         {
-            if (boost::regex_search(buffer.iterator_at(sel.min()),
-                                    utf8::next(buffer.iterator_at(sel.max()), buffer.end()), ex) == matching)
+            if (regex_search(buffer.iterator_at(sel.min()),
+                             utf8::next(buffer.iterator_at(sel.max()), buffer.end()), ex) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())

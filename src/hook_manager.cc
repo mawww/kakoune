@@ -2,6 +2,7 @@
 
 #include "context.hh"
 #include "debug.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
@@ -50,7 +51,7 @@ void HookManager::run_hook(const String& hook_name,
     for (auto& hook : hook_list_it->second)
     {
         if (not hook.first.empty() and not disabled_hooks.empty() and
-            boost::regex_match(hook.first, disabled_hooks))
+            regex_match(hook.first, disabled_hooks))
             continue;
 
         try

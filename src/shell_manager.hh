@@ -2,6 +2,7 @@
 #define shell_manager_hh_INCLUDED
 
 #include "string.hh"
+#include "regex.hh"
 #include "utils.hh"
 #include "env_vars.hh"
 

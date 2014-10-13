@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -549,7 +550,7 @@ const CommandDesc add_hook_cmd = {
             if (context.are_user_hooks_disabled())
                 return;
 
-            if (boost::regex_match(param.begin(), param.end(), regex))
+            if (regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
                                                    { { "hook_param", param } });
         };

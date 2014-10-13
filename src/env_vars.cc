@@ -1,8 +1,6 @@
 #include "env_vars.hh"
 
-#if __APPLE__
 extern char **environ;
-#endif
 
 namespace Kakoune
 {

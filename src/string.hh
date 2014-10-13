@@ -6,12 +6,11 @@
 #include "utf8.hh"
 
 #include <string>
-#include <boost/regex.hpp>
+#include <climits>
+#include <cstring>
 
 namespace Kakoune
 {
-
-using Regex = boost::regex;
 
 class StringView;
 
@@ -287,9 +286,6 @@ inline String codepoint_to_str(Codepoint cp)
     utf8::dump(back_inserter(str), cp);
     return String(str);
 }
-
-String option_to_string(const Regex& re);
-void option_from_string(StringView str, Regex& re);
 
 int str_to_int(StringView str);
 

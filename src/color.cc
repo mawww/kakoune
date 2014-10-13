@@ -1,6 +1,7 @@
 #include "color.hh"
 
 #include "exception.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
@@ -31,7 +32,7 @@ Color str_to_color(StringView color)
     if (color == "white")   return Colors::White;
 
     static const Regex rgb_regex{"rgb:[0-9a-fA-F]{6}"};
-    if (boost::regex_match(color.begin(), color.end(), rgb_regex))
+    if (regex_match(color.begin(), color.end(), rgb_regex))
     {
         unsigned l;
         sscanf(color.zstr() + 4, "%x", &l);

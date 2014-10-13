@@ -1,8 +1,9 @@
 #ifndef file_hh_INCLUDED
 #define file_hh_INCLUDED
 
-#include "string.hh"
 #include "exception.hh"
+#include "string.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
