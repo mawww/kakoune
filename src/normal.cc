@@ -18,6 +18,7 @@
 #include "window.hh"
 
 #include <signal.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
