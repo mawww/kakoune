@@ -107,7 +107,7 @@ struct Pass
 
 // returns the codepoint of the character whose first byte
 // is pointed by it
-template<typename InvalidPolicy = utf8::InvalidPolicy::Assert,
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
          typename Iterator>
 Codepoint codepoint(Iterator it, Iterator end)
 {
@@ -146,7 +146,7 @@ Codepoint codepoint(Iterator it, Iterator end)
     return InvalidPolicy{}(byte);
 }
 
-template<typename InvalidPolicy = utf8::InvalidPolicy::Assert>
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 ByteCount codepoint_size(char byte)
 {
     if (not (byte & 0x80)) // 0xxxxxxx
@@ -160,7 +160,7 @@ ByteCount codepoint_size(char byte)
     else
     {
         InvalidPolicy{}(byte);
-        return -1;
+        return 1;
     }
 }
 

@@ -12,7 +12,7 @@ namespace utf8
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
 template<typename Iterator,
-         typename InvalidPolicy = utf8::InvalidPolicy::Assert>
+         typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 class iterator
 {
 public:
@@ -140,7 +140,7 @@ private:
     mutable Codepoint m_value = -1;
 };
 
-template<typename InvalidPolicy = utf8::InvalidPolicy::Assert, typename Iterator>
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass, typename Iterator>
 iterator<Iterator, InvalidPolicy> make_iterator(Iterator it)
 {
     return iterator<Iterator, InvalidPolicy>{std::move(it)};
