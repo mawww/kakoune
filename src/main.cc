@@ -334,10 +334,8 @@ int run_server(StringView session, StringView init_command,
     register_highlighters();
 
     write_debug("*** This is the debug buffer, where debug info will be written ***");
-    write_debug("pid: " + to_string(getpid()));
 
     Server server(session.empty() ? to_string(getpid()) : String{session});
-    write_debug("session: " + server.session());
 
     if (not ignore_kakrc) try
     {
