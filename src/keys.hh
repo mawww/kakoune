@@ -14,9 +14,9 @@ struct Key
     enum class Modifiers
     {
         None    = 0,
-        Control = 1,
-        Alt     = 2,
-        ControlAlt = 3
+        Control = 1 << 0,
+        Alt     = 1 << 1,
+        ControlAlt = Control | Alt
     };
     enum NamedKey : Codepoint
     {
