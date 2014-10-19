@@ -46,6 +46,22 @@ std::vector<String> split(StringView str, char separator, char escape)
     return res;
 }
 
+std::vector<StringView> split(StringView str, char separator)
+{
+    std::vector<StringView> res;
+    auto beg = str.begin();
+    for (auto it = beg; it != str.end(); ++it)
+    {
+        if (*it == separator)
+        {
+            res.emplace_back(beg, it);
+            beg = it + 1;
+        }
+    }
+    res.emplace_back(beg, str.end());
+    return res;
+}
+
 String escape(StringView str, char character, char escape)
 {
     String res;

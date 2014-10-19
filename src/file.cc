@@ -350,7 +350,7 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     };
     static std::unordered_map<String, CommandCache> command_cache;
 
-    std::vector<String> path;
+    std::vector<StringView> path;
     if (dir_end != -1)
     {
         path.emplace_back(real_prefix.substr(0, dir_end + 1));
@@ -360,8 +360,9 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         path = split(getenv("PATH"), ':');
 
     std::vector<String> res;
-    for (auto dirname : path)
+    for (auto dir : path)
     {
+        String dirname = dir;
         if (not dirname.empty() and dirname.back() != '/')
             dirname += '/';
 

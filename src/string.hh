@@ -271,7 +271,9 @@ inline String operator+(StringView lhs, StringView rhs)
     return res;
 }
 
-std::vector<String> split(StringView str, char separator, char escape = 0);
+std::vector<String> split(StringView str, char separator, char escape);
+std::vector<StringView> split(StringView str, char separator);
+
 String escape(StringView str, char character, char escape);
 String escape(StringView str, StringView characters, char escape);
 

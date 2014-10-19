@@ -113,6 +113,15 @@ void test_string()
     kak_assert(splited[3] == "tchou:kanaky");
     kak_assert(splited[4] == "hihi:");
 
+    std::vector<StringView> splitedview = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':');
+    kak_assert(splitedview[0] == "youpi");
+    kak_assert(splitedview[1] == "matin");
+    kak_assert(splitedview[2] == "");
+    kak_assert(splitedview[3] == "tchou\\");
+    kak_assert(splitedview[4] == "kanaky");
+    kak_assert(splitedview[5] == "hihi\\");
+    kak_assert(splitedview[6] == "");
+
     String escaped = escape("youpi:matin:tchou:", ':', '\\');
     kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
 
