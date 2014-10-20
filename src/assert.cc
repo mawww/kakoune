@@ -15,8 +15,8 @@ namespace Kakoune
 
 struct assert_failed : logic_error
 {
-    assert_failed(const String& message)
-        : m_message(message) {}
+    assert_failed(String message)
+        : m_message(std::move(message)) {}
 
     const char* what() const override { return m_message.c_str(); }
 private:

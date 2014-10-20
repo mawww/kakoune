@@ -37,8 +37,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
 }
 
 void HookManager::run_hook(const String& hook_name,
-                           const String& param,
-                           Context& context) const
+                           StringView param, Context& context) const
 {
     if (m_parent)
         m_parent->run_hook(hook_name, param, context);

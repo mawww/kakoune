@@ -23,7 +23,7 @@ public:
     ~ClientManager();
 
     Client* create_client(std::unique_ptr<UserInterface>&& ui,
-                          EnvVarMap env_vars, const String& init_cmd);
+                          EnvVarMap env_vars, StringView init_cmd);
 
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
@@ -36,9 +36,9 @@ public:
     void redraw_clients() const;
     void clear_mode_trashes() const;
 
-    Client*  get_client_ifp(const String& name);
-    Client&  get_client(const String& name);
-    bool validate_client_name(const String& name) const;
+    Client*  get_client_ifp(StringView name);
+    Client&  get_client(StringView name);
+    bool validate_client_name(StringView name) const;
     void remove_client(Client& client);
 
     CandidateList complete_client_name(StringView name,

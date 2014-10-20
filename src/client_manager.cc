@@ -26,7 +26,7 @@ String ClientManager::generate_name() const
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                      EnvVarMap env_vars,
-                                     const String& init_commands)
+                                     StringView init_commands)
 {
     Buffer& buffer = **BufferManager::instance().begin();
     WindowAndSelections ws = get_free_window(buffer);
@@ -139,14 +139,14 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     m_free_windows.erase(end, m_free_windows.end());
 }
 
-bool ClientManager::validate_client_name(const String& name) const
+bool ClientManager::validate_client_name(StringView name) const
 {
     auto it = find_if(m_clients, [&](const std::unique_ptr<Client>& client)
                                  { return client->context().name() == name; });
     return it == m_clients.end();
 }
 
-Client* ClientManager::get_client_ifp(const String& name)
+Client* ClientManager::get_client_ifp(StringView name)
 {
     for (auto& client : m_clients)
     {
@@ -156,7 +156,7 @@ Client* ClientManager::get_client_ifp(const String& name)
     return nullptr;
 }
 
-Client& ClientManager::get_client(const String& name)
+Client& ClientManager::get_client(StringView name)
 {
     Client* client = get_client_ifp(name);
     if (not client)

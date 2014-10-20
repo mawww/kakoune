@@ -107,7 +107,7 @@ void repeat_last_insert(Context& context, int)
     context.input_handler().repeat_last_insert();
 }
 
-bool show_auto_info_ifn(const String& title, const String& info,
+bool show_auto_info_ifn(StringView title, StringView info,
                         const Context& context)
 {
     if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
@@ -121,7 +121,7 @@ bool show_auto_info_ifn(const String& title, const String& info,
 
 template<typename Cmd>
 void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
-                               const String& title, const String& info)
+                               StringView title, StringView info)
 {
     const bool hide = show_auto_info_ifn(title, info, context);
     context.input_handler().on_next_key(

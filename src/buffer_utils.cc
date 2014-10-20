@@ -133,7 +133,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     });
 
     buffer->hooks().add_hook("BufClose", "",
-        [buffer, watcher](const String&, const Context&) {
+        [buffer, watcher](StringView, const Context&) {
             // Check if fifo is still alive, else watcher is already dead
             if (buffer->flags() & Buffer::Flags::Fifo)
             {

@@ -18,13 +18,13 @@ struct parameter_error : public runtime_error
 
 struct unknown_option : public parameter_error
 {
-    unknown_option(const String& name)
+    unknown_option(StringView name)
         : parameter_error("unknown option '" + name + "'") {}
 };
 
 struct missing_option_value: public parameter_error
 {
-    missing_option_value(const String& name)
+    missing_option_value(StringView name)
         : parameter_error("missing value for option '" + name + "'") {}
 };
 

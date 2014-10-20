@@ -157,7 +157,7 @@ public:
 
     ValueMap& values() const { return m_values; }
 
-    void run_hook_in_own_context(const String& hook_name, const String& param);
+    void run_hook_in_own_context(const String& hook_name, StringView param);
 
     void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
 

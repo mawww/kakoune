@@ -11,7 +11,7 @@ namespace Kakoune
 
 struct function_not_found : runtime_error
 {
-    function_not_found(const String& name)
+    function_not_found(StringView name)
         : runtime_error("'" + name + "' not found") {}
 };
 

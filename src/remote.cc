@@ -409,12 +409,13 @@ void RemoteUI::set_input_callback(InputCallback callback)
 
 RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
                            const EnvVarMap& env_vars,
-                           const String& init_command)
+                           StringView init_command)
     : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions()),
       m_socket_watcher{socket, [this](FDWatcher&){ process_available_messages(); }}
 {
     Message msg(socket);
-    msg.write(init_command.c_str(), (int)init_command.length()+1);
+    msg.write(init_command.data(), (int)init_command.length());
+    msg.write((char)0);
     msg.write(env_vars);
 
     Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) |
@@ -504,10 +505,10 @@ void RemoteClient::write_next_key()
     }
 }
 
-std::unique_ptr<RemoteClient> connect_to(const String& session,
+std::unique_ptr<RemoteClient> connect_to(StringView session,
                                          std::unique_ptr<UserInterface>&& ui,
                                          const EnvVarMap& env_vars,
-                                         const String& init_command)
+                                         StringView init_command)
 {
     auto filename = "/tmp/kak-" + session;
 
@@ -524,7 +525,7 @@ std::unique_ptr<RemoteClient> connect_to(const String& session,
                                                           init_command}};
 }
 
-void send_command(const String& session, const String& command)
+void send_command(StringView session, StringView command)
 {
     auto filename = "/tmp/kak-" + session;
 
@@ -538,7 +539,7 @@ void send_command(const String& session, const String& command)
 
     {
         Message msg(sock);
-        msg.write(command.c_str(), (int)command.length());
+        msg.write(command.data(), (int)command.length());
     }
     close(sock);
 }

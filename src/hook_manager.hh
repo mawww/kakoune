@@ -10,7 +10,7 @@ namespace Kakoune
 {
 
 class Context;
-using HookFunc = std::function<void (const String&, Context&)>;
+using HookFunc = std::function<void (StringView, Context&)>;
 
 class HookManager
 {
@@ -20,7 +20,7 @@ public:
     void add_hook(const String& hook_name, String group, HookFunc hook);
     void remove_hooks(StringView group);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
-    void run_hook(const String& hook_name, const String& param,
+    void run_hook(const String& hook_name, StringView param,
                   Context& context) const;
 
 private:

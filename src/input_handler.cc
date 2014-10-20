@@ -274,12 +274,12 @@ public:
         }
     }
 
-    void insert(const String& str)
+    void insert(StringView str)
     {
         insert_from(m_cursor_pos, str);
     }
 
-    void insert_from(CharCount start, const String& str)
+    void insert_from(CharCount start, StringView str)
     {
         kak_assert(start <= m_cursor_pos);
         m_line = m_line.substr(0, start) + str
@@ -459,7 +459,7 @@ String common_prefix(memoryview<String> strings)
     return res;
 }
 
-void history_push(std::vector<String>& history, const String& entry)
+void history_push(std::vector<String>& history, StringView entry)
 {
     if(entry.empty())
     {

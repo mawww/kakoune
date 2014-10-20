@@ -546,13 +546,13 @@ const CommandDesc add_hook_cmd = {
         // copy so that the lambda gets a copy as well
         Regex regex(parser[2].begin(), parser[2].end());
         String command = parser[3];
-        auto hook_func = [=](const String& param, Context& context) {
+        auto hook_func = [=](StringView param, Context& context) {
             if (context.are_user_hooks_disabled())
                 return;
 
             if (regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
-                                                   { { "hook_param", param } });
+                                                   { { "hook_param", param.str() } });
         };
         StringView group;
         if (parser.has_option("group"))

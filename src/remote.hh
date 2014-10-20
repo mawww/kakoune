@@ -13,7 +13,7 @@ struct peer_disconnected {};
 
 struct connection_failed : runtime_error
 {
-    connection_failed(const String& filename)
+    connection_failed(StringView filename)
         : runtime_error{"connect to " + filename + " failed"}
     {}
 };
@@ -24,7 +24,7 @@ class RemoteClient
 {
 public:
     RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
-                 const EnvVarMap& env_vars, const String& init_command);
+                 const EnvVarMap& env_vars, StringView init_command);
 
 private:
     void process_available_messages();
@@ -35,12 +35,12 @@ private:
     CharCoord                      m_dimensions;
     FDWatcher                      m_socket_watcher;
 };
-std::unique_ptr<RemoteClient> connect_to(const String& session,
+std::unique_ptr<RemoteClient> connect_to(StringView session,
                                          std::unique_ptr<UserInterface>&& ui,
                                          const EnvVarMap& env_vars,
-                                         const String& init_command);
+                                         StringView init_command);
 
-void send_command(const String& session, const String& command);
+void send_command(StringView session, StringView command);
 
 struct Server : public Singleton<Server>
 {
