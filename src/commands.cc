@@ -370,19 +370,19 @@ const CommandDesc namebuf_cmd = {
     }
 };
 
-Completions complete_highlighter_group(const Context& context,
-                                       StringView arg, ByteCount pos_in_token)
+Completions complete_highlighter(const Context& context,
+                                 StringView arg, ByteCount pos_in_token, bool only_group)
 {
     const bool shared = not arg.empty() and arg[0] == '/';
     if (shared)
     {
         auto& group = DefinedHighlighters::instance();
-        return offset_pos(group.complete_group_id(arg.substr(1_byte), pos_in_token-1), 1);
+        return offset_pos(group.complete_child(arg.substr(1_byte), pos_in_token-1, only_group), 1);
     }
     else
     {
         auto& group = context.window().highlighters();
-        return group.complete_group_id(arg, pos_in_token);
+        return group.complete_child(arg, pos_in_token, only_group);
     }
 }
 
@@ -394,10 +394,10 @@ Completions rm_highlighter_completer(
     if (token_to_complete == 0 and not arg.empty() and arg.front() == '/')
     {
         auto& group = DefinedHighlighters::instance();
-        return offset_pos(group.complete_id(arg.substr(1_byte), pos_in_token-1), 1);
+        return offset_pos(group.complete_child(arg.substr(1_byte), pos_in_token-1, false), 1);
     }
     else if (token_to_complete == 0)
-        return context.window().highlighters().complete_id(arg, pos_in_token);
+        return context.window().highlighters().complete_child(arg, pos_in_token, false);
     return {};
 }
 
@@ -407,32 +407,32 @@ Completions add_highlighter_completer(
 {
     StringView arg = params[token_to_complete];
     if (token_to_complete == 1 and params[0] == "-group")
-        return complete_highlighter_group(context, params[1], pos_in_token);
+        return complete_highlighter(context, params[1], pos_in_token, true);
     else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
         return { 0_byte, arg.length(), HighlighterRegistry::instance().complete_name(arg, pos_in_token) };
     return Completions{};
 }
 
-HighlighterGroup& get_highlighter_group(const Context& context, StringView path)
+Highlighter& get_highlighter(const Context& context, StringView path)
 {
     if (path.empty())
         throw runtime_error("group path should not be empty");
 
-    HighlighterGroup* group = nullptr;
+    Highlighter* root = nullptr;
     if (path[0] == '/')
     {
-        group = &DefinedHighlighters::instance();
+        root = &DefinedHighlighters::instance();
         path = path.substr(1_byte);
     }
     else
-        group = &context.window().highlighters();
+        root = &context.window().highlighters();
 
     if (path.back() == '/')
         path = path.substr(0_byte, path.length() - 1);
 
     if (not path.empty())
-        return group->get_group(path);
-    return *group;
+        return root->get_child(path);
+    return *root;
 }
 
 const CommandDesc add_highlighter_cmd = {
@@ -456,9 +456,9 @@ const CommandDesc add_highlighter_cmd = {
             highlighter_params.push_back(*begin);
 
         auto& group = (parser.has_option("group")) ?
-            get_highlighter_group(context, parser.option_value("group"))
+            get_highlighter(context, parser.option_value("group"))
           : context.window().highlighters();
-        group.append(registry[name](highlighter_params));
+        group.add_child(registry[name](highlighter_params));
     }
 };
 
@@ -477,10 +477,10 @@ const CommandDesc rm_highlighter_cmd = {
         StringView path = parser[0];
         auto sep_it = find(reversed(path), '/');
         auto& group = sep_it != path.rend() ?
-            get_highlighter_group(context, {path.begin(), sep_it.base()-1})
+            get_highlighter(context, {path.begin(), sep_it.base()-1})
           : context.window().highlighters();
 
-        group.remove({sep_it.base(), path.end()});
+        group.remove_child({sep_it.base(), path.end()});
     }
 };
 

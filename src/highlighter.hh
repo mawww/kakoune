@@ -25,8 +25,39 @@ enum class HighlightFlags
 // color, adding information text (line numbering for example) or replacing
 // buffer content (folding for example)
 
-using HighlighterFunc = std::function<void (const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)>;
-using HighlighterAndId = std::pair<String, HighlighterFunc>;
+struct Highlighter;
+
+using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
+
+struct Highlighter
+{
+    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) = 0;
+
+    virtual bool has_children() const { return false; }
+    virtual Highlighter& get_child(StringView path) { throw runtime_error("this highlighter do not hold children"); }
+    virtual void add_child(HighlighterAndId&& hl) { throw runtime_error("this highlighter do not hold children"); }
+    virtual void remove_child(StringView id) { throw runtime_error("this highlighter do not hold children"); }
+    virtual Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const { throw runtime_error("this highlighter do not hold children"); }
+};
+
+template<typename Func>
+struct SimpleHighlighter : public Highlighter
+{
+    SimpleHighlighter(Func func) : m_func(std::move(func)) {}
+    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) override
+    {
+        m_func(context, flags, display_buffer);
+    }
+private:
+    Func m_func;
+};
+
+template<typename T>
+std::unique_ptr<SimpleHighlighter<T>> make_simple_highlighter(T func)
+{
+    return make_unique<SimpleHighlighter<T>>(std::move(func));
+}
+
 using HighlighterParameters = memoryview<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 

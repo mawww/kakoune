@@ -9,59 +9,27 @@
 namespace Kakoune
 {
 
-struct group_not_found : public runtime_error
+struct child_not_found : public runtime_error
 {
     using runtime_error::runtime_error;
 };
 
-class HighlighterGroup
+class HighlighterGroup : public Highlighter
 {
 public:
-    void operator()(const Context& context,
-                    HighlightFlags flags,
-                    DisplayBuffer& display_buffer) const;
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) override;
 
-    void append(HighlighterAndId&& hl);
-    void remove(StringView id);
+    bool has_children() const { return true; }
+    void add_child(HighlighterAndId&& hl) override;
+    void remove_child(StringView id) override;
 
-    HighlighterGroup& get_group(StringView path);
-    HighlighterFunc get_highlighter(StringView path) const;
+    Highlighter& get_child(StringView path) override;
 
-    Completions complete_id(StringView path, ByteCount cursor_pos) const;
-    Completions complete_group_id(StringView path, ByteCount cursor_pos) const;
+    Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
 
 private:
-    id_map<HighlighterFunc> m_highlighters;
-};
-
-class HierachicalHighlighter
-{
-public:
-    using GroupMap = id_map<HighlighterGroup>;
-    using Callback = std::function<void (GroupMap& groups,
-                                         const Context& context,
-                                         HighlightFlags flags,
-                                         DisplayBuffer& display_buffer)>;
-
-    HierachicalHighlighter(Callback callback, GroupMap groups)
-        : m_callback(std::move(callback)), m_groups(std::move(groups)) {}
-
-    void operator()(const Context& context,
-                    HighlightFlags flags,
-                    DisplayBuffer& display_buffer)
-    {
-        m_callback(m_groups, context, flags, display_buffer);
-    }
-
-    HighlighterGroup& get_group(StringView path);
-    HighlighterFunc get_highlighter(StringView path) const;
-
-    Completions complete_id(StringView path, ByteCount cursor_pos) const;
-    Completions complete_group_id(StringView path, ByteCount cursor_pos) const;
-
-protected:
-    Callback m_callback;
-    GroupMap m_groups;
+    using HighlighterMap = id_map<std::unique_ptr<Highlighter>>;
+    HighlighterMap m_highlighters;
 };
 
 struct DefinedHighlighters : public HighlighterGroup,

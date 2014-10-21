@@ -63,12 +63,11 @@ void highlight_range(DisplayBuffer& display_buffer,
     }
 }
 
-template<typename T>
 void apply_highlighter(const Context& context,
                        HighlightFlags flags,
                        DisplayBuffer& display_buffer,
                        ByteCoord begin, ByteCoord end,
-                       T&& highlighter)
+                       Highlighter& highlighter)
 {
     using LineIterator = DisplayBuffer::LineList::iterator;
     LineIterator first_line;
@@ -135,7 +134,7 @@ void apply_highlighter(const Context& context,
     }
 
     region_display.compute_range();
-    highlighter(context, flags, region_display);
+    highlighter.highlight(context, flags, region_display);
 
     for (size_t i = 0; i < region_lines.size(); ++i)
     {
@@ -161,7 +160,7 @@ auto apply_face = [](const Face& face)
 
 using FacesSpec = std::vector<String>;
 
-HighlighterAndId fill_factory(HighlighterParameters params)
+static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -169,14 +168,14 @@ HighlighterAndId fill_factory(HighlighterParameters params)
     const String& facespec = params[0];
     get_face(facespec); // validate param
 
-    auto fill = [facespec](const Context& context, HighlightFlags flags,
-                            DisplayBuffer& display_buffer)
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer)
     {
         auto range = display_buffer.range();
         highlight_range(display_buffer, range.first, range.second, true,
                         apply_face(get_face(facespec)));
     };
-    return HighlighterAndId("fill_" + params[0], fill);
+    return {"fill_" + facespec, make_simple_highlighter(std::move(func))};
 }
 
 template<typename T>
@@ -195,7 +194,7 @@ private:
     ValueId m_id;
 };
 
-class RegexHighlighter
+class RegexHighlighter : public Highlighter
 {
 public:
     RegexHighlighter(Regex regex, FacesSpec faces)
@@ -203,7 +202,7 @@ public:
     {
     }
 
-    void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) override
     {
         if (flags != HighlightFlags::Highlight)
             return;
@@ -225,6 +224,48 @@ public:
         }
     }
 
+    void reset(Regex regex, FacesSpec faces)
+    {
+        m_regex = std::move(regex);
+        m_faces = std::move(faces);
+        m_force_update = true;
+    }
+
+    static HighlighterAndId create(HighlighterParameters params)
+    {
+        if (params.size() < 2)
+            throw runtime_error("wrong parameter count");
+
+        try
+        {
+            static Regex face_spec_ex(R"((\d+):(.*))");
+            FacesSpec faces;
+            for (auto it = params.begin() + 1;  it != params.end(); ++it)
+            {
+                MatchResults<String::const_iterator> res;
+                if (not regex_match(it->begin(), it->end(), res, face_spec_ex))
+                    throw runtime_error("wrong face spec: '" + *it +
+                                         "' expected <capture>:<facespec>");
+                get_face(res[2].str()); // throw if wrong face spec
+                int capture = str_to_int(res[1].str());
+                if (capture >= faces.size())
+                    faces.resize(capture+1);
+                faces[capture] = res[2].str();
+            }
+
+            String id = "hlregex'" + params[0] + "'";
+
+            Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
+
+            return {id, make_unique<RegexHighlighter>(std::move(ex),
+                                                      std::move(faces))};
+        }
+        catch (RegexError& err)
+        {
+            throw runtime_error(String("regex error: ") + err.what());
+        }
+    }
+
 private:
     struct Cache
     {
@@ -237,6 +278,8 @@ private:
     Regex     m_regex;
     FacesSpec m_faces;
 
+    bool m_force_update = false;
+
     Cache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
     {
         Cache& cache = m_cache.get(buffer);
@@ -244,10 +287,13 @@ private:
         LineCount first_line = range.first.line;
         LineCount last_line = std::min(buffer.line_count()-1, range.second.line);
 
-        if (buffer.timestamp() == cache.m_timestamp and
+        if (not m_force_update and
+            buffer.timestamp() == cache.m_timestamp and
             first_line >= cache.m_range.first and
             last_line <= cache.m_range.second)
            return cache;
+
+        m_force_update = false;
 
         cache.m_range.first  = std::max(0_line, first_line - 10);
         cache.m_range.second = std::min(buffer.line_count()-1, last_line+10);
@@ -270,43 +316,8 @@ private:
     }
 };
 
-HighlighterAndId highlight_regex_factory(HighlighterParameters params)
-{
-    if (params.size() < 2)
-        throw runtime_error("wrong parameter count");
-
-    try
-    {
-        static Regex face_spec_ex(R"((\d+):(.*))");
-        FacesSpec faces;
-        for (auto it = params.begin() + 1;  it != params.end(); ++it)
-        {
-            MatchResults<String::const_iterator> res;
-            if (not regex_match(it->begin(), it->end(), res, face_spec_ex))
-                throw runtime_error("wrong face spec: '" + *it +
-                                     "' expected <capture>:<facespec>");
-            get_face(res[2].str()); // throw if wrong face spec
-            int capture = str_to_int(res[1].str());
-            if (capture >= faces.size())
-                faces.resize(capture+1);
-            faces[capture] = res[2].str();
-        }
-
-        String id = "hlregex'" + params[0] + "'";
-
-        Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
-
-        return HighlighterAndId(id, RegexHighlighter(std::move(ex),
-                                                   std::move(faces)));
-    }
-    catch (RegexError& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
-}
-
 template<typename RegexGetter, typename FaceGetter>
-class DynamicRegexHighlighter
+class DynamicRegexHighlighter : public Highlighter
 {
 public:
     DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
@@ -314,7 +325,7 @@ public:
           m_face_getter(std::move(face_getter)),
           m_highlighter(Regex(), FacesSpec{}) {}
 
-    void operator()(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
     {
         if (flags != HighlightFlags::Highlight)
             return;
@@ -326,10 +337,10 @@ public:
             m_last_regex = regex;
             m_last_face = face;
             if (not m_last_regex.empty())
-                m_highlighter= RegexHighlighter{m_last_regex, face};
+                m_highlighter.reset(m_last_regex, m_last_face);
         }
         if (not m_last_regex.empty() and not m_last_face.empty())
-            m_highlighter(context, flags, display_buffer);
+            m_highlighter.highlight(context, flags, display_buffer);
     }
 
 private:
@@ -343,15 +354,15 @@ private:
 };
 
 template<typename RegexGetter, typename FaceGetter>
-DynamicRegexHighlighter<RegexGetter, FaceGetter>
+std::unique_ptr<DynamicRegexHighlighter<RegexGetter, FaceGetter>>
 make_dynamic_regex_highlighter(RegexGetter regex_getter, FaceGetter face_getter)
 {
-    return DynamicRegexHighlighter<RegexGetter, FaceGetter>(
+    return make_unique<DynamicRegexHighlighter<RegexGetter, FaceGetter>>(
         std::move(regex_getter), std::move(face_getter));
 }
 
 
-HighlighterAndId highlight_search_factory(HighlighterParameters params)
+HighlighterAndId create_search_highlighter(HighlighterParameters params)
 {
     if (params.size() != 0)
         throw runtime_error("wrong parameter count");
@@ -372,7 +383,7 @@ HighlighterAndId highlight_search_factory(HighlighterParameters params)
         return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
-HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
+HighlighterAndId create_regex_option_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -392,27 +403,26 @@ HighlighterAndId highlight_regex_option_factory(HighlighterParameters params)
     return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
-HighlighterAndId highlight_line_option_factory(HighlighterParameters params)
+HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
     String facespec = params[1];
-    get_face(facespec); // validate facespec
-
     String option_name = params[0];
-    // verify option type now
-    GlobalOptions::instance()[option_name].get<int>();
 
-    auto highlighter = [=](const Context& context, HighlightFlags flags,
-                           DisplayBuffer& display_buffer)
+    get_face(facespec); // validate facespec
+    GlobalOptions::instance()[option_name].get<int>(); // verify option type now
+
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer)
     {
         int line = context.options()[option_name].get<int>();
         highlight_range(display_buffer, {line-1, 0}, {line, 0}, false,
                         apply_face(get_face(facespec)));
     };
 
-    return {"hlline_" + option_name, std::move(highlighter)};
+    return {"hlline_" + params[0], make_simple_highlighter(std::move(func))};
 }
 
 void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
@@ -626,7 +636,7 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
     }
 }
 
-HighlighterAndId flag_lines_factory(HighlighterParameters params)
+HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -637,54 +647,42 @@ HighlighterAndId flag_lines_factory(HighlighterParameters params)
     // throw if wrong option type
     GlobalOptions::instance()[option_name].get<std::vector<LineAndFlag>>();
 
-    return {"hlflags_" + params[1],
-            [=](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
-            {
-                auto& lines_opt = context.options()[option_name];
-                auto& lines = lines_opt.get<std::vector<LineAndFlag>>();
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer)
+    {
+        auto& lines_opt = context.options()[option_name];
+        auto& lines = lines_opt.get<std::vector<LineAndFlag>>();
 
-                CharCount width = 0;
-                for (auto& l : lines)
-                     width = std::max(width, std::get<2>(l).char_length());
-                const String empty{' ', width};
-                for (auto& line : display_buffer.lines())
-                {
-                    int line_num = (int)line.range().first.line + 1;
-                    auto it = find_if(lines,
-                                      [&](const LineAndFlag& l)
-                                      { return std::get<0>(l) == line_num; });
-                    String content = it != lines.end() ? std::get<2>(*it) : empty;
-                    content += String(' ', width - content.char_length());
-                    DisplayAtom atom{std::move(content)};
-                    atom.face = { it != lines.end() ? std::get<1>(*it) : Colors::Default , bg };
-                    line.insert(line.begin(), std::move(atom));
-                }
-            }};
+        CharCount width = 0;
+        for (auto& l : lines)
+             width = std::max(width, std::get<2>(l).char_length());
+        const String empty{' ', width};
+        for (auto& line : display_buffer.lines())
+        {
+            int line_num = (int)line.range().first.line + 1;
+            auto it = find_if(lines,
+                              [&](const LineAndFlag& l)
+                              { return std::get<0>(l) == line_num; });
+            String content = it != lines.end() ? std::get<2>(*it) : empty;
+            content += String(' ', width - content.char_length());
+            DisplayAtom atom{std::move(content)};
+            atom.face = { it != lines.end() ? std::get<1>(*it) : Colors::Default , bg };
+            line.insert(line.begin(), std::move(atom));
+        }
+    };
+
+    return {"hlflags_" + params[1], make_simple_highlighter(func) };
 }
 
-template<void (*highlighter_func)(const Context&, HighlightFlags, DisplayBuffer&)>
-class SimpleHighlighterFactory
-{
-public:
-    SimpleHighlighterFactory(const String& id) : m_id(id) {}
-
-    HighlighterAndId operator()(HighlighterParameters params) const
-    {
-        return HighlighterAndId(m_id, HighlighterFunc(highlighter_func));
-    }
-private:
-    String m_id;
-};
-
-HighlighterAndId highlighter_group_factory(HighlighterParameters params)
+HighlighterAndId create_highlighter_group(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
 
-    return HighlighterAndId(params[0], HighlighterGroup());
+    return HighlighterAndId(params[0], make_unique<HighlighterGroup>());
 }
 
-HighlighterAndId reference_factory(HighlighterParameters params)
+HighlighterAndId create_reference_highlighter(HighlighterParameters params)
 {
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
@@ -694,17 +692,18 @@ HighlighterAndId reference_factory(HighlighterParameters params)
     // throw if not found
     //DefinedHighlighters::instance().get_group(name, '/');
 
-    return {name,
-            [name](const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
-            {
-                try
-                {
-                    DefinedHighlighters::instance().get_highlighter(name)(context, flags, display_buffer);
-                }
-                catch (group_not_found&)
-                {
-                }
-            }};
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer)
+    {
+        try
+        {
+            DefinedHighlighters::instance().get_child(name).highlight(context, flags, display_buffer);
+        }
+        catch (child_not_found&)
+        {}
+    };
+
+    return {name, make_simple_highlighter(func)};
 }
 
 struct RegexMatch
@@ -868,7 +867,7 @@ struct RegionDesc
     }
 };
 
-struct RegionsHighlighter
+struct RegionsHighlighter : public Highlighter
 {
 public:
     using NamedRegionDescList = std::vector<std::pair<String, RegionDesc>>;
@@ -880,12 +879,16 @@ public:
             throw runtime_error("at least one region must be defined");
 
         for (auto& region : m_regions)
+        {
+            m_groups.append({region.first, HighlighterGroup{}});
             if (region.second.m_begin.empty() or region.second.m_end.empty())
                 throw runtime_error("invalid regex for region highlighter");
+        }
+        if (not m_default_group.empty())
+            m_groups.append({m_default_group, HighlighterGroup{}});
     }
 
-    void operator()(HierachicalHighlighter::GroupMap groups, const Context& context,
-                    HighlightFlags flags, DisplayBuffer& display_buffer)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
     {
         if (flags != HighlightFlags::Highlight)
             return;
@@ -904,8 +907,8 @@ public:
             return c;
         };
 
-        auto default_group_it = groups.find(m_default_group);
-        const bool apply_default = default_group_it != groups.end();
+        auto default_group_it = m_groups.find(m_default_group);
+        const bool apply_default = default_group_it != m_groups.end();
 
         auto last_begin = range.first;
         for (; begin != end; ++begin)
@@ -915,8 +918,8 @@ public:
                                   correct(last_begin), correct(begin->begin),
                                   default_group_it->second);
 
-            auto it = groups.find(begin->group);
-            if (it == groups.end())
+            auto it = m_groups.find(begin->group);
+            if (it == m_groups.end())
                 continue;
             apply_highlighter(context, flags, display_buffer,
                               correct(begin->begin), correct(begin->end),
@@ -929,9 +932,79 @@ public:
                               default_group_it->second);
 
     }
+
+    bool has_children() const override { return true; }
+
+    Highlighter& get_child(StringView path) override
+    {
+        auto sep_it = find(path, '/');
+        StringView id(path.begin(), sep_it);
+        auto it = m_groups.find(id);
+        if (it == m_groups.end())
+            throw child_not_found("no such id: "_str + id);
+        if (sep_it == path.end())
+            return it->second;
+        else
+            return it->second.get_child({sep_it+1, path.end()});
+    }
+
+    Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
+    {
+        auto sep_it = find(path, '/');
+        if (sep_it != path.end())
+        {
+            ByteCount offset = sep_it+1 - path.begin();
+            Highlighter& hl = const_cast<RegionsHighlighter*>(this)->get_child({path.begin(), sep_it});
+            return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
+        }
+
+        return { 0, 0, m_groups.complete_id(path, cursor_pos) };
+    }
+
+    static HighlighterAndId create(HighlighterParameters params)
+    {
+        try
+        {
+            static const ParameterDesc param_desc{
+                SwitchMap{ { "default", { true, "" } } },
+                ParameterDesc::Flags::SwitchesOnlyAtStart,
+                5};
+
+            ParametersParser parser{params, param_desc};
+            if ((parser.positional_count() % 4) != 1)
+                throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
+
+            RegionsHighlighter::NamedRegionDescList regions;
+            for (size_t i = 1; i < parser.positional_count(); i += 4)
+            {
+                if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
+                    throw runtime_error("group id, begin and end must not be empty");
+
+                Regex begin{parser[i+1], Regex::nosubs | Regex::optimize };
+                Regex end{parser[i+2], Regex::nosubs | Regex::optimize };
+                Regex recurse;
+                if (not parser[i+3].empty())
+                    recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
+
+                regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
+            }
+            String default_group;
+            if (parser.has_option("default"))
+                default_group = parser.option_value("default");
+
+            return {parser[0], make_unique<RegionsHighlighter>(std::move(regions),
+                                                               std::move(default_group))};
+        }
+        catch (RegexError& err)
+        {
+            throw runtime_error(String("regex error: ") + err.what());
+        }
+    }
+
 private:
     const NamedRegionDescList m_regions;
     const String m_default_group;
+    id_map<HighlighterGroup> m_groups;
 
     struct Region
     {
@@ -1029,68 +1102,31 @@ private:
     }
 };
 
-HighlighterAndId regions_factory(HighlighterParameters params)
+template<typename Func>
+HighlighterFactory simple_factory(const String id, Func func)
 {
-    try
+    return [=](HighlighterParameters params)
     {
-        static const ParameterDesc param_desc{
-            SwitchMap{ { "default", { true, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart,
-            5};
-
-        ParametersParser parser{params, param_desc};
-        if ((parser.positional_count() % 4) != 1)
-            throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
-
-        RegionsHighlighter::NamedRegionDescList regions;
-        id_map<HighlighterGroup> groups;
-        for (size_t i = 1; i < parser.positional_count(); i += 4)
-        {
-            if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
-                throw runtime_error("group id, begin and end must not be empty");
-
-            Regex begin{parser[i+1], Regex::nosubs | Regex::optimize };
-            Regex end{parser[i+2], Regex::nosubs | Regex::optimize };
-            Regex recurse;
-            if (not parser[i+3].empty())
-                recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
-
-            regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
-            groups.append({ parser[i], HighlighterGroup{} });
-        }
-        String default_group;
-        if (parser.has_option("default"))
-        {
-            default_group = parser.option_value("default");
-            groups.append({ default_group, HighlighterGroup{} });
-        }
-
-        return {parser[0],
-                HierachicalHighlighter(
-                    RegionsHighlighter(std::move(regions), std::move(default_group)), std::move(groups))};
-    }
-    catch (RegexError& err)
-    {
-        throw runtime_error(String("regex error: ") + err.what());
-    }
+        return HighlighterAndId(id, make_simple_highlighter(func));
+    };
 }
 
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.register_func("number_lines", SimpleHighlighterFactory<show_line_numbers>("number_lines"));
-    registry.register_func("show_matching", SimpleHighlighterFactory<show_matching_char>("show_matching"));
-    registry.register_func("show_whitespaces", SimpleHighlighterFactory<show_whitespaces>("show_whitespaces"));
-    registry.register_func("fill", fill_factory);
-    registry.register_func("regex", highlight_regex_factory);
-    registry.register_func("regex_option", highlight_regex_option_factory);
-    registry.register_func("search", highlight_search_factory);
-    registry.register_func("group", highlighter_group_factory);
-    registry.register_func("flag_lines", flag_lines_factory);
-    registry.register_func("line_option", highlight_line_option_factory);
-    registry.register_func("ref", reference_factory);
-    registry.register_func("regions", regions_factory);
+    registry.register_func("number_lines", simple_factory("number_lines", show_line_numbers));
+    registry.register_func("show_matching", simple_factory("show_matching", show_matching_char));
+    registry.register_func("show_whitespaces", simple_factory("show_whitespaces", show_whitespaces));
+    registry.register_func("fill", create_fill_highlighter);
+    registry.register_func("regex", RegexHighlighter::create);
+    registry.register_func("regex_option", create_regex_option_highlighter);
+    registry.register_func("search", create_search_highlighter);
+    registry.register_func("group", create_highlighter_group);
+    registry.register_func("flag_lines", create_flag_lines_highlighter);
+    registry.register_func("line_option", create_line_option_highlighter);
+    registry.register_func("ref", create_reference_highlighter);
+    registry.register_func("regions", RegionsHighlighter::create);
 }
 
 }

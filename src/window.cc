@@ -28,9 +28,9 @@ Window::Window(Buffer& buffer)
     m_hooks.run_hook("WinCreate", buffer.name(), hook_handler.context());
     m_options.register_watcher(*this);
 
-    m_builtin_highlighters.append({"tabulations", expand_tabulations});
-    m_builtin_highlighters.append({"unprintable", expand_unprintable});
-    m_builtin_highlighters.append({"selections",  highlight_selections});
+    m_builtin_highlighters.add_child({"tabulations"_str, make_simple_highlighter(expand_tabulations)});
+    m_builtin_highlighters.add_child({"unprintable"_str, make_simple_highlighter(expand_unprintable)});
+    m_builtin_highlighters.add_child({"selections"_str,  make_simple_highlighter(highlight_selections)});
 
     for (auto& option : m_options.flatten_options())
         on_option_changed(*option);
@@ -82,8 +82,8 @@ void Window::update_display_buffer(const Context& context)
     }
 
     m_display_buffer.compute_range();
-    m_highlighters(context, HighlightFlags::Highlight, m_display_buffer);
-    m_builtin_highlighters(context, HighlightFlags::Highlight, m_display_buffer);
+    m_highlighters.highlight(context, HighlightFlags::Highlight, m_display_buffer);
+    m_builtin_highlighters.highlight(context, HighlightFlags::Highlight, m_display_buffer);
 
     // cut the start of the line before m_position.column
     for (auto& line : lines)
@@ -182,8 +182,8 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     lines.emplace_back(AtomList{ {buffer(), cursor.line, cursor.line+1} });
 
     display_buffer.compute_range();
-    m_highlighters(context, HighlightFlags::MoveOnly, display_buffer);
-    m_builtin_highlighters(context, HighlightFlags::MoveOnly, display_buffer);
+    m_highlighters.highlight(context, HighlightFlags::MoveOnly, display_buffer);
+    m_builtin_highlighters.highlight(context, HighlightFlags::MoveOnly, display_buffer);
 
     // now we can compute where the cursor is in display columns
     // (this is only valid if highlighting one line and multiple lines put
@@ -266,8 +266,8 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
 
     InputHandler hook_handler{{ *m_buffer, Selection{} } };
     hook_handler.context().set_window(*this);
-    m_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
-    m_builtin_highlighters(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
+    m_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
+    m_builtin_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
 
     CharCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
     return { find_buffer_coord(lines[1], buffer(), column), column };

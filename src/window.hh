@@ -36,7 +36,7 @@ public:
 
     CharCoord display_position(ByteCoord coord);
 
-    HighlighterGroup& highlighters() { return m_highlighters; }
+    Highlighter& highlighters() { return m_highlighters; }
 
     OptionManager&       options()       { return m_options; }
     const OptionManager& options() const { return m_options; }
