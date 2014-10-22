@@ -147,7 +147,7 @@ void Client::check_buffer_fs_timestamp()
             pos, get_face("Information"), MenuStyle::Prompt);
 
         m_input_handler.on_next_key(KeymapMode::None,
-                                   [this, filename, ts](Key key, Context& context) {
+                                   [this, filename](Key key, Context& context) {
             Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
             m_ui->info_hide();
             // buffer got deleted while waiting for the key, do nothing
@@ -157,7 +157,8 @@ void Client::check_buffer_fs_timestamp()
                 reload_buffer(context, filename);
             else if (key == 'k' or key == 'n')
             {
-                buf->set_fs_timestamp(ts);
+                // reread timestamp in case the file was modified again
+                buf->set_fs_timestamp(get_fs_timestamp(filename));
                 print_status({ "'" + buf->display_name() + "' kept",
                                get_face("Information") });
             }
