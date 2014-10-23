@@ -12,8 +12,7 @@ def -shell-params \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
         (
-            IFS=':'
-            for tags in ${kak_opt_ctagsfiles}; do
+            for tags in $(echo "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
                 readtags -t "${tags}" ${tagname}
             done
         ) | awk -F '\t|\n' -e '
