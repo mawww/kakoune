@@ -47,6 +47,15 @@ Buffer* open_fifo(const String& name , const String& filename, bool scroll)
     return create_fifo_buffer(std::move(name), fd, scroll);
 }
 
+template<typename T>
+CandidateList prefix_complete(StringView prefix, const T& options)
+{
+    CandidateList res;
+    std::copy_if(begin(options), end(options), std::back_inserter(res),
+                 std::bind(prefix_match, std::placeholders::_1, prefix));
+    return res;
+}
+
 const PerArgumentCommandCompleter filename_completer({
      [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
      { return Completions{ 0_byte, cursor_pos,
@@ -502,16 +511,7 @@ HookManager& get_hook_manager(const String& scope, const Context& context)
     throw runtime_error("error: no such hook container " + scope);
 }
 
-CandidateList complete_scope(StringView prefix)
-{
-    CandidateList res;
-    for (auto scope : { "global", "buffer", "window" })
-    {
-        if (prefix_match(scope, prefix))
-            res.emplace_back(scope);
-    }
-    return res;
-}
+static constexpr auto scopes = { "global", "buffer", "window" };
 
 const CommandDesc add_hook_cmd = {
     "hook",
@@ -533,7 +533,7 @@ const CommandDesc add_hook_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     complete_scope(params[0].substr(0_byte, pos_in_token)) };
+                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         else if (token_to_complete == 3)
         {
             auto& cm = CommandManager::instance();
@@ -573,7 +573,7 @@ const CommandDesc rm_hook_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     complete_scope(params[0].substr(0_byte, pos_in_token)) };
+                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         else if (token_to_complete == 1)
         {
             if (auto manager = get_hook_manager_ifp(params[0], context))
@@ -828,7 +828,7 @@ const CommandDesc set_option_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     complete_scope(params[0].substr(0_byte, pos_in_token)) };
+                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         else if (token_to_complete == 1)
         {
             OptionManager& options = get_options(params[0], context);
@@ -914,12 +914,10 @@ const CommandDesc declare_option_cmd = {
 
 KeymapManager& get_keymap_manager(const String& scope, Context& context)
 {
-    if (prefix_match("global", scope))
-        return GlobalKeymaps::instance();
-    else if (prefix_match("buffer", scope))
-        return context.buffer().keymaps();
-    else if (prefix_match("window", scope))
-        return context.window().keymaps();
+    if (prefix_match("global", scope)) return GlobalKeymaps::instance();
+    if (prefix_match("buffer", scope)) return context.buffer().keymaps();
+    if (prefix_match("window", scope)) return context.window().keymaps();
+
     throw runtime_error("error: no such keymap container " + scope);
 }
 
@@ -929,20 +927,10 @@ KeymapMode parse_keymap_mode(const String& str)
     if (prefix_match("insert", str)) return KeymapMode::Insert;
     if (prefix_match("menu", str))   return KeymapMode::Menu;
     if (prefix_match("prompt", str)) return KeymapMode::Prompt;
-    if (prefix_match("goto", str)) return KeymapMode::Goto;
-    if (prefix_match("view", str)) return KeymapMode::View;
-    throw runtime_error("unknown keymap mode '" + str + "'");
-}
+    if (prefix_match("goto", str))   return KeymapMode::Goto;
+    if (prefix_match("view", str))   return KeymapMode::View;
 
-CandidateList complete_mode(StringView prefix)
-{
-    CandidateList res;
-    for (auto mode : { "normal", "insert", "menu", "prompt", "goto", "view" })
-    {
-        if (prefix_match(mode, prefix))
-            res.emplace_back(mode);
-    }
-    return res;
+    throw runtime_error("unknown keymap mode '" + str + "'");
 }
 
 const CommandDesc map_key_cmd = {
@@ -961,15 +949,19 @@ const CommandDesc map_key_cmd = {
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 4, 4 },
     CommandFlags::None,
     [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete, ByteCount pos_in_token)
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return Completions{ 0_byte, params[0].length(),
-                                complete_scope(params[0].substr(0_byte, pos_in_token)) };
+            return { 0_byte, params[0].length(),
+                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         if (token_to_complete == 1)
-            return Completions{ 0_byte, params[1].length(),
-                                complete_mode(params[1].substr(0_byte, pos_in_token)) };
-        return Completions{};
+        {
+            constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view" };
+            return { 0_byte, params[1].length(),
+                     prefix_complete(params[1].substr(0_byte, pos_in_token), modes) };
+        }
+        return {};
     },
     [](const ParametersParser& parser, Context& context)
     {
