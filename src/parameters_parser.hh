@@ -4,6 +4,7 @@
 #include "exception.hh"
 #include "id_map.hh"
 #include "memoryview.hh"
+#include "flags.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -51,14 +52,6 @@ struct ParameterDesc
         SwitchesOnlyAtStart = 1,
         SwitchesAsPositional = 2,
     };
-    friend constexpr Flags operator|(Flags lhs, Flags rhs)
-    {
-        return (Flags)((int) lhs | (int) rhs);
-    }
-    friend constexpr bool operator&(Flags lhs, Flags rhs)
-    {
-        return ((int) lhs & (int) rhs) != 0;
-    }
 
     ParameterDesc() = default;
     ParameterDesc(SwitchMap switches, Flags flags = Flags::None,
@@ -71,6 +64,8 @@ struct ParameterDesc
     size_t min_positionals = 0;
     size_t max_positionals = -1;
 };
+
+template<> struct WithBitOps<ParameterDesc::Flags> : std::true_type {};
 
 // ParametersParser provides tools to parse command parameters.
 // There are 3 types of parameters:

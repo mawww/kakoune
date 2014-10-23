@@ -1,6 +1,7 @@
 #ifndef selectors_hh_INCLUDED
 #define selectors_hh_INCLUDED
 
+#include "flags.hh"
 #include "selection.hh"
 #include "buffer_utils.hh"
 #include "unicode.hh"
@@ -152,10 +153,8 @@ enum class ObjectFlags
     ToEnd   = 2,
     Inner   = 4
 };
-constexpr bool operator&(ObjectFlags lhs, ObjectFlags rhs)
-{ return (bool)((int)lhs & (int) rhs); }
-constexpr ObjectFlags operator|(ObjectFlags lhs, ObjectFlags rhs)
-{ return (ObjectFlags)((int)lhs | (int) rhs); }
+
+template<> struct WithBitOps<ObjectFlags> : std::true_type {};
 
 template<WordType word_type>
 Selection select_word(const Buffer& buffer,

@@ -3,6 +3,7 @@
 
 #include "completion.hh"
 #include "exception.hh"
+#include "flags.hh"
 #include "option_types.hh"
 #include "utils.hh"
 #include "regex.hh"
@@ -25,12 +26,8 @@ enum class OptionFlags
     None   = 0,
     Hidden = 1,
 };
-constexpr OptionFlags operator|(OptionFlags lhs, OptionFlags rhs)
-{ return (OptionFlags)((int)lhs | (int)rhs); }
 
-constexpr bool operator&(OptionFlags lhs, OptionFlags rhs)
-{ return (bool)((int)lhs & (int)rhs); }
-
+template<> struct WithBitOps<OptionFlags> : std::true_type {};
 
 class OptionDesc
 {

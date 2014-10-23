@@ -8,6 +8,7 @@
 #include "context.hh"
 #include "debug.hh"
 #include "face_registry.hh"
+#include "flags.hh"
 #include "file.hh"
 #include "option_manager.hh"
 #include "register_manager.hh"
@@ -956,14 +957,8 @@ enum class SelectFlags
     Inclusive = 2,
     Extend = 4
 };
-constexpr SelectFlags operator|(SelectFlags lhs, SelectFlags rhs)
-{
-    return (SelectFlags)((int) lhs | (int) rhs);
-}
-constexpr bool operator&(SelectFlags lhs, SelectFlags rhs)
-{
-    return ((int) lhs & (int) rhs) != 0;
-}
+
+template<> struct WithBitOps<SelectFlags> : std::true_type {};
 
 template<SelectFlags flags>
 void select_to_next_char(Context& context, int param)

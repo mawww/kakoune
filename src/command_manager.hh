@@ -3,6 +3,7 @@
 
 #include "coord.hh"
 #include "completion.hh"
+#include "flags.hh"
 #include "memoryview.hh"
 #include "shell_manager.hh"
 #include "parameters_parser.hh"
@@ -28,14 +29,8 @@ enum class CommandFlags
     None   = 0,
     Hidden = 1,
 };
-constexpr CommandFlags operator|(CommandFlags lhs, CommandFlags rhs)
-{
-    return (CommandFlags)((int)lhs | (int)rhs);
-}
-constexpr bool operator&(CommandFlags lhs, CommandFlags rhs)
-{
-    return (bool)((int)lhs & (int)rhs);
-}
+
+template<> struct WithBitOps<CommandFlags> : std::true_type {};
 
 class PerArgumentCommandCompleter
 {

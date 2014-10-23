@@ -2,6 +2,7 @@
 #define buffer_hh_INCLUDED
 
 #include "coord.hh"
+#include "flags.hh"
 #include "hook_manager.hh"
 #include "option_manager.hh"
 #include "keymap_manager.hh"
@@ -220,34 +221,9 @@ private:
     // Values are just data holding by the buffer, so it is part of its
     // observable state
     mutable ValueMap m_values;
-
-    friend constexpr Flags operator|(Flags lhs, Flags rhs)
-    {
-        return (Flags)((int) lhs | (int) rhs);
-    }
-
-    friend Flags& operator|=(Flags& lhs, Flags rhs)
-    {
-        (int&) lhs |= (int) rhs;
-        return lhs;
-    }
-
-    friend constexpr bool operator&(Flags lhs, Flags rhs)
-    {
-        return ((int) lhs & (int) rhs) != 0;
-    }
-
-    friend Flags& operator&=(Flags& lhs, Flags rhs)
-    {
-        (int&) lhs &= (int) rhs;
-        return lhs;
-    }
-
-    friend constexpr Flags operator~(Flags lhs)
-    {
-        return (Flags)(~(int)lhs);
-    }
 };
+
+template<> struct WithBitOps<Buffer::Flags> : std::true_type {};
 
 }
 
