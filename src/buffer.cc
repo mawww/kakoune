@@ -69,30 +69,6 @@ Buffer::~Buffer()
     m_values.clear();
 }
 
-void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
-{
-    m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
-
-    m_history.clear();
-    m_current_undo_group.clear();
-    m_history_cursor = m_history.begin();
-    m_last_save_undo_index = 0;
-    m_lines.clear();
-
-    if (lines.empty())
-        lines.emplace_back("\n");
-
-    m_lines.reserve(lines.size());
-    for (auto& line : lines)
-    {
-        kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(std::move(line));
-    }
-    m_fs_timestamp = fs_timestamp;
-
-    m_changes.push_back({ Change::Insert, {0,0}, back_coord(), true });
-}
-
 String Buffer::display_name() const
 {
     if (m_flags & Flags::File)
@@ -182,6 +158,37 @@ struct Buffer::Modification
     }
 };
 
+void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
+{
+    m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
+
+    commit_undo_group();
+    if (not (m_flags & Flags::NoUndo))
+    {
+        for (auto line = line_count()-1; line >= 0; --line)
+            m_current_undo_group.emplace_back(
+                Modification::Erase, line, m_lines[line]);
+    }
+
+    m_lines.clear();
+
+    if (lines.empty())
+        lines.emplace_back("\n");
+
+    m_lines.reserve(lines.size());
+    for (auto& line : lines)
+    {
+        kak_assert(not line.empty() and line.back() == '\n');
+        m_lines.emplace_back(std::move(line));
+        if (not (m_flags & Flags::NoUndo))
+            m_current_undo_group.emplace_back(
+                Modification::Insert, line_count()-1, m_lines.back());
+    }
+    commit_undo_group();
+    m_fs_timestamp = fs_timestamp;
+
+    m_changes.push_back({ Change::Insert, {0,0}, back_coord(), true });
+}
 
 void Buffer::commit_undo_group()
 {
