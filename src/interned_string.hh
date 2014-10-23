@@ -31,7 +31,11 @@ class InternedString : public StringView
 public:
     InternedString() = default;
 
-    InternedString(const InternedString& str) { acquire_ifn(str); }
+    InternedString(const InternedString& str) : InternedString(str, str.m_slot)
+    {
+        if (m_slot != -1)
+            StringRegistry::instance().acquire(m_slot);
+    }
 
     InternedString(InternedString&& str) : StringView(str)
     {
@@ -70,11 +74,6 @@ public:
     {
         release_ifn();
     }
-
-    bool operator==(const InternedString& str) const
-    { return data() == str.data() && length() == str.length(); }
-    bool operator!=(const InternedString& str) const
-    { return !(*this == str); }
 
     using StringView::operator==;
     using StringView::operator!=;
