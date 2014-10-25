@@ -31,6 +31,7 @@ using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
 
 struct Highlighter
 {
+    virtual ~Highlighter() {}
     virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) = 0;
 
     virtual bool has_children() const { return false; }
