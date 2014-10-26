@@ -395,12 +395,12 @@ int run_server(StringView session, StringView init_command,
 
 int run_filter(StringView keystr, memoryview<StringView> files)
 {
-    GlobalOptions       global_options;
-    GlobalHooks         global_hooks;
-    GlobalKeymaps       global_keymaps;
-    ShellManager        shell_manager;
-    BufferManager       buffer_manager;
-    RegisterManager     register_manager;
+    GlobalOptions   global_options;
+    GlobalHooks     global_hooks;
+    GlobalKeymaps   global_keymaps;
+    ShellManager    shell_manager;
+    BufferManager   buffer_manager;
+    RegisterManager register_manager;
 
     register_env_vars();
     register_registers();
