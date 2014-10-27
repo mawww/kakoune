@@ -230,7 +230,7 @@ ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
                 return utf8::advance(buffer.iterator_at(atom.begin()), buffer.iterator_at(range.second),
                                      std::max(0_char, column)).coord();
              return atom.begin();
-         }
+        }
         column -= len;
     }
     return buffer.clamp(buffer.prev(range.second));
