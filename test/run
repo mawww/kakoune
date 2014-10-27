@@ -3,26 +3,25 @@
 # Main ├────────────────────────────────────────────────────────────────────────
 
 main() {
-  local number_tests=0
-  local number_failures=0
-  local dirs=$@
-  local test=$(pwd)
-  local work=$(mktemp --directory)
-  cp --recursive . $work
-  trap "rm --recursive $work" EXIT
+  number_tests=0
+  number_failures=0
+  dirs="$@"
+  test=$(pwd)
+  work=$(mktemp --directory)
+  cp -R . $work
+  trap "rm -R $work" EXIT
   for dir in $(find $dirs -type d); do
     cd $test/$dir;
-    local test_files=$(find * -name out -o -name selections -o -name state)
+    test_files=$(find * -name out -o -name selections -o -name state)
     cd $work/$dir;
-    IFS=¬
-    local indent=$(repeat ' ' $(pwd | sed "s|$test||" | tr --delete --complement / | awk '{ print length }'))
-    local name=$(basename $PWD)
+    indent="$(repeat ' ' $(pwd | sed "s|$test||" | tr -d -c / | awk '{ print length }'))"
+    name=$(basename $PWD)
     if ! exists cmd; then
       echo "$indent$name"
     else
-      ((number_tests++))
+      number_tests=$(($number_tests + 1))
       touch in; cp in out
-      local kak_commands="
+      kak_commands="
         set global autoreload yes
         try %{
         source rc
@@ -42,20 +41,20 @@ main() {
         write out
         quit!
       "
-      kak out -n -e $kak_commands
+      kak out -n -e "$kak_commands"
       IFS=$'\n'
       for expect in $test_files; do
-        if cmp --quiet $test/$dir/$expect $expect; then
+        if cmp -s $test/$dir/$expect $expect; then
           echo "$indent$name" | colorize green normal
         else
-          ((number_failures++))
+          number_failures=$(($number_failures + 1))
           echo "$indent$name" | colorize red normal
           echo
           IFS=$'\n'
-          for line in $(diff --unified $test/$dir/$expect $expect); do
+          for line in $(diff -u $test/$dir/$expect $expect); do
             IFS=¬
-            local first_character=$(echo "$line" | head --bytes 1)
-            local color=$(match $first_character + green - red @ magenta none)
+            first_character=$(echo "$line" | cut -b 1)
+            color=$(match $first_character + green - red @ magenta none)
             echo "$line" | colorize $color normal
           done
           echo
@@ -66,7 +65,7 @@ main() {
       done
     fi
   done
-  if (( $number_failures > 0 )); then
+  if expr $number_failures > 0; then
     color=red
   else
     color=green
@@ -81,17 +80,17 @@ main() {
 match() {
   expression="$1";
   shift
-  while [[ "$@" ]]; do
-    local pattern="$1"
+  while [ $# > 0 ]; do
+    pattern="$1"
     shift
-    local value="$1"
-    local next="$1"
-    local default_value="$pattern"
-    if [[ -z "$next" ]]; then
+    value="$1"
+    next="$1"
+    default_value="$pattern"
+    if [ -z "$next" ]; then
       echo $default_value
       return 1
     fi
-    if [[ "$expression" = "$pattern" ]]; then
+    if [ "$expression" = "$pattern" ]; then
       echo "$value"
       return 0
     fi
@@ -100,13 +99,13 @@ match() {
 }
 
 repeat() {
-  local text=$1
-  local count=${2:-0}
-  echo $(yes $text | head --lines $count | join)
+  text=$1
+  count=${2:-0}
+  echo $(yes $text | head -n $count | join)
 }
 
 join() {
-  tr --delete "\n"
+  tr -d "\n"
 }
 
 exists() {
@@ -114,25 +113,25 @@ exists() {
 }
 
 get_ansi_code() {
-  local color_name=${1:-none}
-  local style_name=${2:-none}
-  local color='none    00
+  color_name=${1:-none}
+  style_name=${2:-none}
+  color='none    00
                red     31
                green   32
                yellow  33
                magenta 35'
-  local style='none    00
+  style='none    00
                bold    01'
-  local color_nr=$(echo "$color" | awk "/$color_name/ { print \$2 }")
-  local style_nr=$(echo "$style" | awk "/$style_name/ { print \$2 }")
+  color_nr=$(echo "$color" | awk "/$color_name/ { print \$2 }")
+  style_nr=$(echo "$style" | awk "/$style_name/ { print \$2 }")
   echo '\e[STYLE_NR;COLOR_NRm' | sed s/COLOR_NR/$color_nr/';'s/STYLE_NR/$style_nr/
 }
 
 colorize() {
-  local text=$(cat)
-  local color_name=${1:-none}
-  local style_name=${2:-none}
-  echo -e "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
+  text=$(cat)
+  color_name=${1:-none}
+  style_name=${2:-none}
+  printf "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)\n"
 }
 
 
