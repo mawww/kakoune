@@ -395,6 +395,7 @@ int run_server(StringView session, StringView init_command,
 
 int run_filter(StringView keystr, memoryview<StringView> files)
 {
+    StringRegistry  string_registry;
     GlobalOptions   global_options;
     GlobalHooks     global_hooks;
     GlobalKeymaps   global_keymaps;
