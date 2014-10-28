@@ -351,7 +351,9 @@ void Buffer::apply_modification(const Modification& modification)
 
     kak_assert(is_valid(coord));
     // in modifications, end coords should be {line_count(), 0}
-    kak_assert(coord != ByteCoord(line_count()-1, m_lines.back().length()));
+    kak_assert((m_lines.empty() and coord == ByteCoord{0,0} ) or
+               coord != ByteCoord(line_count()-1, m_lines.back().length()));
+
     switch (modification.type)
     {
     case Modification::Insert:

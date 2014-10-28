@@ -68,7 +68,7 @@ inline bool Buffer::is_valid(ByteCoord c) const
 
 inline bool Buffer::is_end(ByteCoord c) const
 {
-    return c >= ByteCoord{line_count() - 1, m_lines.back().length()};
+    return c >= end_coord();
 }
 
 inline BufferIterator Buffer::begin() const
@@ -78,9 +78,7 @@ inline BufferIterator Buffer::begin() const
 
 inline BufferIterator Buffer::end() const
 {
-    if (m_lines.empty())
-        return BufferIterator(*this, { 0_line, 0 });
-    return BufferIterator(*this, { line_count() - 1, m_lines.back().length() });
+    return BufferIterator{*this, end_coord()};
 }
 
 [[gnu::always_inline]]
@@ -107,6 +105,8 @@ inline ByteCoord Buffer::back_coord() const
 
 inline ByteCoord Buffer::end_coord() const
 {
+    if (m_lines.empty())
+        return { 0_line, 0 };
     return { line_count() - 1, m_lines.back().length() };
 }
 
