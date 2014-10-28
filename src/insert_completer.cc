@@ -107,7 +107,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         {
             if (buf.get() == &buffer)
                 continue;
-            auto buf_word_db = get_word_db(*buf);
+            auto& buf_word_db = get_word_db(*buf);
             bufmatches = subseq ? buf_word_db.find_subsequence(prefix)
                                 : buf_word_db.find_prefix(prefix);
             matches.insert(bufmatches.begin(), bufmatches.end());
