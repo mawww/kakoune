@@ -16,10 +16,7 @@ struct Value
     Value() = default;
 
     template<typename T>
-    Value(const T& val) : m_value{new Model<T>{val}} {}
-
-    template<typename T>
-    Value(T&& val) : m_value{new Model<T>{std::move(val)}} {}
+    Value(T&& val) : m_value{new Model<T>{std::forward<T>(val)}} {}
 
     Value(const Value& val)
     {
