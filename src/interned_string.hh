@@ -128,8 +128,7 @@ namespace std
     {
         size_t operator()(const Kakoune::InternedString& str) const
         {
-            return hash<const char*>{}(str.data()) ^
-                   hash<int>{}((int)str.length());
+            return Kakoune::hash_data(str.data(), (int)str.length());
         }
     };
 }
