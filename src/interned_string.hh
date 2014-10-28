@@ -48,7 +48,7 @@ public:
 
     InternedString& operator=(const InternedString& str)
     {
-        if (str.data() == data() && str.length() == length())
+        if (str.data() == data() and str.length() == length())
             return *this;
         static_cast<StringView&>(*this) = str;
         if (str.m_slot != m_slot)

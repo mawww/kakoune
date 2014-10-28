@@ -24,7 +24,7 @@ struct InsertCompleterDesc
     {}
 
     bool operator==(const InsertCompleterDesc& other) const
-    { return mode == other.mode && param == other.param; }
+    { return mode == other.mode and param == other.param; }
 
     bool operator!=(const InsertCompleterDesc& other) const
     { return !(*this == other); }

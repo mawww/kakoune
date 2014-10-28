@@ -48,7 +48,7 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
 
     auto condition = [=](const HighlighterMap::value_type& hl)
     {
-        return not group || hl.second->has_children();
+        return not group or hl.second->has_children();
     };
     return { 0, 0, m_highlighters.complete_id_if(path, cursor_pos, condition) };
 }
