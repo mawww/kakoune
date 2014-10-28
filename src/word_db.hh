@@ -5,6 +5,7 @@
 #include "interned_string.hh"
 
 #include <map>
+#include <bitset>
 
 namespace Kakoune
 {
@@ -14,12 +15,20 @@ class WordDB
 {
 public:
     WordDB(const Buffer& buffer);
+    WordDB(const WordDB&) { kak_assert(false); }
+    WordDB(WordDB&&) = default;
 
     std::vector<InternedString> find_prefix(StringView prefix);
     std::vector<InternedString> find_subsequence(StringView subsequence);
     int get_word_occurences(StringView word) const;
 
-    using WordList = std::map<InternedString, int>;
+    using UsedChars = std::bitset<64>;
+    struct WordInfo
+    {
+        UsedChars letters;
+        int refcount;
+    };
+    using WordList = std::unordered_map<InternedString, WordInfo>;
 private:
     using LineToWords = std::vector<std::vector<InternedString>>;
 
