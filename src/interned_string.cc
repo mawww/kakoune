@@ -40,7 +40,7 @@ void StringRegistry::acquire(size_t slot)
     ++m_storage[slot].second;
 }
 
-void StringRegistry::release(size_t slot)
+void StringRegistry::release(size_t slot) noexcept
 {
     if (--m_storage[slot].second == 0)
     {

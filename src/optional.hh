@@ -20,6 +20,7 @@ public:
     }
 
     Optional(Optional&& other)
+        noexcept(noexcept(new ((void*)0) T(std::move(other.m_value))))
         : m_valid(other.m_valid)
     {
         if (m_valid)

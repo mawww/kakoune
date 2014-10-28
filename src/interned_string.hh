@@ -18,7 +18,7 @@ private:
 
     InternedString acquire(StringView str);
     void acquire(size_t slot);
-    void release(size_t slot);
+    void release(size_t slot) noexcept;
 
     std::unordered_map<StringView, size_t> m_slot_map;
     std::vector<size_t> m_free_slots;
@@ -62,8 +62,10 @@ public:
         return *this;
     }
 
-    InternedString& operator=(InternedString&& str)
+    InternedString& operator=(InternedString&& str) noexcept
     {
+        release_ifn();
+
         static_cast<StringView&>(*this) = str;
         m_slot = str.m_slot;
         str.m_slot = -1;
@@ -110,7 +112,7 @@ private:
             *this = StringRegistry::instance().acquire(str);
     }
 
-    void release_ifn()
+    void release_ifn() noexcept
     {
         if (m_slot != -1)
             StringRegistry::instance().release(m_slot);

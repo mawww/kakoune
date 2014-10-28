@@ -29,7 +29,7 @@ public:
         #endif
     }
     safe_ptr(const safe_ptr& other) : safe_ptr(other.m_ptr) {}
-    safe_ptr(safe_ptr&& other) : m_ptr(other.m_ptr)
+    safe_ptr(safe_ptr&& other) noexcept : m_ptr(other.m_ptr)
     {
         other.m_ptr = nullptr;
         #ifdef KAK_DEBUG
@@ -60,7 +60,7 @@ public:
         return *this;
     }
 
-    safe_ptr& operator=(safe_ptr&& other)
+    safe_ptr& operator=(safe_ptr&& other) noexcept
     {
         #ifdef KAK_DEBUG
         if (m_ptr)
