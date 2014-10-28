@@ -13,6 +13,7 @@ InternedString StringRegistry::acquire(StringView str)
         {
             slot = m_free_slots.back();
             m_free_slots.pop_back();
+            kak_assert(m_storage[slot].second == 0);
             m_storage[slot] = DataAndRefCount({str.begin(), str.end()}, 1);
         }
         else
@@ -42,6 +43,7 @@ void StringRegistry::acquire(size_t slot)
 
 void StringRegistry::release(size_t slot) noexcept
 {
+    kak_assert(m_storage[slot].second > 0);
     if (--m_storage[slot].second == 0)
     {
         m_free_slots.push_back(slot);
