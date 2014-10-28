@@ -37,7 +37,7 @@ public:
             StringRegistry::instance().acquire(m_slot);
     }
 
-    InternedString(InternedString&& str) : StringView(str)
+    InternedString(InternedString&& str) noexcept : StringView(str)
     {
         m_slot = str.m_slot;
         str.m_slot = -1;
