@@ -14,9 +14,9 @@ main() {
     cd $test/$dir;
     test_files=$(find * -name out -o -name selections -o -name state)
     cd $work/$dir;
-    indent="$(repeat ' ' $(pwd | sed "s|$test||" | tr -d -c / | awk '{ print length }'))"
+    indent="$(echo "${dir}/" | sed "s|[^/]*/\+|  |g")"
     name=$(basename $PWD)
-    if ! exists cmd; then
+    if ! test -e cmd; then
       echo "$indent$name"
     else
       number_tests=$(($number_tests + 1))
@@ -27,12 +27,12 @@ main() {
         source rc
         }
         try %{
-        exec '%s%[(](.+?)[)]<ret>i<del><del><esc>a<backspace><c-u><esc>'
+        exec '%s%\((.+?)\)<ret>i<del><del><esc>a<backspace><c-u><esc>'
         } \
         catch %{
         exec gg
         }
-        exec '$(<cmd)'
+        exec '$(cat cmd)'
         eval -buffer *debug* write debug
         nop %sh{ IFS==
         echo \"\$kak_selections\"      > selections
@@ -42,7 +42,6 @@ main() {
         quit!
       "
       kak out -n -e "$kak_commands"
-      IFS=$'\n'
       for expect in $test_files; do
         if cmp -s $test/$dir/$expect $expect; then
           echo "$indent$name" | colorize green normal
@@ -50,9 +49,7 @@ main() {
           number_failures=$(($number_failures + 1))
           echo "$indent$name" | colorize red normal
           echo
-          IFS=$'\n'
-          for line in $(diff -u $test/$dir/$expect $expect); do
-            IFS=¬
+          diff -u $test/$dir/$expect $expect | while read -r line; do
             first_character=$(echo "$line" | cut -b 1)
             color=$(match $first_character + green - red @ magenta none)
             echo "$line" | colorize $color normal
@@ -98,40 +95,30 @@ match() {
   done
 }
 
-repeat() {
-  text=$1
-  count=${2:-0}
-  echo $(yes $text | head -n $count | join)
-}
-
-join() {
-  tr -d "\n"
-}
-
-exists() {
-  test -e $@
-}
-
 get_ansi_code() {
   color_name=${1:-none}
   style_name=${2:-none}
-  color='none    00
-               red     31
-               green   32
-               yellow  33
-               magenta 35'
-  style='none    00
-               bold    01'
-  color_nr=$(echo "$color" | awk "/$color_name/ { print \$2 }")
-  style_nr=$(echo "$style" | awk "/$style_name/ { print \$2 }")
-  echo '\e[STYLE_NR;COLOR_NRm' | sed s/COLOR_NR/$color_nr/';'s/STYLE_NR/$style_nr/
+  case "$color_name" in
+    none)    color_nr=00 ;;
+    red)     color_nr=31 ;;
+    green)   color_nr=32 ;;
+    yellow)  color_nr=33 ;;
+    magenta) color_nr=35 ;;
+    *)       color_nr=00 ;;
+  esac
+  case "$style_name" in
+    none) style_nr=00 ;;
+    bold) style_nr=01 ;;
+    *)    style_nr=00 ;;
+  esac
+  printf '\033[%s;%sm' $style_nr $color_nr
 }
 
 colorize() {
   text=$(cat)
   color_name=${1:-none}
   style_name=${2:-none}
-  printf "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)\n"
+  echo "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
 }
 
 
