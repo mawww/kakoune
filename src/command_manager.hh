@@ -65,7 +65,8 @@ public:
     Completions complete(const Context& context, CompletionFlags flags,
                          StringView command_line, ByteCount cursor_pos);
 
-    CommandInfo command_info(StringView command_line) const;
+    CommandInfo command_info(const Context& context,
+                             StringView command_line) const;
 
     bool command_defined(const String& command_name) const;
 
@@ -74,7 +75,6 @@ public:
                           ParameterDesc param_desc,
                           CommandFlags flags = CommandFlags::None,
                           CommandCompleter completer = CommandCompleter());
-   void register_alias(String alias, String command);
 
 private:
     void execute_single_command(CommandParameters params,
@@ -90,9 +90,9 @@ private:
     };
     using CommandMap = std::unordered_map<String, CommandDescriptor>;
     CommandMap m_commands;
-    std::unordered_map<String, String> m_aliases;
 
-    CommandMap::const_iterator find_command(const String& name) const;
+    CommandMap::const_iterator find_command(const Context& context,
+                                            const String& name) const;
 };
 
 }

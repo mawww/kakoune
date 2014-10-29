@@ -1,6 +1,7 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
+#include "alias_registry.hh"
 #include "coord.hh"
 #include "flags.hh"
 #include "hook_manager.hh"
@@ -155,6 +156,8 @@ public:
     const HookManager&   hooks()   const { return m_hooks; }
     KeymapManager&       keymaps()       { return m_keymaps; }
     const KeymapManager& keymaps() const { return m_keymaps; }
+    AliasRegistry&       aliases()       { return m_aliases; }
+    const AliasRegistry& aliases() const { return m_aliases; }
 
     ValueMap& values() const { return m_values; }
 
@@ -217,6 +220,7 @@ private:
     OptionManager m_options;
     HookManager   m_hooks;
     KeymapManager m_keymaps;
+    AliasRegistry m_aliases;
 
     // Values are just data holding by the buffer, so it is part of its
     // observable state

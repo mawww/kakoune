@@ -14,6 +14,7 @@ class InputHandler;
 class UserInterface;
 class DisplayLine;
 class KeymapManager;
+class AliasRegistry;
 
 // A Context is used to access non singleton objects for various services
 // in commands.
@@ -60,6 +61,7 @@ public:
     OptionManager& options() const;
     HookManager& hooks() const;
     KeymapManager& keymaps() const;
+    AliasRegistry& aliases() const;
 
     void print_status(DisplayLine status) const;
 

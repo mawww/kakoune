@@ -1,5 +1,6 @@
 #include "command_manager.hh"
 
+#include "alias_registry.hh"
 #include "assert.hh"
 #include "context.hh"
 #include "register_manager.hh"
@@ -13,7 +14,7 @@ namespace Kakoune
 
 bool CommandManager::command_defined(const String& command_name) const
 {
-    return find_command(command_name) != m_commands.end();
+    return m_commands.find(command_name) != m_commands.end();
 }
 
 void CommandManager::register_command(String command_name,
@@ -28,13 +29,6 @@ void CommandManager::register_command(String command_name,
                                  std::move(param_desc),
                                  flags,
                                  std::move(completer) };
-}
-
-void CommandManager::register_alias(String alias, String command)
-{
-    kak_assert(not alias.empty());
-    kak_assert(command_defined(command));
-    m_aliases[alias] = std::move(command);
 }
 
 struct parse_error : runtime_error
@@ -347,10 +341,10 @@ struct command_not_found : runtime_error
 };
 
 CommandManager::CommandMap::const_iterator
-CommandManager::find_command(const String& name) const
+CommandManager::find_command(const Context& context, const String& name) const
 {
-    auto it = m_aliases.find(name);
-    const String& cmd_name = it == m_aliases.end() ? name : it->second;
+    auto alias = context.aliases()[name];
+    const String& cmd_name = alias.empty() ? name : alias.str();
 
     return m_commands.find(cmd_name);
 }
@@ -363,7 +357,7 @@ void CommandManager::execute_single_command(CommandParameters params,
         return;
 
     memoryview<String> param_view(params.begin()+1, params.end());
-    auto command_it = find_command(params[0]);
+    auto command_it = find_command(context, params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
 
@@ -443,7 +437,7 @@ void CommandManager::execute(StringView command_line,
     execute_single_command(params, context, command_coord);
 }
 
-CommandInfo CommandManager::command_info(StringView command_line) const
+CommandInfo CommandManager::command_info(const Context& context, StringView command_line) const
 {
     TokenList tokens = parse<false>(command_line);
     size_t cmd_idx = 0;
@@ -458,7 +452,7 @@ CommandInfo CommandManager::command_info(StringView command_line) const
         tokens[cmd_idx].type() != Token::Type::Raw)
         return res;
 
-    auto cmd = find_command(tokens[cmd_idx].content());
+    auto cmd = find_command(context, tokens[cmd_idx].content());
     if (cmd == m_commands.end())
         return res;
 
@@ -467,11 +461,8 @@ CommandInfo CommandManager::command_info(StringView command_line) const
         res.second += cmd->second.docstring + "\n";
 
     String aliases;
-    for (auto& alias : m_aliases)
-    {
-        if (alias.second == cmd->first)
-            aliases += " " + alias.first;
-    }
+    for (auto& alias : context.aliases().aliases_for(cmd->first))
+        aliases += " " + alias;
     if (not aliases.empty())
         res.second += "Aliases:" + aliases + "\n";
 
@@ -562,7 +553,7 @@ Completions CommandManager::complete(const Context& context,
 
         const String& command_name = tokens[cmd_idx].content();
 
-        auto command_it = find_command(command_name);
+        auto command_it = find_command(context, command_name);
         if (command_it == m_commands.end() or
             not command_it->second.completer)
             return Completions();

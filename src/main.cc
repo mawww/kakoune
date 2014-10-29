@@ -1,4 +1,5 @@
 #include "assert.hh"
+#include "alias_registry.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -317,6 +318,7 @@ int run_server(StringView session, StringView init_command,
     GlobalOptions       global_options;
     GlobalHooks         global_hooks;
     GlobalKeymaps       global_keymaps;
+    GlobalAliases       global_aliases;
     ShellManager        shell_manager;
     CommandManager      command_manager;
     BufferManager       buffer_manager;
@@ -399,6 +401,7 @@ int run_filter(StringView keystr, memoryview<StringView> files)
     GlobalOptions   global_options;
     GlobalHooks     global_hooks;
     GlobalKeymaps   global_keymaps;
+    GlobalAliases   global_aliases;
     ShellManager    shell_manager;
     BufferManager   buffer_manager;
     RegisterManager register_manager;

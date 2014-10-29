@@ -82,6 +82,8 @@ const ParameterDesc single_optional_name_param{
     SwitchMap{}, ParameterDesc::Flags::None, 0, 1
 };
 
+static constexpr auto scopes = { "global", "buffer", "window" };
+
 struct CommandDesc
 {
     const char* name;
@@ -511,8 +513,6 @@ HookManager& get_hook_manager(const String& scope, const Context& context)
     throw runtime_error("error: no such hook container " + scope);
 }
 
-static constexpr auto scopes = { "global", "buffer", "window" };
-
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
@@ -613,14 +613,6 @@ void define_command(const ParametersParser& parser, Context& context)
     if (parser.has_option("docstring"))
         docstring = parser.option_value("docstring");
 
-    String alias;
-    if (parser.has_option("alias"))
-    {
-        alias = parser.option_value("alias");
-        if (alias.empty())
-            throw runtime_error("alias should not be an empty string");
-    }
-
     String commands = parser[1];
     Command cmd;
     ParameterDesc desc;
@@ -697,8 +689,6 @@ void define_command(const ParametersParser& parser, Context& context)
 
     auto& cm = CommandManager::instance();
     cm.register_command(cmd_name, cmd, std::move(docstring), desc, flags, completer);
-    if (not alias.empty())
-        cm.register_alias(std::move(alias), cmd_name);
 }
 
 const CommandDesc define_command_cmd = {
@@ -709,7 +699,6 @@ const CommandDesc define_command_cmd = {
         SwitchMap{ { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
                    { "allow-override", { false, "allow overriding an existing command" } },
                    { "hidden", { false, "do not display the command in completion candidates" } },
-                   { "alias", { true, "define an alias for this command" } },
                    { "docstring", { true, "define the documentation string for command" } },
                    { "file-completion", { false, "complete parameters using filename completion" } },
                    { "client-completion", { false, "complete parameters using client name completion" } },
@@ -721,6 +710,49 @@ const CommandDesc define_command_cmd = {
     CommandFlags::None,
     CommandCompleter{},
     define_command
+};
+
+AliasRegistry& get_aliases(const String& scope, const Context& context)
+{
+    if (prefix_match("global", scope))
+        return GlobalAliases::instance();
+    else if (prefix_match("buffer", scope))
+        return context.buffer().aliases();
+    else if (prefix_match("window", scope))
+        return context.window().aliases();
+    throw runtime_error("error: no such scope " + scope);
+}
+
+const CommandDesc alias_cmd = {
+    "alias",
+    nullptr,
+    "alias <scope> <alias> <command>: define a command alias in given scope",
+    ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 3, 3},
+    CommandFlags::None,
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context)
+    {
+        AliasRegistry& aliases = get_aliases(parser[0], context);
+        aliases.add_alias(parser[1], parser[2]);
+    }
+};
+
+const CommandDesc unalias_cmd = {
+    "unalias",
+    nullptr,
+    "unalias <scope> <alias> [<expected>]: remove a command alias in given scope\n"
+    "if <expected> is specified, the alias is removed only if its value is <expected>",
+    ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 2, 3},
+    CommandFlags::None,
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context)
+    {
+        AliasRegistry& aliases = get_aliases(parser[0], context);
+        if (parser.positional_count() == 3 and
+            aliases[parser[1]] != parser[2])
+            return;
+        aliases.remove_alias(parser[1]);
+    }
 };
 
 const CommandDesc echo_cmd = {
@@ -1387,7 +1419,7 @@ static void register_command(CommandManager& cm, const CommandDesc& c)
 {
     cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.completer);
     if (c.alias)
-        cm.register_alias(c.alias, c.name);
+        GlobalAliases::instance().add_alias(c.alias, c.name);
 }
 
 void register_commands()
@@ -1414,6 +1446,8 @@ void register_commands()
     register_command(cm, add_hook_cmd);
     register_command(cm, rm_hook_cmd);
     register_command(cm, define_command_cmd);
+    register_command(cm, alias_cmd);
+    register_command(cm, unalias_cmd);
     register_command(cm, echo_cmd);
     register_command(cm, debug_cmd);
     register_command(cm, source_cmd);

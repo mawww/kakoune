@@ -361,7 +361,7 @@ void command(Context& context, int)
                 context.ui().info_hide();
                 if (event == PromptEvent::Change and context.options()["autoinfo"].get<int>() > 0)
                 {
-                    auto info = CommandManager::instance().command_info(cmdline);
+                    auto info = CommandManager::instance().command_info(context, cmdline);
                     Face col = get_face("Information");
                     CharCoord pos = context.window().dimensions();
                     pos.column -= 1;

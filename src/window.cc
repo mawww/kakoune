@@ -21,7 +21,8 @@ Window::Window(Buffer& buffer)
     : m_buffer(&buffer),
       m_hooks(buffer.hooks()),
       m_options(buffer.options()),
-      m_keymaps(buffer.keymaps())
+      m_keymaps(buffer.keymaps()),
+      m_aliases(buffer.aliases())
 {
     InputHandler hook_handler{{ *m_buffer, Selection{} }};
     hook_handler.context().set_window(*this);

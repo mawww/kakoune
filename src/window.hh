@@ -1,6 +1,7 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
+#include "alias_registry.hh"
 #include "completion.hh"
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
@@ -44,6 +45,8 @@ public:
     const HookManager&   hooks()   const { return m_hooks; }
     KeymapManager&       keymaps()       { return m_keymaps; }
     const KeymapManager& keymaps() const { return m_keymaps; }
+    AliasRegistry&       aliases()       { return m_aliases; }
+    const AliasRegistry& aliases() const { return m_aliases; }
 
     Buffer& buffer() const { return *m_buffer; }
 
@@ -67,6 +70,7 @@ private:
     HookManager      m_hooks;
     OptionManager    m_options;
     KeymapManager    m_keymaps;
+    AliasRegistry    m_aliases;
 
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;

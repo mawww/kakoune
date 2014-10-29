@@ -1,5 +1,6 @@
 #include "context.hh"
 
+#include "alias_registry.hh"
 #include "client.hh"
 #include "user_interface.hh"
 #include "register_manager.hh"
@@ -78,6 +79,15 @@ KeymapManager& Context::keymaps() const
     if (has_buffer())
         return buffer().keymaps();
     return GlobalKeymaps::instance();
+}
+
+AliasRegistry& Context::aliases() const
+{
+    if (has_window())
+        return window().aliases();
+    if (has_buffer())
+        return buffer().aliases();
+    return GlobalAliases::instance();
 }
 
 void Context::set_client(Client& client)

@@ -988,6 +988,27 @@ Some helper commands can be used to define composite commands:
 Note that these commands are available in interactive command mode, but are
 not that useful in this context.
 
+Aliases
+-------
+
+With +:alias+ commands can be given additional names. aliases are scoped, so
+that an alias can refer to one command for a buffer, and to another for another
+buffer.
+
+--------------------------------
+:alias <scope> <alias> <command>
+--------------------------------
+
+with +<scope>+ being +global+, +buffer+ or +window+, will define +<alias>+ as
+an alias for +<command>+
+
+-------------------------------------
+:unalias <scope> <alias> [<expected>]
+-------------------------------------
+
+Will remove the given alias in the given scope. If +<expected>+ is specified
+the alias will only be removed if its current value is +<expected>+.
+
 FIFO Buffer
 -----------
 
