@@ -65,12 +65,16 @@ hook global WinSetOption filetype=cpp %[
     hook window InsertChar \n -group cpp-indent _cpp_indent_on_new_line
     hook window InsertChar \{ -group cpp-indent _cpp_indent_on_opening_curly_brace
     hook window InsertChar \} -group cpp-indent _cpp_indent_on_closing_curly_brace
+
+    alias window alt cpp-alternative-file
 ]
 
 hook global WinSetOption filetype=(?!cpp).* %{
     rmhl cpp
     rmhooks window cpp-indent
     rmhooks window cpp-hooks
+
+    unalias window alt cpp-alternative-file
 }
 
 def -hidden _cpp_insert_include_guards %{
@@ -81,7 +85,7 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) _cpp_insert_include_guards
 
 decl str-list alt_dirs ".;.."
 
-def alt -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
+def cpp-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     alt_dirs=$(echo ${kak_opt_alt_dirs} | sed -e 's/;/ /g')
     file=$(basename ${kak_buffile})
     dir=$(dirname ${kak_buffile})
