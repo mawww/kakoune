@@ -51,7 +51,7 @@ void StringRegistry::release(size_t slot) noexcept
         auto it = m_slot_map.find(StringView{data.data(), (int)data.size()});
         kak_assert(it != m_slot_map.end());
         m_slot_map.erase(it);
-        data.clear();
+        data = std::vector<char>{};
     }
 }
 
