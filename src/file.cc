@@ -17,6 +17,10 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
+
 namespace Kakoune
 {
 
@@ -406,6 +410,26 @@ time_t get_fs_timestamp(StringView filename)
     if (stat(filename.zstr(), &st) != 0)
         return InvalidTime;
     return st.st_mtime;
+}
+
+String get_kak_binary_path()
+{
+    char buffer[2048];
+#if defined(__linux__) or defined(__CYGWIN__)
+    ssize_t res = readlink("/proc/self/exe", buffer, 2048);
+    kak_assert(res != -1);
+    buffer[res] = '\0';
+    return buffer;
+#elif defined(__APPLE__)
+    uint32_t bufsize = 2048;
+    _NSGetExecutablePath(buffer, &bufsize);
+    char* canonical_path = realpath(buffer, nullptr);
+    String path = canonical_path;
+    free(canonical_path);
+    return path;
+#else
+# error "finding executable path is not implemented on this platform"
+#endif
 }
 
 }

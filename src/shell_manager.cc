@@ -2,6 +2,7 @@
 
 #include "context.hh"
 #include "debug.hh"
+#include "file.hh"
 
 #include <cstring>
 #include <sys/types.h>
@@ -15,6 +16,15 @@ static const Regex env_var_regex(R"(\bkak_(\w+)\b)");
 
 ShellManager::ShellManager()
 {
+    const char* path = getenv("PATH");
+    String new_path;
+    if (path)
+        new_path = path + ":"_str;
+
+    String kak_path = get_kak_binary_path();
+    StringView kak_dir = kak_path.substr(0_byte, (int)kak_path.find_last_of('/'));
+    new_path += kak_dir;
+    setenv("PATH", new_path.c_str(), 1);
 }
 
 String ShellManager::eval(StringView cmdline, const Context& context,

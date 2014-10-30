@@ -24,10 +24,6 @@
 #include "interned_string.hh"
 #include "window.hh"
 
-#if defined(__APPLE__)
-#include <mach-o/dyld.h>
-#endif
-
 #include <unordered_map>
 #include <locale>
 #include <signal.h>
@@ -43,24 +39,11 @@ void run_unit_tests();
 
 String runtime_directory()
 {
-    char buffer[2048];
-#if defined(__linux__) or defined(__CYGWIN__)
-    ssize_t res = readlink("/proc/self/exe", buffer, 2048);
-    kak_assert(res != -1);
-    buffer[res] = '\0';
-#elif defined(__APPLE__)
-    uint32_t bufsize = 2048;
-    _NSGetExecutablePath(buffer, &bufsize);
-    char* canonical_path = realpath(buffer, nullptr);
-    strncpy(buffer, canonical_path, 2048);
-    free(canonical_path);
-#else
-# error "finding executable path is not implemented on this platform"
-#endif
-    char* ptr = strrchr(buffer, '/');
-    if (not ptr)
+    String bin_path = get_kak_binary_path();
+    size_t last_slash = bin_path.find_last_of('/');
+    if (last_slash == String::npos)
         throw runtime_error("unable to determine runtime directory");
-    return String(buffer, ptr) + "/../share/kak";
+    return bin_path.substr(0_byte, (int)last_slash) + "/../share/kak";
 }
 
 void register_env_vars()

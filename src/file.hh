@@ -29,6 +29,8 @@ String parse_filename(StringView filename);
 String real_path(StringView filename);
 String compact_path(StringView filename);
 
+String get_kak_binary_path();
+
 String read_fd(int fd);
 String read_file(StringView filename);
 
