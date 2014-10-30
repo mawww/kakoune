@@ -1,10 +1,6 @@
 #include "option_manager.hh"
 
-#include "insert_completer.hh"
-
 #include "assert.hh"
-
-#include <sstream>
 
 namespace Kakoune
 {
@@ -126,51 +122,6 @@ void OptionManager::on_option_changed(const Option& option)
 
     for (auto watcher : m_watchers)
         watcher->on_option_changed(option);
-}
-
-GlobalOptions::GlobalOptions()
-    : OptionManager()
-{
-    declare_option("tabstop", "size of a tab character", 8);
-    declare_option("indentwidth", "indentation width", 4);
-    declare_option("scrolloff",
-                   "number of lines and columns to keep visible main cursor when scrolling",
-                   CharCoord{0,0});
-    declare_option("eolformat", "end of line format: 'crlf' or 'lf'", "lf"_str);
-    declare_option("BOM", "insert a byte order mark when writing buffer",
-                   "no"_str);
-    declare_option("complete_prefix",
-                   "complete up to common prefix in tab completion",
-                   true);
-    declare_option("incsearch",
-                   "incrementaly apply search/select/split regex",
-                   true);
-    declare_option("autoinfo",
-                   "automatically display contextual help",
-                   1);
-    declare_option("autoshowcompl",
-                   "automatically display possible completions for prompts",
-                   true);
-    declare_option("aligntab",
-                   "use tab characters when possible for alignement",
-                   false);
-    declare_option("ignored_files",
-                   "patterns to ignore when completing filenames",
-                   Regex{R"(^(\..*|.*\.(o|so|a))$)"});
-    declare_option("disabled_hooks",
-                   "patterns to disable hooks whose group is matched",
-                   Regex{});
-    declare_option("filetype", "buffer filetype", ""_str);
-    declare_option("path", "path to consider when trying to find a file",
-                   std::vector<String>({ "./", "/usr/include" }));
-    declare_option("completers", "insert mode completers to execute.",
-                    std::vector<InsertCompleterDesc>({
-                        InsertCompleterDesc{ InsertCompleterDesc::Filename },
-                        InsertCompleterDesc{ InsertCompleterDesc::Word, "all"_str }
-                    }), OptionFlags::None);
-    declare_option("autoreload",
-                   "autoreload buffer when a filesystem modification is detected",
-                    Ask);
 }
 
 }

@@ -34,18 +34,13 @@ private:
     KeymapManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root map manager
-    friend class GlobalKeymaps;
+    friend class Scope;
 
     KeymapManager* m_parent;
 
     using KeyList = std::vector<Key>;
     using Keymap = std::unordered_map<std::pair<Key, KeymapMode>, KeyList>;
     Keymap m_mapping;
-};
-
-class GlobalKeymaps : public KeymapManager,
-                      public Singleton<GlobalKeymaps>
-{
 };
 
 }

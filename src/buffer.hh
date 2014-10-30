@@ -1,13 +1,10 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
-#include "alias_registry.hh"
 #include "coord.hh"
 #include "flags.hh"
-#include "hook_manager.hh"
-#include "option_manager.hh"
-#include "keymap_manager.hh"
 #include "safe_ptr.hh"
+#include "scope.hh"
 #include "interned_string.hh"
 #include "value.hh"
 
@@ -71,7 +68,7 @@ private:
 // The Buffer class permits to read and mutate this file
 // representation. It also manage modifications undo/redo and
 // provides tools to deal with the line/column nature of text.
-class Buffer : public SafeCountable, public OptionManagerWatcher
+class Buffer : public SafeCountable, public OptionManagerWatcher, public Scope
 {
 public:
     enum class Flags
@@ -150,15 +147,6 @@ public:
     // notify the buffer that it was saved in the current state
     void notify_saved();
 
-    OptionManager&       options()       { return m_options; }
-    const OptionManager& options() const { return m_options; }
-    HookManager&         hooks()         { return m_hooks; }
-    const HookManager&   hooks()   const { return m_hooks; }
-    KeymapManager&       keymaps()       { return m_keymaps; }
-    const KeymapManager& keymaps() const { return m_keymaps; }
-    AliasRegistry&       aliases()       { return m_aliases; }
-    const AliasRegistry& aliases() const { return m_aliases; }
-
     ValueMap& values() const { return m_values; }
 
     void run_hook_in_own_context(const String& hook_name, StringView param);
@@ -216,11 +204,6 @@ private:
     std::vector<Change> m_changes;
 
     time_t m_fs_timestamp;
-
-    OptionManager m_options;
-    HookManager   m_hooks;
-    KeymapManager m_keymaps;
-    AliasRegistry m_aliases;
 
     // Values are just data holding by the buffer, so it is part of its
     // observable state

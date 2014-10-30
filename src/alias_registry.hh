@@ -21,15 +21,12 @@ public:
     std::vector<StringView> aliases_for(StringView command) const;
 
 private:
-    friend class GlobalAliases;
+    friend class Scope;
     AliasRegistry() {}
 
     safe_ptr<AliasRegistry> m_parent;
     std::unordered_map<String, String> m_aliases;
 };
-
-class GlobalAliases : public AliasRegistry, public Singleton<GlobalAliases>
-{};
 
 }
 

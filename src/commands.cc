@@ -84,6 +84,26 @@ const ParameterDesc single_optional_name_param{
 
 static constexpr auto scopes = { "global", "buffer", "window" };
 
+Scope* get_scope_ifp(const String& scope, const Context& context)
+{
+    if (prefix_match("global", scope))
+        return &GlobalScope::instance();
+    else if (prefix_match("buffer", scope))
+        return &context.buffer();
+    else if (prefix_match("window", scope))
+        return &context.window();
+    else if (prefix_match(scope, "buffer="))
+        return &BufferManager::instance().get_buffer(scope.substr(7_byte));
+    return nullptr;
+}
+
+Scope& get_scope(const String& scope, const Context& context)
+{
+    if (auto s = get_scope_ifp(scope, context))
+        return *s;
+    throw runtime_error("error: no such scope " + scope);
+}
+
 struct CommandDesc
 {
     const char* name;
@@ -495,24 +515,6 @@ const CommandDesc rm_highlighter_cmd = {
     }
 };
 
-HookManager* get_hook_manager_ifp(const String& scope, const Context& context)
-{
-    if (prefix_match("global", scope))
-        return &GlobalHooks::instance();
-    else if (prefix_match("buffer", scope))
-        return &context.buffer().hooks();
-    else if (prefix_match("window", scope))
-        return &context.window().hooks();
-    return nullptr;
-}
-
-HookManager& get_hook_manager(const String& scope, const Context& context)
-{
-    if (auto manager = get_hook_manager_ifp(scope, context))
-        return *manager;
-    throw runtime_error("error: no such hook container " + scope);
-}
-
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
@@ -557,14 +559,14 @@ const CommandDesc add_hook_cmd = {
         StringView group;
         if (parser.has_option("group"))
             group = parser.option_value("group");
-        get_hook_manager(parser[0], context).add_hook(parser[1], group, hook_func);
+        get_scope(parser[0], context).hooks().add_hook(parser[1], group, hook_func);
     }
 };
 
 const CommandDesc rm_hook_cmd = {
     "rmhooks",
     nullptr,
-    "rmhooks <group>: remove all hooks whose group is <group>",
+    "rmhooks <scope> <group>: remove all hooks whose group is <group>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     [](const Context& context, CompletionFlags flags,
@@ -576,15 +578,15 @@ const CommandDesc rm_hook_cmd = {
                      prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         else if (token_to_complete == 1)
         {
-            if (auto manager = get_hook_manager_ifp(params[0], context))
+            if (auto scope = get_scope_ifp(params[0], context))
                 return { 0_byte, params[0].length(),
-                         manager->complete_hook_group(params[1], pos_in_token) };
+                         scope->hooks().complete_hook_group(params[1], pos_in_token) };
         }
         return {};
     },
     [](const ParametersParser& parser, Context& context)
     {
-        get_hook_manager(parser[0], context).remove_hooks(parser[1]);
+        get_scope(parser[0], context).hooks().remove_hooks(parser[1]);
     }
 };
 
@@ -712,17 +714,6 @@ const CommandDesc define_command_cmd = {
     define_command
 };
 
-AliasRegistry& get_aliases(const String& scope, const Context& context)
-{
-    if (prefix_match("global", scope))
-        return GlobalAliases::instance();
-    else if (prefix_match("buffer", scope))
-        return context.buffer().aliases();
-    else if (prefix_match("window", scope))
-        return context.window().aliases();
-    throw runtime_error("error: no such scope " + scope);
-}
-
 const CommandDesc alias_cmd = {
     "alias",
     nullptr,
@@ -732,7 +723,7 @@ const CommandDesc alias_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        AliasRegistry& aliases = get_aliases(parser[0], context);
+        AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         aliases.add_alias(parser[1], parser[2]);
     }
 };
@@ -747,7 +738,7 @@ const CommandDesc unalias_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        AliasRegistry& aliases = get_aliases(parser[0], context);
+        AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         if (parser.positional_count() == 3 and
             aliases[parser[1]] != parser[2])
             return;
@@ -831,19 +822,6 @@ const CommandDesc source_cmd = {
     }
 };
 
-OptionManager& get_options(const String& scope, const Context& context)
-{
-    if (prefix_match("global", scope))
-        return GlobalOptions::instance();
-    else if (prefix_match("buffer", scope))
-        return context.buffer().options();
-    else if (prefix_match("window", scope))
-        return context.window().options();
-    else if (prefix_match(scope, "buffer="))
-        return BufferManager::instance().get_buffer(scope.substr(7_byte)).options();
-    throw runtime_error("error: no such option container " + scope);
-}
-
 const CommandDesc set_option_cmd = {
     "set",
     nullptr,
@@ -863,14 +841,14 @@ const CommandDesc set_option_cmd = {
                      prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         else if (token_to_complete == 1)
         {
-            OptionManager& options = get_options(params[0], context);
+            OptionManager& options = get_scope(params[0], context).options();
             return { 0_byte, params[1].length(),
                      options.complete_option_name(params[1], pos_in_token) };
         }
         else if (token_to_complete == 2 and
-                 GlobalOptions::instance().option_exists(params[1]))
+                 GlobalScope::instance().option_registry().option_exists(params[1]))
         {
-            OptionManager& options = get_options(params[0], context);
+            OptionManager& options = get_scope(params[0], context).options();
             String val = options[params[1]].get_as_string();
             if (prefix_match(val, params[2]))
                 return { 0_byte, params[2].length(), { std::move(val) } };
@@ -879,7 +857,7 @@ const CommandDesc set_option_cmd = {
     },
     [](const ParametersParser& parser, Context& context)
     {
-        Option& opt = get_options(parser[0], context).get_local_option(parser[1]);
+        Option& opt = get_scope(parser[0], context).options().get_local_option(parser[1]);
         if (parser.has_option("add"))
             opt.add_from_string(parser[2]);
         else
@@ -920,22 +898,22 @@ const CommandDesc declare_option_cmd = {
         if (parser.has_option("docstring"))
             docstring = parser.option_value("docstring");
 
-        GlobalOptions& opts = GlobalOptions::instance();
+        OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
         if (parser[0] == "int")
-            opt = &opts.declare_option<int>(parser[1], docstring, 0, flags);
+            opt = &reg.declare_option<int>(parser[1], docstring, 0, flags);
         else if (parser[0] == "bool")
-            opt = &opts.declare_option<bool>(parser[1], docstring, 0, flags);
+            opt = &reg.declare_option<bool>(parser[1], docstring, 0, flags);
         else if (parser[0] == "str")
-            opt = &opts.declare_option<String>(parser[1], docstring, "", flags);
+            opt = &reg.declare_option<String>(parser[1], docstring, "", flags);
         else if (parser[0] == "regex")
-            opt = &opts.declare_option<Regex>(parser[1], docstring, Regex{}, flags);
+            opt = &reg.declare_option<Regex>(parser[1], docstring, Regex{}, flags);
         else if (parser[0] == "int-list")
-            opt = &opts.declare_option<std::vector<int>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<std::vector<int>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
-            opt = &opts.declare_option<std::vector<String>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<std::vector<String>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "line-flag-list")
-            opt = &opts.declare_option<std::vector<LineAndFlag>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<std::vector<LineAndFlag>>(parser[1], docstring, {}, flags);
         else
             throw runtime_error("unknown type " + parser[0]);
 
@@ -943,15 +921,6 @@ const CommandDesc declare_option_cmd = {
             opt->set_from_string(parser[2]);
     }
 };
-
-KeymapManager& get_keymap_manager(const String& scope, Context& context)
-{
-    if (prefix_match("global", scope)) return GlobalKeymaps::instance();
-    if (prefix_match("buffer", scope)) return context.buffer().keymaps();
-    if (prefix_match("window", scope)) return context.window().keymaps();
-
-    throw runtime_error("error: no such keymap container " + scope);
-}
 
 KeymapMode parse_keymap_mode(const String& str)
 {
@@ -997,7 +966,7 @@ const CommandDesc map_key_cmd = {
     },
     [](const ParametersParser& parser, Context& context)
     {
-        KeymapManager& keymaps = get_keymap_manager(parser[0], context);
+        KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
         KeymapMode keymap_mode = parse_keymap_mode(parser[1]);
 
         KeyList key = parse_keys(parser[2]);
@@ -1419,7 +1388,7 @@ static void register_command(CommandManager& cm, const CommandDesc& c)
 {
     cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.completer);
     if (c.alias)
-        GlobalAliases::instance().add_alias(c.alias, c.name);
+        GlobalScope::instance().aliases().add_alias(c.alias, c.name);
 }
 
 void register_commands()

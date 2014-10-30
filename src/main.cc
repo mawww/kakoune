@@ -1,5 +1,4 @@
 #include "assert.hh"
-#include "alias_registry.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -12,15 +11,14 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "highlighters.hh"
-#include "hook_manager.hh"
-#include "keymap_manager.hh"
 #include "ncurses.hh"
-#include "option_manager.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
 #include "shell_manager.hh"
+#include "scope.hh"
 #include "string.hh"
+#include "insert_completer.hh"
 #include "interned_string.hh"
 #include "window.hh"
 
@@ -187,6 +185,52 @@ void register_registers()
     }
 }
 
+void register_options()
+{
+    OptionsRegistry& reg = GlobalScope::instance().option_registry();
+
+    reg.declare_option("tabstop", "size of a tab character", 8);
+    reg.declare_option("indentwidth", "indentation width", 4);
+    reg.declare_option("scrolloff",
+                       "number of lines and columns to keep visible main cursor when scrolling",
+                       CharCoord{0,0});
+    reg.declare_option("eolformat", "end of line format: 'crlf' or 'lf'", "lf"_str);
+    reg.declare_option("BOM", "insert a byte order mark when writing buffer",
+                       "no"_str);
+    reg.declare_option("complete_prefix",
+                       "complete up to common prefix in tab completion",
+                       true);
+    reg.declare_option("incsearch",
+                       "incrementaly apply search/select/split regex",
+                       true);
+    reg.declare_option("autoinfo",
+                       "automatically display contextual help",
+                       1);
+    reg.declare_option("autoshowcompl",
+                       "automatically display possible completions for prompts",
+                       true);
+    reg.declare_option("aligntab",
+                       "use tab characters when possible for alignement",
+                       false);
+    reg.declare_option("ignored_files",
+                       "patterns to ignore when completing filenames",
+                       Regex{R"(^(\..*|.*\.(o|so|a))$)"});
+    reg.declare_option("disabled_hooks",
+                      "patterns to disable hooks whose group is matched",
+                      Regex{});
+    reg.declare_option("filetype", "buffer filetype", ""_str);
+    reg.declare_option("path", "path to consider when trying to find a file",
+                   std::vector<String>({ "./", "/usr/include" }));
+    reg.declare_option("completers", "insert mode completers to execute.",
+                       std::vector<InsertCompleterDesc>({
+                           InsertCompleterDesc{ InsertCompleterDesc::Filename },
+                           InsertCompleterDesc{ InsertCompleterDesc::Word, "all"_str }
+                       }), OptionFlags::None);
+    reg.declare_option("autoreload",
+                       "autoreload buffer when a filesystem modification is detected",
+                       Ask);
+}
+
 void create_local_client(const String& init_command)
 {
     class LocalNCursesUI : public NCursesUI
@@ -298,10 +342,7 @@ int run_server(StringView session, StringView init_command,
 
     StringRegistry      string_registry;
     EventManager        event_manager;
-    GlobalOptions       global_options;
-    GlobalHooks         global_hooks;
-    GlobalKeymaps       global_keymaps;
-    GlobalAliases       global_aliases;
+    GlobalScope         global_scope;
     ShellManager        shell_manager;
     CommandManager      command_manager;
     BufferManager       buffer_manager;
@@ -313,6 +354,7 @@ int run_server(StringView session, StringView init_command,
 
     run_unit_tests();
 
+    register_options();
     register_env_vars();
     register_registers();
     register_commands();
@@ -339,7 +381,7 @@ int run_server(StringView session, StringView init_command,
 
     {
         Context empty_context;
-        global_hooks.run_hook("KakBegin", "", empty_context);
+        global_scope.hooks().run_hook("KakBegin", "", empty_context);
     }
 
     if (not files.empty()) try
@@ -372,7 +414,7 @@ int run_server(StringView session, StringView init_command,
 
     {
         Context empty_context;
-        global_hooks.run_hook("KakEnd", "", empty_context);
+        global_scope.hooks().run_hook("KakEnd", "", empty_context);
     }
 
     return 0;
@@ -381,14 +423,12 @@ int run_server(StringView session, StringView init_command,
 int run_filter(StringView keystr, memoryview<StringView> files)
 {
     StringRegistry  string_registry;
-    GlobalOptions   global_options;
-    GlobalHooks     global_hooks;
-    GlobalKeymaps   global_keymaps;
-    GlobalAliases   global_aliases;
+    GlobalScope     global_scope;
     ShellManager    shell_manager;
     BufferManager   buffer_manager;
     RegisterManager register_manager;
 
+    register_options();
     register_env_vars();
     register_registers();
 

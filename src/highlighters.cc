@@ -395,7 +395,7 @@ HighlighterAndId create_regex_option_highlighter(HighlighterParameters params)
 
     String option_name = params[0];
     // verify option type now
-    GlobalOptions::instance()[option_name].get<Regex>();
+    GlobalScope::instance().options()[option_name].get<Regex>();
 
     auto get_regex = [option_name](const Context& context){
         return context.options()[option_name].get<Regex>();
@@ -412,7 +412,7 @@ HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
     String option_name = params[0];
 
     get_face(facespec); // validate facespec
-    GlobalOptions::instance()[option_name].get<int>(); // verify option type now
+    GlobalScope::instance().options()[option_name].get<int>(); // verify option type now
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer)
@@ -645,7 +645,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     Color bg = str_to_color(params[0]);
 
     // throw if wrong option type
-    GlobalOptions::instance()[option_name].get<std::vector<LineAndFlag>>();
+    GlobalScope::instance().options()[option_name].get<std::vector<LineAndFlag>>();
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer)

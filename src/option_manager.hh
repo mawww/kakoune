@@ -104,7 +104,8 @@ private:
     OptionManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root option manager
-    friend class GlobalOptions;
+    friend class Scope;
+    friend class OptionsRegistry;
 
     template<typename MatchingFunc>
     CandidateList get_matching_names(MatchingFunc func);
@@ -186,34 +187,37 @@ auto find_option(T& container, const String& name) -> decltype(container.begin()
     return find_if(container, [&name](const ptr_type& opt) { return opt->name() == name; });
 }
 
-class GlobalOptions : public OptionManager,
-                      public Singleton<GlobalOptions>
+class OptionsRegistry
 {
 public:
-    GlobalOptions();
+    OptionsRegistry(OptionManager& global_manager) : m_global_manager(global_manager) {}
 
     template<typename T>
     Option& declare_option(const String& name, const String& docstring,
                            const T& value,
                            OptionFlags flags = OptionFlags::None)
     {
-        auto it = find_option(m_options, name);
-        if (it != m_options.end())
+        auto& opts = m_global_manager.m_options;
+        auto it = find_option(opts, name);
+        if (it != opts.end())
         {
             if ((*it)->is_of_type<T>() and (*it)->flags() == flags)
                 return **it;
             throw runtime_error("option " + name + " already declared with different type or flags");
         }
         m_descs.emplace_back(new OptionDesc{name, docstring, flags});
-        m_options.emplace_back(new TypedOption<T>{*this, *m_descs.back(), value});
-        return *m_options.back();
+        opts.emplace_back(new TypedOption<T>{m_global_manager, *m_descs.back(), value});
+        return *opts.back();
     }
 
     bool option_exists(const String& name) const
     {
-        return find_option(m_options, name) != m_options.end();
+        return find_if(m_descs, [&name](const std::unique_ptr<OptionDesc>& opt) {
+                           return opt->name() == name;
+                       }) != m_descs.end();
     }
 private:
+    OptionManager& m_global_manager;
     std::vector<std::unique_ptr<OptionDesc>> m_descs;
 };
 

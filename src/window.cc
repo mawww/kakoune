@@ -18,22 +18,19 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
 void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
 
 Window::Window(Buffer& buffer)
-    : m_buffer(&buffer),
-      m_hooks(buffer.hooks()),
-      m_options(buffer.options()),
-      m_keymaps(buffer.keymaps()),
-      m_aliases(buffer.aliases())
+    : Scope(buffer),
+      m_buffer(&buffer)
 {
     InputHandler hook_handler{{ *m_buffer, Selection{} }};
     hook_handler.context().set_window(*this);
-    m_hooks.run_hook("WinCreate", buffer.name(), hook_handler.context());
-    m_options.register_watcher(*this);
+    hooks().run_hook("WinCreate", buffer.name(), hook_handler.context());
+    options().register_watcher(*this);
 
     m_builtin_highlighters.add_child({"tabulations"_str, make_simple_highlighter(expand_tabulations)});
     m_builtin_highlighters.add_child({"unprintable"_str, make_simple_highlighter(expand_unprintable)});
     m_builtin_highlighters.add_child({"selections"_str,  make_simple_highlighter(highlight_selections)});
 
-    for (auto& option : m_options.flatten_options())
+    for (auto& option : options().flatten_options())
         on_option_changed(*option);
 }
 
@@ -41,8 +38,8 @@ Window::~Window()
 {
     InputHandler hook_handler{{ *m_buffer, Selection{} }};
     hook_handler.context().set_window(*this);
-    m_hooks.run_hook("WinClose", buffer().name(), hook_handler.context());
-    m_options.unregister_watcher(*this);
+    hooks().run_hook("WinClose", buffer().name(), hook_handler.context());
+    options().unregister_watcher(*this);
 }
 
 void Window::display_line_at(LineCount buffer_line, LineCount display_line)
@@ -279,7 +276,7 @@ void Window::on_option_changed(const Option& option)
     String desc = option.name() + "=" + option.get_as_string();
     InputHandler hook_handler{{ *m_buffer, Selection{} }};
     hook_handler.context().set_window(*this);
-    m_hooks.run_hook("WinSetOption", desc, hook_handler.context());
+    hooks().run_hook("WinSetOption", desc, hook_handler.context());
 
     // an highlighter might depend on the option, so we need to redraw
     forget_timestamp();

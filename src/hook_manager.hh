@@ -27,15 +27,10 @@ private:
     HookManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root hook manager
-    friend class GlobalHooks;
+    friend class Scope;
 
     HookManager* m_parent;
     std::unordered_map<String, id_map<HookFunc>> m_hook;
-};
-
-class GlobalHooks : public HookManager,
-                    public Singleton<GlobalHooks>
-{
 };
 
 }

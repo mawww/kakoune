@@ -1,21 +1,18 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
-#include "alias_registry.hh"
 #include "completion.hh"
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
 #include "selection.hh"
-#include "hook_manager.hh"
-#include "option_manager.hh"
-#include "keymap_manager.hh"
 #include "safe_ptr.hh"
+#include "scope.hh"
 
 namespace Kakoune
 {
 
 // A Window is a view onto a Buffer
-class Window : public SafeCountable, public OptionManagerWatcher
+class Window : public SafeCountable, public OptionManagerWatcher, public Scope
 {
 public:
     Window(Buffer& buffer);
@@ -39,15 +36,6 @@ public:
 
     Highlighter& highlighters() { return m_highlighters; }
 
-    OptionManager&       options()       { return m_options; }
-    const OptionManager& options() const { return m_options; }
-    HookManager&         hooks()         { return m_hooks; }
-    const HookManager&   hooks()   const { return m_hooks; }
-    KeymapManager&       keymaps()       { return m_keymaps; }
-    const KeymapManager& keymaps() const { return m_keymaps; }
-    AliasRegistry&       aliases()       { return m_aliases; }
-    const AliasRegistry& aliases() const { return m_aliases; }
-
     Buffer& buffer() const { return *m_buffer; }
 
     size_t timestamp() const { return m_timestamp; }
@@ -66,11 +54,6 @@ private:
     CharCoord m_position;
     CharCoord m_dimensions;
     DisplayBuffer m_display_buffer;
-
-    HookManager      m_hooks;
-    OptionManager    m_options;
-    KeymapManager    m_keymaps;
-    AliasRegistry    m_aliases;
 
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;

@@ -54,40 +54,33 @@ UserInterface& Context::ui() const
     return client().ui();
 }
 
-OptionManager& Context::options() const
+Scope& Context::scope() const
 {
     if (has_window())
-        return window().options();
+        return window();
     if (has_buffer())
-        return buffer().options();
-    return GlobalOptions::instance();
+        return buffer();
+    return GlobalScope::instance();
+}
+
+OptionManager& Context::options() const
+{
+    return scope().options();
 }
 
 HookManager& Context::hooks() const
 {
-    if (has_window())
-        return window().hooks();
-    if (has_buffer())
-        return buffer().hooks();
-    return GlobalHooks::instance();
+    return scope().hooks();
 }
 
 KeymapManager& Context::keymaps() const
 {
-    if (has_window())
-        return window().keymaps();
-    if (has_buffer())
-        return buffer().keymaps();
-    return GlobalKeymaps::instance();
+    return scope().keymaps();
 }
 
 AliasRegistry& Context::aliases() const
 {
-    if (has_window())
-        return window().aliases();
-    if (has_buffer())
-        return buffer().aliases();
-    return GlobalAliases::instance();
+    return scope().aliases();
 }
 
 void Context::set_client(Client& client)

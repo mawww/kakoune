@@ -16,18 +16,15 @@ namespace Kakoune
 
 Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
                time_t fs_timestamp)
-    : m_name(flags & Flags::File ? real_path(parse_filename(name)) : std::move(name)),
+    : Scope(GlobalScope::instance()),
+      m_name(flags & Flags::File ? real_path(parse_filename(name)) : std::move(name)),
       m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
-      m_fs_timestamp(fs_timestamp),
-      m_hooks(GlobalHooks::instance()),
-      m_options(GlobalOptions::instance()),
-      m_keymaps(GlobalKeymaps::instance()),
-      m_aliases(GlobalAliases::instance())
+      m_fs_timestamp(fs_timestamp)
 {
     BufferManager::instance().register_buffer(*this);
-    m_options.register_watcher(*this);
+    options().register_watcher(*this);
 
     if (lines.empty())
         lines.emplace_back("\n");
@@ -57,7 +54,7 @@ Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
     // now we may begin to record undo data
     m_flags = flags;
 
-    for (auto& option : m_options.flatten_options())
+    for (auto& option : options().flatten_options())
         on_option_changed(*option);
 }
 
@@ -65,7 +62,7 @@ Buffer::~Buffer()
 {
     run_hook_in_own_context("BufClose", m_name);
 
-    m_options.unregister_watcher(*this);
+    options().unregister_watcher(*this);
     BufferManager::instance().unregister_buffer(*this);
     m_values.clear();
 }
@@ -520,7 +517,7 @@ void Buffer::on_option_changed(const Option& option)
 void Buffer::run_hook_in_own_context(const String& hook_name, StringView param)
 {
     InputHandler hook_handler({ *this, Selection{} });
-    m_hooks.run_hook(hook_name, param, hook_handler.context());
+    hooks().run_hook(hook_name, param, hook_handler.context());
 }
 
 ByteCoord Buffer::last_modification_coord() const

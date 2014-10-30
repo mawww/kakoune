@@ -10,6 +10,7 @@ namespace Kakoune
 class Window;
 class Buffer;
 class Client;
+class Scope;
 class InputHandler;
 class UserInterface;
 class DisplayLine;
@@ -57,6 +58,8 @@ public:
 
     void set_client(Client& client);
     void set_window(Window& window);
+
+    Scope& scope() const;
 
     OptionManager& options() const;
     HookManager& hooks() const;
