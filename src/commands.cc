@@ -1225,7 +1225,7 @@ const CommandDesc info_cmd = {
     nullptr,
     "info <switches> <params>...: display an info box with the params as content",
     ParameterDesc{
-        SwitchMap{ { "anchor", { true, "set info anchoring (left, right, or cursor)" } },
+        SwitchMap{ { "anchor", { true, "set info anchoring <line>.<column>" } },
                    { "title", { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -1241,17 +1241,15 @@ const CommandDesc info_cmd = {
             pos.column -= 1;
             if (parser.has_option("anchor"))
             {
-                style =  MenuStyle::Inline;
-                const auto& sel = context.selections().main();
-                auto it = sel.cursor();
-                String anchor = parser.option_value("anchor");
-                if (anchor == "left")
-                    it = sel.min();
-                else if (anchor == "right")
-                    it = sel.max();
-                else if (anchor != "cursor")
-                    throw runtime_error("anchor param must be one of [left, right, cursor]");
-                pos = context.window().display_position(it);
+                auto anchor = parser.option_value("anchor");
+                size_t dot = anchor.find_first_of('.');
+                if (dot == String::npos)
+                    throw runtime_error("expected <line>.<column> for anchor");
+                ByteCount dotb = (int)dot;
+                ByteCoord coord{str_to_int(anchor.substr(0, dotb))-1,
+                                str_to_int(anchor.substr(dotb+1))-1};
+                pos = context.window().display_position(coord);
+                style = MenuStyle::Inline;
             }
             const String& title = parser.has_option("title") ? parser.option_value("title") : "";
             context.ui().info_show(title, parser[0], pos, get_face("Information"), style);

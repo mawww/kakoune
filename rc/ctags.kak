@@ -35,11 +35,11 @@ def tag-complete %{ eval -draft %{
 
 def funcinfo %{
     eval -draft %{
-        exec [(<space>B<a-k>[a-zA-Z_]+\(<ret>
+        exec '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
         %sh{
-            sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*(class|struct|namespace):(\S+).*signature:(.*)$/\4 [\3::\1]/')
+            sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
             if [ -n "$sigs" ]; then
-                echo "eval -client ${kak_client} %{info -anchor right '$sigs'}"
+                echo "eval -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column '$sigs'}"
             fi
         }
     }
@@ -47,8 +47,6 @@ def funcinfo %{
 
 def ctags-enable-autoinfo %{
      hook window -group ctags-autoinfo NormalIdle .* funcinfo
-     hook window -group ctags-autoinfo NormalEnd  .* info
-     hook window -group ctags-autoinfo NormalKey  .* info
      hook window -group ctags-autoinfo InsertIdle .* funcinfo
 }
 
