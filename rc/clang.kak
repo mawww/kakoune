@@ -8,7 +8,7 @@ def clang-complete %{
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         echo "set buffer clang_tmp_dir ${dir}"
-        echo "write ${dir}/buffer.cpp"
+        echo "write ${dir}/buf"
     }
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
@@ -26,28 +26,11 @@ def clang-complete %{
         (
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
-            clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buffer.cpp 2>&1 | awk -e '
-              function rmblocks(opening, closing, val, res) {
-                  while (match(val, opening)) {
-                      res = res substr(val, 1, RSTART-1)
-                      val = substr(val, RSTART + RLENGTH)
-                      if (match(val, closing))
-                          val = substr(val, RSTART + RLENGTH)
-                  }
-                  return res val
-              }
-              BEGIN { out = ENVIRON["kak_cursor_line"] "." ENVIRON["kak_cursor_column"] "@" ENVIRON["kak_timestamp"] }
-              /^COMPLETION:[^:]+:/ {
-                  gsub("^COMPLETION:[^:]+: +", ""); gsub(":", "\\:")
-                  c = rmblocks("\\[#", "#\\]", rmblocks("<#", "#>", rmblocks("\\{#", "#\\}", $0)))
-                  gsub("\\((, )+\\)", "(", c); gsub("<(, )+>", "<", c)
-                  out = out ":" c
-              }
-              ! /^COMPLETION:[^:]+:/ { print $0 }
-              END {
-                  cmd = "kak -p " ENVIRON["kak_session"]
-                  print "eval -client " ENVIRON["kak_client"] " %[ echo completed; set buffer clang_completions %[" out "] ]" | cmd
-              }' 2>&1 > ${dir}/fifo
+            header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
+            compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2>&1 |
+                    tee ${dir}/fifo | grep ^COMPLETION: | grep -v '(Hidden)' | sed -re 's/^COMPLETION: ([^:]+) :.*/\1/; s/:/\\:/g' | uniq | paste -s -d ':')
+
+            echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
