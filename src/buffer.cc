@@ -183,6 +183,8 @@ void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
                 Modification::Insert, line_count()-1, m_lines.back());
     }
     commit_undo_group();
+
+    m_last_save_undo_index = m_history_cursor - m_history.begin();
     m_fs_timestamp = fs_timestamp;
 
     m_changes.push_back({ Change::Insert, {0,0}, back_coord(), true });
