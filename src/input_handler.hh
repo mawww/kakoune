@@ -27,7 +27,7 @@ enum class PromptEvent
     Abort,
     Validate
 };
-using PromptCallback = std::function<void (const String&, PromptEvent, Context&)>;
+using PromptCallback = std::function<void (StringView, PromptEvent, Context&)>;
 using KeyCallback = std::function<void (Key, Context&)>;
 
 class InputMode;
@@ -50,7 +50,7 @@ public:
     // abort or validation with corresponding PromptEvent value
     // returns to normal mode after validation if callback does
     // not change the mode itself
-    void prompt(const String& prompt, String initstr,
+    void prompt(StringView prompt, String initstr,
                 Face prompt_face, Completer completer,
                 PromptCallback callback);
     void set_prompt_face(Face prompt_face);

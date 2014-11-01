@@ -474,7 +474,7 @@ void history_push(std::vector<String>& history, StringView entry)
 class Prompt : public InputMode
 {
 public:
-    Prompt(InputHandler& input_handler, const String& prompt,
+    Prompt(InputHandler& input_handler, StringView prompt,
            String initstr, Face face, Completer completer,
            PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt), m_prompt_face(face),
@@ -1058,7 +1058,7 @@ void InputHandler::repeat_last_insert()
     kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
 }
 
-void InputHandler::prompt(const String& prompt, String initstr,
+void InputHandler::prompt(StringView prompt, String initstr,
                           Face prompt_face, Completer completer,
                           PromptCallback callback)
 {

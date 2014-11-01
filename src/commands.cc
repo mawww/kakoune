@@ -35,7 +35,7 @@ namespace Kakoune
 namespace
 {
 
-Buffer* open_fifo(const String& name , const String& filename, bool scroll)
+Buffer* open_fifo(StringView name, StringView filename, bool scroll)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
@@ -44,7 +44,7 @@ Buffer* open_fifo(const String& name , const String& filename, bool scroll)
 
     BufferManager::instance().delete_buffer_if_exists(name);
 
-    return create_fifo_buffer(std::move(name), fd, scroll);
+    return create_fifo_buffer(name, fd, scroll);
 }
 
 template<typename T>
@@ -1163,7 +1163,7 @@ const CommandDesc prompt_cmd = {
 
         context.input_handler().prompt(
             params[0], std::move(initstr), get_face("Prompt"), Completer{},
-            [=](const String& str, PromptEvent event, Context& context)
+            [=](StringView str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)
                     return;

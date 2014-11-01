@@ -355,7 +355,7 @@ void command(Context& context, int)
     context.input_handler().prompt(
         ":", "", get_face("Prompt"),
         std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
-        [](const String& cmdline, PromptEvent event, Context& context) {
+        [](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_ui())
             {
                 context.ui().info_hide();
@@ -379,7 +379,7 @@ void pipe(Context& context, int)
 {
     const char* prompt = mode == InsertMode::Replace ? "pipe:" : "pipe (ins):";
     context.input_handler().prompt(prompt, "", get_face("Prompt"), shell_complete,
-        [](const String& cmdline, PromptEvent event, Context& context)
+        [](StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
                 return;
@@ -389,7 +389,7 @@ void pipe(Context& context, int)
                 real_cmd = context.main_sel_register_value("|");
             else
             {
-                RegisterManager::instance()['|'] = cmdline;
+                RegisterManager::instance()['|'] = String{cmdline};
                 real_cmd = cmdline;
             }
 
@@ -530,7 +530,7 @@ void regex_prompt(Context& context, const String prompt, T func)
 {
     SelectionList selections = context.selections();
     context.input_handler().prompt(prompt, "", get_face("Prompt"), complete_nothing,
-        [=](const String& str, PromptEvent event, Context& context) mutable {
+        [=](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
                 if (event != PromptEvent::Change and context.has_ui())
@@ -546,7 +546,9 @@ void regex_prompt(Context& context, const String prompt, T func)
 
                 if (event == PromptEvent::Validate)
                     context.push_jump();
-                func(str.empty() ? Regex{} : Regex{str}, event, context);
+                Regex regex = str.empty() ? Regex{}
+                                          : Regex{str.begin(), str.end()};
+                func(std::move(regex), event, context);
             }
             catch (RegexError& err)
             {
@@ -748,7 +750,7 @@ void keep_pipe(Context& context, int)
 {
     context.input_handler().prompt(
         "keep pipe:", "", get_face("Prompt"), shell_complete,
-        [](const String& cmdline, PromptEvent event, Context& context) {
+        [](StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
             const Buffer& buffer = context.buffer();
