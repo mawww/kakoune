@@ -221,31 +221,6 @@ private:
     std::vector<std::unique_ptr<OptionDesc>> m_descs;
 };
 
-struct OptionManagerRegisterFuncs
-{
-    static void insert(OptionManager& options, OptionManagerWatcher& watcher)
-    {
-        options.register_watcher(watcher);
-    }
-    static void remove(OptionManager& options, OptionManagerWatcher& watcher)
-    {
-        options.unregister_watcher(watcher);
-    }
-};
-
-class OptionManagerWatcher_AutoRegister
-    : public OptionManagerWatcher,
-      public AutoRegister<OptionManagerWatcher_AutoRegister,
-                          OptionManagerRegisterFuncs, OptionManager>
-{
-public:
-    OptionManagerWatcher_AutoRegister(OptionManager& options)
-        : AutoRegister(options) {}
-
-    OptionManager& options() { return registry(); }
-};
-
-
 }
 
 #endif // option_manager_hh_INCLUDED

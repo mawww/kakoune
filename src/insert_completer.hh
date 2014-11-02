@@ -49,12 +49,13 @@ struct InsertCompletion
     bool is_valid() const { return not candidates.empty(); }
 };
 
-class InsertCompleter : public OptionManagerWatcher_AutoRegister
+class InsertCompleter : public OptionManagerWatcher
 {
 public:
     InsertCompleter(const Context& context);
     InsertCompleter(const InsertCompleter&) = delete;
     InsertCompleter& operator=(const InsertCompleter&) = delete;
+    ~InsertCompleter();
 
     void select(int offset);
     void update();

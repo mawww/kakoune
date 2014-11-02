@@ -217,9 +217,15 @@ InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
 }
 
 InsertCompleter::InsertCompleter(const Context& context)
-    : OptionManagerWatcher_AutoRegister(context.options()),
-      m_context(context)
-{}
+    : m_context(context)
+{
+    context.options().register_watcher(*this);
+}
+
+InsertCompleter::~InsertCompleter()
+{
+    m_context.options().unregister_watcher(*this);
+}
 
 void InsertCompleter::select(int offset)
 {
@@ -315,19 +321,19 @@ bool InsertCompleter::setup_ifn()
     using namespace std::placeholders;
     if (not m_completions.is_valid())
     {
-        auto& completers = options()["completers"].get<InsertCompleterDescList>();
+        auto& completers = m_context.options()["completers"].get<InsertCompleterDescList>();
         for (auto& completer : completers)
         {
             if (completer.mode == InsertCompleterDesc::Filename and
                 try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
                     return complete_filename<true>(buffer, cursor_pos,
-                                                   options());
+                                                   m_context.options());
                 }))
                 return true;
             if (completer.mode == InsertCompleterDesc::Option and
                 try_complete([&,this](const Buffer& buffer, ByteCoord cursor_pos) {
                    return complete_option(buffer, cursor_pos,
-                                          options(), *completer.param);
+                                          m_context.options(), *completer.param);
                 }))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
@@ -368,7 +374,7 @@ void InsertCompleter::menu_show()
 
 void InsertCompleter::on_option_changed(const Option& opt)
 {
-    auto& completers = options()["completers"].get<InsertCompleterDescList>();
+    auto& completers = m_context.options()["completers"].get<InsertCompleterDescList>();
     std::vector<StringView> option_names;
     for (auto& completer : completers)
     {
@@ -410,7 +416,7 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
 void InsertCompleter::explicit_file_complete()
 {
     try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
-        return complete_filename<false>(buffer, cursor_pos, options());
+        return complete_filename<false>(buffer, cursor_pos, m_context.options());
     });
 }
 
