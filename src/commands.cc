@@ -37,7 +37,7 @@ namespace
 
 Buffer* open_fifo(StringView name, StringView filename, bool scroll)
 {
-    int fd = open(parse_filename(filename).c_str(), O_RDONLY);
+    int fd = open(parse_filename(filename).c_str(), O_RDONLY | O_NONBLOCK);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
