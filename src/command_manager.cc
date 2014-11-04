@@ -77,20 +77,6 @@ bool is_command_separator(char c)
     return c == ';' or c == '\n';
 }
 
-struct unterminated_string : parse_error
-{
-    unterminated_string(const String& open, const String& close, int nest = 0)
-        : parse_error{"unterminated string '" + open + "..." + close + "'" +
-                      (nest > 0 ? "(nesting: " + to_string(nest) + ")" : "")}
-    {}
-};
-
-struct unknown_expand : parse_error
-{
-    unknown_expand(const String& name)
-        : parse_error{"unknown expand '" + name + "'"} {}
-};
-
 String get_until_delimiter(StringView base, ByteCount& pos, char delimiter)
 {
     const ByteCount length = base.length();
@@ -134,6 +120,12 @@ String get_until_delimiter(StringView base, ByteCount& pos,
     return base.substr(start, pos - start);
 }
 
+struct unknown_expand : parse_error
+{
+    unknown_expand(const String& name)
+        : parse_error{"unknown expand '" + name + "'"} {}
+};
+
 template<bool throw_on_invalid>
 Token::Type token_type(StringView type_name)
 {
@@ -176,6 +168,14 @@ void skip_blanks_and_comments(StringView base, ByteCount& pos)
             break;
     }
 }
+
+struct unterminated_string : parse_error
+{
+    unterminated_string(const String& open, const String& close, int nest = 0)
+        : parse_error{"unterminated string '" + open + "..." + close + "'" +
+                      (nest > 0 ? "(nesting: " + to_string(nest) + ")" : "")}
+    {}
+};
 
 template<bool throw_on_unterminated>
 Token parse_percent_token(StringView line, ByteCount& pos)
