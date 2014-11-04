@@ -54,7 +54,7 @@ addhl -group /cpp/macro fill meta
 addhl -group /cpp/code regex "\<(this|true|false|NULL|nullptr|)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'" 0:value
 addhl -group /cpp/code regex "\<(void|int|char|unsigned|float|bool|size_t)\>" 0:type
 addhl -group /cpp/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|or|not|operator|explicit|(?:reinterpret|const|static|dynamic)_cast)\>" 0:keyword
-addhl -group /cpp/code regex "\<(const|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
+addhl -group /cpp/code regex "\<(const|constexpr|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
 
 hook global WinSetOption filetype=cpp %[
     addhl ref cpp
