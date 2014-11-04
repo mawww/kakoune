@@ -82,9 +82,30 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 {
-    Buffer* buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+    static ValueId s_fifo_watcher_id = ValueId::get_free_id();
 
-    auto watcher = new FDWatcher(fd, [buffer, scroll](FDWatcher& watcher) {
+    Buffer* buffer = BufferManager::instance().get_buffer_ifp(name);
+    if (buffer)
+    {
+        buffer->flags() |= Buffer::Flags::NoUndo;
+        buffer->reload(std::vector<String>({"\n"_str}), 0);
+    }
+    else
+        buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+
+    auto watcher_deleter = [buffer](FDWatcher* watcher) {
+        kak_assert(buffer->flags() & Buffer::Flags::Fifo);
+        close(watcher->fd());
+        buffer->run_hook_in_own_context("BufCloseFifo", "");
+        buffer->flags() &= ~Buffer::Flags::Fifo;
+        watcher->~FDWatcher();
+    };
+
+    // capture a non static one to silence a warning.
+    ValueId fifo_watcher_id = s_fifo_watcher_id;
+
+    std::unique_ptr<FDWatcher, decltype(watcher_deleter)> watcher(
+        new FDWatcher(fd, [buffer, scroll, fifo_watcher_id](FDWatcher& watcher) {
         constexpr size_t buffer_size = 2048;
         // if we read data slower than it arrives in the fifo, limiting the
         // iteration number allows us to go back go back to the event loop and
@@ -122,26 +143,11 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
                select(fifo+1, &rfds, nullptr, nullptr, &tv) == 1);
 
         if (count <= 0)
-        {
-            kak_assert(buffer->flags() & Buffer::Flags::Fifo);
-            buffer->flags() &= ~Buffer::Flags::Fifo;
-            buffer->flags() &= ~Buffer::Flags::NoUndo;
-            close(fifo);
-            buffer->run_hook_in_own_context("BufCloseFifo", "");
-            delete &watcher;
-        }
-    });
+            buffer->values().erase(fifo_watcher_id); // will delete this
+    }), std::move(watcher_deleter));
 
-    buffer->hooks().add_hook("BufClose", "",
-        [buffer, watcher](StringView, const Context&) {
-            // Check if fifo is still alive, else watcher is already dead
-            if (buffer->flags() & Buffer::Flags::Fifo)
-            {
-                close(watcher->fd());
-                buffer->run_hook_in_own_context("BufCloseFifo", "");
-                delete watcher;
-            }
-        });
+    buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
+    buffer->flags() = Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
 
     return buffer;
 }

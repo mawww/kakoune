@@ -42,8 +42,6 @@ Buffer* open_fifo(StringView name, StringView filename, bool scroll)
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
 
-    BufferManager::instance().delete_buffer_if_exists(name);
-
     return create_fifo_buffer(name, fd, scroll);
 }
 
