@@ -66,6 +66,7 @@ public:
     StringView(const char* data) : m_data{data}, m_length{(int)strlen(data)} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
     StringView(const std::string& str) : m_data{str.data()}, m_length{(int)str.length()} {}
+    StringView(const char& c) : m_data(&c), m_length(1) {}
 
     bool operator==(StringView other) const;
     bool operator!=(StringView other) const;
@@ -274,8 +275,8 @@ inline String operator+(StringView lhs, StringView rhs)
 std::vector<String> split(StringView str, char separator, char escape);
 std::vector<StringView> split(StringView str, char separator);
 
-String escape(StringView str, char character, char escape);
 String escape(StringView str, StringView characters, char escape);
+String unescape(StringView str, StringView characters, char escape);
 
 inline String operator"" _str(const char* str, size_t)
 {

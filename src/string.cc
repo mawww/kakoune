@@ -62,18 +62,6 @@ std::vector<StringView> split(StringView str, char separator)
     return res;
 }
 
-String escape(StringView str, char character, char escape)
-{
-    String res;
-    for (auto& c : str)
-    {
-        if (c == character)
-            res += escape;
-        res += c;
-    }
-    return res;
-}
-
 String escape(StringView str, StringView characters, char escape)
 {
     String res;
@@ -82,6 +70,19 @@ String escape(StringView str, StringView characters, char escape)
         if (contains(characters, c))
             res += escape;
         res += c;
+    }
+    return res;
+}
+
+String unescape(StringView str, StringView characters, char escape)
+{
+    String res;
+    for (auto& c : str)
+    {
+        if (contains(characters, c) and not res.empty() and res.back() == escape)
+            res.back() = c;
+        else
+            res += c;
     }
     return res;
 }
