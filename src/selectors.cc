@@ -392,7 +392,7 @@ Selection select_whitespaces(const Buffer& buffer, const Selection& selection, O
                                         : utf8_range(last, first);
 }
 
-static CharCount get_indent(const String& str, int tabstop)
+static CharCount get_indent(StringView str, int tabstop)
 {
     CharCount indent = 0;
     for (auto& c : str)
@@ -407,7 +407,7 @@ static CharCount get_indent(const String& str, int tabstop)
     return indent;
 }
 
-static bool is_only_whitespaces(const String& str)
+static bool is_only_whitespaces(StringView str)
 {
     auto it = str.begin();
     skip_while(it, str.end(),
