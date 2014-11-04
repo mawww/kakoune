@@ -75,6 +75,7 @@ private:
     void menu_show();
 
     const Context&   m_context;
+    OptionManager&   m_options;
     InsertCompletion m_completions;
     CandidateList    m_matching_candidates;
     int              m_current_candidate = -1;
