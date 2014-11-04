@@ -18,23 +18,10 @@ struct Value
     template<typename T>
     Value(T&& val) : m_value{new Model<T>{std::forward<T>(val)}} {}
 
-    Value(const Value& val)
-    {
-        if (val.m_value)
-            m_value.reset(val.m_value->clone());
-    }
-
+    Value(const Value& val) = delete;
     Value(Value&&) = default;
 
-    Value& operator=(const Value& val)
-    {
-        if (val.m_value)
-            m_value.reset(val.m_value->clone());
-        else
-            m_value.reset();
-        return *this;
-    }
-
+    Value& operator=(const Value& val) = delete;
     Value& operator=(Value&& val) = default;
 
     explicit operator bool() const { return (bool)m_value; }
@@ -64,17 +51,13 @@ private:
     {
         virtual ~Concept() {}
         virtual const std::type_info& type() const = 0;
-        virtual Concept* clone() const = 0;
     };
 
     template<typename T>
     struct Model : public Concept
     {
-        Model(const T& val) : m_content(val) {}
         Model(T&& val) : m_content(std::move(val)) {}
-
         const std::type_info& type() const override { return typeid(T); }
-        Concept* clone() const { return new Model(m_content); }
 
         T m_content;
     };
