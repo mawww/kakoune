@@ -254,10 +254,10 @@ TokenList parse(StringView line)
                 ++pos;
             if (start_pos != pos)
             {
-                String token = line.substr(token_start, pos - token_start);
-                static const Regex regex{R"(\\([ \t;\n]))"};
-                result.emplace_back(Token::Type::Raw, token_start, pos,
-                                    regex_replace(token, regex, "\\1"));
+                result.emplace_back(
+                    Token::Type::Raw, token_start, pos,
+                    unescape(line.substr(token_start, pos - token_start),
+                             " \t;\n", '\\'));
             }
         }
 
