@@ -407,27 +407,39 @@ void RemoteUI::set_input_callback(InputCallback callback)
     m_input_callback = std::move(callback);
 }
 
-RemoteClient::RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
-                           const EnvVarMap& env_vars,
-                           StringView init_command)
-    : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions()),
-      m_socket_watcher{socket, [this](FDWatcher&){ process_available_messages(); }}
+RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
+                           const EnvVarMap& env_vars, StringView init_command)
+    : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions())
 {
-    Message msg(socket);
-    msg.write(init_command.data(), (int)init_command.length());
-    msg.write((char)0);
-    msg.write(env_vars);
+    auto filename = "/tmp/kak-" + session;
 
-    Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) |
-                                        (int)m_dimensions.column) };
-    msg.write(key);
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
+        throw connection_failed(filename);
+
+    {
+        Message msg(sock);
+        msg.write(init_command.data(), (int)init_command.length());
+        msg.write((char)0);
+        msg.write(env_vars);
+
+        Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) |
+                                            (int)m_dimensions.column) };
+        msg.write(key);
+    }
 
     m_ui->set_input_callback([this]{ write_next_key(); });
+
+    m_socket_watcher.reset(new FDWatcher{sock, [this](FDWatcher&){ process_available_messages(); }});
 }
 
 void RemoteClient::process_available_messages()
 {
-    int socket = m_socket_watcher.fd();
+    int socket = m_socket_watcher->fd();
     timeval tv{ 0, 0 };
     fd_set  rfds;
 
@@ -441,7 +453,7 @@ void RemoteClient::process_available_messages()
 
 void RemoteClient::process_next_message()
 {
-    int socket = m_socket_watcher.fd();
+    int socket = m_socket_watcher->fd();
     RemoteUIMsg msg = read<RemoteUIMsg>(socket);
     switch (msg)
     {
@@ -490,7 +502,7 @@ void RemoteClient::process_next_message()
 
 void RemoteClient::write_next_key()
 {
-    Message msg(m_socket_watcher.fd());
+    Message msg(m_socket_watcher->fd());
     // do that before checking dimensions as get_key may
     // handle a resize event.
     msg.write(m_ui->get_key());
@@ -503,26 +515,6 @@ void RemoteClient::write_next_key()
                                             (int)dimensions.column) };
         msg.write(key);
     }
-}
-
-std::unique_ptr<RemoteClient> connect_to(StringView session,
-                                         std::unique_ptr<UserInterface>&& ui,
-                                         const EnvVarMap& env_vars,
-                                         StringView init_command)
-{
-    auto filename = "/tmp/kak-" + session;
-
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
-    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw connection_failed(filename);
-
-    return std::unique_ptr<RemoteClient>{new RemoteClient{sock, std::move(ui),
-                                                          env_vars,
-                                                          init_command}};
 }
 
 void send_command(StringView session, StringView command)

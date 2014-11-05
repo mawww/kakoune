@@ -2,7 +2,6 @@
 #define remote_hh_INCLUDED
 
 #include "display_buffer.hh"
-#include "event_manager.hh"
 #include "user_interface.hh"
 #include "env_vars.hh"
 
@@ -18,12 +17,14 @@ struct connection_failed : runtime_error
     {}
 };
 
+class FDWatcher;
+
 // A remote client handle communication between a client running on the server
 // and a user interface running on the local process.
 class RemoteClient
 {
 public:
-    RemoteClient(int socket, std::unique_ptr<UserInterface>&& ui,
+    RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
                  const EnvVarMap& env_vars, StringView init_command);
 
 private:
@@ -33,12 +34,8 @@ private:
 
     std::unique_ptr<UserInterface> m_ui;
     CharCoord                      m_dimensions;
-    FDWatcher                      m_socket_watcher;
+    std::unique_ptr<FDWatcher>     m_socket_watcher;
 };
-std::unique_ptr<RemoteClient> connect_to(StringView session,
-                                         std::unique_ptr<UserInterface>&& ui,
-                                         const EnvVarMap& env_vars,
-                                         StringView init_command);
 
 void send_command(StringView session, StringView command);
 

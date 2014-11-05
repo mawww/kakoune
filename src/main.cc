@@ -299,10 +299,8 @@ int run_client(StringView session, StringView init_command)
     try
     {
         EventManager event_manager;
-        auto client = connect_to(session,
-                                 std::unique_ptr<UserInterface>{new NCursesUI{}},
-                                 get_env_vars(),
-                                 init_command);
+        RemoteClient client{session, make_unique<NCursesUI>(),
+                            get_env_vars(), init_command};
         while (true)
             event_manager.handle_next_events();
     }
