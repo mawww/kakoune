@@ -18,7 +18,10 @@ def clang-complete %{
                   edit! -fifo ${dir}/fifo *clang-output*
                   set buffer filetype make
                   set buffer _make_current_error_line 0
-                  hook buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
+                  hook -group clang-cleanup buffer BufCloseFifo .* %{
+                      nop %sh{ rm -r ${dir} }
+                      rmhooks buffer clang-cleanup
+                  }
               }"
         # this runs in a detached shell, asynchronously, so that kakoune does not hang while clang is running.
         # As completions references a cursor position and a buffer timestamp, only valid completions should be
