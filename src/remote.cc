@@ -151,7 +151,7 @@ T read(int socket)
     union U
     {
         T object;
-        char data[sizeof(T)];
+        alignas(T) char data[sizeof(T)];
         U() {}
         ~U() { object.~T(); }
     } u;
