@@ -91,24 +91,28 @@ def cpp-alternative-file -docstring "Jump to the alternate file (header/implemen
     dir=$(dirname ${kak_buffile})
 
     case ${file} in
-         *.c|*.cc|*.cpp|*.cxx|*.C)
-             for alt_dir in ${alt_dirs}; do
-                 for ext in h hh hpp hxx H; do
-                     altname="${dir}/${alt_dir}/${file%.*}.${ext}"
-                     [ -f ${altname} ] && break
-                 done
-                 [ -f ${altname} ] && break
-             done
-         ;;
-         *.h|*.hh|*.hpp|*.hxx|*.H)
-             for alt_dir in ${alt_dirs}; do
-                 for ext in c cc cpp cxx C; do
-                     altname="${dir}/${alt_dir}/${file%.*}.${ext}"
-                     [ -f ${altname} ] && break
-                 done
-                 [ -f ${altname} ] && break
-             done
-         ;;
+        *.c|*.cc|*.cpp|*.cxx|*.C|*.inl)
+            for alt_dir in ${alt_dirs}; do
+                for ext in h hh hpp hxx H; do
+                    altname="${dir}/${alt_dir}/${file%.*}.${ext}"
+                    [ -f ${altname} ] && break
+                done
+                [ -f ${altname} ] && break
+            done
+        ;;
+        *.h|*.hh|*.hpp|*.hxx|*.H)
+            for alt_dir in ${alt_dirs}; do
+                for ext in c cc cpp cxx C; do
+                    altname="${dir}/${alt_dir}/${file%.*}.${ext}"
+                    [ -f ${altname} ] && break
+                done
+                [ -f ${altname} ] && break
+            done
+        ;;
+        *)
+            echo "'extension not recognized'"
+            exit
+        ;;
     esac
     if [ -f ${altname} ]; then
        echo edit "'${altname}'"
