@@ -21,7 +21,7 @@ def jedi-complete %{
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
 
-            compl=$( (python | 2>&1 tee "${dir}/fifo") <<-END
+            compl=$(python 2> "${dir}/fifo" <<-END
 		import jedi
 		script=jedi.Script(open('$dir/buf', 'r').read(), $kak_cursor_line, $kak_cursor_column - 1, '$kak_buffile')
 		print ':'.join([str(c.name) for c in script.completions()])
@@ -34,7 +34,7 @@ def jedi-complete %{
 }
 
 def jedi-enable-autocomplete %{
-    set window completers %sh{ echo "'option=jedi_completions:${kak_opt_completers}'" }
+    set window completers %rec{option=jedi_completions:%opt{completers}} }
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>\..\'<ret>
         echo 'completing...'

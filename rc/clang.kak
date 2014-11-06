@@ -23,15 +23,16 @@ def clang-complete %{
                       rmhooks buffer clang-cleanup
                   }
               }"
-        # this runs in a detached shell, asynchronously, so that kakoune does not hang while clang is running.
-        # As completions references a cursor position and a buffer timestamp, only valid completions should be
+        # this runs in a detached shell, asynchronously, so that kakoune does
+        # not hang while clang is running. As completions references a cursor
+        # position and a buffer timestamp, only valid completions should be
         # displayed.
         (
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
-            compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2>&1 |
-                    tee ${dir}/fifo | grep ^COMPLETION: | grep -v '(Hidden)' | sed -re 's/^COMPLETION: ([^:]+) :.*/\1/; s/:/\\:/g' | uniq | paste -s -d ':')
+            compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/fifo |
+                    grep ^COMPLETION: | grep -v '(Hidden)' | sed -re 's/^COMPLETION: (.+) : .*/\1/; s/:/\\:/g' | uniq | paste -s -d ':')
 
             echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
@@ -39,7 +40,7 @@ def clang-complete %{
 }
 
 def clang-enable-autocomplete %{
-    set window completers %sh{ echo "'option=clang_completions:${kak_opt_completers}'" }
+    set window completers %rec{option=clang_completions:%opt{completers}}
     hook window -group clang-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>(\.|->|::).\'<ret>
         echo 'completing...'
