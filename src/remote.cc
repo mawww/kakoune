@@ -407,19 +407,30 @@ void RemoteUI::set_input_callback(InputCallback callback)
     m_input_callback = std::move(callback);
 }
 
+static sockaddr_un session_addr(StringView session)
+{
+    sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, ("/tmp/kak-" + session).c_str(),
+            sizeof(addr.sun_path) - 1);
+    return addr;
+}
+
+static int connect_to(StringView session)
+{
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
+    sockaddr_un addr = session_addr(session);
+    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
+        throw connection_failed(addr.sun_path);
+    return sock;
+}
+
 RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
                            const EnvVarMap& env_vars, StringView init_command)
     : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions())
 {
-    auto filename = "/tmp/kak-" + session;
-
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
-    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw connection_failed(filename);
+    int sock = connect_to(session);
 
     {
         Message msg(sock);
@@ -519,20 +530,8 @@ void RemoteClient::write_next_key()
 
 void send_command(StringView session, StringView command)
 {
-    auto filename = "/tmp/kak-" + session;
-
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    fcntl(sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
-    if (connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) == -1)
-        throw connection_failed(filename);
-
-    {
-        Message msg(sock);
-        msg.write(command.data(), (int)command.length());
-    }
+    int sock = connect_to(session);
+    ::write(sock, command.data(), (int)command.length());
     close(sock);
 }
 
@@ -604,18 +603,15 @@ private:
 Server::Server(String session_name)
     : m_session{std::move(session_name)}
 {
-    String filename = "/tmp/kak-" + m_session;
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
-    sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, filename.c_str(), sizeof(addr.sun_path) - 1);
+    sockaddr_un addr = session_addr(m_session);
 
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-       throw runtime_error("unable to bind listen socket " + filename);
+       throw runtime_error("unable to bind listen socket "_str + addr.sun_path);
 
     if (listen(listen_sock, 4) == -1)
-       throw runtime_error("unable to listen on socket " + filename);
+       throw runtime_error("unable to listen on socket "_str + addr.sun_path);
 
     auto accepter = [this](FDWatcher& watcher) {
         sockaddr_un client_addr;
