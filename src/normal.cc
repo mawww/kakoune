@@ -116,7 +116,7 @@ bool show_auto_info_ifn(StringView title, StringView info,
     Face face = get_face("Information");
     CharCoord pos = context.window().dimensions();
     pos.column -= 1;
-    context.ui().info_show(title, info, pos , face, MenuStyle::Prompt);
+    context.ui().info_show(title, info, pos, face, MenuStyle::Prompt);
     return true;
 }
 
