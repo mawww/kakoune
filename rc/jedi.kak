@@ -34,7 +34,7 @@ def jedi-complete %{
 }
 
 def jedi-enable-autocomplete %{
-    set window completers %rec{option=jedi_completions:%opt{completers}} }
+    set window completers %rec{option=jedi_completions:%opt{completers}}
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>\..\'<ret>
         echo 'completing...'
