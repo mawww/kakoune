@@ -39,11 +39,14 @@ using InsertCompleterDescList = std::vector<InsertCompleterDesc>;
 String option_to_string(const InsertCompleterDesc& opt);
 void option_from_string(StringView str, InsertCompleterDesc& opt);
 
+using ComplAndDesc = std::pair<String, String>;
+using ComplAndDescList = std::vector<ComplAndDesc>;
+
 struct InsertCompletion
 {
     ByteCoord begin;
     ByteCoord end;
-    CandidateList candidates;
+    ComplAndDescList candidates;
     size_t timestamp;
 
     bool is_valid() const { return not candidates.empty(); }
@@ -77,7 +80,7 @@ private:
     const Context&   m_context;
     OptionManager&   m_options;
     InsertCompletion m_completions;
-    CandidateList    m_matching_candidates;
+    ComplAndDescList m_matching_candidates;
     int              m_current_candidate = -1;
 };
 

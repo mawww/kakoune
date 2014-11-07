@@ -93,13 +93,14 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     String current_word{begin, end};
 
     auto& word_db = get_word_db(buffer);
-    std::unordered_set<String> matches;
+    std::unordered_set<ComplAndDesc> matches;
     auto bufmatches = subseq ? word_db.find_subsequence(prefix)
                              : word_db.find_prefix(prefix);
-    matches.insert(bufmatches.begin(), bufmatches.end());
+    for (auto& match : bufmatches)
+        matches.insert(ComplAndDesc{match, ""});
 
     if (word_db.get_word_occurences(current_word) <= 1)
-        matches.erase(current_word);
+        matches.erase(ComplAndDesc{current_word, ""});
 
     if (other_buffers)
     {
@@ -110,11 +111,12 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
             auto& buf_word_db = get_word_db(*buf);
             bufmatches = subseq ? buf_word_db.find_subsequence(prefix)
                                 : buf_word_db.find_prefix(prefix);
-            matches.insert(bufmatches.begin(), bufmatches.end());
+            for (auto& match : bufmatches)
+                matches.insert(ComplAndDesc{match, ""});
         }
     }
-    matches.erase(prefix);
-    CandidateList result;
+    matches.erase(ComplAndDesc{prefix, ""});
+    ComplAndDescList result;
     std::copy(matches.begin(), matches.end(),
               inserter(result, result.begin()));
     std::sort(result.begin(), result.end());
@@ -142,9 +144,12 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     if (require_slash and not contains(prefix, '/'))
         return {};
 
-    StringList res;
+    ComplAndDescList res;
     if (prefix.front() == '/')
-        res = Kakoune::complete_filename(prefix, Regex{});
+    {
+        for (auto& filename : Kakoune::complete_filename(prefix, Regex{}))
+            res.emplace_back(std::move(filename), "");
+    }
     else
     {
         for (auto dir : options["path"].get<StringList>())
@@ -152,7 +157,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
             for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
-                res.push_back(filename.substr(dir.length()));
+                res.emplace_back(filename.substr(dir.length()), "");
         }
     }
     if (res.empty())
@@ -190,7 +195,19 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
         if (timestamp == buffer.timestamp() and
             cursor_pos.line == coord.line and cursor_pos.column >= coord.column and
             buffer.distance(coord, cursor_pos) < longest_completion)
-            return { coord, end, { opt.begin() + 1, opt.end() }, timestamp };
+        {
+            ComplAndDescList res;
+            for (auto it = opt.begin() + 1; it != opt.end(); ++it)
+            {
+                size_t pos = it->find_first_of("@");
+                if (pos != String::npos)
+                    res.emplace_back(it->substr(0_byte, (int)pos),
+                                     it->substr(ByteCount{(int)pos+1}));
+                else
+                    res.emplace_back(*it, "");
+            }
+            return { coord, end, std::move(res), timestamp };
+        }
     }
     return {};
 }
@@ -198,14 +215,14 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
 InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
 {
     StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
-    StringList res;
+    ComplAndDescList res;
     for (LineCount l = 0_line; l < buffer.line_count(); ++l)
     {
         if (l == cursor_pos.line)
             continue;
         ByteCount len = buffer[l].length();
         if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buffer[l].begin()))
-            res.push_back(buffer[l].substr(0_byte, len-1));
+            res.emplace_back(buffer[l].substr(0_byte, len-1), "");
     }
     if (res.empty())
         return {};
@@ -236,7 +253,7 @@ void InsertCompleter::select(int offset)
     m_current_candidate = (m_current_candidate + offset) % (int)m_matching_candidates.size();
     if (m_current_candidate < 0)
         m_current_candidate += m_matching_candidates.size();
-    const String& candidate = m_matching_candidates[m_current_candidate];
+    const ComplAndDesc& candidate = m_matching_candidates[m_current_candidate];
     auto& selections = m_context.selections();
     const auto& cursor_pos = selections.main().cursor();
     const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
@@ -251,16 +268,24 @@ void InsertCompleter::select(int offset)
             std::equal(ref.begin(), ref.end(), pos - prefix_len))
         {
             pos = buffer.erase(pos - prefix_len, pos + suffix_len);
-            buffer.insert(pos, candidate);
+            buffer.insert(pos, candidate.first);
             const_cast<SelectionList&>(selections).update();
         }
     }
     m_completions.end = cursor_pos;
-    m_completions.begin = buffer.advance(cursor_pos, -candidate.length());
+    m_completions.begin = buffer.advance(cursor_pos, -candidate.first.length());
     m_completions.timestamp = buffer.timestamp();
     if (m_context.has_ui())
+    {
         m_context.ui().menu_select(m_current_candidate);
-
+        if (not candidate.second.empty())
+        {
+            CharCoord pos = m_context.window().dimensions();
+            pos.column -= 1;
+            m_context.ui().info_show(candidate.first, candidate.second, pos,
+                                     get_face("Information"), MenuStyle::Prompt);
+        }
+    } 
     // when we select a match, remove non displayed matches from the candidates
     // which are considered as invalid with the new completion timestamp
     m_completions.candidates.clear();
@@ -274,7 +299,7 @@ void InsertCompleter::update()
     {
         ByteCount longest_completion = 0;
         for (auto& candidate : m_completions.candidates)
-             longest_completion = std::max(longest_completion, candidate.length());
+             longest_completion = std::max(longest_completion, candidate.first.length());
 
         ByteCoord cursor = m_context.selections().main().cursor();
         ByteCoord compl_beg = m_completions.begin;
@@ -291,7 +316,7 @@ void InsertCompleter::update()
                 m_matching_candidates.clear();
                 for (auto& candidate : m_completions.candidates)
                 {
-                    if (candidate.substr(0, prefix.length()) == prefix)
+                    if (candidate.first.substr(0, prefix.length()) == prefix)
                         m_matching_candidates.push_back(candidate);
                 }
             }
@@ -300,7 +325,7 @@ void InsertCompleter::update()
                 m_current_candidate = m_matching_candidates.size();
                 m_completions.end = cursor;
                 menu_show();
-                m_matching_candidates.push_back(prefix);
+                m_matching_candidates.emplace_back(prefix, "");
                 return;
             }
         }
@@ -363,7 +388,7 @@ void InsertCompleter::menu_show()
                                         m_completions.begin);
     std::vector<String> menu_entries;
     for (auto& candidate : m_matching_candidates)
-        menu_entries.push_back(expand_tabs(candidate, tabstop, column));
+        menu_entries.push_back(expand_tabs(candidate.first, tabstop, column));
 
     m_context.ui().menu_show(menu_entries, menu_pos,
                              get_face("MenuForeground"),
@@ -409,7 +434,7 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
     m_matching_candidates = m_completions.candidates;
     m_current_candidate = m_matching_candidates.size();
     menu_show();
-    m_matching_candidates.push_back(buffer.string(m_completions.begin, m_completions.end));
+    m_matching_candidates.emplace_back(buffer.string(m_completions.begin, m_completions.end), "");
     return true;
 }
 
