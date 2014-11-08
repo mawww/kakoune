@@ -256,7 +256,7 @@ public:
 
     void info_show(StringView title, StringView content,
                    CharCoord anchor, Face face,
-                   MenuStyle style) override;
+                   InfoStyle style) override;
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
@@ -323,7 +323,7 @@ void RemoteUI::menu_hide()
 
 void RemoteUI::info_show(StringView title, StringView content,
                          CharCoord anchor, Face face,
-                         MenuStyle style)
+                         InfoStyle style)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::InfoShow);
@@ -490,7 +490,7 @@ void RemoteClient::process_next_message()
         auto content = read<String>(socket);
         auto anchor = read<CharCoord>(socket);
         auto face = read<Face>(socket);
-        auto style = read<MenuStyle>(socket);
+        auto style = read<InfoStyle>(socket);
         m_ui->info_show(title, content, anchor, face, style);
         break;
     }

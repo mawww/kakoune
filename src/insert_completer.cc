@@ -279,12 +279,8 @@ void InsertCompleter::select(int offset)
     {
         m_context.ui().menu_select(m_current_candidate);
         if (not candidate.second.empty())
-        {
-            CharCoord pos = m_context.window().dimensions();
-            pos.column -= 1;
-            m_context.ui().info_show(candidate.first, candidate.second, pos,
-                                     get_face("Information"), MenuStyle::Prompt);
-        }
+            m_context.ui().info_show(candidate.first, candidate.second, CharCoord{},
+                                     get_face("Information"), InfoStyle::MenuDoc);
     } 
     // when we select a match, remove non displayed matches from the candidates
     // which are considered as invalid with the new completion timestamp

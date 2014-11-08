@@ -34,7 +34,7 @@ public:
 
     void info_show(StringView title, StringView content,
                    CharCoord anchor, Face face,
-                   MenuStyle style) override;
+                   InfoStyle style) override;
     void info_hide() override;
 
     void refresh() override;

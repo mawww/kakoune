@@ -1234,7 +1234,7 @@ const CommandDesc info_cmd = {
         context.ui().info_hide();
         if (parser.positional_count() > 0)
         {
-            MenuStyle style = MenuStyle::Prompt;
+            InfoStyle style = InfoStyle::Prompt;
             CharCoord pos = context.ui().dimensions();
             pos.column -= 1;
             if (parser.has_option("anchor"))
@@ -1247,7 +1247,7 @@ const CommandDesc info_cmd = {
                 ByteCoord coord{str_to_int(anchor.substr(0, dotb))-1,
                                 str_to_int(anchor.substr(dotb+1))-1};
                 pos = context.window().display_position(coord);
-                style = MenuStyle::Inline;
+                style = InfoStyle::Inline;
             }
             const String& title = parser.has_option("title") ? parser.option_value("title") : "";
             context.ui().info_show(title, parser[0], pos, get_face("Information"), style);

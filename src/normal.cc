@@ -116,7 +116,7 @@ bool show_auto_info_ifn(StringView title, StringView info,
     Face face = get_face("Information");
     CharCoord pos = context.window().dimensions();
     pos.column -= 1;
-    context.ui().info_show(title, info, pos, face, MenuStyle::Prompt);
+    context.ui().info_show(title, info, pos, face, InfoStyle::Prompt);
     return true;
 }
 
@@ -366,7 +366,7 @@ void command(Context& context, int)
                     CharCoord pos = context.window().dimensions();
                     pos.column -= 1;
                     if (not info.first.empty() and not info.second.empty())
-                        context.ui().info_show(info.first, info.second, pos , col, MenuStyle::Prompt);
+                        context.ui().info_show(info.first, info.second, pos , col, InfoStyle::Prompt);
                 }
             }
             if (event == PromptEvent::Validate)
@@ -569,7 +569,7 @@ void regex_prompt(Context& context, const String prompt, T func)
                         Face face = get_face("Information");
                         CharCoord pos = context.window().dimensions();
                         pos.column -= 1;
-                        context.ui().info_show("regex error", err.what(), pos, face, MenuStyle::Prompt);
+                        context.ui().info_show("regex error", err.what(), pos, face, InfoStyle::Prompt);
                     }
                 }
             }

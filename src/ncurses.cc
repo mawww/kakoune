@@ -767,22 +767,26 @@ static String make_info_box(StringView title, StringView message,
 }
 
 void NCursesUI::info_show(StringView title, StringView content,
-                          CharCoord anchor, Face face, MenuStyle style)
+                          CharCoord anchor, Face face, InfoStyle style)
 {
     if (m_info_win)
         delwin(m_info_win);
 
     StringView info_box = content;
     String fancy_info_box;
-    if (style == MenuStyle::Prompt)
+    if (style == InfoStyle::Prompt)
     {
         fancy_info_box = make_info_box(title, content, m_dimensions.column);
         info_box = fancy_info_box;
     }
 
     CharCoord size = compute_needed_size(info_box);
-
-    CharCoord pos = compute_pos(anchor, size, m_menu_win);
+    CharCoord pos;
+    if (style == InfoStyle::MenuDoc and m_menu_win and m_menu_columns == 1)
+        pos = window_pos(m_menu_win) +
+             CharCoord{0_line, window_size(m_menu_win).column};
+    else
+        pos = compute_pos(anchor, size, m_menu_win);
 
     m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
                                      (int)pos.line,  (int)pos.column);

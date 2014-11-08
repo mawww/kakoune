@@ -20,6 +20,13 @@ enum class MenuStyle
     Inline
 };
 
+enum class InfoStyle
+{
+    Prompt,
+    Inline,
+    MenuDoc
+};
+
 using InputCallback = std::function<void()>;
 
 class UserInterface : public SafeCountable
@@ -35,7 +42,7 @@ public:
 
     virtual void info_show(StringView title, StringView content,
                            CharCoord anchor, Face face,
-                           MenuStyle style) = 0;
+                           InfoStyle style) = 0;
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
