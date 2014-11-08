@@ -547,6 +547,9 @@ void NCursesUI::menu_show(memoryview<String> items,
     m_menu_fg = fg;
     m_menu_bg = bg;
 
+    if (style == MenuStyle::Prompt)
+        anchor = CharCoord{m_dimensions.line, 0};
+
     CharCoord maxsize = window_size(stdscr);
     maxsize.column -= anchor.column;
     if (maxsize.column <= 2)
@@ -778,6 +781,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     {
         fancy_info_box = make_info_box(title, content, m_dimensions.column);
         info_box = fancy_info_box;
+        anchor = CharCoord{m_dimensions.line, m_dimensions.column-1};
     }
 
     CharCoord size = compute_needed_size(info_box);

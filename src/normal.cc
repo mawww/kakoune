@@ -114,9 +114,7 @@ bool show_auto_info_ifn(StringView title, StringView info,
     if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
         return false;
     Face face = get_face("Information");
-    CharCoord pos = context.window().dimensions();
-    pos.column -= 1;
-    context.ui().info_show(title, info, pos, face, InfoStyle::Prompt);
+    context.ui().info_show(title, info, CharCoord{}, face, InfoStyle::Prompt);
     return true;
 }
 
@@ -363,10 +361,8 @@ void command(Context& context, int)
                 {
                     auto info = CommandManager::instance().command_info(context, cmdline);
                     Face col = get_face("Information");
-                    CharCoord pos = context.window().dimensions();
-                    pos.column -= 1;
                     if (not info.first.empty() and not info.second.empty())
-                        context.ui().info_show(info.first, info.second, pos , col, InfoStyle::Prompt);
+                        context.ui().info_show(info.first, info.second, CharCoord{}, col, InfoStyle::Prompt);
                 }
             }
             if (event == PromptEvent::Validate)
@@ -567,9 +563,7 @@ void regex_prompt(Context& context, const String prompt, T func)
                     if (context.has_ui())
                     {
                         Face face = get_face("Information");
-                        CharCoord pos = context.window().dimensions();
-                        pos.column -= 1;
-                        context.ui().info_show("regex error", err.what(), pos, face, InfoStyle::Prompt);
+                        context.ui().info_show("regex error", err.what(), CharCoord{}, face, InfoStyle::Prompt);
                     }
                 }
             }

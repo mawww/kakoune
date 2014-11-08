@@ -114,12 +114,8 @@ public:
             if (it != keymap.end())
             {
                 if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
-                {
-                    Face col = get_face("Information");
-                    CharCoord pos = context().window().dimensions();
-                    pos.column -= 1;
-                    context().ui().info_show(key_to_str(key), it->second.docstring, pos, col, InfoStyle::Prompt);
-                }
+                    context().ui().info_show(key_to_str(key), it->second.docstring, CharCoord{},
+                                             get_face("Information"), InfoStyle::Prompt);
                 it->second.func(context(), m_count);
             }
             m_count = 0;
@@ -330,8 +326,7 @@ public:
     {
         if (not context().has_ui())
             return;
-        CharCoord menu_pos{ context().ui().dimensions().line, 0_char };
-        context().ui().menu_show(choices, menu_pos, get_face("MenuForeground"),
+        context().ui().menu_show(choices, CharCoord{}, get_face("MenuForeground"),
                                  get_face("MenuBackground"), MenuStyle::Prompt);
         context().ui().menu_select(0);
     }
@@ -683,11 +678,8 @@ private:
                                         line.byte_count_to(m_line_editor.cursor_pos()));
             CandidateList& candidates = m_completions.candidates;
             if (context().has_ui() and not candidates.empty())
-            {
-                CharCoord menu_pos{ context().ui().dimensions().line, 0_char };
-                context().ui().menu_show(candidates, menu_pos, get_face("MenuForeground"),
+                context().ui().menu_show(candidates, CharCoord{}, get_face("MenuForeground"),
                                          get_face("MenuBackground"), MenuStyle::Prompt);
-            }
         } catch (runtime_error&) {}
     }
 

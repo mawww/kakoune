@@ -1235,8 +1235,7 @@ const CommandDesc info_cmd = {
         if (parser.positional_count() > 0)
         {
             InfoStyle style = InfoStyle::Prompt;
-            CharCoord pos = context.ui().dimensions();
-            pos.column -= 1;
+            CharCoord pos;
             if (parser.has_option("anchor"))
             {
                 auto anchor = parser.option_value("anchor");

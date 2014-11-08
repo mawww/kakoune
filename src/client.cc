@@ -138,13 +138,11 @@ void Client::check_buffer_fs_timestamp()
         return;
     if (reload == Ask)
     {
-        CharCoord pos = context().window().dimensions();
-        pos.column -= 1;
         m_ui->info_show(
             "reload '" + buffer.display_name() + "' ?",
             "'" + buffer.display_name() + "' was modified externally\n"
             "press r or y to reload, k or n to keep",
-            pos, get_face("Information"), InfoStyle::Prompt);
+            CharCoord{}, get_face("Information"), InfoStyle::Prompt);
 
         m_input_handler.on_next_key(KeymapMode::None,
                                    [this, filename](Key key, Context& context) {
