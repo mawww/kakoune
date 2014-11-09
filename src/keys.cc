@@ -41,75 +41,57 @@ static const KeyAndName keynamemap[] = {
 KeyList parse_keys(StringView str)
 {
     KeyList result;
-    using PassPolicy = utf8::InvalidPolicy::Pass;
-    using Utf8It = utf8::iterator<const char*, PassPolicy>;
+    using Utf8It = utf8::iterator<const char*>;
     for (Utf8It it = str.begin(), str_end = str.end(); it < str_end; ++it)
     {
-        if (*it == '<')
+        if (*it != '<')
         {
-            Utf8It end_it = it;
-            while (end_it < str_end and *end_it != '>')
-                ++end_it;
-
-            if (end_it < str_end)
-            {
-                Key::Modifiers modifier = Key::Modifiers::None;
-
-                StringView keyname{it.base()+1, end_it.base()};
-                if (keyname.length() > 2)
-                {
-                    if (tolower(keyname[0]) == 'c' and keyname[1] == '-')
-                    {
-                        modifier = Key::Modifiers::Control;
-                        keyname = keyname.substr(2_byte);
-                    }
-                    if (tolower(keyname[0]) == 'a' and keyname[1] == '-')
-                    {
-                        modifier = Key::Modifiers::Alt;
-                        keyname = keyname.substr(2_byte);
-                    }
-                }
-                if (keyname.char_length() == 1)
-                {
-                    result.push_back(Key{ modifier, utf8::codepoint<PassPolicy>(keyname.begin(),keyname.end()) });
-                    it = end_it;
-                    continue;
-                }
-                auto name_it = find_if(keynamemap, [&keyname](const KeyAndName& item)
-                                                   { return item.first == keyname; });
-                if (name_it != end(keynamemap))
-                {
-                    Key key = canonicalize_ifn(Key{ modifier, name_it->second });
-                    result.push_back(key);
-                    it = end_it;
-                    continue;
-                }
-                if ((keyname[0] == 'f' or keyname[0] == 'F') and
-                    keyname.length() <= 3)
-                {
-
-                    int val = 0;
-                    for (auto i = 1_byte; i < keyname.length(); ++i)
-                    {
-                        char c = keyname[i];
-                        if (c >= '0' and c <= '9')
-                            val = val*10 + c - '0';
-                        else
-                        {
-                            val = -1;
-                            break;
-                        }
-                    }
-                    if (val >= 1 and val <= 12)
-                    {
-                        result.push_back(Key{ modifier, Key::F1 + (val - 1) });
-                        it = end_it;
-                        continue;
-                    }
-                }
-            }
+            result.push_back({Key::Modifiers::None, *it});
+            continue;
         }
-        result.push_back({Key::Modifiers::None, *it});
+
+        Utf8It end_it = it;
+        skip_while(end_it, str_end, [](char c) { return c != '>'; });
+        if (end_it == str_end)
+        {
+            result.push_back({Key::Modifiers::None, *it});
+            continue;
+        }
+
+        Key::Modifiers modifier = Key::Modifiers::None;
+
+        StringView desc{it.base()+1, end_it.base()};
+        if (desc.length() > 2 and desc[1] == '-')
+        {
+            switch(tolower(desc[0]))
+            {
+                case 'c': modifier = Key::Modifiers::Control; break;
+                case 'a': modifier = Key::Modifiers::Alt; break;
+                default:
+                    throw runtime_error("unable to parse modifier in " +
+                                        StringView{it.base(), end_it.base()+1});
+            }
+            desc = desc.substr(2_byte);
+        }
+        auto name_it = find_if(keynamemap, [&desc](const KeyAndName& item)
+                                           { return item.first == desc; });
+        if (name_it != end(keynamemap))
+            result.push_back(canonicalize_ifn({ modifier, name_it->second }));
+        else if (desc.char_length() == 1)
+            result.push_back(Key{ modifier, desc[0_char] });
+        else if (tolower(desc[0]) == 'f' and desc.length() <= 3)
+        {
+            int val = str_to_int(desc.substr(1_byte));
+            if (val >= 1 and val <= 12)
+                result.push_back(Key{ modifier, Key::F1 + (val - 1) });
+            else
+                throw runtime_error("Only F1 through F12 are supported");
+        }
+        else
+            throw runtime_error("Failed to parse " +
+                                 StringView{it.base(), end_it.base()+1});
+
+        it = end_it;
     }
     return result;
 }
