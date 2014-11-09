@@ -128,7 +128,7 @@ String key_to_str(Key key)
     else if (key.key >= Key::F1 and key.key < Key::F12)
     {
         named = true;
-        res = "F" + to_string((int)(Codepoint)key.key - (int)(Codepoint)Key::F1 + 1);
+        res = "F" + to_string((int)(key.key - Key::F1 + 1));
     }
     else
         res = codepoint_to_str(key.key);
