@@ -25,6 +25,8 @@
 namespace Kakoune
 {
 
+constexpr bool status_on_top = true;
+
 using std::min;
 using std::max;
 
@@ -335,7 +337,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 {
     check_resize();
 
-    LineCount line_index = 0;
+    LineCount line_index = status_on_top ? 1 : 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
@@ -345,14 +347,15 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     }
 
     set_face(m_window, { Colors::Blue, Colors::Default });
-    for (;line_index < m_dimensions.line; ++line_index)
+    while (line_index < m_dimensions.line + (status_on_top ? 1 : 0))
     {
-        wmove(m_window, (int)line_index, 0);
+        wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
         waddch(m_window, '~');
     }
 
-    wmove(m_window, (int)m_dimensions.line, 0);
+    int status_line_pos = status_on_top ? 0 : (int)m_dimensions.line;
+    wmove(m_window, status_line_pos, 0);
     wclrtoeol(m_window);
     draw_line(status_line, 0);
     CharCount status_len = mode_line.length();
@@ -360,7 +363,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     if (m_dimensions.column - status_line.length() > status_len + 1)
     {
         CharCount col = m_dimensions.column - status_len;
-        wmove(m_window, (int)m_dimensions.line, (int)col);
+        wmove(m_window, status_line_pos, (int)col);
         draw_line(mode_line, col);
     }
 
@@ -548,7 +551,9 @@ void NCursesUI::menu_show(memoryview<String> items,
     m_menu_bg = bg;
 
     if (style == MenuStyle::Prompt)
-        anchor = CharCoord{m_dimensions.line, 0};
+        anchor = CharCoord{status_on_top ? 0_line : m_dimensions.line, 0};
+    else if (status_on_top)
+        anchor.line += 1;
 
     CharCoord maxsize = window_size(stdscr);
     maxsize.column -= anchor.column;
@@ -792,8 +797,11 @@ void NCursesUI::info_show(StringView title, StringView content,
     {
         fancy_info_box = make_info_box(title, content, m_dimensions.column);
         info_box = fancy_info_box;
-        anchor = CharCoord{m_dimensions.line, m_dimensions.column-1};
+        anchor = CharCoord{status_on_top ? 0 : m_dimensions.line,
+                           m_dimensions.column-1};
     }
+    else if (status_on_top)
+        anchor.line += 1;
 
     CharCoord size = compute_needed_size(info_box);
     CharCoord pos;
