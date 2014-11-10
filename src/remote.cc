@@ -26,7 +26,8 @@ enum class RemoteUIMsg
     InfoShow,
     InfoHide,
     Draw,
-    Refresh
+    Refresh,
+    SetOptions
 };
 
 struct socket_error{};
@@ -271,6 +272,8 @@ public:
 
     void set_input_callback(InputCallback callback) override;
 
+    void set_ui_options(const Options& options) override;
+
 private:
     FDWatcher    m_socket_watcher;
     CharCoord m_dimensions;
@@ -355,6 +358,13 @@ void RemoteUI::refresh()
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Refresh);
+}
+
+void RemoteUI::set_ui_options(const Options& options)
+{
+    Message msg(m_socket_watcher.fd());
+    msg.write(RemoteUIMsg::SetOptions);
+    msg.write(options);
 }
 
 static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
@@ -507,6 +517,9 @@ void RemoteClient::process_next_message()
     }
     case RemoteUIMsg::Refresh:
         m_ui->refresh();
+        break;
+    case RemoteUIMsg::SetOptions:
+        m_ui->set_ui_options(read_map<String, String>(socket));
         break;
     }
 }

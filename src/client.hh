@@ -7,6 +7,7 @@
 #include "safe_ptr.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "option_manager.hh"
 
 namespace Kakoune
 {
@@ -14,7 +15,7 @@ namespace Kakoune
 class UserInterface;
 class Window;
 
-class Client : public SafeCountable
+class Client : public SafeCountable, public OptionManagerWatcher
 {
 public:
     Client(std::unique_ptr<UserInterface>&& ui,
@@ -23,6 +24,8 @@ public:
            EnvVarMap env_vars,
            String name);
     ~Client();
+
+    Client(Client&&) = delete;
 
     // handle all the keys currently available in the user interface
     void handle_available_input();
@@ -47,6 +50,8 @@ public:
     const String& get_env_var(const String& name) const;
 
 private:
+    void on_option_changed(const Option& option) override;
+
     DisplayLine generate_mode_line() const;
 
     std::unique_ptr<UserInterface> m_ui;

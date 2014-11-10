@@ -25,8 +25,6 @@
 namespace Kakoune
 {
 
-constexpr bool status_on_top = true;
-
 using std::min;
 using std::max;
 
@@ -337,7 +335,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 {
     check_resize();
 
-    LineCount line_index = status_on_top ? 1 : 0;
+    LineCount line_index = m_status_on_top ? 1 : 0;
     for (const DisplayLine& line : display_buffer.lines())
     {
         wmove(m_window, (int)line_index, 0);
@@ -347,14 +345,14 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     }
 
     set_face(m_window, { Colors::Blue, Colors::Default });
-    while (line_index < m_dimensions.line + (status_on_top ? 1 : 0))
+    while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
         waddch(m_window, '~');
     }
 
-    int status_line_pos = status_on_top ? 0 : (int)m_dimensions.line;
+    int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
     wmove(m_window, status_line_pos, 0);
     wclrtoeol(m_window);
     draw_line(status_line, 0);
@@ -551,8 +549,8 @@ void NCursesUI::menu_show(memoryview<String> items,
     m_menu_bg = bg;
 
     if (style == MenuStyle::Prompt)
-        anchor = CharCoord{status_on_top ? 0_line : m_dimensions.line, 0};
-    else if (status_on_top)
+        anchor = CharCoord{m_status_on_top ? 0_line : m_dimensions.line, 0};
+    else if (m_status_on_top)
         anchor.line += 1;
 
     CharCoord maxsize = window_size(stdscr);
@@ -797,10 +795,10 @@ void NCursesUI::info_show(StringView title, StringView content,
     {
         fancy_info_box = make_info_box(title, content, m_dimensions.column);
         info_box = fancy_info_box;
-        anchor = CharCoord{status_on_top ? 0 : m_dimensions.line,
+        anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
     }
-    else if (status_on_top)
+    else if (m_status_on_top)
         anchor.line += 1;
 
     CharCoord size = compute_needed_size(info_box);
@@ -851,6 +849,13 @@ void NCursesUI::set_input_callback(InputCallback callback)
 void NCursesUI::abort()
 {
     endwin();
+}
+
+void NCursesUI::set_ui_options(const Options& options)
+{
+    auto it = options.find("ncurses_status_on_top");
+    if (it != options.end())
+        m_status_on_top = it->second == "yes" or it->second == "true";
 }
 
 }

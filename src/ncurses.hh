@@ -41,6 +41,8 @@ public:
 
     void set_input_callback(InputCallback callback) override;
 
+    void set_ui_options(const Options& options) override;
+
     CharCoord dimensions() override;
 
     static void abort();
@@ -67,6 +69,8 @@ private:
 
     FDWatcher     m_stdin_watcher;
     InputCallback m_input_callback;
+
+    bool m_status_on_top = false;
 
     bool m_dirty = false;
 };

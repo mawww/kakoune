@@ -229,6 +229,9 @@ void register_options()
     reg.declare_option("autoreload",
                        "autoreload buffer when a filesystem modification is detected",
                        Ask);
+    reg.declare_option("ui_options",
+                       "options passed to UI as a string map",
+                       UserInterface::Options());
 }
 
 void create_local_client(const String& init_command)

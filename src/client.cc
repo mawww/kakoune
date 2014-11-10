@@ -24,10 +24,14 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
 {
     context().set_client(*this);
     context().set_window(*m_window);
+
+    m_window->options().register_watcher(*this);
+    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
 }
 
 Client::~Client()
 {
+    m_window->options().unregister_watcher(*this);
 }
 
 void Client::handle_available_input()
@@ -77,13 +81,19 @@ DisplayLine Client::generate_mode_line() const
 void Client::change_buffer(Buffer& buffer)
 {
     auto& client_manager = ClientManager::instance();
+    m_window->options().unregister_watcher(*this);
     client_manager.add_free_window(std::move(m_window),
                                    std::move(context().selections()));
     WindowAndSelections ws = client_manager.get_free_window(buffer);
+
     m_window = std::move(ws.window);
+    m_window->options().register_watcher(*this);
+    m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
+
     context().m_selections = std::move(ws.selections);
     context().set_window(*m_window);
     m_window->set_dimensions(ui().dimensions());
+
     m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
 }
 
@@ -179,6 +189,12 @@ const String& Client::get_env_var(const String& name) const
     if (it == m_env_vars.end())
         return empty;
     return it->second;
+}
+
+void Client::on_option_changed(const Option& option)
+{
+    if (option.name() == "ui_options")
+        m_ui->set_ui_options(option.get<UserInterface::Options>());
 }
 
 }
