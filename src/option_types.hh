@@ -8,6 +8,7 @@
 
 #include <tuple>
 #include <vector>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace Kakoune
@@ -97,6 +98,38 @@ bool option_add(std::unordered_set<T>& opt, const std::unordered_set<T>& set)
 {
     std::copy(set.begin(), set.end(), std::inserter(opt, opt.begin()));
     return not set.empty();
+}
+
+template<typename Key, typename Value>
+String option_to_string(const std::unordered_map<Key, Value>& opt)
+{
+    String res;
+    for (auto it = begin(opt); it != end(opt); ++it)
+    {
+        if (it != begin(opt))
+            res += list_separator;
+        String elem = escape(option_to_string(it->first), '=', '\\') + "=" +
+                      escape(option_to_string(it->second), '=', '\\');
+        res += escape(elem, list_separator, '\\');
+    }
+    return res;
+}
+
+template<typename Key, typename Value>
+void option_from_string(StringView str, std::unordered_map<Key, Value>& opt)
+{
+    opt.clear();
+    std::vector<String> elems = split(str, list_separator, '\\');
+    for (auto& elem: elems)
+    {
+        std::vector<String> pair_str = split(elem, '=', '\\');
+        if (pair_str.size() != 2)
+            throw runtime_error("map option expects key=value");
+        std::pair<Key, Value> pair;
+        option_from_string(pair_str[0], pair.first);
+        option_from_string(pair_str[1], pair.second);
+        opt.insert(std::move(pair));
+    }
 }
 
 constexpr Codepoint tuple_separator = ',';
