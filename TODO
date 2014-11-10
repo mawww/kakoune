@@ -48,8 +48,7 @@
 * Tree based undo
 
 * configurable evaluated (%sh{...}) strings ? use an option to define
-  the interpreters, regex for finding used kak variables (ability to
-  add direct python/perl/ruby/whatever evaluation).
+  the interpreters.
 
 * User defined text objects
 
@@ -61,7 +60,7 @@
 
 * Make kakoune self-documenting
 
-  - Add doc strings to options
+  - Display option docstring
 
   - Generate documentation from Kakoune source
 
@@ -72,8 +71,6 @@
       with README.asciidoc including commands ?
 
 * Rewrite keymap support using options ? (map window insert a b -> set -add window insert_keymap a:b)
-
-* Fix 'n' command with inverted selection
 
 * Comments and strings should be more integrated than just highlighting, matching chars
   for example should be strings and comments aware
