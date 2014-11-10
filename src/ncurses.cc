@@ -642,12 +642,23 @@ static CharCoord compute_needed_size(StringView str)
 }
 
 static CharCoord compute_pos(CharCoord anchor, CharCoord size,
-                             WINDOW* opt_window_to_avoid = nullptr)
+                             WINDOW* opt_window_to_avoid = nullptr,
+                             bool prefer_above = false)
 {
     CharCoord scrsize = window_size(stdscr);
-    CharCoord pos = { anchor.line+1, anchor.column };
-    if (pos.line + size.line >= scrsize.line)
-        pos.line = max(0_line, anchor.line - size.line);
+    CharCoord pos;
+    if (prefer_above)
+    {
+        pos = anchor - CharCoord{size.line};
+        if (pos.line < 0)
+            prefer_above = false;
+    }
+    if (not prefer_above)
+    {
+        pos = anchor + CharCoord{1_line};
+        if (pos.line + size.line >= scrsize.line)
+            pos.line = max(0_line, anchor.line - size.line);
+    }
     if (pos.column + size.column >= scrsize.column)
         pos.column = max(0_char, anchor.column - size.column+1);
 
@@ -790,7 +801,7 @@ void NCursesUI::info_show(StringView title, StringView content,
         pos = window_pos(m_menu_win) +
              CharCoord{0_line, window_size(m_menu_win).column};
     else
-        pos = compute_pos(anchor, size, m_menu_win);
+        pos = compute_pos(anchor, size, m_menu_win, style == InfoStyle::InlineAbove);
 
     m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
                                      (int)pos.line,  (int)pos.column);

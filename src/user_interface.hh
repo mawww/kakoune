@@ -24,6 +24,8 @@ enum class InfoStyle
 {
     Prompt,
     Inline,
+    InlineAbove,
+    InlineBelow,
     MenuDoc
 };
 

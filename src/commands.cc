@@ -1224,6 +1224,7 @@ const CommandDesc info_cmd = {
     "info <switches> <params>...: display an info box with the params as content",
     ParameterDesc{
         SwitchMap{ { "anchor", { true, "set info anchoring <line>.<column>" } },
+                   { "placement", { true, "set placement relative to anchor (above, below)" } },
                    { "title", { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -1247,6 +1248,16 @@ const CommandDesc info_cmd = {
                                 str_to_int(anchor.substr(dotb+1))-1};
                 pos = context.window().display_position(coord);
                 style = InfoStyle::Inline;
+                if (parser.has_option("placement"))
+                {
+                    auto placement = parser.option_value("placement");
+                    if (placement == "above")
+                        style = InfoStyle::InlineAbove;
+                    else if (placement == "below")
+                        style = InfoStyle::InlineBelow;
+                    else
+                        throw runtime_error("invalid placement " + placement);
+                }
             }
             const String& title = parser.has_option("title") ? parser.option_value("title") : "";
             context.ui().info_show(title, parser[0], pos, get_face("Information"), style);
