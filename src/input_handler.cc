@@ -47,7 +47,7 @@ private:
 namespace InputModes
 {
 
-static constexpr std::chrono::milliseconds idle_timeout{100};
+static constexpr std::chrono::milliseconds idle_timeout{50};
 static constexpr std::chrono::milliseconds fs_check_timeout{500};
 
 class Normal : public InputMode
