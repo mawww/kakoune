@@ -22,7 +22,7 @@ def -shell-params -file-completion \
 
 hook global WinSetOption filetype=grep %{
     addhl group grep
-    addhl -group grep regex "^([^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
+    addhl -group grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     addhl -group grep line_option _grep_current_line default+b
     hook buffer -group grep-hooks NormalKey <c-m> jump
 }
@@ -32,7 +32,7 @@ hook global WinSetOption filetype=(?!grep).* %{ rmhl grep; rmhooks buffer grep-h
 decl str jumpclient
 
 def jump %{
-    exec 'xs^([^:]+):(\d+):(\d+)?<ret>'
+    exec 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
     set buffer _grep_current_line %val{cursor_line}
     eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
     try %{ focus %opt{jumpclient} }
