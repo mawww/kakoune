@@ -281,7 +281,7 @@ void InsertCompleter::select(int offset)
         if (not candidate.second.empty())
             m_context.ui().info_show(candidate.first, candidate.second, CharCoord{},
                                      get_face("Information"), InfoStyle::MenuDoc);
-    } 
+    }
     // when we select a match, remove non displayed matches from the candidates
     // which are considered as invalid with the new completion timestamp
     m_completions.candidates.clear();
@@ -334,7 +334,10 @@ void InsertCompleter::reset()
 {
     m_completions = InsertCompletion{};
     if (m_context.has_ui())
+    {
         m_context.ui().menu_hide();
+        m_context.ui().info_hide();
+    }
 }
 
 bool InsertCompleter::setup_ifn()
