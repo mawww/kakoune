@@ -48,6 +48,7 @@ Buffer* open_fifo(StringView name, StringView filename, bool scroll)
 template<typename T>
 CandidateList prefix_complete(StringView prefix, const T& options)
 {
+    using std::begin; using std::end;
     CandidateList res;
     std::copy_if(begin(options), end(options), std::back_inserter(res),
                  std::bind(prefix_match, std::placeholders::_1, prefix));
@@ -956,7 +957,7 @@ const CommandDesc map_key_cmd = {
                      prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
         if (token_to_complete == 1)
         {
-            constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view" };
+            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view" };
             return { 0_byte, params[1].length(),
                      prefix_complete(params[1].substr(0_byte, pos_in_token), modes) };
         }
