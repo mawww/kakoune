@@ -32,7 +32,22 @@ def clang-complete %{
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
             compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/fifo |
-                    grep ^COMPLETION: | grep -v '(Hidden)' | sed -re 's/^COMPLETION: (.+) : (.*)/\1@\2/; s/:/\\:/g' | uniq | paste -s -d ':')
+                    awk -F ': ' -e '
+                        /^COMPLETION:/ && ! /\(Hidden\)/ {
+                             gsub(/[[{<]#|#[}>]/, "", $3)
+                             gsub(/#]/, " ", $3)
+                             gsub(/:/, "\\:", $2)
+                             gsub(/:/, "\\:", $3)
+                             id=substr($2, 1, length($2)-1)
+                             if (id in completions)
+                                 completions[id]=completions[id] "\\n" $3
+                             else
+                                 completions[id]=$3
+                        }
+                        END {
+                            for (id in completions)
+                                print id  "@" completions[id]
+                        }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
 
             echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
