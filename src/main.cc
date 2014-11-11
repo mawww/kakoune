@@ -421,7 +421,7 @@ int run_server(StringView session, StringView init_command,
     return 0;
 }
 
-int run_filter(StringView keystr, memoryview<StringView> files)
+int run_filter(StringView keystr, memoryview<StringView> files, bool quiet)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
@@ -448,16 +448,18 @@ int run_filter(StringView keystr, memoryview<StringView> files)
             }
             catch (Kakoune::runtime_error& err)
             {
-                fprintf(stderr, "error while applying keys to buffer '%s': %s\n",
-                        buffer.display_name().c_str(), err.what());
+                if (not quiet)
+                    fprintf(stderr, "error while applying keys to buffer '%s': %s\n",
+                            buffer.display_name().c_str(), err.what());
             }
         };
 
         for (auto& file : files)
         {
             Buffer* buffer = create_buffer_from_file(file);
+            write_buffer_to_file(*buffer, file + ".kak-bak");
             apply_keys_to_buffer(*buffer);
-            write_buffer_to_file(*buffer, file + ".kak-out");
+            write_buffer_to_file(*buffer, file);
             buffer_manager.delete_buffer(*buffer);
         }
         if (not isatty(0))
@@ -523,7 +525,8 @@ int main(int argc, char* argv[])
                    { "s", { true, "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true, "just send stdin as commands to the given session" } },
-                   { "f", { true, "act as a filter, executing given keys on given files" } } }
+                   { "f", { true, "act as a filter, executing given keys on given files" } },
+                   { "q", { false, "in filter mode, be quiet about errors applying keys" } } }
     };
     try
     {
@@ -547,7 +550,8 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-             return run_filter(parser.option_value("f"), files);
+             return run_filter(parser.option_value("f"), files,
+                               parser.has_option("q"));
         }
 
         String init_command;
