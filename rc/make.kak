@@ -16,7 +16,7 @@ def -shell-params make %{ %sh{
 }}
 
 addhl -group / group make
-addhl -group /make regex "^([^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+addhl -group /make regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 addhl -group /make line_option _make_current_error_line default+b
 
 hook global WinSetOption filetype=make %{
@@ -36,7 +36,7 @@ def errjump -docstring 'Jump to error location' %{
         eval -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information '%reg{5}'"
         try %{ focus %opt{jumpclient} }
     } catch %{
-        exec ghgl s "([^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+        exec ghgl s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
         set buffer _make_current_error_line %val{cursor_line}
         eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2} %reg{3}; echo -color Information '%reg{4}'"
         try %{ focus %opt{jumpclient} }
