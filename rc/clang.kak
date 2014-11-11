@@ -36,6 +36,8 @@ def clang-complete %{
                         /^COMPLETION:/ && ! /\(Hidden\)/ {
                              gsub(/[[{<]#|#[}>]/, "", $3)
                              gsub(/#]/, " ", $3)
+                             gsub(/:: /, "::", $3)
+                             gsub(/ +$/, "", $3)
                              gsub(/:/, "\\:", $2)
                              gsub(/:/, "\\:", $3)
                              id=substr($2, 1, length($2)-1)
