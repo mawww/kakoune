@@ -139,8 +139,6 @@ Token::Type token_type(StringView type_name)
         return Token::Type::OptionExpand;
     else if (type_name == "val")
         return Token::Type::ValExpand;
-    else if (type_name == "rec")
-        return Token::Type::RawEval;
     else if (throw_on_invalid)
         throw unknown_expand{type_name};
     else
@@ -239,8 +237,9 @@ TokenList parse(StringView line)
             if (throw_on_unterminated and pos == length)
                 throw unterminated_string(String{delimiter},
                                           String{delimiter});
-            result.emplace_back(Token::Type::Raw, token_start,
-                                pos, std::move(token));
+            result.emplace_back(delimiter == '"' ? Token::Type::RawEval
+                                                 : Token::Type::Raw,
+                                token_start, pos, std::move(token));
         }
         else if (line[pos] == '%')
             result.push_back(

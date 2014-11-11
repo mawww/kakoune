@@ -55,7 +55,7 @@ def clang-complete %{
 }
 
 def clang-enable-autocomplete %{
-    set window completers %rec{option=clang_completions:%opt{completers}}
+    set window completers "option=clang_completions:%opt{completers}"
     hook window -group clang-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>(\.|->|::).\'<ret>
         echo 'completing...'

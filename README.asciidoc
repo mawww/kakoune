@@ -473,9 +473,12 @@ When entering a command, parameters are separated by whitespace (shell like),
 if you want to give parameters with spaces, you should quote them.
 
 Kakoune support three string syntax:
+ 
+ * +\'strings\'+: uninterpreted strings, you can use \' to escape the separator,
+     every other char is itself.
 
- * +"strings" and \'strings\'+: classic strings, use \' or \" to escape the
-     separator.
+ * +"strings"+: expended strings, % strings (see %sh, %opt or %reg) contained
+     are expended. Use \% to escape a % inside them, and \\ to escape a slash.
 
  * +%\{strings\}+: these strings are very useful when entering commands
 
