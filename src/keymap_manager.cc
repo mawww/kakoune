@@ -1,5 +1,7 @@
 #include "keymap_manager.hh"
 
+#include "memoryview.hh"
+
 namespace std
 {
 

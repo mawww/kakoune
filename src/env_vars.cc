@@ -1,5 +1,7 @@
 #include "env_vars.hh"
 
+#include "string.hh"
+
 extern char **environ;
 
 namespace Kakoune

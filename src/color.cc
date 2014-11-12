@@ -3,6 +3,8 @@
 #include "exception.hh"
 #include "regex.hh"
 
+#include <cstdio>
+
 namespace Kakoune
 {
 

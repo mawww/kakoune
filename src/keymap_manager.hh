@@ -5,6 +5,7 @@
 #include "utils.hh"
 
 #include <unordered_map>
+#include <vector>
 
 namespace Kakoune
 {
@@ -19,6 +20,8 @@ enum class KeymapMode : int
     Goto,
     View,
 };
+
+template<typename T> class memoryview;
 
 class KeymapManager
 {

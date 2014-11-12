@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "string.hh"
 
 namespace Kakoune
 {

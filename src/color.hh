@@ -1,8 +1,6 @@
 #ifndef color_hh_INCLUDED
 #define color_hh_INCLUDED
 
-#include <utility>
-
 namespace Kakoune
 {
 

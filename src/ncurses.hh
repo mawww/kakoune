@@ -1,8 +1,9 @@
 #ifndef ncurses_hh_INCLUDED
 #define ncurses_hh_INCLUDED
 
-#include "display_buffer.hh"
+#include "coord.hh"
 #include "event_manager.hh"
+#include "face.hh"
 #include "user_interface.hh"
 
 namespace Kakoune

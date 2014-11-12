@@ -1,7 +1,6 @@
 #ifndef alias_registry_hh_INCLUDED
 #define alias_registry_hh_INCLUDED
 
-#include "utils.hh"
 #include "safe_ptr.hh"
 #include "string.hh"
 

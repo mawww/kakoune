@@ -1,16 +1,16 @@
 #ifndef display_buffer_hh_INCLUDED
 #define display_buffer_hh_INCLUDED
 
-#include "buffer.hh"
 #include "face.hh"
 #include "coord.hh"
 #include "string.hh"
-#include "utf8.hh"
 
 #include <vector>
 
 namespace Kakoune
 {
+
+class Buffer;
 
 struct DisplayAtom
 {
@@ -25,41 +25,8 @@ public:
         : m_type(Text), m_text(std::move(str)), face(face)
      { check_invariant(); }
 
-    StringView content() const
-    {
-        switch (m_type)
-        {
-            case BufferRange:
-            {
-                auto line = (*m_buffer)[m_begin.line];
-                if (m_begin.line == m_end.line)
-                    return line.substr(m_begin.column, m_end.column - m_begin.column);
-                else if (m_begin.line+1 == m_end.line and m_end.column == 0)
-                    return line.substr(m_begin.column);
-                break;
-            }
-            case Text:
-            case ReplacedBufferRange:
-                return m_text;
-        }
-        kak_assert(false);
-        return {};
-    }
-
-    CharCount length() const
-    {
-        switch (m_type)
-        {
-            case BufferRange:
-               return utf8::distance(m_buffer->iterator_at(m_begin),
-                                     m_buffer->iterator_at(m_end));
-            case Text:
-            case ReplacedBufferRange:
-               return m_text.char_length();
-        }
-        kak_assert(false);
-        return 0;
-    }
+    StringView content() const;
+    CharCount length() const;
 
     const ByteCoord& begin() const
     {

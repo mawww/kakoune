@@ -1,11 +1,9 @@
 #ifndef user_interface_hh_INCLUDED
 #define user_interface_hh_INCLUDED
 
-#include "color.hh"
-#include "keys.hh"
-#include "memoryview.hh"
 #include "safe_ptr.hh"
 
+#include <functional>
 #include <unordered_map>
 
 namespace Kakoune
@@ -15,6 +13,9 @@ class String;
 class DisplayBuffer;
 class DisplayLine;
 struct CharCoord;
+struct Face;
+struct Key;
+template<typename T> class memoryview;
 
 enum class MenuStyle
 {

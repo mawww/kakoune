@@ -8,6 +8,7 @@
 #include "debug.hh"
 #include "unicode.hh"
 #include "regex.hh"
+#include "string.hh"
 
 #include <errno.h>
 #include <sys/types.h>

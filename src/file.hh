@@ -2,7 +2,6 @@
 #define file_hh_INCLUDED
 
 #include "exception.hh"
-#include "string.hh"
 #include "regex.hh"
 
 namespace Kakoune
@@ -23,6 +22,9 @@ struct file_not_found : file_access_error
 };
 
 class Buffer;
+template<typename T> class memoryview;
+class String;
+class StringView;
 
 // parse ~/ and $env values in filename and returns the translated filename
 String parse_filename(StringView filename);

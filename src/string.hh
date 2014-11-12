@@ -1,13 +1,13 @@
 #ifndef string_hh_INCLUDED
 #define string_hh_INCLUDED
 
-#include "memoryview.hh"
 #include "units.hh"
 #include "utf8.hh"
 
 #include <string>
 #include <climits>
 #include <cstring>
+#include <vector>
 
 namespace Kakoune
 {

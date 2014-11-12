@@ -2,6 +2,7 @@
 
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "keys.hh"
 #include "register_manager.hh"
 #include "utf8_iterator.hh"
 

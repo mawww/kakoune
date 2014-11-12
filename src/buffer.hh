@@ -9,9 +9,6 @@
 #include "value.hh"
 
 #include <vector>
-#include <list>
-#include <memory>
-#include <unordered_set>
 
 namespace Kakoune
 {

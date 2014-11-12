@@ -5,7 +5,6 @@
 #include "env_vars.hh"
 #include "input_handler.hh"
 #include "safe_ptr.hh"
-#include "string.hh"
 #include "utils.hh"
 #include "option_manager.hh"
 
@@ -14,6 +13,7 @@ namespace Kakoune
 
 class UserInterface;
 class Window;
+class String;
 
 class Client : public SafeCountable, public OptionManagerWatcher
 {

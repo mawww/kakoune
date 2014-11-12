@@ -1,8 +1,8 @@
 #ifndef keys_hh_INCLUDED
 #define keys_hh_INCLUDED
 
-#include "string.hh"
 #include "unicode.hh"
+#include "flags.hh"
 
 #include <vector>
 
@@ -64,7 +64,12 @@ struct Key
     { return modifiers != other.modifiers or key != other.key; }
 };
 
+template<> struct WithBitOps<Key::Modifiers> : std::true_type {};
+
 using KeyList = std::vector<Key>;
+
+class String;
+class StringView;
 
 KeyList parse_keys(StringView str);
 String  key_to_str(Key key);
@@ -79,7 +84,7 @@ namespace std
 {
 
 template<>
-struct hash<Kakoune::Key> : unary_function<const Kakoune::Key&, size_t>
+struct hash<Kakoune::Key>
 {
     size_t operator()(Kakoune::Key key) const
     {

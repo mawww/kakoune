@@ -1,10 +1,9 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
-#include "completion.hh"
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
-#include "selection.hh"
+#include "option_manager.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
 

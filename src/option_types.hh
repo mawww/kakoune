@@ -5,6 +5,7 @@
 #include "string.hh"
 #include "units.hh"
 #include "coord.hh"
+#include "memoryview.hh"
 
 #include <tuple>
 #include <vector>

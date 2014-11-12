@@ -67,7 +67,7 @@ private:
 
 struct ValueId : public StronglyTypedNumber<ValueId, int>
 {
-    constexpr ValueId(int value = 0) : StronglyTypedNumber<ValueId>(value) {}
+    constexpr ValueId(int value = 0) : StronglyTypedNumber(value) {}
 
     static ValueId get_free_id()
     {
