@@ -103,8 +103,11 @@ public:
             m_count /= 10;
         else if (key == '\\')
         {
-            m_hooks_disabled = true;
-            context().disable_user_hooks();
+            if (not m_hooks_disabled)
+            {
+                m_hooks_disabled = true;
+                context().disable_user_hooks();
+            }
         }
         else
         {
