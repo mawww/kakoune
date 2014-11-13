@@ -553,7 +553,7 @@ const CommandDesc add_hook_cmd = {
 
             if (regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
-                                                   { { "hook_param", param.str() } });
+                                                   { { "hook_param", param } });
         };
         StringView group;
         if (parser.has_option("group"))
