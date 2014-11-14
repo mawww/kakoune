@@ -234,7 +234,7 @@ void register_options()
                        UserInterface::Options());
 }
 
-void create_local_client(const String& init_command)
+void create_local_client(StringView init_command)
 {
     class LocalNCursesUI : public NCursesUI
     {
