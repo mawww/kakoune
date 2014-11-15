@@ -33,7 +33,7 @@ void CommandManager::register_command(String command_name,
 
 struct parse_error : runtime_error
 {
-    parse_error(const String& error)
+    parse_error(StringView error)
         : runtime_error{"parse error: " + error} {}
 };
 
@@ -122,7 +122,7 @@ String get_until_delimiter(StringView base, ByteCount& pos,
 
 struct unknown_expand : parse_error
 {
-    unknown_expand(const String& name)
+    unknown_expand(StringView name)
         : parse_error{"unknown expand '" + name + "'"} {}
 };
 
@@ -169,7 +169,7 @@ void skip_blanks_and_comments(StringView base, ByteCount& pos)
 
 struct unterminated_string : parse_error
 {
-    unterminated_string(const String& open, const String& close, int nest = 0)
+    unterminated_string(StringView open, StringView close, int nest = 0)
         : parse_error{"unterminated string '" + open + "..." + close + "'" +
                       (nest > 0 ? "(nesting: " + to_string(nest) + ")" : "")}
     {}
@@ -204,7 +204,7 @@ Token parse_percent_token(StringView line, ByteCount& pos)
                                            closing_delimiter);
         if (throw_on_unterminated and pos == length)
             throw unterminated_string("%" + type_name + opening_delimiter,
-                                      String{closing_delimiter}, 0);
+                                      closing_delimiter, 0);
         return {type, token_start, pos, std::move(token)};
     }
     else
@@ -235,8 +235,7 @@ TokenList parse(StringView line)
             token_start = ++pos;
             String token = get_until_delimiter(line, pos, delimiter);
             if (throw_on_unterminated and pos == length)
-                throw unterminated_string(String{delimiter},
-                                          String{delimiter});
+                throw unterminated_string(delimiter, delimiter);
             result.emplace_back(delimiter == '"' ? Token::Type::RawEval
                                                  : Token::Type::Raw,
                                 token_start, pos, std::move(token));
@@ -335,7 +334,7 @@ String eval_token(const Token& token, Context& context,
 
 struct command_not_found : runtime_error
 {
-    command_not_found(const String& command)
+    command_not_found(StringView command)
         : runtime_error(command + " : no such command") {}
 };
 

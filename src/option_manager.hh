@@ -15,7 +15,7 @@ namespace Kakoune
 
 struct option_not_found : public runtime_error
 {
-    option_not_found(const String& name)
+    option_not_found(StringView name)
         : runtime_error("option not found: " + name) {}
 };
 
@@ -210,7 +210,7 @@ public:
         return *opts.back();
     }
 
-    bool option_exists(const String& name) const
+    bool option_exists(StringView name) const
     {
         return find_if(m_descs, [&name](const std::unique_ptr<OptionDesc>& opt) {
                            return opt->name() == name;
