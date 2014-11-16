@@ -39,7 +39,7 @@ void OptionManager::unregister_watcher(OptionManagerWatcher& watcher)
     m_watchers.erase(it);
 }
 
-Option& OptionManager::get_local_option(const String& name)
+Option& OptionManager::get_local_option(StringView name)
 {
     auto it = find_option(m_options, name);
     if (it != m_options.end())
@@ -54,7 +54,7 @@ Option& OptionManager::get_local_option(const String& name)
 
 }
 
-Option& OptionManager::operator[](const String& name)
+Option& OptionManager::operator[](StringView name)
 {
     auto it = find_option(m_options, name);
     if (it != m_options.end())
@@ -65,7 +65,7 @@ Option& OptionManager::operator[](const String& name)
         throw option_not_found(name);
 }
 
-const Option& OptionManager::operator[](const String& name) const
+const Option& OptionManager::operator[](StringView name) const
 {
     return const_cast<OptionManager&>(*this)[name];
 }

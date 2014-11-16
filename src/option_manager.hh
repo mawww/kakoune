@@ -55,8 +55,8 @@ public:
     template<typename T> bool is_of_type() const;
 
     virtual String get_as_string() const = 0;
-    virtual void   set_from_string(const String& str) = 0;
-    virtual void   add_from_string(const String& str) = 0;
+    virtual void   set_from_string(StringView str) = 0;
+    virtual void   add_from_string(StringView str) = 0;
 
     virtual Option* clone(OptionManager& manager) const = 0;
     OptionManager& manager() const { return m_manager; }
@@ -86,9 +86,9 @@ public:
     OptionManager(OptionManager& parent);
     ~OptionManager();
 
-    Option& operator[] (const String& name);
-    const Option& operator[] (const String& name) const;
-    Option& get_local_option(const String& name);
+    Option& operator[] (StringView name);
+    const Option& operator[] (StringView name) const;
+    Option& get_local_option(StringView name);
 
     CandidateList complete_option_name(StringView prefix,
                                        ByteCount cursor_pos);
@@ -137,13 +137,13 @@ public:
     {
         return option_to_string(m_value);
     }
-    void set_from_string(const String& str) override
+    void set_from_string(StringView str) override
     {
         T val;
         option_from_string(str, val);
         set(std::move(val));
     }
-    void add_from_string(const String& str) override
+    void add_from_string(StringView str) override
     {
         T val;
         option_from_string(str, val);
@@ -181,7 +181,7 @@ template<typename T> bool Option::is_of_type() const
 }
 
 template<typename T>
-auto find_option(T& container, const String& name) -> decltype(container.begin())
+auto find_option(T& container, StringView name) -> decltype(container.begin())
 {
     using ptr_type = decltype(*container.begin());
     return find_if(container, [&name](const ptr_type& opt) { return opt->name() == name; });
