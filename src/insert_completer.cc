@@ -193,22 +193,17 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                     }) != changes.end())
             return {};
 
-        ByteCount longest_completion = 0;
-        for (auto it = opt.begin() + 1; it != opt.end(); ++it)
-             longest_completion = std::max(longest_completion, it->length());
-
-        if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column and
-            buffer.distance(coord, cursor_pos) < longest_completion)
+        if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column)
         {
+            StringView prefix = buffer[coord.line].substr(
+                coord.column, cursor_pos.column - coord.column);
+
             ComplAndDescList res;
             for (auto it = opt.begin() + 1; it != opt.end(); ++it)
             {
-                size_t pos = it->find_first_of("@");
-                if (pos != String::npos)
-                    res.emplace_back(it->substr(0_byte, (int)pos),
-                                     it->substr(ByteCount{(int)pos+1}));
-                else
-                    res.emplace_back(*it, "");
+                auto splitted = split(*it, '@');
+                if (not splitted.empty() and prefix_match(splitted[0], prefix))
+                    res.emplace_back(splitted[0], splitted.size() > 1 ? splitted[1] : "");
             }
             return { coord, end, std::move(res), timestamp };
         }
