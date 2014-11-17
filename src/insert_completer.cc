@@ -187,13 +187,17 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
             end = buffer.advance(coord, len);
         }
         size_t timestamp = (size_t)str_to_int(match[4].str());
+        auto changes = buffer.changes_since(timestamp);
+        if (find_if(changes, [&](const Buffer::Change& change){
+                        return change.begin < coord;
+                    }) != changes.end())
+            return {};
 
         ByteCount longest_completion = 0;
         for (auto it = opt.begin() + 1; it != opt.end(); ++it)
              longest_completion = std::max(longest_completion, it->length());
 
-        if (timestamp == buffer.timestamp() and
-            cursor_pos.line == coord.line and cursor_pos.column >= coord.column and
+        if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column and
             buffer.distance(coord, cursor_pos) < longest_completion)
         {
             ComplAndDescList res;
