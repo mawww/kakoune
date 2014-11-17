@@ -90,6 +90,10 @@ ReversedContainer<Container> reversed(Container&& container)
     return ReversedContainer<Container>(container);
 }
 
+// Todo: move that into the following functions once we can remove the decltype
+//       return type.
+using std::begin;
+using std::end;
 
 template<typename Container, typename T>
 auto find(Container&& container, const T& value) -> decltype(begin(container))
@@ -102,7 +106,6 @@ auto find_if(Container&& container, T op) -> decltype(begin(container))
 {
     return std::find_if(begin(container), end(container), op);
 }
-
 
 template<typename Container, typename T>
 bool contains(Container&& container, const T& value)

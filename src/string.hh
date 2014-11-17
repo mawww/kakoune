@@ -196,16 +196,6 @@ inline StringView String::substr(CharCount pos, CharCount length) const
     return StringView{*this}.substr(pos, length);
 }
 
-inline const char* begin(StringView str)
-{
-    return str.begin();
-}
-
-inline const char* end(StringView str)
-{
-    return str.end();
-}
-
 inline String operator+(const char* lhs, const String& rhs)
 {
     return String(lhs) + rhs;
