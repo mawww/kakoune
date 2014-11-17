@@ -36,7 +36,7 @@ String get_kak_binary_path();
 String read_fd(int fd);
 String read_file(StringView filename);
 
-Buffer* create_buffer_from_file(String filename);
+Buffer* create_buffer_from_file(StringView filename);
 
 void write_buffer_to_file(Buffer& buffer, StringView filename);
 void write_buffer_to_fd(Buffer& buffer, int fd);

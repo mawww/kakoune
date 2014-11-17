@@ -132,29 +132,30 @@ String read_file(StringView filename)
     return read_fd(fd);
 }
 
-Buffer* create_buffer_from_file(String filename)
+Buffer* create_buffer_from_file(StringView filename)
 {
-    filename = real_path(parse_filename(filename));
+    String real_filename = real_path(parse_filename(filename));
 
-    int fd = open(filename.c_str(), O_RDONLY);
+    int fd = open(real_filename.c_str(), O_RDONLY);
     if (fd == -1)
     {
         if (errno == ENOENT)
             return nullptr;
 
-        throw file_access_error(filename, strerror(errno));
+        throw file_access_error(real_filename, strerror(errno));
     }
     auto close_fd = on_scope_end([&]{ close(fd); });
 
     struct stat st;
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
-        throw file_access_error(filename, "is a directory");
+        throw file_access_error(real_filename, "is a directory");
 
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     auto unmap = on_scope_end([&]{ munmap((void*)data, st.st_size); });
 
-    return create_buffer_from_data({data, data + st.st_size}, filename, Buffer::Flags::File, st.st_mtime);
+    return create_buffer_from_data({data, data + st.st_size}, real_filename,
+                                   Buffer::Flags::File, st.st_mtime);
 }
 
 static void write(int fd, StringView data)

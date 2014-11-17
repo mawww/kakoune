@@ -121,7 +121,7 @@ void Client::redraw_ifn()
     context().ui().refresh();
 }
 
-static void reload_buffer(Context& context, const String& filename)
+static void reload_buffer(Context& context, StringView filename)
 {
     CharCoord view_pos = context.window().position();
     ByteCoord cursor_pos = context.selections().main().cursor();
