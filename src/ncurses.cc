@@ -237,6 +237,8 @@ NCursesUI::NCursesUI()
     signal(SIGINT, on_sigint);
 
     update_dimensions();
+
+    wrefresh(stdscr);
 }
 
 NCursesUI::~NCursesUI()
