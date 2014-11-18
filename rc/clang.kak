@@ -63,9 +63,11 @@ def clang-enable-autocomplete %{
         echo 'completing...'
         clang-complete
     } }
+    alias window complete clang-complete
 }
 
 def clang-disable-autocomplete %{
     set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
     rmhooks window clang-autocomplete
+    unalias window complete clang-complete
 }

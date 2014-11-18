@@ -40,9 +40,11 @@ def jedi-enable-autocomplete %{
         echo 'completing...'
         jedi-complete
     } }
+    alias window complete jedi-complete
 }
 
 def jedi-disable-autocomplete %{
     set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=jedi_completions://g' }
     rmhooks window jedi-autocomplete
+    unalias window complete jedi-complete
 }
