@@ -10,13 +10,7 @@ def jedi-complete %{
     }
     %sh{
         dir=${kak_opt_jedi_tmp_dir}
-        echo "eval -draft %{
-                  edit! -fifo ${dir}/fifo *jedi-output*
-                  hook -group jedi-cleanup buffer BufCloseFifo .* %{
-                     nop %sh{ rm -r ${dir} }
-                     rmhooks buffer jedi-cleanup
-                  }
-              }"
+        echo "eval -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         (
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
@@ -27,8 +21,8 @@ def jedi-complete %{
 		print ':'.join([str(c.name) + "@" + str(c.description).replace(":", "\\:") for c in script.completions()])
 		END
             )
-
             echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' jedi_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
+            rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
