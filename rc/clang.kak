@@ -2,6 +2,8 @@ decl str clang_options
 
 decl -hidden str clang_tmp_dir
 decl -hidden str-list clang_completions
+decl -hidden line-flag-list clang_flags
+decl -hidden str clang_errors
 
 def clang-complete %{
     %sh{
@@ -18,10 +20,6 @@ def clang-complete %{
                   edit! -fifo ${dir}/fifo *clang-output*
                   set buffer filetype make
                   set buffer _make_current_error_line 0
-                  hook -group clang-cleanup buffer BufCloseFifo .* %{
-                      nop %sh{ rm -r ${dir} }
-                      rmhooks buffer clang-cleanup
-                  }
               }"
         # this runs in a detached shell, asynchronously, so that kakoune does
         # not hang while clang is running. As completions references a cursor
@@ -31,7 +29,7 @@ def clang-complete %{
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
-            compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/fifo |
+            compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/errors |
                     awk -F ': ' -e '
                         /^COMPLETION:/ && ! /\(Hidden\)/ {
                              gsub(/[[{<]#|#[}>]/, "", $3)
@@ -51,7 +49,24 @@ def clang-complete %{
                                 print id  "@" completions[id]
                         }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
 
-            echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
+            flags=$(cat ${dir}/errors | sed -rne "
+                        /^<stdin>:[0-9]+:([0-9]+:)? error/ { s/^<stdin>:([0-9]+):.*/\1,red,█/; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1,yellow,█/; p }
+                    " | paste -s -d ':')
+
+            errors=$(cat ${dir}/errors | sed -rne "
+                        /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; p }")
+
+            sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/errors > ${dir}/fifo
+
+            echo "eval -client ${kak_client} %[
+                      echo completed
+                      set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}] ]
+                      set 'buffer=${kak_buffile}' clang_flags %{${flags}}
+                      set 'buffer=${kak_buffile}' clang_errors %{${errors}}
+                 " | kak -p ${kak_session}
+
+            rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
@@ -70,4 +85,22 @@ def clang-disable-autocomplete %{
     set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
     rmhooks window clang-autocomplete
     unalias window complete clang-complete
+}
+
+def -hidden clang-show-error-info %{ %sh{
+    echo "${kak_opt_clang_errors}" | while read line; do
+        case "${line}" in
+           ${kak_cursor_line},*) echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} %{${line#*,}}" ;;
+        esac
+    done
+} }
+
+def clang-enable-diagnostics %{
+    addhl flag_lines default clang_flags
+    hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
+}
+
+def clang-disable-diagnostics %{
+    rmhl hlflags_clang_flags
+    rmhooks window clang-diagnostics
 }
