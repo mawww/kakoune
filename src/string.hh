@@ -295,6 +295,8 @@ bool subsequence_match(StringView str, StringView subseq);
 
 String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
 
+std::vector<StringView> wrap_lines(StringView text, CharCount max_width);
+
 size_t hash_data(const char* data, size_t len);
 
 }

@@ -147,6 +147,45 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col)
     return res;
 }
 
+std::vector<StringView> wrap_lines(StringView text, CharCount max_width)
+{
+    enum CharCategory { Word, Blank, Eol };
+    static const auto categorize = [](Codepoint c) {
+        return is_blank(c) ? Blank
+                           : is_eol(c) ? Eol : Word;
+    };
+
+    using Utf8It = utf8::iterator<const char*>;
+    Utf8It word_begin{text.begin()};
+    Utf8It word_end{word_begin};
+    Utf8It end{text.end()};
+    CharCount col = 0;
+    std::vector<StringView> lines;
+    const char* line_begin = text.begin();
+    while (word_begin != end)
+    {
+        CharCategory cat = categorize(*word_begin);
+        do
+        {
+            ++word_end;
+        } while (word_end != end and categorize(*word_end) == cat);
+
+        col += word_end - word_begin;
+        if (col > max_width or *word_begin == '\n')
+        {
+            lines.emplace_back(line_begin, word_begin.base());
+            line_begin = word_begin.base();
+            if (*line_begin == '\n')
+                ++line_begin;
+            col = 0;
+        }
+        word_begin = word_end;
+    }
+    if (line_begin != word_begin.base())
+        lines.emplace_back(line_begin, word_begin.base());
+    return lines;
+}
+
 [[gnu::always_inline]]
 static inline uint32_t rotl(uint32_t x, int8_t r)
 {

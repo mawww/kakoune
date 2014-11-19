@@ -689,45 +689,6 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
     return pos;
 }
 
-static std::vector<String> wrap_lines(StringView text, CharCount max_width)
-{
-    enum CharCategory { Word, Blank, Eol };
-    static const auto categorize = [](Codepoint c) {
-        return is_blank(c) ? Blank
-                           : is_eol(c) ? Eol : Word;
-    };
-
-    using Utf8It = utf8::iterator<const char*>;
-    Utf8It word_begin{text.begin()};
-    Utf8It word_end{word_begin};
-    Utf8It end{text.end()};
-    CharCount col = 0;
-    std::vector<String> lines;
-    String line;
-    while (word_begin != end)
-    {
-        CharCategory cat = categorize(*word_begin);
-        do
-        {
-            ++word_end;
-        } while (word_end != end and categorize(*word_end) == cat);
-
-        col += word_end - word_begin;
-        if (col > max_width or *word_begin == '\n')
-        {
-            lines.push_back(std::move(line));
-            line = "";
-            col = 0;
-        }
-        if (*word_begin != '\n')
-            line += String{word_begin.base(), word_end.base()};
-        word_begin = word_end;
-    }
-    if (not line.empty())
-        lines.push_back(std::move(line));
-    return lines;
-}
-
 template<bool assist = true>
 static String make_info_box(StringView title, StringView message,
                             CharCount max_width)
@@ -746,7 +707,7 @@ static String make_info_box(StringView title, StringView message,
         assistant_size = { (int)assistant.size(), assistant[0].char_length() };
 
     const CharCount max_bubble_width = max_width - assistant_size.column - 6;
-    std::vector<String> lines = wrap_lines(message, max_bubble_width);
+    std::vector<StringView> lines = wrap_lines(message, max_bubble_width);
 
     CharCount bubble_width = title.char_length() + 2;
     for (auto& line : lines)
