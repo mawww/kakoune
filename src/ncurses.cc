@@ -666,7 +666,7 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
             pos.line = max(0_line, anchor.line - size.line);
     }
     if (pos.column + size.column >= scrsize.column)
-        pos.column = max(0_char, anchor.column - size.column+1);
+        pos.column = max(0_char, scrsize.column - size.column);
 
     if (opt_window_to_avoid)
     {
