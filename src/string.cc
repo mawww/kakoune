@@ -149,12 +149,6 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col)
 
 std::vector<StringView> wrap_lines(StringView text, CharCount max_width)
 {
-    enum CharCategory { Word, Blank, Eol };
-    static const auto categorize = [](Codepoint c) {
-        return is_blank(c) ? Blank
-                           : is_eol(c) ? Eol : Word;
-    };
-
     using Utf8It = utf8::iterator<const char*>;
     Utf8It word_begin{text.begin()};
     Utf8It word_end{word_begin};
@@ -162,23 +156,27 @@ std::vector<StringView> wrap_lines(StringView text, CharCount max_width)
     CharCount col = 0;
     std::vector<StringView> lines;
     const char* line_begin = text.begin();
+    const char* line_end = line_begin;
     while (word_begin != end)
     {
-        CharCategory cat = categorize(*word_begin);
+        const CharCategories cat = categorize(*word_begin);
         do
         {
             ++word_end;
         } while (word_end != end and categorize(*word_end) == cat);
 
         col += word_end - word_begin;
-        if (col > max_width or *word_begin == '\n')
+        if (col > max_width or cat == CharCategories::EndOfLine)
         {
-            lines.emplace_back(line_begin, word_begin.base());
-            line_begin = word_begin.base();
-            if (*line_begin == '\n')
-                ++line_begin;
-            col = 0;
+            lines.emplace_back(line_begin, line_end);
+            line_begin = (cat == CharCategories::EndOfLine or
+                          cat == CharCategories::Blank) ? word_end.base()
+                                                        : word_begin.base();
+            col = word_end - Utf8It{line_begin};
         }
+        if (cat == CharCategories::Word or cat == CharCategories::Punctuation)
+            line_end = word_end.base();
+
         word_begin = word_end;
     }
     if (line_begin != word_begin.base())
