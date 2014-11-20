@@ -762,14 +762,24 @@ void NCursesUI::info_show(StringView title, StringView content,
         anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
     }
-    else if (m_status_on_top)
-        anchor.line += 1;
+    else
+    {
+        if (m_status_on_top)
+            anchor.line += 1;
+        CharCount col = anchor.column;
+        if (style == InfoStyle::MenuDoc and m_menu_win)
+            col = window_pos(m_menu_win).column + window_size(m_menu_win).column;
+
+        for (auto& line : wrap_lines(content, m_dimensions.column - col))
+            fancy_info_box += line + "\n";
+        info_box = fancy_info_box;
+    }
 
     CharCoord size = compute_needed_size(info_box);
     CharCoord pos;
-    if (style == InfoStyle::MenuDoc and m_menu_win and m_menu_columns == 1)
+    if (style == InfoStyle::MenuDoc and m_menu_win)
         pos = window_pos(m_menu_win) +
-             CharCoord{0_line, window_size(m_menu_win).column};
+              CharCoord{0_line, window_size(m_menu_win).column};
     else
         pos = compute_pos(anchor, size, m_menu_win, style == InfoStyle::InlineAbove);
 
