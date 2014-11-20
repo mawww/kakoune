@@ -29,20 +29,21 @@ def clang-complete %{
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
-            compl=$(clang++ -x c++ -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/errors |
+            compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/errors |
                     awk -F ': ' -e '
                         /^COMPLETION:/ && ! /\(Hidden\)/ {
                              gsub(/[[{<]#|#[}>]/, "", $3)
                              gsub(/#]/, " ", $3)
                              gsub(/:: /, "::", $3)
                              gsub(/ +$/, "", $3)
-                             gsub(/:/, "\\:", $2)
-                             gsub(/:/, "\\:", $3)
                              id=substr($2, 1, length($2)-1)
+                             gsub(/:/, "\\:", id)
+                             desc=$4 ? $3 "\\n" $4 : $3
+                             gsub(/:/, "\\:", desc)
                              if (id in completions)
-                                 completions[id]=completions[id] "\\n" $3
+                                 completions[id]=completions[id] "\\n" desc
                              else
-                                 completions[id]=$3
+                                 completions[id]=desc
                         }
                         END {
                             for (id in completions)
