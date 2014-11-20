@@ -155,8 +155,8 @@ std::vector<StringView> wrap_lines(StringView text, CharCount max_width)
     Utf8It end{text.end()};
     CharCount col = 0;
     std::vector<StringView> lines;
-    const char* line_begin = text.begin();
-    const char* line_end = line_begin;
+    Utf8It line_begin = text.begin();
+    Utf8It line_end = line_begin;
     while (word_begin != end)
     {
         const CharCategories cat = categorize(*word_begin);
@@ -166,21 +166,21 @@ std::vector<StringView> wrap_lines(StringView text, CharCount max_width)
         } while (word_end != end and categorize(*word_end) == cat);
 
         col += word_end - word_begin;
-        if (col > max_width or cat == CharCategories::EndOfLine)
+        if ((word_begin != line_begin and col > max_width) or
+            cat == CharCategories::EndOfLine)
         {
-            lines.emplace_back(line_begin, line_end);
+            lines.emplace_back(line_begin.base(), line_end.base());
             line_begin = (cat == CharCategories::EndOfLine or
-                          cat == CharCategories::Blank) ? word_end.base()
-                                                        : word_begin.base();
-            col = word_end - Utf8It{line_begin};
+                          cat == CharCategories::Blank) ? word_end : word_begin;
+            col = word_end - line_begin;
         }
         if (cat == CharCategories::Word or cat == CharCategories::Punctuation)
-            line_end = word_end.base();
+            line_end = word_end;
 
         word_begin = word_end;
     }
-    if (line_begin != word_begin.base())
-        lines.emplace_back(line_begin, word_begin.base());
+    if (line_begin != word_begin)
+        lines.emplace_back(line_begin.base(), word_begin.base());
     return lines;
 }
 
