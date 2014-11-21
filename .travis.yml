@@ -9,5 +9,5 @@ before_install:
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -y g++-4.8; fi
   - if [ "$CXX" = "g++" ]; then export CXX=g++-4.8; fi
   - sudo apt-get install -y libncursesw5-dev
-  - sudo apt-get install -y libboost-regex-dev
+  - sudo apt-get install -y libboost-all-dev
 script: cd src && make && make test
