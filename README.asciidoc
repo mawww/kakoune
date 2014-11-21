@@ -68,6 +68,8 @@ Features
 Building
 --------
 
+image::https://travis-ci.org/mawww/kakoune.svg[]
+
 Kakoune dependencies are:
 
  * A C++11 compliant compiler (GCC >= 4.8.1 or clang >= 3.4)
