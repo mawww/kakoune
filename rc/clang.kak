@@ -26,6 +26,12 @@ def clang-complete %{
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         (
+            case ${kak_opt_filetype} in
+                cpp) ft=c++ ;;
+                obj-c) ft=objective-c ;;
+                *) ft=c++ ;;
+            esac
+
             pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
