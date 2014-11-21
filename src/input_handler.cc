@@ -1090,6 +1090,8 @@ void InputHandler::handle_key(Key key)
     if (is_valid(key))
     {
         const bool was_recording = is_recording();
+        ++m_handle_key_level;
+        auto dec = on_scope_end([&]{ --m_handle_key_level; });
 
         auto keymap_mode = m_mode->keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
@@ -1102,8 +1104,9 @@ void InputHandler::handle_key(Key key)
         else
             m_mode->on_key(key);
 
-        // do not record the key that made us enter or leave recording mode.
-        if (was_recording and is_recording())
+        // do not record the key that made us enter or leave recording mode,
+        // and the ones that are triggered recursively by previous keys.
+        if (was_recording and is_recording() and m_handle_key_level == 1)
             m_recorded_keys += key_to_str(key);
     }
 }
