@@ -1,0 +1,7 @@
+language: cpp
+compiler: clang
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libncursesw5-dev
+  - sudo apt-get install -y libboost-regex-dev
+script: cd src && make && make test
