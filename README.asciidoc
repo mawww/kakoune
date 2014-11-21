@@ -927,17 +927,21 @@ line using:
 :echo %sh{ ls -l $kak_bufname }
 -------------------------------
 
-Register and Option expansion
------------------------------
+Register, Option and Value expansion
+------------------------------------
 
 Similar to shell expansion, register contents and options values can be
-accessed through %reg{<register>} and %opt{<option>} syntax.
+accessed through +%reg{<register>}+ and +%opt{<option>}+ syntax.
 
 for example you can display last search pattern with
 
 -------------
 :echo %reg{/}
 -------------
+
+more generally, value accessible through shell can be accessed with
++%val{<name>}+, with <name> being the environment variable name minus
+the +kak_+ prefix.
 
 Defining Commands
 -----------------
