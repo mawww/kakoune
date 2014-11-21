@@ -121,13 +121,7 @@ struct ScopedEdition
         : m_context(context), m_buffer(&context.buffer())
     { m_context.begin_edition(); }
 
-    ~ScopedEdition()
-    {
-        // If buffer changed, the edition count
-        // was reset.
-        if (m_buffer == &m_context.buffer())
-            m_context.end_edition();
-    }
+    ~ScopedEdition() { m_context.end_edition(); }
 
     Context& context() const { return m_context; }
 private:

@@ -177,10 +177,8 @@ void Context::change_buffer(Buffer& buffer)
         return;
 
     if (m_edition_level > 0)
-    {
        this->buffer().commit_undo_group();
-       m_edition_level = 0;
-    }
+
     m_window.reset();
     if (has_client())
         client().change_buffer(buffer);
