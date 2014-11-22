@@ -27,7 +27,7 @@ main() {
         source rc
         }
         try %{
-        exec '%s%\((.+?)\)<ret>i<del><del><esc>a<backspace><c-u><esc>'
+        exec '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
         } \
         catch %{
         exec gg
