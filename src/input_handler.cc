@@ -979,7 +979,7 @@ private:
              kak_assert(false); // invalid for interactive insert
              break;
         }
-        if (mode != InsertMode::Append)
+        if (mode != InsertMode::Append and mode != InsertMode::Replace)
             selections.sort_and_merge_overlapping();
         selections.check_invariant();
         buffer.check_invariant();
