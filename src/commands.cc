@@ -83,7 +83,7 @@ const ParameterDesc single_optional_name_param{
 
 static constexpr auto scopes = { "global", "buffer", "window" };
 
-Scope* get_scope_ifp(const String& scope, const Context& context)
+Scope* get_scope_ifp(StringView scope, const Context& context)
 {
     if (prefix_match("global", scope))
         return &GlobalScope::instance();
@@ -96,7 +96,7 @@ Scope* get_scope_ifp(const String& scope, const Context& context)
     return nullptr;
 }
 
-Scope& get_scope(const String& scope, const Context& context)
+Scope& get_scope(StringView scope, const Context& context)
 {
     if (auto s = get_scope_ifp(scope, context))
         return *s;
