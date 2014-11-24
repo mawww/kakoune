@@ -68,9 +68,8 @@ void EventManager::handle_next_events()
     std::vector<int> forced;
     std::swap(forced, m_forced_fd);
 
-    for (size_t i = 0; i < events.size(); ++i)
+    for (auto& event : events)
     {
-        auto& event = events[i];
         const int fd = event.fd;
         if (event.revents or contains(forced, fd))
         {
