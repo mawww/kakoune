@@ -883,7 +883,9 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "insert", Face(Colors::Green) };
+        auto num_sel = context().selections().size();
+        return {AtomList{ { "insert ", Face(Colors::Green) },
+                          { to_string(num_sel) + " sel", Face(Colors::Blue) } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
