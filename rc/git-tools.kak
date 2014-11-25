@@ -58,7 +58,7 @@ def -shell-params \
                       try %{ addhl flag_lines magenta git_blame_flags }
                       set buffer=$kak_bufname git_blame_flags ''
                   }" | kak -p ${kak_session}
-                  git blame --incremental ${kak_buffile} | awk -e '
+                  git blame "$@" --incremental ${kak_buffile} | awk -e '
                   function send_flags(text, flag, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
@@ -112,7 +112,7 @@ def -shell-params \
 
     case "$1" in
        show|log|diff|status) show_git_cmd_output "$@" ;;
-       blame) run_git_blame ;;
+       blame) shift; run_git_blame "$@" ;;
        hide-blame) echo "try %{ rmhl hlflags_git_blame_flags }" ;;
        show-diff)
            echo "try %{ addhl flag_lines black git_diff_flags }"
