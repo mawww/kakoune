@@ -7,7 +7,11 @@
 #include "file.hh"
 #include "remote.hh"
 #include "client_manager.hh"
+#include "event_manager.hh"
 #include "window.hh"
+
+#include <signal.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -34,14 +38,44 @@ Client::~Client()
     m_window->options().unregister_watcher(*this);
 }
 
-void Client::handle_available_input()
+void Client::handle_available_input(EventMode mode)
 {
-    while (m_ui->is_key_available())
+    if (mode == EventMode::Normal)
     {
-        m_input_handler.handle_key(m_ui->get_key());
-        m_input_handler.clear_mode_trash();
+        try
+        {
+            for (auto& key : m_pending_keys)
+            {
+                m_input_handler.handle_key(key);
+                m_input_handler.clear_mode_trash();
+            }
+            m_pending_keys.clear();
+
+            while (m_ui->is_key_available())
+            {
+                m_input_handler.handle_key(m_ui->get_key());
+                m_input_handler.clear_mode_trash();
+            }
+            context().window().forget_timestamp();
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+            context().print_status({ error.what(), get_face("Error") });
+            context().hooks().run_hook("RuntimeError", error.what(), context());
+        }
+        catch (Kakoune::client_removed&)
+        {
+            ClientManager::instance().remove_client(*this);
+        }
     }
-    context().window().forget_timestamp();
+    else
+    {
+        Key key = m_ui->get_key();
+        if (key == ctrl('c'))
+            killpg(getpgrp(), SIGINT);
+        else
+            m_pending_keys.push_back(key);
+    }
 }
 
 void Client::print_status(DisplayLine status_line)

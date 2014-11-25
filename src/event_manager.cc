@@ -16,8 +16,13 @@ FDWatcher::~FDWatcher()
     EventManager::instance().m_fd_watchers.erase(this);
 }
 
-Timer::Timer(TimePoint date, Callback callback)
-    : m_date{date}, m_callback{std::move(callback)}
+void FDWatcher::run(EventMode mode)
+{
+    m_callback(*this, mode);
+}
+
+Timer::Timer(TimePoint date, Callback callback, EventMode mode)
+    : m_date{date}, m_callback{std::move(callback)}, m_mode(mode)
 {
     if (EventManager::has_instance())
         EventManager::instance().m_timers.insert(this);
@@ -29,10 +34,15 @@ Timer::~Timer()
         EventManager::instance().m_timers.erase(this);
 }
 
-void Timer::run()
+void Timer::run(EventMode mode)
 {
-    m_date = TimePoint::max();
-    m_callback(*this);
+    if (mode & m_mode)
+    {
+        m_date = TimePoint::max();
+        m_callback(*this);
+    }
+    else // try again a little later
+        m_date = Clock::now() + std::chrono::milliseconds{10};
 }
 
 EventManager::EventManager()
@@ -46,7 +56,7 @@ EventManager::~EventManager()
     kak_assert(m_timers.empty());
 }
 
-void EventManager::handle_next_events()
+void EventManager::handle_next_events(EventMode mode)
 {
     std::vector<pollfd> events;
     events.reserve(m_fd_watchers.size());
@@ -76,7 +86,7 @@ void EventManager::handle_next_events()
             auto it = find_if(m_fd_watchers,
                               [fd](FDWatcher* w) { return w->fd() == fd; });
             if (it != m_fd_watchers.end())
-                (*it)->run();
+                (*it)->run(mode);
         }
     }
 
@@ -84,7 +94,7 @@ void EventManager::handle_next_events()
     for (auto& timer : m_timers)
     {
         if (timer->next_date() <= now)
-            timer->run();
+            timer->run(mode);
     }
 }
 

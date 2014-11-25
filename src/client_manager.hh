@@ -35,6 +35,7 @@ public:
 
     void redraw_clients() const;
     void clear_mode_trashes() const;
+    void handle_available_inputs() const;
 
     Client*  get_client_ifp(StringView name);
     Client&  get_client(StringView name);

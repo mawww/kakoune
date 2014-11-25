@@ -282,9 +282,9 @@ private:
 
 
 RemoteUI::RemoteUI(int socket)
-    : m_socket_watcher(socket, [this](FDWatcher&) {
+    : m_socket_watcher(socket, [this](FDWatcher&, EventMode mode) {
                            if (m_input_callback)
-                               m_input_callback();
+                               m_input_callback(mode);
                        })
 {
     write_debug("remote client connected: " +
@@ -453,9 +453,9 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         msg.write(key);
     }
 
-    m_ui->set_input_callback([this]{ write_next_key(); });
+    m_ui->set_input_callback([this](EventMode){ write_next_key(); });
 
-    m_socket_watcher.reset(new FDWatcher{sock, [this](FDWatcher&){ process_available_messages(); }});
+    m_socket_watcher.reset(new FDWatcher{sock, [this](FDWatcher&, EventMode){ process_available_messages(); }});
 }
 
 void RemoteClient::process_available_messages()
@@ -560,7 +560,10 @@ class Server::Accepter
 public:
     Accepter(int socket)
         : m_socket_watcher(socket,
-                           [this](FDWatcher&) { handle_available_input(); })
+                           [this](FDWatcher&, EventMode mode) {
+                               if (mode == EventMode::Normal)
+                                   handle_available_input();
+                           })
     {}
 
 private:
@@ -626,7 +629,7 @@ Server::Server(String session_name)
     if (listen(listen_sock, 4) == -1)
        throw runtime_error("unable to listen on socket "_str + addr.sun_path);
 
-    auto accepter = [this](FDWatcher& watcher) {
+    auto accepter = [this](FDWatcher& watcher, EventMode mode) {
         sockaddr_un client_addr;
         socklen_t   client_addr_len = sizeof(sockaddr_un);
         int sock = accept(watcher.fd(), (sockaddr*) &client_addr,

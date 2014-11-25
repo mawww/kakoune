@@ -2,6 +2,7 @@
 
 #include "context.hh"
 #include "debug.hh"
+#include "event_manager.hh"
 #include "file.hh"
 
 #include <cstring>
@@ -59,25 +60,34 @@ String ShellManager::pipe(StringView input,
         write(write_pipe[1], input.data(), (int)input.length());
         close(write_pipe[1]);
 
-        char buffer[1024];
-        while (size_t size = read(read_pipe[0], buffer, 1024))
+        String error;
         {
-            if (size == -1)
-                break;
-            output += String(buffer, buffer+size);
-        }
-        close(read_pipe[0]);
+            auto pipe_reader = [](String& output, bool& closed) {
+                return [&output, &closed](FDWatcher& watcher, EventMode) {
+                    if (closed)
+                        return;
+                    const int fd = watcher.fd();
+                    char buffer[1024];
+                    size_t size = read(fd, buffer, 1024);
+                    if (size <= 0)
+                    {
+                        close(fd);
+                        closed = true;
+                    }
+                    output += String(buffer, buffer+size);
+                };
+            };
 
-        String errorout;
-        while (size_t size = read(error_pipe[0], buffer, 1024))
-        {
-            if (size == -1)
-                break;
-            errorout += String(buffer, buffer+size);
+            bool stdout_closed = false, stderr_closed = false;
+            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(output, stdout_closed)};
+            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(error, stderr_closed)};
+
+            while (not stdout_closed or not stderr_closed)
+                EventManager::instance().handle_next_events(EventMode::Urgent);
         }
-        close(error_pipe[0]);
-        if (not errorout.empty())
-            write_debug("shell stderr: <<<\n" + errorout + ">>>");
+
+        if (not error.empty())
+            write_debug("shell stderr: <<<\n" + error + ">>>");
 
         waitpid(pid, exit_status, 0);
         if (exit_status)
@@ -105,13 +115,7 @@ String ShellManager::pipe(StringView input,
         {
             auto& match = *it;
 
-            StringView name;
-            if (match[1].matched)
-                name = StringView(match[1].first, match[1].second);
-            else if (match[2].matched)
-                name = StringView(match[2].first, match[2].second);
-            else
-                kak_assert(false);
+            StringView name = StringView(match[1].first, match[1].second);
             kak_assert(name.length() > 0);
 
             auto local_var = env_vars.find(name);

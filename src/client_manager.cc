@@ -50,24 +50,17 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         return nullptr;
     }
 
-    client->ui().set_input_callback([client, this]() {
-        try
-        {
-            client->handle_available_input();
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-            client->context().print_status({ error.what(), get_face("Error") });
-            client->context().hooks().run_hook("RuntimeError", error.what(),
-                                               client->context());
-        }
-        catch (Kakoune::client_removed&)
-        {
-            ClientManager::instance().remove_client(*client);
-        }
+    client->ui().set_input_callback([client](EventMode mode) {
+        client->handle_available_input(mode);
     });
 
     return client;
+}
+
+void ClientManager::handle_available_inputs() const
+{
+    for (auto& client : m_clients)
+        client->handle_available_input(EventMode::Normal);
 }
 
 void ClientManager::remove_client(Client& client)

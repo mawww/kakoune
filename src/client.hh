@@ -14,6 +14,9 @@ namespace Kakoune
 class UserInterface;
 class Window;
 class String;
+struct Key;
+
+enum class EventMode;
 
 class Client : public SafeCountable, public OptionManagerWatcher
 {
@@ -28,7 +31,7 @@ public:
     Client(Client&&) = delete;
 
     // handle all the keys currently available in the user interface
-    void handle_available_input();
+    void handle_available_input(EventMode mode);
 
     void print_status(DisplayLine status_line);
 
@@ -64,6 +67,8 @@ private:
     DisplayLine m_status_line;
     DisplayLine m_pending_status_line;
     DisplayLine m_mode_line;
+
+    std::vector<Key> m_pending_keys;
 };
 
 }

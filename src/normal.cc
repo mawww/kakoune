@@ -18,9 +18,6 @@
 #include "user_interface.hh"
 #include "window.hh"
 
-#include <signal.h>
-#include <unistd.h>
-
 namespace Kakoune
 {
 
@@ -1400,8 +1397,6 @@ KeyMap keymap =
 
     { Key::PageUp,   { "scroll one page up", scroll<Key::PageUp> } },
     { Key::PageDown, { "scroll one page down", scroll<Key::PageDown> } },
-
-    { ctrl('c'), { "interupt", [](Context&, int) { killpg(getpgrp(), SIGINT); } } },
 };
 
 }

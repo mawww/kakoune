@@ -219,8 +219,10 @@ void on_sigint(int)
 }
 
 NCursesUI::NCursesUI()
-    : m_stdin_watcher{0, [this](FDWatcher&){ if (m_input_callback)
-                                                 m_input_callback(); }}
+    : m_stdin_watcher{0, [this](FDWatcher&, EventMode mode) {
+        if (m_input_callback)
+            m_input_callback(mode);
+      }}
 {
     initscr();
     raw();

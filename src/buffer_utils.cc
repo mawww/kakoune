@@ -105,7 +105,10 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     ValueId fifo_watcher_id = s_fifo_watcher_id;
 
     std::unique_ptr<FDWatcher, decltype(watcher_deleter)> watcher(
-        new FDWatcher(fd, [buffer, scroll, fifo_watcher_id](FDWatcher& watcher) {
+        new FDWatcher(fd, [buffer, scroll, fifo_watcher_id](FDWatcher& watcher, EventMode mode) {
+        if (mode != EventMode::Normal)
+            return;
+
         constexpr size_t buffer_size = 2048;
         // if we read data slower than it arrives in the fifo, limiting the
         // iteration number allows us to go back go back to the event loop and

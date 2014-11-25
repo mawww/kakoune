@@ -32,7 +32,9 @@ enum class InfoStyle
     MenuDoc
 };
 
-using InputCallback = std::function<void()>;
+enum class EventMode;
+
+using InputCallback = std::function<void(EventMode mode)>;
 
 class UserInterface : public SafeCountable
 {
