@@ -781,7 +781,7 @@ const CommandDesc debug_cmd = {
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     CommandCompleter{},
-    [](const ParametersParser& parser, Context&)
+    [](const ParametersParser& parser, Context& context)
     {
         if (parser[0] == "info")
         {
@@ -793,6 +793,12 @@ const CommandDesc debug_cmd = {
             write_debug("Buffers:");
             for (auto& buffer : BufferManager::instance())
                 write_debug(buffer->debug_description());
+        }
+        if (parser[0] == "options")
+        {
+            write_debug("Options:");
+            for (auto& option : context.options().flatten_options())
+                write_debug(" * " + option->name() + ": " + option->get_as_string());
         }
         else
             throw runtime_error("unknown debug command '" + parser[0] + "'");
