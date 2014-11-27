@@ -5,7 +5,7 @@ decl -hidden str-list clang_completions
 decl -hidden line-flag-list clang_flags
 decl -hidden str clang_errors
 
-def clang-complete %{
+def -shell-params clang-parse %{
     %sh{
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
@@ -32,51 +32,56 @@ def clang-complete %{
                 *) ft=c++ ;;
             esac
 
-            pos=-:${kak_cursor_line}:${kak_cursor_column}
             cd $(dirname ${kak_buffile})
-            header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
-            compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/errors |
-                    awk -F ': ' -e '
-                        /^COMPLETION:/ && ! /\(Hidden\)/ {
-                             gsub(/[[{<]#|#[}>]/, "", $3)
-                             gsub(/#]/, " ", $3)
-                             gsub(/:: /, "::", $3)
-                             gsub(/ +$/, "", $3)
-                             id=substr($2, 1, length($2)-1)
-                             gsub(/:/, "\\:", id)
-                             desc=$4 ? $3 "\\n" $4 : $3
-                             gsub(/:/, "\\:", desc)
-                             if (id in completions)
-                                 completions[id]=completions[id] "\\n" desc
-                             else
-                                 completions[id]=desc
-                        }
-                        END {
-                            for (id in completions)
-                                print id  "@" completions[id]
-                        }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
+            if [ "$1" == "-complete" ]; then
+	            pos=-:${kak_cursor_line}:${kak_cursor_column}
+	            header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
+	            compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \
+                        -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
+	                    awk -F ': ' -e '
+	                        /^COMPLETION:/ && ! /\(Hidden\)/ {
+	                             gsub(/[[{<]#|#[}>]/, "", $3)
+	                             gsub(/#]/, " ", $3)
+	                             gsub(/:: /, "::", $3)
+	                             gsub(/ +$/, "", $3)
+	                             id=substr($2, 1, length($2)-1)
+	                             gsub(/:/, "\\:", id)
+	                             desc=$4 ? $3 "\\n" $4 : $3
+	                             gsub(/:/, "\\:", desc)
+	                             if (id in completions)
+	                                 completions[id]=completions[id] "\\n" desc
+	                             else
+	                                 completions[id]=desc
+	                        }
+	                        END {
+	                            for (id in completions)
+	                                print id  "@" completions[id]
+	                        }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
+	            echo "eval -client ${kak_client} echo completed
+	                  set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}]" | kak -p ${kak_session}
+            else
+				clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
+            fi
 
-            flags=$(cat ${dir}/errors | sed -rne "
+            flags=$(cat ${dir}/stderr | sed -rne "
                         /^<stdin>:[0-9]+:([0-9]+:)? error/ { s/^<stdin>:([0-9]+):.*/\1,red,█/; p }
                         /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1,yellow,█/; p }
                     " | paste -s -d ':')
 
-            errors=$(cat ${dir}/errors | sed -rne "
+            errors=$(cat ${dir}/stderr | sed -rne "
                         /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; p }")
 
-            sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/errors > ${dir}/fifo
+            sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
 
-            echo "eval -client ${kak_client} %[
-                      echo completed
-                      set 'buffer=${kak_buffile}' clang_completions %[${header}:${compl}] ]
-                      set 'buffer=${kak_buffile}' clang_flags %{${flags}}
-                      set 'buffer=${kak_buffile}' clang_errors %{${errors}}
-                 " | kak -p ${kak_session}
+            echo "set 'buffer=${kak_buffile}' clang_flags %{${flags}}
+                  set 'buffer=${kak_buffile}' clang_errors %{${errors}}" | kak -p ${kak_session}
 
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
+
+def clang-complete %{ clang-parse -complete }
 
 def clang-enable-autocomplete %{
     set window completers "option=clang_completions:%opt{completers}"
