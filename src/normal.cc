@@ -69,7 +69,7 @@ class Select
 {
 public:
     constexpr Select(T t) : m_func(t) {}
-    void operator() (Context& context, int) { select<mode>(context, m_func); }
+    void operator() (Context& context, NormalParams) { select<mode>(context, m_func); }
 private:
     T m_func;
 };
@@ -95,12 +95,12 @@ void select_coord(Buffer& buffer, ByteCoord coord, SelectionList& selections)
 }
 
 template<InsertMode mode>
-void enter_insert_mode(Context& context, int)
+void enter_insert_mode(Context& context, NormalParams)
 {
     context.input_handler().insert(mode);
 }
 
-void repeat_last_insert(Context& context, int)
+void repeat_last_insert(Context& context, NormalParams)
 {
     context.input_handler().repeat_last_insert();
 }
@@ -129,14 +129,14 @@ void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, C
 }
 
 template<SelectMode mode>
-void goto_commands(Context& context, int line)
+void goto_commands(Context& context, NormalParams params)
 {
-    if (line != 0)
+    if (params.count != 0)
     {
         context.push_jump();
-        select_coord<mode>(context.buffer(), LineCount{line - 1}, context.selections());
+        select_coord<mode>(context.buffer(), LineCount{params.count - 1}, context.selections());
         if (context.has_window())
-            context.window().center_line(LineCount{line-1});
+            context.window().center_line(LineCount{params.count-1});
     }
     else
     {
@@ -257,10 +257,10 @@ void goto_commands(Context& context, int line)
     }
 }
 
-void view_commands(Context& context, int param)
+void view_commands(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::View,
-                             [param](Key key, Context& context) {
+                             [params](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None or not context.has_window())
             return;
 
@@ -279,16 +279,16 @@ void view_commands(Context& context, int param)
             context.window().display_line_at(cursor_line, window.dimensions().line-1);
             break;
         case 'h':
-            context.window().scroll(-std::max<CharCount>(1, param));
+            context.window().scroll(-std::max<CharCount>(1, params.count));
             break;
         case 'j':
-            context.window().scroll( std::max<LineCount>(1, param));
+            context.window().scroll( std::max<LineCount>(1, params.count));
             break;
         case 'k':
-            context.window().scroll(-std::max<LineCount>(1, param));
+            context.window().scroll(-std::max<LineCount>(1, params.count));
             break;
         case 'l':
-            context.window().scroll( std::max<CharCount>(1, param));
+            context.window().scroll( std::max<CharCount>(1, params.count));
             break;
         }
     }, "view",
@@ -301,7 +301,7 @@ void view_commands(Context& context, int param)
     "l:    scroll right    \n");
 }
 
-void replace_with_char(Context& context, int)
+void replace_with_char(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
@@ -330,7 +330,7 @@ Codepoint swap_case(Codepoint cp)
 }
 
 template<Codepoint (*func)(Codepoint)>
-void for_each_char(Context& context, int)
+void for_each_char(Context& context, NormalParams)
 {
     ScopedEdition edition(context);
     std::vector<String> sels = context.selections_content();
@@ -342,7 +342,7 @@ void for_each_char(Context& context, int)
     context.selections().insert(sels, InsertMode::Replace);
 }
 
-void command(Context& context, int)
+void command(Context& context, NormalParams)
 {
     if (not CommandManager::has_instance())
         return;
@@ -368,7 +368,7 @@ void command(Context& context, int)
 }
 
 template<InsertMode mode>
-void pipe(Context& context, int)
+void pipe(Context& context, NormalParams)
 {
     const char* prompt = mode == InsertMode::Replace ? "pipe:" : "pipe (ins):";
     context.input_handler().prompt(prompt, "", get_face("Prompt"), shell_complete,
@@ -434,25 +434,25 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
     selections.sort_and_merge_overlapping();
 }
 
-void yank(Context& context, int)
+void yank(Context& context, NormalParams params)
 {
-    RegisterManager::instance()['"'] = context.selections_content();
+    RegisterManager::instance()[params.reg] = context.selections_content();
     context.print_status({ "yanked " + to_string(context.selections().size()) +
                            " selections", get_face("Information") });
 }
 
-void erase_selections(Context& context, int)
+void erase_selections(Context& context, NormalParams params)
 {
-    RegisterManager::instance()['"'] = context.selections_content();
+    RegisterManager::instance()[params.reg] = context.selections_content();
     ScopedEdition edition(context);
     context.selections().erase();
     context.selections().avoid_eol();
 }
 
-void change(Context& context, int param)
+void change(Context& context, NormalParams params)
 {
-    RegisterManager::instance()['"'] = context.selections_content();
-    enter_insert_mode<InsertMode::Replace>(context, param);
+    RegisterManager::instance()[params.reg] = context.selections_content();
+    enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
 constexpr InsertMode adapt_for_linewise(InsertMode mode)
@@ -466,9 +466,9 @@ constexpr InsertMode adapt_for_linewise(InsertMode mode)
 }
 
 template<InsertMode mode>
-void paste(Context& context, int)
+void paste(Context& context, NormalParams params)
 {
-    auto strings = RegisterManager::instance()['"'].values(context);
+    auto strings = RegisterManager::instance()[params.reg].values(context);
     InsertMode effective_mode = mode;
     for (auto& str : strings)
     {
@@ -483,9 +483,9 @@ void paste(Context& context, int)
 }
 
 template<InsertMode mode>
-void paste_all(Context& context, int)
+void paste_all(Context& context, NormalParams params)
 {
-    auto strings = RegisterManager::instance()['"'].values(context);
+    auto strings = RegisterManager::instance()[params.reg].values(context);
     InsertMode effective_mode = mode;
     String all;
     std::vector<ByteCount> offsets;
@@ -576,7 +576,7 @@ void regex_prompt(Context& context, const String prompt, T func)
 }
 
 template<SelectMode mode, Direction direction>
-void search(Context& context, int)
+void search(Context& context, NormalParams)
 {
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
                  [](Regex ex, PromptEvent event, Context& context) {
@@ -590,7 +590,7 @@ void search(Context& context, int)
 }
 
 template<SelectMode mode, Direction direction>
-void search_next(Context& context, int param)
+void search_next(Context& context, NormalParams params)
 {
     StringView str = context.main_sel_register_value("/");
     if (not str.empty())
@@ -600,7 +600,7 @@ void search_next(Context& context, int param)
             Regex ex{str.begin(), str.end()};
             do {
                 select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
-            } while (--param > 0);
+            } while (--params.count > 0);
         }
         catch (RegexError& err)
         {
@@ -612,7 +612,7 @@ void search_next(Context& context, int param)
 }
 
 template<bool smart>
-void use_selection_as_search_pattern(Context& context, int)
+void use_selection_as_search_pattern(Context& context, NormalParams)
 {
     std::vector<String> patterns;
     auto& sels = context.selections();
@@ -634,7 +634,7 @@ void use_selection_as_search_pattern(Context& context, int)
     RegisterManager::instance()['/'] = patterns;
 }
 
-void select_regex(Context& context, int)
+void select_regex(Context& context, NormalParams)
 {
     regex_prompt(context, "select:", [](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
@@ -646,7 +646,7 @@ void select_regex(Context& context, int)
     });
 }
 
-void split_regex(Context& context, int)
+void split_regex(Context& context, NormalParams)
 {
     regex_prompt(context, "split:", [](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
@@ -658,7 +658,7 @@ void split_regex(Context& context, int)
     });
 }
 
-void split_lines(Context& context, int)
+void split_lines(Context& context, NormalParams)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
@@ -680,7 +680,7 @@ void split_lines(Context& context, int)
     selections = std::move(res);
 }
 
-void join_select_spaces(Context& context, int)
+void join_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     std::vector<Selection> selections;
@@ -705,7 +705,7 @@ void join_select_spaces(Context& context, int)
     context.selections().insert(" "_str, InsertMode::Replace);
 }
 
-void join(Context& context, int param)
+void join(Context& context, NormalParams params)
 {
     SelectionList sels{context.selections()};
     auto restore_sels = on_scope_end([&]{
@@ -713,11 +713,11 @@ void join(Context& context, int param)
         context.selections() = std::move(sels);
     });
 
-    join_select_spaces(context, param);
+    join_select_spaces(context, params);
 }
 
 template<bool matching>
-void keep(Context& context, int)
+void keep(Context& context, NormalParams)
 {
     constexpr const char* prompt = matching ? "keep matching:" : "keep not matching:";
     regex_prompt(context, prompt, [](const Regex& ex, PromptEvent, Context& context) {
@@ -737,7 +737,7 @@ void keep(Context& context, int)
     });
 }
 
-void keep_pipe(Context& context, int)
+void keep_pipe(Context& context, NormalParams)
 {
     context.input_handler().prompt(
         "keep pipe:", "", get_face("Prompt"), shell_complete,
@@ -761,7 +761,7 @@ void keep_pipe(Context& context, int)
     });
 }
 template<bool indent_empty = false>
-void indent(Context& context, int)
+void indent(Context& context, NormalParams)
 {
     CharCount indent_width = context.options()["indentwidth"].get<int>();
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
@@ -788,7 +788,7 @@ void indent(Context& context, int)
 }
 
 template<bool deindent_incomplete = true>
-void deindent(Context& context, int)
+void deindent(Context& context, NormalParams)
 {
     CharCount tabstop = context.options()["tabstop"].get<int>();
     CharCount indent_width = context.options()["indentwidth"].get<int>();
@@ -837,9 +837,9 @@ void deindent(Context& context, int)
 }
 
 template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
-void select_object(Context& context, int param)
+void select_object(Context& context, NormalParams params)
 {
-    int level = param <= 0 ? 0 : param - 1;
+    int level = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [level](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None)
@@ -902,7 +902,7 @@ void select_object(Context& context, int param)
 }
 
 template<Key::NamedKey key>
-void scroll(Context& context, int)
+void scroll(Context& context, NormalParams)
 {
     static_assert(key == Key::PageUp or key == Key::PageDown,
                   "scrool only implements PageUp and PageDown");
@@ -928,13 +928,14 @@ void scroll(Context& context, int)
     window.set_position(position);
 }
 
-void rotate_selections(Context& context, int count)
+void rotate_selections(Context& context, NormalParams params)
 {
-    context.selections().rotate_main(count != 0 ? count : 1);
+    context.selections().rotate_main(params.count != 0 ? params.count : 1);
 }
 
-void rotate_selections_content(Context& context, int group)
+void rotate_selections_content(Context& context, NormalParams params)
 {
+    int group = params.count;
     int count = 1;
     auto strings = context.selections_content();
     if (group == 0 or group > (int)strings.size())
@@ -961,18 +962,18 @@ enum class SelectFlags
 template<> struct WithBitOps<SelectFlags> : std::true_type {};
 
 template<SelectFlags flags>
-void select_to_next_char(Context& context, int param)
+void select_to_next_char(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
-                             [param](Key key, Context& context) {
+                             [params](Key key, Context& context) {
         select<flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace>(
             context,
             std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
-                      _1, _2, key.key, param, flags & SelectFlags::Inclusive));
+                      _1, _2, key.key, params.count, flags & SelectFlags::Inclusive));
     }, "select to next char","enter char to select to");
 }
 
-void start_or_end_macro_recording(Context& context, int)
+void start_or_end_macro_recording(Context& context, NormalParams)
 {
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
@@ -984,16 +985,16 @@ void start_or_end_macro_recording(Context& context, int)
         }, "record macro", "enter macro name ");
 }
 
-void end_macro_recording(Context& context, int)
+void end_macro_recording(Context& context, NormalParams)
 {
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
 }
 
-void replay_macro(Context& context, int count)
+void replay_macro(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
-                             [count](Key key, Context& context) mutable {
+                             [params](Key key, Context& context) mutable {
         if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
         {
             static std::unordered_set<char> running_macros;
@@ -1009,14 +1010,14 @@ void replay_macro(Context& context, int count)
 
                 auto keys = parse_keys(reg_val[0]);
                 ScopedEdition edition(context);
-                do { exec_keys(keys, context); } while (--count > 0);
+                do { exec_keys(keys, context); } while (--params.count > 0);
             }
         }
     }, "replay macro", "enter macro name");
 }
 
 template<Direction direction>
-void jump(Context& context, int)
+void jump(Context& context, NormalParams)
 {
     auto jump = (direction == Forward) ?
                  context.jump_forward() : context.jump_backward();
@@ -1028,14 +1029,14 @@ void jump(Context& context, int)
     context.selections() = jump;
 }
 
-void save_selections(Context& context, int)
+void save_selections(Context& context, NormalParams)
 {
     context.push_jump();
     context.print_status({ "saved " + to_string(context.selections().size()) +
                            " selections", get_face("Information") });
 }
 
-void align(Context& context, int)
+void align(Context& context, NormalParams)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
@@ -1085,8 +1086,9 @@ void align(Context& context, int)
     }
 }
 
-void copy_indent(Context& context, int selection)
+void copy_indent(Context& context, NormalParams params)
 {
+    int selection = params.count;
     auto& buffer = context.buffer();
     auto& selections = context.selections();
     std::vector<LineCount> lines;
@@ -1122,11 +1124,11 @@ void copy_indent(Context& context, int selection)
     }
 }
 
-void tabs_to_spaces(Context& context, int ts)
+void tabs_to_spaces(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
     const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
-    const CharCount tabstop = ts == 0 ? opt_tabstop : ts;
+    const CharCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     std::vector<Selection> tabs;
     std::vector<String> spaces;
     for (auto& sel : context.selections())
@@ -1147,11 +1149,11 @@ void tabs_to_spaces(Context& context, int ts)
         SelectionList{ buffer, std::move(tabs) }.insert(spaces, InsertMode::Replace);
 }
 
-void spaces_to_tabs(Context& context, int ts)
+void spaces_to_tabs(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
     const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
-    const CharCount tabstop = ts == 0 ? opt_tabstop : ts;
+    const CharCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     std::vector<Selection> spaces;
     for (auto& sel : context.selections())
     {
@@ -1182,7 +1184,7 @@ void spaces_to_tabs(Context& context, int ts)
         SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
 }
 
-void undo(Context& context, int)
+void undo(Context& context, NormalParams)
 {
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
@@ -1197,7 +1199,7 @@ void undo(Context& context, int)
         context.print_status({ "nothing left to undo", get_face("Information") });
 }
 
-void redo(Context& context, int)
+void redo(Context& context, NormalParams)
 {
     using namespace std::placeholders;
     Buffer& buffer = context.buffer();
@@ -1220,10 +1222,10 @@ class Repeated
 public:
     constexpr Repeated(T t) : m_func(t) {}
 
-    void operator() (Context& context, int count)
+    void operator() (Context& context, NormalParams params)
     {
         ScopedEdition edition(context);
-        do { m_func(context, 0); } while(--count > 0);
+        do { m_func(context, {0, params.reg}); } while(--params.count > 0);
     }
 private:
     T m_func;
@@ -1233,10 +1235,10 @@ template<typename T>
 constexpr Repeated<T> repeated(T func) { return Repeated<T>(func); }
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
-void move(Context& context, int count)
+void move(Context& context, NormalParams params)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    Type offset(std::max(count,1));
+    Type offset(std::max(params.count,1));
     if (direction == Backward)
         offset = -offset;
     auto& selections = context.selections();
@@ -1301,15 +1303,15 @@ KeyMap keymap =
 
     { '.', { "repeat last insert command", repeat_last_insert } },
 
-    { '%', { "select whole buffer", [](Context& context, int) { select_buffer(context.selections()); } } },
+    { '%', { "select whole buffer", [](Context& context, NormalParams) { select_buffer(context.selections()); } } },
 
     { ':', { "enter command prompt", command } },
     { '|', { "pipe each selection through filter and replace with output", pipe<InsertMode::Replace> } },
     { alt('|'), { "pipe each selection through filter and append with output", pipe<InsertMode::Append> } },
-    { ' ', { "remove all selection except main", [](Context& context, int count) { keep_selection(context.selections(), count ? count-1 : context.selections().main_index()); } } },
-    { alt(' '), { "remove main selection", [](Context& context, int count) { remove_selection(context.selections(), count ? count-1 : context.selections().main_index()); } } },
-    { ';', { "reduce selections to their cursor", [](Context& context, int count) { clear_selections(context.selections()); } } },
-    { alt(';'), { "swap selections cursor and anchor", [](Context& context, int count) { flip_selections(context.selections()); } } },
+    { ' ', { "remove all selection except main", [](Context& context, NormalParams p) { keep_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index()); } } },
+    { alt(' '), { "remove main selection", [](Context& context, NormalParams p) { remove_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index()); } } },
+    { ';', { "reduce selections to their cursor", [](Context& context, NormalParams) { clear_selections(context.selections()); } } },
+    { alt(';'), { "swap selections cursor and anchor", [](Context& context, NormalParams) { flip_selections(context.selections()); } } },
 
     { 'w', { "select to next word start", repeated(make_select<SelectMode::Replace>(select_to_next_word<Word>)) } },
     { 'e', { "select to next word end", repeated(make_select<SelectMode::Replace>(select_to_next_word_end<Word>)) } },

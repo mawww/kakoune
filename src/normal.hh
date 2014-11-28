@@ -11,10 +11,16 @@ namespace Kakoune
 
 class Context;
 
+struct NormalParams
+{
+    int count;
+    char reg;
+};
+
 struct NormalCmdDesc
 {
     const char* docstring;
-    std::function<void (Context& context, int param)> func;
+    std::function<void (Context& context, NormalParams params)> func;
 };
 
 using KeyMap = std::unordered_map<Key, NormalCmdDesc>;

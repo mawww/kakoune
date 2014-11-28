@@ -84,6 +84,13 @@ public:
 
     void on_key(Key key) override
     {
+        if (m_waiting_for_reg)
+        {
+            if (key.modifiers == Key::Modifiers::None)
+                m_params.reg = key.key;
+            m_waiting_for_reg = false;
+            return;
+        }
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
             if (do_restore_hooks)
@@ -98,9 +105,9 @@ public:
             context().ui().info_hide();
 
         if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
-            m_count = m_count * 10 + key.key - '0';
+            m_params.count = m_params.count * 10 + key.key - '0';
         else if (key == Key::Backspace)
-            m_count /= 10;
+            m_params.count /= 10;
         else if (key == '\\')
         {
             if (not m_hooks_disabled)
@@ -108,6 +115,10 @@ public:
                 m_hooks_disabled = true;
                 context().disable_user_hooks();
             }
+        }
+        else if (key == '"')
+        {
+            m_waiting_for_reg = true;
         }
         else
         {
@@ -119,10 +130,9 @@ public:
                 if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
                     context().ui().info_show(key_to_str(key), it->second.docstring, CharCoord{},
                                              get_face("Information"), InfoStyle::Prompt);
-                it->second.func(context(), m_count);
+                it->second.func(context(), m_params);
             }
-            m_count = 0;
-
+            m_params = { 0, '"' };
         }
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
@@ -131,10 +141,15 @@ public:
     DisplayLine mode_line() const override
     {
         AtomList atoms = { { to_string(context().selections().size()) + " sel", Face(Colors::Blue) } };
-        if (m_count != 0)
+        if (m_params.count != 0)
         {
             atoms.push_back({ "; param=", Face(Colors::Yellow) });
-            atoms.push_back({ to_string(m_count), Face(Colors::Green) });
+            atoms.push_back({ to_string(m_params.count), Face(Colors::Green) });
+        }
+        if (m_params.reg != '"')
+        {
+            atoms.push_back({ "; reg=", Face(Colors::Yellow) });
+            atoms.push_back({ StringView(m_params.reg), Face(Colors::Green) });
         }
         return atoms;
     }
@@ -142,8 +157,9 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
 
 private:
-    int m_count = 0;
+    NormalParams m_params = { 0, '"' };
     bool m_hooks_disabled = false;
+    bool m_waiting_for_reg = false;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
 };
