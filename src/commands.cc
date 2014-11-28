@@ -788,13 +788,13 @@ const CommandDesc debug_cmd = {
             write_debug("pid: " + to_string(getpid()));
             write_debug("session: " + Server::instance().session());
         }
-        if (parser[0] == "buffers")
+        else if (parser[0] == "buffers")
         {
             write_debug("Buffers:");
             for (auto& buffer : BufferManager::instance())
                 write_debug(buffer->debug_description());
         }
-        if (parser[0] == "options")
+        else if (parser[0] == "options")
         {
             write_debug("Options:");
             for (auto& option : context.options().flatten_options())
