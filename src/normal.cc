@@ -768,13 +768,16 @@ void indent(Context& context, int)
 
     auto& buffer = context.buffer();
     std::vector<Selection> sels;
+    LineCount last_line = 0;
     for (auto& sel : context.selections())
     {
-        for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+        for (auto line = std::max(last_line, sel.min().line); line < sel.max().line+1; ++line)
         {
             if (indent_empty or buffer[line].length() > 1)
                 sels.push_back({line, line});
         }
+        // avoid reindenting the same line if multiple selections are on it
+        last_line = sel.max().line+1;
     }
     if (not sels.empty())
     {
@@ -794,9 +797,11 @@ void deindent(Context& context, int)
 
     auto& buffer = context.buffer();
     std::vector<Selection> sels;
+    LineCount last_line = 0;
     for (auto& sel : context.selections())
     {
-        for (auto line = sel.min().line; line < sel.max().line+1; ++line)
+        for (auto line = std::max(sel.min().line, last_line);
+             line < sel.max().line+1; ++line)
         {
             CharCount width = 0;
             auto content = buffer[line];
@@ -820,6 +825,8 @@ void deindent(Context& context, int)
                 }
             }
         }
+        // avoid reindenting the same line if multiple selections are on it
+        last_line = sel.max().line + 1;
     }
     if (not sels.empty())
     {
