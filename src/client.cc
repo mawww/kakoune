@@ -53,11 +53,12 @@ void Client::handle_available_input(EventMode mode)
 
             while (m_ui->is_key_available())
             {
+                Key key = m_ui->get_key();
                 if (key == ctrl('c'))
                     killpg(getpgrp(), SIGINT);
                 else
                 {
-                    m_input_handler.handle_key(m_ui->get_key());
+                    m_input_handler.handle_key(key);
                     m_input_handler.clear_mode_trash();
                 }
             }
