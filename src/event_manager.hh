@@ -12,23 +12,23 @@ namespace Kakoune
 
 enum class EventMode
 {
-    Normal = 1 << 0,
-    Urgent = 1 << 1
+    Normal,
+    Urgent,
+    Pending
 };
-
-template<> struct WithBitOps<EventMode> : std::true_type {};
 
 class FDWatcher
 {
 public:
     using Callback = std::function<void (FDWatcher& watcher, EventMode mode)>;
     FDWatcher(int fd, Callback callback);
+    FDWatcher(const FDWatcher&) = delete;
+    FDWatcher& operator=(const FDWatcher&) = delete;
     ~FDWatcher();
 
     int fd() const { return m_fd; }
     void run(EventMode mode);
 private:
-    FDWatcher(const FDWatcher&) = delete;
 
     int       m_fd;
     Callback  m_callback;
@@ -44,6 +44,8 @@ public:
 
     Timer(TimePoint date, Callback callback,
           EventMode mode = EventMode::Normal);
+    Timer(const Timer&) = delete;
+    Timer& operator=(const Timer&) = delete;
     ~Timer();
 
     TimePoint next_date() const { return m_date; }

@@ -38,31 +38,44 @@ Client::~Client()
     m_window->options().unregister_watcher(*this);
 }
 
+Optional<Key> Client::get_next_key(EventMode mode)
+{
+    if (not m_pending_keys.empty())
+    {
+        Key key = m_pending_keys.front();
+        m_pending_keys.erase(m_pending_keys.begin());
+        return key;
+    }
+    if (mode != EventMode::Pending and m_ui->is_key_available())
+        return m_ui->get_key();
+    return {};
+}
+
 void Client::handle_available_input(EventMode mode)
 {
-    if (mode == EventMode::Normal)
+    if (mode == EventMode::Urgent)
+    {
+        Key key = m_ui->get_key();
+        if (key == ctrl('c'))
+            killpg(getpgrp(), SIGINT);
+        else
+            m_pending_keys.push_back(key);
+    }
+    else
     {
         try
         {
-            for (auto& key : m_pending_keys)
+            while (Optional<Key> key = get_next_key(mode))
             {
-                m_input_handler.handle_key(key);
-                m_input_handler.clear_mode_trash();
-            }
-            m_pending_keys.clear();
-
-            while (m_ui->is_key_available())
-            {
-                Key key = m_ui->get_key();
-                if (key == ctrl('c'))
+                if (*key == ctrl('c'))
                     killpg(getpgrp(), SIGINT);
                 else
                 {
-                    m_input_handler.handle_key(key);
+                    m_input_handler.handle_key(*key);
                     m_input_handler.clear_mode_trash();
+                    context().window().forget_timestamp();
                 }
             }
-            context().window().forget_timestamp();
         }
         catch (Kakoune::runtime_error& error)
         {
@@ -73,14 +86,6 @@ void Client::handle_available_input(EventMode mode)
         {
             ClientManager::instance().remove_client(*this);
         }
-    }
-    else
-    {
-        Key key = m_ui->get_key();
-        if (key == ctrl('c'))
-            killpg(getpgrp(), SIGINT);
-        else
-            m_pending_keys.push_back(key);
     }
 }
 

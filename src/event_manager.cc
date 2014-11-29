@@ -36,7 +36,7 @@ Timer::~Timer()
 
 void Timer::run(EventMode mode)
 {
-    if (mode & m_mode)
+    if (mode == m_mode)
     {
         m_date = TimePoint::max();
         m_callback(*this);

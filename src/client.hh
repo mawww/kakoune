@@ -55,6 +55,8 @@ public:
 private:
     void on_option_changed(const Option& option) override;
 
+    Optional<Key> get_next_key(EventMode mode);
+
     DisplayLine generate_mode_line() const;
 
     std::unique_ptr<UserInterface> m_ui;
