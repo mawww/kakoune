@@ -46,18 +46,18 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 # Regions definition are the same between c++ and objective-c
 %sh{
     for ft in cpp objc; do
-        echo '
+        printf '%s' '
             addhl -group / regions -default code FT \
-                string %{(?<!'\'')"} %{(?<!\\)(\\\\)*\"} "" \
+                string %{(?<!QUOTE)"} %{(?<!\\)(\\\\)*"} "" \
                 comment /\* \*/ "" \
                 comment // $ "" \
                 disabled ^\h*?#\h*if\h+(0|FALSE)\b "#\h*(else|elif|endif)" "#\h*if(def)?" \
-                macro ^\h*?\K# %{(?<!\\)\n} ""
+                macro %{^\h*?\K#} %{(?<!\\)\n} ""
 
             addhl -group /FT/string fill string
             addhl -group /FT/comment fill comment
             addhl -group /FT/disabled fill rgb:666666
-            addhl -group /FT/macro fill meta' | sed -e "s/FT/${ft}/g" 
+            addhl -group /FT/macro fill meta' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g" 
     done
 }
 
