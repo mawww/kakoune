@@ -50,6 +50,10 @@ String ShellManager::pipe(StringView input,
     ::pipe(read_pipe);
     ::pipe(error_pipe);
 
+    static sig_atomic_t exited; exited = 0;
+    static sig_atomic_t sig_exit_status;
+    signal(SIGCHLD, [](int) { wait(&sig_exit_status); exited = 1; });
+
     String output;
     if (pid_t pid = fork())
     {
@@ -89,7 +93,13 @@ String ShellManager::pipe(StringView input,
         if (not error.empty())
             write_debug("shell stderr: <<<\n" + error + ">>>");
 
-        waitpid(pid, exit_status, 0);
+        signal(SIGCHLD, SIG_DFL);
+
+        if (not exited)
+            waitpid(pid, exit_status, 0);
+        else if (exit_status)
+            *exit_status = sig_exit_status;
+
         if (exit_status)
         {
             if (WIFEXITED(*exit_status))
