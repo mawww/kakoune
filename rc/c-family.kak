@@ -72,6 +72,9 @@ addhl -group /objc/code regex %{\<(self|nil|id|super|TRUE|FALSE|YES|NO|NULL)\>|\
 addhl -group /objc/code regex "\<(void|int|char|unsigned|float|bool|size_t|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString)\>" 0:type
 addhl -group /objc/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return)\>" 0:keyword
 addhl -group /objc/code regex "\<(const|auto|inline|static|volatile|struct|enum|union|typedef|extern|__block|@\w+)\>" 0:attribute
+addhl -group /objc/code regex "\<(nonatomic|assign|copy|strong|retain|weak|readonly)\>" 0:attribute
+addhl -group /objc/code regex "@(property|synthesize|interface|implementation|protocol|end|selector|autoreleasepool|try|catch|class|synchronized)\>" 0:attribute
+addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 
 hook global WinSetOption filetype=(cpp|objc) %[
     # cleanup trailing whitespaces when exiting insert mode
