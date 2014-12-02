@@ -134,7 +134,7 @@ void apply_highlighter(const Context& context,
     }
 
     region_display.compute_range();
-    highlighter.highlight(context, flags, region_display);
+    highlighter.highlight(context, flags, region_display, {begin, end});
 
     for (size_t i = 0; i < region_lines.size(); ++i)
     {
@@ -169,9 +169,8 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
     get_face(facespec); // validate param
 
     auto func = [=](const Context& context, HighlightFlags flags,
-                    DisplayBuffer& display_buffer)
+                    DisplayBuffer& display_buffer, BufferRange range)
     {
-        auto range = display_buffer.range();
         highlight_range(display_buffer, range.first, range.second, true,
                         apply_face(get_face(facespec)));
     };
@@ -202,7 +201,7 @@ public:
     {
     }
 
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) override
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange) override
     {
         if (flags != HighlightFlags::Highlight)
             return;
@@ -325,7 +324,7 @@ public:
           m_face_getter(std::move(face_getter)),
           m_highlighter(Regex(), FacesSpec{}) {}
 
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range)
     {
         if (flags != HighlightFlags::Highlight)
             return;
@@ -340,7 +339,7 @@ public:
                 m_highlighter.reset(m_last_regex, m_last_face);
         }
         if (not m_last_regex.empty() and not m_last_face.empty())
-            m_highlighter.highlight(context, flags, display_buffer);
+            m_highlighter.highlight(context, flags, display_buffer, range);
     }
 
 private:
@@ -415,7 +414,7 @@ HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
     GlobalScope::instance().options()[option_name].get<int>(); // verify option type now
 
     auto func = [=](const Context& context, HighlightFlags flags,
-                    DisplayBuffer& display_buffer)
+                    DisplayBuffer& display_buffer, BufferRange)
     {
         int line = context.options()[option_name].get<int>();
         highlight_range(display_buffer, {line-1, 0}, {line, 0}, false,
@@ -425,7 +424,7 @@ HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
     return {"hlline_" + params[0], make_simple_highlighter(std::move(func))};
 }
 
-void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const int tabstop = context.options()["tabstop"].get<int>();
     auto& buffer = context.buffer();
@@ -460,7 +459,7 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
     }
 }
 
-void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const int tabstop = context.options()["tabstop"].get<int>();
     auto& buffer = context.buffer();
@@ -503,7 +502,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
     }
 }
 
-void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     LineCount last_line = context.buffer().line_count();
     int digit_count = 0;
@@ -523,7 +522,7 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
     }
 }
 
-void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = get_face("MatchingChar");
     using CodepointPair = std::pair<Codepoint, Codepoint>;
@@ -575,7 +574,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
     }
 }
 
-void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     if (flags != HighlightFlags::Highlight)
         return;
@@ -602,7 +601,7 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
     }
 }
 
-void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
@@ -648,7 +647,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     GlobalScope::instance().options()[option_name].get<std::vector<LineAndFlag>>();
 
     auto func = [=](const Context& context, HighlightFlags flags,
-                    DisplayBuffer& display_buffer)
+                    DisplayBuffer& display_buffer, BufferRange)
     {
         auto& lines_opt = context.options()[option_name];
         auto& lines = lines_opt.get<std::vector<LineAndFlag>>();
@@ -693,11 +692,11 @@ HighlighterAndId create_reference_highlighter(HighlighterParameters params)
     //DefinedHighlighters::instance().get_group(name, '/');
 
     auto func = [=](const Context& context, HighlightFlags flags,
-                    DisplayBuffer& display_buffer)
+                    DisplayBuffer& display_buffer, BufferRange range)
     {
         try
         {
-            DefinedHighlighters::instance().get_child(name).highlight(context, flags, display_buffer);
+            DefinedHighlighters::instance().get_child(name).highlight(context, flags, display_buffer, range);
         }
         catch (child_not_found&)
         {}
@@ -888,18 +887,18 @@ public:
             m_groups.append({m_default_group, HighlighterGroup{}});
     }
 
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range)
     {
         if (flags != HighlightFlags::Highlight)
             return;
 
-        auto range = display_buffer.range();
+        auto display_range = display_buffer.range();
         const auto& buffer = context.buffer();
-        auto& regions = update_cache_ifn(buffer);
+        auto& regions = get_regions_for_range(buffer, range);
 
-        auto begin = std::lower_bound(regions.begin(), regions.end(), range.first,
+        auto begin = std::lower_bound(regions.begin(), regions.end(), display_range.first,
                                       [](const Region& r, ByteCoord c) { return r.end < c; });
-        auto end = std::lower_bound(begin, regions.end(), range.second,
+        auto end = std::lower_bound(begin, regions.end(), display_range.second,
                                     [](const Region& r, ByteCoord c) { return r.begin < c; });
         auto correct = [&](ByteCoord c) -> ByteCoord {
             if (buffer[c.line].length() == c.column)
@@ -910,7 +909,7 @@ public:
         auto default_group_it = m_groups.find(m_default_group);
         const bool apply_default = default_group_it != m_groups.end();
 
-        auto last_begin = range.first;
+        auto last_begin = display_range.first;
         for (; begin != end; ++begin)
         {
             if (apply_default and last_begin < begin->begin)
@@ -926,7 +925,7 @@ public:
                               it->second);
             last_begin = begin->end;
         }
-        if (apply_default and last_begin < range.second)
+        if (apply_default and last_begin < display_range.second)
             apply_highlighter(context, flags, display_buffer,
                               correct(last_begin), range.second,
                               default_group_it->second);
@@ -1018,7 +1017,7 @@ private:
     {
         size_t timestamp = 0;
         std::vector<RegionMatches> matches;
-        RegionList regions;
+        std::unordered_map<BufferRange, RegionList> regions;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -1040,29 +1039,35 @@ private:
         return res;
     }
 
-    const RegionList& update_cache_ifn(const Buffer& buffer)
+    const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
     {
         Cache& cache = m_cache.get(buffer);
         const size_t buf_timestamp = buffer.timestamp();
-        if (cache.timestamp == buf_timestamp)
-            return cache.regions;
-
-        if (cache.timestamp == 0)
+        if (cache.timestamp != buf_timestamp)
         {
-            cache.matches.resize(m_regions.size());
-            for (size_t i = 0; i < m_regions.size(); ++i)
-                cache.matches[i] = m_regions[i].second.find_matches(buffer);
-        }
-        else
-        {
-            auto modifs = compute_line_modifications(buffer, cache.timestamp);
-            for (size_t i = 0; i < m_regions.size(); ++i)
-                m_regions[i].second.update_matches(buffer, modifs, cache.matches[i]);
+            if (cache.timestamp == 0)
+            {
+                cache.matches.resize(m_regions.size());
+                for (size_t i = 0; i < m_regions.size(); ++i)
+                    cache.matches[i] = m_regions[i].second.find_matches(buffer);
+            }
+            else
+            {
+                auto modifs = compute_line_modifications(buffer, cache.timestamp);
+                for (size_t i = 0; i < m_regions.size(); ++i)
+                    m_regions[i].second.update_matches(buffer, modifs, cache.matches[i]);
+            }
+
+            cache.regions.clear();
         }
 
-        cache.regions.clear();
+        auto it = cache.regions.find(range);
+        if (it != cache.regions.end())
+            return it->second;
 
-        for (auto begin = find_next_begin(cache, ByteCoord{-1, 0}),
+        RegionList& regions = cache.regions[range];
+
+        for (auto begin = find_next_begin(cache, range.first),
                   end = RegionAndMatch{ 0, cache.matches[0].begin_matches.end() };
              begin != end; )
         {
@@ -1071,18 +1076,18 @@ private:
             auto beg_it = begin.second;
             auto end_it = matches.find_matching_end(beg_it->end_coord());
 
-            if (end_it == matches.end_matches.end())
+            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.second)
             {
-                cache.regions.push_back({ {beg_it->line, beg_it->begin},
-                                           buffer.end_coord(),
-                                           named_region.first });
+                regions.push_back({ {beg_it->line, beg_it->begin},
+                                    range.second,
+                                    named_region.first });
                 break;
             }
             else
             {
-                cache.regions.push_back({ beg_it->begin_coord(),
-                                          end_it->end_coord(),
-                                          named_region.first });
+                regions.push_back({ beg_it->begin_coord(),
+                                   end_it->end_coord(),
+                                   named_region.first });
                 auto end_coord = end_it->end_coord();
 
                 // With empty begin and end matches (for example if the regexes
@@ -1098,7 +1103,7 @@ private:
             }
         }
         cache.timestamp = buf_timestamp;
-        return cache.regions;
+        return regions;
     }
 };
 

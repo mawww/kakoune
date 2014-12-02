@@ -13,9 +13,9 @@ namespace Kakoune
 {
 
 // Implementation in highlighters.cc
-void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
-void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
-void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer);
+void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range);
+void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range);
+void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range);
 
 Window::Window(Buffer& buffer)
     : Scope(buffer),
@@ -80,8 +80,9 @@ void Window::update_display_buffer(const Context& context)
     }
 
     m_display_buffer.compute_range();
-    m_highlighters.highlight(context, HighlightFlags::Highlight, m_display_buffer);
-    m_builtin_highlighters.highlight(context, HighlightFlags::Highlight, m_display_buffer);
+    BufferRange range{{0,0}, buffer().end_coord()};
+    m_highlighters.highlight(context, HighlightFlags::Highlight, m_display_buffer, range);
+    m_builtin_highlighters.highlight(context, HighlightFlags::Highlight, m_display_buffer, range);
 
     // cut the start of the line before m_position.column
     for (auto& line : lines)
@@ -180,8 +181,9 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     lines.emplace_back(AtomList{ {buffer(), cursor.line, cursor.line+1} });
 
     display_buffer.compute_range();
-    m_highlighters.highlight(context, HighlightFlags::MoveOnly, display_buffer);
-    m_builtin_highlighters.highlight(context, HighlightFlags::MoveOnly, display_buffer);
+    BufferRange range{cursor.line, cursor.line + 1};
+    m_highlighters.highlight(context, HighlightFlags::MoveOnly, display_buffer, range);
+    m_builtin_highlighters.highlight(context, HighlightFlags::MoveOnly, display_buffer, range);
 
     // now we can compute where the cursor is in display columns
     // (this is only valid if highlighting one line and multiple lines put
@@ -262,10 +264,12 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
     lines.emplace_back(AtomList{ {buffer(), line, line+1} });
     display_buffer.compute_range();
 
+    BufferRange range{ std::min(line, coord.line), std::max(line,coord.line)+1};
+
     InputHandler hook_handler{{ *m_buffer, Selection{} } };
     hook_handler.context().set_window(*this);
-    m_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
-    m_builtin_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer);
+    m_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
+    m_builtin_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
 
     CharCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
     return { find_buffer_coord(lines[1], buffer(), column), column };

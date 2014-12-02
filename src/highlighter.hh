@@ -1,12 +1,29 @@
 #ifndef highlighter_hh_INCLUDED
 #define highlighter_hh_INCLUDED
 
+#include "coord.hh"
 #include "function_registry.hh"
 #include "memoryview.hh"
 #include "string.hh"
 #include "utils.hh"
 
 #include <functional>
+
+namespace std
+{
+
+template<>
+struct hash<Kakoune::ByteCoord>
+{
+    size_t operator()(const Kakoune::ByteCoord& val) const
+    {
+        size_t seed = std::hash<int>()((int)val.line);
+        return seed ^ (std::hash<int>()((int)val.column) + 0x9e3779b9 +
+                       (seed << 6) + (seed >> 2));
+    }
+};
+
+}
 
 namespace Kakoune
 {
@@ -29,10 +46,12 @@ struct Highlighter;
 
 using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
 
+using BufferRange = std::pair<ByteCoord, ByteCoord>;
+
 struct Highlighter
 {
     virtual ~Highlighter() {}
-    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) = 0;
+    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) = 0;
 
     virtual bool has_children() const { return false; }
     virtual Highlighter& get_child(StringView path) { throw runtime_error("this highlighter do not hold children"); }
@@ -45,9 +64,9 @@ template<typename Func>
 struct SimpleHighlighter : public Highlighter
 {
     SimpleHighlighter(Func func) : m_func(std::move(func)) {}
-    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer) override
+    virtual void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        m_func(context, flags, display_buffer);
+        m_func(context, flags, display_buffer, range);
     }
 private:
     Func m_func;

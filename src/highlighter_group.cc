@@ -4,10 +4,10 @@ namespace Kakoune
 {
 
 void HighlighterGroup::highlight(const Context& context, HighlightFlags flags,
-                                 DisplayBuffer& display_buffer)
+                                 DisplayBuffer& display_buffer, BufferRange range)
 {
     for (auto& hl : m_highlighters)
-       hl.second->highlight(context, flags, display_buffer);
+       hl.second->highlight(context, flags, display_buffer, range);
 }
 
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
