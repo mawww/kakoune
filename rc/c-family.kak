@@ -10,6 +10,10 @@ hook global BufCreate .*\.m %{
     set buffer filetype objc
 }
 
+hook global BufSetOption mimetype=text/x-objc %{
+    set buffer filetype objc
+}
+
 def -hidden _c-family-indent-on-new-line %~
     eval -draft -itersel %_
         # preserve previous line indent
