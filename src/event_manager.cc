@@ -86,7 +86,7 @@ void EventManager::handle_next_events(EventMode mode)
     using namespace std::chrono;
     auto timeout = duration_cast<microseconds>(next_timer - Clock::now()).count();
 
-    constexpr auto us = 1000000000ll;
+    constexpr auto us = 1000000;
     timeval tv{ (time_t)(timeout / us), (suseconds_t)(timeout % us) };
     int res = select(max_fd + 1, &rfds, nullptr, nullptr, &tv);
 
