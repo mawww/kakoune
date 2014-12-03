@@ -10,6 +10,10 @@ hook global BufCreate .*\.m %{
     set buffer filetype objc
 }
 
+hook global BufSetOption mimetype=text/x-objc %{
+    set buffer filetype objc
+}
+
 def -hidden _c-family-indent-on-new-line %~
     eval -draft -itersel %_
         # preserve previous line indent
@@ -46,9 +50,15 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 # Regions definition are the same between c++ and objective-c
 %sh{
     for ft in cpp objc; do
+        if [ "${ft}" = "objc" ]; then
+            maybe_at='@?'
+        else
+            maybe_at=''
+        fi
+
         printf '%s' '
             addhl -group / regions -default code FT \
-                string %{(?<!QUOTE)"} %{(?<!\\)(\\\\)*"} "" \
+                string %{MAYBEAT(?<!QUOTE)"} %{(?<!\\)(\\\\)*"} "" \
                 comment /\* \*/ "" \
                 comment // $ "" \
                 disabled ^\h*?#\h*if\h+(0|FALSE)\b "#\h*(else|elif|endif)" "#\h*if(def)?" \
@@ -57,7 +67,7 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
             addhl -group /FT/string fill string
             addhl -group /FT/comment fill comment
             addhl -group /FT/disabled fill rgb:666666
-            addhl -group /FT/macro fill meta' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g" 
+            addhl -group /FT/macro fill meta' | sed -e "s/FT/${ft}/g; s/QUOTE/'/g; s/MAYBEAT/${maybe_at}/;"
     done
 }
 
@@ -72,6 +82,9 @@ addhl -group /objc/code regex %{\<(self|nil|id|super|TRUE|FALSE|YES|NO|NULL)\>|\
 addhl -group /objc/code regex "\<(void|int|char|unsigned|float|bool|size_t|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString)\>" 0:type
 addhl -group /objc/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return)\>" 0:keyword
 addhl -group /objc/code regex "\<(const|auto|inline|static|volatile|struct|enum|union|typedef|extern|__block|@\w+)\>" 0:attribute
+addhl -group /objc/code regex "\<(nonatomic|assign|copy|strong|retain|weak|readonly)\>" 0:attribute
+addhl -group /objc/code regex "@(property|synthesize|interface|implementation|protocol|end|selector|autoreleasepool|try|catch|class|synchronized)\>" 0:attribute
+addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 
 hook global WinSetOption filetype=(cpp|objc) %[
     # cleanup trailing whitespaces when exiting insert mode
