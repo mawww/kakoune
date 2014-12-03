@@ -295,7 +295,7 @@ RemoteUI::~RemoteUI()
 {
     write_debug("remote client disconnected: " +
                 to_string(m_socket_watcher.fd()));
-    close(m_socket_watcher.fd());
+    m_socket_watcher.close_fd();
 }
 
 void RemoteUI::menu_show(memoryview<String> choices,
@@ -646,7 +646,7 @@ Server::Server(String session_name)
 void Server::close_session()
 {
     unlink(("/tmp/kak-" + m_session).c_str());
-    close(m_listener->fd());
+    m_listener->close_fd();
     m_listener.reset();
 }
 

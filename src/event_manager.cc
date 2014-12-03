@@ -1,6 +1,6 @@
 #include "event_manager.hh"
 
-#include <poll.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -19,6 +19,12 @@ FDWatcher::~FDWatcher()
 void FDWatcher::run(EventMode mode)
 {
     m_callback(*this, mode);
+}
+
+void FDWatcher::close_fd()
+{
+    close(m_fd);
+    m_fd = -1;
 }
 
 Timer::Timer(TimePoint date, Callback callback, EventMode mode)
@@ -47,7 +53,7 @@ void Timer::run(EventMode mode)
 
 EventManager::EventManager()
 {
-    m_forced_fd.reserve(4);
+    FD_ZERO(&m_forced_fd);
 }
 
 EventManager::~EventManager()
@@ -58,10 +64,18 @@ EventManager::~EventManager()
 
 void EventManager::handle_next_events(EventMode mode)
 {
-    std::vector<pollfd> events;
-    events.reserve(m_fd_watchers.size());
+    int max_fd = 0;
+    fd_set rfds;
+    FD_ZERO(&rfds);
     for (auto& watcher : m_fd_watchers)
-        events.emplace_back(pollfd{ watcher->fd(), POLLIN | POLLPRI, 0 });
+    {
+        const int fd = watcher->fd();
+        if (fd != -1)
+        {
+            max_fd = std::max(fd, max_fd);
+            FD_SET(fd, &rfds);
+        }
+    }
 
     TimePoint next_timer = TimePoint::max();
     for (auto& timer : m_timers)
@@ -70,21 +84,23 @@ void EventManager::handle_next_events(EventMode mode)
             next_timer = timer->next_date();
     }
     using namespace std::chrono;
-    auto timeout = duration_cast<milliseconds>(next_timer - Clock::now()).count();
-    poll(events.data(), events.size(), timeout < INT_MAX ? (int)timeout : INT_MAX);
+    auto timeout = duration_cast<microseconds>(next_timer - Clock::now()).count();
 
-    // gather forced fds *after* poll, so that signal handlers can write to
+    constexpr auto us = 1000000000ll;
+    timeval tv{ (long)(timeout / us), (long)(timeout % us) };
+    int res = select(max_fd + 1, &rfds, nullptr, nullptr, &tv);
+
+    // copy forced fds *after* poll, so that signal handlers can write to
     // m_forced_fd, interupt poll, and directly be serviced.
-    std::vector<int> forced;
-    std::swap(forced, m_forced_fd);
+    fd_set forced = m_forced_fd;
+    FD_ZERO(&m_forced_fd);
 
-    for (auto& event : events)
+    for (int fd = 0; fd < max_fd + 1; ++fd)
     {
-        const int fd = event.fd;
-        if (event.revents or contains(forced, fd))
+        if ((res > 0 and FD_ISSET(fd, &rfds)) or FD_ISSET(fd, &forced))
         {
             auto it = find_if(m_fd_watchers,
-                              [fd](FDWatcher* w) { return w->fd() == fd; });
+                              [fd](const FDWatcher* w){return w->fd() == fd; });
             if (it != m_fd_watchers.end())
                 (*it)->run(mode);
         }
@@ -100,7 +116,7 @@ void EventManager::handle_next_events(EventMode mode)
 
 void EventManager::force_signal(int fd)
 {
-    m_forced_fd.push_back(fd);
+    FD_SET(fd, &m_forced_fd);
 }
 
 }

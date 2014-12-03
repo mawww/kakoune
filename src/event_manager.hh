@@ -7,6 +7,8 @@
 #include <chrono>
 #include <unordered_set>
 
+#include <sys/select.h>
+
 namespace Kakoune
 {
 
@@ -28,6 +30,9 @@ public:
 
     int fd() const { return m_fd; }
     void run(EventMode mode);
+
+    void close_fd();
+    bool closed() const { return m_fd == -1; }
 private:
 
     int       m_fd;
@@ -80,7 +85,7 @@ private:
     friend class Timer;
     std::unordered_set<FDWatcher*>  m_fd_watchers;
     std::unordered_set<Timer*>      m_timers;
-    std::vector<int> m_forced_fd;
+    fd_set m_forced_fd;
 
     TimePoint        m_last;
 };

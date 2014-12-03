@@ -66,27 +66,20 @@ String ShellManager::pipe(StringView input,
 
         String error;
         {
-            auto pipe_reader = [](String& output, bool& closed) {
-                return [&output, &closed](FDWatcher& watcher, EventMode) {
-                    if (closed)
-                        return;
-                    const int fd = watcher.fd();
+            auto pipe_reader = [](String& output) {
+                return [&output](FDWatcher& watcher, EventMode) {
                     char buffer[1024];
-                    size_t size = read(fd, buffer, 1024);
+                    size_t size = read(watcher.fd(), buffer, 1024);
                     if (size <= 0)
-                    {
-                        close(fd);
-                        closed = true;
-                    }
+                        watcher.close_fd();
                     output += String(buffer, buffer+size);
                 };
             };
 
-            bool stdout_closed = false, stderr_closed = false;
-            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(output, stdout_closed)};
-            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(error, stderr_closed)};
+            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(output)};
+            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(error)};
 
-            while (not stdout_closed or not stderr_closed)
+            while (not stdout_watcher.closed() and not stderr_watcher.closed())
                 EventManager::instance().handle_next_events(EventMode::Urgent);
         }
 

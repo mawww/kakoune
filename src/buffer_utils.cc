@@ -95,7 +95,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 
     auto watcher_deleter = [buffer](FDWatcher* watcher) {
         kak_assert(buffer->flags() & Buffer::Flags::Fifo);
-        close(watcher->fd());
+        watcher->close_fd();
         buffer->run_hook_in_own_context("BufCloseFifo", "");
         buffer->flags() &= ~Buffer::Flags::Fifo;
         watcher->~FDWatcher();
