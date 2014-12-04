@@ -75,7 +75,7 @@ String ShellManager::pipe(StringView input,
             FDWatcher stdout_watcher{read_pipe[0], pipe_reader(output)};
             FDWatcher stderr_watcher{error_pipe[0], pipe_reader(error)};
 
-            while (not stdout_watcher.closed() and not stderr_watcher.closed())
+            while (not stdout_watcher.closed() or not stderr_watcher.closed())
                 EventManager::instance().handle_next_events(EventMode::Urgent);
         }
 
