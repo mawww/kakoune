@@ -551,6 +551,9 @@ const CommandDesc add_hook_cmd = {
             if (context.user_hooks_support().is_disabled())
                 return;
 
+            // Do not let hooks touch prompt history
+            ScopedDisable disable_history{context.history_support()};
+
             if (regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
                                                    { { "hook_param", param } });
@@ -1028,12 +1031,13 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         {
             Buffer& buffer = BufferManager::instance().get_buffer(name);
             InputHandler input_handler{{ buffer, Selection{} }};
+            Context& c = input_handler.context();
+
             // Propagate user hooks disabled status to the temporary context
-            if (disable_hooks)
-                input_handler.context().user_hooks_support().disable();
-            if (disable_keymaps)
-                input_handler.context().keymaps_support().disable();
-            func(parser, input_handler.context());
+            ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
+            ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
+
+            func(parser, c);
         }
         return;
     }
@@ -1051,52 +1055,41 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     if (parser.has_option("draft"))
     {
         InputHandler input_handler(real_context->selections(), real_context->name());
+        Context& c = input_handler.context();
 
         // We do not want this draft context to commit undo groups if the real one is
         // going to commit the whole thing later
         if (real_context->is_editing())
-            input_handler.context().disable_undo_handling();
+            c.disable_undo_handling();
 
-        // Propagate user hooks disabled status to the temporary context
-        if (disable_hooks)
-            input_handler.context().user_hooks_support().disable();
-        if (disable_keymaps)
-            input_handler.context().keymaps_support().disable();
+        ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
+        ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
 
         if (parser.has_option("itersel"))
         {
             SelectionList sels{real_context->selections()};
-            ScopedEdition edition{input_handler.context()};
+            ScopedEdition edition{c};
             for (auto& sel : sels)
             {
-                input_handler.context().selections() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
-                input_handler.context().selections().update();
+                c.selections() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
+                c.selections().update();
 
-                func(parser, input_handler.context());
+                func(parser, c);
 
-                if (&sels.buffer() != &input_handler.context().buffer())
+                if (&sels.buffer() != &c.buffer())
                     throw runtime_error("the buffer has changed while iterating on selections");
             }
         }
         else
-            func(parser, input_handler.context());
+            func(parser, c);
     }
     else
     {
         if (parser.has_option("itersel"))
             throw runtime_error("-itersel makes no sense without -draft");
 
-        if (disable_hooks)
-            real_context->user_hooks_support().disable();
-        if (disable_keymaps)
-            real_context->keymaps_support().disable();
-
-        auto restore = on_scope_end([&](){
-            if (disable_hooks)
-                real_context->user_hooks_support().enable();
-            if (disable_keymaps)
-                real_context->keymaps_support().enable();
-        });
+        ScopedDisable hook_disable(real_context->user_hooks_support(), disable_hooks);
+        ScopedDisable keymaps_disable(real_context->keymaps_support(), disable_keymaps);
 
         func(parser, *real_context);
     }

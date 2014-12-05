@@ -27,6 +27,26 @@ private:
     int m_disable_count = 0;
 };
 
+struct ScopedDisable
+{
+    ScopedDisable(Disableable& disableable, bool condition = true)
+        : m_disableable(disableable), m_condition(condition)
+    {
+        if (m_condition)
+            m_disableable.disable();
+    }
+
+    ~ScopedDisable()
+    {
+        if (m_condition)
+            m_disableable.enable();
+    }
+
+private:
+    Disableable& m_disableable;
+    bool m_condition;
+};
+
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
@@ -97,6 +117,9 @@ public:
     Disableable& keymaps_support() { return m_keymaps_support; }
     const Disableable& keymaps_support() const { return m_keymaps_support; }
 
+    Disableable& history_support() { return m_history_support; }
+    const Disableable& history_support() const { return m_history_support; }
+
 private:
     void begin_edition();
     void end_edition();
@@ -119,6 +142,7 @@ private:
 
     Disableable m_user_hooks_support;
     Disableable m_keymaps_support;
+    Disableable m_history_support;
 };
 
 struct ScopedEdition

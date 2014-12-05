@@ -516,7 +516,8 @@ public:
         }
         else if (key == ctrl('m')) // enter
         {
-            history_push(history, line);
+            if (context().history_support().is_enabled())
+                history_push(history, line);
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
@@ -528,7 +529,8 @@ public:
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
-            history_push(history, line);
+            if (context().history_support().is_enabled())
+                history_push(history, line);
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
