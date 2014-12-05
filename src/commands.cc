@@ -548,7 +548,7 @@ const CommandDesc add_hook_cmd = {
         Regex regex(parser[2].begin(), parser[2].end());
         String command = parser[3];
         auto hook_func = [=](StringView param, Context& context) {
-            if (context.are_user_hooks_disabled())
+            if (context.user_hooks_support().is_disabled())
                 return;
 
             if (regex_match(param.begin(), param.end(), regex))
@@ -1016,7 +1016,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
-    const bool disable_hooks = parser.has_option("no-hooks") or context.are_user_hooks_disabled();
+    const bool disable_hooks = parser.has_option("no-hooks") or
+                               context.user_hooks_support().is_disabled();
     const bool disable_keymaps = not parser.has_option("with-maps");
 
     ClientManager& cm = ClientManager::instance();
@@ -1029,9 +1030,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             InputHandler input_handler{{ buffer, Selection{} }};
             // Propagate user hooks disabled status to the temporary context
             if (disable_hooks)
-                input_handler.context().disable_user_hooks();
+                input_handler.context().user_hooks_support().disable();
             if (disable_keymaps)
-                input_handler.context().disable_keymaps();
+                input_handler.context().keymaps_support().disable();
             func(parser, input_handler.context());
         }
         return;
@@ -1058,9 +1059,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         // Propagate user hooks disabled status to the temporary context
         if (disable_hooks)
-            input_handler.context().disable_user_hooks();
+            input_handler.context().user_hooks_support().disable();
         if (disable_keymaps)
-            input_handler.context().disable_keymaps();
+            input_handler.context().keymaps_support().disable();
 
         if (parser.has_option("itersel"))
         {
@@ -1086,15 +1087,15 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             throw runtime_error("-itersel makes no sense without -draft");
 
         if (disable_hooks)
-            real_context->disable_user_hooks();
+            real_context->user_hooks_support().disable();
         if (disable_keymaps)
-            real_context->disable_keymaps();
+            real_context->keymaps_support().disable();
 
         auto restore = on_scope_end([&](){
             if (disable_hooks)
-                real_context->enable_user_hooks();
+                real_context->user_hooks_support().enable();
             if (disable_keymaps)
-                real_context->enable_keymaps();
+                real_context->keymaps_support().enable();
         });
 
         func(parser, *real_context);

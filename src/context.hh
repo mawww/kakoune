@@ -17,6 +17,16 @@ class DisplayLine;
 class KeymapManager;
 class AliasRegistry;
 
+struct Disableable
+{
+    void disable() { m_disable_count++; }
+    void enable() { kak_assert(m_disable_count > 0); m_disable_count--; }
+    bool is_disabled() const { return m_disable_count > 0; }
+    bool is_enabled() const { return m_disable_count == 0; }
+private:
+    int m_disable_count = 0;
+};
+
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
@@ -81,15 +91,11 @@ public:
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
 
-    bool are_user_hooks_disabled() const { return m_user_hooks_disabled; }
+    Disableable& user_hooks_support() { return m_user_hooks_support; }
+    const Disableable& user_hooks_support() const { return m_user_hooks_support; }
 
-    void disable_user_hooks() { ++m_user_hooks_disabled; }
-    void enable_user_hooks() { --m_user_hooks_disabled; }
-
-    bool are_keymaps_disabled() const { return m_keymaps_disabled; }
-
-    void disable_keymaps() { ++m_keymaps_disabled; }
-    void enable_keymaps() { --m_keymaps_disabled; }
+    Disableable& keymaps_support() { return m_keymaps_support; }
+    const Disableable& keymaps_support() const { return m_keymaps_support; }
 
 private:
     void begin_edition();
@@ -111,8 +117,8 @@ private:
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
 
-    int m_user_hooks_disabled = 0;
-    int m_keymaps_disabled = 0;
+    Disableable m_user_hooks_support;
+    Disableable m_keymaps_support;
 };
 
 struct ScopedEdition

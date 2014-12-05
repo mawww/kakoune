@@ -95,7 +95,7 @@ public:
         auto restore_hooks = on_scope_end([&, this]{
             if (do_restore_hooks)
             {
-                context().enable_user_hooks();
+                context().user_hooks_support().enable();
                 m_hooks_disabled = false;
             }
         });
@@ -113,7 +113,7 @@ public:
             if (not m_hooks_disabled)
             {
                 m_hooks_disabled = true;
-                context().disable_user_hooks();
+                context().user_hooks_support().disable();
             }
         }
         else if (key == '"')
@@ -778,11 +778,11 @@ public:
                            if (m_autoshowcompl)
                                m_completer.update();
                        }},
-          m_disable_hooks{context().are_user_hooks_disabled()}
+          m_disable_hooks{context().user_hooks_support().is_disabled()}
     {
         // Prolongate hook disabling for the whole insert session
         if (m_disable_hooks)
-            context().disable_user_hooks();
+            context().user_hooks_support().disable();
 
         last_insert().first = mode;
         last_insert().second.clear();
@@ -1014,7 +1014,7 @@ private:
         selections.avoid_eol();
 
         if (m_disable_hooks)
-            context().enable_user_hooks();
+            context().user_hooks_support().enable();
     }
 
     enum class Mode { Default, Complete, InsertReg };
@@ -1114,7 +1114,7 @@ void InputHandler::handle_key(Key key)
         auto keymap_mode = m_mode->keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
         if (keymaps.is_mapped(key, keymap_mode) and
-            not m_context.are_keymaps_disabled())
+            m_context.keymaps_support().is_enabled())
         {
             for (auto& k : keymaps.get_mapping(key, keymap_mode))
                 m_mode->on_key(k);
