@@ -12,9 +12,6 @@
 
 * Crash recovery support (swap files)
 
-* Sanitize prompt history handling, hooks should not have side effects
-  on history
-
 * improve highlighters
 
   - folding support
@@ -73,6 +70,6 @@
 * Rewrite keymap support using options ? (map window insert a b -> set -add window insert_keymap a:b)
 
 * Comments and strings should be more integrated than just highlighting, matching chars
-  for example should be strings and comments aware
+  for example should be strings and comments aware (should they ?)
 
 * %val{opt_.*} == %opt{.*}, %val{reg_.*} == %reg{.*}, it might make sense to remove the %opt and %reg
