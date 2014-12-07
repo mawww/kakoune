@@ -271,7 +271,7 @@ String eval_token(const Token& token, Context& context,
                   memoryview<String> shell_params,
                   const EnvVarMap& env_vars);
 
-String eval(const String& str, Context& context,
+String eval(StringView str, Context& context,
             memoryview<String> shell_params,
             const EnvVarMap& env_vars)
 {
