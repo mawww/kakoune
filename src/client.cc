@@ -108,7 +108,7 @@ DisplayLine Client::generate_mode_line() const
     if (context().buffer().is_modified())
         status.push_back({ "[+]", info_face });
     if (m_input_handler.is_recording())
-        status.push_back({ "[recording ("_str + m_input_handler.recording_reg() + ")]", info_face });
+        status.push_back({ "[recording ("_str + StringView{m_input_handler.recording_reg()} + ")]", info_face });
     if (context().buffer().flags() & Buffer::Flags::New)
         status.push_back({ "[new file]", info_face });
     if (context().user_hooks_support().is_disabled())

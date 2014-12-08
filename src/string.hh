@@ -44,13 +44,9 @@ public:
     ByteCount byte_count_to(CharCount count) const { return utf8::advance(begin(), end(), (int)count) - begin(); }
     CharCount char_count_to(ByteCount count) const { return utf8::distance(begin(), begin() + (int)count); }
 
-    String  operator+(const String& other) const { return String{stdstr() + other.stdstr()}; }
     String& operator+=(const String& other) { std::string::operator+=(other); return *this; }
-    String  operator+(const char* other) const { return String{stdstr() + other}; }
     String& operator+=(const char* other) { std::string::operator+=(other); return *this; }
-    String  operator+(char other) const { return String{stdstr() + other}; }
     String& operator+=(char other) { std::string::operator+=(other); return *this; }
-    String  operator+(Codepoint cp) const { String res = *this; utf8::dump(back_inserter(res), cp); return res; }
     String& operator+=(Codepoint cp) { utf8::dump(back_inserter(*this), cp); return *this; }
 
     StringView substr(ByteCount pos, ByteCount length = INT_MAX) const;
@@ -176,30 +172,22 @@ inline StringView String::substr(CharCount pos, CharCount length) const
     return StringView{*this}.substr(pos, length);
 }
 
-inline String operator+(const char* lhs, const String& rhs)
-{
-    return String(lhs) + rhs;
-}
-
-inline String operator+(const std::string& lhs, const String& rhs)
-{
-    return String(lhs) + rhs;
-}
-
-inline String operator+(const String& lhs, const std::string& rhs)
-{
-    return lhs + String(rhs);
-}
-
 inline String& operator+=(String& lhs, StringView rhs)
 {
     lhs.append(rhs.data(), (size_t)(int)rhs.length());
     return lhs;
 }
 
-inline String operator+(const char* lhs, StringView rhs)
+inline String operator+(const String& lhs, const String& rhs)
 {
     String res = lhs;
+    res += rhs;
+    return res;
+}
+
+inline String operator+(StringView lhs, StringView rhs)
+{
+    String res{lhs.begin(), lhs.end()};
     res += rhs;
     return res;
 }
@@ -218,28 +206,24 @@ inline String operator+(StringView lhs, const String& rhs)
     return res;
 }
 
+inline String operator+(const char* lhs, StringView rhs)
+{
+    return StringView{lhs} + rhs;
+}
+
 inline String operator+(StringView lhs, const char* rhs)
 {
-    String res{lhs.begin(), lhs.end()};
-    res.append(rhs);
-    return res;
+    return lhs + StringView{rhs};
 }
 
-inline String operator+(char lhs, const String& rhs)
+inline String operator+(const char* lhs, const String& rhs)
 {
-    return String(lhs) + rhs;
+    return StringView{lhs} + rhs;
 }
 
-inline String operator+(Codepoint lhs, const String& rhs)
+inline String operator+(const String& lhs, const char* rhs)
 {
-    return String(lhs) + rhs;
-}
-
-inline String operator+(StringView lhs, StringView rhs)
-{
-    String res{lhs.begin(), lhs.end()};
-    res += rhs;
-    return res;
+    return lhs + StringView{rhs};
 }
 
 std::vector<String> split(StringView str, char separator, char escape);

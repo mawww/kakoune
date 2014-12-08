@@ -203,7 +203,7 @@ Token parse_percent_token(StringView line, ByteCount& pos)
         String token = get_until_delimiter(line, pos, opening_delimiter,
                                            closing_delimiter);
         if (throw_on_unterminated and pos == length)
-            throw unterminated_string("%" + type_name + opening_delimiter,
+            throw unterminated_string("%" + type_name + StringView{opening_delimiter},
                                       closing_delimiter, 0);
         return {type, token_start, pos, std::move(token)};
     }

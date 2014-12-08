@@ -87,7 +87,7 @@ String compact_path(StringView filename)
 
     char cwd[1024];
     getcwd(cwd, 1024);
-    String real_cwd = real_path(cwd) + '/';
+    String real_cwd = real_path(cwd) + "/";
     if (prefix_match(real_filename, real_cwd))
         return real_filename.substr(real_cwd.length());
 

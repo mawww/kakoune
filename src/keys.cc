@@ -122,7 +122,7 @@ String key_to_str(Key key)
     default: break;
     }
     if (named)
-        res = '<' + res + '>';
+        res = StringView{'<'} + res + StringView{'>'};
     return res;
 }
 
