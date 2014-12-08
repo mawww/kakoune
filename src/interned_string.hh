@@ -77,9 +77,6 @@ public:
         release_ifn();
     }
 
-    using StringView::operator==;
-    using StringView::operator!=;
-
     InternedString acquire_substr(ByteCount from, ByteCount length = INT_MAX) const
     {
         if (m_slot == -1)

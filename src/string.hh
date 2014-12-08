@@ -68,8 +68,7 @@ public:
     StringView(const std::string& str) : m_data{str.data()}, m_length{(int)str.length()} {}
     StringView(const char& c) : m_data(&c), m_length(1) {}
 
-    bool operator==(StringView other) const;
-    bool operator!=(StringView other) const;
+    friend bool operator==(StringView lhs, StringView rhs);
 
     [[gnu::always_inline]]
     const char* data() const { return m_data; }
@@ -130,42 +129,23 @@ private:
     ByteCount m_length;
 };
 
-inline bool StringView::operator==(StringView other) const
+inline bool operator==(StringView lhs, StringView rhs)
 {
-    return m_length == other.m_length and memcmp(m_data, other.m_data, (int)m_length) == 0;
+    return lhs.m_length == rhs.m_length and memcmp(lhs.m_data, rhs.m_data, (int)lhs.m_length) == 0;
 }
 
-inline bool StringView::operator!=(StringView other) const
+inline bool operator!=(StringView lhs, StringView rhs)
 {
-    return !this->operator==(other);
+    return not (lhs == rhs);
 }
 
 bool operator<(StringView lhs, StringView rhs);
-
-inline bool operator==(const char* lhs, StringView rhs)
-{
-    return StringView{lhs} == rhs;
-}
-
-inline bool operator!=(const char* lhs, StringView rhs)
-{
-    return StringView{lhs} != rhs;
-}
-
-inline bool operator==(const std::string& lhs, StringView rhs)
-{
-    return StringView{lhs} == rhs;
-}
-
-inline bool operator!=(const std::string& lhs, StringView rhs)
-{
-    return StringView{lhs} != rhs;
-}
 
 inline ByteCount StringView::byte_count_to(CharCount count) const
 {
     return utf8::advance(begin(), end(), (int)count) - begin();
 }
+
 inline CharCount StringView::char_count_to(ByteCount count) const
 {
     return utf8::distance(begin(), begin() + (int)count);
@@ -290,7 +270,11 @@ String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
     return to_string((ValueType)val);
 }
 
-bool prefix_match(StringView str, StringView prefix);
+inline bool prefix_match(StringView str, StringView prefix)
+{
+    return str.substr(0_byte, prefix.length()) == prefix;
+}
+
 bool subsequence_match(StringView str, StringView subseq);
 
 String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);

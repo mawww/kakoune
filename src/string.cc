@@ -102,17 +102,6 @@ String to_string(int val)
     return buf;
 }
 
-bool prefix_match(StringView str, StringView prefix)
-{
-    auto it = str.begin();
-    for (auto& c : prefix)
-    {
-        if (it ==str.end() or *it++ != c)
-            return false;
-    }
-    return true;
-}
-
 bool subsequence_match(StringView str, StringView subseq)
 {
     auto it = str.begin();
