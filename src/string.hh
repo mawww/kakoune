@@ -72,7 +72,9 @@ public:
     using iterator = const char*;
     using reverse_iterator = std::reverse_iterator<const char*>;
 
+    [[gnu::always_inline]]
     iterator begin() const { return m_data; }
+    [[gnu::always_inline]]
     iterator end() const { return m_data + (int)m_length; }
 
     reverse_iterator rbegin() const { return reverse_iterator{m_data + (int)m_length}; }
