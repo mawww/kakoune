@@ -1,14 +1,30 @@
 language: cpp
+os:
+  - linux
+  - osx
 compiler:
   - clang
   - gcc
 before_install:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y 
-  - sudo add-apt-repository ppa:boost-latest/ppa -y
-  - sudo apt-get update -qq
-  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -y libstdc++-4.8-dev; fi
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -y g++-4.8; fi
-  - if [ "$CXX" = "g++" ]; then export CXX=g++-4.8; fi
-  - sudo apt-get install -y libncursesw5-dev
-  - sudo apt-get install -y libboost-regex1.54-dev
+  - if [ $TRAVIS_OS_NAME = linux ]; then
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
+      sudo add-apt-repository ppa:boost-latest/ppa -y;
+      sudo apt-get update -qq;
+    elif [ $TRAVIS_OS_NAME = osx ]; then
+      brew update;
+    fi;
+install:
+  - if [ $TRAVIS_OS_NAME = linux ]; then
+      if [ "$CXX" = "clang++" ]; then
+        sudo apt-get install -y libstdc++-4.8-dev;
+      elif [ "$CXX" = "g++" ]; then
+        sudo apt-get install -y g++-4.8;
+        export CXX=g++-4.8;
+      fi;
+      sudo apt-get install -y libncursesw5-dev;
+      sudo apt-get install -y libboost-regex1.54-dev;
+    elif [ $TRAVIS_OS_NAME = osx ]; then
+       brew outdated boost || brew upgrade boost;
+    fi;
+
 script: cd src && make && make test
