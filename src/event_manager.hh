@@ -5,7 +5,7 @@
 #include "flags.hh"
 
 #include <chrono>
-#include <unordered_set>
+#include <vector>
 
 #include <sys/select.h>
 
@@ -83,8 +83,8 @@ public:
 private:
     friend class FDWatcher;
     friend class Timer;
-    std::unordered_set<FDWatcher*>  m_fd_watchers;
-    std::unordered_set<Timer*>      m_timers;
+    std::vector<FDWatcher*>  m_fd_watchers;
+    std::vector<Timer*>      m_timers;
     fd_set m_forced_fd;
 
     TimePoint        m_last;

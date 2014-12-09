@@ -10,7 +10,6 @@
 #include <tuple>
 #include <vector>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace Kakoune
 {
@@ -66,39 +65,6 @@ bool option_add(std::vector<T>& opt, const std::vector<T>& vec)
 {
     std::copy(vec.begin(), vec.end(), back_inserter(opt));
     return not vec.empty();
-}
-
-template<typename T>
-String option_to_string(const std::unordered_set<T>& opt)
-{
-    String res;
-    for (auto it = begin(opt); it != end(opt); ++it)
-    {
-        if (it != begin(opt))
-            res += list_separator;
-        res += escape(option_to_string(*it), list_separator, '\\');
-    }
-    return res;
-}
-
-template<typename T>
-void option_from_string(StringView str, std::unordered_set<T>& opt)
-{
-    opt.clear();
-    std::vector<String> elems = split(str, list_separator, '\\');
-    for (auto& elem: elems)
-    {
-        T opt_elem;
-        option_from_string(elem, opt_elem);
-        opt.insert(opt_elem);
-    }
-}
-
-template<typename T>
-bool option_add(std::unordered_set<T>& opt, const std::unordered_set<T>& set)
-{
-    std::copy(set.begin(), set.end(), std::inserter(opt, opt.begin()));
-    return not set.empty();
 }
 
 template<typename Key, typename Value>

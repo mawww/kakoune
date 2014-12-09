@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <unordered_set>
 
 namespace Kakoune
 {
@@ -113,10 +112,15 @@ bool contains(Container&& container, const T& value)
     return find(container, value) != end(container);
 }
 
-template<typename T1, typename T2>
-bool contains(const std::unordered_set<T1>& container, const T2& value)
+template<typename T, typename U>
+void unordered_erase(std::vector<T>& vec, U&& value)
 {
-    return container.find(value) != container.end();
+    auto it = find(vec, std::forward<U>(value));
+    if (it != vec.end())
+    {
+        std::swap(vec.back(), *it);
+        vec.pop_back();
+    }
 }
 
 template<typename Iterator, typename EndIterator, typename T>

@@ -973,6 +973,11 @@ void select_to_next_char(Context& context, NormalParams params)
     }, "select to next char","enter char to select to");
 }
 
+static bool is_basic_alpha(Codepoint c)
+{
+    return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
+}
+
 void start_or_end_macro_recording(Context& context, NormalParams)
 {
     if (context.input_handler().is_recording())
@@ -980,7 +985,7 @@ void start_or_end_macro_recording(Context& context, NormalParams)
     else
         on_next_key_with_autoinfo(context, KeymapMode::None,
                                  [](Key key, Context& context) {
-            if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
+            if (key.modifiers == Key::Modifiers::None and is_basic_alpha(key.key))
                 context.input_handler().start_recording(tolower(key.key));
         }, "record macro", "enter macro name ");
 }
@@ -995,18 +1000,19 @@ void replay_macro(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [params](Key key, Context& context) mutable {
-        if (key.modifiers == Key::Modifiers::None and isalpha(key.key))
+        if (key.modifiers == Key::Modifiers::None and is_basic_alpha(key.key))
         {
-            static std::unordered_set<char> running_macros;
+            static bool running_macros[26] = {};
             const char name = tolower(key.key);
-            if (contains(running_macros, name))
+            const size_t idx = (size_t)(name - 'a');
+            if (running_macros[idx])
                 throw runtime_error("recursive macros call detected");
 
             memoryview<String> reg_val = RegisterManager::instance()[name].values(context);
             if (not reg_val.empty())
             {
-                running_macros.insert(name);
-                auto stop = on_scope_end([&]{ running_macros.erase(name); });
+                running_macros[idx] = true;
+                auto stop = on_scope_end([&]{ running_macros[idx] = false; });
 
                 auto keys = parse_keys(reg_val[0]);
                 ScopedEdition edition(context);

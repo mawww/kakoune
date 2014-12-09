@@ -93,14 +93,11 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     String current_word{begin, end};
 
     auto& word_db = get_word_db(buffer);
-    std::unordered_set<ComplAndDesc> matches;
-    auto bufmatches = subseq ? word_db.find_subsequence(prefix)
-                             : word_db.find_prefix(prefix);
-    for (auto& match : bufmatches)
-        matches.insert(ComplAndDesc{match, ""});
+    auto matches = subseq ? word_db.find_subsequence(prefix)
+                          : word_db.find_prefix(prefix);
 
     if (word_db.get_word_occurences(current_word) <= 1)
-        matches.erase(ComplAndDesc{current_word, ""});
+        unordered_erase(matches, current_word);
 
     if (other_buffers)
     {
@@ -109,17 +106,21 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
             if (buf.get() == &buffer)
                 continue;
             auto& buf_word_db = get_word_db(*buf);
-            bufmatches = subseq ? buf_word_db.find_subsequence(prefix)
-                                : buf_word_db.find_prefix(prefix);
-            for (auto& match : bufmatches)
-                matches.insert(ComplAndDesc{match, ""});
+            auto bufmatches = subseq ? buf_word_db.find_subsequence(prefix)
+                                     : buf_word_db.find_prefix(prefix);
+            std::move(bufmatches.begin(), bufmatches.end(),
+                      std::back_inserter(matches));
         }
     }
-    matches.erase(ComplAndDesc{prefix, ""});
+    unordered_erase(matches, prefix);
+    std::sort(matches.begin(), matches.end());
+    matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
+
     ComplAndDescList result;
-    std::copy(matches.begin(), matches.end(),
-              inserter(result, result.begin()));
-    std::sort(result.begin(), result.end());
+    result.reserve(matches.size());
+    for (auto& m : matches)
+        result.emplace_back(m, "");
+
     return { begin.coord(), cursor_pos, std::move(result), buffer.timestamp() };
 }
 
