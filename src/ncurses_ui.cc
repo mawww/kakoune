@@ -1,4 +1,4 @@
-#include "ncurses.hh"
+#include "ncurses_ui.hh"
 
 #include "display_buffer.hh"
 #include "event_manager.hh"

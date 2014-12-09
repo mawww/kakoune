@@ -11,7 +11,7 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "highlighters.hh"
-#include "ncurses.hh"
+#include "ncurses_ui.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
