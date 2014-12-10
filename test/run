@@ -7,7 +7,7 @@ main() {
   number_failures=0
   dirs="$@"
   test=$(pwd)
-  work=$(mktemp -d)
+  work=$(mktemp -d /tmp/kak-tests.XXXXXXXX)
   cp -R . $work
   trap "rm -R $work" EXIT
   for dir in $(find $dirs -type d); do
