@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <vector>
+#include <functional>
 
 #include <sys/select.h>
 
