@@ -3,6 +3,7 @@
 
 #include "completion.hh"
 #include "string.hh"
+#include "utils.hh"
 
 #include <vector>
 
@@ -33,22 +34,14 @@ public:
 
     iterator find(StringView id)
     {
-        for (auto it = begin(); it != end(); ++it)
-        {
-            if (it->first == id)
-                return it;
-        }
-        return end();
+        return find_if(m_content,
+                       [&](const value_type& v){ return v.first == id; });
     }
 
     const_iterator find(StringView id) const
     {
-        for (auto it = begin(); it != end(); ++it)
-        {
-            if (it->first == id)
-                return it;
-        }
-        return end();
+        return find_if(m_content,
+                       [&](const value_type& v){ return v.first == id; });
     }
 
     bool contains(StringView id) const
@@ -65,8 +58,9 @@ public:
 
     void remove_all(StringView id)
     {
-        for (auto it = find(id); it != end(); it = find(id))
-            m_content.erase(it);
+        auto it = std::remove_if(begin(), end(),
+                                 [&](value_type& v){ return v.first == id; });
+        m_content.erase(it, end());
     }
 
     template<typename Condition>
