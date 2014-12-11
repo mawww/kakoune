@@ -367,10 +367,10 @@ void command(Context& context, NormalParams)
         });
 }
 
-template<InsertMode mode>
+template<bool replace>
 void pipe(Context& context, NormalParams)
 {
-    const char* prompt = mode == InsertMode::Replace ? "pipe:" : "pipe (ins):";
+    const char* prompt = replace ? "pipe:" : "pipe-to:";
     context.input_handler().prompt(prompt, "", get_face("Prompt"), shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
@@ -391,21 +391,60 @@ void pipe(Context& context, NormalParams)
 
             Buffer& buffer = context.buffer();
             SelectionList& selections = context.selections();
-            std::vector<String> strings;
-            for (auto& sel : selections)
+            if (replace)
             {
-                auto str = content(buffer, sel);
-                bool insert_eol = str.back() != '\n';
-                if (insert_eol)
-                    str += '\n';
-                str = ShellManager::instance().pipe(str, real_cmd, context,
-                                                    {}, EnvVarMap{});
-                if (insert_eol and str.back() == '\n')
-                    str = str.substr(0, str.length()-1);
-                strings.push_back(str);
+                std::vector<String> strings;
+                for (auto& sel : selections)
+                {
+                    auto str = content(buffer, sel);
+                    bool insert_eol = str.back() != '\n';
+                    if (insert_eol)
+                        str += '\n';
+                    str = ShellManager::instance().pipe(str, real_cmd, context,
+                                                        {}, EnvVarMap{});
+                    if (insert_eol and str.back() == '\n')
+                        str = str.substr(0, str.length()-1);
+                    strings.push_back(std::move(str));
+                }
+                ScopedEdition edition(context);
+                selections.insert(strings, InsertMode::Replace);
             }
+            else
+            {
+                for (auto& sel : selections)
+                    ShellManager::instance().pipe(
+                        content(buffer, sel), real_cmd, context, {},
+                        EnvVarMap{});
+            }
+        });
+}
+
+template<InsertMode mode>
+void insert_output(Context& context, NormalParams)
+{
+    const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
+    context.input_handler().prompt(prompt, "", get_face("Prompt"), shell_complete,
+        [](StringView cmdline, PromptEvent event, Context& context)
+        {
+            if (event != PromptEvent::Validate)
+                return;
+
+            StringView real_cmd;
+            if (cmdline.empty())
+                real_cmd = context.main_sel_register_value("|");
+            else
+            {
+                RegisterManager::instance()['|'] = String{cmdline};
+                real_cmd = cmdline;
+            }
+
+            if (real_cmd.empty())
+                return;
+
+            auto str = ShellManager::instance().eval(real_cmd, context, {},
+                                                     EnvVarMap{});
             ScopedEdition edition(context);
-            selections.insert(strings, mode);
+            context.selections().insert(str, mode);
         });
 }
 
@@ -1313,8 +1352,11 @@ KeyMap keymap =
     { '%', { "select whole buffer", [](Context& context, NormalParams) { select_buffer(context.selections()); } } },
 
     { ':', { "enter command prompt", command } },
-    { '|', { "pipe each selection through filter and replace with output", pipe<InsertMode::Replace> } },
-    { alt('|'), { "pipe each selection through filter and append with output", pipe<InsertMode::Append> } },
+    { '|', { "pipe each selection through filter and replace with output", pipe<true> } },
+    { alt('|'), { "pipe each selection through command and ignore output", pipe<false> } },
+    { '!', { "insert command output", insert_output<InsertMode::Insert> } },
+    { alt('!'), { "append command output", insert_output<InsertMode::Append> } },
+
     { ' ', { "remove all selection except main", [](Context& context, NormalParams p) { keep_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index()); } } },
     { alt(' '), { "remove main selection", [](Context& context, NormalParams p) { remove_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index()); } } },
     { ';', { "reduce selections to their cursor", [](Context& context, NormalParams) { clear_selections(context.selections()); } } },
