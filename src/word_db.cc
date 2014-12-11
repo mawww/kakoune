@@ -137,12 +137,10 @@ std::vector<InternedString> find_matching(const WordDB::WordList& words, StringV
     std::vector<InternedString> res;
     for (auto&& word : words)
     {
-        if ((letters & word.second.letters) != letters)
-            continue;
-        if (func(word.first, str))
+        if ((letters & word.second.letters) == letters and
+            func(word.first, str))
             res.push_back(word.first);
     }
-    std::sort(res.begin(), res.end());
     return res;
 }
 
