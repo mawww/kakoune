@@ -5,14 +5,14 @@
 main() {
   number_tests=0
   number_failures=0
-  dirs="$@"
+  dirs="${@:-.}"
   test=$(pwd)
   work=$(mktemp -d /tmp/kak-tests.XXXXXXXX)
   cp -R . $work
   trap "rm -R $work" EXIT
   for dir in $(find $dirs -type d); do
     cd $test/$dir;
-    test_files=$(find * -name out -o -name selections -o -name state)
+    test_files=$(ls out selections state 2>/dev/null)
     cd $work/$dir;
     indent="$(echo "${dir}/" | sed "s|[^/]*/\+|  |g")"
     name=$(basename $PWD)
