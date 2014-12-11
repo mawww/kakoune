@@ -438,7 +438,8 @@ void yank(Context& context, NormalParams params)
 {
     RegisterManager::instance()[params.reg] = context.selections_content();
     context.print_status({ "yanked " + to_string(context.selections().size()) +
-                           " selections", get_face("Information") });
+                           " selections to register " + StringView{params.reg},
+                           get_face("Information") });
 }
 
 void erase_selections(Context& context, NormalParams params)
