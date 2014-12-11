@@ -22,7 +22,6 @@
 #include "interned_string.hh"
 #include "window.hh"
 
-#include <unordered_map>
 #include <locale>
 #include <signal.h>
 

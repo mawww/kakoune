@@ -5,8 +5,6 @@
 #include "utils.hh"
 #include "safe_ptr.hh"
 
-#include <unordered_map>
-
 namespace Kakoune
 {
 

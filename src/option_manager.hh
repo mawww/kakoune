@@ -8,8 +8,6 @@
 #include "utils.hh"
 #include "regex.hh"
 
-#include <unordered_map>
-
 namespace Kakoune
 {
 
