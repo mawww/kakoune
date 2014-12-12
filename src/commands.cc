@@ -938,6 +938,7 @@ KeymapMode parse_keymap_mode(const String& str)
     if (prefix_match("prompt", str)) return KeymapMode::Prompt;
     if (prefix_match("goto", str))   return KeymapMode::Goto;
     if (prefix_match("view", str))   return KeymapMode::View;
+    if (prefix_match("user", str))   return KeymapMode::User;
 
     throw runtime_error("unknown keymap mode '" + str + "'");
 }
@@ -954,7 +955,8 @@ const CommandDesc map_key_cmd = {
     "    normal\n"
     "    insert\n"
     "    menu\n"
-    "    prompt\n",
+    "    prompt\n"
+    "    user\n",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 4, 4 },
     CommandFlags::None,
     [](const Context& context, CompletionFlags flags,
@@ -1380,7 +1382,7 @@ private:
 
 }
 
-void exec_keys(const KeyList& keys, Context& context)
+void exec_keys(memoryview<Key> keys, Context& context)
 {
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);

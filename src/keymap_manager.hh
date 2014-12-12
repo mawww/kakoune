@@ -19,6 +19,7 @@ enum class KeymapMode : int
     Menu,
     Goto,
     View,
+    User,
 };
 
 template<typename T> class memoryview;

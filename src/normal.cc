@@ -1262,6 +1262,19 @@ void redo(Context& context, NormalParams)
         context.print_status({ "nothing left to redo", get_face("Information") });
 }
 
+void exec_user_mappings(Context& context, NormalParams params)
+{
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [params](Key key, Context& context) mutable {
+        if (not context.keymaps().is_mapped(key, KeymapMode::User))
+            return;
+
+        auto mapping = context.keymaps().get_mapping(key, KeymapMode::User);
+        ScopedEdition edition(context);
+        exec_keys(mapping, context);
+    }, "user mapping", "enter user key");
+}
+
 template<typename T>
 class Repeated
 {
@@ -1447,6 +1460,8 @@ KeyMap keymap =
 
     { '@', { "convert tabs to spaces in selections", tabs_to_spaces } },
     { alt('@'), { "convert spaces to tabs in selections", spaces_to_tabs } },
+
+    { ',', { "user mappings", exec_user_mappings } },
 
     { Key::Left,  { "move left", move<CharCount, Backward> } },
     { Key::Down,  { "move down", move<LineCount, Forward> } },

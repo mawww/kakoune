@@ -2,6 +2,7 @@
 #define commands_hh_INCLUDED
 
 #include "keys.hh"
+#include "memoryview.hh"
 
 namespace Kakoune
 {
@@ -9,7 +10,7 @@ namespace Kakoune
 class Context;
 
 void register_commands();
-void exec_keys(const KeyList& keys, Context& context);
+void exec_keys(memoryview<Key> keys, Context& context);
 
 }
 
