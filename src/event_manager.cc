@@ -77,20 +77,26 @@ void EventManager::handle_next_events(EventMode mode)
         }
     }
 
+    bool with_timeout = false;
     timeval tv{};
     if (not m_timers.empty())
     {
-        auto next = std::min_element(
+        auto next_date = (*std::min_element(
             m_timers.begin(), m_timers.end(), [](Timer* lhs, Timer* rhs) {
                 return lhs->next_date() < rhs->next_date();
-        });
-        using namespace std::chrono; using us = std::chrono::microseconds;
-        auto usecs = std::max(us(0), duration_cast<us>((*next)->next_date() - Clock::now()));
-        auto secs = duration_cast<seconds>(usecs);
-        tv = timeval{ (time_t)secs.count(), (suseconds_t)(usecs - secs).count() };
+        }))->next_date();
+
+        if (next_date != TimePoint::max())
+        {
+            with_timeout = true;
+            using namespace std::chrono; using us = std::chrono::microseconds;
+            auto usecs = std::max(us(0), duration_cast<us>(next_date - Clock::now()));
+            auto secs = duration_cast<seconds>(usecs);
+            tv = timeval{ (time_t)secs.count(), (suseconds_t)(usecs - secs).count() };
+        }
     }
     int res = select(max_fd + 1, &rfds, nullptr, nullptr,
-                     m_timers.empty() ? nullptr : &tv);
+                     with_timeout ? &tv : nullptr);
 
     // copy forced fds *after* poll, so that signal handlers can write to
     // m_forced_fd, interupt poll, and directly be serviced.
