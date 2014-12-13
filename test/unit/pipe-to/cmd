@@ -1,2 +1,2 @@
-<a-|>sed s/foo/bar/ > tmpfile<ret><a-!>cat tmpfile<ret>
+<a-|>sed -n "s/foo/bar/; P" > tmpfile<ret><a-!>cat tmpfile<ret>
 
