@@ -230,7 +230,10 @@ Changes
  * _|_: pipe each selections through the given external filter program
         and replace the selection with it's output.
  * _alt-|_: pipe each selections through the given external filter program
-        and append the selection with it's output.
+        and ignore its output
+
+ * _!_: insert command output before selection
+ * _a-!_: append command output after selection
 
  * _u_: undo last change
  * _U_: redo last change
