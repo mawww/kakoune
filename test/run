@@ -70,6 +70,7 @@ main() {
   echo
   echo Resume:
   echo $number_tests tests, $number_failures failures | colorize $color normal
+  exit $number_failures
 }
 
 # Utility ├─────────────────────────────────────────────────────────────────────
