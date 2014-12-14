@@ -11,11 +11,7 @@
 #define NCURSES_OPAQUE 0
 #define NCURSES_INTERNALS
 
-#ifdef __APPLE__
 #include <ncurses.h>
-#else
-#include <ncursesw/ncurses.h>
-#endif
 
 #include <fcntl.h>
 #include <signal.h>
