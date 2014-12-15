@@ -14,7 +14,7 @@ main() {
     cd $test/$dir;
     test_files=$(ls out selections state 2>/dev/null)
     cd $work/$dir;
-    indent="$(echo "${dir}/" | sed "s|[^/]*/\+|  |g")"
+    indent="$(echo "${dir}/" | sed -e 's|[^/]*/\+|  |g')"
     name=$(basename $PWD)
     if ! test -e cmd; then
       echo "$indent$name"
@@ -32,7 +32,7 @@ main() {
         catch %{
         exec gg
         }
-        exec '$(cat cmd)'
+        exec '$(cat cmd | sed -e s/\'/\\\'/g)'
         eval -buffer *debug* write debug
         nop %sh{ IFS==
         echo \"\$kak_selections\"      > selections
