@@ -4,8 +4,7 @@
 #include "face.hh"
 #include "utils.hh"
 #include "completion.hh"
-
-#include <unordered_map>
+#include "unordered_map.hh"
 
 namespace Kakoune
 {
@@ -30,7 +29,7 @@ private:
         FaceOrAlias(Face face = Face{}) : face(face) {}
     };
 
-    std::unordered_map<String, FaceOrAlias> m_aliases;
+    UnorderedMap<String, FaceOrAlias> m_aliases;
 };
 
 inline Face get_face(const String& facedesc)

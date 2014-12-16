@@ -1,6 +1,8 @@
 #ifndef units_hh_INCLUDED
 #define units_hh_INCLUDED
 
+#include "hash.hh"
+
 #include <type_traits>
 
 namespace Kakoune
@@ -119,6 +121,8 @@ struct LineCount : public StronglyTypedNumber<LineCount, int>
     constexpr LineCount(int value = 0) : StronglyTypedNumber<LineCount>(value) {}
 };
 
+inline size_t hash_value(LineCount val) { return hash_value((int)val); }
+
 [[gnu::always_inline]]
 inline constexpr LineCount operator"" _line(unsigned long long int value)
 {
@@ -130,6 +134,8 @@ struct ByteCount : public StronglyTypedNumber<ByteCount, int>
     [[gnu::always_inline]]
     constexpr ByteCount(int value = 0) : StronglyTypedNumber<ByteCount>(value) {}
 };
+
+inline size_t hash_value(ByteCount val) { return hash_value((int)val); }
 
 [[gnu::always_inline]]
 inline constexpr ByteCount operator"" _byte(unsigned long long int value)
@@ -148,6 +154,8 @@ inline constexpr CharCount operator"" _char(unsigned long long int value)
 {
     return CharCount(value);
 }
+
+inline size_t hash_value(CharCount val) { return hash_value((int)val); }
 
 }
 

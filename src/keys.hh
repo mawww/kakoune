@@ -3,6 +3,7 @@
 
 #include "unicode.hh"
 #include "flags.hh"
+#include "hash.hh"
 
 #include <vector>
 
@@ -11,7 +12,7 @@ namespace Kakoune
 
 struct Key
 {
-    enum class Modifiers
+    enum class Modifiers : int
     {
         None    = 0,
         Control = 1 << 0,
@@ -78,21 +79,8 @@ constexpr Key alt(Codepoint key) { return { Key::Modifiers::Alt, key }; }
 constexpr Key ctrl(Codepoint key) { return { Key::Modifiers::Control, key }; }
 constexpr Key ctrlalt(Codepoint key) { return { Key::Modifiers::ControlAlt, key }; }
 
-}
-
-namespace std
-{
-
-template<>
-struct hash<Kakoune::Key>
-{
-    size_t operator()(Kakoune::Key key) const
-    {
-        return static_cast<size_t>(key.modifiers) * 1024 + key.key;
-    }
-};
+inline size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 
 }
-
 
 #endif // keys_hh_INCLUDED

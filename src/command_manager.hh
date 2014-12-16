@@ -9,8 +9,8 @@
 #include "parameters_parser.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "unordered_map.hh"
 
-#include <unordered_map>
 #include <functional>
 #include <initializer_list>
 
@@ -88,7 +88,7 @@ private:
         CommandFlags flags;
         CommandCompleter completer;
     };
-    using CommandMap = std::unordered_map<String, CommandDescriptor>;
+    using CommandMap = UnorderedMap<String, CommandDescriptor>;
     CommandMap m_commands;
 
     CommandMap::const_iterator find_command(const Context& context,

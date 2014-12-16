@@ -3,8 +3,7 @@
 
 #include "string.hh"
 #include "utils.hh"
-
-#include <unordered_map>
+#include "unordered_map.hh"
 
 namespace Kakoune
 {
@@ -20,7 +19,7 @@ private:
     void acquire(size_t slot);
     void release(size_t slot) noexcept;
 
-    std::unordered_map<StringView, size_t> m_slot_map;
+    UnorderedMap<StringView, size_t> m_slot_map;
     std::vector<size_t> m_free_slots;
     using DataAndRefCount = std::pair<std::vector<char>, int>;
     std::vector<DataAndRefCount> m_storage;
@@ -118,18 +117,11 @@ private:
     size_t m_slot = -1;
 };
 
+inline size_t hash_value(const Kakoune::InternedString& str)
+{
+    return hash_data(str.data(), (int)str.length());
 }
 
-namespace std
-{
-    template<>
-    struct hash<Kakoune::InternedString>
-    {
-        size_t operator()(const Kakoune::InternedString& str) const
-        {
-            return Kakoune::hash_data(str.data(), (int)str.length());
-        }
-    };
 }
 
 #endif // interned_string_hh_INCLUDED

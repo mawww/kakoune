@@ -3,8 +3,7 @@
 
 #include "safe_ptr.hh"
 #include "string.hh"
-
-#include <unordered_map>
+#include "unordered_map.hh"
 
 namespace Kakoune
 {
@@ -24,7 +23,7 @@ private:
     AliasRegistry() {}
 
     safe_ptr<AliasRegistry> m_parent;
-    std::unordered_map<String, String> m_aliases;
+    UnorderedMap<String, String> m_aliases;
 };
 
 }

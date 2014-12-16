@@ -1,10 +1,10 @@
 #ifndef value_hh_INCLUDED
 #define value_hh_INCLUDED
 
-#include <memory>
-#include <unordered_map>
-
+#include "unordered_map.hh"
 #include "units.hh"
+
+#include <memory>
 
 namespace Kakoune
 {
@@ -76,23 +76,10 @@ struct ValueId : public StronglyTypedNumber<ValueId, int>
     }
 };
 
-using ValueMap = std::unordered_map<ValueId, Value>;
+inline size_t hash_value(ValueId val) { return hash_value((int)val); }
+
+using ValueMap = UnorderedMap<ValueId, Value>;
 
 }
-
-namespace std
-{
-
-template<>
-struct hash<Kakoune::ValueId>
-{
-    size_t operator()(Kakoune::ValueId val) const
-    {
-        return std::hash<int>()((int)val);
-    }
-};
-
-}
-
 
 #endif // value_hh_INCLUDED

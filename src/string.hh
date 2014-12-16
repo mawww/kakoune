@@ -3,6 +3,7 @@
 
 #include "units.hh"
 #include "utf8.hh"
+#include "hash.hh"
 
 #include <string>
 #include <climits>
@@ -267,29 +268,16 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
 
 std::vector<StringView> wrap_lines(StringView text, CharCount max_width);
 
-size_t hash_data(const char* data, size_t len);
-
+inline size_t hash_value(const Kakoune::String& str)
+{
+    return hash_data(str.data(), (int)str.length());
 }
 
-namespace std
+inline size_t hash_value(const Kakoune::StringView& str)
 {
-    template<>
-    struct hash<Kakoune::String> : hash<std::string>
-    {
-        size_t operator()(const Kakoune::String& str) const
-        {
-            return hash<std::string>::operator()(str);
-        }
-    };
+    return hash_data(str.data(), (int)str.length());
+}
 
-    template<>
-    struct hash<Kakoune::StringView>
-    {
-        size_t operator()(Kakoune::StringView str) const
-        {
-            return Kakoune::hash_data(str.data(), (int)str.length());
-        }
-    };
 }
 
 #endif // string_hh_INCLUDED

@@ -2,9 +2,9 @@
 #define normal_hh_INCLUDED
 
 #include "keys.hh"
+#include "unordered_map.hh"
 
 #include <functional>
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -23,7 +23,7 @@ struct NormalCmdDesc
     std::function<void (Context& context, NormalParams params)> func;
 };
 
-using KeyMap = std::unordered_map<Key, NormalCmdDesc>;
+using KeyMap = UnorderedMap<Key, NormalCmdDesc>;
 extern KeyMap keymap;
 
 }

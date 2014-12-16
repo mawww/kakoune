@@ -9,22 +9,6 @@
 
 #include <functional>
 
-namespace std
-{
-
-template<>
-struct hash<Kakoune::ByteCoord>
-{
-    size_t operator()(const Kakoune::ByteCoord& val) const
-    {
-        size_t seed = std::hash<int>()((int)val.line);
-        return seed ^ (std::hash<int>()((int)val.column) + 0x9e3779b9 +
-                       (seed << 6) + (seed >> 2));
-    }
-};
-
-}
-
 namespace Kakoune
 {
 

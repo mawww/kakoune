@@ -2,6 +2,7 @@
 #define coord_hh_INCLUDED
 
 #include "units.hh"
+#include "hash.hh"
 
 namespace Kakoune
 {
@@ -92,12 +93,22 @@ struct ByteCoord : LineAndColumn<ByteCoord, LineCount, ByteCount>
         : LineAndColumn(line, column) {}
 };
 
+inline size_t hash_value(const ByteCoord& val)
+{
+    return hash_values(val.line, val.column);
+}
+
 struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
 {
     [[gnu::always_inline]]
     constexpr CharCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
 };
+
+inline size_t hash_value(const CharCoord& val)
+{
+    return hash_values(val.line, val.column);
+}
 
 struct ByteCoordAndTarget : ByteCoord
 {
@@ -111,6 +122,11 @@ struct ByteCoordAndTarget : ByteCoord
 
     CharCount target;
 };
+
+inline size_t hash_value(const ByteCoordAndTarget& val)
+{
+    return hash_values(val.line, val.column, val.target);
+}
 
 }
 

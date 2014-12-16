@@ -82,7 +82,7 @@ public:
     }
 
     template<typename Key, typename Val>
-    void write(const std::unordered_map<Key, Val>& map)
+    void write(const UnorderedMap<Key, Val>& map)
     {
         write<uint32_t>(map.size());
         for (auto& val : map)
@@ -230,10 +230,10 @@ DisplayBuffer read<DisplayBuffer>(int socket)
 }
 
 template<typename Key, typename Val>
-std::unordered_map<Key, Val> read_map(int socket)
+UnorderedMap<Key, Val> read_map(int socket)
 {
     uint32_t size = read<uint32_t>(socket);
-    std::unordered_map<Key, Val> res;
+    UnorderedMap<Key, Val> res;
     while (size--)
     {
         auto key = read<Key>(socket);

@@ -28,7 +28,7 @@ public:
         UsedChars letters;
         int refcount;
     };
-    using WordList = std::unordered_map<InternedString, WordInfo>;
+    using WordList = UnorderedMap<InternedString, WordInfo>;
 private:
     using LineToWords = std::vector<std::vector<InternedString>>;
 

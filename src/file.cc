@@ -356,7 +356,7 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         TimeSpec mtime = {};
         std::vector<String> commands;
     };
-    static std::unordered_map<String, CommandCache> command_cache;
+    static UnorderedMap<String, CommandCache> command_cache;
 
     std::vector<StringView> path;
     if (dir_end != -1)

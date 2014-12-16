@@ -166,7 +166,7 @@ static int nc_color(Color color)
 static int get_color_pair(const Face& face)
 {
     using ColorPair = std::pair<Color, Color>;
-    static std::map<ColorPair, int> colorpairs;
+    static UnorderedMap<ColorPair, int> colorpairs;
     static int next_pair = 1;
 
     ColorPair colors{face.fg, face.bg};

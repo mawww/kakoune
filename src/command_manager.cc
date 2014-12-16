@@ -189,7 +189,7 @@ Token parse_percent_token(StringView line, ByteCount& pos)
                           type_name + "'"};
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
-    static const std::unordered_map<char, char> matching_delimiters = {
+    static const UnorderedMap<char, char> matching_delimiters = {
         { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
     };
 

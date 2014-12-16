@@ -2,8 +2,7 @@
 #define hook_manager_hh_INCLUDED
 
 #include "id_map.hh"
-
-#include <unordered_map>
+#include "unordered_map.hh"
 
 namespace Kakoune
 {
@@ -29,7 +28,7 @@ private:
     friend class Scope;
 
     HookManager* m_parent;
-    std::unordered_map<String, id_map<HookFunc>> m_hook;
+    UnorderedMap<String, id_map<HookFunc>> m_hook;
 };
 
 }

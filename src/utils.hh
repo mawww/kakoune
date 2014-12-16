@@ -185,21 +185,4 @@ bool is_in_range(const T& val, const T& min, const T& max)
 
 }
 
-// std::pair hashing
-namespace std
-{
-
-template<typename T1, typename T2>
-struct hash<std::pair<T1,T2>>
-{
-    size_t operator()(const std::pair<T1,T2>& val) const
-    {
-        size_t seed = std::hash<T2>()(val.second);
-        return seed ^ (std::hash<T1>()(val.first) + 0x9e3779b9 +
-                       (seed << 6) + (seed >> 2));
-    }
-};
-
-}
-
 #endif // utils_hh_INCLUDED

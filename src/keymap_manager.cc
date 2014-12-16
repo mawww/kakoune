@@ -1,19 +1,7 @@
 #include "keymap_manager.hh"
 
 #include "memoryview.hh"
-
-namespace std
-{
-
-template<> struct hash<Kakoune::KeymapMode>
-{
-    size_t operator()(Kakoune::KeymapMode val) const
-    {
-        return hash<int>{}((int)val);
-    }
-};
-
-}
+#include "assert.hh"
 
 namespace Kakoune
 {

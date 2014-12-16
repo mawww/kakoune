@@ -1017,7 +1017,7 @@ private:
     {
         size_t timestamp = 0;
         std::vector<RegionMatches> matches;
-        std::unordered_map<BufferRange, RegionList> regions;
+        UnorderedMap<BufferRange, RegionList> regions;
     };
     BufferSideCache<Cache> m_cache;
 

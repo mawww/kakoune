@@ -2,9 +2,9 @@
 #define keymap_manager_hh_INCLUDED
 
 #include "keys.hh"
-#include "utils.hh"
+#include "hash.hh"
+#include "unordered_map.hh"
 
-#include <unordered_map>
 #include <vector>
 
 namespace Kakoune
@@ -43,7 +43,8 @@ private:
     KeymapManager* m_parent;
 
     using KeyList = std::vector<Key>;
-    using Keymap = std::unordered_map<std::pair<Key, KeymapMode>, KeyList>;
+    using KeyAndMode = std::pair<Key, KeymapMode>;
+    using Keymap = UnorderedMap<KeyAndMode, KeyList>;
     Keymap m_mapping;
 };
 

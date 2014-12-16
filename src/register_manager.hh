@@ -3,8 +3,8 @@
 
 #include "register.hh"
 #include "utils.hh"
+#include "unordered_map.hh"
 
-#include <unordered_map>
 #include <vector>
 #include <functional>
 
@@ -21,7 +21,7 @@ public:
     void register_dynamic_register(char reg, RegisterRetriever function);
 
 protected:
-    std::unordered_map<char, std::unique_ptr<Register>> m_registers;
+    UnorderedMap<char, std::unique_ptr<Register>> m_registers;
 };
 
 }

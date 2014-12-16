@@ -9,11 +9,10 @@
 #include "normal.hh"
 #include "regex.hh"
 #include "register_manager.hh"
+#include "unordered_map.hh"
 #include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
-
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -736,10 +735,10 @@ private:
     bool           m_autoshowcompl;
     Mode           m_mode = Mode::Default;
 
-    static std::unordered_map<String, std::vector<String>> ms_history;
+    static UnorderedMap<String, std::vector<String>> ms_history;
     std::vector<String>::iterator m_history_it;
 };
-std::unordered_map<String, std::vector<String>> Prompt::ms_history;
+UnorderedMap<String, std::vector<String>> Prompt::ms_history;
 
 class NextKey : public InputMode
 {

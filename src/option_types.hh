@@ -6,10 +6,10 @@
 #include "units.hh"
 #include "coord.hh"
 #include "memoryview.hh"
+#include "unordered_map.hh"
 
 #include <tuple>
 #include <vector>
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -68,7 +68,7 @@ bool option_add(std::vector<T>& opt, const std::vector<T>& vec)
 }
 
 template<typename Key, typename Value>
-String option_to_string(const std::unordered_map<Key, Value>& opt)
+String option_to_string(const UnorderedMap<Key, Value>& opt)
 {
     String res;
     for (auto it = begin(opt); it != end(opt); ++it)
@@ -83,7 +83,7 @@ String option_to_string(const std::unordered_map<Key, Value>& opt)
 }
 
 template<typename Key, typename Value>
-void option_from_string(StringView str, std::unordered_map<Key, Value>& opt)
+void option_from_string(StringView str, UnorderedMap<Key, Value>& opt)
 {
     opt.clear();
     std::vector<String> elems = split(str, list_separator, '\\');

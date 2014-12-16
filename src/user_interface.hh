@@ -2,9 +2,9 @@
 #define user_interface_hh_INCLUDED
 
 #include "safe_ptr.hh"
+#include "unordered_map.hh"
 
 #include <functional>
-#include <unordered_map>
 
 namespace Kakoune
 {
@@ -63,7 +63,7 @@ public:
 
     virtual void set_input_callback(InputCallback callback) = 0;
 
-    using Options = std::unordered_map<String, String>;
+    using Options = UnorderedMap<String, String>;
     virtual void set_ui_options(const Options& options) = 0;
 };
 
