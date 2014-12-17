@@ -811,6 +811,10 @@ existing hooks are:
  * +BufOpen+: A buffer for an existing file has been created, filename is
        used for filtering
  * +BufCreate+: A buffer has been created, filename is used for filtering
+ * +BufInsert+: An insertion just took place in a buffer, filtering string
+       is 'line.column+len'
+ * +BufErase+: An erase just took place in a buffer, filtering string
+       is 'line.column+len'
  * +BufWritePre+: Executed just before a buffer is written, filename is
        used for filtering.
  * +BufWritePost+: Executed just after a buffer is written, filename is
