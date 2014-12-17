@@ -29,7 +29,8 @@ class KeymapManager
 public:
     KeymapManager(KeymapManager& parent) : m_parent(&parent) {}
 
-    void map_key(Key key, KeymapMode mode, std::vector<Key> mapping);
+    using KeyList = std::vector<Key>;
+    void map_key(Key key, KeymapMode mode, KeyList mapping);
     void unmap_key(Key key, KeymapMode mode);
 
     bool is_mapped(Key key, KeymapMode mode) const;
@@ -42,7 +43,6 @@ private:
 
     KeymapManager* m_parent;
 
-    using KeyList = std::vector<Key>;
     using KeyAndMode = std::pair<Key, KeymapMode>;
     using Keymap = UnorderedMap<KeyAndMode, KeyList>;
     Keymap m_mapping;

@@ -6,9 +6,9 @@
 namespace Kakoune
 {
 
-void KeymapManager::map_key(Key key, KeymapMode mode, std::vector<Key> mapping)
+void KeymapManager::map_key(Key key, KeymapMode mode, KeyList mapping)
 {
-    m_mapping[{key, mode}] = mapping;
+    m_mapping[{key, mode}] = std::move(mapping);
 }
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)
