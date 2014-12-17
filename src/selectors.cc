@@ -535,6 +535,7 @@ void split_selections(SelectionList& selections, const Regex& regex)
 {
     std::vector<Selection> result;
     auto& buffer = selections.buffer();
+    auto buf_end = buffer.end();
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
@@ -545,6 +546,8 @@ void split_selections(SelectionList& selections, const Regex& regex)
         for (; re_it != re_end; ++re_it)
         {
             BufferIterator end = (*re_it)[0].first;
+            if (end == buf_end)
+                continue;
 
             result.push_back(keep_direction({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() }, sel));
             begin = (*re_it)[0].second;
