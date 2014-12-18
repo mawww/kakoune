@@ -14,8 +14,6 @@ hook global BufSetOption mimetype=text/x-objc %{
     set buffer filetype objc
 }
 
-decl -hidden bool _c_family_last_change_was_indent false
-
 def -hidden _c-family-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
@@ -34,7 +32,6 @@ def -hidden _c-family-indent-on-new-line %~
         try %[ exec -draft k<a-x> <a-k> ^\h*(public|private|protected):\h*$ <ret> j<a-gt> ]
         # indent after if|else|while|for
         try %[ exec -draft \;<a-F>)MB <a-k> \`(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\' <ret> s \`|.\' <ret> 1<a-&>1<a-space><a-gt> ]
-        set buffer _c_family_last_change_was_indent true
     =
 ~
 
@@ -89,15 +86,8 @@ addhl -group /objc/code regex "@(property|synthesize|interface|implementation|pr
 addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 
 hook global WinSetOption filetype=(cpp|objc) %[
-    hook window BufInsert .* -group c-family-hooks %{ set buffer _c_family_last_change_was_indent false }
-    hook window BufErase .* -group c-family-hooks %{ set buffer _c_family_last_change_was_indent false }
-
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group c-family-hooks %{ %sh{
-        if [ $kak_opt__c_family_last_change_was_indent = "true" ]; then
-            echo 'try %{ exec -draft <a-x>s\h+$<ret>d }'
-        fi
-    } }
+    hook window InsertEnd .* -group c-family-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
 
     hook window InsertChar \n -group c-family-indent _c-family-indent-on-new-line
     hook window InsertChar \{ -group c-family-indent _c-family-indent-on-opening-curly-brace
