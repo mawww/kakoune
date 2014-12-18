@@ -533,7 +533,7 @@ void Buffer::on_option_changed(const Option& option)
 
 void Buffer::run_hook_in_own_context(const String& hook_name, StringView param)
 {
-    InputHandler hook_handler({ *this, Selection{} });
+    InputHandler hook_handler({ *this, Selection{} }, Context::Flags::Transient);
     hooks().run_hook(hook_name, param, hook_handler.context());
 }
 

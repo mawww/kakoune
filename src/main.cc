@@ -441,7 +441,10 @@ int run_filter(StringView keystr, memoryview<StringView> files, bool quiet)
         {
             try
             {
-                InputHandler input_handler{{ buffer, Selection{{0,0}, buffer.back_coord()} }};
+                InputHandler input_handler{
+                    { buffer, {{0,0}, buffer.back_coord()} },
+                    Context::Flags::Transient
+                };
 
                 for (auto& key : keys)
                     input_handler.handle_key(key);

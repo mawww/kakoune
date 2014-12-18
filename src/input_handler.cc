@@ -52,17 +52,21 @@ static constexpr std::chrono::milliseconds fs_check_timeout{500};
 class Normal : public InputMode
 {
 public:
-    Normal(InputHandler& input_handler)
+    Normal(InputHandler& input_handler, bool with_timers = true)
         : InputMode(input_handler),
-          m_idle_timer{Clock::now() + idle_timeout, [this](Timer& timer) {
+          m_idle_timer{Clock::now() + idle_timeout,
+                       context().flags() & Context::Flags::Transient ?
+                           Timer::Callback() : Timer::Callback([this](Timer& timer) {
               context().hooks().run_hook("NormalIdle", "", context());
-          }},
-          m_fs_check_timer{Clock::now() + fs_check_timeout, [this](Timer& timer) {
+          })},
+          m_fs_check_timer{Clock::now() + fs_check_timeout,
+                           context().flags() & Context::Flags::Transient ?
+                            Timer::Callback() : Timer::Callback([this](Timer& timer) {
               if (not context().has_client())
                   return;
               context().client().check_buffer_fs_timestamp();
               timer.set_next_date(Clock::now() + fs_check_timeout);
-          }}
+          })}
     {}
 
     void on_enabled() override
@@ -1034,9 +1038,10 @@ void InputMode::reset_normal_mode()
     m_input_handler.reset_normal_mode();
 }
 
-InputHandler::InputHandler(SelectionList selections, String name)
-    : m_mode(new InputModes::Normal(*this)),
-      m_context(*this, std::move(selections), std::move(name))
+InputHandler::InputHandler(SelectionList selections, Context::Flags flags, String name)
+    : m_context(*this, std::move(selections), flags, std::move(name)),
+      m_mode(new InputModes::Normal(*this))
+      
 {
 }
 

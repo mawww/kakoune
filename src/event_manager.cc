@@ -30,18 +30,19 @@ void FDWatcher::close_fd()
 Timer::Timer(TimePoint date, Callback callback, EventMode mode)
     : m_date{date}, m_callback{std::move(callback)}, m_mode(mode)
 {
-    if (EventManager::has_instance())
+    if (m_callback and EventManager::has_instance())
         EventManager::instance().m_timers.push_back(this);
 }
 
 Timer::~Timer()
 {
-    if (EventManager::has_instance())
+    if (m_callback and EventManager::has_instance())
         unordered_erase(EventManager::instance().m_timers, this);
 }
 
 void Timer::run(EventMode mode)
 {
+    kak_assert(m_callback);
     if (mode == m_mode)
     {
         m_date = TimePoint::max();

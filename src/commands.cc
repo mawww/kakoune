@@ -1032,7 +1032,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         for (auto& name : names)
         {
             Buffer& buffer = BufferManager::instance().get_buffer(name);
-            InputHandler input_handler{{ buffer, Selection{} }};
+            InputHandler input_handler{{ buffer, Selection{} },
+                                       Context::Flags::Transient};
             Context& c = input_handler.context();
 
             // Propagate user hooks disabled status to the temporary context
@@ -1056,7 +1057,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
     if (parser.has_option("draft"))
     {
-        InputHandler input_handler(real_context->selections(), real_context->name());
+        InputHandler input_handler(real_context->selections(),
+                                   Context::Flags::Transient,
+                                   real_context->name());
         Context& c = input_handler.context();
 
         // We do not want this draft context to commit undo groups if the real one is

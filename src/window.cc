@@ -21,9 +21,8 @@ Window::Window(Buffer& buffer)
     : Scope(buffer),
       m_buffer(&buffer)
 {
-    InputHandler hook_handler{{ *m_buffer, Selection{} }};
-    hook_handler.context().set_window(*this);
-    hooks().run_hook("WinCreate", buffer.name(), hook_handler.context());
+    run_hook_in_own_context("WinCreate", buffer.name());
+
     options().register_watcher(*this);
 
     m_builtin_highlighters.add_child({"tabulations"_str, make_simple_highlighter(expand_tabulations)});
@@ -36,9 +35,7 @@ Window::Window(Buffer& buffer)
 
 Window::~Window()
 {
-    InputHandler hook_handler{{ *m_buffer, Selection{} }};
-    hook_handler.context().set_window(*this);
-    hooks().run_hook("WinClose", buffer().name(), hook_handler.context());
+    run_hook_in_own_context("WinClose", buffer().name());
     options().unregister_watcher(*this);
 }
 
@@ -266,10 +263,10 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
 
     BufferRange range{ std::min(line, coord.line), std::max(line,coord.line)+1};
 
-    InputHandler hook_handler{{ *m_buffer, Selection{} } };
-    hook_handler.context().set_window(*this);
-    m_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
-    m_builtin_highlighters.highlight(hook_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
+    InputHandler input_handler{{ *m_buffer, Selection{} }, Context::Flags::Transient};
+    input_handler.context().set_window(*this);
+    m_highlighters.highlight(input_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
+    m_builtin_highlighters.highlight(input_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
 
     CharCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
     return { find_buffer_coord(lines[1], buffer(), column), column };
@@ -278,12 +275,17 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
 void Window::on_option_changed(const Option& option)
 {
     String desc = option.name() + "=" + option.get_as_string();
-    InputHandler hook_handler{{ *m_buffer, Selection{} }};
-    hook_handler.context().set_window(*this);
-    hooks().run_hook("WinSetOption", desc, hook_handler.context());
+    run_hook_in_own_context("WinSetOption", desc);
 
     // an highlighter might depend on the option, so we need to redraw
     forget_timestamp();
 }
 
+
+void Window::run_hook_in_own_context(const String& hook_name, StringView param)
+{
+    InputHandler hook_handler({ *m_buffer, Selection{} }, Context::Flags::Transient);
+    hook_handler.context().set_window(*this);
+    hooks().run_hook(hook_name, param, hook_handler.context());
+}
 }

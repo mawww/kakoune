@@ -13,9 +13,10 @@ Context::Context() = default;
 Context::~Context() = default;
 
 Context::Context(InputHandler& input_handler, SelectionList selections,
-                 String name)
+                 Flags flags, String name)
     : m_input_handler{&input_handler},
       m_selections{std::move(selections)},
+      m_flags(flags),
       m_name(std::move(name))
 {}
 

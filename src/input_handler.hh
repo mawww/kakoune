@@ -38,7 +38,9 @@ enum class KeymapMode : int;
 class InputHandler : public SafeCountable
 {
 public:
-    InputHandler(SelectionList selections, String name = "");
+    InputHandler(SelectionList selections,
+                 Context::Flags flags = Context::Flags::None,
+                 String name = "");
     ~InputHandler();
 
     // switch to insert mode
@@ -80,6 +82,7 @@ public:
 
     DisplayLine mode_line() const;
     void clear_mode_trash();
+
 private:
     Context m_context;
 

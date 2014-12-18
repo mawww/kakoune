@@ -3,6 +3,7 @@
 
 #include "selection.hh"
 #include "optional.hh"
+#include "flags.hh"
 
 namespace Kakoune
 {
@@ -56,9 +57,15 @@ private:
 class Context
 {
 public:
+    enum class Flags
+    {
+        None = 0,
+        Transient = 1,
+    };
+
     Context();
     Context(InputHandler& input_handler, SelectionList selections,
-            String name = "");
+            Flags flags, String name = "");
     ~Context();
 
     Context(const Context&) = delete;
@@ -120,12 +127,16 @@ public:
     Disableable& history_support() { return m_history_support; }
     const Disableable& history_support() const { return m_history_support; }
 
+    Flags flags() const { return m_flags; }
+
 private:
     void begin_edition();
     void end_edition();
     int m_edition_level = 0;
 
     friend struct ScopedEdition;
+
+    Flags m_flags;
 
     safe_ptr<InputHandler> m_input_handler;
     safe_ptr<Window>       m_window;
@@ -144,6 +155,9 @@ private:
     Disableable m_keymaps_support;
     Disableable m_history_support;
 };
+
+template<>
+struct WithBitOps<Context::Flags> : std::true_type {};
 
 struct ScopedEdition
 {
