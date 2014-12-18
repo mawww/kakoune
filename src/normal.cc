@@ -1240,6 +1240,7 @@ void undo(Context& context, NormalParams)
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.set_selections(std::move(ranges));
+        context.selections().avoid_eol();
     }
     else if (not res)
         context.print_status({ "nothing left to undo", get_face("Information") });
@@ -1256,6 +1257,7 @@ void redo(Context& context, NormalParams)
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.set_selections(std::move(ranges));
+        context.selections().avoid_eol();
     }
 
     else if (not res)
