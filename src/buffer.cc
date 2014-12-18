@@ -374,11 +374,6 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-static String change_spec(ByteCoord coord, ByteCount len)
-{
-    return to_string(coord.line) + "." + to_string(coord.column) + "+" + to_string(len);
-}
-
 BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
 {
     kak_assert(is_valid(pos.coord()));
@@ -396,11 +391,7 @@ BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
     auto coord = pos == end() ? ByteCoord{line_count()} : pos.coord();
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
-    BufferIterator it{*this, do_insert(pos.coord(), real_content)};
-
-    run_hook_in_own_context("BufInsert", change_spec(pos.coord(), real_content.length()));
-
-    return it;
+    return {*this, do_insert(pos.coord(), real_content)};
 }
 
 BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
@@ -415,13 +406,7 @@ BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
                                           InternedString(string(begin.coord(), end.coord())));
-
-    ByteCount len = distance(begin.coord(), end.coord());
-    BufferIterator it{*this, do_erase(begin.coord(), end.coord())};
-
-    run_hook_in_own_context("BufErase", change_spec(begin.coord(), len));
-
-    return it;
+    return {*this, do_erase(begin.coord(), end.coord())};
 }
 
 bool Buffer::is_modified() const
