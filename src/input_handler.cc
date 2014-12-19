@@ -1016,6 +1016,7 @@ private:
             if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
                 sel.cursor() = context().buffer().char_prev(sel.cursor());
         }
+        selections.avoid_eol();
 
         if (m_disable_hooks)
             context().user_hooks_support().enable();

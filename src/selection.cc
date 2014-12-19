@@ -443,7 +443,11 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     case InsertMode::Replace:
         return erase(buffer, sel);
     case InsertMode::Append:
-        return utf8::next(buffer.iterator_at(sel.max()), buffer.end());
+    {
+        // special case for end of lines, append to current line instead
+        auto pos = buffer.iterator_at(sel.max());
+        return *pos == '\n' ? pos : utf8::next(pos, buffer.end());
+    }
     case InsertMode::InsertAtLineBegin:
         return buffer.iterator_at(sel.min().line);
     case InsertMode::AppendAtLineEnd:
