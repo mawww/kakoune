@@ -50,7 +50,7 @@ public:
 
     void change_buffer(Buffer& buffer);
 
-    const String& get_env_var(const String& name) const;
+    StringView get_env_var(const String& name) const;
 
 private:
     void on_option_changed(const Option& option) override;

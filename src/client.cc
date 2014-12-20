@@ -227,12 +227,11 @@ void Client::check_buffer_fs_timestamp()
         reload_buffer(context(), filename);
 }
 
-const String& Client::get_env_var(const String& name) const
+StringView Client::get_env_var(const String& name) const
 {
     auto it = m_env_vars.find(name);
-    static String empty{};
     if (it == m_env_vars.end())
-        return empty;
+        return {};
     return it->second;
 }
 
