@@ -339,14 +339,33 @@ std::vector<String> complete_filename(StringView prefix,
 std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
-    String dirname;
-    String fileprefix = real_prefix;
 
     ByteCount dir_end = -1;
     for (ByteCount i = 0; i < real_prefix.length(); ++i)
     {
         if (real_prefix[i] == '/')
             dir_end = i;
+    }
+
+    if (dir_end != -1)
+    {
+        auto dirname = real_prefix.substr(0, dir_end + 1);
+        auto fileprefix = real_prefix.substr(dir_end + 1);
+        auto filter = [&](const dirent& entry)
+        {
+            struct stat st;
+            if (stat((dirname + entry.d_name).c_str(), &st))
+                return false;
+            bool executable = (st.st_mode & S_IXUSR)
+                            | (st.st_mode & S_IXGRP)
+                            | (st.st_mode & S_IXOTH);
+            return S_ISDIR(st.st_mode) or (S_ISREG(st.st_mode) and executable);
+        };
+        std::vector<String> res = list_files(fileprefix, dirname, filter);
+        for (auto& file : res)
+            file = dirname + file;
+        std::sort(res.begin(), res.end());
+        return res;
     }
 
     typedef decltype(stat::st_mtime) TimeSpec;
@@ -358,17 +377,8 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     };
     static UnorderedMap<String, CommandCache> command_cache;
 
-    std::vector<StringView> path;
-    if (dir_end != -1)
-    {
-        path.emplace_back(real_prefix.substr(0, dir_end + 1));
-        fileprefix = real_prefix.substr(dir_end + 1);
-    }
-    else
-        path = split(getenv("PATH"), ':');
-
     std::vector<String> res;
-    for (auto dir : path)
+    for (auto dir : split(getenv("PATH"), ':'))
     {
         String dirname = dir;
         if (not dirname.empty() and dirname.back() != '/')
@@ -396,7 +406,7 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         }
         for (auto& cmd : cache.commands)
         {
-            if (prefix_match(cmd, fileprefix))
+            if (prefix_match(cmd, real_prefix))
                 res.push_back(cmd);
         }
     }
