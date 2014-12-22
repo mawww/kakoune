@@ -52,7 +52,7 @@ static constexpr std::chrono::milliseconds fs_check_timeout{500};
 class Normal : public InputMode
 {
 public:
-    Normal(InputHandler& input_handler, bool with_timers = true)
+    Normal(InputHandler& input_handler)
         : InputMode(input_handler),
           m_idle_timer{Clock::now() + idle_timeout,
                        context().flags() & Context::Flags::Transient ?
