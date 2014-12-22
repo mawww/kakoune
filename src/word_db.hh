@@ -15,7 +15,7 @@ class WordDB
 {
 public:
     WordDB(const Buffer& buffer);
-    WordDB(const WordDB&) { kak_assert(false); }
+    WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
     std::vector<InternedString> find_prefix(StringView prefix);

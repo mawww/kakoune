@@ -133,7 +133,7 @@ void WordDB::update_db()
 template<typename Func>
 std::vector<InternedString> find_matching(const WordDB::WordList& words, StringView str, Func func)
 {
-    WordDB::UsedChars letters = used_letters(str);
+    const WordDB::UsedChars letters = used_letters(str);
     std::vector<InternedString> res;
     for (auto&& word : words)
     {
