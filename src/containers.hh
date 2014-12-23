@@ -51,6 +51,8 @@ struct FilteredIterator : std::iterator<std::forward_iterator_tag,
         return not (lhs == rhs);
     }
 
+    Iterator base() const { return m_it; }
+
 private:
     void do_filter()
     {
@@ -104,6 +106,8 @@ struct TransformedIterator : std::iterator<std::forward_iterator_tag,
     {
         return not (lhs == rhs);
     }
+
+    Iterator base() const { return m_it; }
 
 private:
     Iterator m_it;

@@ -33,14 +33,12 @@ public:
 
     iterator find(StringView id)
     {
-        return find_if(m_content,
-                       [&](const value_type& v){ return v.first == id; });
+        return Kakoune::find(transformed(m_content, get_id), id).base();
     }
 
     const_iterator find(StringView id) const
     {
-        return find_if(m_content,
-                       [&](const value_type& v){ return v.first == id; });
+        return Kakoune::find(transformed(m_content, get_id), id).base();
     }
 
     bool contains(StringView id) const
