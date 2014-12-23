@@ -57,6 +57,17 @@ void register_env_vars()
             [](StringView name, const Context& context) -> String
             { return context.buffer().name(); }
         }, {
+            "buflist",
+            [](StringView name, const Context& context)
+            {
+                String res;
+                for (auto& buf : BufferManager::instance())
+                {
+                    res += buf->display_name() + ":";
+                }
+                res.pop_back();
+                return res; }
+        }, {
             "timestamp",
             [](StringView name, const Context& context)
             { return to_string(context.buffer().timestamp()); }
