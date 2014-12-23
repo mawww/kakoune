@@ -446,7 +446,7 @@ Completions add_highlighter_completer(
     if (token_to_complete == 1 and params[0] == "-group")
         return complete_highlighter(context, params[1], pos_in_token, true);
     else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-        return { 0_byte, arg.length(), HighlighterRegistry::instance().complete_name(arg, pos_in_token) };
+        return { 0_byte, arg.length(), complete(arg, pos_in_token, transformed(HighlighterRegistry::instance(), HighlighterRegistry::get_id)) };
     return Completions{};
 }
 
@@ -495,7 +495,10 @@ const CommandDesc add_highlighter_cmd = {
         auto& group = (parser.has_option("group")) ?
             get_highlighter(context, parser.option_value("group"))
           : context.window().highlighters();
-        group.add_child(registry[name](highlighter_params));
+        auto it = registry.find(name);
+        if (it == registry.end())
+            throw runtime_error("No such highlighter factory '" + name + "'");
+        group.add_child(it->second(highlighter_params));
     }
 };
 

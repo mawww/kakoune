@@ -1122,18 +1122,18 @@ void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.register_func("number_lines", simple_factory("number_lines", show_line_numbers));
-    registry.register_func("show_matching", simple_factory("show_matching", show_matching_char));
-    registry.register_func("show_whitespaces", simple_factory("show_whitespaces", show_whitespaces));
-    registry.register_func("fill", create_fill_highlighter);
-    registry.register_func("regex", RegexHighlighter::create);
-    registry.register_func("regex_option", create_regex_option_highlighter);
-    registry.register_func("search", create_search_highlighter);
-    registry.register_func("group", create_highlighter_group);
-    registry.register_func("flag_lines", create_flag_lines_highlighter);
-    registry.register_func("line_option", create_line_option_highlighter);
-    registry.register_func("ref", create_reference_highlighter);
-    registry.register_func("regions", RegionsHighlighter::create);
+    registry.append({ "number_lines", simple_factory("number_lines", show_line_numbers) });
+    registry.append({ "show_matching", simple_factory("show_matching", show_matching_char) });
+    registry.append({ "show_whitespaces", simple_factory("show_whitespaces", show_whitespaces) });
+    registry.append({ "fill", create_fill_highlighter });
+    registry.append({ "regex", RegexHighlighter::create });
+    registry.append({ "regex_option", create_regex_option_highlighter });
+    registry.append({ "search", create_search_highlighter });
+    registry.append({ "group", create_highlighter_group });
+    registry.append({ "flag_lines", create_flag_lines_highlighter });
+    registry.append({ "line_option", create_line_option_highlighter });
+    registry.append({ "ref", create_reference_highlighter });
+    registry.append({ "regions", RegionsHighlighter::create });
 }
 
 }

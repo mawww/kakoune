@@ -2,7 +2,9 @@
 #define highlighter_hh_INCLUDED
 
 #include "coord.hh"
-#include "function_registry.hh"
+#include "completion.hh"
+#include "exception.hh"
+#include "id_map.hh"
 #include "memoryview.hh"
 #include "string.hh"
 #include "utils.hh"
@@ -65,7 +67,7 @@ std::unique_ptr<SimpleHighlighter<T>> make_simple_highlighter(T func)
 using HighlighterParameters = memoryview<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
-struct HighlighterRegistry : FunctionRegistry<HighlighterFactory>,
+struct HighlighterRegistry : id_map<HighlighterFactory>,
                              Singleton<HighlighterRegistry>
 {};
 
