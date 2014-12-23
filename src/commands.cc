@@ -54,10 +54,26 @@ const PerArgumentCommandCompleter filename_completer({
                                              cursor_pos) }; }
 });
 
+static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_pos)
+{
+    const bool include_dirs = contains(prefix.substr(0, cursor_pos), '/');
+    auto c = transformed(BufferManager::instance(),
+                         [include_dirs](const safe_ptr<Buffer>& buffer) -> String {
+        String name = buffer->display_name();
+        if (not include_dirs and buffer->flags() & Buffer::Flags::File)
+        {
+            ByteCount pos = name.find_last_of('/');
+            if (pos != (int)String::npos)
+                return name.substr(pos+1);
+        }
+        return name;
+    });
+    return complete(prefix, cursor_pos, c, prefix_match, subsequence_match);
+}
+
 const PerArgumentCommandCompleter buffer_completer({
     [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-    { return Completions{ 0_byte, cursor_pos,
-                          BufferManager::instance().complete_buffer_name(prefix, cursor_pos) }; }
+    { return Completions{ 0_byte, cursor_pos, complete_buffer_name(prefix, cursor_pos) }; }
 });
 
 const ParameterDesc no_params{
@@ -659,9 +675,8 @@ void define_command(const ParametersParser& parser, Context& context)
                        size_t token_to_complete, ByteCount pos_in_token)
         {
              const String& prefix = params[token_to_complete];
-             auto& bm = BufferManager::instance();
              return Completions{ 0_byte, prefix.length(),
-                                 bm.complete_buffer_name(prefix, pos_in_token) };
+                                 complete_buffer_name(prefix, pos_in_token) };
         };
     }
     else if (parser.has_option("shell-completion"))

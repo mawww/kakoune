@@ -115,24 +115,6 @@ void BufferManager::backup_modified_buffers()
     }
 }
 
-CandidateList BufferManager::complete_buffer_name(StringView prefix,
-                                                  ByteCount cursor_pos)
-{
-    const bool include_dirs = contains(prefix.substr(0, cursor_pos), '/');
-    auto c = transformed(m_buffers,
-                         [include_dirs](const safe_ptr<Buffer>& buffer) -> String {
-        String name = buffer->display_name();
-        if (not include_dirs and buffer->flags() & Buffer::Flags::File)
-        {
-            ByteCount pos = name.find_last_of('/');
-            if (pos != (int)String::npos)
-                return name.substr(pos+1);
-        }
-        return name;
-    });
-    return complete(prefix, cursor_pos, c, prefix_match, subsequence_match);
-}
-
 void BufferManager::clear_buffer_trash()
 {
     while (not m_buffer_trash.empty())
