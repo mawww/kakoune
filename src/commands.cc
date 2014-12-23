@@ -7,6 +7,7 @@
 #include "client_manager.hh"
 #include "command_manager.hh"
 #include "completion.hh"
+#include "containers.hh"
 #include "context.hh"
 #include "debug.hh"
 #include "event_manager.hh"

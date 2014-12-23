@@ -1,5 +1,8 @@
 #include "keys.hh"
 
+#include "containers.hh"
+#include "exception.hh"
+#include "string.hh"
 #include "utils.hh"
 #include "utf8_iterator.hh"
 

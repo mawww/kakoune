@@ -2,7 +2,7 @@
 
 #include "assert.hh"
 #include "id_map.hh"
-#include "utils.hh"
+#include "exception.hh"
 
 namespace Kakoune
 {

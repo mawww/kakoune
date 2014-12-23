@@ -1,5 +1,7 @@
 #include "event_manager.hh"
 
+#include "containers.hh"
+
 #include <unistd.h>
 
 namespace Kakoune

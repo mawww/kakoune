@@ -1,5 +1,7 @@
 #include "highlighter_group.hh"
 
+#include "containers.hh"
+
 namespace Kakoune
 {
 

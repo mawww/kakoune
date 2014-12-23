@@ -1,7 +1,7 @@
 #include "string.hh"
 
 #include "exception.hh"
-#include "utils.hh"
+#include "containers.hh"
 #include "utf8_iterator.hh"
 
 namespace Kakoune

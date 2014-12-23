@@ -7,6 +7,7 @@
 #include "utf8_iterator.hh"
 
 #include <map>
+#include <algorithm>
 
 #define NCURSES_OPAQUE 0
 #define NCURSES_INTERNALS

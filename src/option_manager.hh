@@ -2,6 +2,7 @@
 #define option_manager_hh_INCLUDED
 
 #include "completion.hh"
+#include "containers.hh"
 #include "exception.hh"
 #include "flags.hh"
 #include "option_types.hh"

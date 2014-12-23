@@ -2,11 +2,8 @@
 #define utils_hh_INCLUDED
 
 #include "assert.hh"
-#include "exception.hh"
 
-#include <algorithm>
 #include <memory>
-#include <vector>
 
 namespace Kakoune
 {
@@ -58,70 +55,6 @@ private:
 
 template<typename T>
 T* Singleton<T>::ms_instance = nullptr;
-
-// *** Containers helpers ***
-
-template<typename Container>
-struct ReversedContainer
-{
-    ReversedContainer(Container& container) : container(container) {}
-    Container& container;
-
-    decltype(container.rbegin()) begin() { return container.rbegin(); }
-    decltype(container.rend())   end()   { return container.rend(); }
-};
-
-template<typename Container>
-auto begin(ReversedContainer<Container>& c) -> decltype(c.begin())
-{
-    return c.begin();
-}
-
-template<typename Container>
-auto end(ReversedContainer<Container>& c) -> decltype(c.end())
-{
-    return c.end();
-}
-
-template<typename Container>
-ReversedContainer<Container> reversed(Container&& container)
-{
-    return ReversedContainer<Container>(container);
-}
-
-// Todo: move that into the following functions once we can remove the decltype
-//       return type.
-using std::begin;
-using std::end;
-
-template<typename Container, typename T>
-auto find(Container&& container, const T& value) -> decltype(begin(container))
-{
-    return std::find(begin(container), end(container), value);
-}
-
-template<typename Container, typename T>
-auto find_if(Container&& container, T op) -> decltype(begin(container))
-{
-    return std::find_if(begin(container), end(container), op);
-}
-
-template<typename Container, typename T>
-bool contains(Container&& container, const T& value)
-{
-    return find(container, value) != end(container);
-}
-
-template<typename T, typename U>
-void unordered_erase(std::vector<T>& vec, U&& value)
-{
-    auto it = find(vec, std::forward<U>(value));
-    if (it != vec.end())
-    {
-        std::swap(vec.back(), *it);
-        vec.pop_back();
-    }
-}
 
 template<typename Iterator, typename EndIterator, typename T>
 void skip_while(Iterator& it, const EndIterator& end, T condition)

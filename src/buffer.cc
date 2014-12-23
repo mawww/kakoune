@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer_manager.hh"
 #include "client.hh"
+#include "containers.hh"
 #include "context.hh"
 #include "file.hh"
 #include "interned_string.hh"

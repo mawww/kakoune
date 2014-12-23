@@ -4,6 +4,8 @@
 #include "units.hh"
 #include "utils.hh"
 
+#include <vector>
+
 namespace Kakoune
 {
 

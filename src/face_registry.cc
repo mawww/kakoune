@@ -1,5 +1,6 @@
 #include "face_registry.hh"
 
+#include "containers.hh"
 #include "exception.hh"
 
 namespace Kakoune
@@ -7,8 +8,8 @@ namespace Kakoune
 
 static Face parse_face(StringView facedesc)
 {
-    auto bg_it = std::find(facedesc.begin(), facedesc.end(), ',');
-    auto attr_it = std::find(facedesc.begin(), facedesc.end(), '+');
+    auto bg_it = find(facedesc, ',');
+    auto attr_it = find(facedesc, '+');
     if (bg_it != facedesc.end() and attr_it < bg_it)
         throw runtime_error("invalid face description, expected <fg>[,<bg>][+<attr>]");
     Face res;

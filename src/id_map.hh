@@ -1,9 +1,9 @@
 #ifndef id_map_hh_INCLUDED
 #define id_map_hh_INCLUDED
 
+#include "containers.hh"
 #include "completion.hh"
 #include "string.hh"
-#include "utils.hh"
 
 #include <vector>
 
