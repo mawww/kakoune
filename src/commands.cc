@@ -46,16 +46,6 @@ Buffer* open_fifo(StringView name, StringView filename, bool scroll)
     return create_fifo_buffer(name, fd, scroll);
 }
 
-template<typename T>
-CandidateList prefix_complete(StringView prefix, const T& options)
-{
-    using std::begin; using std::end;
-    CandidateList res;
-    std::copy_if(begin(options), end(options), std::back_inserter(res),
-                 std::bind(prefix_match, std::placeholders::_1, prefix));
-    return res;
-}
-
 const PerArgumentCommandCompleter filename_completer({
      [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
      { return Completions{ 0_byte, cursor_pos,
@@ -535,7 +525,7 @@ const CommandDesc add_hook_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
+                     complete(params[0], pos_in_token, scopes) };
         else if (token_to_complete == 3)
         {
             auto& cm = CommandManager::instance();
@@ -578,7 +568,7 @@ const CommandDesc rm_hook_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
+                     complete(params[0], pos_in_token, scopes) };
         else if (token_to_complete == 1)
         {
             if (auto scope = get_scope_ifp(params[0], context))
@@ -847,7 +837,7 @@ const CommandDesc set_option_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
+                     complete(params[0], pos_in_token, scopes) };
         else if (token_to_complete == 1)
         {
             OptionManager& options = get_scope(params[0], context).options();
@@ -966,12 +956,12 @@ const CommandDesc map_key_cmd = {
     {
         if (token_to_complete == 0)
             return { 0_byte, params[0].length(),
-                     prefix_complete(params[0].substr(0_byte, pos_in_token), scopes) };
+                     complete(params[0], pos_in_token, scopes) };
         if (token_to_complete == 1)
         {
             constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view" };
             return { 0_byte, params[1].length(),
-                     prefix_complete(params[1].substr(0_byte, pos_in_token), modes) };
+                     complete(params[1], pos_in_token, modes) };
         }
         return {};
     },
