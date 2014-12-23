@@ -958,7 +958,7 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        auto container = transformed(m_groups, id_map<HighlighterGroup>::get_id);
+        auto container = transformed(m_groups, IdMap<HighlighterGroup>::get_id);
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 
@@ -1005,7 +1005,7 @@ public:
 private:
     const NamedRegionDescList m_regions;
     const String m_default_group;
-    id_map<HighlighterGroup> m_groups;
+    IdMap<HighlighterGroup> m_groups;
 
     struct Region
     {

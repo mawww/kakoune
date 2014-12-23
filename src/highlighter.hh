@@ -67,7 +67,7 @@ std::unique_ptr<SimpleHighlighter<T>> make_simple_highlighter(T func)
 using HighlighterParameters = memoryview<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
-struct HighlighterRegistry : id_map<HighlighterFactory>,
+struct HighlighterRegistry : IdMap<HighlighterFactory>,
                              Singleton<HighlighterRegistry>
 {};
 

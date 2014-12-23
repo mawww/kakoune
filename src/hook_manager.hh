@@ -29,7 +29,7 @@ private:
     friend class Scope;
 
     HookManager* m_parent;
-    UnorderedMap<String, id_map<HookFunc>> m_hook;
+    UnorderedMap<String, IdMap<HookFunc>> m_hook;
 };
 
 }

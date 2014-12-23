@@ -40,7 +40,7 @@ struct SwitchDesc
     String description;
 };
 
-using SwitchMap = id_map<SwitchDesc>;
+using SwitchMap = IdMap<SwitchDesc>;
 
 String generate_switches_doc(const SwitchMap& opts);
 

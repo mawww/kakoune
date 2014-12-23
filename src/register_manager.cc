@@ -61,7 +61,7 @@ Register& RegisterManager::operator[](StringView reg)
     if (reg.length() == 1)
         return (*this)[reg[0]];
 
-    static const id_map<Codepoint> reg_names = {
+    static const IdMap<Codepoint> reg_names = {
         { "slash", '/' },
         { "dquote", '"' },
         { "pipe", '|' }

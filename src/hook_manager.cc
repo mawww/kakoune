@@ -27,7 +27,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hook)
     {
-        auto container = transformed(list.second, id_map<HookFunc>::get_id);
+        auto container = transformed(list.second, IdMap<HookFunc>::get_id);
         for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))

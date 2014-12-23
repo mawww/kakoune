@@ -10,7 +10,7 @@ namespace Kakoune
 {
 
 template<typename Value>
-class id_map
+class IdMap
 {
 public:
     using value_type = std::pair<String, Value>;
@@ -18,8 +18,8 @@ public:
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
-    id_map() = default;
-    id_map(std::initializer_list<value_type> val) : m_content{val} {}
+    IdMap() = default;
+    IdMap(std::initializer_list<value_type> val) : m_content{val} {}
 
     void append(const value_type& value)
     {
