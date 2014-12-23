@@ -93,8 +93,8 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     String current_word{begin, end};
 
     auto& word_db = get_word_db(buffer);
-    auto matches = subseq ? word_db.find_subsequence(prefix)
-                          : word_db.find_prefix(prefix);
+    auto matches = word_db.find_matching(
+        prefix, subseq ? subsequence_match : prefix_match);
 
     if (word_db.get_word_occurences(current_word) <= 1)
         unordered_erase(matches, current_word);
@@ -106,8 +106,8 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
             if (buf.get() == &buffer)
                 continue;
             auto& buf_word_db = get_word_db(*buf);
-            auto bufmatches = subseq ? buf_word_db.find_subsequence(prefix)
-                                     : buf_word_db.find_prefix(prefix);
+            auto bufmatches = buf_word_db.find_matching(
+                prefix, subseq ? subsequence_match : prefix_match);
             std::move(bufmatches.begin(), bufmatches.end(),
                       std::back_inserter(matches));
         }

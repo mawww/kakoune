@@ -10,6 +10,9 @@
 namespace Kakoune
 {
 
+using UsedLetters = std::bitset<64>;
+UsedLetters used_letters(StringView str);
+
 // maintain a database of words available in a buffer
 class WordDB
 {
@@ -18,25 +21,40 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
-    std::vector<InternedString> find_prefix(StringView prefix);
-    std::vector<InternedString> find_subsequence(StringView subsequence);
+    using WordList = std::vector<InternedString>;
+    template<typename MatchFunc>
+    WordList find_matching(StringView str, MatchFunc match)
+    {
+        update_db();
+        const UsedLetters letters = used_letters(str);
+        std::vector<InternedString> res;
+        for (auto&& word : m_words)
+        {
+            if ((letters & word.second.letters) == letters and
+                match(word.first, str))
+                res.push_back(word.first);
+        }
+        return res;
+    }
+
     int get_word_occurences(StringView word) const;
 
-    using UsedChars = std::bitset<64>;
     struct WordInfo
     {
-        UsedChars letters;
+        UsedLetters letters;
         int refcount;
     };
-    using WordList = UnorderedMap<InternedString, WordInfo>;
+    using WordToInfo = UnorderedMap<InternedString, WordInfo>;
 private:
-    using LineToWords = std::vector<std::vector<InternedString>>;
+    using LineToWords = std::vector<WordList>;
 
     void update_db();
+    void add_words(const WordList& words);
+    void remove_words(const WordList& words);
 
     safe_ptr<const Buffer> m_buffer;
     size_t m_timestamp;
-    WordList m_words;
+    WordToInfo m_words;
     LineToWords m_line_to_words;
 };
 

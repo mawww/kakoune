@@ -7,9 +7,9 @@
 namespace Kakoune
 {
 
-static WordDB::UsedChars used_letters(StringView str)
+UsedLetters used_letters(StringView str)
 {
-    WordDB::UsedChars res;
+    UsedLetters res;
     for (auto c : str)
     {
         if (c >= 'a' and c <= 'z')
@@ -26,7 +26,7 @@ static WordDB::UsedChars used_letters(StringView str)
     return res;
 }
 
-static std::vector<InternedString> get_words(const InternedString& content)
+static WordDB::WordList get_words(const InternedString& content)
 {
     std::vector<InternedString> res;
     using Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
@@ -52,25 +52,25 @@ static std::vector<InternedString> get_words(const InternedString& content)
     return res;
 }
 
-static void add_words(WordDB::WordList& wl, const std::vector<InternedString>& words)
+void WordDB::add_words(const WordList& words)
 {
     for (auto& w : words)
     {
-        WordDB::WordInfo& info = wl[w];
+        WordDB::WordInfo& info = m_words[w];
         ++info.refcount;
         if (info.letters.none())
             info.letters = used_letters(w);
     }
 }
 
-static void remove_words(WordDB::WordList& wl, const std::vector<InternedString>& words)
+void WordDB::remove_words(const WordList& words)
 {
     for (auto& w : words)
     {
-        auto it = wl.find(w);
-        kak_assert(it != wl.end() and it->second.refcount > 0);
+        auto it = m_words.find(w);
+        kak_assert(it != m_words.end() and it->second.refcount > 0);
         if (--it->second.refcount == 0)
-            wl.erase(it);
+            m_words.erase(it);
     }
 }
 
@@ -81,7 +81,7 @@ WordDB::WordDB(const Buffer& buffer)
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         m_line_to_words.push_back(get_words(buffer[line]));
-        add_words(m_words, m_line_to_words.back());
+        add_words(m_line_to_words.back());
     }
 }
 
@@ -112,7 +112,7 @@ void WordDB::update_db()
         while (old_line <= modif.old_line + modif.num_removed)
         {
             kak_assert(old_line < m_line_to_words.size());
-            remove_words(m_words, m_line_to_words[(int)old_line++]);
+            remove_words(m_line_to_words[(int)old_line++]);
         }
 
         for (auto l = 0_line; l <= modif.num_added; ++l)
@@ -121,39 +121,13 @@ void WordDB::update_db()
                 break;
 
             new_lines.push_back(get_words(buffer[modif.new_line + l]));
-            add_words(m_words, new_lines.back());
+            add_words(new_lines.back());
         }
     }
     while (old_line != (int)m_line_to_words.size())
         new_lines.push_back(std::move(m_line_to_words[(int)old_line++]));
 
     m_line_to_words = std::move(new_lines);
-}
-
-template<typename Func>
-std::vector<InternedString> find_matching(const WordDB::WordList& words, StringView str, Func func)
-{
-    const WordDB::UsedChars letters = used_letters(str);
-    std::vector<InternedString> res;
-    for (auto&& word : words)
-    {
-        if ((letters & word.second.letters) == letters and
-            func(word.first, str))
-            res.push_back(word.first);
-    }
-    return res;
-}
-
-std::vector<InternedString> WordDB::find_prefix(StringView prefix)
-{
-    update_db();
-    return find_matching(m_words, prefix, prefix_match);
-}
-
-std::vector<InternedString> WordDB::find_subsequence(StringView subseq)
-{
-    update_db();
-    return find_matching(m_words, subseq, subsequence_match);
 }
 
 int WordDB::get_word_occurences(StringView word) const
