@@ -5,6 +5,7 @@
 #include "id_map.hh"
 #include "string.hh"
 #include "exception.hh"
+#include "containers.hh"
 
 namespace Kakoune
 {
@@ -35,7 +36,8 @@ public:
 
     CandidateList complete_name(StringView prefix, ByteCount cursor_pos)
     {
-        return m_functions.complete_id(prefix, cursor_pos);
+        auto c = transformed(m_functions, id_map<FunctionType>::get_id);
+        return complete(prefix, cursor_pos, c);
     }
 
 private:

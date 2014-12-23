@@ -2,7 +2,6 @@
 #define id_map_hh_INCLUDED
 
 #include "containers.hh"
-#include "completion.hh"
 #include "string.hh"
 
 #include <vector>
@@ -63,30 +62,7 @@ public:
         m_content.erase(it, end());
     }
 
-    template<typename Condition>
-    CandidateList complete_id_if(StringView prefix,
-                                 ByteCount cursor_pos,
-                                 Condition condition) const
-    {
-        auto real_prefix = prefix.substr(0, cursor_pos);
-        CandidateList result;
-        for (auto& value : m_content)
-        {
-            if (not condition(value))
-                continue;
-
-            if (prefix_match(value.first, real_prefix))
-                result.push_back(value.first);
-        }
-        return result;
-    }
-
-    CandidateList complete_id(StringView prefix,
-                              ByteCount cursor_pos) const
-    {
-        return complete_id_if(
-            prefix, cursor_pos, [](const value_type&) { return true; });
-    }
+    static const String& get_id(const value_type& v) { return v.first; }
 
     bool empty() const { return m_content.empty(); }
 

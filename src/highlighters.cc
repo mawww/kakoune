@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer_utils.hh"
 #include "context.hh"
+#include "containers.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "highlighter_group.hh"
@@ -957,7 +958,8 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        return { 0, 0, m_groups.complete_id(path, cursor_pos) };
+        auto container = transformed(m_groups, id_map<HighlighterGroup>::get_id);
+        return { 0, 0, complete(path, cursor_pos, container) };
     }
 
     static HighlighterAndId create(HighlighterParameters params)

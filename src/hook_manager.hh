@@ -2,6 +2,7 @@
 #define hook_manager_hh_INCLUDED
 
 #include "id_map.hh"
+#include "completion.hh"
 #include "unordered_map.hh"
 
 namespace Kakoune

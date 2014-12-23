@@ -2,6 +2,7 @@
 
 #include "buffer_manager.hh"
 #include "command_manager.hh"
+#include "containers.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
@@ -172,19 +173,8 @@ void ClientManager::clear_mode_trashes() const
 CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {
-    auto real_prefix = prefix.substr(0, cursor_pos);
-    CandidateList result;
-    CandidateList subsequence_result;
-    for (auto& client : m_clients)
-    {
-        const String& name = client->context().name();
-
-        if (prefix_match(name, real_prefix))
-            result.push_back(name);
-        if (subsequence_match(name, real_prefix))
-            subsequence_result.push_back(name);
-    }
-    return result.empty() ? subsequence_result : result;
+    auto c = transformed(m_clients, [](const std::unique_ptr<Client>& c){ return c->context().name(); });
+    return complete(prefix, cursor_pos, c, prefix_match, subsequence_match);
 }
 
 }

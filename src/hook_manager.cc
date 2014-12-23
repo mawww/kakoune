@@ -1,5 +1,6 @@
 #include "hook_manager.hh"
 
+#include "containers.hh"
 #include "context.hh"
 #include "debug.hh"
 #include "regex.hh"
@@ -26,8 +27,8 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hook)
     {
-        auto candidates = list.second.complete_id(prefix, pos_in_token);
-        for (auto& c : candidates)
+        auto container = transformed(list.second, id_map<HookFunc>::get_id);
+        for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))
                 res.push_back(c);

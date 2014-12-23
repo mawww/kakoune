@@ -48,11 +48,12 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
         return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
     }
 
-    auto condition = [=](const HighlighterMap::value_type& hl)
-    {
-        return not group or hl.second->has_children();
-    };
-    return { 0, 0, m_highlighters.complete_id_if(path, cursor_pos, condition) };
+    using ValueType = HighlighterMap::value_type;
+    auto c = transformed(filtered(m_highlighters,
+                                  [=](const ValueType& hl)
+                                  { return not group or hl.second->has_children(); }),
+                         HighlighterMap::get_id);
+    return { 0, 0, complete(path, cursor_pos, c) };
 }
 
 }

@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "client_manager.hh"
+#include "containers.hh"
 #include "exception.hh"
 #include "file.hh"
 #include "string.hh"
@@ -117,27 +118,19 @@ void BufferManager::backup_modified_buffers()
 CandidateList BufferManager::complete_buffer_name(StringView prefix,
                                                   ByteCount cursor_pos)
 {
-    auto real_prefix = prefix.substr(0, cursor_pos);
-    const bool include_dirs = contains(real_prefix, '/');
-    CandidateList result;
-    CandidateList subsequence_result;
-    for (auto& buffer : m_buffers)
-    {
+    const bool include_dirs = contains(prefix.substr(0, cursor_pos), '/');
+    auto c = transformed(m_buffers,
+                         [include_dirs](const safe_ptr<Buffer>& buffer) -> String {
         String name = buffer->display_name();
-        StringView match_name = name;
         if (not include_dirs and buffer->flags() & Buffer::Flags::File)
         {
             ByteCount pos = name.find_last_of('/');
             if (pos != (int)String::npos)
-                match_name = name.substr(pos+1);
+                return name.substr(pos+1);
         }
-
-        if (prefix_match(match_name, real_prefix))
-            result.push_back(name);
-        if (subsequence_match(name, real_prefix))
-            subsequence_result.push_back(name);
-    }
-    return result.empty() ? subsequence_result : result;
+        return name;
+    });
+    return complete(prefix, cursor_pos, c, prefix_match, subsequence_match);
 }
 
 void BufferManager::clear_buffer_trash()

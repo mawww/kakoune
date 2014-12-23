@@ -1,5 +1,6 @@
 #include "ncurses_ui.hh"
 
+#include "containers.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "keys.hh"

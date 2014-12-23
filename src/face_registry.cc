@@ -2,6 +2,7 @@
 
 #include "containers.hh"
 #include "exception.hh"
+#include "containers.hh"
 
 namespace Kakoune
 {
@@ -80,16 +81,12 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
 }
 
 CandidateList FaceRegistry::complete_alias_name(StringView prefix,
-                                                 ByteCount cursor_pos) const
+                                                ByteCount cursor_pos) const
 {
-    CandidateList res;
-    auto real_prefix = prefix.substr(0, cursor_pos);
-    for (auto& alias : m_aliases)
-    {
-        if (prefix_match(alias.first, real_prefix))
-            res.push_back(alias.first);
-    }
-    return res;
+    using ValueType = std::pair<String, FaceOrAlias>;
+    return complete(prefix, cursor_pos,
+                    transformed(m_aliases,
+                                [](const ValueType& v){ return v.first; }));
 }
 
 FaceRegistry::FaceRegistry()
