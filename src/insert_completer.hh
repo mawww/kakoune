@@ -87,4 +87,3 @@ private:
 }
 
 #endif // insert_completer_hh_INCLUDED
-

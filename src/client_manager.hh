@@ -55,4 +55,3 @@ private:
 }
 
 #endif // client_manager_hh_INCLUDED
-

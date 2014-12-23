@@ -86,4 +86,3 @@ private:
 }
 
 #endif // optional_hh_INCLUDED
-

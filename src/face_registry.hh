@@ -42,4 +42,3 @@ inline Face get_face(const String& facedesc)
 }
 
 #endif // face_registry_hh_INCLUDED
-

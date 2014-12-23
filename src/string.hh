@@ -281,4 +281,3 @@ inline size_t hash_value(const Kakoune::StringView& str)
 }
 
 #endif // string_hh_INCLUDED
-

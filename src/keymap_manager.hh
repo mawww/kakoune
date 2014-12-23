@@ -51,4 +51,3 @@ private:
 }
 
 #endif // keymap_manager_hh_INCLUDED
-

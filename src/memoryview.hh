@@ -66,4 +66,3 @@ private:
 }
 
 #endif // memoryview_hh_INCLUDED
-

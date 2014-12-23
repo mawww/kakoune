@@ -61,4 +61,3 @@ private:
 }
 
 #endif // word_db_hh_INCLUDED
-

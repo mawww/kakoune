@@ -45,4 +45,3 @@ inline bool operator!=(const Face& lhs, const Face& rhs)
 }
 
 #endif // face_hh_INCLUDED
-

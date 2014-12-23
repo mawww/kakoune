@@ -36,4 +36,3 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
 }
 
 #endif // buffer_utils_hh_INCLUDED
-

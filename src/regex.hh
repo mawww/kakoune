@@ -54,4 +54,3 @@ void option_from_string(StringView str, Regex& re);
 }
 
 #endif // regex_hh_INCLUDED
-

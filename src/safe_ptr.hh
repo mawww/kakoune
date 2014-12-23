@@ -164,4 +164,3 @@ private:
 }
 
 #endif // safe_ptr_hh_INCLUDED
-

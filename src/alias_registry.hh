@@ -29,4 +29,3 @@ private:
 }
 
 #endif // alias_registry_hh_INCLUDED
-

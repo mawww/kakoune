@@ -35,4 +35,3 @@ private:
 }
 
 #endif // hook_manager_hh_INCLUDED
-

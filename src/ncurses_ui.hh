@@ -79,4 +79,3 @@ private:
 }
 
 #endif // ncurses_hh_INCLUDED
-

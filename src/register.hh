@@ -21,4 +21,3 @@ public:
 }
 
 #endif // register_hh_INCLUDED
-

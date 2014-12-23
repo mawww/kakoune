@@ -94,4 +94,3 @@ private:
 }
 
 #endif // event_manager_hh_INCLUDED
-

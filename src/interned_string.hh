@@ -125,4 +125,3 @@ inline size_t hash_value(const Kakoune::InternedString& str)
 }
 
 #endif // interned_string_hh_INCLUDED
-

@@ -15,4 +15,3 @@ void exec_keys(memoryview<Key> keys, Context& context);
 }
 
 #endif // commands_hh_INCLUDED
-

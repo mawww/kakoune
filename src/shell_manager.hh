@@ -41,4 +41,3 @@ private:
 }
 
 #endif // shell_manager_hh_INCLUDED
-
