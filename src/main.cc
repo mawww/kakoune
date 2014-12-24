@@ -12,23 +12,22 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "highlighters.hh"
+#include "insert_completer.hh"
+#include "interned_string.hh"
 #include "ncurses_ui.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
-#include "shell_manager.hh"
 #include "scope.hh"
+#include "shell_manager.hh"
 #include "string.hh"
-#include "insert_completer.hh"
-#include "interned_string.hh"
 #include "window.hh"
 
+#include <fcntl.h>
 #include <locale>
 #include <signal.h>
-
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 using namespace Kakoune;
