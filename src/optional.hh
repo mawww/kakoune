@@ -20,7 +20,7 @@ public:
     }
 
     Optional(Optional&& other)
-        noexcept(noexcept(new ((void*)0) T(std::move(other.m_value))))
+        noexcept(noexcept(new (nullptr) T(std::move(other.m_value))))
         : m_valid(other.m_valid)
     {
         if (m_valid)
@@ -29,8 +29,7 @@ public:
 
     Optional& operator=(const Optional& other)
     {
-        if (m_valid)
-            m_value.~T();
+        destruct_ifn();
         if ((m_valid = other.m_valid))
             new (&m_value) T(other.m_value);
         return *this;
@@ -38,18 +37,13 @@ public:
 
     Optional& operator=(Optional&& other)
     {
-        if (m_valid)
-            m_value.~T();
+        destruct_ifn();
         if ((m_valid = other.m_valid))
             new (&m_value) T(std::move(other.m_value));
         return *this;
     }
 
-    ~Optional()
-    {
-        if (m_valid)
-            m_value.~T();
-    }
+    ~Optional() { destruct_ifn(); }
 
     constexpr explicit operator bool() const noexcept { return m_valid; }
 
@@ -79,6 +73,8 @@ public:
     const T* operator->() const { return const_cast<Optional&>(*this).operator->(); }
 
 private:
+    void destruct_ifn() { if (m_valid) m_value.~T(); }
+
     bool m_valid;
     union { T m_value; };
 };
