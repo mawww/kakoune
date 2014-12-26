@@ -63,9 +63,10 @@ void register_env_vars()
                 String res;
                 for (auto& buf : BufferManager::instance())
                 {
-                    res += buf->display_name() + ":";
+                    if (not res.empty())
+                        res += ":";
+                    res += buf->display_name();
                 }
-                res.pop_back();
                 return res; }
         }, {
             "timestamp",
