@@ -59,15 +59,9 @@ void register_env_vars()
         }, {
             "buflist",
             [](StringView name, const Context& context)
-            {
-                String res;
-                for (auto& buf : BufferManager::instance())
-                {
-                    if (not res.empty())
-                        res += ":";
-                    res += buf->display_name();
-                }
-                return res; }
+            { return join(transformed(BufferManager::instance(),
+                                      [](const safe_ptr<Buffer>& b)
+                                      { return b->display_name(); }), ':'); }
         }, {
             "timestamp",
             [](StringView name, const Context& context)
@@ -80,15 +74,7 @@ void register_env_vars()
         }, {
             "selections",
             [](StringView name, const Context& context)
-            { auto sels = context.selections_content();
-              String res;
-              for (size_t i = 0; i < sels.size(); ++i)
-              {
-                  res += escape(sels[i], ':', '\\');
-                  if (i != sels.size() - 1)
-                      res += ':';
-              }
-              return res; }
+            { return join(context.selections_content(), ':'); }
         }, {
             "runtime",
             [](StringView name, const Context& context)
@@ -130,24 +116,17 @@ void register_env_vars()
             "selection_desc",
             [](StringView name, const Context& context)
             { auto& sel = context.selections().main();
-                auto beg = sel.min();
-                return to_string(beg.line + 1) + "." + to_string(beg.column + 1) + "+" +
-                       to_string((int)context.buffer().distance(beg, sel.max())+1); }
+              auto beg = sel.min();
+              return to_string(beg.line + 1) + "." + to_string(beg.column + 1) + "+" +
+                     to_string((int)context.buffer().distance(beg, sel.max())+1); }
         }, {
             "selections_desc",
             [](StringView name, const Context& context)
-            {
-                String res;
-                for (auto& sel : context.selections())
-                {
+            { return join(transformed(context.selections(), [&](const Selection& sel) {
                     auto beg = sel.min();
-                    if (not res.empty())
-                        res += ':';
-                    res += to_string(beg.line + 1) + "." + to_string(beg.column + 1) + "+" +
+                    return to_string(beg.line + 1) + "." + to_string(beg.column + 1) + "+" +
                            to_string((int)context.buffer().distance(beg, sel.max())+1);
-                }
-                return res;
-            }
+                }), ':'); }
         }, {
             "window_width",
             [](StringView name, const Context& context)

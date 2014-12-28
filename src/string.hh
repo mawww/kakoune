@@ -235,6 +235,19 @@ std::vector<StringView> split(StringView str, char separator);
 String escape(StringView str, StringView characters, char escape);
 String unescape(StringView str, StringView characters, char escape);
 
+template<typename Container>
+String join(const Container& container, char joiner)
+{
+    String res;
+    for (const auto& str : container)
+    {
+        if (not res.empty())
+            res += joiner;
+        res += escape(str, joiner, '\\');
+    }
+    return res;
+}
+
 inline String operator"" _str(const char* str, size_t)
 {
     return String(str);

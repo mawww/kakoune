@@ -721,7 +721,7 @@ void split_lines(Context& context, NormalParams)
     selections = std::move(res);
 }
 
-void join_select_spaces(Context& context, NormalParams)
+void join_lines_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     std::vector<Selection> selections;
@@ -746,7 +746,7 @@ void join_select_spaces(Context& context, NormalParams)
     context.selections().insert(" "_str, InsertMode::Replace);
 }
 
-void join(Context& context, NormalParams params)
+void join_lines(Context& context, NormalParams params)
 {
     SelectionList sels{context.selections()};
     auto restore_sels = on_scope_end([&]{
@@ -754,7 +754,7 @@ void join(Context& context, NormalParams params)
         context.selections() = std::move(sels);
     });
 
-    join_select_spaces(context, params);
+    join_lines_select_spaces(context, params);
 }
 
 template<bool matching>
@@ -1430,8 +1430,8 @@ KeyMap keymap =
     { alt('{'), { "extend to inner object start", select_object<ObjectFlags::ToBegin | ObjectFlags::Inner, SelectMode::Extend> } },
     { alt('}'), { "extend to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner, SelectMode::Extend> } },
 
-    { alt('j'), { "join lines", join } },
-    { alt('J'), { "join lines and select spaces", join_select_spaces } },
+    { alt('j'), { "join lines", join_lines } },
+    { alt('J'), { "join lines and select spaces", join_lines_select_spaces } },
 
     { alt('k'), { "keep selections matching given regex", keep<true> } },
     { alt('K'), { "keep selections not matching given regex", keep<false> } },
