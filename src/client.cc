@@ -201,8 +201,9 @@ void Client::check_buffer_fs_timestamp()
 
         m_input_handler.on_next_key(KeymapMode::None,
                                    [this, filename](Key key, Context& context) {
-            Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
             m_ui->info_hide();
+
+            Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
             // buffer got deleted while waiting for the key, do nothing
             if (not buf)
                 return;
