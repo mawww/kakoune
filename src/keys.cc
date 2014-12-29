@@ -20,8 +20,8 @@ Key canonicalize_ifn(Key key)
     return key;
 }
 
-using KeyAndName = std::pair<const char*, Codepoint>;
-static const KeyAndName keynamemap[] = {
+struct KeyAndName { const char* name; Codepoint key; };
+static constexpr KeyAndName keynamemap[] = {
     { "ret", '\r' },
     { "space", ' ' },
     { "tab", '\t' },
@@ -77,9 +77,9 @@ KeyList parse_keys(StringView str)
             desc = desc.substr(2_byte);
         }
         auto name_it = find_if(keynamemap, [&desc](const KeyAndName& item)
-                                           { return item.first == desc; });
+                                           { return item.name == desc; });
         if (name_it != end(keynamemap))
-            result.push_back(canonicalize_ifn({ modifier, name_it->second }));
+            result.push_back(canonicalize_ifn({ modifier, name_it->key }));
         else if (desc.char_length() == 1)
             result.push_back(Key{ modifier, desc[0_char] });
         else if (tolower(desc[0]) == 'f' and desc.length() <= 3)
@@ -104,11 +104,11 @@ String key_to_str(Key key)
     bool named = false;
     String res;
     auto it = find_if(keynamemap, [&key](const KeyAndName& item)
-                                  { return item.second == key.key; });
+                                  { return item.key == key.key; });
     if (it != end(keynamemap))
     {
         named = true;
-        res = it->first;
+        res = it->name;
     }
     else if (key.key >= Key::F1 and key.key < Key::F12)
     {
