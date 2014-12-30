@@ -21,7 +21,7 @@ private:
 
     UnorderedMap<StringView, size_t> m_slot_map;
     std::vector<size_t> m_free_slots;
-    using DataAndRefCount = std::pair<std::vector<char>, int>;
+    struct DataAndRefCount { std::vector<char> data; int refcount; };
     std::vector<DataAndRefCount> m_storage;
 };
 
