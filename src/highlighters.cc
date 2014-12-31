@@ -271,7 +271,7 @@ private:
     {
         std::pair<LineCount, LineCount> m_range;
         size_t m_timestamp = 0;
-        std::vector<std::vector<std::pair<ByteCoord, ByteCoord>>> m_matches;
+        std::vector<std::vector<BufferRange>> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
