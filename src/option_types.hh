@@ -86,8 +86,7 @@ template<typename Key, typename Value>
 void option_from_string(StringView str, UnorderedMap<Key, Value>& opt)
 {
     opt.clear();
-    std::vector<String> elems = split(str, list_separator, '\\');
-    for (auto& elem: elems)
+    for (auto& elem : split(str, list_separator, '\\'))
     {
         std::vector<String> pair_str = split(elem, '=', '\\');
         if (pair_str.size() != 2)
