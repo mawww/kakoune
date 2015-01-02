@@ -16,7 +16,7 @@ void write_debug(StringView str)
         return;
     }
 
-    static const String debug_buffer_name("*debug*");
+    const StringView debug_buffer_name = "*debug*";
     Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name);
 
     if (not buffer)
