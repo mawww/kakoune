@@ -1059,8 +1059,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         real_context = &cm.get_client(parser.option_value("client")).context();
     else if (parser.has_option("try-client"))
     {
-        Client* client = cm.get_client_ifp(parser.option_value("try-client"));
-        if (client)
+        if (Client* client = cm.get_client_ifp(parser.option_value("try-client")))
             real_context = &client->context();
     }
 
