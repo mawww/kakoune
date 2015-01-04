@@ -152,10 +152,9 @@ Client* ClientManager::get_client_ifp(StringView name)
 
 Client& ClientManager::get_client(StringView name)
 {
-    Client* client = get_client_ifp(name);
-    if (not client)
-        throw runtime_error("no client named: " + name);
-    return *client;
+    if (Client* client = get_client_ifp(name))
+        return *client;
+    throw runtime_error("no client named: " + name);
 }
 
 void ClientManager::redraw_clients() const
