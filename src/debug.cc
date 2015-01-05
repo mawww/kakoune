@@ -17,13 +17,13 @@ void write_debug(StringView str)
     }
 
     const StringView debug_buffer_name = "*debug*";
-    Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name);
-
-    if (not buffer)
-        buffer = new Buffer(debug_buffer_name, Buffer::Flags::NoUndo);
-
-    kak_assert(buffer);
-    buffer->insert(buffer->end(), str);
+    if (Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name))
+        buffer->insert(buffer->end(), str);
+    else
+    {
+        String line = str + ((str.empty() or str.back() != '\n') ? "\n" : "");
+        new Buffer(debug_buffer_name, Buffer::Flags::NoUndo, { line });
+    }
 }
 
 }
