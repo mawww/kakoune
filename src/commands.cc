@@ -56,19 +56,25 @@ const PerArgumentCommandCompleter filename_completer({
 
 static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_pos)
 {
-    const bool include_dirs = contains(prefix.substr(0, cursor_pos), '/');
-    auto c = transformed(BufferManager::instance(),
-                         [include_dirs](const safe_ptr<Buffer>& buffer) -> String {
+    prefix = prefix.substr(0, cursor_pos);
+    const bool include_dirs = contains(prefix, '/');
+    CandidateList prefix_result, subsequence_result;
+    for (auto& buffer : BufferManager::instance())
+    {
         String name = buffer->display_name();
+        StringView match_name = name;
         if (not include_dirs and buffer->flags() & Buffer::Flags::File)
         {
             ByteCount pos = name.find_last_of('/');
             if (pos != (int)String::npos)
-                return name.substr(pos+1);
+                match_name = name.substr(pos+1);
         }
-        return name;
-    });
-    return complete(prefix, cursor_pos, c, prefix_match, subsequence_match);
+        if (prefix_match(match_name, prefix))
+            prefix_result.push_back(name);
+        if (subsequence_match(name, prefix))
+            subsequence_result.push_back(name);
+    }
+    return prefix_result.empty() ? subsequence_result : prefix_result;
 }
 
 const PerArgumentCommandCompleter buffer_completer({
