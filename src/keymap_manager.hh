@@ -22,7 +22,7 @@ enum class KeymapMode : int
     User,
 };
 
-template<typename T> class memoryview;
+template<typename T> class ArrayView;
 
 class KeymapManager
 {
@@ -34,7 +34,7 @@ public:
     void unmap_key(Key key, KeymapMode mode);
 
     bool is_mapped(Key key, KeymapMode mode) const;
-    memoryview<Key> get_mapping(Key key, KeymapMode mode) const;
+    ArrayView<Key> get_mapping(Key key, KeymapMode mode) const;
 private:
     KeymapManager()
         : m_parent(nullptr) {}

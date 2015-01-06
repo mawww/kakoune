@@ -4,7 +4,7 @@
 #include "coord.hh"
 #include "completion.hh"
 #include "flags.hh"
-#include "memoryview.hh"
+#include "array_view.hh"
 #include "shell_manager.hh"
 #include "parameters_parser.hh"
 #include "string.hh"
@@ -18,7 +18,7 @@ namespace Kakoune
 {
 
 class Context;
-using CommandParameters = memoryview<String>;
+using CommandParameters = ArrayView<String>;
 using Command = std::function<void (const ParametersParser& parser, Context& context)>;
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
@@ -38,7 +38,7 @@ public:
     using ArgumentCompleter = std::function<Completions (const Context&,
                                             CompletionFlags flags,
                                             const String&, ByteCount)>;
-    using ArgumentCompleterList = memoryview<ArgumentCompleter>;
+    using ArgumentCompleterList = ArrayView<ArgumentCompleter>;
 
     PerArgumentCommandCompleter(ArgumentCompleterList completers)
         : m_completers(completers.begin(), completers.end()) {}
@@ -59,7 +59,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(StringView command_line, Context& context,
-                 memoryview<String> shell_params = {},
+                 ArrayView<String> shell_params = {},
                  const EnvVarMap& env_vars = EnvVarMap{});
 
     Completions complete(const Context& context, CompletionFlags flags,

@@ -733,7 +733,7 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
     }
 }
 
-void update_matches(const Buffer& buffer, memoryview<LineModification> modifs,
+void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
                     RegexMatchList& matches, const Regex& regex)
 {
     const size_t buf_timestamp = buffer.timestamp();
@@ -857,7 +857,7 @@ struct RegionDesc
     }
 
     void update_matches(const Buffer& buffer,
-                        memoryview<LineModification> modifs,
+                        ArrayView<LineModification> modifs,
                         RegionMatches& matches) const
     {
         Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin);

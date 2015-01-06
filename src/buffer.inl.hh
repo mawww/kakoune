@@ -92,7 +92,7 @@ inline size_t Buffer::timestamp() const
     return m_changes.size();
 }
 
-inline memoryview<Buffer::Change> Buffer::changes_since(size_t timestamp) const
+inline ArrayView<Buffer::Change> Buffer::changes_since(size_t timestamp) const
 {
     return { m_changes.data() + timestamp,
              m_changes.data() + m_changes.size() };

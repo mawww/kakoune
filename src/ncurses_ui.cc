@@ -540,7 +540,7 @@ void NCursesUI::draw_menu()
     m_dirty = true;
 }
 
-void NCursesUI::menu_show(memoryview<String> items,
+void NCursesUI::menu_show(ArrayView<String> items,
                           CharCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {

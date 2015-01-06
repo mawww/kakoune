@@ -1049,7 +1049,7 @@ void replay_macro(Context& context, NormalParams params)
             if (running_macros[idx])
                 throw runtime_error("recursive macros call detected");
 
-            memoryview<String> reg_val = RegisterManager::instance()[name].values(context);
+            ArrayView<String> reg_val = RegisterManager::instance()[name].values(context);
             if (not reg_val.empty())
             {
                 running_macros[idx] = true;

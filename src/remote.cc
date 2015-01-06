@@ -68,7 +68,7 @@ public:
     }
 
     template<typename T>
-    void write(memoryview<T> view)
+    void write(ArrayView<T> view)
     {
         write<uint32_t>(view.size());
         for (auto& val : view)
@@ -78,7 +78,7 @@ public:
     template<typename T>
     void write(const std::vector<T>& vec)
     {
-        write(memoryview<T>(vec));
+        write(ArrayView<T>(vec));
     }
 
     template<typename Key, typename Val>
@@ -249,7 +249,7 @@ public:
     RemoteUI(int socket);
     ~RemoteUI();
 
-    void menu_show(memoryview<String> choices,
+    void menu_show(ArrayView<String> choices,
                    CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -298,7 +298,7 @@ RemoteUI::~RemoteUI()
     m_socket_watcher.close_fd();
 }
 
-void RemoteUI::menu_show(memoryview<String> choices,
+void RemoteUI::menu_show(ArrayView<String> choices,
                          CharCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {

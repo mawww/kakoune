@@ -5,7 +5,7 @@
 #include "string.hh"
 #include "units.hh"
 #include "coord.hh"
-#include "memoryview.hh"
+#include "array_view.hh"
 #include "unordered_map.hh"
 
 #include <tuple>
@@ -109,7 +109,7 @@ struct TupleOptionDetail
                tuple_separator + escape(option_to_string(std::get<I>(opt)), tuple_separator, '\\');
     }
 
-    static void from_string(memoryview<String> elems, std::tuple<Types...>& opt)
+    static void from_string(ArrayView<String> elems, std::tuple<Types...>& opt)
     {
         option_from_string(elems[I], std::get<I>(opt));
         TupleOptionDetail<I-1, Types...>::from_string(elems, opt);
@@ -124,7 +124,7 @@ struct TupleOptionDetail<0, Types...>
         return option_to_string(std::get<0>(opt));
     }
 
-    static void from_string(memoryview<String> elems, std::tuple<Types...>& opt)
+    static void from_string(ArrayView<String> elems, std::tuple<Types...>& opt)
     {
         option_from_string(elems[0], std::get<0>(opt));
     }

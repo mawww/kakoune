@@ -1,5 +1,5 @@
-#ifndef memoryview_hh_INCLUDED
-#define memoryview_hh_INCLUDED
+#ifndef array_view_hh_INCLUDED
+#define array_view_hh_INCLUDED
 
 #include <vector>
 #include <initializer_list>
@@ -7,34 +7,34 @@
 namespace Kakoune
 {
 
-// A memoryview provides a typed, non owning view of a memory
+// An ArrayView provides a typed, non owning view of a memory
 // range with an interface similar to std::vector.
 template<typename T>
-class memoryview
+class ArrayView
 {
 public:
     using size_t = std::size_t;
 
-    memoryview()
+    ArrayView()
         : m_pointer(nullptr), m_size(0) {}
 
-    memoryview(const T& oneval)
+    ArrayView(const T& oneval)
         : m_pointer(&oneval), m_size(1) {}
 
-    memoryview(const T* pointer, size_t size)
+    ArrayView(const T* pointer, size_t size)
         : m_pointer(pointer), m_size(size) {}
 
-    memoryview(const T* begin, const T* end)
+    ArrayView(const T* begin, const T* end)
         : m_pointer(begin), m_size(end - begin) {}
 
     template<typename Iterator>
-    memoryview(const Iterator& begin, const Iterator& end)
+    ArrayView(const Iterator& begin, const Iterator& end)
         : m_pointer(&(*begin)), m_size(end - begin) {}
 
-    memoryview(const std::vector<T>& v)
+    ArrayView(const std::vector<T>& v)
         : m_pointer(&v[0]), m_size(v.size()) {}
 
-    memoryview(const std::initializer_list<T>& v)
+    ArrayView(const std::initializer_list<T>& v)
         : m_pointer(v.begin()), m_size(v.size()) {}
 
     const T* pointer() const { return m_pointer; }
@@ -53,9 +53,9 @@ public:
 
     bool empty() const { return m_size == 0; }
 
-    memoryview subrange(size_t first, size_t count) const
+    ArrayView subrange(size_t first, size_t count) const
     {
-        return memoryview(m_pointer + first, count);
+        return ArrayView(m_pointer + first, count);
     }
 
 private:
@@ -65,4 +65,4 @@ private:
 
 }
 
-#endif // memoryview_hh_INCLUDED
+#endif // array_view_hh_INCLUDED

@@ -22,7 +22,7 @@ struct file_not_found : file_access_error
 };
 
 class Buffer;
-template<typename T> class memoryview;
+template<typename T> class ArrayView;
 class String;
 class StringView;
 
@@ -42,7 +42,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename);
 void write_buffer_to_fd(Buffer& buffer, int fd);
 void write_buffer_to_backup_file(Buffer& buffer);
 
-String find_file(StringView filename, memoryview<String> paths);
+String find_file(StringView filename, ArrayView<String> paths);
 
 time_t get_fs_timestamp(StringView filename);
 

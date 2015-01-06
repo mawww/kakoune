@@ -29,7 +29,7 @@ ShellManager::ShellManager()
 }
 
 String ShellManager::eval(StringView cmdline, const Context& context,
-                          memoryview<String> params,
+                          ArrayView<String> params,
                           const EnvVarMap& env_vars,
                           int* exit_status)
 {
@@ -38,7 +38,7 @@ String ShellManager::eval(StringView cmdline, const Context& context,
 
 String ShellManager::pipe(StringView input,
                           StringView cmdline, const Context& context,
-                          memoryview<String> params,
+                          ArrayView<String> params,
                           const EnvVarMap& env_vars,
                           int* exit_status)
 {

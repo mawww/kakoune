@@ -340,7 +340,7 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(InputHandler& input_handler, memoryview<String> choices,
+    Menu(InputHandler& input_handler, ArrayView<String> choices,
          MenuCallback callback)
         : InputMode(input_handler),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
@@ -458,7 +458,7 @@ private:
     LineEditor m_filter_editor;
 };
 
-String common_prefix(memoryview<String> strings)
+String common_prefix(ArrayView<String> strings)
 {
     String res;
     if (strings.empty())
@@ -925,7 +925,7 @@ private:
         selections.sort_and_merge_overlapping();
     }
 
-    void insert(memoryview<String> strings)
+    void insert(ArrayView<String> strings)
     {
         context().selections().insert(strings, InsertMode::InsertCursor);
     }
@@ -1093,7 +1093,7 @@ void InputHandler::set_prompt_face(Face prompt_face)
         prompt->set_prompt_face(prompt_face);
 }
 
-void InputHandler::menu(memoryview<String> choices,
+void InputHandler::menu(ArrayView<String> choices,
                        MenuCallback callback)
 {
     change_input_mode(new InputModes::Menu(*this, choices, callback));
@@ -1150,7 +1150,7 @@ bool InputHandler::is_recording() const
 void InputHandler::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
-    RegisterManager::instance()[m_recording_reg] = memoryview<String>(m_recorded_keys);
+    RegisterManager::instance()[m_recording_reg] = ArrayView<String>(m_recorded_keys);
     m_recording_reg = 0;
 }
 

@@ -12,18 +12,18 @@ namespace Kakoune
 class StaticRegister : public Register
 {
 public:
-    Register& operator=(memoryview<String> values) override
+    Register& operator=(ArrayView<String> values) override
     {
         m_content = std::vector<String>(values.begin(), values.end());
         return *this;
     }
 
-    memoryview<String> values(const Context&) override
+    ArrayView<String> values(const Context&) override
     {
         if (m_content.empty())
-            return memoryview<String>(ms_empty);
+            return ArrayView<String>(ms_empty);
         else
-            return memoryview<String>(m_content);
+            return ArrayView<String>(m_content);
     }
 protected:
     std::vector<String> m_content;
@@ -41,12 +41,12 @@ public:
     DynamicRegister(RegisterRetriever function)
         : m_function(std::move(function)) {}
 
-    Register& operator=(memoryview<String> values) override
+    Register& operator=(ArrayView<String> values) override
     {
         throw runtime_error("this register is not assignable");
     }
 
-    memoryview<String> values(const Context& context) override
+    ArrayView<String> values(const Context& context) override
     {
         m_content = m_function(context);
         return StaticRegister::values(context);

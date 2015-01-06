@@ -3,14 +3,14 @@
 
 #include "exception.hh"
 #include "id_map.hh"
-#include "memoryview.hh"
+#include "array_view.hh"
 #include "flags.hh"
 #include "string.hh"
 
 namespace Kakoune
 {
 
-using ParameterList = memoryview<String>;
+using ParameterList = ArrayView<String>;
 
 struct parameter_error : public runtime_error
 {

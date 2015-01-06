@@ -268,11 +268,11 @@ TokenList parse(StringView line)
 }
 
 String eval_token(const Token& token, Context& context,
-                  memoryview<String> shell_params,
+                  ArrayView<String> shell_params,
                   const EnvVarMap& env_vars);
 
 String eval(StringView str, Context& context,
-            memoryview<String> shell_params,
+            ArrayView<String> shell_params,
             const EnvVarMap& env_vars)
 {
     String res;
@@ -301,7 +301,7 @@ String eval(StringView str, Context& context,
 }
 
 String eval_token(const Token& token, Context& context,
-                  memoryview<String> shell_params,
+                  ArrayView<String> shell_params,
                   const EnvVarMap& env_vars)
 {
     auto& content = token.content();
@@ -354,7 +354,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (params.empty())
         return;
 
-    memoryview<String> param_view(params.begin()+1, params.end());
+    ArrayView<String> param_view(params.begin()+1, params.end());
     auto command_it = find_command(context, params[0]);
     if (command_it == m_commands.end())
         throw command_not_found(params[0]);
@@ -394,7 +394,7 @@ static CharCoord find_coord(StringView str, ByteCount offset)
 
 void CommandManager::execute(StringView command_line,
                              Context& context,
-                             memoryview<String> shell_params,
+                             ArrayView<String> shell_params,
                              const EnvVarMap& env_vars)
 {
     TokenList tokens = parse<true>(command_line);

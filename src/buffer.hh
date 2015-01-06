@@ -160,7 +160,7 @@ public:
         ByteCoord end;
         bool at_end;
     };
-    memoryview<Change> changes_since(size_t timestamp) const;
+    ArrayView<Change> changes_since(size_t timestamp) const;
 
     String debug_description() const;
 private:

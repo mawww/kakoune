@@ -1185,7 +1185,7 @@ const CommandDesc prompt_cmd = {
             {
                 if (event != PromptEvent::Validate)
                     return;
-                RegisterManager::instance()[reg] = memoryview<String>(str);
+                RegisterManager::instance()[reg] = ArrayView<String>(str);
 
                 CommandManager::instance().execute(command, context);
             });
@@ -1361,7 +1361,7 @@ const CommandDesc set_register_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        RegisterManager::instance()[parser[0]] = memoryview<String>(parser[1]);
+        RegisterManager::instance()[parser[0]] = ArrayView<String>(parser[1]);
     }
 };
 
@@ -1385,7 +1385,7 @@ public:
     RegisterRestorer(char name, const Context& context)
       : m_name(name)
     {
-        memoryview<String> save = RegisterManager::instance()[name].values(context);
+        ArrayView<String> save = RegisterManager::instance()[name].values(context);
         m_save = std::vector<String>(save.begin(), save.end());
     }
 
@@ -1399,7 +1399,7 @@ private:
 
 }
 
-void exec_keys(memoryview<Key> keys, Context& context)
+void exec_keys(ArrayView<Key> keys, Context& context)
 {
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);

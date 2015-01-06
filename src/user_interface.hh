@@ -15,7 +15,7 @@ class DisplayLine;
 struct CharCoord;
 struct Face;
 struct Key;
-template<typename T> class memoryview;
+template<typename T> class ArrayView;
 
 enum class MenuStyle
 {
@@ -41,7 +41,7 @@ class UserInterface : public SafeCountable
 public:
     virtual ~UserInterface() {}
 
-    virtual void menu_show(memoryview<String> choices,
+    virtual void menu_show(ArrayView<String> choices,
                            CharCoord anchor, Face fg, Face bg,
                            MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;

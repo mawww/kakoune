@@ -196,7 +196,7 @@ const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const B
     return last;
 }
 
-void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
+void update_forward(ArrayView<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
 {
     ForwardChangesTracker changes_tracker;
 
@@ -221,7 +221,7 @@ void update_forward(memoryview<Buffer::Change> changes, std::vector<Selection>& 
     kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
 }
 
-void update_backward(memoryview<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
+void update_backward(ArrayView<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
 {
     ForwardChangesTracker changes_tracker;
 
@@ -463,7 +463,7 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     return {};
 }
 
-void SelectionList::insert(memoryview<String> strings, InsertMode mode,
+void SelectionList::insert(ArrayView<String> strings, InsertMode mode,
                            bool select_inserted)
 {
     if (strings.empty())

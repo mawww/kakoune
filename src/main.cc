@@ -311,7 +311,7 @@ int run_client(StringView session, StringView init_command)
 }
 
 int run_server(StringView session, StringView init_command,
-               bool ignore_kakrc, bool daemon, memoryview<StringView> files)
+               bool ignore_kakrc, bool daemon, ArrayView<StringView> files)
 {
     static bool terminate = false;
     if (daemon)
@@ -412,7 +412,7 @@ int run_server(StringView session, StringView init_command,
     return 0;
 }
 
-int run_filter(StringView keystr, memoryview<StringView> files, bool quiet)
+int run_filter(StringView keystr, ArrayView<StringView> files, bool quiet)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;

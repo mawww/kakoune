@@ -5,7 +5,7 @@
 #include "completion.hh"
 #include "exception.hh"
 #include "id_map.hh"
-#include "memoryview.hh"
+#include "array_view.hh"
 #include "string.hh"
 #include "utils.hh"
 
@@ -64,7 +64,7 @@ std::unique_ptr<SimpleHighlighter<T>> make_simple_highlighter(T func)
     return make_unique<SimpleHighlighter<T>>(std::move(func));
 }
 
-using HighlighterParameters = memoryview<String>;
+using HighlighterParameters = ArrayView<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
 struct HighlighterRegistry : IdMap<HighlighterFactory>,

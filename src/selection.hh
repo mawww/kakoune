@@ -124,7 +124,7 @@ struct SelectionList
     size_t timestamp() const { return m_timestamp; }
     void update_timestamp() { m_timestamp = m_buffer->timestamp(); }
 
-    void insert(memoryview<String> strings, InsertMode mode,
+    void insert(ArrayView<String> strings, InsertMode mode,
                 bool select_inserted = false);
     void erase();
 

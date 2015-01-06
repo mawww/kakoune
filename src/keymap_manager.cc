@@ -1,6 +1,6 @@
 #include "keymap_manager.hh"
 
-#include "memoryview.hh"
+#include "array_view.hh"
 #include "assert.hh"
 
 namespace Kakoune
@@ -23,7 +23,7 @@ bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
            (m_parent and m_parent->is_mapped(key, mode));
 }
 
-memoryview<Key> KeymapManager::get_mapping(Key key, KeymapMode mode) const
+ArrayView<Key> KeymapManager::get_mapping(Key key, KeymapMode mode) const
 {
     auto it = m_mapping.find({key, mode});
     if (it != m_mapping.end())
