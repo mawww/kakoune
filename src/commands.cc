@@ -798,7 +798,12 @@ const CommandDesc debug_cmd = {
     "    existing commands: info, buffers",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
-    CommandCompleter{},
+    PerArgumentCommandCompleter({
+        [](const Context& context, CompletionFlags flags,
+           const String& prefix, ByteCount cursor_pos) -> Completions {
+               auto c = {"info", "buffers", "options"};
+               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
+    } }),
     [](const ParametersParser& parser, Context& context)
     {
         if (parser[0] == "info")
