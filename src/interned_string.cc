@@ -47,11 +47,11 @@ void StringRegistry::release(size_t slot) noexcept
     if (--m_storage[slot].refcount == 0)
     {
         m_free_slots.push_back(slot);
-        std::vector<char>& data = m_storage[slot].data;
+        auto& data = m_storage[slot].data;
         auto it = m_slot_map.find(StringView{data.data(), (int)data.size()});
         kak_assert(it != m_slot_map.end());
         m_slot_map.erase(it);
-        data = std::vector<char>{};
+        data = Vector<char, MemoryDomain::InternedString>{};
     }
 }
 

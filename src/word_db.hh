@@ -3,8 +3,9 @@
 
 #include "buffer.hh"
 #include "interned_string.hh"
+#include "unordered_map.hh"
+#include "vector.hh"
 
-#include <map>
 #include <bitset>
 
 namespace Kakoune
@@ -44,9 +45,9 @@ public:
         UsedLetters letters;
         int refcount;
     };
-    using WordToInfo = UnorderedMap<InternedString, WordInfo>;
+    using WordToInfo = UnorderedMap<InternedString, WordInfo, MemoryDomain::WordDB>;
 private:
-    using LineToWords = std::vector<WordList>;
+    using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
 
     void update_db();
     void add_words(const WordList& words);

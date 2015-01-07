@@ -4,6 +4,7 @@
 #include "string.hh"
 #include "utils.hh"
 #include "unordered_map.hh"
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -20,9 +21,13 @@ private:
     void release(size_t slot) noexcept;
 
     UnorderedMap<StringView, size_t> m_slot_map;
-    std::vector<size_t> m_free_slots;
-    struct DataAndRefCount { std::vector<char> data; int refcount; };
-    std::vector<DataAndRefCount> m_storage;
+    Vector<size_t, MemoryDomain::InternedString> m_free_slots;
+    struct DataAndRefCount
+    {
+        Vector<char, MemoryDomain::InternedString> data;
+        int refcount;
+    };
+    Vector<DataAndRefCount, MemoryDomain::InternedString> m_storage;
 };
 
 class InternedString : public StringView

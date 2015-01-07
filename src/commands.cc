@@ -801,7 +801,7 @@ const CommandDesc debug_cmd = {
     PerArgumentCommandCompleter({
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"info", "buffers", "options"};
+               auto c = {"info", "buffers", "options", "memory"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     } }),
     [](const ParametersParser& parser, Context& context)
@@ -822,6 +822,16 @@ const CommandDesc debug_cmd = {
             write_debug("Options:");
             for (auto& option : context.options().flatten_options())
                 write_debug(" * " + option->name() + ": " + option->get_as_string());
+        }
+        else if (parser[0] == "memory")
+        {
+            write_debug("Memory usage:");
+            write_debug("String: " + to_string(UsedMemory<MemoryDomain::String>::byte_count));
+            write_debug("InternedString: " + to_string(UsedMemory<MemoryDomain::InternedString>::byte_count));
+            write_debug("BufferContent: " + to_string(UsedMemory<MemoryDomain::BufferContent>::byte_count));
+            write_debug("BufferMeta: " + to_string(UsedMemory<MemoryDomain::BufferMeta>::byte_count));
+            write_debug("WordDB: " + to_string(UsedMemory<MemoryDomain::WordDB>::byte_count));
+            write_debug("Undefined: " + to_string(UsedMemory<MemoryDomain::Undefined>::byte_count));
         }
         else
             throw runtime_error("unknown debug command '" + parser[0] + "'");

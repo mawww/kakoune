@@ -3,18 +3,17 @@
 
 #include "containers.hh"
 #include "string.hh"
-
-#include <vector>
+#include "vector.hh"
 
 namespace Kakoune
 {
 
-template<typename Value>
+template<typename Value, MemoryDomain domain = MemoryDomain::Undefined>
 class IdMap
 {
 public:
     using value_type = std::pair<String, Value>;
-    using container_type = std::vector<value_type>;
+    using container_type = Vector<value_type, domain>;
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
