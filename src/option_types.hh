@@ -34,8 +34,8 @@ inline void option_from_string(StringView str, bool& opt)
 
 constexpr Codepoint list_separator = ':';
 
-template<typename T>
-String option_to_string(const std::vector<T>& opt)
+template<typename T, typename Alloc>
+String option_to_string(const std::vector<T, Alloc>& opt)
 {
     String res;
     for (size_t i = 0; i < opt.size(); ++i)
@@ -47,11 +47,11 @@ String option_to_string(const std::vector<T>& opt)
     return res;
 }
 
-template<typename T>
-void option_from_string(StringView str, std::vector<T>& opt)
+template<typename T, typename Alloc>
+void option_from_string(StringView str, std::vector<T, Alloc>& opt)
 {
     opt.clear();
-    std::vector<String> elems = split(str, list_separator, '\\');
+    Vector<String> elems = split(str, list_separator, '\\');
     for (auto& elem: elems)
     {
         T opt_elem;
@@ -60,8 +60,8 @@ void option_from_string(StringView str, std::vector<T>& opt)
     }
 }
 
-template<typename T>
-bool option_add(std::vector<T>& opt, const std::vector<T>& vec)
+template<typename T, typename Alloc>
+bool option_add(std::vector<T, Alloc>& opt, const std::vector<T, Alloc>& vec)
 {
     std::copy(vec.begin(), vec.end(), back_inserter(opt));
     return not vec.empty();
@@ -88,7 +88,7 @@ void option_from_string(StringView str, UnorderedMap<Key, Value>& opt)
     opt.clear();
     for (auto& elem : split(str, list_separator, '\\'))
     {
-        std::vector<String> pair_str = split(elem, '=', '\\');
+        Vector<String> pair_str = split(elem, '=', '\\');
         if (pair_str.size() != 2)
             throw runtime_error("map option expects key=value");
         std::pair<Key, Value> pair;

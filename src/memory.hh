@@ -31,6 +31,13 @@ template<typename T, MemoryDomain domain>
 struct Allocator
 {
     using value_type = T;
+    // TODO: remove that once we have a c++11 compliant stdlib
+    using pointer = T*;
+    using const_pointer = const T*;
+    using reference = T&;
+    using const_reference = const T&;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
     Allocator() = default;
     template<typename U>

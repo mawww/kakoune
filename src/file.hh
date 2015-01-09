@@ -1,6 +1,7 @@
 #ifndef file_hh_INCLUDED
 #define file_hh_INCLUDED
 
+#include "completion.hh"
 #include "exception.hh"
 #include "regex.hh"
 
@@ -46,12 +47,10 @@ String find_file(StringView filename, ArrayView<String> paths);
 
 time_t get_fs_timestamp(StringView filename);
 
-std::vector<String> complete_filename(StringView prefix,
-                                      const Regex& ignore_regex,
-                                      ByteCount cursor_pos = -1);
+CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
+                                ByteCount cursor_pos = -1);
 
-std::vector<String> complete_command(StringView prefix,
-                                     ByteCount cursor_pos = -1);
+CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 }
 
 #endif // file_hh_INCLUDED

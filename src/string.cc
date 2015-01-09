@@ -17,9 +17,9 @@ bool operator<(StringView lhs, StringView rhs)
     return cmp < 0;
 }
 
-std::vector<String> split(StringView str, char separator, char escape)
+Vector<String> split(StringView str, char separator, char escape)
 {
-    std::vector<String> res;
+    Vector<String> res;
     auto it = str.begin();
     while (it != str.end())
     {
@@ -48,9 +48,9 @@ std::vector<String> split(StringView str, char separator, char escape)
     return res;
 }
 
-std::vector<StringView> split(StringView str, char separator)
+Vector<StringView> split(StringView str, char separator)
 {
-    std::vector<StringView> res;
+    Vector<StringView> res;
     auto beg = str.begin();
     for (auto it = beg; it != str.end(); ++it)
     {
@@ -138,14 +138,14 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col)
     return res;
 }
 
-std::vector<StringView> wrap_lines(StringView text, CharCount max_width)
+Vector<StringView> wrap_lines(StringView text, CharCount max_width)
 {
     using Utf8It = utf8::iterator<const char*>;
     Utf8It word_begin{text.begin()};
     Utf8It word_end{word_begin};
     Utf8It end{text.end()};
     CharCount col = 0;
-    std::vector<StringView> lines;
+    Vector<StringView> lines;
     Utf8It line_begin = text.begin();
     Utf8It line_end = line_begin;
     while (word_begin != end)

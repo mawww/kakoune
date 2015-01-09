@@ -4,7 +4,6 @@
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
-#include "completion.hh"
 #include "debug.hh"
 #include "unicode.hh"
 #include "regex.hh"
@@ -260,7 +259,7 @@ String find_file(StringView filename, ArrayView<String> paths)
 }
 
 template<typename Filter>
-std::vector<String> list_files(StringView prefix, StringView dirname,
+Vector<String> list_files(StringView prefix, StringView dirname,
                                Filter filter)
 {
     kak_assert(dirname.empty() or dirname.back() == '/');
@@ -270,8 +269,8 @@ std::vector<String> list_files(StringView prefix, StringView dirname,
 
     auto closeDir = on_scope_end([=]{ closedir(dir); });
 
-    std::vector<String> result;
-    std::vector<String> subseq_result;
+    Vector<String> result;
+    Vector<String> subseq_result;
     while (dirent* entry = readdir(dir))
     {
         if (not filter(*entry))
@@ -301,9 +300,9 @@ std::vector<String> list_files(StringView prefix, StringView dirname,
     return result.empty() ? subseq_result : result;
 }
 
-std::vector<String> complete_filename(StringView prefix,
-                                      const Regex& ignored_regex,
-                                      ByteCount cursor_pos)
+CandidateList complete_filename(StringView prefix,
+                                const Regex& ignored_regex,
+                                ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     String dirname;
@@ -329,14 +328,14 @@ std::vector<String> complete_filename(StringView prefix,
         return not check_ignored_regex or
                not regex_match(entry.d_name, ignored_regex);
     };
-    std::vector<String> res = list_files(fileprefix, dirname, filter);
+    Vector<String> res = list_files(fileprefix, dirname, filter);
     for (auto& file : res)
         file = dirname + file;
     std::sort(res.begin(), res.end());
     return res;
 }
 
-std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
+Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
 
@@ -361,7 +360,7 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
                             | (st.st_mode & S_IXOTH);
             return S_ISDIR(st.st_mode) or (S_ISREG(st.st_mode) and executable);
         };
-        std::vector<String> res = list_files(fileprefix, dirname, filter);
+        Vector<String> res = list_files(fileprefix, dirname, filter);
         for (auto& file : res)
             file = dirname + file;
         std::sort(res.begin(), res.end());
@@ -373,11 +372,11 @@ std::vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     struct CommandCache
     {
         TimeSpec mtime = {};
-        std::vector<String> commands;
+        Vector<String> commands;
     };
     static UnorderedMap<String, CommandCache> command_cache;
 
-    std::vector<String> res;
+    Vector<String> res;
     for (auto dir : split(getenv("PATH"), ':'))
     {
         String dirname = dir;

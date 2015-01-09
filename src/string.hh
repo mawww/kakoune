@@ -4,50 +4,55 @@
 #include "units.hh"
 #include "utf8.hh"
 #include "hash.hh"
+#include "vector.hh"
 
 #include <string>
 #include <climits>
 #include <cstring>
-#include <vector>
 
 namespace Kakoune
 {
 
 class StringView;
 
-class String : public std::string
+using StringBase = std::basic_string<char, std::char_traits<char>,
+                                     Allocator<char, MemoryDomain::String>>;
+
+class String : public  StringBase
 {
 public:
     String() {}
-    String(const char* content) : std::string(content) {}
-    String(std::string content) : std::string(std::move(content)) {}
-    explicit String(char content, CharCount count = 1) : std::string((size_t)(int)count, content) {}
+    String(const char* content) : StringBase(content) {}
+    String(StringBase content) : StringBase(std::move(content)) {}
+    template<typename Char, typename Traits, typename Alloc>
+    String(const std::basic_string<Char, Traits, Alloc>& content) : StringBase(content.begin(), content.end()) {}
+    explicit String(char content, CharCount count = 1) : StringBase((size_t)(int)count, content) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
         while (count-- > 0)
             utf8::dump(back_inserter(*this), cp);
     }
     template<typename Iterator>
-    String(Iterator begin, Iterator end) : std::string(begin, end) {}
+    String(Iterator begin, Iterator end) : StringBase(begin, end) {}
 
-    std::string& stdstr() { return *this; }
-    const std::string& stdstr() const { return *this; }
+    StringBase& stdstr() { return *this; }
+    const StringBase& stdstr() const { return *this; }
 
     [[gnu::always_inline]]
-    char      operator[](ByteCount pos) const { return std::string::operator[]((int)pos); }
+    char      operator[](ByteCount pos) const { return StringBase::operator[]((int)pos); }
     [[gnu::always_inline]]
-    char&     operator[](ByteCount pos) { return std::string::operator[]((int)pos); }
+    char&     operator[](ByteCount pos) { return StringBase::operator[]((int)pos); }
     Codepoint operator[](CharCount pos) { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
 
     [[gnu::always_inline]]
-    ByteCount length() const { return ByteCount{(int)std::string::length()}; }
+    ByteCount length() const { return ByteCount{(int)StringBase::length()}; }
     CharCount char_length() const { return utf8::distance(begin(), end()); }
     ByteCount byte_count_to(CharCount count) const { return utf8::advance(begin(), end(), (int)count) - begin(); }
     CharCount char_count_to(ByteCount count) const { return utf8::distance(begin(), begin() + (int)count); }
 
-    String& operator+=(const String& other) { std::string::operator+=(other); return *this; }
-    String& operator+=(const char* other) { std::string::operator+=(other); return *this; }
-    String& operator+=(char other) { std::string::operator+=(other); return *this; }
+    String& operator+=(const String& other) { StringBase::operator+=(other); return *this; }
+    String& operator+=(const char* other) { StringBase::operator+=(other); return *this; }
+    String& operator+=(char other) { StringBase::operator+=(other); return *this; }
     String& operator+=(Codepoint cp) { utf8::dump(back_inserter(*this), cp); return *this; }
 
     StringView substr(ByteCount pos, ByteCount length = INT_MAX) const;
@@ -62,7 +67,8 @@ public:
         : m_data{data}, m_length{length} {}
     StringView(const char* data) : m_data{data}, m_length{(int)strlen(data)} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
-    StringView(const std::string& str) : m_data{str.data()}, m_length{(int)str.length()} {}
+    template<typename Char, typename Traits, typename Alloc>
+    StringView(const std::basic_string<Char, Traits, Alloc>& str) : m_data{str.data()}, m_length{(int)str.length()} {}
     StringView(const char& c) : m_data(&c), m_length(1) {}
 
     friend bool operator==(StringView lhs, StringView rhs);
@@ -112,12 +118,12 @@ public:
             if (*end == '\0')
                 unowned = begin;
             else
-                owned = std::string(begin, end);
+                owned = StringBase(begin, end);
         }
         operator const char*() const { return unowned ? unowned : owned.c_str(); }
 
     private:
-        std::string owned;
+        StringBase owned;
         const char* unowned = nullptr;
 
     };
@@ -229,8 +235,8 @@ inline String operator+(const String& lhs, const char* rhs)
     return lhs + StringView{rhs};
 }
 
-std::vector<String> split(StringView str, char separator, char escape);
-std::vector<StringView> split(StringView str, char separator);
+Vector<String> split(StringView str, char separator, char escape);
+Vector<StringView> split(StringView str, char separator);
 
 String escape(StringView str, StringView characters, char escape);
 String unescape(StringView str, StringView characters, char escape);
@@ -255,7 +261,7 @@ inline String operator"" _str(const char* str, size_t)
 
 inline String codepoint_to_str(Codepoint cp)
 {
-    std::string str;
+    StringBase str;
     utf8::dump(back_inserter(str), cp);
     return String(str);
 }
@@ -279,7 +285,7 @@ bool subsequence_match(StringView str, StringView subseq);
 
 String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
 
-std::vector<StringView> wrap_lines(StringView text, CharCount max_width);
+Vector<StringView> wrap_lines(StringView text, CharCount max_width);
 
 inline size_t hash_value(const Kakoune::String& str)
 {

@@ -31,7 +31,8 @@ public:
     ArrayView(const Iterator& begin, const Iterator& end)
         : m_pointer(&(*begin)), m_size(end - begin) {}
 
-    ArrayView(const std::vector<T>& v)
+    template<typename Alloc>
+    ArrayView(const std::vector<T, Alloc>& v)
         : m_pointer(&v[0]), m_size(v.size()) {}
 
     ArrayView(const std::initializer_list<T>& v)

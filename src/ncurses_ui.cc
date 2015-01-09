@@ -707,7 +707,7 @@ static String make_info_box(StringView title, StringView message,
         assistant_size = { (int)assistant.size(), assistant[0].char_length() };
 
     const CharCount max_bubble_width = max_width - assistant_size.column - 6;
-    std::vector<StringView> lines = wrap_lines(message, max_bubble_width);
+    Vector<StringView> lines = wrap_lines(message, max_bubble_width);
 
     CharCount bubble_width = title.char_length() + 2;
     for (auto& line : lines)
