@@ -167,15 +167,16 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    struct LineList : std::vector<InternedString>
+    using LineListBase = Vector<InternedString, MemoryDomain::BufferContent>;
+    struct LineList : LineListBase
     {
         [[gnu::always_inline]]
         InternedString& operator[](LineCount line)
-        { return std::vector<InternedString>::operator[]((int)line); }
+        { return LineListBase::operator[]((int)line); }
 
         [[gnu::always_inline]]
         const InternedString& operator[](LineCount line) const
-        { return std::vector<InternedString>::operator[]((int)line); }
+        { return LineListBase::operator[]((int)line); }
     };
     LineList m_lines;
 
@@ -189,16 +190,17 @@ private:
     using  UndoGroup = std::vector<Modification>;
     friend class UndoGroupOptimizer;
 
-    std::vector<UndoGroup>           m_history;
-    std::vector<UndoGroup>::iterator m_history_cursor;
-    UndoGroup                        m_current_undo_group;
+    using History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
+    History           m_history;
+    History::iterator m_history_cursor;
+    UndoGroup         m_current_undo_group;
 
     void apply_modification(const Modification& modification);
     void revert_modification(const Modification& modification);
 
     size_t m_last_save_undo_index;
 
-    std::vector<Change> m_changes;
+    Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
     time_t m_fs_timestamp;
 
