@@ -82,17 +82,17 @@ void test_word_db()
     WordDB word_db(buffer);
     auto res = word_db.find_matching("", prefix_match);
     std::sort(res.begin(), res.end());
-    kak_assert(res == std::vector<InternedString>{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" });
+    kak_assert(res == WordDB::WordList{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" });
     kak_assert(word_db.get_word_occurences("tchou") == 3);
     kak_assert(word_db.get_word_occurences("allo") == 1);
     buffer.erase(buffer.iterator_at({1, 6}), buffer.iterator_at({4, 0}));
     res = word_db.find_matching("", prefix_match);
     std::sort(res.begin(), res.end());
-    kak_assert(res == std::vector<InternedString>{ "allo" COMMA "mutch" COMMA "tchou" });
+    kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "tchou" });
     buffer.insert(buffer.iterator_at({1, 0}), "re");
     res = word_db.find_matching("", subsequence_match);
     std::sort(res.begin(), res.end());
-    kak_assert(res == std::vector<InternedString>{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" });
+    kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" });
 }
 
 void test_utf8()

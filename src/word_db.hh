@@ -22,13 +22,13 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
-    using WordList = std::vector<InternedString>;
+    using WordList = Vector<InternedString, MemoryDomain::WordDB>;
     template<typename MatchFunc>
     WordList find_matching(StringView str, MatchFunc match)
     {
         update_db();
         const UsedLetters letters = used_letters(str);
-        std::vector<InternedString> res;
+        WordList res;
         for (auto&& word : m_words)
         {
             if ((letters & word.second.letters) == letters and

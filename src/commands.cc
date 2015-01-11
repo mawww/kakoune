@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <malloc.h>
 
 namespace Kakoune
 {
@@ -832,6 +833,7 @@ const CommandDesc debug_cmd = {
             write_debug("BufferMeta: " + to_string(UsedMemory<MemoryDomain::BufferMeta>::byte_count));
             write_debug("WordDB: " + to_string(UsedMemory<MemoryDomain::WordDB>::byte_count));
             write_debug("Undefined: " + to_string(UsedMemory<MemoryDomain::Undefined>::byte_count));
+            write_debug("Malloced: " + to_string(mallinfo().uordblks));
         }
         else
             throw runtime_error("unknown debug command '" + parser[0] + "'");

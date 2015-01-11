@@ -28,7 +28,7 @@ UsedLetters used_letters(StringView str)
 
 static WordDB::WordList get_words(const InternedString& content)
 {
-    std::vector<InternedString> res;
+    WordDB::WordList res;
     using Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
     const char* word_start = content.begin();
     bool in_word = false;

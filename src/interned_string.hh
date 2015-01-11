@@ -20,7 +20,7 @@ private:
     void acquire(size_t slot);
     void release(size_t slot) noexcept;
 
-    UnorderedMap<StringView, size_t> m_slot_map;
+    UnorderedMap<StringView, size_t, MemoryDomain::InternedString> m_slot_map;
     Vector<size_t, MemoryDomain::InternedString> m_free_slots;
     struct DataAndRefCount
     {
