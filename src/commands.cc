@@ -826,15 +826,27 @@ const CommandDesc debug_cmd = {
         }
         else if (parser[0] == "memory")
         {
+            auto string = UsedMemory<MemoryDomain::String>::byte_count;
+            auto interned_string = UsedMemory<MemoryDomain::InternedString>::byte_count;
+            auto buffer_content = UsedMemory<MemoryDomain::BufferContent>::byte_count;
+            auto buffer_meta = UsedMemory<MemoryDomain::BufferMeta>::byte_count;
+            auto options = UsedMemory<MemoryDomain::Options>::byte_count;
+            auto highlight = UsedMemory<MemoryDomain::Highlight>::byte_count;
+            auto word_db = UsedMemory<MemoryDomain::WordDB>::byte_count;
+            auto undefined = UsedMemory<MemoryDomain::Undefined>::byte_count;
+
+            auto total = string + interned_string + buffer_content + buffer_meta + options + highlight + word_db + undefined;
+
             write_debug("Memory usage:");
-            write_debug("String: " + to_string(UsedMemory<MemoryDomain::String>::byte_count));
-            write_debug("InternedString: " + to_string(UsedMemory<MemoryDomain::InternedString>::byte_count));
-            write_debug("BufferContent: " + to_string(UsedMemory<MemoryDomain::BufferContent>::byte_count));
-            write_debug("BufferMeta: " + to_string(UsedMemory<MemoryDomain::BufferMeta>::byte_count));
-            write_debug("Options: " + to_string(UsedMemory<MemoryDomain::Options>::byte_count));
-            write_debug("Highlight: " + to_string(UsedMemory<MemoryDomain::Highlight>::byte_count));
-            write_debug("WordDB: " + to_string(UsedMemory<MemoryDomain::WordDB>::byte_count));
-            write_debug("Undefined: " + to_string(UsedMemory<MemoryDomain::Undefined>::byte_count));
+            write_debug("String: " + to_string(string));
+            write_debug("InternedString: " + to_string(interned_string));
+            write_debug("BufferContent: " + to_string(buffer_content));
+            write_debug("BufferMeta: " + to_string(buffer_meta));
+            write_debug("Options: " + to_string(options));
+            write_debug("Highlight: " + to_string(highlight));
+            write_debug("WordDB: " + to_string(word_db));
+            write_debug("Undefined: " + to_string(undefined));
+            write_debug("Total: " + to_string(total));
             write_debug("Malloced: " + to_string(mallinfo().uordblks));
         }
         else
