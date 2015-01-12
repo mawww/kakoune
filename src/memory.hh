@@ -2,6 +2,7 @@
 #define memory_hh_INCLUDED
 
 #include <cstdlib>
+#include <cstddef>
 
 #include "assert.hh"
 
