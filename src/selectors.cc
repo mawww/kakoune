@@ -31,9 +31,9 @@ Selection select_line(const Buffer& buffer, const Selection& selection)
 
 Selection select_matching(const Buffer& buffer, const Selection& selection)
 {
-    std::vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
+    Vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
     Utf8Iterator it = buffer.iterator_at(selection.cursor());
-    std::vector<Codepoint>::iterator match = matching_pairs.end();
+    Vector<Codepoint>::iterator match = matching_pairs.end();
     while (not is_eol(*it))
     {
         match = std::find(matching_pairs.begin(), matching_pairs.end(), *it);
@@ -500,7 +500,7 @@ using RegexIt = RegexIterator<BufferIterator>;
 
 void select_all_matches(SelectionList& selections, const Regex& regex)
 {
-    std::vector<Selection> result;
+    Vector<Selection> result;
     auto& buffer = selections.buffer();
     for (auto& sel : selections)
     {
@@ -533,7 +533,7 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
 
 void split_selections(SelectionList& selections, const Regex& regex)
 {
-    std::vector<Selection> result;
+    Vector<Selection> result;
     auto& buffer = selections.buffer();
     auto buf_end = buffer.end();
     for (auto& sel : selections)

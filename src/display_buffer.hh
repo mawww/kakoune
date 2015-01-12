@@ -4,8 +4,7 @@
 #include "face.hh"
 #include "coord.hh"
 #include "string.hh"
-
-#include <vector>
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -81,7 +80,7 @@ private:
 };
 
 using BufferRange = std::pair<ByteCoord, ByteCoord>;
-using AtomList = std::vector<DisplayAtom>;
+using AtomList = Vector<DisplayAtom>;
 
 class DisplayLine
 {
@@ -127,7 +126,7 @@ private:
 class DisplayBuffer
 {
 public:
-    using LineList = std::vector<DisplayLine>;
+    using LineList = Vector<DisplayLine>;
     DisplayBuffer() {}
 
     LineList& lines() { return m_lines; }

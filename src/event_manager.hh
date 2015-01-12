@@ -3,9 +3,9 @@
 
 #include "utils.hh"
 #include "flags.hh"
+#include "vector.hh"
 
 #include <chrono>
-#include <vector>
 #include <functional>
 
 #include <sys/select.h>
@@ -84,8 +84,8 @@ public:
 private:
     friend class FDWatcher;
     friend class Timer;
-    std::vector<FDWatcher*>  m_fd_watchers;
-    std::vector<Timer*>      m_timers;
+    Vector<FDWatcher*>  m_fd_watchers;
+    Vector<Timer*>      m_timers;
     fd_set m_forced_fd;
 
     TimePoint        m_last;

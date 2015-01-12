@@ -4,14 +4,14 @@
 #include "register.hh"
 #include "utils.hh"
 #include "unordered_map.hh"
+#include "vector.hh"
 
-#include <vector>
 #include <functional>
 
 namespace Kakoune
 {
 
-using RegisterRetriever = std::function<std::vector<String> (const Context&)>;
+using RegisterRetriever = std::function<Vector<String> (const Context&)>;
 
 class RegisterManager : public Singleton<RegisterManager>
 {

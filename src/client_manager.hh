@@ -48,8 +48,8 @@ public:
 private:
     String generate_name() const;
 
-    std::vector<std::unique_ptr<Client>> m_clients;
-    std::vector<WindowAndSelections> m_free_windows;
+    Vector<std::unique_ptr<Client>> m_clients;
+    Vector<WindowAndSelections> m_free_windows;
 };
 
 }

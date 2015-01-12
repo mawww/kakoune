@@ -385,7 +385,7 @@ void InsertCompleter::menu_show()
     const CharCount tabstop = m_options["tabstop"].get<int>();
     const CharCount column = get_column(m_context.buffer(), tabstop,
                                         m_completions.begin);
-    std::vector<String> menu_entries;
+    Vector<String> menu_entries;
     for (auto& candidate : m_matching_candidates)
         menu_entries.push_back(expand_tabs(candidate.first, tabstop, column));
 
@@ -399,7 +399,7 @@ void InsertCompleter::menu_show()
 void InsertCompleter::on_option_changed(const Option& opt)
 {
     auto& completers = m_options["completers"].get<InsertCompleterDescList>();
-    std::vector<StringView> option_names;
+    Vector<StringView> option_names;
     for (auto& completer : completers)
     {
         if (completer.mode == InsertCompleterDesc::Option)

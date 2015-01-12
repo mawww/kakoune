@@ -260,7 +260,7 @@ void quit()
 {
     if (not force and ClientManager::instance().count() == 1)
     {
-        std::vector<String> names;
+        Vector<String> names;
         for (auto& buffer : BufferManager::instance())
         {
             if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
@@ -495,7 +495,7 @@ const CommandDesc add_highlighter_cmd = {
 
         auto begin = parser.begin();
         const String& name = *begin++;
-        std::vector<String> highlighter_params;
+        Vector<String> highlighter_params;
         for (; begin != parser.end(); ++begin)
             highlighter_params.push_back(*begin);
 
@@ -609,9 +609,9 @@ const CommandDesc rm_hook_cmd = {
     }
 };
 
-std::vector<String> params_to_shell(const ParametersParser& parser)
+Vector<String> params_to_shell(const ParametersParser& parser)
 {
-    std::vector<String> vars;
+    Vector<String> vars;
     for (size_t i = 0; i < parser.positional_count(); ++i)
         vars.push_back(parser[i]);
     return vars;
@@ -1255,9 +1255,9 @@ const CommandDesc menu_cmd = {
             return;
         }
 
-        std::vector<String> choices;
-        std::vector<String> commands;
-        std::vector<String> select_cmds;
+        Vector<String> choices;
+        Vector<String> commands;
+        Vector<String> select_cmds;
         for (int i = 0; i < count; i += modulo)
         {
             choices.push_back(parser[i]);
@@ -1424,14 +1424,14 @@ public:
       : m_name(name)
     {
         ArrayView<String> save = RegisterManager::instance()[name].values(context);
-        m_save = std::vector<String>(save.begin(), save.end());
+        m_save = Vector<String>(save.begin(), save.end());
     }
 
     ~RegisterRestorer()
     { RegisterManager::instance()[m_name] = m_save; }
 
 private:
-    std::vector<String> m_save;
+    Vector<String> m_save;
     char                m_name;
 };
 

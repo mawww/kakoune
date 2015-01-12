@@ -58,7 +58,7 @@ private:
     void update_dimensions();
 
     NCursesWin* m_menu_win = nullptr;
-    std::vector<String> m_items;
+    Vector<String> m_items;
     Face m_menu_fg;
     Face m_menu_bg;
     int m_selected_item = 0;

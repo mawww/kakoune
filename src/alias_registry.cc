@@ -30,9 +30,9 @@ StringView AliasRegistry::operator[](const String& alias) const
         return StringView{};
 }
 
-std::vector<StringView> AliasRegistry::aliases_for(StringView command) const
+Vector<StringView> AliasRegistry::aliases_for(StringView command) const
 {
-    std::vector<StringView> res;
+    Vector<StringView> res;
     if (m_parent)
         res = m_parent->aliases_for(command);
 

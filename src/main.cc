@@ -144,7 +144,7 @@ void register_env_vars()
 
 void register_registers()
 {
-    using StringList = std::vector<String>;
+    using StringList = Vector<String>;
     static const struct {
         char name;
         StringList (*func)(const Context&);
@@ -167,7 +167,7 @@ void register_registers()
     {
         register_manager.register_dynamic_register('0'+i,
             [i](const Context& context) {
-                std::vector<String> result;
+                Vector<String> result;
                 for (auto& sel : context.selections())
                     result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
                 return result;
@@ -210,7 +210,7 @@ void register_options()
                       Regex{});
     reg.declare_option("filetype", "buffer filetype", ""_str);
     reg.declare_option("path", "path to consider when trying to find a file",
-                   std::vector<String>({ "./", "/usr/include" }));
+                   Vector<String>({ "./", "/usr/include" }));
     reg.declare_option("completers", "insert mode completers to execute.",
                        InsertCompleterDescList({
                            InsertCompleterDesc{ InsertCompleterDesc::Filename },
@@ -508,7 +508,7 @@ int main(int argc, char* argv[])
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    std::vector<String> params;
+    Vector<String> params;
     for (size_t i = 1; i < argc; ++i)
         params.push_back(argv[i]);
 
@@ -540,7 +540,7 @@ int main(int argc, char* argv[])
         }
         else if (parser.has_option("f"))
         {
-            std::vector<StringView> files;
+            Vector<StringView> files;
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
@@ -566,7 +566,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            std::vector<StringView> files;
+            Vector<StringView> files;
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
             StringView session;

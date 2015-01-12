@@ -15,7 +15,7 @@
 namespace Kakoune
 {
 
-Buffer::Buffer(String name, Flags flags, std::vector<String> lines,
+Buffer::Buffer(String name, Flags flags, Vector<String> lines,
                time_t fs_timestamp)
     : Scope(GlobalScope::instance()),
       m_name(flags & Flags::File ? real_path(parse_filename(name)) : std::move(name)),
@@ -157,7 +157,7 @@ struct Buffer::Modification
     }
 };
 
-void Buffer::reload(std::vector<String> lines, time_t fs_timestamp)
+void Buffer::reload(Vector<String> lines, time_t fs_timestamp)
 {
     m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
 
@@ -284,7 +284,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         StringView prefix = m_lines[pos.line].substr(0, pos.column);
         StringView suffix = m_lines[pos.line].substr(pos.column);
 
-        std::vector<InternedString> new_lines;
+        Vector<InternedString> new_lines;
 
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)

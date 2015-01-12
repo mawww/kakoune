@@ -693,7 +693,7 @@ template<bool assist = true>
 static String make_info_box(StringView title, StringView message,
                             CharCount max_width)
 {
-    static const std::vector<String> assistant =
+    static const Vector<String> assistant =
         { " ╭──╮   ",
           " │  │   ",
           " @  @  ╭",

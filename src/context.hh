@@ -88,8 +88,8 @@ public:
 
     SelectionList& selections();
     const SelectionList& selections() const;
-    std::vector<String>  selections_content() const;
-    void set_selections(std::vector<Selection> sels);
+    Vector<String>  selections_content() const;
+    void set_selections(Vector<Selection> sels);
 
     void change_buffer(Buffer& buffer);
 
@@ -147,7 +147,7 @@ private:
 
     String m_name;
 
-    using JumpList = std::vector<SelectionList>;
+    using JumpList = Vector<SelectionList>;
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
 

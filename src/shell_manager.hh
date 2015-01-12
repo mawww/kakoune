@@ -35,7 +35,7 @@ public:
     String get_val(StringView name, const Context& context) const;
 
 private:
-    std::vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
+    Vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
 };
 
 }

@@ -13,7 +13,7 @@ class Buffer;
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    using BufferList = std::vector<safe_ptr<Buffer>>;
+    using BufferList = Vector<safe_ptr<Buffer>>;
     using iterator = BufferList::const_iterator;
 
     ~BufferManager();

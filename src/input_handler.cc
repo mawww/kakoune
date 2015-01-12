@@ -440,7 +440,7 @@ public:
 private:
     MenuCallback m_callback;
 
-    using ChoiceList = std::vector<String>;
+    using ChoiceList = Vector<String>;
     const ChoiceList m_choices;
     ChoiceList::const_iterator m_selected;
 
@@ -476,13 +476,13 @@ String common_prefix(ArrayView<String> strings)
     return res;
 }
 
-void history_push(std::vector<String>& history, StringView entry)
+void history_push(Vector<String>& history, StringView entry)
 {
     if(entry.empty())
     {
         return;
     }
-    std::vector<String>::iterator it;
+    Vector<String>::iterator it;
     while ((it = find(history, entry)) != history.end())
         history.erase(it);
     history.push_back(entry);
@@ -507,7 +507,7 @@ public:
 
     void on_key(Key key) override
     {
-        std::vector<String>& history = ms_history[m_prompt];
+        Vector<String>& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
         bool showcompl = false;
 
@@ -739,10 +739,10 @@ private:
     bool           m_autoshowcompl;
     Mode           m_mode = Mode::Default;
 
-    static UnorderedMap<String, std::vector<String>> ms_history;
-    std::vector<String>::iterator m_history_it;
+    static UnorderedMap<String, Vector<String>> ms_history;
+    Vector<String>::iterator m_history_it;
 };
-UnorderedMap<String, std::vector<String>> Prompt::ms_history;
+UnorderedMap<String, Vector<String>> Prompt::ms_history;
 
 class NextKey : public InputMode
 {
@@ -828,7 +828,7 @@ public:
         }
         else if (key == Key::Backspace)
         {
-            std::vector<Selection> sels;
+            Vector<Selection> sels;
             for (auto& sel : context().selections())
             {
                 if (sel.cursor() == ByteCoord{0,0})
@@ -841,7 +841,7 @@ public:
         }
         else if (key == Key::Delete)
         {
-            std::vector<Selection> sels;
+            Vector<Selection> sels;
             for (auto& sel : context().selections())
                 sels.push_back({ sel.cursor() });
             SelectionList{buffer, std::move(sels)}.erase();
@@ -1067,7 +1067,7 @@ void InputHandler::repeat_last_insert()
     if (m_last_insert.second.empty())
         return;
 
-    std::vector<Key> keys;
+    Vector<Key> keys;
     swap(keys, m_last_insert.second);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.

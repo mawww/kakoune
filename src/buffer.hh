@@ -7,8 +7,7 @@
 #include "scope.hh"
 #include "interned_string.hh"
 #include "value.hh"
-
-#include <vector>
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -77,7 +76,7 @@ public:
         NoUndo = 8,
     };
 
-    Buffer(String name, Flags flags, std::vector<String> lines = { "\n" },
+    Buffer(String name, Flags flags, Vector<String> lines = { "\n" },
            time_t fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -148,7 +147,7 @@ public:
 
     void run_hook_in_own_context(const String& hook_name, StringView param);
 
-    void reload(std::vector<String> lines, time_t fs_timestamp = InvalidTime);
+    void reload(Vector<String> lines, time_t fs_timestamp = InvalidTime);
 
     void check_invariant() const;
 
@@ -187,7 +186,7 @@ private:
     Flags   m_flags;
 
     struct Modification;
-    using  UndoGroup = std::vector<Modification>;
+    using  UndoGroup = Vector<Modification>;
     friend class UndoGroupOptimizer;
 
     using History = Vector<UndoGroup, MemoryDomain::BufferMeta>;

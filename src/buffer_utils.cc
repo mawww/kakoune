@@ -39,7 +39,7 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
         pos = data.begin() + 3;
     }
 
-    std::vector<String> lines;
+    Vector<String> lines;
     while (pos < data.end())
     {
         const char* line_end = pos;
@@ -88,7 +88,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     if (buffer)
     {
         buffer->flags() |= Buffer::Flags::NoUndo;
-        buffer->reload(std::vector<String>({"\n"_str}), 0);
+        buffer->reload(Vector<String>({"\n"_str}), 0);
     }
     else
         buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);

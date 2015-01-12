@@ -211,7 +211,7 @@ void goto_commands(Context& context, NormalParams params)
                     if (contains(filename, c))
                         return;
 
-                auto paths = context.options()["path"].get<std::vector<String>>();
+                auto paths = context.options()["path"].get<Vector<String>>();
                 const String& buffer_name = buffer.name();
                 auto it = find(reversed(buffer_name), '/');
                 if (it != buffer_name.rend())
@@ -311,7 +311,7 @@ void replace_with_char(Context& context, NormalParams)
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
         SelectionList& selections = context.selections();
-        std::vector<String> strings;
+        Vector<String> strings;
         for (auto& sel : selections)
         {
             CharCount count = char_length(buffer, sel);
@@ -334,7 +334,7 @@ template<Codepoint (*func)(Codepoint)>
 void for_each_char(Context& context, NormalParams)
 {
     ScopedEdition edition(context);
-    std::vector<String> sels = context.selections_content();
+    Vector<String> sels = context.selections_content();
     for (auto& sel : sels)
     {
         for (auto& c : sel)
@@ -394,7 +394,7 @@ void pipe(Context& context, NormalParams)
             SelectionList& selections = context.selections();
             if (replace)
             {
-                std::vector<String> strings;
+                Vector<String> strings;
                 for (auto& sel : selections)
                 {
                     auto str = content(buffer, sel);
@@ -529,7 +529,7 @@ void paste_all(Context& context, NormalParams params)
     auto strings = RegisterManager::instance()[params.reg].values(context);
     InsertMode effective_mode = mode;
     String all;
-    std::vector<ByteCount> offsets;
+    Vector<ByteCount> offsets;
     for (auto& str : strings)
     {
         if (not str.empty() and str.back() == '\n')
@@ -545,7 +545,7 @@ void paste_all(Context& context, NormalParams params)
     }
 
     const Buffer& buffer = context.buffer();
-    std::vector<Selection> result;
+    Vector<Selection> result;
     for (auto& selection : selections)
     {
         ByteCount pos = 0;
@@ -655,7 +655,7 @@ void search_next(Context& context, NormalParams params)
 template<bool smart>
 void use_selection_as_search_pattern(Context& context, NormalParams)
 {
-    std::vector<String> patterns;
+    Vector<String> patterns;
     auto& sels = context.selections();
     const auto& buffer = context.buffer();
     for (auto& sel : sels)
@@ -703,7 +703,7 @@ void split_lines(Context& context, NormalParams)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
-    std::vector<Selection> res;
+    Vector<Selection> res;
     for (auto& sel : selections)
     {
         if (sel.anchor().line == sel.cursor().line)
@@ -724,7 +724,7 @@ void split_lines(Context& context, NormalParams)
 void join_lines_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
-    std::vector<Selection> selections;
+    Vector<Selection> selections;
     for (auto& sel : context.selections())
     {
         const LineCount min_line = sel.min().line;
@@ -765,7 +765,7 @@ void keep(Context& context, NormalParams)
         if (ex.empty())
             return;
         const Buffer& buffer = context.buffer();
-        std::vector<Selection> keep;
+        Vector<Selection> keep;
         for (auto& sel : context.selections())
         {
             if (regex_search(buffer.iterator_at(sel.min()),
@@ -787,7 +787,7 @@ void keep_pipe(Context& context, NormalParams)
                 return;
             const Buffer& buffer = context.buffer();
             auto& shell_manager = ShellManager::instance();
-            std::vector<Selection> keep;
+            Vector<Selection> keep;
             for (auto& sel : context.selections())
             {
                 int status = 0;
@@ -808,7 +808,7 @@ void indent(Context& context, NormalParams)
     String indent = indent_width == 0 ? "\t" : String{' ', indent_width};
 
     auto& buffer = context.buffer();
-    std::vector<Selection> sels;
+    Vector<Selection> sels;
     LineCount last_line = 0;
     for (auto& sel : context.selections())
     {
@@ -837,7 +837,7 @@ void deindent(Context& context, NormalParams)
         indent_width = tabstop;
 
     auto& buffer = context.buffer();
-    std::vector<Selection> sels;
+    Vector<Selection> sels;
     LineCount last_line = 0;
     for (auto& sel : context.selections())
     {
@@ -1089,7 +1089,7 @@ void align(Context& context, NormalParams)
     auto& buffer = context.buffer();
     const CharCount tabstop = context.options()["tabstop"].get<int>();
 
-    std::vector<std::vector<const Selection*>> columns;
+    Vector<Vector<const Selection*>> columns;
     LineCount last_line = -1;
     size_t column = 0;
     for (auto& sel : selections)
@@ -1138,7 +1138,7 @@ void copy_indent(Context& context, NormalParams params)
     int selection = params.count;
     auto& buffer = context.buffer();
     auto& selections = context.selections();
-    std::vector<LineCount> lines;
+    Vector<LineCount> lines;
     for (auto sel : selections)
     {
         for (LineCount l = sel.min().line; l < sel.max().line + 1; ++l)
@@ -1176,8 +1176,8 @@ void tabs_to_spaces(Context& context, NormalParams params)
     auto& buffer = context.buffer();
     const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
     const CharCount tabstop = params.count == 0 ? opt_tabstop : params.count;
-    std::vector<Selection> tabs;
-    std::vector<String> spaces;
+    Vector<Selection> tabs;
+    Vector<String> spaces;
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1201,7 +1201,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
     auto& buffer = context.buffer();
     const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
     const CharCount tabstop = params.count == 0 ? opt_tabstop : params.count;
-    std::vector<Selection> spaces;
+    Vector<Selection> spaces;
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),

@@ -53,7 +53,7 @@ void test_buffer()
 
 void test_undo_group_optimizer()
 {
-    std::vector<String> lines = { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" };
+    Vector<String> lines = { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" };
     Buffer buffer("test", Buffer::Flags::None, lines);
     auto pos = buffer.insert(buffer.end(), "kanaky\n");
     buffer.erase(pos, buffer.end());

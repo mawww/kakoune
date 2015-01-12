@@ -128,7 +128,7 @@ String ShellManager::pipe(StringView input,
         }
         const char* shell = "/bin/sh";
         auto cmdlinezstr = cmdline.zstr();
-        std::vector<const char*> execparams = { shell, "-c", cmdlinezstr };
+        Vector<const char*> execparams = { shell, "-c", cmdlinezstr };
         if (not params.empty())
             execparams.push_back(shell);
         for (auto& param : params)

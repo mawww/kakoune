@@ -3,8 +3,7 @@
 
 #include "units.hh"
 #include "utils.hh"
-
-#include <vector>
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -21,7 +20,7 @@ struct LineModification
     LineCount diff() const { return new_line - old_line + num_added - num_removed; }
 };
 
-std::vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp);
+Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp);
 
 }
 

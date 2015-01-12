@@ -207,7 +207,7 @@ public:
         if (flags != HighlightFlags::Highlight)
             return;
 
-        std::vector<Optional<Face>> faces(m_faces.size());
+        Vector<Optional<Face>> faces(m_faces.size());
         auto& cache = update_cache_ifn(context.buffer(), display_buffer.range());
         for (auto& match : cache.m_matches)
         {
@@ -645,13 +645,13 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     Color bg = str_to_color(params[0]);
 
     // throw if wrong option type
-    GlobalScope::instance().options()[option_name].get<std::vector<LineAndFlag>>();
+    GlobalScope::instance().options()[option_name].get<Vector<LineAndFlag>>();
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
         auto& lines_opt = context.options()[option_name];
-        auto& lines = lines_opt.get<std::vector<LineAndFlag>>();
+        auto& lines = lines_opt.get<Vector<LineAndFlag>>();
 
         CharCount width = 0;
         for (auto& l : lines)

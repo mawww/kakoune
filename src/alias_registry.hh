@@ -16,7 +16,7 @@ public:
     void remove_alias(const String& alias);
     StringView operator[](const String& name) const;
 
-    std::vector<StringView> aliases_for(StringView command) const;
+    Vector<StringView> aliases_for(StringView command) const;
 
 private:
     friend class Scope;

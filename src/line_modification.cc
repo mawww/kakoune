@@ -42,9 +42,9 @@ struct LineChange
 
 }
 
-std::vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp)
+Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp)
 {
-    std::vector<LineModification> res;
+    Vector<LineModification> res;
     for (auto& buf_change : buffer.changes_since(timestamp))
     {
         const LineChange change(buf_change);

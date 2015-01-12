@@ -202,16 +202,16 @@ const SelectionList& Context::selections() const
     return const_cast<Context&>(*this).selections();
 }
 
-std::vector<String> Context::selections_content() const
+Vector<String> Context::selections_content() const
 {
     auto& buf = buffer();
-    std::vector<String> contents;
+    Vector<String> contents;
     for (auto& sel : selections())
         contents.push_back(buf.string(sel.min(), buf.char_next(sel.max())));
     return contents;
 }
 
-void Context::set_selections(std::vector<Selection> sels)
+void Context::set_selections(Vector<Selection> sels)
 {
     *m_selections = std::move(sels);
     (*m_selections).check_invariant();

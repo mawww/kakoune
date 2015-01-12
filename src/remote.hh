@@ -57,7 +57,7 @@ private:
 
     String m_session;
     std::unique_ptr<FDWatcher> m_listener;
-    std::vector<std::unique_ptr<Accepter>> m_accepters;
+    Vector<std::unique_ptr<Accepter>> m_accepters;
 };
 
 }

@@ -25,14 +25,14 @@ SelectionList::SelectionList(Buffer& buffer, Selection s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
 {}
 
-SelectionList::SelectionList(Buffer& buffer, std::vector<Selection> s, size_t timestamp)
+SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp)
     : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
 {
     kak_assert(size() > 0);
     check_invariant();
 }
 
-SelectionList::SelectionList(Buffer& buffer, std::vector<Selection> s)
+SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
 {}
 
@@ -196,7 +196,7 @@ const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const B
     return last;
 }
 
-void update_forward(ArrayView<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
+void update_forward(ArrayView<Buffer::Change> changes, Vector<Selection>& selections, size_t& main)
 {
     ForwardChangesTracker changes_tracker;
 
@@ -221,7 +221,7 @@ void update_forward(ArrayView<Buffer::Change> changes, std::vector<Selection>& s
     kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
 }
 
-void update_backward(ArrayView<Buffer::Change> changes, std::vector<Selection>& selections, size_t& main)
+void update_backward(ArrayView<Buffer::Change> changes, Vector<Selection>& selections, size_t& main)
 {
     ForwardChangesTracker changes_tracker;
 
@@ -258,9 +258,9 @@ void update_backward(ArrayView<Buffer::Change> changes, std::vector<Selection>& 
 
 }
 
-std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
+Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 {
-    std::vector<Selection> ranges;
+    Vector<Selection> ranges;
     auto changes = buffer.changes_since(timestamp);
     auto change_it = changes.begin();
     while (change_it != changes.end())

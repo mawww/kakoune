@@ -39,6 +39,8 @@ public:
     }
 
     int get_word_occurences(StringView word) const;
+private:
+    using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
 
     struct WordInfo
     {
@@ -46,8 +48,6 @@ public:
         int refcount;
     };
     using WordToInfo = UnorderedMap<InternedString, WordInfo, MemoryDomain::WordDB>;
-private:
-    using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
 
     void update_db();
     void add_words(const WordList& words);

@@ -88,11 +88,11 @@ private:
 
     friend class InputMode;
     std::unique_ptr<InputMode> m_mode;
-    std::vector<std::unique_ptr<InputMode>> m_mode_trash;
+    Vector<std::unique_ptr<InputMode>> m_mode_trash;
 
     void change_input_mode(InputMode* new_mode);
 
-    using Insertion = std::pair<InsertMode, std::vector<Key>>;
+    using Insertion = std::pair<InsertMode, Vector<Key>>;
     Insertion m_last_insert = {InsertMode::Insert, {}};
 
     char   m_recording_reg = 0;

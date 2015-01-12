@@ -6,7 +6,7 @@
 namespace Kakoune
 {
 
-using CaptureList = std::vector<String>;
+using CaptureList = Vector<String>;
 
 // A selection is a Selection, associated with a CaptureList
 struct Selection
@@ -70,8 +70,8 @@ struct SelectionList
 {
     SelectionList(Buffer& buffer, Selection s);
     SelectionList(Buffer& buffer, Selection s, size_t timestamp);
-    SelectionList(Buffer& buffer, std::vector<Selection> s);
-    SelectionList(Buffer& buffer, std::vector<Selection> s, size_t timestamp);
+    SelectionList(Buffer& buffer, Vector<Selection> s);
+    SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
 
     void update();
 
@@ -92,7 +92,7 @@ struct SelectionList
     Selection& operator[](size_t i) { return m_selections[i]; }
     const Selection& operator[](size_t i) const { return m_selections[i]; }
 
-    SelectionList& operator=(std::vector<Selection> list)
+    SelectionList& operator=(Vector<Selection> list)
     {
         m_selections = std::move(list);
         m_main = size()-1;
@@ -102,11 +102,11 @@ struct SelectionList
         return *this;
     }
 
-    using iterator = std::vector<Selection>::iterator;
+    using iterator = Vector<Selection>::iterator;
     iterator begin() { return m_selections.begin(); }
     iterator end() { return m_selections.end(); }
 
-    using const_iterator = std::vector<Selection>::const_iterator;
+    using const_iterator = Vector<Selection>::const_iterator;
     const_iterator begin() const { return m_selections.begin(); }
     const_iterator end() const { return m_selections.end(); }
 
@@ -130,13 +130,13 @@ struct SelectionList
 
 private:
     size_t m_main = 0;
-    std::vector<Selection> m_selections;
+    Vector<Selection> m_selections;
 
     safe_ptr<Buffer> m_buffer;
     size_t m_timestamp;
 };
 
-std::vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
+Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 
 }
 

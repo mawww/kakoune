@@ -76,7 +76,7 @@ public:
     }
 
     template<typename T>
-    void write(const std::vector<T>& vec)
+    void write(const Vector<T>& vec)
     {
         write(ArrayView<T>(vec));
     }
@@ -127,7 +127,7 @@ public:
     }
 
 private:
-    std::vector<char> m_stream;
+    Vector<char> m_stream;
     int m_socket;
 };
 
@@ -174,10 +174,10 @@ String read<String>(int socket)
 }
 
 template<typename T>
-std::vector<T> read_vector(int socket)
+Vector<T> read_vector(int socket)
 {
     uint32_t size = read<uint32_t>(socket);
-    std::vector<T> res;
+    Vector<T> res;
     res.reserve(size);
     while (size--)
         res.push_back(read<T>(socket));

@@ -34,8 +34,8 @@ inline void option_from_string(StringView str, bool& opt)
 
 constexpr Codepoint list_separator = ':';
 
-template<typename T, typename Alloc>
-String option_to_string(const std::vector<T, Alloc>& opt)
+template<typename T, MemoryDomain domain>
+String option_to_string(const Vector<T, domain>& opt)
 {
     String res;
     for (size_t i = 0; i < opt.size(); ++i)
@@ -47,8 +47,8 @@ String option_to_string(const std::vector<T, Alloc>& opt)
     return res;
 }
 
-template<typename T, typename Alloc>
-void option_from_string(StringView str, std::vector<T, Alloc>& opt)
+template<typename T, MemoryDomain domain>
+void option_from_string(StringView str, Vector<T, domain>& opt)
 {
     opt.clear();
     Vector<String> elems = split(str, list_separator, '\\');
@@ -60,8 +60,8 @@ void option_from_string(StringView str, std::vector<T, Alloc>& opt)
     }
 }
 
-template<typename T, typename Alloc>
-bool option_add(std::vector<T, Alloc>& opt, const std::vector<T, Alloc>& vec)
+template<typename T, MemoryDomain domain>
+bool option_add(Vector<T, domain>& opt, const Vector<T, domain>& vec)
 {
     std::copy(vec.begin(), vec.end(), back_inserter(opt));
     return not vec.empty();

@@ -6,8 +6,7 @@
 #include "assert.hh"
 
 #ifdef SAFE_PTR_TRACK_CALLSTACKS
-
-#include <vector>
+#include "vector.hh"
 #include <algorithm>
 #endif
 
@@ -155,7 +154,7 @@ private:
         Backtrace bt;
     };
 
-    mutable std::vector<Callstack> m_callstacks;
+    mutable Vector<Callstack> m_callstacks;
     #endif
     mutable int m_count;
 #endif

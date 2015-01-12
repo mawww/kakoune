@@ -70,7 +70,7 @@ private:
 };
 
 
-using TokenList = std::vector<Token>;
+using TokenList = Vector<Token>;
 
 bool is_command_separator(char c)
 {
@@ -402,7 +402,7 @@ void CommandManager::execute(StringView command_line,
         return;
 
     CharCoord command_coord;
-    std::vector<String> params;
+    Vector<String> params;
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
         if (params.empty())
@@ -556,7 +556,7 @@ Completions CommandManager::complete(const Context& context,
             not command_it->second.completer)
             return Completions();
 
-        std::vector<String> params;
+        Vector<String> params;
         for (auto token_it = tokens.begin() + cmd_idx + 1;
              token_it != tokens.end(); ++token_it)
             params.push_back(token_it->content());
