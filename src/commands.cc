@@ -826,33 +826,14 @@ const CommandDesc debug_cmd = {
         }
         else if (parser[0] == "memory")
         {
-            auto string = UsedMemory<MemoryDomain::String>::byte_count;
-            auto interned_string = UsedMemory<MemoryDomain::InternedString>::byte_count;
-            auto buffer_content = UsedMemory<MemoryDomain::BufferContent>::byte_count;
-            auto buffer_meta = UsedMemory<MemoryDomain::BufferMeta>::byte_count;
-            auto options = UsedMemory<MemoryDomain::Options>::byte_count;
-            auto highlight = UsedMemory<MemoryDomain::Highlight>::byte_count;
-            auto word_db = UsedMemory<MemoryDomain::WordDB>::byte_count;
-            auto mapping = UsedMemory<MemoryDomain::Mapping>::byte_count;
-            auto commands = UsedMemory<MemoryDomain::Commands>::byte_count;
-            auto hooks = UsedMemory<MemoryDomain::Hooks>::byte_count;
-            auto undefined = UsedMemory<MemoryDomain::Undefined>::byte_count;
-
-            auto total = string + interned_string + buffer_content + buffer_meta +
-                         options + highlight + word_db + mapping + commands + hooks + undefined;
-
+            auto total = 0;
             write_debug("Memory usage:");
-            write_debug("String: " + to_string(string));
-            write_debug("InternedString: " + to_string(interned_string));
-            write_debug("BufferContent: " + to_string(buffer_content));
-            write_debug("BufferMeta: " + to_string(buffer_meta));
-            write_debug("Options: " + to_string(options));
-            write_debug("Highlight: " + to_string(highlight));
-            write_debug("WordDB: " + to_string(word_db));
-            write_debug("Mapping: " + to_string(mapping));
-            write_debug("Commands: " + to_string(commands));
-            write_debug("Hooks: " + to_string(hooks));
-            write_debug("Undefined: " + to_string(undefined));
+            for (int domain = 0; domain < (int)MemoryDomain::Count; ++domain)
+            {
+                size_t count = domain_allocated_bytes[domain];
+                total += count;
+                write_debug(domain_name((MemoryDomain)domain) + (": " + to_string(count)));
+            }
             write_debug("Total: " + to_string(total));
             write_debug("Malloced: " + to_string(mallinfo().uordblks));
         }

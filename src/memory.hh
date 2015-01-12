@@ -20,17 +20,32 @@ enum class MemoryDomain
     Mapping,
     Commands,
     Hooks,
-    WordDB
+    WordDB,
+    Count
 };
 
-template<MemoryDomain domain>
-struct UsedMemory
+inline const char* domain_name(MemoryDomain domain)
 {
-    static size_t byte_count;
-};
+    switch (domain)
+    {
+        case MemoryDomain::Undefined: return "Undefined";
+        case MemoryDomain::String: return "String";
+        case MemoryDomain::InternedString: return "InternedString";
+        case MemoryDomain::BufferContent: return "BufferContent";
+        case MemoryDomain::BufferMeta: return "BufferMeta";
+        case MemoryDomain::Options: return "Options";
+        case MemoryDomain::Highlight: return "Highlight";
+        case MemoryDomain::Mapping: return "Mapping";
+        case MemoryDomain::Commands: return "Commands";
+        case MemoryDomain::Hooks: return "Hooks";
+        case MemoryDomain::WordDB: return "WordDB";
+        case MemoryDomain::Count: break;
+    }
+    kak_assert(false);
+    return "";
+}
 
-template<MemoryDomain domain>
-size_t UsedMemory<domain>::byte_count = 0;
+extern size_t domain_allocated_bytes[(size_t)MemoryDomain::Count];
 
 template<typename T, MemoryDomain domain>
 struct Allocator
@@ -54,15 +69,15 @@ struct Allocator
     T* allocate(size_t n)
     {
         size_t size = sizeof(T) * n;
-        UsedMemory<domain>::byte_count += size;
+        domain_allocated_bytes[(int)domain] += size;
         return reinterpret_cast<T*>(malloc(size));
     }
 
     void deallocate(T* ptr, size_t n)
     {
         size_t size = sizeof(T) * n;
-        kak_assert(UsedMemory<domain>::byte_count >= size);
-        UsedMemory<domain>::byte_count -= size;
+        kak_assert(domain_allocated_bytes[(int)domain] >= size);
+        domain_allocated_bytes[(int)domain] -= size;
         free(ptr);
     }
 };
