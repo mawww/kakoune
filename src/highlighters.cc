@@ -645,13 +645,13 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     Color bg = str_to_color(params[0]);
 
     // throw if wrong option type
-    GlobalScope::instance().options()[option_name].get<Vector<LineAndFlag>>();
+    GlobalScope::instance().options()[option_name].get<Vector<LineAndFlag, MemoryDomain::Options>>();
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
         auto& lines_opt = context.options()[option_name];
-        auto& lines = lines_opt.get<Vector<LineAndFlag>>();
+        auto& lines = lines_opt.get<Vector<LineAndFlag, MemoryDomain::Options>>();
 
         CharCount width = 0;
         for (auto& l : lines)
