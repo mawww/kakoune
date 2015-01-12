@@ -833,9 +833,13 @@ const CommandDesc debug_cmd = {
             auto options = UsedMemory<MemoryDomain::Options>::byte_count;
             auto highlight = UsedMemory<MemoryDomain::Highlight>::byte_count;
             auto word_db = UsedMemory<MemoryDomain::WordDB>::byte_count;
+            auto mapping = UsedMemory<MemoryDomain::Mapping>::byte_count;
+            auto commands = UsedMemory<MemoryDomain::Commands>::byte_count;
+            auto hooks = UsedMemory<MemoryDomain::Hooks>::byte_count;
             auto undefined = UsedMemory<MemoryDomain::Undefined>::byte_count;
 
-            auto total = string + interned_string + buffer_content + buffer_meta + options + highlight + word_db + undefined;
+            auto total = string + interned_string + buffer_content + buffer_meta +
+                         options + highlight + word_db + mapping + commands + hooks + undefined;
 
             write_debug("Memory usage:");
             write_debug("String: " + to_string(string));
@@ -845,6 +849,9 @@ const CommandDesc debug_cmd = {
             write_debug("Options: " + to_string(options));
             write_debug("Highlight: " + to_string(highlight));
             write_debug("WordDB: " + to_string(word_db));
+            write_debug("Mapping: " + to_string(mapping));
+            write_debug("Commands: " + to_string(commands));
+            write_debug("Hooks: " + to_string(hooks));
             write_debug("Undefined: " + to_string(undefined));
             write_debug("Total: " + to_string(total));
             write_debug("Malloced: " + to_string(mallinfo().uordblks));

@@ -4,8 +4,7 @@
 #include "unicode.hh"
 #include "flags.hh"
 #include "hash.hh"
-
-#include <vector>
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -67,7 +66,7 @@ struct Key
 
 template<> struct WithBitOps<Key::Modifiers> : std::true_type {};
 
-using KeyList = std::vector<Key>;
+using KeyList = Vector<Key, MemoryDomain::Mapping>;
 
 class String;
 class StringView;

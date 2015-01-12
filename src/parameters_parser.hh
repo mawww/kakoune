@@ -40,7 +40,7 @@ struct SwitchDesc
     String description;
 };
 
-using SwitchMap = IdMap<SwitchDesc>;
+using SwitchMap = IdMap<SwitchDesc, MemoryDomain::Commands>;
 
 String generate_switches_doc(const SwitchMap& opts);
 
@@ -145,8 +145,8 @@ struct ParametersParser
     iterator end() const;
 
 private:
-    ParameterList         m_params;
-    std::vector<size_t>   m_positional_indices;
+    ParameterList m_params;
+    Vector<size_t, MemoryDomain::Commands> m_positional_indices;
     const ParameterDesc& m_desc;
 };
 

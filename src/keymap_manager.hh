@@ -4,8 +4,7 @@
 #include "keys.hh"
 #include "hash.hh"
 #include "unordered_map.hh"
-
-#include <vector>
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -29,7 +28,7 @@ class KeymapManager
 public:
     KeymapManager(KeymapManager& parent) : m_parent(&parent) {}
 
-    using KeyList = std::vector<Key>;
+    using KeyList = Vector<Key, MemoryDomain::Mapping>;
     void map_key(Key key, KeymapMode mode, KeyList mapping);
     void unmap_key(Key key, KeymapMode mode);
 
@@ -44,7 +43,7 @@ private:
     KeymapManager* m_parent;
 
     using KeyAndMode = std::pair<Key, KeymapMode>;
-    using Keymap = UnorderedMap<KeyAndMode, KeyList>;
+    using Keymap = UnorderedMap<KeyAndMode, KeyList, MemoryDomain::Mapping>;
     Keymap m_mapping;
 };
 

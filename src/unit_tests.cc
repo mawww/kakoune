@@ -138,7 +138,7 @@ void test_string()
 
 void test_keys()
 {
-    std::vector<Key> keys{
+    KeyList keys{
          { ' ' },
          { 'c' },
          { Key::Modifiers::Alt, 'j' },

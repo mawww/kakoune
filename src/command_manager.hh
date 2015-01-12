@@ -50,7 +50,7 @@ public:
                            ByteCount pos_in_token) const;
 
 private:
-    std::vector<ArgumentCompleter> m_completers;
+    Vector<ArgumentCompleter, MemoryDomain::Commands> m_completers;
 };
 
 using CommandInfo = std::pair<String, String>;
@@ -88,7 +88,7 @@ private:
         CommandFlags flags;
         CommandCompleter completer;
     };
-    using CommandMap = UnorderedMap<String, CommandDescriptor>;
+    using CommandMap = UnorderedMap<String, CommandDescriptor, MemoryDomain::Commands>;
     CommandMap m_commands;
 
     CommandMap::const_iterator find_command(const Context& context,

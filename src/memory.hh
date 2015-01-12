@@ -17,6 +17,9 @@ enum class MemoryDomain
     BufferMeta,
     Options,
     Highlight,
+    Mapping,
+    Commands,
+    Hooks,
     WordDB
 };
 
