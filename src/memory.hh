@@ -15,6 +15,8 @@ enum class MemoryDomain
     InternedString,
     BufferContent,
     BufferMeta,
+    Options,
+    Highlight,
     WordDB
 };
 

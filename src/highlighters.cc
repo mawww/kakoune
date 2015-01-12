@@ -72,7 +72,7 @@ void apply_highlighter(const Context& context,
 {
     using LineIterator = DisplayBuffer::LineList::iterator;
     LineIterator first_line;
-    std::vector<DisplayLine::iterator> insert_pos;
+    Vector<DisplayLine::iterator> insert_pos;
     auto line_end = display_buffer.lines().end();
 
     DisplayBuffer region_display;
@@ -159,7 +159,7 @@ auto apply_face = [](const Face& face)
     };
 };
 
-using FacesSpec = std::vector<String>;
+using FacesSpec = Vector<String, MemoryDomain::Highlight>;
 
 static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
 {
@@ -271,7 +271,7 @@ private:
     {
         std::pair<LineCount, LineCount> m_range;
         size_t m_timestamp = 0;
-        std::vector<std::vector<BufferRange>> m_matches;
+        Vector<Vector<BufferRange, MemoryDomain::Highlight>, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -716,7 +716,7 @@ struct RegexMatch
     ByteCoord begin_coord() const { return { line, begin }; }
     ByteCoord end_coord() const { return { line, end }; }
 };
-using RegexMatchList = std::vector<RegexMatch>;
+using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
 
 void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex)
 {
@@ -870,7 +870,7 @@ struct RegionDesc
 struct RegionsHighlighter : public Highlighter
 {
 public:
-    using NamedRegionDescList = std::vector<std::pair<String, RegionDesc>>;
+    using NamedRegionDescList = Vector<std::pair<String, RegionDesc>, MemoryDomain::Highlight>;
 
     RegionsHighlighter(NamedRegionDescList regions, String default_group)
         : m_regions{std::move(regions)}, m_default_group{std::move(default_group)}
@@ -1005,7 +1005,7 @@ public:
 private:
     const NamedRegionDescList m_regions;
     const String m_default_group;
-    IdMap<HighlighterGroup> m_groups;
+    IdMap<HighlighterGroup, MemoryDomain::Highlight> m_groups;
 
     struct Region
     {
@@ -1013,13 +1013,13 @@ private:
         ByteCoord end;
         StringView group;
     };
-    using RegionList = std::vector<Region>;
+    using RegionList = Vector<Region, MemoryDomain::Highlight>;
 
     struct Cache
     {
         size_t timestamp = 0;
-        std::vector<RegionMatches> matches;
-        UnorderedMap<BufferRange, RegionList> regions;
+        Vector<RegionMatches, MemoryDomain::Highlight> matches;
+        UnorderedMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
     };
     BufferSideCache<Cache> m_cache;
 

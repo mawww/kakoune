@@ -212,7 +212,7 @@ void register_options()
     reg.declare_option("path", "path to consider when trying to find a file",
                    std::vector<String>({ "./", "/usr/include" }));
     reg.declare_option("completers", "insert mode completers to execute.",
-                       std::vector<InsertCompleterDesc>({
+                       InsertCompleterDescList({
                            InsertCompleterDesc{ InsertCompleterDesc::Filename },
                            InsertCompleterDesc{ InsertCompleterDesc::Word, "all"_str }
                        }), OptionFlags::None);

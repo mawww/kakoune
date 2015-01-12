@@ -28,7 +28,7 @@ public:
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override;
 
 private:
-    using HighlighterMap = IdMap<std::unique_ptr<Highlighter>>;
+    using HighlighterMap = IdMap<std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
 };
 

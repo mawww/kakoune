@@ -33,14 +33,14 @@ struct InsertCompleterDesc
     Optional<String> param;
 };
 
-using InsertCompleterDescList = std::vector<InsertCompleterDesc>;
+using InsertCompleterDescList = Vector<InsertCompleterDesc, MemoryDomain::Options>;
 
 
 String option_to_string(const InsertCompleterDesc& opt);
 void option_from_string(StringView str, InsertCompleterDesc& opt);
 
 using ComplAndDesc = std::pair<String, String>;
-using ComplAndDescList = std::vector<ComplAndDesc>;
+using ComplAndDescList = Vector<ComplAndDesc>;
 
 struct InsertCompletion
 {

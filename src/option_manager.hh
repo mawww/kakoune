@@ -7,6 +7,7 @@
 #include "flags.hh"
 #include "option_types.hh"
 #include "regex.hh"
+#include "vector.hh"
 
 namespace Kakoune
 {
@@ -91,7 +92,7 @@ public:
     CandidateList complete_option_name(StringView prefix,
                                        ByteCount cursor_pos);
 
-    using OptionList = std::vector<const Option*>;
+    using OptionList = Vector<const Option*>;
     OptionList flatten_options() const;
 
     void register_watcher(OptionManagerWatcher& watcher);
@@ -108,10 +109,10 @@ private:
     template<typename MatchingFunc>
     CandidateList get_matching_names(MatchingFunc func);
 
-    std::vector<std::unique_ptr<Option>> m_options;
+    Vector<std::unique_ptr<Option>, MemoryDomain::Options> m_options;
     OptionManager* m_parent;
 
-    std::vector<OptionManagerWatcher*> m_watchers;
+    Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
 };
 
 template<typename T>
@@ -152,6 +153,18 @@ public:
     Option* clone(OptionManager& manager) const override
     {
         return new TypedOption{manager, m_desc, m_value};
+    }
+
+    using Alloc = Allocator<TypedOption, MemoryDomain::Options>;
+    static void* operator new (std::size_t sz)
+    {
+        kak_assert(sz == sizeof(TypedOption));
+        return Alloc{}.allocate(1);
+    }
+
+    static void operator delete (void* ptr)
+    {
+        return Alloc{}.deallocate(reinterpret_cast<TypedOption*>(ptr), 1);
     }
 private:
     T m_value;
@@ -216,7 +229,7 @@ public:
     }
 private:
     OptionManager& m_global_manager;
-    std::vector<std::unique_ptr<OptionDesc>> m_descs;
+    Vector<std::unique_ptr<OptionDesc>, MemoryDomain::Options> m_descs;
 };
 
 }

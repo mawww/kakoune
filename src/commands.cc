@@ -831,6 +831,8 @@ const CommandDesc debug_cmd = {
             write_debug("InternedString: " + to_string(UsedMemory<MemoryDomain::InternedString>::byte_count));
             write_debug("BufferContent: " + to_string(UsedMemory<MemoryDomain::BufferContent>::byte_count));
             write_debug("BufferMeta: " + to_string(UsedMemory<MemoryDomain::BufferMeta>::byte_count));
+            write_debug("Options: " + to_string(UsedMemory<MemoryDomain::Options>::byte_count));
+            write_debug("Highlight: " + to_string(UsedMemory<MemoryDomain::Highlight>::byte_count));
             write_debug("WordDB: " + to_string(UsedMemory<MemoryDomain::WordDB>::byte_count));
             write_debug("Undefined: " + to_string(UsedMemory<MemoryDomain::Undefined>::byte_count));
             write_debug("Malloced: " + to_string(mallinfo().uordblks));
@@ -949,11 +951,11 @@ const CommandDesc declare_option_cmd = {
         else if (parser[0] == "regex")
             opt = &reg.declare_option<Regex>(parser[1], docstring, Regex{}, flags);
         else if (parser[0] == "int-list")
-            opt = &reg.declare_option<std::vector<int>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<Vector<int, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
-            opt = &reg.declare_option<std::vector<String>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<Vector<String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "line-flag-list")
-            opt = &reg.declare_option<std::vector<LineAndFlag>>(parser[1], docstring, {}, flags);
+            opt = &reg.declare_option<Vector<LineAndFlag, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else
             throw runtime_error("unknown type " + parser[0]);
 

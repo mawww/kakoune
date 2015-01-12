@@ -15,7 +15,7 @@
 namespace Kakoune
 {
 
-using StringList = std::vector<String>;
+using StringList = Vector<String, MemoryDomain::Options>;
 
 String option_to_string(const InsertCompleterDesc& opt)
 {
