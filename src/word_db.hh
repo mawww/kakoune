@@ -40,7 +40,9 @@ public:
 
     int get_word_occurences(StringView word) const;
 private:
-    using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
+    void update_db();
+    void add_words(const WordList& words);
+    void remove_words(const WordList& words);
 
     struct WordInfo
     {
@@ -48,10 +50,7 @@ private:
         int refcount;
     };
     using WordToInfo = UnorderedMap<InternedString, WordInfo, MemoryDomain::WordDB>;
-
-    void update_db();
-    void add_words(const WordList& words);
-    void remove_words(const WordList& words);
+    using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
 
     safe_ptr<const Buffer> m_buffer;
     size_t m_timestamp;
