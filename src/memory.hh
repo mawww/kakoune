@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cstddef>
+#include <utility>
 
 #include "assert.hh"
 
@@ -81,6 +82,15 @@ struct Allocator
         domain_allocated_bytes[(int)domain] -= size;
         free(ptr);
     }
+
+    template<class U, class... Args>
+    void construct(U* p, Args&&... args)
+    {
+        new (p) U(std::forward<Args>(args)...);
+    }
+
+    template<class U>
+    void destroy(U* p) { p->~U(); }
 };
 
 template<typename T1, MemoryDomain d1, typename T2, MemoryDomain d2>
