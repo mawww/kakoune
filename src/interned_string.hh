@@ -13,6 +13,8 @@ class InternedString;
 
 class StringRegistry : public Singleton<StringRegistry>
 {
+public:
+    void debug_stats() const;
 private:
     friend class InternedString;
 

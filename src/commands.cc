@@ -805,7 +805,7 @@ const CommandDesc debug_cmd = {
     PerArgumentCommandCompleter({
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"info", "buffers", "options", "memory"};
+               auto c = {"info", "buffers", "options", "memory", "interned-strings"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     } }),
     [](const ParametersParser& parser, Context& context)
@@ -835,12 +835,16 @@ const CommandDesc debug_cmd = {
             {
                 size_t count = domain_allocated_bytes[domain];
                 total += count;
-                write_debug(domain_name((MemoryDomain)domain) + (": " + to_string(count)));
+                write_debug("  "_sv + domain_name((MemoryDomain)domain) + ": " + to_string(count));
             }
-            write_debug("Total: " + to_string(total));
+            write_debug("  Total: " + to_string(total));
             #if defined(__GLIBC__)
-            write_debug("Malloced: " + to_string(mallinfo().uordblks));
+            write_debug("  Malloced: " + to_string(mallinfo().uordblks));
             #endif
+        }
+        else if (parser[0] == "interned-strings")
+        {
+            StringRegistry::instance().debug_stats();
         }
         else
             throw runtime_error("unknown debug command '" + parser[0] + "'");

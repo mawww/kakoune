@@ -1,7 +1,27 @@
 #include "interned_string.hh"
+#include "debug.hh"
 
 namespace Kakoune
 {
+
+void StringRegistry::debug_stats() const
+{
+    write_debug("Interned Strings stats:");
+    write_debug("  slots: " + to_string(m_storage.size()) + " allocated, " + to_string(m_free_slots.size()) + " free");
+    size_t total_refcount = 0;
+    size_t total_size = 0;
+    size_t count = 0;
+    for (auto& st : m_storage)
+    {
+        if (st.refcount == 0)
+            continue;
+        total_refcount += st.refcount;
+        total_size += st.data.size();
+        ++count;
+    }
+    write_debug("  data size: " + to_string(total_size) + ", mean: " + to_string((float)total_size/count));
+    write_debug("  refcounts: " + to_string(total_refcount) + ", mean: " + to_string((float)total_refcount/count));
+}
 
 InternedString StringRegistry::acquire(StringView str)
 {
