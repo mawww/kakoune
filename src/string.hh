@@ -259,6 +259,11 @@ inline String operator"" _str(const char* str, size_t)
     return String(str);
 }
 
+inline StringView operator"" _sv(const char* str, size_t len)
+{
+    return StringView(str, (int)len);
+}
+
 inline String codepoint_to_str(Codepoint cp)
 {
     StringBase str;
@@ -269,6 +274,8 @@ inline String codepoint_to_str(Codepoint cp)
 int str_to_int(StringView str);
 
 String to_string(int val);
+String to_string(size_t val);
+String to_string(float val);
 
 template<typename RealType, typename ValueType>
 String to_string(const StronglyTypedNumber<RealType, ValueType>& val)

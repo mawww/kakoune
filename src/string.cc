@@ -104,6 +104,20 @@ String to_string(int val)
     return buf;
 }
 
+String to_string(size_t val)
+{
+    char buf[16];
+    sprintf(buf, "%lu", val);
+    return buf;
+}
+
+String to_string(float val)
+{
+    char buf[32];
+    sprintf(buf, "%f", val);
+    return buf;
+}
+
 bool subsequence_match(StringView str, StringView subseq)
 {
     auto it = str.begin();
