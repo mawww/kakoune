@@ -1,8 +1,9 @@
 #ifndef memory_hh_INCLUDED
 #define memory_hh_INCLUDED
 
-#include <cstdlib>
 #include <cstddef>
+#include <cstdlib>
+#include <new>
 #include <utility>
 
 #include "assert.hh"
