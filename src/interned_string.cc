@@ -28,7 +28,7 @@ InternedString StringRegistry::acquire(StringView str)
     auto it = m_slot_map.find(str);
     if (it == m_slot_map.end())
     {
-        size_t slot;
+        Slot slot;
         if (not m_free_slots.empty())
         {
             slot = m_free_slots.back();
@@ -48,20 +48,20 @@ InternedString StringRegistry::acquire(StringView str)
         return InternedString{storage_view, slot};
     }
 
-    size_t slot = it->second;
+    Slot slot = it->second;
     auto& data = m_storage[slot];
     ++data.refcount;
     return {{data.data.data(), (int)data.data.size()}, slot};
 }
 
-void StringRegistry::acquire(size_t slot)
+void StringRegistry::acquire(Slot slot)
 {
     kak_assert(slot < m_storage.size());
     kak_assert(m_storage[slot].refcount > 0);
     ++m_storage[slot].refcount;
 }
 
-void StringRegistry::release(size_t slot) noexcept
+void StringRegistry::release(Slot slot) noexcept
 {
     kak_assert(m_storage[slot].refcount > 0);
     if (--m_storage[slot].refcount == 0)

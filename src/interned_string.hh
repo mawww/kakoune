@@ -6,6 +6,8 @@
 #include "unordered_map.hh"
 #include "vector.hh"
 
+#include <cstddef>
+
 namespace Kakoune
 {
 
@@ -17,13 +19,14 @@ public:
     void debug_stats() const;
 private:
     friend class InternedString;
+    using Slot = uint32_t;
 
     InternedString acquire(StringView str);
-    void acquire(size_t slot);
-    void release(size_t slot) noexcept;
+    void acquire(Slot slot);
+    void release(Slot slot) noexcept;
 
-    UnorderedMap<StringView, size_t, MemoryDomain::InternedString> m_slot_map;
-    Vector<size_t, MemoryDomain::InternedString> m_free_slots;
+    UnorderedMap<StringView, Slot, MemoryDomain::InternedString> m_slot_map;
+    Vector<Slot, MemoryDomain::InternedString> m_free_slots;
     struct DataAndRefCount
     {
         Vector<char, MemoryDomain::InternedString> data;
@@ -101,7 +104,7 @@ public:
 private:
     friend class StringRegistry;
 
-    InternedString(StringView str, size_t slot)
+    InternedString(StringView str, StringRegistry::Slot slot)
         : StringView(str), m_slot(slot) {}
 
     void acquire_ifn(StringView str)
@@ -121,7 +124,7 @@ private:
             StringRegistry::instance().release(m_slot);
     }
 
-    size_t m_slot = -1;
+    StringRegistry::Slot m_slot = -1;
 };
 
 inline size_t hash_value(const Kakoune::InternedString& str)
