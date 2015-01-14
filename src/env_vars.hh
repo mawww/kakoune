@@ -7,7 +7,7 @@ namespace Kakoune
 {
 
 class String;
-using EnvVarMap = UnorderedMap<String, String>;
+using EnvVarMap = UnorderedMap<String, String, MemoryDomain::EnvVars>;
 
 EnvVarMap get_env_vars();
 

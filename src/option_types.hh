@@ -67,8 +67,8 @@ bool option_add(Vector<T, domain>& opt, const Vector<T, domain>& vec)
     return not vec.empty();
 }
 
-template<typename Key, typename Value>
-String option_to_string(const UnorderedMap<Key, Value>& opt)
+template<typename Key, typename Value, MemoryDomain domain>
+String option_to_string(const UnorderedMap<Key, Value, domain>& opt)
 {
     String res;
     for (auto it = begin(opt); it != end(opt); ++it)
@@ -82,8 +82,8 @@ String option_to_string(const UnorderedMap<Key, Value>& opt)
     return res;
 }
 
-template<typename Key, typename Value>
-void option_from_string(StringView str, UnorderedMap<Key, Value>& opt)
+template<typename Key, typename Value, MemoryDomain domain>
+void option_from_string(StringView str, UnorderedMap<Key, Value, domain>& opt)
 {
     opt.clear();
     for (auto& elem : split(str, list_separator, '\\'))

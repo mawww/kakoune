@@ -70,7 +70,7 @@ private:
     DisplayLine m_pending_status_line;
     DisplayLine m_mode_line;
 
-    Vector<Key> m_pending_keys;
+    Vector<Key, MemoryDomain::Client> m_pending_keys;
 };
 
 }

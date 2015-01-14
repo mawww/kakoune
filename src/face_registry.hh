@@ -29,7 +29,7 @@ private:
         FaceOrAlias(Face face = Face{}) : face(face) {}
     };
 
-    UnorderedMap<String, FaceOrAlias> m_aliases;
+    UnorderedMap<String, FaceOrAlias, MemoryDomain::Faces> m_aliases;
 };
 
 inline Face get_face(const String& facedesc)

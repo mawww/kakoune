@@ -75,14 +75,14 @@ public:
             write(val);
     }
 
-    template<typename T>
-    void write(const Vector<T>& vec)
+    template<typename T, MemoryDomain domain>
+    void write(const Vector<T, domain>& vec)
     {
         write(ArrayView<T>(vec));
     }
 
-    template<typename Key, typename Val>
-    void write(const UnorderedMap<Key, Val>& map)
+    template<typename Key, typename Val, MemoryDomain domain>
+    void write(const UnorderedMap<Key, Val, domain>& map)
     {
         write<uint32_t>(map.size());
         for (auto& val : map)
@@ -229,11 +229,11 @@ DisplayBuffer read<DisplayBuffer>(int socket)
     return db;
 }
 
-template<typename Key, typename Val>
-UnorderedMap<Key, Val> read_map(int socket)
+template<typename Key, typename Val, MemoryDomain domain>
+UnorderedMap<Key, Val, domain> read_map(int socket)
 {
     uint32_t size = read<uint32_t>(socket);
-    UnorderedMap<Key, Val> res;
+    UnorderedMap<Key, Val, domain> res;
     while (size--)
     {
         auto key = read<Key>(socket);
@@ -519,7 +519,7 @@ void RemoteClient::process_next_message()
         m_ui->refresh();
         break;
     case RemoteUIMsg::SetOptions:
-        m_ui->set_ui_options(read_map<String, String>(socket));
+        m_ui->set_ui_options(read_map<String, String, MemoryDomain::Options>(socket));
         break;
     }
 }
@@ -595,7 +595,7 @@ private:
             }
             if (c == 0) // end of initial command stream, go to interactive ui
             {
-                EnvVarMap env_vars = read_map<String, String>(socket);
+                EnvVarMap env_vars = read_map<String, String, MemoryDomain::EnvVars>(socket);
                 std::unique_ptr<UserInterface> ui{new RemoteUI{socket}};
                 ClientManager::instance().create_client(std::move(ui),
                                                         std::move(env_vars),

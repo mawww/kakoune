@@ -30,7 +30,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#if defined(__GLIBC__)
+#if defined(__GLIBC__) || defined(__CYGWIN__)
 #include <malloc.h>
 #endif
 
@@ -838,7 +838,7 @@ const CommandDesc debug_cmd = {
                 write_debug("  "_sv + domain_name((MemoryDomain)domain) + ": " + to_string(count));
             }
             write_debug("  Total: " + to_string(total));
-            #if defined(__GLIBC__)
+            #if defined(__GLIBC__) || defined(__CYGWIN__)
             write_debug("  Malloced: " + to_string(mallinfo().uordblks));
             #endif
         }

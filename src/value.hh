@@ -60,6 +60,10 @@ private:
         const std::type_info& type() const override { return typeid(T); }
 
         T m_content;
+
+        using Alloc = Allocator<Model<T>, MemoryDomain::Values>;
+        static void* operator new (std::size_t sz) { return Alloc{}.allocate(1); }
+        static void operator delete (void* ptr) { Alloc{}.deallocate((Model<T>*)ptr, 1); }
     };
 
     std::unique_ptr<Concept> m_value;
@@ -78,7 +82,7 @@ struct ValueId : public StronglyTypedNumber<ValueId, int>
 
 inline size_t hash_value(ValueId val) { return hash_value((int)val); }
 
-using ValueMap = UnorderedMap<ValueId, Value>;
+using ValueMap = UnorderedMap<ValueId, Value, MemoryDomain::Values>;
 
 }
 

@@ -63,7 +63,7 @@ public:
 
     virtual void set_input_callback(InputCallback callback) = 0;
 
-    using Options = UnorderedMap<String, String>;
+    using Options = UnorderedMap<String, String, MemoryDomain::Options>;
     virtual void set_ui_options(const Options& options) = 0;
 };
 

@@ -144,13 +144,16 @@ void register_env_vars()
 
 void register_registers()
 {
-    using StringList = Vector<String>;
+    using StringList = Vector<String, MemoryDomain::Registers>;
     static const struct {
         char name;
         StringList (*func)(const Context&);
     } dyn_regs[] = {
         { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
-        { '.', [](const Context& context) { return context.selections_content(); } },
+        { '.', [](const Context& context) {
+            auto content = context.selections_content();
+            return StringList{content.begin(), content.end()};
+        } },
         { '#', [](const Context& context) {
             StringList res;
             for (size_t i = 1; i < context.selections().size()+1; ++i)
@@ -167,7 +170,7 @@ void register_registers()
     {
         register_manager.register_dynamic_register('0'+i,
             [i](const Context& context) {
-                Vector<String> result;
+                StringList result;
                 for (auto& sel : context.selections())
                     result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
                 return result;

@@ -23,7 +23,7 @@ private:
     AliasRegistry() {}
 
     safe_ptr<AliasRegistry> m_parent;
-    UnorderedMap<String, String> m_aliases;
+    UnorderedMap<String, String, MemoryDomain::Aliases> m_aliases;
 };
 
 }

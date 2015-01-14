@@ -23,6 +23,12 @@ enum class MemoryDomain
     Mapping,
     Commands,
     Hooks,
+    Aliases,
+    EnvVars,
+    Faces,
+    Values,
+    Registers,
+    Client,
     WordDB,
     Count
 };
@@ -42,6 +48,12 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Commands: return "Commands";
         case MemoryDomain::Hooks: return "Hooks";
         case MemoryDomain::WordDB: return "WordDB";
+        case MemoryDomain::Aliases: return "Aliases";
+        case MemoryDomain::EnvVars: return "EnvVars";
+        case MemoryDomain::Faces: return "Faces";
+        case MemoryDomain::Values: return "Values";
+        case MemoryDomain::Registers: return "Registers";
+        case MemoryDomain::Client: return "Client";
         case MemoryDomain::Count: break;
     }
     kak_assert(false);

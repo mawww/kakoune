@@ -49,7 +49,7 @@ private:
     String generate_name() const;
 
     Vector<std::unique_ptr<Client>> m_clients;
-    Vector<WindowAndSelections> m_free_windows;
+    Vector<WindowAndSelections, MemoryDomain::Client> m_free_windows;
 };
 
 }

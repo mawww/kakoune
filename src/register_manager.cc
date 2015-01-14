@@ -14,7 +14,7 @@ class StaticRegister : public Register
 public:
     Register& operator=(ArrayView<String> values) override
     {
-        m_content = Vector<String>(values.begin(), values.end());
+        m_content = Vector<String, MemoryDomain::Registers>(values.begin(), values.end());
         return *this;
     }
 
@@ -26,7 +26,7 @@ public:
             return ArrayView<String>(m_content);
     }
 protected:
-    Vector<String> m_content;
+    Vector<String, MemoryDomain::Registers> m_content;
 
     static const String ms_empty;
 };
@@ -53,7 +53,7 @@ public:
     }
 
 private:
-    RegisterRetriever   m_function;
+    RegisterRetriever m_function;
 };
 
 Register& RegisterManager::operator[](StringView reg)
