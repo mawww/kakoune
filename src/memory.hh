@@ -15,7 +15,7 @@ enum class MemoryDomain
 {
     Undefined,
     String,
-    InternedString,
+    SharedString,
     BufferContent,
     BufferMeta,
     Options,
@@ -39,7 +39,7 @@ inline const char* domain_name(MemoryDomain domain)
     {
         case MemoryDomain::Undefined: return "Undefined";
         case MemoryDomain::String: return "String";
-        case MemoryDomain::InternedString: return "InternedString";
+        case MemoryDomain::SharedString: return "SharedString";
         case MemoryDomain::BufferContent: return "BufferContent";
         case MemoryDomain::BufferMeta: return "BufferMeta";
         case MemoryDomain::Options: return "Options";

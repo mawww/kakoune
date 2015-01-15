@@ -5,7 +5,7 @@
 #include "flags.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
-#include "interned_string.hh"
+#include "shared_string.hh"
 #include "value.hh"
 #include "vector.hh"
 
@@ -121,7 +121,7 @@ public:
     BufferIterator end() const;
     LineCount      line_count() const;
 
-    const InternedString& operator[](LineCount line) const
+    const SharedString& operator[](LineCount line) const
     { return m_lines[line]; }
 
     // returns an iterator at given coordinates. clamp line_and_column
@@ -166,15 +166,15 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    using LineListBase = Vector<InternedString, MemoryDomain::BufferContent>;
+    using LineListBase = Vector<SharedString, MemoryDomain::BufferContent>;
     struct LineList : LineListBase
     {
         [[gnu::always_inline]]
-        InternedString& operator[](LineCount line)
+        SharedString& operator[](LineCount line)
         { return LineListBase::operator[]((int)line); }
 
         [[gnu::always_inline]]
-        const InternedString& operator[](LineCount line) const
+        const SharedString& operator[](LineCount line) const
         { return LineListBase::operator[]((int)line); }
     };
     LineList m_lines;

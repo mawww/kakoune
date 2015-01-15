@@ -26,7 +26,7 @@ UsedLetters used_letters(StringView str)
     return res;
 }
 
-static WordDB::WordList get_words(const InternedString& content)
+static WordDB::WordList get_words(const SharedString& content)
 {
     WordDB::WordList res;
     using Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;

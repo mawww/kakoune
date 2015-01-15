@@ -13,7 +13,7 @@
 #include "file.hh"
 #include "highlighters.hh"
 #include "insert_completer.hh"
-#include "interned_string.hh"
+#include "shared_string.hh"
 #include "ncurses_ui.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
@@ -405,6 +405,7 @@ int run_server(StringView session, StringView init_command,
         client_manager.handle_pending_inputs();
         client_manager.clear_mode_trashes();
         buffer_manager.clear_buffer_trash();
+        string_registry.purge_unused();
     }
 
     {

@@ -805,7 +805,7 @@ const CommandDesc debug_cmd = {
     PerArgumentCommandCompleter({
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"info", "buffers", "options", "memory", "interned-strings"};
+               auto c = {"info", "buffers", "options", "memory", "shared-strings"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     } }),
     [](const ParametersParser& parser, Context& context)
@@ -842,7 +842,7 @@ const CommandDesc debug_cmd = {
             write_debug("  Malloced: " + to_string(mallinfo().uordblks));
             #endif
         }
-        else if (parser[0] == "interned-strings")
+        else if (parser[0] == "shared-strings")
         {
             StringRegistry::instance().debug_stats();
         }

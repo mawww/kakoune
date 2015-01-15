@@ -6,7 +6,7 @@
 #include "containers.hh"
 #include "context.hh"
 #include "file.hh"
-#include "interned_string.hh"
+#include "shared_string.hh"
 #include "utils.hh"
 #include "window.hh"
 
@@ -146,9 +146,9 @@ struct Buffer::Modification
 
     Type      type;
     ByteCoord coord;
-    InternedString content;
+    SharedString content;
 
-    Modification(Type type, ByteCoord coord, InternedString content)
+    Modification(Type type, ByteCoord coord, SharedString content)
         : type(type), coord(coord), content(std::move(content)) {}
 
     Modification inverse() const
@@ -284,7 +284,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         StringView prefix = m_lines[pos.line].substr(0, pos.column);
         StringView suffix = m_lines[pos.line].substr(pos.column);
 
-        Vector<InternedString> new_lines;
+        Vector<SharedString> new_lines;
 
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)
@@ -332,7 +332,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     if (new_line.length() != 0)
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines[begin.line] = InternedString(new_line);
+        m_lines[begin.line] = SharedString(new_line);
         next = begin;
     }
     else
@@ -381,11 +381,11 @@ BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
     if (content.empty())
         return pos;
 
-    InternedString real_content;
+    SharedString real_content;
     if (pos == end() and content.back() != '\n')
-        real_content = InternedString(content + "\n");
+        real_content = intern(content + "\n");
     else
-        real_content = content;
+        real_content = intern(content);
 
     // for undo and redo purpose it is better to use one past last line rather
     // than one past last char coord.
@@ -406,7 +406,7 @@ BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
 
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
-                                          InternedString(string(begin.coord(), end.coord())));
+                                          intern(string(begin.coord(), end.coord())));
     return {*this, do_erase(begin.coord(), end.coord())};
 }
 

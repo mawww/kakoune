@@ -2,7 +2,7 @@
 #define word_db_hh_INCLUDED
 
 #include "buffer.hh"
-#include "interned_string.hh"
+#include "shared_string.hh"
 #include "unordered_map.hh"
 #include "vector.hh"
 
@@ -22,7 +22,7 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
-    using WordList = Vector<InternedString, MemoryDomain::WordDB>;
+    using WordList = Vector<SharedString, MemoryDomain::WordDB>;
     template<typename MatchFunc>
     WordList find_matching(StringView str, MatchFunc match)
     {
@@ -49,7 +49,7 @@ private:
         UsedLetters letters;
         int refcount;
     };
-    using WordToInfo = UnorderedMap<InternedString, WordInfo, MemoryDomain::WordDB>;
+    using WordToInfo = UnorderedMap<SharedString, WordInfo, MemoryDomain::WordDB>;
     using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
 
     safe_ptr<const Buffer> m_buffer;
