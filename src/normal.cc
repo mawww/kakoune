@@ -211,7 +211,7 @@ void goto_commands(Context& context, NormalParams params)
                     if (contains(filename, c))
                         return;
 
-                auto paths = context.options()["path"].get<Vector<String>>();
+                auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
                 const String& buffer_name = buffer.name();
                 auto it = find(reversed(buffer_name), '/');
                 if (it != buffer_name.rend())
