@@ -24,6 +24,9 @@ public:
             StringView::operator=(*m_storage);
         }
     }
+    struct NoCopy{};
+    SharedString(StringView str, NoCopy) : StringView(str) {}
+
     SharedString(const char* str) : SharedString(StringView{str}) {}
 
     SharedString acquire_substr(ByteCount from, ByteCount length = INT_MAX) const

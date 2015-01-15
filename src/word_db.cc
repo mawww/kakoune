@@ -56,7 +56,7 @@ void WordDB::add_words(const WordList& words)
 {
     for (auto& w : words)
     {
-        WordDB::WordInfo& info = m_words[w];
+        WordDB::WordInfo& info = m_words[intern(w)];
         ++info.refcount;
         if (info.letters.none())
             info.letters = used_letters(w);
@@ -67,7 +67,7 @@ void WordDB::remove_words(const WordList& words)
 {
     for (auto& w : words)
     {
-        auto it = m_words.find(w);
+        auto it = m_words.find({w, SharedString::NoCopy()});
         kak_assert(it != m_words.end() and it->second.refcount > 0);
         if (--it->second.refcount == 0)
             m_words.erase(it);
@@ -131,7 +131,7 @@ void WordDB::update_db()
 
 int WordDB::get_word_occurences(StringView word) const
 {
-    auto it = m_words.find(word);
+    auto it = m_words.find({word, SharedString::NoCopy()});
     if (it != m_words.end())
         return it->second.refcount;
     return 0;
