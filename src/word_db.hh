@@ -22,7 +22,7 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
-    using WordList = Vector<SharedString, MemoryDomain::WordDB>;
+    using WordList = Vector<StringView>;
     template<typename MatchFunc>
     WordList find_matching(StringView str, MatchFunc match)
     {
@@ -50,12 +50,12 @@ private:
         int refcount;
     };
     using WordToInfo = UnorderedMap<SharedString, WordInfo, MemoryDomain::WordDB>;
-    using LineToWords = Vector<WordList, MemoryDomain::WordDB>;
+    using Lines = Vector<SharedString, MemoryDomain::WordDB>;
 
     safe_ptr<const Buffer> m_buffer;
     size_t m_timestamp;
     WordToInfo m_words;
-    LineToWords m_line_to_words;
+    Lines m_lines;
 };
 
 }

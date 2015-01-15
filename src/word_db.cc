@@ -77,11 +77,11 @@ void WordDB::remove_words(const WordList& words)
 WordDB::WordDB(const Buffer& buffer)
     : m_buffer{&buffer}, m_timestamp{buffer.timestamp()}
 {
-    m_line_to_words.reserve((int)buffer.line_count());
+    m_lines.reserve((int)buffer.line_count());
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
-        m_line_to_words.push_back(get_words(buffer[line]));
-        add_words(m_line_to_words.back());
+        m_lines.push_back(buffer[line]);
+        add_words(get_words(m_lines.back()));
     }
 }
 
@@ -95,8 +95,7 @@ void WordDB::update_db()
     if (modifs.empty())
         return;
 
-
-    LineToWords new_lines;
+    Lines new_lines;
     new_lines.reserve((int)buffer.line_count());
 
     auto old_line = 0_line;
@@ -105,14 +104,14 @@ void WordDB::update_db()
         kak_assert(0_line <= modif.new_line and modif.new_line < buffer.line_count());
         kak_assert(old_line <= modif.old_line);
         while (old_line < modif.old_line)
-            new_lines.push_back(std::move(m_line_to_words[(int)old_line++]));
+            new_lines.push_back(std::move(m_lines[(int)old_line++]));
 
         kak_assert((int)new_lines.size() == (int)modif.new_line);
 
         while (old_line <= modif.old_line + modif.num_removed)
         {
-            kak_assert(old_line < m_line_to_words.size());
-            remove_words(m_line_to_words[(int)old_line++]);
+            kak_assert(old_line < m_lines.size());
+            remove_words(get_words(m_lines[(int)old_line++]));
         }
 
         for (auto l = 0_line; l <= modif.num_added; ++l)
@@ -120,14 +119,14 @@ void WordDB::update_db()
             if (modif.new_line + l >= buffer.line_count())
                 break;
 
-            new_lines.push_back(get_words(buffer[modif.new_line + l]));
-            add_words(new_lines.back());
+            new_lines.push_back(buffer[modif.new_line + l]);
+            add_words(get_words(new_lines.back()));
         }
     }
-    while (old_line != (int)m_line_to_words.size())
-        new_lines.push_back(std::move(m_line_to_words[(int)old_line++]));
+    while (old_line != (int)m_lines.size())
+        new_lines.push_back(std::move(m_lines[(int)old_line++]));
 
-    m_line_to_words = std::move(new_lines);
+    m_lines = std::move(new_lines);
 }
 
 int WordDB::get_word_occurences(StringView word) const
