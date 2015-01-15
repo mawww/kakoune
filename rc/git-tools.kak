@@ -12,7 +12,7 @@ hook global WinSetOption filetype=(?!git-log).* %{
 
 hook global WinSetOption filetype=git-status %{
     addhl group git-status-highlight
-    addhl -group git-status-highlight regex '^\h+((modified:)|(added:)|(deleted:)|(renamed:)|(copied:))(.*?)$' 2:yellow 3:green 4:red 5:cyan 6:blue 7:magenta
+    addhl -group git-status-highlight regex '^\h+(?:(modified:)|(added:|new file:)|(deleted:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }
 
 hook global WinSetOption filetype=(?!git-status).* %{
@@ -23,12 +23,12 @@ decl line-flag-list git_blame_flags
 decl line-flag-list git_diff_flags
 
 def -shell-params \
-  -docstring %sh{printf "%%{git wrapping helper\navailable commands:\n add\n blame\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
+  -docstring %sh{printf "%%{git wrapping helper\navailable commands:\n add\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
   -shell-completion %{
     shift $(expr ${kak_token_to_complete})
     prefix=${1:0:${kak_pos_in_token}}
     (
-      for cmd in add blame checkout diff hide-blame log show show-diff status update-diff; do
+      for cmd in add blame commit checkout diff hide-blame log show show-diff status update-diff; do
           expr "${cmd}" : "^\(${prefix}.*\)$"
       done
     ) | grep -v '^$'
@@ -110,6 +110,21 @@ def -shell-params \
         '
     }
 
+    commit() {
+        # fails, and generate COMMIT_EDITMSG
+        GIT_EDITOR='' EDITOR='' git commit > /dev/null 2>&1
+        msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
+        echo "edit '$msgfile'
+              hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
+                  if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
+                     echo 'eval -client $kak_client echo -color Information Commit succeeded'
+                     echo 'delbuf'
+                  else
+                     echo 'eval -client $kak_client echo -color Error Commit failed'
+                  fi
+              } }"
+    }
+
     case "$1" in
        show|log|diff|status) show_git_cmd_output "$@" ;;
        blame) shift; run_git_blame "$@" ;;
@@ -119,6 +134,7 @@ def -shell-params \
            update_diff
            ;;
        update-diff) update_diff ;;
+       commit) shift; commit "$@" ;;
        checkout)
            name="${2:-${kak_buffile}}"
            git checkout "${name}"
