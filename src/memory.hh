@@ -30,6 +30,7 @@ enum class MemoryDomain
     Registers,
     Client,
     WordDB,
+    Selections,
     Count
 };
 
@@ -54,6 +55,7 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Values: return "Values";
         case MemoryDomain::Registers: return "Registers";
         case MemoryDomain::Client: return "Client";
+        case MemoryDomain::Selections: return "Selections";
         case MemoryDomain::Count: break;
     }
     kak_assert(false);
@@ -117,6 +119,15 @@ bool operator!=(const Allocator<T1, d1>& lhs, const Allocator<T2, d2>& rhs)
 {
     return d1 != d2;
 }
+
+template<typename T>
+struct TypeDomain
+{
+    static constexpr MemoryDomain domain = TypeDomain::helper((T*)nullptr);
+private:
+    template<typename U> static decltype(U::Domain) constexpr helper(U*) { return U::Domain; }
+    static constexpr MemoryDomain helper(...) { return MemoryDomain::Undefined; }
+};
 
 }
 

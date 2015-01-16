@@ -11,6 +11,8 @@ using CaptureList = Vector<String>;
 // A selection is a Selection, associated with a CaptureList
 struct Selection
 {
+    static constexpr MemoryDomain Domain = MemoryDomain::Selections;
+
     Selection() = default;
     Selection(ByteCoord pos) : Selection(pos,pos) {}
     Selection(ByteCoord anchor, ByteCoord cursor,
@@ -68,6 +70,8 @@ enum class InsertMode : unsigned
 
 struct SelectionList
 {
+    static constexpr MemoryDomain Domain = MemoryDomain::Selections;
+
     SelectionList(Buffer& buffer, Selection s);
     SelectionList(Buffer& buffer, Selection s, size_t timestamp);
     SelectionList(Buffer& buffer, Vector<Selection> s);
