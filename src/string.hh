@@ -242,14 +242,14 @@ String escape(StringView str, StringView characters, char escape);
 String unescape(StringView str, StringView characters, char escape);
 
 template<typename Container>
-String join(const Container& container, char joiner)
+String join(const Container& container, char joiner, bool esc_joiner = true)
 {
     String res;
     for (const auto& str : container)
     {
         if (not res.empty())
             res += joiner;
-        res += escape(str, joiner, '\\');
+        res += esc_joiner ? escape(str, joiner, '\\') : str;
     }
     return res;
 }

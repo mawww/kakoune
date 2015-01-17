@@ -780,9 +780,7 @@ const CommandDesc echo_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        String message;
-        for (auto& param : parser)
-            message += param + " ";
+        String message = join(parser, ' ', false);
         if (parser.has_option("debug"))
             write_debug(message);
         else
