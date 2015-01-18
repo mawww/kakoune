@@ -186,7 +186,7 @@ private:
     Flags   m_flags;
 
     struct Modification;
-    using  UndoGroup = Vector<Modification>;
+    using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
     friend class UndoGroupOptimizer;
 
     using History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
