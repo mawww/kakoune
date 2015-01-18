@@ -2,7 +2,6 @@
 #define memory_hh_INCLUDED
 
 #include <cstddef>
-#include <cstdlib>
 #include <new>
 #include <utility>
 
@@ -64,6 +63,17 @@ inline const char* domain_name(MemoryDomain domain)
 
 extern size_t domain_allocated_bytes[(size_t)MemoryDomain::Count];
 
+inline void on_alloc(MemoryDomain domain, size_t size)
+{
+    domain_allocated_bytes[(int)domain] += size;
+}
+
+inline void on_dealloc(MemoryDomain domain, size_t size)
+{
+    kak_assert(domain_allocated_bytes[(int)domain] >= size);
+    domain_allocated_bytes[(int)domain] -= size;
+}
+
 template<typename T, MemoryDomain domain>
 struct Allocator
 {
@@ -86,16 +96,15 @@ struct Allocator
     T* allocate(size_t n)
     {
         size_t size = sizeof(T) * n;
-        domain_allocated_bytes[(int)domain] += size;
-        return reinterpret_cast<T*>(malloc(size));
+        on_alloc(domain, size);
+        return reinterpret_cast<T*>(::operator new(size));
     }
 
     void deallocate(T* ptr, size_t n)
     {
         size_t size = sizeof(T) * n;
-        kak_assert(domain_allocated_bytes[(int)domain] >= size);
-        domain_allocated_bytes[(int)domain] -= size;
-        free(ptr);
+        on_dealloc(domain, size);
+        ::operator delete(ptr);
     }
 
     template<class U, class... Args>
@@ -127,6 +136,23 @@ struct TypeDomain
 private:
     template<typename U> static decltype(U::Domain) constexpr helper(U*) { return U::Domain; }
     static constexpr MemoryDomain helper(...) { return MemoryDomain::Undefined; }
+};
+
+template<MemoryDomain d>
+struct UseMemoryDomain
+{
+    static constexpr MemoryDomain domain = d;
+    static void* operator new(size_t size)
+    {
+        on_alloc(domain, size);
+        return ::operator new(size);
+    }
+
+    static void operator delete(void* ptr, size_t size)
+    {
+        on_dealloc(domain, size);
+        ::operator delete(ptr);
+    }
 };
 
 }

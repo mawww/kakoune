@@ -12,7 +12,7 @@ namespace Kakoune
 class SharedString : public StringView
 {
 public:
-    struct Storage
+    struct Storage : UseMemoryDomain<MemoryDomain::SharedString>
     {
         int refcount = 0;
         Vector<char, MemoryDomain::SharedString> content;

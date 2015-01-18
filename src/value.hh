@@ -54,16 +54,12 @@ private:
     };
 
     template<typename T>
-    struct Model : public Concept
+    struct Model : public Concept, public UseMemoryDomain<MemoryDomain::Values>
     {
         Model(T&& val) : m_content(std::move(val)) {}
         const std::type_info& type() const override { return typeid(T); }
 
         T m_content;
-
-        using Alloc = Allocator<Model<T>, MemoryDomain::Values>;
-        static void* operator new (std::size_t sz) { return Alloc{}.allocate(1); }
-        static void operator delete (void* ptr) { Alloc{}.deallocate((Model<T>*)ptr, 1); }
     };
 
     std::unique_ptr<Concept> m_value;
