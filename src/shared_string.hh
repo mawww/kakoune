@@ -2,10 +2,9 @@
 #define shared_string_hh_INCLUDED
 
 #include "string.hh"
+#include "ref_ptr.hh"
 #include "utils.hh"
 #include "unordered_map.hh"
-
-#include <memory>
 
 namespace Kakoune
 {
@@ -13,15 +12,30 @@ namespace Kakoune
 class SharedString : public StringView
 {
 public:
-    using Storage = std::basic_string<char, std::char_traits<char>,
-                                      Allocator<char, MemoryDomain::SharedString>>;
+    struct Storage
+    {
+        int refcount = 0;
+        Vector<char, MemoryDomain::SharedString> content;
+
+        Storage(StringView str)
+        {
+            content.reserve((int)str.length() + 1);
+            content.assign(str.begin(), str.end());
+            content.push_back('\0');
+        }
+        StringView strview() const { return {&content.front(), &content.back()}; }
+
+        friend void inc_ref_count(Storage* s) { ++s->refcount; }
+        friend void dec_ref_count(Storage* s) { if (--s->refcount == 0) delete s; }
+    };
+
     SharedString() = default;
     SharedString(StringView str)
     {
         if (not str.empty())
         {
-            m_storage = std::make_shared<Storage>(str.begin(), str.end());
-            StringView::operator=(*m_storage);
+            m_storage = new Storage{str};
+            StringView::operator=(m_storage->strview());
         }
     }
     struct NoCopy{};
@@ -39,11 +53,11 @@ public:
     }
 
 private:
-    SharedString(StringView str, std::shared_ptr<Storage> storage)
+    SharedString(StringView str, ref_ptr<Storage> storage)
         : StringView{str}, m_storage(std::move(storage)) {}
 
     friend class StringRegistry;
-    std::shared_ptr<Storage> m_storage;
+    ref_ptr<Storage> m_storage;
 };
 
 inline size_t hash_value(const SharedString& str)
@@ -59,7 +73,7 @@ public:
     void purge_unused();
 
 private:
-    UnorderedMap<StringView, std::shared_ptr<SharedString::Storage>, MemoryDomain::SharedString> m_strings;
+    UnorderedMap<StringView, ref_ptr<SharedString::Storage>, MemoryDomain::SharedString> m_strings;
 };
 
 inline SharedString intern(StringView str)
