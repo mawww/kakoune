@@ -12,7 +12,7 @@ SharedString StringRegistry::intern(StringView str)
         SharedString shared_str = str;
         it = m_strings.emplace(shared_str, shared_str.m_storage).first;
     }
-    return {it->second->strview(), it->second};
+    return SharedString{it->second};
 }
 
 void StringRegistry::purge_unused()

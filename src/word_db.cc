@@ -119,7 +119,7 @@ void WordDB::update_db()
             if (modif.new_line + l >= buffer.line_count())
                 break;
 
-            new_lines.push_back(buffer[modif.new_line + l]);
+            new_lines.push_back(buffer.shared_line(modif.new_line + l));
             add_words(get_words(new_lines.back()));
         }
     }

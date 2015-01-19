@@ -9,44 +9,44 @@
 namespace Kakoune
 {
 
+struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
+{
+    int refcount;
+    int length;
+    char data[1];
+
+    StringView strview() const { return {data, length}; }
+
+    static StringStorage* create(StringView str)
+    {
+        const int len = (int)str.length();
+        void* ptr = StringStorage::operator new(sizeof(StringStorage) + len);
+        StringStorage* res = reinterpret_cast<StringStorage*>(ptr);
+        memcpy(res->data, str.data(), len);
+        res->refcount = 0;
+        res->length = len;
+        res->data[len] = 0;
+        return res;
+    }
+
+    static void destroy(StringStorage* s)
+    {
+        StringStorage::operator delete(s, sizeof(StringStorage) + s->length);
+    }
+
+    friend void inc_ref_count(StringStorage* s) { ++s->refcount; }
+    friend void dec_ref_count(StringStorage* s) { if (--s->refcount == 0) StringStorage::destroy(s); }
+};
+
 class SharedString : public StringView
 {
 public:
-    struct Storage : UseMemoryDomain<MemoryDomain::SharedString>
-    {
-        int refcount;
-        int length;
-        char data[1];
-
-        StringView strview() const { return {data, length}; }
-
-        static Storage* create(StringView str)
-        {
-            const int len = (int)str.length();
-            void* ptr = Storage::operator new(sizeof(Storage) + len);
-            Storage* res = reinterpret_cast<Storage*>(ptr);
-            memcpy(res->data, str.data(), len);
-            res->refcount = 0;
-            res->length = len;
-            res->data[len] = 0;
-            return res;
-        }
-
-        static void destroy(Storage* s)
-        {
-            Storage::operator delete(s, sizeof(Storage) + s->length);
-        }
-
-        friend void inc_ref_count(Storage* s) { ++s->refcount; }
-        friend void dec_ref_count(Storage* s) { if (--s->refcount == 0) Storage::destroy(s); }
-    };
-
     SharedString() = default;
     SharedString(StringView str)
     {
         if (not str.empty())
         {
-            m_storage = Storage::create(str);
+            m_storage = StringStorage::create(str);
             StringView::operator=(m_storage->strview());
         }
     }
@@ -64,12 +64,15 @@ public:
         return SharedString{StringView::substr(from, length), m_storage};
     }
 
+    explicit SharedString(ref_ptr<StringStorage> storage)
+        : StringView{storage->strview()}, m_storage(std::move(storage)) {}
+
 private:
-    SharedString(StringView str, ref_ptr<Storage> storage)
+    SharedString(StringView str, ref_ptr<StringStorage> storage)
         : StringView{str}, m_storage(std::move(storage)) {}
 
     friend class StringRegistry;
-    ref_ptr<Storage> m_storage;
+    ref_ptr<StringStorage> m_storage;
 };
 
 inline size_t hash_value(const SharedString& str)
@@ -85,7 +88,7 @@ public:
     void purge_unused();
 
 private:
-    UnorderedMap<StringView, ref_ptr<SharedString::Storage>, MemoryDomain::SharedString> m_strings;
+    UnorderedMap<StringView, ref_ptr<StringStorage>, MemoryDomain::SharedString> m_strings;
 };
 
 inline SharedString intern(StringView str)

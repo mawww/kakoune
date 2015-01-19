@@ -121,8 +121,11 @@ public:
     BufferIterator end() const;
     LineCount      line_count() const;
 
-    const SharedString& operator[](LineCount line) const
+    StringView operator[](LineCount line) const
     { return m_lines[line]; }
+
+    SharedString shared_line(LineCount line) const
+    { return m_lines.get_shared(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
     BufferIterator iterator_at(ByteCoord coord) const;
@@ -166,16 +169,27 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    using LineListBase = Vector<SharedString, MemoryDomain::BufferContent>;
+    using LineListBase = Vector<ref_ptr<StringStorage>, MemoryDomain::BufferContent>;
     struct LineList : LineListBase
     {
         [[gnu::always_inline]]
-        SharedString& operator[](LineCount line)
+        ref_ptr<StringStorage>& get_storage(LineCount line)
         { return LineListBase::operator[]((int)line); }
 
         [[gnu::always_inline]]
-        const SharedString& operator[](LineCount line) const
+        const ref_ptr<StringStorage>& get_storage(LineCount line) const
         { return LineListBase::operator[]((int)line); }
+
+        [[gnu::always_inline]]
+        SharedString get_shared(LineCount line) const
+        { return SharedString{get_storage(line)}; }
+
+        [[gnu::always_inline]]
+        StringView operator[](LineCount line) const
+        { return get_storage(line)->strview(); }
+
+        StringView front() const { return LineListBase::front()->strview(); }
+        StringView back() const { return LineListBase::back()->strview(); }
     };
     LineList m_lines;
 

@@ -34,7 +34,7 @@ Buffer::Buffer(String name, Flags flags, Vector<String> lines,
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(std::move(line));
+        m_lines.emplace_back(StringStorage::create(line));
     }
 
     m_changes.push_back({ Change::Insert, {0,0}, line_count(), true });
@@ -107,7 +107,7 @@ ByteCoord Buffer::clamp(ByteCoord coord) const
 
 ByteCoord Buffer::offset_coord(ByteCoord coord, CharCount offset)
 {
-    auto& line = m_lines[coord.line];
+    StringView line = m_lines[coord.line];
     auto character = std::max(0_char, std::min(line.char_count_to(coord.column) + offset,
                                                line.char_length() - 1));
     return {coord.line, line.byte_count_to(character)};
@@ -117,7 +117,7 @@ ByteCoordAndTarget Buffer::offset_coord(ByteCoordAndTarget coord, LineCount offs
 {
     auto character = coord.target == -1 ? m_lines[coord.line].char_count_to(coord.column) : coord.target;
     auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
-    auto& content = m_lines[line];
+    StringView content = m_lines[line];
 
     character = std::max(0_char, std::min(character, content.char_length() - 2));
     return {line, content.byte_count_to(character), character};
@@ -178,7 +178,7 @@ void Buffer::reload(Vector<String> lines, time_t fs_timestamp)
     for (auto& line : lines)
     {
         kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(std::move(line));
+        m_lines.emplace_back(StringStorage::create(line));
         if (not (m_flags & Flags::NoUndo))
             m_current_undo_group.emplace_back(
                 Modification::Insert, line_count()-1, m_lines.back());
@@ -243,8 +243,8 @@ void Buffer::check_invariant() const
     kak_assert(not m_lines.empty());
     for (auto& line : m_lines)
     {
-        kak_assert(line.length() > 0);
-        kak_assert(line.back() == '\n');
+        kak_assert(line->strview().length() > 0);
+        kak_assert(line->strview().back() == '\n');
     }
 #endif
 }
@@ -268,12 +268,12 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         {
             if (content[i] == '\n')
             {
-                m_lines.push_back(content.substr(start, i + 1 - start));
+                m_lines.push_back(StringStorage::create(content.substr(start, i + 1 - start)));
                 start = i + 1;
             }
         }
         if (start != content.length())
-            m_lines.push_back(content.substr(start));
+            m_lines.push_back(StringStorage::create(content.substr(start)));
 
         begin = pos.column == 0 ? pos : ByteCoord{ pos.line + 1, 0 };
         end = ByteCoord{ line_count(), 0 };
@@ -284,7 +284,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         StringView prefix = m_lines[pos.line].substr(0, pos.column);
         StringView suffix = m_lines[pos.line].substr(pos.column);
 
-        Vector<SharedString> new_lines;
+        LineList new_lines;
 
         ByteCount start = 0;
         for (ByteCount i = 0; i < content.length(); ++i)
@@ -293,16 +293,16 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
             {
                 StringView line_content = content.substr(start, i + 1 - start);
                 if (start == 0)
-                    new_lines.emplace_back(prefix + line_content);
+                    new_lines.emplace_back(StringStorage::create(prefix + line_content));
                 else
-                    new_lines.push_back(line_content);
+                    new_lines.push_back(StringStorage::create(line_content));
                 start = i + 1;
             }
         }
         if (start == 0)
-            new_lines.emplace_back(prefix + content + suffix);
+            new_lines.emplace_back(StringStorage::create(prefix + content + suffix));
         else if (start != content.length() or not suffix.empty())
-            new_lines.emplace_back(content.substr(start) + suffix);
+            new_lines.emplace_back(StringStorage::create(content.substr(start) + suffix));
 
         LineCount last_line = pos.line + new_lines.size() - 1;
 
@@ -332,7 +332,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     if (new_line.length() != 0)
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines[begin.line] = SharedString(new_line);
+        m_lines.get_storage(begin.line) = StringStorage::create(new_line);
         next = begin;
     }
     else
@@ -547,7 +547,7 @@ String Buffer::debug_description() const
 
     size_t content_size = 0;
     for (auto& line : m_lines)
-        content_size += (int)line.length();
+        content_size += (int)line->strview().length();
 
     size_t additional_size = 0;
     for (auto& undo_group : m_history)
