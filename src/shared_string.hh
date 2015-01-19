@@ -14,19 +14,31 @@ class SharedString : public StringView
 public:
     struct Storage : UseMemoryDomain<MemoryDomain::SharedString>
     {
-        int refcount = 0;
-        Vector<char, MemoryDomain::SharedString> content;
+        int refcount;
+        int length;
+        char data[1];
 
-        Storage(StringView str)
+        StringView strview() const { return {data, length}; }
+
+        static Storage* create(StringView str)
         {
-            content.reserve((int)str.length() + 1);
-            content.assign(str.begin(), str.end());
-            content.push_back('\0');
+            const int len = (int)str.length();
+            void* ptr = Storage::operator new(sizeof(Storage) + len);
+            Storage* res = reinterpret_cast<Storage*>(ptr);
+            memcpy(res->data, str.data(), len);
+            res->refcount = 0;
+            res->length = len;
+            res->data[len] = 0;
+            return res;
         }
-        StringView strview() const { return {&content.front(), &content.back()}; }
+
+        static void destroy(Storage* s)
+        {
+            Storage::operator delete(s, sizeof(Storage) + s->length);
+        }
 
         friend void inc_ref_count(Storage* s) { ++s->refcount; }
-        friend void dec_ref_count(Storage* s) { if (--s->refcount == 0) delete s; }
+        friend void dec_ref_count(Storage* s) { if (--s->refcount == 0) Storage::destroy(s); }
     };
 
     SharedString() = default;
@@ -34,7 +46,7 @@ public:
     {
         if (not str.empty())
         {
-            m_storage = new Storage{str};
+            m_storage = Storage::create(str);
             StringView::operator=(m_storage->strview());
         }
     }
