@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -22,7 +23,7 @@ void write_debug(StringView str)
     else
     {
         String line = str + ((str.empty() or str.back() != '\n') ? "\n" : "");
-        new Buffer(debug_buffer_name, Buffer::Flags::NoUndo, { line });
+        create_buffer_from_data(line, debug_buffer_name, Buffer::Flags::NoUndo);
     }
 }
 
