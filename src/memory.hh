@@ -132,7 +132,7 @@ bool operator!=(const Allocator<T1, d1>& lhs, const Allocator<T2, d2>& rhs)
 template<typename T>
 struct TypeDomain
 {
-    static constexpr MemoryDomain domain = TypeDomain::helper((T*)nullptr);
+    static constexpr MemoryDomain domain() { return TypeDomain<T>::helper((T*)nullptr); }
 private:
     template<typename U> static decltype(U::Domain) constexpr helper(U*) { return U::Domain; }
     static constexpr MemoryDomain helper(...) { return MemoryDomain::Undefined; }
@@ -141,16 +141,21 @@ private:
 template<MemoryDomain d>
 struct UseMemoryDomain
 {
-    static constexpr MemoryDomain domain = d;
+    static constexpr MemoryDomain Domain = d;
     static void* operator new(size_t size)
     {
-        on_alloc(domain, size);
+        on_alloc(Domain, size);
         return ::operator new(size);
+    }
+
+    static void* operator new(size_t size, void* ptr)
+    {
+        return ::operator new(size, ptr);
     }
 
     static void operator delete(void* ptr, size_t size)
     {
-        on_dealloc(domain, size);
+        on_dealloc(Domain, size);
         ::operator delete(ptr);
     }
 };
