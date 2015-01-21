@@ -111,6 +111,18 @@ def -shell-params \
     }
 
     commit() {
+        # Handle case where message needs not to be edited
+        if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit"; then
+            if git commit "$@" > /dev/null 2>&1; then
+                echo 'echo -color Information Commit succeeded'
+            else
+                echo 'echo -color Error Commit failed'
+            fi
+            exit
+        fi <<-EOF
+			$@
+		EOF
+
         # fails, and generate COMMIT_EDITMSG
         GIT_EDITOR='' EDITOR='' git commit > /dev/null 2>&1
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
