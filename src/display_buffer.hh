@@ -11,7 +11,7 @@ namespace Kakoune
 
 class Buffer;
 
-struct DisplayAtom
+struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
@@ -82,7 +82,7 @@ private:
 using BufferRange = std::pair<ByteCoord, ByteCoord>;
 using AtomList = Vector<DisplayAtom>;
 
-class DisplayLine
+class DisplayLine : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
     using iterator = AtomList::iterator;
@@ -123,7 +123,7 @@ private:
     AtomList  m_atoms;
 };
 
-class DisplayBuffer
+class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
     using LineList = Vector<DisplayLine>;
