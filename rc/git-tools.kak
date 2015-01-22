@@ -96,7 +96,7 @@ def -shell-params \
             /^---.*/ {}
             /^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@.*/ {
                  if ((x=index($3, ",")) > 0) {
-                     line=substr($3, 2, x-1)
+                     line=substr($3, 2, x-2)
                  } else {
                      line=substr($3, 2)
                  }
