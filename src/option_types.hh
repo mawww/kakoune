@@ -141,7 +141,9 @@ void option_from_string(StringView str, std::tuple<Types...>& opt)
 {
     auto elems = split(str, tuple_separator, '\\');
     if (elems.size() != sizeof...(Types))
-        throw runtime_error("not enough elements in tuple");
+        throw runtime_error(elems.size() < sizeof...(Types) ?
+                              "not enough elements in tuple"
+                            : "to many elements in tuple");
     TupleOptionDetail<sizeof...(Types)-1, Types...>::from_string(elems, opt);
 }
 
