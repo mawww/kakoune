@@ -10,7 +10,7 @@ void test_buffer()
 {
     Buffer empty_buffer("empty", Buffer::Flags::None, {});
 
-    Buffer buffer("test", Buffer::Flags::None, { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" });
+    Buffer buffer("test", Buffer::Flags::None, { "allo ?\n"_ss, "mais que fais la police\n"_ss,  " hein ?\n"_ss, " youpi\n"_ss });
     kak_assert(buffer.line_count() == 4);
 
     BufferIterator pos = buffer.begin();
@@ -53,7 +53,7 @@ void test_buffer()
 
 void test_undo_group_optimizer()
 {
-    Vector<String> lines = { "allo ?\n", "mais que fais la police\n",  " hein ?\n", " youpi\n" };
+    BufferLines lines = { "allo ?\n"_ss, "mais que fais la police\n"_ss,  " hein ?\n"_ss, " youpi\n"_ss };
     Buffer buffer("test", Buffer::Flags::None, lines);
     auto pos = buffer.insert(buffer.end(), "kanaky\n");
     buffer.erase(pos, buffer.end());
@@ -68,17 +68,17 @@ void test_undo_group_optimizer()
 
     kak_assert((int)buffer.line_count() == lines.size());
     for (size_t i = 0; i < lines.size(); ++i)
-        kak_assert(lines[i] == buffer[LineCount((int)i)]);
+        kak_assert(SharedString{lines[i]} == buffer[LineCount((int)i)]);
 }
 
 void test_word_db()
 {
     Buffer buffer("test", Buffer::Flags::None,
-                  { "tchou mutch\n",
-                    "tchou kanaky tchou\n",
-                    "\n",
-                    "tchaa tchaa\n",
-                    "allo\n"});
+                  { "tchou mutch\n"_ss,
+                    "tchou kanaky tchou\n"_ss,
+                    "\n"_ss,
+                    "tchaa tchaa\n"_ss,
+                    "allo\n"_ss});
     WordDB word_db(buffer);
     auto res = word_db.find_matching("", prefix_match);
     std::sort(res.begin(), res.end());

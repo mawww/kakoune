@@ -59,6 +59,8 @@ private:
     ByteCoord m_coord;
 };
 
+using BufferLines = Vector<ref_ptr<StringStorage>, MemoryDomain::BufferContent>;
+
 // A Buffer is a in-memory representation of a file
 //
 // The Buffer class permits to read and mutate this file
@@ -76,7 +78,7 @@ public:
         NoUndo = 8,
     };
 
-    Buffer(String name, Flags flags, Vector<String> lines = { "\n" },
+    Buffer(String name, Flags flags, BufferLines lines = {},
            time_t fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -150,7 +152,7 @@ public:
 
     void run_hook_in_own_context(const String& hook_name, StringView param);
 
-    void reload(Vector<String> lines, time_t fs_timestamp = InvalidTime);
+    void reload(BufferLines lines, time_t fs_timestamp = InvalidTime);
 
     void check_invariant() const;
 
@@ -169,16 +171,15 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    using LineListBase = Vector<ref_ptr<StringStorage>, MemoryDomain::BufferContent>;
-    struct LineList : LineListBase
+    struct LineList : BufferLines
     {
         [[gnu::always_inline]]
         ref_ptr<StringStorage>& get_storage(LineCount line)
-        { return LineListBase::operator[]((int)line); }
+        { return BufferLines::operator[]((int)line); }
 
         [[gnu::always_inline]]
         const ref_ptr<StringStorage>& get_storage(LineCount line) const
-        { return LineListBase::operator[]((int)line); }
+        { return BufferLines::operator[]((int)line); }
 
         [[gnu::always_inline]]
         SharedString get_shared(LineCount line) const
@@ -188,8 +189,8 @@ private:
         StringView operator[](LineCount line) const
         { return get_storage(line)->strview(); }
 
-        StringView front() const { return LineListBase::front()->strview(); }
-        StringView back() const { return LineListBase::back()->strview(); }
+        StringView front() const { return BufferLines::front()->strview(); }
+        StringView back() const { return BufferLines::back()->strview(); }
     };
     LineList m_lines;
 

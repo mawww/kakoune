@@ -39,24 +39,14 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
         pos = data.begin() + 3;
     }
 
-    Vector<String> lines;
+    BufferLines lines;
     while (pos < data.end())
     {
         const char* line_end = pos;
         while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
              ++line_end;
 
-        // this should happen only when opening a file which has no
-        // end of line as last character.
-        if (line_end == data.end())
-        {
-            lines.emplace_back(pos, line_end);
-            lines.back() += '\n';
-            break;
-        }
-
-        lines.emplace_back(pos, line_end + 1);
-        lines.back().back() = '\n';
+        lines.emplace_back(StringStorage::create({pos, line_end}, '\n'));
 
         if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
         {
@@ -88,7 +78,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     if (buffer)
     {
         buffer->flags() |= Buffer::Flags::NoUndo;
-        buffer->reload(Vector<String>({"\n"_str}), 0);
+        buffer->reload({"\n"_ss}, 0);
     }
     else
         buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);

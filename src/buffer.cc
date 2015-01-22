@@ -15,7 +15,7 @@
 namespace Kakoune
 {
 
-Buffer::Buffer(String name, Flags flags, Vector<String> lines,
+Buffer::Buffer(String name, Flags flags, BufferLines lines,
                time_t fs_timestamp)
     : Scope(GlobalScope::instance()),
       m_name(flags & Flags::File ? real_path(parse_filename(name)) : std::move(name)),
@@ -28,14 +28,13 @@ Buffer::Buffer(String name, Flags flags, Vector<String> lines,
     options().register_watcher(*this);
 
     if (lines.empty())
-        lines.emplace_back("\n");
+        lines.emplace_back(StringStorage::create("\n"));
 
-    m_lines.reserve(lines.size());
     for (auto& line : lines)
     {
-        kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(StringStorage::create(line));
+        kak_assert(not line->length == 0 and line->data[line->length-1] == '\n');
     }
+    static_cast<BufferLines&>(m_lines) = std::move(lines);
 
     m_changes.push_back({ Change::Insert, {0,0}, line_count(), true });
 
@@ -157,7 +156,7 @@ struct Buffer::Modification
     }
 };
 
-void Buffer::reload(Vector<String> lines, time_t fs_timestamp)
+void Buffer::reload(BufferLines lines, time_t fs_timestamp)
 {
     m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
 
@@ -169,20 +168,18 @@ void Buffer::reload(Vector<String> lines, time_t fs_timestamp)
                 Modification::Erase, line, m_lines[line]);
     }
 
-    m_lines.clear();
-
     if (lines.empty())
-        lines.emplace_back("\n");
+        lines.emplace_back(StringStorage::create("\n"));
 
-    m_lines.reserve(lines.size());
     for (auto& line : lines)
     {
-        kak_assert(not line.empty() and line.back() == '\n');
-        m_lines.emplace_back(StringStorage::create(line));
+        kak_assert(not line->length == 0 and line->data[line->length-1] == '\n');
         if (not (m_flags & Flags::NoUndo))
             m_current_undo_group.emplace_back(
                 Modification::Insert, line_count()-1, m_lines.back());
     }
+    static_cast<BufferLines&>(m_lines) = std::move(lines);
+
     commit_undo_group();
 
     m_last_save_undo_index = m_history_cursor - m_history.begin();
