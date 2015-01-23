@@ -15,6 +15,9 @@ make userconfig
 ./kak
 ---------------------------------------------
 
+See http://github.com/mawww/golf for kakoune solutions to vimgolf challenges,
+regularly beating the best vim solution.
+
 Introduction:
 -------------
 
