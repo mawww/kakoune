@@ -18,7 +18,7 @@ def jedi-complete %{
             compl=$(python 2> "${dir}/fifo" <<-END
 		import jedi
 		script=jedi.Script(open('$dir/buf', 'r').read(), $kak_cursor_line, $kak_cursor_column - 1, '$kak_buffile')
-		print ':'.join([str(c.name) + "@" + str(c.description).replace(":", "\\:") for c in script.completions()])
+		print ':'.join([str(c.name) + "@" + str(c.docstring()).replace(":", "\\:") for c in script.completions()])
 		END
             )
             echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' jedi_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
