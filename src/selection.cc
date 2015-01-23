@@ -527,6 +527,15 @@ void SelectionList::erase()
         sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
         changes_tracker.update(*m_buffer, m_timestamp);
     }
+
+    ByteCoord back_coord = m_buffer->back_coord();
+    for (auto& sel : m_selections)
+    {
+        if (sel.anchor() > back_coord)
+            sel.anchor() = back_coord;
+        if (sel.cursor() > back_coord)
+            sel.cursor() = back_coord;
+    }
     m_buffer->check_invariant();
 }
 
