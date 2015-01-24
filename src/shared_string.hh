@@ -40,7 +40,7 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
     friend void dec_ref_count(StringStorage* s) { if (--s->refcount == 0) StringStorage::destroy(s); }
 };
 
-inline ref_ptr<StringStorage> operator""_ss(const char* ptr, size_t len)
+inline ref_ptr<StringStorage> operator"" _ss(const char* ptr, size_t len)
 {
     return StringStorage::create({ptr, (int)len});
 }
