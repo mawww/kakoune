@@ -13,27 +13,28 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
 {
     int refcount;
     int length;
-    char data[1];
 
-    StringView strview() const { return {data, length}; }
+    char* data() { return reinterpret_cast<char*>(this + 1); }
+    const char* data() const { return reinterpret_cast<const char*>(this + 1); }
+    StringView strview() const { return {data(), length}; }
 
     static StringStorage* create(StringView str, char back = 0)
     {
         const int len = (int)str.length() + (back != 0 ? 1 : 0);
-        void* ptr = StringStorage::operator new(sizeof(StringStorage) + len);
+        void* ptr = StringStorage::operator new(sizeof(StringStorage) + len + 1);
         StringStorage* res = reinterpret_cast<StringStorage*>(ptr);
-        memcpy(res->data, str.data(), (int)str.length());
+        memcpy(res->data(), str.data(), (int)str.length());
         res->refcount = 0;
         res->length = len;
         if (back != 0)
-            res->data[len-1] = back;
-        res->data[len] = 0;
+            res->data()[len-1] = back;
+        res->data()[len] = 0;
         return res;
     }
 
     static void destroy(StringStorage* s)
     {
-        StringStorage::operator delete(s, sizeof(StringStorage) + s->length);
+        StringStorage::operator delete(s, sizeof(StringStorage) + s->length + 1);
     }
 
     friend void inc_ref_count(StringStorage* s) { ++s->refcount; }
