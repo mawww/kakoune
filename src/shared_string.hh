@@ -14,8 +14,11 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
     int refcount;
     int length;
 
+    [[gnu::always_inline]]
     char* data() { return reinterpret_cast<char*>(this + 1); }
+    [[gnu::always_inline]]
     const char* data() const { return reinterpret_cast<const char*>(this + 1); }
+    [[gnu::always_inline]]
     StringView strview() const { return {data(), length}; }
 
     static StringStorage* create(StringView str, char back = 0)
