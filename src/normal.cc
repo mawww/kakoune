@@ -198,8 +198,10 @@ void goto_commands(Context& context, NormalParams params)
                 auto it = buffer_manager.begin();
                 if (it->get() == &buffer and ++it == buffer_manager.end())
                     break;
+                Buffer& target = **it;
+                BufferManager::instance().set_last_used_buffer(buffer);
                 context.push_jump();
-                context.change_buffer(**it);
+                context.change_buffer(target);
                 break;
             }
             case 'f':

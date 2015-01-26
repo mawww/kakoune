@@ -98,9 +98,7 @@ Buffer& BufferManager::get_buffer(StringView name)
 
 void BufferManager::set_last_used_buffer(Buffer& buffer)
 {
-    auto it = m_buffers.begin();
-    while (*it != &buffer and it != m_buffers.end())
-        ++it;
+    auto it = find(m_buffers, &buffer);
     kak_assert(it != m_buffers.end());
     m_buffers.erase(it);
     m_buffers.emplace(m_buffers.begin(), &buffer);
