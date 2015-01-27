@@ -74,6 +74,18 @@ class StringView:
     def to_string(self):
         return "\"%s\"" % (self.val['m_data'].string("utf-8", "ignore", self.val['m_length']['m_value']))
 
+class StringStoragePtr:
+    """ Print a ref_ptr<StringStorage>"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        ptr = self.val['m_ptr']
+        str_type = gdb.lookup_type("char").pointer()
+        content = (ptr + 1).cast(str_type).string("utf-8", "ignore", ptr.dereference()['length'])
+        return "\"%s\" (ref:%d)" % (content.replace("\n", "\\n"), ptr.dereference()['refcount'])
+
 class Option:
     """ Print a Option"""
 
@@ -120,6 +132,7 @@ def build_pretty_printer():
     pp.add_printer('String',         '^Kakoune::String$',            String)
     pp.add_printer('StringView',     '^Kakoune::StringView$',        StringView)
     pp.add_printer('SharedString',   '^Kakoune::SharedString$',      StringView)
+    pp.add_printer('StringStoragePtr', '^Kakoune::ref_ptr<Kakoune::StringStorage>$', StringStoragePtr)
     pp.add_printer('Option',         '^Kakoune::Option$',            Option)
     pp.add_printer('LineCount',      '^Kakoune::LineCount$',         LineCount)
     pp.add_printer('CharCount',      '^Kakoune::CharCount$',         CharCount)
