@@ -282,11 +282,6 @@ void InsertCompleter::select(int offset)
             m_context.ui().info_show(candidate.first, candidate.second, CharCoord{},
                                      get_face("Information"), InfoStyle::MenuDoc);
     }
-    // when we select a match, remove non displayed matches from the candidates
-    // which are considered as invalid with the new completion timestamp
-    m_completions.candidates.clear();
-    std::copy(m_matching_candidates.begin(), m_matching_candidates.end()-1,
-              std::back_inserter(m_completions.candidates));
 }
 
 void InsertCompleter::update()
