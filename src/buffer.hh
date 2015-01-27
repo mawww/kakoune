@@ -126,8 +126,8 @@ public:
     StringView operator[](LineCount line) const
     { return m_lines[line]; }
 
-    SharedString shared_line(LineCount line) const
-    { return m_lines.get_shared(line); }
+    ref_ptr<StringStorage> line_storage(LineCount line) const
+    { return m_lines.get_storage(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
     BufferIterator iterator_at(ByteCoord coord) const;
@@ -180,10 +180,6 @@ private:
         [[gnu::always_inline]]
         const ref_ptr<StringStorage>& get_storage(LineCount line) const
         { return BufferLines::operator[]((int)line); }
-
-        [[gnu::always_inline]]
-        SharedString get_shared(LineCount line) const
-        { return SharedString{get_storage(line)}; }
 
         [[gnu::always_inline]]
         StringView operator[](LineCount line) const
