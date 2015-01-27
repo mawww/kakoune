@@ -1473,6 +1473,9 @@ KeyMap keymap =
     { Key::Up,    { "move up", move<LineCount, Backward> } },
     { Key::Right, { "move right", move<CharCount, Forward> } },
 
+    { ctrl('b'), { "scroll one page up", scroll<Key::PageUp> } },
+    { ctrl('f'), { "scroll one page down", scroll<Key::PageDown> } },
+
     { Key::PageUp,   { "scroll one page up", scroll<Key::PageUp> } },
     { Key::PageDown, { "scroll one page down", scroll<Key::PageDown> } },
 };
