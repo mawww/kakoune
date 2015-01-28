@@ -31,6 +31,7 @@ enum class MemoryDomain
     Client,
     WordDB,
     Selections,
+    History,
     Count
 };
 
@@ -57,6 +58,7 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Registers: return "Registers";
         case MemoryDomain::Client: return "Client";
         case MemoryDomain::Selections: return "Selections";
+        case MemoryDomain::History: return "History";
         case MemoryDomain::Count: break;
     }
     kak_assert(false);

@@ -476,18 +476,6 @@ String common_prefix(ArrayView<String> strings)
     return res;
 }
 
-void history_push(Vector<String>& history, StringView entry)
-{
-    if(entry.empty())
-    {
-        return;
-    }
-    Vector<String>::iterator it;
-    while ((it = find(history, entry)) != history.end())
-        history.erase(it);
-    history.push_back(entry);
-}
-
 class Prompt : public InputMode
 {
 public:
@@ -507,7 +495,7 @@ public:
 
     void on_key(Key key) override
     {
-        Vector<String>& history = ms_history[m_prompt];
+        History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
         bool showcompl = false;
 
@@ -739,10 +727,23 @@ private:
     bool           m_autoshowcompl;
     Mode           m_mode = Mode::Default;
 
-    static UnorderedMap<String, Vector<String>> ms_history;
-    Vector<String>::iterator m_history_it;
+    using History = Vector<String, MemoryDomain::History>;
+    static UnorderedMap<String, History, MemoryDomain::History> ms_history;
+    History::iterator m_history_it;
+
+    static void history_push(History& history, StringView entry)
+    {
+        if(entry.empty())
+        {
+            return;
+        }
+        History::iterator it;
+        while ((it = find(history, entry)) != history.end())
+            history.erase(it);
+        history.push_back(entry);
+    }
 };
-UnorderedMap<String, Vector<String>> Prompt::ms_history;
+UnorderedMap<String, Prompt::History, MemoryDomain::History> Prompt::ms_history;
 
 class NextKey : public InputMode
 {
