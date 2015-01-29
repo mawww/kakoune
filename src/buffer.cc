@@ -36,7 +36,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     }
     static_cast<BufferLines&>(m_lines) = std::move(lines);
 
-    m_changes.push_back({ Change::Insert, {0,0}, line_count(), true });
+    m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
 
     if (flags & Flags::File)
     {
@@ -158,7 +158,7 @@ struct Buffer::Modification
 
 void Buffer::reload(BufferLines lines, time_t fs_timestamp)
 {
-    m_changes.push_back({ Change::Erase, {0,0}, back_coord(), true });
+    m_changes.push_back({ Change::Erase, true, {0,0}, back_coord() });
 
     commit_undo_group();
     if (not (m_flags & Flags::NoUndo))
@@ -185,7 +185,7 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
     m_last_save_undo_index = m_history_cursor - m_history.begin();
     m_fs_timestamp = fs_timestamp;
 
-    m_changes.push_back({ Change::Insert, {0,0}, back_coord(), true });
+    m_changes.push_back({ Change::Insert, true, {0,0}, back_coord() });
 }
 
 void Buffer::commit_undo_group()
@@ -313,7 +313,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
     }
 
-    m_changes.push_back({ Change::Insert, begin, end, at_end });
+    m_changes.push_back({ Change::Insert, at_end, begin, end });
     return begin;
 }
 
@@ -338,7 +338,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
         next = is_end(begin) ? end_coord() : ByteCoord{begin.line, 0};
     }
 
-    m_changes.push_back({ Change::Erase, begin, end, is_end(begin) });
+    m_changes.push_back({ Change::Erase, is_end(begin), begin, end });
     return next;
 }
 

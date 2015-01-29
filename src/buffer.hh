@@ -158,11 +158,11 @@ public:
 
     struct Change
     {
-        enum Type { Insert, Erase };
+        enum Type : char { Insert, Erase };
         Type type;
+        bool at_end;
         ByteCoord begin;
         ByteCoord end;
-        bool at_end;
     };
     ArrayView<Change> changes_since(size_t timestamp) const;
 
