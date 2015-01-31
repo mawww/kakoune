@@ -749,7 +749,7 @@ void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
         if (not erase and modif_it != modifs.begin())
         {
             auto& prev = *(modif_it-1);
-            erase = it->line <= prev.old_line + prev.num_removed;
+            erase = it->line < prev.old_line + prev.num_removed;
             it->line += prev.diff();
         }
         erase = erase or (it->line >= buffer.line_count());
@@ -774,7 +774,7 @@ void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
     for (auto& modif : modifs)
     {
         for (auto line = modif.new_line;
-             line < modif.new_line + modif.num_added+1 and
+             line < modif.new_line + modif.num_added and
              line < buffer.line_count(); ++line)
         {
             auto l = buffer[line];

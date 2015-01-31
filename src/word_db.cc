@@ -108,13 +108,13 @@ void WordDB::update_db()
 
         kak_assert((int)new_lines.size() == (int)modif.new_line);
 
-        while (old_line <= modif.old_line + modif.num_removed)
+        while (old_line < modif.old_line + modif.num_removed)
         {
             kak_assert(old_line < m_lines.size());
             remove_words(get_words(SharedString{m_lines[(int)old_line++]}));
         }
 
-        for (auto l = 0_line; l <= modif.num_added; ++l)
+        for (auto l = 0_line; l < modif.num_added; ++l)
         {
             if (modif.new_line + l >= buffer.line_count())
                 break;
