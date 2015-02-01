@@ -745,26 +745,24 @@ void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
                                          [](const LineCount& l, const LineModification& c)
                                          { return l < c.old_line; });
 
-        bool erase = false;
         if (modif_it != modifs.begin())
         {
             auto& prev = *(modif_it-1);
-            erase = it->line < prev.old_line + prev.num_removed;
+            if (it->line < prev.old_line + prev.num_removed)
+                continue; // match removed
+
             it->line += prev.diff();
         }
 
-        if (not erase)
-        {
-            it->timestamp = buf_timestamp;
-            kak_assert(buffer.is_valid(it->begin_coord()) or
-                       buffer[it->line].length() == it->begin);
-            kak_assert(buffer.is_valid(it->end_coord()) or
-                       buffer[it->line].length() == it->end);
+        it->timestamp = buf_timestamp;
+        kak_assert(buffer.is_valid(it->begin_coord()) or
+                   buffer[it->line].length() == it->begin);
+        kak_assert(buffer.is_valid(it->end_coord()) or
+                   buffer[it->line].length() == it->end);
 
-            if (ins_pos != it)
-                *ins_pos = std::move(*it);
-            ++ins_pos;
-        }
+        if (ins_pos != it)
+            *ins_pos = std::move(*it);
+        ++ins_pos;
     }
     matches.erase(ins_pos, matches.end());
     size_t pivot = matches.size();
