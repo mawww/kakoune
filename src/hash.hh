@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <functional>
 
+#include <cstddef>
+
 namespace Kakoune
 {
 

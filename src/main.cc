@@ -437,7 +437,7 @@ int run_filter(StringView keystr, ArrayView<StringView> files, bool quiet)
             try
             {
                 InputHandler input_handler{
-                    { buffer, {{0,0}, buffer.back_coord()} },
+                    { buffer, Selection{{0,0}, buffer.back_coord()} },
                     Context::Flags::Transient
                 };
 
