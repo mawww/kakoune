@@ -256,6 +256,12 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
                 find_last_match(buffer.begin(), buffer.end(), matches, ex));
 }
 
+inline BufferIterator ensure_char_start(const Buffer& buffer, const BufferIterator& it)
+{
+    return it != buffer.end() ?
+        utf8::character_start(it, buffer.iterator_at(it.coord().line)) : it;
+}
+
 template<Direction direction>
 Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex)
 {
@@ -269,8 +275,8 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
                                     : utf8::previous(begin, buffer.begin());
     if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex)))
     {
-        begin = matches[0].first;
-        end   = matches[0].second;
+        begin = ensure_char_start(buffer, matches[0].first);
+        end = ensure_char_start(buffer, matches[0].second);
         for (auto& match : matches)
             captures.emplace_back(match.first, match.second);
     }

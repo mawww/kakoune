@@ -510,8 +510,8 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
 
         for (; re_it != re_end; ++re_it)
         {
-            auto& begin = (*re_it)[0].first;
-            auto& end   = (*re_it)[0].second;
+            auto begin = ensure_char_start(buffer, (*re_it)[0].first);
+            auto end = ensure_char_start(buffer, (*re_it)[0].second);
 
             if (begin == sel_end)
                 continue;
@@ -549,8 +549,9 @@ void split_selections(SelectionList& selections, const Regex& regex)
             if (end == buf_end)
                 continue;
 
+            end = ensure_char_start(buffer, end);
             result.push_back(keep_direction({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() }, sel));
-            begin = (*re_it)[0].second;
+            begin = ensure_char_start(buffer, (*re_it)[0].second);
         }
         if (begin.coord() <= sel.max())
             result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));
