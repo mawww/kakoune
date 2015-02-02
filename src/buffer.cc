@@ -171,12 +171,13 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
     if (lines.empty())
         lines.emplace_back(StringStorage::create("\n"));
 
-    for (auto& line : lines)
+    for (size_t l = 0; l < lines.size(); ++l)
     {
+        auto& line = lines[l];
         kak_assert(not line->length == 0 and line->data()[line->length-1] == '\n');
         if (not (m_flags & Flags::NoUndo))
             m_current_undo_group.emplace_back(
-                Modification::Insert, line_count()-1, m_lines.back());
+                Modification::Insert, LineCount{(int)l}, SharedString{line});
     }
     static_cast<BufferLines&>(m_lines) = std::move(lines);
 
