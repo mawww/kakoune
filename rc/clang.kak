@@ -34,35 +34,35 @@ def -shell-params clang-parse %{
 
             cd $(dirname ${kak_buffile})
             if [ "$1" == "-complete" ]; then
-                    pos=-:${kak_cursor_line}:${kak_cursor_column}
-                    header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
-                    compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \
-                        -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
-                            awk -F ': ' -e '
-                                /^COMPLETION:/ && ! /\(Hidden\)/ {
-                                     gsub(/[[{<]#|#[}>]/, "", $3)
-                                     gsub(/#]/, " ", $3)
-                                     gsub(/:: /, "::", $3)
-                                     gsub(/ +$/, "", $3)
-                                     id=substr($2, 1, length($2)-1)
-                                     gsub(/:/, "\\:", id)
-                                     gsub(/"/, "\\\"", id)
-                                     desc=$4 ? $3 "\\n" $4 : $3
-                                     gsub(/:/, "\\:", desc)
-                                     gsub(/"/, "\\\"", desc)
-                                     if (id in completions)
-                                         completions[id]=completions[id] "\\n" desc
-                                     else
-                                         completions[id]=desc
-                                }
-                                END {
-                                    for (id in completions)
-                                        print id  "@" completions[id]
-                                }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
-                    echo "eval -client ${kak_client} echo completed
-                          set 'buffer=${kak_buffile}' clang_completions \"${header}:${compl}\"" | kak -p ${kak_session}
+                pos=-:${kak_cursor_line}:${kak_cursor_column}
+                header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
+                compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \
+                    -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
+                        awk -F ': ' -e '
+                            /^COMPLETION:/ && ! /\(Hidden\)/ {
+                                 gsub(/[[{<]#|#[}>]/, "", $3)
+                                 gsub(/#]/, " ", $3)
+                                 gsub(/:: /, "::", $3)
+                                 gsub(/ +$/, "", $3)
+                                 id=substr($2, 1, length($2)-1)
+                                 gsub(/:/, "\\:", id)
+                                 gsub(/"/, "\\\"", id)
+                                 desc=$4 ? $3 "\\n" $4 : $3
+                                 gsub(/:/, "\\:", desc)
+                                 gsub(/"/, "\\\"", desc)
+                                 if (id in completions)
+                                     completions[id]=completions[id] "\\n" desc
+                                 else
+                                     completions[id]=desc
+                            }
+                            END {
+                                for (id in completions)
+                                    print id  "@" completions[id]
+                            }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
+                echo "eval -client ${kak_client} echo completed
+                      set 'buffer=${kak_buffile}' clang_completions \"${header}:${compl}\"" | kak -p ${kak_session}
             else
-                                clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
+                clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
