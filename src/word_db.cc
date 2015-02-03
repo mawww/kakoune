@@ -101,7 +101,8 @@ void WordDB::update_db()
     auto old_line = 0_line;
     for (auto& modif : modifs)
     {
-        kak_assert(0_line <= modif.new_line and modif.new_line < buffer.line_count());
+        kak_assert(0_line <= modif.new_line and modif.new_line <= buffer.line_count());
+        kak_assert(modif.new_line < buffer.line_count() or modif.num_added == 0);
         kak_assert(old_line <= modif.old_line);
         while (old_line < modif.old_line)
             new_lines.push_back(std::move(m_lines[(int)old_line++]));
@@ -116,9 +117,6 @@ void WordDB::update_db()
 
         for (auto l = 0_line; l < modif.num_added; ++l)
         {
-            if (modif.new_line + l >= buffer.line_count())
-                break;
-
             new_lines.push_back(buffer.line_storage(modif.new_line + l));
             add_words(get_words(SharedString{new_lines.back()}));
         }
