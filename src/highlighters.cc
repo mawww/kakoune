@@ -515,8 +515,8 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
     const Face face = get_face("LineNumbers");
     for (auto& line : display_buffer.lines())
     {
-        char buffer[10];
-        snprintf(buffer, 10, format, (int)line.range().first.line + 1);
+        char buffer[16];
+        snprintf(buffer, 16, format, (int)line.range().first.line + 1);
         DisplayAtom atom{buffer};
         atom.face = face;
         line.insert(line.begin(), std::move(atom));
