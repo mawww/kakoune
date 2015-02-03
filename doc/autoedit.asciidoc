@@ -32,17 +32,21 @@ note that if nothing gets selected on phase *2.*, an error will be raised.
 We want to do that each time the user jumps a line, just after the new line
 is inserted. So the hook would be:
 
-------------------------------------------------------
-:hook InsertChar \n %{ exec k<a-x>s^\h+<ret>yj<a-h>P }
-------------------------------------------------------
+--------------------------------------------------------
+:hook InsertChar \n %{ exec k<a-x> s^\h+<ret>y j<a-h>P }
+--------------------------------------------------------
+
+(exec concatenates the keys for all argument, so the spaces will be ignored,
+allowing for clearer separation. either use <space> or quote the argument to
+use a space key)
 
 That works, however if the phase *2.* raises an error, the +:exec+ will stop
 and the user will get it's selections on the previous line. the solution
 is to use a *draft* context, instead of the one the user is interacting with.
 
--------------------------------------------------------------
-:hook InsertChar \n %{ exec -draft k<a-x>s^\h+<ret>yj<a-h>P }
--------------------------------------------------------------
+---------------------------------------------------------------
+:hook InsertChar \n %{ exec -draft k<a-x> s^\h+<ret>y j<a-h>P }
+---------------------------------------------------------------
 
 That way, exec is executed in a *copy* of the user's context, which means it
 manipulates a *copy* of the user's selections.
@@ -77,7 +81,7 @@ it will write informations about it in the debug buffer, which we do not want,
 as this is actually expected. In order to prevent that, the exec should be
 wrapped in a try command. So we would have:
 
------------------------------------------------------------------------------
-:hook InsertChar \n %[ try %[ exec -draft k<a-x><a-k>[{(]\h*$<ret>j<a-gt> ] ]
------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+:hook InsertChar \n %[ try %[ exec -draft k<a-x> <a-k>[{(]\h*$<ret> j<a-gt> ] ]
+-------------------------------------------------------------------------------
 
