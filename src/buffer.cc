@@ -158,7 +158,7 @@ struct Buffer::Modification
 
 void Buffer::reload(BufferLines lines, time_t fs_timestamp)
 {
-    m_changes.push_back({ Change::Erase, true, {0,0}, back_coord() });
+    m_changes.push_back({ Change::Erase, true, {0,0}, line_count() });
 
     commit_undo_group();
     if (not (m_flags & Flags::NoUndo))
@@ -186,7 +186,7 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
     m_last_save_undo_index = m_history_cursor - m_history.begin();
     m_fs_timestamp = fs_timestamp;
 
-    m_changes.push_back({ Change::Insert, true, {0,0}, back_coord() });
+    m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
 }
 
 void Buffer::commit_undo_group()
