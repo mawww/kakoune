@@ -997,6 +997,8 @@ const CommandDesc map_key_cmd = {
     "    insert\n"
     "    menu\n"
     "    prompt\n"
+    "    goto\n"
+    "    view\n"
     "    user\n",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 4, 4 },
     CommandFlags::None,
@@ -1009,7 +1011,7 @@ const CommandDesc map_key_cmd = {
                      complete(params[0], pos_in_token, scopes) };
         if (token_to_complete == 1)
         {
-            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view" };
+            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view", "user" };
             return { 0_byte, params[1].length(),
                      complete(params[1], pos_in_token, modes) };
         }
