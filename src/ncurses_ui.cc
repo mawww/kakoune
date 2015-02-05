@@ -29,6 +29,30 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
+static const Vector<String> cat_assistant =
+    { "           ___   ",
+      "          / __)  ",
+      "          \\ \\   ╭",
+      "        .·' '.  │",
+      "       ”      ' ╯",
+      "  |\\_/\\       ╯  ",
+      " /         . |   ",
+      " | | |    ’l_╯   ",
+      " \\_ -__/ '       ",
+      " /_/   /_/       ",
+      "                 "};
+static const Vector<String> trombon_assistant =
+    { " ╭──╮   ",
+      " │  │   ",
+      " @  @  ╭",
+      " ││ ││ │",
+      " ││ ││ ╯",
+      " │╰─╯│  ",
+      " ╰───╯  ",
+      "        " };
+static Vector<String> s_assistant = trombon_assistant;
+
+
 static void set_attribute(WINDOW* window, int attribute, bool on)
 {
     if (on)
@@ -690,35 +714,12 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
 }
 
 template<bool assist = true>
-static String make_info_box(StringView title, StringView message,
+String make_info_box(StringView title, StringView message,
                             CharCount max_width)
 {
-    static const Vector<String> cat_assistant =
-        { "           ___   ",
-          "          / __)  ",
-          "          \\ \\   ╭",
-          "        .·' '.  │",
-          "       ”      ' ╯",
-          "  |\\_/\\       ╯  ",
-          " /         . |   ",
-          " | | |    ’l_╯   ",
-          " \\_ -__/ '       ",
-          " /_/   /_/       ",
-          "                 "};
-    static const Vector<String> trombon_assistant =
-        { " ╭──╮   ",
-          " │  │   ",
-          " @  @  ╭",
-          " ││ ││ │",
-          " ││ ││ ╯",
-          " │╰─╯│  ",
-          " ╰───╯  ",
-          "        " };
-    static const Vector<String> assistant = trombon_assistant;
-
     CharCoord assistant_size;
     if (assist)
-        assistant_size = { (int)assistant.size(), assistant[0].char_length() };
+        assistant_size = { (int)s_assistant.size(), s_assistant[0].char_length() };
 
     const CharCount max_bubble_width = max_width - assistant_size.column - 6;
     Vector<StringView> lines = wrap_lines(message, max_bubble_width);
@@ -734,7 +735,7 @@ static String make_info_box(StringView title, StringView message,
     {
         constexpr Codepoint dash{L'─'};
         if (assist)
-            result += assistant[min((int)i, (int)assistant_size.line-1)];
+            result += s_assistant[min((int)i, (int)assistant_size.line-1)];
         if (i == 0)
         {
             if (title.empty())
@@ -841,9 +842,19 @@ void NCursesUI::abort()
 
 void NCursesUI::set_ui_options(const Options& options)
 {
-    auto it = options.find("ncurses_status_on_top");
-    if (it != options.end())
-        m_status_on_top = it->second == "yes" or it->second == "true";
+    {
+        auto it = options.find("assistant");
+        if (it != options.end())
+            s_assistant = (it->second == "cat")     ? cat_assistant :
+                (it->second == "trombon") ? trombon_assistant :
+                s_assistant;
+    }
+
+    {
+        auto it = options.find("ncurses_status_on_top");
+        if (it != options.end())
+            m_status_on_top = it->second == "yes" or it->second == "true";
+    }
 }
 
 }
