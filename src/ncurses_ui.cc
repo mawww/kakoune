@@ -693,7 +693,19 @@ template<bool assist = true>
 static String make_info_box(StringView title, StringView message,
                             CharCount max_width)
 {
-    static const Vector<String> assistant =
+    static const Vector<String> cat_assistant =
+        { "           ___   ",
+          "          / __)  ",
+          "          \\ \\   ╭",
+          "        .·' '.  │",
+          "       ”      ' ╯",
+          "  |\\_/\\       ╯  ",
+          " /         . |   ",
+          " | | |    ’l_╯   ",
+          " \\_ -__/ '       ",
+          " /_/   /_/       ",
+          "                 "};
+    static const Vector<String> trombon_assistant =
         { " ╭──╮   ",
           " │  │   ",
           " @  @  ╭",
@@ -702,6 +714,8 @@ static String make_info_box(StringView title, StringView message,
           " │╰─╯│  ",
           " ╰───╯  ",
           "        " };
+    static const Vector<String> assistant = trombon_assistant;
+
     CharCoord assistant_size;
     if (assist)
         assistant_size = { (int)assistant.size(), assistant[0].char_length() };
