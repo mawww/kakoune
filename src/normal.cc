@@ -971,6 +971,30 @@ void scroll(Context& context, NormalParams)
     window.set_position(position);
 }
 
+template<Direction direction>
+void copy_selections_on_next_lines(Context& context, NormalParams params)
+{
+    auto& selections = context.selections();
+    auto& buffer = context.buffer();
+    Vector<Selection> result;
+    for (auto& sel : selections)
+    {
+        auto anchor = sel.anchor();
+        auto cursor = sel.cursor();
+        result.push_back(std::move(sel));
+        for (int i = 0; i < std::max(params.count, 1); ++i)
+        {
+            LineCount offset = (direction == Forward ? 1 : -1) * (i + 1);
+            ByteCoord new_anchor{anchor.line + offset, anchor.column};
+            ByteCoordAndTarget new_cursor{cursor.line + offset, cursor.column, cursor.target};
+            if (buffer.is_valid(new_anchor) and buffer.is_valid(new_cursor))
+                result.emplace_back(new_anchor, new_cursor);
+        }
+    }
+    selections = std::move(result);
+    selections.sort_and_merge_overlapping();
+}
+
 void rotate_selections(Context& context, NormalParams params)
 {
     context.selections().rotate_main(params.count != 0 ? params.count : 1);
@@ -1465,6 +1489,9 @@ KeyMap keymap =
 
     { '@', { "convert tabs to spaces in selections", tabs_to_spaces } },
     { alt('@'), { "convert spaces to tabs in selections", spaces_to_tabs } },
+
+    { 'C', { "copy selection on next lines", copy_selections_on_next_lines<Forward> } },
+    { alt('C'), { "copy selection on previous lines", copy_selections_on_next_lines<Backward> } },
 
     { ',', { "user mappings", exec_user_mappings } },
 
