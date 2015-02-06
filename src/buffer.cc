@@ -32,7 +32,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
 
     for (auto& line : lines)
     {
-        kak_assert(not line->length == 0 and line->data()[line->length-1] == '\n');
+        kak_assert(not (line->length == 0) and line->data()[line->length-1] == '\n');
     }
     static_cast<BufferLines&>(m_lines) = std::move(lines);
 
@@ -174,7 +174,7 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
     for (size_t l = 0; l < lines.size(); ++l)
     {
         auto& line = lines[l];
-        kak_assert(not line->length == 0 and line->data()[line->length-1] == '\n');
+        kak_assert(not (line->length == 0) and line->data()[line->length-1] == '\n');
         if (not (m_flags & Flags::NoUndo))
             m_current_undo_group.emplace_back(
                 Modification::Insert, LineCount{(int)l}, SharedString{line});
