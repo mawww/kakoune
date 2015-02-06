@@ -987,7 +987,8 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
             LineCount offset = (direction == Forward ? 1 : -1) * (i + 1);
             ByteCoord new_anchor{anchor.line + offset, anchor.column};
             ByteCoordAndTarget new_cursor{cursor.line + offset, cursor.column, cursor.target};
-            if (buffer.is_valid(new_anchor) and buffer.is_valid(new_cursor))
+            if (buffer.is_valid(new_anchor) and not buffer.is_end(new_anchor) and
+                buffer.is_valid(new_cursor) and not buffer.is_end(new_cursor))
                 result.emplace_back(new_anchor, new_cursor);
         }
     }
