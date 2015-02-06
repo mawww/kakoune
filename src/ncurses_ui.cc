@@ -50,6 +50,8 @@ static const Vector<String> trombon_assistant =
       " │╰─╯│  ",
       " ╰───╯  ",
       "        " };
+static const Vector<String> none_assistant = {{}};
+
 static Vector<String> s_assistant = trombon_assistant;
 
 
@@ -845,9 +847,10 @@ void NCursesUI::set_ui_options(const Options& options)
     {
         auto it = options.find("assistant");
         if (it != options.end())
-            s_assistant = (it->second == "cat")     ? cat_assistant :
-                (it->second == "trombon") ? trombon_assistant :
-                s_assistant;
+            s_assistant = (it->second == "cat") ? cat_assistant :
+                          (it->second == "trombon") ? trombon_assistant :
+                          (it->second == "none") ? none_assistant :
+                          s_assistant;
     }
 
     {
