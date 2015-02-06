@@ -54,6 +54,23 @@ String parse_filename(StringView filename)
     return result;
 }
 
+std::pair<StringView, StringView> split_path(StringView path)
+{
+    StringView dir, file = path;
+    ByteCount dir_end = -1;
+    for (ByteCount i = 0; i < path.length(); ++i)
+    {
+        if (path[i] == '/')
+            dir_end = i;
+    }
+    if (dir_end != -1)
+    {
+        dir = path.substr(0, dir_end + 1);
+        file = path.substr(dir_end + 1);
+    }
+    return { dir, file };
+}
+
 String real_path(StringView filename)
 {
     char buffer[PATH_MAX+1];
@@ -218,9 +235,18 @@ void write_buffer_to_file(Buffer& buffer, StringView filename)
 
 void write_buffer_to_backup_file(Buffer& buffer)
 {
+    String path = real_path(buffer.name());
+    StringView dir, file;
+    std::tie(dir,file) = split_path(path);
+
     char pattern[PATH_MAX+1];
-    snprintf(pattern, PATH_MAX+1, ".%s.kak.XXXXXX",
-             real_path(buffer.name()).c_str());
+    if (not dir.empty())
+        snprintf(pattern, PATH_MAX+1, "%s/.%s.kak.XXXXXX",
+                 (const char*)dir.zstr(), (const char*) file.zstr());
+    else
+        snprintf(pattern, PATH_MAX+1, ".%s.kak.XXXXXX",
+                 (const char*)file.zstr());
+
     int fd = mkstemp(pattern);
     if (fd >= 0)
     {
@@ -305,23 +331,11 @@ CandidateList complete_filename(StringView prefix,
                                 ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
-    String dirname;
-    String fileprefix = real_prefix;
-
-    ByteCount dir_end = -1;
-    for (ByteCount i = 0; i < real_prefix.length(); ++i)
-    {
-        if (real_prefix[i] == '/')
-            dir_end = i;
-    }
-    if (dir_end != -1)
-    {
-        dirname = real_prefix.substr(0, dir_end + 1);
-        fileprefix = real_prefix.substr(dir_end + 1);
-    }
+    StringView dirname, fileprefix;
+    std::tie(dirname, fileprefix) = split_path(real_prefix);
 
     const bool check_ignored_regex = not ignored_regex.empty() and
-        not regex_match(fileprefix.c_str(), ignored_regex);
+        not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
 
     auto filter = [&](const dirent& entry)
     {
@@ -338,22 +352,15 @@ CandidateList complete_filename(StringView prefix,
 Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
+    StringView dirname, fileprefix;
+    std::tie(dirname, fileprefix) = split_path(real_prefix);
 
-    ByteCount dir_end = -1;
-    for (ByteCount i = 0; i < real_prefix.length(); ++i)
+    if (not dirname.empty())
     {
-        if (real_prefix[i] == '/')
-            dir_end = i;
-    }
-
-    if (dir_end != -1)
-    {
-        auto dirname = real_prefix.substr(0, dir_end + 1);
-        auto fileprefix = real_prefix.substr(dir_end + 1);
         auto filter = [&](const dirent& entry)
         {
             struct stat st;
-            if (stat((dirname + entry.d_name).c_str(), &st))
+            if (stat((dirname.str() + entry.d_name).c_str(), &st))
                 return false;
             bool executable = (st.st_mode & S_IXUSR)
                             | (st.st_mode & S_IXGRP)
@@ -387,25 +394,25 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         if (stat(dirname.substr(0_byte, dirname.length() - 1).zstr(), &st))
             continue;
 
-        auto filter = [&](const dirent& entry) {
-            struct stat st;
-            if (stat((dirname + entry.d_name).c_str(), &st))
-                return false;
-            bool executable = (st.st_mode & S_IXUSR)
-                            | (st.st_mode & S_IXGRP)
-                            | (st.st_mode & S_IXOTH);
-            return S_ISREG(st.st_mode) and executable;
-        };
-
         auto& cache = command_cache[dirname];
         if (memcmp(&cache.mtime, &st.st_mtime, sizeof(TimeSpec)) != 0)
         {
-            memcpy(&cache.mtime, &st.st_mtime, sizeof(TimeSpec));
+            auto filter = [&](const dirent& entry) {
+                struct stat st;
+                if (stat((dirname + entry.d_name).c_str(), &st))
+                    return false;
+                bool executable = (st.st_mode & S_IXUSR)
+                                | (st.st_mode & S_IXGRP)
+                                | (st.st_mode & S_IXOTH);
+                return S_ISREG(st.st_mode) and executable;
+            };
+
             cache.commands = list_files("", dirname, filter);
+            memcpy(&cache.mtime, &st.st_mtime, sizeof(TimeSpec));
         }
         for (auto& cmd : cache.commands)
         {
-            if (prefix_match(cmd, real_prefix))
+            if (prefix_match(cmd, fileprefix))
                 res.push_back(cmd);
         }
     }
