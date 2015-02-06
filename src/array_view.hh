@@ -27,6 +27,9 @@ public:
     ArrayView(const T* begin, const T* end)
         : m_pointer(begin), m_size(end - begin) {}
 
+    template<size_t N>
+    ArrayView(const T(&array)[N]) : m_pointer(array), m_size(N) {}
+
     template<typename Iterator>
     ArrayView(const Iterator& begin, const Iterator& end)
         : m_pointer(&(*begin)), m_size(end - begin) {}
