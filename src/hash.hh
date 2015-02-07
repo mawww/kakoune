@@ -11,11 +11,11 @@ namespace Kakoune
 
 size_t hash_data(const char* data, size_t len);
 
-template<typename Type>
-typename std::enable_if<not std::is_enum<Type>::value, size_t>::type
-hash_value(const Type& val)
+template<typename... Type>
+size_t hash_value(const Type&... val)
 {
-    return std::hash<Type>()(val);
+    static_assert(sizeof...(Type) == 1, "");
+    return std::hash<Type...>()(val...);
 }
 
 template<typename Type>
