@@ -127,6 +127,7 @@ struct CommandDesc
     const char* docstring;
     ParameterDesc params;
     CommandFlags flags;
+    CommandHelper helper;
     CommandCompleter completer;
     void (*func)(const ParametersParser&, Context&);
 };
@@ -202,6 +203,7 @@ const CommandDesc edit_cmd = {
     "edit <switches> <filename>: open the given filename in a buffer",
     edit_params,
     CommandFlags::None,
+    CommandHelper{},
     filename_completer,
     edit<false>
 };
@@ -212,6 +214,7 @@ const CommandDesc force_edit_cmd = {
     "edit! <switches> <filename>: open the given filename in a buffer, force reload if needed",
     edit_params,
     CommandFlags::None,
+    CommandHelper{},
     filename_completer,
     edit<true>
 };
@@ -235,6 +238,7 @@ const CommandDesc write_cmd = {
     "write [filename]: write the current buffer to it's file or to [filename] if specified",
     single_optional_name_param,
     CommandFlags::None,
+    CommandHelper{},
     filename_completer,
     write_buffer,
 };
@@ -254,6 +258,7 @@ const CommandDesc writeall_cmd = {
     "write all buffers that are associated to a file",
     no_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser&, Context&){ write_all_buffers(); }
 };
@@ -292,6 +297,7 @@ const CommandDesc quit_cmd = {
     "quit current client, and the kakoune session if the client is the last (if not running in daemon mode)",
     no_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser&, Context&){ quit<false>(); }
 };
@@ -303,6 +309,7 @@ const CommandDesc force_quit_cmd = {
     "force quit even if the client is the last and some buffers are not saved.",
     no_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser&, Context&){ quit<true>(); }
 };
@@ -313,6 +320,7 @@ const CommandDesc write_quit_cmd = {
     "write current buffer and quit current client",
     no_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -327,6 +335,7 @@ const CommandDesc force_write_quit_cmd = {
     "write current buffer and quit current client, even if other buffers are not saved",
     no_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -341,6 +350,7 @@ const CommandDesc writeall_quit_cmd = {
     "write all buffers associated to a file and quit current client",
     no_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -355,6 +365,7 @@ const CommandDesc buffer_cmd = {
     "buffer <name>: set buffer to edit in current client",
     single_name_param,
     CommandFlags::None,
+    CommandHelper{},
     buffer_completer,
     [](const ParametersParser& parser, Context& context)
     {
@@ -389,6 +400,7 @@ const CommandDesc delbuf_cmd = {
     "delbuf [name]: delete the current buffer or the buffer named <name> if given",
     single_optional_name_param,
     CommandFlags::None,
+    CommandHelper{},
     buffer_completer,
     delete_buffer<false>
 };
@@ -399,6 +411,7 @@ const CommandDesc force_delbuf_cmd = {
     "delbuf! [name]: delete the current buffer or the buffer named <name> if given, even if the buffer is unsaved",
     single_optional_name_param,
     CommandFlags::None,
+    CommandHelper{},
     buffer_completer,
     delete_buffer<true>
 };
@@ -409,6 +422,7 @@ const CommandDesc namebuf_cmd = {
     "namebuf <name>: change current buffer name",
     single_name_param,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -491,6 +505,7 @@ const CommandDesc add_highlighter_cmd = {
         SwitchMap{ { "group", { true, "specify the group in which to put the highlighter" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
+    CommandHelper{},
     add_highlighter_completer,
     [](const ParametersParser& parser, Context& context)
     {
@@ -521,6 +536,7 @@ const CommandDesc rm_highlighter_cmd = {
         ParameterDesc::Flags::None, 1, 1
     },
     CommandFlags::None,
+    CommandHelper{},
     rm_highlighter_completer,
     [](const ParametersParser& parser, Context& context)
     {
@@ -548,6 +564,7 @@ const CommandDesc add_hook_cmd = {
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
+    CommandHelper{},
     [](const Context& context, CompletionFlags flags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
@@ -591,6 +608,7 @@ const CommandDesc rm_hook_cmd = {
     "rmhooks <scope> <group>: remove all hooks whose group is <group>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
+    CommandHelper{},
     [](const Context& context, CompletionFlags flags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
@@ -711,7 +729,7 @@ void define_command(const ParametersParser& parser, Context& context)
     }
 
     auto& cm = CommandManager::instance();
-    cm.register_command(cmd_name, cmd, std::move(docstring), desc, flags, completer);
+    cm.register_command(cmd_name, cmd, std::move(docstring), desc, flags, CommandHelper{}, completer);
 }
 
 const CommandDesc define_command_cmd = {
@@ -731,6 +749,7 @@ const CommandDesc define_command_cmd = {
         2, 2
     },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     define_command
 };
@@ -741,6 +760,7 @@ const CommandDesc alias_cmd = {
     "alias <scope> <alias> <command>: define a command alias in given scope",
     ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -756,6 +776,7 @@ const CommandDesc unalias_cmd = {
     "if <expected> is specified, the alias is removed only if its value is <expected>",
     ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -777,6 +798,7 @@ const CommandDesc echo_cmd = {
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -800,6 +822,7 @@ const CommandDesc debug_cmd = {
     "    existing commands: info, buffers",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
+    CommandHelper{},
     PerArgumentCommandCompleter({
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
@@ -855,6 +878,7 @@ const CommandDesc source_cmd = {
     "source <filename>: execute commands contained in <filename>",
     single_name_param,
     CommandFlags::None,
+    CommandHelper{},
     filename_completer,
     [](const ParametersParser& parser, Context& context)
     {
@@ -881,6 +905,21 @@ const CommandDesc set_option_cmd = {
         3, 3
     },
     CommandFlags::None,
+    [](const Context& context, CommandParameters params) -> String
+    {
+        if (params.size() < 2)
+            return "";
+
+        try
+        {
+            OptionManager& options = get_scope(params[0], context).options();
+            const String& docstring = options[params[1]].docstring();
+            if (not docstring.empty())
+                return params[1] + ": " + docstring;
+        }
+        catch (runtime_error&) {}
+        return "";
+    },
     [](const Context& context, CompletionFlags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
@@ -934,6 +973,7 @@ const CommandDesc declare_option_cmd = {
         2, 3
     },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1002,6 +1042,7 @@ const CommandDesc map_key_cmd = {
     "    user\n",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 4, 4 },
     CommandFlags::None,
+    CommandHelper{},
     [](const Context& context, CompletionFlags flags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
@@ -1152,6 +1193,7 @@ const CommandDesc exec_string_cmd = {
     "exec <switches> <keys>: execute given keys as if entered by user",
     context_wrap_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1173,6 +1215,7 @@ const CommandDesc eval_string_cmd = {
     "eval <switches> <commands>...: execute commands as if entered by user",
     context_wrap_params,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1195,6 +1238,7 @@ const CommandDesc prompt_cmd = {
         ParameterDesc::Flags::None, 3, 3
     },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& params, Context& context)
     {
@@ -1229,6 +1273,7 @@ const CommandDesc menu_cmd = {
                    { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
     },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1277,6 +1322,7 @@ const CommandDesc info_cmd = {
         ParameterDesc::Flags::None, 0, 1
     },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1321,6 +1367,7 @@ const CommandDesc try_catch_cmd = {
     "The error is not propagated further.",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 1, 3 },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1357,6 +1404,7 @@ const CommandDesc face_cmd = {
     "face <name> <facespec>: set face <name> to refer to <facespec>\n",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
+    CommandHelper{},
     PerArgumentCommandCompleter({ complete_face, complete_face }),
     [](const ParametersParser& parser, Context& context)
     {
@@ -1370,6 +1418,7 @@ const CommandDesc set_client_name_cmd = {
     "nameclient <name>: set current client name to <name>",
     single_name_param,
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1386,6 +1435,7 @@ const CommandDesc set_register_cmd = {
     "reg <name> <value>: set register <name> to <value>",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
+    CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
@@ -1399,6 +1449,7 @@ const CommandDesc change_working_directory_cmd = {
     "cd <dir>: change server working directory to <dir>",
     single_name_param,
     CommandFlags::None,
+    CommandHelper{},
     filename_completer,
     [](const ParametersParser& parser, Context&)
     {
@@ -1440,7 +1491,7 @@ void exec_keys(ArrayView<Key> keys, Context& context)
 
 static void register_command(CommandManager& cm, const CommandDesc& c)
 {
-    cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.completer);
+    cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.helper, c.completer);
     if (c.alias)
         GlobalScope::instance().aliases().add_alias(c.alias, c.name);
 }

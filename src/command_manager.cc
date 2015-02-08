@@ -22,12 +22,14 @@ void CommandManager::register_command(String command_name,
                                       String docstring,
                                       ParameterDesc param_desc,
                                       CommandFlags flags,
+                                      CommandHelper helper,
                                       CommandCompleter completer)
 {
     m_commands[command_name] = { std::move(command),
                                  std::move(docstring),
                                  std::move(param_desc),
                                  flags,
+                                 std::move(helper),
                                  std::move(completer) };
 }
 
@@ -457,6 +459,25 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
     res.first = cmd->first;
     if (not cmd->second.docstring.empty())
         res.second += cmd->second.docstring + "\n";
+
+    if (cmd->second.helper)
+    {
+        Vector<String> params;
+        for (auto it = tokens.begin() + cmd_idx + 1;
+             it != tokens.end() and it->type() != Token::Type::CommandSeparator;
+             ++it)
+        {
+            if (it->type() == Token::Type::Raw or it->type() == Token::Type::RawEval)
+                params.push_back(it->content());
+        }
+        String helpstr = cmd->second.helper(context, params);
+        if (not helpstr.empty())
+        {
+            if (helpstr.back() != '\n')
+                helpstr += '\n';
+            res.second += helpstr;
+        }
+    }
 
     String aliases;
     for (auto& alias : context.aliases().aliases_for(cmd->first))

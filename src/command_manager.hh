@@ -24,6 +24,8 @@ using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
                                                     CommandParameters,
                                                     size_t, ByteCount)>;
+using CommandHelper = std::function<String (const Context& context, CommandParameters)>;
+
 enum class CommandFlags
 {
     None   = 0,
@@ -74,6 +76,7 @@ public:
                           String docstring,
                           ParameterDesc param_desc,
                           CommandFlags flags = CommandFlags::None,
+                          CommandHelper helper = CommandHelper(),
                           CommandCompleter completer = CommandCompleter());
 
 private:
@@ -86,6 +89,7 @@ private:
         String docstring;
         ParameterDesc param_desc;
         CommandFlags flags;
+        CommandHelper helper;
         CommandCompleter completer;
     };
     using CommandMap = UnorderedMap<String, CommandDescriptor, MemoryDomain::Commands>;
