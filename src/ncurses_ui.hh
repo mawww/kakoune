@@ -5,6 +5,7 @@
 #include "event_manager.hh"
 #include "face.hh"
 #include "user_interface.hh"
+#include "array_view.hh"
 
 namespace Kakoune
 {
@@ -72,6 +73,7 @@ private:
     InputCallback m_input_callback;
 
     bool m_status_on_top = false;
+    ArrayView<StringView> m_assistant;
 
     bool m_dirty = false;
 };

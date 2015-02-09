@@ -29,19 +29,20 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
-static const Vector<String> cat_assistant =
-    { "           ___   ",
-      "          / __)  ",
-      "          \\ \\   ╭",
-      "        .·' '.  │",
-      "       ”      ' ╯",
-      "  |\\_/\\       ╯  ",
-      " /         . |   ",
-      " | | |    ’l_╯   ",
-      " \\_ -__/ '       ",
-      " /_/   /_/       ",
-      "                 "};
-static const Vector<String> trombon_assistant =
+static const StringView assistant_cat[] =
+    { R"(           ___   )",
+      R"(          / __)  )",
+      R"(          \ \   ╭)",
+      R"(        .·' '.  │)",
+      R"(       ”      ' ╯)",
+      R"(  |\_/\       ╯  )",
+      R"( /         . |   )",
+      R"( | | |    ’l_╯   )",
+      R"( \_ -__/ '       )",
+      R"( /_/   /_/       )",
+      R"(                 )"};
+
+static const StringView assistant_clippy[] =
     { " ╭──╮   ",
       " │  │   ",
       " @  @  ╭",
@@ -50,8 +51,6 @@ static const Vector<String> trombon_assistant =
       " │╰─╯│  ",
       " ╰───╯  ",
       "        " };
-static Vector<String> s_assistant = trombon_assistant;
-
 
 static void set_attribute(WINDOW* window, int attribute, bool on)
 {
@@ -244,7 +243,8 @@ NCursesUI::NCursesUI()
     : m_stdin_watcher{0, [this](FDWatcher&, EventMode mode) {
         if (m_input_callback)
             m_input_callback(mode);
-      }}
+      }},
+      m_assistant(assistant_clippy)
 {
     initscr();
     raw();
@@ -713,13 +713,12 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
     return pos;
 }
 
-template<bool assist = true>
-String make_info_box(StringView title, StringView message,
-                            CharCount max_width)
+String make_info_box(StringView title, StringView message, CharCount max_width,
+                     ArrayView<StringView> assistant)
 {
     CharCoord assistant_size;
-    if (assist)
-        assistant_size = { (int)s_assistant.size(), s_assistant[0].char_length() };
+    if (not assistant.empty())
+        assistant_size = { (int)assistant.size(), assistant[0].char_length() };
 
     const CharCount max_bubble_width = max_width - assistant_size.column - 6;
     Vector<StringView> lines = wrap_lines(message, max_bubble_width);
@@ -734,8 +733,8 @@ String make_info_box(StringView title, StringView message,
     for (LineCount i = 0; i < line_count; ++i)
     {
         constexpr Codepoint dash{L'─'};
-        if (assist)
-            result += s_assistant[min((int)i, (int)assistant_size.line-1)];
+        if (not assistant.empty())
+            result += assistant[min((int)i, (int)assistant_size.line-1)];
         if (i == 0)
         {
             if (title.empty())
@@ -772,7 +771,8 @@ void NCursesUI::info_show(StringView title, StringView content,
     String fancy_info_box;
     if (style == InfoStyle::Prompt)
     {
-        fancy_info_box = make_info_box(title, content, m_dimensions.column);
+        fancy_info_box = make_info_box(title, content, m_dimensions.column,
+                                       m_assistant);
         info_box = fancy_info_box;
         anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
@@ -843,11 +843,16 @@ void NCursesUI::abort()
 void NCursesUI::set_ui_options(const Options& options)
 {
     {
-        auto it = options.find("assistant");
+        auto it = options.find("ncurses_assistant");
         if (it != options.end())
-            s_assistant = (it->second == "cat")     ? cat_assistant :
-                (it->second == "trombon") ? trombon_assistant :
-                s_assistant;
+        {
+            if (it->second == "cat")
+                m_assistant = assistant_cat;
+            else if (it->second == "clippy")
+                m_assistant = assistant_clippy;
+            else if (it->second == "none" or it->second == "off")
+                m_assistant = ArrayView<StringView>{};
+        }
     }
 
     {
