@@ -499,8 +499,11 @@ void SelectionList::insert(ArrayView<String> strings, InsertMode mode,
 
         if (select_inserted or mode == InsertMode::Replace)
         {
-            sel.min() = change.begin;
-            sel.max() = m_buffer->char_prev(change.end);
+            // we want min and max from *before* we do any change
+            auto& min = sel.min();
+            auto& max = sel.max();
+            min = change.begin;
+            max = m_buffer->char_prev(change.end);
         }
         else
         {
