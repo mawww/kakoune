@@ -29,7 +29,7 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
-static const StringView assistant_cat[] =
+static constexpr StringView assistant_cat[] =
     { R"(           ___   )",
       R"(          / __)  )",
       R"(          \ \   ╭)",
@@ -42,7 +42,7 @@ static const StringView assistant_cat[] =
       R"( /_/   /_/       )",
       R"(                 )"};
 
-static const StringView assistant_clippy[] =
+static constexpr StringView assistant_clippy[] =
     { " ╭──╮   ",
       " │  │   ",
       " @  @  ╭",

@@ -11,10 +11,7 @@ namespace Kakoune
 
 bool operator<(StringView lhs, StringView rhs)
 {
-    int cmp = strncmp(lhs.data(), rhs.data(), (int)std::min(lhs.length(), rhs.length()));
-    if (cmp == 0)
-        return lhs.length() < rhs.length();
-    return cmp < 0;
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
 Vector<String> split(StringView str, char separator, char escape)

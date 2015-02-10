@@ -8,7 +8,6 @@
 
 #include <string>
 #include <climits>
-#include <cstring>
 
 namespace Kakoune
 {
@@ -17,6 +16,11 @@ class StringView;
 
 using StringBase = std::basic_string<char, std::char_traits<char>,
                                      Allocator<char, MemoryDomain::String>>;
+
+constexpr ByteCount strlen(const char* s)
+{
+    return *s == 0 ? 0 : strlen(s+1) + 1;
+}
 
 class String : public  StringBase
 {
@@ -65,7 +69,7 @@ public:
     constexpr StringView() : m_data{nullptr}, m_length{0} {}
     constexpr StringView(const char* data, ByteCount length)
         : m_data{data}, m_length{length} {}
-    StringView(const char* data) : m_data{data}, m_length{(int)strlen(data)} {}
+    constexpr StringView(const char* data) : m_data{data}, m_length{strlen(data)} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
     template<typename Char, typename Traits, typename Alloc>
     StringView(const std::basic_string<Char, Traits, Alloc>& str) : m_data{str.data()}, m_length{(int)str.length()} {}
@@ -136,7 +140,8 @@ private:
 
 inline bool operator==(StringView lhs, StringView rhs)
 {
-    return lhs.m_length == rhs.m_length and memcmp(lhs.m_data, rhs.m_data, (int)lhs.m_length) == 0;
+    return lhs.m_length == rhs.m_length and
+           std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 inline bool operator!=(StringView lhs, StringView rhs)

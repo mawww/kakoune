@@ -26,7 +26,7 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
         const int len = (int)str.length() + (back != 0 ? 1 : 0);
         void* ptr = StringStorage::operator new(sizeof(StringStorage) + len + 1);
         StringStorage* res = reinterpret_cast<StringStorage*>(ptr);
-        memcpy(res->data(), str.data(), (int)str.length());
+        std::copy(str.begin(), str.end(), res->data());
         res->refcount = 0;
         res->length = len;
         if (back != 0)
