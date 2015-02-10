@@ -57,7 +57,9 @@ bool is_color_name(StringView color);
 
 inline size_t hash_value(const Color& val)
 {
-    return hash_values(val.color, val.r, val.g, val.b);
+    return val.color == Colors::RGB ?
+        hash_values(val.color, val.r, val.g, val.b)
+      : hash_value(val.color);
 }
 
 }
