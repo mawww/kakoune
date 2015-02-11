@@ -196,7 +196,7 @@ void Client::check_buffer_fs_timestamp()
         m_ui->info_show(
             "reload '" + buffer.display_name() + "' ?",
             "'" + buffer.display_name() + "' was modified externally\n"
-            "press r or y to reload, k or n to keep",
+            "press <ret>, r or y to reload, <esc>, k or n to keep",
             CharCoord{}, get_face("Information"), InfoStyle::Prompt);
 
         m_input_handler.on_next_key(KeymapMode::None,
@@ -207,9 +207,9 @@ void Client::check_buffer_fs_timestamp()
             // buffer got deleted while waiting for the key, do nothing
             if (not buf)
                 return;
-            if (key == 'r' or key == 'y')
+            if (key == 'r' or key == 'y' or key == ctrl('m'))
                 reload_buffer(context, filename);
-            else if (key == 'k' or key == 'n')
+            else if (key == 'k' or key == 'n' or key == Key::Escape)
             {
                 // reread timestamp in case the file was modified again
                 buf->set_fs_timestamp(get_fs_timestamp(filename));
