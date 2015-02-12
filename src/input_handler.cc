@@ -64,7 +64,7 @@ public:
                             Timer::Callback() : Timer::Callback([this](Timer& timer) {
               if (not context().has_client())
                   return;
-              context().client().check_buffer_fs_timestamp();
+              context().client().check_if_buffer_needs_reloading();
               timer.set_next_date(Clock::now() + fs_check_timeout);
           })}
     {}

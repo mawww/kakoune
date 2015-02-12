@@ -40,7 +40,7 @@ public:
     UserInterface& ui() const { return *m_ui; }
     Window& window() const { return *m_window; }
 
-    void check_buffer_fs_timestamp();
+    void check_if_buffer_needs_reloading();
 
     Context& context() { return m_input_handler.context(); }
     const Context& context() const { return m_input_handler.context(); }
@@ -54,6 +54,10 @@ public:
 
 private:
     void on_option_changed(const Option& option) override;
+
+    void on_buffer_reload_key(Key key);
+    void close_buffer_reload_dialog();
+    void reload_buffer();
 
     Optional<Key> get_next_key(EventMode mode);
 
@@ -71,6 +75,8 @@ private:
     DisplayLine m_mode_line;
 
     Vector<Key, MemoryDomain::Client> m_pending_keys;
+
+    bool m_buffer_reload_dialog_opened = false;
 };
 
 }

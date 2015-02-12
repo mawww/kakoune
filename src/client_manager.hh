@@ -42,13 +42,19 @@ public:
     bool validate_client_name(StringView name) const;
     void remove_client(Client& client);
 
+    using ClientList = Vector<std::unique_ptr<Client>, MemoryDomain::Client>;
+    using iterator = ClientList::const_iterator;
+
+    iterator begin() const { return m_clients.begin(); }
+    iterator end() const { return m_clients.end(); }
+
     CandidateList complete_client_name(StringView name,
                                        ByteCount cursor_pos = -1) const;
 
 private:
     String generate_name() const;
 
-    Vector<std::unique_ptr<Client>> m_clients;
+    ClientList m_clients;
     Vector<WindowAndSelections, MemoryDomain::Client> m_free_windows;
 };
 

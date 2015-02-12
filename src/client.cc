@@ -125,6 +125,9 @@ DisplayLine Client::generate_mode_line() const
 
 void Client::change_buffer(Buffer& buffer)
 {
+    if (m_buffer_reload_dialog_opened)
+        close_buffer_reload_dialog();
+
     auto& client_manager = ClientManager::instance();
     m_window->options().unregister_watcher(*this);
     client_manager.add_free_window(std::move(m_window),
@@ -166,21 +169,58 @@ void Client::redraw_ifn()
     context().ui().refresh();
 }
 
-static void reload_buffer(Context& context, StringView filename)
+void Client::reload_buffer()
 {
-    CharCoord view_pos = context.window().position();
-    ByteCoord cursor_pos = context.selections().main().cursor();
-    Buffer* buf = create_buffer_from_file(filename);
-    if (not buf)
-        return;
-    context.change_buffer(*buf);
-    context.selections() = SelectionList{ *buf, buf->clamp(cursor_pos)};
-    context.window().set_position(view_pos);
-    context.print_status({ "'" + buf->display_name() + "' reloaded",
-                           get_face("Information") });
+    auto& buffer = context().buffer();
+    kak_assert(buffer.flags() & Buffer::Flags::File);
+    CharCoord view_pos = context().window().position();
+    ByteCoord cursor_pos = context().selections().main().cursor();
+    Buffer* buf = create_buffer_from_file(buffer.name());
+    kak_assert(buf == &buffer);
+    context().selections() = SelectionList{buffer, buffer.clamp(cursor_pos)};
+    context().window().set_position(view_pos);
+    context().print_status({ "'" + buffer.display_name() + "' reloaded",
+                             get_face("Information") });
 }
 
-void Client::check_buffer_fs_timestamp()
+void Client::on_buffer_reload_key(Key key)
+{
+    auto& buffer = context().buffer();
+
+    if (key == 'y' or key == ctrl('m'))
+        reload_buffer();
+    else if (key == 'n' or key == Key::Escape)
+    {
+        // reread timestamp in case the file was modified again
+        buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
+        print_status({ "'" + buffer.display_name() + "' kept",
+                       get_face("Information") });
+    }
+    else
+    {
+        print_status({ "'" + key_to_str(key) + "' is not a valid choice",
+                       get_face("Error") });
+        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        return;
+    }
+
+    for (auto& client : ClientManager::instance())
+    {
+        if (&client->context().buffer() == &buffer and
+            client->m_buffer_reload_dialog_opened)
+            client->close_buffer_reload_dialog();
+    }
+}
+
+void Client::close_buffer_reload_dialog()
+{
+    kak_assert(m_buffer_reload_dialog_opened);
+    m_buffer_reload_dialog_opened = false;
+    m_ui->info_hide();
+    m_input_handler.reset_normal_mode();
+}
+
+void Client::check_if_buffer_needs_reloading()
 {
     Buffer& buffer = context().buffer();
     auto reload = context().options()["autoreload"].get<YesNoAsk>();
@@ -196,36 +236,14 @@ void Client::check_buffer_fs_timestamp()
         m_ui->info_show(
             "reload '" + buffer.display_name() + "' ?",
             "'" + buffer.display_name() + "' was modified externally\n"
-            "press <ret>, r or y to reload, <esc>, k or n to keep",
+            "press <ret> or y to reload, <esc> or n to keep",
             CharCoord{}, get_face("Information"), InfoStyle::Prompt);
 
-        m_input_handler.on_next_key(KeymapMode::None,
-                                   [this, filename](Key key, Context& context) {
-            m_ui->info_hide();
-
-            Buffer* buf = BufferManager::instance().get_buffer_ifp(filename);
-            // buffer got deleted while waiting for the key, do nothing
-            if (not buf)
-                return;
-            if (key == 'r' or key == 'y' or key == ctrl('m'))
-                reload_buffer(context, filename);
-            else if (key == 'k' or key == 'n' or key == Key::Escape)
-            {
-                // reread timestamp in case the file was modified again
-                buf->set_fs_timestamp(get_fs_timestamp(filename));
-                print_status({ "'" + buf->display_name() + "' kept",
-                               get_face("Information") });
-            }
-            else
-            {
-                print_status({ "'" + key_to_str(key) + "' is not a valid choice",
-                               get_face("Error") });
-                check_buffer_fs_timestamp();
-            }
-        });
+        m_buffer_reload_dialog_opened = true;
+        m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
     }
     else
-        reload_buffer(context(), filename);
+        reload_buffer();
 }
 
 StringView Client::get_env_var(const String& name) const
