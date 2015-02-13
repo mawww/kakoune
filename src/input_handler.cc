@@ -242,12 +242,12 @@ class LineEditor
 public:
     void handle_key(Key key)
     {
-        if (key == Key::Left)
+        if (key == Key::Left or key == alt('h'))
         {
             if (m_cursor_pos > 0)
                 --m_cursor_pos;
         }
-        else if (key == Key::Right)
+        else if (key == Key::Right or key == alt('l'))
         {
             if (m_cursor_pos < m_line.char_length())
                 ++m_cursor_pos;
@@ -256,7 +256,7 @@ public:
             m_cursor_pos = 0;
         else if (key == Key::End)
             m_cursor_pos = m_line.char_length();
-        else if (key == Key::Backspace)
+        else if (key == Key::Backspace or key == alt('x'))
         {
             if (m_cursor_pos != 0)
             {
@@ -266,7 +266,7 @@ public:
                 --m_cursor_pos;
             }
         }
-        else if (key == Key::Delete)
+        else if (key == Key::Delete or key == alt('d'))
         {
             if (m_cursor_pos != m_line.char_length())
                 m_line = m_line.substr(0, m_cursor_pos)
