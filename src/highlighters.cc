@@ -70,6 +70,9 @@ void apply_highlighter(const Context& context,
                        ByteCoord begin, ByteCoord end,
                        Highlighter& highlighter)
 {
+    if (begin == end)
+        return;
+
     using LineIterator = DisplayBuffer::LineList::iterator;
     LineIterator first_line;
     Vector<DisplayLine::iterator> insert_pos;
@@ -202,14 +205,14 @@ public:
     {
     }
 
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange) override
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
         if (flags != HighlightFlags::Highlight)
             return;
 
         Vector<Optional<Face>> faces(m_faces.size());
-        auto& cache = update_cache_ifn(context.buffer(), display_buffer.range());
-        for (auto& match : cache.m_matches)
+        auto& cache = update_cache_ifn(context.buffer(), display_buffer.range(), range);
+        for (auto& match : cache)
         {
             for (size_t n = 0; n < match.size(); ++n)
             {
@@ -269,9 +272,10 @@ public:
 private:
     struct Cache
     {
-        std::pair<LineCount, LineCount> m_range;
         size_t m_timestamp = 0;
-        Vector<Vector<BufferRange, MemoryDomain::Highlight>, MemoryDomain::Highlight> m_matches;
+        using MatchesList = Vector<Vector<BufferRange, MemoryDomain::Highlight>, MemoryDomain::Highlight>;
+        using RangeAndMatches = std::pair<BufferRange, MatchesList>;
+        Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
 
@@ -280,39 +284,53 @@ private:
 
     bool m_force_update = false;
 
-    Cache& update_cache_ifn(const Buffer& buffer, const BufferRange& range)
+    Cache::MatchesList& update_cache_ifn(const Buffer& buffer, const BufferRange& display_range,
+                                         const BufferRange& buffer_range)
     {
         Cache& cache = m_cache.get(buffer);
+        auto& matches = cache.m_matches;
 
-        LineCount first_line = range.first.line;
-        LineCount last_line = std::min(buffer.line_count()-1, range.second.line);
-
-        if (not m_force_update and
-            buffer.timestamp() == cache.m_timestamp and
-            first_line >= cache.m_range.first and
-            last_line <= cache.m_range.second)
-           return cache;
-
+        if (m_force_update or cache.m_timestamp != buffer.timestamp())
+        {
+            matches.clear();
+            cache.m_timestamp = buffer.timestamp();
+        }
         m_force_update = false;
 
-        cache.m_range.first  = std::max(0_line, first_line - 10);
-        cache.m_range.second = std::min(buffer.line_count()-1, last_line+10);
-        cache.m_timestamp = buffer.timestamp();
+        const LineCount line_offset = 3;
+        BufferRange range{std::max(buffer_range.first.line, display_range.first.line - line_offset),
+                          std::min(buffer_range.second.line, display_range.second.line + line_offset)};
 
-        cache.m_matches.clear();
+        auto it = std::upper_bound(matches.begin(), matches.end(), range,
+                                   [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
+                                   { return lhs.first < rhs.first.second; });
+
+
+        if (it == matches.end() or it->first.first > range.second)
+            it = matches.insert(it, Cache::RangeAndMatches{range, {}});
+        else if (it->first.first <= range.first and it->first.second >= range.second)
+            return it->second;
+        else
+        {
+            range.first = std::min(range.first, it->first.first);
+            range.second = std::max(range.second, it->first.second);
+            it->first = range;
+            it->second.clear();
+        }
+        auto& match_list = it->second;
 
         using RegexIt = RegexIterator<BufferIterator>;
-        RegexIt re_it{buffer.iterator_at(cache.m_range.first),
-                      buffer.iterator_at(cache.m_range.second+1), m_regex};
+        RegexIt re_it{buffer.iterator_at(range.first),
+                      buffer.iterator_at(range.second), m_regex};
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
-            cache.m_matches.emplace_back();
-            auto& match = cache.m_matches.back();
+            match_list.emplace_back();
+            auto& match = match_list.back();
             for (auto& sub : *re_it)
                 match.emplace_back(sub.first.coord(), sub.second.coord());
         }
-        return cache;
+        return match_list;
     }
 };
 
