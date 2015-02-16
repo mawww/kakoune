@@ -240,7 +240,7 @@ public:
     {
         m_regex = std::move(regex);
         m_faces = std::move(faces);
-        m_force_update = true;
+        ++m_regex_version;
     }
 
     static HighlighterAndId create(HighlighterParameters params)
@@ -281,7 +281,8 @@ public:
 private:
     struct Cache
     {
-        size_t m_timestamp = 0;
+        size_t m_timestamp = -1;
+        size_t m_regex_version = -1;
         using MatchesList = Vector<Vector<BufferRange, MemoryDomain::Highlight>, MemoryDomain::Highlight>;
         using RangeAndMatches = std::pair<BufferRange, MatchesList>;
         Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
@@ -291,7 +292,7 @@ private:
     Regex     m_regex;
     FacesSpec m_faces;
 
-    bool m_force_update = false;
+    size_t m_regex_version = 0;
 
     void add_matches(const Buffer& buffer, Cache::MatchesList& match_list,
                      BufferRange range)
@@ -316,13 +317,13 @@ private:
         Cache& cache = m_cache.get(buffer);
         auto& matches = cache.m_matches;
 
-        if (m_force_update or cache.m_timestamp != buffer.timestamp())
+        if (cache.m_regex_version != m_regex_version or
+            cache.m_timestamp != buffer.timestamp())
         {
             matches.clear();
             cache.m_timestamp = buffer.timestamp();
+            cache.m_regex_version = m_regex_version;
         }
-        m_force_update = false;
-
         const LineCount line_offset = 3;
         BufferRange range{std::max<ByteCoord>(buffer_range.first, display_range.first.line - line_offset),
                           std::min<ByteCoord>(buffer_range.second, display_range.second.line + line_offset)};
