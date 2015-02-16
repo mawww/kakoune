@@ -30,10 +30,11 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     if (lines.empty())
         lines.emplace_back(StringStorage::create("\n"));
 
+    #ifdef KAK_DEBUG
     for (auto& line : lines)
-    {
-        kak_assert(not (line->length == 0) and line->data()[line->length-1] == '\n');
-    }
+        kak_assert(not (line->length == 0) and
+                   line->data()[line->length-1] == '\n');
+    #endif
     static_cast<BufferLines&>(m_lines) = std::move(lines);
 
     m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
