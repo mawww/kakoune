@@ -137,6 +137,9 @@ void apply_highlighter(const Context& context,
         }
     }
 
+    if (region_display.lines().empty())
+        return;
+
     region_display.compute_range();
     highlighter.highlight(context, flags, region_display, {begin, end});
 
@@ -197,6 +200,12 @@ private:
     ValueId m_id;
 };
 
+static bool overlaps(const BufferRange& lhs, const BufferRange& rhs)
+{
+    return lhs.first < rhs.first ? lhs.second > rhs.first
+                                 : rhs.second > lhs.first;
+}
+
 class RegexHighlighter : public Highlighter
 {
 public:
@@ -207,7 +216,7 @@ public:
 
     void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        if (flags != HighlightFlags::Highlight)
+        if (flags != HighlightFlags::Highlight or not overlaps(display_buffer.range(), range))
             return;
 
         Vector<Optional<Face>> faces(m_faces.size());
@@ -298,8 +307,8 @@ private:
         m_force_update = false;
 
         const LineCount line_offset = 3;
-        BufferRange range{std::max(buffer_range.first.line, display_range.first.line - line_offset),
-                          std::min(buffer_range.second.line, display_range.second.line + line_offset)};
+        BufferRange range{std::max<ByteCoord>(buffer_range.first, display_range.first.line - line_offset),
+                          std::min<ByteCoord>(buffer_range.second, display_range.second.line + line_offset)};
 
         auto it = std::upper_bound(matches.begin(), matches.end(), range,
                                    [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
@@ -923,7 +932,8 @@ public:
         auto default_group_it = m_groups.find(m_default_group);
         const bool apply_default = default_group_it != m_groups.end();
 
-        auto last_begin = display_range.first;
+        auto last_begin = (begin == regions.begin()) ?
+                             ByteCoord{0,0} : (begin-1)->end;
         for (; begin != end; ++begin)
         {
             if (apply_default and last_begin < begin->begin)
