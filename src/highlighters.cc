@@ -293,8 +293,25 @@ private:
 
     bool m_force_update = false;
 
-    Cache::MatchesList& update_cache_ifn(const Buffer& buffer, const BufferRange& display_range,
-                                         const BufferRange& buffer_range)
+    void add_matches(const Buffer& buffer, Cache::MatchesList& match_list,
+                     BufferRange range)
+    {
+        using RegexIt = RegexIterator<BufferIterator>;
+        RegexIt re_it{buffer.iterator_at(range.first),
+                      buffer.iterator_at(range.second), m_regex};
+        RegexIt re_end;
+        for (; re_it != re_end; ++re_it)
+        {
+            match_list.emplace_back();
+            auto& match = match_list.back();
+            for (auto& sub : *re_it)
+                match.emplace_back(sub.first.coord(), sub.second.coord());
+        }
+    }
+
+    Cache::MatchesList& update_cache_ifn(const Buffer& buffer,
+                                         BufferRange display_range,
+                                         BufferRange buffer_range)
     {
         Cache& cache = m_cache.get(buffer);
         auto& matches = cache.m_matches;
@@ -314,32 +331,55 @@ private:
                                    [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
                                    { return lhs.first < rhs.first.second; });
 
-
         if (it == matches.end() or it->first.first > range.second)
+        {
             it = matches.insert(it, Cache::RangeAndMatches{range, {}});
-        else if (it->first.first <= range.first and it->first.second >= range.second)
-            return it->second;
+            add_matches(buffer, it->second, range);
+        }
+        else if (it->second.empty())
+        {
+            it->first = range;
+            add_matches(buffer, it->second, range);
+        }
         else
         {
-            range.first = std::min(range.first, it->first.first);
-            range.second = std::max(range.second, it->first.second);
-            it->first = range;
-            it->second.clear();
-        }
-        auto& match_list = it->second;
+            // Here we extend the matches, that is not strictly valid,
+            // but may work nicely with every reasonable regex, and
+            // greatly reduces regex parsing. To change if we encounter
+            // regex that do not work great with that.
+            BufferRange& old_range = it->first;
+            Cache::MatchesList& matches = it->second;
+            auto first_end = matches.front()[0].second;
+            auto last_begin = matches.back()[0].first;
+            bool remove_last = true;
 
-        using RegexIt = RegexIterator<BufferIterator>;
-        RegexIt re_it{buffer.iterator_at(range.first),
-                      buffer.iterator_at(range.second), m_regex};
-        RegexIt re_end;
-        for (; re_it != re_end; ++re_it)
-        {
-            match_list.emplace_back();
-            auto& match = match_list.back();
-            for (auto& sub : *re_it)
-                match.emplace_back(sub.first.coord(), sub.second.coord());
+            // add regex matches from new begin to old first match end
+            if (range.first < old_range.first)
+            {
+                old_range.first = range.first;
+                Cache::MatchesList new_matches;
+                add_matches(buffer, new_matches, {range.first, first_end});
+                matches.erase(matches.begin());
+
+                // matches.front() was matches.back() as well, so
+                // make sure we do not try to remove it again.
+                if (matches.empty())
+                    remove_last = false;
+
+                std::copy(std::make_move_iterator(new_matches.begin()),
+                          std::make_move_iterator(new_matches.end()),
+                          std::inserter(matches, matches.begin()));
+            }
+            // add regex matches from old last match begin to new end
+            if (old_range.second < range.second)
+            {
+                old_range.second = range.second;
+                if (remove_last)
+                    matches.pop_back();
+                add_matches(buffer, matches, {last_begin, range.second});
+            }
         }
-        return match_list;
+        return it->second;
     }
 };
 
