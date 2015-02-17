@@ -799,7 +799,6 @@ HighlighterAndId create_reference_highlighter(HighlighterParameters params)
 
 struct RegexMatch
 {
-    size_t timestamp;
     LineCount line;
     ByteCount begin;
     ByteCount end;
@@ -811,7 +810,6 @@ using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
 
 void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex)
 {
-    const size_t buf_timestamp = buffer.timestamp();
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         auto l = buffer[line];
@@ -819,7 +817,7 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
         {
             ByteCount b = (int)((*it)[0].first - l.begin());
             ByteCount e = (int)((*it)[0].second - l.begin());
-            matches.push_back({ buf_timestamp, line, b, e });
+            matches.push_back({ line, b, e });
         }
     }
 }
@@ -827,7 +825,6 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
 void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
                     RegexMatchList& matches, const Regex& regex)
 {
-    const size_t buf_timestamp = buffer.timestamp();
     // remove out of date matches and update line for others
     auto ins_pos = matches.begin();
     for (auto it = ins_pos; it != matches.end(); ++it)
@@ -845,7 +842,6 @@ void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
             it->line += prev.diff();
         }
 
-        it->timestamp = buf_timestamp;
         kak_assert(buffer.is_valid(it->begin_coord()) or
                    buffer[it->line].length() == it->begin);
         kak_assert(buffer.is_valid(it->end_coord()) or
@@ -868,7 +864,7 @@ void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
             {
                 ByteCount b = (int)((*it)[0].first - l.begin());
                 ByteCount e = (int)((*it)[0].second - l.begin());
-                matches.push_back({ buf_timestamp, line, b, e });
+                matches.push_back({ line, b, e });
             }
         }
     }
