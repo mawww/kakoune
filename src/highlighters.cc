@@ -165,8 +165,6 @@ auto apply_face = [](const Face& face)
     };
 };
 
-using FacesSpec = Vector<String, MemoryDomain::Highlight>;
-
 static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
 {
     if (params.size() != 1)
@@ -206,12 +204,15 @@ static bool overlaps(const BufferRange& lhs, const BufferRange& rhs)
                                  : rhs.second > lhs.first;
 }
 
+using FacesSpec = Vector<std::pair<size_t, String>, MemoryDomain::Highlight>;
+
 class RegexHighlighter : public Highlighter
 {
 public:
     RegexHighlighter(Regex regex, FacesSpec faces)
         : m_regex{std::move(regex)}, m_faces{std::move(faces)}
     {
+        ensure_first_face_is_capture_0();
     }
 
     void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
@@ -219,20 +220,24 @@ public:
         if (flags != HighlightFlags::Highlight or not overlaps(display_buffer.range(), range))
             return;
 
-        Vector<Optional<Face>> faces(m_faces.size());
-        auto& cache = update_cache_ifn(context.buffer(), display_buffer.range(), range);
-        for (auto& match : cache)
+        Vector<Face> faces(m_faces.size());
+        for (int f = 0; f < m_faces.size(); ++f)
         {
-            for (size_t n = 0; n < match.size(); ++n)
-            {
-                if (n >= m_faces.size() or m_faces[n].empty())
-                    continue;
-                if (not faces[n])
-                    faces[n] = get_face(m_faces[n]);
+            if (not m_faces[f].second.empty())
+                faces[f] = get_face(m_faces[f].second);
+        }
 
-                highlight_range(display_buffer, match[n].first, match[n].second, true,
-                                apply_face(*faces[n]));
-            }
+        auto& matches = get_matches(context.buffer(), display_buffer.range(), range);
+        kak_assert(matches.size() % m_faces.size() == 0);
+        for (size_t m = 0; m < matches.size(); ++m)
+        {
+            auto& face = faces[m % faces.size()];
+            if (face == Face{})
+                continue;
+
+            highlight_range(display_buffer,
+                            matches[m].first, matches[m].second,
+                            true, apply_face(face));
         }
     }
 
@@ -240,6 +245,7 @@ public:
     {
         m_regex = std::move(regex);
         m_faces = std::move(faces);
+        ensure_first_face_is_capture_0();
         ++m_regex_version;
     }
 
@@ -260,9 +266,7 @@ public:
                                          "' expected <capture>:<facespec>");
                 get_face(res[2].str()); // throw if wrong face spec
                 int capture = str_to_int(res[1].str());
-                if (capture >= faces.size())
-                    faces.resize(capture+1);
-                faces[capture] = res[2].str();
+                faces.emplace_back(capture, res[2].str());
             }
 
             String id = "hlregex'" + params[0] + "'";
@@ -279,12 +283,13 @@ public:
     }
 
 private:
+    // stores the range for each highlighted capture of each match
+    using MatchList = Vector<BufferRange, MemoryDomain::Highlight>;
     struct Cache
     {
         size_t m_timestamp = -1;
         size_t m_regex_version = -1;
-        using MatchesList = Vector<Vector<BufferRange, MemoryDomain::Highlight>, MemoryDomain::Highlight>;
-        using RangeAndMatches = std::pair<BufferRange, MatchesList>;
+        using RangeAndMatches = std::pair<BufferRange, MatchList>;
         Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
@@ -294,25 +299,39 @@ private:
 
     size_t m_regex_version = 0;
 
-    void add_matches(const Buffer& buffer, Cache::MatchesList& match_list,
+    void ensure_first_face_is_capture_0()
+    {
+        if (m_faces.empty())
+            return;
+
+        std::sort(m_faces.begin(), m_faces.end(),
+                  [](const std::pair<size_t, String>& lhs,
+                     const std::pair<size_t, String>& rhs)
+                  { return lhs.first < rhs.first; });
+        if (m_faces[0].first != 0)
+            m_faces.emplace(m_faces.begin(), 0, String{});
+    }
+
+    void add_matches(const Buffer& buffer, MatchList& matches,
                      BufferRange range)
     {
+        kak_assert(matches.size() % m_faces.size() == 0);
         using RegexIt = RegexIterator<BufferIterator>;
         RegexIt re_it{buffer.iterator_at(range.first),
                       buffer.iterator_at(range.second), m_regex};
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
-            match_list.emplace_back();
-            auto& match = match_list.back();
-            for (auto& sub : *re_it)
-                match.emplace_back(sub.first.coord(), sub.second.coord());
+            for (size_t i = 0; i < m_faces.size(); ++i)
+            {
+                auto& sub = (*re_it)[m_faces[i].first];
+                matches.emplace_back(sub.first.coord(), sub.second.coord());
+            }
         }
     }
 
-    Cache::MatchesList& update_cache_ifn(const Buffer& buffer,
-                                         BufferRange display_range,
-                                         BufferRange buffer_range)
+    MatchList& get_matches(const Buffer& buffer, BufferRange display_range,
+                           BufferRange buffer_range)
     {
         Cache& cache = m_cache.get(buffer);
         auto& matches = cache.m_matches;
@@ -349,21 +368,25 @@ private:
             // greatly reduces regex parsing. To change if we encounter
             // regex that do not work great with that.
             BufferRange& old_range = it->first;
-            Cache::MatchesList& matches = it->second;
-            auto first_end = matches.front()[0].second;
-            auto last_begin = matches.back()[0].first;
+            MatchList& matches = it->second;
+
+            // Thanks to the ensure_first_face_is_capture_0 method, we know
+            // these point to the first/last matches capture 0.
+            auto first_end = matches.begin()->second;
+            auto last_begin = (matches.end() - m_faces.size())->first;
+
             bool remove_last = true;
 
             // add regex matches from new begin to old first match end
             if (range.first < old_range.first)
             {
                 old_range.first = range.first;
-                Cache::MatchesList new_matches;
+                MatchList new_matches;
                 add_matches(buffer, new_matches, {range.first, first_end});
-                matches.erase(matches.begin());
+                matches.erase(matches.begin(), matches.begin() + m_faces.size());
 
-                // matches.front() was matches.back() as well, so
-                // make sure we do not try to remove it again.
+                // first matches was last matches as well, so
+                // make sure we do not try to remove them again.
                 if (matches.empty())
                     remove_last = false;
 
@@ -376,7 +399,7 @@ private:
             {
                 old_range.second = range.second;
                 if (remove_last)
-                    matches.pop_back();
+                    matches.erase(matches.end() - m_faces.size(), matches.end());
                 add_matches(buffer, matches, {last_begin, range.second});
             }
         }
@@ -435,7 +458,7 @@ HighlighterAndId create_search_highlighter(HighlighterParameters params)
     if (params.size() != 0)
         throw runtime_error("wrong parameter count");
         auto get_face = [](const Context& context){
-            return FacesSpec{ { "Search" } };
+            return FacesSpec{ { 0, "Search" } };
         };
         auto get_regex = [](const Context&){
             auto s = Context().main_sel_register_value("/");
@@ -458,7 +481,7 @@ HighlighterAndId create_regex_option_highlighter(HighlighterParameters params)
 
     String facespec = params[1];
     auto get_face = [=](const Context&){
-        return FacesSpec{ { facespec } };
+        return FacesSpec{ { 0, facespec } };
     };
 
     String option_name = params[0];
