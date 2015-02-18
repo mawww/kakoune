@@ -26,6 +26,8 @@ def -shell-params clang-parse %{
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         (
+            trap "rm -r ${dir}" EXIT
+
             case ${kak_opt_filetype} in
                 cpp) ft=c++ ;;
                 obj-c) ft=objective-c ;;
@@ -71,14 +73,12 @@ def -shell-params clang-parse %{
                     " | paste -s -d ':')
 
             errors=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; p }")
+                        /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }")
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
 
             echo "set 'buffer=${kak_buffile}' clang_flags %{${flags}}
-                  set 'buffer=${kak_buffile}' clang_errors %{${errors}}" | kak -p ${kak_session}
-
-            rm -r ${dir}
+                  set 'buffer=${kak_buffile}' clang_errors '${errors}'" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
 }
