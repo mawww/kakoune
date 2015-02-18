@@ -73,7 +73,8 @@ def -shell-params clang-parse %{
                     " | paste -s -d ':')
 
             errors=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }")
+                        /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }
+                     " | sort -n)
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
 
@@ -118,3 +119,21 @@ def clang-disable-diagnostics %{
     rmhl hlflags_clang_flags
     rmhooks window clang-diagnostics
 }
+
+def clang-diagnostics-next %{ %sh{
+    echo "${kak_opt_clang_errors}" | (
+        line=-1
+        first_line=-1
+        while read line_content; do
+            candidate=${line_content%%,*}
+            first_line=$(( first_line == -1 ? candidate : first_line ))
+            line=$((candidate > kak_cursor_line && (candidate < line || line == -1) ? candidate : line ))
+        done
+        line=$((line == -1 ? first_line : line))
+        if [ ${line} -ne -1 ]; then
+            echo "exec ${line} g"
+        else
+            echo 'echo -color Error no next clang diagnostic'
+        fi
+    )
+} }
