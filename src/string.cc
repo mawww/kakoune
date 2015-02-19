@@ -86,6 +86,20 @@ String unescape(StringView str, StringView characters, char escape)
     return res;
 }
 
+String indent(StringView str, StringView indent)
+{
+    String res;
+    bool was_eol = true;
+    for (ByteCount i = 0; i < str.length(); ++i)
+    {
+        if (was_eol)
+            res += indent;
+        res += str[i];
+        was_eol = is_eol(str[i]);
+    }
+    return res;
+}
+
 int str_to_int(StringView str)
 {
     int res = 0;

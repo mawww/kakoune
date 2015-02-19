@@ -246,6 +246,8 @@ Vector<StringView> split(StringView str, char separator);
 String escape(StringView str, StringView characters, char escape);
 String unescape(StringView str, StringView characters, char escape);
 
+String indent(StringView str, StringView indent = "    ");
+
 template<typename Container>
 String join(const Container& container, char joiner, bool esc_joiner = true)
 {

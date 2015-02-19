@@ -505,7 +505,17 @@ const CommandDesc add_highlighter_cmd = {
         SwitchMap{ { "group", { true, "specify the group in which to put the highlighter" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
-    CommandHelper{},
+    [](const Context& context, CommandParameters params) -> String
+    {
+        if (params.size() > 0)
+        {
+            HighlighterRegistry& registry = HighlighterRegistry::instance();
+            auto it = registry.find(params[0]);
+            if (it != registry.end())
+                return params[0] + ":\n" + indent(it->second.docstring);
+        }
+        return "";
+    },
     add_highlighter_completer,
     [](const ParametersParser& parser, Context& context)
     {
@@ -523,7 +533,7 @@ const CommandDesc add_highlighter_cmd = {
         auto it = registry.find(name);
         if (it == registry.end())
             throw runtime_error("No such highlighter factory '" + name + "'");
-        group.add_child(it->second(highlighter_params));
+        group.add_child(it->second.factory(highlighter_params));
     }
 };
 

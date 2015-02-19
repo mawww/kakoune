@@ -1205,18 +1205,65 @@ void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
-    registry.append({ "number_lines", simple_factory("number_lines", show_line_numbers) });
-    registry.append({ "show_matching", simple_factory("show_matching", show_matching_char) });
-    registry.append({ "show_whitespaces", simple_factory("show_whitespaces", show_whitespaces) });
-    registry.append({ "fill", create_fill_highlighter });
-    registry.append({ "regex", RegexHighlighter::create });
-    registry.append({ "regex_option", create_regex_option_highlighter });
-    registry.append({ "search", create_search_highlighter });
-    registry.append({ "group", create_highlighter_group });
-    registry.append({ "flag_lines", create_flag_lines_highlighter });
-    registry.append({ "line_option", create_line_option_highlighter });
-    registry.append({ "ref", create_reference_highlighter });
-    registry.append({ "regions", RegionsHighlighter::create });
+    registry.append({
+        "number_lines",
+        { simple_factory("number_lines", show_line_numbers),
+          "Display line numbers" } });
+    registry.append({
+        "show_matching",
+        { simple_factory("show_matching", show_matching_char),
+          "Apply the MatchingChar face to the char matching the one under the cursor" } });
+    registry.append({
+        "show_whitespaces",
+        { simple_factory("show_whitespaces", show_whitespaces),
+          "Display whitespaces using symbols" } });
+    registry.append({
+        "fill",
+        { create_fill_highlighter,
+          "Fill the whole highlighted range with the given face" } });
+    registry.append({
+        "regex",
+        { RegexHighlighter::create,
+          "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
+          "Highlights the matches for captures from the regex with the given faces" } });
+    registry.append({
+        "regex_option",
+        { create_regex_option_highlighter,
+          "Parameters: <option name> <face>\n"
+          "Highlight matches for the regex stored in <option name> with <face>" } });
+    registry.append({
+        "search",
+        { create_search_highlighter,
+          "Highlight the current search pattern with the Search face" } });
+    registry.append({
+        "group",
+        { create_highlighter_group,
+          "Parameters: <group name>\n"
+          "Creates a named group that can contain other highlighters" } });
+    registry.append({
+        "flag_lines",
+        { create_flag_lines_highlighter,
+          "Parameters: <option name> <bg color>\n"
+          "Display flags specified in the line-flag-list option <option name>\n"
+          "A line-flag is written: <line>|<fg color>|<text>, the list is : separated" } });
+    registry.append({
+        "line_option",
+        { create_line_option_highlighter,
+          "Parameters: <option name> <face>\n"
+          "Highlight the line stored in <option name> with <face>" } });
+    registry.append({
+        "ref",
+        { create_reference_highlighter,
+          "Parameters: <path>\n"
+          "Reference the highlighter at <path> in shared highglighters" } });
+    registry.append({
+        "regions",
+        { RegionsHighlighter::create,
+          "Parameters: [-default <default group>] {<name> <begin> <end> <recurse>}..."
+          "Split the highlighting into regions defined by the <begin>, <end> and <recurse> regex\n"
+          "The region <name> starts at <begin> match, end at <end> match that does not\n"
+          "close a <recurse> match. In between region is the <default group>.\n"
+          "Highlighting a region is done by adding highlighters into the different <name> subgroups." } });
 }
 
 }
