@@ -13,22 +13,22 @@
 namespace Kakoune
 {
 
-// *** safe_ptr: objects that assert nobody references them when they die ***
+// *** SafePtr: objects that assert nobody references them when they die ***
 
 template<typename T>
-class safe_ptr
+class SafePtr
 {
 public:
-    safe_ptr() : m_ptr(nullptr) {}
-    explicit safe_ptr(T* ptr) : m_ptr(ptr)
+    SafePtr() : m_ptr(nullptr) {}
+    explicit SafePtr(T* ptr) : m_ptr(ptr)
     {
         #ifdef KAK_DEBUG
         if (m_ptr)
             m_ptr->inc_safe_count(this);
         #endif
     }
-    safe_ptr(const safe_ptr& other) : safe_ptr(other.m_ptr) {}
-    safe_ptr(safe_ptr&& other) noexcept : m_ptr(other.m_ptr)
+    SafePtr(const SafePtr& other) : SafePtr(other.m_ptr) {}
+    SafePtr(SafePtr&& other) noexcept : m_ptr(other.m_ptr)
     {
         other.m_ptr = nullptr;
         #ifdef KAK_DEBUG
@@ -36,7 +36,7 @@ public:
             m_ptr->safe_ptr_moved(&other, this);
         #endif
     }
-    ~safe_ptr()
+    ~SafePtr()
     {
         #ifdef KAK_DEBUG
         if (m_ptr)
@@ -44,7 +44,7 @@ public:
         #endif
     }
 
-    safe_ptr& operator=(const safe_ptr& other)
+    SafePtr& operator=(const SafePtr& other)
     {
         #ifdef KAK_DEBUG
         if (m_ptr != other.m_ptr)
@@ -59,7 +59,7 @@ public:
         return *this;
     }
 
-    safe_ptr& operator=(safe_ptr&& other) noexcept
+    SafePtr& operator=(SafePtr&& other) noexcept
     {
         #ifdef KAK_DEBUG
         if (m_ptr)
@@ -74,11 +74,11 @@ public:
 
     void reset(T* ptr = nullptr)
     {
-        *this = safe_ptr(ptr);
+        *this = SafePtr(ptr);
     }
 
-    bool operator== (const safe_ptr& other) const { return m_ptr == other.m_ptr; }
-    bool operator!= (const safe_ptr& other) const { return m_ptr != other.m_ptr; }
+    bool operator== (const SafePtr& other) const { return m_ptr == other.m_ptr; }
+    bool operator!= (const SafePtr& other) const { return m_ptr != other.m_ptr; }
     bool operator== (T* ptr) const { return m_ptr == ptr; }
     bool operator!= (T* ptr) const { return m_ptr != ptr; }
 

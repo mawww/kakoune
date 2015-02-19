@@ -52,7 +52,7 @@ private:
 
     void run_hook_in_own_context(const String& hook_name, StringView param);
 
-    safe_ptr<Buffer> m_buffer;
+    SafePtr<Buffer> m_buffer;
 
     CharCoord m_position;
     CharCoord m_dimensions;

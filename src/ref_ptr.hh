@@ -5,22 +5,22 @@ namespace Kakoune
 {
 
 template<typename T>
-struct ref_ptr
+struct RefPtr
 {
-    ref_ptr() = default;
-    ref_ptr(T* ptr) : m_ptr(ptr) { acquire(); }
-    ~ref_ptr() { release(); }
-    ref_ptr(const ref_ptr& other) : m_ptr(other.m_ptr) { acquire(); }
-    ref_ptr(ref_ptr&& other) : m_ptr(other.m_ptr) { other.m_ptr = nullptr; }
+    RefPtr() = default;
+    RefPtr(T* ptr) : m_ptr(ptr) { acquire(); }
+    ~RefPtr() { release(); }
+    RefPtr(const RefPtr& other) : m_ptr(other.m_ptr) { acquire(); }
+    RefPtr(RefPtr&& other) : m_ptr(other.m_ptr) { other.m_ptr = nullptr; }
 
-    ref_ptr& operator=(const ref_ptr& other)
+    RefPtr& operator=(const RefPtr& other)
     {
         release();
         m_ptr = other.m_ptr;
         acquire();
         return *this;
     }
-    ref_ptr& operator=(ref_ptr&& other)
+    RefPtr& operator=(RefPtr&& other)
     {
         release();
         m_ptr = other.m_ptr;
@@ -35,11 +35,11 @@ struct ref_ptr
 
     explicit operator bool() { return m_ptr; }
 
-    friend bool operator==(const ref_ptr& lhs, const ref_ptr& rhs)
+    friend bool operator==(const RefPtr& lhs, const RefPtr& rhs)
     {
         return lhs.m_ptr == rhs.m_ptr;
     }
-    friend bool operator!=(const ref_ptr& lhs, const ref_ptr& rhs)
+    friend bool operator!=(const RefPtr& lhs, const RefPtr& rhs)
     {
         return lhs.m_ptr != rhs.m_ptr;
     }

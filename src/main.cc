@@ -60,7 +60,7 @@ void register_env_vars()
             "buflist",
             [](StringView name, const Context& context)
             { return join(transformed(BufferManager::instance(),
-                                      [](const safe_ptr<Buffer>& b)
+                                      [](const SafePtr<Buffer>& b)
                                       { return b->display_name(); }), ':'); }
         }, {
             "timestamp",

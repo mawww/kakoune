@@ -44,7 +44,7 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
     friend void dec_ref_count(StringStorage* s) { if (--s->refcount == 0) StringStorage::destroy(s); }
 };
 
-inline ref_ptr<StringStorage> operator"" _ss(const char* ptr, size_t len)
+inline RefPtr<StringStorage> operator"" _ss(const char* ptr, size_t len)
 {
     return StringStorage::create({ptr, (int)len});
 }
@@ -75,15 +75,15 @@ public:
         return SharedString{StringView::substr(from, length), m_storage};
     }
 
-    explicit SharedString(ref_ptr<StringStorage> storage)
+    explicit SharedString(RefPtr<StringStorage> storage)
         : StringView{storage->strview()}, m_storage(std::move(storage)) {}
 
 private:
-    SharedString(StringView str, ref_ptr<StringStorage> storage)
+    SharedString(StringView str, RefPtr<StringStorage> storage)
         : StringView{str}, m_storage(std::move(storage)) {}
 
     friend class StringRegistry;
-    ref_ptr<StringStorage> m_storage;
+    RefPtr<StringStorage> m_storage;
 };
 
 inline size_t hash_value(const SharedString& str)
@@ -99,7 +99,7 @@ public:
     void purge_unused();
 
 private:
-    UnorderedMap<StringView, ref_ptr<StringStorage>, MemoryDomain::SharedString> m_strings;
+    UnorderedMap<StringView, RefPtr<StringStorage>, MemoryDomain::SharedString> m_strings;
 };
 
 inline SharedString intern(StringView str)

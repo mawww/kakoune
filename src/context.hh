@@ -138,9 +138,9 @@ private:
 
     Flags m_flags;
 
-    safe_ptr<InputHandler> m_input_handler;
-    safe_ptr<Window>       m_window;
-    safe_ptr<Client>       m_client;
+    SafePtr<InputHandler> m_input_handler;
+    SafePtr<Window>       m_window;
+    SafePtr<Client>       m_client;
 
     friend class Client;
     Optional<SelectionList> m_selections;
@@ -170,7 +170,7 @@ struct ScopedEdition
     Context& context() const { return m_context; }
 private:
     Context& m_context;
-    safe_ptr<Buffer> m_buffer;
+    SafePtr<Buffer> m_buffer;
 };
 
 }

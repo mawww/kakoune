@@ -55,11 +55,11 @@ public:
     const ByteCoord& coord() const { return m_coord; }
 
 private:
-    safe_ptr<const Buffer> m_buffer;
+    SafePtr<const Buffer> m_buffer;
     ByteCoord m_coord;
 };
 
-using BufferLines = Vector<ref_ptr<StringStorage>, MemoryDomain::BufferContent>;
+using BufferLines = Vector<RefPtr<StringStorage>, MemoryDomain::BufferContent>;
 
 // A Buffer is a in-memory representation of a file
 //
@@ -126,7 +126,7 @@ public:
     StringView operator[](LineCount line) const
     { return m_lines[line]; }
 
-    ref_ptr<StringStorage> line_storage(LineCount line) const
+    RefPtr<StringStorage> line_storage(LineCount line) const
     { return m_lines.get_storage(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
@@ -174,11 +174,11 @@ private:
     struct LineList : BufferLines
     {
         [[gnu::always_inline]]
-        ref_ptr<StringStorage>& get_storage(LineCount line)
+        RefPtr<StringStorage>& get_storage(LineCount line)
         { return BufferLines::operator[]((int)line); }
 
         [[gnu::always_inline]]
-        const ref_ptr<StringStorage>& get_storage(LineCount line) const
+        const RefPtr<StringStorage>& get_storage(LineCount line) const
         { return BufferLines::operator[]((int)line); }
 
         [[gnu::always_inline]]

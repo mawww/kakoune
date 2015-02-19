@@ -136,7 +136,7 @@ private:
     size_t m_main = 0;
     Vector<Selection> m_selections;
 
-    safe_ptr<Buffer> m_buffer;
+    SafePtr<Buffer> m_buffer;
     size_t m_timestamp;
 };
 

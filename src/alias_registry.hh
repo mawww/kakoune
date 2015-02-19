@@ -22,7 +22,7 @@ private:
     friend class Scope;
     AliasRegistry() {}
 
-    safe_ptr<AliasRegistry> m_parent;
+    SafePtr<AliasRegistry> m_parent;
     UnorderedMap<String, String, MemoryDomain::Aliases> m_aliases;
 };
 
