@@ -48,7 +48,10 @@ def -shell-params \
         echo "eval -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set buffer filetype '${filetype}'
-                  hook buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+                  hook -group fifo buffer BufCloseFifo .* %{
+                      nop %sh{ rm -r $(dirname ${output}) }
+                      rmhooks buffer fifo
+                  }
               }"
     }
 

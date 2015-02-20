@@ -11,7 +11,10 @@ def -shell-params make %{ %sh{
                edit! -fifo ${output} -scroll *make*
                set buffer filetype make
                set buffer _make_current_error_line 0
-               hook buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+               hook -group fifo buffer BufCloseFifo .* %{
+                   nop %sh{ rm -r $(dirname ${output}) }
+                   rmhooks buffer fifo
+               }
            }"
 }}
 

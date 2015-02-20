@@ -16,7 +16,10 @@ def -shell-params -file-completion \
                edit! -fifo ${output} -scroll *grep*
                set buffer filetype grep
                set buffer _grep_current_line 0
-               hook buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+               hook -group fifo buffer BufCloseFifo .* %{
+                   nop %sh{ rm -r $(dirname ${output}) }
+                   rmhooks buffer fifo
+               }
            }"
 }}
 
