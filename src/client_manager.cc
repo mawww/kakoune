@@ -121,7 +121,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
         // access, this selects a sensible buffer to display.
         for (auto& buf : BufferManager::instance())
         {
-            if (buf != &buffer)
+            if (buf.get() != &buffer)
             {
                client->context().change_buffer(*buf);
                break;

@@ -36,7 +36,7 @@ void BufferManager::unregister_buffer(Buffer& buffer)
 {
     for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
     {
-        if (*it == &buffer)
+        if (it->get() == &buffer)
         {
             m_buffers.erase(it);
             return;
@@ -44,7 +44,7 @@ void BufferManager::unregister_buffer(Buffer& buffer)
     }
     for (auto it = m_buffer_trash.begin(); it != m_buffer_trash.end(); ++it)
     {
-        if (*it == &buffer)
+        if (it->get() == &buffer)
         {
             m_buffer_trash.erase(it);
             return;
@@ -57,7 +57,7 @@ void BufferManager::delete_buffer(Buffer& buffer)
 {
     for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
     {
-        if (*it == &buffer)
+        if (it->get() == &buffer)
         {
             if (ClientManager::has_instance())
                 ClientManager::instance().ensure_no_client_uses_buffer(buffer);
@@ -98,7 +98,8 @@ Buffer& BufferManager::get_buffer(StringView name)
 
 void BufferManager::set_last_used_buffer(Buffer& buffer)
 {
-    auto it = find(m_buffers, &buffer);
+    auto it = find_if(m_buffers, [&buffer](const SafePtr<Buffer>& p)
+                                 { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
     m_buffers.erase(it);
     m_buffers.emplace(m_buffers.begin(), &buffer);

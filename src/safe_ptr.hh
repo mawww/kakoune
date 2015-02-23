@@ -4,6 +4,10 @@
 // #define SAFE_PTR_TRACK_CALLSTACKS
 
 #include "assert.hh"
+#include "ref_ptr.hh"
+
+#include <type_traits>
+#include <utility>
 
 #ifdef SAFE_PTR_TRACK_CALLSTACKS
 #include "vector.hh"
@@ -14,84 +18,6 @@ namespace Kakoune
 {
 
 // *** SafePtr: objects that assert nobody references them when they die ***
-
-template<typename T>
-class SafePtr
-{
-public:
-    SafePtr() : m_ptr(nullptr) {}
-    explicit SafePtr(T* ptr) : m_ptr(ptr)
-    {
-        #ifdef KAK_DEBUG
-        if (m_ptr)
-            m_ptr->inc_safe_count(this);
-        #endif
-    }
-    SafePtr(const SafePtr& other) : SafePtr(other.m_ptr) {}
-    SafePtr(SafePtr&& other) noexcept : m_ptr(other.m_ptr)
-    {
-        other.m_ptr = nullptr;
-        #ifdef KAK_DEBUG
-        if (m_ptr)
-            m_ptr->safe_ptr_moved(&other, this);
-        #endif
-    }
-    ~SafePtr()
-    {
-        #ifdef KAK_DEBUG
-        if (m_ptr)
-            m_ptr->dec_safe_count(this);
-        #endif
-    }
-
-    SafePtr& operator=(const SafePtr& other)
-    {
-        #ifdef KAK_DEBUG
-        if (m_ptr != other.m_ptr)
-        {
-            if (m_ptr)
-                m_ptr->dec_safe_count(this);
-            if (other.m_ptr)
-                other.m_ptr->inc_safe_count(this);
-        }
-        #endif
-        m_ptr = other.m_ptr;
-        return *this;
-    }
-
-    SafePtr& operator=(SafePtr&& other) noexcept
-    {
-        #ifdef KAK_DEBUG
-        if (m_ptr)
-            m_ptr->dec_safe_count(this);
-        if (other.m_ptr)
-            other.m_ptr->safe_ptr_moved(&other, this);
-        #endif
-        m_ptr = other.m_ptr;
-        other.m_ptr = nullptr;
-        return *this;
-    }
-
-    void reset(T* ptr = nullptr)
-    {
-        *this = SafePtr(ptr);
-    }
-
-    bool operator== (const SafePtr& other) const { return m_ptr == other.m_ptr; }
-    bool operator!= (const SafePtr& other) const { return m_ptr != other.m_ptr; }
-    bool operator== (T* ptr) const { return m_ptr == ptr; }
-    bool operator!= (T* ptr) const { return m_ptr != ptr; }
-
-    T& operator*  () const { return *m_ptr; }
-    T* operator-> () const { return m_ptr; }
-
-    T* get() const { return m_ptr; }
-
-    explicit operator bool() const { return m_ptr; }
-
-private:
-    T* m_ptr;
-};
 
 class SafeCountable
 {
@@ -106,31 +32,32 @@ public:
         #endif
     }
 
-    void inc_safe_count(void* ptr) const
+    friend void inc_ref_count(const SafeCountable* sc, void* ptr)
     {
-        ++m_count;
+        ++sc->m_count;
         #ifdef SAFE_PTR_TRACK_CALLSTACKS
-        m_callstacks.emplace_back(ptr);
-        #endif
-    }
-    void dec_safe_count(void* ptr) const
-    {
-        --m_count;
-        kak_assert(m_count >= 0);
-        #ifdef SAFE_PTR_TRACK_CALLSTACKS
-        auto it = std::find_if(m_callstacks.begin(), m_callstacks.end(),
-                               [=](const Callstack& cs) { return cs.ptr == ptr; });
-        kak_assert(it != m_callstacks.end());
-        m_callstacks.erase(it);
+        sc->m_callstacks.emplace_back(ptr);
         #endif
     }
 
-    void safe_ptr_moved(void* from, void* to) const
+    friend void dec_ref_count(const SafeCountable* sc, void* ptr)
+    {
+        --sc->m_count;
+        kak_assert(sc->m_count >= 0);
+        #ifdef SAFE_PTR_TRACK_CALLSTACKS
+        auto it = std::find_if(sc->m_callstacks.begin(), sc->m_callstacks.end(),
+                               [=](const Callstack& cs) { return cs.ptr == ptr; });
+        kak_assert(it != sc->m_callstacks.end());
+        sc->m_callstacks.erase(it);
+        #endif
+    }
+
+    friend void ref_ptr_moved(const SafeCountable* sc, void* from, void* to)
     {
         #ifdef SAFE_PTR_TRACK_CALLSTACKS
-        auto it = std::find_if(m_callstacks.begin(), m_callstacks.end(),
+        auto it = std::find_if(sc->m_callstacks.begin(), sc->m_callstacks.end(),
                                [=](const Callstack& cs) { return cs.ptr == from; });
-        kak_assert(it != m_callstacks.end());
+        kak_assert(it != sc->m_callstacks.end());
         it->ptr = to;
         #endif
     }
@@ -157,8 +84,18 @@ private:
     mutable Vector<Callstack> m_callstacks;
     #endif
     mutable int m_count;
+#else
+    [[gnu::always_inline]]
+    friend void inc_ref_count(const SafeCountable* sc, void* ptr) {}
+
+    [[gnu::always_inline]]
+    friend void dec_ref_count(const SafeCountable* sc, void* ptr) {}
 #endif
 };
+
+template<typename T> using SafePtr =
+    RefPtr<T, typename std::conditional<std::is_const<T>::value,
+                                        const SafeCountable, SafeCountable>::type>;
 
 }
 

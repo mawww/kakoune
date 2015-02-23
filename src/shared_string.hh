@@ -21,7 +21,7 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
     [[gnu::always_inline]]
     StringView strview() const { return {data(), length}; }
 
-    static StringStorage* create(StringView str, char back = 0)
+    static RefPtr<StringStorage> create(StringView str, char back = 0)
     {
         const int len = (int)str.length() + (back != 0 ? 1 : 0);
         void* ptr = StringStorage::operator new(sizeof(StringStorage) + len + 1);
@@ -32,7 +32,7 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
         if (back != 0)
             res->data()[len-1] = back;
         res->data()[len] = 0;
-        return res;
+        return RefPtr<StringStorage>(res);
     }
 
     static void destroy(StringStorage* s)
@@ -40,8 +40,8 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
         StringStorage::operator delete(s, sizeof(StringStorage) + s->length + 1);
     }
 
-    friend void inc_ref_count(StringStorage* s) { ++s->refcount; }
-    friend void dec_ref_count(StringStorage* s) { if (--s->refcount == 0) StringStorage::destroy(s); }
+    friend void inc_ref_count(StringStorage* s, void*) { ++s->refcount; }
+    friend void dec_ref_count(StringStorage* s, void*) { if (--s->refcount == 0) StringStorage::destroy(s); }
 };
 
 inline RefPtr<StringStorage> operator"" _ss(const char* ptr, size_t len)
