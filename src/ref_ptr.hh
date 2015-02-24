@@ -60,12 +60,14 @@ struct RefPtr
 private:
     T* m_ptr = nullptr;
 
+    [[gnu::always_inline]]
     void acquire()
     {
         if (m_ptr)
             inc_ref_count(static_cast<TForOverload*>(m_ptr), this);
     }
 
+    [[gnu::always_inline]]
     void release()
     {
         if (m_ptr)
@@ -73,6 +75,7 @@ private:
         m_ptr = nullptr;
     }
 
+    [[gnu::always_inline]]
     void moved(void* from)
         noexcept(noexcept(ref_ptr_moved(static_cast<TForOverload*>(nullptr), nullptr, nullptr)))
     {
