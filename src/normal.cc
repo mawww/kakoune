@@ -976,20 +976,32 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
+    const CharCount tabstop = context.options()["tabstop"].get<int>();
     Vector<Selection> result;
     for (auto& sel : selections)
     {
         auto anchor = sel.anchor();
         auto cursor = sel.cursor();
+        CharCount cursor_col = get_column(buffer, tabstop, cursor);
+        CharCount anchor_col = get_column(buffer, tabstop, anchor);
         result.push_back(std::move(sel));
         for (int i = 0; i < std::max(params.count, 1); ++i)
         {
             LineCount offset = (direction == Forward ? 1 : -1) * (i + 1);
-            ByteCoord new_anchor{anchor.line + offset, anchor.column};
-            ByteCoordAndTarget new_cursor{cursor.line + offset, cursor.column, cursor.target};
-            if (buffer.is_valid(new_anchor) and not buffer.is_end(new_anchor) and
-                buffer.is_valid(new_cursor) and not buffer.is_end(new_cursor))
-                result.emplace_back(new_anchor, new_cursor);
+
+            const LineCount anchor_line = anchor.line + offset;
+            const LineCount cursor_line = cursor.line + offset;
+
+            if (anchor_line >= buffer.line_count() or cursor_line >= buffer.line_count())
+                continue;
+
+            ByteCount anchor_byte = get_byte_to_column(buffer, tabstop, {anchor_line, anchor_col});
+            ByteCount cursor_byte = get_byte_to_column(buffer, tabstop, {cursor_line, cursor_col});
+
+            if (anchor_byte != buffer[anchor_line].length() and
+                cursor_byte != buffer[cursor_line].length())
+                result.emplace_back(ByteCoord{anchor_line, anchor_byte},
+                                    ByteCoordAndTarget{cursor_line, cursor_byte, cursor.target});
         }
     }
     selections = std::move(result);

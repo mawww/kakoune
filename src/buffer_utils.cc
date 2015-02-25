@@ -26,6 +26,26 @@ CharCount get_column(const Buffer& buffer,
     return col;
 }
 
+ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop, CharCoord coord)
+{
+    auto line = buffer[coord.line];
+    auto col = 0_char;
+    auto it = line.begin();
+    while (it != line.end() and coord.column > col)
+    {
+        if (*it == '\t')
+        {
+            col = (col / tabstop + 1) * tabstop;
+            if (col > coord.column) // the target column was in the tab
+                break;
+        }
+        else
+            ++col;
+        it = utf8::next(it, line.end());
+    }
+    return (int)(it - line.begin());
+}
+
 Buffer* create_buffer_from_data(StringView data, StringView name,
                                 Buffer::Flags flags, time_t fs_timestamp)
 {
