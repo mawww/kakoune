@@ -18,6 +18,8 @@ make userconfig
 See http://github.com/mawww/golf for kakoune solutions to vimgolf challenges,
 regularly beating the best vim solution.
 
+image::https://travis-ci.org/mawww/kakoune.svg[link="https://travis-ci.org/mawww/kakoune"]
+
 Introduction:
 -------------
 
@@ -70,8 +72,6 @@ Features
 
 Building
 --------
-
-image::https://travis-ci.org/mawww/kakoune.svg[]
 
 Kakoune dependencies are:
 
