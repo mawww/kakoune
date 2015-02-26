@@ -180,12 +180,14 @@ inline BufferIterator BufferIterator::operator-(ByteCount size) const
 
 inline BufferIterator& BufferIterator::operator+=(ByteCount size)
 {
-    return *this = (*this + size);
+    m_coord = m_buffer->advance(m_coord, size);
+    return *this;
 }
 
 inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 {
-    return *this = (*this - size);
+    m_coord = m_buffer->advance(m_coord, -size);
+    return *this;
 }
 
 [[gnu::always_inline]]
