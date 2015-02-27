@@ -86,14 +86,17 @@ FilteredContainer<Container, Filter> filtered(Container&& container, Filter filt
     return FilteredContainer<Container, Filter>(container, std::move(filter));
 }
 
+template<typename I, typename T>
+using TransformedResult = decltype(std::declval<T>()(*std::declval<I>()));
+
 template<typename Iterator, typename Transform>
 struct TransformedIterator : std::iterator<std::forward_iterator_tag,
-                                           typename std::remove_reference<decltype(std::declval<Transform>()(*std::declval<Iterator>()))>::type>
+                                           typename std::remove_reference<TransformedResult<Iterator, Transform>>::type>
 {
     TransformedIterator(Transform transform, Iterator it)
         : m_it(std::move(it)), m_transform(std::move(transform)) {}
 
-    auto operator*() -> decltype(std::declval<Transform>()(*std::declval<Iterator>())) { return m_transform(*m_it); }
+    auto operator*() -> TransformedResult<Iterator, Transform> { return m_transform(*m_it); }
     TransformedIterator& operator++() { ++m_it; return *this; }
     TransformedIterator operator++(int) { auto copy = *this; ++m_it; return copy; }
 
