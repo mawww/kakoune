@@ -14,6 +14,9 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
     int refcount;
     int length;
 
+    StringStorage() = default;
+    constexpr StringStorage(int refcount, int length) : refcount(refcount), length(length) {}
+
     [[gnu::always_inline]]
     char* data() { return reinterpret_cast<char*>(this + 1); }
     [[gnu::always_inline]]
@@ -40,13 +43,38 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
         StringStorage::operator delete(s, sizeof(StringStorage) + s->length + 1);
     }
 
-    friend void inc_ref_count(StringStorage* s, void*) { ++s->refcount; }
-    friend void dec_ref_count(StringStorage* s, void*) { if (--s->refcount == 0) StringStorage::destroy(s); }
+    friend void inc_ref_count(StringStorage* s, void*)
+    {
+        if (s->refcount != -1)
+            ++s->refcount;
+    }
+
+    friend void dec_ref_count(StringStorage* s, void*)
+    {
+        if (s->refcount != -1 and --s->refcount == 0)
+            StringStorage::destroy(s);
+    }
 };
 
 inline RefPtr<StringStorage> operator"" _ss(const char* ptr, size_t len)
 {
     return StringStorage::create({ptr, (int)len});
+}
+
+template<size_t len>
+struct StaticStringStorage : StringStorage
+{
+    template<size_t... I> constexpr
+    StaticStringStorage(const char (&literal)[len], IndexSequence<I...>)
+        : StringStorage{-1, len}, data{literal[I]...} {}
+
+    const char data[len];
+};
+
+template<size_t len>
+constexpr StaticStringStorage<len> static_storage(const char (&literal)[len])
+{
+    return { literal, make_index_sequence<len>() };
 }
 
 class SharedString : public StringView
