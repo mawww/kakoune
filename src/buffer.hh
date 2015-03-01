@@ -59,7 +59,7 @@ private:
     ByteCoord m_coord;
 };
 
-using BufferLines = Vector<RefPtr<StringData>, MemoryDomain::BufferContent>;
+using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 
 // A Buffer is a in-memory representation of a file
 //
@@ -126,7 +126,7 @@ public:
     StringView operator[](LineCount line) const
     { return m_lines[line]; }
 
-    RefPtr<StringData> line_storage(LineCount line) const
+    StringDataPtr line_storage(LineCount line) const
     { return m_lines.get_storage(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
@@ -174,11 +174,11 @@ private:
     struct LineList : BufferLines
     {
         [[gnu::always_inline]]
-        RefPtr<StringData>& get_storage(LineCount line)
+        StringDataPtr& get_storage(LineCount line)
         { return BufferLines::operator[]((int)line); }
 
         [[gnu::always_inline]]
-        const RefPtr<StringData>& get_storage(LineCount line) const
+        const StringDataPtr& get_storage(LineCount line) const
         { return BufferLines::operator[]((int)line); }
 
         [[gnu::always_inline]]

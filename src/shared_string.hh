@@ -56,7 +56,9 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
     }
 };
 
-inline RefPtr<StringData> operator"" _ss(const char* ptr, size_t len)
+using StringDataPtr = RefPtr<StringData>;
+
+inline StringDataPtr operator"" _ss(const char* ptr, size_t len)
 {
     return StringData::create({ptr, (int)len});
 }
@@ -103,15 +105,15 @@ public:
         return SharedString{StringView::substr(from, length), m_storage};
     }
 
-    explicit SharedString(RefPtr<StringData> storage)
+    explicit SharedString(StringDataPtr storage)
         : StringView{storage->strview()}, m_storage(std::move(storage)) {}
 
 private:
-    SharedString(StringView str, RefPtr<StringData> storage)
+    SharedString(StringView str, StringDataPtr storage)
         : StringView{str}, m_storage(std::move(storage)) {}
 
     friend class StringRegistry;
-    RefPtr<StringData> m_storage;
+    StringDataPtr m_storage;
 };
 
 inline size_t hash_value(const SharedString& str)
@@ -127,7 +129,7 @@ public:
     void purge_unused();
 
 private:
-    UnorderedMap<StringView, RefPtr<StringData>, MemoryDomain::SharedString> m_strings;
+    UnorderedMap<StringView, StringDataPtr, MemoryDomain::SharedString> m_strings;
 };
 
 inline SharedString intern(StringView str)
