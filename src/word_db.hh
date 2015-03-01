@@ -50,7 +50,7 @@ private:
         int refcount;
     };
     using WordToInfo = UnorderedMap<SharedString, WordInfo, MemoryDomain::WordDB>;
-    using Lines = Vector<RefPtr<StringStorage>, MemoryDomain::WordDB>;
+    using Lines = Vector<RefPtr<StringData>, MemoryDomain::WordDB>;
 
     SafePtr<const Buffer> m_buffer;
     size_t m_timestamp;

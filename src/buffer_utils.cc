@@ -66,7 +66,7 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
         while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
              ++line_end;
 
-        lines.emplace_back(StringStorage::create({pos, line_end}, '\n'));
+        lines.emplace_back(StringData::create({pos, line_end}, '\n'));
 
         if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
         {

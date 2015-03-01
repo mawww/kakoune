@@ -9,13 +9,13 @@
 namespace Kakoune
 {
 
-struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
+struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 {
     int refcount;
     int length;
 
-    StringStorage() = default;
-    constexpr StringStorage(int refcount, int length) : refcount(refcount), length(length) {}
+    StringData() = default;
+    constexpr StringData(int refcount, int length) : refcount(refcount), length(length) {}
 
     [[gnu::always_inline]]
     char* data() { return reinterpret_cast<char*>(this + 1); }
@@ -24,55 +24,55 @@ struct StringStorage : UseMemoryDomain<MemoryDomain::SharedString>
     [[gnu::always_inline]]
     StringView strview() const { return {data(), length}; }
 
-    static RefPtr<StringStorage> create(StringView str, char back = 0)
+    static RefPtr<StringData> create(StringView str, char back = 0)
     {
         const int len = (int)str.length() + (back != 0 ? 1 : 0);
-        void* ptr = StringStorage::operator new(sizeof(StringStorage) + len + 1);
-        StringStorage* res = reinterpret_cast<StringStorage*>(ptr);
+        void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
+        StringData* res = reinterpret_cast<StringData*>(ptr);
         std::copy(str.begin(), str.end(), res->data());
         res->refcount = 0;
         res->length = len;
         if (back != 0)
             res->data()[len-1] = back;
         res->data()[len] = 0;
-        return RefPtr<StringStorage>(res);
+        return RefPtr<StringData>(res);
     }
 
-    static void destroy(StringStorage* s)
+    static void destroy(StringData* s)
     {
-        StringStorage::operator delete(s, sizeof(StringStorage) + s->length + 1);
+        StringData::operator delete(s, sizeof(StringData) + s->length + 1);
     }
 
-    friend void inc_ref_count(StringStorage* s, void*)
+    friend void inc_ref_count(StringData* s, void*)
     {
         if (s->refcount != -1)
             ++s->refcount;
     }
 
-    friend void dec_ref_count(StringStorage* s, void*)
+    friend void dec_ref_count(StringData* s, void*)
     {
         if (s->refcount != -1 and --s->refcount == 0)
-            StringStorage::destroy(s);
+            StringData::destroy(s);
     }
 };
 
-inline RefPtr<StringStorage> operator"" _ss(const char* ptr, size_t len)
+inline RefPtr<StringData> operator"" _ss(const char* ptr, size_t len)
 {
-    return StringStorage::create({ptr, (int)len});
+    return StringData::create({ptr, (int)len});
 }
 
 template<size_t len>
-struct StaticStringStorage : StringStorage
+struct StaticStringData : StringData
 {
     template<size_t... I> constexpr
-    StaticStringStorage(const char (&literal)[len], IndexSequence<I...>)
-        : StringStorage{-1, len}, data{literal[I]...} {}
+    StaticStringData(const char (&literal)[len], IndexSequence<I...>)
+        : StringData{-1, len}, data{literal[I]...} {}
 
     const char data[len];
 };
 
 template<size_t len>
-constexpr StaticStringStorage<len> static_storage(const char (&literal)[len])
+constexpr StaticStringData<len> static_storage(const char (&literal)[len])
 {
     return { literal, make_index_sequence<len>() };
 }
@@ -85,7 +85,7 @@ public:
     {
         if (not str.empty())
         {
-            m_storage = StringStorage::create(str);
+            m_storage = StringData::create(str);
             StringView::operator=(m_storage->strview());
         }
     }
@@ -103,15 +103,15 @@ public:
         return SharedString{StringView::substr(from, length), m_storage};
     }
 
-    explicit SharedString(RefPtr<StringStorage> storage)
+    explicit SharedString(RefPtr<StringData> storage)
         : StringView{storage->strview()}, m_storage(std::move(storage)) {}
 
 private:
-    SharedString(StringView str, RefPtr<StringStorage> storage)
+    SharedString(StringView str, RefPtr<StringData> storage)
         : StringView{str}, m_storage(std::move(storage)) {}
 
     friend class StringRegistry;
-    RefPtr<StringStorage> m_storage;
+    RefPtr<StringData> m_storage;
 };
 
 inline size_t hash_value(const SharedString& str)
@@ -127,7 +127,7 @@ public:
     void purge_unused();
 
 private:
-    UnorderedMap<StringView, RefPtr<StringStorage>, MemoryDomain::SharedString> m_strings;
+    UnorderedMap<StringView, RefPtr<StringData>, MemoryDomain::SharedString> m_strings;
 };
 
 inline SharedString intern(StringView str)

@@ -28,7 +28,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     options().register_watcher(*this);
 
     if (lines.empty())
-        lines.emplace_back(StringStorage::create("\n"));
+        lines.emplace_back(StringData::create("\n"));
 
     #ifdef KAK_DEBUG
     for (auto& line : lines)
@@ -170,7 +170,7 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
     }
 
     if (lines.empty())
-        lines.emplace_back(StringStorage::create("\n"));
+        lines.emplace_back(StringData::create("\n"));
 
     for (size_t l = 0; l < lines.size(); ++l)
     {
@@ -267,12 +267,12 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         {
             if (content[i] == '\n')
             {
-                m_lines.push_back(StringStorage::create(content.substr(start, i + 1 - start)));
+                m_lines.push_back(StringData::create(content.substr(start, i + 1 - start)));
                 start = i + 1;
             }
         }
         if (start != content.length())
-            m_lines.push_back(StringStorage::create(content.substr(start)));
+            m_lines.push_back(StringData::create(content.substr(start)));
 
         begin = pos.column == 0 ? pos : ByteCoord{ pos.line + 1, 0 };
         end = ByteCoord{ line_count(), 0 };
@@ -292,16 +292,16 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
             {
                 StringView line_content = content.substr(start, i + 1 - start);
                 if (start == 0)
-                    new_lines.emplace_back(StringStorage::create(prefix + line_content));
+                    new_lines.emplace_back(StringData::create(prefix + line_content));
                 else
-                    new_lines.push_back(StringStorage::create(line_content));
+                    new_lines.push_back(StringData::create(line_content));
                 start = i + 1;
             }
         }
         if (start == 0)
-            new_lines.emplace_back(StringStorage::create(prefix + content + suffix));
+            new_lines.emplace_back(StringData::create(prefix + content + suffix));
         else if (start != content.length() or not suffix.empty())
-            new_lines.emplace_back(StringStorage::create(content.substr(start) + suffix));
+            new_lines.emplace_back(StringData::create(content.substr(start) + suffix));
 
         LineCount last_line = pos.line + new_lines.size() - 1;
 
@@ -331,7 +331,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     if (new_line.length() != 0)
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines.get_storage(begin.line) = StringStorage::create(new_line);
+        m_lines.get_storage(begin.line) = StringData::create(new_line);
         next = begin;
     }
     else
