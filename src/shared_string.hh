@@ -28,10 +28,8 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
     {
         const int len = (int)str.length() + (back != 0 ? 1 : 0);
         void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
-        StringData* res = reinterpret_cast<StringData*>(ptr);
+        StringData* res = new (ptr) StringData(0, len);;
         std::copy(str.begin(), str.end(), res->data());
-        res->refcount = 0;
-        res->length = len;
         if (back != 0)
             res->data()[len-1] = back;
         res->data()[len] = 0;
