@@ -829,7 +829,7 @@ const CommandDesc debug_cmd = {
     "debug",
     nullptr,
     "debug <command>: write some debug informations in the debug buffer\n"
-    "    existing commands: info, buffers",
+    "existing commands: info, buffers, options, memory, shared-strings",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     CommandHelper{},
