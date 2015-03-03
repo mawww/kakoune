@@ -20,14 +20,16 @@ def -shell-params clang-parse %{
                   edit! -fifo ${dir}/fifo *clang-output*
                   set buffer filetype make
                   set buffer _make_current_error_line 0
+                  hook -group fifo buffer BufCloseFifo .* %{
+                      nop %sh{ rm -r ${dir} }
+                      rmhooks buffer fifo
+                  }
               }"
         # this runs in a detached shell, asynchronously, so that kakoune does
         # not hang while clang is running. As completions references a cursor
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         (
-            trap "rm -r ${dir}" EXIT
-
             case ${kak_opt_filetype} in
                 cpp) ft=c++ ;;
                 obj-c) ft=objective-c ;;
@@ -48,10 +50,8 @@ def -shell-params clang-parse %{
                                  gsub(/ +$/, "", $3)
                                  id=substr($2, 1, length($2)-1)
                                  gsub(/:/, "\\:", id)
-                                 gsub(/"/, "\\\"", id)
                                  desc=$4 ? $3 "\\n" $4 : $3
                                  gsub(/:/, "\\:", desc)
-                                 gsub(/"/, "\\\"", desc)
                                  if (id in completions)
                                      completions[id]=completions[id] "\\n" desc
                                  else
@@ -60,9 +60,9 @@ def -shell-params clang-parse %{
                             END {
                                 for (id in completions)
                                     print id  "@" completions[id]
-                            }' | sort | paste -s -d ':' | sed -e 's/\\n/\n/g')
+                            }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
                 echo "eval -client ${kak_client} echo completed
-                      set 'buffer=${kak_buffile}' clang_completions \"${header}:${compl}\"" | kak -p ${kak_session}
+                      set 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
             else
                 clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
             fi
