@@ -296,9 +296,9 @@ void select_all_matches(SelectionList& selections,
 void split_selections(SelectionList& selections,
                       const Regex& separator_regex);
 
-using CodepointPair = std::pair<Codepoint, Codepoint>;
+struct MatchingPair { Codepoint opening, closing; };
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
-                             CodepointPair matching, int level, ObjectFlags flags);
+                             MatchingPair matching, int level, ObjectFlags flags);
 
 }
 

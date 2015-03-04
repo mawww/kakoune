@@ -908,9 +908,9 @@ void select_object(Context& context, NormalParams params)
                 return select<mode>(context, std::bind(sel.func, _1, _2, flags));
         }
 
-        static const struct
+        static constexpr struct
         {
-            CodepointPair pair;
+            MatchingPair pair;
             Codepoint name;
         } surrounding_pairs[] = {
             { { '(', ')' }, 'b' },
@@ -923,7 +923,7 @@ void select_object(Context& context, NormalParams params)
         };
         for (auto& sur : surrounding_pairs)
         {
-            if (sur.pair.first == c or sur.pair.second == c or
+            if (sur.pair.opening == c or sur.pair.closing == c or
                 (sur.name != 0 and sur.name == c))
                 return select<mode>(context, std::bind(select_surrounding, _1, _2,
                                                        sur.pair, level, flags));

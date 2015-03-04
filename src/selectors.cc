@@ -81,12 +81,12 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
 
 static Optional<Selection> find_surrounding(const Buffer& buffer,
                                             ByteCoord coord,
-                                            CodepointPair matching,
+                                            MatchingPair matching,
                                             ObjectFlags flags, int init_level)
 {
     const bool to_begin = flags & ObjectFlags::ToBegin;
     const bool to_end   = flags & ObjectFlags::ToEnd;
-    const bool nestable = matching.first != matching.second;
+    const bool nestable = matching.opening != matching.closing;
     auto pos = buffer.iterator_at(coord);
     Utf8Iterator first = pos;
     if (to_begin)
@@ -94,9 +94,9 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
         int level = nestable ? init_level : 0;
         while (first != buffer.begin())
         {
-            if (nestable and first != pos and *first == matching.second)
+            if (nestable and first != pos and *first == matching.closing)
                 ++level;
-            else if (*first == matching.first)
+            else if (*first == matching.opening)
             {
                 if (level == 0)
                     break;
@@ -105,7 +105,7 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
             }
             --first;
         }
-        if (level != 0 or *first != matching.first)
+        if (level != 0 or *first != matching.opening)
             return Optional<Selection>{};
     }
 
@@ -115,9 +115,9 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
         int level = nestable ? init_level : 0;
         while (last != buffer.end())
         {
-            if (nestable and last != pos and *last == matching.first)
+            if (nestable and last != pos and *last == matching.opening)
                 ++level;
-            else if (*last == matching.second)
+            else if (*last == matching.closing)
             {
                 if (level == 0)
                     break;
@@ -141,10 +141,10 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
 }
 
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
-                             CodepointPair matching, int level,
+                             MatchingPair matching, int level,
                              ObjectFlags flags)
 {
-    const bool nestable = matching.first != matching.second;
+    const bool nestable = matching.opening != matching.closing;
     auto pos = selection.cursor();
     if (not nestable or flags & ObjectFlags::Inner)
     {
@@ -154,8 +154,8 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
     }
 
     auto c = buffer.byte_at(pos);
-    if ((flags == ObjectFlags::ToBegin and c == matching.first) or
-        (flags == ObjectFlags::ToEnd and c == matching.second))
+    if ((flags == ObjectFlags::ToBegin and c == matching.opening) or
+        (flags == ObjectFlags::ToEnd and c == matching.closing))
         ++level;
 
     auto res = find_surrounding(buffer, pos, matching, flags, level);
