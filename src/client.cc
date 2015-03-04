@@ -222,6 +222,9 @@ void Client::close_buffer_reload_dialog()
 
 void Client::check_if_buffer_needs_reloading()
 {
+    if (m_buffer_reload_dialog_opened)
+        return;
+
     Buffer& buffer = context().buffer();
     auto reload = context().options()["autoreload"].get<YesNoAsk>();
     if (not (buffer.flags() & Buffer::Flags::File) or reload == No)

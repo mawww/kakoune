@@ -71,11 +71,11 @@ public:
 
     void on_enabled() override
     {
-        if (not context().has_client())
-            return;
-        // Do not check buffer timestamp, we might already be executing the
-        // on next key of a buffer timestamp check.
-        m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
+        if (context().has_client())
+        {
+            context().client().check_if_buffer_needs_reloading();
+            m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
+        }
 
         context().hooks().run_hook("NormalBegin", "", context());
     }
