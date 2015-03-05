@@ -3,8 +3,7 @@
 
 #include "keys.hh"
 #include "unordered_map.hh"
-
-#include <functional>
+#include "string.hh"
 
 namespace Kakoune
 {
@@ -19,12 +18,12 @@ struct NormalParams
 
 struct NormalCmdDesc
 {
-    const char* docstring;
-    std::function<void (Context& context, NormalParams params)> func;
+    StringView docstring;
+    void (*func)(Context& context, NormalParams params);
 };
 
 using KeyMap = UnorderedMap<Key, NormalCmdDesc>;
-extern KeyMap keymap;
+extern const KeyMap keymap;
 
 }
 

@@ -31,15 +31,15 @@ enum class SelectMode
     Append,
 };
 
-template<SelectMode mode = SelectMode::Replace, typename Func>
-void select(Context& context, Func func)
+template<SelectMode mode, typename T>
+void select(Context& context, T func)
 {
     auto& buffer = context.buffer();
     auto& selections = context.selections();
     if (mode == SelectMode::Append)
     {
         auto& sel = selections.main();
-        auto  res = func(buffer, sel);
+        auto res = func(buffer, sel);
         if (res.captures().empty())
             res.captures() = sel.captures();
         selections.push_back(res);
@@ -65,20 +65,10 @@ void select(Context& context, Func func)
     selections.check_invariant();
 }
 
-template<SelectMode mode, typename T>
-class Select
+template<SelectMode mode, Selection (*func)(const Buffer&, const Selection&)>
+void select(Context& context, NormalParams)
 {
-public:
-    constexpr Select(T t) : m_func(t) {}
-    void operator() (Context& context, NormalParams) { select<mode>(context, m_func); }
-private:
-    T m_func;
-};
-
-template<SelectMode mode = SelectMode::Replace, typename T>
-constexpr Select<mode, T> make_select(T func)
-{
-    return Select<mode, T>(func);
+    select<mode>(context, func);
 }
 
 template<SelectMode mode = SelectMode::Replace>
@@ -154,10 +144,10 @@ void goto_commands(Context& context, NormalParams params)
                 select_coord<mode>(buffer, ByteCoord{0,0}, context.selections());
                 break;
             case 'l':
-                select<mode>(context, select_to_eol);
+                select<mode, select_to_eol>(context, {});
                 break;
             case 'h':
-                select<mode>(context, select_to_eol_reverse);
+                select<mode, select_to_eol_reverse>(context, {});
                 break;
             case 'j':
             {
@@ -1332,8 +1322,12 @@ private:
     T m_func;
 };
 
-template<typename T>
-constexpr Repeated<T> repeated(T func) { return Repeated<T>(func); }
+template<void (*func)(Context&, NormalParams)>
+void repeated(Context& context, NormalParams params)
+{
+    ScopedEdition edition(context);
+    do { func(context, {0, params.reg}); } while(--params.count > 0);
+}
 
 template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
 void move(Context& context, NormalParams params)
@@ -1355,7 +1349,7 @@ void move(Context& context, NormalParams params)
     selections.sort_and_merge_overlapping();
 }
 
-KeyMap keymap =
+const KeyMap keymap =
 {
     { 'h', { "move left", move<CharCount, Backward> } },
     { 'j', { "move down", move<LineCount, Forward> } },
@@ -1392,8 +1386,8 @@ KeyMap keymap =
     { 'v', { "move view", view_commands } },
 
     { 'y', { "yank selected text", yank } },
-    { 'p', { "paste after selected text", repeated(paste<InsertMode::Append>) } },
-    { 'P', { "paste before selected text", repeated(paste<InsertMode::Insert>) } },
+    { 'p', { "paste after selected text", repeated<paste<InsertMode::Append>> } },
+    { 'P', { "paste before selected text", repeated<paste<InsertMode::Insert>> } },
     { alt('p'), { "paste every yanked selection after selected text", paste_all<InsertMode::Append> } },
     { alt('P'), { "paste every yanked selection before selected text", paste_all<InsertMode::Insert> } },
     { 'R', { "replace selected text with yanked text", paste<InsertMode::Replace> } },
@@ -1417,32 +1411,32 @@ KeyMap keymap =
     { ';', { "reduce selections to their cursor", [](Context& context, NormalParams) { clear_selections(context.selections()); } } },
     { alt(';'), { "swap selections cursor and anchor", [](Context& context, NormalParams) { flip_selections(context.selections()); } } },
 
-    { 'w', { "select to next word start", repeated(make_select<SelectMode::Replace>(select_to_next_word<Word>)) } },
-    { 'e', { "select to next word end", repeated(make_select<SelectMode::Replace>(select_to_next_word_end<Word>)) } },
-    { 'b', { "select to prevous word start", repeated(make_select<SelectMode::Replace>(select_to_previous_word<Word>)) } },
-    { 'W', { "extend to next word start", repeated(make_select<SelectMode::Extend>(select_to_next_word<Word>)) } },
-    { 'E', { "extend to next word end", repeated(make_select<SelectMode::Extend>(select_to_next_word_end<Word>)) } },
-    { 'B', { "extend to prevous word start", repeated(make_select<SelectMode::Extend>(select_to_previous_word<Word>)) } },
+    { 'w', { "select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>> } },
+    { 'e', { "select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>> } },
+    { 'b', { "select to prevous word start", repeated<select<SelectMode::Replace, select_to_previous_word<Word>>> } },
+    { 'W', { "extend to next word start", repeated<select<SelectMode::Extend, select_to_next_word<Word>>> } },
+    { 'E', { "extend to next word end", repeated<select<SelectMode::Extend, select_to_next_word_end<Word>>> } },
+    { 'B', { "extend to prevous word start", repeated<select<SelectMode::Extend, select_to_previous_word<Word>>> } },
 
-    { alt('w'), { "select to next WORD start", repeated(make_select<SelectMode::Replace>(select_to_next_word<WORD>)) } },
-    { alt('e'), { "select to next WORD end", repeated(make_select<SelectMode::Replace>(select_to_next_word_end<WORD>)) } },
-    { alt('b'), { "select to prevous WORD start", repeated(make_select<SelectMode::Replace>(select_to_previous_word<WORD>)) } },
-    { alt('W'), { "extend to next WORD start", repeated(make_select<SelectMode::Extend>(select_to_next_word<WORD>)) } },
-    { alt('E'), { "extend to next WORD end", repeated(make_select<SelectMode::Extend>(select_to_next_word_end<WORD>)) } },
-    { alt('B'), { "extend to prevous WORD start", repeated(make_select<SelectMode::Extend>(select_to_previous_word<WORD>)) } },
+    { alt('w'), { "select to next WORD start", repeated<select<SelectMode::Replace, select_to_next_word<WORD>>> } },
+    { alt('e'), { "select to next WORD end", repeated<select<SelectMode::Replace, select_to_next_word_end<WORD>>> } },
+    { alt('b'), { "select to prevous WORD start", repeated<select<SelectMode::Replace, select_to_previous_word<WORD>>> } },
+    { alt('W'), { "extend to next WORD start", repeated<select<SelectMode::Extend, select_to_next_word<WORD>>> } },
+    { alt('E'), { "extend to next WORD end", repeated<select<SelectMode::Extend, select_to_next_word_end<WORD>>> } },
+    { alt('B'), { "extend to prevous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>> } },
 
-    { alt('l'), { "select to line end", repeated(make_select<SelectMode::Replace>(select_to_eol)) } },
-    { alt('L'), { "extend to line end", repeated(make_select<SelectMode::Extend>(select_to_eol)) } },
-    { alt('h'), { "select to line begin", repeated(make_select<SelectMode::Replace>(select_to_eol_reverse)) } },
-    { alt('H'), { "extend to line begin", repeated(make_select<SelectMode::Extend>(select_to_eol_reverse)) } },
+    { alt('l'), { "select to line end", repeated<select<SelectMode::Replace, select_to_eol>> } },
+    { alt('L'), { "extend to line end", repeated<select<SelectMode::Extend, select_to_eol>> } },
+    { alt('h'), { "select to line begin", repeated<select<SelectMode::Replace, select_to_eol_reverse>> } },
+    { alt('H'), { "extend to line begin", repeated<select<SelectMode::Extend, select_to_eol_reverse>> } },
 
-    { 'x', { "select line", repeated(make_select<SelectMode::Replace>(select_line)) } },
-    { 'X', { "extend line", repeated(make_select<SelectMode::Extend>(select_line)) } },
-    { alt('x'), { "extend selections to whole lines", make_select<SelectMode::Replace>(select_lines) } },
-    { alt('X'), { "crop selections to whole lines", make_select<SelectMode::Replace>(trim_partial_lines) } },
+    { 'x', { "select line", repeated<select<SelectMode::Replace, select_line>> } },
+    { 'X', { "extend line", repeated<select<SelectMode::Extend, select_line>> } },
+    { alt('x'), { "extend selections to whole lines", select<SelectMode::Replace, select_lines> } },
+    { alt('X'), { "crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines> } },
 
-    { 'm', { "select to matching character", make_select<SelectMode::Replace>(select_matching) } },
-    { 'M', { "extend to matching character", make_select<SelectMode::Extend>(select_matching) } },
+    { 'm', { "select to matching character", select<SelectMode::Replace, select_matching> } },
+    { 'M', { "extend to matching character", select<SelectMode::Extend, select_matching> } },
 
     { '/', { "select next given regex match", search<SelectMode::Replace, Forward> } },
     { '?', { "extend with next given regex match", search<SelectMode::Extend, Forward> } },
