@@ -20,7 +20,7 @@ struct LineAndColumn
     [[gnu::always_inline]]
     constexpr EffectiveType operator+(EffectiveType other) const
     {
-        return EffectiveType(line + other.line, column + other.column);
+        return {line + other.line, column + other.column};
     }
 
     [[gnu::always_inline]]
@@ -34,7 +34,7 @@ struct LineAndColumn
     [[gnu::always_inline]]
     constexpr EffectiveType operator-(EffectiveType other) const
     {
-        return EffectiveType(line - other.line, column - other.column);
+        return {line - other.line, column - other.column};
     }
 
     [[gnu::always_inline]]
