@@ -59,6 +59,21 @@ public:
         m_content.erase(it, end());
     }
 
+    Value& operator[](StringView id)
+    {
+        auto it = find(id);
+        if (it != m_content.end())
+            return it->second;
+
+        append({ id, Value{} });
+        return (m_content.end()-1)->second;
+    }
+
+    const Value& operator[](StringView id) const
+    {
+        return (*const_cast<IdMap*>(this))[id];
+    }
+
     static const String& get_id(const value_type& v) { return v.first; }
 
     bool empty() const { return m_content.empty(); }

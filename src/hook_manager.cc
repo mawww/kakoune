@@ -8,7 +8,7 @@
 namespace Kakoune
 {
 
-void HookManager::add_hook(const String& hook_name, String group, HookFunc hook)
+void HookManager::add_hook(StringView hook_name, String group, HookFunc hook)
 {
     auto& hooks = m_hook[hook_name];
     hooks.append({std::move(group), std::move(hook)});
@@ -37,7 +37,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     return res;
 }
 
-void HookManager::run_hook(const String& hook_name,
+void HookManager::run_hook(StringView hook_name,
                            StringView param, Context& context) const
 {
     if (m_parent)

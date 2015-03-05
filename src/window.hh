@@ -50,7 +50,7 @@ private:
     void on_option_changed(const Option& option) override;
     void scroll_to_keep_selection_visible_ifn(const Context& context);
 
-    void run_hook_in_own_context(const String& hook_name, StringView param);
+    void run_hook_in_own_context(StringView hook_name, StringView param);
 
     SafePtr<Buffer> m_buffer;
 

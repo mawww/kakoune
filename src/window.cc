@@ -282,7 +282,7 @@ void Window::on_option_changed(const Option& option)
 }
 
 
-void Window::run_hook_in_own_context(const String& hook_name, StringView param)
+void Window::run_hook_in_own_context(StringView hook_name, StringView param)
 {
     InputHandler hook_handler({ *m_buffer, Selection{} }, Context::Flags::Transient);
     hook_handler.context().set_window(*this);

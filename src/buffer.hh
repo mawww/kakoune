@@ -150,7 +150,7 @@ public:
 
     ValueMap& values() const { return m_values; }
 
-    void run_hook_in_own_context(const String& hook_name, StringView param);
+    void run_hook_in_own_context(StringView hook_name, StringView param);
 
     void reload(BufferLines lines, time_t fs_timestamp = InvalidTime);
 

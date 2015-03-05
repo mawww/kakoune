@@ -16,10 +16,10 @@ class HookManager
 public:
     HookManager(HookManager& parent) : m_parent(&parent) {}
 
-    void add_hook(const String& hook_name, String group, HookFunc hook);
+    void add_hook(StringView hook_name, String group, HookFunc hook);
     void remove_hooks(StringView group);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
-    void run_hook(const String& hook_name, StringView param,
+    void run_hook(StringView hook_name, StringView param,
                   Context& context) const;
 
 private:
@@ -29,7 +29,7 @@ private:
     friend class Scope;
 
     HookManager* m_parent;
-    UnorderedMap<String, IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hook;
+    IdMap<IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hook;
 };
 
 }
