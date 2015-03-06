@@ -395,7 +395,8 @@ void pipe(Context& context, NormalParams)
                         str += '\n';
                     str = ShellManager::instance().pipe(str, real_cmd, context,
                                                         {}, EnvVarMap{});
-                    if (insert_eol and str.back() == '\n')
+                    if ((insert_eol or sel.max() == buffer.back_coord()) and
+                        str.back() == '\n')
                         str = str.substr(0, str.length()-1);
                     strings.push_back(std::move(str));
                 }
