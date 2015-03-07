@@ -57,11 +57,11 @@ struct Key
     constexpr Key(Codepoint key)
         : modifiers(Modifiers::None), key(key) {}
 
-    constexpr bool operator==(Key other) const
-    { return modifiers == other.modifiers and key == other.key; }
+    constexpr uint64_t val() const { return (uint64_t)modifiers << 32 | key; }
 
-    constexpr bool operator!=(Key other) const
-    { return modifiers != other.modifiers or key != other.key; }
+    constexpr bool operator==(Key other) const { return val() == other.val(); }
+    constexpr bool operator!=(Key other) const { return val() != other.val(); }
+    constexpr bool operator<(Key other) const { return val() < other.val(); }
 };
 
 template<> struct WithBitOps<Key::Modifiers> : std::true_type {};
