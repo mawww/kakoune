@@ -127,13 +127,15 @@ public:
         {
             if (m_hooks_disabled)
                 do_restore_hooks = true;
-            auto it = keymap.find(key);
-            if (it != keymap.end())
+            auto it = std::lower_bound(keymap.begin(), keymap.end(), key,
+                                       [](const NormalCmdDesc& lhs, const Key& rhs)
+                                       { return lhs.key < rhs; });
+            if (it != keymap.end() and it->key == key)
             {
                 if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
-                    context().ui().info_show(key_to_str(key), it->second.docstring, CharCoord{},
+                    context().ui().info_show(key_to_str(key), it->docstring, CharCoord{},
                                              get_face("Information"), InfoStyle::Prompt);
-                it->second.func(context(), m_params);
+                it->func(context(), m_params);
             }
             m_params = { 0, '"' };
         }

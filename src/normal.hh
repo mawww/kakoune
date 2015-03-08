@@ -18,12 +18,13 @@ struct NormalParams
 
 struct NormalCmdDesc
 {
+    Key key;
     StringView docstring;
     void (*func)(Context& context, NormalParams params);
 };
 
-using KeyMap = UnorderedMap<Key, NormalCmdDesc>;
-extern const KeyMap keymap;
+using KeyMap = Vector<NormalCmdDesc>;
+extern KeyMap keymap;
 
 }
 
