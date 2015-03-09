@@ -1350,7 +1350,7 @@ void move(Context& context, NormalParams params)
     selections.sort_and_merge_overlapping();
 }
 
-KeyMap keymap =
+static NormalCmdDesc cmds[] =
 {
     { 'h', "move left", move<CharCount, Backward> },
     { 'j', "move down", move<LineCount, Forward> },
@@ -1514,5 +1514,7 @@ KeyMap keymap =
     { Key::PageUp,   "scroll one page up", scroll<Key::PageUp> },
     { Key::PageDown, "scroll one page down", scroll<Key::PageDown> },
 };
+
+KeyMap keymap = cmds;
 
 }

@@ -1,8 +1,8 @@
 #ifndef normal_hh_INCLUDED
 #define normal_hh_INCLUDED
 
+#include "array_view.hh"
 #include "keys.hh"
-#include "unordered_map.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -23,7 +23,7 @@ struct NormalCmdDesc
     void (*func)(Context& context, NormalParams params);
 };
 
-using KeyMap = Vector<NormalCmdDesc>;
+using KeyMap = const ArrayView<NormalCmdDesc>;
 extern KeyMap keymap;
 
 }
