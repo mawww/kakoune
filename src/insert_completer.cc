@@ -295,8 +295,8 @@ void InsertCompleter::update()
         ByteCoord cursor = m_context.selections().main().cursor();
         ByteCoord compl_beg = m_completions.begin;
         if (cursor.line == compl_beg.line and
-            is_in_range(cursor.column, compl_beg.column,
-                        compl_beg.column + longest_completion-1))
+            compl_beg.column <= cursor.column and
+            cursor.column < compl_beg.column + longest_completion)
         {
             String prefix = m_context.buffer().string(compl_beg, cursor);
 
