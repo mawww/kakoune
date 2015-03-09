@@ -23,7 +23,7 @@ bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
            (m_parent and m_parent->is_mapped(key, mode));
 }
 
-ArrayView<Key> KeymapManager::get_mapping(Key key, KeymapMode mode) const
+ConstArrayView<Key> KeymapManager::get_mapping(Key key, KeymapMode mode) const
 {
     auto it = m_mapping.find({key, mode});
     if (it != m_mapping.end())

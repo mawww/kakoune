@@ -18,7 +18,7 @@ namespace Kakoune
 {
 
 class Context;
-using CommandParameters = ArrayView<String>;
+using CommandParameters = ConstArrayView<String>;
 using Command = std::function<void (const ParametersParser& parser, Context& context)>;
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
@@ -40,7 +40,7 @@ public:
     using ArgumentCompleter = std::function<Completions (const Context&,
                                             CompletionFlags flags,
                                             const String&, ByteCount)>;
-    using ArgumentCompleterList = ArrayView<ArgumentCompleter>;
+    using ArgumentCompleterList = ConstArrayView<ArgumentCompleter>;
 
     PerArgumentCommandCompleter(ArgumentCompleterList completers)
         : m_completers(completers.begin(), completers.end()) {}
@@ -61,7 +61,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(StringView command_line, Context& context,
-                 ArrayView<String> shell_params = {},
+                 ConstArrayView<String> shell_params = {},
                  const EnvVarMap& env_vars = EnvVarMap{});
 
     Completions complete(const Context& context, CompletionFlags flags,

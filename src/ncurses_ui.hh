@@ -28,7 +28,7 @@ public:
     bool   is_key_available() override;
     Key    get_key() override;
 
-    void menu_show(ArrayView<String> items,
+    void menu_show(ConstArrayView<String> items,
                    CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -73,7 +73,7 @@ private:
     InputCallback m_input_callback;
 
     bool m_status_on_top = false;
-    ArrayView<StringView> m_assistant;
+    ConstArrayView<StringView> m_assistant;
 
     bool m_dirty = false;
 };

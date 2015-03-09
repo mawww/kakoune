@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-using ParameterList = ArrayView<String>;
+using ParameterList = ConstArrayView<String>;
 
 struct parameter_error : public runtime_error
 {

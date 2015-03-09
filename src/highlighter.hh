@@ -64,7 +64,7 @@ std::unique_ptr<SimpleHighlighter<T>> make_simple_highlighter(T func)
     return make_unique<SimpleHighlighter<T>>(std::move(func));
 }
 
-using HighlighterParameters = ArrayView<String>;
+using HighlighterParameters = ConstArrayView<String>;
 using HighlighterFactory = std::function<HighlighterAndId (HighlighterParameters params)>;
 
 struct HighlighterFactoryAndDocstring

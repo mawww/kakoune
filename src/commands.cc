@@ -1267,7 +1267,7 @@ const CommandDesc prompt_cmd = {
             {
                 if (event != PromptEvent::Validate)
                     return;
-                RegisterManager::instance()[reg] = ArrayView<String>(str);
+                RegisterManager::instance()[reg] = ConstArrayView<String>(str);
 
                 CommandManager::instance().execute(command, context);
             });
@@ -1449,7 +1449,7 @@ const CommandDesc set_register_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        RegisterManager::instance()[parser[0]] = ArrayView<String>(parser[1]);
+        RegisterManager::instance()[parser[0]] = ConstArrayView<String>(parser[1]);
     }
 };
 
@@ -1474,7 +1474,7 @@ public:
     RegisterRestorer(char name, const Context& context)
       : m_name(name)
     {
-        ArrayView<String> save = RegisterManager::instance()[name].values(context);
+        ConstArrayView<String> save = RegisterManager::instance()[name].values(context);
         m_save = Vector<String>(save.begin(), save.end());
     }
 
@@ -1488,7 +1488,7 @@ private:
 
 }
 
-void exec_keys(ArrayView<Key> keys, Context& context)
+void exec_keys(ConstArrayView<Key> keys, Context& context)
 {
     RegisterRestorer quote('"', context);
     RegisterRestorer slash('/', context);

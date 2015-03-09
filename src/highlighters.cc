@@ -822,7 +822,7 @@ void find_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& re
     }
 }
 
-void update_matches(const Buffer& buffer, ArrayView<LineModification> modifs,
+void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
                     RegexMatchList& matches, const Regex& regex)
 {
     // remove out of date matches and update line for others
@@ -939,7 +939,7 @@ struct RegionDesc
     }
 
     void update_matches(const Buffer& buffer,
-                        ArrayView<LineModification> modifs,
+                        ConstArrayView<LineModification> modifs,
                         RegionMatches& matches) const
     {
         Kakoune::update_matches(buffer, modifs, matches.begin_matches, m_begin);

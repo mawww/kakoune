@@ -68,7 +68,7 @@ public:
     }
 
     template<typename T>
-    void write(ArrayView<T> view)
+    void write(ConstArrayView<T> view)
     {
         write<uint32_t>(view.size());
         for (auto& val : view)
@@ -78,7 +78,7 @@ public:
     template<typename T, MemoryDomain domain>
     void write(const Vector<T, domain>& vec)
     {
-        write(ArrayView<T>(vec));
+        write(ConstArrayView<T>(vec));
     }
 
     template<typename Key, typename Val, MemoryDomain domain>
@@ -249,7 +249,7 @@ public:
     RemoteUI(int socket);
     ~RemoteUI();
 
-    void menu_show(ArrayView<String> choices,
+    void menu_show(ConstArrayView<String> choices,
                    CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -298,7 +298,7 @@ RemoteUI::~RemoteUI()
     m_socket_watcher.close_fd();
 }
 
-void RemoteUI::menu_show(ArrayView<String> choices,
+void RemoteUI::menu_show(ConstArrayView<String> choices,
                          CharCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {

@@ -1,6 +1,7 @@
 #ifndef shell_manager_hh_INCLUDED
 #define shell_manager_hh_INCLUDED
 
+#include "array_view.hh"
 #include "regex.hh"
 #include "utils.hh"
 #include "env_vars.hh"
@@ -9,7 +10,6 @@ namespace Kakoune
 {
 
 class Context;
-template<typename T> class ArrayView;
 class String;
 class StringView;
 
@@ -21,13 +21,13 @@ public:
     ShellManager();
 
     String eval(StringView cmdline, const Context& context,
-                ArrayView<String> params,
+                ConstArrayView<String> params,
                 const EnvVarMap& env_vars,
                 int* exit_status = nullptr);
 
     String pipe(StringView input,
                 StringView cmdline, const Context& context,
-                ArrayView<String> params,
+                ConstArrayView<String> params,
                 const EnvVarMap& env_vars,
                 int* exit_status = nullptr);
 

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <initializer_list>
+#include <type_traits>
 
 namespace Kakoune
 {
@@ -18,42 +19,42 @@ public:
     constexpr ArrayView()
         : m_pointer(nullptr), m_size(0) {}
 
-    constexpr ArrayView(const T& oneval)
+    constexpr ArrayView(T& oneval)
         : m_pointer(&oneval), m_size(1) {}
 
-    constexpr ArrayView(const T* pointer, size_t size)
+    constexpr ArrayView(T* pointer, size_t size)
         : m_pointer(pointer), m_size(size) {}
 
-    constexpr ArrayView(const T* begin, const T* end)
+    constexpr ArrayView(T* begin, T* end)
         : m_pointer(begin), m_size(end - begin) {}
 
     template<size_t N>
-    constexpr ArrayView(const T(&array)[N]) : m_pointer(array), m_size(N) {}
+    constexpr ArrayView(T(&array)[N]) : m_pointer(array), m_size(N) {}
 
     template<typename Iterator>
     constexpr ArrayView(const Iterator& begin, const Iterator& end)
         : m_pointer(&(*begin)), m_size(end - begin) {}
 
-    template<typename Alloc>
-    constexpr ArrayView(const std::vector<T, Alloc>& v)
+    template<typename Alloc, typename U>
+    constexpr ArrayView(const std::vector<U, Alloc>& v)
         : m_pointer(&v[0]), m_size(v.size()) {}
 
     constexpr ArrayView(const std::initializer_list<T>& v)
         : m_pointer(v.begin()), m_size(v.size()) {}
 
-    constexpr const T* pointer() const { return m_pointer; }
+    constexpr T* pointer() const { return m_pointer; }
     constexpr size_t size() const { return m_size; }
-    constexpr const T& operator[](size_t n) const { return *(m_pointer + n); }
+    constexpr T& operator[](size_t n) const { return *(m_pointer + n); }
 
-    constexpr const T* begin() const { return m_pointer; }
-    constexpr const T* end()   const { return m_pointer+m_size; }
+    constexpr T* begin() const { return m_pointer; }
+    constexpr T* end()   const { return m_pointer+m_size; }
 
-    using reverse_iterator = std::reverse_iterator<const T*>;
+    using reverse_iterator = std::reverse_iterator<T*>;
     constexpr reverse_iterator rbegin() const { return reverse_iterator(m_pointer+m_size); }
     constexpr reverse_iterator rend()   const { return reverse_iterator(m_pointer); }
 
-    constexpr const T& front() const { return *m_pointer; }
-    constexpr const T& back()  const { return *(m_pointer + m_size - 1); }
+    constexpr T& front() const { return *m_pointer; }
+    constexpr T& back()  const { return *(m_pointer + m_size - 1); }
 
     constexpr bool empty() const { return m_size == 0; }
 
@@ -63,9 +64,12 @@ public:
     }
 
 private:
-    const T* m_pointer;
+    T* m_pointer;
     size_t   m_size;
 };
+
+template<typename T>
+using ConstArrayView = ArrayView<const T>;
 
 }
 

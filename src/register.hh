@@ -13,9 +13,9 @@ class Register
 {
 public:
     virtual ~Register() {}
-    virtual Register& operator=(ArrayView<String> values) = 0;
+    virtual Register& operator=(ConstArrayView<String> values) = 0;
 
-    virtual ArrayView<String> values(const Context& context) = 0;
+    virtual ConstArrayView<String> values(const Context& context) = 0;
 };
 
 }

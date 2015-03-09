@@ -564,7 +564,7 @@ void NCursesUI::draw_menu()
     m_dirty = true;
 }
 
-void NCursesUI::menu_show(ArrayView<String> items,
+void NCursesUI::menu_show(ConstArrayView<String> items,
                           CharCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
@@ -714,7 +714,7 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
 }
 
 String make_info_box(StringView title, StringView message, CharCount max_width,
-                     ArrayView<StringView> assistant)
+                     ConstArrayView<StringView> assistant)
 {
     CharCoord assistant_size;
     if (not assistant.empty())
@@ -851,7 +851,7 @@ void NCursesUI::set_ui_options(const Options& options)
             else if (it->second == "clippy")
                 m_assistant = assistant_clippy;
             else if (it->second == "none" or it->second == "off")
-                m_assistant = ArrayView<StringView>{};
+                m_assistant = ConstArrayView<StringView>{};
         }
     }
 

@@ -255,7 +255,7 @@ void write_buffer_to_backup_file(Buffer& buffer)
     }
 }
 
-String find_file(StringView filename, ArrayView<String> paths)
+String find_file(StringView filename, ConstArrayView<String> paths)
 {
     struct stat buf;
     if (filename.length() > 1 and filename[0] == '/')

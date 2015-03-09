@@ -1,6 +1,7 @@
 #ifndef user_interface_hh_INCLUDED
 #define user_interface_hh_INCLUDED
 
+#include "array_view.hh"
 #include "safe_ptr.hh"
 #include "unordered_map.hh"
 
@@ -15,7 +16,6 @@ class DisplayLine;
 struct CharCoord;
 struct Face;
 struct Key;
-template<typename T> class ArrayView;
 
 enum class MenuStyle
 {
@@ -41,7 +41,7 @@ class UserInterface : public SafeCountable
 public:
     virtual ~UserInterface() {}
 
-    virtual void menu_show(ArrayView<String> choices,
+    virtual void menu_show(ConstArrayView<String> choices,
                            CharCoord anchor, Face fg, Face bg,
                            MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;

@@ -164,7 +164,7 @@ public:
         ByteCoord begin;
         ByteCoord end;
     };
-    ArrayView<Change> changes_since(size_t timestamp) const;
+    ConstArrayView<Change> changes_since(size_t timestamp) const;
 
     String debug_description() const;
 private:

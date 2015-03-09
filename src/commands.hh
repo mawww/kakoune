@@ -10,7 +10,7 @@ namespace Kakoune
 class Context;
 
 void register_commands();
-void exec_keys(ArrayView<Key> keys, Context& context);
+void exec_keys(ConstArrayView<Key> keys, Context& context);
 
 }
 

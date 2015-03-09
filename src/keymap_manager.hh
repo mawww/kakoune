@@ -1,6 +1,7 @@
 #ifndef keymap_manager_hh_INCLUDED
 #define keymap_manager_hh_INCLUDED
 
+#include "array_view.hh"
 #include "keys.hh"
 #include "hash.hh"
 #include "unordered_map.hh"
@@ -21,8 +22,6 @@ enum class KeymapMode : int
     User,
 };
 
-template<typename T> class ArrayView;
-
 class KeymapManager
 {
 public:
@@ -33,7 +32,7 @@ public:
     void unmap_key(Key key, KeymapMode mode);
 
     bool is_mapped(Key key, KeymapMode mode) const;
-    ArrayView<Key> get_mapping(Key key, KeymapMode mode) const;
+    ConstArrayView<Key> get_mapping(Key key, KeymapMode mode) const;
 private:
     KeymapManager()
         : m_parent(nullptr) {}
