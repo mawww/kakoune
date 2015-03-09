@@ -1350,6 +1350,31 @@ void move(Context& context, NormalParams params)
     selections.sort_and_merge_overlapping();
 }
 
+void select_whole_buffer(Context& context, NormalParams)
+{
+    select_buffer(context.selections());
+}
+
+void keep_selection(Context& context, NormalParams p)
+{
+    keep_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index());
+}
+
+void remove_selection(Context& context, NormalParams p)
+{
+    remove_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index());
+}
+
+void clear_selections(Context& context, NormalParams)
+{
+    clear_selections(context.selections());
+}
+
+void flip_selections(Context& context, NormalParams)
+{
+    flip_selections(context.selections());
+}
+
 static NormalCmdDesc cmds[] =
 {
     { 'h', "move left", move<CharCount, Backward> },
@@ -1399,7 +1424,7 @@ static NormalCmdDesc cmds[] =
 
     { '.', "repeat last insert command", repeat_last_insert },
 
-    { '%', "select whole buffer", [](Context& context, NormalParams) { select_buffer(context.selections()); } },
+    { '%', "select whole buffer", select_whole_buffer },
 
     { ':', "enter command prompt", command },
     { '|', "pipe each selection through filter and replace with output", pipe<true> },
@@ -1407,10 +1432,10 @@ static NormalCmdDesc cmds[] =
     { '!', "insert command output", insert_output<InsertMode::Insert> },
     { alt('!'), "append command output", insert_output<InsertMode::Append> },
 
-    { ' ', "remove all selection except main", [](Context& context, NormalParams p) { keep_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index()); } },
-    { alt(' '), "remove main selection", [](Context& context, NormalParams p) { remove_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index()); } },
-    { ';', "reduce selections to their cursor", [](Context& context, NormalParams) { clear_selections(context.selections()); } },
-    { alt(';'), "swap selections cursor and anchor", [](Context& context, NormalParams) { flip_selections(context.selections()); } },
+    { ' ', "remove all selection except main", keep_selection },
+    { alt(' '), "remove main selection", remove_selection },
+    { ';', "reduce selections to their cursor", clear_selections },
+    { alt(';'), "swap selections cursor and anchor", flip_selections },
 
     { 'w', "select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>> },
     { 'e', "select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>> },
