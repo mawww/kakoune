@@ -51,7 +51,7 @@ void HookManager::run_hook(StringView hook_name,
     for (auto& hook : hook_list_it->second)
     {
         if (not hook.first.empty() and not disabled_hooks.empty() and
-            regex_match(hook.first, disabled_hooks))
+            regex_match(hook.first.begin(), hook.first.end(), disabled_hooks))
             continue;
 
         try

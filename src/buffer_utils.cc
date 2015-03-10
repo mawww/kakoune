@@ -53,7 +53,7 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
 
     const char* pos = data.begin();
     if (data.length() >= 3 and
-       data[0] == '\xEF' and data[1] == '\xBB' and data[2] == '\xBF')
+       data[0_byte] == '\xEF' and data[1_byte] == '\xBB' and data[2_byte] == '\xBF')
     {
         bom = true;
         pos = data.begin() + 3;
@@ -81,7 +81,7 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
     if (buffer)
         buffer->reload(std::move(lines), fs_timestamp);
     else
-        buffer = new Buffer{name, flags, std::move(lines), fs_timestamp};
+        buffer = new Buffer{name.str(), flags, std::move(lines), fs_timestamp};
 
     OptionManager& options = buffer->options();
     options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");

@@ -37,10 +37,10 @@ void run_unit_tests();
 String runtime_directory()
 {
     String bin_path = get_kak_binary_path();
-    size_t last_slash = bin_path.find_last_of('/');
-    if (last_slash == String::npos)
+    auto it = find(reversed(bin_path), '/');
+    if (it == bin_path.rend())
         throw runtime_error("unable to determine runtime directory");
-    return bin_path.substr(0_byte, (int)last_slash) + "/../share/kak";
+    return StringView{bin_path.begin(), it.base()-1} + "/../share/kak";
 }
 
 void register_env_vars()
@@ -54,7 +54,7 @@ void register_env_vars()
             { return context.buffer().display_name(); }
         }, {
             "buffile",
-            [](StringView name, const Context& context) -> String
+            [](StringView name, const Context& context)
             { return context.buffer().name(); }
         }, {
             "buflist",
@@ -85,19 +85,19 @@ void register_env_vars()
             { return context.options()[name.substr(4_byte)].get_as_string(); }
         }, {
             "reg_.+",
-            [](StringView name, const Context& context) -> String
-            { return context.main_sel_register_value(name.substr(4_byte)); }
+            [](StringView name, const Context& context)
+            { return context.main_sel_register_value(name.substr(4_byte)).str(); }
         }, {
             "client_env_.+",
-            [](StringView name, const Context& context) -> String
-            { return context.client().get_env_var(name.substr(11_byte)); }
+            [](StringView name, const Context& context)
+            { return context.client().get_env_var(name.substr(11_byte)).str(); }
         }, {
             "session",
-            [](StringView name, const Context& context) -> String
+            [](StringView name, const Context& context)
             { return Server::instance().session(); }
         }, {
             "client",
-            [](StringView name, const Context& context) -> String
+            [](StringView name, const Context& context)
             { return context.name(); }
         }, {
             "cursor_line",
@@ -356,7 +356,7 @@ int run_server(StringView session, StringView init_command,
 
     write_debug("*** This is the debug buffer, where debug info will be written ***");
 
-    Server server(session.empty() ? to_string(getpid()) : String{session});
+    Server server(session.empty() ? to_string(getpid()) : session.str());
 
     if (not ignore_kakrc) try
     {
@@ -385,7 +385,7 @@ int run_server(StringView session, StringView init_command,
         for (auto& file : reversed(files))
         {
             if (not create_buffer_from_file(file))
-                new Buffer(file, Buffer::Flags::New | Buffer::Flags::File);
+                new Buffer(file.str(), Buffer::Flags::New | Buffer::Flags::File);
         }
     }
     catch (Kakoune::runtime_error& error)

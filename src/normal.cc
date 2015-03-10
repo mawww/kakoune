@@ -375,7 +375,7 @@ void pipe(Context& context, NormalParams)
                 real_cmd = context.main_sel_register_value("|");
             else
             {
-                RegisterManager::instance()['|'] = String{cmdline};
+                RegisterManager::instance()['|'] = cmdline.str();
                 real_cmd = cmdline;
             }
 
@@ -397,7 +397,7 @@ void pipe(Context& context, NormalParams)
                                                         {}, EnvVarMap{});
                     if ((insert_eol or sel.max() == buffer.back_coord()) and
                         str.back() == '\n')
-                        str = str.substr(0, str.length()-1);
+                        str = str.substr(0, str.length()-1).str();
                     strings.push_back(std::move(str));
                 }
                 ScopedEdition edition(context);
@@ -428,7 +428,7 @@ void insert_output(Context& context, NormalParams)
                 real_cmd = context.main_sel_register_value("|");
             else
             {
-                RegisterManager::instance()['|'] = String{cmdline};
+                RegisterManager::instance()['|'] = cmdline.str();
                 real_cmd = cmdline;
             }
 
@@ -617,7 +617,7 @@ void search(Context& context, NormalParams)
                      if (ex.empty())
                          ex = Regex{context.main_sel_register_value("/").str()};
                      else if (event == PromptEvent::Validate)
-                         RegisterManager::instance()['/'] = String{ex.str()};
+                         RegisterManager::instance()['/'] = ex.str();
                      if (not ex.empty() and not ex.str().empty())
                          select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
                  });
@@ -674,7 +674,7 @@ void select_regex(Context& context, NormalParams)
         if (ex.empty())
             ex = Regex{context.main_sel_register_value("/").str()};
         else if (event == PromptEvent::Validate)
-            RegisterManager::instance()['/'] = String{ex.str()};
+            RegisterManager::instance()['/'] = ex.str();
         if (not ex.empty() and not ex.str().empty())
             select_all_matches(context.selections(), ex);
     });
@@ -686,7 +686,7 @@ void split_regex(Context& context, NormalParams)
         if (ex.empty())
             ex = Regex{context.main_sel_register_value("/").str()};
         else if (event == PromptEvent::Validate)
-            RegisterManager::instance()['/'] = String{ex.str()};
+            RegisterManager::instance()['/'] = ex.str();
         if (not ex.empty() and not ex.str().empty())
             split_selections(context.selections(), ex);
     });

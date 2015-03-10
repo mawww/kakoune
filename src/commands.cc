@@ -47,7 +47,7 @@ Buffer* open_fifo(StringView name, StringView filename, bool scroll)
     if (fd < 0)
        throw runtime_error("unable to open " + filename);
 
-    return create_fifo_buffer(name, fd, scroll);
+    return create_fifo_buffer(name.str(), fd, scroll);
 }
 
 const PerArgumentCommandCompleter filename_completer({
@@ -69,9 +69,9 @@ static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_po
         StringView match_name = name;
         if (not include_dirs and buffer->flags() & Buffer::Flags::File)
         {
-            ByteCount pos = name.find_last_of('/');
-            if (pos != (int)String::npos)
-                match_name = name.substr(pos+1);
+            auto it = find(reversed(name), '/');
+            if (it != name.rend())
+                match_name = StringView{it.base() + 2, name.end()};
         }
         if (prefix_match(match_name, prefix))
             prefix_result.push_back(name);
@@ -434,7 +434,7 @@ const CommandDesc namebuf_cmd = {
 Completions complete_highlighter(const Context& context,
                                  StringView arg, ByteCount pos_in_token, bool only_group)
 {
-    const bool shared = not arg.empty() and arg[0] == '/';
+    const bool shared = not arg.empty() and arg[0_byte] == '/';
     if (shared)
     {
         auto& group = DefinedHighlighters::instance();
@@ -480,7 +480,7 @@ Highlighter& get_highlighter(const Context& context, StringView path)
         throw runtime_error("group path should not be empty");
 
     Highlighter* root = nullptr;
-    if (path[0] == '/')
+    if (path[0_byte] == '/')
     {
         root = &DefinedHighlighters::instance();
         path = path.substr(1_byte);
@@ -603,12 +603,12 @@ const CommandDesc add_hook_cmd = {
 
             if (regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
-                                                   { { "hook_param", param } });
+                                                   { { "hook_param", param.str() } });
         };
         StringView group;
         if (parser.has_option("group"))
             group = parser.option_value("group");
-        get_scope(parser[0], context).hooks().add_hook(parser[1], group, hook_func);
+        get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), hook_func);
     }
 };
 
@@ -866,7 +866,7 @@ const CommandDesc debug_cmd = {
             {
                 size_t count = domain_allocated_bytes[domain];
                 total += count;
-                write_debug("  "_sv + domain_name((MemoryDomain)domain) + ": " + to_string(count));
+                write_debug("  "_str + domain_name((MemoryDomain)domain) + ": " + to_string(count));
             }
             write_debug("  Total: " + to_string(total));
             #if defined(__GLIBC__) || defined(__CYGWIN__)
@@ -1254,7 +1254,7 @@ const CommandDesc prompt_cmd = {
     {
         if (params[1].length() != 1)
             throw runtime_error("register name should be a single character");
-        const char reg = params[1][0];
+        const char reg = params[1][0_byte];
         const String& command = params[2];
 
         String initstr;
@@ -1267,7 +1267,7 @@ const CommandDesc prompt_cmd = {
             {
                 if (event != PromptEvent::Validate)
                     return;
-                RegisterManager::instance()[reg] = ConstArrayView<String>(str);
+                RegisterManager::instance()[reg] = ConstArrayView<String>(str.str());
 
                 CommandManager::instance().execute(command, context);
             });
@@ -1344,12 +1344,11 @@ const CommandDesc info_cmd = {
             if (parser.has_option("anchor"))
             {
                 auto anchor = parser.option_value("anchor");
-                size_t dot = anchor.find_first_of('.');
-                if (dot == String::npos)
+                auto dot = find(anchor, '.');
+                if (dot == anchor.end())
                     throw runtime_error("expected <line>.<column> for anchor");
-                ByteCount dotb = (int)dot;
-                ByteCoord coord{str_to_int(anchor.substr(0, dotb))-1,
-                                str_to_int(anchor.substr(dotb+1))-1};
+                ByteCoord coord{str_to_int({anchor.begin(), dot})-1,
+                                str_to_int({dot+1, anchor.end()})-1};
                 pos = context.window().display_position(coord);
                 style = InfoStyle::Inline;
                 if (parser.has_option("placement"))

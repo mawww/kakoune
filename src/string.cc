@@ -9,11 +9,6 @@
 namespace Kakoune
 {
 
-bool operator<(StringView lhs, StringView rhs)
-{
-    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
-}
-
 Vector<String> split(StringView str, char separator, char escape)
 {
     Vector<String> res;

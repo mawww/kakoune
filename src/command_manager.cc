@@ -119,7 +119,7 @@ String get_until_delimiter(StringView base, ByteCount& pos,
         }
         ++pos;
     }
-    return base.substr(start, pos - start);
+    return base.substr(start, pos - start).str();
 }
 
 struct unknown_expand : parse_error
@@ -313,7 +313,7 @@ String eval_token(const Token& token, Context& context,
         return ShellManager::instance().eval(content, context, shell_params,
                                              env_vars);
     case Token::Type::RegisterExpand:
-        return context.main_sel_register_value(content);
+        return context.main_sel_register_value(content).str();
     case Token::Type::OptionExpand:
         return context.options()[content].get_as_string();
     case Token::Type::ValExpand:

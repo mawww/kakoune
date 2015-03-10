@@ -119,7 +119,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     ComplAndDescList result;
     result.reserve(matches.size());
     for (auto& m : matches)
-        result.emplace_back(m, "");
+        result.emplace_back(m.str(), "");
 
     return { begin.coord(), cursor_pos, std::move(result), buffer.timestamp() };
 }
@@ -158,7 +158,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
             for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
-                res.emplace_back(filename.substr(dir.length()), "");
+                res.emplace_back(filename.substr(dir.length()).str(), "");
         }
     }
     if (res.empty())
@@ -178,16 +178,17 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
     MatchResults<String::const_iterator> match;
     if (regex_match(desc.begin(), desc.end(), match, re))
     {
-        ByteCoord coord{ str_to_int(match[1].str()) - 1, str_to_int(match[2].str()) - 1 };
+        ByteCoord coord{ str_to_int({match[1].first, match[1].second}) - 1,
+                         str_to_int({match[2].first, match[2].second}) - 1 };
         if (not buffer.is_valid(coord))
             return {};
         auto end = coord;
         if (match[3].matched)
         {
-            ByteCount len = str_to_int(match[3].str());
+            ByteCount len = str_to_int({match[3].first, match[3].second});
             end = buffer.advance(coord, len);
         }
-        size_t timestamp = (size_t)str_to_int(match[4].str());
+        size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
         auto changes = buffer.changes_since(timestamp);
         if (find_if(changes, [&](const Buffer::Change& change){
                         return change.begin < coord;
@@ -204,7 +205,7 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
             {
                 auto splitted = split(*it, '@');
                 if (not splitted.empty() and prefix_match(splitted[0], prefix))
-                    res.emplace_back(splitted[0], splitted.size() > 1 ? splitted[1] : "");
+                    res.emplace_back(splitted[0].str(), splitted.size() > 1 ? splitted[1].str() : "");
             }
             return { coord, end, std::move(res), timestamp };
         }
@@ -222,7 +223,7 @@ InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
             continue;
         ByteCount len = buffer[l].length();
         if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buffer[l].begin()))
-            res.emplace_back(buffer[l].substr(0_byte, len-1), "");
+            res.emplace_back(buffer[l].substr(0_byte, len-1).str(), "");
     }
     if (res.empty())
         return {};

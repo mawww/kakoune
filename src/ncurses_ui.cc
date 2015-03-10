@@ -591,7 +591,7 @@ void NCursesUI::menu_show(ConstArrayView<String> items,
     const CharCount maxlen = min((int)maxsize.column-2, 200);
     for (auto& item : items)
     {
-        m_items.push_back(item.substr(0_char, maxlen));
+        m_items.push_back(item.substr(0_char, maxlen).str());
         longest = max(longest, m_items.back().char_length());
     }
     longest += 1;

@@ -257,6 +257,11 @@ StringView Client::get_env_var(const String& name) const
     return it->second;
 }
 
+StringView Client::get_env_var(StringView name) const
+{
+    return get_env_var(name.str());
+}
+
 void Client::on_option_changed(const Option& option)
 {
     if (option.name() == "ui_options")

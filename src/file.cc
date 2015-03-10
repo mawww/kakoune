@@ -26,8 +26,8 @@ namespace Kakoune
 
 String parse_filename(StringView filename)
 {
-    if (filename.length() >= 1 and filename[0] == '~' and
-        (filename.length() == 1 or filename[1] == '/'))
+    if (filename.length() >= 1 and filename[0_byte] == '~' and
+        (filename.length() == 1 or filename[1_byte] == '/'))
         return parse_filename("$HOME"_str + filename.substr(1_byte));
 
     ByteCount pos = 0;
@@ -90,7 +90,7 @@ String real_path(StringView filename)
 
         auto it = find(existing.rbegin(), existing.rend(), '/');
         if (it == existing.rend())
-            return filename;
+            return filename.str();
 
         existing = StringView{existing.begin(), it.base()-1};
         non_existing = StringView{it.base(), filename.end()};
@@ -105,7 +105,7 @@ String compact_path(StringView filename)
     getcwd(cwd, 1024);
     String real_cwd = real_path(cwd) + "/";
     if (prefix_match(real_filename, real_cwd))
-        return real_filename.substr(real_cwd.length());
+        return real_filename.substr(real_cwd.length()).str();
 
     const char* home = getenv("HOME");
     if (home)
@@ -258,14 +258,14 @@ void write_buffer_to_backup_file(Buffer& buffer)
 String find_file(StringView filename, ConstArrayView<String> paths)
 {
     struct stat buf;
-    if (filename.length() > 1 and filename[0] == '/')
+    if (filename.length() > 1 and filename[0_byte] == '/')
     {
         if (stat(filename.zstr(), &buf) == 0 and S_ISREG(buf.st_mode))
             return filename.str();
          return "";
     }
     if (filename.length() > 2 and
-             filename[0] == '~' and filename[1] == '/')
+             filename[0_byte] == '~' and filename[1_byte] == '/')
     {
         String candidate = getenv("HOME") + filename.substr(1_byte).str();
         if (stat(candidate.c_str(), &buf) == 0 and S_ISREG(buf.st_mode))
@@ -386,7 +386,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     Vector<String> res;
     for (auto dir : split(getenv("PATH"), ':'))
     {
-        String dirname = dir;
+        String dirname = dir.str();
         if (not dirname.empty() and dirname.back() != '/')
             dirname += '/';
 

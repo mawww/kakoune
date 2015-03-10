@@ -49,7 +49,7 @@ void DisplayAtom::trim_begin(CharCount count)
         m_begin = utf8::advance(m_buffer->iterator_at(m_begin),
                                 m_buffer->iterator_at(m_end), count).coord();
     else
-        m_text = m_text.substr(count);
+        m_text = m_text.substr(count).str();
     check_invariant();
 }
 
@@ -59,7 +59,7 @@ void DisplayAtom::trim_end(CharCount count)
         m_end = utf8::advance(m_buffer->iterator_at(m_end),
                               m_buffer->iterator_at(m_begin), -count).coord();
     else
-        m_text = m_text.substr(0, m_text.char_length() - count);
+        m_text = m_text.substr(0, m_text.char_length() - count).str();
     check_invariant();
 }
 

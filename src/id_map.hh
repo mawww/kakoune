@@ -65,7 +65,7 @@ public:
         if (it != m_content.end())
             return it->second;
 
-        append({ id, Value{} });
+        append({ id.str(), Value{} });
         return (m_content.end()-1)->second;
     }
 

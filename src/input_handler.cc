@@ -154,7 +154,7 @@ public:
         if (m_params.reg != '"')
         {
             atoms.push_back({ "; reg=", Face(Colors::Yellow) });
-            atoms.push_back({ StringView(m_params.reg), Face(Colors::Green) });
+            atoms.push_back({ StringView(m_params.reg).str(), Face(Colors::Green) });
         }
         return atoms;
     }
@@ -325,12 +325,12 @@ public:
             m_display_pos = m_cursor_pos + 1 - width;
 
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ {m_line.substr(m_display_pos, width-1), get_face("StatusLine")},
+            return DisplayLine{{ {m_line.substr(m_display_pos, width-1).str(), get_face("StatusLine")},
                                  {" "_str, get_face("StatusCursor")} }};
         else
-            return DisplayLine({ { m_line.substr(m_display_pos, m_cursor_pos - m_display_pos), get_face("StatusLine") },
-                                 { m_line.substr(m_cursor_pos,1), get_face("StatusCursor") },
-                                 { m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1), get_face("StatusLine") } });
+            return DisplayLine({ { m_line.substr(m_display_pos, m_cursor_pos - m_display_pos).str(), get_face("StatusLine") },
+                                 { m_line.substr(m_cursor_pos,1).str(), get_face("StatusCursor") },
+                                 { m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1).str(), get_face("StatusLine") } });
     }
 private:
     CharCount      m_cursor_pos = 0;
@@ -473,7 +473,7 @@ String common_prefix(ConstArrayView<String> strings)
         while (common_len < len and str[common_len] == res[common_len])
             ++common_len;
         if (common_len != res.length())
-            res = res.substr(0, common_len);
+            res = res.substr(0, common_len).str();
     }
     return res;
 }
@@ -484,7 +484,7 @@ public:
     Prompt(InputHandler& input_handler, StringView prompt,
            String initstr, Face face, Completer completer,
            PromptCallback callback)
-        : InputMode(input_handler), m_prompt(prompt), m_prompt_face(face),
+        : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
           m_completer(completer), m_callback(callback),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()}
     {
@@ -600,7 +600,7 @@ public:
                 String prefix = common_prefix(candidates);
                 if (m_completions.end - m_completions.start > prefix.length())
                     prefix = line.substr(m_completions.start,
-                                         m_completions.end - m_completions.start);
+                                         m_completions.end - m_completions.start).str();
 
                 if (not prefix.empty())
                 {
@@ -742,7 +742,7 @@ private:
         History::iterator it;
         while ((it = find(history, entry)) != history.end())
             history.erase(it);
-        history.push_back(entry);
+        history.push_back(entry.str());
     }
 };
 UnorderedMap<String, Prompt::History, MemoryDomain::History> Prompt::ms_history;

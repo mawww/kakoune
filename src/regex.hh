@@ -29,15 +29,27 @@ struct Regex : std::regex
     bool operator==(const Regex& other) { return m_str == other.m_str; }
     bool operator!=(const Regex& other) { return m_str != other.m_str; }
 
-    StringView str() const { return m_str; }
+    const String& str() const { return m_str; }
 
 private:
     String m_str;
 };
 namespace regex_ns = std;
 #else
+struct Regex : boost::regex
+{
+    Regex() = default;
+
+    explicit Regex(StringView re, flag_type flags = ECMAScript)
+        : boost::regex(re.begin(), re.end(), flags) {}
+
+    template<typename Iterator>
+    Regex(Iterator begin, Iterator end, flag_type flags = ECMAScript)
+        : boost::regex(begin, end, flags) {}
+
+        String str() const { auto s = boost::regex::str(); return {s.begin(), s.end()}; }
+};
 namespace regex_ns = boost;
-using Regex = boost::regex;
 #endif
 
 template<typename Iterator>

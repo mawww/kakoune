@@ -14,8 +14,8 @@
 namespace Kakoune
 {
 
-inline String option_to_string(StringView opt) { return opt; }
-inline void option_from_string(StringView str, String& opt) { opt = str; }
+inline String option_to_string(StringView opt) { return opt.str(); }
+inline void option_from_string(StringView str, String& opt) { opt = str.str(); }
 
 inline String option_to_string(int opt) { return to_string(opt); }
 inline void option_from_string(StringView str, int& opt) { opt = str_to_int(str); }

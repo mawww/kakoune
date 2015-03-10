@@ -64,9 +64,9 @@ KeyList parse_keys(StringView str)
         Key::Modifiers modifier = Key::Modifiers::None;
 
         StringView desc{it.base()+1, end_it.base()};
-        if (desc.length() > 2 and desc[1] == '-')
+        if (desc.length() > 2 and desc[1_byte] == '-')
         {
-            switch(tolower(desc[0]))
+            switch(tolower(desc[0_byte]))
             {
                 case 'c': modifier = Key::Modifiers::Control; break;
                 case 'a': modifier = Key::Modifiers::Alt; break;
@@ -82,7 +82,7 @@ KeyList parse_keys(StringView str)
             result.push_back(canonicalize_ifn({ modifier, name_it->key }));
         else if (desc.char_length() == 1)
             result.push_back(Key{ modifier, desc[0_char] });
-        else if (tolower(desc[0]) == 'f' and desc.length() <= 3)
+        else if (tolower(desc[0_byte]) == 'f' and desc.length() <= 3)
         {
             int val = str_to_int(desc.substr(1_byte));
             if (val >= 1 and val <= 12)

@@ -21,7 +21,7 @@ ParametersParser::ParametersParser(ParameterList params,
     {
         if (not only_pos and params[i] == "--")
             only_pos = true;
-        else if (not only_pos and params[i][0] == '-')
+        else if (not only_pos and params[i][0_byte] == '-')
         {
             auto it = m_desc.switches.find(params[i].substr(1_byte));
             if (it == m_desc.switches.end())
@@ -30,7 +30,7 @@ ParametersParser::ParametersParser(ParameterList params,
             if (it->second.takes_arg)
             {
                 ++i;
-                if (i == params.size() or params[i][0] == '-')
+                if (i == params.size() or params[i][0_byte] == '-')
                    throw missing_option_value(it->first);
             }
         }
@@ -51,7 +51,7 @@ bool ParametersParser::has_option(const String& name) const
     kak_assert(m_desc.switches.find(name) != m_desc.switches.end());
     for (auto& param : m_params)
     {
-        if (param[0] == '-' and param.substr(1_byte) == name)
+        if (param[0_byte] == '-' and param.substr(1_byte) == name)
             return true;
 
         if (param == "--")
@@ -70,7 +70,7 @@ const String& ParametersParser::option_value(const String& name) const
 
     for (size_t i = 0; i < m_params.size(); ++i)
     {
-        if (m_params[i][0] == '-' and m_params[i].substr(1_byte) == name)
+        if (m_params[i][0_byte] == '-' and m_params[i].substr(1_byte) == name)
             return m_params[i+1];
 
         if (m_params[i] == "--")

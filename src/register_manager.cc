@@ -59,7 +59,7 @@ private:
 Register& RegisterManager::operator[](StringView reg)
 {
     if (reg.length() == 1)
-        return (*this)[reg[0]];
+        return (*this)[reg[0_byte]];
 
     static const IdMap<Codepoint> reg_names = {
         { "slash", '/' },

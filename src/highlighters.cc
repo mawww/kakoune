@@ -264,9 +264,9 @@ public:
                 if (not regex_match(it->begin(), it->end(), res, face_spec_ex))
                     throw runtime_error("wrong face spec: '" + *it +
                                          "' expected <capture>:<facespec>");
-                get_face(res[2].str()); // throw if wrong face spec
-                int capture = str_to_int(res[1].str());
-                faces.emplace_back(capture, res[2].str());
+                get_face({res[2].first, res[2].second}); // throw if wrong face spec
+                int capture = str_to_int({res[1].first, res[1].second});
+                faces.emplace_back(capture, String{res[2].first, res[2].second});
             }
 
             String id = "hlregex'" + params[0] + "'";
@@ -711,7 +711,8 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                     {
                         std::ostringstream oss;
                         oss << "U+" << std::hex << cp;
-                        String str = oss.str();
+                        const auto& stdstr = oss.str();
+                        String str{stdstr.begin(), stdstr.end()};
                         if (it.coord() != atom_it->begin())
                             atom_it = ++line.split(atom_it, it.coord());
                         if (next.coord() < atom_it->end())
