@@ -41,8 +41,8 @@ public:
     int get_word_occurences(StringView word) const;
 private:
     void update_db();
-    void add_words(const WordList& words);
-    void remove_words(const WordList& words);
+    void add_words(const SharedString& line);
+    void remove_words(const SharedString& line);
 
     struct WordInfo
     {

@@ -52,9 +52,9 @@ static WordDB::WordList get_words(const SharedString& content)
     return res;
 }
 
-void WordDB::add_words(const WordList& words)
+void WordDB::add_words(const SharedString& line)
 {
-    for (auto& w : words)
+    for (auto& w : get_words(line))
     {
         WordDB::WordInfo& info = m_words[intern(w)];
         ++info.refcount;
@@ -63,9 +63,9 @@ void WordDB::add_words(const WordList& words)
     }
 }
 
-void WordDB::remove_words(const WordList& words)
+void WordDB::remove_words(const SharedString& line)
 {
-    for (auto& w : words)
+    for (auto& w : get_words(line))
     {
         auto it = m_words.find({w, SharedString::NoCopy()});
         kak_assert(it != m_words.end() and it->second.refcount > 0);
@@ -81,7 +81,7 @@ WordDB::WordDB(const Buffer& buffer)
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         m_lines.push_back(buffer.line_storage(line));
-        add_words(get_words(SharedString{m_lines.back()}));
+        add_words(SharedString{m_lines.back()});
     }
 }
 
@@ -112,13 +112,13 @@ void WordDB::update_db()
         while (old_line < modif.old_line + modif.num_removed)
         {
             kak_assert(old_line < m_lines.size());
-            remove_words(get_words(SharedString{m_lines[(int)old_line++]}));
+            remove_words(SharedString{m_lines[(int)old_line++]});
         }
 
         for (auto l = 0_line; l < modif.num_added; ++l)
         {
             new_lines.push_back(buffer.line_storage(modif.new_line + l));
-            add_words(get_words(SharedString{new_lines.back()}));
+            add_words(SharedString{new_lines.back()});
         }
     }
     while (old_line != (int)m_lines.size())
