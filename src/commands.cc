@@ -1499,54 +1499,54 @@ void exec_keys(ConstArrayView<Key> keys, Context& context)
         context.input_handler().handle_key(key);
 }
 
-static void register_command(CommandManager& cm, const CommandDesc& c)
-{
-    cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.helper, c.completer);
-    if (c.alias)
-        GlobalScope::instance().aliases().add_alias(c.alias, c.name);
-}
-
 void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
-
     cm.register_command("nop", [](const ParametersParser&, Context&){}, "do nothing", {});
 
-    register_command(cm, edit_cmd);
-    register_command(cm, force_edit_cmd);
-    register_command(cm, write_cmd);
-    register_command(cm, writeall_cmd);
-    register_command(cm, writeall_quit_cmd);
-    register_command(cm, quit_cmd);
-    register_command(cm, force_quit_cmd);
-    register_command(cm, write_quit_cmd);
-    register_command(cm, force_write_quit_cmd);
-    register_command(cm, buffer_cmd);
-    register_command(cm, delbuf_cmd);
-    register_command(cm, force_delbuf_cmd);
-    register_command(cm, namebuf_cmd);
-    register_command(cm, add_highlighter_cmd);
-    register_command(cm, rm_highlighter_cmd);
-    register_command(cm, add_hook_cmd);
-    register_command(cm, rm_hook_cmd);
-    register_command(cm, define_command_cmd);
-    register_command(cm, alias_cmd);
-    register_command(cm, unalias_cmd);
-    register_command(cm, echo_cmd);
-    register_command(cm, debug_cmd);
-    register_command(cm, source_cmd);
-    register_command(cm, set_option_cmd);
-    register_command(cm, declare_option_cmd);
-    register_command(cm, map_key_cmd);
-    register_command(cm, exec_string_cmd);
-    register_command(cm, eval_string_cmd);
-    register_command(cm, prompt_cmd);
-    register_command(cm, menu_cmd);
-    register_command(cm, info_cmd);
-    register_command(cm, try_catch_cmd);
-    register_command(cm, face_cmd);
-    register_command(cm, set_client_name_cmd);
-    register_command(cm, set_register_cmd);
-    register_command(cm, change_working_directory_cmd);
+    auto register_command = [&](const CommandDesc& c)
+    {
+        cm.register_command(c.name, c.func, c.docstring, c.params, c.flags, c.helper, c.completer);
+        if (c.alias)
+            GlobalScope::instance().aliases().add_alias(c.alias, c.name);
+    };
+
+    register_command(edit_cmd);
+    register_command(force_edit_cmd);
+    register_command(write_cmd);
+    register_command(writeall_cmd);
+    register_command(writeall_quit_cmd);
+    register_command(quit_cmd);
+    register_command(force_quit_cmd);
+    register_command(write_quit_cmd);
+    register_command(force_write_quit_cmd);
+    register_command(buffer_cmd);
+    register_command(delbuf_cmd);
+    register_command(force_delbuf_cmd);
+    register_command(namebuf_cmd);
+    register_command(add_highlighter_cmd);
+    register_command(rm_highlighter_cmd);
+    register_command(add_hook_cmd);
+    register_command(rm_hook_cmd);
+    register_command(define_command_cmd);
+    register_command(alias_cmd);
+    register_command(unalias_cmd);
+    register_command(echo_cmd);
+    register_command(debug_cmd);
+    register_command(source_cmd);
+    register_command(set_option_cmd);
+    register_command(declare_option_cmd);
+    register_command(map_key_cmd);
+    register_command(exec_string_cmd);
+    register_command(eval_string_cmd);
+    register_command(prompt_cmd);
+    register_command(menu_cmd);
+    register_command(info_cmd);
+    register_command(try_catch_cmd);
+    register_command(face_cmd);
+    register_command(set_client_name_cmd);
+    register_command(set_register_cmd);
+    register_command(change_working_directory_cmd);
 }
+
 }
