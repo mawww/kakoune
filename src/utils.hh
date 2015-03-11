@@ -106,7 +106,10 @@ template<typename T>
 class OnScopeEnd
 {
 public:
+    [[gnu::always_inline]]
     OnScopeEnd(T func) : m_func(std::move(func)) {}
+
+    [[gnu::always_inline]]
     ~OnScopeEnd() { m_func(); }
 private:
     T m_func;
