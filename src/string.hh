@@ -20,17 +20,16 @@ class StringOps
 public:
     using value_type = CharType;
 
+    [[gnu::always_inline]]
     friend bool operator==(const Type& lhs, const Type& rhs)
     {
         return lhs.length() == rhs.length() and 
            std::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
 
+    [[gnu::always_inline]]
     friend bool operator!=(const Type& lhs, const Type& rhs)
-    {
-        return lhs.length() != rhs.length() or 
-           not std::equal(lhs.begin(), lhs.end(), rhs.begin());
-    }
+    { return not (lhs == rhs); }
 
     friend bool operator<(const Type& lhs, const Type& rhs)
     {
@@ -75,8 +74,7 @@ public:
     CharType& operator[](ByteCount pos) { return type().data()[(int)pos]; }
 
     [[gnu::always_inline]]
-    const CharType& operator[](ByteCount pos) const
-    { return type().data()[(int)pos]; }
+    const CharType& operator[](ByteCount pos) const { return type().data()[(int)pos]; }
 
     Codepoint operator[](CharCount pos) const
     { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
@@ -96,7 +94,9 @@ public:
     StringView substr(CharCount from, CharCount length = INT_MAX) const;
 
 private:
+    [[gnu::always_inline]]
     Type& type() { return *static_cast<Type*>(this); }
+    [[gnu::always_inline]]
     const Type& type() const { return *static_cast<const Type*>(this); }
 };
 
@@ -106,9 +106,8 @@ public:
     using Content = std::basic_string<char, std::char_traits<char>,
                                       Allocator<char, MemoryDomain::String>>;
 
-    String() {}
+    String() = default;
     String(const char* content) : m_data(content) {}
-    String(Content content) : m_data(std::move(content)) {}
     explicit String(char content, CharCount count = 1) : m_data((size_t)(int)count, content) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
@@ -125,11 +124,12 @@ public:
     const char* data() const { return m_data.data(); }
 
     [[gnu::always_inline]]
-    ByteCount length() const { return ByteCount{(int)m_data.length()}; }
+    ByteCount length() const { return (int)m_data.length(); }
 
     [[gnu::always_inline]]
     const char* c_str() const { return m_data.c_str(); }
 
+    [[gnu::always_inline]]
     void append(const char* data, ByteCount count) { m_data.append(data, (size_t)(int)count); }
 
     void push_back(char c) { m_data.push_back(c); }
@@ -143,7 +143,7 @@ private:
 class StringView : public StringOps<StringView, const char>
 {
 public:
-    constexpr StringView() : m_data{nullptr}, m_length{0} {}
+    constexpr StringView() = default;
     constexpr StringView(const char* data, ByteCount length)
         : m_data{data}, m_length{length} {}
     constexpr StringView(const char* data) : m_data{data}, m_length{strlen(data)} {}
@@ -152,12 +152,12 @@ public:
     StringView(const char& c) : m_data(&c), m_length(1) {}
 
     [[gnu::always_inline]]
-    const char* data() const { return m_data; }
+    constexpr const char* data() const { return m_data; }
 
     [[gnu::always_inline]]
-    ByteCount length() const { return m_length; }
+    constexpr ByteCount length() const { return m_length; }
 
-    String str() const { return String{begin(), end()}; }
+    String str() const { return {begin(), end()}; }
 
     struct ZeroTerminatedString
     {
@@ -175,7 +175,7 @@ public:
         const char* unowned = nullptr;
 
     };
-    ZeroTerminatedString zstr() const { return ZeroTerminatedString{begin(), end()}; }
+    ZeroTerminatedString zstr() const { return {begin(), end()}; }
 
 private:
     static constexpr ByteCount strlen(const char* s)
@@ -183,8 +183,8 @@ private:
         return *s == 0 ? 0 : strlen(s+1) + 1;
     }
 
-    const char* m_data;
-    ByteCount m_length;
+    const char* m_data = nullptr;
+    ByteCount m_length = 0;
 };
 
 template<typename Type, typename CharType>
@@ -214,8 +214,8 @@ inline String operator+(StringView lhs, StringView rhs)
 {
     String res;
     res.reserve((int)(lhs.length() + rhs.length()));
-    res += lhs;
-    res += rhs;
+    res.append(lhs.data(), lhs.length());
+    res.append(rhs.data(), rhs.length());
     return res;
 }
 

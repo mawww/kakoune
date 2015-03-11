@@ -16,7 +16,7 @@ EnvVarMap get_env_vars()
         const char* value = name;
         while (*value != 0 and *value != '=')
             ++value;
-        env_vars[String{name, value}] = (*value == '=') ? value+1 : value;
+        env_vars[{name, value}] = (*value == '=') ? value+1 : String{};
     }
     return env_vars;
 }
