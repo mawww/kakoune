@@ -166,7 +166,8 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
     {
         for (auto line = line_count()-1; line >= 0; --line)
             m_current_undo_group.emplace_back(
-                Modification::Erase, line, m_lines[line]);
+                Modification::Erase, line,
+                SharedString{m_lines.get_storage(line)});
     }
 
     if (lines.empty())
