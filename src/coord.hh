@@ -84,6 +84,11 @@ struct LineAndColumn
     {
         return line != other.line or column != other.column;
     }
+
+    friend size_t hash_value(const EffectiveType& val)
+    {
+        return hash_values(val.line, val.column);
+    }
 };
 
 struct ByteCoord : LineAndColumn<ByteCoord, LineCount, ByteCount>
@@ -93,22 +98,12 @@ struct ByteCoord : LineAndColumn<ByteCoord, LineCount, ByteCount>
         : LineAndColumn(line, column) {}
 };
 
-inline size_t hash_value(const ByteCoord& val)
-{
-    return hash_values(val.line, val.column);
-}
-
 struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
 {
     [[gnu::always_inline]]
     constexpr CharCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
 };
-
-inline size_t hash_value(const CharCoord& val)
-{
-    return hash_values(val.line, val.column);
-}
 
 struct ByteCoordAndTarget : ByteCoord
 {

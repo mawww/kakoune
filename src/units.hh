@@ -111,6 +111,9 @@ public:
     explicit constexpr operator ValueType() const { return m_value; }
     [[gnu::always_inline]]
     explicit constexpr operator bool() const { return m_value; }
+
+    friend size_t hash_value(RealType val) { return hash_value(val.m_value); }
+
 private:
     ValueType m_value;
 };
@@ -120,8 +123,6 @@ struct LineCount : public StronglyTypedNumber<LineCount, int>
     [[gnu::always_inline]]
     constexpr LineCount(int value = 0) : StronglyTypedNumber<LineCount>(value) {}
 };
-
-inline size_t hash_value(LineCount val) { return hash_value((int)val); }
 
 [[gnu::always_inline]]
 inline constexpr LineCount operator"" _line(unsigned long long int value)
@@ -134,8 +135,6 @@ struct ByteCount : public StronglyTypedNumber<ByteCount, int>
     [[gnu::always_inline]]
     constexpr ByteCount(int value = 0) : StronglyTypedNumber<ByteCount>(value) {}
 };
-
-inline size_t hash_value(ByteCount val) { return hash_value((int)val); }
 
 [[gnu::always_inline]]
 inline constexpr ByteCount operator"" _byte(unsigned long long int value)
@@ -154,8 +153,6 @@ inline constexpr CharCount operator"" _char(unsigned long long int value)
 {
     return CharCount(value);
 }
-
-inline size_t hash_value(CharCount val) { return hash_value((int)val); }
 
 }
 

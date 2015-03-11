@@ -76,8 +76,6 @@ struct ValueId : public StronglyTypedNumber<ValueId, int>
     }
 };
 
-inline size_t hash_value(ValueId val) { return hash_value((int)val); }
-
 using ValueMap = UnorderedMap<ValueId, Value, MemoryDomain::Values>;
 
 }
