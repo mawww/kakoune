@@ -650,11 +650,10 @@ Vector<String> params_to_shell(const ParametersParser& parser)
 
 void define_command(const ParametersParser& parser, Context& context)
 {
-    auto begin = parser.begin();
-    const String& cmd_name = *begin;
+    const String& cmd_name = parser[0];
+    auto& cm = CommandManager::instance();
 
-    if (CommandManager::instance().command_defined(cmd_name) and
-        not parser.has_option("allow-override"))
+    if (cm.command_defined(cmd_name) and not parser.has_option("allow-override"))
         throw runtime_error("command '" + cmd_name + "' already defined");
 
     CommandFlags flags = CommandFlags::None;
@@ -665,7 +664,7 @@ void define_command(const ParametersParser& parser, Context& context)
     if (parser.has_option("docstring"))
         docstring = parser.option_value("docstring");
 
-    String commands = parser[1];
+    const String& commands = parser[1];
     Command cmd;
     ParameterDesc desc;
     if (parser.has_option("shell-params"))
@@ -692,7 +691,7 @@ void define_command(const ParametersParser& parser, Context& context)
         {
              const String& prefix = params[token_to_complete];
              auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-             return Completions{ 0_byte, prefix.length(),
+             return Completions{ 0_byte, pos_in_token,
                                  complete_filename(prefix, ignored_files,
                                                    pos_in_token) };
         };
@@ -705,7 +704,7 @@ void define_command(const ParametersParser& parser, Context& context)
         {
              const String& prefix = params[token_to_complete];
              auto& cm = ClientManager::instance();
-             return Completions{ 0_byte, prefix.length(),
+             return Completions{ 0_byte, pos_in_token,
                                  cm.complete_client_name(prefix, pos_in_token) };
         };
     }
@@ -716,13 +715,13 @@ void define_command(const ParametersParser& parser, Context& context)
                        size_t token_to_complete, ByteCount pos_in_token)
         {
              const String& prefix = params[token_to_complete];
-             return Completions{ 0_byte, prefix.length(),
+             return Completions{ 0_byte, pos_in_token,
                                  complete_buffer_name(prefix, pos_in_token) };
         };
     }
     else if (parser.has_option("shell-completion"))
     {
-        String shell_cmd = parser.option_value("shell-completion");
+        const String& shell_cmd = parser.option_value("shell-completion");
         completer = [=](const Context& context, CompletionFlags flags,
                         CommandParameters params,
                         size_t token_to_complete, ByteCount pos_in_token)
@@ -734,11 +733,10 @@ void define_command(const ParametersParser& parser, Context& context)
                 { "pos_in_token",      to_string(pos_in_token) }
             };
             String output = ShellManager::instance().eval(shell_cmd, context, params, vars);
-            return Completions{ 0_byte, params[token_to_complete].length(), split(output, '\n', 0) };
+            return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
         };
     }
 
-    auto& cm = CommandManager::instance();
     cm.register_command(cmd_name, cmd, std::move(docstring), desc, flags, CommandHelper{}, completer);
 }
 
