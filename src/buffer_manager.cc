@@ -78,11 +78,11 @@ void BufferManager::delete_buffer_if_exists(StringView name)
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)
 {
+    auto path = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
     {
         if (buf->name() == name or
-            (buf->flags() & Buffer::Flags::File and
-             real_path(buf->name()) == real_path(parse_filename(name))))
+            (buf->flags() & Buffer::Flags::File and buf->name() == path))
             return buf.get();
     }
     return nullptr;
