@@ -106,7 +106,7 @@ public:
     using Content = std::basic_string<char, std::char_traits<char>,
                                       Allocator<char, MemoryDomain::String>>;
 
-    String() = default;
+    String() {}
     String(const char* content) : m_data(content) {}
     explicit String(char content, CharCount count = 1) : m_data((size_t)(int)count, content) {}
     explicit String(Codepoint cp, CharCount count = 1)

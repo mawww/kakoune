@@ -54,7 +54,7 @@ void register_env_vars()
             { return context.buffer().display_name(); }
         }, {
             "buffile",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return context.buffer().name(); }
         }, {
             "buflist",
@@ -93,11 +93,11 @@ void register_env_vars()
             { return context.client().get_env_var(name.substr(11_byte)).str(); }
         }, {
             "session",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return Server::instance().session(); }
         }, {
             "client",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return context.name(); }
         }, {
             "cursor_line",
