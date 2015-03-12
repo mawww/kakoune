@@ -80,25 +80,4 @@ const String& ParametersParser::option_value(const String& name) const
     return empty;
 }
 
-size_t ParametersParser::positional_count() const
-{
-    return m_positional_indices.size();
-}
-
-const String& ParametersParser::operator[] (size_t index) const
-{
-    kak_assert(index < positional_count());
-    return m_params[m_positional_indices[index]];
-}
-
-ParametersParser::iterator ParametersParser::begin() const
-{
-    return iterator(*this, 0);
-}
-
-ParametersParser::iterator ParametersParser::end() const
-{
-    return iterator(*this, m_positional_indices.size());
-}
-
 }

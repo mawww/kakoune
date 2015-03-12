@@ -86,30 +86,13 @@ struct ParametersParser
     // is not defined
     const String& option_value(const String& name) const;
 
-    // positional parameters count
-    size_t positional_count() const;
-
-    struct iterator
+    struct iterator : std::iterator<std::forward_iterator_tag, String>
     {
-    public:
-        using value_type = String;
-        using pointer = const value_type*;
-        using reference = const value_type&;
-        using difference_type = size_t;
-        using iterator_category = std::forward_iterator_tag;
-
         iterator(const ParametersParser& parser, size_t index)
             : m_parser(parser), m_index(index) {}
 
-        const String& operator*() const
-        {
-            return m_parser.m_params[m_parser.m_positional_indices[m_index]];
-        }
-
-        const String* operator->() const
-        {
-            return &m_parser.m_params[m_parser.m_positional_indices[m_index]];
-        }
+        const String& operator*() const { return m_parser[m_index]; }
+        const String* operator->() const { return &m_parser[m_index]; }
 
         iterator& operator++() { ++m_index; return *this; }
         iterator operator++(int) { auto copy = *this; ++m_index; return copy; }
@@ -122,14 +105,7 @@ struct ParametersParser
 
         bool operator!=(const iterator& other) const
         {
-            kak_assert(&m_parser == &other.m_parser);
-            return m_index != other.m_index;
-        }
-
-        bool operator<(const iterator& other) const
-        {
-            kak_assert(&m_parser == &other.m_parser);
-            return m_index < other.m_index;
+            return not (*this == other);
         }
 
     private:
@@ -137,12 +113,18 @@ struct ParametersParser
         size_t                  m_index;
     };
 
+    // positional parameters count
+    size_t positional_count() const { return m_positional_indices.size(); }
+
     // access positional parameter by index
-    const String& operator[] (size_t index) const;
-    // positional parameter begin
-    iterator begin() const;
-    // positional parameter end
-    iterator end() const;
+    const String& operator[] (size_t index) const
+    {
+        kak_assert(index < positional_count());
+        return m_params[m_positional_indices[index]];
+    }
+
+    iterator begin() const { return iterator(*this, 0); }
+    iterator end() const { return iterator(*this, m_positional_indices.size()); }
 
 private:
     ParameterList m_params;
