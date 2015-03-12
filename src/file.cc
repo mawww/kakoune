@@ -56,19 +56,11 @@ String parse_filename(StringView filename)
 
 std::pair<StringView, StringView> split_path(StringView path)
 {
-    StringView dir, file = path;
-    ByteCount dir_end = -1;
-    for (ByteCount i = 0; i < path.length(); ++i)
-    {
-        if (path[i] == '/')
-            dir_end = i;
-    }
-    if (dir_end != -1)
-    {
-        dir = path.substr(0, dir_end + 1);
-        file = path.substr(dir_end + 1);
-    }
-    return { dir, file };
+    auto it = find(reversed(path), '/');
+    if (it == path.rend())
+        return { {}, path };
+    const char* slash = it.base()-1;
+    return { {path.begin(), slash}, {slash+1, path.end()} };
 }
 
 String real_path(StringView filename)

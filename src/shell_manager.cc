@@ -22,9 +22,7 @@ ShellManager::ShellManager()
     if (path)
         new_path = path + ":"_str;
 
-    String kak_path = get_kak_binary_path();
-    StringView kak_dir{kak_path.begin(), find(reversed(kak_path), '/').base()-1};
-    new_path += kak_dir;
+    new_path += split_path(get_kak_binary_path()).first;
     setenv("PATH", new_path.c_str(), 1);
 }
 

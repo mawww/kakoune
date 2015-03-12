@@ -591,9 +591,10 @@ const CommandDesc add_hook_cmd = {
     },
     [](const ParametersParser& parser, Context& context)
     {
-        // copy so that the lambda gets a copy as well
-        Regex regex(parser[2].begin(), parser[2].end());
-        String command = parser[3];
+        Regex regex(parser[2].begin(), parser[2].end(),
+                    Regex::optimize | Regex::nosubs | Regex::ECMAScript);
+        const String& command = parser[3];
+
         auto hook_func = [=](StringView param, Context& context) {
             if (context.user_hooks_support().is_disabled())
                 return;
