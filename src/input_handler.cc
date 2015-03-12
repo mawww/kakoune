@@ -1045,9 +1045,7 @@ void InputMode::reset_normal_mode()
 InputHandler::InputHandler(SelectionList selections, Context::Flags flags, String name)
     : m_context(*this, std::move(selections), flags, std::move(name)),
       m_mode(new InputModes::Normal(*this))
-      
-{
-}
+{}
 
 InputHandler::~InputHandler()
 {}
