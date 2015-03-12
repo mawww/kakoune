@@ -113,7 +113,7 @@ String to_string(int val)
 String to_string(size_t val)
 {
     char buf[16];
-    sprintf(buf, "%lu", (unsigned long)val);
+    sprintf(buf, "%zu", val);
     return buf;
 }
 
