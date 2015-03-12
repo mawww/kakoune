@@ -105,8 +105,6 @@ void test_utf8()
     kak_assert(utf8::codepoint(str.begin() + 2, str.end()) == 0x00EF);
 }
 
-constexpr auto ss_static_str = static_storage("yeehaa");
-
 void test_string()
 {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
@@ -139,8 +137,6 @@ void test_string()
     kak_assert(subsequence_match("tchou kanaky", "knk"));
     kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
     kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
-
-    kak_assert(ss_static_str.refcount == -1);
 }
 
 void test_keys()

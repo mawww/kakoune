@@ -14,8 +14,7 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
     int refcount;
     int length;
 
-    StringData() = default;
-    constexpr StringData(int refcount, int length) : refcount(refcount), length(length) {}
+    constexpr StringData(int ref, int len) : refcount(ref), length(len) {}
 
     [[gnu::always_inline]]
     char* data() { return reinterpret_cast<char*>(this + 1); }
@@ -43,13 +42,12 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 
     friend void inc_ref_count(StringData* s, void*)
     {
-        if (s->refcount != -1)
-            ++s->refcount;
+        ++s->refcount;
     }
 
     friend void dec_ref_count(StringData* s, void*)
     {
-        if (s->refcount != -1 and --s->refcount == 0)
+        if (--s->refcount == 0)
             StringData::destroy(s);
     }
 };
@@ -59,22 +57,6 @@ using StringDataPtr = RefPtr<StringData>;
 inline StringDataPtr operator"" _ss(const char* ptr, size_t len)
 {
     return StringData::create({ptr, (int)len});
-}
-
-template<size_t len>
-struct StaticStringData : StringData
-{
-    template<size_t... I> constexpr
-    StaticStringData(const char (&literal)[len], IndexSequence<I...>)
-        : StringData{-1, len}, data{literal[I]...} {}
-
-    const char data[len];
-};
-
-template<size_t len>
-constexpr StaticStringData<len> static_storage(const char (&literal)[len])
-{
-    return { literal, make_index_sequence<len>() };
 }
 
 class SharedString : public StringView
