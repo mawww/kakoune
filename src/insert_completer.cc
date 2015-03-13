@@ -394,17 +394,21 @@ void InsertCompleter::menu_show()
 
 void InsertCompleter::on_option_changed(const Option& opt)
 {
+    // Do not reset the menu if the user has selected an entry
+    if (not m_matching_candidates.empty() and
+        m_current_candidate != m_matching_candidates.size() - 1)
+        return;
+
     auto& completers = m_options["completers"].get<InsertCompleterDescList>();
-    Vector<StringView> option_names;
     for (auto& completer : completers)
     {
-        if (completer.mode == InsertCompleterDesc::Option)
-            option_names.emplace_back(*completer.param);
-    }
-    if (contains(option_names, opt.name()))
-    {
-        reset();
-        setup_ifn();
+        if (completer.mode == InsertCompleterDesc::Option and
+            *completer.param == opt.name())
+        {
+            reset();
+            setup_ifn();
+            break;
+        }
     }
 }
 
