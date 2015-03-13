@@ -310,8 +310,8 @@ String eval_token(const Token& token, Context& context,
     switch (token.type())
     {
     case Token::Type::ShellExpand:
-        return ShellManager::instance().eval(content, context, shell_params,
-                                             env_vars);
+        return ShellManager::instance().eval(content, context, {},
+                                             shell_params, env_vars).first;
     case Token::Type::RegisterExpand:
         return context.main_sel_register_value(content).str();
     case Token::Type::OptionExpand:

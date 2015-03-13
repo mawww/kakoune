@@ -393,8 +393,8 @@ void pipe(Context& context, NormalParams)
                     bool insert_eol = str.back() != '\n';
                     if (insert_eol)
                         str += '\n';
-                    str = ShellManager::instance().pipe(str, real_cmd, context,
-                                                        {}, EnvVarMap{});
+                    str = ShellManager::instance().eval(real_cmd, context, str,
+                                                        {}, EnvVarMap{}).first;
                     if ((insert_eol or sel.max() == buffer.back_coord()) and
                         str.back() == '\n')
                         str = str.substr(0, str.length()-1).str();
@@ -406,9 +406,9 @@ void pipe(Context& context, NormalParams)
             else
             {
                 for (auto& sel : selections)
-                    ShellManager::instance().pipe(
-                        content(buffer, sel), real_cmd, context, {},
-                        EnvVarMap{});
+                    ShellManager::instance().eval(real_cmd, context,
+                                                  content(buffer, sel),
+                                                  {}, EnvVarMap{}).first;
             }
         });
 }
@@ -435,8 +435,8 @@ void insert_output(Context& context, NormalParams)
             if (real_cmd.empty())
                 return;
 
-            auto str = ShellManager::instance().eval(real_cmd, context, {},
-                                                     EnvVarMap{});
+            auto str = ShellManager::instance().eval(real_cmd, context, {}, {},
+                                                     EnvVarMap{}).first;
             ScopedEdition edition(context);
             context.selections().insert(str, mode);
         });
@@ -783,10 +783,8 @@ void keep_pipe(Context& context, NormalParams)
             Vector<Selection> keep;
             for (auto& sel : context.selections())
             {
-                int status = 0;
-                shell_manager.pipe(content(buffer, sel), cmdline, context,
-                                   {}, EnvVarMap{}, &status);
-                if (status == 0)
+                if (shell_manager.eval(cmdline, context, content(buffer, sel),
+                                       {}, EnvVarMap{}).second == 0)
                     keep.push_back(sel);
             }
             if (keep.empty())

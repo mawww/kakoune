@@ -20,16 +20,10 @@ class ShellManager : public Singleton<ShellManager>
 public:
     ShellManager();
 
-    String eval(StringView cmdline, const Context& context,
-                ConstArrayView<String> params,
-                const EnvVarMap& env_vars,
-                int* exit_status = nullptr);
-
-    String pipe(StringView input,
-                StringView cmdline, const Context& context,
-                ConstArrayView<String> params,
-                const EnvVarMap& env_vars,
-                int* exit_status = nullptr);
+    std::pair<String, int> eval(StringView cmdline, const Context& context,
+                                StringView input = {},
+                                ConstArrayView<String> params = {},
+                                const EnvVarMap& env_vars = EnvVarMap{});
 
     void register_env_var(StringView regex, EnvVarRetriever retriever);
     String get_val(StringView name, const Context& context) const;

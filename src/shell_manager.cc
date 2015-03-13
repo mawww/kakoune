@@ -26,19 +26,9 @@ ShellManager::ShellManager()
     setenv("PATH", new_path.c_str(), 1);
 }
 
-String ShellManager::eval(StringView cmdline, const Context& context,
-                          ConstArrayView<String> params,
-                          const EnvVarMap& env_vars,
-                          int* exit_status)
-{
-    return pipe("", cmdline, context, params, env_vars, exit_status);
-}
-
-String ShellManager::pipe(StringView input,
-                          StringView cmdline, const Context& context,
-                          ConstArrayView<String> params,
-                          const EnvVarMap& env_vars,
-                          int* exit_status)
+std::pair<String, int> ShellManager::eval(
+    StringView cmdline, const Context& context, StringView input,
+    ConstArrayView<String> params, const EnvVarMap& env_vars)
 {
     int write_pipe[2]; // child stdin
     int read_pipe[2];  // child stdout
@@ -48,7 +38,6 @@ String ShellManager::pipe(StringView input,
     ::pipe(read_pipe);
     ::pipe(error_pipe);
 
-    String output;
     if (pid_t pid = fork())
     {
         close(write_pipe[0]);
@@ -58,7 +47,7 @@ String ShellManager::pipe(StringView input,
         write(write_pipe[1], input.data(), (int)input.length());
         close(write_pipe[1]);
 
-        String error;
+        String stdout, stderr;
         {
             auto pipe_reader = [](String& output) {
                 return [&output](FDWatcher& watcher, EventMode) {
@@ -70,24 +59,19 @@ String ShellManager::pipe(StringView input,
                 };
             };
 
-            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(output)};
-            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(error)};
+            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(stdout)};
+            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(stderr)};
 
             while (not stdout_watcher.closed() or not stderr_watcher.closed())
                 EventManager::instance().handle_next_events(EventMode::Urgent);
         }
 
-        if (not error.empty())
-            write_debug("shell stderr: <<<\n" + error + ">>>");
+        if (not stderr.empty())
+            write_debug("shell stderr: <<<\n" + stderr + ">>>");
 
-        waitpid(pid, exit_status, 0);
-        if (exit_status)
-        {
-            if (WIFEXITED(*exit_status))
-                *exit_status = WEXITSTATUS(*exit_status);
-            else
-                *exit_status = -1;
-        }
+        int status = 0;
+        waitpid(pid, &status, 0);
+        return { stdout, WIFEXITED(status) ? WEXITSTATUS(status) : - 1 };
     }
     else try
     {
@@ -131,7 +115,7 @@ String ShellManager::pipe(StringView input,
         exit(-1);
     }
     catch (...) { exit(-1); }
-    return output;
+    return {};
 }
 
 void ShellManager::register_env_var(StringView regex,
