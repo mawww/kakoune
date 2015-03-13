@@ -99,30 +99,24 @@ String ShellManager::pipe(StringView input,
         dup2(error_pipe[1], 2); close(error_pipe[1]);
         dup2(write_pipe[0], 0); close(write_pipe[0]);
 
-        RegexIterator<StringView::iterator> it(cmdline.begin(), cmdline.end(), env_var_regex);
-        RegexIterator<StringView::iterator> end;
-
-        while (it != end)
+        using RegexIt = RegexIterator<StringView::iterator>;
+        for (RegexIt it{cmdline.begin(), cmdline.end(), env_var_regex}, end;
+             it != end; ++it)
         {
             auto& match = *it;
 
-            StringView name = StringView(match[1].first, match[1].second);
+            StringView name{match[1].first, match[1].second};
             kak_assert(name.length() > 0);
 
             auto local_var = env_vars.find(name.str());
             if (local_var != env_vars.end())
                 setenv(("kak_" + name).c_str(), local_var->second.c_str(), 1);
-            else
+            else try
             {
-                try
-                {
-                    String value = get_val(name, context);
-                    setenv(("kak_"_str + name).c_str(), value.c_str(), 1);
-                }
-                catch (runtime_error&) {}
+                String value = get_val(name, context);
+                setenv(("kak_"_str + name).c_str(), value.c_str(), 1);
             }
-
-            ++it;
+            catch (runtime_error&) {}
         }
         const char* shell = "/bin/sh";
         auto cmdlinezstr = cmdline.zstr();
