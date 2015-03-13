@@ -60,7 +60,7 @@ std::pair<StringView, StringView> split_path(StringView path)
     if (it == path.rend())
         return { {}, path };
     const char* slash = it.base()-1;
-    return { {path.begin(), slash}, {slash+1, path.end()} };
+    return { {path.begin(), slash+1}, {slash+1, path.end()} };
 }
 
 String real_path(StringView filename)
@@ -278,7 +278,7 @@ String find_file(StringView filename, ConstArrayView<String> paths)
 
 template<typename Filter>
 Vector<String> list_files(StringView prefix, StringView dirname,
-                               Filter filter)
+                          Filter filter)
 {
     kak_assert(dirname.empty() or dirname.back() == '/');
     DIR* dir = opendir(dirname.empty() ? "./" : dirname.zstr());
