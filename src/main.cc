@@ -307,7 +307,7 @@ int run_client(StringView session, StringView init_command)
     }
     catch (connection_failed& e)
     {
-        fputs(e.what(), stderr);
+        fputs(e.what().zstr(), stderr);
         return -1;
     }
     return 0;
@@ -448,7 +448,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
             {
                 if (not quiet)
                     fprintf(stderr, "error while applying keys to buffer '%s': %s\n",
-                            buffer.display_name().c_str(), err.what());
+                            buffer.display_name().c_str(), (const char*)err.what().zstr());
             }
         };
 
@@ -471,7 +471,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
     }
     catch (Kakoune::runtime_error& err)
     {
-        fprintf(stderr, "error: %s\n", err.what());
+        fprintf(stderr, "error: %s\n", (const char*)err.what().zstr());
     }
 
     buffer_manager.clear_buffer_trash();
@@ -497,7 +497,7 @@ int run_pipe(StringView session)
     }
     catch (connection_failed& e)
     {
-        fputs(e.what(), stderr);
+        fputs(e.what().zstr(), stderr);
         return -1;
     }
     return 0;
@@ -592,7 +592,7 @@ int main(int argc, char* argv[])
         printf("Error: %s\n"
                "Valid switches:\n"
                "%s",
-               error.what(),
+               (const char*)error.what().zstr(),
                generate_switches_doc(param_desc.switches).c_str());
        return -1;
     }

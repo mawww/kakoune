@@ -79,7 +79,7 @@ void Client::handle_available_input(EventMode mode)
         }
         catch (Kakoune::runtime_error& error)
         {
-            context().print_status({ error.what(), get_face("Error") });
+            context().print_status({ error.what().str(), get_face("Error") });
             context().hooks().run_hook("RuntimeError", error.what(), context());
         }
         catch (Kakoune::client_removed&)

@@ -19,7 +19,7 @@ struct assert_failed : logic_error
     assert_failed(String message)
         : m_message(std::move(message)) {}
 
-    const char* what() const override { return m_message.c_str(); }
+    StringView what() const override { return m_message; }
 private:
     String m_message;
 };

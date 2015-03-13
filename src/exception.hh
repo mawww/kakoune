@@ -9,7 +9,7 @@ namespace Kakoune
 struct exception
 {
     virtual ~exception() {}
-    virtual const char* what() const;
+    virtual StringView what() const;
 };
 
 struct runtime_error : exception
@@ -17,7 +17,7 @@ struct runtime_error : exception
     runtime_error(String what)
         : m_what(std::move(what)) {}
 
-    const char* what() const override { return m_what.c_str(); }
+    StringView what() const override { return m_what.c_str(); }
 
 private:
     String m_what;

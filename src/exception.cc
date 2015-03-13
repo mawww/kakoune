@@ -7,7 +7,7 @@
 namespace Kakoune
 {
 
-const char* exception::what() const
+StringView exception::what() const
 {
     return typeid(*this).name();
 }

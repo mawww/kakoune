@@ -41,7 +41,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     }
     catch (Kakoune::runtime_error& error)
     {
-        client->context().print_status({ error.what(), get_face("Error") });
+        client->context().print_status({ error.what().str(), get_face("Error") });
         client->context().hooks().run_hook("RuntimeError", error.what(),
                                            client->context());
     }
