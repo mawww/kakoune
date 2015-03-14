@@ -47,7 +47,7 @@ std::pair<String, int> ShellManager::eval(
         write(write_pipe[1], input.data(), (int)input.length());
         close(write_pipe[1]);
 
-        String stdout, stderr;
+        String child_stdout, child_stderr;
         {
             auto pipe_reader = [](String& output) {
                 return [&output](FDWatcher& watcher, EventMode) {
@@ -59,19 +59,19 @@ std::pair<String, int> ShellManager::eval(
                 };
             };
 
-            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(stdout)};
-            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(stderr)};
+            FDWatcher stdout_watcher{read_pipe[0], pipe_reader(child_stdout)};
+            FDWatcher stderr_watcher{error_pipe[0], pipe_reader(child_stderr)};
 
             while (not stdout_watcher.closed() or not stderr_watcher.closed())
                 EventManager::instance().handle_next_events(EventMode::Urgent);
         }
 
-        if (not stderr.empty())
-            write_debug("shell stderr: <<<\n" + stderr + ">>>");
+        if (not child_stderr.empty())
+            write_debug("shell stderr: <<<\n" + child_stderr + ">>>");
 
         int status = 0;
         waitpid(pid, &status, 0);
-        return { stdout, WIFEXITED(status) ? WEXITSTATUS(status) : - 1 };
+        return { child_stdout, WIFEXITED(status) ? WEXITSTATUS(status) : - 1 };
     }
     else try
     {
