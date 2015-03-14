@@ -61,10 +61,11 @@ def -shell-params clang-parse %{
                                 for (id in completions)
                                     print id  "@" completions[id]
                             }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
-                echo "eval -client ${kak_client} echo completed
+                echo "eval -client ${kak_client} echo 'clang completion done'
                       set 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
             else
                 clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
+                echo "eval -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
