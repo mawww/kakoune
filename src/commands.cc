@@ -211,7 +211,8 @@ const CommandDesc edit_cmd = {
 const CommandDesc force_edit_cmd = {
     "edit!",
     "e!",
-    "edit! <switches> <filename>: open the given filename in a buffer, force reload if needed",
+    "edit! <switches> <filename>: open the given filename in a buffer, "
+    "force reload if needed",
     edit_params,
     CommandFlags::None,
     CommandHelper{},
@@ -226,16 +227,16 @@ void write_buffer(const ParametersParser& parser, Context& context)
     if (parser.positional_count() == 0 and !(buffer.flags() & Buffer::Flags::File))
         throw runtime_error("cannot write a non file buffer without a filename");
 
-    String filename = parser.positional_count() == 0 ? buffer.name()
-                                     : parse_filename(parser[0]);
-
+    auto filename = parser.positional_count() == 0 ?
+                        buffer.name() : parse_filename(parser[0]);
     write_buffer_to_file(buffer, filename);
 }
 
 const CommandDesc write_cmd = {
     "write",
     "w",
-    "write [filename]: write the current buffer to it's file or to [filename] if specified",
+    "write [filename]: write the current buffer to it's file "
+    "or to [filename] if specified",
     single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -294,7 +295,8 @@ void quit()
 const CommandDesc quit_cmd = {
     "quit",
     "q",
-    "quit current client, and the kakoune session if the client is the last (if not running in daemon mode)",
+    "quit current client, and the kakoune session if the client is the last "
+    "(if not running in daemon mode)",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -305,8 +307,9 @@ const CommandDesc quit_cmd = {
 const CommandDesc force_quit_cmd = {
     "quit!",
     "q!",
-    "quit current client, and the kakoune session if the client is the last (if not running in daemon mode)\n"
-    "force quit even if the client is the last and some buffers are not saved.",
+    "quit current client, and the kakoune session if the client is the last "
+    "(if not running in daemon mode). force quit even if the client is the "
+    "last and some buffers are not saved.",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -332,7 +335,8 @@ const CommandDesc write_quit_cmd = {
 const CommandDesc force_write_quit_cmd = {
     "wq!",
     nullptr,
-    "write current buffer and quit current client, even if other buffers are not saved",
+    "write current buffer and quit current client, even if other buffers are "
+    "not saved",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -397,7 +401,7 @@ void delete_buffer(const ParametersParser& parser, Context& context)
 const CommandDesc delbuf_cmd = {
     "delbuf",
     "db",
-    "delbuf [name]: delete the current buffer or the buffer named <name> if given",
+    "delbuf [name]: delete current buffer or the buffer named <name> if given",
     single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -408,7 +412,8 @@ const CommandDesc delbuf_cmd = {
 const CommandDesc force_delbuf_cmd = {
     "delbuf!",
     "db!",
-    "delbuf! [name]: delete the current buffer or the buffer named <name> if given, even if the buffer is unsaved",
+    "delbuf! [name]: delete current buffer or the buffer named <name> if "
+    "given, even if the buffer is unsaved",
     single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -499,10 +504,14 @@ Highlighter& get_highlighter(const Context& context, StringView path)
 const CommandDesc add_highlighter_cmd = {
     "addhl",
     "ah",
-    "addhl <scope>/<group>/<id> <type> <type params>...: add an highlighter\n"
-    "<scope> can be shared or window",
+    "addhl <type> <type params>...: add an highlighter",
     ParameterDesc{
-        SwitchMap{ { "group", { true, "specify the group in which to put the highlighter" } } },
+        SwitchMap{
+            { "group",
+                { true,
+                  "specify the group in which to put the highlighter. If "
+                  "starting with /, searche in shared highlighters, if not, "
+                  "it is searched in the current window" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
     CommandFlags::None,
     [](const Context& context, CommandParameters params) -> String
@@ -563,7 +572,8 @@ const CommandDesc rm_highlighter_cmd = {
 const CommandDesc add_hook_cmd = {
     "hook",
     nullptr,
-    "hook <switches> <scope> <hook_name> <command>: add <command> in <scope> to be executed on hook <hook_name>\n"
+    "hook <switches> <scope> <hook_name> <command>: add <command> in <scope> "
+    "to be executed on hook <hook_name>\n"
     "scope can be: \n"
     "  * global: hook is executed for any buffer or window\n"
     "  * buffer: hook is executed only for the current buffer\n"
@@ -745,7 +755,7 @@ void define_command(const ParametersParser& parser, Context& context)
 const CommandDesc define_command_cmd = {
     "def",
     nullptr,
-    "def <switches> <name> <commands>: define a command named <name> corresponding to <commands>",
+    "def <switches> <name> <cmds>: define a command <name> executing <cmds>",
     ParameterDesc{
         SwitchMap{ { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
                    { "allow-override", { false, "allow overriding an existing command" } },
@@ -767,7 +777,7 @@ const CommandDesc define_command_cmd = {
 const CommandDesc alias_cmd = {
     "alias",
     nullptr,
-    "alias <scope> <alias> <command>: define a command alias in given scope",
+    "alias <scope> <alias> <command>: alias <alias> to <command> in <scope>\n",
     ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
@@ -782,8 +792,8 @@ const CommandDesc alias_cmd = {
 const CommandDesc unalias_cmd = {
     "unalias",
     nullptr,
-    "unalias <scope> <alias> [<expected>]: remove a command alias in given scope\n"
-    "if <expected> is specified, the alias is removed only if its value is <expected>",
+    "unalias <scope> <alias> [<expected>]: remove <alias> from <scope>\n"
+    "If <expected> is specified, remove <alias> only if its value is <expected>",
     ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
@@ -967,7 +977,7 @@ const CommandDesc declare_option_cmd = {
     "decl",
     nullptr,
     "decl <type> <name> [value]: declare option <name> of type <type>.\n"
-    "set its initial value to <value> if given and if the option did not exist\n"
+    "set its initial value to <value> if given and the option did not exist\n"
     "Available types:\n"
     "    int: integer\n"
     "    bool: boolean (true/false or yes/no)\n"
@@ -1037,12 +1047,8 @@ KeymapMode parse_keymap_mode(const String& str)
 const CommandDesc map_key_cmd = {
     "map",
     nullptr,
-    "map <scope> <mode> <key> <keys>: map <key> to <keys> in given mode at given scope.\n"
-    "Valid scopes:\n"
-    "    window\n"
-    "    buffer\n"
-    "    global\n"
-    "Valid modes:\n"
+    "map <scope> <mode> <key> <keys>: map <key> to <keys> in given mode in <scope>.\n"
+    "<mode> can be:\n"
     "    normal\n"
     "    insert\n"
     "    menu\n"
@@ -1277,7 +1283,8 @@ const CommandDesc prompt_cmd = {
 const CommandDesc menu_cmd = {
     "menu",
     nullptr,
-    "menu <switches> <name1> <commands1> <name2> <commands2>...: display a menu and execute commands for the selected item",
+    "menu <switches> <name1> <commands1> <name2> <commands2>...: display a "
+    "menu and execute commands for the selected item",
     ParameterDesc{
         SwitchMap{ { "auto-single", { false, "instantly validate if only one item is available" } },
                    { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
@@ -1371,8 +1378,8 @@ const CommandDesc info_cmd = {
 const CommandDesc try_catch_cmd = {
     "try",
     nullptr,
-    "try <command> [catch <error_command>]: execute command in current context.\n"
-    "if an error is raised and <error_command> is specified, execute it.\n"
+    "try <cmds> [catch <error_cmds>]: execute <cmds> in current context.\n"
+    "if an error is raised and <error_cmds> is specified, execute it; "
     "The error is not propagated further.",
     ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 1, 3 },
     CommandFlags::None,
