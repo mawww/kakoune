@@ -873,28 +873,28 @@ public:
             insert(key.key);
         else if (key == ctrl('r'))
             m_mode = Mode::InsertReg;
-        else if ( key == ctrl('m'))
+        else if (key == ctrl('m'))
             insert('\n');
-        else if ( key == ctrl('i'))
+        else if (key == ctrl('i'))
             insert('\t');
-        else if ( key == ctrl('n'))
+        else if (key == ctrl('n'))
         {
             m_completer.select(1);
             update_completions = false;
         }
-        else if ( key == ctrl('p'))
+        else if (key == ctrl('p'))
         {
             m_completer.select(-1);
             update_completions = false;
         }
-        else if ( key == ctrl('x'))
+        else if (key == ctrl('x'))
             m_mode = Mode::Complete;
-        else if ( key == ctrl('o'))
+        else if (key == ctrl('o'))
         {
             m_autoshowcompl = false;
             m_completer.reset();
         }
-        else if ( key == ctrl('u'))
+        else if (key == ctrl('u'))
             context().buffer().commit_undo_group();
 
         context().hooks().run_hook("InsertKey", key_to_str(key), context());
