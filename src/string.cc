@@ -59,6 +59,7 @@ Vector<StringView> split(StringView str, char separator)
 String escape(StringView str, StringView characters, char escape)
 {
     String res;
+    res.reserve(str.length());
     for (auto& c : str)
     {
         if (contains(characters, c))
@@ -71,6 +72,7 @@ String escape(StringView str, StringView characters, char escape)
 String unescape(StringView str, StringView characters, char escape)
 {
     String res;
+    res.reserve(str.length());
     for (auto& c : str)
     {
         if (contains(characters, c) and not res.empty() and res.back() == escape)
@@ -84,6 +86,7 @@ String unescape(StringView str, StringView characters, char escape)
 String indent(StringView str, StringView indent)
 {
     String res;
+    res.reserve(str.length());
     bool was_eol = true;
     for (ByteCount i = 0; i < str.length(); ++i)
     {
@@ -144,6 +147,7 @@ bool subsequence_match(StringView str, StringView subseq)
 String expand_tabs(StringView line, CharCount tabstop, CharCount col)
 {
     String res;
+    res.reserve(line.length());
     using Utf8It = utf8::iterator<const char*>;
     for (Utf8It it = line.begin(); it.base() < line.end(); ++it)
     {
