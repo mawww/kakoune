@@ -46,38 +46,20 @@ ParametersParser::ParametersParser(ParameterList params,
         throw wrong_argument_count();
 }
 
-bool ParametersParser::has_option(const String& name) const
+Optional<StringView> ParametersParser::get_switch(StringView name) const
 {
-    kak_assert(m_desc.switches.find(name) != m_desc.switches.end());
-    for (auto& param : m_params)
+    auto it = m_desc.switches.find(name);
+    kak_assert(it != m_desc.switches.end());
+    for (size_t i = 0; i < m_params.size(); ++i)
     {
+        const auto& param = m_params[i];
         if (param[0_byte] == '-' and param.substr(1_byte) == name)
-            return true;
+            return it->second.takes_arg ? m_params[i+1] : StringView{};
 
         if (param == "--")
             break;
     }
-    return false;
-}
-
-const String& ParametersParser::option_value(const String& name) const
-{
-#ifdef KAK_DEBUG
-    auto it = m_desc.switches.find(name);
-    kak_assert(it != m_desc.switches.end());
-    kak_assert(it->second.takes_arg);
-#endif
-
-    for (size_t i = 0; i < m_params.size(); ++i)
-    {
-        if (m_params[i][0_byte] == '-' and m_params[i].substr(1_byte) == name)
-            return m_params[i+1];
-
-        if (m_params[i] == "--")
-            break;
-    }
-    static String empty;
-    return empty;
+    return {};
 }
 
 }

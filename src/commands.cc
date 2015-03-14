@@ -138,19 +138,19 @@ void edit(const ParametersParser& parser, Context& context)
         buffer = BufferManager::instance().get_buffer_ifp(name);
     if (not buffer)
     {
-        if (parser.has_option("scratch"))
+        if (parser.get_switch("scratch"))
         {
             BufferManager::instance().delete_buffer_if_exists(name);
             buffer = new Buffer(name, Buffer::Flags::None);
         }
-        else if (parser.has_option("fifo"))
-            buffer = open_fifo(name, parser.option_value("fifo"), parser.has_option("scroll"));
+        else if (auto fifo = parser.get_switch("fifo"))
+            buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
         else
         {
             buffer = create_buffer_from_file(name);
             if (not buffer)
             {
-                if (parser.has_option("existing"))
+                if (parser.get_switch("existing"))
                     throw runtime_error("unable to open " + name);
 
                 context.print_status({ "new file " + name, get_face("StatusLine") });
@@ -525,9 +525,9 @@ const CommandDesc add_highlighter_cmd = {
         for (; begin != parser.end(); ++begin)
             highlighter_params.push_back(*begin);
 
-        auto& group = (parser.has_option("group")) ?
-            get_highlighter(context, parser.option_value("group"))
-          : context.window().highlighters();
+        auto group_name = parser.get_switch("group");
+        auto& group = group_name ? get_highlighter(context, *group_name)
+                                 : context.window().highlighters();
         auto it = registry.find(name);
         if (it == registry.end())
             throw runtime_error("No such highlighter factory '" + name + "'");
@@ -602,9 +602,7 @@ const CommandDesc add_hook_cmd = {
                 CommandManager::instance().execute(command, context, {},
                                                    { { "hook_param", param.str() } });
         };
-        StringView group;
-        if (parser.has_option("group"))
-            group = parser.option_value("group");
+        auto group = parser.get_switch("group").value_or(StringView{});
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), hook_func);
     }
 };
@@ -650,21 +648,17 @@ void define_command(const ParametersParser& parser, Context& context)
     const String& cmd_name = parser[0];
     auto& cm = CommandManager::instance();
 
-    if (cm.command_defined(cmd_name) and not parser.has_option("allow-override"))
+    if (cm.command_defined(cmd_name) and not parser.get_switch("allow-override"))
         throw runtime_error("command '" + cmd_name + "' already defined");
 
     CommandFlags flags = CommandFlags::None;
-    if (parser.has_option("hidden"))
+    if (parser.get_switch("hidden"))
         flags = CommandFlags::Hidden;
-
-    String docstring;
-    if (parser.has_option("docstring"))
-        docstring = parser.option_value("docstring");
 
     const String& commands = parser[1];
     Command cmd;
     ParameterDesc desc;
-    if (parser.has_option("shell-params"))
+    if (parser.get_switch("shell-params"))
     {
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional };
         cmd = [=](const ParametersParser& parser, Context& context) {
@@ -680,7 +674,7 @@ void define_command(const ParametersParser& parser, Context& context)
     }
 
     CommandCompleter completer;
-    if (parser.has_option("file-completion"))
+    if (parser.get_switch("file-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
                        CommandParameters params,
@@ -693,7 +687,7 @@ void define_command(const ParametersParser& parser, Context& context)
                                                    pos_in_token) };
         };
     }
-    if (parser.has_option("client-completion"))
+    else if (parser.get_switch("client-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
                        CommandParameters params,
@@ -705,7 +699,7 @@ void define_command(const ParametersParser& parser, Context& context)
                                  cm.complete_client_name(prefix, pos_in_token) };
         };
     }
-    if (parser.has_option("buffer-completion"))
+    else if (parser.get_switch("buffer-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
                        CommandParameters params,
@@ -716,9 +710,9 @@ void define_command(const ParametersParser& parser, Context& context)
                                  complete_buffer_name(prefix, pos_in_token) };
         };
     }
-    else if (parser.has_option("shell-completion"))
+    else if (auto shell_cmd_opt = parser.get_switch("shell-completion"))
     {
-        const String& shell_cmd = parser.option_value("shell-completion");
+        String shell_cmd = shell_cmd_opt->str();
         completer = [=](const Context& context, CompletionFlags flags,
                         CommandParameters params,
                         size_t token_to_complete, ByteCount pos_in_token)
@@ -735,7 +729,9 @@ void define_command(const ParametersParser& parser, Context& context)
         };
     }
 
-    cm.register_command(cmd_name, cmd, std::move(docstring), desc, flags, CommandHelper{}, completer);
+    auto docstring = parser.get_switch("docstring").value_or(StringView{});
+
+    cm.register_command(cmd_name, cmd, docstring.str(), desc, flags, CommandHelper{}, completer);
 }
 
 const CommandDesc define_command_cmd = {
@@ -809,12 +805,11 @@ const CommandDesc echo_cmd = {
     [](const ParametersParser& parser, Context& context)
     {
         String message = join(parser, ' ', false);
-        if (parser.has_option("debug"))
+        if (parser.get_switch("debug"))
             write_debug(message);
         else
         {
-            auto face = get_face(parser.has_option("color") ?
-                                 parser.option_value("color") : "StatusLine");
+            auto face = get_face(parser.get_switch("color").value_or("StatusLine").str());
             context.print_status({ std::move(message), face } );
         }
     }
@@ -951,7 +946,7 @@ const CommandDesc set_option_cmd = {
     [](const ParametersParser& parser, Context& context)
     {
         Option& opt = get_scope(parser[0], context).options().get_local_option(parser[1]);
-        if (parser.has_option("add"))
+        if (parser.get_switch("add"))
             opt.add_from_string(parser[2]);
         else
             opt.set_from_string(parser[2]);
@@ -984,13 +979,10 @@ const CommandDesc declare_option_cmd = {
         Option* opt = nullptr;
 
         OptionFlags flags = OptionFlags::None;
-        if (parser.has_option("hidden"))
+        if (parser.get_switch("hidden"))
             flags = OptionFlags::Hidden;
 
-        String docstring;
-        if (parser.has_option("docstring"))
-            docstring = parser.option_value("docstring");
-
+        auto docstring = parser.get_switch("docstring").value_or(StringView{}).str();
         OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
         if (parser[0] == "int")
@@ -1105,15 +1097,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
-    const bool disable_hooks = parser.has_option("no-hooks") or
+    const bool disable_hooks = parser.get_switch("no-hooks") or
                                context.user_hooks_support().is_disabled();
-    const bool disable_keymaps = not parser.has_option("with-maps");
+    const bool disable_keymaps = not parser.get_switch("with-maps");
 
     ClientManager& cm = ClientManager::instance();
-    if (parser.has_option("buffer"))
+    if (auto bufnames = parser.get_switch("buffer"))
     {
-        auto names = split(parser.option_value("buffer"), ',');
-        for (auto& name : names)
+        for (auto& name : split(*bufnames, ','))
         {
             Buffer& buffer = BufferManager::instance().get_buffer(name);
             InputHandler input_handler{{ buffer, Selection{} },
@@ -1130,15 +1121,15 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     }
 
     Context* real_context = &context;
-    if (parser.has_option("client"))
-        real_context = &cm.get_client(parser.option_value("client")).context();
-    else if (parser.has_option("try-client"))
+    if (auto client_name = parser.get_switch("client"))
+        real_context = &cm.get_client(*client_name).context();
+    else if (auto client_name = parser.get_switch("try-client"))
     {
-        if (Client* client = cm.get_client_ifp(parser.option_value("try-client")))
+        if (Client* client = cm.get_client_ifp(*client_name))
             real_context = &client->context();
     }
 
-    if (parser.has_option("draft"))
+    if (parser.get_switch("draft"))
     {
         InputHandler input_handler(real_context->selections(),
                                    Context::Flags::Transient,
@@ -1153,7 +1144,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
         ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
 
-        if (parser.has_option("itersel"))
+        if (parser.get_switch("itersel"))
         {
             SelectionList sels{real_context->selections()};
             ScopedEdition edition{c};
@@ -1173,7 +1164,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     }
     else
     {
-        if (parser.has_option("itersel"))
+        if (parser.get_switch("itersel"))
             throw runtime_error("-itersel makes no sense without -draft");
 
         ScopedDisable hook_disable(real_context->user_hooks_support(), disable_hooks);
@@ -1246,13 +1237,10 @@ const CommandDesc prompt_cmd = {
             throw runtime_error("register name should be a single character");
         const char reg = params[1][0_byte];
         const String& command = params[2];
-
-        String initstr;
-        if (params.has_option("init"))
-            initstr = params.option_value("init");
+        auto initstr = params.get_switch("init").value_or(StringView{});
 
         context.input_handler().prompt(
-            params[0], std::move(initstr), get_face("Prompt"), Completer{},
+            params[0], initstr.str(), get_face("Prompt"), Completer{},
             [=](StringView str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)
@@ -1278,14 +1266,14 @@ const CommandDesc menu_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        const bool with_select_cmds = parser.has_option("select-cmds");
+        const bool with_select_cmds = (bool)parser.get_switch("select-cmds");
         const size_t modulo = with_select_cmds ? 3 : 2;
 
         const size_t count = parser.positional_count();
         if (count == 0 or (count % modulo) != 0)
             throw wrong_argument_count();
 
-        if (count == modulo and parser.has_option("auto-single"))
+        if (count == modulo and parser.get_switch("auto-single"))
         {
             CommandManager::instance().execute(parser[1], context);
             return;
@@ -1332,28 +1320,26 @@ const CommandDesc info_cmd = {
         {
             InfoStyle style = InfoStyle::Prompt;
             CharCoord pos;
-            if (parser.has_option("anchor"))
+            if (auto anchor = parser.get_switch("anchor"))
             {
-                auto anchor = parser.option_value("anchor");
-                auto dot = find(anchor, '.');
-                if (dot == anchor.end())
+                auto dot = find(*anchor, '.');
+                if (dot == anchor->end())
                     throw runtime_error("expected <line>.<column> for anchor");
-                ByteCoord coord{str_to_int({anchor.begin(), dot})-1,
-                                str_to_int({dot+1, anchor.end()})-1};
+                ByteCoord coord{str_to_int({anchor->begin(), dot})-1,
+                                str_to_int({dot+1, anchor->end()})-1};
                 pos = context.window().display_position(coord);
                 style = InfoStyle::Inline;
-                if (parser.has_option("placement"))
+                if (auto placement = parser.get_switch("placement"))
                 {
-                    auto placement = parser.option_value("placement");
-                    if (placement == "above")
+                    if (*placement == "above")
                         style = InfoStyle::InlineAbove;
-                    else if (placement == "below")
+                    else if (*placement == "below")
                         style = InfoStyle::InlineBelow;
                     else
-                        throw runtime_error("invalid placement " + placement);
+                        throw runtime_error("invalid placement " + *placement);
                 }
             }
-            const String& title = parser.has_option("title") ? parser.option_value("title") : "";
+            auto title = parser.get_switch("title").value_or(StringView{});
             context.ui().info_show(title, parser[0], pos, get_face("Information"), style);
         }
     }

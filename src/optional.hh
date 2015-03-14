@@ -72,6 +72,9 @@ public:
     }
     const T* operator->() const { return const_cast<Optional&>(*this).operator->(); }
 
+    template<typename U>
+    T value_or(U&& fallback) const { return m_valid ? m_value : T{fallback}; }
+
 private:
     void destruct_ifn() { if (m_valid) m_value.~T(); }
 

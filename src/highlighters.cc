@@ -1073,12 +1073,9 @@ public:
 
                 regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
             }
-            String default_group;
-            if (parser.has_option("default"))
-                default_group = parser.option_value("default");
 
-            return {parser[0], make_unique<RegionsHighlighter>(std::move(regions),
-                                                               std::move(default_group))};
+            auto default_group = parser.get_switch("default").value_or(StringView{}).str();
+            return {parser[0], make_unique<RegionsHighlighter>(std::move(regions), default_group)};
         }
         catch (RegexError& err)
         {

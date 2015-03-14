@@ -5,6 +5,7 @@
 #include "id_map.hh"
 #include "array_view.hh"
 #include "flags.hh"
+#include "optional.hh"
 #include "string.hh"
 
 namespace Kakoune
@@ -79,12 +80,9 @@ struct ParametersParser
     // boolean option.
     ParametersParser(ParameterList params, const ParameterDesc& desc);
 
-    // check if a named option (either string or boolean) is specified
-    bool has_option(const String& name) const;
-
-    // get a string option value, returns an empty string if the option
-    // is not defined
-    const String& option_value(const String& name) const;
+    // Return a valid optional if the switch was given, with
+    // a non empty StringView value if the switch took an argument.
+    Optional<StringView> get_switch(StringView name) const;
 
     struct iterator : std::iterator<std::forward_iterator_tag, String>
     {

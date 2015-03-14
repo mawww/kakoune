@@ -534,56 +534,51 @@ int main(int argc, char* argv[])
 
         ParametersParser parser(params, param_desc);
 
-        if (parser.has_option("p"))
+        if (auto session = parser.get_switch("p"))
         {
             for (auto opt : { "c", "n", "s", "d", "e" })
             {
-                if (parser.has_option(opt))
+                if (parser.get_switch(opt))
                 {
                     fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
                     return -1;
                 }
             }
-            return run_pipe(parser.option_value("p"));
+            return run_pipe(*session);
         }
-        else if (parser.has_option("f"))
+        else if (auto keys = parser.get_switch("f"))
         {
             Vector<StringView> files;
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-             return run_filter(parser.option_value("f"), files,
-                               parser.has_option("q"));
+            return run_filter(*keys, files, (bool)parser.get_switch("q"));
         }
 
-        String init_command;
-        if (parser.has_option("e"))
-            init_command = parser.option_value("e");
+        auto init_command = parser.get_switch("e").value_or(StringView{});
 
-        if (parser.has_option("c"))
+        if (auto server_session = parser.get_switch("c"))
         {
             for (auto opt : { "n", "s", "d" })
             {
-                if (parser.has_option(opt))
+                if (parser.get_switch(opt))
                 {
                     fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
                     return -1;
                 }
             }
-            return run_client(parser.option_value("c"), init_command);
+            return run_client(*server_session, init_command);
         }
         else
         {
             Vector<StringView> files;
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
-            StringView session;
-            if (parser.has_option("s"))
-                session = parser.option_value("s");
 
+            StringView session = parser.get_switch("s").value_or(StringView{});
             return run_server(session, init_command,
-                              parser.has_option("n"),
-                              parser.has_option("d"),
+                              (bool)parser.get_switch("n"),
+                              (bool)parser.get_switch("d"),
                               files);
         }
     }
