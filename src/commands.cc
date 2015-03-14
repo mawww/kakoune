@@ -86,17 +86,9 @@ const PerArgumentCommandCompleter buffer_completer({
     { return Completions{ 0_byte, cursor_pos, complete_buffer_name(prefix, cursor_pos) }; }
 });
 
-const ParameterDesc no_params{
-    SwitchMap{}, ParameterDesc::Flags::None, 0, 0
-};
-
-const ParameterDesc single_name_param{
-    SwitchMap{}, ParameterDesc::Flags::None, 1, 1
-};
-
-const ParameterDesc single_optional_name_param{
-    SwitchMap{}, ParameterDesc::Flags::None, 0, 1
-};
+const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
+const ParameterDesc single_name_param{ {}, ParameterDesc::Flags::None, 1, 1 };
+const ParameterDesc single_optional_name_param{ {}, ParameterDesc::Flags::None, 0, 1 };
 
 static constexpr auto scopes = { "global", "buffer", "window" };
 
@@ -190,16 +182,15 @@ void edit(const ParametersParser& parser, Context& context)
 }
 
 ParameterDesc edit_params{
-    SwitchMap{ { "existing", { false, "fail if the file does not exists, do not open a new file" } },
-               { "scratch", { false, "create a scratch buffer, not linked to a file" } },
-               { "fifo", { true, "create a buffer reading its content from a named fifo" } },
-               { "scroll", { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
-    ParameterDesc::Flags::None, 0, 3
+    { { "existing", { false, "fail if the file does not exists, do not open a new file" } },
+      { "scratch",  { false, "create a scratch buffer, not linked to a file" } },
+      { "fifo",     { true,  "create a buffer reading its content from a named fifo" } },
+      { "scroll",   { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
+      ParameterDesc::Flags::None, 0, 3
 };
-
-const CommandDesc edit_cmd = {
-    "edit",
-    "e",
+ const CommandDesc edit_cmd = {
+             "edit",
+             "e",
     "edit <switches> <filename>: open the given filename in a buffer",
     edit_params,
     CommandFlags::None,
@@ -506,13 +497,11 @@ const CommandDesc add_highlighter_cmd = {
     "ah",
     "addhl <type> <type params>...: add an highlighter",
     ParameterDesc{
-        SwitchMap{
-            { "group",
-                { true,
-                  "specify the group in which to put the highlighter. If "
-                  "starting with /, searche in shared highlighters, if not, "
-                  "it is searched in the current window" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
+        { { "group", { true, "Set the group in which to put the highlighter. "
+                             "If starting with /, search in shared highlighters, "
+                             "else search in the current window" } } },
+      ParameterDesc::Flags::SwitchesOnlyAtStart, 1
+    },
     CommandFlags::None,
     [](const Context& context, CommandParameters params) -> String
     {
@@ -550,10 +539,7 @@ const CommandDesc rm_highlighter_cmd = {
     "rmhl",
     "rh",
     "rmhl <path>: remove highlighter <name>",
-    ParameterDesc{
-        SwitchMap{},
-        ParameterDesc::Flags::None, 1, 1
-    },
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
     rm_highlighter_completer,
@@ -580,7 +566,7 @@ const CommandDesc add_hook_cmd = {
     "            (and any window for that buffer)\n"
     "  * window: hook is executed only for the current window\n",
     ParameterDesc{
-        SwitchMap{ { "group", { true, "set hook group, see rmhooks" } } },
+        { { "group", { true, "set hook group, see rmhooks" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -627,7 +613,7 @@ const CommandDesc rm_hook_cmd = {
     "rmhooks",
     nullptr,
     "rmhooks <scope> <group>: remove all hooks whose group is <group>",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     CommandHelper{},
     [](const Context& context, CompletionFlags flags,
@@ -680,14 +666,14 @@ void define_command(const ParametersParser& parser, Context& context)
     ParameterDesc desc;
     if (parser.has_option("shell-params"))
     {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional };
+        desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context, params_to_shell(parser));
         };
     }
     else
     {
-        desc = ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
+        desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
         cmd = [=](const ParametersParser& parser, Context& context) {
             CommandManager::instance().execute(commands, context);
         };
@@ -757,14 +743,14 @@ const CommandDesc define_command_cmd = {
     nullptr,
     "def <switches> <name> <cmds>: define a command <name> executing <cmds>",
     ParameterDesc{
-        SwitchMap{ { "shell-params", { false, "pass parameters to each shell escape as $0..$N" } },
-                   { "allow-override", { false, "allow overriding an existing command" } },
-                   { "hidden", { false, "do not display the command in completion candidates" } },
-                   { "docstring", { true, "define the documentation string for command" } },
-                   { "file-completion", { false, "complete parameters using filename completion" } },
-                   { "client-completion", { false, "complete parameters using client name completion" } },
-                   { "buffer-completion", { false, "complete parameters using buffer name completion" } },
-                   { "shell-completion", { true, "complete the parameters using the given shell-script" } } },
+        { { "shell-params",      { false, "pass parameters to each shell escape as $0..$N" } },
+          { "allow-override",    { false, "allow overriding an existing command" } },
+          { "hidden",            { false, "do not display the command in completion candidates" } },
+          { "docstring",         { true,  "define the documentation string for command" } },
+          { "file-completion",   { false, "complete parameters using filename completion" } },
+          { "client-completion", { false, "complete parameters using client name completion" } },
+          { "buffer-completion", { false, "complete parameters using buffer name completion" } },
+          { "shell-completion",  { true,  "complete the parameters using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
     },
@@ -778,7 +764,7 @@ const CommandDesc alias_cmd = {
     "alias",
     nullptr,
     "alias <scope> <alias> <command>: alias <alias> to <command> in <scope>\n",
-    ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 3, 3},
+    ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -794,7 +780,7 @@ const CommandDesc unalias_cmd = {
     nullptr,
     "unalias <scope> <alias> [<expected>]: remove <alias> from <scope>\n"
     "If <expected> is specified, remove <alias> only if its value is <expected>",
-    ParameterDesc{SwitchMap{}, ParameterDesc::Flags::None, 2, 3},
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -813,8 +799,8 @@ const CommandDesc echo_cmd = {
     nullptr,
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
-        SwitchMap{ { "color", { true, "set message color" } },
-                   { "debug", { false, "write to debug buffer instead of status line" } } },
+        { { "color", { true,  "set message color" } },
+          { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
     CommandFlags::None,
@@ -840,7 +826,7 @@ const CommandDesc debug_cmd = {
     nullptr,
     "debug <command>: write some debug informations in the debug buffer\n"
     "existing commands: info, buffers, options, memory, shared-strings",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 },
+    ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
     CommandHelper{},
     PerArgumentCommandCompleter({
@@ -920,9 +906,8 @@ const CommandDesc set_option_cmd = {
     nullptr,
     "set <switches> <scope> <name> <value>: set option <name> in <scope> to <value>",
     ParameterDesc{
-        SwitchMap{ { "add", { false, "add to option rather than replacing it" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart,
-        3, 3
+        { { "add", { false, "add to option rather than replacing it" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 3, 3
     },
     CommandFlags::None,
     [](const Context& context, CommandParameters params) -> String
@@ -987,10 +972,9 @@ const CommandDesc declare_option_cmd = {
     "    str-list: list of character strings\n"
     "    line-flag-list: list of line flags\n",
     ParameterDesc{
-        SwitchMap{ { "hidden", { false, "do not display option name when completing" } },
-                   { "docstring", { true, "specify option description" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart,
-        2, 3
+        { { "hidden",    { false, "do not display option name when completing" } },
+          { "docstring", { true,  "specify option description" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 3
     },
     CommandFlags::None,
     CommandHelper{},
@@ -1056,7 +1040,7 @@ const CommandDesc map_key_cmd = {
     "    goto\n"
     "    view\n"
     "    user\n",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 4, 4 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
     CommandFlags::None,
     CommandHelper{},
     [](const Context& context, CompletionFlags flags,
@@ -1089,13 +1073,13 @@ const CommandDesc map_key_cmd = {
 };
 
 const ParameterDesc context_wrap_params = {
-    SwitchMap{ { "client", { true, "run in given client context" } },
-               { "try-client", { true, "run in given client context if it exists, or else in the current one" } },
-               { "buffer", { true, "run in a disposable context for each given buffer in the comma separated list argument" } },
-               { "draft", { false, "run in a disposable context" } },
-               { "no-hooks", { false, "disable hooks" } },
-               { "with-maps", { false, "use user defined key mapping when executing keys" } },
-               { "itersel", { false, "run once for each selection with that selection as the only one" } } },
+    { { "client",     { true,  "run in given client context" } },
+      { "try-client", { true,  "run in given client context if it exists, or else in the current one" } },
+      { "buffer",     { true,  "run in a disposable context for each given buffer in the comma separated list argument" } },
+      { "draft",      { false, "run in a disposable context" } },
+      { "no-hooks",   { false, "disable hooks" } },
+      { "with-maps",  { false, "use user defined key mapping when executing keys" } },
+      { "itersel",    { false, "run once for each selection with that selection as the only one" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
@@ -1250,7 +1234,7 @@ const CommandDesc prompt_cmd = {
     "prompt <prompt> <register> <command>: prompt the use to enter a text string "
     "stores it in <register> and then executes <command>",
     ParameterDesc{
-        SwitchMap{ { "init", { true, "set initial prompt content" } } },
+        { { "init", { true, "set initial prompt content" } } },
         ParameterDesc::Flags::None, 3, 3
     },
     CommandFlags::None,
@@ -1286,8 +1270,8 @@ const CommandDesc menu_cmd = {
     "menu <switches> <name1> <commands1> <name2> <commands2>...: display a "
     "menu and execute commands for the selected item",
     ParameterDesc{
-        SwitchMap{ { "auto-single", { false, "instantly validate if only one item is available" } },
-                   { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
+        { { "auto-single", { false, "instantly validate if only one item is available" } },
+          { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
     },
     CommandFlags::None,
     CommandHelper{},
@@ -1333,9 +1317,9 @@ const CommandDesc info_cmd = {
     nullptr,
     "info <switches> <params>...: display an info box with the params as content",
     ParameterDesc{
-        SwitchMap{ { "anchor", { true, "set info anchoring <line>.<column>" } },
-                   { "placement", { true, "set placement relative to anchor (above, below)" } },
-                   { "title", { true, "set info title" } } },
+        { { "anchor",    { true, "set info anchoring <line>.<column>" } },
+          { "placement", { true, "set placement relative to anchor (above, below)" } },
+          { "title",     { true, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
     CommandFlags::None,
@@ -1381,7 +1365,7 @@ const CommandDesc try_catch_cmd = {
     "try <cmds> [catch <error_cmds>]: execute <cmds> in current context.\n"
     "if an error is raised and <error_cmds> is specified, execute it; "
     "The error is not propagated further.",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 1, 3 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 1, 3},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -1418,7 +1402,7 @@ const CommandDesc face_cmd = {
     "face",
     nullptr,
     "face <name> <facespec>: set face <name> to refer to <facespec>\n",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
     PerArgumentCommandCompleter({ complete_face, complete_face }),
@@ -1449,7 +1433,7 @@ const CommandDesc set_register_cmd = {
     "reg",
     nullptr,
     "reg <name> <value>: set register <name> to <value>",
-    ParameterDesc{ SwitchMap{}, ParameterDesc::Flags::None, 2, 2 },
+    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},

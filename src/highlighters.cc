@@ -1051,9 +1051,9 @@ public:
         try
         {
             static const ParameterDesc param_desc{
-                SwitchMap{ { "default", { true, "" } } },
-                ParameterDesc::Flags::SwitchesOnlyAtStart,
-                5};
+                { { "default", { true, "" } } },
+                ParameterDesc::Flags::SwitchesOnlyAtStart, 5
+            };
 
             ParametersParser parser{params, param_desc};
             if ((parser.positional_count() % 4) != 1)

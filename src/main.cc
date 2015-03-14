@@ -517,13 +517,13 @@ int main(int argc, char* argv[])
         params.push_back(argv[i]);
 
     const ParameterDesc param_desc{
-        SwitchMap{ { "c", { true, "connect to given session" } },
-                   { "e", { true, "execute argument on initialisation" } },
+        SwitchMap{ { "c", { true,  "connect to given session" } },
+                   { "e", { true,  "execute argument on initialisation" } },
                    { "n", { false, "do not source kakrc files on startup" } },
-                   { "s", { true, "set session name" } },
+                   { "s", { true,  "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
-                   { "p", { true, "just send stdin as commands to the given session" } },
-                   { "f", { true, "act as a filter, executing given keys on given files" } },
+                   { "p", { true,  "just send stdin as commands to the given session" } },
+                   { "f", { true,  "act as a filter, executing given keys on given files" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } } }
     };
     try
