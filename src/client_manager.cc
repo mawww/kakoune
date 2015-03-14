@@ -79,21 +79,18 @@ void ClientManager::remove_client(Client& client)
 
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 {
-    for (auto it = m_free_windows.rbegin(), end = m_free_windows.rend();
-         it != end; ++it)
-    {
-        auto& w = it->window;
-        if (&w->buffer() == &buffer)
-        {
-            w->forget_timestamp();
-            WindowAndSelections res = std::move(*it);
-            m_free_windows.erase(it.base()-1);
-            res.selections.update();
-            return res;
-        }
-    }
-    return WindowAndSelections{ std::unique_ptr<Window>{new Window{buffer}},
-                                SelectionList{ buffer, Selection{} } };
+    auto it = find_if(reversed(m_free_windows),
+                      [&](const WindowAndSelections& ws)
+                      { return &ws.window->buffer() == &buffer; });
+
+    if (it == m_free_windows.rend())
+        return { make_unique<Window>(buffer), { buffer, Selection{} } };
+
+    it->window->forget_timestamp();
+    WindowAndSelections res = std::move(*it);
+    m_free_windows.erase(it.base()-1);
+    res.selections.update();
+    return res;
 }
 
 void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
@@ -136,9 +133,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 
 bool ClientManager::validate_client_name(StringView name) const
 {
-    auto it = find_if(m_clients, [&](const std::unique_ptr<Client>& client)
-                                 { return client->context().name() == name; });
-    return it == m_clients.end();
+    return const_cast<ClientManager*>(this)->get_client_ifp(name) == nullptr;
 }
 
 Client* ClientManager::get_client_ifp(StringView name)
