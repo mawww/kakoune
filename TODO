@@ -10,7 +10,7 @@
 
 * Mouse support
 
-* Crash recovery support (swap files)
+* Detect crash recovery files when restarting
 
 * improve highlighters
 
@@ -57,7 +57,9 @@
 
 * Make kakoune self-documenting
 
-  - Display option docstring
+  - Improve in source doc strings, add minimal markup so that they
+    display nicely with different width (paragraph rewrapping and
+    explicit line break would go a long way)
 
   - Generate documentation from Kakoune source
 
