@@ -27,6 +27,8 @@
 
 * improve insert completion
 
+  - Use some kind of ranking to sort completions
+
   - Detect when the following text is matching the inserted completion
 
   - Support multiple completion points
