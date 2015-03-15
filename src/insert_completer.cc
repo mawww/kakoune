@@ -245,7 +245,7 @@ InsertCompleter::~InsertCompleter()
     m_options.unregister_watcher(*this);
 }
 
-void InsertCompleter::select(int offset)
+void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
 {
     if (not setup_ifn())
         return;
@@ -283,6 +283,13 @@ void InsertCompleter::select(int offset)
             m_context.ui().info_show(candidate.first, candidate.second, CharCoord{},
                                      get_face("Information"), InfoStyle::MenuDoc);
     }
+
+    for (auto i = 0_byte; i < prefix_len; ++i)
+        keystrokes.push_back(Key::Backspace);
+    for (auto i = 0_byte; i < suffix_len; ++i)
+        keystrokes.push_back(Key::Delete);
+    for (auto& c : candidate.first)
+        keystrokes.push_back(c);
 }
 
 void InsertCompleter::update()

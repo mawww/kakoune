@@ -879,12 +879,14 @@ public:
             insert('\t');
         else if (key == ctrl('n'))
         {
-            m_completer.select(1);
+            last_insert().second.pop_back();
+            m_completer.select(1, last_insert().second);
             update_completions = false;
         }
         else if (key == ctrl('p'))
         {
-            m_completer.select(-1);
+            last_insert().second.pop_back();
+            m_completer.select(-1, last_insert().second);
             update_completions = false;
         }
         else if (key == ctrl('x'))

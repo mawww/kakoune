@@ -60,7 +60,7 @@ public:
     InsertCompleter& operator=(const InsertCompleter&) = delete;
     ~InsertCompleter();
 
-    void select(int offset);
+    void select(int offset, Vector<Key>& keystrokes);
     void update();
     void reset();
 
