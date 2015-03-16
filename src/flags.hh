@@ -28,10 +28,18 @@ Flags& operator|=(Flags& lhs, Flags rhs)
     return lhs;
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
-constexpr bool operator&(Flags lhs, Flags rhs)
+template<typename Flags>
+struct TestableFlags
 {
-    return ((UnderlyingType<Flags>) lhs & (UnderlyingType<Flags>) rhs) == (UnderlyingType<Flags>)rhs;
+    Flags value;
+    constexpr operator bool() const { return (UnderlyingType<Flags>)value; }
+    constexpr operator Flags() const { return value; }
+};
+
+template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+constexpr TestableFlags<Flags> operator&(Flags lhs, Flags rhs)
+{
+    return { (Flags)((UnderlyingType<Flags>) lhs & (UnderlyingType<Flags>) rhs) };
 }
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
