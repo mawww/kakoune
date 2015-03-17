@@ -3,7 +3,6 @@
 
 #include "id_map.hh"
 #include "completion.hh"
-#include "unordered_map.hh"
 
 namespace Kakoune
 {
