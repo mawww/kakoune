@@ -96,6 +96,7 @@ FaceRegistry::FaceRegistry()
         { "PrimaryCursor", Face{ Colors::Black, Colors::White } },
         { "SecondaryCursor", Face{ Colors::Black, Colors::White } },
         { "LineNumbers", Face{ Colors::Default, Colors::Default } },
+        { "LineNumberAbsolute", Face{ Colors::Black, Colors::Blue } },
         { "MenuForeground", Face{ Colors::White, Colors::Blue } },
         { "MenuBackground", Face{ Colors::Blue, Colors::White } },
         { "Information", Face{ Colors::Black, Colors::Yellow } },
