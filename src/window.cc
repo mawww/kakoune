@@ -234,7 +234,7 @@ ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 }
 }
 
-CharCoord Window::display_position(ByteCoord coord)
+CharCoord Window::display_position(ByteCoord coord) const
 {
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
@@ -244,6 +244,13 @@ CharCoord Window::display_position(ByteCoord coord)
             return {l, find_display_column(line, buffer(), coord)};
         ++l;
     }
+    return { 0, 0 };
+}
+
+ByteCoord Window::buffer_coord(CharCoord coord) const
+{
+    if (0_line <= coord.line and coord.line < m_display_buffer.lines().size())
+        return find_buffer_coord(m_display_buffer.lines()[(int)coord.line], buffer(), coord.column);
     return { 0, 0 };
 }
 

@@ -31,7 +31,8 @@ public:
     void scroll(CharCount offset);
     void update_display_buffer(const Context& context);
 
-    CharCoord display_position(ByteCoord coord);
+    CharCoord display_position(ByteCoord coord) const;
+    ByteCoord buffer_coord(CharCoord coord) const;
 
     Highlighter& highlighters() { return m_highlighters; }
 
