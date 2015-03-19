@@ -594,11 +594,12 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
     }
 }
 
-template<bool relative>
-void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
+template<bool relative, bool hl_cursor_line>
+void show_line_numbers(const Context& context, HighlightFlags flags,
+                       DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = get_face("LineNumbers");
-    const Face face_absolute = get_face("LineNumberAbsolute");
+    const Face face_absolute = get_face("LineNumberCursor");
     LineCount last_line = context.buffer().line_count();
     int digit_count = 0;
     for (LineCount c = last_line; c > 0; c /= 10)
@@ -609,41 +610,40 @@ void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuff
     int main_selection = (int)context.selections().main().cursor().line + 1;
     for (auto& line : display_buffer.lines())
     {
-        int current_line = (int)line.range().first.line + 1;
+        const int current_line = (int)line.range().first.line + 1;
+        const bool is_cursor_line = main_selection == current_line;
+        const int line_to_format = (relative and not is_cursor_line) ?
+                                   current_line - main_selection : current_line;
         char buffer[16];
-        if (relative)
-        {
-            if (main_selection == current_line)
-            {
-                snprintf(buffer, 16, format, current_line);
-                DisplayAtom atom{buffer};
-                atom.face = face_absolute;
-                line.insert(line.begin(), std::move(atom));
-            }
-            else {
-                snprintf(buffer, 16, format, current_line - main_selection);
-                DisplayAtom atom{buffer};
-                atom.face = face;
-                line.insert(line.begin(), std::move(atom));
-            }
-        }
-        else {
-            snprintf(buffer, 16, format, current_line);
-            DisplayAtom atom{buffer};
-            (main_selection == current_line) ? atom.face = face_absolute
-                                                : atom.face = face;
-            line.insert(line.begin(), std::move(atom));
-        }
+        snprintf(buffer, 16, format, line_to_format);
+        DisplayAtom atom{buffer};
+        atom.face = (hl_cursor_line and is_cursor_line) ? face_absolute : face;
+        line.insert(line.begin(), std::move(atom));
     }
 }
 
 HighlighterAndId number_lines_factory(HighlighterParameters params)
 {
-    if (params.size() > 1)
-        throw runtime_error("wrong parameter count");
+    static const ParameterDesc param_desc{
+        { { "relative", { false, "" } },
+          { "hlcursor", { false, "" } } },
+        ParameterDesc::Flags::None, 0, 0
+    };
+    ParametersParser parser(params, param_desc);
 
-    return (params.size() == 1 && params[0] == "-relative") ? HighlighterAndId("number_lines_relative", make_simple_highlighter(show_line_numbers<true>))
-                                                               : HighlighterAndId("number_lines", make_simple_highlighter(show_line_numbers<false>));
+    constexpr struct {
+        StringView name;
+        void (*func)(const Context&, HighlightFlags, DisplayBuffer&, BufferRange);
+    } funcs[] = {
+        { "number_lines", show_line_numbers<false, false> },
+        { "number_lines", show_line_numbers<false, true> },
+        { "number_lines_relative", show_line_numbers<true, false> },
+        { "number_lines_relative", show_line_numbers<true, true> },
+    };
+    const int index = (parser.get_switch("relative") ? 1 : 0) * 2 +
+                      (parser.get_switch("hlcursor") ? 1 : 0);
+
+    return {funcs[index].name.str(), make_simple_highlighter(funcs[index].func)};
 }
 
 void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
@@ -1239,7 +1239,7 @@ void register_highlighters()
         "number_lines",
         { number_lines_factory,
           "Display line numbers \n"
-          "Parameters: -relative" } });
+          "Parameters: -relative, -hlcursor\n" } });
     registry.append({
         "show_matching",
         { simple_factory("show_matching", show_matching_char),

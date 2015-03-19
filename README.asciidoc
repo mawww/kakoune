@@ -637,8 +637,9 @@ general highlighters are:
        <option_name>.
  * +show_matching+: highlight matching char of the character under the selections
        cursor using +MatchingChar+ face.
- * +number_lines <-relative>+: show line numbers. The -relative switch will enable relative
-       line numbers.
+ * +number_lines <-relative> <-hlcursor>+: show line numbers. The -relative switch
+       will show line numbers to main cursor line, the -hlcursor switch will
+       highlight the cursor line with a separate face..
  * +fill <face>+: fill using given face, mostly useful with the +regions+ highlighter
        (see below)
 
