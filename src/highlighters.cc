@@ -594,24 +594,56 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
     }
 }
 
+template<bool relative>
 void show_line_numbers(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
+    const Face face = get_face("LineNumbers");
+    const Face face_absolute = get_face("LineNumberAbsolute");
     LineCount last_line = context.buffer().line_count();
     int digit_count = 0;
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
 
     char format[] = "%?d│";
-    format[1] = '0' + digit_count;
-    const Face face = get_face("LineNumbers");
+    format[1] = '0' + digit_count + (relative ? 1 : 0);
+    int main_selection = (int)context.selections().main().cursor().line + 1;
     for (auto& line : display_buffer.lines())
     {
+        int current_line = (int)line.range().first.line + 1;
         char buffer[16];
-        snprintf(buffer, 16, format, (int)line.range().first.line + 1);
-        DisplayAtom atom{buffer};
-        atom.face = face;
-        line.insert(line.begin(), std::move(atom));
+        if (relative)
+        {
+            if (main_selection == current_line)
+            {
+                snprintf(buffer, 16, format, current_line);
+                DisplayAtom atom{buffer};
+                atom.face = face_absolute;
+                line.insert(line.begin(), std::move(atom));
+            }
+            else {
+                snprintf(buffer, 16, format, current_line - main_selection);
+                DisplayAtom atom{buffer};
+                atom.face = face;
+                line.insert(line.begin(), std::move(atom));
+            }
+        }
+        else {
+            snprintf(buffer, 16, format, current_line);
+            DisplayAtom atom{buffer};
+            (main_selection == current_line) ? atom.face = face_absolute
+                                                : atom.face = face;
+            line.insert(line.begin(), std::move(atom));
+        }
     }
+}
+
+HighlighterAndId number_lines_factory(HighlighterParameters params)
+{
+    if (params.size() > 1)
+        throw runtime_error("wrong parameter count");
+
+    return (params.size() == 1 && params[0] == "-relative") ? HighlighterAndId("number_lines_relative", make_simple_highlighter(show_line_numbers<true>))
+                                                               : HighlighterAndId("number_lines", make_simple_highlighter(show_line_numbers<false>));
 }
 
 void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
@@ -1205,8 +1237,9 @@ void register_highlighters()
 
     registry.append({
         "number_lines",
-        { simple_factory("number_lines", show_line_numbers),
-          "Display line numbers" } });
+        { number_lines_factory,
+          "Display line numbers \n"
+          "Parameters: -relative" } });
     registry.append({
         "show_matching",
         { simple_factory("show_matching", show_matching_char),
