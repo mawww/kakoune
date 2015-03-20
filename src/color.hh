@@ -36,13 +36,13 @@ struct Color
         : color{Colors::RGB}, r{r}, g{g}, b{b} {}
 };
 
-inline bool operator==(Color lhs, Color rhs)
+constexpr bool operator==(Color lhs, Color rhs)
 {
     return lhs.color == rhs.color and
            lhs.r == rhs.r and lhs.g == rhs.g and lhs.b == rhs.b;
 }
 
-inline bool operator!=(Color lhs, Color rhs)
+constexpr bool operator!=(Color lhs, Color rhs)
 {
     return not (lhs == rhs);
 }
