@@ -25,19 +25,19 @@ struct Face
     Color bg;
     Attribute attributes;
 
-    Face(Color fg = Colors::Default, Color bg = Colors::Default,
+    constexpr Face(Color fg = Colors::Default, Color bg = Colors::Default,
          Attribute attributes = Attribute::Normal)
       : fg{fg}, bg{bg}, attributes{attributes} {}
 };
 
-inline bool operator==(const Face& lhs, const Face& rhs)
+constexpr bool operator==(const Face& lhs, const Face& rhs)
 {
     return lhs.fg == rhs.fg and
            lhs.bg == rhs.bg and
            lhs.attributes == rhs.attributes;
 }
 
-inline bool operator!=(const Face& lhs, const Face& rhs)
+constexpr bool operator!=(const Face& lhs, const Face& rhs)
 {
     return not (lhs == rhs);
 }
