@@ -30,9 +30,9 @@ struct Color
     unsigned char g;
     unsigned char b;
 
-    Color() : Color{Colors::Default} {}
-    Color(Colors c) : color{c}, r{0}, g{0}, b{0} {}
-    Color(unsigned char r, unsigned char g, unsigned char b)
+    constexpr Color() : Color{Colors::Default} {}
+    constexpr Color(Colors c) : color{c}, r{0}, g{0}, b{0} {}
+    constexpr Color(unsigned char r, unsigned char g, unsigned char b)
         : color{Colors::RGB}, r{r}, g{g}, b{b} {}
 };
 
