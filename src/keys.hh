@@ -5,6 +5,7 @@
 #include "flags.hh"
 #include "hash.hh"
 #include "vector.hh"
+#include "coord.hh"
 
 namespace Kakoune
 {
@@ -16,7 +17,11 @@ struct Key
         None    = 0,
         Control = 1 << 0,
         Alt     = 1 << 1,
-        ControlAlt = Control | Alt
+        ControlAlt = Control | Alt,
+
+        MousePress   = 1 << 2,
+        MouseRelease = 1 << 3,
+        MousePos     = 1 << 4,
     };
     enum NamedKey : Codepoint
     {
@@ -62,6 +67,8 @@ struct Key
     constexpr bool operator==(Key other) const { return val() == other.val(); }
     constexpr bool operator!=(Key other) const { return val() != other.val(); }
     constexpr bool operator<(Key other) const { return val() < other.val(); }
+
+    constexpr CharCoord mouse_coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
 };
 
 template<> struct WithBitOps<Key::Modifiers> : std::true_type {};
@@ -77,6 +84,12 @@ String  key_to_str(Key key);
 constexpr Key alt(Codepoint key) { return { Key::Modifiers::Alt, key }; }
 constexpr Key ctrl(Codepoint key) { return { Key::Modifiers::Control, key }; }
 constexpr Key ctrlalt(Codepoint key) { return { Key::Modifiers::ControlAlt, key }; }
+
+constexpr Codepoint encode_mouse_coord(CharCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
+
+constexpr Key mouse_press(CharCoord pos) { return { Key::Modifiers::MousePress, encode_mouse_coord(pos) }; }
+constexpr Key mouse_release(CharCoord pos) { return { Key::Modifiers::MouseRelease, encode_mouse_coord(pos) }; }
+constexpr Key mouse_pos(CharCoord pos) { return { Key::Modifiers::MousePos, encode_mouse_coord(pos) }; }
 
 inline size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 

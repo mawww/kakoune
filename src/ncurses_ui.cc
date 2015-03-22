@@ -260,6 +260,10 @@ NCursesUI::NCursesUI()
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, on_sigint);
 
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+    mouseinterval(0);
+    // force enable report mouse position
+    printf("\033[?1002h");
     update_dimensions();
 
     wrefresh(stdscr);
@@ -267,6 +271,7 @@ NCursesUI::NCursesUI()
 
 NCursesUI::~NCursesUI()
 {
+    printf("\033[?1002l");
     endwin();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGINT, SIG_DFL);
@@ -442,6 +447,19 @@ Key NCursesUI::get_key()
     check_resize();
 
     const int c = getch();
+
+    if (c == KEY_MOUSE)
+    {
+        MEVENT ev;
+        if (getmouse(&ev) == OK)
+        {
+            CharCoord pos{ ev.y, ev.x };
+            if ((ev.bstate & BUTTON1_PRESSED) == BUTTON1_PRESSED) return mouse_press(pos);
+            if ((ev.bstate & BUTTON1_RELEASED) == BUTTON1_RELEASED) return mouse_release(pos);
+            else return mouse_pos(pos);
+        }
+    }
+
     if (c > 0 and c < 27)
     {
         if (c == CTRL('l'))

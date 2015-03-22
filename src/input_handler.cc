@@ -49,6 +49,45 @@ namespace InputModes
 static constexpr std::chrono::milliseconds idle_timeout{50};
 static constexpr std::chrono::milliseconds fs_check_timeout{500};
 
+struct MouseHandler
+{
+    bool handle_key(Key key, Context& context)
+    {
+        if (not context.has_window())
+            return false;
+
+        if (key.modifiers == Key::Modifiers::MousePress)
+        {
+            m_dragging = true;
+            m_anchor = context.window().buffer_coord(key.mouse_coord());
+            context.selections() = SelectionList{ context.buffer(), m_anchor };
+            return true;
+        }
+        if (key.modifiers == Key::Modifiers::MouseRelease)
+        {
+            if (not m_dragging)
+                return true;
+            m_dragging = false;
+            auto cursor = context.window().buffer_coord(key.mouse_coord());
+            context.selections() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
+            return true;
+        }
+        if (key.modifiers == Key::Modifiers::MousePos)
+        {
+            if (not m_dragging)
+                return true;
+            auto cursor = context.window().buffer_coord(key.mouse_coord());
+            context.selections() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
+            return true;
+        }
+        return false;
+    }
+
+private:
+    bool m_dragging = false;
+    ByteCoord m_anchor;
+};
+
 class Normal : public InputMode
 {
 public:
@@ -87,6 +126,9 @@ public:
 
     void on_key(Key key) override
     {
+        if (m_mouse_handler.handle_key(key, context()))
+            return;
+
         if (m_waiting_for_reg)
         {
             if (key.modifiers == Key::Modifiers::None)
@@ -139,6 +181,7 @@ public:
             }
             m_params = { 0, '"' };
         }
+
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
     }
@@ -167,6 +210,7 @@ private:
     bool m_waiting_for_reg = false;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
+    MouseHandler m_mouse_handler;
 };
 
 template<WordType word_type>
@@ -1109,7 +1153,8 @@ void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
 
 static bool is_valid(Key key)
 {
-    return key != Key::Invalid and key.key <= 0x10FFFF;
+    return key != Key::Invalid and
+        ((key.modifiers & ~Key::Modifiers::ControlAlt) or key.key <= 0x10FFFF);
 }
 
 void InputHandler::handle_key(Key key)
