@@ -286,7 +286,7 @@ public:
             to_next_word_end<Word>(m_cursor_pos, m_line);
         else if (key == ctrlalt('e'))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
-        else
+        else if (key.modifiers == Key::Modifiers::None)
         {
             m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(key.key)
                    + m_line.substr(m_cursor_pos);
