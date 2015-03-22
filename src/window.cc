@@ -249,9 +249,13 @@ CharCoord Window::display_position(ByteCoord coord) const
 
 ByteCoord Window::buffer_coord(CharCoord coord) const
 {
-    if (0_line <= coord.line and coord.line < m_display_buffer.lines().size())
-        return find_buffer_coord(m_display_buffer.lines()[(int)coord.line], buffer(), coord.column);
-    return { 0, 0 };
+    if (coord <= 0_line)
+        coord = {0,0};
+    if ((int)coord.line >= m_display_buffer.lines().size())
+        coord = CharCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
+
+    return find_buffer_coord(m_display_buffer.lines()[(int)coord.line],
+                             buffer(), coord.column);
 }
 
 ByteCoord Window::offset_coord(ByteCoord coord, CharCount offset)
