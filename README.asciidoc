@@ -1,5 +1,5 @@
-image:./doc/kakoune_logo.svg[height=50] Kakoune
-===============================================
+image:https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg[K,30,30] Kakoune image:https://travis-ci.org/mawww/kakoune.svg[link="https://travis-ci.org/mawww/kakoune"]
+=============================================================================================================================================================================
 
 TL;DR
 -----
@@ -17,8 +17,6 @@ make userconfig
 
 See http://github.com/mawww/golf for kakoune solutions to vimgolf challenges,
 regularly beating the best vim solution.
-
-image::https://travis-ci.org/mawww/kakoune.svg[link="https://travis-ci.org/mawww/kakoune"]
 
 Introduction:
 -------------
