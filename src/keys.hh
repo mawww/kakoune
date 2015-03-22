@@ -22,6 +22,8 @@ struct Key
         MousePress   = 1 << 2,
         MouseRelease = 1 << 3,
         MousePos     = 1 << 4,
+        MouseWheelDown = 1 << 5,
+        MouseWheelUp = 1 << 6,
     };
     enum NamedKey : Codepoint
     {
@@ -90,6 +92,8 @@ constexpr Codepoint encode_mouse_coord(CharCoord coord) { return (Codepoint)(((i
 constexpr Key mouse_press(CharCoord pos) { return { Key::Modifiers::MousePress, encode_mouse_coord(pos) }; }
 constexpr Key mouse_release(CharCoord pos) { return { Key::Modifiers::MouseRelease, encode_mouse_coord(pos) }; }
 constexpr Key mouse_pos(CharCoord pos) { return { Key::Modifiers::MousePos, encode_mouse_coord(pos) }; }
+constexpr Key mouse_wheel_down(CharCoord pos) { return { Key::Modifiers::MouseWheelDown, encode_mouse_coord(pos) }; }
+constexpr Key mouse_wheel_up(CharCoord pos) { return { Key::Modifiers::MouseWheelUp, encode_mouse_coord(pos) }; }
 
 inline size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 

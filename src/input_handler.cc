@@ -80,10 +80,47 @@ struct MouseHandler
             context.selections() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
             return true;
         }
+        if (key.modifiers == Key::Modifiers::MouseWheelDown)
+        {
+            wheel(context, 3);
+            return true;
+        }
+        if (key.modifiers == Key::Modifiers::MouseWheelUp)
+        {
+            wheel(context, -3);
+            return true;
+        }
         return false;
     }
 
 private:
+    void wheel(Context& context, LineCount offset)
+    {
+        Window& window = context.window();
+        Buffer& buffer = context.buffer();
+
+        CharCoord win_pos = window.position();
+        CharCoord win_dim = window.dimensions();
+
+        const CharCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
+        const CharCoord scrolloff =
+            std::min(context.options()["scrolloff"].get<CharCoord>(), max_offset);
+
+        const LineCount line_count = buffer.line_count();
+        win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
+
+        SelectionList& selections = context.selections();
+        const ByteCoord cursor = selections.main().cursor();
+
+        auto clamp_line = [&](LineCount line) { return clamp(line, 0_line, line_count-1); };
+        auto min_coord = buffer.offset_coord(clamp_line(win_pos.line + scrolloff.line), win_pos.column);
+        auto max_coord = buffer.offset_coord(clamp_line(win_pos.line + win_dim.line - scrolloff.line), win_pos.column);
+
+        selections = SelectionList{buffer, clamp(cursor, min_coord, max_coord)};
+
+        window.set_position(win_pos);
+    }
+
     bool m_dragging = false;
     ByteCoord m_anchor;
 };

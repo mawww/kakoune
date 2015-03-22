@@ -456,6 +456,8 @@ Key NCursesUI::get_key()
             CharCoord pos{ ev.y, ev.x };
             if ((ev.bstate & BUTTON1_PRESSED) == BUTTON1_PRESSED) return mouse_press(pos);
             if ((ev.bstate & BUTTON1_RELEASED) == BUTTON1_RELEASED) return mouse_release(pos);
+            if ((ev.bstate & BUTTON2_PRESSED) == BUTTON2_PRESSED) return mouse_wheel_down(pos);
+            if ((ev.bstate & BUTTON4_PRESSED) == BUTTON4_PRESSED) return mouse_wheel_up(pos);
             else return mouse_pos(pos);
         }
     }
