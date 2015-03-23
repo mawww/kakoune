@@ -1017,7 +1017,7 @@ public:
         auto end = std::lower_bound(begin, regions.end(), display_range.second,
                                     [](const Region& r, ByteCoord c) { return r.begin < c; });
         auto correct = [&](ByteCoord c) -> ByteCoord {
-            if (buffer[c.line].length() == c.column)
+            if (not buffer.is_end(c) and buffer[c.line].length() == c.column)
                 return {c.line+1, 0};
             return c;
         };
