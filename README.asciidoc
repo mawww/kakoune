@@ -104,6 +104,13 @@ a symbolic link to the $PREFIX/share/kak/rc directory.
 ln -s /usr/share/kak/rc ~/.config/kak/autoload
 ----------------------------------------------
 
+Homebrew (OSX)
+~~~~~~~~~~~~~~
+
+-----------------------------------------------------------------------------------------------
+brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/homebrew/contrib/kakoune.rb
+-----------------------------------------------------------------------------------------------
+
 Running
 -------
 
