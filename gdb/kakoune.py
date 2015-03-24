@@ -62,8 +62,7 @@ class String:
         self.val = val
 
     def to_string(self):
-        std_str = gdb.lookup_type("std::string")
-        return self.val.cast(std_str)
+        return "%s" % (self.val['m_data'])
 
 class StringView:
     """ Print a StringView"""
