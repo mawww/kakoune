@@ -243,17 +243,20 @@ void create_local_client(StringView init_command)
         }
     };
 
-    if (not isatty(1))
-        throw runtime_error("stdout is not a tty");
-
-    if (not isatty(0))
+    if (std::is_same<UI, NCursesUI>::value)
     {
-        // move stdin to another fd, and restore tty as stdin
-        int fd = dup(0);
-        int tty = open("/dev/tty", O_RDONLY);
-        dup2(tty, 0);
-        close(tty);
-        create_fifo_buffer("*stdin*", fd);
+        if (not isatty(1))
+            throw runtime_error("stdout is not a tty");
+
+        if (not isatty(0))
+        {
+            // move stdin to another fd, and restore tty as stdin
+            int fd = dup(0);
+            int tty = open("/dev/tty", O_RDONLY);
+            dup2(tty, 0);
+            close(tty);
+            create_fifo_buffer("*stdin*", fd);
+        }
     }
 
     static Client* client = ClientManager::instance().create_client(
