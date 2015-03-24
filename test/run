@@ -41,7 +41,7 @@ main() {
         write out
         quit!
       "
-      ${test}/../src/kak out -n -e "$kak_commands"
+      ${test}/../src/kak out -n -u -e "$kak_commands"
       for expect in $test_files; do
         if cmp -s $test/$dir/$expect $expect; then
           echo "$indent$name" | colorize green normal

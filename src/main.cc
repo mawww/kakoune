@@ -227,15 +227,16 @@ void register_options()
                        UserInterface::Options());
 }
 
+template<typename UI>
 void create_local_client(StringView init_command)
 {
-    class LocalNCursesUI : public NCursesUI
+    struct LocalUI : UI
     {
-        ~LocalNCursesUI()
+        ~LocalUI()
         {
             if (not ClientManager::instance().empty() and fork())
             {
-                this->NCursesUI::~NCursesUI();
+                this->UI::~UI();
                 puts("detached from terminal\n");
                 exit(0);
             }
@@ -255,9 +256,8 @@ void create_local_client(StringView init_command)
         create_fifo_buffer("*stdin*", fd);
     }
 
-    UserInterface* ui = new LocalNCursesUI{};
     static Client* client = ClientManager::instance().create_client(
-        std::unique_ptr<UserInterface>{ui}, get_env_vars(), init_command);
+        make_unique<LocalUI>(), get_env_vars(), init_command);
     signal(SIGHUP, [](int) {
         if (client)
             ClientManager::instance().remove_client(*client);
@@ -313,8 +313,28 @@ int run_client(StringView session, StringView init_command)
     return 0;
 }
 
+struct DummyUI : UserInterface
+{
+public:
+    void menu_show(ConstArrayView<String>, CharCoord, Face, Face, MenuStyle) override {}
+    void menu_select(int) override {}
+    void menu_hide() override {}
+
+    void info_show(StringView, StringView, CharCoord, Face, InfoStyle) override {}
+    void info_hide() override {}
+
+    void draw(const DisplayBuffer&, const DisplayLine&, const DisplayLine&) override {}
+    CharCoord dimensions() override { return {24,80}; }
+    bool is_key_available() override { return false; }
+    Key  get_key() override { return Key::Invalid; }
+    void refresh() override {}
+    void set_input_callback(InputCallback) override {}
+    void set_ui_options(const Options&) override {}
+};
+
 int run_server(StringView session, StringView init_command,
-               bool ignore_kakrc, bool daemon, ConstArrayView<StringView> files)
+               bool ignore_kakrc, bool daemon, bool dummy_ui,
+               ConstArrayView<StringView> files)
 {
     static bool terminate = false;
     if (daemon)
@@ -396,7 +416,12 @@ int run_server(StringView session, StringView init_command,
         new Buffer("*scratch*", Buffer::Flags::None);
 
     if (not daemon)
-        create_local_client(init_command);
+    {
+        if (dummy_ui)
+            create_local_client<DummyUI>(init_command);
+        else
+            create_local_client<NCursesUI>(init_command);
+    }
 
     while (not terminate and (not client_manager.empty() or daemon))
     {
@@ -524,7 +549,8 @@ int main(int argc, char* argv[])
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true,  "just send stdin as commands to the given session" } },
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
-                   { "q", { false, "in filter mode, be quiet about errors applying keys" } } }
+                   { "q", { false, "in filter mode, be quiet about errors applying keys" } },
+                   { "u", { false, "use a dummy user interface, for testing purposes" } } }
     };
     try
     {
@@ -579,6 +605,7 @@ int main(int argc, char* argv[])
             return run_server(session, init_command,
                               (bool)parser.get_switch("n"),
                               (bool)parser.get_switch("d"),
+                              (bool)parser.get_switch("u"),
                               files);
         }
     }
