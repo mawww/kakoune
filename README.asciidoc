@@ -111,6 +111,15 @@ Homebrew (OSX)
 brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/homebrew/contrib/kakoune.rb
 -----------------------------------------------------------------------------------------------
 
+Fedora 21/22/Rawhide
+~~~~~~~~~~~~~~~~~~~~
+
+Use created copr repository https://copr.fedoraproject.org/coprs/jkonecny/kakoune/
+---------------------------------
+dnf copr enable jkonecny/kakoune
+dnf install kakoune
+---------------------------------
+
 Running
 -------
 
