@@ -8,8 +8,6 @@
 
   - right-to-left, bidirectional text
 
-* Mouse support
-
 * Detect crash recovery files when restarting
 
 * improve highlighters
