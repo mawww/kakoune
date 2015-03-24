@@ -127,8 +127,8 @@ Just running *kak* launch a new kak session with a client on local terminal.
 
 At startup, if +-n+ is not specified, Kakoune will try to source the file
 ../share/kak/kakrc relative to the kak binary. This kak file will then try
-to source $XDG_CONFIG_HOME/kak/kakrc (with $XDG_CONFIG_HOME defaulting to
-$HOME/.config), and any files in $XDG_CONFIG_HOME/kak/autoload.
+to source any files in $XDG_CONFIG_HOME/kak/autoload (with $XDG_CONFIG_HOME
+defaulting to $HOME/.config), and finally $XDG_CONFIG_HOME/kak/kakrc.
 
 The common pattern is to add links to $XDG_CONFIG_HOME/kak/autoload to the
 scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
