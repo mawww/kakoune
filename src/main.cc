@@ -623,12 +623,12 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::exception& error)
     {
-        on_assert_failed(("uncaught exception:\n"_str + error.what()).c_str());
+        on_assert_failed(("uncaught exception ("_str + typeid(error).name() + "):\n" + error.what()).c_str());
         return -1;
     }
     catch (std::exception& error)
     {
-        on_assert_failed(("uncaught exception:\n"_str + error.what()).c_str());
+        on_assert_failed(("uncaught exception ("_str + typeid(error).name() + "):\n" + error.what()).c_str());
         return -1;
     }
     catch (...)
