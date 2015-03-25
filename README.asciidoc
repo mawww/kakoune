@@ -160,41 +160,41 @@ scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
 Basic Movement
 --------------
 
- * _h_: select the character on the right of selection end
- * _j_: select the character below the selection end
- * _k_: select the character above the selection end
- * _l_: select the character on the left of selection end
+ * +h+: select the character on the right of selection end
+ * +j+: select the character below the selection end
+ * +k+: select the character above the selection end
+ * +l+: select the character on the left of selection end
 
- * _w_: select the word and following whitespaces  on the right of selection end
- * _b_: select preceding whitespaces and the word on the left of selection end
- * _e_: select preceding whitespaces and the word on the right of selection end
- * _alt-[wbe]_: same as [wbe] but select WORD instead of word
+ * +w+: select the word and following whitespaces  on the right of selection end
+ * +b+: select preceding whitespaces and the word on the left of selection end
+ * +e+: select preceding whitespaces and the word on the right of selection end
+ * +alt-[wbe]+: same as [wbe] but select WORD instead of word
 
- * _x_: select line on which selection end lies (or next line when end lies on
+ * +x+: select line on which selection end lies (or next line when end lies on
         an end-of-line)
- * _alt-x_: expand selections to contain full lines (including end-of-lines)
- * _alt-X_: trim selections to only contain full lines (not including last
+ * +alt-x+: expand selections to contain full lines (including end-of-lines)
+ * +alt-X+: trim selections to only contain full lines (not including last
             end-of-line)
 
- * _%_: select whole buffer
+ * +%+: select whole buffer
 
- * _alt-H_: select to line begin
- * _alt-L_: select to line end
+ * +alt-H+: select to line begin
+ * +alt-L+: select to line end
 
- * _/_: search (select next match)
- * _?_: search (extend to next match)
- * _n_: select next match
- * _N_: add a new selection with next match
- * _alt-n_: select previous match
- * _alt-N_: add a new selection with previous match
+ * +/+: search (select next match)
+ * +?+: search (extend to next match)
+ * +n+: select next match
+ * +N+: add a new selection with next match
+ * +alt-n+: select previous match
+ * +alt-N+: add a new selection with previous match
 
- * _pageup_: scroll up
- * _pagedown_: scroll down
+ * +pageup+: scroll up
+ * +pagedown+: scroll down
 
- * _alt-r_: rotate selections (the main selection becomes the next one)
+ * +alt-r+: rotate selections (the main selection becomes the next one)
 
- * _;_: reduce selections to their cursor
- * _alt-;_: flip the selections direction
+ * +;+: reduce selections to their cursor
+ * +alt-;+: flip the selections direction
 
 
 A word is a sequence of alphanumeric characters or underscore, a WORD is a
@@ -218,66 +218,66 @@ the right of selection end.
 Changes
 -------
 
- * _i_: insert before current selection
- * _a_: insert after current selection
- * _d_: yank and delete current selection
- * _c_: yank and delete current selection and insert
- * _._: repeat last insert mode change (_i_, _a_, or _c_, including
+ * +i+: insert before current selection
+ * +a+: insert after current selection
+ * +d+: yank and delete current selection
+ * +c+: yank and delete current selection and insert
+ * +.+: repeat last insert mode change (_i_, _a_, or _c_, including
         the inserted text)
 
- * _I_: insert at current selection begin line start
- * _A_: insert at current selection end line end
- * _o_: insert in a new line below current selection end
- * _O_: insert in a new line above current selection begin
+ * +I+: insert at current selection begin line start
+ * +A+: insert at current selection end line end
+ * +o+: insert in a new line below current selection end
+ * +O+: insert in a new line above current selection begin
 
- * _y_: yank selections
- * _p_: paste after current selection end
- * _P_: paste before current selection begin
- * _alt-p_: paste all after current selection end, and
+ * +y+: yank selections
+ * +p+: paste after current selection end
+ * +P+: paste before current selection begin
+ * +alt-p+: paste all after current selection end, and
             select each pasted string.
- * _alt-P_: paste all before current selection begin, and
+ * +alt-P+: paste all before current selection begin, and
             select each pasted string.
- * _R_: replace current selection with yanked text
+ * +R+: replace current selection with yanked text
 
- * _r_: replace each character with the next entered one
+ * +r+: replace each character with the next entered one
 
- * _alt-j_: join selected lines
- * _alt-J_: join selected lines and select spaces inserted
+ * +alt-j+: join selected lines
+ * +alt-J+: join selected lines and select spaces inserted
             in place of line breaks
 
- * _>_: indent selected lines
- * _<_: deindent selected lines
- * _alt->_: indent selected lines, including empty lines
- * _<_: deindent selected lines
- * _alt-<_: deindent selected lines, do not remove incomplete
+ * +>+: indent selected lines
+ * +<+: deindent selected lines
+ * +alt->+: indent selected lines, including empty lines
+ * +<+: deindent selected lines
+ * +alt-<+: deindent selected lines, do not remove incomplete
         indent (3 leading spaces when indent is 4)
 
- * _|_: pipe each selections through the given external filter program
+ * +|+: pipe each selections through the given external filter program
         and replace the selection with it's output.
- * _alt-|_: pipe each selections through the given external filter program
+ * +alt-|+: pipe each selections through the given external filter program
         and ignore its output
 
- * _!_: insert command output before selection
- * _a-!_: append command output after selection
+ * +!+: insert command output before selection
+ * +a-!+: append command output after selection
 
- * _u_: undo last change
- * _U_: redo last change
+ * +u+: undo last change
+ * +U+: redo last change
 
- * _&_: align selection, align the cursor of selections by inserting
+ * +&+: align selection, align the cursor of selections by inserting
         spaces before the first character of the selection
- * _alt-&_: copy indent, copy the indentation of the main selection
+ * +alt-&+: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
 
- * _`_: to lower case
- * _~_: to upper case
- * _alt-`_: swap case
+ * +`+: to lower case
+ * +~+: to upper case
+ * +alt-`+: swap case
 
- * _@_: convert tabs to spaces in current selections, uses the buffer
+ * +@+: convert tabs to spaces in current selections, uses the buffer
         tabstop option or the count parameter for tabstop.
- * _alt-@_: convert spaces to tabs in current selections, uses the buffer
+ * +alt-@+: convert spaces to tabs in current selections, uses the buffer
             tabstop option or the count parameter for tabstop.
 
- * _alt-R_: rotate selections content, if specified, the count groups
+ * +alt-R+: rotate selections content, if specified, the count groups
             selections, so +3<a-R>+ rotate (1, 2, 3) and (3, 4, 6)
             independently.
 
@@ -286,20 +286,20 @@ Goto Commands
 
 Commands begining with g are used to goto certain position and or buffer:
 
- * _gh_: select to line begin
- * _gl_: select to line end
+ * +gh+: select to line begin
+ * +gl+: select to line end
 
- * _gg_, _gk_: go to the first line
- * _gj_: go to the last line
+ * +gg+, _gk_: go to the first line
+ * +gj+: go to the last line
 
- * _gt_: go to the first displayed line
- * _gc_: go to the middle displayed line
- * _gb_: go to the last displayed line
+ * +gt+: go to the first displayed line
+ * +gc+: go to the middle displayed line
+ * +gb+: go to the last displayed line
 
- * _ga_: go to the previous (alternate) buffer
- * _gf_: open the file whose name is selected
+ * +ga+: go to the previous (alternate) buffer
+ * +gf+: open the file whose name is selected
 
- * _g._: go to last buffer modifiction position
+ * +g.+: go to last buffer modifiction position
 
 View commands
 -------------
@@ -307,13 +307,13 @@ View commands
 Some commands, all begining with v permit to manipulate the current
 view.
 
- * _vv_ or _vc_: center the main selection in the window
- * _vt_: scroll to put the main selection on the top line of the window
- * _vb_: scroll to put the main selection on the bottom line of the window
- * _vh_: scroll the window count columns left
- * _vj_: scroll the window count line downward
- * _vk_: scroll the window count line upward
- * _vl_: scroll the window count columns right
+ * +vv+ or _vc_: center the main selection in the window
+ * +vt+: scroll to put the main selection on the top line of the window
+ * +vb+: scroll to put the main selection on the bottom line of the window
+ * +vh+: scroll the window count columns left
+ * +vj+: scroll the window count line downward
+ * +vk+: scroll the window count line upward
+ * +vl+: scroll the window count columns right
 
 Jump list
 ---------
@@ -322,9 +322,9 @@ Some commands, like the goto commands, buffer switch or search commands,
 push the previous selections to the client's jump list. It is possible
 to forward or backward in the jump list using:
 
- * _control-i_: Jump forward
- * _control-o_: Jump backward
- * _control-s_: save current selections
+ * +control-i+: Jump forward
+ * +control-o+: Jump backward
+ * +control-s+: save current selections
 
 Multi Selection
 ---------------
@@ -367,32 +367,32 @@ Object Selection
 
 Some keys allow you to select a text object:
 
- * _alt-a_: selects the whole object
- * _alt-i_: selects the inner object, that is the object excluding it's surrounder.
+ * +alt-a+: selects the whole object
+ * +alt-i+: selects the inner object, that is the object excluding it's surrounder.
             for example, for a quoted string, this will not select the quote, and
             for a word this will not select trailing spaces.
- * _[_: selects to object start
- * _]_: selects to object end
- * _{_: extends selections to object start
- * _}_: extends selections to object end
+ * +[+: selects to object start
+ * +]+: selects to object end
+ * +{+: extends selections to object start
+ * +}+: extends selections to object end
 
 After this key, you need to enter a second key in order to specify which
 object you want.
 
- * _b_, _(_ or _)_: select the enclosing parenthesis
- * _B_, _{_ or _}_: select the enclosing {} block
- * _r_, _[_ or _]_: select the enclosing [] block
- * _a_, _<_ or _>_: select the enclosing <> block
- * _"_: select the enclosing double quoted string
- * _'_: select the enclosing single quoted string
- * _`_: select the enclosing grave quoted string
- * _w_: select the whole word
- * _W_: select the whole WORD
- * _s_: select the sentence
- * _p_: select the paragraph
- * _␣_: select the whitespaces
- * _i_: select the current indentation block
- * _n_: select the number
+ * +b+, _(_ or _)_: select the enclosing parenthesis
+ * +B+, _{_ or _}_: select the enclosing {} block
+ * +r+, _[_ or _]_: select the enclosing [] block
+ * +a+, _<_ or _>_: select the enclosing <> block
+ * +"+: select the enclosing double quoted string
+ * +'+: select the enclosing single quoted string
+ * +`+: select the enclosing grave quoted string
+ * +w+: select the whole word
+ * +W+: select the whole WORD
+ * +s+: select the sentence
+ * +p+: select the paragraph
+ * +␣+: select the whitespaces
+ * +i+: select the current indentation block
+ * +n+: select the number
 
 For nestable objects, a count can be used in order to specify which surrounding
 level to select.
