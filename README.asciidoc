@@ -204,7 +204,7 @@ Appending
 ---------
 
 for most selection commands, using shift permits to extend current selection
-instead of replacing it. for example, _wWW_ selects 3 consecutive words
+instead of replacing it. for example, +wWW+ selects 3 consecutive words
 
 Using Counts
 ------------
@@ -212,7 +212,7 @@ Using Counts
 Most selection commands also support counts, which are entered before the
 command itself.
 
-for example, _3W_ selects 3 consecutive words and _3w_ select the third word on
+for example, +3W+ selects 3 consecutive words and +3w+ select the third word on
 the right of selection end.
 
 Changes
@@ -222,7 +222,7 @@ Changes
  * +a+: insert after current selection
  * +d+: yank and delete current selection
  * +c+: yank and delete current selection and insert
- * +.+: repeat last insert mode change (_i_, _a_, or _c_, including
+ * +.+: repeat last insert mode change (+i+, +a+, or +c+, including
         the inserted text)
 
  * +I+: insert at current selection begin line start
@@ -289,7 +289,7 @@ Commands begining with g are used to goto certain position and or buffer:
  * +gh+: select to line begin
  * +gl+: select to line end
 
- * +gg+, _gk_: go to the first line
+ * +gg+, +gk+: go to the first line
  * +gj+: go to the last line
 
  * +gt+: go to the first displayed line
@@ -307,7 +307,7 @@ View commands
 Some commands, all begining with v permit to manipulate the current
 view.
 
- * +vv+ or _vc_: center the main selection in the window
+ * +vv+ or +vc+: center the main selection in the window
  * +vt+: scroll to put the main selection on the top line of the window
  * +vb+: scroll to put the main selection on the bottom line of the window
  * +vh+: scroll the window count columns left
@@ -330,36 +330,36 @@ Multi Selection
 ---------------
 
 Kak was designed from the start to handle multiple selections.
-One way to get a multiselection is via the _s_ key.
+One way to get a multiselection is via the +s+ key.
 
 For example, to change all occurences of word 'roger' to word 'marcel'
 in a paragraph, here is what can be done:
 
-select the paragraph with enough _x_. press _s_ and enter roger then enter.
+select the paragraph with enough +x+. press +s+ and enter roger then enter.
 now paragraph selection was replaced with multiselection of each roger in
-the paragraph. press _c_ and marcel<esc> to replace rogers with marcels.
+the paragraph. press +c+ and marcel<esc> to replace rogers with marcels.
 
-A multiselection can also be obtained with _S_, which splits the current
+A multiselection can also be obtained with +S+, which splits the current
 selection according to the regex entered. To split a comma separated list,
-use _S_ then ', *'
+use +S+ then ', *'
 
-_s_ and _S_ share the search pattern with _/_, and hence entering an empty
++s+ and +S+ share the search pattern with +/+, and hence entering an empty
 pattern uses the last one.
 
-As a convenience, _alt-s_ allows you to split the current selections on
+As a convenience, +alt-s+ allows you to split the current selections on
 line boundaries.
 
-To clear multiple selections, use _space_. To keep only the nth selection
-use _n_ followed by _space_, in order to remove a selection, use _alt-space_.
+To clear multiple selections, use +space+. To keep only the nth selection
+use +n+ followed by +space+, in order to remove a selection, use +alt-space+.
 
-_alt-k_ allows you to enter a regex and keep only the selections that
-contains a match for this regex. using _alt-K_ you can keep the selections
++alt-k+ allows you to enter a regex and keep only the selections that
+contains a match for this regex. using +alt-K+ you can keep the selections
 not containing a match.
 
-_C_ copies the current selection to the next line (or lines if a count is given)
-_alt-C_ does the same to previous lines.
++C+ copies the current selection to the next line (or lines if a count is given)
++alt-C+ does the same to previous lines.
 
-_$_ allows you to enter a shell command and pipe each selections to it.
++$+ allows you to enter a shell command and pipe each selections to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
 
 Object Selection
@@ -379,10 +379,10 @@ Some keys allow you to select a text object:
 After this key, you need to enter a second key in order to specify which
 object you want.
 
- * +b+, _(_ or _)_: select the enclosing parenthesis
- * +B+, _{_ or _}_: select the enclosing {} block
- * +r+, _[_ or _]_: select the enclosing [] block
- * +a+, _<_ or _>_: select the enclosing <> block
+ * +b+, +(+ or +)+: select the enclosing parenthesis
+ * +B+, +{+ or +}+: select the enclosing {} block
+ * +r+, +[+ or +]+: select the enclosing [] block
+ * +a+, +<+ or +>+: select the enclosing <> block
  * +"+: select the enclosing double quoted string
  * +'+: select the enclosing single quoted string
  * +`+: select the enclosing grave quoted string
@@ -419,20 +419,20 @@ Macros
 
 Kakoune can record and replay a sequence of key press.
 
-When pressing the _Q_ key, followed by an alphabetic key for the macro name,
+When pressing the +Q+ key, followed by an alphabetic key for the macro name,
 Kakoune begins macro recording: every pressed keys will be added to the
-macro until the _Q_ key is pressed again.
+macro until the +Q+ key is pressed again.
 
-To replay a macro, use the _q_ key, followed by the macro name.
+To replay a macro, use the +q+ key, followed by the macro name.
 
 Search selection
 ----------------
 
-Using the _*_ key, you can set the search pattern to the current selection.
+Using the +*+ key, you can set the search pattern to the current selection.
 This tries to be intelligent. It will for example detect if current selection
 begins and/or end at word boundaries, and set the search pattern accordingly.
 
-with _alt-*_ you can set the search pattern to the current seletion without
+with +alt-*+ you can set the search pattern to the current seletion without
 Kakoune trying to be smart.
 
 Basic Commands
