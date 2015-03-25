@@ -17,7 +17,7 @@ struct runtime_error : exception
     runtime_error(String what)
         : m_what(std::move(what)) {}
 
-    StringView what() const override { return m_what.c_str(); }
+    StringView what() const override { return m_what; }
 
 private:
     String m_what;
