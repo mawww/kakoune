@@ -30,16 +30,16 @@ using std::max;
 struct NCursesWin : WINDOW {};
 
 static constexpr StringView assistant_cat[] =
-    { R"(           ___   )",
-      R"(          / __)  )",
-      R"(          \ \   ╭)",
-      R"(        .·' '.  │)",
-      R"(       ”      ' ╯)",
-      R"(  |\_/\       ╯  )",
-      R"( /         . |   )",
-      R"( | | |    ’l_╯   )",
-      R"( \_ -__/ '       )",
-      R"( /_/   /_/       )",
+    { R"(  ___            )",
+      R"( (__ \           )",
+      R"(   / /          ╭)",
+      R"(  .' '·.        │)",
+      R"( '      ”       │)",
+      R"( ╰       /\_/|  │)",
+      R"(  | .         \ │)",
+      R"(  ╰_J`    | | | ╯)",
+      R"(      ' \__- _/  )",
+      R"(      \_\   \_\  )",
       R"(                 )"};
 
 static constexpr StringView assistant_clippy[] =
