@@ -120,6 +120,14 @@ dnf copr enable jkonecny/kakoune
 dnf install kakoune
 ---------------------------------
 
+Exherbo
+~~~~~~~
+
+--------------------------------
+cave resolve -x repository/mawww
+cave resolve -x kakoune
+--------------------------------
+
 Running
 -------
 
