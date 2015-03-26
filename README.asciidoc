@@ -195,6 +195,7 @@ Basic Movement
 
  * +;+: reduce selections to their cursor
  * +alt-;+: flip the selections direction
+ * +alt-:+: ensure selections are in forward direction (cursor after anchor)
 
 
 A word is a sequence of alphanumeric characters or underscore, a WORD is a

@@ -1373,6 +1373,11 @@ void flip_selections(Context& context, NormalParams)
     flip_selections(context.selections());
 }
 
+void ensure_forward(Context& context, NormalParams)
+{
+    ensure_forward(context.selections());
+}
+
 static NormalCmdDesc cmds[] =
 {
     { 'h', "move left", move<CharCount, Backward> },
@@ -1434,6 +1439,7 @@ static NormalCmdDesc cmds[] =
     { alt(' '), "remove main selection", remove_selection },
     { ';', "reduce selections to their cursor", clear_selections },
     { alt(';'), "swap selections cursor and anchor", flip_selections },
+    { alt(':'), "ensure selection cursor is after anchor", ensure_forward },
 
     { 'w', "select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>> },
     { 'e', "select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>> },

@@ -28,9 +28,20 @@ inline void flip_selections(SelectionList& selections)
 {
     for (auto& sel : selections)
     {
-        ByteCoord tmp = sel.anchor();
+        const ByteCoord tmp = sel.anchor();
         sel.anchor() = sel.cursor();
         sel.cursor() = tmp;
+    }
+    selections.check_invariant();
+}
+
+inline void ensure_forward(SelectionList& selections)
+{
+    for (auto& sel : selections)
+    {
+        const ByteCoord min = sel.min(), max = sel.max();
+        sel.anchor() = min;
+        sel.cursor() = max;
     }
     selections.check_invariant();
 }
