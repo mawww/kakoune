@@ -18,53 +18,6 @@ inline Selection keep_direction(Selection res, const Selection& ref)
     return res;
 }
 
-inline void clear_selections(SelectionList& selections)
-{
-    for (auto& sel : selections)
-        sel.anchor() = sel.cursor();
-}
-
-inline void flip_selections(SelectionList& selections)
-{
-    for (auto& sel : selections)
-    {
-        const ByteCoord tmp = sel.anchor();
-        sel.anchor() = sel.cursor();
-        sel.cursor() = tmp;
-    }
-    selections.check_invariant();
-}
-
-inline void ensure_forward(SelectionList& selections)
-{
-    for (auto& sel : selections)
-    {
-        const ByteCoord min = sel.min(), max = sel.max();
-        sel.anchor() = min;
-        sel.cursor() = max;
-    }
-    selections.check_invariant();
-}
-
-inline void keep_selection(SelectionList& selections, int index)
-{
-    if (index < selections.size())
-        selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
-    selections.check_invariant();
-}
-
-inline void remove_selection(SelectionList& selections, int index)
-{
-    if (selections.size() > 1 and index < selections.size())
-    {
-        selections.remove(index);
-        size_t main_index = selections.main_index();
-        if (index < main_index or main_index == selections.size())
-            selections.set_main_index(main_index - 1);
-    }
-    selections.check_invariant();
-}
-
 using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
 
 inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)

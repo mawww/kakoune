@@ -1355,27 +1355,53 @@ void select_whole_buffer(Context& context, NormalParams)
 
 void keep_selection(Context& context, NormalParams p)
 {
-    keep_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index());
+    auto& selections = context.selections();
+    const int index = p.count ? p.count-1 : selections.main_index();
+    if (index < selections.size())
+        selections = SelectionList{ selections.buffer(), std::move(selections[index]) };
+    selections.check_invariant();
 }
 
 void remove_selection(Context& context, NormalParams p)
 {
-    remove_selection(context.selections(), p.count ? p.count-1 : context.selections().main_index());
+    auto& selections = context.selections();
+    const int index = p.count ? p.count-1 : selections.main_index();
+    if (selections.size() > 1 and index < selections.size())
+    {
+        selections.remove(index);
+        size_t main_index = selections.main_index();
+        if (index < main_index or main_index == selections.size())
+            selections.set_main_index(main_index - 1);
+    }
+    selections.check_invariant();
 }
 
 void clear_selections(Context& context, NormalParams)
 {
-    clear_selections(context.selections());
+    for (auto& sel : context.selections())
+        sel.anchor() = sel.cursor();
 }
 
 void flip_selections(Context& context, NormalParams)
 {
-    flip_selections(context.selections());
+    for (auto& sel : context.selections())
+    {
+        const ByteCoord tmp = sel.anchor();
+        sel.anchor() = sel.cursor();
+        sel.cursor() = tmp;
+    }
+    context.selections().check_invariant();
 }
 
 void ensure_forward(Context& context, NormalParams)
 {
-    ensure_forward(context.selections());
+    for (auto& sel : context.selections())
+    {
+        const ByteCoord min = sel.min(), max = sel.max();
+        sel.anchor() = min;
+        sel.cursor() = max;
+    }
+    context.selections().check_invariant();
 }
 
 static NormalCmdDesc cmds[] =
