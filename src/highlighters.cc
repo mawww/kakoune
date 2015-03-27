@@ -664,35 +664,37 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
             int level = 1;
             if (c == pair.first)
             {
-                auto it = buffer.iterator_at(pos)+1;
-                auto end = buffer.iterator_at(range.second);
-                skip_while(it, end, [&](char c) {
+                for (auto it = buffer.iterator_at(pos)+1,
+                         end = buffer.iterator_at(range.second); it != end; ++it)
+                {
+                    char c = *it;
                     if (c == pair.first)
                         ++level;
                     else if (c == pair.second and --level == 0)
-                        return false;
-                    return true;
-                });
-                if (it != end)
-                    highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                    apply_face(face));
-                break;
+                    {
+                        highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
+                                        apply_face(face));
+                        break;
+                    }
+                }
             }
             else if (c == pair.second and pos > range.first)
             {
-                auto it = buffer.iterator_at(pos)-1;
-                auto end = buffer.iterator_at(range.first);
-                skip_while_reverse(it, end, [&](char c) {
+                for (auto it = buffer.iterator_at(pos)-1,
+                         end = buffer.iterator_at(range.first); true; --it)
+                {
+                    char c = *it;
                     if (c == pair.second)
                         ++level;
                     else if (c == pair.first and --level == 0)
-                        return false;
-                    return true;
-                });
-                if (it != end or (*end == pair.first and level == 1))
-                    highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
-                                    apply_face(face));
-                break;
+                    {
+                        highlight_range(display_buffer, it.coord(), (it+1).coord(), false,
+                                        apply_face(face));
+                        break;
+                    }
+                    if (it == end)
+                        break;
+                }
             }
         }
     }
