@@ -254,11 +254,8 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     return {begin.coord(), end.coord(), std::move(captures)};
 }
 
-void select_all_matches(SelectionList& selections,
-                        const Regex& regex);
-
-void split_selections(SelectionList& selections,
-                      const Regex& separator_regex);
+void select_all_matches(SelectionList& selections, const Regex& regex);
+void split_selections(SelectionList& selections, const Regex& separator_regex);
 
 struct MatchingPair { Codepoint opening, closing; };
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
