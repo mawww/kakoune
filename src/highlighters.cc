@@ -21,8 +21,6 @@
 namespace Kakoune
 {
 
-using namespace std::placeholders;
-
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
                      ByteCoord begin, ByteCoord end,
