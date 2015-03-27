@@ -3,6 +3,8 @@
 
 #include "utf8.hh"
 
+#include <iterator>
+
 namespace Kakoune
 {
 
@@ -13,7 +15,8 @@ namespace utf8
 // on unicode codepoints instead.
 template<typename Iterator,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
-class iterator
+class iterator : public std::iterator<std::forward_iterator_tag,
+                                      Codepoint, CharCount>
 {
 public:
     iterator() = default;

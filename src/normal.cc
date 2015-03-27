@@ -727,8 +727,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
         for (LineCount line = min_line; line < end_line; ++line)
         {
             auto begin = buffer.iterator_at({line, buffer[line].length()-1});
-            auto end = begin+1;
-            skip_while(end, buffer.end(), is_horizontal_blank);
+            auto end = std::find_if_not(begin+1, buffer.end(), is_horizontal_blank);
             selections.push_back({begin.coord(), (end-1).coord()});
         }
     }

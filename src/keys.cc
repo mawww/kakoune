@@ -53,8 +53,7 @@ KeyList parse_keys(StringView str)
             continue;
         }
 
-        Utf8It end_it = it;
-        skip_while(end_it, str_end, [](char c) { return c != '>'; });
+        Utf8It end_it = std::find(it, str_end, '>');
         if (end_it == str_end)
         {
             result.push_back({Key::Modifiers::None, *it});
