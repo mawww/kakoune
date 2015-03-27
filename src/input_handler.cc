@@ -950,6 +950,24 @@ public:
             move(1_line);
             moved = true;
         }
+        else if (key == Key::Home)
+        {
+            auto& selections = context().selections();
+            for (auto& sel : selections)
+                sel.anchor() = sel.cursor() = ByteCoord{sel.cursor().line, 0};
+            selections.sort_and_merge_overlapping();
+        }
+        else if (key == Key::End)
+        {
+            auto& buffer = context().buffer();
+            auto& selections = context().selections();
+            for (auto& sel : selections)
+            {
+                const LineCount line = sel.cursor().line;
+                sel.anchor() = sel.cursor() = buffer.clamp({line, buffer[line].length()});
+            }
+            selections.sort_and_merge_overlapping();
+        }
         else if (key.modifiers == Key::Modifiers::None)
             insert(key.key);
         else if (key == ctrl('r'))

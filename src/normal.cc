@@ -1481,8 +1481,10 @@ static NormalCmdDesc cmds[] =
     { alt('B'), "extend to prevous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>> },
 
     { alt('l'), "select to line end", repeated<select<SelectMode::Replace, select_to_eol>> },
+    { Key::End, "select to line end", repeated<select<SelectMode::Replace, select_to_eol>> },
     { alt('L'), "extend to line end", repeated<select<SelectMode::Extend, select_to_eol>> },
     { alt('h'), "select to line begin", repeated<select<SelectMode::Replace, select_to_eol_reverse>> },
+    { Key::Home, "select to line begin", repeated<select<SelectMode::Replace, select_to_eol_reverse>> },
     { alt('H'), "extend to line begin", repeated<select<SelectMode::Extend, select_to_eol_reverse>> },
 
     { 'x', "select line", repeated<select<SelectMode::Replace, select_line>> },
