@@ -100,6 +100,9 @@ KeyList parse_keys(StringView str)
 
 String key_to_str(Key key)
 {
+    if (key.modifiers & Key::Modifiers::MouseEvent)
+        return "<mouse event>";
+
     bool named = false;
     String res;
     auto it = find_if(keynamemap, [&key](const KeyAndName& item)

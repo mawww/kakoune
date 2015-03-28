@@ -24,6 +24,8 @@ struct Key
         MousePos     = 1 << 4,
         MouseWheelDown = 1 << 5,
         MouseWheelUp = 1 << 6,
+        MouseEvent = MousePress | MouseRelease | MousePos |
+                     MouseWheelDown | MouseWheelUp,
     };
     enum NamedKey : Codepoint
     {
