@@ -78,20 +78,6 @@ private:
 template<typename T>
 T* Singleton<T>::ms_instance = nullptr;
 
-template<typename Iterator, typename EndIterator, typename T>
-void skip_while(Iterator& it, const EndIterator& end, T condition)
-{
-    while (it != end and condition(*it))
-        ++it;
-}
-
-template<typename Iterator, typename BeginIterator, typename T>
-void skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
-{
-    while (it != begin and condition(*it))
-        --it;
-}
-
 // *** On scope end ***
 //
 // on_scope_end provides a way to register some code to be
