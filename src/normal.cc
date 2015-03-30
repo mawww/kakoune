@@ -470,8 +470,8 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
 void yank(Context& context, NormalParams params)
 {
     RegisterManager::instance()[params.reg] = context.selections_content();
-    context.print_status({ "yanked " + to_string(context.selections().size()) +
-                           " selections to register " + StringView{params.reg},
+    context.print_status({ format("yanked {} selections to register {}",
+                                  context.selections().size(), params.reg),
                            get_face("Information") });
 }
 
@@ -1106,8 +1106,8 @@ void jump(Context& context, NormalParams)
 void save_selections(Context& context, NormalParams)
 {
     context.push_jump();
-    context.print_status({ "saved " + to_string(context.selections().size()) +
-                           " selections", get_face("Information") });
+    context.print_status({ format("saved {} selections", context.selections().size()),
+                           get_face("Information") });
 }
 
 void align(Context& context, NormalParams)

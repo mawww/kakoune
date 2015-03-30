@@ -37,8 +37,8 @@ void StringRegistry::debug_stats() const
         total_refcount += st.second->refcount - 1;
         total_size += (int)st.second->length;
     }
-    write_debug("  data size: " + to_string(total_size) + ", mean: " + to_string((float)total_size/count));
-    write_debug("  refcounts: " + to_string(total_refcount) + ", mean: " + to_string((float)total_refcount/count));
+    write_debug(format("  data size: {}, mean: {}", total_size, (float)total_size/count));
+    write_debug(format("  refcounts: {}, mean: {}", total_refcount, (float)total_refcount/count));
 }
 
 }

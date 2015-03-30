@@ -77,7 +77,7 @@ String real_path(StringView filename)
         {
             if (non_existing.empty())
                 return res;
-            return res + "/"_str + non_existing;
+            return format("{}/{}", res, non_existing);
         }
 
         auto it = find(existing.rbegin(), existing.rend(), '/');

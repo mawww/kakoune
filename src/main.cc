@@ -117,15 +117,15 @@ void register_env_vars()
             [](StringView name, const Context& context)
             { auto& sel = context.selections().main();
               auto beg = sel.min();
-              return to_string(beg.line + 1) + "." + to_string(beg.column + 1) + "+" +
-                     to_string((int)context.buffer().distance(beg, sel.max())+1); }
+              return format("{}.{}+{}", beg.line + 1, beg.column + 1,
+                            context.buffer().distance(beg, sel.max())+1); }
         }, {
             "selections_desc",
             [](StringView name, const Context& context)
             { return join(transformed(context.selections(), [&](const Selection& sel) {
                     auto beg = sel.min();
-                    return to_string(beg.line + 1) + "." + to_string(beg.column + 1) + "+" +
-                           to_string((int)context.buffer().distance(beg, sel.max())+1);
+                    return format("{}.{}+{}", beg.line + 1, beg.column + 1,
+                                  context.buffer().distance(beg, sel.max())+1);
                 }), ':'); }
         }, {
             "window_width",
@@ -623,12 +623,12 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::exception& error)
     {
-        on_assert_failed(("uncaught exception ("_str + typeid(error).name() + "):\n" + error.what()).c_str());
+        on_assert_failed(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()).c_str());
         return -1;
     }
     catch (std::exception& error)
     {
-        on_assert_failed(("uncaught exception ("_str + typeid(error).name() + "):\n" + error.what()).c_str());
+        on_assert_failed(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()).c_str());
         return -1;
     }
     catch (...)

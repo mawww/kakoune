@@ -430,7 +430,7 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
     }
     catch (runtime_error& e)
     {
-        write_debug("error while trying to run completer: "_str + e.what());
+        write_debug(format("error while trying to run completer: {}", e.what()));
         return false;
     }
     if (not m_completions.is_valid())

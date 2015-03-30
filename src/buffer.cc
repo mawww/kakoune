@@ -532,19 +532,6 @@ ByteCoord Buffer::last_modification_coord() const
 
 String Buffer::debug_description() const
 {
-    String res = display_name() + "\n";
-
-    res += "  Flags: ";
-    if (m_flags & Flags::File)
-        res += "File (" + name() + ") ";
-    if (m_flags & Flags::New)
-        res += "New ";
-    if (m_flags & Flags::Fifo)
-        res += "Fifo ";
-    if (m_flags & Flags::NoUndo)
-        res += "NoUndo ";
-    res += "\n";
-
     size_t content_size = 0;
     for (auto& line : m_lines)
         content_size += (int)line->strview().length();
@@ -554,9 +541,13 @@ String Buffer::debug_description() const
         additional_size += undo_group.size() * sizeof(Modification);
     additional_size += m_changes.size() * sizeof(Change);
 
-    res += "  Used mem: content=" + to_string(content_size) +
-           " additional=" + to_string(additional_size) + "\n";
-    return res;
+    return format("{}\nFlags: {}{}{}{}\nUsed mem: content={} additional={}\n",
+                  display_name(),
+                  (m_flags & Flags::File) ? "File (" + name() + ") " : "",
+                  (m_flags & Flags::New) ? "New " : "",
+                  (m_flags & Flags::Fifo) ? "Fifo " : "",
+                  (m_flags & Flags::NoUndo) ? "NoUndo " : "",
+                  content_size, additional_size);
 }
 
 }

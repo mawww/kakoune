@@ -36,7 +36,7 @@ void CommandManager::register_command(String command_name,
 struct parse_error : runtime_error
 {
     parse_error(StringView error)
-        : runtime_error{"parse error: " + error} {}
+        : runtime_error{format("parse error: {}", error)} {}
 };
 
 namespace
@@ -125,7 +125,7 @@ String get_until_delimiter(StringView base, ByteCount& pos,
 struct unknown_expand : parse_error
 {
     unknown_expand(StringView name)
-        : parse_error{"unknown expand '" + name + "'"} {}
+        : parse_error{format("unknown expand '{}'", name)} {}
 };
 
 template<bool throw_on_invalid>
@@ -169,14 +169,6 @@ void skip_blanks_and_comments(StringView base, ByteCount& pos)
     }
 }
 
-struct unterminated_string : parse_error
-{
-    unterminated_string(StringView open, StringView close, int nest = 0)
-        : parse_error{"unterminated string '" + open + "..." + close + "'" +
-                      (nest > 0 ? "(nesting: " + to_string(nest) + ")" : "")}
-    {}
-};
-
 template<bool throw_on_unterminated>
 Token parse_percent_token(StringView line, ByteCount& pos)
 {
@@ -187,8 +179,8 @@ Token parse_percent_token(StringView line, ByteCount& pos)
     StringView type_name = line.substr(type_start, pos - type_start);
 
     if (throw_on_unterminated and pos == length)
-        throw parse_error{"expected a string delimiter after '%" +
-                          type_name + "'"};
+        throw parse_error{format("expected a string delimiter after '%{}'",
+                                 type_name)};
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
     static const UnorderedMap<char, char> matching_delimiters = {
@@ -205,8 +197,9 @@ Token parse_percent_token(StringView line, ByteCount& pos)
         String token = get_until_delimiter(line, pos, opening_delimiter,
                                            closing_delimiter);
         if (throw_on_unterminated and pos == length)
-            throw unterminated_string("%" + type_name + StringView{opening_delimiter},
-                                      closing_delimiter, 0);
+            throw parse_error{format("unterminated string '%{}{}...{}'",
+                                     type_name, opening_delimiter,
+                                     closing_delimiter)};
         return {type, token_start, pos, std::move(token)};
     }
     else
@@ -237,7 +230,7 @@ TokenList parse(StringView line)
             token_start = ++pos;
             String token = get_until_delimiter(line, pos, delimiter);
             if (throw_on_unterminated and pos == length)
-                throw unterminated_string(delimiter, delimiter);
+                throw parse_error{format("unterminated string {0}...{0}", delimiter)};
             result.emplace_back(delimiter == '"' ? Token::Type::RawEval
                                                  : Token::Type::Raw,
                                 token_start, pos, std::move(token));
