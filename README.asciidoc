@@ -120,6 +120,37 @@ dnf copr enable jkonecny/kakoune
 dnf install kakoune
 ---------------------------------
 
+Arch Linux
+~~~~~~~~~
+
+Choose between the quick manual way or a more _automagical_ one with build helper scripts such as +yaourt+:
+
+Manual way
+^^^^^^^^^^
+
+--------------------------------
+# Check build tools are installed
+pacman -Sy base-devel
+
+# Get the package sources
+curl -L -O https://aur.archlinux.org/packages/ka/kakoune-git/kakoune-git.tar.gz
+tar xf kakoune-git.tar.gz
+cd kakoune-git
+
+# Build it (may ask for your sudo password to install potentially missing dependencies)
+makepkg -rs
+
+# Install it
+sudo pacman -U kakoune-git-*.pkg.tar.xz
+--------------------------------
+
+With +yaourt+
+^^^^^^^^^^^^^
+
+--------------------------------
+yaourt -Sy kakoune-git
+--------------------------------
+
 Exherbo
 ~~~~~~~
 
