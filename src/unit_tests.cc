@@ -139,6 +139,12 @@ void test_string()
     kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
 
     kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5) == "Youhou hehe 5 10 {}");
+
+    kak_assert(str_to_int("5") == 5);
+    kak_assert(str_to_int(to_string(INT_MAX)) == INT_MAX);
+    kak_assert(str_to_int(to_string(INT_MIN)) == INT_MIN);
+    kak_assert(str_to_int("00") == 0);
+    kak_assert(str_to_int("-0") == 0);
 }
 
 void test_keys()

@@ -100,10 +100,19 @@ String indent(StringView str, StringView indent)
 
 int str_to_int(StringView str)
 {
-    int res = 0;
-    if (sscanf(str.zstr(), "%i", &res) != 1)
-        throw runtime_error(str + "is not a number");
-    return res;
+    unsigned int res = 0;
+    bool negative = false;
+    for (auto it = str.begin(), end = str.end(); it != end; ++it)
+    {
+        const char c = *it;
+        if (it == str.begin() and c == '-')
+            negative = true;
+        else if (c >= '0' and c <= '9')
+            res = res * 10 + c - '0';
+        else
+            throw runtime_error(str + "is not a number");
+    }
+    return negative ? -(int)res : (int)res;
 }
 
 String to_string(int val)
