@@ -20,23 +20,6 @@ class StringOps
 public:
     using value_type = CharType;
 
-    [[gnu::always_inline]]
-    friend bool operator==(const Type& lhs, const Type& rhs)
-    {
-        return lhs.length() == rhs.length() and 
-           std::equal(lhs.begin(), lhs.end(), rhs.begin());
-    }
-
-    [[gnu::always_inline]]
-    friend bool operator!=(const Type& lhs, const Type& rhs)
-    { return not (lhs == rhs); }
-
-    friend bool operator<(const Type& lhs, const Type& rhs)
-    {
-        return std::lexicographical_compare(lhs.begin(), lhs.end(),
-                                            rhs.begin(), rhs.end());
-    }
-
     friend inline size_t hash_value(const Type& str)
     {
         return hash_data(str.data(), (int)str.length());
@@ -218,6 +201,23 @@ inline String operator+(StringView lhs, StringView rhs)
     res.append(lhs.data(), lhs.length());
     res.append(rhs.data(), rhs.length());
     return res;
+}
+
+[[gnu::always_inline]]
+inline bool operator==(const StringView& lhs, const StringView& rhs)
+{
+    return lhs.length() == rhs.length() and
+       std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+[[gnu::always_inline]]
+inline bool operator!=(const StringView& lhs, const StringView& rhs)
+{ return not (lhs == rhs); }
+
+inline bool operator<(const StringView& lhs, const StringView& rhs)
+{
+    return std::lexicographical_compare(lhs.begin(), lhs.end(),
+                                        rhs.begin(), rhs.end());
 }
 
 Vector<String> split(StringView str, char separator, char escape);
