@@ -32,7 +32,7 @@ inline void option_from_string(StringView str, bool& opt)
         throw runtime_error("boolean values are either true, yes, false or no");
 }
 
-constexpr Codepoint list_separator = ':';
+constexpr char list_separator = ':';
 
 template<typename T, MemoryDomain domain>
 String option_to_string(const Vector<T, domain>& opt)
@@ -98,7 +98,7 @@ void option_from_string(StringView str, UnorderedMap<Key, Value, domain>& opt)
     }
 }
 
-constexpr Codepoint tuple_separator = ',';
+constexpr char tuple_separator = ',';
 
 template<size_t I, typename... Types>
 struct TupleOptionDetail

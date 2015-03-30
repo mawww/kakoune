@@ -148,16 +148,22 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col)
 {
     String res;
     res.reserve(line.length());
-    using Utf8It = utf8::iterator<const char*>;
-    for (Utf8It it = line.begin(); it.base() < line.end(); ++it)
+    for (auto it = line.begin(), end = line.end(); it != end; )
     {
         if (*it == '\t')
         {
             CharCount end_col = (col / tabstop + 1) * tabstop;
             res += String{' ', end_col - col};
+            col = end_col;
+            ++it;
         }
         else
-            res += *it;
+        {
+            auto char_end = utf8::next(it, end);
+            res += {it, char_end};
+            ++col;
+            it = char_end;
+        }
     }
     return res;
 }
