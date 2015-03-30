@@ -5,6 +5,7 @@
 #include "utf8.hh"
 #include "hash.hh"
 #include "vector.hh"
+#include "array_view.hh"
 
 #include <string>
 #include <climits>
@@ -275,6 +276,27 @@ bool subsequence_match(StringView str, StringView subseq);
 String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
 
 Vector<StringView> wrap_lines(StringView text, CharCount max_width);
+
+namespace detail
+{
+
+template<typename T> using IsString = std::is_convertible<T, StringView>;
+
+template<typename T, class = typename std::enable_if<!IsString<T>::value>::type>
+String format_param(const T& val) { return to_string(val); }
+
+template<typename T, class = typename std::enable_if<IsString<T>::value>::type>
+StringView format_param(const T& val) { return val; }
+
+}
+
+String format(StringView fmt, ArrayView<const StringView> params);
+
+template<typename... Types>
+String format(StringView fmt, Types... params)
+{
+    return format(fmt, ArrayView<const StringView>{{detail::format_param(params)...}});
+}
 
 }
 

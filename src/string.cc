@@ -205,4 +205,46 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
     return lines;
 }
 
+String format(StringView fmt, ArrayView<const StringView> params)
+{
+    ByteCount size = fmt.length();
+    for (auto& s : params) size += s.length();
+    String res;
+    res.reserve(size);
+
+    int implicitIndex = 0;
+    for (auto it = fmt.begin(), end = fmt.end(); it != end;)
+    {
+        auto opening = std::find(it, end, '{');
+        res += StringView{it, opening};
+        if (opening == end)
+            break;
+
+        if (opening != it && res.back() == '\\')
+        {
+            res.back() = '{';
+            it = opening + 1;
+        }
+        else
+        {
+            auto closing = std::find(it, end, '}');
+            if (closing == end)
+                throw runtime_error("Format string error, unclosed '{'");
+            int index;
+            if (closing == opening + 1)
+                index = implicitIndex;
+            else
+                index = str_to_int({opening+1, closing});
+
+            if (index >= params.size())
+                throw runtime_error("Format string parameter index too big");
+
+            res += params[index];
+            implicitIndex = index+1;
+            it = closing+1;
+        }
+    }
+    return res;
+}
+
 }

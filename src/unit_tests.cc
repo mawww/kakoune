@@ -137,6 +137,8 @@ void test_string()
     kak_assert(subsequence_match("tchou kanaky", "knk"));
     kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
     kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
+
+    kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5) == "Youhou hehe 5 10 {}");
 }
 
 void test_keys()
