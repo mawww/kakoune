@@ -12,7 +12,7 @@ hook global WinSetOption filetype=(?!git-log).* %{
 
 hook global WinSetOption filetype=git-status %{
     addhl group git-status-highlight
-    addhl -group git-status-highlight regex '^\h+(?:(modified:)|(added:|new file:)|(deleted:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
+    addhl -group git-status-highlight regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }
 
 hook global WinSetOption filetype=(?!git-status).* %{
