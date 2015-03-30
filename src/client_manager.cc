@@ -19,7 +19,7 @@ String ClientManager::generate_name() const
 {
     for (int i = 0; true; ++i)
     {
-        String name = "unnamed" + to_string(i);
+        String name = format("unnamed{}", i);
         if (validate_client_name(name))
             return name;
     }

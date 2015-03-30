@@ -26,10 +26,10 @@ private:
 
 void on_assert_failed(const char* message)
 {
-    String debug_info = "pid: " + to_string(getpid());
-    write_debug("assert failed: '"_str + message + "' " + debug_info);
+    String debug_info = format("pid: {}", getpid());
+    write_debug(format("assert failed: '{}' ", message, debug_info));
 
-    const auto msg = message + "\n[Debug Infos]\n"_str + debug_info;
+    const auto msg = format("{}\n[Debug Infos]\n{}", message, debug_info);
 #if defined(__CYGWIN__)
     int res = MessageBox(NULL, msg.c_str(), "Kakoune: assert failed",
                          MB_OKCANCEL | MB_ICONERROR);

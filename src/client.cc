@@ -104,11 +104,11 @@ DisplayLine Client::generate_mode_line() const
     Face status_face = get_face("StatusLine");
 
     status.push_back({ context().buffer().display_name(), status_face });
-    status.push_back({ " " + to_string((int)pos.line+1) + ":" + to_string((int)col+1) + " ", status_face });
+    status.push_back({ format(" {}:{} ", pos.line+1, col+1), status_face });
     if (context().buffer().is_modified())
         status.push_back({ "[+]", info_face });
     if (m_input_handler.is_recording())
-        status.push_back({ "[recording ("_str + StringView{m_input_handler.recording_reg()} + ")]", info_face });
+        status.push_back({ format("[recording ({})]", m_input_handler.recording_reg()), info_face });
     if (context().buffer().flags() & Buffer::Flags::New)
         status.push_back({ "[new file]", info_face });
     if (context().user_hooks_support().is_disabled())
@@ -118,7 +118,7 @@ DisplayLine Client::generate_mode_line() const
     status.push_back({ " ", status_face });
     for (auto& atom : m_input_handler.mode_line())
         status.push_back(std::move(atom));
-    status.push_back({ " - " + context().name() + "@[" + Server::instance().session() + "]", status_face });
+    status.push_back({ format(" - {}@[{}]", context().name(), Server::instance().session()), status_face });
 
     return status;
 }

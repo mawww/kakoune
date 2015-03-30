@@ -362,9 +362,8 @@ void CommandManager::execute_single_command(CommandParameters params,
     }
     catch (runtime_error& error)
     {
-        String info = to_string(pos.line+1) + ":" + to_string(pos.column+1) +
-                      ": '" + command_it->first + "' " + error.what();
-        throw runtime_error(std::move(info));
+        throw runtime_error(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
+                                   command_it->first, error.what()));
     }
 }
 

@@ -834,8 +834,8 @@ const CommandDesc debug_cmd = {
     {
         if (parser[0] == "info")
         {
-            write_debug("pid: " + to_string(getpid()));
-            write_debug("session: " + Server::instance().session());
+            write_debug(format("pid: {}", getpid()));
+            write_debug(format("session: {}", Server::instance().session()));
         }
         else if (parser[0] == "buffers")
         {
@@ -847,7 +847,7 @@ const CommandDesc debug_cmd = {
         {
             write_debug("Options:");
             for (auto& option : context.options().flatten_options())
-                write_debug(" * " + option->name() + ": " + option->get_as_string());
+                write_debug(format(" * {}: {}", option->name(), option->get_as_string()));
         }
         else if (parser[0] == "memory")
         {
@@ -857,11 +857,11 @@ const CommandDesc debug_cmd = {
             {
                 size_t count = domain_allocated_bytes[domain];
                 total += count;
-                write_debug("  "_str + domain_name((MemoryDomain)domain) + ": " + to_string(count));
+                write_debug(format("  {}: {}", domain_name((MemoryDomain)domain), count));
             }
-            write_debug("  Total: " + to_string(total));
+            write_debug(format("  Total: {}", total));
             #if defined(__GLIBC__) || defined(__CYGWIN__)
-            write_debug("  Malloced: " + to_string(mallinfo().uordblks));
+            write_debug(format("  Malloced: {}", mallinfo().uordblks));
             #endif
         }
         else if (parser[0] == "shared-strings")
@@ -869,7 +869,7 @@ const CommandDesc debug_cmd = {
             StringRegistry::instance().debug_stats();
         }
         else
-            throw runtime_error("unknown debug command '" + parser[0] + "'");
+            throw runtime_error(format("unknown debug command '{}'", parser[0]));
     }
 };
 
@@ -890,7 +890,7 @@ const CommandDesc source_cmd = {
         }
         catch (Kakoune::runtime_error& err)
         {
-            write_debug(parser[0] + ":" + err.what());
+            write_debug(format("{}:{}", parser[0], err.what()));
             throw;
         }
     }
