@@ -514,7 +514,7 @@ void Buffer::set_fs_timestamp(time_t ts)
 void Buffer::on_option_changed(const Option& option)
 {
     run_hook_in_own_context("BufSetOption",
-                            option.name() + "=" + option.get_as_string());
+                            format("{}={}", option.name(), option.get_as_string()));
 }
 
 void Buffer::run_hook_in_own_context(StringView hook_name, StringView param)

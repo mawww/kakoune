@@ -285,8 +285,8 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
 
 void Window::on_option_changed(const Option& option)
 {
-    String desc = option.name() + "=" + option.get_as_string();
-    run_hook_in_own_context("WinSetOption", desc);
+    run_hook_in_own_context("WinSetOption",
+                            format("{}={}", option.name(), option.get_as_string()));
 
     // an highlighter might depend on the option, so we need to redraw
     forget_timestamp();
