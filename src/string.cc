@@ -229,7 +229,7 @@ String format(StringView fmt, ArrayView<const StringView> params)
         if (opening == end)
             break;
 
-        if (opening != it && res.back() == '\\')
+        if (opening != it && *(opening-1) == '\\')
         {
             res.back() = '{';
             it = opening + 1;
