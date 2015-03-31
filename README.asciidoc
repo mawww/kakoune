@@ -114,7 +114,8 @@ brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/homebrew/con
 Fedora 20/21/22/Rawhide & Epel 7
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use copr repository https://copr.fedoraproject.org/coprs/jkonecny/kakoune/
+Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr] repository.
+
 ---------------------------------
 dnf copr enable jkonecny/kakoune
 dnf install kakoune
@@ -123,31 +124,11 @@ dnf install kakoune
 Arch Linux
 ~~~~~~~~~
 
-Choose between the quick manual way or a more _automagical_ one with build helper scripts such as +yaourt+:
-
-Manual way
-^^^^^^^^^^
+A PKGBUILD https://aur.archlinux.org/packages/kakoune-git[kakoune-git]
+to install Kakoune is available in the https://wiki.archlinux.org/index.php/Arch_User_Repository[AUR].
 
 --------------------------------
-# Check build tools are installed
-pacman -Sy base-devel
-
-# Get the package sources
-curl -L -O https://aur.archlinux.org/packages/ka/kakoune-git/kakoune-git.tar.gz
-tar xf kakoune-git.tar.gz
-cd kakoune-git
-
-# Build it (may ask for your sudo password to install potentially missing dependencies)
-makepkg -rs
-
-# Install it
-sudo pacman -U kakoune-git-*.pkg.tar.xz
---------------------------------
-
-With +yaourt+
-^^^^^^^^^^^^^
-
---------------------------------
+# For example build and install Kakoune via yaourt
 yaourt -Sy kakoune-git
 --------------------------------
 
