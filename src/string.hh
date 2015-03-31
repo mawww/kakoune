@@ -92,6 +92,7 @@ public:
 
     String() {}
     String(const char* content) : m_data(content) {}
+    String(const char* content, ByteCount len) : m_data(content, (size_t)(int)len) {}
     explicit String(char content, CharCount count = 1) : m_data((size_t)(int)count, content) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
@@ -256,12 +257,23 @@ inline String codepoint_to_str(Codepoint cp)
 
 int str_to_int(StringView str);
 
-String to_string(int val);
-String to_string(size_t val);
-String to_string(float val);
+template<size_t N>
+struct InplaceString
+{
+    constexpr operator StringView() const { return {m_data, m_length}; }
+    operator String() const { return {m_data, m_length}; }
+
+    ByteCount m_length;
+    char m_data[N];
+};
+
+InplaceString<16> to_string(int val);
+InplaceString<24> to_string(size_t val);
+InplaceString<24> to_string(float val);
 
 template<typename RealType, typename ValueType>
-String to_string(const StronglyTypedNumber<RealType, ValueType>& val)
+decltype(to_string(std::declval<ValueType>()))
+to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 {
     return to_string((ValueType)val);
 }
@@ -283,7 +295,7 @@ namespace detail
 template<typename T> using IsString = std::is_convertible<T, StringView>;
 
 template<typename T, class = typename std::enable_if<!IsString<T>::value>::type>
-String format_param(const T& val) { return to_string(val); }
+auto format_param(const T& val) -> decltype(to_string(val)) { return to_string(val); }
 
 template<typename T, class = typename std::enable_if<IsString<T>::value>::type>
 StringView format_param(const T& val) { return val; }
@@ -295,7 +307,7 @@ String format(StringView fmt, ArrayView<const StringView> params);
 template<typename... Types>
 String format(StringView fmt, Types... params)
 {
-    return format(fmt, ArrayView<const StringView>{{detail::format_param(params)...}});
+    return format(fmt, ArrayView<const StringView>{detail::format_param(params)...});
 }
 
 }

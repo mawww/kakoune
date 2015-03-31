@@ -115,25 +115,25 @@ int str_to_int(StringView str)
     return negative ? -(int)res : (int)res;
 }
 
-String to_string(int val)
+InplaceString<16> to_string(int val)
 {
-    char buf[16];
-    sprintf(buf, "%i", val);
-    return buf;
+    InplaceString<16> res;
+    res.m_length = sprintf(res.m_data, "%i", val);
+    return res;
 }
 
-String to_string(size_t val)
+InplaceString<24> to_string(size_t val)
 {
-    char buf[16];
-    sprintf(buf, "%zu", val);
-    return buf;
+    InplaceString<24> res;
+    res.m_length = sprintf(res.m_data, "%zu", val);
+    return res;
 }
 
-String to_string(float val)
+InplaceString<24> to_string(float val)
 {
-    char buf[32];
-    sprintf(buf, "%f", val);
-    return buf;
+    InplaceString<24> res;
+    res.m_length = sprintf(res.m_data, "%f", val);
+    return res;
 }
 
 bool subsequence_match(StringView str, StringView subseq)

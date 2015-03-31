@@ -64,7 +64,7 @@ void register_env_vars()
                                       { return b->display_name(); }), ':'); }
         }, {
             "timestamp",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return to_string(context.buffer().timestamp()); }
         }, {
             "selection",
@@ -101,15 +101,15 @@ void register_env_vars()
             { return context.name(); }
         }, {
             "cursor_line",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return to_string(context.selections().main().cursor().line + 1); }
         }, {
             "cursor_column",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return to_string(context.selections().main().cursor().column + 1); }
         }, {
             "cursor_char_column",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { auto coord = context.selections().main().cursor();
               return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
         }, {
@@ -129,11 +129,11 @@ void register_env_vars()
                 }), ':'); }
         }, {
             "window_width",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return to_string(context.window().dimensions().column); }
         }, {
             "window_height",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return to_string(context.window().dimensions().line); }
     } };
 
