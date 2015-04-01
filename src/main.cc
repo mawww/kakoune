@@ -43,6 +43,14 @@ String runtime_directory()
     return StringView{bin_path.begin(), it.base()-1} + "/../share/kak";
 }
 
+static void write(int fd, StringView str)
+{
+    write(fd, str.data(), (size_t)(int)str.length());
+}
+
+static void write_stdout(StringView str) { write(1, str); }
+static void write_stderr(StringView str) { write(2, str); }
+
 void register_env_vars()
 {
     static const struct {
@@ -237,7 +245,7 @@ void create_local_client(StringView init_command)
             if (not ClientManager::instance().empty() and fork())
             {
                 this->UI::~UI();
-                puts("detached from terminal\n");
+                write_stdout("detached from terminal\n");
                 exit(0);
             }
         }
@@ -305,12 +313,12 @@ int run_client(StringView session, StringView init_command)
     }
     catch (peer_disconnected&)
     {
-        fputs("disconnected from server\n", stderr);
+        write_stderr("disconnected from server\n");
         return -1;
     }
     catch (connection_failed& e)
     {
-        fputs(e.what().zstr(), stderr);
+        write_stderr(e.what());
         return -1;
     }
     return 0;
@@ -344,14 +352,14 @@ int run_server(StringView session, StringView init_command,
     {
         if (session.empty())
         {
-            fputs("-d needs a session name to be specified with -s\n", stderr);
+            write_stderr("-d needs a session name to be specified with -s\n");
             return -1;
         }
         if (pid_t child = fork())
         {
-            printf("Kakoune forked to background, for session '%s'\n"
-                   "send SIGTERM to process %d for closing the session\n",
-                   (const char*)session.zstr(), child);
+            write_stderr(format("Kakoune forked to background, for session '{}'\n"
+                                "send SIGTERM to process {} for closing the session\n",
+                                session, child));
             exit(0);
         }
         signal(SIGTERM, [](int) { terminate = true; });
@@ -475,8 +483,8 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
             catch (Kakoune::runtime_error& err)
             {
                 if (not quiet)
-                    fprintf(stderr, "error while applying keys to buffer '%s': %s\n",
-                            buffer.display_name().c_str(), (const char*)err.what().zstr());
+                    write_stderr(format("error while applying keys to buffer '{}': {}\n",
+                                        buffer.display_name(), err.what()));
             }
         };
 
@@ -499,7 +507,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
     }
     catch (Kakoune::runtime_error& err)
     {
-        fprintf(stderr, "error: %s\n", (const char*)err.what().zstr());
+        write_stderr(format("error: {}\n", err.what()));
     }
 
     buffer_manager.clear_buffer_trash();
@@ -514,7 +522,7 @@ int run_pipe(StringView session)
     {
         if (count < 0)
         {
-            fprintf(stderr, "error while reading stdin\n");
+            write_stderr("error while reading stdin\n");
             return -1;
         }
         command += String{buf, buf + count};
@@ -525,7 +533,7 @@ int run_pipe(StringView session)
     }
     catch (connection_failed& e)
     {
-        fputs(e.what().zstr(), stderr);
+        write_stderr(e.what());
         return -1;
     }
     return 0;
@@ -569,7 +577,7 @@ int main(int argc, char* argv[])
             {
                 if (parser.get_switch(opt))
                 {
-                    fprintf(stderr, "error: -%s makes not sense with -p\n", opt);
+                    write_stderr(format("error: -{} makes not sense with -p\n", opt));
                     return -1;
                 }
             }
@@ -592,7 +600,7 @@ int main(int argc, char* argv[])
             {
                 if (parser.get_switch(opt))
                 {
-                    fprintf(stderr, "error: -%s makes not sense with -c\n", opt);
+                    write_stderr(format("error: -{} makes not sense with -c\n", opt));
                     return -1;
                 }
             }
@@ -614,11 +622,10 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::parameter_error& error)
     {
-        printf("Error: %s\n"
-               "Valid switches:\n"
-               "%s",
-               (const char*)error.what().zstr(),
-               generate_switches_doc(param_desc.switches).c_str());
+        write_stderr(format("Error: {}\n"
+                            "Valid switches:\n"
+                            "{}", error.what(),
+                            generate_switches_doc(param_desc.switches)));
        return -1;
     }
     catch (Kakoune::exception& error)
