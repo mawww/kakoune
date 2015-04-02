@@ -32,16 +32,23 @@ Color str_to_color(StringView color)
     if (it != std::end(color_names))
         return static_cast<Colors>(it - color_names);
 
-    static const Regex rgb_regex{"rgb:[0-9a-fA-F]{6}"};
-    if (regex_match(color.begin(), color.end(), rgb_regex))
+    auto hval = [&color](char c) -> int
     {
-        unsigned l;
-        sscanf(color.zstr() + 4, "%x", &l);
-        return { (unsigned char)((l >> 16) & 0xFF),
-                 (unsigned char)((l >> 8) & 0xFF),
-                 (unsigned char)(l & 0xFF) };
-    }
-    throw runtime_error("Unable to parse color '" + color + "'");
+        if (c >= 'A' and c <= 'F')
+            return 10 + c - 'A';
+        else if (c >= 'a' and c <= 'f')
+            return 10 + c - 'a';
+        else if (c >= '0' and c <= '9')
+            return c - '0';
+        throw runtime_error(format("invalid digit '{}' in '{}'", c, color));
+    };
+
+    if (color.length() == 10 and color.substr(0_byte, 4_byte) == "rgb:")
+        return { (unsigned char)(hval(color[4]) * 16 + hval(color[5])),
+                 (unsigned char)(hval(color[6]) * 16 + hval(color[7])),
+                 (unsigned char)(hval(color[8]) * 16 + hval(color[9])) };
+
+    throw runtime_error(format("Unable to parse color '{}'", color));
     return Colors::Default;
 }
 
