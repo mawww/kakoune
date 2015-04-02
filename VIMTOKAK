@@ -18,7 +18,7 @@ delete a word:
 
 delete a character:
  * vim: x
- * kak: d or <space>d
+ * kak: d or ;d (; reduces the selection to a single char)
 
 copy a line:
  * vim: yy
