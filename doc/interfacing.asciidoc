@@ -29,7 +29,7 @@ For example, we can echo a message in Kakoune in 10 seconds with:
     sleep 10
     echo "eval -client '$kak_client' 'echo sleep ended'" |
         kak -p ${kak_session}
-) >& /dev/null < /dev/null & }
+) > /dev/null 2>&1 < /dev/null & }
 ----
 
  * The +nop+ command is used so that any eventual output from the
@@ -59,7 +59,7 @@ The common pattern to do that is to use a fifo buffer:
      output=$(mktemp -d -t kak-temp-XXXXXXXX)/fifo
      mkfifo ${output}
      # run command detached from the shell
-     ( run command here >& ${output} ) >& /dev/null < /dev/null &
+     ( run command here > ${output} ) > /dev/null 2>&1 < /dev/null &
      # Open the file in Kakoune and add a hook to remove the fifo
      echo "edit! -fifo %{output} *buffer-name*
            hook buffer BufClose .* %{ nop %sh{ rm -r $(dirname ${output}} }"
@@ -119,5 +119,5 @@ nop %sh{ ( # launch a detached shell
     # write to Kakoune socket for the buffer that triggered the completion
     echo "set buffer=${kak_bufname} completions '$completions'" |
         kak -p ${kak_session}
-) >& /dev/null < /dev/null & }
+) > /dev/null 2>&1 < /dev/null & }
 -----
