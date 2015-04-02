@@ -231,15 +231,10 @@ void write_buffer_to_backup_file(Buffer& buffer)
     StringView dir, file;
     std::tie(dir,file) = split_path(path);
 
-    char pattern[PATH_MAX+1];
-    if (not dir.empty())
-        snprintf(pattern, PATH_MAX+1, "%s/.%s.kak.XXXXXX",
-                 (const char*)dir.zstr(), (const char*) file.zstr());
-    else
-        snprintf(pattern, PATH_MAX+1, ".%s.kak.XXXXXX",
-                 (const char*)file.zstr());
+    String pattern = dir.empty() ? format(".{}.kak.XXXXXX", file)
+                                 : format("{}/.{}.kak.XXXXXX", dir, file);
 
-    int fd = mkstemp(pattern);
+    int fd = mkstemp(&pattern[0]);
     if (fd >= 0)
     {
         write_buffer_to_fd(buffer, fd);
