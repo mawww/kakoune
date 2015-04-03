@@ -305,7 +305,7 @@ using Utf8Policy = utf8::InvalidPolicy::Pass;
 using Utf8Iterator = utf8::iterator<const char*, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
-    waddstr(win, StringView(begin.base(), end.base()).zstr());
+    waddnstr(win, begin.base(), end.base() - begin.base());
 }
 
 static CharCoord window_size(WINDOW* win)
