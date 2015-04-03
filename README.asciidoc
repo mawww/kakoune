@@ -2,6 +2,8 @@
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
 :travis-img: https://travis-ci.org/mawww/kakoune.svg
 :travis-url: https://travis-ci.org/mawww/kakoune
+:icons: font
+:toc: right
 
 TL;DR
 -----
@@ -46,7 +48,7 @@ see http://vimeo.com/82711574
 Join us on freenode IRC +#Kakoune+
 
 Features
---------
+~~~~~~~~
 
  * Multiple selections as a central way of interacting
  * Powerful selection manipulation primitives
@@ -72,8 +74,11 @@ Features
    - Supports multiple languages in the same buffer
    - Highlight a buffer differently in different windows
 
+Getting started
+---------------
+
 Building
---------
+~~~~~~~~
 
 Kakoune dependencies are:
 
@@ -91,7 +96,7 @@ src directory, this will setup an initial $XDG_CONFIG_HOME/kak directory. See
 the _Kakrc_ section for more information.
 
 Installing
-----------
+~~~~~~~~~~
 
 In order to install kak on your system, rather than running it directly from
 it's source directory, type *make install*, you can specify the +PREFIX+ and
@@ -108,26 +113,28 @@ a symbolic link to the $PREFIX/share/kak/rc directory.
 ln -s /usr/share/kak/rc ~/.config/kak/autoload
 ----------------------------------------------
 
-Homebrew (OSX)
-~~~~~~~~~~~~~~
-
+[TIP]
+.Homebrew (OSX)
+====
 -----------------------------------------------------------------------------------------------
 brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/homebrew/contrib/kakoune.rb
 -----------------------------------------------------------------------------------------------
+====
 
-Fedora 20/21/22/Rawhide & Epel 7
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+[TIP]
+.Fedora 20/21/22/Rawhide & Epel 7
+====
 Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr] repository.
 
 ---------------------------------
 dnf copr enable jkonecny/kakoune
 dnf install kakoune
 ---------------------------------
+====
 
-Arch Linux
-~~~~~~~~~
-
+[TIP]
+.Arch Linux
+====
 A PKGBUILD https://aur.archlinux.org/packages/kakoune-git[kakoune-git]
 to install Kakoune is available in the https://wiki.archlinux.org/index.php/Arch_User_Repository[AUR].
 
@@ -135,17 +142,19 @@ to install Kakoune is available in the https://wiki.archlinux.org/index.php/Arch
 # For example build and install Kakoune via yaourt
 yaourt -Sy kakoune-git
 --------------------------------
+====
 
-Exherbo
-~~~~~~~
-
+[TIP]
+.Exherbo
+====
 --------------------------------
 cave resolve -x repository/mawww
 cave resolve -x kakoune
 --------------------------------
+====
 
 Running
--------
+~~~~~~~
 
 Just running *kak* launch a new kak session with a client on local terminal.
 *kak* accepts some switches:
@@ -173,8 +182,37 @@ defaulting to $HOME/.config), and finally $XDG_CONFIG_HOME/kak/kakrc.
 The common pattern is to add links to $XDG_CONFIG_HOME/kak/autoload to the
 scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
 
-Basic Movement
---------------
+Basic Interaction
+-----------------
+
+Selections
+~~~~~~~~~~
+
+The main concept in Kakoune is the selection. A selection is an inclusive,
+directed range of character. A selection has two ends, the anchor and the
+cursor.
+
+There is always at least one selection, and a selection is always at least
+one character (in which case the anchor and cursor of the selections are
+on the same character).
+
+Normal Mode
+~~~~~~~~~~~
+
+In normal mode, keys are not inserted directly inside the buffer, but are editing
+commands. These commands provides ways to manipulate either the selections themselves,
+or the selected text.
+
+Insert Mode
+~~~~~~~~~~~
+
+When entering insert mode, keys are now directly inserted before each selections
+cursor. A few additional keys are supported, like arrow keys to move around, however
+their use is not encouraged. You can go back to normal mode by pressing the +<esc>+
+key.
+
+Movement
+~~~~~~~~
 
  * +h+: select the character on the right of selection end
  * +j+: select the character below the selection end
@@ -218,13 +256,13 @@ A word is a sequence of alphanumeric characters or underscore, a WORD is a
 sequence of non whitespace characters.
 
 Appending
----------
+~~~~~~~~~
 
 for most selection commands, using shift permits to extend current selection
 instead of replacing it. for example, +wWW+ selects 3 consecutive words
 
 Using Counts
-------------
+~~~~~~~~~~~~
 
 Most selection commands also support counts, which are entered before the
 command itself.
@@ -233,19 +271,19 @@ for example, +3W+ selects 3 consecutive words and +3w+ select the third word on
 the right of selection end.
 
 Changes
--------
+~~~~~~~
 
- * +i+: insert before current selection
- * +a+: insert after current selection
+ * +i+: enter insert mode before current selection
+ * +a+: enter insert mode after current selection
  * +d+: yank and delete current selection
- * +c+: yank and delete current selection and insert
+ * +c+: yank and delete current selection and enter insert mode
  * +.+: repeat last insert mode change (+i+, +a+, or +c+, including
         the inserted text)
 
- * +I+: insert at current selection begin line start
- * +A+: insert at current selection end line end
- * +o+: insert in a new line below current selection end
- * +O+: insert in a new line above current selection begin
+ * +I+: enter insert mode at current selection begin line start
+ * +A+: enter insert mode at current selection end line end
+ * +o+: enter insert mode in a new line below current selection end
+ * +O+: enter insert mode in a new line above current selection begin
 
  * +y+: yank selections
  * +p+: paste after current selection end
@@ -299,7 +337,7 @@ Changes
             independently.
 
 Goto Commands
--------------
+~~~~~~~~~~~~~
 
 Commands begining with g are used to goto certain position and or buffer:
 
@@ -319,7 +357,7 @@ Commands begining with g are used to goto certain position and or buffer:
  * +g.+: go to last buffer modifiction position
 
 View commands
--------------
+~~~~~~~~~~~~~
 
 Some commands, all begining with v permit to manipulate the current
 view.
@@ -333,7 +371,7 @@ view.
  * +vl+: scroll the window count columns right
 
 Jump list
----------
+~~~~~~~~~
 
 Some commands, like the goto commands, buffer switch or search commands,
 push the previous selections to the client's jump list. It is possible
@@ -344,7 +382,7 @@ to forward or backward in the jump list using:
  * +control-s+: save current selections
 
 Multi Selection
----------------
+~~~~~~~~~~~~~~~
 
 Kak was designed from the start to handle multiple selections.
 One way to get a multiselection is via the +s+ key.
@@ -380,7 +418,7 @@ not containing a match.
 Selections whose shell command returns 0 will be kept, other will be dropped.
 
 Object Selection
-----------------
+~~~~~~~~~~~~~~~~
 
 Some keys allow you to select a text object:
 
@@ -414,48 +452,16 @@ object you want.
 For nestable objects, a count can be used in order to specify which surrounding
 level to select.
 
-Registers
----------
+Commands
+--------
 
-registers are named list of text. They are used for various purpose, like
-storing the last yanked test, or the captures groups associated with the
-selections.
+When pressing +:+ in normal mode, Kakoune will open a prompt to enter a command.
 
-While in insert mode, ctrl-r followed by a register name (one character)
-inserts it.
-
-For example, ctrl-r followed by " will insert the currently yanked text.
-ctrl-r followed by 2 will insert the second capture group from the last regex
-selection.
-
-Registers are lists, instead of simply text in order to interact well with
-multiselection. Each selection have it's own captures, or yank buffer.
-
-Macros
-------
-
-Kakoune can record and replay a sequence of key press.
-
-When pressing the +Q+ key, followed by an alphabetic key for the macro name,
-Kakoune begins macro recording: every pressed keys will be added to the
-macro until the +Q+ key is pressed again.
-
-To replay a macro, use the +q+ key, followed by the macro name.
-
-Search selection
-----------------
-
-Using the +*+ key, you can set the search pattern to the current selection.
-This tries to be intelligent. It will for example detect if current selection
-begins and/or end at word boundaries, and set the search pattern accordingly.
-
-with +alt-*+ you can set the search pattern to the current seletion without
-Kakoune trying to be smart.
+Commands are used for non editing tasks, such as opening a buffer, writing the
+current one, quitting, etc...
 
 Basic Commands
---------------
-
-Commands are entered using +:+.
+~~~~~~~~~~~~~~
 
  * +e[dit] <filename> [<line> [<column>]]+: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
@@ -482,42 +488,8 @@ Commands are entered using +:+.
       +:nop %sh{ echo echo tchou }+ will not, but both will execute the
       shell command.
 
-Exec and Eval
--------------
-
-the +:exec+ and +:eval+ commands can be used for running Kakoune commands.
-+:exec+ keys as if they were pressed, whereas +:eval+ executes it's given
-paremeters as if they were entered in the command prompt. By default,
-they do their execution in the context of the current client.
-
-Some parameters provide a way to change the context of execution:
-
- * +-client <name>+: execute in the context of the client named <name>
- * +-try-client <name>+: execute in the context of the client named
-     <name> if such client exists, or else in the current context.
- * +-draft+: execute in a copy of the context of the selected client
-     modifications to the selections or input state will not affect
-     the client. This permits to make some modification to the buffer
-     without modifying the user's selection.
- * +-itersel+ (requires +-draft+): execute once per selection, in a
-     context with only the considered selection. This permits to avoid
-     cases where the selections may get merged.
- * +-buffer <names>+: execute in the context of each buffers in the
-     comma separated list <names>
- * +-no-hooks+: disable hook execution while executing the keys/commands
-
-The execution stops when the last key/command is reached, or an error
-is raised.
-
-key parameters gets concatenated, so the following commands are equivalent.
-
-----------------------
-:exec otest<space>1
-:exec o test <space> 1
-----------------------
-
 String syntax
--------------
+~~~~~~~~~~~~~
 
 When entering a command, parameters are separated by whitespace (shell like),
 if you want to give parameters with spaces, you should quote them.
@@ -527,7 +499,7 @@ Kakoune support three string syntax:
  * +\'strings\'+: uninterpreted strings, you can use \' to escape the separator,
      every other char is itself.
 
- * +"strings"+: expended strings, % strings (see %sh, %opt or %reg) contained
+ * +"strings"+: expanded strings, % strings (see %sh, %opt or %reg) contained
      are expended. Use \% to escape a % inside them, and \\ to escape a slash.
 
  * +%\{strings\}+: these strings are very useful when entering commands
@@ -538,6 +510,121 @@ Kakoune support three string syntax:
    - if the character following the % is one of {[(<, then the closing one is
      the matching }])> and the delimiters are not escapable but are nestable.
      for example +%{ roger {}; }+ is a valid string, +%{ marcel \}+ as well.
+
+Expansions
+^^^^^^^^^^
+
+A special kind of +%\{strings\}+ can be used, with a type between
++%+ and the opening delimiter (which cannot be alphanumeric). These
+strings are expanded according to their type.
+
+For example +%opt{autoinfo}+ is of type 'opt'. opt expansions are replaced
+by the value of the given option (here +autoinfo+).
+
+Supported types are:
+
+ * +sh+: shell expansion, similar to posix shell $(...) construct, see the
+     Shell expansion section for more details.
+ * +reg+: register expansion, will be replaced by the content of the given
+     register.
+ * +opt+: option expansion, will be replaced with the value of the given
+     option
+ * +val+: value expansion, gives access to the environment variable available
+     to the Shell expansion. The +kak_+ prefix is not used there.
+
+for example you can display last search pattern with
+
+-------------
+:echo %reg{/}
+-------------
+
+Shell expansion
+^^^^^^^^^^^^^^^
+
+The +%sh{...}+ expansion replaces it's content with the output of the shell
+commands in it, it is similar to the shell $(...) syntax and is evaluated
+only when needed.
+
+for example: %sh{ ls } is replaced with the output of the ls command.
+
+Some of Kakoune state is available through environment variables:
+
+ * +kak_selection+: content of the main selection
+ * +kak_selections+: content of the selection separated by colons, colons in
+    the selection contents are escapted with a backslash.
+ * +kak_bufname+: name of the current buffer
+ * +kak_buflist+: the current buffer list, each buffer seperated by a colon
+ * +kak_timestamp+: timestamp of the current buffer, the timestamp is an
+       integer value which is incremented each time the buffer is modified.
+ * +kak_runtime+: directory containing the kak binary
+ * +kak_opt_<name>+: value of option <name>
+ * +kak_reg_<r>+: value of register <r>
+ * +kak_socket+: filename of session socket (/tmp/kak-<session>)
+ * +kak_client+: name of current client
+ * +kak_cursor_line+: line of the end of the main selection
+ * +kak_cursor_column+: column of the end of the main selection (in byte)
+ * +kak_cursor_char_column+: column of the end of the main selection (in character)
+ * +kak_hook_param+: filtering text passed to the currently executing hook
+
+Note that in order to make only needed information available, Kakoune needs
+to find the environment variable reference in the shell script executed.
+Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environment
+variable will not work.
+
+for example you can print informations on the current file in the status
+line using:
+
+-------------------------------
+:echo %sh{ ls -l $kak_bufname }
+-------------------------------
+
+Kakrc
+-----
+
+The kakrc file in +../share/kak/kakrc+ (relative to the +kak+ binary)
+is a list of kak commands to be executed at startup.
+
+The current behaviour is to execute local user commands in the file
+$HOME/.config/kak/kakrc and in all files in $HOME/.config/kak/autoload
+directory
+
+Place links to the files in +rc/+ in your autoload directory in order to
+execute them on startup, or use the runtime command (which sources relative
+to the kak binary) to load them on demand.
+
+Existing commands files are:
+
+ * *rc/kakrc.kak*: provides kak commands files autodetection and highlighting
+ * *rc/cpp.kak*: provides C/CPP files autodetection and highlighting and the
+     +:alt+ command for switching from C/CPP file to h/hpp one.
+ * *rc/asciidoc.kak*: provides asciidoc files autodetection and highlighting
+ * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
+ * *rc/git.kak*: provides various git format highlighting (commit message editing,
+     interactive rebase)
+ * *rc/git-tools.kak*: provides some git integration, like +:git-blame+, +:git-show+
+     or +:git-diff-show+
+ * *rc/make.kak*: provides the +:make+ and +:errjump+ commands along with
+     highlighting for compiler output.
+ * *rc/man.kak*: provides the +:man+ command
+ * *rc/grep.kak*: provides the +:grep+ and +:gjump+ commands along with highlighting
+     for grep output.
+ * *rc/ctags.kak*: provides the +:tag+ command to jump on a tag definition using
+     exuberant ctags files, this script requires the *readtags* binary, available
+     in the exuberant ctags package but not installed by default.
+ * *rc/client.kak*: provides the +:new+ command to launch a new client on the current
+     session, if tmux is detected, launch the client in a new tmux split, else
+     launch in a new terminal emulator.
+ * *rc/clang.kak*: provides the +:clang-enable-autocomplete+ command for C/CPP
+     insert mode completion support. This requires the clang++ compiler to be
+     available. You can use the +clang_options+ option to specify switches to
+     be passed to the compiler.
+
+Certain command files defines options, such as +grepcmd+ (for +:grep+) +makecmd+
+(for +:make+) or +termcmd+ (for +:new+).
+
+Some options are shared with commands. +:grep+ and +:make+ honor the +toolsclient+ option,
+if specified, to open their buffer in it rather than the current client. man honor
+the +docsclient+ option for the same purpose.
 
 Options
 -------
@@ -560,9 +647,9 @@ Options are typed, their type can be
 
 Options value can be changed using the +set+ commands:
 
---------------------------------------------------------------
+------------------------------------------------------------------------------
 :set [global,buffer,window] <option> <value> # buffer, window, or global scope
---------------------------------------------------------------
+------------------------------------------------------------------------------
 
 Option values can be different by scope, an option can have a global
 value, a buffer value and a window value. The effective value of an
@@ -633,8 +720,147 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    - +ncurses_status_on_top+: if +yes+, or +true+ the status line will be placed
      at the top of the terminal rather than at the bottom.
 
-Insert mode completion
+Faces
+-----
+
+A Face refer the how specified text is displayed, a Face has a foreground
+color, a background color, and some attributes.
+
+Faces can be defined and modified with the face command.
+
+-----------------------
+:face <name> <facespec>
+-----------------------
+
+Any place requiring a face can take either a face name defined with the +face+
+command or a direct face description (called _facespec_) with the following
+syntax:
+
+--------------------------------
+fg_color[,bg_color][+attributes]
+--------------------------------
+
+fg_color and bg_color can be:
+
+ * A named color: +black, red, green, yellow, blue, magenta, cyan, white+.
+ * +default+, which keeps the existing color
+ * An rgb color: +rgb:RRGGBB+, with RRGGBB the hexadecimal value of the color.
+
+not specifying bg_color uses +default+
+
+attributes is a string of letters each defining an attributes:
+
+ * +u+: Underline
+ * +r+: Reverse
+ * +b+: Bold
+
+Using named faces instead of facespec permits to change the effective faces
+afterward.
+
+there are some builtins faces used by internal Kakoune functionalities:
+
+ * +PrimarySelection+: main selection face for every selected character except
+     the cursor
+ * +SecondarySelection+: secondary selection face for every selected character
+     except the cursor
+ * +PrimaryCursor+: cursor of the primary selection
+ * +SecondaryCursor+: cursor of the secondary selection
+ * +LineNumbers+: face used by the number_lines highlighter
+ * +LineNumberAbsolute+: face used to highlight the line number of the main
+     selection
+ * +MenuForeground+: face for the selected element in menus
+ * +MenuBackground+: face for the not selected elements in menus
+ * +Information+: face for the informations windows and information messages
+ * +Error+: face of error messages
+ * +StatusLine+: face used for the status line
+ * +StatusCursor+: face used for the status line cursor
+ * +Prompt+: face used prompt displayed on the status line
+
+Advanced topics
+---------------
+
+Registers
+~~~~~~~~~
+
+Registers are named list of text. They are used for various purpose, like
+storing the last yanked test, or the captures groups associated with the
+selections.
+
+Yanking and pasting uses the register +"+, however most commands using register
+can have their default register overriden by using the +"+ key followed by the
+register. For example +"sy+ will yank (+y+ command) in the +s+ register. +"sp+
+will paste from the +s+ register.
+
+While in insert mode or in a prompt, +ctrl-r+ followed by a register name
+(one character) inserts it.
+
+For example, +ctrl-r+ followed by " will insert the currently yanked text.
++ctrl-r+ followed by 2 will insert the second capture group from the last regex
+selection.
+
+Registers are lists, instead of simply text in order to interact well with
+multiselection. Each selection have it's own captures, or yank buffer.
+
+Macros
+~~~~~~
+
+Kakoune can record and replay a sequence of key press.
+
+When pressing the +Q+ key, followed by an alphabetic key for the macro name,
+Kakoune begins macro recording: every pressed keys will be added to the
+macro until the +Q+ key is pressed again.
+
+To replay a macro, use the +q+ key, followed by the macro name.
+
+macros are actually stored as a key sequence into a register, a macro name
+is a register name.
+
+Search selection
+~~~~~~~~~~~~~~~~
+
+Using the +*+ key, you can set the search pattern to the current selection.
+This tries to be intelligent. It will for example detect if current selection
+begins and/or end at word boundaries, and set the search pattern accordingly.
+
+with +alt-*+ you can set the search pattern to the current seletion without
+Kakoune trying to be smart.
+
+Exec and Eval
+~~~~~~~~~~~~~
+
+the +:exec+ and +:eval+ commands can be used for running Kakoune commands.
++:exec+ run keys as if they were pressed, whereas +:eval+ executes it's given
+paremeters as if they were entered in the command prompt. By default,
+they do their execution in the context of the current client.
+
+Some parameters provide a way to change the context of execution:
+
+ * +-client <name>+: execute in the context of the client named <name>
+ * +-try-client <name>+: execute in the context of the client named
+     <name> if such client exists, or else in the current context.
+ * +-draft+: execute in a copy of the context of the selected client
+     modifications to the selections or input state will not affect
+     the client. This permits to make some modification to the buffer
+     without modifying the user's selection.
+ * +-itersel+ (requires +-draft+): execute once per selection, in a
+     context with only the considered selection. This permits to avoid
+     cases where the selections may get merged.
+ * +-buffer <names>+: execute in the context of each buffers in the
+     comma separated list <names>
+ * +-no-hooks+: disable hook execution while executing the keys/commands
+
+The execution stops when the last key/command is reached, or an error
+is raised.
+
+key parameters gets concatenated, so the following commands are equivalent.
+
 ----------------------
+:exec otest<space>1
+:exec o test <space> 1
+----------------------
+
+Insert mode completion
+~~~~~~~~~~~~~~~~~~~~~~
 
 Kakoune can propose completions while inserting text, the +completers+ option
 control automatic completion, which kicks in when a certain idle timeout is
@@ -647,7 +873,7 @@ using *control-x*, followed, by:
  * *o* : option based completion
 
 Highlighters
-------------
+~~~~~~~~~~~~
 
 Manipulation of the displayed text is done through highlighters, which can be added
 or removed with the command
@@ -683,7 +909,7 @@ general highlighters are:
        (see below)
 
 Highlighting Groups
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 the +group+ highlighter is a container for other highlighters. You can add
 a group to the current window using
@@ -707,7 +933,7 @@ addhl -group <name>/<subname> <type> <params>...
 ------------------------------------------------
 
 Regions highlighters
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 A special highlighter provide a way to segment the buffer into regions, which are
 to be highlighted differently.
@@ -768,7 +994,7 @@ addhl -group <lang>/comment ...
 -----------------------------------------------------------------
 
 Shared Highlighters
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 Highlighters are often defined for a specific filetype, and it makes then sense to
 share the highlighters between all the windows on the same filetypes.
@@ -799,7 +1025,7 @@ addhl ref <name>
 the +ref+ can reference any named highlighter in the shared namespace.
 
 Hooks
------
+~~~~~
 
 commands can be registred to be executed when certain events arise.
 to register a hook, use the hook command.
@@ -875,7 +1101,7 @@ existing hooks are:
 when not specified, the filtering text is an empty string.
 
 Key Mapping
------------
+~~~~~~~~~~~
 
 You can redefine keys meaning using the map command
 
@@ -890,119 +1116,8 @@ a single key name and +keys+ a list of keys.
 +user+ mode allows for user mapping behind the +,+ key. Keys will be executed in
 normal mode.
 
-Faces
------
-
-A Face refer the how specified text is displayed, a Face has a foreground
-color, a background color, and some attributes.
-
-Faces can be defined and modified with the face command.
-
------------------------
-:face <name> <facespec>
------------------------
-
-Any place requiring a face can take either a face name defined with the +face+
-command or a direct face description (called _facespec_) with the following
-syntax:
-
---------------------------------
-fg_color[,bg_color][+attributes]
---------------------------------
-
-fg_color and bg_color can be:
-
- * A named color: +black, red, green, yellow, blue, magenta, cyan, white+.
- * +default+, which keeps the existing color
- * An rgb color: +rgb:RRGGBB+, with RRGGBB the hexadecimal value of the color.
-
-not specifying bg_color uses +default+
-
-attributes is a string of letters each defining an attributes:
-
- * +u+: Underline
- * +r+: Reverse
- * +b+: Bold
-
-Using named faces instead of facespec permits to change the effective faces
-afterward.
-
-there are some builtins faces used by internal Kakoune functionalities:
-
- * +PrimarySelection+: main selection face for every selected character except
-     the cursor
- * +SecondarySelection+: secondary selection face for every selected character
-     except the cursor
- * +PrimaryCursor+: cursor of the primary selection
- * +SecondaryCursor+: cursor of the secondary selection
- * +LineNumbers+: face used by the number_lines highlighter
- * +LineNumberAbsolute+: face used to highlight the line number of the main
-     selection
- * +MenuForeground+: face for the selected element in menus
- * +MenuBackground+: face for the not selected elements in menus
- * +Information+: face for the informations windows and information messages
- * +Error+: face of error messages
- * +StatusLine+: face used for the status line
- * +StatusCursor+: face used for the status line cursor
- * +Prompt+: face used prompt displayed on the status line
-
-Shell expansion
----------------
-
-A special string syntax is supported which replace it's content with the
-output of the shell commands in it, it is similar to the shell $(...)
-syntax and is evaluated only when needed.
-for example: %sh{ ls } is replaced with the output of the ls command.
-
-Some of Kakoune state is available through environment variables:
-
- * +kak_selection+: content of the main selection
- * +kak_selections+: content of the selection separated by colons, colons in
-    the selection contents are escapted with a backslash.
- * +kak_bufname+: name of the current buffer
- * +kak_buflist+: the current buffer list, each buffer seperated by a colon
- * +kak_timestamp+: timestamp of the current buffer, the timestamp is an
-       integer value which is incremented each time the buffer is modified.
- * +kak_runtime+: directory containing the kak binary
- * +kak_opt_<name>+: value of option <name>
- * +kak_reg_<r>+: value of register <r>
- * +kak_socket+: filename of session socket (/tmp/kak-<session>)
- * +kak_client+: name of current client
- * +kak_cursor_line+: line of the end of the main selection
- * +kak_cursor_column+: column of the end of the main selection (in byte)
- * +kak_cursor_char_column+: column of the end of the main selection (in character)
- * +kak_hook_param+: filtering text passed to the currently executing hook
-
-Note that in order to make only needed information available, Kakoune needs
-to find the environment variable reference in the shell script executed.
-Hence +%sh{ ./script.sh }+ with +script.sh+ referencing an environment
-variable will not work.
-
-for example you can print informations on the current file in the status
-line using:
-
--------------------------------
-:echo %sh{ ls -l $kak_bufname }
--------------------------------
-
-Register, Option and Value expansion
-------------------------------------
-
-Similar to shell expansion, register contents and options values can be
-accessed through +%reg{<register>}+ and +%opt{<option>}+ syntax.
-
-for example you can display last search pattern with
-
--------------
-:echo %reg{/}
--------------
-
-more generally, value accessible through shell can be accessed with
-+%val{<name>}+, with <name> being the environment variable name minus
-the +kak_+ prefix.
-
 Defining Commands
------------------
+~~~~~~~~~~~~~~~~~
 
 new commands can be defined using the +:def+ command.
 
@@ -1058,7 +1173,7 @@ Note that these commands are available in interactive command mode, but are
 not that useful in this context.
 
 Aliases
--------
+~~~~~~~
 
 With +:alias+ commands can be given additional names. aliases are scoped, so
 that an alias can refer to one command for a buffer, and to another for another
@@ -1079,7 +1194,7 @@ Will remove the given alias in the given scope. If +<expected>+ is specified
 the alias will only be removed if its current value is +<expected>+.
 
 FIFO Buffer
------------
+~~~~~~~~~~~
 
 the +:edit+ command can take a -fifo parameter:
 
@@ -1102,58 +1217,10 @@ to it will receive SIGPIPE. This is usefull as it permits to stop the writing
 program when the buffer is deleted.
 
 Menus
------
+~~~~~
 
 When a menu is displayed, you can use *j*, *control-n* or *tab* to select the next
 entry, and *k*, *control-p* or *shift-tab* to select the previous one.
 
 Using the */* key, you can enter some regex in order to restrict available choices
 to the matching ones.
-
-Kakrc
------
-
-The kakrc file next to the kak binary (in the src directory for the moment)
-is a list of kak commands to be executed at startup.
-
-The current behaviour is to execute local user commands in the file
-$HOME/.config/kak/kakrc and in all files in $HOME/.config/kak/autoload
-directory
-
-Place links to the files in src/rc/ in your autoload directory in order to
-execute them on startup, or use the runtime command (which sources relative
-to the kak binary) to load them on demand.
-
-Existing commands files are:
-
- * *rc/kakrc.kak*: provides kak commands files autodetection and highlighting
- * *rc/cpp.kak*: provides C/CPP files autodetection and highlighting and the
-     +:alt+ command for switching from C/CPP file to h/hpp one.
- * *rc/asciidoc.kak*: provides asciidoc files autodetection and highlighting
- * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
- * *rc/git.kak*: provides various git format highlighting (commit message editing,
-     interactive rebase)
- * *rc/git-tools.kak*: provides some git integration, like +:git-blame+, +:git-show+
-     or +:git-diff-show+
- * *rc/make.kak*: provides the +:make+ and +:errjump+ commands along with
-     highlighting for compiler output.
- * *rc/man.kak*: provides the +:man+ command
- * *rc/grep.kak*: provides the +:grep+ and +:gjump+ commands along with highlighting
-     for grep output.
- * *rc/ctags.kak*: provides the +:tag+ command to jump on a tag definition using
-     exuberant ctags files, this script requires the *readtags* binary, available
-     in the exuberant ctags package but not installed by default.
- * *rc/client.kak*: provides the +:new+ command to launch a new client on the current
-     session, if tmux is detected, launch the client in a new tmux split, else
-     launch in a new terminal emulator.
- * *rc/clang.kak*: provides the +:clang-enable-autocomplete+ command for C/CPP
-     insert mode completion support. This requires the clang++ compiler to be
-     available. You can use the +clang_options+ option to specify switches to
-     be passed to the compiler.
-
-Certain command files defines options, such as +grepcmd+ (for +:grep+) +makecmd+
-(for +:make+) or +termcmd+ (for +:new+).
-
-Some options are shared with commands. +:grep+ and +:make+ honor the +toolsclient+ option,
-if specified, to open their buffer in it rather than the current client. man honor
-the +docsclient+ option for the same purpose.
