@@ -13,7 +13,8 @@ void write_debug(StringView str)
 {
     if (not BufferManager::has_instance())
     {
-        fprintf(stderr, "%s\n", (const char*)str.zstr());
+        write(2, str.data(), (int)str.length());
+        write(2, "\n", 1);
         return;
     }
 
