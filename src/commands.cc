@@ -1300,6 +1300,26 @@ const CommandDesc menu_cmd = {
     }
 };
 
+const CommandDesc onkey_cmd = {
+    "onkey",
+    nullptr,
+    "onkey <register> <command>: wait for next user key, store it in <register> and execute <command>",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context)
+    {
+        String reg = parser[0];
+        String command = parser[1];
+        context.input_handler().on_next_key(KeymapMode::None,
+                                            [=](Key key, Context& context) {
+            RegisterManager::instance()[reg] = key_to_str(key);
+            CommandManager::instance().execute(command, context);
+        });
+    }
+};
+
 const CommandDesc info_cmd = {
     "info",
     nullptr,
@@ -1517,6 +1537,7 @@ void register_commands()
     register_command(eval_string_cmd);
     register_command(prompt_cmd);
     register_command(menu_cmd);
+    register_command(onkey_cmd);
     register_command(info_cmd);
     register_command(try_catch_cmd);
     register_command(face_cmd);
