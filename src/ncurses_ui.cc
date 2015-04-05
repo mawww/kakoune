@@ -453,11 +453,14 @@ Key NCursesUI::get_key()
         MEVENT ev;
         if (getmouse(&ev) == OK)
         {
+            auto wheel_down_mask = NCURSES_MOUSE_MASK(m_wheel_down_button, NCURSES_BUTTON_PRESSED);
+            auto wheel_up_mask = NCURSES_MOUSE_MASK(m_wheel_up_button, NCURSES_BUTTON_PRESSED);
+
             CharCoord pos{ ev.y, ev.x };
             if ((ev.bstate & BUTTON1_PRESSED) == BUTTON1_PRESSED) return mouse_press(pos);
             if ((ev.bstate & BUTTON1_RELEASED) == BUTTON1_RELEASED) return mouse_release(pos);
-            if ((ev.bstate & BUTTON2_PRESSED) == BUTTON2_PRESSED) return mouse_wheel_down(pos);
-            if ((ev.bstate & BUTTON4_PRESSED) == BUTTON4_PRESSED) return mouse_wheel_up(pos);
+            if ((ev.bstate & wheel_down_mask) == wheel_down_mask) return mouse_wheel_down(pos);
+            if ((ev.bstate & wheel_up_mask) == wheel_up_mask) return mouse_wheel_up(pos);
             else return mouse_pos(pos);
         }
     }
@@ -879,6 +882,18 @@ void NCursesUI::set_ui_options(const Options& options)
         auto it = options.find("ncurses_status_on_top");
         if (it != options.end())
             m_status_on_top = it->second == "yes" or it->second == "true";
+    }
+
+    {
+        auto wheel_down_it = options.find("ncurses_wheel_down_button");
+        if (wheel_down_it != options.end()) try {
+            m_wheel_down_button = str_to_int(wheel_down_it->second);;
+        } catch(...) {}
+
+        auto wheel_up_it = options.find("ncurses_wheel_up_button");
+        if (wheel_up_it != options.end()) try {
+            m_wheel_up_button = str_to_int(wheel_up_it->second);;
+        } catch(...) {}
     }
 }
 

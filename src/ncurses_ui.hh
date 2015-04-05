@@ -75,6 +75,9 @@ private:
     bool m_status_on_top = false;
     ConstArrayView<StringView> m_assistant;
 
+    int m_wheel_down_button = 2;
+    int m_wheel_up_button = 4;
+
     bool m_dirty = false;
 };
 
