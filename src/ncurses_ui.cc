@@ -867,31 +867,36 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant");
-        if (it != options.end())
-        {
-            if (it->second == "cat")
-                m_assistant = assistant_cat;
-            else if (it->second == "clippy")
-                m_assistant = assistant_clippy;
-            else if (it->second == "none" or it->second == "off")
-                m_assistant = ConstArrayView<StringView>{};
-        }
+        if (it == options.end())
+            m_assistant = assistant_clippy;
+        else if (it->second == "cat")
+            m_assistant = assistant_cat;
+        else if (it->second == "clippy")
+            m_assistant = assistant_clippy;
+        else if (it->second == "none" or it->second == "off")
+            m_assistant = ConstArrayView<StringView>{};
     }
 
     {
         auto it = options.find("ncurses_status_on_top");
-        if (it != options.end())
+        if (it == options.end())
+            m_status_on_top = false;
+        else
             m_status_on_top = it->second == "yes" or it->second == "true";
     }
 
     {
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
-        if (wheel_down_it != options.end()) try {
+        if (wheel_down_it == options.end())
+            m_wheel_down_button = 2;
+        else try {
             m_wheel_down_button = str_to_int(wheel_down_it->second);;
         } catch(...) {}
 
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
-        if (wheel_up_it != options.end()) try {
+        if (wheel_up_it == options.end())
+            m_wheel_up_button = 4;
+        else try {
             m_wheel_up_button = str_to_int(wheel_up_it->second);;
         } catch(...) {}
     }
