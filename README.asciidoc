@@ -719,6 +719,10 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    the user interface implementation. The NCurses UI support the following option:
    - `ncurses_status_on_top`: if `yes`, or `true` the status line will be placed
      at the top of the terminal rather than at the bottom.
+   - `ncurses_assistant`: specify the nice assistant you get in info boxes, can
+      be 'clippy' (the default), 'cat' or 'none'
+   - `ncurses_wheel_down_button` and `ncurses_wheel_up_button`: specify which
+      button send for wheel down/up events.
 
 Faces
 -----
