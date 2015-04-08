@@ -26,8 +26,8 @@ struct Regex : std::regex
         : std::regex(begin, end, flags), m_str(begin, end) {}
 
     bool empty() const { return m_str.empty(); }
-    bool operator==(const Regex& other) { return m_str == other.m_str; }
-    bool operator!=(const Regex& other) { return m_str != other.m_str; }
+    bool operator==(const Regex& other) const { return m_str == other.m_str; }
+    bool operator!=(const Regex& other) const { return m_str != other.m_str; }
 
     const String& str() const { return m_str; }
 
