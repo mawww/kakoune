@@ -15,9 +15,9 @@ class Scope
 public:
     Scope(Scope& parent)
         : m_options(parent.options()),
-           m_hooks(parent.hooks()),
-           m_keymaps(parent.keymaps()),
-           m_aliases(parent.aliases()) {}
+          m_hooks(parent.hooks()),
+          m_keymaps(parent.keymaps()),
+          m_aliases(parent.aliases()) {}
 
     OptionManager&       options()       { return m_options; }
     const OptionManager& options() const { return m_options; }
