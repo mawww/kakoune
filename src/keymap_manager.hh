@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-enum class KeymapMode : int
+enum class KeymapMode : char
 {
     None,
     Normal,

@@ -33,7 +33,7 @@ using KeyCallback = std::function<void (Key, Context&)>;
 class InputMode;
 class DisplayLine;
 enum class InsertMode : unsigned;
-enum class KeymapMode : int;
+enum class KeymapMode : char;
 
 class InputHandler : public SafeCountable
 {
