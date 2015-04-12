@@ -65,7 +65,7 @@ public:
 
 private:
     T* m_pointer;
-    size_t   m_size;
+    size_t m_size;
 };
 
 template<typename T>
