@@ -375,6 +375,54 @@ const CommandDesc buffer_cmd = {
     }
 };
 
+Buffer& next_buffer(Context& context) {
+    auto& buffer_manager = BufferManager::instance();
+    if (buffer_manager.end()->get() == &context.buffer())
+    {
+        return **buffer_manager.begin();
+    }
+    else
+    {
+        bool found_current = false;
+        Buffer& current_buffer = context.buffer();
+        for (auto& it : buffer_manager)
+        {
+            Buffer& buffer = *it;
+            if (&buffer == &current_buffer)
+            {
+                found_current = true;
+            }
+            else if (found_current)
+            {
+                return buffer;
+            }
+        }
+
+        return **buffer_manager.begin();
+    }
+}
+
+const CommandDesc nextbuffer_cmd = {
+    "nextbuffer",
+    "nb",
+    "nextbuffer: move to the next buffer in the list",
+    no_params,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context)
+    {
+        Buffer& nb = next_buffer(context);
+        BufferManager::instance().set_last_used_buffer(nb);
+
+        if (&nb != &context.buffer())
+        {
+            context.push_jump();
+            context.change_buffer(nb);
+        }
+    }
+};
+
 template<bool force>
 void delete_buffer(const ParametersParser& parser, Context& context)
 {
@@ -1517,6 +1565,7 @@ void register_commands()
     register_command(write_quit_cmd);
     register_command(force_write_quit_cmd);
     register_command(buffer_cmd);
+    register_command(nextbuffer_cmd);
     register_command(delbuf_cmd);
     register_command(force_delbuf_cmd);
     register_command(namebuf_cmd);
