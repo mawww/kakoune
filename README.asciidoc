@@ -495,17 +495,17 @@ if you want to give parameters with spaces, you should quote them.
 
 Kakoune support three string syntax:
  
- * `\'strings\'`: uninterpreted strings, you can use \' to escape the separator,
+ * `'strings'`: uninterpreted strings, you can use `\'` to escape the separator,
      every other char is itself.
 
- * `"strings"`: expanded strings, % strings (see %sh, %opt or %reg) contained
+ * `"strings"`: expanded strings, % strings (see <<Expansions>>) contained
      are expended. Use \% to escape a % inside them, and \\ to escape a slash.
 
  * `%{strings}`: these strings are very useful when entering commands
 
-   - the '{' and '}' delimiter are configurable: you can use any non
-     alphanumeric character. like %[string], %<string>, %(string), %~string~
-     or %!string!...
+   - the `{` and `}` delimiter are configurable: you can use any non
+     alphanumeric character. like `%[string]`, `%<string>`, `%(string)`,
+     `%\~string~` or `%!string!`...
    - if the character following the % is one of {[(<, then the closing one is
      the matching }])> and the delimiters are not escapable but are nestable.
      for example `%{ roger {}; }` is a valid string, `%{ marcel \}` as well.
@@ -522,8 +522,8 @@ by the value of the given option (here `autoinfo`).
 
 Supported types are:
 
- * `sh`: shell expansion, similar to posix shell $(...) construct, see the
-     Shell expansion section for more details.
+ * `sh`: shell expansion, similar to posix shell $(...) construct, see
+     <<Shell expansion>> for more details.
  * `reg`: register expansion, will be replaced by the content of the given
      register.
  * `opt`: option expansion, will be replaced with the value of the given
@@ -912,8 +912,7 @@ general highlighters are:
  * `number_lines <-relative> <-hlcursor>`: show line numbers. The -relative switch
        will show line numbers to main cursor line, the -hlcursor switch will
        highlight the cursor line with a separate face..
- * `fill <face>`: fill using given face, mostly useful with the `regions` highlighter
-       (see below)
+ * `fill <face>`: fill using given face, mostly useful with <<Regions highlighters>>
 
 Highlighting Groups
 ^^^^^^^^^^^^^^^^^^^
@@ -1228,8 +1227,8 @@ program when the buffer is deleted.
 Menus
 ~~~~~
 
-When a menu is displayed, you can use *j*, *control-n* or *tab* to select the next
-entry, and *k*, *control-p* or *shift-tab* to select the previous one.
+When a menu is displayed, you can use `j`, `<ctrl-n>` or `<tab>` to select the next
+entry, and `k`, `<ctrl-p>` or `<shift-tab>` to select the previous one.
 
-Using the */* key, you can enter some regex in order to restrict available choices
+Using the `/` key, you can enter some regex in order to restrict available choices
 to the matching ones.
