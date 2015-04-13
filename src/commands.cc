@@ -375,33 +375,6 @@ const CommandDesc buffer_cmd = {
     }
 };
 
-Buffer& next_buffer(Context& context) {
-    auto& buffer_manager = BufferManager::instance();
-    if (buffer_manager.end()->get() == &context.buffer())
-    {
-        return **buffer_manager.begin();
-    }
-    else
-    {
-        bool found_current = false;
-        Buffer& current_buffer = context.buffer();
-        for (auto& it : buffer_manager)
-        {
-            Buffer& buffer = *it;
-            if (&buffer == &current_buffer)
-            {
-                found_current = true;
-            }
-            else if (found_current)
-            {
-                return buffer;
-            }
-        }
-
-        return **buffer_manager.begin();
-    }
-}
-
 const CommandDesc nextbuffer_cmd = {
     "nextbuffer",
     "nb",
@@ -412,13 +385,22 @@ const CommandDesc nextbuffer_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        Buffer& nb = next_buffer(context);
-        BufferManager::instance().set_last_used_buffer(nb);
+        const Buffer* oldbuf = &context.buffer();
+        auto it = find_if(BufferManager::instance(),
+                          [oldbuf](const SafePtr<Buffer>& lhs)
+                          { return lhs.get() == oldbuf; });
 
-        if (&nb != &context.buffer())
+        kak_assert(it != BufferManager::instance().end());
+        if (++it == BufferManager::instance().end())
+            it = BufferManager::instance().begin();
+
+        Buffer* newbuf = it->get();
+        BufferManager::instance().set_last_used_buffer(*newbuf);
+
+        if (newbuf != oldbuf)
         {
             context.push_jump();
-            context.change_buffer(nb);
+            context.change_buffer(*newbuf);
         }
     }
 };
