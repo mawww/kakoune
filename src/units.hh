@@ -113,6 +113,7 @@ public:
     explicit constexpr operator bool() const { return m_value; }
 
     friend size_t hash_value(RealType val) { return hash_value(val.m_value); }
+    friend size_t abs(RealType val) { return abs(val.m_value); }
 
 private:
     ValueType m_value;
