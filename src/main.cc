@@ -123,18 +123,11 @@ void register_env_vars()
         }, {
             "selection_desc",
             [](StringView name, const Context& context)
-            { auto& sel = context.selections().main();
-              auto beg = sel.min();
-              return format("{}.{}+{}", beg.line + 1, beg.column + 1,
-                            context.buffer().distance(beg, sel.max())+1); }
+            { return selection_to_string(context.buffer(), context.selections().main()); }
         }, {
             "selections_desc",
             [](StringView name, const Context& context)
-            { return join(transformed(context.selections(), [&](const Selection& sel) {
-                    auto beg = sel.min();
-                    return format("{}.{}+{}", beg.line + 1, beg.column + 1,
-                                  context.buffer().distance(beg, sel.max())+1);
-                }), ':'); }
+            { return selection_list_to_string(context.selections()); }
         }, {
             "window_width",
             [](StringView name, const Context& context) -> String

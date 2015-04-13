@@ -1479,6 +1479,20 @@ const CommandDesc set_register_cmd = {
     }
 };
 
+const CommandDesc select_cmd = {
+    "select",
+    nullptr,
+    "select <selections_desc>: select given selections",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 1, 1},
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context)
+    {
+        context.selections() = selection_list_from_string(context.buffer(), parser[0]);
+    }
+};
+
 const CommandDesc change_working_directory_cmd = {
     "cd",
     nullptr,
@@ -1574,6 +1588,7 @@ void register_commands()
     register_command(face_cmd);
     register_command(set_client_name_cmd);
     register_command(set_register_cmd);
+    register_command(select_cmd);
     register_command(change_working_directory_cmd);
 }
 
