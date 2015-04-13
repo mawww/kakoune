@@ -322,7 +322,7 @@ Changes
  * `alt-&`: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
 
- * ` ` `: to lower case
+ * ```: to lower case
  * `~`: to upper case
  * `alt-``: swap case
 
@@ -439,7 +439,7 @@ object you want.
  * `a`, `<` or `>`: select the enclosing <> block
  * `"`: select the enclosing double quoted string
  * `'`: select the enclosing single quoted string
- * ` ` `: select the enclosing grave quoted string
+ * ```: select the enclosing grave quoted string
  * `w`: select the whole word
  * `W`: select the whole WORD
  * `s`: select the sentence
