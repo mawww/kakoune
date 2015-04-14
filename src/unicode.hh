@@ -15,11 +15,6 @@ inline bool is_eol(Codepoint c)
     return c == '\n';
 }
 
-inline bool is_blank(Codepoint c)
-{
-    return c == ' ' or c == '\t';
-}
-
 inline bool is_horizontal_blank(Codepoint c)
 {
     return c == ' ' or c == '\t';
@@ -36,12 +31,12 @@ inline bool is_word(Codepoint c)
 template<>
 inline bool is_word<WORD>(Codepoint c)
 {
-    return not is_blank(c) and not is_eol(c);
+    return not is_horizontal_blank(c) and not is_eol(c);
 }
 
 inline bool is_punctuation(Codepoint c)
 {
-    return not (is_word(c) or is_blank(c) or is_eol(c));
+    return not (is_word(c) or is_horizontal_blank(c) or is_eol(c));
 }
 
 enum class CharCategories
@@ -59,7 +54,7 @@ inline CharCategories categorize(Codepoint c)
         return CharCategories::Word;
     if (is_eol(c))
         return CharCategories::EndOfLine;
-    if (is_blank(c))
+    if (is_horizontal_blank(c))
         return CharCategories::Blank;
     return word_type == WORD ? CharCategories::Word
                              : CharCategories::Punctuation;

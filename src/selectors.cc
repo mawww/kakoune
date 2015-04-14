@@ -259,7 +259,7 @@ Selection select_sentence(const Buffer& buffer, const Selection& selection, Obje
     {
         BufferIterator prev_non_blank = first-1;
         skip_while_reverse(prev_non_blank, buffer.begin(),
-                           [](char c) { return is_blank(c) or is_eol(c); });
+                           [](char c) { return is_horizontal_blank(c) or is_eol(c); });
         if (is_end_of_sentence(*prev_non_blank))
             first = prev_non_blank;
     }
@@ -273,7 +273,7 @@ Selection select_sentence(const Buffer& buffer, const Selection& selection, Obje
         {
             char cur = *first;
             char prev = *(first-1);
-            if (not is_blank(cur))
+            if (not is_horizontal_blank(cur))
                 saw_non_blank = true;
             if (is_eol(prev) and is_eol(cur))
             {
@@ -289,7 +289,7 @@ Selection select_sentence(const Buffer& buffer, const Selection& selection, Obje
             }
             --first;
         }
-        skip_while(first, buffer.end(), is_blank);
+        skip_while(first, buffer.end(), is_horizontal_blank);
     }
     if (flags & ObjectFlags::ToEnd)
     {
@@ -304,7 +304,7 @@ Selection select_sentence(const Buffer& buffer, const Selection& selection, Obje
         if (not (flags & ObjectFlags::Inner) and last != buffer.end())
         {
             ++last;
-            skip_while(last, buffer.end(), is_blank);
+            skip_while(last, buffer.end(), is_horizontal_blank);
             --last;
         }
     }

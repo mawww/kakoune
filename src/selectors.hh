@@ -58,7 +58,7 @@ Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
     else if (is_word<word_type>(*begin))
         skip_while(end, buffer.end(), is_word<word_type>);
 
-    skip_while(end, buffer.end(), is_blank);
+    skip_while(end, buffer.end(), is_horizontal_blank);
 
     return utf8_range(begin, end-1);
 }
@@ -76,7 +76,7 @@ Selection select_to_next_word_end(const Buffer& buffer, const Selection& selecti
     if (begin == buffer.end())
         return selection;
     Utf8Iterator end = begin;
-    skip_while(end, buffer.end(), is_blank);
+    skip_while(end, buffer.end(), is_horizontal_blank);
 
     if (word_type == Word and is_punctuation(*end))
         skip_while(end, buffer.end(), is_punctuation);
@@ -97,7 +97,7 @@ Selection select_to_previous_word(const Buffer& buffer, const Selection& selecti
 
     skip_while_reverse(begin, buffer.begin(), is_eol);
     Utf8Iterator end = begin;
-    skip_while_reverse(end, buffer.begin(), is_blank);
+    skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
 
     bool with_end = false;
     if (word_type == Word and is_punctuation(*end))
@@ -153,7 +153,7 @@ Selection select_word(const Buffer& buffer,
         {
             skip_while(last, buffer.end(), is_word<word_type>);
             if (not (flags & ObjectFlags::Inner))
-                skip_while(last, buffer.end(), is_blank);
+                skip_while(last, buffer.end(), is_horizontal_blank);
             --last;
         }
     }
@@ -161,7 +161,7 @@ Selection select_word(const Buffer& buffer,
     {
         if (flags & ObjectFlags::ToBegin)
         {
-            skip_while_reverse(first, buffer.begin(), is_blank);
+            skip_while_reverse(first, buffer.begin(), is_horizontal_blank);
             if (not is_word<word_type>(*first))
                 return selection;
             skip_while_reverse(first, buffer.begin(), is_word<word_type>);
@@ -170,7 +170,7 @@ Selection select_word(const Buffer& buffer,
         }
         if (flags & ObjectFlags::ToEnd)
         {
-            skip_while(last, buffer.end(), is_blank);
+            skip_while(last, buffer.end(), is_horizontal_blank);
             --last;
         }
     }

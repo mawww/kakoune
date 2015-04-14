@@ -266,7 +266,7 @@ void to_next_word_begin(CharCount& pos, StringView line)
         while (pos != len and is_word<word_type>(line[pos]))
             ++pos;
     }
-    while (pos != len and is_blank(line[pos]))
+    while (pos != len and is_horizontal_blank(line[pos]))
         ++pos;
 }
 
@@ -278,7 +278,7 @@ void to_next_word_end(CharCount& pos, StringView line)
         return;
     ++pos;
 
-    while (pos != len and is_blank(line[pos]))
+    while (pos != len and is_horizontal_blank(line[pos]))
         ++pos;
 
     if (word_type == Word and is_punctuation(line[pos]))
@@ -301,7 +301,7 @@ void to_prev_word_begin(CharCount& pos, StringView line)
         return;
     --pos;
 
-    while (pos != 0_char and is_blank(line[pos]))
+    while (pos != 0_char and is_horizontal_blank(line[pos]))
         --pos;
 
     if (word_type == Word and is_punctuation(line[pos]))

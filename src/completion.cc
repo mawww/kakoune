@@ -17,10 +17,10 @@ Completions shell_complete(const Context& context, CompletionFlags flags,
     {
         command = (pos == 0 or prefix[pos-1] == ';' or prefix[pos-1] == '|' or
                    (pos > 1 and prefix[pos-1] == '&' and prefix[pos-2] == '&'));
-        while (pos != len and is_blank(prefix[pos]))
+        while (pos != len and is_horizontal_blank(prefix[pos]))
             ++pos;
         word_start = pos;
-        while (pos != len and not is_blank(prefix[pos]))
+        while (pos != len and not is_horizontal_blank(prefix[pos]))
             ++pos;
         word_end = pos;
     }
