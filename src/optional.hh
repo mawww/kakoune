@@ -78,8 +78,8 @@ public:
 private:
     void destruct_ifn() { if (m_valid) m_value.~T(); }
 
-    bool m_valid;
     union { T m_value; };
+    bool m_valid;
 };
 
 }
