@@ -134,6 +134,7 @@ void edit(const ParametersParser& parser, Context& context)
                                                : context.buffer().name();
 
     Buffer* buffer = nullptr;
+    Buffer* oldbuf = &context.buffer();
     if (not force_reload)
         buffer = BufferManager::instance().get_buffer_ifp(name);
     if (not buffer)
@@ -159,7 +160,7 @@ void edit(const ParametersParser& parser, Context& context)
         }
     }
 
-    BufferManager::instance().set_last_used_buffer(*buffer);
+    BufferManager::instance().set_last_used_buffer(*oldbuf);
 
     const size_t param_count = parser.positional_count();
     if (buffer != &context.buffer() or param_count > 1)
@@ -364,11 +365,12 @@ const CommandDesc buffer_cmd = {
     buffer_completer,
     [](const ParametersParser& parser, Context& context)
     {
+        Buffer* oldbuf = &context.buffer();
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
-        BufferManager::instance().set_last_used_buffer(buffer);
 
-        if (&buffer != &context.buffer())
+        if (&buffer != oldbuf)
         {
+            BufferManager::instance().set_last_used_buffer(*oldbuf);
             context.push_jump();
             context.change_buffer(buffer);
         }
@@ -385,7 +387,7 @@ const CommandDesc nextbuffer_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        const Buffer* oldbuf = &context.buffer();
+        Buffer* oldbuf = &context.buffer();
         auto it = find_if(BufferManager::instance(),
                           [oldbuf](const SafePtr<Buffer>& lhs)
                           { return lhs.get() == oldbuf; });
@@ -395,10 +397,10 @@ const CommandDesc nextbuffer_cmd = {
             it = BufferManager::instance().begin();
 
         Buffer* newbuf = it->get();
-        BufferManager::instance().set_last_used_buffer(*newbuf);
 
         if (newbuf != oldbuf)
         {
+            BufferManager::instance().set_last_used_buffer(*oldbuf);
             context.push_jump();
             context.change_buffer(*newbuf);
         }
