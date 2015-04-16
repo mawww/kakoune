@@ -224,8 +224,9 @@ void register_options()
                        "autoreload buffer when a filesystem modification is detected",
                        Ask);
     reg.declare_option("ui_options",
-                       "options passed to UI as a string map",
-                       UserInterface::Options());
+                       "colon separated list of <key>=<value> options that are"
+                       "passed to and interpreted by the user interface",
+                       UserInterface::Options{});
 }
 
 template<typename UI>
