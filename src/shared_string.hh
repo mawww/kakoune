@@ -109,7 +109,7 @@ public:
     void purge_unused();
 
 private:
-    UnorderedMap<StringView, StringDataPtr, MemoryDomain::SharedString> m_strings;
+    UnorderedSet<SharedString, MemoryDomain::SharedString> m_strings;
 };
 
 inline SharedString intern(StringView str)
