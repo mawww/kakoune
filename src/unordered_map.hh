@@ -16,7 +16,7 @@ using UnorderedMap = std::unordered_map<Key, Value, Hash<Key>, std::equal_to<Key
 
 template<typename Key, MemoryDomain domain = TypeDomain<Key>::domain()>
 using UnorderedSet = std::unordered_set<Key, Hash<Key>, std::equal_to<Key>,
-                                        Allocator<const Key, domain>>;
+                                        Allocator<Key, domain>>;
 
 }
 
