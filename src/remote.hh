@@ -37,8 +37,8 @@ private:
     void write_next_key();
 
     std::unique_ptr<UserInterface> m_ui;
-    CharCoord                      m_dimensions;
     std::unique_ptr<FDWatcher>     m_socket_watcher;
+    CharCoord                      m_dimensions;
 };
 
 void send_command(StringView session, StringView command);
