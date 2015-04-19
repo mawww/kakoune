@@ -138,7 +138,7 @@ void Client::change_buffer(Buffer& buffer)
     m_window->options().register_watcher(*this);
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
 
-    context().m_selections = std::move(ws.selections);
+    context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
     m_window->set_dimensions(ui().dimensions());
 
@@ -177,7 +177,7 @@ void Client::reload_buffer()
     ByteCoord cursor_pos = context().selections().main().cursor();
     Buffer* buf = create_buffer_from_file(buffer.name());
     kak_assert(buf == &buffer);
-    context().selections() = SelectionList{buffer, buffer.clamp(cursor_pos)};
+    context().selections_write_only() = SelectionList{buffer, buffer.clamp(cursor_pos)};
     context().window().set_position(view_pos);
     context().print_status({ "'" + buffer.display_name() + "' reloaded",
                              get_face("Information") });

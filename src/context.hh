@@ -90,6 +90,9 @@ public:
     const SelectionList& selections() const;
     Vector<String>  selections_content() const;
 
+    // Return potentially out of date selections
+    SelectionList& selections_write_only();
+
     void change_buffer(Buffer& buffer);
 
     void set_client(Client& client);
@@ -141,7 +144,6 @@ private:
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
 
-    friend class Client;
     Optional<SelectionList> m_selections;
 
     String m_name;

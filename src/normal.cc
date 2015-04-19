@@ -563,7 +563,7 @@ void regex_prompt(Context& context, const String prompt, T func)
                 if (event != PromptEvent::Change and context.has_ui())
                     context.ui().info_hide();
                 selections.update();
-                context.selections() = selections;
+                context.selections_write_only() = selections;
                 context.input_handler().set_prompt_face(get_face("Prompt"));
                 if (event == PromptEvent::Abort)
                     return;
@@ -600,7 +600,7 @@ void regex_prompt(Context& context, const String prompt, T func)
             }
             catch (runtime_error&)
             {
-                context.selections() = selections;
+                context.selections_write_only() = selections;
                 // only validation should propagate errors,
                 // incremental search should not.
                 if (event == PromptEvent::Validate)
@@ -733,7 +733,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
     }
     if (selections.empty())
         return;
-    context.selections() = selections;
+    context.selections_write_only() = std::move(selections);
     ScopedEdition edition(context);
     context.selections().insert(" "_str, InsertMode::Replace);
 }
@@ -743,7 +743,7 @@ void join_lines(Context& context, NormalParams params)
     SelectionList sels{context.selections()};
     auto restore_sels = on_scope_end([&]{
         sels.update();
-        context.selections() = std::move(sels);
+        context.selections_write_only() = std::move(sels);
     });
 
     join_lines_select_spaces(context, params);
@@ -766,7 +766,7 @@ void keep(Context& context, NormalParams)
         }
         if (keep.empty())
             throw runtime_error("no selections remaining");
-        context.selections() = std::move(keep);
+        context.selections_write_only() = std::move(keep);
     });
 }
 
@@ -788,7 +788,7 @@ void keep_pipe(Context& context, NormalParams)
             }
             if (keep.empty())
                 throw runtime_error("no selections remaining");
-            context.selections() = std::move(keep);
+            context.selections_write_only() = std::move(keep);
     });
 }
 template<bool indent_empty = false>
@@ -1100,7 +1100,7 @@ void jump(Context& context, NormalParams)
     BufferManager::instance().set_last_used_buffer(buffer);
     if (&buffer != &context.buffer())
         context.change_buffer(buffer);
-    context.selections() = jump;
+    context.selections_write_only() = jump;
 }
 
 void save_selections(Context& context, NormalParams)
@@ -1267,7 +1267,7 @@ void undo(Context& context, NormalParams)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
-            context.selections() = std::move(ranges);
+            context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
     }
     else if (not res)
@@ -1284,7 +1284,7 @@ void redo(Context& context, NormalParams)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
-            context.selections() = std::move(ranges);
+            context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
     }
 

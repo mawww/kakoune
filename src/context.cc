@@ -197,6 +197,13 @@ SelectionList& Context::selections()
     return *m_selections;
 }
 
+SelectionList& Context::selections_write_only()
+{
+    if (not m_selections)
+        throw runtime_error("no selections in context");
+    return *m_selections;
+}
+
 const SelectionList& Context::selections() const
 {
     return const_cast<Context&>(*this).selections();

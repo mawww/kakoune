@@ -60,7 +60,7 @@ struct MouseHandler
         {
             m_dragging = true;
             m_anchor = context.window().buffer_coord(key.mouse_coord());
-            context.selections() = SelectionList{ context.buffer(), m_anchor };
+            context.selections_write_only() = SelectionList{ context.buffer(), m_anchor };
             return true;
         }
         if (key.modifiers == Key::Modifiers::MouseRelease)
@@ -69,7 +69,7 @@ struct MouseHandler
                 return true;
             m_dragging = false;
             auto cursor = context.window().buffer_coord(key.mouse_coord());
-            context.selections() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
+            context.selections_write_only() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
             return true;
         }
         if (key.modifiers == Key::Modifiers::MousePos)
@@ -77,7 +77,7 @@ struct MouseHandler
             if (not m_dragging)
                 return true;
             auto cursor = context.window().buffer_coord(key.mouse_coord());
-            context.selections() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
+            context.selections_write_only() = SelectionList{ context.buffer(), Selection{m_anchor, cursor} };
             return true;
         }
         if (key.modifiers == Key::Modifiers::MouseWheelDown)

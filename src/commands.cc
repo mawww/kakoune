@@ -175,7 +175,7 @@ void edit(const ParametersParser& parser, Context& context)
                      std::max(0, str_to_int(parser[2]) - 1) : 0;
 
         auto& buffer = context.buffer();
-        context.selections() = { buffer, buffer.clamp({ line,  column }) };
+        context.selections_write_only() = { buffer, buffer.clamp({ line,  column }) };
         if (context.has_window())
             context.window().center_line(context.selections().main().cursor().line);
     }
@@ -1180,7 +1180,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             ScopedEdition edition{c};
             for (auto& sel : sels)
             {
-                c.selections() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
+                c.selections_write_only() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
                 c.selections().update();
 
                 func(parser, c);
@@ -1489,7 +1489,7 @@ const CommandDesc select_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
-        context.selections() = selection_list_from_string(context.buffer(), parser[0]);
+        context.selections_write_only() = selection_list_from_string(context.buffer(), parser[0]);
     }
 };
 
