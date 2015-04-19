@@ -458,8 +458,8 @@ HighlighterAndId create_search_highlighter(HighlighterParameters params)
         auto get_face = [](const Context& context){
             return FacesSpec{ { 0, "Search" } };
         };
-        auto get_regex = [](const Context&){
-            auto s = Context().main_sel_register_value("/");
+        auto get_regex = [](const Context& context){
+            auto s = context.main_sel_register_value("/");
             try
             {
                 return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
