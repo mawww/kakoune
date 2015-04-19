@@ -580,7 +580,7 @@ private:
             {
                 if (not m_buffer.empty()) try
                 {
-                    Context context{};
+                    Context context{Context::EmptyContextFlag{}};
                     CommandManager::instance().execute(m_buffer, context);
                 }
                 catch (runtime_error& e)

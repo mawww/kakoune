@@ -63,9 +63,11 @@ public:
         Transient = 1,
     };
 
-    Context();
     Context(InputHandler& input_handler, SelectionList selections,
             Flags flags, String name = "");
+
+    struct EmptyContextFlag {};
+    explicit Context(EmptyContextFlag);
     ~Context();
 
     Context(const Context&) = delete;

@@ -385,7 +385,7 @@ int run_server(StringView session, StringView init_command,
 
     if (not ignore_kakrc) try
     {
-        Context initialisation_context;
+        Context initialisation_context{Context::EmptyContextFlag{}};
         command_manager.execute("source " + runtime_directory() + "/kakrc",
                                 initialisation_context);
     }
@@ -399,7 +399,7 @@ int run_server(StringView session, StringView init_command,
     }
 
     {
-        Context empty_context;
+        Context empty_context{Context::EmptyContextFlag{}};
         global_scope.hooks().run_hook("KakBegin", "", empty_context);
     }
 
@@ -439,7 +439,7 @@ int run_server(StringView session, StringView init_command,
     }
 
     {
-        Context empty_context;
+        Context empty_context{Context::EmptyContextFlag{}};
         global_scope.hooks().run_hook("KakEnd", "", empty_context);
     }
 

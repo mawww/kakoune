@@ -9,7 +9,6 @@
 namespace Kakoune
 {
 
-Context::Context() = default;
 Context::~Context() = default;
 
 Context::Context(InputHandler& input_handler, SelectionList selections,
@@ -19,6 +18,8 @@ Context::Context(InputHandler& input_handler, SelectionList selections,
       m_flags(flags),
       m_name(std::move(name))
 {}
+
+Context::Context(EmptyContextFlag) {}
 
 Buffer& Context::buffer() const
 {
