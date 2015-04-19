@@ -766,7 +766,7 @@ void keep(Context& context, NormalParams)
         }
         if (keep.empty())
             throw runtime_error("no selections remaining");
-        context.set_selections(std::move(keep));
+        context.selections() = std::move(keep);
     });
 }
 
@@ -788,7 +788,7 @@ void keep_pipe(Context& context, NormalParams)
             }
             if (keep.empty())
                 throw runtime_error("no selections remaining");
-            context.set_selections(std::move(keep));
+            context.selections() = std::move(keep);
     });
 }
 template<bool indent_empty = false>
@@ -1267,7 +1267,7 @@ void undo(Context& context, NormalParams)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
-            context.set_selections(std::move(ranges));
+            context.selections() = std::move(ranges);
         context.selections().avoid_eol();
     }
     else if (not res)
@@ -1284,7 +1284,7 @@ void redo(Context& context, NormalParams)
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
-            context.set_selections(std::move(ranges));
+            context.selections() = std::move(ranges);
         context.selections().avoid_eol();
     }
 

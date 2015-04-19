@@ -89,7 +89,6 @@ public:
     SelectionList& selections();
     const SelectionList& selections() const;
     Vector<String>  selections_content() const;
-    void set_selections(Vector<Selection> sels);
 
     void change_buffer(Buffer& buffer);
 
