@@ -161,6 +161,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 
     buffer->values()[fifo_watcher_id] = Value(std::move(watcher));
     buffer->flags() = Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
+    buffer->run_hook_in_own_context("BufOpenFifo", name);
 
     return buffer;
 }
