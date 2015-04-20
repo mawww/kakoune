@@ -229,13 +229,15 @@ Selection select_number(const Buffer& buffer, const Selection& selection, Object
     };
 
     BufferIterator first = buffer.iterator_at(selection.cursor());
+    BufferIterator last = first;
     if (flags & ObjectFlags::ToBegin)
     {
         skip_while_reverse(first, buffer.begin(), is_number);
-        if (not is_number(*first) and *first != '-')
+        if (not is_number(*first) and *first != '-' and
+            first+1 != buffer.end())
             ++first;
     }
-    BufferIterator last = buffer.iterator_at(selection.cursor());
+
     if (flags & ObjectFlags::ToEnd)
     {
         skip_while(last, buffer.end(), is_number);
