@@ -1168,6 +1168,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             // Propagate user hooks disabled status to the temporary context
             ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
             ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
+            ScopedDisable disable_history{c.history_support()};
 
             func(parser, c);
         };
@@ -1203,6 +1204,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
         ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
+        ScopedDisable disable_history{c.history_support()};
 
         if (parser.get_switch("itersel"))
         {
@@ -1229,6 +1231,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         ScopedDisable hook_disable(real_context->user_hooks_support(), disable_hooks);
         ScopedDisable keymaps_disable(real_context->keymaps_support(), disable_keymaps);
+        ScopedDisable disable_history{real_context->history_support()};
 
         func(parser, *real_context);
     }
