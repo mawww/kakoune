@@ -141,13 +141,13 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
             done
         ;;
         *)
-            echo "'extension not recognized'"
+            echo "echo -color Error 'extension not recognized'"
             exit
         ;;
     esac
     if [ -f ${altname} ]; then
-       echo edit "'${altname}'"
+       echo "edit '${altname}'"
     else
-       echo echo "'alternative file not found'"
+       echo "echo -color Error 'alternative file not found'"
     fi
 }}
