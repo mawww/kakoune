@@ -134,6 +134,7 @@ void edit(const ParametersParser& parser, Context& context)
                                                : context.buffer().name();
 
     Buffer* buffer = nullptr;
+    Buffer* oldbuf = &context.buffer();
     if (not force_reload)
         buffer = BufferManager::instance().get_buffer_ifp(name);
     if (not buffer)
@@ -159,7 +160,7 @@ void edit(const ParametersParser& parser, Context& context)
         }
     }
 
-    BufferManager::instance().set_last_used_buffer(*buffer);
+    BufferManager::instance().set_last_used_buffer(*oldbuf);
 
     const size_t param_count = parser.positional_count();
     if (buffer != &context.buffer() or param_count > 1)
@@ -364,45 +365,71 @@ const CommandDesc buffer_cmd = {
     buffer_completer,
     [](const ParametersParser& parser, Context& context)
     {
+        Buffer* oldbuf = &context.buffer();
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
-        BufferManager::instance().set_last_used_buffer(buffer);
 
-        if (&buffer != &context.buffer())
+        if (&buffer != oldbuf)
         {
+            BufferManager::instance().set_last_used_buffer(*oldbuf);
             context.push_jump();
             context.change_buffer(buffer);
         }
     }
 };
 
-const CommandDesc nextbuffer_cmd = {
-    "nextbuffer",
-    "nb",
-    "nextbuffer: move to the next buffer in the list",
+template<bool next>
+void cycle_buffer(const ParametersParser& parser, Context& context)
+{
+    Buffer* oldbuf = &context.buffer();
+    auto it = find_if(BufferManager::instance(),
+                      [oldbuf](const SafePtr<Buffer>& lhs)
+                      { return lhs.get() == oldbuf; });
+
+    kak_assert(it != BufferManager::instance().end());
+
+    if (not next)
+    {
+        if (it == BufferManager::instance().begin())
+            it = BufferManager::instance().end();
+
+        it = std::prev(it,1);
+    }
+    else
+    {
+        if (++it == BufferManager::instance().end())
+            it = BufferManager::instance().begin();
+    }
+
+    Buffer* newbuf = it->get();
+
+    if (newbuf != oldbuf)
+    {
+        BufferManager::instance().set_last_used_buffer(*oldbuf);
+        context.push_jump();
+        context.change_buffer(*newbuf);
+    }
+}
+
+const CommandDesc buffernext_cmd = {
+    "buffernext",
+    "bn",
+    "buffernext: move to the next buffer in the list",
     no_params,
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context)
-    {
-        const Buffer* oldbuf = &context.buffer();
-        auto it = find_if(BufferManager::instance(),
-                          [oldbuf](const SafePtr<Buffer>& lhs)
-                          { return lhs.get() == oldbuf; });
+    cycle_buffer<true>
+};
 
-        kak_assert(it != BufferManager::instance().end());
-        if (++it == BufferManager::instance().end())
-            it = BufferManager::instance().begin();
-
-        Buffer* newbuf = it->get();
-        BufferManager::instance().set_last_used_buffer(*newbuf);
-
-        if (newbuf != oldbuf)
-        {
-            context.push_jump();
-            context.change_buffer(*newbuf);
-        }
-    }
+const CommandDesc bufferprev_cmd = {
+    "bufferprev",
+    "bp",
+    "bufferprev: move to the previous buffer in the list",
+    no_params,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    cycle_buffer<false>
 };
 
 template<bool force>
@@ -1561,7 +1588,8 @@ void register_commands()
     register_command(write_quit_cmd);
     register_command(force_write_quit_cmd);
     register_command(buffer_cmd);
-    register_command(nextbuffer_cmd);
+    register_command(buffernext_cmd);
+    register_command(bufferprev_cmd);
     register_command(delbuf_cmd);
     register_command(force_delbuf_cmd);
     register_command(namebuf_cmd);

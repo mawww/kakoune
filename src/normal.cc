@@ -219,7 +219,8 @@ void goto_commands(Context& context, NormalParams params)
 
                 if (buffer != &context.buffer())
                 {
-                    BufferManager::instance().set_last_used_buffer(*buffer);
+                    Buffer* oldbuf = &context.buffer();
+                    BufferManager::instance().set_last_used_buffer(*oldbuf);
                     context.push_jump();
                     context.change_buffer(*buffer);
                 }
@@ -1096,9 +1097,10 @@ void jump(Context& context, NormalParams)
     auto jump = (direction == Forward) ?
                  context.jump_forward() : context.jump_backward();
 
+    Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
     BufferManager::instance().set_last_used_buffer(buffer);
-    if (&buffer != &context.buffer())
+    if (&buffer != oldbuf)
         context.change_buffer(buffer);
     context.selections_write_only() = jump;
 }
