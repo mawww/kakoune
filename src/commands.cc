@@ -391,8 +391,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context)
     {
         if (it == BufferManager::instance().begin())
             it = BufferManager::instance().end();
-
-        it = std::prev(it,1);
+        --it;
     }
     else
     {
