@@ -849,7 +849,8 @@ Some parameters provide a way to change the context of execution:
      context with only the considered selection. This permits to avoid
      cases where the selections may get merged.
  * `-buffer <names>`: execute in the context of each buffers in the
-     comma separated list <names>
+     comma separated list <names>, '*' as a name can be used to iterate
+     on all buffers.
  * `-no-hooks`: disable hook execution while executing the keys/commands
 
 The execution stops when the last key/command is reached, or an error
