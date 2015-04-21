@@ -1160,9 +1160,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     ClientManager& cm = ClientManager::instance();
     if (auto bufnames = parser.get_switch("buffer"))
     {
-        for (auto& name : split(*bufnames, ','))
-        {
-            Buffer& buffer = BufferManager::instance().get_buffer(name);
+        auto context_wrap_for_buffer = [&](Buffer& buffer) {
             InputHandler input_handler{{ buffer, Selection{} },
                                        Context::Flags::Transient};
             Context& c = input_handler.context();
@@ -1172,7 +1170,13 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
 
             func(parser, c);
-        }
+        };
+        if (*bufnames == "*")
+            for (auto buffer : BufferManager::instance())
+                context_wrap_for_buffer(*buffer);
+        else
+            for (auto& name : split(*bufnames, ','))
+                context_wrap_for_buffer(BufferManager::instance().get_buffer(name));
         return;
     }
 
