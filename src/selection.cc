@@ -50,6 +50,7 @@ ByteCoord update_insert(ByteCoord coord, ByteCoord begin, ByteCoord end)
     return coord;
 }
 
+/* For reference
 ByteCoord update_erase(ByteCoord coord, ByteCoord begin, ByteCoord end)
 {
     if (coord < begin)
@@ -61,9 +62,9 @@ ByteCoord update_erase(ByteCoord coord, ByteCoord begin, ByteCoord end)
     coord.line -= end.line - begin.line;
     kak_assert(coord.line >= 0 and coord.column >= 0);
     return coord;
-}
+} */
 
-static bool compare_selections(const Selection& lhs, const Selection& rhs)
+bool compare_selections(const Selection& lhs, const Selection& rhs)
 {
     return lhs.min() < rhs.min();
 }
