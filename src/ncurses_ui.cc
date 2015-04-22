@@ -263,7 +263,7 @@ NCursesUI::NCursesUI()
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
     mouseinterval(0);
     // force enable report mouse position
-    printf("\033[?1002h");
+    puts("\033[?1002h");
     update_dimensions();
 
     wrefresh(stdscr);
@@ -271,7 +271,7 @@ NCursesUI::NCursesUI()
 
 NCursesUI::~NCursesUI()
 {
-    printf("\033[?1002l");
+    puts("\033[?1002l");
     endwin();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGINT, SIG_DFL);
