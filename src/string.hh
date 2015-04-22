@@ -311,6 +311,14 @@ String format(StringView fmt, Types... params)
     return format(fmt, ArrayView<const StringView>{detail::format_param(params)...});
 }
 
+StringView format_to(ArrayView<char> buffer, StringView fmt, ArrayView<const StringView> params);
+
+template<typename... Types>
+StringView format_to(ArrayView<char> buffer, StringView fmt, Types... params)
+{
+    return format_to(buffer, fmt, ArrayView<const StringView>{detail::format_param(params)...});
+}
+
 }
 
 #endif // string_hh_INCLUDED

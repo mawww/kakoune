@@ -214,29 +214,28 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
     return lines;
 }
 
-String format(StringView fmt, ArrayView<const StringView> params)
+template<typename AppendFunc>
+void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc append)
 {
-    ByteCount size = fmt.length();
-    for (auto& s : params) size += s.length();
-    String res;
-    res.reserve(size);
-
     int implicitIndex = 0;
     for (auto it = fmt.begin(), end = fmt.end(); it != end;)
     {
         auto opening = std::find(it, end, '{');
-        res += StringView{it, opening};
         if (opening == end)
-            break;
-
-        if (opening != it && *(opening-1) == '\\')
         {
-            res.back() = '{';
+            append(StringView{it, opening});
+            break;
+        }
+        else if (opening != it and *(opening-1) == '\\')
+        {
+            append(StringView{it, opening-1});
+            append('{');
             it = opening + 1;
         }
         else
         {
-            auto closing = std::find(it, end, '}');
+            append(StringView{it, opening});
+            auto closing = std::find(opening, end, '}');
             if (closing == end)
                 throw runtime_error("Format string error, unclosed '{'");
             int index;
@@ -248,11 +247,40 @@ String format(StringView fmt, ArrayView<const StringView> params)
             if (index >= params.size())
                 throw runtime_error("Format string parameter index too big");
 
-            res += params[index];
+            append(params[index]);
             implicitIndex = index+1;
             it = closing+1;
         }
     }
+}
+
+StringView format_to(ArrayView<char> buffer, StringView fmt, ArrayView<const StringView> params)
+{
+    char* ptr = buffer.begin();
+    const char* end = buffer.end();
+    format_impl(fmt, params, [&](StringView s) mutable {
+        for (auto c : s)
+        {
+            if (ptr == end)
+                throw runtime_error("buffer is too small");
+            *ptr++ = c;
+        }
+    });
+    if (ptr == end)
+        throw runtime_error("buffer is too small");
+    *ptr = 0;
+
+    return { buffer.begin(), ptr };
+}
+
+String format(StringView fmt, ArrayView<const StringView> params)
+{
+    ByteCount size = fmt.length();
+    for (auto& s : params) size += s.length();
+    String res;
+    res.reserve(size);
+
+    format_impl(fmt, params, [&](StringView s) { res += s; });
     return res;
 }
 

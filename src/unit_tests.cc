@@ -140,6 +140,9 @@ void test_string()
 
     kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5) == "Youhou hehe 5 10 {}");
 
+    char buffer[20];
+    kak_assert(format_to(buffer, "Hey {}", 15) == "Hey 15");
+
     kak_assert(str_to_int("5") == 5);
     kak_assert(str_to_int(to_string(INT_MAX)) == INT_MAX);
     kak_assert(str_to_int(to_string(INT_MIN)) == INT_MIN);
