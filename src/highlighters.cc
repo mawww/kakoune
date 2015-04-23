@@ -287,7 +287,7 @@ private:
     {
         size_t m_timestamp = -1;
         size_t m_regex_version = -1;
-        using RangeAndMatches = std::pair<BufferRange, MatchList>;
+        struct RangeAndMatches { BufferRange range; MatchList matches; };
         Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
     };
     BufferSideCache<Cache> m_cache;
@@ -347,17 +347,17 @@ private:
 
         auto it = std::upper_bound(matches.begin(), matches.end(), range,
                                    [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
-                                   { return lhs.begin < rhs.first.end; });
+                                   { return lhs.begin < rhs.range.end; });
 
-        if (it == matches.end() or it->first.begin > range.end)
+        if (it == matches.end() or it->range.begin > range.end)
         {
             it = matches.insert(it, Cache::RangeAndMatches{range, {}});
-            add_matches(buffer, it->second, range);
+            add_matches(buffer, it->matches, range);
         }
-        else if (it->second.empty())
+        else if (it->matches.empty())
         {
-            it->first = range;
-            add_matches(buffer, it->second, range);
+            it->range = range;
+            add_matches(buffer, it->matches, range);
         }
         else
         {
@@ -365,8 +365,8 @@ private:
             // but may work nicely with every reasonable regex, and
             // greatly reduces regex parsing. To change if we encounter
             // regex that do not work great with that.
-            BufferRange& old_range = it->first;
-            MatchList& matches = it->second;
+            BufferRange& old_range = it->range;
+            MatchList& matches = it->matches;
 
             // Thanks to the ensure_first_face_is_capture_0 method, we know
             // these point to the first/last matches capture 0.
@@ -401,7 +401,7 @@ private:
                 add_matches(buffer, matches, {last_begin, range.end});
             }
         }
-        return it->second;
+        return it->matches;
     }
 };
 
