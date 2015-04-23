@@ -13,11 +13,11 @@ StringView DisplayAtom::content() const
     {
         case BufferRange:
         {
-            auto line = (*m_buffer)[m_begin.line];
-            if (m_begin.line == m_end.line)
-                return line.substr(m_begin.column, m_end.column - m_begin.column);
-            else if (m_begin.line+1 == m_end.line and m_end.column == 0)
-                return line.substr(m_begin.column);
+            auto line = (*m_buffer)[m_range.begin.line];
+            if (m_range.begin.line == m_range.end.line)
+                return line.substr(m_range.begin.column, m_range.end.column - m_range.begin.column);
+            else if (m_range.begin.line+1 == m_range.end.line and m_range.end.column == 0)
+                return line.substr(m_range.begin.column);
             break;
         }
         case Text:
@@ -33,8 +33,8 @@ CharCount DisplayAtom::length() const
     switch (m_type)
     {
         case BufferRange:
-           return utf8::distance(m_buffer->iterator_at(m_begin),
-                                 m_buffer->iterator_at(m_end));
+           return utf8::distance(m_buffer->iterator_at(m_range.begin),
+                                 m_buffer->iterator_at(m_range.end));
         case Text:
         case ReplacedBufferRange:
            return m_text.char_length();
@@ -46,8 +46,8 @@ CharCount DisplayAtom::length() const
 void DisplayAtom::trim_begin(CharCount count)
 {
     if (m_type == BufferRange)
-        m_begin = utf8::advance(m_buffer->iterator_at(m_begin),
-                                m_buffer->iterator_at(m_end), count).coord();
+        m_range.begin = utf8::advance(m_buffer->iterator_at(m_range.begin),
+                                m_buffer->iterator_at(m_range.end), count).coord();
     else
         m_text = m_text.substr(count).str();
     check_invariant();
@@ -56,8 +56,8 @@ void DisplayAtom::trim_begin(CharCount count)
 void DisplayAtom::trim_end(CharCount count)
 {
     if (m_type == BufferRange)
-        m_end = utf8::advance(m_buffer->iterator_at(m_end),
-                              m_buffer->iterator_at(m_begin), -count).coord();
+        m_range.end = utf8::advance(m_buffer->iterator_at(m_range.end),
+                              m_buffer->iterator_at(m_range.begin), -count).coord();
     else
         m_text = m_text.substr(0, m_text.char_length() - count).str();
     check_invariant();
@@ -68,8 +68,8 @@ void DisplayAtom::check_invariant() const
 #ifdef KAK_DEBUG
     if (has_buffer_range())
     {
-        kak_assert(m_buffer->is_valid(m_begin));
-        kak_assert(m_buffer->is_valid(m_end));
+        kak_assert(m_buffer->is_valid(m_range.begin));
+        kak_assert(m_buffer->is_valid(m_range.end));
     }
 #endif
 }
@@ -87,8 +87,8 @@ DisplayLine::iterator DisplayLine::split(iterator it, ByteCoord pos)
     kak_assert(it->end() > pos);
 
     DisplayAtom atom = *it;
-    atom.m_end = pos;
-    it->m_begin = pos;
+    atom.m_range.end = pos;
+    it->m_range.begin = pos;
     atom.check_invariant();
     it->check_invariant();
     return m_atoms.insert(it, std::move(atom));
@@ -98,8 +98,8 @@ DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
 {
     if (atom.has_buffer_range())
     {
-        m_range.first  = std::min(m_range.first, atom.begin());
-        m_range.second = std::max(m_range.second, atom.end());
+        m_range.begin  = std::min(m_range.begin, atom.begin());
+        m_range.end = std::max(m_range.end, atom.end());
     }
     return m_atoms.insert(it, std::move(atom));
 }
@@ -108,8 +108,8 @@ void DisplayLine::push_back(DisplayAtom atom)
 {
     if (atom.has_buffer_range())
     {
-        m_range.first  = std::min(m_range.first, atom.begin());
-        m_range.second = std::max(m_range.second, atom.end());
+        m_range.begin  = std::min(m_range.begin, atom.begin());
+        m_range.end = std::max(m_range.end, atom.end());
     }
     m_atoms.push_back(std::move(atom));
 }
@@ -142,7 +142,7 @@ void DisplayLine::optimize()
                  type == DisplayAtom::ReplacedBufferRange) and
                 next_atom.begin() == atom.end())
             {
-                atom.m_end = next_atom.end();
+                atom.m_range.end = next_atom.end();
                 if (type == DisplayAtom::ReplacedBufferRange)
                     atom.m_text += next_atom.m_text;
                 merged = true;
@@ -211,12 +211,12 @@ void DisplayLine::compute_range()
     {
         if (not atom.has_buffer_range())
             continue;
-        m_range.first  = std::min(m_range.first, atom.begin());
-        m_range.second = std::max(m_range.second, atom.end());
+        m_range.begin  = std::min(m_range.begin, atom.begin());
+        m_range.end = std::max(m_range.end, atom.end());
     }
     if (m_range == init_range)
         m_range = { { 0, 0 }, { 0, 0 } };
-    kak_assert(m_range.first <= m_range.second);
+    kak_assert(m_range.begin <= m_range.end);
 }
 
 void DisplayBuffer::compute_range()
@@ -224,12 +224,12 @@ void DisplayBuffer::compute_range()
     m_range = init_range;
     for (auto& line : m_lines)
     {
-        m_range.first  = std::min(line.range().first, m_range.first);
-        m_range.second = std::max(line.range().second, m_range.second);
+        m_range.begin  = std::min(line.range().begin, m_range.begin);
+        m_range.end = std::max(line.range().end, m_range.end);
     }
     if (m_range == init_range)
         m_range = { { 0, 0 }, { 0, 0 } };
-    kak_assert(m_range.first <= m_range.second);
+    kak_assert(m_range.begin <= m_range.end);
 }
 
 void DisplayBuffer::optimize()

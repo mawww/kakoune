@@ -224,13 +224,13 @@ ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
         if (atom.has_buffer_range() and column < len)
         {
             if (atom.type() == DisplayAtom::BufferRange)
-                return utf8::advance(buffer.iterator_at(atom.begin()), buffer.iterator_at(range.second),
+                return utf8::advance(buffer.iterator_at(atom.begin()), buffer.iterator_at(range.end),
                                      std::max(0_char, column)).coord();
              return atom.begin();
         }
         column -= len;
     }
-    return buffer.clamp(buffer.prev(range.second));
+    return buffer.clamp(buffer.prev(range.end));
 }
 }
 
@@ -240,7 +240,7 @@ CharCoord Window::display_position(ByteCoord coord) const
     for (auto& line : m_display_buffer.lines())
     {
         auto& range = line.range();
-        if (range.first <= coord and coord < range.second)
+        if (range.begin <= coord and coord < range.end)
             return {l, find_display_column(line, buffer(), coord)};
         ++l;
     }

@@ -3,6 +3,7 @@
 
 #include "coord.hh"
 #include "completion.hh"
+#include "display_buffer.hh"
 #include "exception.hh"
 #include "id_map.hh"
 #include "array_view.hh"
@@ -14,7 +15,6 @@
 namespace Kakoune
 {
 
-class DisplayBuffer;
 class Context;
 
 enum class HighlightFlags
@@ -32,7 +32,7 @@ struct Highlighter;
 
 using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
 
-using BufferRange = std::pair<ByteCoord, ByteCoord>;
+struct BufferRange;
 
 struct Highlighter
 {

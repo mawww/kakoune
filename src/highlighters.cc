@@ -26,14 +26,14 @@ void highlight_range(DisplayBuffer& display_buffer,
                      ByteCoord begin, ByteCoord end,
                      bool skip_replaced, T func)
 {
-    if (begin == end or end <= display_buffer.range().first
-                     or begin >= display_buffer.range().second)
+    if (begin == end or end <= display_buffer.range().begin
+                     or begin >= display_buffer.range().end)
         return;
 
     for (auto& line : display_buffer.lines())
     {
         auto& range = line.range();
-        if (range.second <= begin or  end < range.first)
+        if (range.end <= begin or  end < range.begin)
             continue;
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -82,7 +82,7 @@ void apply_highlighter(const Context& context,
     {
         auto& line = *line_it;
         auto& range = line.range();
-        if (range.second <= begin or end <= range.first)
+        if (range.end <= begin or end <= range.begin)
             continue;
 
         if (region_lines.empty())
@@ -90,7 +90,7 @@ void apply_highlighter(const Context& context,
         region_lines.emplace_back();
         insert_pos.emplace_back();
 
-        if (range.first < begin or range.second > end)
+        if (range.begin < begin or range.end > end)
         {
             size_t beg_idx = 0;
             size_t end_idx = line.atoms().size();
@@ -174,7 +174,7 @@ static HighlighterAndId create_fill_highlighter(HighlighterParameters params)
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange range)
     {
-        highlight_range(display_buffer, range.first, range.second, true,
+        highlight_range(display_buffer, range.begin, range.end, true,
                         apply_face(get_face(facespec)));
     };
     return {"fill_" + facespec, make_simple_highlighter(std::move(func))};
@@ -198,8 +198,8 @@ private:
 
 static bool overlaps(const BufferRange& lhs, const BufferRange& rhs)
 {
-    return lhs.first < rhs.first ? lhs.second > rhs.first
-                                 : rhs.second > lhs.first;
+    return lhs.begin < rhs.begin ? lhs.end > rhs.begin
+                                 : rhs.end > lhs.begin;
 }
 
 using FacesSpec = Vector<std::pair<size_t, String>, MemoryDomain::Highlight>;
@@ -234,7 +234,7 @@ public:
                 continue;
 
             highlight_range(display_buffer,
-                            matches[m].first, matches[m].second,
+                            matches[m].begin, matches[m].end,
                             true, apply_face(face));
         }
     }
@@ -315,15 +315,15 @@ private:
     {
         kak_assert(matches.size() % m_faces.size() == 0);
         using RegexIt = RegexIterator<BufferIterator>;
-        RegexIt re_it{buffer.iterator_at(range.first),
-                      buffer.iterator_at(range.second), m_regex};
+        RegexIt re_it{buffer.iterator_at(range.begin),
+                      buffer.iterator_at(range.end), m_regex};
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {
             for (size_t i = 0; i < m_faces.size(); ++i)
             {
                 auto& sub = (*re_it)[m_faces[i].first];
-                matches.emplace_back(sub.first.coord(), sub.second.coord());
+                matches.push_back({sub.first.coord(), sub.second.coord()});
             }
         }
     }
@@ -342,14 +342,14 @@ private:
             cache.m_regex_version = m_regex_version;
         }
         const LineCount line_offset = 3;
-        BufferRange range{std::max<ByteCoord>(buffer_range.first, display_range.first.line - line_offset),
-                          std::min<ByteCoord>(buffer_range.second, display_range.second.line + line_offset)};
+        BufferRange range{std::max<ByteCoord>(buffer_range.begin, display_range.begin.line - line_offset),
+                          std::min<ByteCoord>(buffer_range.end, display_range.end.line + line_offset)};
 
         auto it = std::upper_bound(matches.begin(), matches.end(), range,
                                    [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
-                                   { return lhs.first < rhs.first.second; });
+                                   { return lhs.begin < rhs.first.end; });
 
-        if (it == matches.end() or it->first.first > range.second)
+        if (it == matches.end() or it->first.begin > range.end)
         {
             it = matches.insert(it, Cache::RangeAndMatches{range, {}});
             add_matches(buffer, it->second, range);
@@ -370,17 +370,17 @@ private:
 
             // Thanks to the ensure_first_face_is_capture_0 method, we know
             // these point to the first/last matches capture 0.
-            auto first_end = matches.begin()->second;
-            auto last_begin = (matches.end() - m_faces.size())->first;
+            auto first_end = matches.begin()->end;
+            auto last_begin = (matches.end() - m_faces.size())->begin;
 
             bool remove_last = true;
 
             // add regex matches from new begin to old first match end
-            if (range.first < old_range.first)
+            if (range.begin < old_range.begin)
             {
-                old_range.first = range.first;
+                old_range.begin = range.begin;
                 MatchList new_matches;
-                add_matches(buffer, new_matches, {range.first, first_end});
+                add_matches(buffer, new_matches, {range.begin, first_end});
                 matches.erase(matches.begin(), matches.begin() + m_faces.size());
 
                 // first matches was last matches as well, so
@@ -393,12 +393,12 @@ private:
                           std::inserter(matches, matches.begin()));
             }
             // add regex matches from old last match begin to new end
-            if (old_range.second < range.second)
+            if (old_range.end < range.end)
             {
-                old_range.second = range.second;
+                old_range.end = range.end;
                 if (remove_last)
                     matches.erase(matches.end() - m_faces.size(), matches.end());
-                add_matches(buffer, matches, {last_begin, range.second});
+                add_matches(buffer, matches, {last_begin, range.end});
             }
         }
         return it->second;
@@ -613,7 +613,7 @@ void show_line_numbers(const Context& context, HighlightFlags flags,
     int main_selection = (int)context.selections().main().cursor().line + 1;
     for (auto& line : display_buffer.lines())
     {
-        const int current_line = (int)line.range().first.line + 1;
+        const int current_line = (int)line.range().begin.line + 1;
         const bool is_cursor_line = main_selection == current_line;
         const int line_to_format = (relative and not is_cursor_line) ?
                                    current_line - main_selection : current_line;
@@ -659,7 +659,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
     for (auto& sel : context.selections())
     {
         auto pos = sel.cursor();
-        if (pos < range.first or pos >= range.second)
+        if (pos < range.begin or pos >= range.end)
             continue;
         auto c = buffer.byte_at(pos);
         for (auto& pair : matching_chars)
@@ -668,7 +668,7 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
             if (c == pair.first)
             {
                 for (auto it = buffer.iterator_at(pos)+1,
-                         end = buffer.iterator_at(range.second); it != end; ++it)
+                         end = buffer.iterator_at(range.end); it != end; ++it)
                 {
                     char c = *it;
                     if (c == pair.first)
@@ -681,10 +681,10 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
                     }
                 }
             }
-            else if (c == pair.second and pos > range.first)
+            else if (c == pair.second and pos > range.begin)
             {
                 for (auto it = buffer.iterator_at(pos)-1,
-                         end = buffer.iterator_at(range.first); true; --it)
+                         end = buffer.iterator_at(range.begin); true; --it)
                 {
                     char c = *it;
                     if (c == pair.second)
@@ -793,7 +793,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
         const String empty{' ', width};
         for (auto& line : display_buffer.lines())
         {
-            int line_num = (int)line.range().first.line + 1;
+            int line_num = (int)line.range().begin.line + 1;
             auto it = find_if(lines,
                               [&](const LineAndFlag& l)
                               { return std::get<0>(l) == line_num; });
@@ -1022,9 +1022,9 @@ public:
         const auto& buffer = context.buffer();
         auto& regions = get_regions_for_range(buffer, range);
 
-        auto begin = std::lower_bound(regions.begin(), regions.end(), display_range.first,
+        auto begin = std::lower_bound(regions.begin(), regions.end(), display_range.begin,
                                       [](const Region& r, ByteCoord c) { return r.end < c; });
-        auto end = std::lower_bound(begin, regions.end(), display_range.second,
+        auto end = std::lower_bound(begin, regions.end(), display_range.end,
                                     [](const Region& r, ByteCoord c) { return r.begin < c; });
         auto correct = [&](ByteCoord c) -> ByteCoord {
             if (not buffer.is_end(c) and buffer[c.line].length() == c.column)
@@ -1052,9 +1052,9 @@ public:
                               it->second);
             last_begin = begin->end;
         }
-        if (apply_default and last_begin < display_range.second)
+        if (apply_default and last_begin < display_range.end)
             apply_highlighter(context, flags, display_buffer,
-                              correct(last_begin), range.second,
+                              correct(last_begin), range.end,
                               default_group_it->second);
 
     }
@@ -1192,7 +1192,7 @@ private:
 
         RegionList& regions = cache.regions[range];
 
-        for (auto begin = find_next_begin(cache, range.first),
+        for (auto begin = find_next_begin(cache, range.begin),
                   end = RegionAndMatch{ 0, cache.matches[0].begin_matches.end() };
              begin != end; )
         {
@@ -1201,10 +1201,10 @@ private:
             auto beg_it = begin.second;
             auto end_it = matches.find_matching_end(beg_it->end_coord());
 
-            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.second)
+            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end)
             {
                 regions.push_back({ {beg_it->line, beg_it->begin},
-                                    range.second,
+                                    range.end,
                                     named_region.first });
                 break;
             }

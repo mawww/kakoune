@@ -2,6 +2,7 @@
 #define display_buffer_hh_INCLUDED
 
 #include "face.hh"
+#include "hash.hh"
 #include "coord.hh"
 #include "string.hh"
 #include "vector.hh"
@@ -10,6 +11,18 @@ namespace Kakoune
 {
 
 class Buffer;
+struct BufferRange{ ByteCoord begin, end; };
+
+inline bool operator==(const BufferRange& lhs, const BufferRange& rhs)
+{
+    return lhs.begin == rhs.begin and lhs.end == rhs.end;
+}
+
+inline
+size_t hash_value(const BufferRange& range)
+{
+    return hash_values(range.begin, range.end);
+}
 
 struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 {
@@ -17,7 +30,7 @@ public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
 
     DisplayAtom(const Buffer& buffer, ByteCoord begin, ByteCoord end)
-        : m_type(BufferRange), m_buffer(&buffer), m_begin(begin), m_end(end)
+        : m_type(BufferRange), m_buffer(&buffer), m_range{begin, end}
      { check_invariant(); }
 
     DisplayAtom(String str, Face face = Face{})
@@ -30,13 +43,13 @@ public:
     const ByteCoord& begin() const
     {
         kak_assert(has_buffer_range());
-        return m_begin;
+        return m_range.begin;
     }
 
     const ByteCoord& end() const
     {
         kak_assert(has_buffer_range());
-        return m_end;
+        return m_range.end;
     }
 
     void replace(String text)
@@ -62,7 +75,8 @@ public:
 
     bool operator==(const DisplayAtom& other) const
     {
-        return face == other.face and content() == other.content();
+        return face == other.face and type() == other.type() and
+               content() == other.content();
     }
 
 public:
@@ -74,12 +88,10 @@ private:
     Type m_type;
 
     const Buffer* m_buffer = nullptr;
-    ByteCoord m_begin;
-    ByteCoord m_end;
+    Kakoune::BufferRange m_range;
     String m_text;
 };
 
-using BufferRange = std::pair<ByteCoord, ByteCoord>;
 using AtomList = Vector<DisplayAtom>;
 
 class DisplayLine : public UseMemoryDomain<MemoryDomain::Display>
