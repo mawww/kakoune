@@ -592,6 +592,11 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
     }
 }
 
+HighlighterAndId create_show_whitespaces_highlighter(HighlighterParameters params)
+{
+    return {"show_whitespaces", make_simple_highlighter(show_whitespaces)};
+}
+
 template<bool relative, bool hl_cursor_line>
 void show_line_numbers(const Context& context, HighlightFlags flags,
                        DisplayBuffer& display_buffer, BufferRange)
@@ -696,6 +701,11 @@ void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuf
             }
         }
     }
+}
+
+HighlighterAndId create_matching_char_highlighter(HighlighterParameters params)
+{
+    return {"show_matching", make_simple_highlighter(show_matching_char)};
 }
 
 void highlight_selections(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
@@ -1222,15 +1232,6 @@ private:
     }
 };
 
-template<typename Func>
-HighlighterFactory simple_factory(const String id, Func func)
-{
-    return [=](HighlighterParameters params)
-    {
-        return HighlighterAndId(id, make_simple_highlighter(func));
-    };
-}
-
 void register_highlighters()
 {
     HighlighterRegistry& registry = HighlighterRegistry::instance();
@@ -1242,11 +1243,11 @@ void register_highlighters()
           "Parameters: -relative, -hlcursor\n" } });
     registry.append({
         "show_matching",
-        { simple_factory("show_matching", show_matching_char),
+        { create_matching_char_highlighter,
           "Apply the MatchingChar face to the char matching the one under the cursor" } });
     registry.append({
         "show_whitespaces",
-        { simple_factory("show_whitespaces", show_whitespaces),
+        { create_show_whitespaces_highlighter,
           "Display whitespaces using symbols" } });
     registry.append({
         "fill",
