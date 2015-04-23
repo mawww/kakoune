@@ -1,15 +1,27 @@
 #ifndef register_manager_hh_INCLUDED
 #define register_manager_hh_INCLUDED
 
-#include "register.hh"
+#include "array_view.hh"
 #include "utils.hh"
 #include "unordered_map.hh"
+#include "string.hh"
 #include "vector.hh"
 
 #include <functional>
 
 namespace Kakoune
 {
+
+class Context;
+
+class Register
+{
+public:
+    virtual ~Register() {}
+    virtual Register& operator=(ConstArrayView<String> values) = 0;
+
+    virtual ConstArrayView<String> values(const Context& context) = 0;
+};
 
 using RegisterRetriever = std::function<Vector<String, MemoryDomain::Registers> (const Context&)>;
 
