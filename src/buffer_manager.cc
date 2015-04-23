@@ -70,12 +70,6 @@ void BufferManager::delete_buffer(Buffer& buffer)
     kak_assert(false);
 }
 
-void BufferManager::delete_buffer_if_exists(StringView name)
-{
-    if (Buffer* buf = get_buffer_ifp(name))
-        delete_buffer(*buf);
-}
-
 Buffer* BufferManager::get_buffer_ifp(StringView name)
 {
     auto path = real_path(parse_filename(name));

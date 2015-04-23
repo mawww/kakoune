@@ -132,16 +132,22 @@ void edit(const ParametersParser& parser, Context& context)
 
     auto& name = parser.positional_count() > 0 ? parser[0]
                                                : context.buffer().name();
+    auto& buffer_manager = BufferManager::instance();
 
     Buffer* buffer = nullptr;
     Buffer* oldbuf = &context.buffer();
     if (not force_reload)
-        buffer = BufferManager::instance().get_buffer_ifp(name);
+        buffer = buffer_manager.get_buffer_ifp(name);
     if (not buffer)
     {
         if (parser.get_switch("scratch"))
         {
-            BufferManager::instance().delete_buffer_if_exists(name);
+            if (Buffer* buf = buffer_manager.get_buffer_ifp(name))
+            {
+                buffer_manager.delete_buffer(*buf);
+                if (buf == oldbuf)
+                    oldbuf = nullptr;
+            }
             buffer = new Buffer(name, Buffer::Flags::None);
         }
         else if (auto fifo = parser.get_switch("fifo"))
@@ -160,7 +166,8 @@ void edit(const ParametersParser& parser, Context& context)
         }
     }
 
-    BufferManager::instance().set_last_used_buffer(*oldbuf);
+    if (oldbuf)
+        buffer_manager.set_last_used_buffer(*oldbuf);
 
     const size_t param_count = parser.positional_count();
     if (buffer != &context.buffer() or param_count > 1)
