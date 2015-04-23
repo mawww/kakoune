@@ -114,7 +114,7 @@ public:
 
     // remove first_char from the begining of the line, and make sure
     // the line is less that char_count character
-    void trim(CharCount first_char, CharCount char_count);
+    void trim(CharCount first_char, CharCount char_count, bool only_buffer);
 
     void     optimize();
 private:

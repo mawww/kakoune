@@ -169,11 +169,11 @@ CharCount DisplayLine::length() const
     return len;
 }
 
-void DisplayLine::trim(CharCount first_char, CharCount char_count)
+void DisplayLine::trim(CharCount first_char, CharCount char_count, bool only_buffer)
 {
     for (auto it = begin(); first_char > 0 and it != end(); )
     {
-        if (not it->has_buffer_range())
+        if (only_buffer and not it->has_buffer_range())
         {
             ++it;
             continue;

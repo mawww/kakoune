@@ -388,13 +388,24 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     wmove(m_window, status_line_pos, 0);
     wclrtoeol(m_window);
     draw_line(status_line, 0);
-    CharCount status_len = mode_line.length();
-    // only draw mode_line if it does not overlap one status line
-    if (m_dimensions.column - status_line.length() > status_len + 1)
+    const auto mode_len = mode_line.length();
+    const auto remaining = m_dimensions.column - status_line.length();
+    if (mode_len < remaining)
     {
-        CharCount col = m_dimensions.column - status_len;
+        CharCount col = m_dimensions.column - mode_len;
         wmove(m_window, status_line_pos, (int)col);
         draw_line(mode_line, col);
+    }
+    else if (remaining > 2)
+    {
+        DisplayLine trimmed_mode_line = mode_line;
+        trimmed_mode_line.trim(mode_len + 2 - remaining, remaining - 2, false);
+        trimmed_mode_line.insert(trimmed_mode_line.begin(), { "<" });
+        kak_assert(trimmed_mode_line.length() == remaining - 1);
+
+        CharCount col = m_dimensions.column - remaining + 1;
+        wmove(m_window, status_line_pos, (int)col);
+        draw_line(trimmed_mode_line, col);
     }
 
     const char* tsl = tigetstr((char*)"tsl");

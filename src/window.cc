@@ -83,7 +83,7 @@ void Window::update_display_buffer(const Context& context)
 
     // cut the start of the line before m_position.column
     for (auto& line : lines)
-        line.trim(m_position.column, m_dimensions.column);
+        line.trim(m_position.column, m_dimensions.column, true);
     m_display_buffer.optimize();
 
     m_timestamp = buffer().timestamp();
