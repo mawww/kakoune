@@ -104,7 +104,7 @@ FaceRegistry::FaceRegistry()
         { "StatusLine", Face{ Colors::Cyan, Colors::Default } },
         { "StatusCursor", Face{ Colors::Black, Colors::Cyan } },
         { "Prompt", Face{ Colors::Yellow, Colors::Default } },
-        { "MatchingChar", Face{ Colors::Default, Colors::Default, Attribute::Underline } },
+        { "MatchingChar", Face{ Colors::Default, Colors::Default, Attribute::Bold } },
         { "Search", Face{ Colors::Default, Colors::Default, Attribute::Underline } },
       }
 {}
