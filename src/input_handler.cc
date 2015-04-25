@@ -225,16 +225,16 @@ public:
 
     DisplayLine mode_line() const override
     {
-        AtomList atoms = { { to_string(context().selections().size()) + " sel", Face(Colors::Blue) } };
+        AtomList atoms = { { to_string(context().selections().size()) + " sel", Face(Color::Blue) } };
         if (m_params.count != 0)
         {
-            atoms.push_back({ "; param=", Face(Colors::Yellow) });
-            atoms.push_back({ to_string(m_params.count), Face(Colors::Green) });
+            atoms.push_back({ "; param=", Face(Color::Yellow) });
+            atoms.push_back({ to_string(m_params.count), Face(Color::Green) });
         }
         if (m_params.reg != '"')
         {
-            atoms.push_back({ "; reg=", Face(Colors::Yellow) });
-            atoms.push_back({ StringView(m_params.reg).str(), Face(Colors::Green) });
+            atoms.push_back({ "; reg=", Face(Color::Yellow) });
+            atoms.push_back({ StringView(m_params.reg).str(), Face(Color::Green) });
         }
         return atoms;
     }
@@ -515,7 +515,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "menu", Face(Colors::Yellow) };
+        return { "menu", Face(Color::Yellow) };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
@@ -755,7 +755,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "prompt", Face(Colors::Yellow) };
+        return { "prompt", Face(Color::Yellow) };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -842,7 +842,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "enter key", Face(Colors::Yellow) };
+        return { "enter key", Face(Color::Yellow) };
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
@@ -1009,8 +1009,8 @@ public:
     DisplayLine mode_line() const override
     {
         auto num_sel = context().selections().size();
-        return {AtomList{ { "insert ", Face(Colors::Green) },
-                          { to_string(num_sel) + " sel", Face(Colors::Blue) } }};
+        return {AtomList{ { "insert ", Face(Color::Green) },
+                          { to_string(num_sel) + " sel", Face(Color::Blue) } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }

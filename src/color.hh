@@ -9,31 +9,31 @@ namespace Kakoune
 class String;
 class StringView;
 
-enum class Colors : char
-{
-    Default,
-    Black,
-    Red,
-    Green,
-    Yellow,
-    Blue,
-    Magenta,
-    Cyan,
-    White,
-    RGB,
-};
-
 struct Color
 {
-    Colors color;
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
+    enum NamedColor : char
+    {
+        Default,
+        Black,
+        Red,
+        Green,
+        Yellow,
+        Blue,
+        Magenta,
+        Cyan,
+        White,
+        RGB,
+    };
 
-    constexpr Color() : Color{Colors::Default} {}
-    constexpr Color(Colors c) : color{c}, r{0}, g{0}, b{0} {}
+    NamedColor color;
+    unsigned char r = 0;
+    unsigned char g = 0;
+    unsigned char b = 0;
+
+    constexpr Color() : Color{Default} {}
+    constexpr Color(NamedColor c) : color{c} {}
     constexpr Color(unsigned char r, unsigned char g, unsigned char b)
-        : color{Colors::RGB}, r{r}, g{g}, b{b} {}
+        : color{RGB}, r{r}, g{g}, b{b} {}
 };
 
 constexpr bool operator==(Color lhs, Color rhs)
@@ -57,7 +57,7 @@ bool is_color_name(StringView color);
 
 inline size_t hash_value(const Color& val)
 {
-    return val.color == Colors::RGB ?
+    return val.color == Color::RGB ?
         hash_values(val.color, val.r, val.g, val.b)
       : hash_value(val.color);
 }

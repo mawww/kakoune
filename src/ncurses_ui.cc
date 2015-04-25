@@ -62,7 +62,7 @@ static void set_attribute(WINDOW* window, int attribute, bool on)
 
 static bool operator<(Color lhs, Color rhs)
 {
-    if (lhs.color == rhs.color and lhs.color == Colors::RGB)
+    if (lhs.color == rhs.color and lhs.color == Color::RGB)
         return lhs.r == rhs.r ? (lhs.g == rhs.g ? lhs.b < rhs.b
                                                 : lhs.g < rhs.g)
                               : lhs.r < rhs.r;
@@ -74,15 +74,15 @@ template<typename T> T sq(T x) { return x * x; }
 static int nc_color(Color color)
 {
     static std::map<Color, int> colors = {
-        { Colors::Default, -1 },
-        { Colors::Black,   COLOR_BLACK },
-        { Colors::Red,     COLOR_RED },
-        { Colors::Green,   COLOR_GREEN },
-        { Colors::Yellow,  COLOR_YELLOW },
-        { Colors::Blue,    COLOR_BLUE },
-        { Colors::Magenta, COLOR_MAGENTA },
-        { Colors::Cyan,    COLOR_CYAN },
-        { Colors::White,   COLOR_WHITE },
+        { Color::Default, -1 },
+        { Color::Black,   COLOR_BLACK },
+        { Color::Red,     COLOR_RED },
+        { Color::Green,   COLOR_GREEN },
+        { Color::Yellow,  COLOR_YELLOW },
+        { Color::Blue,    COLOR_BLUE },
+        { Color::Magenta, COLOR_MAGENTA },
+        { Color::Cyan,    COLOR_CYAN },
+        { Color::White,   COLOR_WHITE },
     };
     static int next_color = 8;
 
@@ -91,7 +91,7 @@ static int nc_color(Color color)
         return it->second;
     else if (can_change_color() and COLORS > 8)
     {
-        kak_assert(color.color == Colors::RGB);
+        kak_assert(color.color == Color::RGB);
         if (next_color > COLORS)
             next_color = 8;
         init_color(next_color,
@@ -103,7 +103,7 @@ static int nc_color(Color color)
     }
     else
     {
-        kak_assert(color.color == Colors::RGB);
+        kak_assert(color.color == Color::RGB);
         static const struct { unsigned char r, g, b; } builtin_colors[] = {
             {0x00,0x00,0x00}, {0x80,0x00,0x00}, {0x00,0x80,0x00}, {0x80,0x80,0x00},
             {0x00,0x00,0x80}, {0x80,0x00,0x80}, {0x00,0x80,0x80}, {0xc0,0xc0,0xc0},
@@ -213,7 +213,7 @@ static void set_face(WINDOW* window, Face face)
     if (current_pair != -1)
         wattroff(window, COLOR_PAIR(current_pair));
 
-    if (face.fg != Colors::Default or face.bg != Colors::Default)
+    if (face.fg != Color::Default or face.bg != Color::Default)
     {
         current_pair = get_color_pair(face);
         wattron(window, COLOR_PAIR(current_pair));
@@ -376,7 +376,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         ++line_index;
     }
 
-    set_face(m_window, { Colors::Blue, Colors::Default });
+    set_face(m_window, { Color::Blue, Color::Default });
     while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
     {
         wmove(m_window, (int)line_index++, 0);

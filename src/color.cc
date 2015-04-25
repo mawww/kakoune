@@ -30,7 +30,7 @@ Color str_to_color(StringView color)
 {
     auto it = find_if(color_names, [&](const char* c){ return color == c; });
     if (it != std::end(color_names))
-        return static_cast<Colors>(it - color_names);
+        return static_cast<Color::NamedColor>(it - color_names);
 
     auto hval = [&color](char c) -> int
     {
@@ -49,12 +49,12 @@ Color str_to_color(StringView color)
                  (unsigned char)(hval(color[8]) * 16 + hval(color[9])) };
 
     throw runtime_error(format("Unable to parse color '{}'", color));
-    return Colors::Default;
+    return Color::Default;
 }
 
 String color_to_str(Color color)
 {
-    if (color.color == Colors::RGB)
+    if (color.color == Color::RGB)
     {
         char buffer[11];
         sprintf(buffer, "rgb:%02x%02x%02x", color.r, color.g, color.b);

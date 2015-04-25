@@ -95,7 +95,7 @@ public:
     void write(Color color)
     {
         write(color.color);
-        if (color.color == Colors::RGB)
+        if (color.color == Color::RGB)
         {
             write(color.r);
             write(color.g);
@@ -188,8 +188,8 @@ template<>
 Color read<Color>(int socket)
 {
     Color res;
-    res.color = read<Colors>(socket);
-    if (res.color == Colors::RGB)
+    res.color = read<Color::NamedColor>(socket);
+    if (res.color == Color::RGB)
     {
         res.r = read<unsigned char>(socket);
         res.g = read<unsigned char>(socket);

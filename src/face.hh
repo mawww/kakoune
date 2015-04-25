@@ -25,7 +25,7 @@ struct Face
     Color bg;
     Attribute attributes;
 
-    constexpr Face(Color fg = Colors::Default, Color bg = Colors::Default,
+    constexpr Face(Color fg = Color::Default, Color bg = Color::Default,
          Attribute attributes = Attribute::Normal)
       : fg{fg}, bg{bg}, attributes{attributes} {}
 };

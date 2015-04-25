@@ -154,9 +154,9 @@ void apply_highlighter(const Context& context,
 auto apply_face = [](const Face& face)
 {
     return [&face](DisplayAtom& atom) {
-        if (face.fg != Colors::Default)
+        if (face.fg != Color::Default)
             atom.face.fg = face.fg;
-        if (face.bg != Colors::Default)
+        if (face.bg != Color::Default)
             atom.face.bg = face.bg;
         if (face.attributes != Attribute::Normal)
             atom.face.attributes |= face.attributes;
@@ -760,7 +760,7 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                         if (next.coord() < atom_it->end())
                             atom_it = line.split(atom_it, next.coord());
                         atom_it->replace(str);
-                        atom_it->face = { Colors::Red, Colors::Black };
+                        atom_it->face = { Color::Red, Color::Black };
                         break;
                     }
                     it = next;
@@ -800,7 +800,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
             String content = it != lines.end() ? std::get<2>(*it) : empty;
             content += String(' ', width - content.char_length());
             DisplayAtom atom{std::move(content)};
-            atom.face = { it != lines.end() ? std::get<1>(*it) : Colors::Default , bg };
+            atom.face = { it != lines.end() ? std::get<1>(*it) : Color::Default , bg };
             line.insert(line.begin(), std::move(atom));
         }
     };
