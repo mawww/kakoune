@@ -12,12 +12,6 @@
 namespace Kakoune
 {
 
-struct option_not_found : public runtime_error
-{
-    option_not_found(StringView name)
-        : runtime_error("option not found: " + name) {}
-};
-
 class OptionManager;
 
 enum class OptionFlags

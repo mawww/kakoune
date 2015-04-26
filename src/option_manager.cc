@@ -39,6 +39,12 @@ void OptionManager::unregister_watcher(OptionManagerWatcher& watcher)
     m_watchers.erase(it);
 }
 
+struct option_not_found : public runtime_error
+{
+    option_not_found(StringView name)
+        : runtime_error("option not found: " + name) {}
+};
+
 Option& OptionManager::get_local_option(StringView name)
 {
     auto it = find_option(m_options, name);
