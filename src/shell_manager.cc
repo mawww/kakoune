@@ -55,7 +55,7 @@ std::pair<String, int> ShellManager::eval(
                     size_t size = read(watcher.fd(), buffer, 1024);
                     if (size <= 0)
                         watcher.close_fd();
-                    output += String(buffer, buffer+size);
+                    output += StringView{buffer, buffer+size};
                 };
             };
 

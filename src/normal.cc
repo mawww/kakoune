@@ -656,7 +656,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams)
     {
         auto begin = utf8::make_iterator(buffer.iterator_at(sel.min()));
         auto end   = utf8::make_iterator(buffer.iterator_at(sel.max()))+1;
-        auto content = "\\Q" + String{begin.base(), end.base()} + "\\E";
+        auto content = "\\Q" + buffer.string(begin.base().coord(), end.base().coord()) + "\\E";
         if (smart)
         {
             if (begin == buffer.begin() or (is_word(*begin) and not is_word(*(begin-1))))

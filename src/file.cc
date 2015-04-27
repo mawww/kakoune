@@ -120,7 +120,7 @@ String read_fd(int fd)
         if (size == -1 or size == 0)
             break;
 
-        content += String(buf, buf + size);
+        content += StringView(buf, buf + size);
     }
     return content;
 }

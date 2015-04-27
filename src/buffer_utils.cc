@@ -138,7 +138,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             if (prevent_scrolling)
                 ++pos;
 
-            buffer->insert(pos, String(data, data+count));
+            buffer->insert(pos, StringView(data, data+count));
 
             if (count > 0 and prevent_scrolling)
             {

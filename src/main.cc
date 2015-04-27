@@ -519,7 +519,7 @@ int run_pipe(StringView session)
             write_stderr("error while reading stdin\n");
             return -1;
         }
-        command += String{buf, buf + count};
+        command += StringView{buf, buf + count};
     }
     try
     {

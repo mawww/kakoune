@@ -276,7 +276,7 @@ public:
         }
         catch (RegexError& err)
         {
-            throw runtime_error(String("regex error: ") + err.what());
+            throw runtime_error(StringView{"regex error: "} + err.what());
         }
     }
 
@@ -1121,7 +1121,7 @@ public:
         }
         catch (RegexError& err)
         {
-            throw runtime_error(String("regex error: ") + err.what());
+            throw runtime_error(StringView{"regex error: "} + err.what());
         }
     }
 

@@ -8,7 +8,7 @@ namespace Kakoune
 String option_to_string(const Regex& re)
 {
     const auto& str = re.str();
-    return String{str.begin(), str.end()};
+    return {str.begin(), str.end()};
 }
 
 void option_from_string(StringView str, Regex& re)
