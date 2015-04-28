@@ -400,7 +400,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     {
         DisplayLine trimmed_mode_line = mode_line;
         trimmed_mode_line.trim(mode_len + 2 - remaining, remaining - 2, false);
-        trimmed_mode_line.insert(trimmed_mode_line.begin(), { "<" });
+        trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…" });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
         CharCount col = m_dimensions.column - remaining + 1;
