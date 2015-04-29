@@ -514,6 +514,69 @@ HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
     return {"hlline_" + params[0], make_simple_highlighter(std::move(func))};
 }
 
+HighlighterAndId create_column_option_highlighter(HighlighterParameters params)
+{
+    if (params.size() != 2)
+        throw runtime_error("wrong parameter count");
+
+    String facespec = params[1];
+    String option_name = params[0];
+
+    get_face(facespec); // validate facespec
+    GlobalScope::instance().options()[option_name].get<int>(); // verify option type now
+
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer, BufferRange)
+    {
+        const CharCount column = context.options()[option_name].get<int>() - 1;
+        if (column < 0)
+            return;
+
+        const Buffer& buffer = context.buffer();
+        const int tabstop = context.options()["tabstop"].get<int>();
+        auto face = get_face(facespec);
+        for (auto& line : display_buffer.lines())
+        {
+            const LineCount buf_line = line.range().begin.line;
+            const ByteCount byte_col = get_byte_to_column(buffer, tabstop, {buf_line, column});
+            const ByteCoord coord{buf_line, byte_col};
+            bool found = false;
+            if (buffer.is_valid(coord) and not buffer.is_end(coord))
+            {
+                for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
+                {
+                    if (!atom_it->has_buffer_range())
+                        continue;
+
+                    kak_assert(atom_it->begin().line == buf_line);
+                    if (coord >= atom_it->begin() and coord < atom_it->end())
+                    {
+                        if (coord > atom_it->begin())
+                            atom_it = ++line.split(atom_it, coord);
+                        if (buffer.next(coord) < atom_it->end())
+                            atom_it = line.split(atom_it, buffer.next(coord));
+
+                        apply_face(face)(*atom_it);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (not found)
+            {
+                CharCount col = get_column(buffer, tabstop, buffer.prev(line.range().end));
+                if (col < column)
+                {
+                    line.push_back({String{' ', column - col - 1}});
+                    line.push_back({String{" "}, face});
+                }
+            }
+        }
+    };
+
+    return {"hlcol_" + params[0], make_simple_highlighter(std::move(func))};
+}
+
 void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const int tabstop = context.options()["tabstop"].get<int>();
@@ -1283,6 +1346,11 @@ void register_highlighters()
         { create_line_option_highlighter,
           "Parameters: <option name> <face>\n"
           "Highlight the line stored in <option name> with <face>" } });
+    registry.append({
+        "column_option",
+        { create_column_option_highlighter,
+          "Parameters: <option name> <face>\n"
+          "Highlight the column stored in <option name> with <face>" } });
     registry.append({
         "ref",
         { create_reference_highlighter,
