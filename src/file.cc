@@ -144,7 +144,7 @@ Buffer* create_buffer_from_file(StringView filename)
 {
     String real_filename = real_path(parse_filename(filename));
 
-    int fd = open(real_filename.c_str(), O_RDONLY);
+    int fd = open(real_filename.c_str(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
     {
         if (errno == ENOENT)
@@ -158,6 +158,9 @@ Buffer* create_buffer_from_file(StringView filename)
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
         throw file_access_error(real_filename, "is a directory");
+    if (S_ISFIFO(st.st_mode)) // Do not try to read fifos, use them as write only
+        return create_buffer_from_data({}, real_filename,
+                                       Buffer::Flags::File, st.st_mtime);
 
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     auto unmap = on_scope_end([&]{ munmap((void*)data, st.st_size); });
