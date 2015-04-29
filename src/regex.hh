@@ -47,7 +47,7 @@ struct Regex : boost::regex
     Regex(Iterator begin, Iterator end, flag_type flags = ECMAScript)
         : boost::regex(begin, end, flags) {}
 
-        String str() const { auto s = boost::regex::str(); return {s.begin(), s.end()}; }
+    String str() const { auto s = boost::regex::str(); return {s.begin(), s.end()}; }
 };
 namespace regex_ns = boost;
 #endif
