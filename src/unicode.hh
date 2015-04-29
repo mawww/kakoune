@@ -1,14 +1,12 @@
 #ifndef unicode_hh_INCLUDED
 #define unicode_hh_INCLUDED
 
-#include <cstdint>
-#include <ctype.h>
 #include <wctype.h>
 
 namespace Kakoune
 {
 
-using Codepoint = uint32_t;
+using Codepoint = char32_t;
 
 inline bool is_eol(Codepoint c)
 {
