@@ -262,13 +262,13 @@ TokenList parse(StringView line)
     return result;
 }
 
-String eval_token(const Token& token, Context& context,
-                  ConstArrayView<String> shell_params,
-                  const EnvVarMap& env_vars);
+String expand_token(const Token& token, const Context& context,
+                    ConstArrayView<String> shell_params,
+                    const EnvVarMap& env_vars);
 
-String eval(StringView str, Context& context,
-            ConstArrayView<String> shell_params,
-            const EnvVarMap& env_vars)
+String expand(StringView str, const Context& context,
+              ConstArrayView<String> shell_params,
+              const EnvVarMap& env_vars)
 {
     String res;
     auto pos = 0_byte;
@@ -286,7 +286,7 @@ String eval(StringView str, Context& context,
         else if (str[pos] == '%')
         {
             Token token = parse_percent_token<true>(str, pos);
-            res += eval_token(token, context, shell_params, env_vars);
+            res += expand_token(token, context, shell_params, env_vars);
             ++pos;
         }
         else
@@ -295,9 +295,9 @@ String eval(StringView str, Context& context,
     return res;
 }
 
-String eval_token(const Token& token, Context& context,
-                  ConstArrayView<String> shell_params,
-                  const EnvVarMap& env_vars)
+String expand_token(const Token& token, const Context& context,
+                    ConstArrayView<String> shell_params,
+                    const EnvVarMap& env_vars)
 {
     auto& content = token.content();
     switch (token.type())
@@ -317,7 +317,7 @@ String eval_token(const Token& token, Context& context,
         return ShellManager::instance().get_val(content, context);
     }
     case Token::Type::RawEval:
-        return eval(content, context, shell_params, env_vars);
+        return expand(content, context, shell_params, env_vars);
     case Token::Type::Raw:
         return content;
     default: kak_assert(false);
@@ -410,9 +410,9 @@ void CommandManager::execute(StringView command_line,
         // Shell expand are retokenized
         else if (it->type() == Token::Type::ShellExpand)
         {
-            auto shell_tokens = parse<true>(eval_token(*it, context,
-                                                       shell_params,
-                                                       env_vars));
+            auto shell_tokens = parse<true>(expand_token(*it, context,
+                                                         shell_params,
+                                                         env_vars));
             it = tokens.erase(it);
             for (auto& token : shell_tokens)
                 it = ++tokens.insert(it, std::move(token));
@@ -423,8 +423,8 @@ void CommandManager::execute(StringView command_line,
             it -= shell_tokens.size() + 1;
         }
         else
-            params.push_back(eval_token(*it, context, shell_params,
-                                        env_vars));
+            params.push_back(expand_token(*it, context, shell_params,
+                                          env_vars));
     }
     execute_single_command(params, context, command_coord);
 }
