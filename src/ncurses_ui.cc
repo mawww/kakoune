@@ -832,6 +832,10 @@ void NCursesUI::info_show(StringView title, StringView content,
     else
         pos = compute_pos(anchor, size, m_menu_win, style == InfoStyle::InlineAbove);
 
+    // The info window will hide the status line
+    if (pos.line + size.line > m_dimensions.line)
+        return;
+
     m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
                                      (int)pos.line,  (int)pos.column);
 
