@@ -1,6 +1,8 @@
 #ifndef optional_hh_INCLUDED
 #define optional_hh_INCLUDED
 
+#include "assert.hh"
+
 namespace Kakoune
 {
 

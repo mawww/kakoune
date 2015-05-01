@@ -1,11 +1,12 @@
 #ifndef string_hh_INCLUDED
 #define string_hh_INCLUDED
 
+#include "array_view.hh"
+#include "hash.hh"
+#include "optional.hh"
 #include "units.hh"
 #include "utf8.hh"
-#include "hash.hh"
 #include "vector.hh"
-#include "array_view.hh"
 
 #include <string>
 #include <climits>
@@ -256,7 +257,8 @@ inline String codepoint_to_str(Codepoint cp)
     return str;
 }
 
-int str_to_int(StringView str);
+int str_to_int(StringView str); // throws on error
+Optional<int> str_to_int_ifp(StringView str);
 
 template<size_t N>
 struct InplaceString

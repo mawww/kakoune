@@ -98,7 +98,7 @@ String indent(StringView str, StringView indent)
     return res;
 }
 
-int str_to_int(StringView str)
+Optional<int> str_to_int_ifp(StringView str)
 {
     unsigned int res = 0;
     bool negative = false;
@@ -110,9 +110,16 @@ int str_to_int(StringView str)
         else if (c >= '0' and c <= '9')
             res = res * 10 + c - '0';
         else
-            throw runtime_error(str + "is not a number");
+            return {};
     }
     return negative ? -(int)res : (int)res;
+}
+
+int str_to_int(StringView str)
+{
+    if (auto val = str_to_int_ifp(str))
+        return *val;
+    throw str + " is not a number";
 }
 
 InplaceString<16> to_string(int val)

@@ -904,16 +904,14 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
         if (wheel_down_it == options.end())
             m_wheel_down_button = 2;
-        else try {
-            m_wheel_down_button = str_to_int(wheel_down_it->second);;
-        } catch(...) {}
+        else if (auto down = str_to_int_ifp(wheel_down_it->second))
+            m_wheel_down_button = *down;
 
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
         if (wheel_up_it == options.end())
             m_wheel_up_button = 4;
-        else try {
-            m_wheel_up_button = str_to_int(wheel_up_it->second);;
-        } catch(...) {}
+        else if (auto up = str_to_int_ifp(wheel_up_it->second))
+            m_wheel_up_button = *up;
     }
 }
 
