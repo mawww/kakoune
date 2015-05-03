@@ -254,17 +254,16 @@ public:
 
         try
         {
-            static Regex face_spec_ex(R"((\d+):(.*))");
             FacesSpec faces;
             for (auto it = params.begin() + 1;  it != params.end(); ++it)
             {
-                MatchResults<String::const_iterator> res;
-                if (not regex_match(it->begin(), it->end(), res, face_spec_ex))
+                auto colon = find(*it, ':');
+                if (colon == it->end())
                     throw runtime_error("wrong face spec: '" + *it +
                                          "' expected <capture>:<facespec>");
-                get_face({res[2].first, res[2].second}); // throw if wrong face spec
-                int capture = str_to_int({res[1].first, res[1].second});
-                faces.emplace_back(capture, String{res[2].first, res[2].second});
+                get_face({colon+1, it->end()}); // throw if wrong face spec
+                int capture = str_to_int({it->begin(), colon});
+                faces.emplace_back(capture, String{colon+1, it->end()});
             }
 
             String id = "hlregex'" + params[0] + "'";
