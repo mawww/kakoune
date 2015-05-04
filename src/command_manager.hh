@@ -99,6 +99,10 @@ private:
                                             const String& name) const;
 };
 
+String expand(StringView str, const Context& context,
+              ConstArrayView<String> shell_params,
+              const EnvVarMap& env_vars);
+
 }
 
 #endif // command_manager_hh_INCLUDED

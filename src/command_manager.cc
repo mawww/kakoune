@@ -264,39 +264,6 @@ TokenList parse(StringView line)
 
 String expand_token(const Token& token, const Context& context,
                     ConstArrayView<String> shell_params,
-                    const EnvVarMap& env_vars);
-
-String expand(StringView str, const Context& context,
-              ConstArrayView<String> shell_params,
-              const EnvVarMap& env_vars)
-{
-    String res;
-    auto pos = 0_byte;
-    auto length = str.length();
-    while (pos < length)
-    {
-        if (str[pos] == '\\')
-        {
-            char c = str[++pos];
-            if (c != '%' and c != '\\')
-                res += '\\';
-            res += c;
-            ++pos;
-        }
-        else if (str[pos] == '%')
-        {
-            Token token = parse_percent_token<true>(str, pos);
-            res += expand_token(token, context, shell_params, env_vars);
-            ++pos;
-        }
-        else
-            res += str[pos++];
-    }
-    return res;
-}
-
-String expand_token(const Token& token, const Context& context,
-                    ConstArrayView<String> shell_params,
                     const EnvVarMap& env_vars)
 {
     auto& content = token.content();
@@ -325,6 +292,35 @@ String expand_token(const Token& token, const Context& context,
     return {};
 }
 
+}
+
+String expand(StringView str, const Context& context,
+              ConstArrayView<String> shell_params,
+              const EnvVarMap& env_vars)
+{
+    String res;
+    auto pos = 0_byte;
+    auto length = str.length();
+    while (pos < length)
+    {
+        if (str[pos] == '\\')
+        {
+            char c = str[++pos];
+            if (c != '%' and c != '\\')
+                res += '\\';
+            res += c;
+            ++pos;
+        }
+        else if (str[pos] == '%')
+        {
+            Token token = parse_percent_token<true>(str, pos);
+            res += expand_token(token, context, shell_params, env_vars);
+            ++pos;
+        }
+        else
+            res += str[pos++];
+    }
+    return res;
 }
 
 struct command_not_found : runtime_error
