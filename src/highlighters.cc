@@ -4,6 +4,7 @@
 #include "buffer_utils.hh"
 #include "context.hh"
 #include "containers.hh"
+#include "command_manager.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "highlighter_group.hh"
@@ -491,7 +492,7 @@ HighlighterAndId create_regex_option_highlighter(HighlighterParameters params)
     return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
-HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
+HighlighterAndId create_line_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -500,20 +501,19 @@ HighlighterAndId create_line_option_highlighter(HighlighterParameters params)
     String option_name = params[0];
 
     get_face(facespec); // validate facespec
-    GlobalScope::instance().options()[option_name].get<int>(); // verify option type now
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        int line = context.options()[option_name].get<int>();
-        highlight_range(display_buffer, {line-1, 0}, {line, 0}, false,
-                        apply_face(get_face(facespec)));
+        if (auto line = str_to_int_ifp(expand(option_name, context, {}, EnvVarMap{})))
+            highlight_range(display_buffer, {*line-1, 0}, {*line, 0}, false,
+                            apply_face(get_face(facespec)));
     };
 
     return {"hlline_" + params[0], make_simple_highlighter(std::move(func))};
 }
 
-HighlighterAndId create_column_option_highlighter(HighlighterParameters params)
+HighlighterAndId create_column_highlighter(HighlighterParameters params)
 {
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
@@ -522,12 +522,11 @@ HighlighterAndId create_column_option_highlighter(HighlighterParameters params)
     String option_name = params[0];
 
     get_face(facespec); // validate facespec
-    GlobalScope::instance().options()[option_name].get<int>(); // verify option type now
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        const CharCount column = context.options()[option_name].get<int>() - 1;
+        const CharCount column = str_to_int_ifp(expand(option_name, context, {}, EnvVarMap{})).value_or(0) - 1;
         if (column < 0)
             return;
 
@@ -1341,15 +1340,15 @@ void register_highlighters()
           "Display flags specified in the line-flag-list option <option name>\n"
           "A line-flag is written: <line>|<fg color>|<text>, the list is : separated" } });
     registry.append({
-        "line_option",
-        { create_line_option_highlighter,
-          "Parameters: <option name> <face>\n"
-          "Highlight the line stored in <option name> with <face>" } });
+        "line",
+        { create_line_highlighter,
+          "Parameters: <value string> <face>\n"
+          "Highlight the line given by evaluating <value string> with <face>" } });
     registry.append({
-        "column_option",
-        { create_column_option_highlighter,
-          "Parameters: <option name> <face>\n"
-          "Highlight the column stored in <option name> with <face>" } });
+        "column",
+        { create_column_highlighter,
+          "Parameters: <value string> <face>\n"
+          "Highlight the column given by evaluating <value string> with <face>" } });
     registry.append({
         "ref",
         { create_reference_highlighter,

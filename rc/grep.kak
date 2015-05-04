@@ -26,7 +26,7 @@ def -shell-params -file-completion \
 hook global WinSetOption filetype=grep %{
     addhl group grep
     addhl -group grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
-    addhl -group grep line_option _grep_current_line default+b
+    addhl -group grep line %{%opt{_grep_current_line}} default+b
     hook buffer -group grep-hooks NormalKey <c-m> jump
 }
 
