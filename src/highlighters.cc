@@ -13,6 +13,7 @@
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "string.hh"
+#include "window.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 
@@ -505,9 +506,30 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        if (auto line = str_to_int_ifp(expand(option_name, context, {}, EnvVarMap{})))
-            highlight_range(display_buffer, {*line-1, 0}, {*line, 0}, false,
-                            apply_face(get_face(facespec)));
+        const LineCount line = str_to_int_ifp(expand(option_name, context, {}, EnvVarMap{})).value_or(0) - 1;
+        if (line < 0)
+            return;
+
+        auto it = find_if(display_buffer.lines(),
+                          [line](const DisplayLine& l)
+                          { return l.range().begin.line == line; });
+        if (it == display_buffer.lines().end())
+            return;
+
+        auto face = get_face(facespec);
+        CharCount column = 0;
+        for (auto atom_it = it->begin(); atom_it != it->end(); ++atom_it)
+        {
+            column += atom_it->length();
+            if (!atom_it->has_buffer_range())
+                continue;
+
+            kak_assert(atom_it->begin().line == line);
+            apply_face(face)(*atom_it);
+        }
+        const CharCount remaining = context.window().dimensions().column - column;
+        if (remaining > 0)
+            it->push_back({ String{' ', remaining}, face });
     };
 
     return {"hlline_" + params[0], make_simple_highlighter(std::move(func))};
