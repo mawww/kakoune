@@ -74,6 +74,17 @@ Features
    - Supports multiple languages in the same buffer
    - Highlight a buffer differently in different windows
 
+Screenshots
+-----------
+
+[[screenshow-i3]]
+.Kakoune in i3
+image::doc/screenshot-i3.gif[Kakoune in i3]
+
+[[screenshot-tmux]]
+.Kakoune in tmux
+image::doc/screenshot-tmux.gif[Kakoune in tmux]
+
 Getting started
 ---------------
 
