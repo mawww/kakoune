@@ -1563,7 +1563,7 @@ public:
 
 private:
     Vector<String> m_save;
-    char                m_name;
+    char           m_name;
 };
 
 }
