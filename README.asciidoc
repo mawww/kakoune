@@ -75,7 +75,7 @@ Features
    - Highlight a buffer differently in different windows
 
 Screenshots
------------
+~~~~~~~~~~~
 
 [[screenshow-i3]]
 .Kakoune in i3
