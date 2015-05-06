@@ -798,8 +798,7 @@ String make_info_box(StringView title, StringView message, CharCount max_width,
 void NCursesUI::info_show(StringView title, StringView content,
                           CharCoord anchor, Face face, InfoStyle style)
 {
-    if (m_info_win)
-        delwin(m_info_win);
+    info_hide();
 
     StringView info_box = content;
     String fancy_info_box;
