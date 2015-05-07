@@ -81,15 +81,23 @@ Completion candidates
 Most of the time, filetype specific completion should be provided by
 external programs.
 
-external completions are provided using the +completions+ option, which
+external completions are provided using an option to store completion, which
 have the following format.
 
 ----
-line.column[+len]@timestamp:candidate1:candidate2:...
+line.column[+len]@timestamp:candidate1[@desc1]:candidate2[@desc2]:...
 ----
 
 the first element of this string list specify where and when this completions
-applies, the others are simply completion candidates.
+applies, the others are simply completion candidates, eventually containing
+a descriptive text (after an `@` separator).
+
+to effectively use that completion option, it should get added to the completers
+option.
+
+---
+set -add buffer completers option=my_option_name
+---
 
 As a completion program may take some time to compute the candidates, it should
 run asynchronously. In order to do that, the following pattern may be used:
@@ -98,6 +106,12 @@ run asynchronously. In order to do that, the following pattern may be used:
 -----
 # Declare the option which will store the temporary filename
 decl str plugin_filename
+# Declare the completion option
+decl str plugin_completions
+# Add plugin_completions to completers for files of good filetype
+hook global BufSetOption filetype=my_filetype %{
+    set -add buff completers option=plugin_completions
+}
 %sh{
     # ask Kakoune to write current buffer to temporary file
     filename=$(mktemp -t kak-temp.XXXXXXXX)
@@ -117,7 +131,7 @@ nop %sh{ ( # launch a detached shell
     # generate completion option value
     completions="$line.$column@$kak_timestamp:$candidates"
     # write to Kakoune socket for the buffer that triggered the completion
-    echo "set buffer=${kak_bufname} completions '$completions'" |
+    echo "set buffer=${kak_bufname} plugin_completions '$completions'" |
         kak -p ${kak_session}
 ) > /dev/null 2>&1 < /dev/null & }
 -----
