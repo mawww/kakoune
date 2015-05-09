@@ -30,18 +30,18 @@ addhl -group /markdown/fish ref fish
 addhl -group /markdown/ruby ref ruby
 
 # Setext-style header
-addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:blue
-addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:cyan
+addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
+addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 
 # Atx-style header
-addhl -group /markdown/content regex ^(#+)(\h+)([^\n]+) 1:red
+addhl -group /markdown/content regex ^(#+)(\h+)([^\n]+) 1:header
 
-addhl -group /markdown/content regex ^\h+([-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*)*$ 0:yellow 1:cyan
-addhl -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:magenta
-addhl -group /markdown/content regex (?<!\w)\+[^\n]+?\+(?!\w) 0:green
-addhl -group /markdown/content regex (?<!\w)_[^\n]+?_(?!\w) 0:yellow
-addhl -group /markdown/content regex (?<!\w)\*[^\n]+?\*(?!\w) 0:red
-addhl -group /markdown/content regex <[a-z]+://.*?> 0:cyan
+addhl -group /markdown/content regex ^\h+([-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*)*$ 0:list 1:bullet
+addhl -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
+addhl -group /markdown/content regex (?<!\w)\+[^\n]+?\+(?!\w) 0:mono
+addhl -group /markdown/content regex (?<!\w)_[^\n]+?_(?!\w) 0:italic
+addhl -group /markdown/content regex (?<!\w)\*[^\n]+?\*(?!\w) 0:bold
+addhl -group /markdown/content regex <[a-z]+://.*?> 0:link
 addhl -group /markdown/content regex ^\h*(>\h*)+ 0:comment
 addhl -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
 
