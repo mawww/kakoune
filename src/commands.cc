@@ -1147,6 +1147,7 @@ struct DisableOption {
 
     ~DisableOption() { m_option.set(m_prev_value); }
 
+private:
     Option& m_option;
     T m_prev_value;
 };
