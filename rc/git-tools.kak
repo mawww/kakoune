@@ -143,7 +143,12 @@ def -shell-params \
     case "$1" in
        show|log|diff|status) show_git_cmd_output "$@" ;;
        blame) shift; run_git_blame "$@" ;;
-       hide-blame) echo "try %{ rmhl hlflags_git_blame_flags }" ;;
+       hide-blame)
+            echo "try %{
+                set buffer=$kak_bufname git_blame_flags ''
+                rmhl hlflags_git_blame_flags
+            }"
+            ;;
        show-diff)
            echo "try %{ addhl flag_lines black git_diff_flags }"
            update_diff
