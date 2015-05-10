@@ -1,4 +1,6 @@
 # define color scheme
+#
+# For Code
 face value red
 face type yellow
 face identifier green
@@ -9,6 +11,18 @@ face operator yellow
 face attribute green
 face comment cyan
 face meta magenta
+
+# For markup
+face title blue
+face header cyan
+face bold red
+face italic yellow
+face mono green
+face block magenta
+face meta blue
+face link cyan
+face bullet cyan
+face list yellow
 
 def -shell-params runtime %{ %sh{
         while [ $# -gt 0 ]; do
