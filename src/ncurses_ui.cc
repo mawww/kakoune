@@ -472,7 +472,7 @@ Key NCursesUI::get_key()
             if ((ev.bstate & BUTTON1_RELEASED) == BUTTON1_RELEASED) return mouse_release(pos);
             if ((ev.bstate & wheel_down_mask) == wheel_down_mask) return mouse_wheel_down(pos);
             if ((ev.bstate & wheel_up_mask) == wheel_up_mask) return mouse_wheel_up(pos);
-            else return mouse_pos(pos);
+            return mouse_pos(pos);
         }
     }
 
