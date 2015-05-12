@@ -1,5 +1,6 @@
 #include "assert.hh"
 #include "buffer.hh"
+#include "diff.hh"
 #include "keys.hh"
 #include "selectors.hh"
 #include "word_db.hh"
@@ -239,6 +240,14 @@ void test_line_modifications()
     }
 }
 
+void test_diff()
+{
+    StringView s1 = "mais que fais la police";
+    StringView s2 = "mais ou va la police";
+
+    auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
+}
+
 void run_unit_tests()
 {
     test_utf8();
@@ -248,4 +257,5 @@ void run_unit_tests()
     test_undo_group_optimizer();
     test_word_db();
     test_line_modifications();
+    test_diff();
 }
