@@ -1,6 +1,9 @@
 #include "array_view.hh"
 #include "vector.hh"
 
+#include <functional>
+#include <iterator>
+
 namespace Kakoune
 {
 
@@ -21,10 +24,10 @@ private:
 
 struct Snake{ int x, y, u, v; bool add; }; 
 
-template<typename Iterator>
+template<typename Iterator, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
                                                const MirroredArray<int>& V,
-                                               const int D, const int k)
+                                               const int D, const int k, Equal eq)
 {
     int x; // our position along a
 
@@ -43,7 +46,7 @@ Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, in
 
     int u = x, v = y;
     // follow end snake along diagonal k
-    while (u < N and v < M and a[u] == b[v])
+    while (u < N and v < M and eq(a[u], b[v]))
         ++u, ++v;
 
     return { x, y, u, v, add };
@@ -55,9 +58,10 @@ struct SnakeLen : Snake
     int d;
 };
 
-template<typename Iterator>
+template<typename Iterator, typename Equal>
 SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
-                           ArrayView<int> data1, ArrayView<int> data2)
+                           ArrayView<int> data1, ArrayView<int> data2,
+                           Equal eq)
 {
     const int delta = N - M;
     MirroredArray<int> V1{data1, N + M};
@@ -69,7 +73,7 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
     {
         for (int k1 = -D; k1 <= D; k1 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, D, k1);
+            auto p = find_end_snake_of_further_reaching_dpath(a, N, b, M, V1, D, k1, eq);
             V1[k1] = p.u;
 
             const int k2 = -(k1 - delta);
@@ -82,7 +86,7 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
 
         for (int k2 = -D; k2 <= D; k2 += 2)
         {
-            auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, D, k2);
+            auto p = find_end_snake_of_further_reaching_dpath(ra, N, rb, M, V2, D, k2, eq);
             V2[k2] = p.u;
 
             const int k1 = -(k2 - delta);
@@ -95,53 +99,60 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
     }
 
     kak_assert(false);
+    return { {}, 0 };
 }
 
-template<typename Iterator>
 struct Diff
 {
-    bool add;
-    Iterator begin;
-    Iterator end;
+    enum { Keep, Add, Remove } mode;
+    int len;
+    int posB;
 };
 
-template<typename Iterator>
-void find_diff_rec(Iterator a, size_t N, Iterator b, size_t M,
+template<typename Iterator, typename Equal>
+void find_diff_rec(Iterator a, int offA, int lenA,
+                   Iterator b, int offB, int lenB,
                    ArrayView<int> data1, ArrayView<int> data2,
-                   Vector<Diff<Iterator>>& diffs)
+                   Equal eq, Vector<Diff>& diffs)
 {
-    if (N > 0 and M > 0)
+    if (lenA > 0 and lenB > 0)
     {
-        auto middle_snake = find_middle_snake(a, N, b, M, data1, data2);
+        auto middle_snake = find_middle_snake(a + offA, lenA, b + offB, lenB, data1, data2, eq);
         if (middle_snake.d > 1)
         {
-            find_diff_rec(a, middle_snake.x, b, middle_snake.y,
-                          data1, data2, diffs);
+            find_diff_rec(a, offA, middle_snake.x,
+                          b, offB, middle_snake.y,
+                          data1, data2, eq, diffs);
 
-            find_diff_rec(a + middle_snake.u, N - middle_snake.u,
-                          b + middle_snake.v, M - middle_snake.v,
-                          data1, data2, diffs);
+            if (int len = middle_snake.u - middle_snake.x)
+                diffs.push_back({Diff::Keep, len, 0});
+
+            find_diff_rec(a, offA + middle_snake.u, lenA - middle_snake.u,
+                          b, offB + middle_snake.v, lenB - middle_snake.v,
+                          data1, data2, eq, diffs);
         }
         else if (middle_snake.d == 1)
         {
             int diag = 0;
-            while (a[diag] == b[diag])
+            while (eq(a[offA + diag], b[offB + diag]))
                 ++diag;
 
+            if (diag != 0)
+                diffs.push_back({Diff::Keep, diag, 0});
+
             if (middle_snake.add)
-                diffs.push_back({true, b + middle_snake.y, b + middle_snake.y + 1});
+                diffs.push_back({Diff::Add, 1, offB + middle_snake.y-1});
             else
-                diffs.push_back({false, a + middle_snake.x-1, a + middle_snake.x});
+                diffs.push_back({Diff::Remove, 1, 0});
         }
     }
-    else if (M > 0)
-        diffs.push_back({true, b, b + M});
-    else if (N > 0)
-        diffs.push_back({false, a, a + N});
+    else if (lenB > 0)
+        diffs.push_back({Diff::Add, lenB, offB});
+    else if (lenA > 0)
+        diffs.push_back({Diff::Remove, lenA, 0});
 }
 
-template<typename Iterator>
-void compact_diffs(Vector<Diff<Iterator>>& diffs)
+inline void compact_diffs(Vector<Diff>& diffs)
 {
     if (diffs.size() < 2)
         return;
@@ -149,25 +160,28 @@ void compact_diffs(Vector<Diff<Iterator>>& diffs)
     auto out_it = diffs.begin();
     for (auto it = out_it + 1; it != diffs.end(); ++it)
     {
-        if (it->add == out_it->add and it->begin == out_it->end)
-            out_it->end = it->end;
+        if (it->mode == out_it->mode and
+            (it->mode != Diff::Add or
+             it->posB == out_it->posB + out_it->len))
+            out_it->len += it->len;
         else if (++out_it != it)
             *out_it = *it;
     }
+    diffs.erase(out_it+1, diffs.end());
 }
 
-template<typename Iterator>
-Vector<Diff<Iterator>> find_diff(Iterator a, size_t N, Iterator b, size_t M)
+template<typename Iterator, typename Equal = std::equal_to<typename std::iterator_traits<Iterator>::value_type>>
+Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M,
+                                 Equal eq = Equal{})
 {
-    Vector<int> data(4 * (N+M));
-    Vector<Diff<Iterator>> diffs;
-    const size_t max_D_size = 2 * (N + M) + 1;
-    find_diff_rec(a, N, b, M,
-                  {data.data(), max_D_size},
-                  {data.data() + max_D_size, max_D_size},
-                  diffs);
+    const int max = 2 * (N + M) + 1;
+    Vector<int> data(2*max);
+    Vector<Diff> diffs;
+    find_diff_rec(a, 0, N, b, 0, M,
+                  {data.data(), (size_t)max}, {data.data() + max, (size_t)max},
+                  eq, diffs);
 
-    // compact_diffs(diffs);
+    compact_diffs(diffs);
 
     return diffs;
 }
