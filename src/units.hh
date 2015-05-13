@@ -21,20 +21,20 @@ public:
     }
 
     [[gnu::always_inline]]
-    constexpr RealType operator+(RealType other) const
-    { return RealType(m_value + other.m_value); }
+    constexpr friend RealType operator+(RealType lhs, RealType rhs)
+    { return RealType(lhs.m_value + rhs.m_value); }
 
     [[gnu::always_inline]]
-    constexpr RealType operator-(RealType other) const
-    { return RealType(m_value - other.m_value); }
+    constexpr friend RealType operator-(RealType lhs, RealType rhs)
+    { return RealType(lhs.m_value - rhs.m_value); }
 
     [[gnu::always_inline]]
-    constexpr RealType operator*(RealType other) const
-    { return RealType(m_value * other.m_value); }
+    constexpr friend RealType operator*(RealType lhs, RealType rhs)
+    { return RealType(lhs.m_value * rhs.m_value); }
 
     [[gnu::always_inline]]
-    constexpr RealType operator/(RealType other) const
-    { return RealType(m_value / other.m_value); }
+    constexpr friend RealType operator/(RealType lhs, RealType rhs)
+    { return RealType(lhs.m_value / rhs.m_value); }
 
     [[gnu::always_inline]]
     RealType& operator+=(RealType other)
@@ -72,36 +72,36 @@ public:
     constexpr RealType operator-() const { return RealType(-m_value); }
 
     [[gnu::always_inline]]
-    constexpr RealType operator%(RealType other) const
-    { return RealType(m_value % other.m_value); }
+    constexpr friend RealType operator%(RealType lhs, RealType rhs)
+    { return RealType(lhs.m_value % rhs.m_value); }
 
     [[gnu::always_inline]]
     RealType& operator%=(RealType other)
     { m_value %= other.m_value; return static_cast<RealType&>(*this); }
 
     [[gnu::always_inline]]
-    constexpr bool operator==(RealType other) const
-    { return m_value == other.m_value; }
+    constexpr friend bool operator==(RealType lhs, RealType rhs)
+    { return lhs.m_value == rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr bool operator!=(RealType other) const
-    { return m_value != other.m_value; }
+    constexpr friend bool operator!=(RealType lhs, RealType rhs)
+    { return lhs.m_value != rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr bool operator<(RealType other) const
-    { return m_value < other.m_value; }
+    constexpr friend bool operator<(RealType lhs, RealType rhs)
+    { return lhs.m_value < rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr bool operator<=(RealType other) const
-    { return m_value <= other.m_value; }
+    constexpr friend bool operator<=(RealType lhs, RealType rhs)
+    { return lhs.m_value <= rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr bool operator>(RealType other) const
-    { return m_value > other.m_value; }
+    constexpr friend bool operator>(RealType lhs, RealType rhs)
+    { return lhs.m_value > rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr bool operator>=(RealType other) const
-    { return m_value >= other.m_value; }
+    constexpr friend bool operator>=(RealType lhs, RealType rhs)
+    { return lhs.m_value >= rhs.m_value; }
 
     [[gnu::always_inline]]
     constexpr bool operator!() const
