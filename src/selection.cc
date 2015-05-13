@@ -406,10 +406,8 @@ void SelectionList::sort_and_merge_overlapping()
     std::stable_sort(begin(), end(), compare_selections);
     m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps), end());
 }
-namespace
-{
 
-inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
+static inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
 {
     auto column = coord.column;
     auto line = buffer[coord.line];
@@ -417,20 +415,14 @@ inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
         coord.column = line.byte_count_to(line.char_length() - 2);
 }
 
-
-inline void _avoid_eol(const Buffer& buffer, Selection& sel)
-{
-    _avoid_eol(buffer, sel.anchor());
-    _avoid_eol(buffer, sel.cursor());
-}
-
-}
-
 void SelectionList::avoid_eol()
 {
     update();
     for (auto& sel : m_selections)
-        _avoid_eol(buffer(), sel);
+    {
+        _avoid_eol(buffer(), sel.anchor());
+        _avoid_eol(buffer(), sel.cursor());
+    }
 }
 
 BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
