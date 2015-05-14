@@ -167,44 +167,49 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
 
     commit_undo_group();
 
-    auto diff = find_diff(m_lines.begin(), m_lines.size(),
-                          lines.begin(), (int)lines.size(),
-                          [](const StringDataPtr& lhs, const StringDataPtr& rhs)
-                          { return lhs->strview() == rhs->strview(); });
-
-    auto it = m_lines.begin();
-    for (auto& d : diff)
+    if (not record_undo)
     {
-        switch (d.mode)
+        m_changes.push_back({ Change::Erase, true, {0,0}, line_count() });
+
+        static_cast<BufferLines&>(m_lines) = std::move(lines);
+
+        m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
+    }
+    else
+    {
+        auto diff = find_diff(m_lines.begin(), m_lines.size(),
+                              lines.begin(), (int)lines.size(),
+                              [](const StringDataPtr& lhs, const StringDataPtr& rhs)
+                              { return lhs->strview() == rhs->strview(); });
+
+        auto it = m_lines.begin();
+        for (auto& d : diff)
         {
-            case Diff::Keep: it += d.len; break;
-            case Diff::Add:
+            if (d.mode == Diff::Keep)
+                it += d.len;
+            else if (d.mode == Diff::Add)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
-                if (record_undo)
-                {
-                    for (LineCount line = 0; line < d.len; ++line)
-                        m_current_undo_group.emplace_back(
-                            Modification::Insert, cur_line + line,
-                            SharedString{lines[(int)(d.posB + line)]});
-                }
+
+                for (LineCount line = 0; line < d.len; ++line)
+                    m_current_undo_group.emplace_back(
+                        Modification::Insert, cur_line + line,
+                        SharedString{lines[(int)(d.posB + line)]});
+
                 m_changes.push_back({ Change::Insert, it == m_lines.end(), cur_line, cur_line + d.len });
                 it = m_lines.insert(it, &lines[d.posB], &lines[d.posB + d.len]) + d.len;
-                break;
             }
-            case Diff::Remove:
+            else if (d.mode == Diff::Remove)
             {
                 const LineCount cur_line = (int)(it - m_lines.begin());
-                if (record_undo)
-                {
-                    for (LineCount line = d.len-1; line >= 0; --line)
-                        m_current_undo_group.emplace_back(
-                            Modification::Erase, cur_line + line,
-                            SharedString{m_lines.get_storage(cur_line + line)});
-                }
+
+                for (LineCount line = d.len-1; line >= 0; --line)
+                    m_current_undo_group.emplace_back(
+                        Modification::Erase, cur_line + line,
+                        SharedString{m_lines.get_storage(cur_line + line)});
+
                 it = m_lines.erase(it, it + d.len);
                 m_changes.push_back({ Change::Erase, it == m_lines.end(), cur_line, cur_line + d.len });
-                break;
             }
         }
     }
