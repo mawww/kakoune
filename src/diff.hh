@@ -18,7 +18,9 @@ struct MirroredArray : public ArrayView<T>
             (*this)[i] = 0;
     }
 
+    [[gnu::always_inline]]
     T& operator[](int n) { return ArrayView<T>::operator[](n + size); }
+    [[gnu::always_inline]]
     const T& operator[](int n) const { return ArrayView<T>::operator[](n + size); }
 private:
     int size;
