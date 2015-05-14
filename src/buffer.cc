@@ -180,7 +180,7 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
         auto diff = find_diff(m_lines.begin(), m_lines.size(),
                               lines.begin(), (int)lines.size(),
                               [](const StringDataPtr& lhs, const StringDataPtr& rhs)
-                              { return lhs->strview() == rhs->strview(); });
+                              { return lhs->hash == rhs->hash and lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
         for (auto& d : diff)
