@@ -14,6 +14,8 @@ struct MirroredArray : public ArrayView<T>
         : ArrayView<T>(data), size(size)
     {
         kak_assert(2 * size + 1 <= data.size());
+        for (int i = -size; i <= size; ++i)
+            (*this)[i] = 0;
     }
 
     T& operator[](int n) { return ArrayView<T>::operator[](n + size); }
@@ -118,6 +120,7 @@ void find_diff_rec(Iterator a, int offA, int lenA,
     if (lenA > 0 and lenB > 0)
     {
         auto middle_snake = find_middle_snake(a + offA, lenA, b + offB, lenB, data1, data2, eq);
+        kak_assert(middle_snake.u <= lenA and middle_snake.v <= lenB);
         if (middle_snake.d > 1)
         {
             find_diff_rec(a, offA, middle_snake.x,
@@ -145,6 +148,8 @@ void find_diff_rec(Iterator a, int offA, int lenA,
             else
                 diffs.push_back({Diff::Remove, 1, 0});
         }
+        else if (int len = middle_snake.u - middle_snake.x)
+            diffs.push_back({Diff::Keep, len, 0});
     }
     else if (lenB > 0)
         diffs.push_back({Diff::Add, lenB, offB});

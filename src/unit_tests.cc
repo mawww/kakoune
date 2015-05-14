@@ -242,10 +242,29 @@ void test_line_modifications()
 
 void test_diff()
 {
-    StringView s1 = "mais que fais la police";
-    StringView s2 = "mais ou va la police";
+    auto eq = [](const Diff& lhs, const Diff& rhs) {
+        return lhs.mode == rhs.mode and lhs.len == rhs.len and lhs.posB == rhs.posB;
+    };
 
-    auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
+    {
+        StringView s1 = "mais que fais la police";
+        StringView s2 = "mais ou va la police";
+
+        auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
+        kak_assert(diff.size() == 10);
+    }
+
+    {
+        StringView s1 = "a?";
+        StringView s2 = "!";
+
+        auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
+
+        kak_assert(diff.size() == 3 and
+                   eq(diff[0], {Diff::Remove, 1, 0}) and
+                   eq(diff[1], {Diff::Add, 1, 0}) and
+                   eq(diff[2], {Diff::Remove, 1, 0}));
+    }
 }
 
 void run_unit_tests()
