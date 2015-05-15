@@ -97,7 +97,7 @@ SnakeLen find_middle_snake(Iterator a, int N, Iterator b, int M,
             if ((delta % 2 == 0) and -D <= k1 and k1 <= D)
             {
                 if (V1[k1] + V2[k2] >= N)
-                    return { { N - p.u, M - p.v, N - p.x , M - p.y } , 2 * D };// return last snake on reverse path
+                    return { { N - p.u, M - p.v, N - p.x , M - p.y, p.add } , 2 * D };// return last snake on reverse path
             }
         }
     }
@@ -138,11 +138,7 @@ void find_diff_rec(Iterator a, int offA, int lenA,
         }
         else if (middle_snake.d == 1)
         {
-            int diag = 0;
-            while (eq(a[offA + diag], b[offB + diag]))
-                ++diag;
-
-            if (diag != 0)
+            if (int diag = middle_snake.x - (middle_snake.add ? 0 : 1))
                 diffs.push_back({Diff::Keep, diag, 0});
 
             if (middle_snake.add)
