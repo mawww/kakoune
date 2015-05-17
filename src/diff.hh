@@ -14,8 +14,7 @@ struct MirroredArray : public ArrayView<T>
         : ArrayView<T>(data), size(size)
     {
         kak_assert(2 * size + 1 <= data.size());
-        for (int i = -size; i <= size; ++i)
-            (*this)[i] = 0;
+        (*this)[1] = 0;
     }
 
     [[gnu::always_inline]]
