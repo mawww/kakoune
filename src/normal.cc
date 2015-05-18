@@ -556,6 +556,7 @@ void paste_all(Context& context, NormalParams params)
 template<typename T>
 void regex_prompt(Context& context, const String prompt, T func)
 {
+    CharCoord position = context.has_window() ? context.window().position() : CharCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(prompt, "", get_face("Prompt"), complete_nothing,
         [=](StringView str, PromptEvent event, Context& context) mutable {
@@ -565,6 +566,9 @@ void regex_prompt(Context& context, const String prompt, T func)
                     context.ui().info_hide();
                 selections.update();
                 context.selections_write_only() = selections;
+                if (context.has_window())
+                    context.window().set_position(position);
+
                 context.input_handler().set_prompt_face(get_face("Prompt"));
                 if (event == PromptEvent::Abort)
                     return;
