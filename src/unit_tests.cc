@@ -251,7 +251,7 @@ void test_diff()
         StringView s2 = "mais ou va la police";
 
         auto diff = find_diff(s1.begin(), (int)s1.length(), s2.begin(), (int)s2.length());
-        kak_assert(diff.size() == 10);
+        kak_assert(diff.size() == 11);
     }
 
     {
