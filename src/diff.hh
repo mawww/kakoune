@@ -1,3 +1,10 @@
+#ifndef diff_hh_INCLUDED
+#define diff_hh_INCLUDED
+
+// Implementation of the linear space variant of the algorithm described in
+// "An O(ND) Difference Algorithm and Its Variations"
+// (http://xmailserver.org/diff2.pdf)
+
 #include "array_view.hh"
 #include "vector.hh"
 
@@ -184,3 +191,5 @@ Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M,
 }
 
 }
+
+#endif // diff_hh_INCLUDED
