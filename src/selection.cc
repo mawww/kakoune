@@ -312,11 +312,6 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
         std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
         ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
     }
-    for (auto& sel : ranges)
-    {
-        sel.anchor() = buffer.clamp(sel.anchor());
-        sel.cursor() = buffer.clamp(sel.cursor());
-    }
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
         return buffer.char_next(lhs.max()) >= rhs.min();
