@@ -42,6 +42,10 @@ main() {
         quit!
       "
       ${test}/../src/kak out -n -u -e "$kak_commands"
+      retval=$?
+      if (( retval != 0 )); then
+          echo "Kakoune returned error $retval"
+      fi
       for expect in $test_files; do
         if cmp -s $test/$dir/$expect $expect; then
           echo "$indent$name" | colorize green normal

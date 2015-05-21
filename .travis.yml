@@ -9,6 +9,9 @@ before_install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
       sudo add-apt-repository ppa:boost-latest/ppa -y;
+      if [ "$CXX" = "clang++" ]; then
+          sudo add-apt-repository ppa:h-rayflood/llvm-upper -y;
+      fi;
       sudo apt-get update -qq;
     elif [ $TRAVIS_OS_NAME = osx ]; then
       brew update;
@@ -16,10 +19,12 @@ before_install:
 install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
       if [ "$CXX" = "clang++" ]; then
-        sudo apt-get install -y libstdc++-4.8-dev;
+        sudo apt-get install -y libstdc++-4.9-dev;
+        sudo apt-get install -y clang-3.5;
+        export CXX=clang++-3.5;
       elif [ "$CXX" = "g++" ]; then
-        sudo apt-get install -y g++-4.8;
-        export CXX=g++-4.8;
+        sudo apt-get install -y g++-4.9;
+        export CXX=g++-4.9;
       fi;
       sudo apt-get install -y libncursesw5-dev;
       sudo apt-get install -y libboost-regex1.54-dev;

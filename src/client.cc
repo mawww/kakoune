@@ -173,12 +173,8 @@ void Client::reload_buffer()
 {
     auto& buffer = context().buffer();
     kak_assert(buffer.flags() & Buffer::Flags::File);
-    CharCoord view_pos = context().window().position();
-    ByteCoord cursor_pos = context().selections().main().cursor();
     Buffer* buf = create_buffer_from_file(buffer.name());
     kak_assert(buf == &buffer);
-    context().selections_write_only() = SelectionList{buffer, buffer.clamp(cursor_pos)};
-    context().window().set_position(view_pos);
     context().print_status({ "'" + buffer.display_name() + "' reloaded",
                              get_face("Information") });
 }

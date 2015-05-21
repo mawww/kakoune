@@ -13,8 +13,9 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 {
     int refcount;
     int length;
+    uint32_t hash;
 
-    constexpr StringData(int ref, int len) : refcount(ref), length(len) {}
+    StringData(int ref, int len) : refcount(ref), length(len) {}
 
     [[gnu::always_inline]]
     char* data() { return reinterpret_cast<char*>(this + 1); }
@@ -32,6 +33,7 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
         if (back != 0)
             res->data()[len-1] = back;
         res->data()[len] = 0;
+        res->hash = hash_data(res->data(), res->length);
         return RefPtr<StringData>(res);
     }
 
@@ -88,6 +90,11 @@ public:
     explicit SharedString(StringDataPtr storage)
         : StringView{storage->strview()}, m_storage(std::move(storage)) {}
 
+    friend size_t hash_value(const SharedString& str)
+    {
+        return str.m_storage ? str.m_storage->hash : hash_data(str.data(), (int)str.length());
+    }
+
 private:
     SharedString(StringView str, StringDataPtr storage)
         : StringView{str}, m_storage(std::move(storage)) {}
@@ -95,11 +102,6 @@ private:
     friend class StringRegistry;
     StringDataPtr m_storage;
 };
-
-inline size_t hash_value(const SharedString& str)
-{
-    return hash_data(str.data(), (int)str.length());
-}
 
 class StringRegistry : public Singleton<StringRegistry>
 {

@@ -44,6 +44,8 @@ public:
 
     constexpr T* pointer() const { return m_pointer; }
     constexpr size_t size() const { return m_size; }
+
+    [[gnu::always_inline]]
     constexpr T& operator[](size_t n) const { return *(m_pointer + n); }
 
     constexpr T* begin() const { return m_pointer; }

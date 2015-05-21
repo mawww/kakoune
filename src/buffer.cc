@@ -9,6 +9,7 @@
 #include "shared_string.hh"
 #include "utils.hh"
 #include "window.hh"
+#include "diff.hh"
 
 #include <algorithm>
 
@@ -159,36 +160,64 @@ struct Buffer::Modification
 
 void Buffer::reload(BufferLines lines, time_t fs_timestamp)
 {
-    m_changes.push_back({ Change::Erase, true, {0,0}, line_count() });
-
-    commit_undo_group();
-    if (not (m_flags & Flags::NoUndo))
-    {
-        for (auto line = line_count()-1; line >= 0; --line)
-            m_current_undo_group.emplace_back(
-                Modification::Erase, line,
-                SharedString{m_lines.get_storage(line)});
-    }
-
     if (lines.empty())
         lines.emplace_back(StringData::create("\n"));
 
-    for (size_t l = 0; l < lines.size(); ++l)
+    const bool record_undo = not (m_flags & Flags::NoUndo);
+
+    commit_undo_group();
+
+    if (not record_undo)
     {
-        auto& line = lines[l];
-        kak_assert(not (line->length == 0) and line->data()[line->length-1] == '\n');
-        if (not (m_flags & Flags::NoUndo))
-            m_current_undo_group.emplace_back(
-                Modification::Insert, LineCount{(int)l}, SharedString{line});
+        m_changes.push_back({ Change::Erase, true, {0,0}, line_count() });
+
+        static_cast<BufferLines&>(m_lines) = std::move(lines);
+
+        m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
     }
-    static_cast<BufferLines&>(m_lines) = std::move(lines);
+    else
+    {
+        auto diff = find_diff(m_lines.begin(), m_lines.size(),
+                              lines.begin(), (int)lines.size(),
+                              [](const StringDataPtr& lhs, const StringDataPtr& rhs)
+                              { return lhs->hash == rhs->hash and lhs->strview() == rhs->strview(); });
+
+        auto it = m_lines.begin();
+        for (auto& d : diff)
+        {
+            if (d.mode == Diff::Keep)
+                it += d.len;
+            else if (d.mode == Diff::Add)
+            {
+                const LineCount cur_line = (int)(it - m_lines.begin());
+
+                for (LineCount line = 0; line < d.len; ++line)
+                    m_current_undo_group.emplace_back(
+                        Modification::Insert, cur_line + line,
+                        SharedString{lines[(int)(d.posB + line)]});
+
+                m_changes.push_back({ Change::Insert, it == m_lines.end(), cur_line, cur_line + d.len });
+                it = m_lines.insert(it, &lines[d.posB], &lines[d.posB + d.len]) + d.len;
+            }
+            else if (d.mode == Diff::Remove)
+            {
+                const LineCount cur_line = (int)(it - m_lines.begin());
+
+                for (LineCount line = d.len-1; line >= 0; --line)
+                    m_current_undo_group.emplace_back(
+                        Modification::Erase, cur_line + line,
+                        SharedString{m_lines.get_storage(cur_line + line)});
+
+                it = m_lines.erase(it, it + d.len);
+                m_changes.push_back({ Change::Erase, it == m_lines.end(), cur_line, cur_line + d.len });
+            }
+        }
+    }
 
     commit_undo_group();
 
     m_last_save_undo_index = m_history_cursor - m_history.begin();
     m_fs_timestamp = fs_timestamp;
-
-    m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
 }
 
 void Buffer::commit_undo_group()
