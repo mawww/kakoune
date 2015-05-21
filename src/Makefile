@@ -32,7 +32,7 @@ mandir := $(DESTDIR)$(PREFIX)/share/man/man1
 os := $(shell uname)
 
 ifeq ($(os),Darwin)
-    LIBS += -lncurses -lboost_regex-mt
+    LIBS += -lncurses -lboost_regex
     CPPFLAGS += -I$(PREFIX)/opt/ncurses/include -I$(PREFIX)/opt/boost/include -I/opt/local/include
     LDFLAGS += -L$(PREFIX)/opt/ncurses/lib -L$(PREFIX)/opt/boost/lib -L/opt/local/lib
 else ifeq ($(os),FreeBSD)
