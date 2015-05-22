@@ -5,11 +5,12 @@
 #include "client.hh"
 #include "containers.hh"
 #include "context.hh"
+#include "diff.hh"
 #include "file.hh"
 #include "shared_string.hh"
+#include "unit_tests.hh"
 #include "utils.hh"
 #include "window.hh"
-#include "diff.hh"
 
 #include <algorithm>
 
@@ -578,5 +579,70 @@ String Buffer::debug_description() const
                   (m_flags & Flags::NoUndo) ? "NoUndo " : "",
                   content_size, additional_size);
 }
+
+UnitTest test_buffer{[]()
+{
+    Buffer empty_buffer("empty", Buffer::Flags::None, {});
+
+    Buffer buffer("test", Buffer::Flags::None, { "allo ?\n"_ss, "mais que fais la police\n"_ss,  " hein ?\n"_ss, " youpi\n"_ss });
+    kak_assert(buffer.line_count() == 4);
+
+    BufferIterator pos = buffer.begin();
+    kak_assert(*pos == 'a');
+    pos += 6;
+    kak_assert(pos.coord() == ByteCoord{0 COMMA 6});
+    ++pos;
+    kak_assert(pos.coord() == ByteCoord{1 COMMA 0});
+    --pos;
+    kak_assert(pos.coord() == ByteCoord{0 COMMA 6});
+    pos += 1;
+    kak_assert(pos.coord() == ByteCoord{1 COMMA 0});
+    buffer.insert(pos, "tchou kanaky\n");
+    kak_assert(buffer.line_count() == 5);
+    BufferIterator pos2 = buffer.end();
+    pos2 -= 9;
+    kak_assert(*pos2 == '?');
+
+    String str = buffer.string({ 4, 1 }, buffer.next({ 4, 5 }));
+    kak_assert(str == "youpi");
+
+    // check insert at end behaviour: auto add end of line if necessary
+    pos = buffer.end()-1;
+    buffer.insert(pos, "tchou");
+    kak_assert(buffer.string(pos.coord(), buffer.end_coord()) == StringView{"tchou\n"});
+
+    pos = buffer.end()-1;
+    buffer.insert(buffer.end(), "kanaky\n");
+    kak_assert(buffer.string((pos+1).coord(), buffer.end_coord()) == StringView{"kanaky\n"});
+
+    buffer.commit_undo_group();
+    buffer.erase(pos+1, buffer.end());
+    buffer.insert(buffer.end(), "mutch\n");
+    buffer.commit_undo_group();
+    buffer.undo();
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == StringView{"kanaky\n"});
+    buffer.redo();
+    kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -6), buffer.end_coord()) == StringView{"mutch\n"});
+}};
+
+UnitTest test_undo{[]()
+{
+    BufferLines lines = { "allo ?\n"_ss, "mais que fais la police\n"_ss,  " hein ?\n"_ss, " youpi\n"_ss };
+    Buffer buffer("test", Buffer::Flags::None, lines);
+    auto pos = buffer.insert(buffer.end(), "kanaky\n");
+    buffer.erase(pos, buffer.end());
+    buffer.insert(buffer.iterator_at(2_line), "tchou\n");
+    buffer.insert(buffer.iterator_at(2_line), "mutch\n");
+    buffer.erase(buffer.iterator_at({2, 1}), buffer.iterator_at({2, 5}));
+    buffer.erase(buffer.iterator_at(2_line), buffer.end());
+    buffer.insert(buffer.end(), "youpi");
+    buffer.undo();
+    buffer.redo();
+    buffer.undo();
+
+    kak_assert((int)buffer.line_count() == lines.size());
+    for (size_t i = 0; i < lines.size(); ++i)
+        kak_assert(SharedString{lines[i]} == buffer[LineCount((int)i)]);
+}};
 
 }

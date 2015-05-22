@@ -3,6 +3,7 @@
 #include "utils.hh"
 #include "line_modification.hh"
 #include "utf8_iterator.hh"
+#include "unit_tests.hh"
 
 namespace Kakoune
 {
@@ -134,5 +135,29 @@ int WordDB::get_word_occurences(StringView word) const
         return it->second.refcount;
     return 0;
 }
+
+UnitTest test_word_db{[]()
+{
+    Buffer buffer("test", Buffer::Flags::None,
+                  { "tchou mutch\n"_ss,
+                    "tchou kanaky tchou\n"_ss,
+                    "\n"_ss,
+                    "tchaa tchaa\n"_ss,
+                    "allo\n"_ss});
+    WordDB word_db(buffer);
+    auto res = word_db.find_matching("", prefix_match);
+    std::sort(res.begin(), res.end());
+    kak_assert(res == WordDB::WordList{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" });
+    kak_assert(word_db.get_word_occurences("tchou") == 3);
+    kak_assert(word_db.get_word_occurences("allo") == 1);
+    buffer.erase(buffer.iterator_at({1, 6}), buffer.iterator_at({4, 0}));
+    res = word_db.find_matching("", prefix_match);
+    std::sort(res.begin(), res.end());
+    kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "tchou" });
+    buffer.insert(buffer.iterator_at({1, 0}), "re");
+    res = word_db.find_matching("", subsequence_match);
+    std::sort(res.begin(), res.end());
+    kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" });
+}};
 
 }

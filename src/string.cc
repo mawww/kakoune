@@ -3,6 +3,7 @@
 #include "exception.hh"
 #include "containers.hh"
 #include "utf8_iterator.hh"
+#include "unit_tests.hh"
 
 #include <cstdio>
 
@@ -290,5 +291,50 @@ String format(StringView fmt, ArrayView<const StringView> params)
     format_impl(fmt, params, [&](StringView s) { res += s; });
     return res;
 }
+
+UnitTest test_string{[]()
+{
+    kak_assert(String("youpi ") + "matin" == "youpi matin");
+
+    Vector<String> splited = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':', '\\');
+    kak_assert(splited[0] == "youpi");
+    kak_assert(splited[1] == "matin");
+    kak_assert(splited[2] == "");
+    kak_assert(splited[3] == "tchou:kanaky");
+    kak_assert(splited[4] == "hihi:");
+
+    Vector<StringView> splitedview = split("youpi:matin::tchou\\:kanaky:hihi\\:", ':');
+    kak_assert(splitedview[0] == "youpi");
+    kak_assert(splitedview[1] == "matin");
+    kak_assert(splitedview[2] == "");
+    kak_assert(splitedview[3] == "tchou\\");
+    kak_assert(splitedview[4] == "kanaky");
+    kak_assert(splitedview[5] == "hihi\\");
+    kak_assert(splitedview[6] == "");
+
+    String escaped = escape("youpi:matin:tchou:", ':', '\\');
+    kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
+
+    kak_assert(prefix_match("tchou kanaky", "tchou"));
+    kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
+    kak_assert(prefix_match("tchou kanaky", "t"));
+    kak_assert(not prefix_match("tchou kanaky", "c"));
+
+    kak_assert(subsequence_match("tchou kanaky", "tknky"));
+    kak_assert(subsequence_match("tchou kanaky", "knk"));
+    kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
+    kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
+
+    kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5) == "Youhou hehe 5 10 {}");
+
+    char buffer[20];
+    kak_assert(format_to(buffer, "Hey {}", 15) == "Hey 15");
+
+    kak_assert(str_to_int("5") == 5);
+    kak_assert(str_to_int(to_string(INT_MAX)) == INT_MAX);
+    kak_assert(str_to_int(to_string(INT_MIN)) == INT_MIN);
+    kak_assert(str_to_int("00") == 0);
+    kak_assert(str_to_int("-0") == 0);
+}};
 
 }

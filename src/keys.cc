@@ -3,8 +3,9 @@
 #include "containers.hh"
 #include "exception.hh"
 #include "string.hh"
-#include "utils.hh"
+#include "unit_tests.hh"
 #include "utf8_iterator.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
@@ -130,5 +131,20 @@ String key_to_str(Key key)
         res = StringView{'<'} + res + StringView{'>'};
     return res;
 }
+
+UnitTest test_keys{[]()
+{
+    KeyList keys{
+         { ' ' },
+         { 'c' },
+         { Key::Modifiers::Alt, 'j' },
+         { Key::Modifiers::Control, 'r' }
+    };
+    String keys_as_str;
+    for (auto& key : keys)
+        keys_as_str += key_to_str(key);
+    auto parsed_keys = parse_keys(keys_as_str);
+    kak_assert(keys == parsed_keys);
+}};
 
 }

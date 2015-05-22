@@ -1,6 +1,7 @@
 #include "line_modification.hh"
 
 #include "buffer.hh"
+#include "unit_tests.hh"
 
 namespace Kakoune
 {
@@ -94,5 +95,74 @@ Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t
     }
     return res;
 }
+
+bool operator==(const LineModification& lhs, const LineModification& rhs)
+{
+    return std::tie(lhs.old_line, lhs.new_line, lhs.num_removed, lhs.num_added) ==
+           std::tie(rhs.old_line, rhs.new_line, rhs.num_removed, rhs.num_added);
+}
+
+UnitTest test_line_modifications{[]()
+{
+    {
+        Buffer buffer("test", Buffer::Flags::None, { "line 1\n"_ss, "line 2\n"_ss });
+        auto ts = buffer.timestamp();
+        buffer.erase(buffer.iterator_at({1, 0}), buffer.iterator_at({2, 0}));
+
+        auto modifs = compute_line_modifications(buffer, ts);
+        kak_assert(modifs.size() == 1 && modifs[0] == LineModification{ 1 COMMA 1 COMMA 1 COMMA 0 });
+    }
+
+    {
+        Buffer buffer("test", Buffer::Flags::None, { "line 1\n"_ss, "line 2\n"_ss });
+        auto ts = buffer.timestamp();
+        buffer.insert(buffer.iterator_at({1, 7}), "line 3");
+
+        auto modifs = compute_line_modifications(buffer, ts);
+        kak_assert(modifs.size() == 1 && modifs[0] == LineModification{ 2 COMMA 2 COMMA 0 COMMA 1 });
+    }
+
+    {
+        Buffer buffer("test", Buffer::Flags::None,
+                      { "line 1\n"_ss, "line 2\n"_ss, "line 3\n"_ss });
+
+        auto ts = buffer.timestamp();
+        buffer.insert(buffer.iterator_at({1, 4}), "hoho\nhehe");
+        buffer.erase(buffer.iterator_at({0, 0}), buffer.iterator_at({1, 0}));
+
+        auto modifs = compute_line_modifications(buffer, ts);
+        kak_assert(modifs.size() == 1 && modifs[0] == LineModification{ 0 COMMA 0 COMMA 2 COMMA 2 });
+    }
+
+    {
+        Buffer buffer("test", Buffer::Flags::None,
+                      { "line 1\n"_ss, "line 2\n"_ss, "line 3\n"_ss, "line 4\n"_ss });
+
+        auto ts = buffer.timestamp();
+        buffer.erase(buffer.iterator_at({0,0}), buffer.iterator_at({3,0}));
+        buffer.insert(buffer.iterator_at({1,0}), "newline 1\nnewline 2\nnewline 3\n");
+        buffer.erase(buffer.iterator_at({0,0}), buffer.iterator_at({1,0}));
+        {
+            auto modifs = compute_line_modifications(buffer, ts);
+            kak_assert(modifs.size() == 1 && modifs[0] == LineModification{ 0 COMMA 0 COMMA 4 COMMA 3 });
+        }
+        buffer.insert(buffer.iterator_at({3,0}), "newline 4\n");
+
+        {
+            auto modifs = compute_line_modifications(buffer, ts);
+            kak_assert(modifs.size() == 1 && modifs[0] == LineModification{ 0 COMMA 0 COMMA 4 COMMA 4 });
+        }
+    }
+
+    {
+        Buffer buffer("test", Buffer::Flags::None, { "line 1\n"_ss });
+        auto ts = buffer.timestamp();
+        buffer.insert(buffer.iterator_at({0,0}), "n");
+        buffer.insert(buffer.iterator_at({0,1}), "e");
+        buffer.insert(buffer.iterator_at({0,2}), "w");
+        auto modifs = compute_line_modifications(buffer, ts);
+        kak_assert(modifs.size() == 1 && modifs[0] == LineModification{ 0 COMMA 0 COMMA 1 COMMA 1 });
+    }
+}};
 
 }

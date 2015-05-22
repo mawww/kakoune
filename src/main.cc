@@ -21,6 +21,7 @@
 #include "scope.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "unit_tests.hh"
 #include "window.hh"
 
 #include <fcntl.h>
@@ -31,8 +32,6 @@
 #include <unistd.h>
 
 using namespace Kakoune;
-
-void run_unit_tests();
 
 String runtime_directory()
 {
