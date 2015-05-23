@@ -23,12 +23,12 @@ decl line-flag-list git_blame_flags
 decl line-flag-list git_diff_flags
 
 def -shell-params \
-  -docstring %sh{printf "%%{git wrapping helper\navailable commands:\n add\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
+  -docstring %sh{printf "%%{git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
   -shell-completion %{
     shift $(expr ${kak_token_to_complete})
     prefix=${1:0:${kak_pos_in_token}}
     (
-      for cmd in add blame commit checkout diff hide-blame log show show-diff status update-diff; do
+      for cmd in add rm blame commit checkout diff hide-blame log show show-diff status update-diff; do
           expr "${cmd}" : "^\(${prefix}.*\)$"
       done
     ) | grep -v '^$'
@@ -157,14 +157,22 @@ def -shell-params \
        commit) shift; commit "$@" ;;
        checkout)
            name="${2:-${kak_buffile}}"
-           git checkout "${name}"
+           git checkout "${name}" > /dev/null 2>&1
            ;;
        add)
            name="${2:-${kak_buffile}}"
-           if git add -- "${name}"; then
+           if git add -- "${name}" > /dev/null 2>&1; then
               echo "echo -color Information 'git: added ${name}'"
            else
               echo "echo -color Error 'git: unable to add ${name}'"
+           fi
+           ;;
+       rm)
+           name="${2:-${kak_buffile}}"
+           if git rm -- "${name}" > /dev/null 2>&1; then
+              echo "echo -color Information 'git: removed ${name}'"
+           else
+              echo "echo -color Error 'git: unable to remove ${name}'"
            fi
            ;;
        *) echo "echo -color Error %{unknown git command '$1'}"; exit ;;
