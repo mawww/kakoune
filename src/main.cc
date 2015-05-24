@@ -370,7 +370,7 @@ int run_server(StringView session, StringView init_command,
     FaceRegistry        face_registry;
     ClientManager       client_manager;
 
-    run_unit_tests();
+    UnitTest::run_all_tests();
 
     register_options();
     register_env_vars();

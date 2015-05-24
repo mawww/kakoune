@@ -42,11 +42,11 @@ UnitTest test_diff{[]()
     }
 }};
 
-UnitTest* unit_tests;
+UnitTest* UnitTest::list = nullptr;
 
-void run_unit_tests()
+void UnitTest::run_all_tests()
 {
-    for (const UnitTest* test = unit_tests; test; test = test->next)
+    for (const UnitTest* test = UnitTest::list; test; test = test->next)
         test->func();
 }
 
