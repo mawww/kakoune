@@ -9,7 +9,7 @@ bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
 
-CXXFLAGS += -std=c++14 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
+CXXFLAGS += -std=gnu++14 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
 ifneq (,$(findstring CYGWIN,$(os)))
     LDFLAGS += -rdynamic
 endif
