@@ -1096,7 +1096,7 @@ public:
             m_groups.append({m_default_group, HighlighterGroup{}});
     }
 
-    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range)
+    void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
         if (flags != HighlightFlags::Highlight)
             return;
