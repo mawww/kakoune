@@ -297,10 +297,10 @@ namespace detail
 
 template<typename T> using IsString = std::is_convertible<T, StringView>;
 
-template<typename T, class = typename std::enable_if<!IsString<T>::value>::type>
+template<typename T, class = std::enable_if_t<!IsString<T>::value>>
 auto format_param(const T& val) -> decltype(to_string(val)) { return to_string(val); }
 
-template<typename T, class = typename std::enable_if<IsString<T>::value>::type>
+template<typename T, class = std::enable_if_t<IsString<T>::value>>
 StringView format_param(const T& val) { return val; }
 
 }

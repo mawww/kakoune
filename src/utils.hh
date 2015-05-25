@@ -8,34 +8,6 @@
 namespace Kakoune
 {
 
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
-template<size_t... I>
-struct IndexSequence
-{
-    using Next = IndexSequence<I..., sizeof...(I)>;
-};
-
-template<size_t N>
-struct MakeIndexSequence
-{
-    using Type = typename MakeIndexSequence<N-1>::Type::Next;
-};
-
-template<>
-struct MakeIndexSequence<0>
-{
-    using Type = IndexSequence<>;
-};
-
-template<size_t N>
-constexpr typename MakeIndexSequence<N>::Type
-make_index_sequence() { return typename MakeIndexSequence<N>::Type{}; }
-
 // *** Singleton ***
 //
 // Singleton helper class, every singleton type T should inherit

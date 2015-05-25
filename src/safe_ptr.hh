@@ -94,8 +94,7 @@ private:
 };
 
 template<typename T> using SafePtr =
-    RefPtr<T, typename std::conditional<std::is_const<T>::value,
-                                        const SafeCountable, SafeCountable>::type>;
+    RefPtr<T, std::conditional_t<std::is_const<T>::value, const SafeCountable, SafeCountable>>;
 
 }
 
