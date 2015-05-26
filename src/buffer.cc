@@ -198,7 +198,8 @@ void Buffer::reload(BufferLines lines, time_t fs_timestamp)
                         SharedString{lines[(int)(d.posB + line)]});
 
                 m_changes.push_back({ Change::Insert, it == m_lines.end(), cur_line, cur_line + d.len });
-                it = m_lines.insert(it, &lines[d.posB], &lines[d.posB + d.len]) + d.len;
+                m_lines.insert(it, &lines[d.posB], &lines[d.posB + d.len]);
+                it = m_lines.begin() + (int)(cur_line + d.len);
             }
             else if (d.mode == Diff::Remove)
             {
