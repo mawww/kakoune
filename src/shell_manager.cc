@@ -128,7 +128,7 @@ String ShellManager::get_val(StringView name, const Context& context) const
 {
     auto env_var = std::find_if(
         m_env_vars.begin(), m_env_vars.end(),
-        [&](const std::pair<Regex, EnvVarRetriever>& pair)
+        [name](const std::pair<Regex, EnvVarRetriever>& pair)
         { return regex_match(name.begin(), name.end(), pair.first); });
 
     if (env_var == m_env_vars.end())

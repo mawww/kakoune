@@ -875,7 +875,7 @@ void deindent(Context& context, NormalParams)
 template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
 void select_object(Context& context, NormalParams params)
 {
-    int level = params.count <= 0 ? 0 : params.count - 1;
+    const int level = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [level](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None)
