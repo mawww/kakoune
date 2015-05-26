@@ -272,8 +272,8 @@ public:
 
             Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
 
-            return {id, std::make_unique<RegexHighlighter>(std::move(ex),
-                                                           std::move(faces))};
+            return {id, make_unique<RegexHighlighter>(std::move(ex),
+                                                      std::move(faces))};
         }
         catch (RegexError& err)
         {
@@ -447,7 +447,7 @@ template<typename RegexGetter, typename FaceGetter>
 std::unique_ptr<DynamicRegexHighlighter<RegexGetter, FaceGetter>>
 make_dynamic_regex_highlighter(RegexGetter regex_getter, FaceGetter face_getter)
 {
-    return std::make_unique<DynamicRegexHighlighter<RegexGetter, FaceGetter>>(
+    return make_unique<DynamicRegexHighlighter<RegexGetter, FaceGetter>>(
         std::move(regex_getter), std::move(face_getter));
 }
 
@@ -896,7 +896,7 @@ HighlighterAndId create_highlighter_group(HighlighterParameters params)
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
 
-    return HighlighterAndId(params[0], std::make_unique<HighlighterGroup>());
+    return HighlighterAndId(params[0], make_unique<HighlighterGroup>());
 }
 
 HighlighterAndId create_reference_highlighter(HighlighterParameters params)
@@ -1200,7 +1200,7 @@ public:
             }
 
             auto default_group = parser.get_switch("default").value_or(StringView{}).str();
-            return {parser[0], std::make_unique<RegionsHighlighter>(std::move(regions), default_group)};
+            return {parser[0], make_unique<RegionsHighlighter>(std::move(regions), default_group)};
         }
         catch (RegexError& err)
         {

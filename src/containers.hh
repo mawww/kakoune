@@ -91,7 +91,7 @@ using TransformedResult = decltype(std::declval<T>()(*std::declval<I>()));
 
 template<typename Iterator, typename Transform>
 struct TransformedIterator : std::iterator<std::forward_iterator_tag,
-                                           std::remove_reference_t<TransformedResult<Iterator, Transform>>>
+                                           typename std::remove_reference<TransformedResult<Iterator, Transform>>::type>
 {
     TransformedIterator(Transform transform, Iterator it)
         : m_it(std::move(it)), m_transform(std::move(transform)) {}

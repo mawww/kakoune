@@ -84,7 +84,7 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
                       { return &ws.window->buffer() == &buffer; });
 
     if (it == m_free_windows.rend())
-        return { std::make_unique<Window>(buffer), { buffer, Selection{} } };
+        return { make_unique<Window>(buffer), { buffer, Selection{} } };
 
     it->window->forget_timestamp();
     WindowAndSelections res = std::move(*it);

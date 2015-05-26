@@ -261,7 +261,7 @@ void create_local_client(StringView init_command)
     }
 
     static Client* client = ClientManager::instance().create_client(
-        std::make_unique<LocalUI>(), get_env_vars(), init_command);
+        make_unique<LocalUI>(), get_env_vars(), init_command);
     signal(SIGHUP, [](int) {
         if (client)
             ClientManager::instance().remove_client(*client);
@@ -299,7 +299,7 @@ int run_client(StringView session, StringView init_command)
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, std::make_unique<NCursesUI>(),
+        RemoteClient client{session, make_unique<NCursesUI>(),
                             get_env_vars(), init_command};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
