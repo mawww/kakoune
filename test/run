@@ -43,7 +43,7 @@ main() {
       "
       ${test}/../src/kak out -n -u -e "$kak_commands"
       retval=$?
-      if (( retval != 0 )); then
+      if [ $retval -ne 0 ]; then
           echo "Kakoune returned error $retval"
       fi
       for expect in $test_files; do
