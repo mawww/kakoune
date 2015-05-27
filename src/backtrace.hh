@@ -11,7 +11,7 @@ struct Backtrace
     int num_frames = 0;
 
     Backtrace();
-    const char* desc() const;
+    char* desc() const;
 };
 
 }

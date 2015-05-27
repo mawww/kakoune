@@ -2,6 +2,7 @@
 
 #include "exception.hh"
 #include "debug.hh"
+#include "backtrace.hh"
 
 #if defined(__CYGWIN__)
 #include <windows.h>
@@ -26,8 +27,10 @@ private:
 
 void on_assert_failed(const char* message)
 {
-    String debug_info = format("pid: {}", getpid());
-    write_debug(format("assert failed: '{}' ", message, debug_info));
+    char* callstack = Backtrace{}.desc();
+    String debug_info = format("pid: {}\ncallstack:\n{}", getpid(), callstack);
+    free(callstack);
+    write_debug(format("assert failed: '{}'\n{}", message, debug_info));
 
     const auto msg = format("{}\n[Debug Infos]\n{}", message, debug_info);
 #if defined(__CYGWIN__)

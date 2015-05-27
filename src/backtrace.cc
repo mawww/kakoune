@@ -21,7 +21,7 @@ Backtrace::Backtrace()
     #endif
 }
 
-const char* Backtrace::desc() const
+char* Backtrace::desc() const
 {
     #if defined(__linux__) || defined(__APPLE__)
     char** symbols = backtrace_symbols(stackframes, num_frames);
