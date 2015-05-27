@@ -10,26 +10,15 @@ sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
 
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
-ifneq (,$(findstring CYGWIN,$(os)))
-    LDFLAGS += -rdynamic
-endif
 
 os := $(shell uname)
 
 ifeq ($(os),Darwin)
-    LIBS += -lncurses
+    LIBS += -lncurses -lboost_regex-mt
 else
-    LIBS += -lncursesw
+    LIBS += -lncursesw -lboost_regex
+    LDFLAGS += -rdynamic
 endif
-
-ifneq (,$(findstring CYGWIN,$(os)))
-    LIBS += -lboost_regex
-else ifeq ($(os),Darwin)
-    LIBS += -lboost_regex-mt
-else
-    LIBS += -lboost_regex
-endif
-
 
 debug ?= yes
 ifeq ($(debug),yes)
