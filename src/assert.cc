@@ -43,16 +43,12 @@ void on_assert_failed(const char* message)
     case IDOK:
         return;
     }
-#else
+#elif defined(__linux__)
     auto cmd = "xmessage -buttons 'quit:0,ignore:1' '" + msg + "'";
-    switch (system(cmd.c_str()))
-    {
-    case -1:
-    case  0:
-        throw assert_failed(message);
-    case 1:
-        return;
-    }
+    if (system(cmd.c_str()) != 1)
+        throw assert_failed(msg);
+#else
+    throw assert_failed(msg);
 #endif
 }
 
