@@ -72,7 +72,5 @@
 * Comments and strings should be more integrated than just highlighting, matching chars
   for example should be strings and comments aware (should they ?)
 
-* Diff buffer on reload and only store the diff modifications
-
 * change command parsing to be more shell like
   (support -option="value with spaces" instead of requiring "-option=value with spaces")
