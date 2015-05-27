@@ -5,6 +5,7 @@
 
 #include "assert.hh"
 #include "ref_ptr.hh"
+#include "backtrace.hh"
 
 #include <type_traits>
 #include <utility>
@@ -64,16 +65,6 @@ public:
 
 private:
     #ifdef SAFE_PTR_TRACK_CALLSTACKS
-    struct Backtrace
-    {
-        static constexpr int max_frames = 16;
-        void* stackframes[max_frames];
-        int num_frames = 0;
-
-        Backtrace();
-        const char* desc() const;
-    };
-
     struct Callstack
     {
         Callstack(void* p) : ptr(p) {}

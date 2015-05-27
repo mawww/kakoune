@@ -1,32 +1,29 @@
-#include "safe_ptr.hh"
-
-#ifdef SAFE_PTR_TRACK_CALLSTACKS
+#include "backtrace.hh"
 
 #include <string.h>
+#include <stdlib.h>
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
 # include <execinfo.h>
 #elif defined(__CYGWIN__)
 # include <windows.h>
 #endif
 
-
 namespace Kakoune
 {
 
-
-SafeCountable::Backtrace::Backtrace()
+Backtrace::Backtrace()
 {
-    #if defined(__linux__)
+    #if defined(__linux__) || defined(__APPLE__)
     num_frames = backtrace(stackframes, max_frames);
     #elif defined(__CYGWIN__)
     num_frames = CaptureStackBackTrace(0, max_frames, stackframes, nullptr);
     #endif
 }
 
-const char* SafeCountable::Backtrace::desc() const
+const char* Backtrace::desc() const
 {
-    #if defined(__linux__)
+    #if defined(__linux__) || defined(__APPLE__)
     char** symbols = backtrace_symbols(stackframes, num_frames);
     int size = 0;
     for (int i = 0; i < num_frames; ++i)
@@ -57,4 +54,3 @@ const char* SafeCountable::Backtrace::desc() const
 }
 
 }
-#endif
