@@ -279,6 +279,7 @@ void signal_handler(int signal)
         case SIGFPE:  text = "SIGFPE";  break;
         case SIGQUIT: text = "SIGQUIT"; break;
         case SIGTERM: text = "SIGTERM"; break;
+        case SIGPIPE: text = "SIGPIPE"; break;
     }
     if (signal != SIGTERM)
         on_assert_failed(text);
@@ -540,7 +541,7 @@ int main(int argc, char* argv[])
     signal(SIGFPE,  signal_handler);
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
-    signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, signal_handler);
 
     Vector<String> params;
     for (size_t i = 1; i < argc; ++i)
