@@ -282,7 +282,11 @@ void signal_handler(int signal)
         case SIGPIPE: text = "SIGPIPE"; break;
     }
     if (signal != SIGTERM)
-        on_assert_failed(text);
+    {
+        char* callstack = Backtrace{}.desc();
+        write_stderr(format("Received {}, exiting.\nCallstack:\n{}", text, callstack));
+        free(callstack);
+    }
 
     if (Server::has_instance())
         Server::instance().close_session();
