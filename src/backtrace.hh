@@ -4,6 +4,8 @@
 namespace Kakoune
 {
 
+class String;
+
 struct Backtrace
 {
     static constexpr int max_frames = 16;
@@ -11,7 +13,7 @@ struct Backtrace
     int num_frames = 0;
 
     Backtrace();
-    char* desc() const;
+    String desc() const;
 };
 
 }

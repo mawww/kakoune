@@ -47,9 +47,7 @@ bool notify_fatal_error(const String& msg)
 
 void on_assert_failed(const char* message)
 {
-    char* callstack = Backtrace{}.desc();
-    String debug_info = format("pid: {}\ncallstack:\n{}", getpid(), callstack);
-    free(callstack);
+    String debug_info = format("pid: {}\ncallstack:\n{}", getpid(), Backtrace{}.desc());
     write_debug(format("assert failed: '{}'\n{}", message, debug_info));
 
     const auto msg = format("{}\n[Debug Infos]\n{}", message, debug_info);

@@ -164,13 +164,13 @@ public:
     };
     ZeroTerminatedString zstr() const { return {begin(), end()}; }
 
-private:
     [[gnu::optimize(3)]] // this is recursive for constexpr reason
     static constexpr ByteCount strlen(const char* s)
     {
         return *s == 0 ? 0 : strlen(s+1) + 1;
     }
 
+private:
     const char* m_data = nullptr;
     ByteCount m_length = 0;
 };

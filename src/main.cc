@@ -283,9 +283,7 @@ void signal_handler(int signal)
     }
     if (signal != SIGTERM)
     {
-        char* callstack = Backtrace{}.desc();
-        auto msg = format("Received {}, exiting.\nCallstack:\n{}", text, callstack);
-        free(callstack);
+        auto msg = format("Received {}, exiting.\nCallstack:\n{}", text, Backtrace{}.desc());
         write_stderr(msg);
         notify_fatal_error(msg);
     }
