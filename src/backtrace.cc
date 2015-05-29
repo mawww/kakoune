@@ -4,9 +4,10 @@
 
 #if defined(__linux__) || defined(__APPLE__)
 # include <execinfo.h>
+# include <stdlib.h>
 #elif defined(__CYGWIN__)
 # include <windows.h>
-#include <stdio.h>
+# include <stdio.h>
 #endif
 
 namespace Kakoune
