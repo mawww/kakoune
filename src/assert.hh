@@ -4,6 +4,11 @@
 namespace Kakoune
 {
 
+class String;
+
+// return true if user asked to ignore the error
+bool notify_fatal_error(const String& message);
+
 void on_assert_failed(const char* message);
 
 }

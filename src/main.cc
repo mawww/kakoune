@@ -284,8 +284,10 @@ void signal_handler(int signal)
     if (signal != SIGTERM)
     {
         char* callstack = Backtrace{}.desc();
-        write_stderr(format("Received {}, exiting.\nCallstack:\n{}", text, callstack));
+        auto msg = format("Received {}, exiting.\nCallstack:\n{}", text, callstack);
         free(callstack);
+        write_stderr(msg);
+        notify_fatal_error(msg);
     }
 
     if (Server::has_instance())
