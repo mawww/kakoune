@@ -24,10 +24,10 @@ face bullet cyan
 face list yellow
 
 def -shell-params runtime %{ %sh{
-        while [ $# -gt 0 ]; do
-            echo "source '${kak_runtime}/$1'"
-            shift
-        done
+    while [ $# -gt 0 ]; do
+        echo "source '${kak_runtime}/$1'"
+        shift
+    done
 }}
 
 %sh{
