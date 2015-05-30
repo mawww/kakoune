@@ -15,7 +15,6 @@ TL;DR
 git clone http://github.com/mawww/kakoune.git
 cd kakoune/src
 make
-make userconfig
 ./kak
 ---------------------------------------------
 
@@ -102,27 +101,12 @@ To build, just type *make* in the src directory
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
 on being in an Unix like environment, no native Windows version is planned.
 
-To setup a basic configuration on your account, type *make userconfig* in the
-src directory, this will setup an initial $XDG_CONFIG_HOME/kak directory. See
-the _Kakrc_ section for more information.
-
 Installing
 ~~~~~~~~~~
 
 In order to install kak on your system, rather than running it directly from
 it's source directory, type *make install*, you can specify the `PREFIX` and
 `DESTDIR` if needed.
-
-Note that by default, no script files will be read if you do not add links
-to them in $XDG_CONFIG_HOME/kak/autoload. Available script files will be
-installed in $PREFIX/share/kak/rc
-
-If you want to enable all files, set $XDG_CONFIG_HOME/kak/autoload to be
-a symbolic link to the $PREFIX/share/kak/rc directory.
-
-----------------------------------------------
-ln -s /usr/share/kak/rc ~/.config/kak/autoload
-----------------------------------------------
 
 [TIP]
 .Homebrew (OSX)
@@ -591,50 +575,22 @@ line using:
 Kakrc
 -----
 
-The kakrc file in `../share/kak/kakrc` (relative to the `kak` binary)
-is a list of kak commands to be executed at startup.
+If not launched with the `-n` switch, Kakoune will source the
+`../share/kak/kakrc` file (relative to the `kak` binary), which
+will in turn source additional files:
 
-The current behaviour is to execute local user commands in the file
-$HOME/.config/kak/kakrc and in all files in $HOME/.config/kak/autoload
-directory
+If the `$XDG_CONFIG_HOME/kak/autoload` directory exists, load every
+`*.kak` files in it, and load recursively any subdirectory.
 
-Place links to the files in `rc/` in your autoload directory in order to
-execute them on startup, or use the runtime command (which sources relative
-to the kak binary) to load them on demand.
+If it does not exists, falls back to the site wide autoload directory
+in `../share/kak/autoload/`.
 
-Existing commands files are:
+After that, if it exists, source the `$XDG_CONFIG_HOME/kak/kakrc` file
+which should be used for user configuration.
 
- * *rc/kakrc.kak*: provides kak commands files autodetection and highlighting
- * *rc/cpp.kak*: provides C/CPP files autodetection and highlighting and the
-     `:alt` command for switching from C/CPP file to h/hpp one.
- * *rc/asciidoc.kak*: provides asciidoc files autodetection and highlighting
- * *rc/diff.kak*: provides patches/diff files autodetection and highlighting
- * *rc/git.kak*: provides various git format highlighting (commit message editing,
-     interactive rebase)
- * *rc/git-tools.kak*: provides some git integration, like `:git-blame`, `:git-show`
-     or `:git-diff-show`
- * *rc/make.kak*: provides the `:make` and `:errjump` commands along with
-     highlighting for compiler output.
- * *rc/man.kak*: provides the `:man` command
- * *rc/grep.kak*: provides the `:grep` and `:gjump` commands along with highlighting
-     for grep output.
- * *rc/ctags.kak*: provides the `:tag` command to jump on a tag definition using
-     exuberant ctags files, this script requires the *readtags* binary, available
-     in the exuberant ctags package but not installed by default.
- * *rc/client.kak*: provides the `:new` command to launch a new client on the current
-     session, if tmux is detected, launch the client in a new tmux split, else
-     launch in a new terminal emulator.
- * *rc/clang.kak*: provides the `:clang-enable-autocomplete` command for C/CPP
-     insert mode completion support. This requires the clang++ compiler to be
-     available. You can use the `clang_options` option to specify switches to
-     be passed to the compiler.
-
-Certain command files defines options, such as `grepcmd` (for `:grep`) `makecmd`
-(for `:make`) or `termcmd` (for `:new`).
-
-Some options are shared with commands. `:grep` and `:make` honor the `toolsclient` option,
-if specified, to open their buffer in it rather than the current client. man honor
-the `docsclient` option for the same purpose.
+In order to continue autoloading site-wide files with a local autoload
+directory, just add a symbolic link to `../share/kak/autoload/` into
+your local autoload directory.
 
 Options
 -------

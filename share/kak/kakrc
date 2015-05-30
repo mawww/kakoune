@@ -31,16 +31,32 @@ def -shell-params runtime %{ %sh{
 }}
 
 %sh{
+    autoload() {
+        dir=$1
+        echo "echo -debug autoloading $dir"
+        for rcfile in ${dir}/*.kak; do
+            echo "echo -debug autoloading $rcfile"
+            echo "try %{ source '${rcfile}' } catch %{ }";
+        done
+        for subdir in ${dir}/*; do
+            if [ -d "$subdir" ]; then
+                autoload $subdir
+            fi
+        done
+    }
+
     if [ -n "${XDG_CONFIG_HOME}" ]; then
        localconfdir="${XDG_CONFIG_HOME}/kak"
     else
        localconfdir="$HOME/.config/kak"
     fi
+
     if [ -d "${localconfdir}/autoload" ]; then
-        for rcfile in ${localconfdir}/autoload/*.kak; do
-            echo "try %{ source '${rcfile}' } catch %{ }";
-        done
+        autoload ${localconfdir}/autoload
+    elif [ -d "${kak_runtime}/autoload" ]; then
+        autoload ${kak_runtime}/autoload
     fi
+
     if [ -f "${localconfdir}/kakrc" ]; then
         echo "source '${localconfdir}/kakrc'"
     fi
