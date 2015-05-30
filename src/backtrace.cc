@@ -43,7 +43,7 @@ String Backtrace::desc() const
     for (int i = 0; i < num_frames; ++i)
     {
         char addr[20];
-        snprintf(addr, 20, "0x%p", stackframes[i]);
+        snprintf(addr, 20, "0x%p\n", stackframes[i]);
         res += addr;
     }
     return res;
