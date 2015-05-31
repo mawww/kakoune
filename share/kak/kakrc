@@ -33,9 +33,7 @@ def -shell-params runtime %{ %sh{
 %sh{
     autoload() {
         dir=$1
-        echo "echo -debug autoloading $dir"
         for rcfile in ${dir}/*.kak; do
-            echo "echo -debug autoloading $rcfile"
             echo "try %{ source '${rcfile}' } catch %{ }";
         done
         for subdir in ${dir}/*; do
