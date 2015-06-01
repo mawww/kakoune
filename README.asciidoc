@@ -924,7 +924,7 @@ general highlighters are:
  * `number_lines <-relative> <-hlcursor>`: show line numbers. The -relative switch
        will show line numbers to main cursor line, the -hlcursor switch will
        highlight the cursor line with a separate face..
- * `fill <face>`: fill using given face, mostly useful with <<Regions highlighters>>
+ * `fill <face>`: fill using given face, mostly useful with <<regions-highlighters,Regions highlighters>>
 
 Highlighting Groups
 ^^^^^^^^^^^^^^^^^^^
@@ -950,6 +950,7 @@ addhl -group <name> group <subname>
 addhl -group <name>/<subname> <type> <params>...
 ------------------------------------------------
 
+[[regions-highlighters]]
 Regions highlighters
 ^^^^^^^^^^^^^^^^^^^^
 
