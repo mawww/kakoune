@@ -17,7 +17,7 @@ struct peer_disconnected {};
 struct connection_failed : runtime_error
 {
     connection_failed(StringView filename)
-        : runtime_error{"connect to " + filename + " failed"}
+        : runtime_error{format("connect to {} failed", filename)}
     {}
 };
 

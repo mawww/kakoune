@@ -68,7 +68,7 @@ Register& RegisterManager::operator[](StringView reg)
     };
     auto it = reg_names.find(reg);
     if (it == reg_names.end())
-        throw runtime_error("no such register: " + reg);
+        throw runtime_error(format("no such register: '{}'", reg));
     return (*this)[it->second];
 }
 

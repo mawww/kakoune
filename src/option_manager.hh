@@ -168,7 +168,7 @@ template<typename T> const T& Option::get() const
 {
     auto* typed_opt = dynamic_cast<const TypedOption<T>*>(this);
     if (not typed_opt)
-        throw runtime_error("option " + name() + " is not of type " + typeid(T).name());
+        throw runtime_error(format("option '{}' is not of type '{}'", name(), typeid(T).name()));
     return typed_opt->get();
 }
 
@@ -176,7 +176,7 @@ template<typename T> void Option::set(const T& val)
 {
     auto* typed_opt = dynamic_cast<TypedOption<T>*>(this);
     if (not typed_opt)
-        throw runtime_error("option " + name() + " is not of type " + typeid(T).name());
+        throw runtime_error(format("option '{}' is not of type '{}'", name(), typeid(T).name()));
     return typed_opt->set(val);
 }
 
@@ -208,7 +208,7 @@ public:
         {
             if ((*it)->is_of_type<T>() and (*it)->flags() == flags)
                 return **it;
-            throw runtime_error("option " + name + " already declared with different type or flags");
+            throw runtime_error(format("option '{}' already declared with different type or flags", name));
         }
         m_descs.emplace_back(new OptionDesc{name, docstring, flags});
         opts.emplace_back(new TypedOption<T>{m_global_manager, *m_descs.back(), value});

@@ -259,7 +259,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
             captures.emplace_back(match.first, match.second);
     }
     if (not found or begin == buffer.end())
-        throw runtime_error("'" + regex.str() + "': no matches found");
+        throw runtime_error(format("'{}': no matches found", regex.str()));
 
     end = (begin == end) ? end : utf8::previous(end, begin);
     if (direction == Backward)

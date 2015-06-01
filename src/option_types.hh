@@ -217,7 +217,7 @@ inline void option_from_string(StringView str, YesNoAsk& opt)
     else if (str == "ask")
         opt = Ask;
     else
-        throw runtime_error("invalid value '" + str + "', expected yes, no or ask");
+        throw runtime_error(format("invalid value '{}', expected yes, no or ask", str));
 }
 
 }

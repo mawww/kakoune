@@ -45,7 +45,7 @@ Buffer* open_fifo(StringView name, StringView filename, bool scroll)
     int fd = open(parse_filename(filename).c_str(), O_RDONLY | O_NONBLOCK);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (fd < 0)
-       throw runtime_error("unable to open " + filename);
+       throw runtime_error(format("unable to open '{}'", filename));
 
     return create_fifo_buffer(name.str(), fd, scroll);
 }
@@ -109,7 +109,7 @@ Scope& get_scope(StringView scope, const Context& context)
 {
     if (auto s = get_scope_ifp(scope, context))
         return *s;
-    throw runtime_error("error: no such scope " + scope);
+    throw runtime_error(format("error: no such scope '{}'", scope));
 }
 
 struct CommandDesc
@@ -158,9 +158,10 @@ void edit(const ParametersParser& parser, Context& context)
             if (not buffer)
             {
                 if (parser.get_switch("existing"))
-                    throw runtime_error("unable to open " + name);
+                    throw runtime_error(format("unable to open '{}'", name));
 
-                context.print_status({ "new file " + name, get_face("StatusLine") });
+                context.print_status({ format("new file '{}'", name),
+                                       get_face("StatusLine") });
                 buffer = new Buffer(name, Buffer::Flags::File | Buffer::Flags::New);
             }
         }
@@ -444,10 +445,10 @@ void delete_buffer(const ParametersParser& parser, Context& context)
     BufferManager& manager = BufferManager::instance();
     Buffer& buffer = parser.positional_count() == 0 ? context.buffer() : manager.get_buffer(parser[0]);
     if (not force and (buffer.flags() & Buffer::Flags::File) and buffer.is_modified())
-        throw runtime_error("buffer " + buffer.name() + " is modified");
+        throw runtime_error(format("buffer '{}' is modified", buffer.name()));
 
     if (manager.count() == 1)
-        throw runtime_error("buffer " + buffer.name() + " is the last one");
+        throw runtime_error(format("buffer '{}' is the last one", buffer.name()));
 
     manager.delete_buffer(buffer);
 }
@@ -486,7 +487,7 @@ const CommandDesc namebuf_cmd = {
     [](const ParametersParser& parser, Context& context)
     {
         if (not context.buffer().set_name(parser[0]))
-            throw runtime_error("unable to change buffer name to " + parser[0]);
+            throw runtime_error(format("unable to change buffer name to '{}'", parser[0]));
     }
 };
 
@@ -573,7 +574,7 @@ const CommandDesc add_highlighter_cmd = {
             HighlighterRegistry& registry = HighlighterRegistry::instance();
             auto it = registry.find(params[0]);
             if (it != registry.end())
-                return params[0] + ":\n" + indent(it->second.docstring);
+                return format("{}:\n{}", params[0], indent(it->second.docstring));
         }
         return "";
     },
@@ -593,7 +594,7 @@ const CommandDesc add_highlighter_cmd = {
                                  : context.window().highlighters();
         auto it = registry.find(name);
         if (it == registry.end())
-            throw runtime_error("No such highlighter factory '" + name + "'");
+            throw runtime_error(format("No such highlighter factory '{}'", name));
         group.add_child(it->second.factory(highlighter_params));
     }
 };
@@ -712,7 +713,7 @@ void define_command(const ParametersParser& parser, Context& context)
     auto& cm = CommandManager::instance();
 
     if (cm.command_defined(cmd_name) and not parser.get_switch("allow-override"))
-        throw runtime_error("command '" + cmd_name + "' already defined");
+        throw runtime_error(format("command '{}' already defined", cmd_name));
 
     CommandFlags flags = CommandFlags::None;
     if (parser.get_switch("hidden"))
@@ -978,7 +979,7 @@ const CommandDesc set_option_cmd = {
             OptionManager& options = get_scope(params[0], context).options();
             const String& docstring = options[params[1]].docstring();
             if (not docstring.empty())
-                return params[1] + ": " + docstring;
+                return format("{}: {}", params[1], docstring);
         }
         catch (runtime_error&) {}
         return "";
@@ -1063,7 +1064,7 @@ const CommandDesc declare_option_cmd = {
         else if (parser[0] == "line-flag-list")
             opt = &reg.declare_option<Vector<LineAndFlag, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else
-            throw runtime_error("unknown type " + parser[0]);
+            throw runtime_error(format("unknown type {}", parser[0]));
 
         if (parser.positional_count() == 3)
             opt->set_from_string(parser[2]);
@@ -1080,7 +1081,7 @@ KeymapMode parse_keymap_mode(const String& str)
     if (prefix_match("view", str))   return KeymapMode::View;
     if (prefix_match("user", str))   return KeymapMode::User;
 
-    throw runtime_error("unknown keymap mode '" + str + "'");
+    throw runtime_error(format("unknown keymap mode '{}'", str));
 }
 
 const CommandDesc map_key_cmd = {
@@ -1282,9 +1283,7 @@ const CommandDesc eval_string_cmd = {
     [](const ParametersParser& parser, Context& context)
     {
         context_wrap(parser, context, [](const ParametersParser& parser, Context& context) {
-            String command;
-            for (auto& param : parser)
-                command += param + " ";
+            String command = join(parser, ' ', false);
             CommandManager::instance().execute(command, context);
         });
     }
@@ -1427,7 +1426,7 @@ const CommandDesc info_cmd = {
                     else if (*placement == "below")
                         style = InfoStyle::InlineBelow;
                     else
-                        throw runtime_error("invalid placement " + *placement);
+                        throw runtime_error(format("invalid placement '{}'", *placement));
                 }
             }
             auto title = parser.get_switch("title").value_or(StringView{});
@@ -1502,7 +1501,7 @@ const CommandDesc set_client_name_cmd = {
         if (ClientManager::instance().validate_client_name(parser[0]))
             context.set_name(parser[0]);
         else if (context.name() != parser[0])
-            throw runtime_error("client name '" + parser[0] + "' is not unique");
+            throw runtime_error(format("client name '{}' is not unique", parser[0]));
     }
 };
 
@@ -1545,7 +1544,7 @@ const CommandDesc change_working_directory_cmd = {
     [](const ParametersParser& parser, Context&)
     {
         if (chdir(parse_filename(parser[0]).c_str()) != 0)
-            throw runtime_error("cannot change to directory " + parser[0]);
+            throw runtime_error(format("cannot change to directory '{}'", parser[0]));
     }
 };
 

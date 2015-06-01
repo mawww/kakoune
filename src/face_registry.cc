@@ -28,7 +28,7 @@ static Face parse_face(StringView facedesc)
                 case 'b': res.attributes |= Attribute::Bold; break;
                 case 'B': res.attributes |= Attribute::Blink; break;
                 case 'd': res.attributes |= Attribute::Dim; break;
-                default: throw runtime_error("unknown face attribute '" + StringView(*attr_it) + "'");
+                default: throw runtime_error(format("unknown face attribute '{}'", StringView{*attr_it}));
             }
         }
     }
@@ -51,12 +51,12 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
                                   bool override)
 {
     if (not override and m_aliases.find(name) != m_aliases.end())
-        throw runtime_error("alias '" + name + "' already defined");
+        throw runtime_error(format("alias '{}' already defined", name));
 
     if (name.empty() or is_color_name(name) or
         std::any_of(name.begin(), name.end(),
                     [](char c){ return not isalnum(c); }))
-        throw runtime_error("invalid alias name");
+        throw runtime_error(format("invalid alias name: '{}'", name));
 
     FaceOrAlias& alias = m_aliases[name];
     auto it = m_aliases.find(facedesc);

@@ -14,7 +14,7 @@ struct file_access_error : runtime_error
 public:
     file_access_error(StringView filename,
                       StringView error_desc)
-        : runtime_error(filename + ": " + error_desc) {}
+        : runtime_error(format("{}: {}", filename, error_desc)) {}
 };
 
 struct file_not_found : file_access_error

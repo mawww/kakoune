@@ -211,11 +211,11 @@ void goto_commands(Context& context, NormalParams params)
 
                 String path = find_file(filename, paths);
                 if (path.empty())
-                    throw runtime_error("unable to find file '" + filename + "'");
+                    throw runtime_error(format("unable to find file '{}'", filename));
 
                 Buffer* buffer = create_buffer_from_file(path);
                 if (buffer == nullptr)
-                    throw runtime_error("unable to open file '" + path + "'");
+                    throw runtime_error(format("unable to open file '{}'", path));
 
                 if (buffer != &context.buffer())
                 {

@@ -175,7 +175,7 @@ void Client::reload_buffer()
     kak_assert(buffer.flags() & Buffer::Flags::File);
     Buffer* buf = create_buffer_from_file(buffer.name());
     kak_assert(buf == &buffer);
-    context().print_status({ "'" + buffer.display_name() + "' reloaded",
+    context().print_status({ format("'{}' reloaded", buffer.display_name()),
                              get_face("Information") });
 }
 
@@ -189,12 +189,12 @@ void Client::on_buffer_reload_key(Key key)
     {
         // reread timestamp in case the file was modified again
         buffer.set_fs_timestamp(get_fs_timestamp(buffer.name()));
-        print_status({ "'" + buffer.display_name() + "' kept",
+        print_status({ format("'{}' kept", buffer.display_name()),
                        get_face("Information") });
     }
     else
     {
-        print_status({ "'" + key_to_str(key) + "' is not a valid choice",
+        print_status({ format("'{}' is not a valid choice", key_to_str(key)),
                        get_face("Error") });
         m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;
@@ -233,9 +233,10 @@ void Client::check_if_buffer_needs_reloading()
     if (reload == Ask)
     {
         m_ui->info_show(
-            "reload '" + buffer.display_name() + "' ?",
-            "'" + buffer.display_name() + "' was modified externally\n"
-            "press <ret> or y to reload, <esc> or n to keep",
+            format("reload '{}' ?", buffer.display_name()),
+            format("'{}' was modified externally\n"
+                   "press <ret> or y to reload, <esc> or n to keep",
+                   buffer.display_name()),
             CharCoord{}, get_face("Information"), InfoStyle::Prompt);
 
         m_buffer_reload_dialog_opened = true;

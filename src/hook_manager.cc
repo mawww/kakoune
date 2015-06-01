@@ -60,8 +60,8 @@ void HookManager::run_hook(StringView hook_name,
         }
         catch (runtime_error& err)
         {
-            write_debug("error running hook " + hook_name + "/" +
-                        hook.first + ": " + err.what());
+            write_debug(format("error running hook {}/{}: {}",
+                               hook_name, hook.first, err.what()));
         }
     }
 }

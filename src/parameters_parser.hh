@@ -21,13 +21,13 @@ struct parameter_error : public runtime_error
 struct unknown_option : public parameter_error
 {
     unknown_option(StringView name)
-        : parameter_error("unknown option '" + name + "'") {}
+        : parameter_error(format("unknown option '{}'", name)) {}
 };
 
 struct missing_option_value: public parameter_error
 {
     missing_option_value(StringView name)
-        : parameter_error("missing value for option '" + name + "'") {}
+        : parameter_error(format("missing value for option '{}'", name)) {}
 };
 
 struct wrong_argument_count : public parameter_error

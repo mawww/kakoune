@@ -287,14 +287,12 @@ RemoteUI::RemoteUI(int socket)
                                m_input_callback(mode);
                        })
 {
-    write_debug("remote client connected: " +
-                to_string(m_socket_watcher.fd()));
+    write_debug(format("remote client connected: {}", m_socket_watcher.fd()));
 }
 
 RemoteUI::~RemoteUI()
 {
-    write_debug("remote client disconnected: " +
-                to_string(m_socket_watcher.fd()));
+    write_debug(format("remote client disconnected: {}", m_socket_watcher.fd()));
     m_socket_watcher.close_fd();
 }
 
@@ -421,7 +419,7 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, ("/tmp/kak-" + session).c_str(),
+    strncpy(addr.sun_path, format("/tmp/kak-{}", session).c_str(),
             sizeof(addr.sun_path) - 1);
     return addr;
 }
@@ -585,8 +583,8 @@ private:
                 }
                 catch (runtime_error& e)
                 {
-                    write_debug("error running command '" + m_buffer +
-                                "' : " + e.what());
+                    write_debug(format("error running command '{}': {}",
+                                       m_buffer, e.what()));
                 }
                 catch (client_removed&) {}
                 close(socket);
@@ -645,7 +643,7 @@ Server::Server(String session_name)
 
 void Server::close_session()
 {
-    unlink(("/tmp/kak-" + m_session).c_str());
+    unlink(format("/tmp/kak-{}", m_session).c_str());
     m_listener->close_fd();
     m_listener.reset();
 }

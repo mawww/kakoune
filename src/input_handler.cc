@@ -1010,7 +1010,7 @@ public:
     {
         auto num_sel = context().selections().size();
         return {AtomList{ { "insert ", Face(Color::Green) },
-                          { to_string(num_sel) + " sel", Face(Color::Blue) } }};
+                          { format( "{} sel", num_sel), Face(Color::Blue) } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }

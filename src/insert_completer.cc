@@ -56,7 +56,7 @@ void option_from_string(StringView str, InsertCompleterDesc& opt)
         opt.param = Optional<String>{};
         return;
     }
-    throw runtime_error("invalid completer description: " + str);
+    throw runtime_error(format("invalid completer description: '{}'", str));
 }
 
 namespace

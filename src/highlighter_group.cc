@@ -15,7 +15,7 @@ void HighlighterGroup::highlight(const Context& context, HighlightFlags flags,
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
 {
     if (m_highlighters.contains(hl.first))
-        throw runtime_error("duplicate id: " + hl.first);
+        throw runtime_error(format("duplicate id: '{}'", hl.first));
 
     m_highlighters.append(std::move(hl));
 }
@@ -31,7 +31,7 @@ Highlighter& HighlighterGroup::get_child(StringView path)
     StringView id(path.begin(), sep_it);
     auto it = m_highlighters.find(id);
     if (it == m_highlighters.end())
-        throw child_not_found("no such id: " + id);
+        throw child_not_found(format("no such id: '{}'", id));
     if (sep_it == path.end())
         return *it->second;
     else

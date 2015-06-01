@@ -110,8 +110,9 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             continue;
 
         if (client->context().is_editing())
-            throw runtime_error("client '" + client->context().name() + "' is inserting in '" +
-                                buffer.display_name() + "'");
+            throw runtime_error(format("client '{}' is inserting in buffer '{}'",
+                                       client->context().name(),
+                                       buffer.display_name()));
 
         // change client context to edit the first buffer which is not the
         // specified one. As BufferManager stores buffer according to last
@@ -150,7 +151,7 @@ Client& ClientManager::get_client(StringView name)
 {
     if (Client* client = get_client_ifp(name))
         return *client;
-    throw runtime_error("no client named: " + name);
+    throw runtime_error(format("no client named '{}'", name));
 }
 
 void ClientManager::redraw_clients() const

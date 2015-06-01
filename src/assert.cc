@@ -38,7 +38,7 @@ bool notify_fatal_error(const String& msg)
         return true;
     }
 #elif defined(__linux__)
-    auto cmd = "xmessage -buttons 'quit:0,ignore:1' '" + msg + "'";
+    auto cmd = format("xmessage -buttons 'quit:0,ignore:1' '{}'", msg);
     if (system(cmd.c_str()) == 1)
         return true;
 #endif
