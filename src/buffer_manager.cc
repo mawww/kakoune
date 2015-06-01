@@ -86,7 +86,7 @@ Buffer& BufferManager::get_buffer(StringView name)
 {
     Buffer* res = get_buffer_ifp(name);
     if (not res)
-        throw runtime_error("no such buffer '"_str + name + "'");
+        throw runtime_error(format("no such buffer '{}'", name));
     return *res;
 }
 

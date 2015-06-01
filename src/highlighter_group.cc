@@ -31,7 +31,7 @@ Highlighter& HighlighterGroup::get_child(StringView path)
     StringView id(path.begin(), sep_it);
     auto it = m_highlighters.find(id);
     if (it == m_highlighters.end())
-        throw child_not_found("no such id: "_str + id);
+        throw child_not_found("no such id: " + id);
     if (sep_it == path.end())
         return *it->second;
     else

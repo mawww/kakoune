@@ -28,7 +28,7 @@ String parse_filename(StringView filename)
 {
     if (filename.length() >= 1 and filename[0_byte] == '~' and
         (filename.length() == 1 or filename[1_byte] == '/'))
-        return parse_filename("$HOME"_str + filename.substr(1_byte));
+        return parse_filename("$HOME" + filename.substr(1_byte));
 
     ByteCount pos = 0;
     String result;

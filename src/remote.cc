@@ -624,10 +624,10 @@ Server::Server(String session_name)
     sockaddr_un addr = session_addr(m_session);
 
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
-       throw runtime_error("unable to bind listen socket "_str + addr.sun_path);
+       throw runtime_error(format("unable to bind listen socket '{}'", addr.sun_path));
 
     if (listen(listen_sock, 4) == -1)
-       throw runtime_error("unable to listen on socket "_str + addr.sun_path);
+       throw runtime_error(format("unable to listen on socket '{}'", addr.sun_path));
 
     auto accepter = [this](FDWatcher& watcher, EventMode mode) {
         sockaddr_un client_addr;

@@ -18,11 +18,7 @@ static const Regex env_var_regex(R"(\bkak_(\w+)\b)");
 ShellManager::ShellManager()
 {
     const char* path = getenv("PATH");
-    String new_path;
-    if (path)
-        new_path = path + ":"_str;
-
-    new_path += split_path(get_kak_binary_path()).first;
+    auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
     setenv("PATH", new_path.c_str(), 1);
 }
 
@@ -98,7 +94,7 @@ std::pair<String, int> ShellManager::eval(
             else try
             {
                 String value = get_val(name, context);
-                setenv(("kak_"_str + name).c_str(), value.c_str(), 1);
+                setenv(format("kak_{}", name).c_str(), value.c_str(), 1);
             }
             catch (runtime_error&) {}
         }

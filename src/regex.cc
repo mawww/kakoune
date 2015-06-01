@@ -19,7 +19,7 @@ void option_from_string(StringView str, Regex& re)
     }
     catch (RegexError& err)
     {
-        throw runtime_error("unable to create regex: "_str + err.what());
+        throw runtime_error(format("unable to create regex: {}", err.what()));
     }
 }
 

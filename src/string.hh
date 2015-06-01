@@ -132,7 +132,7 @@ public:
     constexpr StringView() = default;
     constexpr StringView(const char* data, ByteCount length)
         : m_data{data}, m_length{length} {}
-    constexpr StringView(const char* data) : m_data{data}, m_length{strlen(data)} {}
+    constexpr StringView(const char* data) : m_data{data}, m_length{data ? strlen(data) : 0} {}
     constexpr StringView(const char* begin, const char* end) : m_data{begin}, m_length{(int)(end - begin)} {}
     StringView(const String& str) : m_data{str.data()}, m_length{(int)str.length()} {}
     StringView(const char& c) : m_data(&c), m_length(1) {}

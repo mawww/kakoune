@@ -585,14 +585,14 @@ void regex_prompt(Context& context, const String prompt, T func)
             catch (RegexError& err)
             {
                 if (event == PromptEvent::Validate)
-                    throw runtime_error("regex error: "_str + err.what());
+                    throw runtime_error(format("regex error: {}", err.what()));
                 else
                     context.input_handler().set_prompt_face(get_face("Error"));
             }
             catch (std::runtime_error& err)
             {
                 if (event == PromptEvent::Validate)
-                    throw runtime_error("regex error: "_str + err.what());
+                    throw runtime_error(format("regex error: {}", err.what()));
                 else
                 {
                     context.input_handler().set_prompt_face(get_face("Error"));
@@ -643,7 +643,7 @@ void search_next(Context& context, NormalParams params)
         }
         catch (RegexError& err)
         {
-            throw runtime_error("regex error: "_str + err.what());
+            throw runtime_error(format("regex error: ", err.what()));
         }
     }
     else

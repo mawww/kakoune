@@ -390,12 +390,12 @@ int run_server(StringView session, StringView init_command,
     if (not ignore_kakrc) try
     {
         Context initialisation_context{Context::EmptyContextFlag{}};
-        command_manager.execute("source " + runtime_directory() + "/kakrc",
+        command_manager.execute(format("source {}/kakrc", runtime_directory()),
                                 initialisation_context);
     }
     catch (Kakoune::runtime_error& error)
     {
-        write_debug("error while parsing kakrc:\n    "_str + error.what());
+        write_debug(format("error while parsing kakrc:\n    {}", error.what()));
     }
     catch (Kakoune::client_removed&)
     {
@@ -419,7 +419,7 @@ int run_server(StringView session, StringView init_command,
     }
     catch (Kakoune::runtime_error& error)
     {
-         write_debug("error while opening command line files: "_str + error.what());
+         write_debug(format("error while opening command line files: {}", error.what()));
     }
     else
         new Buffer("*scratch*", Buffer::Flags::None);

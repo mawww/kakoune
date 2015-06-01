@@ -1150,7 +1150,7 @@ public:
         StringView id(path.begin(), sep_it);
         auto it = m_groups.find(id);
         if (it == m_groups.end())
-            throw child_not_found("no such id: "_str + id);
+            throw child_not_found(format("no such id: {}", id));
         if (sep_it == path.end())
             return it->second;
         else

@@ -178,7 +178,7 @@ inline void option_from_string(StringView str, LineAndColumn<EffectiveType, Line
 {
     auto vals = split(str, tuple_separator);
     if (vals.size() != 2)
-        throw runtime_error("expected <line>"_str + tuple_separator + "<column>");
+        throw runtime_error(format("expected <line>{}<column>", tuple_separator));
     opt.line = str_to_int(vals[0]);
     opt.column = str_to_int(vals[1]);
 }
