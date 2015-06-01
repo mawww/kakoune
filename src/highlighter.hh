@@ -32,8 +32,6 @@ struct Highlighter;
 
 using HighlighterAndId = std::pair<String, std::unique_ptr<Highlighter>>;
 
-struct BufferRange;
-
 struct Highlighter
 {
     virtual ~Highlighter() {}
