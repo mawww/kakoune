@@ -30,6 +30,12 @@ make test
 cd src
 %make_install PREFIX=/usr
 
+%files
+%doc
+%{_bindir}/*
+%{_datadir}/doc/kak/*
+%{_datadir}/kak/*
+
 %changelog
 * Sat Mar 28 2015 jkonecny <jkonecny@redhat.com> - 0-5.20150328gitd1b81c8f
 - Automated git update by dgroc script new hash: d1b81c8f
@@ -39,10 +45,3 @@ cd src
 
 * Tue Mar 17 2015 Jiri Konecny <jkonecny@redhat.com> 0-1.12a732dgit
 - Create first rpm for kakoune
-
-%files
-%doc
-%{_bindir}/*
-%{_datadir}/doc/kak/*
-%{_datadir}/kak/*
-
