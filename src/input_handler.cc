@@ -38,7 +38,7 @@ public:
     Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
-    void reset_normal_mode();
+    void pop_mode() { m_input_handler.pop_mode(this); }
 private:
     InputHandler& m_input_handler;
 };
@@ -447,7 +447,7 @@ public:
             if (context().has_ui())
                 context().ui().menu_hide();
             context().print_status(DisplayLine{});
-            reset_normal_mode();
+            pop_mode();
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
             return;
@@ -465,7 +465,7 @@ public:
             {
                 if (context().has_ui())
                     context().ui().menu_hide();
-                reset_normal_mode();
+                pop_mode();
                 int selected = m_selected - m_choices.begin();
                 m_callback(selected, MenuEvent::Abort, context());
             }
@@ -595,8 +595,8 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
-            reset_normal_mode();
-            // call callback after reset_normal_mode so that callback
+            pop_mode();
+            // call callback after pop_mode so that callback
             // may change the mode
             m_callback(line, PromptEvent::Validate, context());
             return;
@@ -608,7 +608,7 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
-            reset_normal_mode();
+            pop_mode();
             m_callback(line, PromptEvent::Abort, context());
             return;
         }
@@ -836,7 +836,7 @@ public:
 
     void on_key(Key key) override
     {
-        reset_normal_mode();
+        pop_mode();
         m_callback(key, context());
     }
 
@@ -908,7 +908,7 @@ public:
         {
             context().hooks().run_hook("InsertEnd", "", context());
             m_completer.reset();
-            reset_normal_mode();
+            pop_mode();
         }
         else if (key == Key::Backspace)
         {
@@ -1138,30 +1138,47 @@ private:
 
 }
 
-void InputMode::reset_normal_mode()
-{
-    m_input_handler.reset_normal_mode();
-}
-
 InputHandler::InputHandler(SelectionList selections, Context::Flags flags, String name)
-    : m_context(*this, std::move(selections), flags, std::move(name)),
-      m_mode(new InputModes::Normal(*this))
-{}
+    : m_context(*this, std::move(selections), flags, std::move(name))
+{
+    m_mode_stack.emplace_back(new InputModes::Normal(*this));
+}
 
 InputHandler::~InputHandler()
 {}
 
-void InputHandler::change_input_mode(InputMode* new_mode)
+void InputHandler::push_mode(InputMode* new_mode)
 {
-    m_mode->on_disabled();
-    m_mode_trash.emplace_back(std::move(m_mode));
-    m_mode.reset(new_mode);
+    current_mode().on_disabled();
+    m_mode_stack.emplace_back(new_mode);
     new_mode->on_enabled();
+}
+
+void InputHandler::pop_mode(InputMode* mode)
+{
+    kak_assert(m_mode_stack.back() == mode);
+    kak_assert(m_mode_stack.size() > 1);
+
+    current_mode().on_disabled();
+    m_mode_trash.emplace_back(std::move(m_mode_stack.back()));
+    m_mode_stack.pop_back();
+    current_mode().on_enabled();
+}
+
+void InputHandler::reset_normal_mode()
+{
+    while (m_mode_stack.size() > 1)
+    {
+        current_mode().on_disabled();
+        m_mode_trash.emplace_back(std::move(m_mode_stack.back()));
+    }
+    current_mode().on_enabled();
+    kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
 void InputHandler::insert(InsertMode mode)
 {
-    change_input_mode(new InputModes::Insert(*this, mode));
+    push_mode(new InputModes::Insert(*this, mode));
 }
 
 void InputHandler::repeat_last_insert()
@@ -1173,24 +1190,24 @@ void InputHandler::repeat_last_insert()
     swap(keys, m_last_insert.second);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    change_input_mode(new InputModes::Insert(*this, m_last_insert.first));
+    push_mode(new InputModes::Insert(*this, m_last_insert.first));
     for (auto& key : keys)
-        m_mode->on_key(key);
-    kak_assert(dynamic_cast<InputModes::Normal*>(m_mode.get()) != nullptr);
+        current_mode().on_key(key);
+    kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
 void InputHandler::prompt(StringView prompt, String initstr,
                           Face prompt_face, Completer completer,
                           PromptCallback callback)
 {
-    change_input_mode(new InputModes::Prompt(*this, prompt, initstr,
+    push_mode(new InputModes::Prompt(*this, prompt, initstr,
                                              prompt_face, completer,
                                              callback));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
 {
-    InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(m_mode.get());
+    InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
     if (prompt)
         prompt->set_prompt_face(prompt_face);
 }
@@ -1198,12 +1215,12 @@ void InputHandler::set_prompt_face(Face prompt_face)
 void InputHandler::menu(ConstArrayView<String> choices,
                        MenuCallback callback)
 {
-    change_input_mode(new InputModes::Menu(*this, choices, callback));
+    push_mode(new InputModes::Menu(*this, choices, callback));
 }
 
 void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
 {
-    change_input_mode(new InputModes::NextKey(*this, keymap_mode, callback));
+    push_mode(new InputModes::NextKey(*this, keymap_mode, callback));
 }
 
 static bool is_valid(Key key)
@@ -1220,16 +1237,16 @@ void InputHandler::handle_key(Key key)
         ++m_handle_key_level;
         auto dec = on_scope_end([&]{ --m_handle_key_level; });
 
-        auto keymap_mode = m_mode->keymap_mode();
+        auto keymap_mode = current_mode().keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
         if (keymaps.is_mapped(key, keymap_mode) and
             m_context.keymaps_support().is_enabled())
         {
             for (auto& k : keymaps.get_mapping(key, keymap_mode))
-                m_mode->on_key(k);
+                current_mode().on_key(k);
         }
         else
-            m_mode->on_key(key);
+            current_mode().on_key(key);
 
         // do not record the key that made us enter or leave recording mode,
         // and the ones that are triggered recursively by previous keys.
@@ -1257,14 +1274,9 @@ void InputHandler::stop_recording()
     m_recording_reg = 0;
 }
 
-void InputHandler::reset_normal_mode()
-{
-    change_input_mode(new InputModes::Normal(*this));
-}
-
 DisplayLine InputHandler::mode_line() const
 {
-    return m_mode->mode_line();
+    return current_mode().mode_line();
 }
 
 void InputHandler::clear_mode_trash()

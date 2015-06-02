@@ -87,10 +87,13 @@ private:
     Context m_context;
 
     friend class InputMode;
-    std::unique_ptr<InputMode> m_mode;
+    Vector<std::unique_ptr<InputMode>> m_mode_stack;
     Vector<std::unique_ptr<InputMode>> m_mode_trash;
 
-    void change_input_mode(InputMode* new_mode);
+    InputMode& current_mode() const { return *m_mode_stack.back(); }
+
+    void push_mode(InputMode* new_mode);
+    void pop_mode(InputMode* current_mode);
 
     using Insertion = std::pair<InsertMode, Vector<Key>>;
     Insertion m_last_insert = {InsertMode::Insert, {}};
