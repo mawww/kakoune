@@ -25,7 +25,8 @@ public:
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    virtual void on_key(Key key) = 0;
+    void handle_key(Key key) { on_key(key, {}); }
+
     virtual void on_enabled() {}
     virtual void on_disabled() {}
     Context& context() const { return m_input_handler.context(); }
@@ -38,7 +39,17 @@ public:
     Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
-    void pop_mode() { m_input_handler.pop_mode(this); }
+    // KeepAlive is usedto make sure the current InputMode
+    // stays alive until the end of the on_key method
+    struct KeepAlive { std::shared_ptr<InputMode> ptr; };
+
+    virtual void on_key(Key key, KeepAlive keep_alive) = 0;
+
+    void pop_mode(KeepAlive& keep_alive)
+    {
+        kak_assert(not keep_alive.ptr);
+        keep_alive.ptr = m_input_handler.pop_mode(this);
+    }
 private:
     InputHandler& m_input_handler;
 };
@@ -130,12 +141,12 @@ class Normal : public InputMode
 public:
     Normal(InputHandler& input_handler)
         : InputMode(input_handler),
-          m_idle_timer{Clock::now() + idle_timeout,
+          m_idle_timer{TimePoint::max(),
                        context().flags() & Context::Flags::Transient ?
                            Timer::Callback() : Timer::Callback([this](Timer& timer) {
               context().hooks().run_hook("NormalIdle", "", context());
           })},
-          m_fs_check_timer{Clock::now() + fs_check_timeout,
+          m_fs_check_timer{TimePoint::max(),
                            context().flags() & Context::Flags::Transient ?
                             Timer::Callback() : Timer::Callback([this](Timer& timer) {
               if (not context().has_client())
@@ -153,15 +164,20 @@ public:
             m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
         }
 
+        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
     void on_disabled() override
     {
+        m_idle_timer.set_next_date(TimePoint::max());
+        m_fs_check_timer.set_next_date(TimePoint::max());
+
         context().hooks().run_hook("NormalEnd", "", context());
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, KeepAlive keep_alive) override
     {
         if (m_mouse_handler.handle_key(key, context()))
             return;
@@ -436,7 +452,7 @@ public:
         context().ui().menu_select(0);
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, KeepAlive keep_alive) override
     {
         auto match_filter = [this](const String& str) {
             return regex_match(str.begin(), str.end(), m_filter);
@@ -447,7 +463,7 @@ public:
             if (context().has_ui())
                 context().ui().menu_hide();
             context().print_status(DisplayLine{});
-            pop_mode();
+            pop_mode(keep_alive);
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
             return;
@@ -465,7 +481,7 @@ public:
             {
                 if (context().has_ui())
                     context().ui().menu_hide();
-                pop_mode();
+                pop_mode(keep_alive);
                 int selected = m_selected - m_choices.begin();
                 m_callback(selected, MenuEvent::Abort, context());
             }
@@ -576,7 +592,7 @@ public:
         display();
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, KeepAlive keep_alive) override
     {
         History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
@@ -595,7 +611,7 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
-            pop_mode();
+            pop_mode(keep_alive);
             // call callback after pop_mode so that callback
             // may change the mode
             m_callback(line, PromptEvent::Validate, context());
@@ -608,7 +624,7 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
-            pop_mode();
+            pop_mode(keep_alive);
             m_callback(line, PromptEvent::Abort, context());
             return;
         }
@@ -834,9 +850,9 @@ public:
     NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
         : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(callback) {}
 
-    void on_key(Key key) override
+    void on_key(Key key, KeepAlive keep_alive) override
     {
-        pop_mode();
+        pop_mode(keep_alive);
         m_callback(key, context());
     }
 
@@ -861,7 +877,7 @@ public:
           m_edition(context()),
           m_completer(context()),
           m_autoshowcompl(true),
-          m_idle_timer{Clock::now() + idle_timeout,
+          m_idle_timer{TimePoint::max(),
                        [this](Timer& timer) {
                            context().hooks().run_hook("InsertIdle", "", context());
                            if (m_autoshowcompl)
@@ -879,7 +895,31 @@ public:
         prepare(m_insert_mode);
     }
 
-    void on_key(Key key) override
+    ~Insert()
+    {
+        auto& selections = context().selections();
+        for (auto& sel : selections)
+        {
+            if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
+                sel.cursor() = context().buffer().char_prev(sel.cursor());
+        }
+        selections.avoid_eol();
+
+        if (m_disable_hooks)
+            context().user_hooks_support().enable();
+    }
+
+    void on_enabled() override
+    {
+        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+    }
+
+    void on_disabled() override
+    {
+        m_idle_timer.set_next_date(TimePoint::max());
+    }
+
+    void on_key(Key key, KeepAlive keep_alive) override
     {
         auto& buffer = context().buffer();
         last_insert().second.push_back(key);
@@ -908,7 +948,7 @@ public:
         {
             context().hooks().run_hook("InsertEnd", "", context());
             m_completer.reset();
-            pop_mode();
+            pop_mode(keep_alive);
         }
         else if (key == Key::Backspace)
         {
@@ -1112,20 +1152,6 @@ private:
         buffer.check_invariant();
     }
 
-    void on_disabled() override
-    {
-        auto& selections = context().selections();
-        for (auto& sel : selections)
-        {
-            if (m_insert_mode == InsertMode::Append and sel.cursor().column > 0)
-                sel.cursor() = context().buffer().char_prev(sel.cursor());
-        }
-        selections.avoid_eol();
-
-        if (m_disable_hooks)
-            context().user_hooks_support().enable();
-    }
-
     enum class Mode { Default, Complete, InsertReg };
     Mode m_mode = Mode::Default;
     InsertMode       m_insert_mode;
@@ -1154,23 +1180,24 @@ void InputHandler::push_mode(InputMode* new_mode)
     new_mode->on_enabled();
 }
 
-void InputHandler::pop_mode(InputMode* mode)
+std::unique_ptr<InputMode> InputHandler::pop_mode(InputMode* mode)
 {
     kak_assert(m_mode_stack.back() == mode);
     kak_assert(m_mode_stack.size() > 1);
 
     current_mode().on_disabled();
-    m_mode_trash.emplace_back(std::move(m_mode_stack.back()));
+    std::unique_ptr<InputMode> res = std::move(m_mode_stack.back());
     m_mode_stack.pop_back();
     current_mode().on_enabled();
+    return res;
 }
 
 void InputHandler::reset_normal_mode()
 {
-    while (m_mode_stack.size() > 1)
+    if (m_mode_stack.size() > 1)
     {
         current_mode().on_disabled();
-        m_mode_trash.emplace_back(std::move(m_mode_stack.back()));
+        m_mode_stack.resize(1);
     }
     current_mode().on_enabled();
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
@@ -1192,7 +1219,7 @@ void InputHandler::repeat_last_insert()
     // this is very inefficient.
     push_mode(new InputModes::Insert(*this, m_last_insert.first));
     for (auto& key : keys)
-        current_mode().on_key(key);
+        current_mode().handle_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
@@ -1243,10 +1270,10 @@ void InputHandler::handle_key(Key key)
             m_context.keymaps_support().is_enabled())
         {
             for (auto& k : keymaps.get_mapping(key, keymap_mode))
-                current_mode().on_key(k);
+                current_mode().handle_key(k);
         }
         else
-            current_mode().on_key(key);
+            current_mode().handle_key(key);
 
         // do not record the key that made us enter or leave recording mode,
         // and the ones that are triggered recursively by previous keys.
@@ -1277,11 +1304,6 @@ void InputHandler::stop_recording()
 DisplayLine InputHandler::mode_line() const
 {
     return current_mode().mode_line();
-}
-
-void InputHandler::clear_mode_trash()
-{
-    m_mode_trash.clear();
 }
 
 }

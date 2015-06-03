@@ -81,19 +81,17 @@ public:
     const Context& context() const { return m_context; }
 
     DisplayLine mode_line() const;
-    void clear_mode_trash();
 
 private:
     Context m_context;
 
     friend class InputMode;
     Vector<std::unique_ptr<InputMode>> m_mode_stack;
-    Vector<std::unique_ptr<InputMode>> m_mode_trash;
 
     InputMode& current_mode() const { return *m_mode_stack.back(); }
 
     void push_mode(InputMode* new_mode);
-    void pop_mode(InputMode* current_mode);
+    std::unique_ptr<InputMode> pop_mode(InputMode* current_mode);
 
     using Insertion = std::pair<InsertMode, Vector<Key>>;
     Insertion m_last_insert = {InsertMode::Insert, {}};
