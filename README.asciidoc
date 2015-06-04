@@ -729,6 +729,7 @@ afterward.
 
 there are some builtins faces used by internal Kakoune functionalities:
 
+ * `Default`: default colors
  * `PrimarySelection`: main selection face for every selected character except
      the cursor
  * `SecondarySelection`: secondary selection face for every selected character

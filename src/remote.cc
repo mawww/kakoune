@@ -123,6 +123,7 @@ public:
 
     void write(const DisplayBuffer& display_buffer)
     {
+        write(display_buffer.default_face());
         write(display_buffer.lines());
     }
 
@@ -225,6 +226,7 @@ template<>
 DisplayBuffer read<DisplayBuffer>(int socket)
 {
     DisplayBuffer db;
+    db.set_default_face(read<Face>(socket));
     db.lines() = read_vector<DisplayLine>(socket);
     return db;
 }
