@@ -149,9 +149,13 @@ public:
     void optimize();
     void compute_range();
 
+    void set_default_face(const Face& face) { m_default_face = face; }
+    const Face& default_face() const { return m_default_face; }
+
 private:
     LineList m_lines;
     BufferRange m_range;
+    Face m_default_face;
 };
 
 }

@@ -206,12 +206,17 @@ static int get_color_pair(const Face& face)
     }
 }
 
-static void set_face(WINDOW* window, Face face)
+void set_face(WINDOW* window, Face face, const Face& default_face)
 {
     static int current_pair = -1;
 
     if (current_pair != -1)
         wattroff(window, COLOR_PAIR(current_pair));
+
+    if (face.fg == Color::Default)
+        face.fg = default_face.fg;
+    if (face.bg == Color::Default)
+        face.bg = default_face.bg;
 
     if (face.fg != Color::Default or face.bg != Color::Default)
     {
@@ -333,11 +338,12 @@ void NCursesUI::update_dimensions()
     --m_dimensions.line;
 }
 
-void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index) const
+void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
+                          const Face& default_face) const
 {
     for (const DisplayAtom& atom : line)
     {
-        set_face(m_window, atom.face);
+        set_face(m_window, atom.face, default_face);
 
         StringView content = atom.content();
         if (content.empty())
@@ -365,6 +371,9 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
                      const DisplayLine& status_line,
                      const DisplayLine& mode_line)
 {
+    const Face& default_face = display_buffer.default_face();
+    wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
+
     check_resize();
 
     LineCount line_index = m_status_on_top ? 1 : 0;
@@ -372,11 +381,11 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     {
         wmove(m_window, (int)line_index, 0);
         wclrtoeol(m_window);
-        draw_line(line, 0);
+        draw_line(line, 0, default_face);
         ++line_index;
     }
 
-    set_face(m_window, { Color::Blue, Color::Default });
+    set_face(m_window, { Color::Blue, Color::Default }, default_face);
     while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
     {
         wmove(m_window, (int)line_index++, 0);
@@ -387,14 +396,14 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
     wmove(m_window, status_line_pos, 0);
     wclrtoeol(m_window);
-    draw_line(status_line, 0);
+    draw_line(status_line, 0, default_face);
     const auto mode_len = mode_line.length();
     const auto remaining = m_dimensions.column - status_line.length();
     if (mode_len < remaining)
     {
         CharCount col = m_dimensions.column - mode_len;
         wmove(m_window, status_line_pos, (int)col);
-        draw_line(mode_line, col);
+        draw_line(mode_line, col, default_face);
     }
     else if (remaining > 2)
     {
@@ -405,7 +414,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
 
         CharCount col = m_dimensions.column - remaining + 1;
         wmove(m_window, status_line_pos, (int)col);
-        draw_line(trimmed_mode_line, col);
+        draw_line(trimmed_mode_line, col, default_face);
     }
 
     const char* tsl = tigetstr((char*)"tsl");
