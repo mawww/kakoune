@@ -91,6 +91,7 @@ CandidateList FaceRegistry::complete_alias_name(StringView prefix,
 
 FaceRegistry::FaceRegistry()
     : m_aliases{
+        { "Default", Face{ Color::Default, Color::Default } },
         { "PrimarySelection", Face{ Color::White, Color::Blue } },
         { "SecondarySelection", Face{ Color::Black, Color::Blue } },
         { "PrimaryCursor", Face{ Color::Black, Color::White } },

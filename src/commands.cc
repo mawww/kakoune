@@ -1477,7 +1477,13 @@ static Completions complete_face(const Context&, CompletionFlags flags,
 const CommandDesc face_cmd = {
     "face",
     nullptr,
-    "face <name> <facespec>: set face <name> to refer to <facespec>\n",
+    "face <name> <facespec>: set face <name> to refer to <facespec>\n"
+    "\n"
+    "facespec format is <fg color>[,<bg color>][+<attributes>]\n"
+    "colors are either a color name, or rgb:###### values.\n"
+    "attributes is a combination of:\n"
+    "    u: underline, r: reverse, b: bold, B: blink, d: dim\n"
+    "facespec can as well just be the name of another face" ,
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},

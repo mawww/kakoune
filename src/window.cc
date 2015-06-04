@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "context.hh"
+#include "face_registry.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
 #include "client.hh"
@@ -65,6 +66,7 @@ void Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     scroll_to_keep_selection_visible_ifn(context);
 
+    m_display_buffer.set_default_face(get_face("Default"));
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
@@ -281,6 +283,11 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
 
     CharCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
     return { find_buffer_coord(lines[1], buffer(), column), column };
+}
+
+void Window::clear_display_buffer()
+{
+    m_display_buffer = DisplayBuffer{};
 }
 
 void Window::on_option_changed(const Option& option)

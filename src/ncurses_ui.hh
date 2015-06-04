@@ -51,7 +51,8 @@ public:
 private:
     void check_resize();
     void redraw();
-    void draw_line(const DisplayLine& line, CharCount col_index) const;
+    void draw_line(const DisplayLine& line, CharCount col_index,
+                   const Face& default_face) const;
 
     NCursesWin* m_window = nullptr;
 

@@ -108,7 +108,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         watcher->close_fd();
         buffer->run_hook_in_own_context("BufCloseFifo", "");
         buffer->flags() &= ~Buffer::Flags::Fifo;
-        watcher->~FDWatcher();
+        delete watcher;
     };
 
     // capture a non static one to silence a warning.

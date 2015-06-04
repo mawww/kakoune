@@ -44,7 +44,7 @@ public:
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
     ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
 
-    void clear_display_buffer() { m_display_buffer = DisplayBuffer{}; }
+    void clear_display_buffer();
 private:
     Window(const Window&) = delete;
 
