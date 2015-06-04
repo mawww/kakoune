@@ -1199,8 +1199,8 @@ void InputHandler::reset_normal_mode()
         current_mode().on_disabled();
         m_mode_stack.resize(1);
     }
-    current_mode().on_enabled();
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
+    current_mode().on_enabled();
 }
 
 void InputHandler::insert(InsertMode mode)
