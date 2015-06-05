@@ -321,6 +321,11 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 
     for (auto& sel : ranges)
     {
+        if (buffer.is_end(sel.anchor()))
+            sel.anchor() = buffer.back_coord();
+        if (buffer.is_end(sel.cursor()))
+            sel.cursor() = buffer.back_coord();
+
         if (sel.anchor() != sel.cursor())
             sel.cursor() = buffer.char_prev(sel.cursor());
     }
