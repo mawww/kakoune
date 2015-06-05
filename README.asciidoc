@@ -76,7 +76,7 @@ Features
 Screenshots
 ~~~~~~~~~~~
 
-[[screenshow-i3]]
+[[screenshot-i3]]
 .Kakoune in i3
 image::doc/screenshot-i3.gif[Kakoune in i3]
 
@@ -99,13 +99,13 @@ Kakoune dependencies are:
 To build, just type *make* in the src directory
 
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
-on being in an Unix like environment, no native Windows version is planned.
+on being in a Unix-like environment, no native Windows version is planned.
 
 Installing
 ~~~~~~~~~~
 
 In order to install kak on your system, rather than running it directly from
-it's source directory, type *make install*, you can specify the `PREFIX` and
+its source directory, type *make install*, you can specify the `PREFIX` and
 `DESTDIR` if needed.
 
 [TIP]
@@ -170,12 +170,12 @@ Just running *kak* launch a new kak session with a client on local terminal.
        and stdin if piped in, and apply given keys on each.
 
 At startup, if `-n` is not specified, Kakoune will try to source the file
-../share/kak/kakrc relative to the kak binary. This kak file will then try
-to source any files in $XDG_CONFIG_HOME/kak/autoload (with $XDG_CONFIG_HOME
-defaulting to $HOME/.config), and finally $XDG_CONFIG_HOME/kak/kakrc.
+`../share/kak/kakrc` relative to the kak binary. This kak file will then try
+to source any files in `$XDG_CONFIG_HOME/kak/autoload` (with `$XDG_CONFIG_HOME`
+defaulting to `$HOME/.config`), and finally `$XDG_CONFIG_HOME/kak/kakrc`.
 
-The common pattern is to add links to $XDG_CONFIG_HOME/kak/autoload to the
-scripts in $PREFIX/share/kak/rc that the user wants sourced at kak launch.
+The common pattern is to add links to `$XDG_CONFIG_HOME/kak/autoload` to the
+scripts in `$PREFIX/share/kak/rc` that the user wants sourced at kak launch.
 
 Basic Interaction
 -----------------
@@ -209,10 +209,10 @@ key.
 Movement
 ~~~~~~~~
 
- * `h`: select the character on the right of selection end
+ * `h`: select the character on the left of selection end
  * `j`: select the character below the selection end
  * `k`: select the character above the selection end
- * `l`: select the character on the left of selection end
+ * `l`: select the character on the right of selection end
 
  * `w`: select the word and following whitespaces  on the right of selection end
  * `b`: select preceding whitespaces and the word on the left of selection end
@@ -227,8 +227,8 @@ Movement
 
  * `%`: select whole buffer
 
- * `alt-H`: select to line begin
- * `alt-L`: select to line end
+ * `alt-h`: select to line begin
+ * `alt-l`: select to line end
 
  * `/`: search (select next match)
  * `?`: search (extend to next match)
@@ -384,9 +384,9 @@ One way to get a multiselection is via the `s` key.
 For example, to change all occurences of word 'roger' to word 'marcel'
 in a paragraph, here is what can be done:
 
-select the paragraph with enough `x`. press `s` and enter roger then enter.
-now paragraph selection was replaced with multiselection of each roger in
-the paragraph. press `c` and marcel<esc> to replace rogers with marcels.
+select the paragraph with enough `x`. press `s` and enter roger, then enter.
+Now paragraph selection was replaced with multiselection of each roger in
+the paragraph. Press `c` and marcel<esc> to replace rogers with marcels.
 
 A multiselection can also be obtained with `S`, which splits the current
 selection according to the regex entered. To split a comma separated list,
@@ -452,7 +452,7 @@ Commands
 When pressing `:` in normal mode, Kakoune will open a prompt to enter a command.
 
 Commands are used for non editing tasks, such as opening a buffer, writing the
-current one, quitting, etc...
+current one, quitting, etc.
 
 Basic Commands
 ~~~~~~~~~~~~~~
@@ -498,7 +498,7 @@ Kakoune support three string syntax:
 
  * `%{strings}`: these strings are very useful when entering commands
 
-   - the `{` and `}` delimiter are configurable: you can use any non
+   - the `{` and `}` delimiters are configurable: you can use any non
      alphanumeric character. like `%[string]`, `%<string>`, `%(string)`,
      `%\~string~` or `%!string!`...
    - if the character following the % is one of {[(<, then the closing one is
@@ -535,11 +535,11 @@ for example you can display last search pattern with
 Shell expansion
 ^^^^^^^^^^^^^^^
 
-The `%sh{...}` expansion replaces it's content with the output of the shell
-commands in it, it is similar to the shell $(...) syntax and is evaluated
+The `%sh{...}` expansion replaces its content with the output of the shell
+commands in it. It is similar to the shell $(...) syntax and is evaluated
 only when needed.
 
-for example: %sh{ ls } is replaced with the output of the ls command.
+for example: `%sh{ ls }` is replaced with the output of the ls command.
 
 Some of Kakoune state is available through environment variables:
 
@@ -565,7 +565,7 @@ to find the environment variable reference in the shell script executed.
 Hence `%sh{ ./script.sh }` with `script.sh` referencing an environment
 variable will not work.
 
-for example you can print informations on the current file in the status
+For example you can print informations on the current file in the status
 line using:
 
 -------------------------------
@@ -682,7 +682,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * `autoreload` _yesnoask_: auto reload the buffers when an external
    modification is detected.
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
-   the user interface implementation. The NCurses UI support the following option:
+   the user interface implementation. The NCurses UI support the following options:
    - `ncurses_status_on_top`: if `yes`, or `true` the status line will be placed
      at the top of the terminal rather than at the bottom.
    - `ncurses_assistant`: specify the nice assistant you get in info boxes, can
@@ -693,10 +693,10 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
 Faces
 -----
 
-A Face refer the how specified text is displayed, a Face has a foreground
+A Face refers how the specified text is displayed. A face has a foreground
 color, a background color, and some attributes.
 
-Faces can be defined and modified with the face command.
+Faces can be defined and modified with the face command:
 
 -----------------------
 :face <name> <facespec>
@@ -725,9 +725,9 @@ attributes is a string of letters each defining an attributes:
  * `b`: Bold
 
 Using named faces instead of facespec permits to change the effective faces
-afterward.
+afterwards.
 
-there are some builtins faces used by internal Kakoune functionalities:
+There are some builtins faces used by internal Kakoune functionalities:
 
  * `Default`: default colors
  * `PrimarySelection`: main selection face for every selected character except
@@ -753,11 +753,11 @@ Advanced topics
 Registers
 ~~~~~~~~~
 
-Registers are named list of text. They are used for various purpose, like
-storing the last yanked test, or the captures groups associated with the
+Registers are named lists of text. They are used for various purposes, like
+storing the last yanked test, or the captured groups associated with the
 selections.
 
-Yanking and pasting uses the register `"`, however most commands using register
+Yanking and pasting uses the register `"`, however most commands using a register
 can have their default register overriden by using the `"` key followed by the
 register. For example `"sy` will yank (`y` command) in the `s` register. `"sp`
 will paste from the `s` register.
@@ -770,28 +770,28 @@ For example, `ctrl-r` followed by " will insert the currently yanked text.
 selection.
 
 Registers are lists, instead of simply text in order to interact well with
-multiselection. Each selection have it's own captures, or yank buffer.
+multiselection. Each selection has its own captures or yank buffer.
 
 Macros
 ~~~~~~
 
-Kakoune can record and replay a sequence of key press.
+Kakoune can record and replay a sequence of key presses.
 
 When pressing the `Q` key, followed by an alphabetic key for the macro name,
-Kakoune begins macro recording: every pressed keys will be added to the
+Kakoune begins macro recording: every pressed key will be added to the
 macro until the `Q` key is pressed again.
 
 To replay a macro, use the `q` key, followed by the macro name.
 
-macros are actually stored as a key sequence into a register, a macro name
+Macros are actually stored as a key sequence into a register, i.e. a macro name
 is a register name.
 
 Search selection
 ~~~~~~~~~~~~~~~~
 
 Using the `*` key, you can set the search pattern to the current selection.
-This tries to be intelligent. It will for example detect if current selection
-begins and/or end at word boundaries, and set the search pattern accordingly.
+This tries to be intelligent. It will for example detect if the current selection
+begins and/or ends at word boundaries and set the search pattern accordingly.
 
 with `alt-*` you can set the search pattern to the current seletion without
 Kakoune trying to be smart.
@@ -800,7 +800,7 @@ Exec and Eval
 ~~~~~~~~~~~~~
 
 the `:exec` and `:eval` commands can be used for running Kakoune commands.
-`:exec` run keys as if they were pressed, whereas `:eval` executes it's given
+`:exec` runs keys as if they were pressed, whereas `:eval` executes its given
 paremeters as if they were entered in the command prompt. By default,
 they do their execution in the context of the current client.
 
@@ -824,7 +824,7 @@ Some parameters provide a way to change the context of execution:
 The execution stops when the last key/command is reached, or an error
 is raised.
 
-key parameters gets concatenated, so the following commands are equivalent.
+Key parameters get concatenated, so the following commands are equivalent:
 
 ----------------------
 :exec otest<space>1
@@ -835,7 +835,7 @@ Insert mode completion
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Kakoune can propose completions while inserting text, the `completers` option
-control automatic completion, which kicks in when a certain idle timeout is
+controls automatic completion, which kicks in when a certain idle timeout is
 reached (100 milliseconds). Insert mode completion can be explicitely triggered
 using *control-x*, followed, by:
 
@@ -843,6 +843,8 @@ using *control-x*, followed, by:
  * *w* : buffer word completion
  * *l* : buffer line completion
  * *o* : option based completion
+
+Completion candidates can be selected using `ctrl-n` and `ctrl-p`.
 
 Highlighters
 ~~~~~~~~~~~~
@@ -871,10 +873,10 @@ general highlighters are:
        For example: `:addhl regex //(\h`TODO:)?[^\n]` 0:cyan 1:yellow,red`
        will highlight C++ style comments in cyan, with an eventual 'TODO:' in
        yellow on red background.
- * `search`: highlight every matches to the current search pattern with the
+ * `search`: highlight every match to the current search pattern with the
        `Search` face
  * `flag_lines <flag> <option_name>`: add a column in front of text, and display the
-       given flag in it for everly lines contained in the int-list option named
+       given flag in it for everly line contained in the int-list option named
        <option_name>.
  * `show_matching`: highlight matching char of the character under the selections
        cursor using `MatchingChar` face.
@@ -911,7 +913,7 @@ addhl -group <name>/<subname> <type> <params>...
 Regions highlighters
 ^^^^^^^^^^^^^^^^^^^^
 
-A special highlighter provide a way to segment the buffer into regions, which are
+A special highlighter provides a way to segment the buffer into regions, which are
 to be highlighted differently.
 
 A region is defined by 4 parametes:
@@ -956,7 +958,7 @@ That matches the rule governing most programming language parsing.
 `regions` also supports a `-default <default_region>` switch to define the
 default region, when no other region matches the current buffer range.
 
-most programming languages can then be properly highlighted using a `regions`
+Most programming languages can then be properly highlighted using a `regions`
 highlighter as root:
 
 -----------------------------------------------------------------
@@ -1003,35 +1005,35 @@ the `ref` can reference any named highlighter in the shared namespace.
 Hooks
 ~~~~~
 
-commands can be registred to be executed when certain events arise.
-to register a hook, use the hook command.
+Commands can be registred to be executed when certain events arise.
+To register a hook use the hook command.
 
 -----------------------------------------------------------------------
 :hook [-group <group>] <scope> <hook_name> <filtering_regex> <commands>
 -----------------------------------------------------------------------
 
-<scope> can be either global, buffer or window (or any of their prefixes),
-the scope are hierarchical, meaning that a Window calling a hook will
-execute it's own, the buffer ones and the global ones.
+`<scope>` can be either global, buffer or window (or any of their prefixes).
+Scopes are hierarchical, meaning that a Window calling a hook will
+execute its own, the buffer ones and the global ones.
 
-<command> is a string containing the commands to execute when the hook is
+`<command>` is a string containing the commands to execute when the hook is
 called.
 
-for example, to automatically use line numbering with .cc files,
+For example to automatically use line numbering with .cc files,
 use the following command:
 
 -----------------------------------------------------
 :hook global WinCreate .*\.cc %{ addhl number_lines }
 -----------------------------------------------------
 
-if <group> is given, make this hook part of the named group. groups
+if `<group>` is given, make this hook part of the named group. groups
 are used for removing hooks with the `rmhooks` command
 
 -----------------------
 rmhooks <scope> <group>
 -----------------------
 
-will remove every hooks in <scope> that are part of the given group.
+will remove every hooks in `<scope>` that are part of the given group.
 
 existing hooks are:
 
@@ -1074,19 +1076,19 @@ existing hooks are:
        configuration files
  * `KakEnd`: Kakoune is quitting.
 
-when not specified, the filtering text is an empty string.
+When not specified, the filtering text is an empty string.
 
 Key Mapping
 ~~~~~~~~~~~
 
-You can redefine keys meaning using the map command
+You can redefine a key's meaning using the map command
 
 ------------------------------------------------------
 :map <scope> <mode> <key> <keys>
 ------------------------------------------------------
 
-with `scope` being one of `global, buffer or window` (or any prefix),
-mode being `insert, normal, prompt, menu or user` (or any prefix), `key` being
+with `scope` being one of `global`, `buffer` or `window` (or any prefix),
+mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix), `key` being
 a single key name and `keys` a list of keys.
 
 `user` mode allows for user mapping behind the `,` key. Keys will be executed in
@@ -1095,15 +1097,15 @@ normal mode.
 Defining Commands
 ~~~~~~~~~~~~~~~~~
 
-new commands can be defined using the `:def` command.
+New commands can be defined using the `:def` command.
 
 ------------------------------
 :def <command_name> <commands>
 ------------------------------
 
-<commands> is a string containing the commands to execute
+`<commands>` is a string containing the commands to execute.
 
-def can also takes some flags:
+`def` can also takes some flags:
 
  * `-env-params`: pass parameters given to commands in the environment as
                   kak_paramN with N the parameter number
@@ -1153,7 +1155,7 @@ not that useful in this context.
 Aliases
 ~~~~~~~
 
-With `:alias` commands can be given additional names. aliases are scoped, so
+With `:alias` commands can be given additional names. Aliases are scoped, so
 that an alias can refer to one command for a buffer, and to another for another
 buffer.
 
@@ -1168,19 +1170,19 @@ an alias for `<command>`
 :unalias <scope> <alias> [<expected>]
 -------------------------------------
 
-Will remove the given alias in the given scope. If `<expected>` is specified
+will remove the given alias in the given scope. If `<expected>` is specified
 the alias will only be removed if its current value is `<expected>`.
 
 FIFO Buffer
 ~~~~~~~~~~~
 
-the `:edit` command can take a -fifo parameter:
+the `:edit` command can take a `-fifo` parameter:
 
 ---------------------------------------------
 :edit -fifo <filename> [-scroll] <buffername>
 ---------------------------------------------
 
-in this case, a buffer named `<buffername>` is created which reads its content
+In this case, a buffer named `<buffername>` is created which reads its content
 from fifo `<filename>`. When the fifo is written to, the buffer is automatically
 updated.
 
@@ -1188,10 +1190,10 @@ if the `-scroll` switch is specified, the initial cursor position will be made
 such as the window displaying the buffer will scroll as new data is read.
 
 This is very useful for running some commands asynchronously while displaying
-their result in a buffer. See rc/make.kak and rc/grep.kak for examples.
+their result in a buffer. See `rc/make.kak` and `rc/grep.kak` for examples.
 
 When the buffer is deleted, the fifo will be closed, so any program writing
-to it will receive SIGPIPE. This is usefull as it permits to stop the writing
+to it will receive `SIGPIPE`. This is usefull as it permits to stop the writing
 program when the buffer is deleted.
 
 Menus
