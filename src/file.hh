@@ -37,8 +37,8 @@ std::pair<StringView, StringView> split_path(StringView path);
 
 String get_kak_binary_path();
 
-String read_fd(int fd);
-String read_file(StringView filename);
+String read_fd(int fd, bool text = false);
+String read_file(StringView filename, bool text = false);
 
 Buffer* create_buffer_from_file(StringView filename);
 

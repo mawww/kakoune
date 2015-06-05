@@ -947,7 +947,7 @@ const CommandDesc source_cmd = {
     filename_completer,
     [](const ParametersParser& parser, Context& context)
     {
-        String file_content = read_file(parse_filename(parser[0]));
+        String file_content = read_file(parse_filename(parser[0]), true);
         try
         {
             CommandManager::instance().execute(file_content, context);

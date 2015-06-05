@@ -110,22 +110,37 @@ String compact_path(StringView filename)
     return filename.str();
 }
 
-String read_fd(int fd)
+String read_fd(int fd, bool text)
 {
     String content;
-    char buf[256];
+    constexpr size_t bufsize = 256;
+    char buf[bufsize];
     while (true)
     {
-        ssize_t size = read(fd, buf, 256);
+        ssize_t size = read(fd, buf, bufsize);
         if (size == -1 or size == 0)
             break;
 
-        content += StringView(buf, buf + size);
+        if  (text)
+        {
+            ssize_t beg = 0;
+            for (ssize_t pos = 0; pos < size; ++pos)
+            {
+                if (buf[pos] == '\r')
+                {
+                   content += StringView{buf + beg, buf + pos};
+                   beg = pos + 1;
+                }
+            }
+            content += StringView{buf + beg, buf + size};
+        }
+        else
+            content += StringView{buf, buf + size};
     }
     return content;
 }
 
-String read_file(StringView filename)
+String read_file(StringView filename, bool text)
 {
     int fd = open(parse_filename(filename).c_str(), O_RDONLY);
     if (fd == -1)
@@ -137,7 +152,7 @@ String read_file(StringView filename)
     }
     auto close_fd = on_scope_end([fd]{ close(fd); });
 
-    return read_fd(fd);
+    return read_fd(fd, text);
 }
 
 Buffer* create_buffer_from_file(StringView filename)
