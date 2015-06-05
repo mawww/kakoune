@@ -72,7 +72,6 @@ void Client::handle_available_input(EventMode mode)
                 else
                 {
                     m_input_handler.handle_key(*key);
-                    m_input_handler.clear_mode_trash();
                     context().window().forget_timestamp();
                 }
             }

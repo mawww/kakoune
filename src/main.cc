@@ -437,7 +437,6 @@ int run_server(StringView session, StringView init_command,
         client_manager.redraw_clients();
         event_manager.handle_next_events(EventMode::Normal);
         client_manager.handle_pending_inputs();
-        client_manager.clear_mode_trashes();
         buffer_manager.clear_buffer_trash();
         string_registry.purge_unused();
     }
