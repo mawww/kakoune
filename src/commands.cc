@@ -9,7 +9,6 @@
 #include "completion.hh"
 #include "containers.hh"
 #include "context.hh"
-#include "debug.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
@@ -870,7 +869,7 @@ const CommandDesc echo_cmd = {
     {
         String message = join(parser, ' ', false);
         if (parser.get_switch("debug"))
-            write_debug(message);
+            write_to_debug_buffer(message);
         else
         {
             auto face = get_face(parser.get_switch("color").value_or("StatusLine").str());
@@ -898,34 +897,34 @@ const CommandDesc debug_cmd = {
     {
         if (parser[0] == "info")
         {
-            write_debug(format("pid: {}", getpid()));
-            write_debug(format("session: {}", Server::instance().session()));
+            write_to_debug_buffer(format("pid: {}", getpid()));
+            write_to_debug_buffer(format("session: {}", Server::instance().session()));
         }
         else if (parser[0] == "buffers")
         {
-            write_debug("Buffers:");
+            write_to_debug_buffer("Buffers:");
             for (auto& buffer : BufferManager::instance())
-                write_debug(buffer->debug_description());
+                write_to_debug_buffer(buffer->debug_description());
         }
         else if (parser[0] == "options")
         {
-            write_debug("Options:");
+            write_to_debug_buffer("Options:");
             for (auto& option : context.options().flatten_options())
-                write_debug(format(" * {}: {}", option->name(), option->get_as_string()));
+                write_to_debug_buffer(format(" * {}: {}", option->name(), option->get_as_string()));
         }
         else if (parser[0] == "memory")
         {
             auto total = 0;
-            write_debug("Memory usage:");
+            write_to_debug_buffer("Memory usage:");
             for (int domain = 0; domain < (int)MemoryDomain::Count; ++domain)
             {
                 size_t count = domain_allocated_bytes[domain];
                 total += count;
-                write_debug(format("  {}: {}", domain_name((MemoryDomain)domain), count));
+                write_to_debug_buffer(format("  {}: {}", domain_name((MemoryDomain)domain), count));
             }
-            write_debug(format("  Total: {}", total));
+            write_to_debug_buffer(format("  Total: {}", total));
             #if defined(__GLIBC__) || defined(__CYGWIN__)
-            write_debug(format("  Malloced: {}", mallinfo().uordblks));
+            write_to_debug_buffer(format("  Malloced: {}", mallinfo().uordblks));
             #endif
         }
         else if (parser[0] == "shared-strings")
@@ -954,7 +953,7 @@ const CommandDesc source_cmd = {
         }
         catch (Kakoune::runtime_error& err)
         {
-            write_debug(format("{}:{}", parser[0], err.what()));
+            write_to_debug_buffer(format("{}:{}", parser[0], err.what()));
             throw;
         }
     }

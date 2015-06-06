@@ -1,9 +1,9 @@
 #include "remote.hh"
 
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "client_manager.hh"
 #include "command_manager.hh"
-#include "debug.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 
@@ -289,12 +289,12 @@ RemoteUI::RemoteUI(int socket)
                                m_input_callback(mode);
                        })
 {
-    write_debug(format("remote client connected: {}", m_socket_watcher.fd()));
+    write_to_debug_buffer(format("remote client connected: {}", m_socket_watcher.fd()));
 }
 
 RemoteUI::~RemoteUI()
 {
-    write_debug(format("remote client disconnected: {}", m_socket_watcher.fd()));
+    write_to_debug_buffer(format("remote client disconnected: {}", m_socket_watcher.fd()));
     m_socket_watcher.close_fd();
 }
 
@@ -402,7 +402,7 @@ Key RemoteUI::get_key()
     }
     catch (socket_error&)
     {
-        write_debug("ungraceful deconnection detected");
+        write_to_debug_buffer("ungraceful deconnection detected");
         throw client_removed{};
     }
 }
@@ -585,7 +585,7 @@ private:
                 }
                 catch (runtime_error& e)
                 {
-                    write_debug(format("error running command '{}': {}",
+                    write_to_debug_buffer(format("error running command '{}': {}",
                                        m_buffer, e.what()));
                 }
                 catch (client_removed&) {}

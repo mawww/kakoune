@@ -36,6 +36,8 @@ Buffer* create_buffer_from_data(StringView data, StringView name,
                                 Buffer::Flags flags,
                                 time_t fs_timestamp = InvalidTime);
 
+void write_to_debug_buffer(StringView str);
+
 }
 
 #endif // buffer_utils_hh_INCLUDED

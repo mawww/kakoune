@@ -7,7 +7,6 @@
 #include "commands.hh"
 #include "containers.hh"
 #include "context.hh"
-#include "debug.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
@@ -383,7 +382,7 @@ int run_server(StringView session, StringView init_command,
     register_commands();
     register_highlighters();
 
-    write_debug("*** This is the debug buffer, where debug info will be written ***");
+    write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
     Server server(session.empty() ? to_string(getpid()) : session.str());
 
@@ -395,11 +394,11 @@ int run_server(StringView session, StringView init_command,
     }
     catch (Kakoune::runtime_error& error)
     {
-        write_debug(format("error while parsing kakrc:\n    {}", error.what()));
+        write_to_debug_buffer(format("error while parsing kakrc:\n    {}", error.what()));
     }
     catch (Kakoune::client_removed&)
     {
-        write_debug("error while parsing kakrc: asked to quit");
+        write_to_debug_buffer("error while parsing kakrc: asked to quit");
     }
 
     {
@@ -419,7 +418,7 @@ int run_server(StringView session, StringView init_command,
     }
     catch (Kakoune::runtime_error& error)
     {
-         write_debug(format("error while opening command line files: {}", error.what()));
+         write_to_debug_buffer(format("error while opening command line files: {}", error.what()));
     }
     else
         new Buffer("*scratch*", Buffer::Flags::None);

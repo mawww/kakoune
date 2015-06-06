@@ -1,8 +1,8 @@
 #include "assert.hh"
 
-#include "exception.hh"
-#include "debug.hh"
 #include "backtrace.hh"
+#include "buffer_utils.hh"
+#include "exception.hh"
 
 #if defined(__CYGWIN__)
 #include <windows.h>
@@ -48,7 +48,7 @@ bool notify_fatal_error(const String& msg)
 void on_assert_failed(const char* message)
 {
     String debug_info = format("pid: {}\ncallstack:\n{}", getpid(), Backtrace{}.desc());
-    write_debug(format("assert failed: '{}'\n{}", message, debug_info));
+    write_to_debug_buffer(format("assert failed: '{}'\n{}", message, debug_info));
 
     const auto msg = format("{}\n[Debug Infos]\n{}", message, debug_info);
     if (not notify_fatal_error(msg))

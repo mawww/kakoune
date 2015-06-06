@@ -2,7 +2,7 @@
 
 #include "containers.hh"
 #include "context.hh"
-#include "debug.hh"
+#include "buffer_utils.hh"
 #include "regex.hh"
 
 namespace Kakoune
@@ -60,7 +60,7 @@ void HookManager::run_hook(StringView hook_name,
         }
         catch (runtime_error& err)
         {
-            write_debug(format("error running hook {}/{}: {}",
+            write_to_debug_buffer(format("error running hook {}/{}: {}",
                                hook_name, hook.first, err.what()));
         }
     }

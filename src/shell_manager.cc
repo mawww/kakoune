@@ -1,7 +1,7 @@
 #include "shell_manager.hh"
 
 #include "context.hh"
-#include "debug.hh"
+#include "buffer_utils.hh"
 #include "event_manager.hh"
 #include "file.hh"
 
@@ -63,7 +63,7 @@ std::pair<String, int> ShellManager::eval(
         }
 
         if (not child_stderr.empty())
-            write_debug("shell stderr: <<<\n" + child_stderr + ">>>");
+            write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", child_stderr));
 
         int status = 0;
         waitpid(pid, &status, 0);

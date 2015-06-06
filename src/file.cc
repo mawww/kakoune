@@ -4,7 +4,6 @@
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
-#include "debug.hh"
 #include "unicode.hh"
 #include "regex.hh"
 #include "string.hh"

@@ -3,7 +3,6 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "context.hh"
-#include "debug.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "file.hh"
@@ -430,7 +429,7 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
     }
     catch (runtime_error& e)
     {
-        write_debug(format("error while trying to run completer: {}", e.what()));
+        write_to_debug_buffer(format("error while trying to run completer: {}", e.what()));
         return false;
     }
     if (not m_completions.is_valid())
