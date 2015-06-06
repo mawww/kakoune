@@ -10,7 +10,7 @@ hook global BufSetOption mimetype=text/x-clojure %{
     set buffer filetype clojure
 }
 
-hook global BufCreate .*[.](clj) %{
+hook global BufCreate .*[.](cljs?) %{
     set buffer filetype clojure
 }
 
