@@ -207,18 +207,18 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
 
 Selection select_to_eol(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
-    Utf8Iterator end = begin;
-    skip_while(end, buffer.end(), [](Codepoint cur) { return not is_eol(cur); });
-    return target_eol(utf8_range(begin, end != begin ? end-1 : end));
+    ByteCoord begin = selection.cursor();
+    LineCount line = begin.line;
+    ByteCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
+                                   buffer.iterator_at(line)).coord();
+    return target_eol({begin, end});
 }
 
 Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
-    Utf8Iterator end = begin - 1;
-    skip_while_reverse(end, buffer.begin(), [](Codepoint cur) { return not is_eol(cur); });
-    return utf8_range(begin, end == buffer.begin() ? end : end+1);
+    ByteCoord begin = selection.cursor();
+    ByteCoord end = begin.line;
+    return {begin, end};
 }
 
 Selection select_number(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
