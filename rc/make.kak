@@ -33,13 +33,13 @@ decl str jumpclient
 
 def errjump -docstring 'Jump to error location' %{
     try %{
-        exec gll<a-?> "Entering directory" <ret>
+        exec gl<a-?> "Entering directory" <ret>
         exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
         set buffer _make_current_error_line %val{cursor_line}
         eval -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information %{%reg{5}}"
         try %{ focus %opt{jumpclient} }
     } catch %{
-        exec ghgl s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+        exec <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
         set buffer _make_current_error_line %val{cursor_line}
         eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2} %reg{3}; echo -color Information %{%reg{4}}"
         try %{ focus %opt{jumpclient} }
@@ -49,7 +49,7 @@ def errjump -docstring 'Jump to error location' %{
 def errnext -docstring 'Jump to next error' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*make*'
-        exec "%opt{_make_current_error_line}ggl/[0-9]+: (?:fatal )?error:<ret>"
+        exec "%opt{_make_current_error_line}g<a-l>/[0-9]+: (?:fatal )?error:<ret>"
         errjump
     }
 }
@@ -57,7 +57,7 @@ def errnext -docstring 'Jump to next error' %{
 def errprev -docstring 'Jump to previous error' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*make*'
-        exec "%opt{_make_current_error_line}ggh<a-/>[0-9]+: (?:fatal )?error:<ret>"
+        exec "%opt{_make_current_error_line}g<a-h><a-/>[0-9]+: (?:fatal )?error:<ret>"
         errjump
     }
 }

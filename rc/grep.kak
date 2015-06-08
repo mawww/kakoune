@@ -44,7 +44,7 @@ def jump %{
 def next -docstring 'Jump to next grep match' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*grep*'
-        exec "%opt{_grep_current_line}ggl/^[^:]+:\d+:<ret>"
+        exec "%opt{_grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
         jump
     }
 }
