@@ -8,12 +8,6 @@
 namespace Kakoune
 {
 
-static Selection target_eol(Selection sel)
-{
-    sel.cursor().target = INT_MAX;
-    return sel;
-}
-
 Selection select_line(const Buffer& buffer, const Selection& selection)
 {
     Utf8Iterator first = buffer.iterator_at(selection.cursor());
@@ -203,22 +197,6 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
     while (--count > 0);
 
     return utf8_range(begin, inclusive ? end : end+1);
-}
-
-Selection select_to_eol(const Buffer& buffer, const Selection& selection)
-{
-    ByteCoord begin = selection.cursor();
-    LineCount line = begin.line;
-    ByteCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
-                                   buffer.iterator_at(line)).coord();
-    return target_eol({begin, end});
-}
-
-Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection)
-{
-    ByteCoord begin = selection.cursor();
-    ByteCoord end = begin.line;
-    return {begin, end};
 }
 
 Selection select_number(const Buffer& buffer, const Selection& selection, ObjectFlags flags)

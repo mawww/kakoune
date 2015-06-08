@@ -18,6 +18,12 @@ inline Selection keep_direction(Selection res, const Selection& ref)
     return res;
 }
 
+inline Selection target_eol(Selection sel)
+{
+    sel.cursor().target = INT_MAX;
+    return sel;
+}
+
 template<typename Iterator, typename EndIterator, typename T>
 void skip_while(Iterator& it, const EndIterator& end, T condition)
 {
@@ -122,8 +128,23 @@ Selection select_to(const Buffer& buffer, const Selection& selection,
 Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
                             Codepoint c, int count, bool inclusive);
 
-Selection select_to_eol(const Buffer& buffer, const Selection& selection);
-Selection select_to_eol_reverse(const Buffer& buffer, const Selection& selection);
+template<bool only_move>
+Selection select_to_line_end(const Buffer& buffer, const Selection& selection)
+{
+    ByteCoord begin = selection.cursor();
+    LineCount line = begin.line;
+    ByteCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
+                                   buffer.iterator_at(line)).coord();
+    return target_eol({only_move ? end : begin, end});
+}
+
+template<bool only_move>
+Selection select_to_line_begin(const Buffer& buffer, const Selection& selection)
+{
+    ByteCoord begin = selection.cursor();
+    ByteCoord end = begin.line;
+    return {only_move ? end : begin, end};
+}
 
 enum class ObjectFlags
 {

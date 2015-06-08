@@ -144,10 +144,10 @@ void goto_commands(Context& context, NormalParams params)
                 select_coord<mode>(buffer, ByteCoord{0,0}, context.selections());
                 break;
             case 'l':
-                select<mode, select_to_eol>(context, {});
+                select<mode, select_to_line_end<true>>(context, {});
                 break;
             case 'h':
-                select<mode, select_to_eol_reverse>(context, {});
+                select<mode, select_to_line_begin<true>>(context, {});
                 break;
             case 'j':
             {
@@ -1492,12 +1492,12 @@ static NormalCmdDesc cmds[] =
     { alt('E'), "extend to next WORD end", repeated<select<SelectMode::Extend, select_to_next_word_end<WORD>>> },
     { alt('B'), "extend to prevous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>> },
 
-    { alt('l'), "select to line end", repeated<select<SelectMode::Replace, select_to_eol>> },
-    { Key::End, "select to line end", repeated<select<SelectMode::Replace, select_to_eol>> },
-    { alt('L'), "extend to line end", repeated<select<SelectMode::Extend, select_to_eol>> },
-    { alt('h'), "select to line begin", repeated<select<SelectMode::Replace, select_to_eol_reverse>> },
-    { Key::Home, "select to line begin", repeated<select<SelectMode::Replace, select_to_eol_reverse>> },
-    { alt('H'), "extend to line begin", repeated<select<SelectMode::Extend, select_to_eol_reverse>> },
+    { alt('l'), "select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>> },
+    { Key::End, "select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>> },
+    { alt('L'), "extend to line end", repeated<select<SelectMode::Extend, select_to_line_end<false>>> },
+    { alt('h'), "select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>> },
+    { Key::Home, "select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>> },
+    { alt('H'), "extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>> },
 
     { 'x', "select line", repeated<select<SelectMode::Replace, select_line>> },
     { 'X', "extend line", repeated<select<SelectMode::Extend, select_line>> },
