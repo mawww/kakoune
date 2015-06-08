@@ -25,8 +25,11 @@ void FDWatcher::run(EventMode mode)
 
 void FDWatcher::close_fd()
 {
-    close(m_fd);
-    m_fd = -1;
+    if (m_fd != -1)
+    {
+        close(m_fd);
+        m_fd = -1;
+    }
 }
 
 Timer::Timer(TimePoint date, Callback callback, EventMode mode)

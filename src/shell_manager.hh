@@ -24,12 +24,12 @@ public:
     enum class Flags
     {
         None = 0,
-        ReadOutput = 1
+        WaitForStdout = 1
     };
 
     std::pair<String, int> eval(StringView cmdline, const Context& context,
                                 StringView input = {},
-                                Flags flags = Flags::ReadOutput,
+                                Flags flags = Flags::WaitForStdout,
                                 ConstArrayView<String> params = {},
                                 const EnvVarMap& env_vars = EnvVarMap{});
 

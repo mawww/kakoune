@@ -396,7 +396,7 @@ void pipe(Context& context, NormalParams)
                         str += '\n';
                     str = ShellManager::instance().eval(
                         real_cmd, context, str,
-                        ShellManager::Flags::ReadOutput,
+                        ShellManager::Flags::WaitForStdout,
                         {}, EnvVarMap{}).first;
 
                     if ((insert_eol or sel.max() == buffer.back_coord()) and
@@ -441,7 +441,7 @@ void insert_output(Context& context, NormalParams)
                 return;
 
             auto str = ShellManager::instance().eval(real_cmd, context, {},
-                                                     ShellManager::Flags::ReadOutput,
+                                                     ShellManager::Flags::WaitForStdout,
                                                      {}, EnvVarMap{}).first;
             ScopedEdition edition(context);
             context.selections().insert(str, mode);

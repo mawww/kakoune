@@ -60,20 +60,18 @@ std::pair<String, int> ShellManager::eval(
             FDWatcher stdout_watcher{read_pipe[0], pipe_reader(child_stdout)};
             FDWatcher stderr_watcher{error_pipe[0], pipe_reader(child_stderr)};
 
-            if (not (flags & Flags::ReadOutput))
-            {
-                stdout_watcher.close_fd();
-                stderr_watcher.close_fd();
-            }
-
-            while (not stdout_watcher.closed() or
-                   not stderr_watcher.closed() or
-                   not terminated)
+            while (not terminated or
+                   ((flags & Flags::WaitForStdout) and
+                    (not stdout_watcher.closed() or
+                     not stderr_watcher.closed())))
             {
                 EventManager::instance().handle_next_events(EventMode::Urgent);
                 if (not terminated)
                     terminated = waitpid(pid, &status, WNOHANG);
             }
+
+            stdout_watcher.close_fd();
+            stderr_watcher.close_fd();
         }
 
         if (not child_stderr.empty())

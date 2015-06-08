@@ -787,7 +787,7 @@ void define_command(const ParametersParser& parser, Context& context)
                 { "pos_in_token",      to_string(pos_in_token) }
             };
             String output = ShellManager::instance().eval(shell_cmd, context, {},
-                                                          ShellManager::Flags::ReadOutput,
+                                                          ShellManager::Flags::WaitForStdout,
                                                           params, vars).first;
             return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
         };
