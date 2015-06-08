@@ -24,7 +24,7 @@ ShellManager::ShellManager()
 
 std::pair<String, int> ShellManager::eval(
     StringView cmdline, const Context& context, StringView input,
-    ConstArrayView<String> params, const EnvVarMap& env_vars)
+    Flags flags, ConstArrayView<String> params, const EnvVarMap& env_vars)
 {
     int write_pipe[2]; // child stdin
     int read_pipe[2];  // child stdout
@@ -44,6 +44,8 @@ std::pair<String, int> ShellManager::eval(
         close(write_pipe[1]);
 
         String child_stdout, child_stderr;
+        int status = 0;
+        bool terminated = false;
         {
             auto pipe_reader = [](String& output) {
                 return [&output](FDWatcher& watcher, EventMode) {
@@ -58,15 +60,25 @@ std::pair<String, int> ShellManager::eval(
             FDWatcher stdout_watcher{read_pipe[0], pipe_reader(child_stdout)};
             FDWatcher stderr_watcher{error_pipe[0], pipe_reader(child_stderr)};
 
-            while (not stdout_watcher.closed() or not stderr_watcher.closed())
+            if (not (flags & Flags::ReadOutput))
+            {
+                stdout_watcher.close_fd();
+                stderr_watcher.close_fd();
+            }
+
+            while (not stdout_watcher.closed() or
+                   not stderr_watcher.closed() or
+                   not terminated)
+            {
                 EventManager::instance().handle_next_events(EventMode::Urgent);
+                if (not terminated)
+                    terminated = waitpid(pid, &status, WNOHANG);
+            }
         }
 
         if (not child_stderr.empty())
             write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", child_stderr));
 
-        int status = 0;
-        waitpid(pid, &status, 0);
         return { child_stdout, WIFEXITED(status) ? WEXITSTATUS(status) : - 1 };
     }
     else try

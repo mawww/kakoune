@@ -5,6 +5,7 @@
 #include "regex.hh"
 #include "utils.hh"
 #include "env_vars.hh"
+#include "flags.hh"
 
 namespace Kakoune
 {
@@ -20,8 +21,15 @@ class ShellManager : public Singleton<ShellManager>
 public:
     ShellManager();
 
+    enum class Flags
+    {
+        None = 0,
+        ReadOutput = 1
+    };
+
     std::pair<String, int> eval(StringView cmdline, const Context& context,
                                 StringView input = {},
+                                Flags flags = Flags::ReadOutput,
                                 ConstArrayView<String> params = {},
                                 const EnvVarMap& env_vars = EnvVarMap{});
 
@@ -31,6 +39,8 @@ public:
 private:
     Vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
 };
+
+template<> struct WithBitOps<ShellManager::Flags> : std::true_type {};
 
 }
 

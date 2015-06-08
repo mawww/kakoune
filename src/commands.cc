@@ -786,8 +786,9 @@ void define_command(const ParametersParser& parser, Context& context)
                 { "token_to_complete", to_string(token_to_complete) },
                 { "pos_in_token",      to_string(pos_in_token) }
             };
-            String output = ShellManager::instance().eval(shell_cmd, context,
-                                                          {}, params, vars).first;
+            String output = ShellManager::instance().eval(shell_cmd, context, {},
+                                                          ShellManager::Flags::ReadOutput,
+                                                          params, vars).first;
             return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
         };
     }

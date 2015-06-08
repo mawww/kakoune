@@ -271,6 +271,7 @@ String expand_token(const Token& token, const Context& context,
     {
     case Token::Type::ShellExpand:
         return ShellManager::instance().eval(content, context, {},
+                                             ShellManager::Flags::ReadOutput,
                                              shell_params, env_vars).first;
     case Token::Type::RegisterExpand:
         return context.main_sel_register_value(content).str();
