@@ -45,7 +45,6 @@ std::pair<String, int> ShellManager::eval(
 
         String child_stdout, child_stderr;
         int status = 0;
-        bool terminated = false;
         {
             auto pipe_reader = [](String& output) {
                 return [&output](FDWatcher& watcher, EventMode) {
@@ -60,18 +59,30 @@ std::pair<String, int> ShellManager::eval(
             FDWatcher stdout_watcher{read_pipe[0], pipe_reader(child_stdout)};
             FDWatcher stderr_watcher{error_pipe[0], pipe_reader(child_stderr)};
 
+            // block SIGCHLD to make sure we wont receive it before
+            // our call to pselect, that will end up blocking indefinitly.
+            sigset_t mask, orig_mask;
+            sigemptyset(&mask);
+            sigaddset(&mask, SIGCHLD);
+            sigprocmask(SIG_BLOCK, &mask, &orig_mask);
+
+            // check for termination now that SIGCHLD is blocked
+            bool terminated = waitpid(pid, &status, WNOHANG);
+
             while (not terminated or
                    ((flags & Flags::WaitForStdout) and
                     (not stdout_watcher.closed() or
                      not stderr_watcher.closed())))
             {
-                EventManager::instance().handle_next_events(EventMode::Urgent);
+                EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
                 if (not terminated)
                     terminated = waitpid(pid, &status, WNOHANG);
             }
 
             stdout_watcher.close_fd();
             stderr_watcher.close_fd();
+
+            sigprocmask(SIG_SETMASK, &orig_mask, nullptr);
         }
 
         if (not child_stderr.empty())

@@ -68,7 +68,7 @@ EventManager::~EventManager()
     kak_assert(m_timers.empty());
 }
 
-void EventManager::handle_next_events(EventMode mode)
+void EventManager::handle_next_events(EventMode mode, sigset_t* sigmask)
 {
     int max_fd = 0;
     fd_set rfds;
@@ -84,7 +84,7 @@ void EventManager::handle_next_events(EventMode mode)
     }
 
     bool with_timeout = false;
-    timeval tv{};
+    timespec ts{};
     if (not m_timers.empty())
     {
         auto next_date = (*std::min_element(
@@ -95,14 +95,14 @@ void EventManager::handle_next_events(EventMode mode)
         if (next_date != TimePoint::max())
         {
             with_timeout = true;
-            using namespace std::chrono; using us = std::chrono::microseconds;
-            auto usecs = std::max(us(0), duration_cast<us>(next_date - Clock::now()));
-            auto secs = duration_cast<seconds>(usecs);
-            tv = timeval{ (time_t)secs.count(), (suseconds_t)(usecs - secs).count() };
+            using namespace std::chrono; using ns = std::chrono::nanoseconds;
+            auto nsecs = std::max(ns(0), duration_cast<ns>(next_date - Clock::now()));
+            auto secs = duration_cast<seconds>(nsecs);
+            ts = timespec{ (time_t)secs.count(), (long)(nsecs - secs).count() };
         }
     }
-    int res = select(max_fd + 1, &rfds, nullptr, nullptr,
-                     with_timeout ? &tv : nullptr);
+    int res = pselect(max_fd + 1, &rfds, nullptr, nullptr,
+                      with_timeout ? &ts : nullptr, sigmask);
 
     // copy forced fds *after* select, so that signal handlers can write to
     // m_forced_fd, interupt select, and directly be serviced.

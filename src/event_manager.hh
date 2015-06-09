@@ -9,6 +9,7 @@
 #include <functional>
 
 #include <sys/select.h>
+#include <signal.h>
 
 namespace Kakoune
 {
@@ -75,7 +76,7 @@ public:
     EventManager();
     ~EventManager();
 
-    void handle_next_events(EventMode mode);
+    void handle_next_events(EventMode mode, sigset_t* sigmask = nullptr);
 
     // force the watchers associated with fd to be executed
     // on next handle_next_events call.

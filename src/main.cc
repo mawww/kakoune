@@ -544,6 +544,7 @@ int main(int argc, char* argv[])
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, [](int){});
 
     Vector<String> params;
     for (size_t i = 1; i < argc; ++i)
