@@ -104,8 +104,8 @@ void EventManager::handle_next_events(EventMode mode)
     int res = select(max_fd + 1, &rfds, nullptr, nullptr,
                      with_timeout ? &tv : nullptr);
 
-    // copy forced fds *after* poll, so that signal handlers can write to
-    // m_forced_fd, interupt poll, and directly be serviced.
+    // copy forced fds *after* select, so that signal handlers can write to
+    // m_forced_fd, interupt select, and directly be serviced.
     fd_set forced = m_forced_fd;
     FD_ZERO(&m_forced_fd);
 
