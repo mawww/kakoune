@@ -674,6 +674,10 @@ void use_selection_as_search_pattern(Context& context, NormalParams)
                 content = content + "\\b";
         }
         patterns.push_back(std::move(content));
+
+        context.print_status({
+            format("search pattern set to '{}'", patterns[sels.main_index()]),
+            get_face("Information") });
     }
     RegisterManager::instance()['/'] = patterns;
 }
