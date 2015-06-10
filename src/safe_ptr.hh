@@ -84,9 +84,11 @@ private:
 #endif
 };
 
-template<typename T> using SafePtr =
-    RefPtr<T, typename std::conditional<std::is_const<T>::value,
-                                        const SafeCountable, SafeCountable>::type>;
+template<typename T, typename U>
+using PropagateConst = typename std::conditional<std::is_const<T>::value, const U, U>::type;
+
+template<typename T>
+using SafePtr = RefPtr<T, PropagateConst<T, SafeCountable>>;
 
 }
 
