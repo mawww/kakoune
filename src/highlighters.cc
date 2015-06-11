@@ -1379,11 +1379,11 @@ void register_highlighters()
     registry.append({
         "regions",
         { RegionsHighlighter::create,
-          "Parameters: [-default <default group>] {<name> <begin> <end> <recurse>}..."
+          "Parameters: [-default <default group>] <name> {<region name> <begin> <end> <recurse>}..."
           "Split the highlighting into regions defined by the <begin>, <end> and <recurse> regex\n"
-          "The region <name> starts at <begin> match, end at <end> match that does not\n"
+          "The region <region name> starts at <begin> match, end at <end> match that does not\n"
           "close a <recurse> match. In between region is the <default group>.\n"
-          "Highlighting a region is done by adding highlighters into the different <name> subgroups." } });
+          "Highlighting a region is done by adding highlighters into the different <region name> subgroups." } });
 }
 
 }
