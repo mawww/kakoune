@@ -21,6 +21,9 @@ make
 See http://github.com/mawww/golf for kakoune solutions to vimgolf challenges,
 regularly beating the best vim solution.
 
+See the link:doc/design.asciidoc[design document] for more information on
+Kakoune philosophy and design.
+
 :numbered:
 
 Introduction
