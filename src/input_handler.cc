@@ -45,6 +45,11 @@ protected:
 
     virtual void on_key(Key key, KeepAlive keep_alive) = 0;
 
+    void push_mode(InputMode* new_mode)
+    {
+        m_input_handler.push_mode(new_mode);
+    }
+
     void pop_mode(KeepAlive& keep_alive)
     {
         kak_assert(not keep_alive.ptr);
@@ -139,7 +144,7 @@ private:
 class Normal : public InputMode
 {
 public:
-    Normal(InputHandler& input_handler)
+    Normal(InputHandler& input_handler, bool single_command = false)
         : InputMode(input_handler),
           m_idle_timer{TimePoint::max(),
                        context().flags() & Context::Flags::Transient ?
@@ -153,7 +158,8 @@ public:
                   return;
               context().client().check_if_buffer_needs_reloading();
               timer.set_next_date(Clock::now() + fs_check_timeout);
-          })}
+          })},
+          m_single_command(single_command)
     {}
 
     void on_enabled() override
@@ -220,6 +226,9 @@ public:
         }
         else
         {
+            if (m_single_command)
+                pop_mode(keep_alive);
+
             if (m_hooks_disabled)
                 do_restore_hooks = true;
             auto it = std::lower_bound(keymap.begin(), keymap.end(), key,
@@ -264,6 +273,7 @@ private:
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
+    const bool m_single_command;
 };
 
 template<WordType word_type>
@@ -1037,6 +1047,11 @@ public:
         }
         else if (key == ctrl('u'))
             context().buffer().commit_undo_group();
+        else if (key == alt(';'))
+        {
+            push_mode(new Normal(context().input_handler(), true));
+            return;
+        }
 
         context().hooks().run_hook("InsertKey", key_to_str(key), context());
 
@@ -1239,8 +1254,7 @@ void InputHandler::set_prompt_face(Face prompt_face)
         prompt->set_prompt_face(prompt_face);
 }
 
-void InputHandler::menu(ConstArrayView<String> choices,
-                       MenuCallback callback)
+void InputHandler::menu(ConstArrayView<String> choices, MenuCallback callback)
 {
     push_mode(new InputModes::Menu(*this, choices, callback));
 }
