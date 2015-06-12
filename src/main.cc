@@ -228,7 +228,7 @@ void register_options()
 }
 
 template<typename UI>
-void create_local_client(StringView init_command)
+void create_local_client(StringView init_command, bool kakrc_error)
 {
     struct LocalUI : UI
     {
@@ -261,6 +261,13 @@ void create_local_client(StringView init_command)
 
     static Client* client = ClientManager::instance().create_client(
         make_unique<LocalUI>(), get_env_vars(), init_command);
+
+    if (kakrc_error)
+        client->print_status({
+            "error while sourcing kakrc, see *debug* buffer for details",
+            get_face("Error")
+        });
+
     signal(SIGHUP, [](int) {
         if (client)
             ClientManager::instance().remove_client(*client);
@@ -386,6 +393,7 @@ int run_server(StringView session, StringView init_command,
 
     Server server(session.empty() ? to_string(getpid()) : session.str());
 
+    bool kakrc_error = false;
     if (not ignore_kakrc) try
     {
         Context initialisation_context{Context::EmptyContextFlag{}};
@@ -394,10 +402,12 @@ int run_server(StringView session, StringView init_command,
     }
     catch (Kakoune::runtime_error& error)
     {
+        kakrc_error = true;
         write_to_debug_buffer(format("error while parsing kakrc:\n    {}", error.what()));
     }
     catch (Kakoune::client_removed&)
     {
+        kakrc_error = true;
         write_to_debug_buffer("error while parsing kakrc: asked to quit");
     }
 
@@ -426,9 +436,9 @@ int run_server(StringView session, StringView init_command,
     if (not daemon)
     {
         if (dummy_ui)
-            create_local_client<DummyUI>(init_command);
+            create_local_client<DummyUI>(init_command, kakrc_error);
         else
-            create_local_client<NCursesUI>(init_command);
+            create_local_client<NCursesUI>(init_command, kakrc_error);
     }
 
     while (not terminate and (not client_manager.empty() or daemon))
