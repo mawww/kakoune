@@ -849,6 +849,25 @@ using *control-x*, followed, by:
 
 Completion candidates can be selected using `ctrl-n` and `ctrl-p`.
 
+Escape to normal mode
+~~~~~~~~~~~~~~~~~~~~~
+
+From insert mode, pressing `<a-;>` allows you to execute a single normal mode
+command. This provides a few advantages:
+
+ * The selections are not modified: when leaving insert mode using `<esc>` the
+   selections can change, for example when insert mode was entered with `a` the
+   cursor will go back one char. Or if on an end of line the cursor will go back
+   left (if possible).
+
+ * The modes are nested: that means the normal mode can enter prompt (with `:`),
+   or any other modes (using `:onkey` or `:menu` for example), and these modes
+   will get back to the insert mode afterwards.
+
+This feature is tailored for scripting/macros, as it provides a more predictible
+behaviour than leaving insert mode with `<esc>`, executing normal mode command
+and entering back insert mode (with which binding ?)
+
 Highlighters
 ~~~~~~~~~~~~
 
