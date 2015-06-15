@@ -54,6 +54,7 @@ CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
                                 ByteCount cursor_pos = -1);
 
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
+
 }
 
 #endif // file_hh_INCLUDED
