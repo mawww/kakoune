@@ -15,6 +15,9 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
+else ifneq (,$(findstring CYGWIN,$(os)))
+    LIBS += -lncursesw -lboost_regex -ldbghelp
+    LDFLAGS += -rdynamic
 else
     LIBS += -lncursesw -lboost_regex
     LDFLAGS += -rdynamic

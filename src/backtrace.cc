@@ -7,6 +7,7 @@
 # include <stdlib.h>
 #elif defined(__CYGWIN__)
 # include <windows.h>
+# include <dbghelp.h>
 # include <stdio.h>
 #endif
 
@@ -39,12 +40,27 @@ String Backtrace::desc() const
     free(symbols);
     return res;
     #elif defined(__CYGWIN__)
-    String res; res.reserve(num_frames * 20);
+    HANDLE process = GetCurrentProcess();
+
+    static bool symbols_initialized = false;
+    if (not symbols_initialized)
+    {
+        SymInitialize(process, nullptr, true);
+        symbols_initialized = true;
+    }
+
+    alignas(SYMBOL_INFO) char symbol_info_buffer[sizeof(SYMBOL_INFO) + 256];
+    SYMBOL_INFO* symbol_info = reinterpret_cast<SYMBOL_INFO*>(symbol_info_buffer);
+    symbol_info->MaxNameLen = 255;
+    symbol_info->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+    String res; // res.reserve(num_frames * 276);
     for (int i = 0; i < num_frames; ++i)
     {
-        char addr[20];
-        snprintf(addr, 20, "0x%p\n", stackframes[i]);
-        res += addr;
+        SymFromAddr(process, (DWORD64)stackframes[i], 0, symbol_info);
+        char desc[276];
+        snprintf(desc, 276, "0x%0llx (%s)\n", symbol_info->Address, symbol_info->Name);
+        res += desc;
     }
     return res;
     #else
