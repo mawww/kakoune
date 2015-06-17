@@ -368,10 +368,8 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
 }
 
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
-                     const DisplayLine& status_line,
-                     const DisplayLine& mode_line)
+                     const Face& default_face)
 {
-    const Face& default_face = display_buffer.default_face();
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
 
     check_resize();
@@ -393,6 +391,13 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         waddch(m_window, '~');
     }
 
+    m_dirty = true;
+}
+
+void NCursesUI::draw_status(const DisplayLine& status_line,
+                            const DisplayLine& mode_line,
+                            const Face& default_face)
+{
     int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
     wmove(m_window, status_line_pos, 0);
     wclrtoeol(m_window);

@@ -2,7 +2,6 @@
 
 #include "assert.hh"
 #include "context.hh"
-#include "face_registry.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
 #include "client.hh"
@@ -66,7 +65,6 @@ void Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     scroll_to_keep_selection_visible_ifn(context);
 
-    m_display_buffer.set_default_face(get_face("Default"));
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 

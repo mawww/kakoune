@@ -53,8 +53,12 @@ public:
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
-                      const DisplayLine& status_line,
-                      const DisplayLine& mode_line) = 0;
+                      const Face& default_face) = 0;
+
+    virtual void draw_status(const DisplayLine& status_line,
+                             const DisplayLine& mode_line,
+                             const Face& default_face) = 0;
+
     virtual CharCoord dimensions() = 0;
     virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;

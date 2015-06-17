@@ -26,6 +26,7 @@ enum class RemoteUIMsg
     InfoShow,
     InfoHide,
     Draw,
+    DrawStatus,
     Refresh,
     SetOptions
 };
@@ -123,7 +124,6 @@ public:
 
     void write(const DisplayBuffer& display_buffer)
     {
-        write(display_buffer.default_face());
         write(display_buffer.lines());
     }
 
@@ -226,7 +226,6 @@ template<>
 DisplayBuffer read<DisplayBuffer>(int socket)
 {
     DisplayBuffer db;
-    db.set_default_face(read<Face>(socket));
     db.lines() = read_vector<DisplayLine>(socket);
     return db;
 }
@@ -263,8 +262,11 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
-              const DisplayLine& status_line,
-              const DisplayLine& mode_line) override;
+              const Face& default_face) override;
+
+    void draw_status(const DisplayLine& status_line,
+                     const DisplayLine& mode_line,
+                     const Face& default_face) override;
 
     void refresh() override;
 
@@ -344,14 +346,23 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
-                    const DisplayLine& status_line,
-                    const DisplayLine& mode_line)
+                    const Face& default_face)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Draw);
     msg.write(display_buffer);
+    msg.write(default_face);
+}
+
+void RemoteUI::draw_status(const DisplayLine& status_line,
+                           const DisplayLine& mode_line,
+                           const Face& default_face)
+{
+    Message msg(m_socket_watcher.fd());
+    msg.write(RemoteUIMsg::DrawStatus);
     msg.write(status_line);
     msg.write(mode_line);
+    msg.write(default_face);
 }
 
 void RemoteUI::refresh()
@@ -510,9 +521,16 @@ void RemoteClient::process_next_message()
     case RemoteUIMsg::Draw:
     {
         auto display_buffer = read<DisplayBuffer>(socket);
+        auto default_face = read<Face>(socket);
+        m_ui->draw(display_buffer, default_face);
+        break;
+    }
+    case RemoteUIMsg::DrawStatus:
+    {
         auto status_line = read<DisplayLine>(socket);
         auto mode_line = read<DisplayLine>(socket);
-        m_ui->draw(display_buffer, status_line, mode_line);
+        auto default_face = read<Face>(socket);
+        m_ui->draw_status(status_line, mode_line, default_face);
         break;
     }
     case RemoteUIMsg::Refresh:

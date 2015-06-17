@@ -146,25 +146,29 @@ void Client::change_buffer(Buffer& buffer)
 
 void Client::redraw_ifn()
 {
-    DisplayLine mode_line = generate_mode_line();
-    const bool buffer_changed = context().window().timestamp() != context().buffer().timestamp();
-    const bool mode_line_changed = mode_line.atoms() != m_mode_line.atoms();
-    const bool status_line_changed = m_status_line.atoms() != m_pending_status_line.atoms();
-    if (buffer_changed or status_line_changed or mode_line_changed)
+    Face default_face = get_face("Default");
+
+    if (context().window().timestamp() != context().buffer().timestamp())
     {
-        if (buffer_changed)
-        {
-            CharCoord dimensions = context().ui().dimensions();
-            if (dimensions == CharCoord{0,0})
-                return;
-            context().window().set_dimensions(dimensions);
-            context().window().update_display_buffer(context());
-        }
+        CharCoord dimensions = context().ui().dimensions();
+        if (dimensions == CharCoord{0,0})
+            return;
+        context().window().set_dimensions(dimensions);
+        context().window().update_display_buffer(context());
+
+        context().ui().draw(context().window().display_buffer(), default_face);
+    }
+
+    DisplayLine mode_line = generate_mode_line();
+    if (m_status_line.atoms() != m_pending_status_line.atoms() or
+        mode_line.atoms() != m_mode_line.atoms())
+    {
         m_mode_line = std::move(mode_line);
         m_status_line = m_pending_status_line;
-        context().ui().draw(context().window().display_buffer(),
-                            m_status_line, m_mode_line);
+
+        context().ui().draw_status(m_status_line, m_mode_line, default_face);
     }
+
     context().ui().refresh();
 }
 

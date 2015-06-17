@@ -338,7 +338,8 @@ public:
     void info_show(StringView, StringView, CharCoord, Face, InfoStyle) override {}
     void info_hide() override {}
 
-    void draw(const DisplayBuffer&, const DisplayLine&, const DisplayLine&) override {}
+    void draw(const DisplayBuffer&, const Face&) override {}
+    void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
     CharCoord dimensions() override { return {24,80}; }
     bool is_key_available() override { return false; }
     Key  get_key() override { return Key::Invalid; }

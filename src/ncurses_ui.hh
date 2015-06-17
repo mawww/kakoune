@@ -22,11 +22,14 @@ public:
     NCursesUI& operator=(const NCursesUI&) = delete;
 
     void draw(const DisplayBuffer& display_buffer,
-              const DisplayLine& status_line,
-              const DisplayLine& mode_line) override;
+              const Face& default_face) override;
 
-    bool   is_key_available() override;
-    Key    get_key() override;
+    void draw_status(const DisplayLine& status_line,
+                     const DisplayLine& mode_line,
+                     const Face& default_face) override;
+
+    bool is_key_available() override;
+    Key  get_key() override;
 
     void menu_show(ConstArrayView<String> items,
                    CharCoord anchor, Face fg, Face bg,
