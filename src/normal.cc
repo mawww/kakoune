@@ -230,7 +230,9 @@ void goto_commands(Context& context, NormalParams params)
             {
                 context.push_jump();
                 auto pos = buffer.last_modification_coord();
-                if (buffer[pos.line].length() == pos.column + 1)
+                if (pos >= buffer.back_coord())
+                    pos = buffer.back_coord();
+                else if (buffer[pos.line].length() == pos.column + 1)
                     pos = ByteCoord{ pos.line+1, 0 };
                 select_coord<mode>(buffer, pos, context.selections());
                 break;
