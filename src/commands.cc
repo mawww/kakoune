@@ -199,7 +199,7 @@ ParameterDesc edit_params{
  const CommandDesc edit_cmd = {
              "edit",
              "e",
-    "edit <switches> <filename>: open the given filename in a buffer",
+    "edit [<switches>] <filename> [<line> [<column>]]: open the given filename in a buffer",
     edit_params,
     CommandFlags::None,
     CommandHelper{},
@@ -210,7 +210,7 @@ ParameterDesc edit_params{
 const CommandDesc force_edit_cmd = {
     "edit!",
     "e!",
-    "edit! <switches> <filename>: open the given filename in a buffer, "
+    "edit! [<switches>] <filename> [<line> [<column>]]: open the given filename in a buffer, "
     "force reload if needed",
     edit_params,
     CommandFlags::None,
