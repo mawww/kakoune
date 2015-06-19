@@ -120,7 +120,7 @@ int str_to_int(StringView str)
 {
     if (auto val = str_to_int_ifp(str))
         return *val;
-    throw str + " is not a number";
+    throw runtime_error{str + " is not a number"};
 }
 
 InplaceString<16> to_string(int val)
