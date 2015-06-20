@@ -343,6 +343,7 @@ Commands begining with g are used to goto certain position and or buffer:
 
  * `gg`, `gk`: go to the first line
  * `gj`: go to the last line
+ * `ge`: go to last char of last line
 
  * `gt`: go to the first displayed line
  * `gc`: go to the middle displayed line
