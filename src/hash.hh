@@ -31,12 +31,16 @@ size_t hash_values(Type&& t)
     return hash_value(std::forward<Type>(t));
 }
 
+inline size_t combine_hash(size_t lhs, size_t rhs)
+{
+    return lhs ^ (rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2));
+}
+
 template<typename Type, typename... RemainingTypes>
 size_t hash_values(Type&& t, RemainingTypes&&... rt)
 {
     size_t seed = hash_values(std::forward<RemainingTypes>(rt)...);
-    return seed ^ (hash_value(std::forward<Type>(t)) + 0x9e3779b9 +
-                   (seed << 6) + (seed >> 2));
+    return combine_hash(seed, hash_value(std::forward<Type>(t)));
 }
 
 template<typename T1, typename T2>
