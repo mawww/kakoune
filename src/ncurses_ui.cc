@@ -284,7 +284,6 @@ NCursesUI::~NCursesUI()
 
 void NCursesUI::redraw()
 {
-    redrawwin(m_window);
     wnoutrefresh(m_window);
     if (m_menu_win)
     {
@@ -616,9 +615,7 @@ void NCursesUI::menu_show(ConstArrayView<String> items,
                           CharCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
-    if (m_menu_win)
-        delwin(m_menu_win);
-    m_items.clear();
+    menu_hide();
 
     m_menu_fg = fg;
     m_menu_bg = bg;
@@ -688,6 +685,7 @@ void NCursesUI::menu_hide()
     if (not m_menu_win)
         return;
     m_items.clear();
+    mark_dirty(m_menu_win);
     delwin(m_menu_win);
     m_menu_win = nullptr;
     m_dirty = true;
@@ -871,9 +869,18 @@ void NCursesUI::info_hide()
 {
     if (not m_info_win)
         return;
+    mark_dirty(m_info_win);
     delwin(m_info_win);
     m_info_win = nullptr;
     m_dirty = true;
+}
+
+void NCursesUI::mark_dirty(NCursesWin* region)
+{
+    auto pos = window_pos(region);
+    auto size = window_size(region);
+
+    wredrawln(m_window, (int)pos.line, (int)size.line);
 }
 
 CharCoord NCursesUI::dimensions()
