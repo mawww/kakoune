@@ -533,7 +533,10 @@ void paste_all(Context& context, NormalParams params)
     Vector<ByteCount> offsets;
     for (auto& str : strings)
     {
-        if (not str.empty() and str.back() == '\n')
+        if (str.empty())
+            continue;
+
+        if (str.back() == '\n')
             effective_mode = adapt_for_linewise(mode);
         all += str;
         offsets.push_back(all.length());
@@ -557,7 +560,8 @@ void paste_all(Context& context, NormalParams params)
             pos = offset;
         }
     }
-    selections = std::move(result);
+    if (not result.empty())
+        selections = std::move(result);
 }
 
 template<typename T>
@@ -1463,6 +1467,7 @@ static NormalCmdDesc cmds[] =
     { alt('p'), "paste every yanked selection after selected text", paste_all<InsertMode::Append> },
     { alt('P'), "paste every yanked selection before selected text", paste_all<InsertMode::Insert> },
     { 'R', "replace selected text with yanked text", paste<InsertMode::Replace> },
+    { alt('R'), "replace selected text with yanked text", paste_all<InsertMode::Replace> },
 
     { 's', "select regex matches in selected text", select_regex },
     { 'S', "split selected text on regex matches", split_regex },
@@ -1554,8 +1559,8 @@ static NormalCmdDesc cmds[] =
     { ctrl('o'), "jump backward in jump list", jump<Backward> },
     { ctrl('s'), "push current selections in jump list", save_selections },
 
-    { alt('r'), "rotate main selection", rotate_selections },
-    { alt('R'), "rotate selections content", rotate_selections_content },
+    { '\'', "rotate main selection", rotate_selections },
+    { alt('\''), "rotate selections content", rotate_selections_content },
 
     { 'q', "replay recorded macro", replay_macro },
     { 'Q', "start or end macro recording", start_or_end_macro_recording },
