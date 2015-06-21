@@ -686,6 +686,10 @@ void use_selection_as_search_pattern(Context& context, NormalParams)
             get_face("Information") });
     }
     RegisterManager::instance()['/'] = patterns;
+
+    // Hack, as Window do not take register state into account
+    if (context.has_window())
+        context.window().force_redraw();
 }
 
 void select_regex(Context& context, NormalParams)

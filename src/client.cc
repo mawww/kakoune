@@ -70,10 +70,7 @@ void Client::handle_available_input(EventMode mode)
                 if (*key == ctrl('c'))
                     killpg(getpgrp(), SIGINT);
                 else
-                {
                     m_input_handler.handle_key(*key);
-                    context().window().forget_timestamp();
-                }
             }
         }
         catch (Kakoune::runtime_error& error)
@@ -148,12 +145,8 @@ void Client::redraw_ifn()
 {
     Face default_face = get_face("Default");
 
-    if (context().window().timestamp() != context().buffer().timestamp())
+    if (context().window().needs_redraw(context()))
     {
-        CharCoord dimensions = context().ui().dimensions();
-        if (dimensions == CharCoord{0,0})
-            return;
-        context().window().set_dimensions(dimensions);
         context().window().update_display_buffer(context());
 
         context().ui().draw(context().window().display_buffer(), default_face);

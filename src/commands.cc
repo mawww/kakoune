@@ -1244,10 +1244,6 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
         func(parser, *real_context);
     }
-
-    // force redraw of this client window
-    if (real_context != &context and real_context->has_window())
-        real_context->window().forget_timestamp();
 }
 
 const CommandDesc exec_string_cmd = {

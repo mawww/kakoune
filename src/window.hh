@@ -38,8 +38,8 @@ public:
 
     Buffer& buffer() const { return *m_buffer; }
 
-    size_t timestamp() const { return m_timestamp; }
-    void   forget_timestamp() { m_timestamp = -1; }
+    bool needs_redraw(const Context& context) const;
+    void force_redraw() { m_hash = -1; }
 
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
     ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
@@ -53,6 +53,8 @@ private:
 
     void run_hook_in_own_context(StringView hook_name, StringView param);
 
+    size_t compute_hash(const Context& context) const;
+
     SafePtr<Buffer> m_buffer;
 
     CharCoord m_position;
@@ -62,7 +64,8 @@ private:
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;
 
-    size_t m_timestamp = -1;
+    // hash used to determine if a redraw is necessary
+    size_t m_hash = -1;
 };
 
 }

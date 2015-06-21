@@ -4,7 +4,8 @@
 #include "context.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
-#include "client.hh"
+#include "input_handler.hh"
+#include "user_interface.hh"
 
 #include <algorithm>
 #include <sstream>
@@ -60,13 +61,35 @@ void Window::scroll(CharCount offset)
     m_position.column = std::max(0_char, m_position.column + offset);
 }
 
+size_t Window::compute_hash(const Context& context) const
+{
+    size_t res = hash_values(m_position, context.ui().dimensions(), context.buffer().timestamp());
+
+    auto& selections = context.selections();
+    res = combine_hash(res, hash_value(selections.main_index()));
+    for (auto& sel : selections)
+        res = combine_hash(res, hash_values((const ByteCoord&)sel.cursor(), sel.anchor()));
+
+    return res;
+}
+
+bool Window::needs_redraw(const Context& context) const
+{
+    size_t hash = compute_hash(context);
+    return hash != m_hash;
+}
+
 void Window::update_display_buffer(const Context& context)
 {
-    kak_assert(&buffer() == &context.buffer());
-    scroll_to_keep_selection_visible_ifn(context);
-
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
+
+    m_dimensions = context.ui().dimensions();
+    if (m_dimensions == CharCoord{0,0})
+        return;
+
+    kak_assert(&buffer() == &context.buffer());
+    scroll_to_keep_selection_visible_ifn(context);
 
     for (LineCount line = 0; line < m_dimensions.line; ++line)
     {
@@ -86,7 +109,7 @@ void Window::update_display_buffer(const Context& context)
         line.trim(m_position.column, m_dimensions.column, true);
     m_display_buffer.optimize();
 
-    m_timestamp = buffer().timestamp();
+    m_hash = compute_hash(context);
 }
 
 void Window::set_position(CharCoord position)
@@ -294,7 +317,7 @@ void Window::on_option_changed(const Option& option)
                             format("{}={}", option.name(), option.get_as_string()));
 
     // an highlighter might depend on the option, so we need to redraw
-    forget_timestamp();
+    force_redraw();
 }
 
 
