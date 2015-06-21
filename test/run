@@ -32,7 +32,7 @@ main() {
         catch %{
         exec gg
         }
-        exec '$(cat cmd | sed -e s/\'/\\\'/g)'
+        exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
         eval -buffer *debug* write debug
         nop %sh{ IFS==
         echo \"\$kak_selections\"      > selections
