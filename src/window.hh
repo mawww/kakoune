@@ -23,13 +23,12 @@ public:
     const CharCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(CharCoord dimensions);
 
-    const DisplayBuffer& display_buffer() const { return m_display_buffer; }
-
     void center_line(LineCount buffer_line);
     void display_line_at(LineCount buffer_line, LineCount display_line);
     void scroll(LineCount offset);
     void scroll(CharCount offset);
-    void update_display_buffer(const Context& context);
+
+    const DisplayBuffer& update_display_buffer(const Context& context);
 
     CharCoord display_position(ByteCoord coord) const;
     ByteCoord buffer_coord(CharCoord coord) const;

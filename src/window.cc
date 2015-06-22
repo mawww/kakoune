@@ -79,14 +79,14 @@ bool Window::needs_redraw(const Context& context) const
     return hash != m_hash;
 }
 
-void Window::update_display_buffer(const Context& context)
+const DisplayBuffer& Window::update_display_buffer(const Context& context)
 {
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
     m_dimensions = context.ui().dimensions();
     if (m_dimensions == CharCoord{0,0})
-        return;
+        return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
     scroll_to_keep_selection_visible_ifn(context);
@@ -110,6 +110,8 @@ void Window::update_display_buffer(const Context& context)
     m_display_buffer.optimize();
 
     m_hash = compute_hash(context);
+
+    return m_display_buffer;
 }
 
 void Window::set_position(CharCoord position)

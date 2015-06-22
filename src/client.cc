@@ -145,12 +145,11 @@ void Client::redraw_ifn()
 {
     Face default_face = get_face("Default");
 
-    if (context().window().needs_redraw(context()))
-    {
-        context().window().update_display_buffer(context());
+    Window& window = context().window();
+    UserInterface& ui = context().ui();
 
-        context().ui().draw(context().window().display_buffer(), default_face);
-    }
+    if (window.needs_redraw(context()))
+        ui.draw(window.update_display_buffer(context()), default_face);
 
     DisplayLine mode_line = generate_mode_line();
     if (m_status_line.atoms() != m_pending_status_line.atoms() or
@@ -159,10 +158,10 @@ void Client::redraw_ifn()
         m_mode_line = std::move(mode_line);
         m_status_line = m_pending_status_line;
 
-        context().ui().draw_status(m_status_line, m_mode_line, default_face);
+        ui.draw_status(m_status_line, m_mode_line, default_face);
     }
 
-    context().ui().refresh();
+    ui.refresh();
 }
 
 void Client::reload_buffer()
