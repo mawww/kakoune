@@ -17,7 +17,6 @@
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 
-#include <sstream>
 #include <locale>
 
 namespace Kakoune
@@ -834,15 +833,12 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                     auto next = utf8::next(it, end);
                     if (cp != '\n' and not iswprint(cp))
                     {
-                        std::ostringstream oss;
-                        oss << "U+" << std::hex << cp;
-                        const auto& stdstr = oss.str();
-                        String str{stdstr.begin(), stdstr.end()};
                         if (it.coord() != atom_it->begin())
                             atom_it = ++line.split(atom_it, it.coord());
                         if (next.coord() < atom_it->end())
                             atom_it = line.split(atom_it, next.coord());
-                        atom_it->replace(str);
+
+                        atom_it->replace(format("U+{}", hex(cp)));
                         atom_it->face = { Color::Red, Color::Black };
                         break;
                     }

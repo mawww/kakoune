@@ -137,6 +137,13 @@ InplaceString<24> to_string(size_t val)
     return res;
 }
 
+InplaceString<24> to_string(Hex val)
+{
+    InplaceString<24> res;
+    res.m_length = sprintf(res.m_data, "%zx", val.val);
+    return res;
+}
+
 InplaceString<24> to_string(float val)
 {
     InplaceString<24> res;

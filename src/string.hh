@@ -270,8 +270,12 @@ struct InplaceString
     char m_data[N];
 };
 
+struct Hex { size_t val; };
+inline Hex hex(size_t val) { return {val}; }
+
 InplaceString<16> to_string(int val);
 InplaceString<24> to_string(size_t val);
+InplaceString<24> to_string(Hex val);
 InplaceString<24> to_string(float val);
 
 template<typename RealType, typename ValueType>
