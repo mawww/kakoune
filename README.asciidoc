@@ -115,7 +115,7 @@ its source directory, type *make install*, you can specify the `PREFIX` and
 .Homebrew (OSX)
 ====
 -----------------------------------------------------------------------------------------------
-brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/homebrew/contrib/kakoune.rb
+brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contrib/kakoune.rb
 -----------------------------------------------------------------------------------------------
 ====
 
