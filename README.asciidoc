@@ -29,7 +29,7 @@ Kakoune philosophy and design.
 Introduction
 ------------
 
-Kakoune is a code editor heavily inspired by Vim, as such most of it's
+Kakoune is a code editor heavily inspired by Vim, as such most of its
 commands are similar to vi's ones.
 
 Kakoune can operate in two modes, normal and insertion. In insertion mode,
