@@ -148,11 +148,13 @@ void Client::redraw_ifn()
     Window& window = context().window();
     UserInterface& ui = context().ui();
 
-    if (window.needs_redraw(context()))
+    const bool needs_redraw = window.needs_redraw(context());
+    if (needs_redraw)
         ui.draw(window.update_display_buffer(context()), default_face);
 
     DisplayLine mode_line = generate_mode_line();
-    if (m_status_line.atoms() != m_pending_status_line.atoms() or
+    if (needs_redraw or
+        m_status_line.atoms() != m_pending_status_line.atoms() or
         mode_line.atoms() != m_mode_line.atoms())
     {
         m_mode_line = std::move(mode_line);
