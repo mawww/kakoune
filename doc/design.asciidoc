@@ -116,7 +116,7 @@ things easier to understand, bugs easier to fix, and code easier to change.
 Language agnostic
 -----------------
 
-Kakoune should not be tailored for writing a specific programming
+Kakoune should not be tailored for writing in a specific programming
 language. Support for different languages should be provided by a kak script
 file, built-in language support should be avoided.
 
