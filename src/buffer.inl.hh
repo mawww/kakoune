@@ -73,12 +73,12 @@ inline bool Buffer::is_end(ByteCoord c) const
 
 inline BufferIterator Buffer::begin() const
 {
-    return BufferIterator(*this, { 0_line, 0 });
+    return {*this, { 0_line, 0 }};
 }
 
 inline BufferIterator Buffer::end() const
 {
-    return BufferIterator{*this, end_coord()};
+    return {*this, end_coord()};
 }
 
 [[gnu::always_inline]]
