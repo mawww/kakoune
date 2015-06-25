@@ -354,6 +354,9 @@ Commands begining with g are used to goto certain position and or buffer:
 
  * `g.`: go to last buffer modifiction position
 
+If a count is given prior to hitting `g`, `g` will jump to the given line.
+Using `G` will extend the selection rather than jump.
+
 View commands
 ~~~~~~~~~~~~~
 
