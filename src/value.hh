@@ -4,6 +4,7 @@
 #include "unordered_map.hh"
 #include "units.hh"
 
+#include <type_traits>
 #include <memory>
 
 namespace Kakoune
@@ -15,7 +16,8 @@ struct Value
 {
     Value() = default;
 
-    template<typename T>
+    template<typename T,
+             typename = typename std::enable_if<not std::is_same<Value, T>::value>::type>
     Value(T&& val) : m_value{new Model<T>{std::forward<T>(val)}} {}
 
     Value(const Value& val) = delete;
