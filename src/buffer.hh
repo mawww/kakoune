@@ -171,6 +171,14 @@ private:
 
     void on_option_changed(const Option& option) override;
 
+    ByteCoord do_insert(ByteCoord pos, StringView content);
+    ByteCoord do_erase(ByteCoord begin, ByteCoord end);
+
+    struct Modification;
+
+    void apply_modification(const Modification& modification);
+    void revert_modification(const Modification& modification);
+
     struct LineList : BufferLines
     {
         [[gnu::always_inline]]
@@ -190,22 +198,15 @@ private:
     };
     LineList m_lines;
 
-    ByteCoord do_insert(ByteCoord pos, StringView content);
-    ByteCoord do_erase(ByteCoord begin, ByteCoord end);
-
     String  m_name;
     Flags   m_flags;
 
-    struct Modification;
     using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
+    using  History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
 
-    using History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
     History           m_history;
     History::iterator m_history_cursor;
     UndoGroup         m_current_undo_group;
-
-    void apply_modification(const Modification& modification);
-    void revert_modification(const Modification& modification);
 
     size_t m_last_save_undo_index;
 
@@ -213,7 +214,7 @@ private:
 
     time_t m_fs_timestamp;
 
-    // Values are just data holding by the buffer, so it is part of its
+    // Values are just data holding by the buffer, they are not part of its
     // observable state
     mutable ValueMap m_values;
 };
