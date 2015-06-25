@@ -595,6 +595,9 @@ const CommandDesc add_highlighter_cmd = {
         if (it == registry.end())
             throw runtime_error(format("No such highlighter factory '{}'", name));
         group.add_child(it->second.factory(highlighter_params));
+
+        if (context.has_window())
+            context.window().force_redraw();
     }
 };
 
@@ -615,6 +618,9 @@ const CommandDesc rm_highlighter_cmd = {
           : context.window().highlighters();
 
         group.remove_child({sep_it.base(), path.end()});
+
+        if (context.has_window())
+            context.window().force_redraw();
     }
 };
 
