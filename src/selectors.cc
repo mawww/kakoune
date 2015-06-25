@@ -431,6 +431,139 @@ Selection select_indent(const Buffer& buffer, const Selection& selection, Object
     return Selection{begin_line, {end_line, buffer[end_line].length() - 1}};
 }
 
+Selection select_argument(const Buffer& buffer, const Selection& selection,
+                          int level, ObjectFlags flags)
+{
+    auto is_whitespace = [](Codepoint c) {
+        return c == ' ' or c == '\t' or c == '\n';
+    };
+    auto get_kind = [](Codepoint c) -> int {
+        switch (c)
+        {
+        case '(': case ')': return 1;
+        case '[': case ']': return 2;
+        case '{': case '}': return 3;
+        case '<': case '>': return 4;
+        }
+    };
+    enum Class { None, Opening, Closing };
+    auto classify = [](Codepoint c) {
+        switch (c)
+        {
+        case '(': case '[': case '{': case '<': return Opening;
+        case ')': case ']': case '}': case '>': return Closing;
+        default: return None;
+        }
+    };
+
+    auto pairs = std::vector<int>();
+
+    Utf8Iterator pos = buffer.iterator_at(selection.cursor());
+    if (classify(*pos) == Closing)
+        ++pos;
+    Utf8Iterator begin = pos;
+    Utf8Iterator end = begin;
+    bool fail = false;
+
+    skip_while(end, buffer.end(), [&](Codepoint cur)
+    {
+        if (cur == ',' && level == 0)
+        {
+            pairs.push_back(0);
+            return false;
+        }
+        auto c = classify(cur);
+        if (c == Opening)
+        {
+            pairs.push_back(get_kind(cur));
+            ++level;
+        }
+        else if (c == Closing)
+        {
+            --level;
+            if (pairs.empty() || pairs.back() < 0)
+            {
+                pairs.push_back(-get_kind(cur));
+                return level >= 0;
+            }
+            else if (pairs.back() == get_kind(cur))
+            {
+                pairs.pop_back();
+                return true;
+            }
+            fail = true;
+            return false;
+        }
+        return true;
+    });
+    if (fail || end == buffer.end())
+        return selection;
+
+    write_to_debug_buffer("before reverse:");
+    for (auto it = pairs.begin(); it != pairs.end(); ++it)
+        write_to_debug_buffer(format("{}", *it));
+    std::reverse(pairs.begin(), pairs.end());
+    write_to_debug_buffer("before reverse:");
+    for (auto it = pairs.begin(); it != pairs.end(); ++it)
+        write_to_debug_buffer(format("{}", *it));
+
+    --begin;
+    skip_while_reverse(begin, buffer.begin(), [&](Codepoint cur)
+    {
+        if (cur == ',' && pairs.size() == 1)
+        {
+            return false;
+        }
+        auto c = classify(cur);
+        if (c == Closing)
+        {
+            pairs.push_back(-get_kind(cur));
+        }
+        else if (c == Opening)
+        {
+            if (pairs.back() == 0 || pairs.back() == -get_kind(cur))
+            {
+                pairs.pop_back();
+                return !pairs.empty();
+            }
+            fail = true;
+            return false;
+        }
+        return true;
+    });
+    if (fail || begin == buffer.begin())
+        return selection;
+
+    if (flags & ObjectFlags::Inner)
+    {
+        ++begin;
+        skip_while(begin, end, is_whitespace);
+        --end;
+        skip_while_reverse(end, begin, is_whitespace);
+    }
+    else
+    {
+        if (classify(*end) == Closing)
+        {
+            --end;
+            if (classify(*begin) == Opening)
+                ++begin;
+        }
+        else
+        {
+            ++begin;
+            skip_while(begin, end, is_whitespace);
+            ++end;
+            skip_while(end, buffer.end(), is_whitespace);
+            --end;
+        }
+    }
+
+    if (flags & ObjectFlags::ToBegin and not (flags & ObjectFlags::ToEnd))
+        return utf8_range(pos, begin);
+    return utf8_range(flags & ObjectFlags::ToBegin ? begin : pos, end);
+}
+
 Selection select_lines(const Buffer& buffer, const Selection& selection)
 {
     // no need to be utf8 aware for is_eol as we only use \n as line seperator

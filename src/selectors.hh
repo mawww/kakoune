@@ -219,6 +219,10 @@ Selection select_indent(const Buffer& buffer,
                         const Selection& selection,
                         ObjectFlags flags);
 
+Selection select_argument(const Buffer& buffer,
+                          const Selection& selection,
+                          int level, ObjectFlags flags);
+
 Selection select_lines(const Buffer& buffer, const Selection& selection);
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);

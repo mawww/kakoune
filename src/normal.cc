@@ -925,6 +925,11 @@ void select_object(Context& context, NormalParams params)
                 return select<mode>(context, std::bind(sel.func, _1, _2, flags));
         }
 
+        if (c == 'u')
+        {
+            return select<mode>(context, std::bind(select_argument, _1, _2, level, flags));
+        }
+
         static constexpr struct
         {
             MatchingPair pair;
@@ -958,7 +963,8 @@ void select_object(Context& context, NormalParams params)
     "s:    sentence           \n"
     "p:    paragraph          \n"
     "␣:    whitespaces        \n"
-    "i:    indent             \n");
+    "i:    indent             \n"
+    "u:    argument           \n");
 }
 
 template<Key::NamedKey key>
