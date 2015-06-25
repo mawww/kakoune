@@ -80,7 +80,11 @@ public:
 private:
     void destruct_ifn() { if (m_valid) m_value.~T(); }
 
-    union { T m_value; };
+    union
+    {
+        struct {} m_empty; // disable default construction of value
+        T m_value;
+    };
     bool m_valid;
 };
 
