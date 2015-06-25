@@ -17,9 +17,7 @@ void Selection::merge_with(const Selection& range)
 
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
     : m_buffer(&buffer), m_selections({ std::move(s) }), m_timestamp(timestamp)
-{
-    check_invariant();
-}
+{}
 
 SelectionList::SelectionList(Buffer& buffer, Selection s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
@@ -29,7 +27,6 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s, size_t timesta
     : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
 {
     kak_assert(size() > 0);
-    check_invariant();
 }
 
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s)
@@ -535,43 +532,45 @@ void SelectionList::erase()
     m_buffer->check_invariant();
 }
 
-String selection_to_string(const Buffer& buffer, const Selection& selection)
+String selection_to_string(const Selection& selection)
 {
     auto& cursor = selection.cursor();
     auto& anchor = selection.anchor();
-    ByteCount distance = buffer.distance(anchor, cursor);
-    return format("{}.{}{}{}", anchor.line + 1, anchor.column + 1,
-                  distance < 0 ? '-' : '+', abs(distance));
+    return format("{}.{},{}.{}", anchor.line + 1, anchor.column + 1,
+                  cursor.line + 1, cursor.column + 1);
 }
 
 String selection_list_to_string(const SelectionList& selections)
 {
     const auto& buffer = selections.buffer();
-    return join(transformed(selections, [&buffer](const Selection& s)
-                            { return selection_to_string(buffer, s); }),
+    return join(transformed(selections, [](const Selection& s)
+                            { return selection_to_string(s); }),
                 ':', false);
 }
 
-Selection selection_from_string(const Buffer& buffer, StringView desc)
+Selection selection_from_string(StringView desc)
 {
-    auto dot = find(desc, '.');
-    auto sign = std::find_if(dot, desc.end(), [](char c) { return c == '+' or c == '-'; });
+    auto comma = find(desc, ',');
+    auto dot_anchor = find(StringView{desc.begin(), comma}, '.');
+    auto dot_cursor = find(StringView{comma, desc.end()}, '.');
 
-    if (dot == desc.end() or sign == desc.end())
-        throw runtime_error(format("'{}' does not follow <line>.<column>+<len> format", desc));
+    if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
+        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
 
-    LineCount line = str_to_int({desc.begin(), dot}) - 1;
-    ByteCount column = str_to_int({dot+1, sign}) - 1;
-    ByteCoord anchor{line, column};
-    ByteCount count = (*sign == '+' ? 1 : -1) * str_to_int({sign+1, desc.end()});
-    return Selection{anchor, buffer.advance(anchor, count)};
+    ByteCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
+                     str_to_int({dot_anchor+1, comma}) - 1};
+
+    ByteCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
+                     str_to_int({dot_cursor+1, desc.end()}) - 1};
+
+    return Selection{anchor, cursor};
 }
 
 SelectionList selection_list_from_string(Buffer& buffer, StringView desc)
 {
     Vector<Selection> sels;
     for (auto sel_desc : split(desc, ':'))
-        sels.push_back(selection_from_string(buffer, sel_desc));
+        sels.push_back(selection_from_string(sel_desc));
     return {buffer, std::move(sels)};
 }
 

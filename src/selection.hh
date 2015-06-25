@@ -142,9 +142,9 @@ private:
 
 Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp);
 
-String selection_to_string(const Buffer& buffer, const Selection& selection);
+String selection_to_string(const Selection& selection);
 String selection_list_to_string(const SelectionList& selection);
-Selection selection_from_string(const Buffer& buffer, StringView desc);
+Selection selection_from_string(StringView desc);
 SelectionList selection_list_from_string(Buffer& buffer, StringView desc);
 
 }

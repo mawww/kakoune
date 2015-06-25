@@ -1132,7 +1132,7 @@ void jump(Context& context, NormalParams)
     context.selections_write_only() = jump;
 }
 
-void save_selections(Context& context, NormalParams)
+void push_selections(Context& context, NormalParams)
 {
     context.push_jump();
     context.print_status({ format("saved {} selections", context.selections().size()),
@@ -1285,6 +1285,64 @@ void spaces_to_tabs(Context& context, NormalParams params)
     }
     if (not spaces.empty())
         SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
+}
+
+void save_selections(Context& context, NormalParams)
+{
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [](Key key, Context& context) {
+        if (key.modifiers != Key::Modifiers::None)
+            return;
+
+        const char reg = key.key;
+        String desc = format("{}@{}%{}",
+                             selection_list_to_string(context.selections()),
+                             context.buffer().name(),
+                             context.buffer().timestamp());
+
+        RegisterManager::instance()[reg] = desc;
+
+        context.print_status({format("Saved selections in register '{}'", reg), get_face("Information")});
+    }, "Save selections", "Enter register to save selections into");
+}
+
+void restore_selections(Context& context, NormalParams)
+{
+    on_next_key_with_autoinfo(context, KeymapMode::None,
+                             [](Key key, Context& context) {
+        if (key.modifiers != Key::Modifiers::None)
+            return;
+
+        const char reg = key.key;
+
+        auto content = RegisterManager::instance()[reg].values(context);
+
+        if (content.size() != 1)
+            throw runtime_error(format("Register {} does not contain a selections desc", reg));
+
+        StringView desc = content[0];
+        auto arobase = find(desc, '@');
+        auto percent = find(desc, '%');
+
+        if (arobase == desc.end() or percent == desc.end())
+            throw runtime_error(format("Register {} does not contain a selections desc", reg));
+
+        Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
+        size_t timestamp = str_to_int({percent + 1, desc.end()});
+
+        Vector<Selection> sels;
+        for (auto sel_desc : split({desc.begin(), arobase}, ':'))
+            sels.push_back(selection_from_string(sel_desc));
+
+        SelectionList sel_list{buffer, std::move(sels), timestamp};
+
+        if (&buffer != &context.buffer())
+            context.change_buffer(buffer);
+
+        context.selections_write_only() = std::move(sel_list);
+
+        context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
+    }, "Restore selections", "Enter register to restore selections from");
 }
 
 void undo(Context& context, NormalParams)
@@ -1564,7 +1622,7 @@ static NormalCmdDesc cmds[] =
 
     { ctrl('i'), "jump forward in jump list",jump<Forward> },
     { ctrl('o'), "jump backward in jump list", jump<Backward> },
-    { ctrl('s'), "push current selections in jump list", save_selections },
+    { ctrl('s'), "push current selections in jump list", push_selections },
 
     { '\'', "rotate main selection", rotate_selections },
     { alt('\''), "rotate selections content", rotate_selections_content },
@@ -1599,6 +1657,9 @@ static NormalCmdDesc cmds[] =
 
     { Key::PageUp,   "scroll one page up", scroll<Key::PageUp> },
     { Key::PageDown, "scroll one page down", scroll<Key::PageDown> },
+
+    { '^', "restore selections", restore_selections },
+    { alt('^'), "save selections", save_selections },
 };
 
 KeyMap keymap = cmds;

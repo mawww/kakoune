@@ -121,7 +121,7 @@ void register_env_vars()
         }, {
             "selection_desc",
             [](StringView name, const Context& context)
-            { return selection_to_string(context.buffer(), context.selections().main()); }
+            { return selection_to_string(context.selections().main()); }
         }, {
             "selections_desc",
             [](StringView name, const Context& context)
