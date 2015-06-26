@@ -1169,19 +1169,15 @@ New commands can be defined using the `:def` command.
 
 `def` can also takes some flags:
 
- * `-env-params`: pass parameters given to commands in the environment as
-                  kak_paramN with N the parameter number
- * `-shell-params`: pass parameters given to commands as positional parameters
-                    to any shell expansions used in the command.
- * `-file-completion`: try file completion on any parameter passed
-                       to this command
- * `-shell-completion`: following string is a shell command which takes
-                        parameters as positional params and output one
-                        completion candidate per line.
- * `-allow-override`: allow the new command to replace an exisiting one
-                      with the same name.
- * `-hidden`: do not show the command in command name completions
- * `-docstring`: define the documentation string for the command
+ * `-shell-params`:      pass parameters to each shell escape as $0..$N
+ * `-allow-override`:    allow overriding an existing command
+ * `-hidden`:            do not display the command in completion candidates
+ * `-docstring`:         define the documentation string for command
+ * `-file-completion`:   complete parameters using filename completion
+ * `-client-completion`: complete parameters using client name completion
+ * `-buffer-completion`: complete parameters using buffer name completion
+ * `-command-completion`: complete parameters using kakoune command completion
+ * `-shell-completion`:  complete the parameters using the given shell-script
 
 Using shell expansion permits to define complex commands or to access
 Kakoune state:
