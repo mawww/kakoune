@@ -112,12 +112,14 @@ struct Allocator
     }
 
     template<class U, class... Args>
+    [[gnu::always_inline]]
     void construct(U* p, Args&&... args)
     {
         new ((void*)p) U(std::forward<Args>(args)...);
     }
 
     template<class U>
+    [[gnu::always_inline]]
     void destroy(U* p) { p->~U(); }
 };
 
