@@ -797,6 +797,11 @@ selection.
 Registers are lists, instead of simply text in order to interact well with
 multiselection. Each selection has its own captures or yank buffer.
 
+Keybindings summary:
+
+ * `"`: Prefix to set the current register
+ * `ctrl-r`: (in insert mode) Paste the contents of register
+
 Macros
 ~~~~~~
 
@@ -811,6 +816,11 @@ To replay a macro, use the `q` key, followed by the macro name.
 Macros are actually stored as a key sequence into a register, i.e. a macro name
 is a register name.
 
+Keybindings summary:
+
+ * `Q`: record macro
+ * `q`: replay macro
+
 Search selection
 ~~~~~~~~~~~~~~~~
 
@@ -820,6 +830,11 @@ begins and/or ends at word boundaries and set the search pattern accordingly.
 
 with `alt-*` you can set the search pattern to the current seletion without
 Kakoune trying to be smart.
+
+Keybindings summary:
+
+ * `*`: set the search pattern to the current selection
+ * `alt-*`: same as above, but without trying to be smart
 
 Exec and Eval
 ~~~~~~~~~~~~~
@@ -862,12 +877,12 @@ Insert mode completion
 Kakoune can propose completions while inserting text, the `completers` option
 controls automatic completion, which kicks in when a certain idle timeout is
 reached (100 milliseconds). Insert mode completion can be explicitely triggered
-using *control-x*, followed, by:
+using `ctrl-x`, followed, by:
 
- * *f* : filename completion
- * *w* : buffer word completion
- * *l* : buffer line completion
- * *o* : option based completion
+ * `f` : filename completion
+ * `w` : buffer word completion
+ * `l` : buffer line completion
+ * `o` : option based completion
 
 Completion candidates can be selected using `ctrl-n` and `ctrl-p`.
 
@@ -1135,8 +1150,11 @@ with `scope` being one of `global`, `buffer` or `window` (or any prefix),
 mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix), `key` being
 a single key name and `keys` a list of keys.
 
-`user` mode allows for user mapping behind the `,` key. Keys will be executed in
-normal mode.
+The `user` mode allows for user mapping behind the `,` key. Keys will be executed in
+normal mode. So use `exec` to run default key bindings, example:
+
+    # map ,/ to search in selections (s), even if s is rebound in normal mode:
+    map global user / ":exec s<ret>"
 
 Defining Commands
 ~~~~~~~~~~~~~~~~~
