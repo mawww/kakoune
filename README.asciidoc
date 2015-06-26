@@ -305,7 +305,7 @@ Changes
         indent (3 leading spaces when indent is 4)
 
  * `|`: pipe each selections through the given external filter program
-        and replace the selection with it's output.
+        and replace the selection with its output.
  * `alt-|`: pipe each selections through the given external filter program
         and ignore its output
 
@@ -424,7 +424,7 @@ Object Selection
 Some keys allow you to select a text object:
 
  * `alt-a`: selects the whole object
- * `alt-i`: selects the inner object, that is the object excluding it's surrounder.
+ * `alt-i`: selects the inner object, that is the object excluding its surrounder.
             for example, for a quoted string, this will not select the quote, and
             for a word this will not select trailing spaces.
  * `[`: selects to object start
@@ -467,7 +467,7 @@ Basic Commands
  * `e[dit] <filename> [<line> [<column>]]`: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
      use edit! to force reloading.
- * `w[rite] [<filename>]`: write buffer to <filename> or use it's name if
+ * `w[rite] [<filename>]`: write buffer to <filename> or use its name if
       filename is not given.
  * `w[rite]a[ll]`: write all buffers that are associated to a file.
  * `q[uit]`: exit Kakoune, use quit! to force quitting even if there is some
@@ -484,7 +484,7 @@ Basic Commands
  * `echo <text>`: show <text> in status line
  * `nop`: does nothing, but as with every other commands, arguments may be
       evaluated. So nop can be used for example to execute a shell command
-      while being sure that it's output will not be interpreted by kak.
+      while being sure that its output will not be interpreted by kak.
       `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
       `:nop %sh{ echo echo tchou }` will not, but both will execute the
       shell command.
@@ -648,7 +648,7 @@ New options can be declared using the `:decl` command:
 the `-hidden` parameter makes the option invisible in completion, but
 still modifiable.
 
-Some options are built in Kakoune, and can be used to control it's behaviour:
+Some options are built in Kakoune, and can be used to control its behaviour:
 
  * `tabstop` _int_: width of a tab character.
  * `indentwidth` _int_: width (in spaces) used for indentation.
