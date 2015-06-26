@@ -22,14 +22,20 @@ decl str termcmd %sh{
 }
 
 def -docstring 'create a new kak client for current session' \
+    -file-completion \
     -shell-params \
     new %{ %sh{
-            if [ -z "${kak_opt_termcmd}" ]; then
-               echo "echo -color Error 'termcmd option is not set'"
-               exit
-            fi
-            if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
-            setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
+        if [ -z "${kak_opt_termcmd}" ]; then
+           echo "echo -color Error 'termcmd option is not set'"
+           exit
+        fi
+        ## if there is only one argument, and it's a filepath, then edit it in the new client
+        if [ $# -eq 1 -a -f "${1}" ]; then
+            kakoune_params="-e 'edit ${1}'"
+        else
+            kakoune_params="-e '$@'"
+        fi
+        setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
 }}
 
 def -docstring 'focus given client' \
