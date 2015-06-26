@@ -345,7 +345,10 @@ void command(Context& context, NormalParams)
 
     context.input_handler().prompt(
         ":", "", get_face("Prompt"),
-        std::bind(&CommandManager::complete, &CommandManager::instance(), _1, _2, _3, _4),
+        [](const Context& context, CompletionFlags flags,
+           StringView cmd_line, ByteCount pos) {
+               return CommandManager::instance().complete(context, flags, cmd_line, pos);
+        },
         [](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_ui())
             {

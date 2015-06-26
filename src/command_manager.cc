@@ -506,7 +506,7 @@ Completions CommandManager::complete(const Context& context,
         }
     }
 
-     // command name completion
+    // command name completion
     if (tokens.empty() or
         (tok_idx == cmd_idx and (tok_idx == tokens.size() or
                                  tokens[tok_idx].type() == Token::Type::Raw)))
@@ -585,6 +585,40 @@ Completions CommandManager::complete(const Context& context,
     }
     default:
         break;
+    }
+    return Completions{};
+}
+
+Completions CommandManager::complete(const Context& context,
+                                     CompletionFlags flags,
+                                     CommandParameters params,
+                                     size_t token_to_complete,
+                                     ByteCount pos_in_token)
+{
+    StringView prefix = params[token_to_complete].substr(0, pos_in_token);
+
+    if (token_to_complete == 0)
+    {
+        CandidateList candidates;
+        for (auto& command : m_commands)
+        {
+            if (command.second.flags & CommandFlags::Hidden)
+                continue;
+            if (prefix_match(command.first, prefix))
+                candidates.push_back(command.first);
+        }
+        std::sort(candidates.begin(), candidates.end());
+        return {0, pos_in_token, std::move(candidates)};
+    }
+    else
+    {
+        const String& command_name = params[0];
+
+        auto command_it = find_command(context, command_name);
+        if (command_it != m_commands.end() and command_it->second.completer)
+            return command_it->second.completer(
+                context, flags, params.subrange(1, params.size()-1),
+                token_to_complete-1, pos_in_token);
     }
     return Completions{};
 }

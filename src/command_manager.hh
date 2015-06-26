@@ -67,6 +67,10 @@ public:
     Completions complete(const Context& context, CompletionFlags flags,
                          StringView command_line, ByteCount cursor_pos);
 
+    Completions complete(const Context& context, CompletionFlags flags,
+                         CommandParameters params,
+                         size_t token_to_complete, ByteCount pos_in_token);
+
     CommandInfo command_info(const Context& context,
                              StringView command_line) const;
 

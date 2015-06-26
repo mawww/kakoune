@@ -23,6 +23,7 @@ decl str termcmd %sh{
 
 def -docstring 'create a new kak client for current session' \
     -shell-params \
+    -command-completion \
     new %{ %sh{
             if [ -z "${kak_opt_termcmd}" ]; then
                echo "echo -color Error 'termcmd option is not set'"

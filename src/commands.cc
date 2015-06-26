@@ -798,6 +798,16 @@ void define_command(const ParametersParser& parser, Context& context)
             return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
         };
     }
+    else if (parser.get_switch("command-completion"))
+    {
+        completer = [](const Context& context, CompletionFlags flags,
+                       CommandParameters params,
+                       size_t token_to_complete, ByteCount pos_in_token)
+        {
+            return CommandManager::instance().complete(
+                context, flags, params, token_to_complete, pos_in_token);
+        };
+    }
 
     auto docstring = parser.get_switch("docstring").value_or(StringView{});
 
@@ -816,6 +826,7 @@ const CommandDesc define_command_cmd = {
           { "file-completion",   { false, "complete parameters using filename completion" } },
           { "client-completion", { false, "complete parameters using client name completion" } },
           { "buffer-completion", { false, "complete parameters using buffer name completion" } },
+          { "command-completion", { false, "complete parameters using kakoune command completion" } },
           { "shell-completion",  { true,  "complete the parameters using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
