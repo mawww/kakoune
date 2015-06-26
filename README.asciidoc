@@ -385,7 +385,7 @@ to forward or backward in the jump list using:
 Multi Selection
 ~~~~~~~~~~~~~~~
 
-Kak was designed from the start to handle multiple selections.
+Kak was designed from the start to handle multiple selections (also called multiple cursors).
 One way to get a multiselection is via the `s` key.
 
 For example, to change all occurences of word 'roger' to word 'marcel'
@@ -417,6 +417,24 @@ not containing a match.
 
 `$` allows you to enter a shell command and pipe each selections to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
+
+In summary:
+
+ * `s`: make a cursor for each match of the pattern in the current selections
+ * `S`: split selection into new cursors for each match of the pattern
+ * `alt-s`: split selection into new cursors
+ * `C`: make new cursors below the current ones
+ * `alt-C`: make new cursor above the current ones
+ * `$`: filter selections by a pipe: keeps the ones returning 0
+ * `alt-k`: filter selections by regex (keeps the matches)
+ * `alt-K`: filter out selections by regex (removes the matches)
+ * `space`: remove all cursors but the main one (with count n: keep the nth one)
+ * `alt-space`: remove one cursor
+
+A recap: another way to get more cursors is by adding the current search pattern:
+
+ * `N`: add a new selection with next match
+ * `alt-N`: add a new selection with previous match
 
 Object Selection
 ~~~~~~~~~~~~~~~~
