@@ -1112,7 +1112,11 @@ const CommandDesc map_key_cmd = {
     "    prompt\n"
     "    goto\n"
     "    view\n"
-    "    user\n",
+    "    user\n"
+    "scope can be: \n"
+    "    global\n"
+    "    buffer\n"
+    "    window\n",
     ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
     CommandFlags::None,
     CommandHelper{},
