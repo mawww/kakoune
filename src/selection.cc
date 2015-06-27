@@ -508,6 +508,10 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
 void SelectionList::erase()
 {
     update();
+
+    m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps),
+                       end());
+
     ForwardChangesTracker changes_tracker;
     for (auto& sel : m_selections)
     {
@@ -529,6 +533,7 @@ void SelectionList::erase()
         if (sel.cursor() > back_coord)
             sel.cursor() = back_coord;
     }
+
     m_buffer->check_invariant();
 }
 
