@@ -155,6 +155,8 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         while (--loops and count > 0 and
                select(fifo+1, &rfds, nullptr, nullptr, &tv) == 1);
 
+        buffer->run_hook_in_own_context("BufReadFifo", buffer->name());
+
         if (count <= 0)
             buffer->values().erase(fifo_watcher_id); // will delete this
     }), std::move(watcher_deleter));

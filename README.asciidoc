@@ -1100,6 +1100,9 @@ existing hooks are:
  * `BufWritePost`: Executed just after a buffer is written, filename is
        used for filtering.
  * `BufClose`: Executed when a buffer is deleted, while it is still valid.
+ * `BufOpenFifo`: Executed when a buffer opens a fifo.
+ * `BufReadFifo`: Executed after some data has been red from a fifo and
+       inserted in the buffer.
  * `BufCloseFifo`: Executed when a fifo buffer closes its fifo file descriptor
        either because the buffer is being deleted, or because the writing
        end has been closed.
