@@ -239,11 +239,6 @@ void on_term_resize(int)
     EventManager::instance().force_signal(0);
 }
 
-void on_sigint(int)
-{
-    // do nothing
-}
-
 NCursesUI::NCursesUI()
     : m_stdin_watcher{0, [this](FDWatcher&, EventMode mode) {
         if (m_input_callback)
@@ -262,16 +257,17 @@ NCursesUI::NCursesUI()
     use_default_colors();
     set_escdelay(25);
 
-    signal(SIGWINCH, on_term_resize);
-    signal(SIGINT, on_sigint);
-
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
     mouseinterval(0);
     // force enable report mouse position
     puts("\033[?1002h");
-    update_dimensions();
 
-    wrefresh(stdscr);
+    signal(SIGWINCH, on_term_resize);
+    signal(SIGINT, [](int){});
+
+    check_resize(true);
+
+    redraw();
 }
 
 NCursesUI::~NCursesUI()
@@ -324,17 +320,6 @@ static CharCoord window_pos(WINDOW* win)
     CharCoord pos;
     getbegyx(win, (int&)pos.line, (int&)pos.column);
     return pos;
-}
-
-void NCursesUI::update_dimensions()
-{
-    m_dimensions = window_size(stdscr);
-
-    if (m_window)
-        delwin(m_window);
-    m_window = (NCursesWin*)newwin((int)m_dimensions.line, (int)m_dimensions.column, 0, 0);
-
-    --m_dimensions.line;
 }
 
 void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
@@ -440,22 +425,32 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     m_dirty = true;
 }
 
-void NCursesUI::check_resize()
+void NCursesUI::check_resize(bool force)
 {
-    if (resize_pending)
+    if (not force and not resize_pending)
+        return;
+
+    resize_pending = 0;
+
+    const int fd = open("/dev/tty", O_RDWR);
+    auto close_fd = on_scope_end([fd]{ close(fd); });
+    winsize ws;
+    if (ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
     {
-        int fd = open("/dev/tty", O_RDWR);
-        winsize ws;
-        if (ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
-        {
-            close(fd);
-            resizeterm(ws.ws_row, ws.ws_col);
-            update_dimensions();
-        }
-        ungetch(KEY_RESIZE);
-        m_dirty = true;
-        resize_pending = false;
+        resize_term(ws.ws_row, ws.ws_col);
+
+        if (m_window)
+            delwin(m_window);
+        m_window = (NCursesWin*)newwin(ws.ws_row, ws.ws_col, 0, 0);
+
+        m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
     }
+    else
+        kak_assert(false);
+
+    m_dirty = true;
+    ungetch(KEY_RESIZE);
+    wrefresh(stdscr);
 }
 
 bool NCursesUI::is_key_available()
@@ -496,7 +491,10 @@ Key NCursesUI::get_key()
     if (c > 0 and c < 27)
     {
         if (c == CTRL('l'))
-           redrawwin(stdscr);
+        {
+           redrawwin(m_window);
+           redraw();
+        }
         if (c == CTRL('z'))
         {
             raise(SIGTSTP);

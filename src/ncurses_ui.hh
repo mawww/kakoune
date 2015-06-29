@@ -52,7 +52,7 @@ public:
 
     static void abort();
 private:
-    void check_resize();
+    void check_resize(bool force = false);
     void redraw();
     void draw_line(const DisplayLine& line, CharCount col_index,
                    const Face& default_face) const;
@@ -62,7 +62,6 @@ private:
     NCursesWin* m_window = nullptr;
 
     CharCoord m_dimensions;
-    void update_dimensions();
 
     NCursesWin* m_menu_win = nullptr;
     Vector<String> m_items;
