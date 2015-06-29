@@ -397,10 +397,14 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
                             const DisplayLine& mode_line,
                             const Face& default_face)
 {
-    int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
+    const int status_line_pos = m_status_on_top ? 0 : (int)m_dimensions.line;
     wmove(m_window, status_line_pos, 0);
+
+    wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
     wclrtoeol(m_window);
+
     draw_line(status_line, 0, default_face);
+
     const auto mode_len = mode_line.length();
     const auto remaining = m_dimensions.column - status_line.length();
     if (mode_len < remaining)

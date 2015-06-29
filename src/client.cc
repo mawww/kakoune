@@ -97,10 +97,9 @@ DisplayLine Client::generate_mode_line() const
 
     DisplayLine status;
     Face info_face = get_face("Information");
-    Face status_face = get_face("StatusLine");
 
-    status.push_back({ context().buffer().display_name(), status_face });
-    status.push_back({ format(" {}:{} ", pos.line+1, col+1), status_face });
+    status.push_back({ context().buffer().display_name() });
+    status.push_back({ format(" {}:{} ", pos.line+1, col+1) });
     if (context().buffer().is_modified())
         status.push_back({ "[+]", info_face });
     if (m_input_handler.is_recording())
@@ -111,10 +110,10 @@ DisplayLine Client::generate_mode_line() const
         status.push_back({ "[no-hooks]", info_face });
     if (context().buffer().flags() & Buffer::Flags::Fifo)
         status.push_back({ "[fifo]", info_face });
-    status.push_back({ " ", status_face });
+    status.push_back({ " " });
     for (auto& atom : m_input_handler.mode_line())
         status.push_back(std::move(atom));
-    status.push_back({ format(" - {}@[{}]", context().name(), Server::instance().session()), status_face });
+    status.push_back({ format(" - {}@[{}]", context().name(), Server::instance().session()) });
 
     return status;
 }
@@ -143,14 +142,12 @@ void Client::change_buffer(Buffer& buffer)
 
 void Client::redraw_ifn()
 {
-    Face default_face = get_face("Default");
-
     Window& window = context().window();
     UserInterface& ui = context().ui();
 
     const bool needs_redraw = window.needs_redraw(context());
     if (needs_redraw)
-        ui.draw(window.update_display_buffer(context()), default_face);
+        ui.draw(window.update_display_buffer(context()), get_face("Default"));
 
     DisplayLine mode_line = generate_mode_line();
     if (needs_redraw or
@@ -160,7 +157,7 @@ void Client::redraw_ifn()
         m_mode_line = std::move(mode_line);
         m_status_line = m_pending_status_line;
 
-        ui.draw_status(m_status_line, m_mode_line, default_face);
+        ui.draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
     }
 
     ui.refresh();
