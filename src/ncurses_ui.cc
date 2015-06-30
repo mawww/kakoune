@@ -445,8 +445,8 @@ void NCursesUI::check_resize(bool force)
 
         m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
 
-        if (const char* csr = tigetstr((char*)"csr"))
-            putp(tiparm(csr, 0, ws.ws_row));
+        if (char* csr = tigetstr((char*)"csr"))
+            putp(tparm(csr, (long)0, (long)ws.ws_row));
     }
     else
         kak_assert(false);
