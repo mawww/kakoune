@@ -1504,6 +1504,9 @@ const CommandDesc face_cmd = {
     [](const ParametersParser& parser, Context& context)
     {
         FaceRegistry::instance().register_alias(parser[0], parser[1], true);
+
+        for (auto& client : ClientManager::instance())
+            client->window().force_redraw();
     }
 };
 
