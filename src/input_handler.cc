@@ -842,7 +842,7 @@ private:
 
     static void history_push(History& history, StringView entry)
     {
-        if(entry.empty())
+        if(entry.empty() or is_horizontal_blank(entry[0_byte]))
         {
             return;
         }
