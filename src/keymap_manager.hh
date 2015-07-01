@@ -20,6 +20,7 @@ enum class KeymapMode : char
     Goto,
     View,
     User,
+    Object,
 };
 
 class KeymapManager

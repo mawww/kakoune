@@ -1097,6 +1097,7 @@ KeymapMode parse_keymap_mode(const String& str)
     if (prefix_match("goto", str))   return KeymapMode::Goto;
     if (prefix_match("view", str))   return KeymapMode::View;
     if (prefix_match("user", str))   return KeymapMode::User;
+    if (prefix_match("object", str)) return KeymapMode::Object;
 
     throw runtime_error(format("unknown keymap mode '{}'", str));
 }
@@ -1112,7 +1113,8 @@ const CommandDesc map_key_cmd = {
     "    prompt\n"
     "    goto\n"
     "    view\n"
-    "    user\n",
+    "    user\n"
+    "    object\n",
     ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
     CommandFlags::None,
     CommandHelper{},
@@ -1125,7 +1127,7 @@ const CommandDesc map_key_cmd = {
                      complete(params[0], pos_in_token, scopes) };
         if (token_to_complete == 1)
         {
-            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view", "user" };
+            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
             return { 0_byte, params[1].length(),
                      complete(params[1], pos_in_token, modes) };
         }

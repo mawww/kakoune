@@ -900,7 +900,7 @@ template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
 void select_object(Context& context, NormalParams params)
 {
     const int level = params.count <= 0 ? 0 : params.count - 1;
-    on_next_key_with_autoinfo(context, KeymapMode::None,
+    on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [level](Key key, Context& context) {
         if (key.modifiers != Key::Modifiers::None)
             return;
