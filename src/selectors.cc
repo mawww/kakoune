@@ -226,13 +226,12 @@ Selection select_number(const Buffer& buffer, const Selection& selection, Object
                                         : Selection{last.coord(), first.coord()};
 }
 
-static bool is_end_of_sentence(char c)
-{
-    return c == '.' or c == ';' or c == '!' or c == '?';
-}
-
 Selection select_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
+    auto is_end_of_sentence = [](char c) {
+        return c == '.' or c == ';' or c == '!' or c == '?';
+    };
+
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
     if (not (flags & ObjectFlags::ToEnd))
@@ -372,31 +371,29 @@ Selection select_whitespaces(const Buffer& buffer, const Selection& selection, O
                                         : utf8_range(last, first);
 }
 
-static CharCount get_indent(StringView str, int tabstop)
-{
-    CharCount indent = 0;
-    for (auto& c : str)
-    {
-    if (c == ' ')
-        ++indent;
-    else if (c =='\t')
-        indent = (indent / tabstop + 1) * tabstop;
-    else
-        break;
-    }
-    return indent;
-}
-
-static bool is_only_whitespaces(StringView str)
-{
-    auto it = str.begin();
-    skip_while(it, str.end(),
-               [](char c){ return c == ' ' or c == '\t' or c == '\n'; });
-    return it == str.end();
-}
-
 Selection select_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
 {
+    auto get_indent = [](StringView str, int tabstop) {
+        CharCount indent = 0;
+        for (auto& c : str)
+        {
+            if (c == ' ')
+                ++indent;
+            else if (c =='\t')
+                indent = (indent / tabstop + 1) * tabstop;
+            else
+                break;
+        }
+        return indent;
+    };
+
+    auto is_only_whitespaces = [](StringView str) {
+        auto it = str.begin();
+        skip_while(it, str.end(),
+                   [](char c){ return c == ' ' or c == '\t' or c == '\n'; });
+        return it == str.end();
+    };
+
     int tabstop = buffer.options()["tabstop"].get<int>();
     LineCount line = selection.cursor().line;
     auto indent = get_indent(buffer[line], tabstop);
