@@ -305,7 +305,7 @@ Changes
         indent (3 leading spaces when indent is 4)
 
  * `|`: pipe each selections through the given external filter program
-        and replace the selection with it's output.
+        and replace the selection with its output.
  * `alt-|`: pipe each selections through the given external filter program
         and ignore its output
 
@@ -392,7 +392,7 @@ to forward or backward in the jump list using:
 Multi Selection
 ~~~~~~~~~~~~~~~
 
-Kak was designed from the start to handle multiple selections.
+Kak was designed from the start to handle multiple selections (also called multiple cursors).
 One way to get a multiselection is via the `s` key.
 
 For example, to change all occurences of word 'roger' to word 'marcel'
@@ -425,13 +425,31 @@ not containing a match.
 `$` allows you to enter a shell command and pipe each selections to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
 
+In summary:
+
+ * `s`: make a cursor for each match of the pattern in the current selections
+ * `S`: split selection into new cursors for each match of the pattern
+ * `alt-s`: split selection into new cursors
+ * `C`: make new cursors below the current ones
+ * `alt-C`: make new cursor above the current ones
+ * `$`: filter selections by a pipe: keeps the ones returning 0
+ * `alt-k`: filter selections by regex (keeps the matches)
+ * `alt-K`: filter out selections by regex (removes the matches)
+ * `space`: remove all cursors but the main one (with count n: keep the nth one)
+ * `alt-space`: remove one cursor
+
+A recap: another way to get more cursors is by adding the current search pattern:
+
+ * `N`: add a new selection with next match
+ * `alt-N`: add a new selection with previous match
+
 Object Selection
 ~~~~~~~~~~~~~~~~
 
 Some keys allow you to select a text object:
 
  * `alt-a`: selects the whole object
- * `alt-i`: selects the inner object, that is the object excluding it's surrounder.
+ * `alt-i`: selects the inner object, that is the object excluding its surrounder.
             for example, for a quoted string, this will not select the quote, and
             for a word this will not select trailing spaces.
  * `[`: selects to object start
@@ -474,7 +492,7 @@ Basic Commands
  * `e[dit] <filename> [<line> [<column>]]`: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
      use edit! to force reloading.
- * `w[rite] [<filename>]`: write buffer to <filename> or use it's name if
+ * `w[rite] [<filename>]`: write buffer to <filename> or use its name if
       filename is not given.
  * `w[rite]a[ll]`: write all buffers that are associated to a file.
  * `q[uit]`: exit Kakoune, use quit! to force quitting even if there is some
@@ -491,7 +509,7 @@ Basic Commands
  * `echo <text>`: show <text> in status line
  * `nop`: does nothing, but as with every other commands, arguments may be
       evaluated. So nop can be used for example to execute a shell command
-      while being sure that it's output will not be interpreted by kak.
+      while being sure that its output will not be interpreted by kak.
       `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
       `:nop %sh{ echo echo tchou }` will not, but both will execute the
       shell command.
@@ -655,7 +673,7 @@ New options can be declared using the `:decl` command:
 the `-hidden` parameter makes the option invisible in completion, but
 still modifiable.
 
-Some options are built in Kakoune, and can be used to control it's behaviour:
+Some options are built in Kakoune, and can be used to control its behaviour:
 
  * `tabstop` _int_: width of a tab character.
  * `indentwidth` _int_: width (in spaces) used for indentation.
@@ -786,6 +804,11 @@ selection.
 Registers are lists, instead of simply text in order to interact well with
 multiselection. Each selection has its own captures or yank buffer.
 
+Keybindings summary:
+
+ * `"`: Prefix to set the current register
+ * `ctrl-r`: (in insert mode) Paste the contents of register
+
 Macros
 ~~~~~~
 
@@ -800,6 +823,11 @@ To replay a macro, use the `q` key, followed by the macro name.
 Macros are actually stored as a key sequence into a register, i.e. a macro name
 is a register name.
 
+Keybindings summary:
+
+ * `Q`: record macro
+ * `q`: replay macro
+
 Search selection
 ~~~~~~~~~~~~~~~~
 
@@ -809,6 +837,11 @@ begins and/or ends at word boundaries and set the search pattern accordingly.
 
 with `alt-*` you can set the search pattern to the current seletion without
 Kakoune trying to be smart.
+
+Keybindings summary:
+
+ * `*`: set the search pattern to the current selection
+ * `alt-*`: same as above, but without trying to be smart
 
 Exec and Eval
 ~~~~~~~~~~~~~
@@ -851,12 +884,12 @@ Insert mode completion
 Kakoune can propose completions while inserting text, the `completers` option
 controls automatic completion, which kicks in when a certain idle timeout is
 reached (100 milliseconds). Insert mode completion can be explicitely triggered
-using *control-x*, followed, by:
+using `ctrl-x`, followed, by:
 
- * *f* : filename completion
- * *w* : buffer word completion
- * *l* : buffer line completion
- * *o* : option based completion
+ * `f` : filename completion
+ * `w` : buffer word completion
+ * `l` : buffer line completion
+ * `o` : option based completion
 
 Completion candidates can be selected using `ctrl-n` and `ctrl-p`.
 
@@ -1127,8 +1160,11 @@ with `scope` being one of `global`, `buffer` or `window` (or any prefix),
 mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix), `key` being
 a single key name and `keys` a list of keys.
 
-`user` mode allows for user mapping behind the `,` key. Keys will be executed in
-normal mode.
+The `user` mode allows for user mapping behind the `,` key. Keys will be executed in
+normal mode. So use `exec` to run default key bindings, example:
+
+    # map ,/ to search in selections (s), even if s is rebound in normal mode:
+    map global user / ":exec s<ret>"
 
 Defining Commands
 ~~~~~~~~~~~~~~~~~
@@ -1143,19 +1179,15 @@ New commands can be defined using the `:def` command.
 
 `def` can also takes some flags:
 
- * `-env-params`: pass parameters given to commands in the environment as
-                  kak_paramN with N the parameter number
- * `-shell-params`: pass parameters given to commands as positional parameters
-                    to any shell expansions used in the command.
- * `-file-completion`: try file completion on any parameter passed
-                       to this command
- * `-shell-completion`: following string is a shell command which takes
-                        parameters as positional params and output one
-                        completion candidate per line.
- * `-allow-override`: allow the new command to replace an exisiting one
-                      with the same name.
- * `-hidden`: do not show the command in command name completions
- * `-docstring`: define the documentation string for the command
+ * `-shell-params`:      pass parameters to each shell escape as $0..$N
+ * `-allow-override`:    allow overriding an existing command
+ * `-hidden`:            do not display the command in completion candidates
+ * `-docstring`:         define the documentation string for command
+ * `-file-completion`:   complete parameters using filename completion
+ * `-client-completion`: complete parameters using client name completion
+ * `-buffer-completion`: complete parameters using buffer name completion
+ * `-command-completion`: complete parameters using kakoune command completion
+ * `-shell-completion`:  complete the parameters using the given shell-script
 
 Using shell expansion permits to define complex commands or to access
 Kakoune state:
