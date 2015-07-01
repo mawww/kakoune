@@ -434,16 +434,14 @@ Selection select_indent(const Buffer& buffer, const Selection& selection, Object
 Selection select_argument(const Buffer& buffer, const Selection& selection,
                           int level, ObjectFlags flags)
 {
-    auto is_whitespace = [](Codepoint c) {
-        return c == ' ' or c == '\t' or c == '\n';
-    };
-    auto get_kind = [](Codepoint c) -> int {
+    auto get_kind = [](Codepoint c) -> char {
         switch (c)
         {
         case '(': case ')': return 1;
         case '[': case ']': return 2;
         case '{': case '}': return 3;
         case '<': case '>': return 4;
+        default: kak_assert(false); return 0;
         }
     };
     enum Class { None, Opening, Closing };
@@ -456,108 +454,99 @@ Selection select_argument(const Buffer& buffer, const Selection& selection,
         }
     };
 
-    auto pairs = std::vector<int>();
+    Vector<char> pairs;
 
-    Utf8Iterator pos = buffer.iterator_at(selection.cursor());
+    BufferIterator pos = buffer.iterator_at(selection.cursor());
     if (classify(*pos) == Closing)
         ++pos;
-    Utf8Iterator begin = pos;
-    Utf8Iterator end = begin;
-    bool fail = false;
-
-    skip_while(end, buffer.end(), [&](Codepoint cur)
+    bool first_arg = false;
+    BufferIterator begin = pos;
+    for (int lev = level; begin != buffer.begin(); --begin)
     {
-        if (cur == ',' && level == 0)
-        {
-            pairs.push_back(0);
-            return false;
-        }
-        auto c = classify(cur);
-        if (c == Opening)
-        {
-            pairs.push_back(get_kind(cur));
-            ++level;
-        }
-        else if (c == Closing)
-        {
-            --level;
-            if (pairs.empty() || pairs.back() < 0)
-            {
-                pairs.push_back(-get_kind(cur));
-                return level >= 0;
-            }
-            else if (pairs.back() == get_kind(cur))
-            {
-                pairs.pop_back();
-                return true;
-            }
-            fail = true;
-            return false;
-        }
-        return true;
-    });
-    if (fail || end == buffer.end())
-        return selection;
-
-    write_to_debug_buffer("before reverse:");
-    for (auto it = pairs.begin(); it != pairs.end(); ++it)
-        write_to_debug_buffer(format("{}", *it));
-    std::reverse(pairs.begin(), pairs.end());
-    write_to_debug_buffer("before reverse:");
-    for (auto it = pairs.begin(); it != pairs.end(); ++it)
-        write_to_debug_buffer(format("{}", *it));
-
-    --begin;
-    skip_while_reverse(begin, buffer.begin(), [&](Codepoint cur)
-    {
-        if (cur == ',' && pairs.size() == 1)
-        {
-            return false;
-        }
-        auto c = classify(cur);
+        Codepoint cur = *begin;
+        Class c = classify(cur);
         if (c == Closing)
         {
-            pairs.push_back(-get_kind(cur));
+            pairs.push_back(get_kind(cur));
+            ++lev;
         }
         else if (c == Opening)
         {
-            if (pairs.back() == 0 || pairs.back() == -get_kind(cur))
+            if (not pairs.empty())
             {
+                if (pairs.back() != get_kind(cur))
+                    return selection;
+
                 pairs.pop_back();
-                return !pairs.empty();
             }
-            fail = true;
-            return false;
+            if (lev-- == 0)
+            {
+                first_arg = true;
+                ++begin;
+                break;
+            }
         }
-        return true;
-    });
-    if (fail || begin == buffer.begin())
-        return selection;
+        else if (cur == ',' and lev == 0)
+        {
+            ++begin;
+            break;
+        }
+    }
+
+    kak_assert(pairs.empty());
+
+    bool last_arg = false;
+    BufferIterator end = pos;
+    for (int lev = level; end != buffer.end(); ++end)
+    {
+        Codepoint cur = *end;
+        Class c = classify(cur);
+        if (c == Opening)
+        {
+            pairs.push_back(get_kind(cur));
+            ++lev;
+        }
+        else if (c == Closing)
+        {
+            if (not pairs.empty())
+            {
+                if (pairs.back() != get_kind(cur))
+                    return selection;
+
+                pairs.pop_back();
+            }
+            if (lev-- == 0)
+            {
+                last_arg = true;
+                --end;
+                break;
+            }
+        }
+        else if (cur == ',' and lev == 0)
+        {
+            // include whitespaces *after* the comma only for first argument
+            if (first_arg and not (flags & ObjectFlags::Inner))
+            {
+                while (end + 1 != buffer.end() and is_blank(*(end+1)))
+                    ++end;
+            }
+            break;
+        }
+    }
 
     if (flags & ObjectFlags::Inner)
     {
-        ++begin;
-        skip_while(begin, end, is_whitespace);
+        if (not last_arg)
+            --end;
+        skip_while(begin, end, is_blank);
+        skip_while_reverse(end, begin, is_blank);
+    }
+    // get starting comma for non inner last arg
+    else if (not first_arg and last_arg)
+        --begin;
+
+    if (end == buffer.end())
         --end;
-        skip_while_reverse(end, begin, is_whitespace);
-    }
-    else
-    {
-        if (classify(*end) == Closing)
-        {
-            --end;
-            if (classify(*begin) == Opening)
-                ++begin;
-        }
-        else
-        {
-            ++begin;
-            skip_while(begin, end, is_whitespace);
-            ++end;
-            skip_while(end, buffer.end(), is_whitespace);
-            --end;
-        }
-    }
 
     if (flags & ObjectFlags::ToBegin and not (flags & ObjectFlags::ToEnd))
         return utf8_range(pos, begin);

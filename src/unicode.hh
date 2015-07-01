@@ -18,6 +18,11 @@ inline bool is_horizontal_blank(Codepoint c)
     return c == ' ' or c == '\t';
 }
 
+inline bool is_blank(Codepoint c)
+{
+    return c == ' ' or c == '\t' or c == '\n';
+}
+
 enum WordType { Word, WORD };
 
 template<WordType word_type = Word>
