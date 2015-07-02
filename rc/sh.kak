@@ -7,8 +7,8 @@ hook global BufSetOption mimetype=text/x-shellscript %{
 }
 
 addhl -group / regions -default code sh \
-    double_string  %{"} %{(?<!\\)(\\\\)*"} '' \
-    single_string %{'} %{(?<!\\)(\\\\)*'} '' \
+    double_string  %{(?<!\\)(\\\\)*\K"} %{(?<!\\)(\\\\)*"} '' \
+    single_string %{(?<!\\)(\\\\)*\K'} %{'} '' \
     comment '(?<!\$)#' '$' ''
 
 addhl -group /sh/double_string fill string
