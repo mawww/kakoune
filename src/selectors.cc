@@ -431,97 +431,62 @@ Selection select_indent(const Buffer& buffer, const Selection& selection, Object
 Selection select_argument(const Buffer& buffer, const Selection& selection,
                           int level, ObjectFlags flags)
 {
-    auto get_kind = [](Codepoint c) -> char {
-        switch (c)
-        {
-        case '(': case ')': return 1;
-        case '[': case ']': return 2;
-        case '{': case '}': return 3;
-        case '<': case '>': return 4;
-        default: kak_assert(false); return 0;
-        }
-    };
-    enum Class { None, Opening, Closing };
+    enum Class { None, Opening, Closing, Delimiter };
     auto classify = [](Codepoint c) {
         switch (c)
         {
         case '(': case '[': case '{': case '<': return Opening;
         case ')': case ']': case '}': case '>': return Closing;
+        case ',': case ';': return Delimiter;
         default: return None;
         }
     };
 
-    Vector<char> pairs;
-
     BufferIterator pos = buffer.iterator_at(selection.cursor());
-    if (classify(*pos) == Closing)
-        ++pos;
+    switch (classify(*pos))
+    {
+        //case Closing: if (pos+1 != buffer.end()) ++pos; break;
+        case Opening:
+        case Delimiter: if (pos != buffer.begin()) --pos; break;
+        default: break;
+    };
+
     bool first_arg = false;
     BufferIterator begin = pos;
     for (int lev = level; begin != buffer.begin(); --begin)
     {
-        Codepoint cur = *begin;
-        Class c = classify(cur);
+        Class c = classify(*begin);
         if (c == Closing)
-        {
-            pairs.push_back(get_kind(cur));
             ++lev;
-        }
-        else if (c == Opening)
+        else if (c == Opening and (lev-- == 0))
         {
-            if (not pairs.empty())
-            {
-                if (pairs.back() != get_kind(cur))
-                    return selection;
-
-                pairs.pop_back();
-            }
-            if (lev-- == 0)
-            {
-                first_arg = true;
-                ++begin;
-                break;
-            }
+            first_arg = true;
+            ++begin;
+            break;
         }
-        else if (cur == ',' and lev == 0)
+        else if (c == Delimiter and lev == 0)
         {
             ++begin;
             break;
         }
     }
 
-    kak_assert(pairs.empty());
-
     bool last_arg = false;
     BufferIterator end = pos;
     for (int lev = level; end != buffer.end(); ++end)
     {
-        Codepoint cur = *end;
-        Class c = classify(cur);
+        Class c = classify(*end);
         if (c == Opening)
-        {
-            pairs.push_back(get_kind(cur));
             ++lev;
-        }
-        else if (c == Closing)
+        else if (end != pos and c == Closing and (lev-- == 0))
         {
-            if (not pairs.empty())
-            {
-                if (pairs.back() != get_kind(cur))
-                    return selection;
-
-                pairs.pop_back();
-            }
-            if (lev-- == 0)
-            {
-                last_arg = true;
-                --end;
-                break;
-            }
+            last_arg = true;
+            --end;
+            break;
         }
-        else if (cur == ',' and lev == 0)
+        else if (c == Delimiter and lev == 0)
         {
-            // include whitespaces *after* the comma only for first argument
+            // include whitespaces *after* the delimiter only for first argument
             if (first_arg and not (flags & ObjectFlags::Inner))
             {
                 while (end + 1 != buffer.end() and is_blank(*(end+1)))
@@ -538,7 +503,7 @@ Selection select_argument(const Buffer& buffer, const Selection& selection,
         skip_while(begin, end, is_blank);
         skip_while_reverse(end, begin, is_blank);
     }
-    // get starting comma for non inner last arg
+    // get starting delimiter for non inner last arg
     else if (not first_arg and last_arg)
         --begin;
 
