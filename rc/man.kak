@@ -33,7 +33,14 @@ def -hidden -shell-params _man %{ %sh{
     fi
 } }
 
-def -shell-params man %{ %sh{
+def -shell-params \
+  -shell-completion %{
+    prefix=${1:0:${kak_pos_in_token}}
+    for page in /usr/share/man/*/${prefix}*.1.gz; do
+        basename $page .1.gz
+    done
+  } \
+  man %{ %sh{
     [ -z "$@" ] && set -- "$kak_selection"
     echo "eval -try-client %opt{docsclient} _man $@"
 } }

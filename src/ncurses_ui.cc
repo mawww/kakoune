@@ -482,7 +482,7 @@ Key NCursesUI::get_key()
             auto wheel_down_mask = NCURSES_MOUSE_MASK(m_wheel_down_button, NCURSES_BUTTON_PRESSED);
             auto wheel_up_mask = NCURSES_MOUSE_MASK(m_wheel_up_button, NCURSES_BUTTON_PRESSED);
 
-            CharCoord pos{ ev.y, ev.x };
+            CharCoord pos{ ev.y - (m_status_on_top ? 1 : 0), ev.x };
             if ((ev.bstate & BUTTON1_PRESSED) == BUTTON1_PRESSED) return mouse_press(pos);
             if ((ev.bstate & BUTTON1_RELEASED) == BUTTON1_RELEASED) return mouse_release(pos);
             if ((ev.bstate & wheel_down_mask) == wheel_down_mask) return mouse_wheel_down(pos);

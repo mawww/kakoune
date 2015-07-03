@@ -466,7 +466,9 @@ Commands
 When pressing `:` in normal mode, Kakoune will open a prompt to enter a command.
 
 Commands are used for non editing tasks, such as opening a buffer, writing the
-current one, quitting, etc.
+current one, quitting, etc. You can cycle through the command history with
+`<c-p>` and `<c-n>`. Commands starting with horizontal whitespace (e.g. a
+space) will not be saved in the command history.
 
 Basic Commands
 ~~~~~~~~~~~~~~
