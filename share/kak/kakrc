@@ -31,20 +31,20 @@ def -shell-params runtime %{ %sh{
 }}
 
 def -shell-params -docstring "colorscheme <name>: enable named colorscheme" \
-    -shell-completion %{
-      prefix=${1:0:${kak_pos_in_token}}
-      (
-        for col in ${kak_runtime}/colors/*.kak; do
-            expr $(basename "${col}" .kak) : "^\(${prefix}.*\)$"
-        done
-      ) | grep -v '^$'
-    } \
-    colorscheme %{ %sh{
-        if [ $# -eq 1 ]; then
-            echo "source '${kak_runtime}/colors/$1.kak'"
-        else
-            echo -color Error 'Usage: colorscheme <scheme name>'
-        fi
+  -shell-completion %{
+    prefix=${1:0:${kak_pos_in_token}}
+    (
+      for col in ${kak_runtime}/colors/*.kak; do
+          expr $(basename "${col}" .kak) : "^\(${prefix}.*\)$"
+      done
+    ) | grep -v '^$'
+  } \
+  colorscheme %{ %sh{
+    if [ $# -eq 1 ]; then
+        echo "source '${kak_runtime}/colors/$1.kak'"
+    else
+        echo -color Error 'Usage: colorscheme <scheme name>'
+    fi
 }}
 
 %sh{
