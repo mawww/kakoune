@@ -1,7 +1,11 @@
 # zenburn theme
 
 # first we define the zenburn colors as faces
-face zenbackground   rgb:3f3f3f
+face zenbackground   default,rgb:3f3f3f
+face zenstatus       rgb:efdcbc,rgb:2a2a2a
+face zeninfo         rgb:cc9393,rgb:2a2a2a
+face zenmenubg       rgb:7f9f7f,rgb:4a4a4a
+face zenmenufg       rgb:8cd0d3,rgb:4a4a4a
 face zentext         rgb:efefef
 face zenkeyword      rgb:f0dfaf+b
 face zenstorageClass rgb:c3bf9f+b
@@ -40,8 +44,9 @@ face link zenstring
 face bullet zenidentifier
 face list zentype
 
-face Default default,rgb:3f3f3f
-face StatusLine rgb:efdcbc,rgb:2a2a2a
-face Information rgb:cc9393,rgb:2a2a2a
-face MenuBackground rgb:7f9f7f,rgb:4a4a4a
-face MenuForeground rgb:8cd0d3,rgb:4a4a4a
+# and built in faces
+face Default zenbackground
+face StatusLine zenstatus
+face Information zeninfo
+face MenuBackground zenmenubg
+face MenuForeground zenmenufg
