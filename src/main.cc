@@ -323,7 +323,7 @@ int run_client(StringView session, StringView init_command)
     }
     catch (connection_failed& e)
     {
-        write_stderr(e.what());
+        write_stderr(format("{}\n", e.what()));
         return -1;
     }
     return 0;
@@ -541,7 +541,7 @@ int run_pipe(StringView session)
     }
     catch (connection_failed& e)
     {
-        write_stderr(e.what());
+        write_stderr(format("{}\n", e.what()));
         return -1;
     }
     return 0;
