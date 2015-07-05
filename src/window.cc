@@ -127,13 +127,18 @@ void Window::set_dimensions(CharCoord dimensions)
 
 static LineCount adapt_view_pos(LineCount line, LineCount offset,
                                 LineCount view_pos, LineCount view_size,
-                                LineCount buffer_size)
+                                LineCount buffer_size, bool scrolloffalways)
 {
     if (line - offset < view_pos)
         return std::max(0_line, line - offset);
     else if (line + offset >= view_pos + view_size)
-        return std::min(buffer_size - view_size,
-                        line + offset - (view_size - 1));
+    {
+        if (scrolloffalways)
+            return std::max(0_line, line + offset - (view_size - 1));
+        else
+            return std::min(std::max(0_line, buffer_size - view_size),
+                            line + offset - (view_size - 1));
+    }
     return view_pos;
 }
 
@@ -190,12 +195,15 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
                                (m_dimensions.column - 1)/2};
     const CharCoord offset = std::min(options()["scrolloff"].get<CharCoord>(),
                                       max_offset);
+    const bool scrolloffalways = options()["scrolloffalways"].get<bool>();
 
     // scroll lines if needed, try to get as much of the selection visible as possible
     m_position.line = adapt_view_pos(anchor.line, offset.line, m_position.line,
-                                     m_dimensions.line, buffer().line_count());
+                                     m_dimensions.line, buffer().line_count(),
+                                     scrolloffalways);
     m_position.line = adapt_view_pos(cursor.line,  offset.line, m_position.line,
-                                     m_dimensions.line, buffer().line_count());
+                                     m_dimensions.line, buffer().line_count(),
+                                     scrolloffalways);
 
     // highlight only the line containing the cursor
     DisplayBuffer display_buffer;
