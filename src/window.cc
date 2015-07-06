@@ -132,8 +132,8 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
     if (line - offset < view_pos)
         return std::max(0_line, line - offset);
     else if (line + offset >= view_pos + view_size)
-        return std::min(buffer_size - view_size,
-                        line + offset - (view_size - 1));
+        return std::max(0_line, std::min(buffer_size - view_size,
+                                         line + offset - (view_size - 1)));
     return view_pos;
 }
 
