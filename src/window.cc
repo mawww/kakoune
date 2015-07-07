@@ -129,17 +129,18 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
                                 LineCount view_pos, LineCount view_size,
                                 LineCount buffer_size)
 {
+    offset = std::min(offset, (view_size + 1) / 2);
     if (line - offset < view_pos)
         return std::max(0_line, line - offset);
     else if (line + offset >= view_pos + view_size)
-        return std::max(0_line, std::min(buffer_size - view_size,
-                                         line + offset - (view_size - 1)));
+        return std::max(0_line, line + offset - view_size);
     return view_pos;
 }
 
 static CharCount adapt_view_pos(const DisplayBuffer& display_buffer, CharCount offset,
                                 ByteCoord pos, CharCount view_pos, CharCount view_size)
 {
+    offset = std::min(offset, (view_size + 1) / 2);
     CharCount buffer_column = 0;
     CharCount non_buffer_column = 0;
     for (auto& line : display_buffer.lines())
@@ -186,10 +187,7 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     const auto& anchor = selection.anchor();
     const auto& cursor  = selection.cursor();
 
-    const CharCoord max_offset{(m_dimensions.line - 1)/2,
-                               (m_dimensions.column - 1)/2};
-    const CharCoord offset = std::min(options()["scrolloff"].get<CharCoord>(),
-                                      max_offset);
+    const CharCoord offset = options()["scrolloff"].get<CharCoord>();
 
     // scroll lines if needed, try to get as much of the selection visible as possible
     m_position.line = adapt_view_pos(anchor.line, offset.line, m_position.line,
