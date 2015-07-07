@@ -488,6 +488,7 @@ Basic Commands
  * `source <filename>`: execute commands in <filename>
  * `runtime <filename>`: execute commands in <filename>, <filename>
       is relative to kak executable path.
+ * `colorscheme <name>`: load named colorscheme.
  * `nameclient <name>`: set current client name
  * `namebuf <name>`: set current buffer name
  * `echo <text>`: show <text> in status line
