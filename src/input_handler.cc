@@ -956,7 +956,11 @@ public:
         bool moved = false;
         if (key == Key::Escape or key == ctrl('c'))
         {
+            if (m_in_end)
+                throw runtime_error("Asked to exit insert mode while running InsertEnd hook");
+            m_in_end = true;
             context().hooks().run_hook("InsertEnd", "", context());
+
             m_completer.reset();
             pop_mode(keep_alive);
         }
@@ -1175,6 +1179,7 @@ private:
     bool             m_autoshowcompl;
     Timer            m_idle_timer;
     bool             m_disable_hooks;
+    bool             m_in_end = false;
 };
 
 }
