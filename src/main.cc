@@ -228,7 +228,7 @@ void register_options()
 }
 
 template<typename UI>
-void create_local_client(StringView init_command, bool kakrc_error)
+void create_local_client(StringView init_command, bool startup_error)
 {
     struct LocalUI : UI
     {
@@ -262,9 +262,9 @@ void create_local_client(StringView init_command, bool kakrc_error)
     static Client* client = ClientManager::instance().create_client(
         make_unique<LocalUI>(), get_env_vars(), init_command);
 
-    if (kakrc_error)
+    if (startup_error)
         client->print_status({
-            "error while sourcing kakrc, see *debug* buffer for details",
+            "error during startup, see *debug* buffer for details",
             get_face("Error")
         });
 
@@ -395,7 +395,7 @@ int run_server(StringView session, StringView init_command,
 
     Server server(session.empty() ? to_string(getpid()) : session.str());
 
-    bool kakrc_error = false;
+    bool startup_error = false;
     if (not ignore_kakrc) try
     {
         Context initialisation_context{Context::EmptyContextFlag{}};
@@ -404,12 +404,12 @@ int run_server(StringView session, StringView init_command,
     }
     catch (Kakoune::runtime_error& error)
     {
-        kakrc_error = true;
+        startup_error = true;
         write_to_debug_buffer(format("error while parsing kakrc:\n    {}", error.what()));
     }
     catch (Kakoune::client_removed&)
     {
-        kakrc_error = true;
+        startup_error = true;
         write_to_debug_buffer("error while parsing kakrc: asked to quit");
     }
 
@@ -424,8 +424,17 @@ int run_server(StringView session, StringView init_command,
         // is the most recently created one.
         for (auto& file : reversed(files))
         {
-            if (not create_buffer_from_file(file))
-                new Buffer(file.str(), Buffer::Flags::New | Buffer::Flags::File);
+            try
+            {
+                if (not create_buffer_from_file(file))
+                    new Buffer(file.str(), Buffer::Flags::New | Buffer::Flags::File);
+            }
+            catch (Kakoune::runtime_error& error)
+            {
+                startup_error = true;
+                write_to_debug_buffer(format("error while opening file '{}':\n    {}",
+                                             file, error.what()));
+            }
         }
     }
     catch (Kakoune::runtime_error& error)
@@ -438,9 +447,9 @@ int run_server(StringView session, StringView init_command,
     if (not daemon)
     {
         if (dummy_ui)
-            create_local_client<DummyUI>(init_command, kakrc_error);
+            create_local_client<DummyUI>(init_command, startup_error);
         else
-            create_local_client<NCursesUI>(init_command, kakrc_error);
+            create_local_client<NCursesUI>(init_command, startup_error);
     }
 
     while (not terminate and (not client_manager.empty() or daemon))

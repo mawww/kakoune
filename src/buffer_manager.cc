@@ -11,7 +11,10 @@
 namespace Kakoune
 {
 
-struct name_not_unique : logic_error {};
+struct name_not_unique : runtime_error
+{
+    name_not_unique() : runtime_error("buffer name is already in use") {}
+};
 
 BufferManager::~BufferManager()
 {
