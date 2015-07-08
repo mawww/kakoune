@@ -3,6 +3,8 @@
 #include "containers.hh"
 #include "context.hh"
 #include "buffer_utils.hh"
+#include "display_buffer.hh"
+#include "face_registry.hh"
 #include "regex.hh"
 
 namespace Kakoune
@@ -48,6 +50,7 @@ void HookManager::run_hook(StringView hook_name,
         return;
 
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
+    bool hook_error = false;
     for (auto& hook : hook_list_it->second)
     {
         if (not hook.first.empty() and not disabled_hooks.empty() and
@@ -60,10 +63,16 @@ void HookManager::run_hook(StringView hook_name,
         }
         catch (runtime_error& err)
         {
+            hook_error = true;
             write_to_debug_buffer(format("error running hook {}/{}: {}",
                                hook_name, hook.first, err.what()));
         }
     }
+
+    if (hook_error)
+        context.print_status({
+            format("Error running hooks for '{}' '{}', see *debug* buffer",
+                   hook_name, param), get_face("Error") });
 }
 
 }
