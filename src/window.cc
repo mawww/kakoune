@@ -133,7 +133,7 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
     if (line - offset < view_pos)
         return std::max(0_line, line - offset);
     else if (line + offset >= view_pos + view_size)
-        return std::max(0_line, line + offset - view_size);
+        return std::max(0_line, line + offset - view_size + 1);
     return view_pos;
 }
 
