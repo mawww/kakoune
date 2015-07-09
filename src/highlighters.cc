@@ -455,21 +455,22 @@ HighlighterAndId create_search_highlighter(HighlighterParameters params)
 {
     if (params.size() != 0)
         throw runtime_error("wrong parameter count");
-        auto get_face = [](const Context& context){
-            return FacesSpec{ { 0, "Search" } };
-        };
-        auto get_regex = [](const Context& context){
-            auto s = context.main_sel_register_value("/");
-            try
-            {
-                return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
-            }
-            catch (RegexError& err)
-            {
-                return Regex{};
-            }
-        };
-        return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_face)};
+
+    auto get_face = [](const Context& context){
+        return FacesSpec{ { 0, "Search" } };
+    };
+    auto get_regex = [](const Context& context){
+        auto s = context.main_sel_register_value("/");
+        try
+        {
+            return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
+        }
+        catch (RegexError& err)
+        {
+            return Regex{};
+        }
+    };
+    return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
 HighlighterAndId create_regex_option_highlighter(HighlighterParameters params)
