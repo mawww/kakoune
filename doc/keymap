@@ -12,7 +12,7 @@
 ┃             ┃ append│ select│ delete│   char│       │     ← │     ↓ │     ↑ │     → │ cursor│ rotate│eschook┃        ┃
 ┣━━━━━━━━━┳━━━┹───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┲━━━┷━━━━━━━┻━━━━━━━━┫
 ┃         ┃ indent│       │      ᵐ│copysel│      ᵛ│     ᵐʷ│     ᵐʳ│       │ dedent│ indent│     ᵐʳ┃                    ┃
-┃         ┠┄┄┄┄┄┄┄┤       │ select├┄┄┄┄┄┄┄┤   view│   prev│ search│  match├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┤ search┃                    ┃
+┃         ┠┄┄┄┄┄┄┄┤  marks│ select├┄┄┄┄┄┄┄┤   view│   prev│ search│  match├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┤ search┃                    ┃
 ┃ ⇧       ┃ dedent│       │   line│ change│   cmds│   word│   next│   char│   user│ repeat│       ┃ ⇧                  ┃
 ┣━━━━━━━━━┻┳━━━━━━┷━━━┳━━━┷━━━━━┱─┴───────┴───────┴───────┴───────┴───────┴─┲━━━━━┷━━━━┳━━┷━━━━━━━╋━━━━━━━━━┳━━━━━━━━━━┫
 ┃          ┃          ┃         ┃                                           ┃          ┃          ┃         ┃          ┃

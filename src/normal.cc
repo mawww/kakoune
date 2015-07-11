@@ -1665,8 +1665,8 @@ static NormalCmdDesc cmds[] =
     { Key::PageUp,   "scroll one page up", scroll<Key::PageUp> },
     { Key::PageDown, "scroll one page down", scroll<Key::PageDown> },
 
-    { '^', "restore selections", restore_selections },
-    { alt('^'), "save selections", save_selections },
+    { 'z', "restore selections", restore_selections },
+    { 'Z', "save selections", save_selections },
 };
 
 KeyMap keymap = cmds;
