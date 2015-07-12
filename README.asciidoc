@@ -234,7 +234,9 @@ Movement
  * `alt-l`: select to line end
 
  * `/`: search (select next match)
+ * `alt-/`: search (select previous match)
  * `?`: search (extend to next match)
+ * `alt-?`: search (extend to previous match)
  * `n`: select next match
  * `N`: add a new selection with next match
  * `alt-n`: select previous match
