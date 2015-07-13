@@ -65,26 +65,6 @@ Scope& Context::scope() const
     return GlobalScope::instance();
 }
 
-OptionManager& Context::options() const
-{
-    return scope().options();
-}
-
-HookManager& Context::hooks() const
-{
-    return scope().hooks();
-}
-
-KeymapManager& Context::keymaps() const
-{
-    return scope().keymaps();
-}
-
-AliasRegistry& Context::aliases() const
-{
-    return scope().aliases();
-}
-
 void Context::set_client(Client& client)
 {
     kak_assert(not has_client());

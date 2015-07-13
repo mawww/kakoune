@@ -102,10 +102,10 @@ public:
 
     Scope& scope() const;
 
-    OptionManager& options() const;
-    HookManager& hooks() const;
-    KeymapManager& keymaps() const;
-    AliasRegistry& aliases() const;
+    OptionManager& options() const { return scope().options(); }
+    HookManager& hooks()     const { return scope().hooks(); }
+    KeymapManager& keymaps() const { return scope().keymaps(); }
+    AliasRegistry& aliases() const { return scope().aliases(); }
 
     void print_status(DisplayLine status) const;
 
