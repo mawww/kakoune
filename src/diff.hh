@@ -177,8 +177,7 @@ void find_diff_rec(Iterator a, int offA, int lenA,
 }
 
 template<typename Iterator, typename Equal = std::equal_to<typename std::iterator_traits<Iterator>::value_type>>
-Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M,
-                                 Equal eq = Equal{})
+Vector<Diff> find_diff(Iterator a, int N, Iterator b, int M, Equal eq = Equal{})
 {
     const int max = 2 * (N + M) + 1;
     Vector<int> data(2*max);
