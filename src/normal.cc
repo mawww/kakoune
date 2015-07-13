@@ -395,19 +395,19 @@ void pipe(Context& context, NormalParams)
                 Vector<String> strings;
                 for (auto& sel : selections)
                 {
-                    auto str = content(buffer, sel);
-                    bool insert_eol = str.back() != '\n';
+                    auto in = content(buffer, sel);
+                    bool insert_eol = in.back() != '\n';
                     if (insert_eol)
-                        str += '\n';
-                    str = ShellManager::instance().eval(
-                        real_cmd, context, str,
+                        in += '\n';
+                    auto out = ShellManager::instance().eval(
+                        real_cmd, context, in,
                         ShellManager::Flags::WaitForStdout,
                         {}, EnvVarMap{}).first;
 
                     if ((insert_eol or sel.max() == buffer.back_coord()) and
-                        str.back() == '\n')
-                        str = str.substr(0, str.length()-1).str();
-                    strings.push_back(std::move(str));
+                        out.back() == '\n')
+                        out = out.substr(0, out.length()-1).str();
+                    strings.push_back(std::move(out));
                 }
                 ScopedEdition edition(context);
                 selections.insert(strings, InsertMode::Replace);
