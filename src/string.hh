@@ -277,6 +277,7 @@ InplaceString<16> to_string(int val);
 InplaceString<24> to_string(size_t val);
 InplaceString<24> to_string(Hex val);
 InplaceString<24> to_string(float val);
+InplaceString<8>  to_string(Codepoint c);
 
 template<typename RealType, typename ValueType>
 decltype(to_string(std::declval<ValueType>()))

@@ -151,6 +151,15 @@ InplaceString<24> to_string(float val)
     return res;
 }
 
+InplaceString<8> to_string(Codepoint c)
+{
+    InplaceString<8> res;
+    char* ptr = res.m_data;
+    utf8::dump(ptr, c);
+    res.m_length = (int)(ptr - res.m_data);
+    return res;
+}
+
 bool subsequence_match(StringView str, StringView subseq)
 {
     auto it = str.begin();
