@@ -253,31 +253,24 @@ public:
         if (params.size() < 2)
             throw runtime_error("wrong parameter count");
 
-        try
+        FacesSpec faces;
+        for (auto it = params.begin() + 1;  it != params.end(); ++it)
         {
-            FacesSpec faces;
-            for (auto it = params.begin() + 1;  it != params.end(); ++it)
-            {
-                auto colon = find(*it, ':');
-                if (colon == it->end())
-                    throw runtime_error("wrong face spec: '" + *it +
-                                         "' expected <capture>:<facespec>");
-                get_face({colon+1, it->end()}); // throw if wrong face spec
-                int capture = str_to_int({it->begin(), colon});
-                faces.emplace_back(capture, String{colon+1, it->end()});
-            }
-
-            String id = "hlregex'" + params[0] + "'";
-
-            Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
-
-            return {id, make_unique<RegexHighlighter>(std::move(ex),
-                                                      std::move(faces))};
+            auto colon = find(*it, ':');
+            if (colon == it->end())
+                throw runtime_error("wrong face spec: '" + *it +
+                                     "' expected <capture>:<facespec>");
+            get_face({colon+1, it->end()}); // throw if wrong face spec
+            int capture = str_to_int({it->begin(), colon});
+            faces.emplace_back(capture, String{colon+1, it->end()});
         }
-        catch (RegexError& err)
-        {
-            throw runtime_error(StringView{"regex error: "} + err.what());
-        }
+
+        String id = "hlregex'" + params[0] + "'";
+
+        Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
+
+        return {id, make_unique<RegexHighlighter>(std::move(ex),
+                                                  std::move(faces))};
     }
 
 private:
@@ -465,7 +458,7 @@ HighlighterAndId create_search_highlighter(HighlighterParameters params)
         {
             return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
         }
-        catch (RegexError& err)
+        catch (regex_error& err)
         {
             return Regex{};
         }
@@ -1170,39 +1163,32 @@ public:
 
     static HighlighterAndId create(HighlighterParameters params)
     {
-        try
+        static const ParameterDesc param_desc{
+            { { "default", { true, "" } } },
+            ParameterDesc::Flags::SwitchesOnlyAtStart, 5
+        };
+
+        ParametersParser parser{params, param_desc};
+        if ((parser.positional_count() % 4) != 1)
+            throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
+
+        RegionsHighlighter::NamedRegionDescList regions;
+        for (size_t i = 1; i < parser.positional_count(); i += 4)
         {
-            static const ParameterDesc param_desc{
-                { { "default", { true, "" } } },
-                ParameterDesc::Flags::SwitchesOnlyAtStart, 5
-            };
+            if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
+                throw runtime_error("group id, begin and end must not be empty");
 
-            ParametersParser parser{params, param_desc};
-            if ((parser.positional_count() % 4) != 1)
-                throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
+            Regex begin{parser[i+1], Regex::nosubs | Regex::optimize };
+            Regex end{parser[i+2], Regex::nosubs | Regex::optimize };
+            Regex recurse;
+            if (not parser[i+3].empty())
+                recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
 
-            RegionsHighlighter::NamedRegionDescList regions;
-            for (size_t i = 1; i < parser.positional_count(); i += 4)
-            {
-                if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
-                    throw runtime_error("group id, begin and end must not be empty");
-
-                Regex begin{parser[i+1], Regex::nosubs | Regex::optimize };
-                Regex end{parser[i+2], Regex::nosubs | Regex::optimize };
-                Regex recurse;
-                if (not parser[i+3].empty())
-                    recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
-
-                regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
-            }
-
-            auto default_group = parser.get_switch("default").value_or(StringView{}).str();
-            return {parser[0], make_unique<RegionsHighlighter>(std::move(regions), default_group)};
+            regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
         }
-        catch (RegexError& err)
-        {
-            throw runtime_error(StringView{"regex error: "} + err.what());
-        }
+
+        auto default_group = parser.get_switch("default").value_or(StringView{}).str();
+        return {parser[0], make_unique<RegionsHighlighter>(std::move(regions), default_group)};
     }
 
 private:

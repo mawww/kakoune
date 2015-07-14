@@ -596,26 +596,12 @@ void regex_prompt(Context& context, const String prompt, T func)
                                           : Regex{str.begin(), str.end()};
                 func(std::move(regex), event, context);
             }
-            catch (RegexError& err)
+            catch (regex_error& err)
             {
                 if (event == PromptEvent::Validate)
-                    throw runtime_error(format("regex error: {}", err.what()));
+                    throw;
                 else
                     context.input_handler().set_prompt_face(get_face("Error"));
-            }
-            catch (std::runtime_error& err)
-            {
-                if (event == PromptEvent::Validate)
-                    throw runtime_error(format("regex error: {}", err.what()));
-                else
-                {
-                    context.input_handler().set_prompt_face(get_face("Error"));
-                    if (context.has_ui())
-                    {
-                        Face face = get_face("Information");
-                        context.ui().info_show("regex error", err.what(), CharCoord{}, face, InfoStyle::Prompt);
-                    }
-                }
             }
             catch (runtime_error&)
             {
@@ -648,17 +634,10 @@ void search_next(Context& context, NormalParams params)
     StringView str = context.main_sel_register_value("/");
     if (not str.empty())
     {
-        try
-        {
-            Regex ex{str.begin(), str.end()};
-            do {
-                select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
-            } while (--params.count > 0);
-        }
-        catch (RegexError& err)
-        {
-            throw runtime_error(format("regex error: ", err.what()));
-        }
+        Regex ex{str.begin(), str.end()};
+        do {
+            select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+        } while (--params.count > 0);
     }
     else
         throw runtime_error("no search pattern");

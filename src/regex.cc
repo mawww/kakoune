@@ -13,14 +13,7 @@ String option_to_string(const Regex& re)
 
 void option_from_string(StringView str, Regex& re)
 {
-    try
-    {
-        re = Regex{str.begin(), str.end()};
-    }
-    catch (RegexError& err)
-    {
-        throw runtime_error(format("unable to create regex: {}", err.what()));
-    }
+    re = Regex{str.begin(), str.end()};
 }
 
 }
