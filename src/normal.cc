@@ -1298,7 +1298,7 @@ void save_selections(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
-        if (key.modifiers != Key::Modifiers::None)
+        if (key.modifiers != Key::Modifiers::None or key == Key::Escape)
             return;
 
         const char reg = key.key;
@@ -1317,7 +1317,7 @@ void restore_selections(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
-        if (key.modifiers != Key::Modifiers::None)
+        if (key.modifiers != Key::Modifiers::None or key == Key::Escape)
             return;
 
         const char reg = key.key;

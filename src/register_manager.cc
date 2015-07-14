@@ -74,6 +74,10 @@ Register& RegisterManager::operator[](StringView reg)
 
 Register& RegisterManager::operator[](Codepoint c)
 {
+    c = tolower(c);
+    if (c < 32 or c > 127)
+        throw runtime_error(format("invalid register name: '{}'", c));
+
     auto& reg_ptr = m_registers[c];
     if (not reg_ptr)
         reg_ptr.reset(new StaticRegister());
