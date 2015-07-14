@@ -63,6 +63,8 @@ install: kak
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../rc/* $(sharedir)/rc
 	ln -s rc $(sharedir)/autoload
+	mkdir -p $(sharedir)/colors
+	install -m 0644 ../colors/* $(sharedir)/colors
 	mkdir -p $(docdir)
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/* $(docdir)
