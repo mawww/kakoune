@@ -69,6 +69,10 @@ void Client::handle_available_input(EventMode mode)
             {
                 if (*key == ctrl('c'))
                     killpg(getpgrp(), SIGINT);
+                else if (*key == Key::FocusIn)
+                    context().hooks().run_hook("FocusIn", context().name(), context());
+                else if (*key == Key::FocusOut)
+                    context().hooks().run_hook("FocusOut", context().name(), context());
                 else
                     m_input_handler.handle_key(*key);
             }

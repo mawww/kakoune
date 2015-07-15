@@ -261,6 +261,8 @@ NCursesUI::NCursesUI()
     mouseinterval(0);
     // force enable report mouse position
     puts("\033[?1002h");
+    // force enable report focus events
+    puts("\033[?1004h");
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, [](int){});
@@ -272,6 +274,7 @@ NCursesUI::NCursesUI()
 
 NCursesUI::~NCursesUI()
 {
+    puts("\033[?1004l");
     puts("\033[?1002l");
     endwin();
     signal(SIGWINCH, SIG_DFL);
@@ -509,6 +512,16 @@ Key NCursesUI::get_key()
     {
         timeout(0);
         const Codepoint new_c = getch();
+        if (new_c == '[') // potential CSI
+        {
+            const Codepoint csi_val = getch();
+            switch (csi_val)
+            {
+                case 'I': return Key::FocusIn;
+                case 'O': return Key::FocusOut;
+                default: break; // nothing
+            }
+        }
         timeout(-1);
         if (new_c != ERR)
         {

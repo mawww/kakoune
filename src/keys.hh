@@ -54,6 +54,8 @@ struct Key
         F10,
         F11,
         F12,
+        FocusIn,
+        FocusOut,
         Invalid,
     };
 
