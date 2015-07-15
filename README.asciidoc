@@ -222,6 +222,9 @@ Movement
  * `e`: select preceding whitespaces and the word on the right of selection end
  * `alt-[wbe]`: same as [wbe] but select WORD instead of word
 
+ * `m`: select to matching character
+ * `M`: extend selection to matching character
+
  * `x`: select line on which selection end lies (or next line when end lies on
         an end-of-line)
  * `alt-x`: expand selections to contain full lines (including end-of-lines)
