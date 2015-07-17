@@ -120,7 +120,7 @@ brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contr
 ====
 
 [TIP]
-.Fedora 20/21/22/Rawhide & Epel 7
+.Fedora 21/22/Rawhide & Epel 7
 ====
 Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr] repository.
 
