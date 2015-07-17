@@ -594,12 +594,15 @@ line using:
 :echo %sh{ ls -l $kak_bufname }
 -------------------------------
 
+Configuration & Autoloading
+---------------------------
+
 Kakrc
------
+~~~~~
 
 If not launched with the `-n` switch, Kakoune will source the
-`../share/kak/kakrc` file (relative to the `kak` binary), which
-will in turn source additional files:
+`../share/kak/kakrc` file relative to the `kak` binary, which
+will source additional files:
 
 If the `$XDG_CONFIG_HOME/kak/autoload` directory exists, load every
 `*.kak` files in it, and load recursively any subdirectory.
@@ -613,6 +616,15 @@ which should be used for user configuration.
 In order to continue autoloading site-wide files with a local autoload
 directory, just add a symbolic link to `../share/kak/autoload/` into
 your local autoload directory.
+
+Color Schemes
+~~~~~~~~~~~~~
+
+Kakoune ships with some color schemes that are installed to
+`../share/kak/colors/`. If `$XDG_CONFIG_HOME/kak/colors/` is present
+the builtin commmand `colorscheme` will offer completion for those
+color schemes. If a scheme is duplicated in userspace it will take
+precedence.
 
 Options
 -------
