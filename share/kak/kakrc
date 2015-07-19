@@ -1,28 +1,3 @@
-# define color scheme
-#
-# For Code
-face value red
-face type yellow
-face identifier green
-face string magenta
-face error default,red
-face keyword blue
-face operator yellow
-face attribute green
-face comment cyan
-face meta magenta
-
-# For markup
-face title blue
-face header cyan
-face bold red
-face italic yellow
-face mono green
-face block magenta
-face link cyan
-face bullet cyan
-face list yellow
-
 def -shell-params runtime %{ %sh{
     while [ $# -gt 0 ]; do
         echo "source '${kak_runtime}/$1'"
@@ -67,6 +42,9 @@ def -shell-params -docstring "colorscheme <name>: enable named colorscheme" \
     }
 
     localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
+
+    echo "colorscheme default"
+
     if [ -d "${localconfdir}/autoload" ]; then
         autoload ${localconfdir}/autoload
     elif [ -d "${kak_runtime}/autoload" ]; then

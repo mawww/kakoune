@@ -780,6 +780,8 @@ There are some builtins faces used by internal Kakoune functionalities:
  * `StatusLine`: face used for the status line
  * `StatusCursor`: face used for the status line cursor
  * `Prompt`: face used prompt displayed on the status line
+ * `MatchingChar`: face used by the show_matching highlighter
+ * `Search`: face used to highlight search results
 
 Advanced topics
 ---------------
