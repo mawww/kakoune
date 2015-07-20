@@ -11,9 +11,13 @@ def -shell-params -docstring "colorscheme <name>: enable named colorscheme" \
     (
       localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
       for col in ${kak_runtime}/colors/*.kak ${localconfdir}/colors/*.kak; do
-          expr $(basename "${col}" .kak) : "^\(${prefix}.*\)$"
+          candidate=$(basename "${col}" .kak)
+          case ${candidate} in
+             \**) ;;
+             ${prefix}*) echo ${candidate} ;;
+          esac
       done
-    ) | sort -u | grep -v '^$'
+    ) | sort -u
   } \
   colorscheme %{ %sh{
     localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
