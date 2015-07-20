@@ -37,7 +37,11 @@ def -shell-params \
   -shell-completion %{
     prefix=${1:0:${kak_pos_in_token}}
     for page in /usr/share/man/*/${prefix}*.1.gz; do
-        basename $page .1.gz
+        candidate=$(basename $page .1.gz)
+        case $candidate in
+            *\*) ;;
+            *) echo $candidate ;;
+        esac
     done
   } \
   man %{ %sh{
