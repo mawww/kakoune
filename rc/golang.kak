@@ -74,4 +74,6 @@ hook global WinSetOption filetype=golang %{
 
 hook global WinSetOption filetype=(?!golang).* %{
     rmhl golang
+    rmhooks window golang-hooks 
+    rmhooks window golang-indent 
 }
