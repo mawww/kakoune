@@ -59,6 +59,16 @@ def -hidden _golang-indent-on-closing-curly-brace %[
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
+def golang-enable-gofmt %{
+    hook buffer -group golang-formatter BufWritePre .* %{
+        exec -draft %{%|"gofmt"<ret>}
+    }
+}
+
+def golang-disable-gofmt %{
+	rmhooks buffer golang-formatter
+}
+
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -74,4 +84,7 @@ hook global WinSetOption filetype=golang %{
 
 hook global WinSetOption filetype=(?!golang).* %{
     rmhl golang
+
+    rmhooks window golang-indent
+    rmhooks window golang-hooks
 }
