@@ -1133,6 +1133,10 @@ existing hooks are:
  * `KakBegin`: Kakoune started, this is called just after reading the user
        configuration files
  * `KakEnd`: Kakoune is quitting.
+ * `FocusIn`: On supported clients, triggered when the client gets focused.
+       the filtering text is the client name.
+ * `FocusOut`: On supported clients, triggered when the client gets unfocused.
+       the filtering text is the client name.
 
 When not specified, the filtering text is an empty string.
 
