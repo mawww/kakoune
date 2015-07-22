@@ -272,6 +272,8 @@ CharCoord Window::display_position(ByteCoord coord) const
 
 ByteCoord Window::buffer_coord(CharCoord coord) const
 {
+    if (m_display_buffer.lines().empty())
+        return {0,0};
     if (coord <= 0_line)
         coord = {0,0};
     if ((int)coord.line >= m_display_buffer.lines().size())
