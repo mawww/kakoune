@@ -60,32 +60,31 @@ void Client::handle_available_input(EventMode mode)
             killpg(getpgrp(), SIGINT);
         else
             m_pending_keys.push_back(key);
+        return;
     }
-    else
+
+    try
     {
-        try
+        while (Optional<Key> key = get_next_key(mode))
         {
-            while (Optional<Key> key = get_next_key(mode))
-            {
-                if (*key == ctrl('c'))
-                    killpg(getpgrp(), SIGINT);
-                else if (*key == Key::FocusIn)
-                    context().hooks().run_hook("FocusIn", context().name(), context());
-                else if (*key == Key::FocusOut)
-                    context().hooks().run_hook("FocusOut", context().name(), context());
-                else
-                    m_input_handler.handle_key(*key);
-            }
+            if (*key == ctrl('c'))
+                killpg(getpgrp(), SIGINT);
+            else if (*key == Key::FocusIn)
+                context().hooks().run_hook("FocusIn", context().name(), context());
+            else if (*key == Key::FocusOut)
+                context().hooks().run_hook("FocusOut", context().name(), context());
+            else
+                m_input_handler.handle_key(*key);
         }
-        catch (Kakoune::runtime_error& error)
-        {
-            context().print_status({ error.what().str(), get_face("Error") });
-            context().hooks().run_hook("RuntimeError", error.what(), context());
-        }
-        catch (Kakoune::client_removed&)
-        {
-            ClientManager::instance().remove_client(*this);
-        }
+    }
+    catch (Kakoune::runtime_error& error)
+    {
+        context().print_status({ error.what().str(), get_face("Error") });
+        context().hooks().run_hook("RuntimeError", error.what(), context());
+    }
+    catch (Kakoune::client_removed&)
+    {
+        ClientManager::instance().remove_client(*this);
     }
 }
 
