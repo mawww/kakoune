@@ -1163,9 +1163,9 @@ struct DisableOption {
     DisableOption(Context& context, const char* name)
         : m_option(context.options()[name]),
           m_prev_value(m_option.get<T>())
-    { m_option.set(T{}); }
+    { m_option.set(T{}, false); }
 
-    ~DisableOption() { m_option.set(m_prev_value); }
+    ~DisableOption() { m_option.set(m_prev_value, false); }
 
 private:
     Option& m_option;

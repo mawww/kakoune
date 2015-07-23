@@ -44,7 +44,7 @@ public:
     virtual ~Option() = default;
 
     template<typename T> const T& get() const;
-    template<typename T> void set(const T& val);
+    template<typename T> void set(const T& val, bool notify=true);
     template<typename T> bool is_of_type() const;
 
     virtual String get_as_string() const = 0;
@@ -116,12 +116,13 @@ public:
     TypedOption(OptionManager& manager, const OptionDesc& desc, const T& value)
         : Option(desc, manager), m_value(value) {}
 
-    void set(T value)
+    void set(T value, bool notify = true)
     {
         if (m_value != value)
         {
             m_value = std::move(value);
-            manager().on_option_changed(*this);
+            if (notify)
+                manager().on_option_changed(*this);
         }
     }
     const T& get() const { return m_value; }
@@ -172,12 +173,12 @@ template<typename T> const T& Option::get() const
     return typed_opt->get();
 }
 
-template<typename T> void Option::set(const T& val)
+template<typename T> void Option::set(const T& val, bool notify)
 {
     auto* typed_opt = dynamic_cast<TypedOption<T>*>(this);
     if (not typed_opt)
         throw runtime_error(format("option '{}' is not of type '{}'", name(), typeid(T).name()));
-    return typed_opt->set(val);
+    return typed_opt->set(val, notify);
 }
 
 template<typename T> bool Option::is_of_type() const
