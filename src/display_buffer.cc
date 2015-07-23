@@ -94,6 +94,19 @@ DisplayLine::iterator DisplayLine::split(iterator it, ByteCoord pos)
     return m_atoms.insert(it, std::move(atom));
 }
 
+DisplayLine::iterator DisplayLine::split(iterator it, CharCount pos)
+{
+    kak_assert(it->type() == DisplayAtom::Text);
+    kak_assert(pos > 0);
+    kak_assert(pos < it->length());
+
+    DisplayAtom atom(it->m_text.substr(0, pos).str());
+    it->m_text = it->m_text.substr(pos).str();
+    atom.check_invariant();
+    it->check_invariant();
+    return m_atoms.insert(it, std::move(atom));
+}
+
 DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
 {
     if (atom.has_buffer_range())

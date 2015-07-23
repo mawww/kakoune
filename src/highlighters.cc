@@ -577,11 +577,53 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
             }
             if (not found)
             {
-                CharCount col = get_column(buffer, tabstop, buffer.prev(line.range().end));
-                if (col < column)
+                CharCount first_buffer_col = -1;
+                CharCount first_display_col = 0;
+                for (auto& atom : line)
                 {
-                    line.push_back({String{' ', column - col - 1}});
+                    if (atom.has_buffer_range())
+                    {
+                        first_buffer_col = get_column(buffer, tabstop, atom.begin());
+                        break;
+                    }
+                    first_display_col += atom.length();
+                }
+
+                if (first_buffer_col == -1)
+                    continue;
+
+                CharCount eol_col = line.length();
+                CharCount count = column + first_display_col - first_buffer_col - eol_col;
+                if (count >= 0)
+                {
+                    if (count > 0)
+                        line.push_back({String{' ',  count}});
                     line.push_back({String{" "}, face});
+                }
+                else
+                {
+                    for (auto atom_it = line.end(); atom_it != line.begin() and count < 0; --atom_it)
+                    {
+                        DisplayAtom& atom = *(atom_it-1);
+
+                        const CharCount len = atom.length();
+                        if (atom.type() == DisplayAtom::Text and -count <= len)
+                        {
+                            auto it = atom_it - 1;
+                            CharCount pos = len + count;
+                            if (pos > 0)
+                            {
+                                it = ++line.split(it, pos);
+                                pos = 0;
+                            }
+                            if (pos+1 != it->length())
+                                it = line.split(it, pos+1);
+
+                            apply_face(face)(*it);
+                            break;
+                        }
+                        count += len;
+                    }
                 }
             }
         }

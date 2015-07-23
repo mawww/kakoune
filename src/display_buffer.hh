@@ -117,8 +117,13 @@ public:
     CharCount length() const;
     const BufferRange& range() const { return m_range; }
 
-    // Split atom pointed by it at pos, returns an iterator to the first atom
+    // Split atom pointed by it at buffer coord pos,
+    // returns an iterator to the first atom
     iterator split(iterator it, ByteCoord pos);
+
+    // Split atom pointed by it at its pos character,
+    // returns an iterator to the first atom
+    iterator split(iterator it, CharCount pos);
 
     iterator insert(iterator it, DisplayAtom atom);
     iterator erase(iterator beg, iterator end);
