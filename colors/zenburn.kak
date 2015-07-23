@@ -3,6 +3,7 @@
 # first we define the zenburn colors as faces
 face zenbackground   default,rgb:3f3f3f
 face zenstatus       rgb:efdcbc,rgb:2a2a2a
+face zencursor       default,rgb:7f9f7f
 face zeninfo         rgb:cc9393,rgb:2a2a2a
 face zenmenubg       rgb:7f9f7f,rgb:4a4a4a
 face zenmenufg       rgb:8cd0d3,rgb:4a4a4a
@@ -47,6 +48,7 @@ face list zentype
 # and built in faces
 face Default zenbackground
 face StatusLine zenstatus
+face StatusCursor zencursor
 face Information zeninfo
 face MenuBackground zenmenubg
 face MenuForeground zenmenufg
