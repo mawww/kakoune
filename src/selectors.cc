@@ -548,7 +548,8 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 
     while (to_line_start != buffer.begin() and *(to_line_start-1) != '\n')
         ++to_line_start;
-    while (*(to_line_end+1) != '\n' and to_line_end != to_line_start)
+    while (to_line_end.coord() != buffer.back_coord() and
+           *(to_line_end+1) != '\n' and to_line_end != to_line_start)
         --to_line_end;
 
     return target_eol({first.coord(), last.coord()});
