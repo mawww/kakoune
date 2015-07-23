@@ -517,42 +517,39 @@ Selection select_argument(const Buffer& buffer, const Selection& selection,
 
 Selection select_lines(const Buffer& buffer, const Selection& selection)
 {
-    // no need to be utf8 aware for is_eol as we only use \n as line seperator
-    BufferIterator first = buffer.iterator_at(selection.anchor());
-    BufferIterator last  = buffer.iterator_at(selection.cursor());
-    BufferIterator& to_line_start = first <= last ? first : last;
-    BufferIterator& to_line_end = first <= last ? last : first;
+    ByteCoord anchor = selection.anchor();
+    ByteCoord cursor  = selection.cursor();
+    ByteCoord& to_line_start = anchor <= cursor ? anchor : cursor;
+    ByteCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 
-    --to_line_start;
-    skip_while_reverse(to_line_start, buffer.begin(), [](char cur) { return not is_eol(cur); });
-    if (is_eol(*to_line_start))
-    {
-        if (++to_line_start == buffer.end())
-            --to_line_start;
-    }
+    to_line_start.column = 0;
+    to_line_end.column = buffer[to_line_end.line].length()-1;
 
-    skip_while(to_line_end, buffer.end(), [](char cur) { return not is_eol(cur); });
-    if (to_line_end == buffer.end())
-        --to_line_end;
-
-    return target_eol({first.coord(), last.coord()});
+    return target_eol({anchor, cursor});
 }
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 {
-    // same as select_lines
-    BufferIterator first = buffer.iterator_at(selection.anchor());
-    BufferIterator last =  buffer.iterator_at(selection.cursor());
-    BufferIterator& to_line_start = first <= last ? first : last;
-    BufferIterator& to_line_end = first <= last ? last : first;
+    ByteCoord anchor = selection.anchor();
+    ByteCoord cursor  = selection.cursor();
+    ByteCoord& to_line_start = anchor <= cursor ? anchor : cursor;
+    ByteCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 
-    while (to_line_start != buffer.begin() and *(to_line_start-1) != '\n')
-        ++to_line_start;
-    while (to_line_end.coord() != buffer.back_coord() and
-           *(to_line_end+1) != '\n' and to_line_end != to_line_start)
-        --to_line_end;
+    if (to_line_start.column != 0)
+        to_line_start = to_line_start.line+1;
+    if (to_line_end.column != buffer[to_line_end.line].length()-1)
+    {
+        if (to_line_end.line == 0)
+            return selection;
 
-    return target_eol({first.coord(), last.coord()});
+        auto prev_line = to_line_end.line-1;
+        to_line_end = ByteCoord{ prev_line, buffer[prev_line].length()-1 };
+    }
+
+    if (to_line_start > to_line_end)
+        return selection;
+
+    return target_eol({anchor, cursor});
 }
 
 void select_buffer(SelectionList& selections)
