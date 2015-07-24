@@ -547,7 +547,6 @@ String selection_to_string(const Selection& selection)
 
 String selection_list_to_string(const SelectionList& selections)
 {
-    const auto& buffer = selections.buffer();
     return join(transformed(selections, [](const Selection& s)
                             { return selection_to_string(s); }),
                 ':', false);
