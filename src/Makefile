@@ -19,13 +19,13 @@ else ifneq (,$(findstring CYGWIN,$(os)))
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else
     LIBS += -lncursesw -lboost_regex
-    CXXFLAGS += -I/usr/include/ncursesw
+    CPPFLAGS += -I/usr/include/ncursesw
     LDFLAGS += -rdynamic
 endif
 
 debug ?= yes
 ifeq ($(debug),yes)
-    CXXFLAGS += -DKAK_DEBUG
+    CPPFLAGS += -DKAK_DEBUG
 else
     ifeq ($(debug),no)
         CXXFLAGS += -O3
@@ -40,7 +40,7 @@ kak : $(objects)
 -include $(deps)
 
 .%.o: %.cc
-	$(CXX) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
 
 test:
 	cd ../test && ./run
