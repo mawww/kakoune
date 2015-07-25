@@ -82,20 +82,25 @@ bool is_command_separator(char c)
 String get_until_delimiter(StringView base, ByteCount& pos, char delimiter)
 {
     const ByteCount length = base.length();
+    ByteCount beg = pos;
     String str;
     while (pos < length)
     {
         char c = base[pos];
         if (c == delimiter)
         {
-            if (base[pos-1] != '\\')
-                break;
-            str.back() = delimiter;
+            str += base.substr(beg, pos - beg);
+            if (pos != 0 and base[pos-1] == '\\')
+            {
+                str.back() = delimiter;
+                beg = pos+1;
+            }
+            else
+                return str;
         }
-        else
-            str += c;
         ++pos;
     }
+    str += base.substr(beg, pos - beg);
     return str;
 }
 
@@ -300,27 +305,31 @@ String expand(StringView str, const Context& context,
               const EnvVarMap& env_vars)
 {
     String res;
-    auto pos = 0_byte;
+    auto pos = 0_byte, beg = 0_byte;
     auto length = str.length();
     while (pos < length)
     {
         if (str[pos] == '\\')
         {
             char c = str[++pos];
-            if (c != '%' and c != '\\')
-                res += '\\';
-            res += c;
-            ++pos;
+            if (c == '%' or c == '\\')
+            {
+                res += str.substr(beg, pos - beg);
+                res.back() = c;
+                beg = ++pos;
+            }
         }
         else if (str[pos] == '%')
         {
+            res += str.substr(beg, pos - beg);
             Token token = parse_percent_token<true>(str, pos);
             res += expand_token(token, context, shell_params, env_vars);
-            ++pos;
+            beg = ++pos;
         }
         else
-            res += str[pos++];
+            ++pos;
     }
+    res += str.substr(beg, pos - beg);
     return res;
 }
 
