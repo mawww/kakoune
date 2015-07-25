@@ -483,7 +483,7 @@ public:
             if (m_edit_filter)
             {
                 m_edit_filter = false;
-                m_filter = Regex(".*");
+                m_filter = Regex{".*"};
                 m_filter_editor.reset("");
                 context().print_status(DisplayLine{});
             }
@@ -522,7 +522,7 @@ public:
             m_filter_editor.handle_key(key);
 
             auto search = ".*" + m_filter_editor.line() + ".*";
-            m_filter = Regex(search.begin(), search.end());
+            m_filter = Regex{search};
             auto it = std::find_if(m_selected, m_choices.end(), match_filter);
             if (it == m_choices.end())
                 it = std::find_if(m_choices.begin(), m_selected, match_filter);
@@ -562,7 +562,7 @@ private:
         m_callback(selected, MenuEvent::Select, context());
     }
 
-    Regex      m_filter = Regex(".*");
+    Regex      m_filter = Regex{".*"};
     bool       m_edit_filter = false;
     LineEditor m_filter_editor;
 };

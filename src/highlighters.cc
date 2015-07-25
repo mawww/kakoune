@@ -405,7 +405,7 @@ public:
     DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
         : m_regex_getter(std::move(regex_getter)),
           m_face_getter(std::move(face_getter)),
-          m_highlighter(Regex(), FacesSpec{}) {}
+          m_highlighter(Regex{}, FacesSpec{}) {}
 
     void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range)
     {

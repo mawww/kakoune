@@ -592,9 +592,8 @@ void regex_prompt(Context& context, const String prompt, T func)
 
                 if (event == PromptEvent::Validate)
                     context.push_jump();
-                Regex regex = str.empty() ? Regex{}
-                                          : Regex{str.begin(), str.end()};
-                func(std::move(regex), event, context);
+
+                func(str.empty() ? Regex{} : Regex{str}, event, context);
             }
             catch (regex_error& err)
             {
@@ -620,7 +619,7 @@ void search(Context& context, NormalParams)
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
                  [](Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
-                         ex = Regex{context.main_sel_register_value("/").str()};
+                         ex = Regex{context.main_sel_register_value("/")};
                      else if (event == PromptEvent::Validate)
                          RegisterManager::instance()['/'] = ex.str();
                      if (not ex.empty() and not ex.str().empty())
@@ -634,7 +633,7 @@ void search_next(Context& context, NormalParams params)
     StringView str = context.main_sel_register_value("/");
     if (not str.empty())
     {
-        Regex ex{str.begin(), str.end()};
+        Regex ex{str};
         do {
             select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
         } while (--params.count > 0);
@@ -679,7 +678,7 @@ void select_regex(Context& context, NormalParams)
 {
     regex_prompt(context, "select:", [](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
-            ex = Regex{context.main_sel_register_value("/").str()};
+            ex = Regex{context.main_sel_register_value("/")};
         else if (event == PromptEvent::Validate)
             RegisterManager::instance()['/'] = ex.str();
         if (not ex.empty() and not ex.str().empty())
@@ -691,7 +690,7 @@ void split_regex(Context& context, NormalParams)
 {
     regex_prompt(context, "split:", [](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
-            ex = Regex{context.main_sel_register_value("/").str()};
+            ex = Regex{context.main_sel_register_value("/")};
         else if (event == PromptEvent::Validate)
             RegisterManager::instance()['/'] = ex.str();
         if (not ex.empty() and not ex.str().empty())

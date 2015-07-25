@@ -13,7 +13,7 @@ String option_to_string(const Regex& re)
 
 void option_from_string(StringView str, Regex& re)
 {
-    re = Regex{str.begin(), str.end()};
+    re = Regex{str};
 }
 
 }

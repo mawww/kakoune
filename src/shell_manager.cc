@@ -138,7 +138,7 @@ std::pair<String, int> ShellManager::eval(
 void ShellManager::register_env_var(StringView regex,
                                     EnvVarRetriever retriever)
 {
-    m_env_vars.push_back({ Regex(regex.begin(), regex.end()), std::move(retriever) });
+    m_env_vars.push_back({ Regex{regex}, std::move(retriever) });
 }
 
 String ShellManager::get_val(StringView name, const Context& context) const
