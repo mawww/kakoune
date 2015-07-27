@@ -19,7 +19,7 @@ else ifneq (,$(findstring CYGWIN,$(os)))
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else
     LIBS += -lncursesw -lboost_regex
-    CPPFLAGS += -I/usr/include/ncursesw
+    CPPFLAGS += -Incursesw
     LDFLAGS += -rdynamic
 endif
 
