@@ -198,8 +198,8 @@ private:
     };
     LineList m_lines;
 
-    String  m_name;
-    Flags   m_flags;
+    String m_name;
+    Flags  m_flags;
 
     using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
     using  History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
