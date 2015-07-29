@@ -942,7 +942,8 @@ void select_object(Context& context, NormalParams params)
     "p:    paragraph          \n"
     "␣:    whitespaces        \n"
     "i:    indent             \n"
-    "u:    argument           \n");
+    "u:    argument           \n"
+    "n:    number             \n");
 }
 
 template<Key::NamedKey key>
