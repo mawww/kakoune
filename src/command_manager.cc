@@ -100,7 +100,8 @@ String get_until_delimiter(StringView base, ByteCount& pos, char delimiter)
         }
         ++pos;
     }
-    str += base.substr(beg, pos - beg);
+    if (beg < length)
+        str += base.substr(beg, pos - beg);
     return str;
 }
 
@@ -179,7 +180,7 @@ Token parse_percent_token(StringView line, ByteCount& pos)
 {
     const ByteCount length = line.length();
     const ByteCount type_start = ++pos;
-    while (isalpha(line[pos]))
+    while (pos < length and isalpha(line[pos]))
         ++pos;
     StringView type_name = line.substr(type_start, pos - type_start);
 
