@@ -7,7 +7,7 @@ def -hidden _autorestore-restore-buffer %{
         buffer_dirname=$(dirname "${kak_bufname}")
 
         ## Find the name of the latest backup created for the buffer that was open
-        latest_backup_path=$(find "${buffer_dirname}" -type f -readable -name ".${buffer_basename}.kak.*" -printf '%A@/%p\n' 2>/dev/null \
+        latest_backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -name ".${buffer_basename}.kak.*" -printf '%A@/%p\n' 2>/dev/null \
                              | sort -n -t. -k1 | sed -nr 's/^.+\///;$p')
         test ! -z "${latest_backup_path}" || exit
 
