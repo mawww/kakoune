@@ -31,6 +31,8 @@ addhl -group /python/code regex \<(import|from)\> 0:meta
 
 # Keyword list is collected using `keyword.kwlist` from `keyword`
 addhl -group /python/code regex \<(and|as|assert|break|class|continue|def|del|elif|else|except|exec|finally|for|global|if|in|is|lambda|not|or|pass|print|raise|return|try|while|with|yield)\> 0:keyword
+# Highlight types, when they are not used as constructors
+addhl -group /python/code regex \<(buffer|bytearray|complex|dict|file|float|frozenset|int|list|long|memoryview|object|set|str|tuple|unicode|xrange)\>[^(] 0:type
 
 # Commands
 # ‾‾‾‾‾‾‾‾
