@@ -74,3 +74,5 @@
 
 * change command parsing to be more shell like
   (support -option="value with spaces" instead of requiring "-option=value with spaces")
+
+* Store pre parsed commands
