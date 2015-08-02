@@ -44,7 +44,7 @@ def -hidden _rust_filter_around_selections %{
 }
 
 def -hidden _rust_indent_on_new_line %~
-    eval -draft -itersel %_
+    eval -draft -itersel %<
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
@@ -59,7 +59,7 @@ def -hidden _rust_indent_on_new_line %~
         try %[ exec -draft k <a-x> <a-k> ^\h*(public|private|protected):\h*$ <ret> j <a-gt> ]
         # indent after if|else|while|for
         try %[ exec -draft <space> <a-F> ) M B <a-k> \`(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\' <ret> s \`|.\' <ret> 1<a-&> 1<a-space> <a-gt> ]
-    _
+    >
 ~
 
 def -hidden _rust_indent_on_opening_curly_brace %[
