@@ -23,7 +23,7 @@ def autowrap-selection %{
 def autowrap-enable %{
     hook -group autowrap window InsertChar [^\n] %{
         try %{
-            exec -draft "x:autowrap-selection<ret>"
+            exec -draft "<a-x>:autowrap-selection<ret>"
         }
     }
 }
