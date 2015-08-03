@@ -380,8 +380,8 @@ Marks
 ~~~~~
 
 Current selections position can be saved in a register and restored later on.
-`^` followed by a register will save the current selections in that register,
-`alt-^` followed by a register will restore the selections saved in it.
+`Z` followed by a register will save the current selections in that register,
+`z` followed by a register will restore the selections saved in it.
 
 Jump list
 ~~~~~~~~~
