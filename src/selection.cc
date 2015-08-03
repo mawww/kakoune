@@ -17,21 +17,28 @@ void Selection::merge_with(const Selection& range)
 
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
     : m_buffer(&buffer), m_selections({ std::move(s) }), m_timestamp(timestamp)
-{}
+{
+    check_invariant();
+}
 
 SelectionList::SelectionList(Buffer& buffer, Selection s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
-{}
+{
+    check_invariant();
+}
 
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp)
     : m_buffer(&buffer), m_selections(std::move(s)), m_timestamp(timestamp)
 {
     kak_assert(size() > 0);
+    check_invariant();
 }
 
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s)
     : SelectionList(buffer, std::move(s), buffer.timestamp())
-{}
+{
+    check_invariant();
+}
 
 namespace
 {
@@ -371,6 +378,13 @@ void SelectionList::check_invariant() const
     auto& buffer = this->buffer();
     kak_assert(size() > 0);
     kak_assert(m_main < size());
+    const size_t timestamp = buffer.timestamp();
+    kak_assert(timestamp >= m_timestamp);
+
+    // cannot check further in that case
+    if (timestamp != m_timestamp)
+        return;
+
     for (size_t i = 0; i < size(); ++i)
     {
         auto& sel = (*this)[i];
