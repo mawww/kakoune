@@ -36,12 +36,14 @@ def tag-complete -docstring "Insert completion candidates for the current select
 
 def ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     eval -draft %{
-        exec '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
-        %sh{
-            sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
-            if [ -n "$sigs" ]; then
-                echo "eval -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
-            fi
+        try %{
+            exec '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
+            %sh{
+                sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
+                if [ -n "$sigs" ]; then
+                    echo "eval -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
+                fi
+            }
         }
     }
 }
