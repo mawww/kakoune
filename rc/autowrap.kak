@@ -2,7 +2,7 @@
 decl int autowrap_column 80
 
 ## Automatically wrap the selection
-def autowrap-selection %{
+def autowrap-selection -docstring "Wrap the selection" %{
     try %{
         ## <a-:><a-;>: ensure that the cursor is located after the anchor, then reverse the
         ##             selection (make sure the cursor is at the beginning of the selection)
@@ -20,7 +20,7 @@ def autowrap-selection %{
 }
 
 ## Add a hook that will wrap the entire line every time a key is pressed
-def autowrap-enable %{
+def autowrap-enable -docstring "Wrap the lines in which characters are inserted" %{
     hook -group autowrap window InsertChar [^\n] %{
         try %{
             exec -draft "x:autowrap-selection<ret>"
@@ -29,6 +29,6 @@ def autowrap-enable %{
 }
 
 ## Disable the automatic line wrapping, autowrap-selection remains available though
-def autowrap-disable %{
+def autowrap-disable -docstring "Disable automatic line wrapping" %{
     rmhooks window autowrap
 }

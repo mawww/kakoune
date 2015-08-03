@@ -36,7 +36,7 @@ def -hidden _autorestore-restore-buffer %{
 }
 
 ## Remove all the backups that have been created for the current buffer
-def autorestore-purge-backups %{
+def autorestore-purge-backups -docstring "Remove all the backups of the current buffer" %{
     nop %sh{
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
@@ -46,7 +46,7 @@ def autorestore-purge-backups %{
 }
 
 ## If for some reason, backup files need to be ignored
-def autorestore-disable %{
+def autorestore-disable -docstring "Disable automatic backup recovering" %{
     rmhooks global autorestore
 }
 

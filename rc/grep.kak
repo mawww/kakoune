@@ -3,7 +3,7 @@ decl str toolsclient
 decl -hidden int _grep_current_line 0
 
 def -shell-params -file-completion \
-    grep %{ %sh{
+    grep -docstring "Grep utility wrapper" %{ %sh{
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      if [ $# -gt 0 ]; then

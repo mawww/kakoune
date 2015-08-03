@@ -1,7 +1,7 @@
 decl -hidden str jedi_tmp_dir
 decl -hidden str-list jedi_completions
 
-def jedi-complete %{
+def jedi-complete -docstring "Complete the current selection with jedi" %{
     %sh{
         dir=$(mktemp -d -t kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
@@ -27,7 +27,7 @@ def jedi-complete %{
     }
 }
 
-def jedi-enable-autocomplete %{
+def jedi-enable-autocomplete -docstring "Add jedi completion candidates to the completer" %{
     set window completers "option=jedi_completions:%opt{completers}"
     hook window -group jedi-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>\..\'<ret>
@@ -37,7 +37,7 @@ def jedi-enable-autocomplete %{
     alias window complete jedi-complete
 }
 
-def jedi-disable-autocomplete %{
+def jedi-disable-autocomplete -docstring "Disable jedi completion" %{
     set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=jedi_completions://g' }
     rmhooks window jedi-autocomplete
     unalias window complete jedi-complete

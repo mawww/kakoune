@@ -23,7 +23,7 @@ decl line-flag-list git_blame_flags
 decl line-flag-list git_diff_flags
 
 def -shell-params \
-  -docstring %sh{printf "%%{git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
+  -docstring %sh{printf "%%{Git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
   -shell-completion %{
     shift $(expr ${kak_token_to_complete})
     prefix=${1:0:${kak_pos_in_token}}

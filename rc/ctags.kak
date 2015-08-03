@@ -7,7 +7,7 @@ decl str-list ctagsfiles 'tags'
 
 def -shell-params \
     -shell-completion 'readtags -p "$1" | cut -f 1 | sort | uniq' \
-    -docstring 'jump to tag definition' \
+    -docstring 'Jump to tag definition' \
     tag \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
@@ -25,7 +25,7 @@ def -shell-params \
             END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -auto-single " out }'
     }}
 
-def tag-complete %{ eval -draft %{
+def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
     exec <space>hb<a-k>^\w+$<ret>
     %sh{ (
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
@@ -34,7 +34,7 @@ def tag-complete %{ eval -draft %{
     ) > /dev/null 2>&1 < /dev/null & }
 }}
 
-def funcinfo %{
+def ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     eval -draft %{
         exec '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
         %sh{
@@ -46,16 +46,16 @@ def funcinfo %{
     }
 }
 
-def ctags-enable-autoinfo %{
-     hook window -group ctags-autoinfo NormalKey .* funcinfo
-     hook window -group ctags-autoinfo InsertKey .* funcinfo
+def ctags-enable-autoinfo -docstring "Automatically display ctags information about function" %{
+     hook window -group ctags-autoinfo NormalKey .* ctags-funcinfo
+     hook window -group ctags-autoinfo InsertKey .* ctags-funcinfo
 }
 
-def ctags-disable-autoinfo %{ rmhooks window ctags-autoinfo }
+def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ rmhooks window ctags-autoinfo }
 
 decl str ctagsopts "-R ."
 
-def gentags -docstring 'generate tag file asynchronously' %{
+def gentags -docstring 'Generate tag file asynchronously' %{
     echo -color Information "launching tag generation in the background"
     %sh{ (
         if ctags -f .tags.kaktmp ${kak_opt_ctagsopts}; then
