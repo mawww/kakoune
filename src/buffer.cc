@@ -55,7 +55,8 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     run_hook_in_own_context("BufCreate", m_name);
 
     // now we may begin to record undo data
-    m_flags = flags;
+    if (not (flags & Flags::NoUndo))
+        m_flags &= ~Flags::NoUndo;
 
     for (auto& option : options().flatten_options())
         on_option_changed(*option);

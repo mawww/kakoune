@@ -119,6 +119,8 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         if (mode != EventMode::Normal)
             return;
 
+        kak_assert(buffer->flags() & Buffer::Flags::Fifo);
+
         constexpr size_t buffer_size = 2048;
         // if we read data slower than it arrives in the fifo, limiting the
         // iteration number allows us to go back go back to the event loop and
