@@ -69,12 +69,12 @@ def -shell-params clang-parse %{
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? error/ { s/^<stdin>:([0-9]+):.*/\1,red,█/; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/\1,red,█/; p }
                         /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1,yellow,█/; p }
                     " | paste -s -d ':')
 
             errors=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? (error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? ((fatal )?error|warning)/ { s/^<stdin>:([0-9]+):([0-9]+:)? (.*)/\1,\3/; s/'/\\\\'/g; p }
                      " | sort -n)
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
@@ -127,8 +127,10 @@ def clang-diagnostics-next %{ %sh{
         first_line=-1
         while read line_content; do
             candidate=${line_content%%,*}
-            first_line=$(( first_line == -1 ? candidate : first_line ))
-            line=$((candidate > kak_cursor_line && (candidate < line || line == -1) ? candidate : line ))
+            if [ -n "$candidate" ]; then
+                first_line=$(( first_line == -1 ? candidate : first_line ))
+                line=$((candidate > kak_cursor_line && (candidate < line || line == -1) ? candidate : line ))
+            fi
         done
         line=$((line == -1 ? first_line : line))
         if [ ${line} -ne -1 ]; then
