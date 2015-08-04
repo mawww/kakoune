@@ -5,7 +5,7 @@ decl -hidden str-list clang_completions
 decl -hidden line-flag-list clang_flags
 decl -hidden str clang_errors
 
-def -shell-params clang-parse %{
+def -shell-params clang-parse -docstring "Parse the contents of the current buffer with clang" %{
     %sh{
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
@@ -85,9 +85,9 @@ def -shell-params clang-parse %{
     }
 }
 
-def clang-complete %{ clang-parse -complete }
+def clang-complete -docstring "Complete the current selection with clang" %{ clang-parse -complete }
 
-def clang-enable-autocomplete %{
+def clang-enable-autocomplete -docstring "Enable completion with clang" %{
     set window completers "option=clang_completions:%opt{completers}"
     hook window -group clang-autocomplete InsertIdle .* %{ try %{
         exec -draft <a-h><a-k>(\.|->|::).\'<ret>
@@ -97,7 +97,7 @@ def clang-enable-autocomplete %{
     alias window complete clang-complete
 }
 
-def clang-disable-autocomplete %{
+def clang-disable-autocomplete -docstring "Disable automatic clang completion" %{
     set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
     rmhooks window clang-autocomplete
     unalias window complete clang-complete
@@ -111,17 +111,17 @@ def -hidden clang-show-error-info %{ %sh{
     done
 } }
 
-def clang-enable-diagnostics %{
+def clang-enable-diagnostics -docstring "Activate automatic diagnostics of the code by clang" %{
     addhl flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
 }
 
-def clang-disable-diagnostics %{
+def clang-disable-diagnostics -docstring "Disable automatic diagnostics of the code" %{
     rmhl hlflags_clang_flags
     rmhooks window clang-diagnostics
 }
 
-def clang-diagnostics-next %{ %sh{
+def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{ %sh{
     echo "${kak_opt_clang_errors}" | (
         line=-1
         first_line=-1

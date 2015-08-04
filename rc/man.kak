@@ -44,7 +44,7 @@ def -shell-params \
         esac
     done
   } \
-  man %{ %sh{
+  man -docstring "Manpages viewer wrapper" %{ %sh{
     [ -z "$@" ] && set -- "$kak_selection"
     echo "eval -try-client %opt{docsclient} _man $@"
 } }
