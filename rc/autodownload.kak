@@ -6,8 +6,8 @@ decl bool autodownload_keep_log no
 decl str autodownload_format
 
 ## Pre-defined formats for different popular download tools
-decl str autodownload_format_wget "wget -o '{fifo}' -O '{buffer}' '{url}'"
-decl str autodownload_format_aria2 "aria2c -o $(basename '{buffer}') -d $(dirname '{buffer}') '{url}' > '{fifo}'"
+decl str autodownload_format_wget "wget -o '{progress}' -O '{output}' '{url}'"
+decl str autodownload_format_aria2 "aria2c -o $(basename '{output}') -d $(dirname '{output}') '{url}' > '{progress}'"
 
 ## Set the default downloader to be wget
 set global autodownload_format %opt{autodownload_format_wget}
@@ -45,8 +45,8 @@ hook global BufNew .* %{
 		## When the download has finished, remove the pipe to notify the hook below that the file can be loaded
         (
             download_str=$(sed "s/{url}/${netproto_url//\//\\\/}/g; \
-                                s/{fifo}/${netproto_fifo//\//\\\/}/g; \
-                                s/{buffer}/${netproto_buffer//\//\\\/}/g" <<< "${kak_opt_autodownload_format}")
+                                s/{progress}/${netproto_fifo//\//\\\/}/g; \
+                                s/{output}/${netproto_buffer//\//\\\/}/g" <<< "${kak_opt_autodownload_format}")
             eval "${download_str}"
             rm -f "${netproto_fifo}"
         ) &>/dev/null </dev/null &
