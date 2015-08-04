@@ -27,7 +27,7 @@ hook global WinSetOption filetype=grep %{
     addhl group grep
     addhl -group grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     addhl -group grep line %{%opt{_grep_current_line}} default+b
-    hook buffer -group grep-hooks NormalKey <c-m> jump
+    hook buffer -group grep-hooks NormalKey <c-m> grep-jump
 }
 
 hook global WinSetOption filetype=(?!grep).* %{ rmhl grep; rmhooks buffer grep-hooks }
