@@ -24,14 +24,14 @@ addhl -group /make line %{%opt{_make_current_error_line}} default+b
 
 hook global WinSetOption filetype=make %{
     addhl ref make
-    hook buffer -group make-hooks NormalKey <c-m> errjump
+    hook buffer -group make-hooks NormalKey <c-m> make-jump
 }
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }
 
 decl str jumpclient
 
-def errjump -docstring 'Jump to error location' %{
+def make-jump -docstring 'Jump to error location' %{
     try %{
         exec gl<a-?> "Entering directory" <ret>
         exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
@@ -46,18 +46,18 @@ def errjump -docstring 'Jump to error location' %{
     }
 }
 
-def errnext -docstring 'Jump to next error' %{
+def make-next -docstring 'Jump to next error' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{_make_current_error_line}g<a-l>/[0-9]+: (?:fatal )?error:<ret>"
-        errjump
+        make-jump
     }
 }
 
-def errprev -docstring 'Jump to previous error' %{
+def make-prev -docstring 'Jump to previous error' %{
     eval -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{_make_current_error_line}g<a-h><a-/>[0-9]+: (?:fatal )?error:<ret>"
-        errjump
+        make-jump
     }
 }
