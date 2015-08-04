@@ -18,11 +18,11 @@ addhl -group /kickstart/single_string fill string
 addhl -group /kickstart/double_string fill string
 addhl -group /kickstart/packages regex "^\h*[\w-]*" 0:value
 addhl -group /kickstart/packages regex "#[^\n]*" 0:comment
-addhl -group /kickstart/packages regex "^\h*@[\w-]*" 0:attribute
-addhl -group /kickstart/packages regex '\`\h*\K%packages\>' 0:yellow
-addhl -group /kickstart/packages regex '^\h*%end\>' 0:yellow
-addhl -group /kickstart/shell regex '\`\h*\K%(pre-install|pre|post)\>' 0:yellow
-addhl -group /kickstart/shell regex '^\h*%end\>' 0:yellow
+addhl -group /kickstart/packages regex "^\h*@\^?[\h\w-]*" 0:attribute
+addhl -group /kickstart/packages regex '\`\h*\K%packages\>' 0:type
+addhl -group /kickstart/packages regex '^\h*%end\>' 0:type
+addhl -group /kickstart/shell regex '\`\h*\K%(pre-install|pre|post)\>' 0:type
+addhl -group /kickstart/shell regex '^\h*%end\>' 0:type
 addhl -group /kickstart/shell ref sh
 
 
