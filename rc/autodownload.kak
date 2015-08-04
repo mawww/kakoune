@@ -8,6 +8,7 @@ decl str autodownload_format
 ## Pre-defined formats for different popular download tools
 decl str autodownload_format_wget "wget -o '{progress}' -O '{output}' '{url}'"
 decl str autodownload_format_aria2 "aria2c -o $(basename '{output}') -d $(dirname '{output}') '{url}' > '{progress}'"
+decl str autodownload_format_curl "curl -o '{output}' '{url}' 2> '{progress}'"
 
 ## Set the default downloader to be wget
 set global autodownload_format %opt{autodownload_format_wget}
