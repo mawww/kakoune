@@ -7,6 +7,8 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
 
+        test ! -f "${kak_bufname}" && exit
+
         ## Find the name of the latest backup created for the buffer that was open
         ## The backup file has to have been last modified more recently than the file we are editing
         latest_backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -newer "${kak_bufname}" -name "\.${buffer_basename}\.kak\.*" -printf '%A@/%p\n' 2>/dev/null \
@@ -44,6 +46,8 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
     nop %sh{
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
+
+        test ! -f "${kak_bufname}" && exit
 
         find "${buffer_dirname}" -maxdepth 1 -type f -readable -name "\.${buffer_basename}\.kak\.*" -delete 2>/dev/null
     }
