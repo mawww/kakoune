@@ -1,0 +1,47 @@
+##
+## Tupfile for kakoune
+## by lenormf
+##
+## How to use:
+## Initialize a tup database in the main directory with `tup init`
+## Create a symlink from `contrib/Tupfile` to `src/Tupfile`
+## Start the build with the `tup` command
+##
+
+.gitignore
+
+debug = yes
+
+CXX = g++
+CXXFLAGS = -std=gnu++11 -Wall -Wno-reorder -Wno-sign-compare -pedantic
+CPPFLAGS =
+LDFLAGS =
+LIBS =
+
+ifeq ($(debug),yes)
+	CXXFLAGS += -O0 -g
+	CPPFLAGS += -DKAK_DEBUG
+else
+	CXXFLAGS += -O3
+endif
+
+ifeq (@(TUP_PLATFORM),macosx)
+	LIBS += -lncurses -lboost_regex-mt
+else
+	ifeq (@(TUP_PLATFORM),win32)
+		LIBS += -lncursesw -lboost_regex -ldbghelp
+	else
+		LIBS += -lncursesw -lboost_regex
+		CPPFLAGS += -I/usr/include/ncursesw
+
+		ifeq ($(CXX),g++)
+			LDFLAGS += -rdynamic
+		endif
+	endif
+endif
+
+!cxx = |> $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c %f -o %o |>
+!ld = |> $(CXX) $(LDFLAGS) $(LIBS) %f -o %o |>
+
+:foreach *.cc |> !cxx |> obj/%B.o {objects}
+:{objects} |> !ld |> kak
