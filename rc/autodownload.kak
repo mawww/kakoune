@@ -66,8 +66,7 @@ hook global BufNew .* %{
                     exec '%d!cat<space>${netproto_buffer}<ret>d'
                     %sh{
                         rm -rf '${path_dir_tmp}'
-                        if [ '${kak_opt_autodownload_keep_log,,}' != yes \
-                            -a '${kak_opt_autodownload_keep_log,,}' != true ]; then
+                        if [ '${kak_opt_autodownload_keep_log,,}' != true ]; then
                             echo '
                                 delbuf! download:${netproto_url}
                                 buffer ${buffer_basename}
