@@ -45,7 +45,7 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
 
-        find "${buffer_dirname}" -type f -readable -name "\.${buffer_basename}\.kak\.*" -delete 2>/dev/null
+        find "${buffer_dirname}" -maxdepth 1 -type f -readable -name "\.${buffer_basename}\.kak\.*" -delete 2>/dev/null
     }
     echo -color 'Information Backup files removed'
 }
