@@ -114,7 +114,16 @@ void BufferManager::backup_modified_buffers()
 void BufferManager::clear_buffer_trash()
 {
     while (not m_buffer_trash.empty())
-        delete m_buffer_trash.back().get();
+    {
+        Buffer* buffer = m_buffer_trash.back().get();
+
+        // Do that again, to be tolerant in some corner cases, where a buffer is
+        // deleted during its creation
+        if (ClientManager::has_instance())
+            ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
+
+        delete buffer;
+    }
 }
 
 }
