@@ -13,10 +13,10 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         ## The backup file has to have been last modified more recently than the file we are editing
         latest_backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -newer "${kak_bufname}" -name "\.${buffer_basename}\.kak\.*" -printf '%A@/%p\n' 2>/dev/null \
                              | sort -n -t. -k1 | sed -nr 's/^[^\/]+\///;$p')
-        test ! -z "${latest_backup_path}" || {
+        if [ -z "${latest_backup_path}" ]; then
             echo "eval -draft %{ autorestore-purge-backups }";
             exit;
-        }
+        fi
 
         ## Replace the content of the buffer with the content of the backup file
         echo "
