@@ -93,7 +93,7 @@ private:
     void push_mode(InputMode* new_mode);
     std::unique_ptr<InputMode> pop_mode(InputMode* current_mode);
 
-    using Insertion = std::pair<InsertMode, Vector<Key>>;
+    struct Insertion{ InsertMode mode; Vector<Key> keys; };
     Insertion m_last_insert = {InsertMode::Insert, {}};
 
     char   m_recording_reg = 0;

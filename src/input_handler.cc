@@ -899,8 +899,8 @@ public:
         if (m_disable_hooks)
             context().user_hooks_support().disable();
 
-        last_insert().first = mode;
-        last_insert().second.clear();
+        last_insert().mode = mode;
+        last_insert().keys.clear();
         context().hooks().run_hook("InsertBegin", "", context());
         prepare(m_insert_mode);
     }
@@ -932,7 +932,7 @@ public:
     void on_key(Key key, KeepAlive keep_alive) override
     {
         auto& buffer = context().buffer();
-        last_insert().second.push_back(key);
+        last_insert().keys.push_back(key);
         if (m_mode == Mode::InsertReg)
         {
             if (key.modifiers == Key::Modifiers::None)
@@ -1032,14 +1032,14 @@ public:
             insert('\t');
         else if (key == ctrl('n'))
         {
-            last_insert().second.pop_back();
-            m_completer.select(1, last_insert().second);
+            last_insert().keys.pop_back();
+            m_completer.select(1, last_insert().keys);
             update_completions = false;
         }
         else if (key == ctrl('p'))
         {
-            last_insert().second.pop_back();
-            m_completer.select(-1, last_insert().second);
+            last_insert().keys.pop_back();
+            m_completer.select(-1, last_insert().keys);
             update_completions = false;
         }
         else if (key == ctrl('x'))
@@ -1230,14 +1230,14 @@ void InputHandler::insert(InsertMode mode)
 
 void InputHandler::repeat_last_insert()
 {
-    if (m_last_insert.second.empty())
+    if (m_last_insert.keys.empty())
         return;
 
     Vector<Key> keys;
-    swap(keys, m_last_insert.second);
+    swap(keys, m_last_insert.keys);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
-    push_mode(new InputModes::Insert(*this, m_last_insert.first));
+    push_mode(new InputModes::Insert(*this, m_last_insert.mode));
     for (auto& key : keys)
         current_mode().handle_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
