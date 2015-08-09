@@ -247,9 +247,11 @@ ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
         if (atom.has_buffer_range() and column < len)
         {
             if (atom.type() == DisplayAtom::BufferRange)
-                return utf8::advance(buffer.iterator_at(atom.begin()), buffer.iterator_at(range.end),
-                                     std::max(0_char, column)).coord();
-             return atom.begin();
+                return buffer.clamp(
+                    utf8::advance(buffer.iterator_at(atom.begin()),
+                                  buffer.iterator_at(range.end),
+                                  std::max(0_char, column)).coord());
+             return buffer.clamp(atom.begin());
         }
         column -= len;
     }
