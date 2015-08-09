@@ -7,14 +7,16 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
 
+        test ! -f "${kak_bufname}" && exit
+
         ## Find the name of the latest backup created for the buffer that was open
         ## The backup file has to have been last modified more recently than the file we are editing
         latest_backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -newer "${kak_bufname}" -name "\.${buffer_basename}\.kak\.*" -printf '%A@/%p\n' 2>/dev/null \
                              | sort -n -t. -k1 | sed -nr 's/^[^\/]+\///;$p')
-        test ! -z "${latest_backup_path}" || {
+        if [ -z "${latest_backup_path}" ]; then
             echo "eval -draft %{ autorestore-purge-backups }";
             exit;
-        }
+        fi
 
         ## Replace the content of the buffer with the content of the backup file
         echo "
@@ -29,8 +31,7 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         echo "
             hook -group autorestore global BufWritePost (.+/)?${kak_bufname} %{
                 nop %sh{
-                    if [ \"\${kak_opt_autorestore_purge_restored,,}\" = yes \
-                         -o \"\${kak_opt_autorestore_purge_restored,,}\" = true ]; then
+                    if [ \"\${kak_opt_autorestore_purge_restored,,}\" = true ]; then
                         rm -f '${latest_backup_path}'
                     fi
                 }
@@ -45,7 +46,9 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
         buffer_basename="${kak_bufname##*/}"
         buffer_dirname=$(dirname "${kak_bufname}")
 
-        find "${buffer_dirname}" -type f -readable -name "\.${buffer_basename}\.kak\.*" -delete 2>/dev/null
+        test ! -f "${kak_bufname}" && exit
+
+        find "${buffer_dirname}" -maxdepth 1 -type f -readable -name "\.${buffer_basename}\.kak\.*" -delete 2>/dev/null
     }
     echo -color 'Information Backup files removed'
 }
