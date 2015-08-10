@@ -83,8 +83,6 @@ public:
     const Option& operator[] (StringView name) const;
     Option& get_local_option(StringView name);
 
-    CandidateList complete_option_name(StringView prefix,
-                                       ByteCount cursor_pos);
 
     using OptionList = Vector<const Option*>;
     OptionList flatten_options() const;
@@ -99,9 +97,6 @@ private:
     // the only one allowed to construct a root option manager
     friend class Scope;
     friend class OptionsRegistry;
-
-    template<typename MatchingFunc>
-    CandidateList get_matching_names(MatchingFunc func);
 
     Vector<std::unique_ptr<Option>, MemoryDomain::Options> m_options;
     OptionManager* m_parent;
@@ -222,6 +217,8 @@ public:
                            return opt->name() == name;
                        }) != m_descs.end();
     }
+
+    CandidateList complete_option_name(StringView prefix, ByteCount cursor_pos) const;
 private:
     OptionManager& m_global_manager;
     Vector<std::unique_ptr<OptionDesc>, MemoryDomain::Options> m_descs;

@@ -1009,11 +1009,8 @@ const CommandDesc set_option_cmd = {
             return { 0_byte, params[0].length(),
                      complete(params[0], pos_in_token, scopes) };
         else if (token_to_complete == 1)
-        {
-            OptionManager& options = get_scope(params[0], context).options();
             return { 0_byte, params[1].length(),
-                     options.complete_option_name(params[1], pos_in_token) };
-        }
+                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
         else if (token_to_complete == 2 and
                  GlobalScope::instance().option_registry().option_exists(params[1]))
         {

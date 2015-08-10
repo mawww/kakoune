@@ -76,35 +76,6 @@ const Option& OptionManager::operator[](StringView name) const
     return const_cast<OptionManager&>(*this)[name];
 }
 
-template<typename MatchingFunc>
-CandidateList OptionManager::get_matching_names(MatchingFunc func)
-{
-    CandidateList result;
-    if (m_parent)
-        result = m_parent->get_matching_names(func);
-    for (auto& option : m_options)
-    {
-        if (option->flags() & OptionFlags::Hidden)
-            continue;
-
-        const auto& name = option->name();
-        if (func(name) and not contains(result, name))
-            result.push_back(name);
-    }
-    return result;
-}
-
-CandidateList OptionManager::complete_option_name(StringView prefix,
-                                                  ByteCount cursor_pos)
-{
-    using namespace std::placeholders;
-    auto real_prefix = prefix.substr(0, cursor_pos);
-    auto result = get_matching_names(std::bind(prefix_match, _1, real_prefix));
-    if (result.empty())
-        result = get_matching_names(std::bind(subsequence_match, _1, real_prefix));
-    return result;
-}
-
 OptionManager::OptionList OptionManager::flatten_options() const
 {
     OptionList res = m_parent ? m_parent->flatten_options() : OptionList{};
@@ -128,6 +99,33 @@ void OptionManager::on_option_changed(const Option& option)
 
     for (auto watcher : m_watchers)
         watcher->on_option_changed(option);
+}
+
+template<typename Container, typename MatchingFunc>
+static CandidateList get_matching_names(const Container& options, MatchingFunc func)
+{
+    CandidateList result;
+    for (auto& option : options)
+    {
+        if (option->flags() & OptionFlags::Hidden)
+            continue;
+
+        const auto& name = option->name();
+        if (func(name))
+            result.push_back(name);
+    }
+    return result;
+}
+
+CandidateList OptionsRegistry::complete_option_name(StringView prefix,
+                                                    ByteCount cursor_pos) const
+{
+    using namespace std::placeholders;
+    auto real_prefix = prefix.substr(0, cursor_pos);
+    auto result = get_matching_names(m_descs, std::bind(prefix_match, _1, real_prefix));
+    if (result.empty())
+        result = get_matching_names(m_descs, std::bind(subsequence_match, _1, real_prefix));
+    return result;
 }
 
 }

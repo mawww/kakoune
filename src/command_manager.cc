@@ -552,7 +552,7 @@ Completions CommandManager::complete(const Context& context,
     case Token::Type::OptionExpand:
     {
         Completions result(start , cursor_pos);
-        result.candidates = context.options().complete_option_name(
+        result.candidates = GlobalScope::instance().option_registry().complete_option_name(
             tokens[tok_idx].content(), cursor_pos_in_token);
         return result;
     }
