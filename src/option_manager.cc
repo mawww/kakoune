@@ -76,6 +76,17 @@ const Option& OptionManager::operator[](StringView name) const
     return const_cast<OptionManager&>(*this)[name];
 }
 
+void OptionManager::unset_option(StringView name)
+{
+    kak_assert(m_parent); // cannot unset option on global manager
+    auto it = find_option(m_options, name);
+    if (it != m_options.end())
+    {
+        m_options.erase(it);
+        on_option_changed((*m_parent)[name]);
+    }
+}
+
 OptionManager::OptionList OptionManager::flatten_options() const
 {
     OptionList res = m_parent ? m_parent->flatten_options() : OptionList{};

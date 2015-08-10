@@ -83,6 +83,7 @@ public:
     const Option& operator[] (StringView name) const;
     Option& get_local_option(StringView name);
 
+    void unset_option(StringView name);
 
     using OptionList = Vector<const Option*>;
     OptionList flatten_options() const;

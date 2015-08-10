@@ -977,6 +977,18 @@ const CommandDesc source_cmd = {
     }
 };
 
+static String option_doc_helper(const Context& context, CommandParameters params)
+{
+    if (params.size() < 2)
+        return "";
+
+    auto desc = GlobalScope::instance().option_registry().option_desc(params[1]);
+    if (not desc or desc->docstring().empty())
+        return "";
+
+    return format("{}: {}", desc->name(), desc->docstring());
+}
+
 const CommandDesc set_option_cmd = {
     "set",
     nullptr,
@@ -986,17 +998,7 @@ const CommandDesc set_option_cmd = {
         ParameterDesc::Flags::SwitchesOnlyAtStart, 3, 3
     },
     CommandFlags::None,
-    [](const Context& context, CommandParameters params) -> String
-    {
-        if (params.size() < 2)
-            return "";
-    
-        auto desc = GlobalScope::instance().option_registry().option_desc(params[1]);
-        if (not desc or desc->docstring().empty())
-            return "";
-    
-        return format("{}: {}", desc->name(), desc->docstring());
-    },
+    option_doc_helper,
     [](const Context& context, CompletionFlags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
@@ -1024,6 +1026,36 @@ const CommandDesc set_option_cmd = {
             opt.add_from_string(parser[2]);
         else
             opt.set_from_string(parser[2]);
+    }
+};
+
+const CommandDesc unset_option_cmd = {
+    "unset",
+    nullptr,
+    "unset <scope> <name>: remove <name> option from scope, falling back on parent scope value",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
+    CommandFlags::None,
+    option_doc_helper,
+    [](const Context& context, CompletionFlags,
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
+    {
+        if (token_to_complete == 0)
+        {
+            constexpr auto scopes = { "buffer", "window" };
+            return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
+        }
+        else if (token_to_complete == 1)
+            return { 0_byte, params[1].length(),
+                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
+        return Completions{};
+    },
+    [](const ParametersParser& parser, Context& context)
+    {
+        if (parser[0] == "global")
+            throw runtime_error("Cannot unset options in global scope");
+
+        get_scope(parser[0], context).options().unset_option(parser[1]);
     }
 };
 
@@ -1634,6 +1666,7 @@ void register_commands()
     register_command(debug_cmd);
     register_command(source_cmd);
     register_command(set_option_cmd);
+    register_command(unset_option_cmd);
     register_command(declare_option_cmd);
     register_command(map_key_cmd);
     register_command(exec_string_cmd);
