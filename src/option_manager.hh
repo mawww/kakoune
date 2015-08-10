@@ -211,12 +211,15 @@ public:
         return *opts.back();
     }
 
-    bool option_exists(StringView name) const
+    const OptionDesc* option_desc(StringView name) const
     {
-        return find_if(m_descs, [&name](const std::unique_ptr<OptionDesc>& opt) {
-                           return opt->name() == name;
-                       }) != m_descs.end();
+        auto it = find_if(m_descs,
+                          [&name](const std::unique_ptr<OptionDesc>& opt)
+                          { return opt->name() == name; });
+        return it != m_descs.end() ? it->get() : nullptr;
     }
+
+    bool option_exists(StringView name) const { return option_desc(name) != nullptr; }
 
     CandidateList complete_option_name(StringView prefix, ByteCount cursor_pos) const;
 private:

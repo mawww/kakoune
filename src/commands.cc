@@ -990,16 +990,12 @@ const CommandDesc set_option_cmd = {
     {
         if (params.size() < 2)
             return "";
-
-        try
-        {
-            OptionManager& options = get_scope(params[0], context).options();
-            const String& docstring = options[params[1]].docstring();
-            if (not docstring.empty())
-                return format("{}: {}", params[1], docstring);
-        }
-        catch (runtime_error&) {}
-        return "";
+    
+        auto desc = GlobalScope::instance().option_registry().option_desc(params[1]);
+        if (not desc or desc->docstring().empty())
+            return "";
+    
+        return format("{}: {}", desc->name(), desc->docstring());
     },
     [](const Context& context, CompletionFlags,
        CommandParameters params, size_t token_to_complete,
