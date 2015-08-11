@@ -608,13 +608,7 @@ public:
         const String& line = m_line_editor.line();
         bool showcompl = false;
 
-        if (m_mode == Mode::InsertReg)
-        {
-            StringView reg = context().main_sel_register_value(String{key.key});
-            m_line_editor.insert(reg);
-            m_mode = Mode::Default;
-        }
-        else if (key == ctrl('m')) // enter
+        if (key == ctrl('m')) // enter
         {
             if (context().history_support().is_enabled())
                 history_push(history, line);
@@ -640,7 +634,14 @@ public:
         }
         else if (key == ctrl('r'))
         {
-            m_mode = Mode::InsertReg;
+            context().input_handler().on_next_key(
+                KeymapMode::None, [this](Key key, Context&) {
+                    StringView reg = context().main_sel_register_value(String{key.key});
+                    m_line_editor.insert(reg);
+
+                    display();
+                    m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                });
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
@@ -823,8 +824,6 @@ private:
         context().print_status(display_line);
     }
 
-    enum class Mode { Default, InsertReg };
-
     PromptCallback m_callback;
     Completer      m_completer;
     const String   m_prompt;
@@ -834,7 +833,6 @@ private:
     String         m_prefix;
     LineEditor     m_line_editor;
     bool           m_autoshowcompl;
-    Mode           m_mode = Mode::Default;
 
     using History = Vector<String, MemoryDomain::History>;
     static UnorderedMap<String, History, MemoryDomain::History> ms_history;
@@ -933,24 +931,6 @@ public:
     {
         auto& buffer = context().buffer();
         last_insert().keys.push_back(key);
-        if (m_mode == Mode::InsertReg)
-        {
-            if (key.modifiers == Key::Modifiers::None)
-                insert(RegisterManager::instance()[key.key].values(context()));
-            m_mode = Mode::Default;
-            return;
-        }
-        if (m_mode == Mode::Complete)
-        {
-            if (key.key == 'f')
-                m_completer.explicit_file_complete();
-            if (key.key == 'w')
-                m_completer.explicit_word_complete();
-            if (key.key == 'l')
-                m_completer.explicit_line_complete();
-            m_mode = Mode::Default;
-            return;
-        }
 
         bool update_completions = true;
         bool moved = false;
@@ -1025,7 +1005,11 @@ public:
         else if (key.modifiers == Key::Modifiers::None)
             insert(key.key);
         else if (key == ctrl('r'))
-            m_mode = Mode::InsertReg;
+            context().input_handler().on_next_key(
+                KeymapMode::None, [this](Key key, Context&) {
+                    if (key.modifiers == Key::Modifiers::None)
+                        insert(RegisterManager::instance()[key.key].values(context()));
+                });
         else if (key == ctrl('m'))
             insert('\n');
         else if (key == ctrl('i'))
@@ -1043,7 +1027,15 @@ public:
             update_completions = false;
         }
         else if (key == ctrl('x'))
-            m_mode = Mode::Complete;
+            context().input_handler().on_next_key(
+                KeymapMode::None, [this](Key key, Context&) {
+                    if (key.key == 'f')
+                        m_completer.explicit_file_complete();
+                    if (key.key == 'w')
+                        m_completer.explicit_word_complete();
+                    if (key.key == 'l')
+                        m_completer.explicit_line_complete();
+            });
         else if (key == ctrl('o'))
         {
             m_autoshowcompl = false;
@@ -1171,8 +1163,6 @@ private:
         buffer.check_invariant();
     }
 
-    enum class Mode { Default, Complete, InsertReg };
-    Mode m_mode = Mode::Default;
     InsertMode       m_insert_mode;
     ScopedEdition    m_edition;
     InsertCompleter  m_completer;
