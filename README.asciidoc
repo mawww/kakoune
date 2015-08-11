@@ -808,6 +808,16 @@ selection.
 Registers are lists, instead of simply text in order to interact well with
 multiselection. Each selection has its own captures or yank buffer.
 
+Special registers
+^^^^^^^^^^^^^^^^^
+
+Some registers are not general purposes, they cannot be written to, but they
+contain some special data:
+
+ * `%`: current buffer name
+ * `.`: current selection contents
+ * `#`: selection indices (first selection has 1, second has 2, ...)
+
 Macros
 ~~~~~~
 
