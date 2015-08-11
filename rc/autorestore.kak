@@ -21,7 +21,7 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         ## Replace the content of the buffer with the content of the backup file
         echo "
             exec -draft %{ %d!cat<space>${latest_backup_path}<ret>d }
-            echo -color Information Backup restored
+            echo -color Information 'Backup restored'
         "
 
         ## If the backup file has to be removed, issue the command once
@@ -50,7 +50,7 @@ def autorestore-purge-backups -docstring "Remove all the backups of the current 
 
         find "${buffer_dirname}" -maxdepth 1 -type f -readable -name "\.${buffer_basename}\.kak\.*" -delete 2>/dev/null
     }
-    echo -color 'Information Backup files removed'
+    echo -color Information 'Backup files removed'
 }
 
 ## If for some reason, backup files need to be ignored
