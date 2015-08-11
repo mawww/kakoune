@@ -847,6 +847,9 @@ const CommandDesc alias_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context)
     {
+        if (not CommandManager::instance().command_defined(parser[2]))
+            throw runtime_error(format("Command '{}' does not exist", parser[2]));
+
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
         aliases.add_alias(parser[1], parser[2]);
     }
