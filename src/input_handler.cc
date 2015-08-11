@@ -585,6 +585,12 @@ String common_prefix(ConstArrayView<String> strings)
     return res;
 }
 
+constexpr StringView register_doc =
+    "Special registers:\n"
+    "    * %: buffer name\n"
+    "    * .: selection contents\n"
+    "    * #: selection index\n";
+
 class Prompt : public InputMode
 {
 public:
@@ -634,14 +640,15 @@ public:
         }
         else if (key == ctrl('r'))
         {
-            context().input_handler().on_next_key(
-                KeymapMode::None, [this](Key key, Context&) {
+            on_next_key_with_autoinfo(context(), KeymapMode::None,
+                [this](Key key, Context&) {
                     StringView reg = context().main_sel_register_value(String{key.key});
                     m_line_editor.insert(reg);
 
                     display();
                     m_callback(m_line_editor.line(), PromptEvent::Change, context());
-                });
+                }, "Enter register name", register_doc);
+            return;
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
@@ -856,7 +863,7 @@ class NextKey : public InputMode
 {
 public:
     NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
-        : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(callback) {}
+        : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(std::move(callback)) {}
 
     void on_key(Key key, KeepAlive keep_alive) override
     {
@@ -1005,11 +1012,14 @@ public:
         else if (key.modifiers == Key::Modifiers::None)
             insert(key.key);
         else if (key == ctrl('r'))
-            context().input_handler().on_next_key(
-                KeymapMode::None, [this](Key key, Context&) {
+        {
+            on_next_key_with_autoinfo(context(), KeymapMode::None,
+                [this](Key key, Context&) {
                     if (key.modifiers == Key::Modifiers::None)
                         insert(RegisterManager::instance()[key.key].values(context()));
-                });
+                }, "Enter register name", register_doc);
+            update_completions = false;
+        }
         else if (key == ctrl('m'))
             insert('\n');
         else if (key == ctrl('i'))
@@ -1027,15 +1037,22 @@ public:
             update_completions = false;
         }
         else if (key == ctrl('x'))
-            context().input_handler().on_next_key(
-                KeymapMode::None, [this](Key key, Context&) {
+        {
+            on_next_key_with_autoinfo(context(), KeymapMode::None,
+                [this](Key key, Context&) {
                     if (key.key == 'f')
                         m_completer.explicit_file_complete();
                     if (key.key == 'w')
                         m_completer.explicit_word_complete();
                     if (key.key == 'l')
                         m_completer.explicit_line_complete();
-            });
+            }, "Complete",
+            " Enter completion type:\n"
+            "    * f: filename completion\n"
+            "    * w: word completion\n"
+            "    * l: line completion\n");
+            update_completions = false;
+        }
         else if (key == ctrl('o'))
         {
             m_autoshowcompl = false;
@@ -1315,4 +1332,13 @@ DisplayLine InputHandler::mode_line() const
     return current_mode().mode_line();
 }
 
+
+bool show_auto_info_ifn(StringView title, StringView info, const Context& context)
+{
+    if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
+        return false;
+    Face face = get_face("Information");
+    context.ui().info_show(title, info, CharCoord{}, face, InfoStyle::Prompt);
+    return true;
+}
 }

@@ -96,29 +96,6 @@ void repeat_last_insert(Context& context, NormalParams)
     context.input_handler().repeat_last_insert();
 }
 
-bool show_auto_info_ifn(StringView title, StringView info,
-                        const Context& context)
-{
-    if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
-        return false;
-    Face face = get_face("Information");
-    context.ui().info_show(title, info, CharCoord{}, face, InfoStyle::Prompt);
-    return true;
-}
-
-template<typename Cmd>
-void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
-                               StringView title, StringView info)
-{
-    const bool hide = show_auto_info_ifn(title, info, context);
-    context.input_handler().on_next_key(
-        keymap_mode, [hide,cmd](Key key, Context& context) mutable {
-            if (hide)
-                context.ui().info_hide();
-            cmd(key, context);
-    });
-}
-
 template<SelectMode mode>
 void goto_commands(Context& context, NormalParams params)
 {

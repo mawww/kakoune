@@ -8,6 +8,7 @@
 #include "keys.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "user_interface.hh"
 #include "safe_ptr.hh"
 
 namespace Kakoune
@@ -102,6 +103,20 @@ private:
     int    m_handle_key_level = 0;
 };
 
+bool show_auto_info_ifn(StringView title, StringView info, const Context& context);
+
+template<typename Cmd>
+void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
+                               StringView title, StringView info)
+{
+    const bool hide = show_auto_info_ifn(title, info, context);
+    context.input_handler().on_next_key(
+        keymap_mode, [hide,cmd](Key key, Context& context) mutable {
+            if (hide)
+                context.ui().info_hide();
+            cmd(key, context);
+    });
+}
 }
 
 #endif // input_handler_hh_INCLUDED
