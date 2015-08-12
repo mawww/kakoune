@@ -31,6 +31,6 @@ addons:
       - libstdc++-4.8-dev
       - g++-4.8
       - libncursesw5-dev
-      - libboost-regex-dev
+      - libboost-regex1.55-dev
 
 script: cd src && make && make test
