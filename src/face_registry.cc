@@ -58,6 +58,9 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
                     [](char c){ return not isalnum(c); }))
         throw runtime_error(format("invalid alias name: '{}'", name));
 
+    if (name == facedesc)
+        throw runtime_error(format("cannot alias face '{}' to itself", name));
+
     FaceOrAlias& alias = m_aliases[name];
     auto it = m_aliases.find(facedesc);
     if (it != m_aliases.end())
