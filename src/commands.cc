@@ -1045,7 +1045,7 @@ const CommandDesc unset_option_cmd = {
     {
         if (token_to_complete == 0)
         {
-            constexpr auto scopes = { "buffer", "window" };
+            static constexpr auto scopes = { "buffer", "window" };
             return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
         }
         else if (token_to_complete == 1)
