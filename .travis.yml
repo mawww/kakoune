@@ -1,30 +1,36 @@
 language: cpp
+
+sudo: false
+
 os:
   - linux
   - osx
+
 compiler:
   - clang
   - gcc
+
 before_install:
-  - if [ $TRAVIS_OS_NAME = linux ]; then
-      sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
-      sudo add-apt-repository ppa:boost-latest/ppa -y;
-      sudo apt-get update -qq;
-    elif [ $TRAVIS_OS_NAME = osx ]; then
+  - if [ $TRAVIS_OS_NAME = osx ]; then
       brew update;
     fi;
+
 install:
-  - if [ $TRAVIS_OS_NAME = linux ]; then
-      if [ "$CXX" = "clang++" ]; then
-        sudo apt-get install -y libstdc++-4.8-dev;
-      elif [ "$CXX" = "g++" ]; then
-        sudo apt-get install -y g++-4.8;
+  - if [ $TRAVIS_OS_NAME = linux -a "$CXX" = "g++" ]; then
         export CXX=g++-4.8;
-      fi;
-      sudo apt-get install -y libncursesw5-dev;
-      sudo apt-get install -y libboost-regex1.54-dev;
     elif [ $TRAVIS_OS_NAME = osx ]; then
        brew outdated boost || brew upgrade boost;
     fi;
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - libstdc++-4.8-dev
+      - g++-4.8
+      - libncursesw5-dev
+      - libboost-regex-dev
 
 script: cd src && make && make test
