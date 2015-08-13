@@ -61,11 +61,21 @@ String escape(StringView str, StringView characters, char escape)
 {
     String res;
     res.reserve(str.length());
-    for (auto& c : str)
+    for (auto it = str.begin(), end = str.end(); it != end; )
     {
-        if (contains(characters, c))
-            res += escape;
-        res += c;
+        auto next = std::find_if(it, end, [&characters](char c) { return contains(characters, c); });
+        if (next != end)
+        {
+            res += StringView{it, next+1};
+            res.back() = escape;
+            res += *next;
+            it = next+1;
+        }
+        else
+        {
+            res += StringView{it, next};
+            break;
+        }
     }
     return res;
 }
@@ -74,12 +84,17 @@ String unescape(StringView str, StringView characters, char escape)
 {
     String res;
     res.reserve(str.length());
-    for (auto& c : str)
+    for (auto it = str.begin(), end = str.end(); it != end; )
     {
-        if (contains(characters, c) and not res.empty() and res.back() == escape)
-            res.back() = c;
+        auto next = std::find(it, end, escape);
+        if (next != end and next+1 != end and contains(characters, *(next+1)))
+        {
+            res += StringView{it, next+1};
+            res.back() = *(next+1);
+        }
         else
-            res += c;
+            res += StringView{it, next == end ? next : next + 1};
+        it = next == end ? next : next + 1;
     }
     return res;
 }
