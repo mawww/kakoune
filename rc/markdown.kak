@@ -8,7 +8,7 @@ hook global BufSetOption mimetype=text/x-markdown %{
     set buffer filetype markdown
 }
 
-hook global BufCreate .*[.](markdown|md) %{
+hook global BufCreate .*[.](markdown|md|mkd) %{
     set buffer filetype markdown
 }
 
