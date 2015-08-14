@@ -28,7 +28,7 @@ private:
 bool notify_fatal_error(const String& msg)
 {
 #if defined(__CYGWIN__)
-    int res = MessageBox(NULL, msg.c_str(), "Kakoune: assert failed",
+    int res = MessageBox(NULL, msg.c_str(), "Kakoune: fatal error",
                          MB_OKCANCEL | MB_ICONERROR);
     switch (res)
     {
