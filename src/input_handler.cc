@@ -73,43 +73,44 @@ struct MouseHandler
             return false;
 
         Buffer& buffer = context.buffer();
-        if (key.modifiers == Key::Modifiers::MousePress)
+        ByteCoord cursor;
+        switch (key.modifiers)
         {
+        case Key::Modifiers::MousePress:
             m_dragging = true;
             m_anchor = context.window().buffer_coord(key.mouse_coord());
             context.selections_write_only() = SelectionList{ buffer, m_anchor };
             return true;
-        }
-        if (key.modifiers == Key::Modifiers::MouseRelease)
-        {
+
+        case Key::Modifiers::MouseRelease:
             if (not m_dragging)
                 return true;
             m_dragging = false;
-            auto cursor = context.window().buffer_coord(key.mouse_coord());
+            cursor = context.window().buffer_coord(key.mouse_coord());
             context.selections_write_only() =
                 SelectionList{ buffer, Selection{buffer.clamp(m_anchor), cursor} };
             return true;
-        }
-        if (key.modifiers == Key::Modifiers::MousePos)
-        {
+
+        case Key::Modifiers::MousePos:
             if (not m_dragging)
                 return true;
-            auto cursor = context.window().buffer_coord(key.mouse_coord());
+            cursor = context.window().buffer_coord(key.mouse_coord());
             context.selections_write_only() =
                 SelectionList{ buffer, Selection{buffer.clamp(m_anchor), cursor} };
             return true;
-        }
-        if (key.modifiers == Key::Modifiers::MouseWheelDown)
-        {
+
+        case Key::Modifiers::MouseWheelDown:
+            m_dragging = false;
             wheel(context, 3);
             return true;
-        }
-        if (key.modifiers == Key::Modifiers::MouseWheelUp)
-        {
+
+        case Key::Modifiers::MouseWheelUp:
+            m_dragging = false;
             wheel(context, -3);
             return true;
+
+        default: return false;
         }
-        return false;
     }
 
 private:
