@@ -641,7 +641,7 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::parameter_error& error)
     {
-        write_stderr(format("Error: {}\n"
+        write_stderr(format("Error while parsing parameters: {}\n"
                             "Valid switches:\n"
                             "{}", error.what(),
                             generate_switches_doc(param_desc.switches)));
