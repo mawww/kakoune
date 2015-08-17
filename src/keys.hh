@@ -1,11 +1,12 @@
 #ifndef keys_hh_INCLUDED
 #define keys_hh_INCLUDED
 
-#include "unicode.hh"
+#include "coord.hh"
 #include "flags.hh"
 #include "hash.hh"
+#include "optional.hh"
+#include "unicode.hh"
 #include "vector.hh"
-#include "coord.hh"
 
 namespace Kakoune
 {
@@ -75,6 +76,8 @@ struct Key
     constexpr bool operator<(Key other) const { return val() < other.val(); }
 
     constexpr CharCoord mouse_coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
+
+    Optional<Codepoint> codepoint() const;
 };
 
 template<> struct WithBitOps<Key::Modifiers> : std::true_type {};

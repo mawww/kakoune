@@ -194,8 +194,8 @@ public:
 
         if (m_waiting_for_reg)
         {
-            if (key.modifiers == Key::Modifiers::None)
-                m_params.reg = key.key;
+            if (auto cp = key.codepoint())
+                m_params.reg = *cp;
             m_waiting_for_reg = false;
             return;
         }
@@ -212,8 +212,9 @@ public:
         if (context().has_ui())
             context().ui().info_hide();
 
-        if (key.modifiers == Key::Modifiers::None and isdigit(key.key))
-            m_params.count = m_params.count * 10 + key.key - '0';
+        auto cp = key.codepoint();
+        if (cp and isdigit(*cp))
+            m_params.count = m_params.count * 10 + *cp - '0';
         else if (key == Key::Backspace)
             m_params.count /= 10;
         else if (key == '\\')
@@ -397,9 +398,9 @@ public:
             to_next_word_end<Word>(m_cursor_pos, m_line);
         else if (key == ctrlalt('e'))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
-        else if (key.modifiers == Key::Modifiers::None)
+        else if (auto cp = key.codepoint())
         {
-            m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(key.key)
+            m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(*cp)
                    + m_line.substr(m_cursor_pos);
             ++m_cursor_pos;
         }
@@ -646,11 +647,14 @@ public:
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
-                    StringView reg = context().main_sel_register_value(String{key.key});
-                    m_line_editor.insert(reg);
+                    if (auto cp = key.codepoint())
+                    {
+                        StringView reg = context().main_sel_register_value(String{*cp});
+                        m_line_editor.insert(reg);
 
-                    display();
-                    m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                        display();
+                        m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                    }
                 }, "Enter register name", register_doc);
             return;
         }
@@ -1013,21 +1017,17 @@ public:
             }
             selections.sort_and_merge_overlapping();
         }
-        else if (key.modifiers == Key::Modifiers::None)
-            insert(key.key);
+        else if (auto cp = key.codepoint())
+            insert(*cp);
         else if (key == ctrl('r'))
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
-                    if (key.modifiers == Key::Modifiers::None)
-                        insert(RegisterManager::instance()[key.key].values(context()));
+                    if (auto cp = key.codepoint())
+                        insert(RegisterManager::instance()[*cp].values(context()));
                 }, "Enter register name", register_doc);
             update_completions = false;
         }
-        else if (key == ctrl('m'))
-            insert('\n');
-        else if (key == ctrl('i'))
-            insert('\t');
         else if (key == ctrl('n'))
         {
             last_insert().keys.pop_back();
@@ -1044,11 +1044,11 @@ public:
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
-                    if (key.key == 'f')
+                    if (key == 'f')
                         m_completer.explicit_file_complete();
-                    if (key.key == 'w')
+                    if (key == 'w')
                         m_completer.explicit_word_complete();
-                    if (key.key == 'l')
+                    if (key == 'l')
                         m_completer.explicit_line_complete();
             }, "Complete",
             " Enter completion type:\n"

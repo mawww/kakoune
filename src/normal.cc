@@ -110,10 +110,11 @@ void goto_commands(Context& context, NormalParams params)
     {
         on_next_key_with_autoinfo(context, KeymapMode::Goto,
                                  [](Key key, Context& context) {
-            if (key.modifiers != Key::Modifiers::None)
+            auto cp = key.codepoint();
+            if (not cp)
                 return;
             auto& buffer = context.buffer();
-            switch (tolower(key.key))
+            switch (tolower(*cp))
             {
             case 'g':
             case 'k':
@@ -234,12 +235,13 @@ void view_commands(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::View,
                              [params](Key key, Context& context) {
-        if (key.modifiers != Key::Modifiers::None or not context.has_window())
+        auto cp = key.codepoint();
+        if (not cp or not context.has_window())
             return;
 
         LineCount cursor_line = context.selections().main().cursor().line;
         Window& window = context.window();
-        switch (tolower(key.key))
+        switch (tolower(*cp))
         {
         case 'v':
         case 'c':
@@ -278,7 +280,8 @@ void replace_with_char(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
-        if (not iswprint(key.key))
+        auto cp = key.codepoint();
+        if (not cp)
             return;
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
@@ -287,7 +290,7 @@ void replace_with_char(Context& context, NormalParams)
         for (auto& sel : selections)
         {
             CharCount count = char_length(buffer, sel);
-            strings.emplace_back(key.key, count);
+            strings.emplace_back(*cp, count);
         }
         selections.insert(strings, InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
@@ -857,9 +860,9 @@ void select_object(Context& context, NormalParams params)
     const int level = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [level](Key key, Context& context) {
-        if (key.modifiers != Key::Modifiers::None)
+        auto cp = key.codepoint();
+        if (not cp)
             return;
-        const Codepoint c = key.key;
 
         static constexpr struct
         {
@@ -876,11 +879,11 @@ void select_object(Context& context, NormalParams params)
         };
         for (auto& sel : selectors)
         {
-            if (c == sel.key)
+            if (*cp == sel.key)
                 return select<mode>(context, std::bind(sel.func, _1, _2, flags));
         }
 
-        if (c == 'u')
+        if (*cp == 'u')
         {
             return select<mode>(context, std::bind(select_argument, _1, _2, level, flags));
         }
@@ -900,8 +903,8 @@ void select_object(Context& context, NormalParams params)
         };
         for (auto& sur : surrounding_pairs)
         {
-            if (sur.pair.opening == c or sur.pair.closing == c or
-                (sur.name != 0 and sur.name == c))
+            if (sur.pair.opening == *cp or sur.pair.closing == *cp or
+                (sur.name != 0 and sur.name == *cp))
                 return select<mode>(context, std::bind(select_surrounding, _1, _2,
                                                        sur.pair, level, flags));
         }
@@ -1026,10 +1029,13 @@ void select_to_next_char(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [params](Key key, Context& context) {
-        select<flags & SelectFlags::Extend ? SelectMode::Extend : SelectMode::Replace>(
-            context,
-            std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
-                      _1, _2, key.key, params.count, flags & SelectFlags::Inclusive));
+        constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
+                                                               : SelectMode::Replace;
+        if (auto cp = key.codepoint())
+            select<new_flags>(
+                context,
+                std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
+                          _1, _2, *cp, params.count, flags & SelectFlags::Inclusive));
     }, "select to next char","enter char to select to");
 }
 
@@ -1045,8 +1051,9 @@ void start_or_end_macro_recording(Context& context, NormalParams)
     else
         on_next_key_with_autoinfo(context, KeymapMode::None,
                                  [](Key key, Context& context) {
-            if (key.modifiers == Key::Modifiers::None and is_basic_alpha(key.key))
-                context.input_handler().start_recording(tolower(key.key));
+            auto cp = key.codepoint();
+            if (cp and is_basic_alpha(*cp))
+                context.input_handler().start_recording(tolower(*cp));
         }, "record macro", "enter macro name ");
 }
 
@@ -1060,10 +1067,11 @@ void replay_macro(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [params](Key key, Context& context) mutable {
-        if (key.modifiers == Key::Modifiers::None and is_basic_alpha(key.key))
+        auto cp = key.codepoint();
+        if (cp and is_basic_alpha(*cp))
         {
             static bool running_macros[26] = {};
-            const char name = tolower(key.key);
+            const char name = tolower(*cp);
             const size_t idx = (size_t)(name - 'a');
             if (running_macros[idx])
                 throw runtime_error("recursive macros call detected");
@@ -1255,18 +1263,18 @@ void save_selections(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
-        if (key.modifiers != Key::Modifiers::None or key == Key::Escape)
+        auto cp = key.codepoint();
+        if (not cp or not is_basic_alpha(*cp))
             return;
 
-        const char reg = key.key;
         String desc = format("{}@{}%{}",
                              selection_list_to_string(context.selections()),
                              context.buffer().name(),
                              context.buffer().timestamp());
 
-        RegisterManager::instance()[reg] = desc;
+        RegisterManager::instance()[*cp] = desc;
 
-        context.print_status({format("Saved selections in register '{}'", reg), get_face("Information")});
+        context.print_status({format("Saved selections in register '{}'", *cp), get_face("Information")});
     }, "Save selections", "Enter register to save selections into");
 }
 
@@ -1274,22 +1282,21 @@ void restore_selections(Context& context, NormalParams)
 {
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [](Key key, Context& context) {
-        if (key.modifiers != Key::Modifiers::None or key == Key::Escape)
+        auto cp = key.codepoint();
+        if (not cp or not is_basic_alpha(*cp))
             return;
 
-        const char reg = key.key;
-
-        auto content = RegisterManager::instance()[reg].values(context);
+        auto content = RegisterManager::instance()[*cp].values(context);
 
         if (content.size() != 1)
-            throw runtime_error(format("Register {} does not contain a selections desc", reg));
+            throw runtime_error(format("Register {} does not contain a selections desc", *cp));
 
         StringView desc = content[0];
         auto arobase = find(desc, '@');
         auto percent = find(desc, '%');
 
         if (arobase == desc.end() or percent == desc.end())
-            throw runtime_error(format("Register {} does not contain a selections desc", reg));
+            throw runtime_error(format("Register {} does not contain a selections desc", *cp));
 
         Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
         size_t timestamp = str_to_int({percent + 1, desc.end()});
@@ -1305,7 +1312,7 @@ void restore_selections(Context& context, NormalParams)
 
         context.selections_write_only() = std::move(sel_list);
 
-        context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
+        context.print_status({format("Restored selections from register '{}'", *cp), get_face("Information")});
     }, "Restore selections", "Enter register to restore selections from");
 }
 

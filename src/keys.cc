@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-Key canonicalize_ifn(Key key)
+static Key canonicalize_ifn(Key key)
 {
     if (key.key > 0 and key.key < 27)
     {
@@ -19,6 +19,18 @@ Key canonicalize_ifn(Key key)
         key.key = key.key - 1 + 'a';
     }
     return key;
+}
+
+Optional<Codepoint> Key::codepoint() const
+{
+    if (*this == ctrl('m'))
+        return '\n';
+    if (*this == ctrl('i'))
+        return '\t';
+    if (modifiers == Modifiers::None and key > 27 and
+        (key < 0xD800 or key > 0xDFFF)) // avoid surrogates
+        return key;
+    return {};
 }
 
 struct KeyAndName { const char* name; Codepoint key; };
