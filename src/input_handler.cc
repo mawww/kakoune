@@ -203,7 +203,7 @@ public:
         auto restore_hooks = on_scope_end([&, this]{
             if (do_restore_hooks)
             {
-                context().user_hooks_support().enable();
+                context().user_hooks_disabled().unset();
                 m_hooks_disabled = false;
             }
         });
@@ -222,7 +222,7 @@ public:
             if (not m_hooks_disabled)
             {
                 m_hooks_disabled = true;
-                context().user_hooks_support().disable();
+                context().user_hooks_disabled().set();
             }
         }
         else if (key == '"')
@@ -621,7 +621,7 @@ public:
 
         if (key == ctrl('m')) // enter
         {
-            if (context().history_support().is_enabled())
+            if (not context().history_disabled())
                 history_push(history, line);
             context().print_status(DisplayLine{});
             if (context().has_ui())
@@ -634,7 +634,7 @@ public:
         }
         else if (key == Key::Escape or key == ctrl('c'))
         {
-            if (context().history_support().is_enabled())
+            if (not context().history_disabled())
                 history_push(history, line);
             context().print_status(DisplayLine{});
             if (context().has_ui())
@@ -906,11 +906,11 @@ public:
                            if (m_autoshowcompl)
                                m_completer.update();
                        }},
-          m_disable_hooks{context().user_hooks_support().is_disabled()}
+          m_disable_hooks{context().user_hooks_disabled()}
     {
         // Prolongate hook disabling for the whole insert session
         if (m_disable_hooks)
-            context().user_hooks_support().disable();
+            context().user_hooks_disabled().set();
 
         last_insert().mode = mode;
         last_insert().keys.clear();
@@ -929,7 +929,7 @@ public:
         selections.avoid_eol();
 
         if (m_disable_hooks)
-            context().user_hooks_support().enable();
+            context().user_hooks_disabled().unset();
     }
 
     void on_enabled() override
@@ -1297,7 +1297,7 @@ void InputHandler::handle_key(Key key)
         auto keymap_mode = current_mode().keymap_mode();
         KeymapManager& keymaps = m_context.keymaps();
         if (keymaps.is_mapped(key, keymap_mode) and
-            m_context.keymaps_support().is_enabled())
+            not m_context.keymaps_disabled())
         {
             for (auto& k : keymaps.get_mapping(key, keymap_mode))
                 current_mode().handle_key(k);

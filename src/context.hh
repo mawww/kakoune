@@ -18,33 +18,35 @@ class DisplayLine;
 class KeymapManager;
 class AliasRegistry;
 
-struct Disableable
+// bool that can be set (to true) multiple times, and will
+// be false only when unset the same time;
+struct NestedBool
 {
-    void disable() { m_disable_count++; }
-    void enable() { kak_assert(m_disable_count > 0); m_disable_count--; }
-    bool is_disabled() const { return m_disable_count > 0; }
-    bool is_enabled() const { return m_disable_count == 0; }
+    void set() { m_count++; }
+    void unset() { kak_assert(m_count > 0); m_count--; }
+
+    explicit operator bool() const { return m_count > 0; }
 private:
-    int m_disable_count = 0;
+    int m_count = 0;
 };
 
-struct ScopedDisable
+struct ScopedSetBool
 {
-    ScopedDisable(Disableable& disableable, bool condition = true)
-        : m_disableable(disableable), m_condition(condition)
+    ScopedSetBool(NestedBool& nested_bool, bool condition = true)
+        : m_nested_bool(nested_bool), m_condition(condition)
     {
         if (m_condition)
-            m_disableable.disable();
+            m_nested_bool.set();
     }
 
-    ~ScopedDisable()
+    ~ScopedSetBool()
     {
         if (m_condition)
-            m_disableable.enable();
+            m_nested_bool.unset();
     }
 
 private:
-    Disableable& m_disableable;
+    NestedBool& m_nested_bool;
     bool m_condition;
 };
 
@@ -122,14 +124,14 @@ public:
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
 
-    Disableable& user_hooks_support() { return m_user_hooks_support; }
-    const Disableable& user_hooks_support() const { return m_user_hooks_support; }
+    NestedBool& user_hooks_disabled() { return m_user_hooks_disabled; }
+    const NestedBool& user_hooks_disabled() const { return m_user_hooks_disabled; }
 
-    Disableable& keymaps_support() { return m_keymaps_support; }
-    const Disableable& keymaps_support() const { return m_keymaps_support; }
+    NestedBool& keymaps_disabled() { return m_keymaps_disabled; }
+    const NestedBool& keymaps_disabled() const { return m_keymaps_disabled; }
 
-    Disableable& history_support() { return m_history_support; }
-    const Disableable& history_support() const { return m_history_support; }
+    NestedBool& history_disabled() { return m_history_disabled; }
+    const NestedBool& history_disabled() const { return m_history_disabled; }
 
     Flags flags() const { return m_flags; }
 
@@ -154,9 +156,9 @@ private:
     JumpList           m_jump_list;
     JumpList::iterator m_current_jump = m_jump_list.begin();
 
-    Disableable m_user_hooks_support;
-    Disableable m_keymaps_support;
-    Disableable m_history_support;
+    NestedBool m_user_hooks_disabled;
+    NestedBool m_keymaps_disabled;
+    NestedBool m_history_disabled;
 };
 
 template<>

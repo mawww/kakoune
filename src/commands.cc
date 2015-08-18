@@ -661,11 +661,11 @@ const CommandDesc add_hook_cmd = {
         const String& command = parser[3];
 
         auto hook_func = [=](StringView param, Context& context) {
-            if (context.user_hooks_support().is_disabled())
+            if (context.user_hooks_disabled())
                 return;
 
             // Do not let hooks touch prompt history
-            ScopedDisable disable_history{context.history_support()};
+            ScopedSetBool disable_history{context.history_disabled()};
 
             if (regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context, {},
@@ -1210,7 +1210,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
     const bool disable_hooks = parser.get_switch("no-hooks") or
-                               context.user_hooks_support().is_disabled();
+                               context.user_hooks_disabled();
     const bool disable_keymaps = not parser.get_switch("with-maps");
 
     ClientManager& cm = ClientManager::instance();
@@ -1222,9 +1222,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             Context& c = input_handler.context();
 
             // Propagate user hooks disabled status to the temporary context
-            ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
-            ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
-            ScopedDisable disable_history{c.history_support()};
+            ScopedSetBool hook_disable(c.user_hooks_disabled(), disable_hooks);
+            ScopedSetBool keymaps_disable(c.keymaps_disabled(), disable_keymaps);
+            ScopedSetBool disable_history{c.history_disabled()};
 
             func(parser, c);
         };
@@ -1258,9 +1258,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         if (real_context->is_editing())
             c.disable_undo_handling();
 
-        ScopedDisable hook_disable(c.user_hooks_support(), disable_hooks);
-        ScopedDisable keymaps_disable(c.keymaps_support(), disable_keymaps);
-        ScopedDisable disable_history{c.history_support()};
+        ScopedSetBool hook_disable(c.user_hooks_disabled(), disable_hooks);
+        ScopedSetBool keymaps_disable(c.keymaps_disabled(), disable_keymaps);
+        ScopedSetBool disable_history{c.history_disabled()};
 
         if (parser.get_switch("itersel"))
         {
@@ -1285,9 +1285,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         if (parser.get_switch("itersel"))
             throw runtime_error("-itersel makes no sense without -draft");
 
-        ScopedDisable hook_disable(real_context->user_hooks_support(), disable_hooks);
-        ScopedDisable keymaps_disable(real_context->keymaps_support(), disable_keymaps);
-        ScopedDisable disable_history{real_context->history_support()};
+        ScopedSetBool hook_disable(real_context->user_hooks_disabled(), disable_hooks);
+        ScopedSetBool keymaps_disable(real_context->keymaps_disabled(), disable_keymaps);
+        ScopedSetBool disable_history{real_context->history_disabled()};
 
         func(parser, *real_context);
     }
