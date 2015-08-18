@@ -138,37 +138,37 @@ int str_to_int(StringView str)
     throw runtime_error{str + " is not a number"};
 }
 
-InplaceString<16> to_string(int val)
+InplaceString<15> to_string(int val)
 {
-    InplaceString<16> res;
+    InplaceString<15> res;
     res.m_length = sprintf(res.m_data, "%i", val);
     return res;
 }
 
-InplaceString<24> to_string(size_t val)
+InplaceString<23> to_string(size_t val)
 {
-    InplaceString<24> res;
+    InplaceString<23> res;
     res.m_length = sprintf(res.m_data, "%zu", val);
     return res;
 }
 
-InplaceString<24> to_string(Hex val)
+InplaceString<23> to_string(Hex val)
 {
-    InplaceString<24> res;
+    InplaceString<23> res;
     res.m_length = sprintf(res.m_data, "%zx", val.val);
     return res;
 }
 
-InplaceString<24> to_string(float val)
+InplaceString<23> to_string(float val)
 {
-    InplaceString<24> res;
+    InplaceString<23> res;
     res.m_length = sprintf(res.m_data, "%f", val);
     return res;
 }
 
-InplaceString<8> to_string(Codepoint c)
+InplaceString<7> to_string(Codepoint c)
 {
-    InplaceString<8> res;
+    InplaceString<7> res;
     char* ptr = res.m_data;
     utf8::dump(ptr, c);
     res.m_length = (int)(ptr - res.m_data);

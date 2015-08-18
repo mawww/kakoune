@@ -263,21 +263,23 @@ Optional<int> str_to_int_ifp(StringView str);
 template<size_t N>
 struct InplaceString
 {
-    constexpr operator StringView() const { return {m_data, m_length}; }
-    operator String() const { return {m_data, m_length}; }
+    static_assert(N < 256, "InplaceString cannot handle sizes >= 256");
 
-    ByteCount m_length;
+    constexpr operator StringView() const { return {m_data, ByteCount{m_length}}; }
+    operator String() const { return {m_data, ByteCount{m_length}}; }
+
+    unsigned char m_length;
     char m_data[N];
 };
 
 struct Hex { size_t val; };
 inline Hex hex(size_t val) { return {val}; }
 
-InplaceString<16> to_string(int val);
-InplaceString<24> to_string(size_t val);
-InplaceString<24> to_string(Hex val);
-InplaceString<24> to_string(float val);
-InplaceString<8>  to_string(Codepoint c);
+InplaceString<15> to_string(int val);
+InplaceString<23> to_string(size_t val);
+InplaceString<23> to_string(Hex val);
+InplaceString<23> to_string(float val);
+InplaceString<7>  to_string(Codepoint c);
 
 template<typename RealType, typename ValueType>
 decltype(to_string(std::declval<ValueType>()))
