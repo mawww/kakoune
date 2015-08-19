@@ -246,7 +246,7 @@ public:
                                              get_face("Information"), InfoStyle::Prompt);
                 it->func(context(), m_params);
             }
-            m_params = { 0, '"' };
+            m_params = { 0, 0 };
         }
 
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
@@ -261,7 +261,7 @@ public:
             atoms.push_back({ "; param=", Face(Color::Yellow) });
             atoms.push_back({ to_string(m_params.count), Face(Color::Green) });
         }
-        if (m_params.reg != '"')
+        if (m_params.reg)
         {
             atoms.push_back({ "; reg=", Face(Color::Yellow) });
             atoms.push_back({ StringView(m_params.reg).str(), Face(Color::Green) });
@@ -272,7 +272,7 @@ public:
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
 
 private:
-    NormalParams m_params = { 0, '"' };
+    NormalParams m_params = { 0, 0 };
     bool m_hooks_disabled = false;
     bool m_waiting_for_reg = false;
     Timer m_idle_timer;

@@ -460,15 +460,17 @@ void select_next_match(const Buffer& buffer, SelectionList& selections,
 
 void yank(Context& context, NormalParams params)
 {
-    RegisterManager::instance()[params.reg] = context.selections_content();
+    const char reg = params.reg ? params.reg : '"';
+    RegisterManager::instance()[reg] = context.selections_content();
     context.print_status({ format("yanked {} selections to register {}",
-                                  context.selections().size(), params.reg),
+                                  context.selections().size(), reg),
                            get_face("Information") });
 }
 
 void erase_selections(Context& context, NormalParams params)
 {
-    RegisterManager::instance()[params.reg] = context.selections_content();
+    const char reg = params.reg ? params.reg : '"';
+    RegisterManager::instance()[reg] = context.selections_content();
     ScopedEdition edition(context);
     context.selections().erase();
     context.selections().avoid_eol();
@@ -476,7 +478,8 @@ void erase_selections(Context& context, NormalParams params)
 
 void change(Context& context, NormalParams params)
 {
-    RegisterManager::instance()[params.reg] = context.selections_content();
+    const char reg = params.reg ? params.reg : '"';
+    RegisterManager::instance()[reg] = context.selections_content();
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
@@ -493,7 +496,8 @@ constexpr InsertMode adapt_for_linewise(InsertMode mode)
 template<InsertMode mode>
 void paste(Context& context, NormalParams params)
 {
-    auto strings = RegisterManager::instance()[params.reg].values(context);
+    const char reg = params.reg ? params.reg : '"';
+    auto strings = RegisterManager::instance()[reg].values(context);
     InsertMode effective_mode = mode;
     for (auto& str : strings)
     {
@@ -510,7 +514,8 @@ void paste(Context& context, NormalParams params)
 template<InsertMode mode>
 void paste_all(Context& context, NormalParams params)
 {
-    auto strings = RegisterManager::instance()[params.reg].values(context);
+    const char reg = params.reg ? params.reg : '"';
+    auto strings = RegisterManager::instance()[reg].values(context);
     InsertMode effective_mode = mode;
     String all;
     Vector<ByteCount> offsets;
