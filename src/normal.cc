@@ -1049,17 +1049,17 @@ static bool is_basic_alpha(Codepoint c)
     return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
 }
 
-void start_or_end_macro_recording(Context& context, NormalParams)
+void start_or_end_macro_recording(Context& context, NormalParams params)
 {
     if (context.input_handler().is_recording())
         context.input_handler().stop_recording();
     else
-        on_next_key_with_autoinfo(context, KeymapMode::None,
-                                 [](Key key, Context& context) {
-            auto cp = key.codepoint();
-            if (cp and is_basic_alpha(*cp))
-                context.input_handler().start_recording(tolower(*cp));
-        }, "record macro", "enter macro name ");
+    {
+        const char reg = tolower(params.reg ? params.reg : '@');
+        if (not is_basic_alpha(reg) and reg != '@')
+            throw runtime_error("Macros can only use the '@' and alphabetic registers");
+        context.input_handler().start_recording(reg);
+    }
 }
 
 void end_macro_recording(Context& context, NormalParams)
@@ -1070,29 +1070,25 @@ void end_macro_recording(Context& context, NormalParams)
 
 void replay_macro(Context& context, NormalParams params)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
-                             [params](Key key, Context& context) mutable {
-        auto cp = key.codepoint();
-        if (cp and is_basic_alpha(*cp))
-        {
-            static bool running_macros[26] = {};
-            const char name = tolower(*cp);
-            const size_t idx = (size_t)(name - 'a');
-            if (running_macros[idx])
-                throw runtime_error("recursive macros call detected");
+    const char reg = tolower(params.reg ? params.reg : '@');
+    if (not is_basic_alpha(reg) and reg != '@')
+        throw runtime_error("Macros can only use the '@' and alphabetic registers");
 
-            ConstArrayView<String> reg_val = RegisterManager::instance()[name].values(context);
-            if (not reg_val.empty())
-            {
-                running_macros[idx] = true;
-                auto stop = on_scope_end([&]{ running_macros[idx] = false; });
+    static bool running_macros[27] = {};
+    const size_t idx = reg != '@' ? (size_t)(reg - 'a') : 26;
+    if (running_macros[idx])
+        throw runtime_error("recursive macros call detected");
 
-                auto keys = parse_keys(reg_val[0]);
-                ScopedEdition edition(context);
-                do { exec_keys(keys, context); } while (--params.count > 0);
-            }
-        }
-    }, "replay macro", "enter macro name");
+    ConstArrayView<String> reg_val = RegisterManager::instance()[reg].values(context);
+    if (not reg_val.empty())
+    {
+        running_macros[idx] = true;
+        auto stop = on_scope_end([&]{ running_macros[idx] = false; });
+
+        auto keys = parse_keys(reg_val[0]);
+        ScopedEdition edition(context);
+        do { exec_keys(keys, context); } while (--params.count > 0);
+    }
 }
 
 template<Direction direction>
@@ -1264,61 +1260,55 @@ void spaces_to_tabs(Context& context, NormalParams params)
         SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
 }
 
-void save_selections(Context& context, NormalParams)
+void save_selections(Context& context, NormalParams params)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
-                             [](Key key, Context& context) {
-        auto cp = key.codepoint();
-        if (not cp or not is_basic_alpha(*cp))
-            return;
+    const char reg = tolower(params.reg ? params.reg : '^');
+    if (not is_basic_alpha(reg) and reg != '^')
+        throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
-        String desc = format("{}@{}%{}",
-                             selection_list_to_string(context.selections()),
-                             context.buffer().name(),
-                             context.buffer().timestamp());
+    String desc = format("{}@{}%{}",
+                         selection_list_to_string(context.selections()),
+                         context.buffer().name(),
+                         context.buffer().timestamp());
 
-        RegisterManager::instance()[*cp] = desc;
+    RegisterManager::instance()[reg] = desc;
 
-        context.print_status({format("Saved selections in register '{}'", *cp), get_face("Information")});
-    }, "Save selections", "Enter register to save selections into");
+    context.print_status({format("Saved selections in register '{}'", reg), get_face("Information")});
 }
 
-void restore_selections(Context& context, NormalParams)
+void restore_selections(Context& context, NormalParams params)
 {
-    on_next_key_with_autoinfo(context, KeymapMode::None,
-                             [](Key key, Context& context) {
-        auto cp = key.codepoint();
-        if (not cp or not is_basic_alpha(*cp))
-            return;
+    const char reg = tolower(params.reg ? params.reg : '^');
+    if (not is_basic_alpha(reg) and reg != '^')
+        throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
-        auto content = RegisterManager::instance()[*cp].values(context);
+    auto content = RegisterManager::instance()[reg].values(context);
 
-        if (content.size() != 1)
-            throw runtime_error(format("Register {} does not contain a selections desc", *cp));
+    if (content.size() != 1)
+        throw runtime_error(format("Register {} does not contain a selections desc", reg));
 
-        StringView desc = content[0];
-        auto arobase = find(desc, '@');
-        auto percent = find(desc, '%');
+    StringView desc = content[0];
+    auto arobase = find(desc, '@');
+    auto percent = find(desc, '%');
 
-        if (arobase == desc.end() or percent == desc.end())
-            throw runtime_error(format("Register {} does not contain a selections desc", *cp));
+    if (arobase == desc.end() or percent == desc.end())
+        throw runtime_error(format("Register {} does not contain a selections desc", reg));
 
-        Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
-        size_t timestamp = str_to_int({percent + 1, desc.end()});
+    Buffer& buffer = BufferManager::instance().get_buffer({arobase+1, percent});
+    size_t timestamp = str_to_int({percent + 1, desc.end()});
 
-        Vector<Selection> sels;
-        for (auto sel_desc : split({desc.begin(), arobase}, ':'))
-            sels.push_back(selection_from_string(sel_desc));
+    Vector<Selection> sels;
+    for (auto sel_desc : split({desc.begin(), arobase}, ':'))
+        sels.push_back(selection_from_string(sel_desc));
 
-        SelectionList sel_list{buffer, std::move(sels), timestamp};
+    SelectionList sel_list{buffer, std::move(sels), timestamp};
 
-        if (&buffer != &context.buffer())
-            context.change_buffer(buffer);
+    if (&buffer != &context.buffer())
+        context.change_buffer(buffer);
 
-        context.selections_write_only() = std::move(sel_list);
+    context.selections_write_only() = std::move(sel_list);
 
-        context.print_status({format("Restored selections from register '{}'", *cp), get_face("Information")});
-    }, "Restore selections", "Enter register to restore selections from");
+    context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
 }
 
 void undo(Context& context, NormalParams)
