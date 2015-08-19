@@ -380,8 +380,11 @@ Marks
 ~~~~~
 
 Current selections position can be saved in a register and restored later on.
-`Z` followed by a register will save the current selections in that register,
-`z` followed by a register will restore the selections saved in it.
+By default, marks us the '^' register, but using the register can be set
+using `"<reg>` prefix.
+
+`Z` will save the current selections to the register.
+`z` will restore the selections from the register.
 
 Jump list
 ~~~~~~~~~
@@ -823,14 +826,11 @@ Macros
 
 Kakoune can record and replay a sequence of key presses.
 
-When pressing the `Q` key, followed by an alphabetic key for the macro name,
-Kakoune begins macro recording: every pressed key will be added to the
-macro until the `Q` key is pressed again.
+Macros are recorded with the `Q` key, and are stored by default in the `@`
+register. Another register can be chosen by with hitting `"<reg>` before
+the `Q` key.
 
-To replay a macro, use the `q` key, followed by the macro name.
-
-Macros are actually stored as a key sequence into a register, i.e. a macro name
-is a register name.
+To replay a macro, use the `q` key.
 
 Search selection
 ~~~~~~~~~~~~~~~~
