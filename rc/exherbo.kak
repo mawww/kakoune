@@ -14,7 +14,7 @@ hook global BufCreate .*\.(exheres-0|exlib) %{
 }
 
 # Paludis configurations
-hook global BufCreate /etc/paludis/.*\.conf %{
+hook global BufCreate .*paludis/.*\.conf %{
     set buffer filetype paludis-conf
 }
 
@@ -33,10 +33,10 @@ hook global WinSetOption filetype=(?!exheres-0-metadata).* %{ rmhl exheres-0-met
 ## Paludis configurations
 addhl -group / group paludis-conf
 addhl -group /paludis-conf regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
-addhl -group /paludis-conf regex [\s\t]+(-(\S+(?:[\s\t]+))) 0:keyword 1:red
-addhl -group /paludis-conf regex [\s\t]+(\S+:(?:[\s\t]+)) 0:keyword
 addhl -group /paludis-conf regex (?::)(?:[\s\t]+)(.*?$) 1:attribute
 addhl -group /paludis-conf regex [\s\t]+(\S+\=)(.+?[\s\t]) 1:attribute 2:value
+addhl -group /paludis-conf regex [\s\t](\S+:) 0:keyword
+addhl -group /paludis-conf regex [\s\t](-\S+)(.*?) 1:red
 addhl -group /paludis-conf regex ^(\S+/\S+) 0:type
 addhl -group /paludis-conf regex ^#.*?$ 0:comment
 
