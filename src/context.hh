@@ -25,7 +25,7 @@ struct NestedBool
     void set() { m_count++; }
     void unset() { kak_assert(m_count > 0); m_count--; }
 
-    explicit operator bool() const { return m_count > 0; }
+    operator bool() const { return m_count > 0; }
 private:
     int m_count = 0;
 };
