@@ -64,7 +64,9 @@ Register& RegisterManager::operator[](StringView reg)
     static const IdMap<Codepoint> reg_names = {
         { "slash", '/' },
         { "dquote", '"' },
-        { "pipe", '|' }
+        { "pipe", '|' },
+        { "caret", '^' },
+        { "arobase", '@' }
     };
     auto it = reg_names.find(reg);
     if (it == reg_names.end())
