@@ -244,9 +244,13 @@ public:
                 if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
                     context().ui().info_show(key_to_str(key), it->docstring, CharCoord{},
                                              get_face("Information"), InfoStyle::Prompt);
-                it->func(context(), m_params);
+
+                // reset m_params now to be reentrant
+                NormalParams params = m_params;
+                m_params = { 0, 0 };
+
+                it->func(context(), params);
             }
-            m_params = { 0, 0 };
         }
 
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
