@@ -927,8 +927,12 @@ void NCursesUI::set_ui_options(const Options& options)
 
     {
         auto it = options.find("ncurses_status_on_top");
-        m_status_on_top = it != options.end() and
-            (it->second == "yes" or it->second == "true");
+        if (it == options.end())
+            m_status_on_top = false;
+        else if (it->second == "no" or it->second == "false")
+            m_status_on_top = false;
+        else if (it->second == "yes" or it->second == "true")
+            m_status_on_top = true;
     }
 
     {
