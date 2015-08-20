@@ -1522,17 +1522,17 @@ static NormalCmdDesc cmds[] =
 
     { 'w', "select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>> },
     { 'e', "select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>> },
-    { 'b', "select to prevous word start", repeated<select<SelectMode::Replace, select_to_previous_word<Word>>> },
+    { 'b', "select to previous word start", repeated<select<SelectMode::Replace, select_to_previous_word<Word>>> },
     { 'W', "extend to next word start", repeated<select<SelectMode::Extend, select_to_next_word<Word>>> },
     { 'E', "extend to next word end", repeated<select<SelectMode::Extend, select_to_next_word_end<Word>>> },
-    { 'B', "extend to prevous word start", repeated<select<SelectMode::Extend, select_to_previous_word<Word>>> },
+    { 'B', "extend to previous word start", repeated<select<SelectMode::Extend, select_to_previous_word<Word>>> },
 
     { alt('w'), "select to next WORD start", repeated<select<SelectMode::Replace, select_to_next_word<WORD>>> },
     { alt('e'), "select to next WORD end", repeated<select<SelectMode::Replace, select_to_next_word_end<WORD>>> },
-    { alt('b'), "select to prevous WORD start", repeated<select<SelectMode::Replace, select_to_previous_word<WORD>>> },
+    { alt('b'), "select to previous WORD start", repeated<select<SelectMode::Replace, select_to_previous_word<WORD>>> },
     { alt('W'), "extend to next WORD start", repeated<select<SelectMode::Extend, select_to_next_word<WORD>>> },
     { alt('E'), "extend to next WORD end", repeated<select<SelectMode::Extend, select_to_next_word_end<WORD>>> },
-    { alt('B'), "extend to prevous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>> },
+    { alt('B'), "extend to previous WORD start", repeated<select<SelectMode::Extend, select_to_previous_word<WORD>>> },
 
     { alt('l'), "select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>> },
     { Key::End, "select to line end", repeated<select<SelectMode::Replace, select_to_line_end<false>>> },
