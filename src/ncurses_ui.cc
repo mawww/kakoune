@@ -919,9 +919,9 @@ void NCursesUI::set_ui_options(const Options& options)
             m_assistant = assistant_clippy;
         else if (it->second == "cat")
             m_assistant = assistant_cat;
-        else if (it->second == "clippy")
+        else if (it->second == "clippy" or it->second == "yes" or it->second == "true")
             m_assistant = assistant_clippy;
-        else if (it->second == "none" or it->second == "off")
+        else if (it->second == "no" or it->second == "false")
             m_assistant = ConstArrayView<StringView>{};
     }
 
