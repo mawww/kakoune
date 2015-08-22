@@ -432,8 +432,7 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, format("/tmp/kak-{}", session).c_str(),
-            sizeof(addr.sun_path) - 1);
+    format_to(addr.sun_path, "/tmp/kak-{}", session);
     return addr;
 }
 
