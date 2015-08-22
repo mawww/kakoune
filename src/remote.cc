@@ -669,7 +669,8 @@ void Server::close_session()
 
 Server::~Server()
 {
-    close_session();
+    if (m_listener)
+        close_session();
 }
 
 void Server::remove_accepter(Accepter* accepter)
