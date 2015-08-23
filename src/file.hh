@@ -48,6 +48,8 @@ void write_buffer_to_backup_file(Buffer& buffer);
 
 String find_file(StringView filename, ConstArrayView<String> paths);
 
+Vector<String> list_files(StringView directory);
+
 void make_directory(StringView dir);
 
 time_t get_fs_timestamp(StringView filename);

@@ -580,7 +580,8 @@ int main(int argc, char* argv[])
                    { "p", { true,  "just send stdin as commands to the given session" } },
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
-                   { "u", { false, "use a dummy user interface, for testing purposes" } } }
+                   { "u", { false, "use a dummy user interface, for testing purposes" } },
+                   { "l", { false, "list existing sessions" } } }
     };
     try
     {
@@ -590,6 +591,12 @@ int main(int argc, char* argv[])
 
         ParametersParser parser(params, param_desc);
 
+        if (parser.get_switch("l"))
+        {
+            for (auto& file : list_files(format("/tmp/kakoune/{}/", getlogin())))
+                write_stdout(format("{}\n", file));
+            return 0;
+        }
         if (auto session = parser.get_switch("p"))
         {
             for (auto opt : { "c", "n", "s", "d", "e" })

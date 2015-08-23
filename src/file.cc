@@ -351,6 +351,11 @@ Vector<String> list_files(StringView prefix, StringView dirname,
     return result.empty() ? subseq_result : result;
 }
 
+Vector<String> list_files(StringView directory)
+{
+    return list_files("", directory, [](const dirent&) { return true; });
+}
+
 CandidateList complete_filename(StringView prefix,
                                 const Regex& ignored_regex,
                                 ByteCount cursor_pos)
