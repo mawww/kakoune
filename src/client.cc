@@ -166,6 +166,12 @@ void Client::redraw_ifn()
     ui.refresh();
 }
 
+void Client::force_redraw()
+{
+    if (m_window)
+        m_window->force_redraw();
+}
+
 void Client::reload_buffer()
 {
     auto& buffer = context().buffer();

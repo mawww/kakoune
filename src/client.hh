@@ -35,10 +35,10 @@ public:
 
     void print_status(DisplayLine status_line);
 
+    void force_redraw();
     void redraw_ifn();
 
     UserInterface& ui() const { return *m_ui; }
-    Window& window() const { return *m_window; }
 
     void check_if_buffer_needs_reloading();
 
