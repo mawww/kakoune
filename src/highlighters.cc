@@ -155,12 +155,7 @@ void apply_highlighter(const Context& context,
 auto apply_face = [](const Face& face)
 {
     return [&face](DisplayAtom& atom) {
-        if (face.fg != Color::Default)
-            atom.face.fg = face.fg;
-        if (face.bg != Color::Default)
-            atom.face.bg = face.bg;
-        if (face.attributes != Attribute::Normal)
-            atom.face.attributes |= face.attributes;
+        atom.face = merge_faces(atom.face, face);
     };
 };
 
@@ -891,7 +886,8 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
         throw runtime_error("wrong parameter count");
 
     const String& option_name = params[1];
-    Color bg = str_to_color(params[0]);
+    String default_face = params[0];
+    get_face(default_face); // validate param
 
     // throw if wrong option type
     GlobalScope::instance().options()[option_name].get<Vector<LineAndFlag, MemoryDomain::Options>>();
@@ -901,6 +897,8 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     {
         auto& lines_opt = context.options()[option_name];
         auto& lines = lines_opt.get<Vector<LineAndFlag, MemoryDomain::Options>>();
+
+        auto def_face = get_face(default_face);
 
         CharCount width = 0;
         for (auto& l : lines)
@@ -915,7 +913,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
             String content = it != lines.end() ? std::get<2>(*it) : empty;
             content += String(' ', width - content.char_length());
             DisplayAtom atom{std::move(content)};
-            atom.face = { it != lines.end() ? std::get<1>(*it) : Color::Default , bg };
+            atom.face = it != lines.end() ? merge_faces(get_face(std::get<1>(*it)), def_face) : def_face;
             line.insert(line.begin(), std::move(atom));
         }
     };

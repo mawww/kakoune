@@ -42,6 +42,13 @@ constexpr bool operator!=(const Face& lhs, const Face& rhs)
     return not (lhs == rhs);
 }
 
+constexpr Face merge_faces(const Face& base, const Face& face)
+{
+    return { face.fg == Color::Default ? base.fg : face.fg,
+             face.bg == Color::Default ? base.bg : face.bg,
+             face.attributes | base.attributes };
+}
+
 }
 
 #endif // face_hh_INCLUDED
