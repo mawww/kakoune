@@ -6,6 +6,7 @@
 #include "command_manager.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "file.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -432,7 +433,7 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    format_to(addr.sun_path, "/tmp/kak-{}", session);
+    format_to(addr.sun_path, "/tmp/kakoune/{}/{}", getlogin(), session);
     return addr;
 }
 
@@ -640,6 +641,8 @@ Server::Server(String session_name)
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
 
+    make_directory(split_path(addr.sun_path).first);
+
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
        throw runtime_error(format("unable to bind listen socket '{}'", addr.sun_path));
 
@@ -662,7 +665,9 @@ Server::Server(String session_name)
 
 void Server::close_session()
 {
-    unlink(format("/tmp/kak-{}", m_session).c_str());
+    char socket_file[128];
+    format_to(socket_file, "/tmp/kakoune/{}/{}", getlogin(), m_session);
+    unlink(socket_file);
     m_listener->close_fd();
     m_listener.reset();
 }

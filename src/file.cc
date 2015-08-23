@@ -291,6 +291,24 @@ String find_file(StringView filename, ConstArrayView<String> paths)
     return "";
 }
 
+void make_directory(StringView dir)
+{
+    auto it = dir.begin(), end = dir.end();
+    while(it != end)
+    {
+        it = std::find(it+1, end, '/');
+        struct stat st;
+        StringView dirname{dir.begin(), it};
+        if (stat(dirname.zstr(), &st) == 0)
+        {
+            if (not S_ISDIR(st.st_mode))
+                throw runtime_error(format("Cannot make directory, '{}' exists but is not a directory", dirname));
+        }
+        else if (mkdir(dirname.zstr(), S_IRWXU) != 0)
+            throw runtime_error(format("mkdir failed for directory '{}' errno {}", dirname, errno));
+    }
+}
+
 template<typename Filter>
 Vector<String> list_files(StringView prefix, StringView dirname,
                           Filter filter)
