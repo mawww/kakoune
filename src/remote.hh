@@ -38,7 +38,6 @@ private:
 
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<FDWatcher>     m_socket_watcher;
-    CharCoord                      m_dimensions;
 };
 
 void send_command(StringView session, StringView command);

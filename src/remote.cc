@@ -401,11 +401,8 @@ Key RemoteUI::get_key()
     try
     {
         Key key = read<Key>(m_socket_watcher.fd());
-        if (key.modifiers == resize_modifier)
-        {
-            m_dimensions = { (int)(key.key >> 16), (int)(key.key & 0xFFFF) };
-            return Key::Invalid;
-        }
+        if (key.modifiers == Key::Modifiers::Resize)
+            m_dimensions = key.coord();
         return key;
     }
     catch (peer_disconnected&)
@@ -449,7 +446,7 @@ static int connect_to(StringView session)
 
 RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
                            const EnvVarMap& env_vars, StringView init_command)
-    : m_ui(std::move(ui)), m_dimensions(m_ui->dimensions())
+    : m_ui(std::move(ui))
 {
     int sock = connect_to(session);
 
@@ -458,10 +455,6 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         msg.write(init_command.data(), (int)init_command.length());
         msg.write((char)0);
         msg.write(env_vars);
-
-        Key key{ resize_modifier, Codepoint(((int)m_dimensions.line << 16) |
-                                            (int)m_dimensions.column) };
-        msg.write(key);
     }
 
     m_ui->set_input_callback([this](EventMode){ write_next_key(); });
@@ -548,15 +541,6 @@ void RemoteClient::write_next_key()
     // do that before checking dimensions as get_key may
     // handle a resize event.
     msg.write(m_ui->get_key());
-
-    CharCoord dimensions = m_ui->dimensions();
-    if (dimensions != m_dimensions)
-    {
-        m_dimensions = dimensions;
-        Key key{ resize_modifier, Codepoint(((int)dimensions.line << 16) |
-                                            (int)dimensions.column) };
-        msg.write(key);
-    }
 }
 
 void send_command(StringView session, StringView command)

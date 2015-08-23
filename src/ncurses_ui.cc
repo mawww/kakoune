@@ -542,6 +542,7 @@ Key NCursesUI::get_key()
     case KEY_HOME: return Key::Home;
     case KEY_END: return Key::End;
     case KEY_BTAB: return Key::BackTab;
+    case KEY_RESIZE: return resize(m_dimensions);
     }
 
     for (int i = 0; i < 12; ++i)

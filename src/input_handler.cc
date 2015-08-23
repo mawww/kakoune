@@ -78,7 +78,7 @@ struct MouseHandler
         {
         case Key::Modifiers::MousePress:
             m_dragging = true;
-            m_anchor = context.window().buffer_coord(key.mouse_coord());
+            m_anchor = context.window().buffer_coord(key.coord());
             context.selections_write_only() = SelectionList{ buffer, m_anchor };
             return true;
 
@@ -86,7 +86,7 @@ struct MouseHandler
             if (not m_dragging)
                 return true;
             m_dragging = false;
-            cursor = context.window().buffer_coord(key.mouse_coord());
+            cursor = context.window().buffer_coord(key.coord());
             context.selections_write_only() =
                 SelectionList{ buffer, Selection{buffer.clamp(m_anchor), cursor} };
             return true;
@@ -94,7 +94,7 @@ struct MouseHandler
         case Key::Modifiers::MousePos:
             if (not m_dragging)
                 return true;
-            cursor = context.window().buffer_coord(key.mouse_coord());
+            cursor = context.window().buffer_coord(key.coord());
             context.selections_write_only() =
                 SelectionList{ buffer, Selection{buffer.clamp(m_anchor), cursor} };
             return true;
