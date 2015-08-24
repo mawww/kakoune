@@ -4,6 +4,7 @@ hook global WinSetOption filetype=git-log %{
     addhl group git-log-highlight
     addhl -group git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
     addhl -group git-log-highlight regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
+    addhl -group git-log-highlight ref diff # highlight potential diffs from the -p option
 }
 
 hook global WinSetOption filetype=(?!git-log).* %{
