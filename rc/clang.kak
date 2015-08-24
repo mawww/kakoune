@@ -36,7 +36,6 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
                 *) ft=c++ ;;
             esac
 
-            cd $(dirname ${kak_buffile})
             if [ "$1" == "-complete" ]; then
                 pos=-:${kak_cursor_line}:${kak_cursor_column}
                 header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
