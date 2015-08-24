@@ -69,8 +69,8 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/\1,red,█/; p }
-                        /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1,yellow,█/; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/\1|red|█/; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1|yellow|█/; p }
                     " | paste -s -d ':')
 
             errors=$(cat ${dir}/stderr | sed -rne "
