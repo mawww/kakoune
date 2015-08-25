@@ -435,8 +435,8 @@ Selection select_argument(const Buffer& buffer, const Selection& selection,
     auto classify = [](Codepoint c) {
         switch (c)
         {
-        case '(': case '[': case '{': case '<': return Opening;
-        case ')': case ']': case '}': case '>': return Closing;
+        case '(': case '[': case '{': return Opening;
+        case ')': case ']': case '}': return Closing;
         case ',': case ';': return Delimiter;
         default: return None;
         }
