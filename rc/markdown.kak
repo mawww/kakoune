@@ -48,14 +48,6 @@ addhl -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _markdown_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
-}
-
 def -hidden _markdown_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
@@ -72,13 +64,10 @@ def -hidden _markdown_indent_on_new_line %{
 
 hook global WinSetOption filetype=markdown %{
     addhl ref markdown
-
-    hook window InsertEnd  .* -group markdown-hooks  _markdown_filter_around_selections
     hook window InsertChar \n -group markdown-indent _markdown_indent_on_new_line
 }
 
 hook global WinSetOption filetype=(?!markdown).* %{
     rmhl markdown
     rmhooks window markdown-indent
-    rmhooks window markdown-hooks
 }
