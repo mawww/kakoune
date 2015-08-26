@@ -127,6 +127,8 @@ const SelectionList& Context::jump_backward()
         {
             push_jump();
             --m_current_jump;
+            if (m_current_jump == m_jump_list.begin())
+                throw runtime_error("no previous jump");
         }
         SelectionList& res = *--m_current_jump;
         res.update();
