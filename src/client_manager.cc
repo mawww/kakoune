@@ -66,15 +66,11 @@ void ClientManager::handle_pending_inputs() const
 
 void ClientManager::remove_client(Client& client)
 {
-    for (auto it = m_clients.begin(); it != m_clients.end(); ++it)
-    {
-        if (it->get() == &client)
-        {
-             m_clients.erase(it);
-             return;
-        }
-    }
-    kak_assert(false);
+    auto it = find_if(m_clients,
+                      [&](const std::unique_ptr<Client>& ptr)
+                      { return ptr.get() == &client; });
+    kak_assert(it != m_clients.end());
+    m_clients.erase(it);
 }
 
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)

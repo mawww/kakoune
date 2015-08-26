@@ -227,40 +227,63 @@ void register_options()
                        UserInterface::Options{});
 }
 
-template<typename UI>
-void create_local_client(StringView init_command, bool startup_error)
+std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 {
-    struct LocalUI : UI
+    struct DummyUI : UserInterface
+    {
+        void menu_show(ConstArrayView<String>, CharCoord, Face, Face, MenuStyle) override {}
+        void menu_select(int) override {}
+        void menu_hide() override {}
+
+        void info_show(StringView, StringView, CharCoord, Face, InfoStyle) override {}
+        void info_hide() override {}
+
+        void draw(const DisplayBuffer&, const Face&) override {}
+        void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
+        CharCoord dimensions() override { return {24,80}; }
+        bool is_key_available() override { return false; }
+        Key  get_key() override { return Key::Invalid; }
+        void refresh() override {}
+        void set_input_callback(InputCallback) override {}
+        void set_ui_options(const Options&) override {}
+    };
+
+    if (dummy_ui)
+        return make_unique<DummyUI>();
+
+    struct LocalUI : NCursesUI
     {
         ~LocalUI()
         {
             if (not ClientManager::instance().empty() and fork())
             {
-                this->UI::~UI();
+                this->NCursesUI::~NCursesUI();
                 write_stdout("detached from terminal\n");
                 exit(0);
             }
         }
     };
 
-    if (std::is_same<UI, NCursesUI>::value)
-    {
-        if (not isatty(1))
-            throw runtime_error("stdout is not a tty");
+    if (not isatty(1))
+        throw runtime_error("stdout is not a tty");
 
-        if (not isatty(0))
-        {
-            // move stdin to another fd, and restore tty as stdin
-            int fd = dup(0);
-            int tty = open("/dev/tty", O_RDONLY);
-            dup2(tty, 0);
-            close(tty);
-            create_fifo_buffer("*stdin*", fd);
-        }
+    if (not isatty(0))
+    {
+        // move stdin to another fd, and restore tty as stdin
+        int fd = dup(0);
+        int tty = open("/dev/tty", O_RDONLY);
+        dup2(tty, 0);
+        close(tty);
+        create_fifo_buffer("*stdin*", fd);
     }
 
+    return make_unique<LocalUI>();
+}
+
+void create_local_client(std::unique_ptr<UserInterface> ui, StringView init_command, bool startup_error)
+{
     static Client* client = ClientManager::instance().create_client(
-        make_unique<LocalUI>(), get_env_vars(), init_command);
+        std::move(ui), get_env_vars(), init_command);
 
     if (startup_error)
         client->print_status({
@@ -328,26 +351,6 @@ int run_client(StringView session, StringView init_command)
     }
     return 0;
 }
-
-struct DummyUI : UserInterface
-{
-public:
-    void menu_show(ConstArrayView<String>, CharCoord, Face, Face, MenuStyle) override {}
-    void menu_select(int) override {}
-    void menu_hide() override {}
-
-    void info_show(StringView, StringView, CharCoord, Face, InfoStyle) override {}
-    void info_hide() override {}
-
-    void draw(const DisplayBuffer&, const Face&) override {}
-    void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
-    CharCoord dimensions() override { return {24,80}; }
-    bool is_key_available() override { return false; }
-    Key  get_key() override { return Key::Invalid; }
-    void refresh() override {}
-    void set_input_callback(InputCallback) override {}
-    void set_ui_options(const Options&) override {}
-};
 
 int run_server(StringView session, StringView init_command,
                bool ignore_kakrc, bool daemon, bool dummy_ui,
@@ -445,12 +448,7 @@ int run_server(StringView session, StringView init_command,
         new Buffer("*scratch*", Buffer::Flags::None);
 
     if (not daemon)
-    {
-        if (dummy_ui)
-            create_local_client<DummyUI>(init_command, startup_error);
-        else
-            create_local_client<NCursesUI>(init_command, startup_error);
-    }
+        create_local_client(create_local_ui(dummy_ui), init_command, startup_error);
 
     while (not terminate and (not client_manager.empty() or daemon))
     {
