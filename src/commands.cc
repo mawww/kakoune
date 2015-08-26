@@ -263,6 +263,17 @@ const CommandDesc writeall_cmd = {
     [](const ParametersParser&, Context&){ write_all_buffers(); }
 };
 
+const CommandDesc kill_cmd = {
+    "kill",
+    nullptr,
+    "kill current session, quit all clients and server",
+    no_params,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser&, Context&){ throw kill_session{}; }
+};
+
 template<bool force>
 void quit()
 {
@@ -1649,6 +1660,7 @@ void register_commands()
     register_command(writeall_cmd);
     register_command(writeall_quit_cmd);
     register_command(quit_cmd);
+    register_command(kill_cmd);
     register_command(force_quit_cmd);
     register_command(write_quit_cmd);
     register_command(force_write_quit_cmd);

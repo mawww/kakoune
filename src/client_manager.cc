@@ -13,7 +13,12 @@ namespace Kakoune
 {
 
 ClientManager::ClientManager() = default;
-ClientManager::~ClientManager() = default;
+ClientManager::~ClientManager()
+{
+    // So that clients destructor find the client manager empty
+    // so that local UI does not fork.
+    ClientList clients = std::move(m_clients);
+}
 
 String ClientManager::generate_name() const
 {

@@ -12,6 +12,8 @@ class Key;
 void register_commands();
 void exec_keys(ConstArrayView<Key> keys, Context& context);
 
+struct kill_session {};
+
 }
 
 #endif // commands_hh_INCLUDED

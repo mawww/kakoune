@@ -450,14 +450,18 @@ int run_server(StringView session, StringView init_command,
     if (not daemon)
         create_local_client(create_local_ui(dummy_ui), init_command, startup_error);
 
-    while (not terminate and (not client_manager.empty() or daemon))
+    try
     {
-        client_manager.redraw_clients();
-        event_manager.handle_next_events(EventMode::Normal);
-        client_manager.handle_pending_inputs();
-        buffer_manager.clear_buffer_trash();
-        string_registry.purge_unused();
+        while (not terminate and (not client_manager.empty() or daemon))
+        {
+            client_manager.redraw_clients();
+            event_manager.handle_next_events(EventMode::Normal);
+            client_manager.handle_pending_inputs();
+            buffer_manager.clear_buffer_trash();
+            string_registry.purge_unused();
+        }
     }
+    catch (const kill_session&) {}
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
