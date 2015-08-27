@@ -30,7 +30,8 @@ Introduction
 ------------
 
 Kakoune is a code editor heavily inspired by Vim, as such most of its
-commands are similar to vi's ones.
+commands are similar to vi's ones, and it shares Vi's "keystrokes as
+a text editing language" model.
 
 Kakoune can operate in two modes, normal and insertion. In insertion mode,
 keys are directly inserted into the current buffer. In normal mode, keys
