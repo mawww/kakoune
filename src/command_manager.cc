@@ -6,6 +6,7 @@
 #include "register_manager.hh"
 #include "shell_manager.hh"
 #include "utils.hh"
+#include "optional.hh"
 
 #include <algorithm>
 
@@ -56,76 +57,125 @@ struct Token
     };
     Token() : m_type(Type::Raw) {}
 
-    Token(Type type, ByteCount b, ByteCount e, String str = "")
-    : m_type(type), m_begin(b), m_end(e), m_content(str) {}
+    Token(Type type, ByteCount b, ByteCount e, CharCoord coord, String str = "")
+        : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(str) {}
 
     Type type() const { return m_type; }
     ByteCount begin() const { return m_begin; }
     ByteCount end() const { return m_end; }
+    CharCoord coord() const { return m_coord; }
     const String& content() const { return m_content; }
 
 private:
     Type   m_type;
     ByteCount m_begin;
     ByteCount m_end;
+    CharCoord m_coord;
     String m_content;
 };
 
-
 using TokenList = Vector<Token>;
+
+struct Reader
+{
+public:
+    [[gnu::always_inline]]
+    char operator*() const { return str[pos]; }
+
+    Reader& operator++()
+    {
+        if (str[pos++] == '\n')
+        {
+            ++coord.line;
+            coord.column = 0;
+        }
+        else
+            ++coord.column;
+        return *this;
+    }
+
+    [[gnu::always_inline]]
+    explicit operator bool() const { return pos < str.length(); }
+
+    [[gnu::always_inline]]
+    StringView substr_from(ByteCount start) const
+    {
+        return str.substr(start, pos - start);
+    }
+
+    Optional<char> peek_next() const
+    {
+        if (pos+1 != str.length())
+            return str[pos+1];
+        return {};
+    }
+
+    StringView str;
+    ByteCount pos;
+    CharCoord coord;
+};
 
 bool is_command_separator(char c)
 {
     return c == ';' or c == '\n';
 }
 
-String get_until_delimiter(StringView base, ByteCount& pos, char delimiter)
+template<typename Func>
+String get_until_delimiter(Reader& reader, Func is_delimiter)
 {
-    const ByteCount length = base.length();
-    ByteCount beg = pos;
+    auto beg = reader.pos;
     String str;
-    while (pos < length)
+    bool was_antislash = false;
+
+    while (reader)
     {
-        char c = base[pos];
-        if (c == delimiter)
+        const char c = *reader;
+        if (is_delimiter(c))
         {
-            str += base.substr(beg, pos - beg);
-            if (pos != 0 and base[pos-1] == '\\')
+            str += reader.substr_from(beg);
+            if (was_antislash)
             {
-                str.back() = delimiter;
-                beg = pos+1;
+                str.back() = c;
+                beg = reader.pos+1;
             }
             else
                 return str;
         }
-        ++pos;
+        was_antislash = c == '\\';
+        ++reader;
     }
-    if (beg < length)
-        str += base.substr(beg, pos - beg);
+    if (beg < reader.str.length())
+        str += reader.substr_from(beg);
     return str;
 }
 
-String get_until_delimiter(StringView base, ByteCount& pos,
-                           char opening_delimiter, char closing_delimiter)
+[[gnu::always_inline]]
+inline String get_until_delimiter(Reader& reader, char c)
 {
-    kak_assert(base[pos-1] == opening_delimiter);
-    const ByteCount length = base.length();
+    return get_until_delimiter(reader, [c](char ch) { return c == ch; });
+}
+
+StringView get_until_closing_delimiter(Reader& reader, char opening_delimiter,
+                                       char closing_delimiter)
+{
+    kak_assert(reader.str[reader.pos-1] == opening_delimiter);
     int level = 0;
-    ByteCount start = pos;
-    while (pos != length)
+    auto start = reader.pos;
+    while (reader)
     {
-        if (base[pos] == opening_delimiter)
+        const char c = *reader;
+        if (c == opening_delimiter)
             ++level;
-        else if (base[pos] == closing_delimiter)
+        else if (c == closing_delimiter)
         {
             if (level > 0)
                 --level;
             else
                 break;
         }
-        ++pos;
+        ++reader;
     }
-    return base.substr(start, pos - start).str();
+    return reader.substr_from(start);
 }
 
 struct unknown_expand : parse_error
@@ -153,22 +203,19 @@ Token::Type token_type(StringView type_name)
         return Token::Type::Raw;
 }
 
-void skip_blanks_and_comments(StringView base, ByteCount& pos)
+void skip_blanks_and_comments(Reader& reader)
 {
-    const ByteCount length = base.length();
-    while (pos != length)
+    while (reader)
     {
-        if (is_horizontal_blank(base[pos]))
-            ++pos;
-        else if (base[pos] == '\\' and pos+1 < length and base[pos+1] == '\n')
-            pos += 2;
-        else if (base[pos] == '#')
+        const char c = *reader;
+        if (is_horizontal_blank(c))
+            ++reader;
+        else if (c == '\\' and reader.peek_next().value_or('\0') == '\n')
+            ++(++reader);
+        else if (c == '#')
         {
-            while (pos != length)
-            {
-                if (base[pos++] == '\n')
-                    break;
-            }
+            for (bool eol = false; reader and not eol; ++reader)
+                eol = *reader == '\n';
         }
         else
             break;
@@ -176,15 +223,15 @@ void skip_blanks_and_comments(StringView base, ByteCount& pos)
 }
 
 template<bool throw_on_unterminated>
-Token parse_percent_token(StringView line, ByteCount& pos)
+Token parse_percent_token(Reader& reader)
 {
-    const ByteCount length = line.length();
-    const ByteCount type_start = ++pos;
-    while (pos < length and isalpha(line[pos]))
-        ++pos;
-    StringView type_name = line.substr(type_start, pos - type_start);
+    ++reader;
+    const ByteCount type_start = reader.pos;
+    while (reader and isalpha(*reader))
+        ++reader;
+    StringView type_name = reader.substr_from(type_start);
 
-    if (throw_on_unterminated and pos == length)
+    if (throw_on_unterminated and not reader)
         throw parse_error{format("expected a string delimiter after '%{}'",
                                  type_name)};
 
@@ -193,25 +240,34 @@ Token parse_percent_token(StringView line, ByteCount& pos)
         { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
     };
 
-    char opening_delimiter = line[pos];
-    ByteCount token_start = ++pos;
+    char opening_delimiter = *reader;
+    ++reader;
+    auto start = reader.pos;
+    auto coord = reader.coord;
 
     auto delim_it = matching_delimiters.find(opening_delimiter);
     if (delim_it != matching_delimiters.end())
     {
-        char closing_delimiter = delim_it->second;
-        String token = get_until_delimiter(line, pos, opening_delimiter,
-                                           closing_delimiter);
-        if (throw_on_unterminated and pos == length)
-            throw parse_error{format("unterminated string '%{}{}...{}'",
-                                     type_name, opening_delimiter,
-                                     closing_delimiter)};
-        return {type, token_start, pos, std::move(token)};
+        const char closing_delimiter = delim_it->second;
+        auto token = get_until_closing_delimiter(reader, opening_delimiter,
+                                                 closing_delimiter);
+        if (throw_on_unterminated and not reader)
+            throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
+                                     coord.line, coord.column, type_name,
+                                     opening_delimiter, closing_delimiter)};
+
+        return {type, start, reader.pos, coord, token.str()};
     }
     else
     {
-        String token = get_until_delimiter(line, pos, opening_delimiter);
-        return {type, token_start, pos, std::move(token)};
+        String token = get_until_delimiter(reader, opening_delimiter);
+
+        if (throw_on_unterminated and not reader)
+            throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
+                                     coord.line, coord.column, type_name,
+                                     opening_delimiter, opening_delimiter)};
+
+        return {type, start, reader.pos, coord, std::move(token)};
     }
 }
 
@@ -220,50 +276,44 @@ TokenList parse(StringView line)
 {
     TokenList result;
 
-    const ByteCount length = line.length();
-    ByteCount pos = 0;
-    while (pos < length)
+    Reader reader{line};
+    while (reader)
     {
-        skip_blanks_and_comments(line, pos);
+        skip_blanks_and_comments(reader);
 
-        ByteCount token_start = pos;
-        ByteCount start_pos = pos;
+        ByteCount start = reader.pos;
+        auto coord = reader.coord;
 
-        if (line[pos] == '"' or line[pos] == '\'')
+        const char c = *reader;
+        if (c == '"' or c == '\'')
         {
-            char delimiter = line[pos];
-
-            token_start = ++pos;
-            String token = get_until_delimiter(line, pos, delimiter);
-            if (throw_on_unterminated and pos == length)
-                throw parse_error{format("unterminated string {0}...{0}", delimiter)};
-            result.emplace_back(delimiter == '"' ? Token::Type::RawEval
-                                                 : Token::Type::Raw,
-                                token_start, pos, std::move(token));
+            start = (++reader).pos;
+            String token = get_until_delimiter(reader, c);
+            if (throw_on_unterminated and not reader)
+                throw parse_error{format("unterminated string {0}...{0}", c)};
+            result.emplace_back(c == '"' ? Token::Type::RawEval
+                                         : Token::Type::Raw,
+                                start, reader.pos, coord, std::move(token));
         }
-        else if (line[pos] == '%')
+        else if (c == '%')
             result.push_back(
-                parse_percent_token<throw_on_unterminated>(line, pos));
+                parse_percent_token<throw_on_unterminated>(reader));
         else
         {
-            while (pos != length and
-                   ((not is_command_separator(line[pos]) and
-                     not is_horizontal_blank(line[pos]))
-                    or (pos != 0 and line[pos-1] == '\\')))
-                ++pos;
-            if (start_pos != pos)
-            {
-                result.emplace_back(
-                    Token::Type::Raw, token_start, pos,
-                    unescape(line.substr(token_start, pos - token_start),
-                             " \t;\n", '\\'));
-            }
+            String str = get_until_delimiter(reader, [](char c) {
+                return is_command_separator(c) or is_horizontal_blank(c);
+            });
+
+            if (not str.empty())
+                result.emplace_back(Token::Type::Raw, start, reader.pos,
+                                    coord, std::move(str));
         }
 
-        if (is_command_separator(line[pos]))
-            result.emplace_back(Token::Type::CommandSeparator, pos, pos+1);
+        if (is_command_separator(*reader))
+            result.emplace_back(Token::Type::CommandSeparator,
+                                reader.pos, reader.pos+1, coord);
 
-        ++pos;
+        ++reader;
     }
     return result;
 }
@@ -305,32 +355,33 @@ String expand(StringView str, const Context& context,
               ConstArrayView<String> shell_params,
               const EnvVarMap& env_vars)
 {
+    Reader reader{str};
     String res;
-    auto pos = 0_byte, beg = 0_byte;
-    auto length = str.length();
-    while (pos < length)
+    auto beg = 0_byte;
+    while (reader)
     {
-        if (str[pos] == '\\')
+        char c = *reader;
+        if (c == '\\')
         {
-            char c = str[++pos];
+            c = *++reader;
             if (c == '%' or c == '\\')
             {
-                res += str.substr(beg, pos - beg);
+                res += reader.substr_from(beg);
                 res.back() = c;
-                beg = ++pos;
+                beg = (++reader).pos;
             }
         }
-        else if (str[pos] == '%')
+        else if (c == '%')
         {
-            res += str.substr(beg, pos - beg);
-            Token token = parse_percent_token<true>(str, pos);
+            res += reader.substr_from(beg);
+            Token token = parse_percent_token<true>(reader);
             res += expand_token(token, context, shell_params, env_vars);
-            beg = ++pos;
+            beg = (++reader).pos;
         }
         else
-            ++pos;
+            ++reader;
     }
-    res += str.substr(beg, pos - beg);
+    res += reader.substr_from(beg);
     return res;
 }
 
@@ -374,25 +425,6 @@ void CommandManager::execute_single_command(CommandParameters params,
     }
 }
 
-static CharCoord find_coord(StringView str, ByteCount offset)
-{
-    CharCoord res;
-    auto it = str.begin();
-    auto line_start = it;
-    while (it != str.end() and offset > 0)
-    {
-        if (*it == '\n')
-        {
-            line_start = it + 1;
-            ++res.line;
-        }
-        ++it;
-        --offset;
-    }
-    res.column = utf8::distance(line_start, it);
-    return res;
-}
-
 void CommandManager::execute(StringView command_line,
                              Context& context,
                              ConstArrayView<String> shell_params,
@@ -407,7 +439,7 @@ void CommandManager::execute(StringView command_line,
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {
         if (params.empty())
-            command_coord = find_coord(command_line, it->begin());
+            command_coord = it->coord();
 
         if (it->type() == Token::Type::CommandSeparator)
         {
@@ -545,9 +577,9 @@ Completions CommandManager::complete(const Context& context,
                       tokens[tok_idx].begin() : cursor_pos;
     ByteCount cursor_pos_in_token = cursor_pos - start;
 
-    const Token::Type token_type = tok_idx < tokens.size() ?
-                                   tokens[tok_idx].type() : Token::Type::Raw;
-    switch (token_type)
+    const Token::Type type = tok_idx < tokens.size() ?
+                              tokens[tok_idx].type() : Token::Type::Raw;
+    switch (type)
     {
     case Token::Type::OptionExpand:
         return {start , cursor_pos,
@@ -571,9 +603,8 @@ Completions CommandManager::complete(const Context& context,
             return Completions();
 
         Vector<String> params;
-        for (auto token_it = tokens.begin() + cmd_idx + 1;
-             token_it != tokens.end(); ++token_it)
-            params.push_back(token_it->content());
+        for (auto it = tokens.begin() + cmd_idx + 1; it != tokens.end(); ++it)
+            params.push_back(it->content());
         if (tok_idx == tokens.size())
             params.push_back("");
         Completions completions = command_it->second.completer(
