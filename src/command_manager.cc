@@ -550,20 +550,14 @@ Completions CommandManager::complete(const Context& context,
     switch (token_type)
     {
     case Token::Type::OptionExpand:
-    {
-        Completions result(start , cursor_pos);
-        result.candidates = GlobalScope::instance().option_registry().complete_option_name(
-            tokens[tok_idx].content(), cursor_pos_in_token);
-        return result;
-    }
+        return {start , cursor_pos,
+                GlobalScope::instance().option_registry().complete_option_name(
+                    tokens[tok_idx].content(), cursor_pos_in_token) };
+
     case Token::Type::ShellExpand:
-    {
-        Completions shell_completions = shell_complete(
-            context, flags, tokens[tok_idx].content(), cursor_pos_in_token);
-        shell_completions.start += start;
-        shell_completions.end += start;
-        return shell_completions;
-    }
+        return offset_pos(shell_complete(context, flags, tokens[tok_idx].content(),
+                                         cursor_pos_in_token), start);
+
     case Token::Type::Raw:
     {
         if (tokens[cmd_idx].type() != Token::Type::Raw)
