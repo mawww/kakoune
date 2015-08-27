@@ -236,7 +236,8 @@ Token parse_percent_token(Reader& reader)
                                  type_name)};
 
     Token::Type type = token_type<throw_on_unterminated>(type_name);
-    static const UnorderedMap<char, char> matching_delimiters = {
+
+    constexpr struct CharPair { char opening; char closing; } matching_pairs[] = {
         { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
     };
 
@@ -245,10 +246,12 @@ Token parse_percent_token(Reader& reader)
     auto start = reader.pos;
     auto coord = reader.coord;
 
-    auto delim_it = matching_delimiters.find(opening_delimiter);
-    if (delim_it != matching_delimiters.end())
+    auto it = find_if(matching_pairs, [opening_delimiter](const CharPair& cp)
+                      { return opening_delimiter == cp.opening; });
+
+    if (it != std::end(matching_pairs))
     {
-        const char closing_delimiter = delim_it->second;
+        const char closing_delimiter = it->closing;
         auto token = get_until_closing_delimiter(reader, opening_delimiter,
                                                  closing_delimiter);
         if (throw_on_unterminated and not reader)
