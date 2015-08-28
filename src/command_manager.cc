@@ -58,7 +58,7 @@ struct Token
     Token() : m_type(Type::Raw) {}
 
     Token(Type type, ByteCount b, ByteCount e, CharCoord coord, String str = "")
-        : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(str) {}
+        : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(std::move(str)) {}
 
     Type type() const { return m_type; }
     ByteCount begin() const { return m_begin; }
