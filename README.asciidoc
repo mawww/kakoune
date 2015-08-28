@@ -172,6 +172,7 @@ Just running *kak* launch a new kak session with a client on local terminal.
        acting as a remote control.
  * `-f <keys>`: Work as a filter, read every file given on the command line
        and stdin if piped in, and apply given keys on each.
+ * `-l`: list existing sessions
 
 At startup, if `-n` is not specified, Kakoune will try to source the file
 `../share/kak/kakrc` relative to the kak binary. This kak file will then try
