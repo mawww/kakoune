@@ -242,9 +242,9 @@ Token parse_percent_token(Reader& reader)
     };
 
     char opening_delimiter = *reader;
+    auto coord = reader.coord;
     ++reader;
     auto start = reader.pos;
-    auto coord = reader.coord;
 
     auto it = find_if(matching_pairs, [opening_delimiter](const CharPair& cp)
                       { return opening_delimiter == cp.opening; });
@@ -456,8 +456,8 @@ void CommandManager::execute(StringView command_line,
                                                          shell_params,
                                                          env_vars));
             it = tokens.erase(it);
-            for (auto& token : shell_tokens)
-                it = ++tokens.insert(it, std::move(token));
+            for (Token& token : shell_tokens)
+                it = ++tokens.emplace(it, std::move(token));
 
             if (tokens.empty())
                 break;
