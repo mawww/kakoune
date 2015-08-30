@@ -62,7 +62,7 @@ install: kak
 	mkdir -p $(sharedir)/rc
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../rc/* $(sharedir)/rc
-	ln -s rc $(sharedir)/autoload
+	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
 	mkdir -p $(sharedir)/colors
 	install -m 0644 ../colors/* $(sharedir)/colors
 	mkdir -p $(docdir)
