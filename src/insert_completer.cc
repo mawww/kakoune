@@ -115,10 +115,10 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     std::sort(matches.begin(), matches.end());
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
 
-    ComplAndDescList result;
+    InsertCompletion::CandidateList result;
     result.reserve(matches.size());
     for (auto& m : matches)
-        result.emplace_back(m.str(), "");
+        result.push_back({m.str(), ""});
 
     return { begin.coord(), cursor_pos, std::move(result), buffer.timestamp() };
 }
@@ -144,11 +144,11 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     if (require_slash and not contains(prefix, '/'))
         return {};
 
-    ComplAndDescList res;
+    InsertCompletion::CandidateList res;
     if (prefix.front() == '/')
     {
         for (auto& filename : Kakoune::complete_filename(prefix, Regex{}))
-            res.emplace_back(std::move(filename), "");
+            res.push_back({std::move(filename), ""});
     }
     else
     {
@@ -157,7 +157,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
             for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
-                res.emplace_back(filename.substr(dir.length()).str(), "");
+                res.push_back({filename.substr(dir.length()).str(), ""});
         }
     }
     if (res.empty())
@@ -199,12 +199,12 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
             StringView prefix = buffer[coord.line].substr(
                 coord.column, cursor_pos.column - coord.column);
 
-            ComplAndDescList res;
+            InsertCompletion::CandidateList res;
             for (auto it = opt.begin() + 1; it != opt.end(); ++it)
             {
                 auto splitted = split(*it, '@');
                 if (not splitted.empty() and prefix_match(splitted[0], prefix))
-                    res.emplace_back(splitted[0].str(), splitted.size() > 1 ? splitted[1].str() : "");
+                    res.push_back({splitted[0].str(), splitted.size() > 1 ? splitted[1].str() : ""});
             }
             return { coord, end, std::move(res), timestamp };
         }
@@ -215,14 +215,14 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
 InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
 {
     StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
-    ComplAndDescList res;
+    InsertCompletion::CandidateList res;
     for (LineCount l = 0_line; l < buffer.line_count(); ++l)
     {
         if (l == cursor_pos.line)
             continue;
         ByteCount len = buffer[l].length();
         if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buffer[l].begin()))
-            res.emplace_back(buffer[l].substr(0_byte, len-1).str(), "");
+            res.push_back({buffer[l].substr(0_byte, len-1).str(), ""});
     }
     if (res.empty())
         return {};
@@ -253,7 +253,7 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
     m_current_candidate = (m_current_candidate + offset) % (int)m_matching_candidates.size();
     if (m_current_candidate < 0)
         m_current_candidate += m_matching_candidates.size();
-    const ComplAndDesc& candidate = m_matching_candidates[m_current_candidate];
+    const InsertCompletion::Candidate& candidate = m_matching_candidates[m_current_candidate];
     auto& selections = m_context.selections();
     const auto& cursor_pos = selections.main().cursor();
     const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
@@ -268,18 +268,18 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
             std::equal(ref.begin(), ref.end(), pos - prefix_len))
         {
             pos = buffer.erase(pos - prefix_len, pos + suffix_len);
-            buffer.insert(pos, candidate.first);
+            buffer.insert(pos, candidate.completion);
             const_cast<SelectionList&>(selections).update();
         }
     }
     m_completions.end = cursor_pos;
-    m_completions.begin = buffer.advance(cursor_pos, -candidate.first.length());
+    m_completions.begin = buffer.advance(cursor_pos, -candidate.completion.length());
     m_completions.timestamp = buffer.timestamp();
     if (m_context.has_ui())
     {
         m_context.ui().menu_select(m_current_candidate);
-        if (not candidate.second.empty())
-            m_context.ui().info_show(candidate.first, candidate.second, CharCoord{},
+        if (not candidate.docstring.empty())
+            m_context.ui().info_show(candidate.completion, candidate.docstring, CharCoord{},
                                      get_face("Information"), InfoStyle::MenuDoc);
     }
 
@@ -287,7 +287,7 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
         keystrokes.push_back(Key::Backspace);
     for (auto i = 0_byte; i < suffix_len; ++i)
         keystrokes.push_back(Key::Delete);
-    for (auto& c : candidate.first)
+    for (auto& c : candidate.completion)
         keystrokes.push_back(c);
 }
 
@@ -297,7 +297,7 @@ void InsertCompleter::update()
     {
         ByteCount longest_completion = 0;
         for (auto& candidate : m_completions.candidates)
-             longest_completion = std::max(longest_completion, candidate.first.length());
+             longest_completion = std::max(longest_completion, candidate.completion.length());
 
         ByteCoord cursor = m_context.selections().main().cursor();
         ByteCoord compl_beg = m_completions.begin;
@@ -314,7 +314,7 @@ void InsertCompleter::update()
                 m_matching_candidates.clear();
                 for (auto& candidate : m_completions.candidates)
                 {
-                    if (candidate.first.substr(0, prefix.length()) == prefix)
+                    if (candidate.completion.substr(0, prefix.length()) == prefix)
                         m_matching_candidates.push_back(candidate);
                 }
             }
@@ -323,7 +323,7 @@ void InsertCompleter::update()
                 m_current_candidate = m_matching_candidates.size();
                 m_completions.end = cursor;
                 menu_show();
-                m_matching_candidates.emplace_back(prefix, "");
+                m_matching_candidates.push_back({prefix, ""});
                 return;
             }
         }
@@ -389,7 +389,7 @@ void InsertCompleter::menu_show()
                                         m_completions.begin);
     Vector<String> menu_entries;
     for (auto& candidate : m_matching_candidates)
-        menu_entries.push_back(expand_tabs(candidate.first, tabstop, column));
+        menu_entries.push_back(expand_tabs(candidate.completion, tabstop, column));
 
     m_context.ui().menu_show(menu_entries, menu_pos,
                              get_face("MenuForeground"),
@@ -439,7 +439,7 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
     m_matching_candidates = m_completions.candidates;
     m_current_candidate = m_matching_candidates.size();
     menu_show();
-    m_matching_candidates.emplace_back(buffer.string(m_completions.begin, m_completions.end), "");
+    m_matching_candidates.push_back({buffer.string(m_completions.begin, m_completions.end), ""});
     return true;
 }
 

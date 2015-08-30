@@ -39,14 +39,22 @@ using InsertCompleterDescList = Vector<InsertCompleterDesc, MemoryDomain::Option
 String option_to_string(const InsertCompleterDesc& opt);
 void option_from_string(StringView str, InsertCompleterDesc& opt);
 
-using ComplAndDesc = std::pair<String, String>;
-using ComplAndDescList = Vector<ComplAndDesc>;
-
 struct InsertCompletion
 {
+    struct Candidate
+    {
+        String completion;
+        String docstring;
+
+        bool operator==(const Candidate& other) const { return completion == other.completion; }
+        bool operator<(const Candidate& other) const { return completion < other.completion; }
+    };
+
+    using CandidateList = Vector<Candidate>;
+
     ByteCoord begin;
     ByteCoord end;
-    ComplAndDescList candidates;
+    CandidateList candidates;
     size_t timestamp;
 
     bool is_valid() const { return not candidates.empty(); }
@@ -77,10 +85,12 @@ private:
 
     void menu_show();
 
+    using CandidateList = InsertCompletion::CandidateList;
+
     const Context&   m_context;
     OptionManager&   m_options;
     InsertCompletion m_completions;
-    ComplAndDescList m_matching_candidates;
+    CandidateList    m_matching_candidates;
     int              m_current_candidate = -1;
 };
 
