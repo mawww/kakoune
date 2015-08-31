@@ -214,7 +214,13 @@ public:
 
         auto cp = key.codepoint();
         if (cp and isdigit(*cp))
-            m_params.count = m_params.count * 10 + *cp - '0';
+        {
+            int new_val = m_params.count * 10 + *cp - '0';
+            if (new_val < 0)
+                context().print_status({ "parameter overflowed", get_face("Error") });
+            else
+                m_params.count = new_val;
+        }
         else if (key == Key::Backspace)
             m_params.count /= 10;
         else if (key == '\\')
