@@ -226,8 +226,14 @@ void register_options()
                        "autoreload buffer when a filesystem modification is detected",
                        Ask);
     reg.declare_option("ui_options",
-                       "colon separated list of <key>=<value> options that are"
-                       "passed to and interpreted by the user interface",
+                       "colon separated list of <key>=<value> options that are "
+                       "passed to and interpreted by the ncurses user interface\n"
+                       "<key>:                        <value>:\n"
+                       "    ncurses_assistant             clippy|cat|bool\n"
+                       "    ncurses_status_on_top         bool\n"
+                       "    ncurses_set_title                 bool\n"
+                       "    ncurses_wheel_up_button       int\n"
+                       "    ncurses_wheel_down_button     int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
