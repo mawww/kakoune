@@ -118,6 +118,11 @@ its source directory, type *make install*, you can specify the `PREFIX` and
 -----------------------------------------------------------------------------------------------
 brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contrib/kakoune.rb
 -----------------------------------------------------------------------------------------------
+
+To update kakoune,
+-----------------------------------------------------------------------------------------------
+brew reinstall --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contrib/kakoune.rb
+-----------------------------------------------------------------------------------------------
 ====
 
 [TIP]
