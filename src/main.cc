@@ -34,11 +34,7 @@ using namespace Kakoune;
 
 String runtime_directory()
 {
-    String bin_path = get_kak_binary_path();
-    auto it = find(reversed(bin_path), '/');
-    if (it == bin_path.rend())
-        throw runtime_error("unable to determine runtime directory");
-    return StringView{bin_path.begin(), it.base()-1} + "/../share/kak";
+    return split_path(get_kak_binary_path()).first + "../share/kak";
 }
 
 static void write(int fd, StringView str)
