@@ -20,7 +20,8 @@ namespace Kakoune
 Buffer::Buffer(String name, Flags flags, BufferLines lines,
                time_t fs_timestamp)
     : Scope(GlobalScope::instance()),
-      m_name(flags & Flags::File ? real_path(parse_filename(name)) : std::move(name)),
+      m_name((flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)),
+      m_display_name((flags & Flags::File) ? compact_path(m_name) : m_name),
       m_flags(flags | Flags::NoUndo),
       m_history(), m_history_cursor(m_history.begin()),
       m_last_save_undo_index(0),
@@ -71,22 +72,21 @@ Buffer::~Buffer()
     m_values.clear();
 }
 
-String Buffer::display_name() const
-{
-    if (m_flags & Flags::File)
-        return compact_path(m_name);
-    return m_name;
-}
-
 bool Buffer::set_name(String name)
 {
     Buffer* other = BufferManager::instance().get_buffer_ifp(name);
     if (other == nullptr or other == this)
     {
         if (m_flags & Flags::File)
+        {
             m_name = real_path(name);
+            m_display_name = compact_path(m_name);
+        }
         else
+        {
             m_name = std::move(name);
+            m_display_name = m_name;
+        }
         return true;
     }
     return false;

@@ -139,7 +139,7 @@ public:
     ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
 
     const String& name() const { return m_name; }
-    String display_name() const;
+    const String& display_name() const { return m_display_name; }
 
     // returns true if the buffer is in a different state than
     // the last time it was saved
@@ -199,6 +199,7 @@ private:
     LineList m_lines;
 
     String m_name;
+    String m_display_name;
     Flags  m_flags;
 
     using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
