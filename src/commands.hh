@@ -7,7 +7,7 @@ namespace Kakoune
 {
 
 class Context;
-class Key;
+struct Key;
 
 void register_commands();
 void exec_keys(ConstArrayView<Key> keys, Context& context);
