@@ -413,16 +413,13 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         draw_line(trimmed_mode_line, col, default_face);
     }
 
-    const char* tsl = tigetstr((char*)"tsl");
-    const char* fsl = tigetstr((char*)"fsl");
-    if (tsl != 0 and (ptrdiff_t)tsl != -1 and
-        fsl != 0 and (ptrdiff_t)fsl != -1)
+    if (m_set_title)
     {
-        String title;
+        String title = "\033]2;";
         for (auto& atom : mode_line)
             title += atom.content();
-        title += " - Kakoune";
-        printf("%s%s%s", tsl, title.c_str(), fsl);
+        title += " - Kakoune\007";
+        write(1, title.data(), (int)title.length());
     }
 
     m_dirty = true;
@@ -930,10 +927,14 @@ void NCursesUI::set_ui_options(const Options& options)
 
     {
         auto it = options.find("ncurses_status_on_top");
-        if (it == options.end())
-            m_status_on_top = false;
-        else
-            m_status_on_top = it->second == "yes" or it->second == "true";
+        m_status_on_top = it != options.end() and
+            (it->second == "yes" or it->second == "true");
+    }
+
+    {
+        auto it = options.find("ncurses_set_title");
+        m_set_title = it == options.end() or
+            (it->second == "yes" or it->second == "true");
     }
 
     {

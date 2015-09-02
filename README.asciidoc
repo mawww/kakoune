@@ -727,6 +727,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    modification is detected.
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
    the user interface implementation. The NCurses UI support the following options:
+   - `ncurses_set_title`: if `yes` or `true`, the terminal emulator title will
+      be changed.
    - `ncurses_status_on_top`: if `yes`, or `true` the status line will be placed
      at the top of the terminal rather than at the bottom.
    - `ncurses_assistant`: specify the nice assistant you get in info boxes, can
