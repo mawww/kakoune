@@ -45,6 +45,7 @@ struct InsertCompletion
     {
         String completion;
         String docstring;
+        String menu_entry;
 
         bool operator==(const Candidate& other) const { return completion == other.completion; }
         bool operator<(const Candidate& other) const { return completion < other.completion; }
