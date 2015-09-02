@@ -11,7 +11,7 @@
 #include "window.hh"
 #include "word_db.hh"
 
-#include <algorithm>
+#include <numeric>
 
 namespace Kakoune
 {
