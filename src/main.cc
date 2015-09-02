@@ -34,7 +34,13 @@ using namespace Kakoune;
 
 String runtime_directory()
 {
-    return split_path(get_kak_binary_path()).first + "../share/kak";
+    char relpath[PATH_MAX+1];
+    format_to(relpath, "{}../share/kak", split_path(get_kak_binary_path()).first);
+    struct stat st;
+    if (stat(relpath, &st) == 0 and S_ISDIR(st.st_mode))
+        return real_path(relpath);
+
+    return "/usr/share/kak";
 }
 
 static void write(int fd, StringView str)
