@@ -52,7 +52,7 @@ void register_env_vars()
         String (*func)(StringView, const Context&);
     } env_vars[] = { {
             "bufname",
-            [](StringView name, const Context& context)
+            [](StringView name, const Context& context) -> String
             { return context.buffer().display_name(); }
         }, {
             "buffile",
