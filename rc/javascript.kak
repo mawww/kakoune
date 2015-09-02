@@ -46,15 +46,15 @@ def -hidden _javascript_filter_around_selections %{
     }
 }
 
-def -hidden _javascript_indent_on_char "
-    eval -draft -itersel %_
+def -hidden _javascript_indent_on_char %<
+    eval -draft -itersel %<
         # align closer token to its opener when alone on a line
         try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> /
-    _
-"
+    >
+>
 
-def -hidden _javascript_indent_on_new_line "
-    eval -draft -itersel '
+def -hidden _javascript_indent_on_new_line %<
+    eval -draft -itersel %<
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
@@ -63,8 +63,8 @@ def -hidden _javascript_indent_on_new_line "
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
         # indent after lines beginning / ending with opener token
         try %_ exec -draft k x <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
-    '
-"
+    >
+>
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
