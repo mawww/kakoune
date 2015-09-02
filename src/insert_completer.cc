@@ -94,8 +94,8 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     struct MatchAndBuffer {
         MatchAndBuffer(StringView m, const Buffer* b = nullptr) : match(m), buffer(b) {}
 
-        bool operator==(const MatchAndBuffer& other) { return match == other.match; }
-        bool operator<(const MatchAndBuffer& other) { return match < other.match; }
+        bool operator==(const MatchAndBuffer& other) const { return match == other.match; }
+        bool operator<(const MatchAndBuffer& other) const { return match < other.match; }
 
         StringView match;
         const Buffer* buffer;
