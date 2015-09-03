@@ -2,17 +2,15 @@
 #define shell_manager_hh_INCLUDED
 
 #include "array_view.hh"
-#include "regex.hh"
-#include "utils.hh"
 #include "env_vars.hh"
 #include "flags.hh"
+#include "string.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
 
 class Context;
-class String;
-class StringView;
 
 using EnvVarRetriever = std::function<String (StringView name, const Context&)>;
 
