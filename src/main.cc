@@ -55,92 +55,93 @@ void register_env_vars()
 {
     static const struct {
         const char* name;
+        bool prefix;
         String (*func)(StringView, const Context&);
     } env_vars[] = { {
-            "bufname",
+            "bufname", false,
             [](StringView name, const Context& context) -> String
             { return context.buffer().display_name(); }
         }, {
-            "buffile",
+            "buffile", false,
             [](StringView name, const Context& context) -> String
             { return context.buffer().name(); }
         }, {
-            "buflist",
+            "buflist", false,
             [](StringView name, const Context& context)
             { return join(transformed(BufferManager::instance(),
                                       [](const SafePtr<Buffer>& b)
                                       { return b->display_name(); }), ':'); }
         }, {
-            "timestamp",
+            "timestamp", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.buffer().timestamp()); }
         }, {
-            "selection",
+            "selection", false,
             [](StringView name, const Context& context)
             { const Selection& sel = context.selections().main();
               return content(context.buffer(), sel); }
         }, {
-            "selections",
+            "selections", false,
             [](StringView name, const Context& context)
             { return join(context.selections_content(), ':'); }
         }, {
-            "runtime",
+            "runtime", false,
             [](StringView name, const Context& context)
             { return runtime_directory(); }
         }, {
-            "opt_.+",
+            "opt_", true,
             [](StringView name, const Context& context)
             { return context.options()[name.substr(4_byte)].get_as_string(); }
         }, {
-            "reg_.+",
+            "reg_", true,
             [](StringView name, const Context& context)
             { return context.main_sel_register_value(name.substr(4_byte)).str(); }
         }, {
-            "client_env_.+",
+            "client_env_", true,
             [](StringView name, const Context& context)
             { return context.client().get_env_var(name.substr(11_byte)).str(); }
         }, {
-            "session",
+            "session", false,
             [](StringView name, const Context& context) -> String
             { return Server::instance().session(); }
         }, {
-            "client",
+            "client", false,
             [](StringView name, const Context& context) -> String
             { return context.name(); }
         }, {
-            "cursor_line",
+            "cursor_line", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.selections().main().cursor().line + 1); }
         }, {
-            "cursor_column",
+            "cursor_column", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.selections().main().cursor().column + 1); }
         }, {
-            "cursor_char_column",
+            "cursor_char_column", false,
             [](StringView name, const Context& context) -> String
             { auto coord = context.selections().main().cursor();
               return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
         }, {
-            "selection_desc",
+            "selection_desc", false,
             [](StringView name, const Context& context)
             { return selection_to_string(context.selections().main()); }
         }, {
-            "selections_desc",
+            "selections_desc", false,
             [](StringView name, const Context& context)
             { return selection_list_to_string(context.selections()); }
         }, {
-            "window_width",
+            "window_width", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.window().dimensions().column); }
         }, {
-            "window_height",
+            "window_height", false,
             [](StringView name, const Context& context) -> String
             { return to_string(context.window().dimensions().line); }
     } };
 
     ShellManager& shell_manager = ShellManager::instance();
     for (auto& env_var : env_vars)
-        shell_manager.register_env_var(env_var.name, env_var.func);
+        shell_manager.register_env_var(env_var.name, env_var.prefix, env_var.func);
 }
 
 void register_registers()

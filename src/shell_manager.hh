@@ -33,11 +33,12 @@ public:
                                 ConstArrayView<String> params = {},
                                 const EnvVarMap& env_vars = EnvVarMap{});
 
-    void register_env_var(StringView regex, EnvVarRetriever retriever);
+    void register_env_var(StringView str, bool prefix, EnvVarRetriever retriever);
     String get_val(StringView name, const Context& context) const;
 
 private:
-    Vector<std::pair<Regex, EnvVarRetriever>> m_env_vars;
+    struct EnvVarDesc { String str; bool prefix; EnvVarRetriever func; };
+    Vector<EnvVarDesc> m_env_vars;
 };
 
 template<> struct WithBitOps<ShellManager::Flags> : std::true_type {};

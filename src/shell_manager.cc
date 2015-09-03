@@ -135,22 +135,24 @@ std::pair<String, int> ShellManager::eval(
     return {};
 }
 
-void ShellManager::register_env_var(StringView regex,
+void ShellManager::register_env_var(StringView str, bool prefix,
                                     EnvVarRetriever retriever)
 {
-    m_env_vars.push_back({ Regex{regex}, std::move(retriever) });
+    m_env_vars.push_back({ str.str(), prefix, std::move(retriever) });
 }
 
 String ShellManager::get_val(StringView name, const Context& context) const
 {
     auto env_var = std::find_if(
         m_env_vars.begin(), m_env_vars.end(),
-        [name](const std::pair<Regex, EnvVarRetriever>& pair)
-        { return regex_match(name.begin(), name.end(), pair.first); });
+        [name](const EnvVarDesc& desc) {
+            return desc.prefix ? prefix_match(name, desc.str) : name == desc.str;
+        });
 
     if (env_var == m_env_vars.end())
         throw runtime_error("no such env var: " + name);
-    return env_var->second(name, context);
+
+    return env_var->func(name, context);
 }
 
 }
