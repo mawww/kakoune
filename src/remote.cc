@@ -105,13 +105,6 @@ public:
         }
     }
 
-    void write(Face face)
-    {
-        write(face.fg);
-        write(face.bg);
-        write(face.attributes);
-    }
-
     void write(const DisplayAtom& atom)
     {
         write(atom.content());
@@ -197,16 +190,6 @@ Color read<Color>(int socket)
         res.g = read<unsigned char>(socket);
         res.b = read<unsigned char>(socket);
     }
-    return res;
-}
-
-template<>
-Face read<Face>(int socket)
-{
-    Face res;
-    res.fg = read<Color>(socket);
-    res.bg = read<Color>(socket);
-    res.attributes = read<Attribute>(socket);
     return res;
 }
 
@@ -378,8 +361,6 @@ void RemoteUI::set_ui_options(const Options& options)
     msg.write(RemoteUIMsg::SetOptions);
     msg.write(options);
 }
-
-static const Key::Modifiers resize_modifier = (Key::Modifiers)0x80;
 
 bool RemoteUI::is_key_available()
 {
