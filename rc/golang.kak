@@ -4,7 +4,8 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](go) %{
+hook global BufCreate .*\.go %{
+    set buffer mimetype ""
     set buffer filetype golang
 }
 
@@ -22,7 +23,8 @@ addhl -group /golang/double_string fill string
 addhl -group /golang/single_string fill string
 addhl -group /golang/comment fill comment
 
-addhl -group /golang/code regex %{\<(false|true|nil)\>|\<-?(0x[0-9a-zA-Z]+|\d+)\>} 0:value
+addhl -group /golang/code regex %{\<(false|true|nil)\>} 0:value
+addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\<([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\>} 0:value
 addhl -group /golang/code regex \<(break|default|defer|else|fallthrough|for|func|go|goto|if|import|interface|make|new|package|range|return|select|case|switch|type|continue)\> 0:keyword
 addhl -group /golang/code regex \<(bool|byte|chan|complex128|complex64|float32|float64|int|int16|int32|int64|int8|interface|intptr|map|rune|string|struct|uint|uint16|uint32|uint64|uint8)\> 0:type
 addhl -group /golang/code regex \<(const)\> 0:attribute
