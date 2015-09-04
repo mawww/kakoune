@@ -563,16 +563,20 @@ void regex_prompt(Context& context, const String prompt, T func)
             {
                 if (event != PromptEvent::Change and context.has_ui())
                     context.ui().info_hide();
-                selections.update();
-                context.selections_write_only() = selections;
-                if (context.has_window())
-                    context.window().set_position(position);
 
-                context.input_handler().set_prompt_face(get_face("Prompt"));
-                if (event == PromptEvent::Abort)
-                    return;
-                if (event == PromptEvent::Change and
-                    (str.empty() or not context.options()["incsearch"].get<bool>()))
+                const bool incsearch = context.options()["incsearch"].get<bool>();
+                if (incsearch)
+                {
+                    selections.update();
+                    context.selections_write_only() = selections;
+                    if (context.has_window())
+                        context.window().set_position(position);
+
+                    context.input_handler().set_prompt_face(get_face("Prompt"));
+                }
+
+                if (event == PromptEvent::Abort or
+                    (event == PromptEvent::Change and (not incsearch or str.empty())))
                     return;
 
                 if (event == PromptEvent::Validate)
