@@ -28,7 +28,7 @@ addhl -group /dlang/token fill meta
 addhl -group /dlang/disabled fill rgb:777777
 addhl -group /dlang/comment fill comment
 
-addhl -group /dlang/string regex "\\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\>" 0:value
+addhl -group /dlang/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\>} 0:value
 addhl -group /dlang/code regex %{\<(true|false|null|__FILE__|__MODULE__|__LINE__|__FUNCTION__|__PRETTY_FUNCTION__|__DATE__|__EOF__|__TIME__|__TIMESTAMP__|__VENDOR__|__VERSION__)\>|'((\\.)?|[^'\\])'} 0:value
 addhl -group /dlang/code regex "-?([0-9_]*\.(?!0[xXbB]))?\<([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\>" 0:value
 addhl -group /dlang/code regex "\<(this)\>\s*[^(]" 1:value
