@@ -689,10 +689,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
                     {
                         int column = (int)get_column(buffer, tabstop, it.coord());
                         int count = tabstop - (column % tabstop);
-                        String padding = "→";
-                        for (int i = 0; i < count-1; ++i)
-                            padding += ' ';
-                        atom_it->replace(padding);
+                        atom_it->replace("→" + String(' ', count-1));
                     }
                     else if (c == ' ')
                         atom_it->replace("·");
