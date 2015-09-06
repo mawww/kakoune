@@ -16,6 +16,11 @@ public:
     void remove_alias(const String& alias);
     StringView operator[](const String& name) const;
 
+    using AliasMap = UnorderedMap<String, String, MemoryDomain::Aliases>;
+    using iterator = AliasMap::const_iterator;
+    iterator begin() const { return m_aliases.begin(); }
+    iterator end() const { return m_aliases.end(); }
+
     Vector<StringView> aliases_for(StringView command) const;
 
 private:
