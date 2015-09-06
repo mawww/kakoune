@@ -59,14 +59,18 @@ def -hidden _golang-indent-on-closing-curly-brace %[
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
-def golang-enable-gofmt -docstring "Format the code using the gofmt utility upon saving" %{
-    hook buffer -group golang-formatter BufWritePre .* %{
-        exec -draft %{%|"gofmt"<ret>}
+def golang-format-gofmt -docstring "Format the code using the gofmt utility" %{
+    %sh{
+        readonly x=$((kak_cursor_column - 1))
+        readonly y="${kak_cursor_line}"
+
+        echo "exec -draft %{%|gofmt<ret>}"
+        echo "exec gg ${y}g ${x}l"
     }
 }
 
 def golang-disable-gofmt -docstring "Disable automatic code formatting" %{
-	rmhooks buffer golang-formatter
+    rmhooks buffer golang-formatter
 }
 
 # Initialization
@@ -80,10 +84,15 @@ hook global WinSetOption filetype=golang %{
     hook window InsertChar \n -group golang-indent _golang-indent-on-new-line
     hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
     hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
+
+    alias global format-code golang-format-gofmt
 }
 
 hook global WinSetOption filetype=(?!golang).* %{
     rmhl golang
+
     rmhooks window golang-hooks
     rmhooks window golang-indent
+
+    unalias global format-code
 }
