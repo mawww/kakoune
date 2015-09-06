@@ -735,6 +735,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    - `ncurses_assistant`: specify your favourite assistant for the info boxes, can
      be `clippy` (the default), `cat` respectively `no or false` to disable the
      assistant.
+   - `ncurses_mouse_support` can be toggled on and off with `yes`/`true` (the
+     default) and `no`/`false`
    - `ncurses_wheel_down_button` and `ncurses_wheel_up_button`: specify which
      button send for wheel down/up events.
 

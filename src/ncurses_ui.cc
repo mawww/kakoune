@@ -257,12 +257,10 @@ NCursesUI::NCursesUI()
     use_default_colors();
     set_escdelay(25);
 
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-    mouseinterval(0);
-    // force enable report mouse position
-    puts("\033[?1002h");
-    // force enable report focus events
+    // force reporting focus events
     puts("\033[?1004h");
+
+    toggle_mouse(true);
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, [](int){});
@@ -274,11 +272,29 @@ NCursesUI::NCursesUI()
 
 NCursesUI::~NCursesUI()
 {
+    // disable reporting focus events
     puts("\033[?1004l");
-    puts("\033[?1002l");
+    toggle_mouse(false);
     endwin();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGINT, SIG_DFL);
+}
+
+void NCursesUI::toggle_mouse(bool mouse)
+{
+    if (mouse)
+    {
+        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+        mouseinterval(0);
+        // force reporting mouse position
+        puts("\033[?1002h");
+    }
+    else
+    {
+        mousemask(0, nullptr);
+        // disable reporting mouse position
+        puts("\033[?1002l");
+    }
 }
 
 void NCursesUI::redraw()
@@ -940,6 +956,15 @@ void NCursesUI::set_ui_options(const Options& options)
             m_set_title = false;
         else if (it->second == "yes" or it->second == "true")
             m_set_title = true;
+    }
+
+    {
+        auto it = options.find("ncurses_mouse_support");
+        if (it == options.end());
+        else if (it->second == "yes" or it->second == "true")
+            toggle_mouse(true);
+        else if (it->second == "no" or it->second == "false")
+            toggle_mouse(false);
     }
 
     {

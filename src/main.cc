@@ -231,6 +231,7 @@ void register_options()
                        "    ncurses_assistant             clippy|cat|bool\n"
                        "    ncurses_status_on_top         bool\n"
                        "    ncurses_set_title                 bool\n"
+                       "    ncurses_mouse_support         bool\n"
                        "    ncurses_wheel_up_button       int\n"
                        "    ncurses_wheel_down_button     int\n",
                        UserInterface::Options{});
