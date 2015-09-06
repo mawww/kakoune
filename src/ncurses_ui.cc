@@ -915,8 +915,7 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant");
-        if (it == options.end())
-            m_assistant = assistant_clippy;
+        if (it == options.end());
         else if (it->second == "cat")
             m_assistant = assistant_cat;
         else if (it->second == "clippy" or it->second == "yes" or it->second == "true")
@@ -927,8 +926,7 @@ void NCursesUI::set_ui_options(const Options& options)
 
     {
         auto it = options.find("ncurses_status_on_top");
-        if (it == options.end())
-            m_status_on_top = false;
+        if (it == options.end());
         else if (it->second == "no" or it->second == "false")
             m_status_on_top = false;
         else if (it->second == "yes" or it->second == "true")
@@ -937,20 +935,21 @@ void NCursesUI::set_ui_options(const Options& options)
 
     {
         auto it = options.find("ncurses_set_title");
-        m_set_title = it == options.end() or
-            (it->second == "yes" or it->second == "true");
+        if (it == options.end());
+        else if (it->second == "no" or it->second == "false")
+            m_set_title = false;
+        else if (it->second == "yes" or it->second == "true")
+            m_set_title = true;
     }
 
     {
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
-        if (wheel_down_it == options.end())
-            m_wheel_down_button = 2;
+        if (wheel_down_it == options.end());
         else if (auto down = str_to_int_ifp(wheel_down_it->second))
             m_wheel_down_button = *down;
 
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
-        if (wheel_up_it == options.end())
-            m_wheel_up_button = 4;
+        if (wheel_up_it == options.end());
         else if (auto up = str_to_int_ifp(wheel_up_it->second))
             m_wheel_up_button = *up;
     }
