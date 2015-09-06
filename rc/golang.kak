@@ -61,14 +61,19 @@ def -hidden _golang-indent-on-closing-curly-brace %[
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
-def golang-enable-gofmt -docstring "Format the code using the gofmt utility upon saving" %{
-    hook buffer -group golang-formatter BufWritePre .* %{
-        exec -draft %{%|"gofmt"<ret>}
+def golang-format-gofmt -docstring "Format the code using the gofmt utility" %{
+    %sh{
+        readonly x=$((kak_cursor_column - 1))
+        readonly y="${kak_cursor_line}"
+
+        echo "exec -draft %{%|gofmt<ret>}"
+        echo "exec gg ${y}g ${x}l"
     }
 }
+alias global format-code golang-format-gofmt
 
 def golang-disable-gofmt -docstring "Disable automatic code formatting" %{
-	rmhooks buffer golang-formatter
+    rmhooks buffer golang-formatter
 }
 
 # Initialization
