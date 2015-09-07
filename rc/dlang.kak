@@ -16,8 +16,8 @@ addhl -group / regions -default code dlang \
     string '"' (?<!\\)(\\\\)*" '' \
     verbatim_string ` ` '' \
     verbatim_string_prefixed 'r"' '"' '' \
-	token '#' '\n' '' \
-	disabled /\+ \+/ '' \
+    token '#' '\n' '' \
+    disabled /\+ \+/ '' \
     comment /\* \*/ '' \
     comment '//' $ ''
 
@@ -71,16 +71,18 @@ def -hidden _dlang-indent-on-closing-curly-brace %[
 ]
 
 decl str dlang_dfmt_options ""
-def dlang-enable-dfmt -docstring "Format the code using the dfmt utility upon saving" %{
-    hook buffer -group dlang-formatter BufWritePre .* %{
-        %sh{
-            echo "exec -draft %{%|dfmt<space>${kak_opt_dlang_dfmt_options// /<space>}<ret>}"
-        }
+def dlang-format-dfmt -docstring "Format the code using the dfmt utility" %{
+    %sh{
+        readonly x=$((kak_cursor_column - 1))
+        readonly y="${kak_cursor_line}"
+
+        echo "exec -draft %{%|dfmt<space>${kak_opt_dlang_dfmt_options// /<space>}<ret>}"
+        echo "exec gg ${y}g ${x}l"
     }
 }
 
 def dlang-disable-dfmt -docstring "Disable automatic code formatting" %{
-	rmhooks buffer dlang-formatter
+    rmhooks buffer dlang-formatter
 }
 
 # Initialization
@@ -94,10 +96,15 @@ hook global WinSetOption filetype=dlang %{
     hook window InsertChar \n -group dlang-indent _dlang-indent-on-new-line
     hook window InsertChar \{ -group dlang-indent _dlang-indent-on-opening-curly-brace
     hook window InsertChar \} -group dlang-indent _dlang-indent-on-closing-curly-brace
+
+    alias global format-code dlang-format-dfmt
 }
 
 hook global WinSetOption filetype=(?!dlang).* %{
     rmhl dlang
+
     rmhooks window dlang-hooks
     rmhooks window dlang-indent
+
+    unalias global format-code
 }
