@@ -87,10 +87,15 @@ hook global WinSetOption filetype=golang %{
     hook window InsertChar \n -group golang-indent _golang-indent-on-new-line
     hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
     hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
+
+    alias global format-code golang-format-gofmt
 }
 
 hook global WinSetOption filetype=(?!golang).* %{
     rmhl golang
+
     rmhooks window golang-hooks
     rmhooks window golang-indent
+
+    unalias global format-code
 }
