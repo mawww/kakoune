@@ -825,13 +825,11 @@ void NCursesUI::info_show(StringView title, StringView content,
 {
     info_hide();
 
-    StringView info_box = content;
-    String fancy_info_box;
+    String info_box;
     if (style == InfoStyle::Prompt)
     {
-        fancy_info_box = make_info_box(title, content, m_dimensions.column,
-                                       m_assistant);
-        info_box = fancy_info_box;
+        info_box = make_info_box(title, content, m_dimensions.column,
+                                 m_assistant);
         anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
     }
@@ -843,9 +841,12 @@ void NCursesUI::info_show(StringView title, StringView content,
         if (style == InfoStyle::MenuDoc and m_menu_win)
             col = window_pos(m_menu_win).column + window_size(m_menu_win).column;
 
-        for (auto& line : wrap_lines(content, m_dimensions.column - col))
-            fancy_info_box += line + "\n";
-        info_box = fancy_info_box;
+        const CharCount max_width = m_dimensions.column - col;
+        if (max_width < 4)
+            return;
+
+        for (auto& line : wrap_lines(content, max_width))
+            info_box += line + "\n";
     }
 
     CharCoord size = compute_needed_size(info_box);
