@@ -711,6 +711,7 @@ template<bool relative, bool hl_cursor_line>
 void show_line_numbers(const Context& context, HighlightFlags flags,
                        DisplayBuffer& display_buffer, BufferRange)
 {
+    const String& number_format = context.options()["separator"].get<String>();
     const Face face = get_face("LineNumbers");
     const Face face_absolute = get_face("LineNumberCursor");
     LineCount last_line = context.buffer().line_count();
@@ -718,8 +719,8 @@ void show_line_numbers(const Context& context, HighlightFlags flags,
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
 
-    char format[] = "%?d│";
-    format[1] = '0' + digit_count + (relative ? 1 : 0);
+    char format[7];
+    format_to(format, "%{}d{}", digit_count + (relative ? 1 : 0), number_format.substr(0_char, 3_char));
     int main_selection = (int)context.selections().main().cursor().line + 1;
     for (auto& line : display_buffer.lines())
     {
