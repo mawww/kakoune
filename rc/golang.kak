@@ -70,11 +70,6 @@ def golang-format-gofmt -docstring "Format the code using the gofmt utility" %{
         echo "exec gg ${y}g ${x}l"
     }
 }
-alias global format-code golang-format-gofmt
-
-def golang-disable-gofmt -docstring "Disable automatic code formatting" %{
-    rmhooks buffer golang-formatter
-}
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -88,7 +83,7 @@ hook global WinSetOption filetype=golang %{
     hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
     hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
 
-    alias global format-code golang-format-gofmt
+    alias buffer format-code golang-format-gofmt
 }
 
 hook global WinSetOption filetype=(?!golang).* %{
@@ -97,5 +92,5 @@ hook global WinSetOption filetype=(?!golang).* %{
     rmhooks window golang-hooks
     rmhooks window golang-indent
 
-    unalias global format-code
+    unalias buffer format-code
 }
