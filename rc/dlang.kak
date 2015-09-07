@@ -81,10 +81,6 @@ def dlang-format-dfmt -docstring "Format the code using the dfmt utility" %{
     }
 }
 
-def dlang-disable-dfmt -docstring "Disable automatic code formatting" %{
-    rmhooks buffer dlang-formatter
-}
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -97,7 +93,7 @@ hook global WinSetOption filetype=dlang %{
     hook window InsertChar \{ -group dlang-indent _dlang-indent-on-opening-curly-brace
     hook window InsertChar \} -group dlang-indent _dlang-indent-on-closing-curly-brace
 
-    alias global format-code dlang-format-dfmt
+    alias buffer format-code dlang-format-dfmt
 }
 
 hook global WinSetOption filetype=(?!dlang).* %{
@@ -106,5 +102,5 @@ hook global WinSetOption filetype=(?!dlang).* %{
     rmhooks window dlang-hooks
     rmhooks window dlang-indent
 
-    unalias global format-code
+    unalias buffer format-code
 }
