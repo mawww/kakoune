@@ -779,14 +779,18 @@ String make_info_box(StringView title, StringView message, CharCount max_width,
     if (not assistant.empty())
         assistant_size = { (int)assistant.size(), assistant[0].char_length() };
 
+    String result;
+
     const CharCount max_bubble_width = max_width - assistant_size.column - 6;
+    if (max_bubble_width < 4)
+        return result;
+
     Vector<StringView> lines = wrap_lines(message, max_bubble_width);
 
     CharCount bubble_width = title.char_length() + 2;
     for (auto& line : lines)
         bubble_width = max(bubble_width, line.char_length());
 
-    String result;
     auto line_count = max(assistant_size.line-1,
                           LineCount{(int)lines.size()} + 2);
     for (LineCount i = 0; i < line_count; ++i)

@@ -218,6 +218,9 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col)
 
 Vector<StringView> wrap_lines(StringView text, CharCount max_width)
 {
+    if (max_width <= 0)
+        throw runtime_error("Invalid max width");
+
     using Utf8It = utf8::iterator<const char*>;
     Utf8It word_begin{text.begin()};
     Utf8It word_end{word_begin};
