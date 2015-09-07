@@ -36,7 +36,7 @@ addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 # Atx-style header
 addhl -group /markdown/content regex ^(#+)(\h+)([^\n]+) 1:header
 
-addhl -group /markdown/content regex ^\h+([-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*)*$ 0:list 1:bullet
+addhl -group /markdown/content regex ^\h?+((?:[\s\t]+)?[-\*])\h+[^\n]*(\n\h+[^-\*]\S+[^\n]*\n)*$ 0:list 1:bullet
 addhl -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
 addhl -group /markdown/content regex (?<!\w)\+[^\n]+?\+(?!\w) 0:mono
 addhl -group /markdown/content regex (?<!\w)_[^\n]+?_(?!\w) 0:italic
