@@ -59,6 +59,8 @@ private:
 
     void mark_dirty(NCursesWin* region);
 
+    void toggle_mouse(bool mouse = true);
+
     NCursesWin* m_window = nullptr;
 
     CharCoord m_dimensions;

@@ -257,12 +257,10 @@ NCursesUI::NCursesUI()
     use_default_colors();
     set_escdelay(25);
 
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-    mouseinterval(0);
-    // force enable report mouse position
-    puts("\033[?1002h");
-    // force enable report focus events
+    // force reporting focus events
     puts("\033[?1004h");
+
+    toggle_mouse(true);
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, [](int){});
@@ -274,11 +272,29 @@ NCursesUI::NCursesUI()
 
 NCursesUI::~NCursesUI()
 {
+    // disable reporting focus events
     puts("\033[?1004l");
-    puts("\033[?1002l");
+    toggle_mouse(false);
     endwin();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGINT, SIG_DFL);
+}
+
+void NCursesUI::toggle_mouse(bool mouse)
+{
+    if (mouse)
+    {
+        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+        mouseinterval(0);
+        // force reporting mouse position
+        puts("\033[?1002h");
+    }
+    else
+    {
+        mousemask(0, nullptr);
+        // disable reporting mouse position
+        puts("\033[?1002l");
+    }
 }
 
 void NCursesUI::redraw()
@@ -930,38 +946,50 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant");
-        if (it == options.end())
-            m_assistant = assistant_clippy;
+        if (it == options.end());
         else if (it->second == "cat")
             m_assistant = assistant_cat;
-        else if (it->second == "clippy")
+        else if (it->second == "clippy" or it->second == "yes" or it->second == "true")
             m_assistant = assistant_clippy;
-        else if (it->second == "none" or it->second == "off")
+        else if (it->second == "no" or it->second == "false")
             m_assistant = ConstArrayView<StringView>{};
     }
 
     {
         auto it = options.find("ncurses_status_on_top");
-        m_status_on_top = it != options.end() and
-            (it->second == "yes" or it->second == "true");
+        if (it == options.end());
+        else if (it->second == "no" or it->second == "false")
+            m_status_on_top = false;
+        else if (it->second == "yes" or it->second == "true")
+            m_status_on_top = true;
     }
 
     {
         auto it = options.find("ncurses_set_title");
-        m_set_title = it == options.end() or
-            (it->second == "yes" or it->second == "true");
+        if (it == options.end());
+        else if (it->second == "no" or it->second == "false")
+            m_set_title = false;
+        else if (it->second == "yes" or it->second == "true")
+            m_set_title = true;
+    }
+
+    {
+        auto it = options.find("ncurses_mouse_support");
+        if (it == options.end());
+        else if (it->second == "yes" or it->second == "true")
+            toggle_mouse(true);
+        else if (it->second == "no" or it->second == "false")
+            toggle_mouse(false);
     }
 
     {
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
-        if (wheel_down_it == options.end())
-            m_wheel_down_button = 2;
+        if (wheel_down_it == options.end());
         else if (auto down = str_to_int_ifp(wheel_down_it->second))
             m_wheel_down_button = *down;
 
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
-        if (wheel_up_it == options.end())
-            m_wheel_up_button = 4;
+        if (wheel_up_it == options.end());
         else if (auto up = str_to_int_ifp(wheel_up_it->second))
             m_wheel_up_button = *up;
     }

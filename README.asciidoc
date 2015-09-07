@@ -726,15 +726,19 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * `autoreload` _yesnoask_: auto reload the buffers when an external
    modification is detected.
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
-   the user interface implementation. The NCurses UI support the following options:
+   the user interface implementation. The NCurses UI supports the following options:
    - `ncurses_set_title`: if `yes` or `true`, the terminal emulator title will
-      be changed.
+     be changed.
    - `ncurses_status_on_top`: if `yes`, or `true` the status line will be placed
-     at the top of the terminal rather than at the bottom.
-   - `ncurses_assistant`: specify the nice assistant you get in info boxes, can
-      be 'clippy' (the default), 'cat' or 'none'
+     at the top of the terminal rather than at the bottom. Set it to `no` or `false`
+     to place it to the bottom.
+   - `ncurses_assistant`: specify your favourite assistant for the info boxes, can
+     be `clippy` (the default), `cat` respectively `no or false` to disable the
+     assistant.
+   - `ncurses_mouse_support` can be toggled on and off with `yes`/`true` (the
+     default) and `no`/`false`
    - `ncurses_wheel_down_button` and `ncurses_wheel_up_button`: specify which
-      button send for wheel down/up events.
+     button send for wheel down/up events.
 
 Faces
 -----
