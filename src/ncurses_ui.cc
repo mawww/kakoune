@@ -437,10 +437,20 @@ void NCursesUI::check_resize(bool force)
     winsize ws;
     if (ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
     {
+        auto delete_win = [](NCursesWin*& win) {
+            if (win)
+            {
+                delwin(win);
+                win = nullptr;
+            }
+        };
+
+        delete_win(m_window);
+        delete_win(m_info_win);
+        delete_win(m_menu_win);
+
         resize_term(ws.ws_row, ws.ws_col);
 
-        if (m_window)
-            delwin(m_window);
         m_window = (NCursesWin*)newwin(ws.ws_row, ws.ws_col, 0, 0);
 
         m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
