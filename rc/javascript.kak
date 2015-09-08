@@ -33,7 +33,7 @@ addhl -group /javascript/code regex \<(Array|Boolean|Date|Function|Number|Object
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
-addhl -group /javascript/code regex \<(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|return|super|switch|throw|try|typeof|var|void|while|with|yield)\> 0:keyword
+addhl -group /javascript/code regex \<(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|super|switch|throw|try|typeof|var|void|while|with|yield)\> 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
