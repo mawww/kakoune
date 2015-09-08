@@ -58,19 +58,15 @@ void BufferManager::unregister_buffer(Buffer& buffer)
 
 void BufferManager::delete_buffer(Buffer& buffer)
 {
-    for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
-    {
-        if (it->get() == &buffer)
-        {
-            if (ClientManager::has_instance())
-                ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+    auto it = find_if(m_buffers, [&](const SafePtr<Buffer>& p)
+                      { return p.get() == &buffer; });
+    kak_assert(it != m_buffers.end());
 
-            m_buffers.erase(it);
-            m_buffer_trash.emplace_back(&buffer);
-            return;
-        }
-    }
-    kak_assert(false);
+    if (ClientManager::has_instance())
+        ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+
+    m_buffers.erase(it);
+    m_buffer_trash.emplace_back(&buffer);
 }
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)
