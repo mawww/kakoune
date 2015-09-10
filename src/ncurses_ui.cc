@@ -295,19 +295,36 @@ NCursesUI::~NCursesUI()
     signal(SIGINT, SIG_DFL);
 }
 
+void NCursesUI::Window::create(const CharCoord& p, const CharCoord& s)
+{
+    pos = p;
+    size = s;
+    win = (NCursesWin*)newpad((int)size.line, (int)size.column);
+}
+
+void NCursesUI::Window::destroy()
+{
+    delwin(win);
+    win = nullptr;
+}
+
+void NCursesUI::Window::refresh()
+{
+    if (not win)
+        return;
+
+    redrawwin(win);
+    CharCoord max_pos = pos + size - CharCoord{1,1};
+    pnoutrefresh(win, 0, 0, (int)pos.line, (int)pos.column,
+                 (int)max_pos.line, (int)max_pos.column);
+}
+
 void NCursesUI::redraw()
 {
-    wnoutrefresh(m_window);
-    if (m_menu_win)
-    {
-        redrawwin(m_menu_win);
-        wnoutrefresh(m_menu_win);
-    }
-    if (m_info_win)
-    {
-        redrawwin(m_info_win);
-        wnoutrefresh(m_info_win);
-    }
+    pnoutrefresh(m_window, 0, 0, 0, 0,
+                 (int)m_dimensions.line + 1, (int)m_dimensions.column);
+    m_menu.refresh();
+    m_info.refresh();
     doupdate();
 }
 
@@ -323,20 +340,6 @@ using Utf8Iterator = utf8::iterator<const char*, Utf8Policy>;
 void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
 {
     waddnstr(win, begin.base(), end.base() - begin.base());
-}
-
-static CharCoord window_size(WINDOW* win)
-{
-    CharCoord size;
-    getmaxyx(win, (int&)size.line, (int&)size.column);
-    return size;
-}
-
-static CharCoord window_pos(WINDOW* win)
-{
-    CharCoord pos;
-    getbegyx(win, (int&)pos.line, (int&)pos.column);
-    return pos;
 }
 
 void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
@@ -460,12 +463,12 @@ void NCursesUI::check_resize(bool force)
         };
 
         delete_win(m_window);
-        delete_win(m_info_win);
-        delete_win(m_menu_win);
+        delete_win(m_info.win);
+        delete_win(m_menu.win);
 
         resize_term(ws.ws_row, ws.ws_col);
 
-        m_window = (NCursesWin*)newwin(ws.ws_row, ws.ws_col, 0, 0);
+        m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
 
         m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
 
@@ -597,22 +600,21 @@ void NCursesUI::draw_menu()
 {
     // menu show may have not created the window if it did not fit.
     // so be tolerant.
-    if (not m_menu_win)
+    if (not m_menu)
         return;
 
     const auto menu_fg = get_color_pair(m_menu_fg);
     const auto menu_bg = get_color_pair(m_menu_bg);
 
-    wattron(m_menu_win, COLOR_PAIR(menu_bg));
-    wbkgdset(m_menu_win, COLOR_PAIR(menu_bg));
+    wattron(m_menu.win, COLOR_PAIR(menu_bg));
+    wbkgdset(m_menu.win, COLOR_PAIR(menu_bg));
 
     const int item_count = (int)m_items.size();
     const LineCount menu_lines = div_round_up(item_count, m_menu_columns);
-    const CharCoord win_size = window_size(m_menu_win);
-    const LineCount& win_height = win_size.line;
+    const LineCount& win_height = m_menu.size.line;
     kak_assert(win_height <= menu_lines);
 
-    const CharCount column_width = (win_size.column - 1) / m_menu_columns;
+    const CharCount column_width = (m_menu.size.column - 1) / m_menu_columns;
 
     const LineCount mark_height = min(div_round_up(sq(win_height), menu_lines),
                                       win_height);
@@ -620,7 +622,7 @@ void NCursesUI::draw_menu()
                                 max(1_line, menu_lines - win_height);
     for (auto line = 0_line; line < win_height; ++line)
     {
-        wmove(m_menu_win, (int)line, 0);
+        wmove(m_menu.win, (int)line, 0);
         for (int col = 0; col < m_menu_columns; ++col)
         {
             const int item_idx = (int)(m_menu_top_line + line) * m_menu_columns
@@ -628,22 +630,22 @@ void NCursesUI::draw_menu()
             if (item_idx >= item_count)
                 break;
             if (item_idx == m_selected_item)
-                wattron(m_menu_win, COLOR_PAIR(menu_fg));
+                wattron(m_menu.win, COLOR_PAIR(menu_fg));
 
             StringView item = m_items[item_idx];
             auto begin = item.begin();
             auto end = utf8::advance(begin, item.end(), column_width);
-            addutf8str(m_menu_win, begin, end);
+            addutf8str(m_menu.win, begin, end);
             const CharCount pad = column_width - utf8::distance(begin, end);
-            waddstr(m_menu_win, String{' ' COMMA pad}.c_str());
-            wattron(m_menu_win, COLOR_PAIR(menu_bg));
+            waddstr(m_menu.win, String{' ' COMMA pad}.c_str());
+            wattron(m_menu.win, COLOR_PAIR(menu_bg));
         }
         const bool is_mark = line >= mark_line and
                              line < mark_line + mark_height;
-        wclrtoeol(m_menu_win);
-        wmove(m_menu_win, (int)line, (int)win_size.column - 1);
-        wattron(m_menu_win, COLOR_PAIR(menu_bg));
-        waddstr(m_menu_win, is_mark ? "█" : "░");
+        wclrtoeol(m_menu.win);
+        wmove(m_menu.win, (int)line, (int)m_menu.size.column - 1);
+        wattron(m_menu.win, COLOR_PAIR(menu_bg));
+        waddstr(m_menu.win, is_mark ? "█" : "░");
     }
     m_dirty = true;
 }
@@ -662,7 +664,7 @@ void NCursesUI::menu_show(ConstArrayView<String> items,
     else if (m_status_on_top)
         anchor.line += 1;
 
-    CharCoord maxsize = window_size(stdscr);
+    CharCoord maxsize = m_dimensions;
     maxsize.column -= anchor.column;
     if (maxsize.column <= 2)
         return;
@@ -690,7 +692,7 @@ void NCursesUI::menu_show(ConstArrayView<String> items,
     m_menu_top_line = 0;
 
     int width = is_prompt ? (int)maxsize.column : (int)longest;
-    m_menu_win = (NCursesWin*)newwin(height, width, line, (int)anchor.column);
+    m_menu.create({line, anchor.column}, {height, width});
     draw_menu();
 }
 
@@ -707,7 +709,7 @@ void NCursesUI::menu_select(int selected)
     {
         m_selected_item = selected;
         const LineCount selected_line = m_selected_item / m_menu_columns;
-        const LineCount win_height = window_size(m_menu_win).line;
+        const LineCount win_height = m_menu.size.line;
         kak_assert(menu_lines >= win_height);
         if (selected_line < m_menu_top_line)
             m_menu_top_line = selected_line;
@@ -719,12 +721,11 @@ void NCursesUI::menu_select(int selected)
 
 void NCursesUI::menu_hide()
 {
-    if (not m_menu_win)
+    if (not m_menu)
         return;
     m_items.clear();
-    mark_dirty(m_menu_win);
-    delwin(m_menu_win);
-    m_menu_win = nullptr;
+    mark_dirty(m_menu);
+    m_menu.destroy();
     m_dirty = true;
 }
 
@@ -754,11 +755,11 @@ static CharCoord compute_needed_size(StringView str)
     return res;
 }
 
-static CharCoord compute_pos(CharCoord anchor, CharCoord size,
-                             WINDOW* opt_window_to_avoid = nullptr,
+static CharCoord compute_pos(CharCoord anchor, CharCoord size, CharCoord scrsize,
+                             CharCoord rect_to_avoid_pos = CharCoord{},
+                             CharCoord rect_to_avoid_size = CharCoord{},
                              bool prefer_above = false)
 {
-    CharCoord scrsize = window_size(stdscr);
     CharCoord pos;
     if (prefer_above)
     {
@@ -775,21 +776,21 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
     if (pos.column + size.column >= scrsize.column)
         pos.column = max(0_char, scrsize.column - size.column);
 
-    if (opt_window_to_avoid)
+    if (rect_to_avoid_size != CharCoord{})
     {
-        CharCoord winbeg = window_pos(opt_window_to_avoid);
-        CharCoord winend = winbeg + window_size(opt_window_to_avoid);
+        CharCoord rectbeg = rect_to_avoid_pos;
+        CharCoord rectend = rectbeg + rect_to_avoid_size;
 
         CharCoord end = pos + size;
 
         // check intersection
-        if (not (end.line < winbeg.line or end.column < winbeg.column or
-                 pos.line > winend.line or pos.column > winend.column))
+        if (not (end.line < rectbeg.line or end.column < rectbeg.column or
+                 pos.line > rectend.line or pos.column > rectend.column))
         {
-            pos.line = min(winbeg.line, anchor.line) - size.line;
+            pos.line = min(rectbeg.line, anchor.line) - size.line;
             // if above does not work, try below
             if (pos.line < 0)
-                pos.line = max(winend.line, anchor.line);
+                pos.line = max(rectend.line, anchor.line);
         }
     }
 
@@ -866,8 +867,8 @@ void NCursesUI::info_show(StringView title, StringView content,
         if (m_status_on_top)
             anchor.line += 1;
         CharCount col = anchor.column;
-        if (style == InfoStyle::MenuDoc and m_menu_win)
-            col = window_pos(m_menu_win).column + window_size(m_menu_win).column;
+        if (style == InfoStyle::MenuDoc and m_menu)
+            col = m_menu.pos.column + m_menu.size.column;
 
         const CharCount max_width = m_dimensions.column - col;
         if (max_width < 4)
@@ -877,29 +878,27 @@ void NCursesUI::info_show(StringView title, StringView content,
             info_box += line + "\n";
     }
 
-    CharCoord size = compute_needed_size(info_box);
-    CharCoord pos;
-    if (style == InfoStyle::MenuDoc and m_menu_win)
-        pos = window_pos(m_menu_win) +
-              CharCoord{0_line, window_size(m_menu_win).column};
+    CharCoord size = compute_needed_size(info_box), pos;
+    if (style == InfoStyle::MenuDoc and m_menu)
+        pos = m_menu.pos + CharCoord{0_line, m_menu.size.column};
     else
-        pos = compute_pos(anchor, size, m_menu_win, style == InfoStyle::InlineAbove);
+        pos = compute_pos(anchor, size, m_dimensions, m_menu.pos, m_menu.size,
+                          style == InfoStyle::InlineAbove);
 
     // The info window will hide the status line
     if (pos.line + size.line > m_dimensions.line)
         return;
 
-    m_info_win = (NCursesWin*)newwin((int)size.line, (int)size.column,
-                                     (int)pos.line,  (int)pos.column);
+    m_info.create(pos, size);
 
-    wbkgd(m_info_win, COLOR_PAIR(get_color_pair(face)));
+    wbkgd(m_info.win, COLOR_PAIR(get_color_pair(face)));
     int line = 0;
     auto it = info_box.begin(), end = info_box.end();
     while (true)
     {
-        wmove(m_info_win, line++, 0);
+        wmove(m_info.win, line++, 0);
         auto eol = std::find_if(it, end, [](char c) { return c == '\n'; });
-        addutf8str(m_info_win, Utf8Iterator(it), Utf8Iterator(eol));
+        addutf8str(m_info.win, Utf8Iterator(it), Utf8Iterator(eol));
         if (eol == end)
            break;
         it = eol + 1;
@@ -909,20 +908,16 @@ void NCursesUI::info_show(StringView title, StringView content,
 
 void NCursesUI::info_hide()
 {
-    if (not m_info_win)
+    if (not m_info)
         return;
-    mark_dirty(m_info_win);
-    delwin(m_info_win);
-    m_info_win = nullptr;
+    mark_dirty(m_info);
+    m_info.destroy();
     m_dirty = true;
 }
 
-void NCursesUI::mark_dirty(NCursesWin* region)
+void NCursesUI::mark_dirty(const Window& win)
 {
-    auto pos = window_pos(region);
-    auto size = window_size(region);
-
-    wredrawln(m_window, (int)pos.line, (int)size.line);
+    wredrawln(m_window, (int)win.pos.line, (int)win.size.line);
 }
 
 CharCoord NCursesUI::dimensions()

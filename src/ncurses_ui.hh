@@ -57,13 +57,26 @@ private:
     void draw_line(const DisplayLine& line, CharCount col_index,
                    const Face& default_face) const;
 
-    void mark_dirty(NCursesWin* region);
-
     NCursesWin* m_window = nullptr;
 
     CharCoord m_dimensions;
 
-    NCursesWin* m_menu_win = nullptr;
+    struct Window
+    {
+        void create(const CharCoord& pos, const CharCoord& size);
+        void destroy();
+        void refresh();
+
+        explicit operator bool() const { return win; }
+
+        NCursesWin* win = nullptr;
+        CharCoord pos;
+        CharCoord size;
+    };
+
+    void mark_dirty(const Window& win);
+
+    Window m_menu;
     Vector<String> m_items;
     Face m_menu_fg;
     Face m_menu_bg;
@@ -72,7 +85,7 @@ private:
     LineCount m_menu_top_line = 0;
     void draw_menu();
 
-    NCursesWin* m_info_win = nullptr;
+    Window m_info;
 
     FDWatcher     m_stdin_watcher;
     InputCallback m_input_callback;
