@@ -487,11 +487,11 @@ bool NCursesUI::is_key_available()
 {
     check_resize();
 
-    timeout(0);
-    const int c = getch();
+    wtimeout(m_window, 0);
+    const int c = wgetch(m_window);
     if (c != ERR)
         ungetch(c);
-    timeout(-1);
+    wtimeout(m_window, -1);
     return c != ERR;
 }
 
@@ -499,7 +499,7 @@ Key NCursesUI::get_key()
 {
     check_resize();
 
-    const int c = getch();
+    const int c = wgetch(m_window);
 
     if (c == KEY_MOUSE)
     {
@@ -519,7 +519,7 @@ Key NCursesUI::get_key()
     {
         if (c == CTRL('l'))
         {
-           redrawwin(m_window);
+           //redrawwin(m_window);
            redraw();
         }
         if (c == CTRL('z'))
@@ -531,11 +531,11 @@ Key NCursesUI::get_key()
     }
     else if (c == 27)
     {
-        timeout(0);
-        const Codepoint new_c = getch();
+        wtimeout(m_window, 0);
+        const Codepoint new_c = wgetch(m_window);
         if (new_c == '[') // potential CSI
         {
-            const Codepoint csi_val = getch();
+            const Codepoint csi_val = wgetch(m_window);
             switch (csi_val)
             {
                 case 'I': return Key::FocusIn;
@@ -543,7 +543,7 @@ Key NCursesUI::get_key()
                 default: break; // nothing
             }
         }
-        timeout(-1);
+        wtimeout(m_window, -1);
         if (new_c != ERR)
         {
             if (new_c > 0 and new_c < 27)
@@ -580,12 +580,15 @@ Key NCursesUI::get_key()
        ungetch(c);
        struct getch_iterator
        {
-            int operator*() { return getch(); }
-            getch_iterator& operator++() { return *this; }
-            getch_iterator& operator++(int) { return *this; }
-            bool operator== (const getch_iterator&) const { return false; }
+           getch_iterator(WINDOW* win) : window(win) {}
+           int operator*() { return wgetch(window); }
+           getch_iterator& operator++() { return *this; }
+           getch_iterator& operator++(int) { return *this; }
+           bool operator== (const getch_iterator&) const { return false; }
+
+            WINDOW* window;
        };
-       return utf8::codepoint(getch_iterator{}, getch_iterator{});
+       return utf8::codepoint(getch_iterator{m_window}, getch_iterator{m_window});
     }
     return Key::Invalid;
 }
