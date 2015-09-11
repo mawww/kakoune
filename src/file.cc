@@ -313,8 +313,9 @@ template<typename Filter>
 Vector<String> list_files(StringView prefix, StringView dirname,
                           Filter filter)
 {
-    kak_assert(dirname.empty() or dirname.back() == '/');
-    DIR* dir = opendir(dirname.empty() ? "./" : dirname.zstr());
+    char buffer[PATH_MAX+1];
+    format_to(buffer, "{}", dirname);
+    DIR* dir = opendir(dirname.empty() ? "./" : buffer);
     if (not dir)
         return {};
 
@@ -327,24 +328,28 @@ Vector<String> list_files(StringView prefix, StringView dirname,
         if (not filter(*entry))
             continue;
 
-        String filename = entry->d_name;
+        StringView filename = entry->d_name;
         if (filename.empty())
             continue;
 
         const bool match_prefix = prefix_match(filename, prefix);
         const bool match_subseq = subsequence_match(filename, prefix);
         struct stat st;
-        if ((match_prefix or match_subseq) and
-            stat((dirname + filename).c_str(), &st) == 0)
+        if (match_prefix or match_subseq)
         {
+            auto fmt_str = (dirname.empty() or dirname.back() == '/') ? "{}{}" : "{}/{}";
+            format_to(buffer, fmt_str, dirname, filename);
+            if (stat(buffer, &st) != 0)
+                continue;
+
             if (S_ISDIR(st.st_mode))
-                filename += '/';
+                filename = format_to(buffer, "{}/", filename);
             if (prefix.length() != 0 or filename[0_byte] != '.')
             {
                 if (match_prefix)
-                    result.push_back(filename);
+                    result.push_back(filename.str());
                 if (match_subseq)
-                    subseq_result.push_back(filename);
+                    subseq_result.push_back(filename.str());
             }
         }
     }
@@ -387,10 +392,12 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 
     if (not dirname.empty())
     {
+        char buffer[PATH_MAX+1];
         auto filter = [&](const dirent& entry)
         {
             struct stat st;
-            if (stat((dirname.str() + entry.d_name).c_str(), &st))
+            format_to(buffer, "{}{}", dirname, entry.d_name);
+            if (stat(buffer, &st) != 0)
                 return false;
             bool executable = (st.st_mode & S_IXUSR)
                             | (st.st_mode & S_IXGRP)
@@ -416,12 +423,10 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     Vector<String> res;
     for (auto dir : split(getenv("PATH"), ':'))
     {
-        String dirname = dir.str();
-        if (not dirname.empty() and dirname.back() != '/')
-            dirname += '/';
+        auto dirname = ((not dir.empty() and dir.back() == '/') ? dir.substr(0, dir.length()-1) : dir).str();
 
         struct stat st;
-        if (stat(dirname.substr(0_byte, dirname.length() - 1).zstr(), &st))
+        if (stat(dirname.c_str(), &st))
             continue;
 
         auto& cache = command_cache[dirname];
@@ -429,7 +434,9 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         {
             auto filter = [&](const dirent& entry) {
                 struct stat st;
-                if (stat((dirname + entry.d_name).c_str(), &st))
+                char buffer[PATH_MAX+1];
+                format_to(buffer, "{}/{}", dirname, entry.d_name);
+                if (stat(buffer, &st))
                     return false;
                 bool executable = (st.st_mode & S_IXUSR)
                                 | (st.st_mode & S_IXGRP)
