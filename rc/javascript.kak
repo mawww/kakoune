@@ -29,11 +29,12 @@ addhl -group /javascript/comment       fill comment
 
 addhl -group /javascript/code regex \$\w* 0:identifier
 addhl -group /javascript/code regex \<(document|false|null|parent|self|this|true|undefined|window)\> 0:value
+addhl -group /javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
 addhl -group /javascript/code regex \<(Array|Boolean|Date|Function|Number|Object|RegExp|String)\> 0:type
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
-addhl -group /javascript/code regex \<(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|return|super|switch|throw|try|typeof|var|void|while|with|yield)\> 0:keyword
+addhl -group /javascript/code regex \<(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|of|return|super|switch|throw|try|typeof|var|void|while|with|yield)\> 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾
