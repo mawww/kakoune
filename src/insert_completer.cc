@@ -140,9 +140,10 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     {
         String menu_entry;
         if (m.buffer)
-            menu_entry = m.match.str() +
-                String{' ', longest + 1 - m.match.char_length()} +
-                m.buffer->display_name();
+        {
+            const auto pad_len = longest + 1 - m.match.char_length();
+            menu_entry = m.match + String{' ', pad_len} + m.buffer->display_name();
+        }
 
         candidates.push_back({m.match.str(), "", std::move(menu_entry)});
     }
