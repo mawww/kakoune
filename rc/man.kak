@@ -36,8 +36,8 @@ def -hidden -shell-params _man %{ %sh{
 def -shell-params \
   -shell-completion %{
     prefix=${1:0:${kak_pos_in_token}}
-    for page in /usr/share/man/*/${prefix}*.1.gz; do
-        candidate=$(basename $page .1.gz)
+    for page in /usr/share/man/*/${prefix}*.[1-8]*; do
+        candidate=$(basename ${page%%.[1-8]*})
         case $candidate in
             *\*) ;;
             *) echo $candidate ;;
