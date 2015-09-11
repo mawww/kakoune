@@ -934,12 +934,10 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant");
-        if (it == options.end())
+        if (it == options.end() or it->second == "clippy")
             m_assistant = assistant_clippy;
         else if (it->second == "cat")
             m_assistant = assistant_cat;
-        else if (it->second == "clippy")
-            m_assistant = assistant_clippy;
         else if (it->second == "none" or it->second == "off")
             m_assistant = ConstArrayView<StringView>{};
     }
@@ -958,16 +956,12 @@ void NCursesUI::set_ui_options(const Options& options)
 
     {
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
-        if (wheel_down_it == options.end())
-            m_wheel_down_button = 2;
-        else if (auto down = str_to_int_ifp(wheel_down_it->second))
-            m_wheel_down_button = *down;
+        m_wheel_down_button = wheel_down_it != options.end() ?
+            str_to_int_ifp(wheel_down_it->second).value_or(2) : 2;
 
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
-        if (wheel_up_it == options.end())
-            m_wheel_up_button = 4;
-        else if (auto up = str_to_int_ifp(wheel_up_it->second))
-            m_wheel_up_button = *up;
+        m_wheel_up_button = wheel_up_it != options.end() ?
+            str_to_int_ifp(wheel_up_it->second).value_or(4) : 4;
     }
 }
 
