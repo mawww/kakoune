@@ -263,8 +263,6 @@ NCursesUI::NCursesUI()
     raw();
     noecho();
     nonl();
-    intrflush(stdscr, false);
-    keypad(stdscr, true);
     curs_set(0);
     start_color();
     use_default_colors();
@@ -461,6 +459,8 @@ void NCursesUI::check_resize(bool force)
         resize_term(ws.ws_row, ws.ws_col);
 
         m_window = (NCursesWin*)newpad(ws.ws_row, ws.ws_col);
+        intrflush(m_window, false);
+        keypad(m_window, true);
 
         m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
 
