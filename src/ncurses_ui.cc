@@ -480,7 +480,7 @@ void NCursesUI::check_resize(bool force)
 
     m_dirty = true;
     ungetch(KEY_RESIZE);
-    wrefresh(stdscr);
+    clearok(curscr, true);
 }
 
 bool NCursesUI::is_key_available()
