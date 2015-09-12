@@ -304,6 +304,8 @@ void NCursesUI::Window::destroy()
 {
     delwin(win);
     win = nullptr;
+    pos = CharCoord{};
+    size = CharCoord{};
 }
 
 void NCursesUI::Window::refresh()
