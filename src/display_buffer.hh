@@ -92,7 +92,7 @@ private:
     String m_text;
 };
 
-using AtomList = Vector<DisplayAtom>;
+using AtomList = Vector<DisplayAtom, MemoryDomain::Display>;
 
 class DisplayLine : public UseMemoryDomain<MemoryDomain::Display>
 {
@@ -143,7 +143,7 @@ private:
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    using LineList = Vector<DisplayLine>;
+    using LineList = Vector<DisplayLine, MemoryDomain::Display>;
     DisplayBuffer() {}
 
     LineList& lines() { return m_lines; }

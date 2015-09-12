@@ -418,7 +418,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         TimeSpec mtime = {};
         Vector<String> commands;
     };
-    static UnorderedMap<String, CommandCache> command_cache;
+    static UnorderedMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
     Vector<String> res;
     for (auto dir : split(getenv("PATH"), ':'))

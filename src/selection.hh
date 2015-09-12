@@ -6,7 +6,7 @@
 namespace Kakoune
 {
 
-using CaptureList = Vector<String>;
+using CaptureList = Vector<String, MemoryDomain::Selections>;
 
 // A selection is a Selection, associated with a CaptureList
 struct Selection
