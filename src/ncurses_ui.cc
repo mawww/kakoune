@@ -140,9 +140,6 @@ constexpr struct { unsigned char r, g, b; } builtin_colors[] = {
 
 static void restore_colors()
 {
-    if (not can_change_color())
-        return;
-
     for (size_t i = 8; i < COLORS; ++i)
     {
         auto& c = builtin_colors[i];
@@ -287,8 +284,10 @@ NCursesUI::~NCursesUI()
 {
     puts("\033[?1004l");
     puts("\033[?1002l");
+    const bool changed_color = can_change_color();
     endwin();
-    restore_colors();
+    if (changed_color)
+        restore_colors();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGINT, SIG_DFL);
 }
