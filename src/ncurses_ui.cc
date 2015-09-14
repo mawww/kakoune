@@ -512,7 +512,7 @@ Key NCursesUI::get_key()
     {
         if (c == CTRL('l'))
         {
-           //redrawwin(m_window);
+           redrawwin(m_window);
            redraw();
         }
         if (c == CTRL('z'))
