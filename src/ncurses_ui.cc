@@ -140,7 +140,7 @@ constexpr struct { unsigned char r, g, b; } builtin_colors[] = {
 
 static void restore_colors()
 {
-    for (size_t i = 8; i < COLORS; ++i)
+    for (size_t i = 16; i < COLORS; ++i)
     {
         auto& c = builtin_colors[i];
         init_color(i, c.r * 1000 / 255, c.g * 1000 / 255, c.b * 1000 / 255);
@@ -160,16 +160,16 @@ static int nc_color(Color color)
         { Color::Cyan,    COLOR_CYAN },
         { Color::White,   COLOR_WHITE },
     };
-    static int next_color = 8;
+    static int next_color = 16;
 
     auto it = colors.find(color);
     if (it != colors.end())
         return it->second;
-    else if (can_change_color() and COLORS > 8)
+    else if (can_change_color() and COLORS > 16)
     {
         kak_assert(color.color == Color::RGB);
         if (next_color > COLORS)
-            next_color = 8;
+            next_color = 16;
         init_color(next_color,
                    color.r * 1000 / 255,
                    color.g * 1000 / 255,
