@@ -13,6 +13,7 @@
 #include <sys/un.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <fcntl.h>
 
 
@@ -411,7 +412,7 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    format_to(addr.sun_path, "/tmp/kakoune/{}/{}", getlogin(), session);
+    format_to(addr.sun_path, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, session);
     return addr;
 }
 
@@ -631,7 +632,7 @@ Server::Server(String session_name)
 void Server::close_session()
 {
     char socket_file[128];
-    format_to(socket_file, "/tmp/kakoune/{}/{}", getlogin(), m_session);
+    format_to(socket_file, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
     unlink(socket_file);
     m_listener->close_fd();
     m_listener.reset();

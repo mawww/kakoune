@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <pwd.h>
 
 using namespace Kakoune;
 
@@ -598,7 +599,7 @@ int main(int argc, char* argv[])
 
         if (parser.get_switch("l"))
         {
-            for (auto& file : list_files(format("/tmp/kakoune/{}/", getlogin())))
+            for (auto& file : list_files(format("/tmp/kakoune/{}/", getpwuid(geteuid())->pw_name)))
                 write_stdout(format("{}\n", file));
             return 0;
         }
