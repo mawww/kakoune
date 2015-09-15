@@ -27,7 +27,7 @@ struct Regex : std::regex
     Regex() = default;
 
     explicit Regex(StringView re, flag_type flags = ECMAScript) try
-        : std::regex(re.begin(), re.end(), flags), m_str(re) {}
+        : std::regex(re.begin(), re.end(), flags), m_str(re.str()) {}
         catch (std::runtime_error& err) { throw regex_error(err.what()); }
 
     template<typename Iterator>
