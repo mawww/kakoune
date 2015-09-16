@@ -256,17 +256,12 @@ void Client::check_if_buffer_needs_reloading()
         reload_buffer();
 }
 
-StringView Client::get_env_var(const String& name) const
+StringView Client::get_env_var(StringView name) const
 {
     auto it = m_env_vars.find(name);
     if (it == m_env_vars.end())
         return {};
-    return it->second;
-}
-
-StringView Client::get_env_var(StringView name) const
-{
-    return get_env_var(name.str());
+    return it->value;
 }
 
 void Client::on_option_changed(const Option& option)

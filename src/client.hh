@@ -50,7 +50,6 @@ public:
 
     void change_buffer(Buffer& buffer);
 
-    StringView get_env_var(const String& name) const;
     StringView get_env_var(StringView name) const;
 
 private:

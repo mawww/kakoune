@@ -340,7 +340,7 @@ String expand_token(const Token& token, const Context& context,
     {
         auto it = env_vars.find(content);
         if (it != env_vars.end())
-            return it->second;
+            return it->value;
         return ShellManager::instance().get_val(content, context);
     }
     case Token::Type::RawEval:

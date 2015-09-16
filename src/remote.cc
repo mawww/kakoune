@@ -91,8 +91,8 @@ public:
         write<uint32_t>(map.size());
         for (auto& val : map)
         {
-            write(val.first);
-            write(val.second);
+            write(val.key);
+            write(val.value);
         }
     }
 

@@ -75,8 +75,8 @@ String option_to_string(const IdMap<Value, domain>& opt)
     {
         if (it != begin(opt))
             res += list_separator;
-        String elem = escape(option_to_string(it->first), '=', '\\') + "=" +
-                      escape(option_to_string(it->second), '=', '\\');
+        String elem = escape(option_to_string(it->key), '=', '\\') + "=" +
+                      escape(option_to_string(it->value), '=', '\\');
         res += escape(elem, list_separator, '\\');
     }
     return res;

@@ -21,7 +21,7 @@ void HookManager::remove_hooks(StringView group)
     if (group.empty())
         throw runtime_error("invalid id");
     for (auto& hooks : m_hook)
-        hooks.second.remove_all(group);
+        hooks.value.remove_all(group);
 }
 
 CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_in_token)
@@ -29,7 +29,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hook)
     {
-        auto container = transformed(list.second, IdMap<HookFunc>::get_id);
+        auto container = transformed(list.value, decltype(list.value)::get_id);
         for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))
@@ -51,21 +51,21 @@ void HookManager::run_hook(StringView hook_name,
 
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
     bool hook_error = false;
-    for (auto& hook : hook_list_it->second)
+    for (auto& hook : hook_list_it->value)
     {
-        if (not hook.first.empty() and not disabled_hooks.empty() and
-            regex_match(hook.first.begin(), hook.first.end(), disabled_hooks))
+        if (not hook.key.empty() and not disabled_hooks.empty() and
+            regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
             continue;
 
         try
         {
-            hook.second(param, context);
+            hook.value(param, context);
         }
         catch (runtime_error& err)
         {
             hook_error = true;
             write_to_debug_buffer(format("error running hook {}/{}: {}",
-                               hook_name, hook.first, err.what()));
+                               hook_name, hook.key, err.what()));
         }
     }
 

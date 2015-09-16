@@ -71,7 +71,7 @@ Register& RegisterManager::operator[](StringView reg)
     auto it = reg_names.find(reg);
     if (it == reg_names.end())
         throw runtime_error(format("no such register: '{}'", reg));
-    return (*this)[it->second];
+    return (*this)[it->value];
 }
 
 Register& RegisterManager::operator[](Codepoint c)

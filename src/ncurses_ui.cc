@@ -935,34 +935,34 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant");
-        if (it == options.end() or it->second == "clippy")
+        if (it == options.end() or it->value == "clippy")
             m_assistant = assistant_clippy;
-        else if (it->second == "cat")
+        else if (it->value == "cat")
             m_assistant = assistant_cat;
-        else if (it->second == "none" or it->second == "off")
+        else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
     }
 
     {
         auto it = options.find("ncurses_status_on_top");
         m_status_on_top = it != options.end() and
-            (it->second == "yes" or it->second == "true");
+            (it->value == "yes" or it->value == "true");
     }
 
     {
         auto it = options.find("ncurses_set_title");
         m_set_title = it == options.end() or
-            (it->second == "yes" or it->second == "true");
+            (it->value == "yes" or it->value == "true");
     }
 
     {
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
         m_wheel_down_button = wheel_down_it != options.end() ?
-            str_to_int_ifp(wheel_down_it->second).value_or(2) : 2;
+            str_to_int_ifp(wheel_down_it->value).value_or(2) : 2;
 
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
         m_wheel_up_button = wheel_up_it != options.end() ?
-            str_to_int_ifp(wheel_up_it->second).value_or(4) : 4;
+            str_to_int_ifp(wheel_up_it->value).value_or(4) : 4;
     }
 }
 

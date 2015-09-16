@@ -111,7 +111,7 @@ std::pair<String, int> ShellManager::eval(
 
             auto local_var = env_vars.find(name);
             if (local_var != env_vars.end())
-                setenv(("kak_" + name).c_str(), local_var->second.c_str(), 1);
+                setenv(("kak_" + name).c_str(), local_var->value.c_str(), 1);
             else try
             {
                 String value = get_val(name, context);

@@ -584,7 +584,7 @@ const CommandDesc add_highlighter_cmd = {
             HighlighterRegistry& registry = HighlighterRegistry::instance();
             auto it = registry.find(params[0]);
             if (it != registry.end())
-                return format("{}:\n{}", params[0], indent(it->second.docstring));
+                return format("{}:\n{}", params[0], indent(it->value.docstring));
         }
         return "";
     },
@@ -605,7 +605,7 @@ const CommandDesc add_highlighter_cmd = {
         auto it = registry.find(name);
         if (it == registry.end())
             throw runtime_error(format("No such highlighter factory '{}'", name));
-        group.add_child(it->second.factory(highlighter_params));
+        group.add_child(it->value.factory(highlighter_params));
 
         if (context.has_window())
             context.window().force_redraw();

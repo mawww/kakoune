@@ -1152,20 +1152,20 @@ public:
             if (apply_default and last_begin < begin->begin)
                 apply_highlighter(context, flags, display_buffer,
                                   correct(last_begin), correct(begin->begin),
-                                  default_group_it->second);
+                                  default_group_it->value);
 
             auto it = m_groups.find(begin->group);
             if (it == m_groups.end())
                 continue;
             apply_highlighter(context, flags, display_buffer,
                               correct(begin->begin), correct(begin->end),
-                              it->second);
+                              it->value);
             last_begin = begin->end;
         }
         if (apply_default and last_begin < display_range.end)
             apply_highlighter(context, flags, display_buffer,
                               correct(last_begin), range.end,
-                              default_group_it->second);
+                              default_group_it->value);
 
     }
 
@@ -1179,9 +1179,9 @@ public:
         if (it == m_groups.end())
             throw child_not_found(format("no such id: {}", id));
         if (sep_it == path.end())
-            return it->second;
+            return it->value;
         else
-            return it->second.get_child({sep_it+1, path.end()});
+            return it->value.get_child({sep_it+1, path.end()});
     }
 
     Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const override
@@ -1194,7 +1194,7 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        auto container = transformed(m_groups, IdMap<HighlighterGroup>::get_id);
+        auto container = transformed(m_groups, decltype(m_groups)::get_id);
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 

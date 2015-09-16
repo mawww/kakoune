@@ -1,9 +1,10 @@
 #ifndef id_map_hh_INCLUDED
 #define id_map_hh_INCLUDED
 
-#include "containers.hh"
 #include "string.hh"
 #include "vector.hh"
+
+#include <algorithm>
 
 namespace Kakoune
 {
@@ -12,32 +13,49 @@ template<typename Value, MemoryDomain domain = MemoryDomain::Undefined>
 class IdMap
 {
 public:
-    using value_type = std::pair<String, Value>;
-    using container_type = Vector<value_type, domain>;
+    struct Element
+    {
+        Element(String k, Value v)
+            : key(std::move(k)), hash(hash_value(key)), value(std::move(v)) {}
+
+        String key;
+        size_t hash;
+        Value value;
+
+        bool operator==(const Element& other) const
+        {
+            return hash == other.hash and key == other.key and value == other.value;
+        }
+    };
+
+    using container_type = Vector<Element, domain>;
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
     IdMap() = default;
-    IdMap(std::initializer_list<value_type> val) : m_content{val} {}
+    IdMap(std::initializer_list<Element> val) : m_content{val} {}
 
-    void append(const value_type& value)
+    void append(const Element& value)
     {
         m_content.push_back(value);
     }
 
-    void append(value_type&& value)
+    void append(Element&& value)
     {
         m_content.push_back(std::move(value));
     }
 
     iterator find(StringView id)
     {
-        return Kakoune::find(transformed(m_content, get_id), id).base();
+        const size_t hash = hash_value(id);
+        return std::find_if(begin(), end(),
+                            [id, hash](const Element& e)
+                            { return e.hash == hash and e.key == id; });
     }
 
     const_iterator find(StringView id) const
     {
-        return Kakoune::find(transformed(m_content, get_id), id).base();
+        return const_cast<IdMap*>(this)->find(id);
     }
 
     bool contains(StringView id) const
@@ -54,8 +72,9 @@ public:
 
     void remove_all(StringView id)
     {
-        auto it = std::remove_if(begin(), end(),
-                                 [&](value_type& v){ return v.first == id; });
+        const size_t hash = hash_value(id);
+        auto it = std::remove_if(begin(), end(), [id, hash](const Element& e)
+                                 { return e.hash == hash and e.key == id; });
         m_content.erase(it, end());
     }
 
@@ -63,10 +82,10 @@ public:
     {
         auto it = find(id);
         if (it != m_content.end())
-            return it->second;
+            return it->value;
 
         append({ id.str(), Value{} });
-        return (m_content.end()-1)->second;
+        return (m_content.end()-1)->value;
     }
 
     template<MemoryDomain dom>
@@ -85,7 +104,7 @@ public:
     size_t size() const { return m_content.size(); }
     void clear() { m_content.clear(); }
 
-    static const String& get_id(const value_type& v) { return v.first; }
+    static const String& get_id(const Element& e) { return e.key; }
 
     bool empty() const { return m_content.empty(); }
 

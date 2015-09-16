@@ -7,7 +7,7 @@ String generate_switches_doc(const SwitchMap& switches)
 {
     String res;
     for (auto& sw : switches)
-        res += " -" + sw.first + (sw.second.takes_arg ? " <arg>: " : ": ") + sw.second.description + "\n";
+        res += " -" + sw.key + (sw.value.takes_arg ? " <arg>: " : ": ") + sw.value.description + "\n";
     return res;
 }
 
@@ -27,11 +27,11 @@ ParametersParser::ParametersParser(ParameterList params,
             if (it == m_desc.switches.end())
                 throw unknown_option(params[i]);
 
-            if (it->second.takes_arg)
+            if (it->value.takes_arg)
             {
                 ++i;
                 if (i == params.size() or params[i][0_byte] == '-')
-                   throw missing_option_value(it->first);
+                   throw missing_option_value(it->key);
             }
         }
         else
@@ -54,7 +54,7 @@ Optional<StringView> ParametersParser::get_switch(StringView name) const
     {
         const auto& param = m_params[i];
         if (param[0_byte] == '-' and param.substr(1_byte) == name)
-            return it->second.takes_arg ? m_params[i+1] : StringView{};
+            return it->value.takes_arg ? m_params[i+1] : StringView{};
 
         if (param == "--")
             break;
