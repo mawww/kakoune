@@ -304,8 +304,14 @@ void make_directory(StringView dir)
             if (not S_ISDIR(st.st_mode))
                 throw runtime_error(format("Cannot make directory, '{}' exists but is not a directory", dirname));
         }
-        else if (mkdir(dirname.zstr(), S_IRWXU) != 0)
-            throw runtime_error(format("mkdir failed for directory '{}' errno {}", dirname, errno));
+        else
+        {
+            auto old_mask = umask(0);
+            auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
+
+            if (mkdir(dirname.zstr(), S_IRWXU | S_IRWXG | S_IRWXO) != 0)
+                throw runtime_error(format("mkdir failed for directory '{}' errno {}", dirname, errno));
+        }
     }
 }
 
