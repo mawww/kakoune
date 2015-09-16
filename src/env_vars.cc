@@ -18,6 +18,7 @@ EnvVarMap get_env_vars()
             ++value;
         env_vars.append({{name, value}, (*value == '=') ? value+1 : String{}});
     }
+    env_vars.sort();
     return env_vars;
 }
 

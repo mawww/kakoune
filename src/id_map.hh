@@ -32,25 +32,66 @@ public:
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
-    IdMap() = default;
-    IdMap(std::initializer_list<Element> val) : m_content{val} {}
+    IdMap() : m_sorted(true) {}
 
-    void append(const Element& value)
+    IdMap(std::initializer_list<Element> val)
+        : m_content{val},
+          m_sorted(std::is_sorted(begin(), end(),
+                                  [](const Element& lhs, const Element& rhs)
+                                  { return lhs.hash < rhs.hash; }))
+    {}
+
+    void append(const Element& value, bool keep_sorted = false)
     {
-        m_content.push_back(value);
+        if (keep_sorted and m_sorted)
+        {
+            auto it = std::lower_bound(begin(), end(), value.hash,
+                                       [](const Element& e, size_t hash)
+                                       { return e.hash < hash; });
+            m_content.insert(it, value);
+        }
+        else
+        {
+            m_content.push_back(value);
+            m_sorted = false;
+        }
     }
 
-    void append(Element&& value)
+    void append(Element&& value, bool keep_sorted = false)
     {
-        m_content.push_back(std::move(value));
+        if (keep_sorted and m_sorted)
+        {
+            auto it = std::lower_bound(begin(), end(), value.hash,
+                                       [](const Element& e, size_t hash)
+                                       { return e.hash < hash; });
+            m_content.insert(it, std::move(value));
+        }
+        else
+        {
+            m_content.push_back(std::move(value));
+            m_sorted = false;
+        }
     }
 
     iterator find(StringView id)
     {
         const size_t hash = hash_value(id);
-        return std::find_if(begin(), end(),
-                            [id, hash](const Element& e)
-                            { return e.hash == hash and e.key == id; });
+        if (m_sorted)
+        {
+            auto it = std::lower_bound(begin(), end(), hash,
+                                       [](const Element& e, size_t hash)
+                                       { return e.hash < hash; });
+            for (auto e = end(); it != e and it->hash == hash; ++it)
+            {
+                if (it->key == id)
+                    return it;
+            }
+            return end();
+        }
+        else
+            return std::find_if(begin(), end(),
+                                [id, hash](const Element& e)
+                                { return e.hash == hash and e.key == id; });
     }
 
     const_iterator find(StringView id) const
@@ -100,9 +141,18 @@ public:
         return not (*this == other);
     }
 
+    void sort()
+    {
+        std::sort(begin(), end(),
+                  [](const Element& lhs, const Element& rhs)
+                  { return lhs.hash < rhs.hash; });
+        m_sorted = true;
+    }
+
     void reserve(size_t size) { m_content.reserve(size); }
     size_t size() const { return m_content.size(); }
     void clear() { m_content.clear(); }
+    void erase(const_iterator it) { m_content.erase(it); }
 
     static const String& get_id(const Element& e) { return e.key; }
 
@@ -115,6 +165,7 @@ public:
 
 private:
     container_type m_content;
+    bool m_sorted;
 };
 
 }
