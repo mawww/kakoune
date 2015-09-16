@@ -72,14 +72,7 @@ public:
     template<MemoryDomain dom>
     bool operator==(const IdMap<Value, dom>& other) const
     {
-        if (size() != other.size())
-            return false;
-        for (size_t i = 0, s = size(); i < s; ++i)
-        {
-            if (m_content[i] != other.m_content[i])
-                return false;
-        }
-        return true;
+        return size() == other.size() and std::equal(begin(), end(), other.begin());
     }
 
     template<MemoryDomain dom>
