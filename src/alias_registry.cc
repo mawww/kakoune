@@ -9,21 +9,21 @@ void AliasRegistry::add_alias(String alias, String command)
 {
     kak_assert(not alias.empty());
     kak_assert(CommandManager::instance().command_defined(command));
-    m_aliases[alias] = std::move(command);
+    m_aliases.append({std::move(alias), std::move(command) }, true);
 }
 
-void AliasRegistry::remove_alias(const String& alias)
+void AliasRegistry::remove_alias(StringView alias)
 {
     auto it = m_aliases.find(alias);
     if (it != m_aliases.end())
         m_aliases.erase(it);
 }
 
-StringView AliasRegistry::operator[](const String& alias) const
+StringView AliasRegistry::operator[](StringView alias) const
 {
     auto it = m_aliases.find(alias);
     if (it != m_aliases.end())
-        return it->second;
+        return it->value;
     else if (m_parent)
         return (*m_parent)[alias];
     else
@@ -38,8 +38,8 @@ Vector<StringView> AliasRegistry::aliases_for(StringView command) const
 
     for (auto& alias : m_aliases)
     {
-        if (alias.second == command)
-            res.push_back(alias.first);
+        if (alias.value == command)
+            res.push_back(alias.key);
     }
 
     return res;

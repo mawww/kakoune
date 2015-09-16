@@ -3,7 +3,7 @@
 
 #include "safe_ptr.hh"
 #include "string.hh"
-#include "unordered_map.hh"
+#include "id_map.hh"
 
 namespace Kakoune
 {
@@ -13,10 +13,10 @@ class AliasRegistry : public SafeCountable
 public:
     AliasRegistry(AliasRegistry& parent) : m_parent(&parent) {}
     void add_alias(String alias, String command);
-    void remove_alias(const String& alias);
-    StringView operator[](const String& name) const;
+    void remove_alias(StringView alias);
+    StringView operator[](StringView name) const;
 
-    using AliasMap = UnorderedMap<String, String, MemoryDomain::Aliases>;
+    using AliasMap = IdMap<String, MemoryDomain::Aliases>;
     using iterator = AliasMap::const_iterator;
     iterator begin() const { return m_aliases.begin(); }
     iterator end() const { return m_aliases.end(); }
@@ -28,7 +28,7 @@ private:
     AliasRegistry() {}
 
     SafePtr<AliasRegistry> m_parent;
-    UnorderedMap<String, String, MemoryDomain::Aliases> m_aliases;
+    AliasMap m_aliases;
 };
 
 }

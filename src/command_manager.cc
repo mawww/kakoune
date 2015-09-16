@@ -572,8 +572,8 @@ Completions CommandManager::complete(const Context& context,
         }
         for (auto& alias : context.aliases())
         {
-            if (prefix_match(alias.first, prefix))
-                result.candidates.push_back(alias.first);
+            if (prefix_match(alias.key, prefix))
+                result.candidates.push_back(alias.key);
         }
         std::sort(result.candidates.begin(), result.candidates.end());
         return result;
