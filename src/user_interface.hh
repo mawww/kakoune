@@ -3,7 +3,7 @@
 
 #include "array_view.hh"
 #include "safe_ptr.hh"
-#include "unordered_map.hh"
+#include "id_map.hh"
 
 #include <functional>
 
@@ -67,7 +67,7 @@ public:
 
     virtual void set_input_callback(InputCallback callback) = 0;
 
-    using Options = UnorderedMap<String, String, MemoryDomain::Options>;
+    using Options = IdMap<String, MemoryDomain::Options>;
     virtual void set_ui_options(const Options& options) = 0;
 };
 

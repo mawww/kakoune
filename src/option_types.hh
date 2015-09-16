@@ -6,7 +6,7 @@
 #include "units.hh"
 #include "coord.hh"
 #include "array_view.hh"
-#include "unordered_map.hh"
+#include "id_map.hh"
 
 #include <tuple>
 #include <vector>
@@ -67,8 +67,8 @@ bool option_add(Vector<T, domain>& opt, const Vector<T, domain>& vec)
     return not vec.empty();
 }
 
-template<typename Key, typename Value, MemoryDomain domain>
-String option_to_string(const UnorderedMap<Key, Value, domain>& opt)
+template<typename Value, MemoryDomain domain>
+String option_to_string(const IdMap<Value, domain>& opt)
 {
     String res;
     for (auto it = begin(opt); it != end(opt); ++it)
@@ -82,8 +82,8 @@ String option_to_string(const UnorderedMap<Key, Value, domain>& opt)
     return res;
 }
 
-template<typename Key, typename Value, MemoryDomain domain>
-void option_from_string(StringView str, UnorderedMap<Key, Value, domain>& opt)
+template<typename Value, MemoryDomain domain>
+void option_from_string(StringView str, IdMap<Value, domain>& opt)
 {
     opt.clear();
     for (auto& elem : split(str, list_separator, '\\'))
@@ -91,10 +91,11 @@ void option_from_string(StringView str, UnorderedMap<Key, Value, domain>& opt)
         Vector<String> pair_str = split(elem, '=', '\\');
         if (pair_str.size() != 2)
             throw runtime_error("map option expects key=value");
-        std::pair<Key, Value> pair;
-        option_from_string(pair_str[0], pair.first);
-        option_from_string(pair_str[1], pair.second);
-        opt.insert(std::move(pair));
+        String key;
+        Value value;
+        option_from_string(pair_str[0], key);
+        option_from_string(pair_str[1], value);
+        opt.append({ std::move(key), std::move(value) });
     }
 }
 

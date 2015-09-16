@@ -7,6 +7,7 @@
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "file.hh"
+#include "id_map.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -84,8 +85,8 @@ public:
         write(ConstArrayView<T>(vec));
     }
 
-    template<typename Key, typename Val, MemoryDomain domain>
-    void write(const UnorderedMap<Key, Val, domain>& map)
+    template<typename Val, MemoryDomain domain>
+    void write(const IdMap<Val, domain>& map)
     {
         write<uint32_t>(map.size());
         for (auto& val : map)
@@ -215,16 +216,17 @@ DisplayBuffer read<DisplayBuffer>(int socket)
     return db;
 }
 
-template<typename Key, typename Val, MemoryDomain domain>
-UnorderedMap<Key, Val, domain> read_map(int socket)
+template<typename Val, MemoryDomain domain>
+IdMap<Val, domain> read_idmap(int socket)
 {
     uint32_t size = read<uint32_t>(socket);
-    UnorderedMap<Key, Val, domain> res;
+    IdMap<Val, domain> res;
+    res.reserve(size);
     while (size--)
     {
-        auto key = read<Key>(socket);
+        auto key = read<String>(socket);
         auto val = read<Val>(socket);
-        res.insert({std::move(key), std::move(val)});
+        res.append({std::move(key), std::move(val)});
     }
     return res;
 }
@@ -512,7 +514,7 @@ void RemoteClient::process_next_message()
         m_ui->refresh();
         break;
     case RemoteUIMsg::SetOptions:
-        m_ui->set_ui_options(read_map<String, String, MemoryDomain::Options>(socket));
+        m_ui->set_ui_options(read_idmap<String, MemoryDomain::Options>(socket));
         break;
     }
 }
@@ -579,7 +581,7 @@ private:
             }
             if (c == 0) // end of initial command stream, go to interactive ui
             {
-                EnvVarMap env_vars = read_map<String, String, MemoryDomain::EnvVars>(socket);
+                EnvVarMap env_vars = read_idmap<String, MemoryDomain::EnvVars>(socket);
                 std::unique_ptr<UserInterface> ui{new RemoteUI{socket}};
                 ClientManager::instance().create_client(std::move(ui),
                                                         std::move(env_vars),

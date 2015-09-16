@@ -69,10 +69,28 @@ public:
         return (m_content.end()-1)->second;
     }
 
-    const Value& operator[](StringView id) const
+    template<MemoryDomain dom>
+    bool operator==(const IdMap<Value, dom>& other) const
     {
-        return (*const_cast<IdMap*>(this))[id];
+        if (size() != other.size())
+            return false;
+        for (size_t i = 0, s = size(); i < s; ++i)
+        {
+            if (m_content[i] != other.m_content[i])
+                return false;
+        }
+        return true;
     }
+
+    template<MemoryDomain dom>
+    bool operator!=(const IdMap<Value, dom>& other) const
+    {
+        return not (*this == other);
+    }
+
+    void reserve(size_t size) { m_content.reserve(size); }
+    size_t size() const { return m_content.size(); }
+    void clear() { m_content.clear(); }
 
     static const String& get_id(const value_type& v) { return v.first; }
 

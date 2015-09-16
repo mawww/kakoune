@@ -109,7 +109,7 @@ std::pair<String, int> ShellManager::eval(
             StringView name{match[1].first, match[1].second};
             kak_assert(name.length() > 0);
 
-            auto local_var = env_vars.find(name.str());
+            auto local_var = env_vars.find(name);
             if (local_var != env_vars.end())
                 setenv(("kak_" + name).c_str(), local_var->second.c_str(), 1);
             else try
