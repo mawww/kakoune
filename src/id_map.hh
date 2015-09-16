@@ -36,10 +36,15 @@ public:
 
     IdMap(std::initializer_list<Element> val)
         : m_content{val},
-          m_sorted(std::is_sorted(begin(), end(),
-                                  [](const Element& lhs, const Element& rhs)
-                                  { return lhs.hash < rhs.hash; }))
+          m_sorted(std::is_sorted(begin(), end(), cmp_hashes))
     {}
+
+    bool sorted() const { return m_sorted; }
+    void assume_sorted()
+    {
+        kak_assert(std::is_sorted(begin(), end(), cmp_hashes));
+        m_sorted = true;
+    }
 
     void append(const Element& value, bool keep_sorted = false)
     {
@@ -61,9 +66,7 @@ public:
     {
         if (keep_sorted and m_sorted)
         {
-            auto it = std::lower_bound(begin(), end(), value.hash,
-                                       [](const Element& e, size_t hash)
-                                       { return e.hash < hash; });
+            auto it = std::lower_bound(begin(), end(), value, cmp_hashes);
             m_content.insert(it, std::move(value));
         }
         else
@@ -143,9 +146,7 @@ public:
 
     void sort()
     {
-        std::sort(begin(), end(),
-                  [](const Element& lhs, const Element& rhs)
-                  { return lhs.hash < rhs.hash; });
+        std::sort(begin(), end(), cmp_hashes);
         m_sorted = true;
     }
 
@@ -164,6 +165,11 @@ public:
     const_iterator end()   const { return m_content.end(); }
 
 private:
+    static bool cmp_hashes(const Element& lhs, const Element& rhs)
+    {
+        return lhs.hash < rhs.hash;
+    }
+
     container_type m_content;
     bool m_sorted;
 };
