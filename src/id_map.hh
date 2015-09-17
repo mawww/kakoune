@@ -153,7 +153,7 @@ public:
     void reserve(size_t size) { m_content.reserve(size); }
     size_t size() const { return m_content.size(); }
     void clear() { m_content.clear(); }
-    void erase(const_iterator it) { m_content.erase(it); }
+    void erase(iterator it) { m_content.erase(it); }
 
     static const String& get_id(const Element& e) { return e.key; }
 
