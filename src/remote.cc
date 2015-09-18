@@ -89,7 +89,6 @@ public:
     void write(const IdMap<Val, domain>& map)
     {
         write<uint32_t>(map.size());
-        write<bool>(map.sorted());
         for (auto& val : map)
         {
             write(val.key);
@@ -221,7 +220,6 @@ template<typename Val, MemoryDomain domain>
 IdMap<Val, domain> read_idmap(int socket)
 {
     uint32_t size = read<uint32_t>(socket);
-    bool sorted = read<bool>(socket);
     IdMap<Val, domain> res;
     res.reserve(size);
     while (size--)
@@ -230,8 +228,6 @@ IdMap<Val, domain> read_idmap(int socket)
         auto val = read<Val>(socket);
         res.append({std::move(key), std::move(val)});
     }
-    if (sorted)
-        res.assume_sorted();
     return res;
 }
 

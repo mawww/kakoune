@@ -16,10 +16,10 @@ public:
     struct Element
     {
         Element(String k, Value v)
-            : key(std::move(k)), hash(hash_value(key)), value(std::move(v)) {}
+            : hash(hash_value(k)), key(std::move(k)), value(std::move(v)) {}
 
-        String key;
         size_t hash;
+        String key;
         Value value;
 
         bool operator==(const Element& other) const
@@ -32,69 +32,26 @@ public:
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
-    IdMap() : m_sorted(true) {}
+    IdMap() = default;
 
-    IdMap(std::initializer_list<Element> val)
-        : m_content{val},
-          m_sorted(std::is_sorted(begin(), end(), cmp_hashes))
-    {}
+    IdMap(std::initializer_list<Element> val) : m_content{val} {}
 
-    bool sorted() const { return m_sorted; }
-    void assume_sorted()
+    void append(const Element& value)
     {
-        kak_assert(std::is_sorted(begin(), end(), cmp_hashes));
-        m_sorted = true;
+        m_content.push_back(value);
     }
 
-    void append(const Element& value, bool keep_sorted = false)
+    void append(Element&& value)
     {
-        if (keep_sorted and m_sorted)
-        {
-            auto it = std::lower_bound(begin(), end(), value.hash,
-                                       [](const Element& e, size_t hash)
-                                       { return e.hash < hash; });
-            m_content.insert(it, value);
-        }
-        else
-        {
-            m_content.push_back(value);
-            m_sorted = false;
-        }
-    }
-
-    void append(Element&& value, bool keep_sorted = false)
-    {
-        if (keep_sorted and m_sorted)
-        {
-            auto it = std::lower_bound(begin(), end(), value, cmp_hashes);
-            m_content.insert(it, std::move(value));
-        }
-        else
-        {
-            m_content.push_back(std::move(value));
-            m_sorted = false;
-        }
+        m_content.push_back(std::move(value));
     }
 
     iterator find(StringView id)
     {
         const size_t hash = hash_value(id);
-        if (m_sorted)
-        {
-            auto it = std::lower_bound(begin(), end(), hash,
-                                       [](const Element& e, size_t hash)
-                                       { return e.hash < hash; });
-            for (auto e = end(); it != e and it->hash == hash; ++it)
-            {
-                if (it->key == id)
-                    return it;
-            }
-            return end();
-        }
-        else
-            return std::find_if(begin(), end(),
-                                [id, hash](const Element& e)
-                                { return e.hash == hash and e.key == id; });
+        return std::find_if(begin(), end(),
+                            [id, hash](const Element& e)
+                            { return e.hash == hash and e.key == id; });
     }
 
     const_iterator find(StringView id) const
@@ -144,12 +101,6 @@ public:
         return not (*this == other);
     }
 
-    void sort()
-    {
-        std::sort(begin(), end(), cmp_hashes);
-        m_sorted = true;
-    }
-
     void reserve(size_t size) { m_content.reserve(size); }
     size_t size() const { return m_content.size(); }
     void clear() { m_content.clear(); }
@@ -165,13 +116,7 @@ public:
     const_iterator end()   const { return m_content.end(); }
 
 private:
-    static bool cmp_hashes(const Element& lhs, const Element& rhs)
-    {
-        return lhs.hash < rhs.hash;
-    }
-
     container_type m_content;
-    bool m_sorted;
 };
 
 }

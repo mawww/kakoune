@@ -9,7 +9,7 @@ void AliasRegistry::add_alias(String alias, String command)
 {
     kak_assert(not alias.empty());
     kak_assert(CommandManager::instance().command_defined(command));
-    m_aliases.append({std::move(alias), std::move(command) }, true);
+    m_aliases.append({std::move(alias), std::move(command) });
 }
 
 void AliasRegistry::remove_alias(StringView alias)

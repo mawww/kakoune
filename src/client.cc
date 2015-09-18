@@ -26,8 +26,6 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
                       std::move(name)},
       m_env_vars(env_vars)
 {
-    m_env_vars.sort();
-
     context().set_client(*this);
     context().set_window(*m_window);
 
