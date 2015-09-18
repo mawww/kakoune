@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Kakoune - Official site</title>
+
+        <meta name="description" content="The official website of Kakoune, a vim inspired text editor">
+        <meta name="author" content="@lenormf">
+        <link rel="icon" type="image/png" href="/img/favicon16.png">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Gafata" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="/css/default.css">
+    </head>
+
+    <body>
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/">
+                        <img alt="kakoune logo" src="/img/kakoune_logo_32.png">
+                    </a>
+                    <p class="navbar-text"><b>Kakoune</b></p>
+                </div>
+
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li><a href="https://github.com/mawww/kakoune#2-getting-started"><i class="fa fa-fw fa-flag"></i>&nbsp;Get started!</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/blob/master/README.asciidoc#3-basic-interaction"><i class="fa fa-fw fa-list-alt"></i>&nbsp;Documentation</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/issues"><i class="fa fa-fw fa-bug"></i>&nbsp;Issue Tracker</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/wiki"><i class="fa fa-fw fa-group"></i>&nbsp;Wiki</a></li>
+                        <li><a href="https://github.com/mawww/kakoune/blob/master/doc/design.asciidoc"><i class="fa fa-fw fa-book"></i>&nbsp;Design Notes</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div id="kak-preview" class="col-sm-12">
+                    <div class="row-fluid">
+                        <div class="col-sm-8 col-sm-offset-2">
+                            <div id="kak-preview-pitch">Vim inspired · Faster as in less keystrokes<br>Multiple selections · Orthogonal design</div>
+                        </div>
+                    </div>
+
+                    <div class="row-fluid">
+                        <div class="col-sm-10 col-sm-offset-1">
+                            <div id="kak-preview-logo"><img src="/img/kakoune_logo_full.png"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row-fluid">
+                <div id="kak-features" class="col-sm-10 col-sm-offset-1">
+                    <div class="col-sm-12">
+                        <h1 class="page-header">Features</h1>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="col-sm-6">
+                            <div class="feature-title">
+                                <i class="fa fa-fw fa-object-group"></i>&nbsp;Multiple selections
+                            </div>
+
+                            <div class="feature-text">
+                                Multiple selections are the central way
+                                of interacting in <i>Kakoune</i>, with powerful handling primitives (regex
+                                matches, filtering, splitting, aligning, text objects etc).
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="feature-title">
+                                <i class="fa fa-fw fa-magic"></i>&nbsp;Text editing tools
+                            </div>
+
+                            <div class="feature-text">
+                                <i>Kakoune</i> implements several tools to help
+                                editing/writing text: contextual help, as-you-type completion, syntax
+                                highlighting for several programming languages…
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="col-sm-6">
+                            <div class="feature-title">
+                                <i class="fa fa-fw fa-filter"></i>&nbsp;Advanced text manipulation primitives
+                            </div>
+
+                            <div class="feature-text">
+                                Text can be selected and modified at
+                                will in multiple ways, thanks to several primitives: selection rotation,
+                                case manipulation, indentation leveling…
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="feature-title">
+                                <i class="fa fa-fw fa-gears"></i>&nbsp;Customization
+                            </div>
+
+                            <div class="feature-text">
+                                Users can extend the features of <i>Kakoune</i>
+                                or customize them to their liking with macros or hooks.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="col-sm-6">
+                            <div class="feature-title">
+                                <i class="fa fa-fw fa-sitemap"></i>&nbsp;Client/Server architecture
+                            </div>
+
+                            <div class="feature-text">
+                                With <i>Kakoune</i>, you can collaboratively
+                                edit the same file: all new windows created by the editor are clients,
+                                and can simultaneously modify the content of a file. As such, windows
+                                are fully under the control of your windows manager (through the X
+                                server), and even benefit from <i>Kakoune</i>'s <a href="https://tmux.github.io/">tmux</a>
+                                support.
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="feature-title">
+                                <i class="fa fa-fw fa-tachometer"></i>&nbsp;Active development & support
+                            </div>
+
+                            <div class="feature-text">
+                                The project is actively developed, and
+                                regularly implements new features, and integrates pull requests proposed
+                                by the contributors. Users can also ask their questions and share their
+                                remark with the rest of the community, on <b>#kakoune</b> @ irc.
+                                freenode.net.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row-fluid">
+                <div class="col-sm-10 col-sm-offset-1">
+                    <div class="col-sm-12">
+                        <h1 class="page-header">Screenshots</h1>
+                    </div>
+
+                    <div class="col-sm-12">
+                        <div class="col-sm-6">
+                            <div class="screenshot-title">
+                                <i>Kakoune</i> in <a href="http://i3wm.org/">i3</a>
+                            </div>
+
+                            <div class="row-fluid">
+                                <img src="/img/screenshots/screenshot-i3.gif" class="img-responsive">
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="screenshot-title">
+                                <i>Kakoune</i> in <a href="https://tmux.github.io/">tmux</a>
+                            </div>
+
+                            <div class="row-fluid">
+                                <img src="/img/screenshots/screenshot-tmux.gif" class="img-responsive">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row-fluid">
+                <div id="footer" class="col-sm-8 col-sm-offset-2">
+                    2012-2015 · <a href="https://github.com/mawww/<i>kakoune</i>"><i>kakoune</i></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

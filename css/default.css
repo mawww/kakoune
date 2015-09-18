@@ -1,0 +1,87 @@
+
+* {
+    font-family: "Gafata", sans-serif;
+}
+
+body {
+    padding-top: 50px;
+}
+
+a {
+    color: #fa5300;
+}
+
+a:focus,
+a:hover {
+    color: #f52500;
+}
+
+#kak-preview {
+    padding-top: 1.3em;
+    padding-bottom: 1.3em;
+    background: #6c8646;
+    background: -moz-linear-gradient(top, #6c8646 0%, #6c8646 47%, #3f763f 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#6c8646), color-stop(47%,#6c8646), color-stop(100%,#3f763f));
+    background: -webkit-linear-gradient(top, #6c8646 0%,#6c8646 47%,#3f763f 100%);
+    background: -o-linear-gradient(top, #6c8646 0%,#6c8646 47%,#3f763f 100%);
+    background: -ms-linear-gradient(top, #6c8646 0%,#6c8646 47%,#3f763f 100%);
+    background: linear-gradient(to bottom, #6c8646 0%,#6c8646 47%,#3f763f 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#6c8646", endColorstr="#3f763f",GradientType=0);
+}
+
+#kak-preview-pitch {
+    color: #EAEAEA;
+    font-size: 1.3em;
+    text-align: center;
+    margin-bottom: .5em;
+}
+
+#kak-preview-logo {
+    text-align: center;
+}
+
+#kak-features {
+    background-color: #FAFAFA;
+}
+
+#footer {
+    margin-top: 1em;
+    padding: .5em;
+    font-size: .9em;
+    color: #ACACAC;
+    border-top: 1px solid #CCC;
+    text-align: center;
+}
+
+.navbar-default {
+    border-color: #ACACAC;
+}
+
+.navbar-brand {
+    padding: 10px 0 10px 10px;
+}
+
+.navbar > .container .navbar-brand,
+.navbar > .container-fluid .navbar-brand {
+    margin-left: 0;
+}
+
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.feature-title {
+    font-size: 1.2em;
+    color: #fa5300;
+}
+
+.feature-text {
+    text-align: justify;
+    margin-bottom: 1em;
+}
+
+.screenshot-title {
+    font-size: 1.2em;
+    margin-bottom: .5em;
+}
