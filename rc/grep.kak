@@ -49,6 +49,7 @@ def grep-next -docstring 'Jump to next grep match' %{
         exec "%opt{_grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
         grep-jump
     }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{_grep_current_line}g } }
 }
 
 def grep-prev -docstring 'Jump to previous grep match' %{
@@ -57,4 +58,5 @@ def grep-prev -docstring 'Jump to previous grep match' %{
         exec "%opt{_grep_current_line}g<a-/>^[^:]+:\d+:<ret>"
         grep-jump
     }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{_grep_current_line}g } }
 }

@@ -52,6 +52,7 @@ def make-next -docstring 'Jump to next error' %{
         exec "%opt{_make_current_error_line}g<a-l>/[0-9]+: (?:fatal )?error:<ret>"
         make-jump
     }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{_make_current_error_line}g } }
 }
 
 def make-prev -docstring 'Jump to previous error' %{
@@ -60,4 +61,5 @@ def make-prev -docstring 'Jump to previous error' %{
         exec "%opt{_make_current_error_line}g<a-h><a-/>[0-9]+: (?:fatal )?error:<ret>"
         make-jump
     }
+    try %{ eval -client %opt{toolsclient} %{ exec %opt{_make_current_error_line}g } }
 }
