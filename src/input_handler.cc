@@ -1054,11 +1054,11 @@ public:
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
                 [this](Key key, Context&) {
-                    if (key == 'f')
+                    if (key.key == 'f')
                         m_completer.explicit_file_complete();
-                    if (key == 'w')
+                    if (key.key == 'w')
                         m_completer.explicit_word_complete();
-                    if (key == 'l')
+                    if (key.key == 'l')
                         m_completer.explicit_line_complete();
             }, "Complete",
             " Enter completion type:\n"
