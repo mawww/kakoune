@@ -891,6 +891,7 @@ const CommandDesc echo_cmd = {
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
         { { "color", { true,  "set message color" } },
+          { "markup", { false, "parse markup" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
@@ -902,6 +903,8 @@ const CommandDesc echo_cmd = {
         String message = join(parser, ' ', false);
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
+        else if (parser.get_switch("markup"))
+            context.print_status(parse_display_line(message, get_face("StatusLine")));
         else
         {
             auto face = get_face(parser.get_switch("color").value_or("StatusLine").str());

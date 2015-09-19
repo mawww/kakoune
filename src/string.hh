@@ -118,6 +118,8 @@ public:
     [[gnu::always_inline]]
     void append(const char* data, ByteCount count) { m_data.append(data, (size_t)(int)count); }
 
+    void clear() { m_data.clear(); }
+
     void push_back(char c) { m_data.push_back(c); }
     void resize(ByteCount size) { m_data.resize((size_t)(int)size); }
     void reserve(ByteCount size) { m_data.reserve((size_t)(int)size); }

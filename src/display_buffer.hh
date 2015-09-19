@@ -140,6 +140,8 @@ private:
     AtomList  m_atoms;
 };
 
+DisplayLine parse_display_line(StringView line, Face default_face);
+
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:

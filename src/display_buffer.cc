@@ -4,6 +4,8 @@
 #include "buffer.hh"
 #include "utf8.hh"
 
+#include "face_registry.hh"
+
 namespace Kakoune
 {
 
@@ -250,4 +252,55 @@ void DisplayBuffer::optimize()
     for (auto& line : m_lines)
         line.optimize();
 }
+
+DisplayLine parse_display_line(StringView line, Face default_face)
+{
+    DisplayLine res;
+    bool was_antislash = false;
+    auto pos = line.begin();
+    String content;
+    Face face = default_face;
+    for (auto it = line.begin(), end = line.end(); it != end; ++it)
+    {
+        const char c = *it;
+        if (c == '{')
+        {
+            if (was_antislash)
+            {
+                content += StringView{pos, it};
+                content.back() = '{';
+                pos = it + 1;
+            }
+            else
+            {
+                content += StringView{pos, it};
+                res.push_back({std::move(content), face});
+                content.clear();
+                auto closing = std::find(it+1, end, '}');
+                if (closing == end)
+                    throw runtime_error("unclosed face definition");
+                face = merge_faces(default_face, get_face({it+1, closing}));
+                it = closing;
+                pos = closing + 1;
+            }
+            was_antislash = false;
+        }
+        if (c == '\\')
+        {
+            if (was_antislash)
+            {
+                content += StringView{pos, it};
+                pos = it + 1;
+                was_antislash = false;
+            }
+            else
+                was_antislash = true;
+        }
+    }
+    content += StringView{pos, line.end()};
+    if (not content.empty())
+        res.push_back({std::move(content), face});
+    return res;
+}
+
 }
