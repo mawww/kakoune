@@ -3,10 +3,12 @@
 #include "face_registry.hh"
 #include "context.hh"
 #include "buffer_manager.hh"
+#include "buffer_utils.hh"
 #include "user_interface.hh"
 #include "file.hh"
 #include "remote.hh"
 #include "client_manager.hh"
+#include "command_manager.hh"
 #include "event_manager.hh"
 #include "window.hh"
 
@@ -97,30 +99,39 @@ void Client::print_status(DisplayLine status_line)
 
 DisplayLine Client::generate_mode_line() const
 {
-    auto pos = context().selections().main().cursor();
-    auto col = context().buffer()[pos.line].char_count_to(pos.column);
+    Face status_face = get_face("StatusLine");
 
-    DisplayLine status;
+    DisplayLine modeline;
+    try
+    {
+        const String& modelinefmt = context().options()["modelinefmt"].get<String>();
+
+        modeline = parse_display_line(expand(modelinefmt, context()), status_face);
+    }
+    catch (runtime_error& err)
+    {
+        write_to_debug_buffer(format("Error while parsing modelinefmt: {}", err.what()));
+        modeline.push_back({ "modelinefmt error, see *debug* buffer", get_face("Error") });
+    }
+
     Face info_face = get_face("Information");
 
-    status.push_back({ context().buffer().display_name() });
-    status.push_back({ format(" {}:{} ", pos.line+1, col+1) });
     if (context().buffer().is_modified())
-        status.push_back({ "[+]", info_face });
+        modeline.push_back({ "[+]", info_face });
     if (m_input_handler.is_recording())
-        status.push_back({ format("[recording ({})]", m_input_handler.recording_reg()), info_face });
+        modeline.push_back({ format("[recording ({})]", m_input_handler.recording_reg()), info_face });
     if (context().buffer().flags() & Buffer::Flags::New)
-        status.push_back({ "[new file]", info_face });
+        modeline.push_back({ "[new file]", info_face });
     if (context().user_hooks_disabled())
-        status.push_back({ "[no-hooks]", info_face });
+        modeline.push_back({ "[no-hooks]", info_face });
     if (context().buffer().flags() & Buffer::Flags::Fifo)
-        status.push_back({ "[fifo]", info_face });
-    status.push_back({ " " });
+        modeline.push_back({ "[fifo]", info_face });
+    modeline.push_back({ " " });
     for (auto& atom : m_input_handler.mode_line())
-        status.push_back(std::move(atom));
-    status.push_back({ format(" - {}@[{}]", context().name(), Server::instance().session()) });
+        modeline.push_back(std::move(atom));
+    modeline.push_back({ format(" - {}@[{}]", context().name(), Server::instance().session()) });
 
-    return status;
+    return modeline;
 }
 
 void Client::change_buffer(Buffer& buffer)

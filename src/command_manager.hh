@@ -104,8 +104,8 @@ private:
 };
 
 String expand(StringView str, const Context& context,
-              ConstArrayView<String> shell_params,
-              const EnvVarMap& env_vars);
+              ConstArrayView<String> shell_params = {},
+              const EnvVarMap& env_vars = EnvVarMap{});
 
 }
 

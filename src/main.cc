@@ -229,6 +229,8 @@ void register_options()
                        "colon separated list of <key>=<value> options that are"
                        "passed to and interpreted by the user interface",
                        UserInterface::Options{});
+    reg.declare_option("modelinefmt", "format string used to generate the modeline",
+                       "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
 }
 
 std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
