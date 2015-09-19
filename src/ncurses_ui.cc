@@ -471,9 +471,8 @@ void NCursesUI::check_resize(bool force)
     else
         kak_assert(false);
 
-    m_dirty = true;
     ungetch(KEY_RESIZE);
-    clearok(curscr, true);
+    werase(curscr);
 }
 
 bool NCursesUI::is_key_available()
