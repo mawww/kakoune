@@ -48,6 +48,7 @@ struct Token
     enum class Type
     {
         Raw,
+        RawQuoted,
         RawEval,
         ShellExpand,
         RegisterExpand,
@@ -188,7 +189,7 @@ template<bool throw_on_invalid>
 Token::Type token_type(StringView type_name)
 {
     if (type_name == "")
-        return Token::Type::Raw;
+        return Token::Type::RawQuoted;
     else if (type_name == "sh")
         return Token::Type::ShellExpand;
     else if (type_name == "reg")
@@ -200,7 +201,7 @@ Token::Type token_type(StringView type_name)
     else if (throw_on_invalid)
         throw unknown_expand{type_name};
     else
-        return Token::Type::Raw;
+        return Token::Type::RawQuoted;
 }
 
 void skip_blanks_and_comments(Reader& reader)
@@ -295,7 +296,7 @@ TokenList parse(StringView line)
             if (throw_on_unterminated and not reader)
                 throw parse_error{format("unterminated string {0}...{0}", c)};
             result.emplace_back(c == '"' ? Token::Type::RawEval
-                                         : Token::Type::Raw,
+                                         : Token::Type::RawQuoted,
                                 start, reader.pos, coord, std::move(token));
         }
         else if (c == '%')
@@ -346,6 +347,7 @@ String expand_token(const Token& token, const Context& context,
     case Token::Type::RawEval:
         return expand(content, context, shell_params, env_vars);
     case Token::Type::Raw:
+    case Token::Type::RawQuoted:
         return content;
     default: kak_assert(false);
     }
@@ -483,7 +485,8 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
 
     CommandInfo res;
     if (cmd_idx == tokens.size() or
-        tokens[cmd_idx].type() != Token::Type::Raw)
+        (tokens[cmd_idx].type() != Token::Type::Raw and
+         tokens[cmd_idx].type() != Token::Type::RawQuoted))
         return res;
 
     auto cmd = find_command(context, tokens[cmd_idx].content());
@@ -501,7 +504,9 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
              it != tokens.end() and it->type() != Token::Type::CommandSeparator;
              ++it)
         {
-            if (it->type() == Token::Type::Raw or it->type() == Token::Type::RawEval)
+            if (it->type() == Token::Type::Raw or
+                it->type() == Token::Type::RawQuoted or
+                it->type() == Token::Type::RawEval)
                 params.push_back(it->content());
         }
         String helpstr = cmd->second.helper(context, params);
@@ -554,7 +559,8 @@ Completions CommandManager::complete(const Context& context,
     // command name completion
     if (tokens.empty() or
         (tok_idx == cmd_idx and (tok_idx == tokens.size() or
-                                 tokens[tok_idx].type() == Token::Type::Raw)))
+                                 tokens[tok_idx].type() == Token::Type::Raw or
+                                 tokens[tok_idx].type() == Token::Type::RawQuoted)))
     {
         const bool is_end_token = tok_idx == tokens.size();
         ByteCount cmd_start =  is_end_token ? cursor_pos
@@ -586,7 +592,7 @@ Completions CommandManager::complete(const Context& context,
     ByteCount cursor_pos_in_token = cursor_pos - start;
 
     const Token::Type type = tok_idx < tokens.size() ?
-                              tokens[tok_idx].type() : Token::Type::Raw;
+                             tokens[tok_idx].type() : Token::Type::Raw;
     switch (type)
     {
     case Token::Type::OptionExpand:
@@ -599,6 +605,8 @@ Completions CommandManager::complete(const Context& context,
                                          cursor_pos_in_token), start);
 
     case Token::Type::Raw:
+    case Token::Type::RawQuoted:
+    case Token::Type::RawEval:
     {
         if (tokens[cmd_idx].type() != Token::Type::Raw)
             return Completions{};
@@ -615,14 +623,16 @@ Completions CommandManager::complete(const Context& context,
             params.push_back(it->content());
         if (tok_idx == tokens.size())
             params.push_back("");
-        Completions completions = command_it->second.completer(
+        Completions completions = offset_pos(command_it->second.completer(
             context, flags, params, tok_idx - cmd_idx - 1,
-            cursor_pos_in_token);
-        completions.start += start;
-        completions.end += start;
+            cursor_pos_in_token), start);
 
-        for (auto& candidate : completions.candidates)
-            candidate = escape(candidate, " \t;", '\\');
+        if (type != Token::Type::RawQuoted)
+        {
+            StringView to_escape = type == Token::Type::Raw ? "% \t;" : "%";
+            for (auto& candidate : completions.candidates)
+                candidate = escape(candidate, to_escape, '\\');
+        }
 
         return completions;
     }
