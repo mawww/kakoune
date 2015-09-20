@@ -91,10 +91,13 @@ String unescape(StringView str, StringView characters, char escape)
         {
             res += StringView{it, next+1};
             res.back() = *(next+1);
+            it = next + 2;
         }
         else
+        {
             res += StringView{it, next == end ? next : next + 1};
-        it = next == end ? next : next + 1;
+            it = next == end ? next : next + 1;
+        }
     }
     return res;
 }
