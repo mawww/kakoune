@@ -904,7 +904,7 @@ const CommandDesc echo_cmd = {
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
-            context.print_status(parse_display_line(message, get_face("StatusLine")));
+            context.print_status(parse_display_line(message));
         else
         {
             auto face = get_face(parser.get_switch("color").value_or("StatusLine").str());

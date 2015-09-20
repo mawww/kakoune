@@ -99,14 +99,12 @@ void Client::print_status(DisplayLine status_line)
 
 DisplayLine Client::generate_mode_line() const
 {
-    Face status_face = get_face("StatusLine");
-
     DisplayLine modeline;
     try
     {
         const String& modelinefmt = context().options()["modelinefmt"].get<String>();
 
-        modeline = parse_display_line(expand(modelinefmt, context()), status_face);
+        modeline = parse_display_line(expand(modelinefmt, context()));
     }
     catch (runtime_error& err)
     {

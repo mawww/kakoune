@@ -253,13 +253,13 @@ void DisplayBuffer::optimize()
         line.optimize();
 }
 
-DisplayLine parse_display_line(StringView line, Face default_face)
+DisplayLine parse_display_line(StringView line)
 {
     DisplayLine res;
     bool was_antislash = false;
     auto pos = line.begin();
     String content;
-    Face face = default_face;
+    Face face;
     for (auto it = line.begin(), end = line.end(); it != end; ++it)
     {
         const char c = *it;
@@ -279,7 +279,7 @@ DisplayLine parse_display_line(StringView line, Face default_face)
                 auto closing = std::find(it+1, end, '}');
                 if (closing == end)
                     throw runtime_error("unclosed face definition");
-                face = merge_faces(default_face, get_face({it+1, closing}));
+                face = get_face({it+1, closing});
                 it = closing;
                 pos = closing + 1;
             }
