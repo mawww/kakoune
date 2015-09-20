@@ -604,6 +604,15 @@ line using:
 :echo %sh{ ls -l $kak_bufname }
 -------------------------------
 
+Markup strings
+^^^^^^^^^^^^^^
+
+In certain context, kakoune can take a markup string, which is a string containing
+formatting informations. In these strings, syntax `{facename}` will enable the
+face _facename_ until another face gets activated (or the end of the string.
+Literal `{` shall be written `\{`, and literal `\` that preceed a `{` shall
+be written `\\`
+
 Configuration & Autoloading
 ---------------------------
 
@@ -725,6 +734,9 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
      apply in the buffer, and the other strings are the candidates.
  * `autoreload` _yesnoask_: auto reload the buffers when an external
    modification is detected.
+ * `modelinefmt` _string_: A format string used to generate the mode line, that
+   string is first expanded as a command line would be (expanding `%...{...}`
+   strings), then markup tags are applied (see <<Markup strings>>).
  * `ui_options`: colon separated list of key=value pairs that are forwarded to
    the user interface implementation. The NCurses UI support the following options:
    - `ncurses_set_title`: if `yes` or `true`, the terminal emulator title will
