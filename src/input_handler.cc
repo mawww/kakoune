@@ -698,7 +698,7 @@ public:
                 // search for the next history entry matching typed prefix
                 ++m_history_it;
                 while (m_history_it != history.end() and
-                       prefix_match(*m_history_it, m_prefix))
+                       not prefix_match(*m_history_it, m_prefix))
                     ++m_history_it;
 
                 if (m_history_it != history.end())
