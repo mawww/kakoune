@@ -349,8 +349,8 @@ UnitTest test_string{[]()
     kak_assert(splitedview[5] == "hihi\\");
     kak_assert(splitedview[6] == "");
 
-    String escaped = escape("youpi:matin:tchou:", ':', '\\');
-    kak_assert(escaped == "youpi\\:matin\\:tchou\\:");
+    kak_assert(escape("youpi:matin:tchou:", ':', '\\') == "youpi\\:matin\\:tchou\\:");
+    kak_assert(unescape("youpi\\:matin\\:tchou\\:", ':', '\\') == "youpi:matin:tchou:");
 
     kak_assert(prefix_match("tchou kanaky", "tchou"));
     kak_assert(prefix_match("tchou kanaky", "tchou kanaky"));
