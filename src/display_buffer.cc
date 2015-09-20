@@ -296,6 +296,13 @@ DisplayLine parse_display_line(StringView line, Face default_face)
             else
                 was_antislash = true;
         }
+        if (c == '\n') // line breaks are forbidden, replace with space
+        {
+            content += StringView{pos, it+1};
+            content.back() = ' ';
+            pos = it + 1;
+            was_antislash = false;
+        }
     }
     content += StringView{pos, line.end()};
     if (not content.empty())
