@@ -1,6 +1,19 @@
+debug ?= yes
+ifeq ($(debug),yes)
+    CPPFLAGS += -DKAK_DEBUG
+    suffix := .debug
+else
+    ifeq ($(debug),no)
+        CXXFLAGS += -O3
+        suffix := .opt
+    else
+        $(error debug should be either yes or no)
+    endif
+endif
+
 sources := $(wildcard *.cc)
-objects := $(addprefix ., $(sources:.cc=.o))
-deps := $(addprefix ., $(sources:.cc=.d))
+objects := $(addprefix ., $(sources:.cc=$(suffix).o))
+deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
@@ -23,24 +36,13 @@ else
     LDFLAGS += -rdynamic
 endif
 
-debug ?= yes
-ifeq ($(debug),yes)
-    CPPFLAGS += -DKAK_DEBUG
-else
-    ifeq ($(debug),no)
-        CXXFLAGS += -O3
-    else
-        $(error debug should be either yes or no)
-    endif
-endif
-
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
 
 -include $(deps)
 
-.%.o: %.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=.d)) -c -o $@ $<
+.%$(suffix).o: %.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
 test:
 	cd ../test && ./run
