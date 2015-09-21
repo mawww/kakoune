@@ -94,12 +94,14 @@ hook global WinSetOption filetype=(cpp|objc) %[
     hook window InsertChar \} -group c-family-indent _c-family-indent-on-closing-curly-brace
 
     alias window alt c-family-alternative-file
+    alias window comment-selection c-family-comment-selection
 ]
 
 hook global WinSetOption filetype=(?!cpp|objc).* %[
     rmhooks window c-family-indent
     rmhooks window c-family-hooks
     unalias window alt c-family-alternative-file
+    unalias window comment-selection c-family-comment-selection
 ]
 
 hook global WinSetOption filetype=cpp %[ addhl ref cpp ]
@@ -151,3 +153,25 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
        echo "echo -color Error 'alternative file not found'"
     fi
 }}
+
+def c-family-comment-selection -docstring "Comment the current selection" %{
+    try %{
+        ## The selection is empty
+        exec %{<a-K>\A[\h\v]*\z<ret>}
+
+        try %{
+            ## The selection has already been commented
+            exec %{<a-K>\A[\h\v]*/\*.*\*/[\h\v]*\z<ret>}
+
+            try %{
+                ## Comment the selection
+                exec %{a */<esc>i/* <esc>3H}
+            }
+        } catch %{
+            try %{
+                ## Uncomment the commented selection
+                exec %{s(\A(?:[\h\v]*)/\* ?)|( ?\*/(?:[\h\v]*)\z)<ret>d }
+            }
+        }
+    }
+}
