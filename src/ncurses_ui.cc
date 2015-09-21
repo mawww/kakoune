@@ -472,6 +472,7 @@ void NCursesUI::check_resize(bool force)
         kak_assert(false);
 
     ungetch(KEY_RESIZE);
+    clearok(curscr, true);
     werase(curscr);
 }
 
