@@ -31,6 +31,7 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
         # displayed.
         (
             case ${kak_opt_filetype} in
+                c) ft=c ;;
                 cpp) ft=c++ ;;
                 obj-c) ft=objective-c ;;
                 *) ft=c++ ;;
