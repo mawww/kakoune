@@ -42,6 +42,13 @@ a:hover {
     margin-bottom: .5em;
 }
 
+#kak-title {
+    color: #EAEAEA;
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: .5em;
+}
+
 #kak-preview-logo {
     text-align: center;
 }
