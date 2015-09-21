@@ -1,13 +1,24 @@
-hook global BufCreate .*\.(c|cc|cpp|cxx|C|h|hh|hpp|hxx|H) %{
+hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set buffer filetype cpp
+    set buffer mimetype ''
 }
 
-hook global BufSetOption mimetype=text/x-c(\+\+)? %{
+hook global BufCreate .*\.(c|h)$ %{
+    set buffer filetype c
+    set buffer mimetype ''
+}
+
+hook global BufSetOption mimetype=text/x-c %{
+    set buffer filetype c
+}
+
+hook global BufSetOption mimetype=text/x-c\+\+ %{
     set buffer filetype cpp
 }
 
 hook global BufCreate .*\.m %{
     set buffer filetype objc
+    set buffer mimetype ''
 }
 
 hook global BufSetOption mimetype=text/x-objc %{
@@ -49,7 +60,7 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 
 # Regions definition are the same between c++ and objective-c
 %sh{
-    for ft in cpp objc; do
+    for ft in c cpp objc; do
         if [ "${ft}" = "objc" ]; then
             maybe_at='@?'
         else
@@ -71,6 +82,12 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
     done
 }
 
+# c specific
+addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+addhl -group /c/code regex "\<(void|int|char|unsigned|float|double|size_t)\>" 0:type
+addhl -group /c/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|sizeof)\>" 0:keyword
+addhl -group /c/code regex "\<(const|inline|static|volatile|struct|enum|union|typedef|extern)\>" 0:attribute
+
 # c++ specific
 addhl -group /cpp/code regex %{\<(this|true|false|NULL|nullptr|)\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 addhl -group /cpp/code regex "\<(void|int|char|unsigned|float|double|bool|size_t)\>" 0:type
@@ -85,7 +102,7 @@ addhl -group /objc/code regex "\<(const|auto|inline|static|volatile|struct|enum|
 addhl -group /objc/code regex "@(property|synthesize|interface|implementation|protocol|end|selector|autoreleasepool|try|catch|class|synchronized)\>" 0:attribute
 addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 
-hook global WinSetOption filetype=(cpp|objc) %[
+hook global WinSetOption filetype=(c|cpp|objc) %[
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group c-family-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
 
@@ -97,18 +114,21 @@ hook global WinSetOption filetype=(cpp|objc) %[
     alias window comment-selection c-family-comment-selection
 ]
 
-hook global WinSetOption filetype=(?!cpp|objc).* %[
+hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
     rmhooks window c-family-indent
     rmhooks window c-family-hooks
     unalias window alt c-family-alternative-file
     unalias window comment-selection c-family-comment-selection
 ]
 
+hook global WinSetOption filetype=c %[ addhl ref c ]
+hook global WinSetOption filetype=(?!c$).* %[ rmhl c ]
+
 hook global WinSetOption filetype=cpp %[ addhl ref cpp ]
-hook global WinSetOption filetype=(?!cpp).* %[ rmhl cpp ]
+hook global WinSetOption filetype=(?!cpp$).* %[ rmhl cpp ]
 
 hook global WinSetOption filetype=objc %[ addhl ref objc ]
-hook global WinSetOption filetype=(?!objc).* %[ rmhl objc ]
+hook global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
 
 def -hidden _c-family-insert-include-guards %{
     exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
