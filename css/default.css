@@ -4,7 +4,13 @@
 }
 
 body {
-    padding-top: 50px;
+    padding-top: 260px;
+}
+
+@media (min-width: 768px) {
+    body {
+        padding-top: 50px;
+    }
 }
 
 a {
