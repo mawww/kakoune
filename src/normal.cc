@@ -1084,15 +1084,15 @@ void replay_macro(Context& context, NormalParams params)
         throw runtime_error("recursive macros call detected");
 
     ConstArrayView<String> reg_val = RegisterManager::instance()[reg].values(context);
-    if (not reg_val.empty())
-    {
-        running_macros[idx] = true;
-        auto stop = on_scope_end([&]{ running_macros[idx] = false; });
+    if (reg_val.empty() or reg_val[0].empty())
+        throw runtime_error(format("Register '{}' is empty", reg));
 
-        auto keys = parse_keys(reg_val[0]);
-        ScopedEdition edition(context);
-        do { exec_keys(keys, context); } while (--params.count > 0);
-    }
+    running_macros[idx] = true;
+    auto stop = on_scope_end([&]{ running_macros[idx] = false; });
+
+    auto keys = parse_keys(reg_val[0]);
+    ScopedEdition edition(context);
+    do { exec_keys(keys, context); } while (--params.count > 0);
 }
 
 template<Direction direction>
