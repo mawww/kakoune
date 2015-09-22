@@ -196,10 +196,8 @@ def c-family-comment-selection -docstring "Comment the current selection" %{
             ## Comment the selection
             exec %{a */<esc>i/* <esc>3H}
         } catch %{
-            try %{
-                ## Uncomment the commented selection
-                exec -draft %{s(\A/\* )|( \*/\z)<ret>d}
-            }
+            ## Uncomment the commented selection
+            exec -draft %{s(\A/\* )|( \*/\z)<ret>d}
         }
     }
 }
@@ -219,10 +217,8 @@ def c-family-comment-line -docstring "Comment the current line" %{
             ## Comment the line
             exec %{i// <esc>3H}
         } catch %{
-            try %{
-                ## Uncomment the line
-                exec -draft %{s^//\h*<ret>d}
-            }
+            ## Uncomment the line
+            exec -draft %{s^//\h*<ret>d}
         }
     }
 }
