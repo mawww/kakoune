@@ -334,11 +334,9 @@ void NCursesUI::refresh()
     m_dirty = false;
 }
 
-using Utf8Policy = utf8::InvalidPolicy::Pass;
-using Utf8Iterator = utf8::iterator<const char*, Utf8Policy>;
-void addutf8str(WINDOW* win, Utf8Iterator begin, Utf8Iterator end)
+void add_str(WINDOW* win, StringView str)
 {
-    waddnstr(win, begin.base(), end.base() - begin.base());
+    waddnstr(win, str.begin(), (int)str.length());
 }
 
 void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
@@ -352,20 +350,18 @@ void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
         if (content.empty())
             continue;
 
-        if (content[content.length()-1] == '\n' and
-            content.char_length() - 1 < m_dimensions.column - col_index)
+        const auto remaining_columns = m_dimensions.column - col_index;
+        if (content.back() == '\n' and
+            content.char_length() - 1 < remaining_columns)
         {
-            addutf8str(m_window, Utf8Iterator{content.begin()},
-                                 Utf8Iterator{content.end()}-1);
+            add_str(m_window, content.substr(0, content.length()-1));
             waddch(m_window, ' ');
         }
         else
         {
-            Utf8Iterator begin{content.begin()}, end{content.end()};
-            if (end - begin > m_dimensions.column - col_index)
-                end = begin + (m_dimensions.column - col_index);
-            addutf8str(m_window, begin, end);
-            col_index += end - begin;
+            content = content.substr(0_char, remaining_columns);
+            add_str(m_window, content);
+            col_index += content.char_length();
         }
     }
 }
@@ -628,12 +624,10 @@ void NCursesUI::draw_menu()
             if (item_idx == m_selected_item)
                 wattron(m_menu.win, COLOR_PAIR(menu_fg));
 
-            StringView item = m_items[item_idx];
-            auto begin = item.begin();
-            auto end = utf8::advance(begin, item.end(), column_width);
-            addutf8str(m_menu.win, begin, end);
-            const CharCount pad = column_width - utf8::distance(begin, end);
-            waddstr(m_menu.win, String{' ' COMMA pad}.c_str());
+            StringView item = m_items[item_idx].substr(0_char, column_width);
+            add_str(m_menu.win, item);
+            const CharCount pad = column_width - item.char_length();
+            add_str(m_menu.win, String{' ' COMMA pad});
             wattron(m_menu.win, COLOR_PAIR(menu_bg));
         }
         const bool is_mark = line >= mark_line and
@@ -641,7 +635,7 @@ void NCursesUI::draw_menu()
         wclrtoeol(m_menu.win);
         wmove(m_menu.win, (int)line, (int)m_menu.size.column - 1);
         wattron(m_menu.win, COLOR_PAIR(menu_bg));
-        waddstr(m_menu.win, is_mark ? "█" : "░");
+        add_str(m_menu.win, is_mark ? "█" : "░");
     }
     m_dirty = true;
 }
@@ -727,6 +721,8 @@ void NCursesUI::menu_hide()
 
 static CharCoord compute_needed_size(StringView str)
 {
+    using Utf8Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
+
     CharCoord res{1,0};
     CharCount line_len = 0;
     for (Utf8Iterator begin{str.begin()}, end{str.end()};
@@ -894,7 +890,7 @@ void NCursesUI::info_show(StringView title, StringView content,
     {
         wmove(m_info.win, line++, 0);
         auto eol = std::find_if(it, end, [](char c) { return c == '\n'; });
-        addutf8str(m_info.win, Utf8Iterator(it), Utf8Iterator(eol));
+        add_str(m_info.win, {it, eol});
         if (eol == end)
            break;
         it = eol + 1;
