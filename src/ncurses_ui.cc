@@ -721,17 +721,15 @@ void NCursesUI::menu_hide()
 
 static CharCoord compute_needed_size(StringView str)
 {
-    using Utf8Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
-
     CharCoord res{1,0};
     CharCount line_len = 0;
-    for (Utf8Iterator begin{str.begin()}, end{str.end()};
-         begin != end; ++begin)
+    for (auto it = str.begin(), end = str.end();
+         it != end; it = utf8::next(it, end))
     {
-        if (*begin == '\n')
+        if (*it == '\n')
         {
             // ignore last '\n', no need to show an empty line
-            if (begin+1 == end)
+            if (it+1 == end)
                 break;
 
             res.column = max(res.column, line_len);
