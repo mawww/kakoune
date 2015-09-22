@@ -3,8 +3,18 @@ hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set buffer mimetype ''
 }
 
-hook global BufCreate .*\.(c|h)$ %{
+hook global BufCreate .*\.c$ %{
     set buffer filetype c
+    set buffer mimetype ''
+}
+
+hook global BufCreate .*\.h$ %{
+    try %{
+        exec %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
+        set buffer filetype cpp
+    } catch %{
+        set buffer filetype c
+    }
     set buffer mimetype ''
 }
 
