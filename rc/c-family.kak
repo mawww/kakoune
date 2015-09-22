@@ -187,20 +187,41 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
 def c-family-comment-selection -docstring "Comment the current selection" %{
     try %{
         ## The selection is empty
-        exec %{<a-K>\A[\h\v]*\z<ret>}
+        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
 
         try %{
             ## The selection has already been commented
-            exec %{<a-K>\A[\h\v]*/\*.*\*/[\h\v]*\z<ret>}
+            exec -draft %{<a-K>\A/\*.*\*/\z<ret>}
 
-            try %{
-                ## Comment the selection
-                exec %{a */<esc>i/* <esc>3H}
-            }
+            ## Comment the selection
+            exec %{a */<esc>i/* <esc>3H}
         } catch %{
             try %{
                 ## Uncomment the commented selection
-                exec %{s(\A(?:[\h\v]*)/\* ?)|( ?\*/(?:[\h\v]*)\z)<ret>d }
+                exec -draft %{s(\A/\* )|( \*/\z)<ret>d}
+            }
+        }
+    }
+}
+
+def c-family-comment-line -docstring "Comment the current line" %{
+    ## Select the content of the line, without indentation
+    exec %{I<esc><a-l>}
+
+    try %{
+        ## There's no text on the line
+        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
+
+        try %{
+            ## The line has already been commented
+            exec -draft %{<a-K>^//<ret>}
+
+            ## Comment the line
+            exec %{i// <esc>3H}
+        } catch %{
+            try %{
+                ## Uncomment the line
+                exec -draft %{s^//\h*<ret>d}
             }
         }
     }
