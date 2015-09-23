@@ -15,7 +15,7 @@ namespace utf8
 
 // returns an iterator to next character first byte
 template<typename Iterator>
-Iterator next(Iterator it, Iterator end)
+Iterator next(Iterator it, const Iterator& end)
 {
     if (it != end and *it++ & 0x80)
         while (it != end and (*(it) & 0xC0) == 0x80)
@@ -26,7 +26,7 @@ Iterator next(Iterator it, Iterator end)
 // returns it's parameter if it points to a character first byte,
 // or else returns next character first byte
 template<typename Iterator>
-Iterator finish(Iterator it, Iterator end)
+Iterator finish(Iterator it, const Iterator& end)
 {
     while (it != end and (*(it) & 0xC0) == 0x80)
         ++it;
@@ -35,7 +35,7 @@ Iterator finish(Iterator it, Iterator end)
 
 // returns an iterator to the previous character first byte
 template<typename Iterator>
-Iterator previous(Iterator it, Iterator begin)
+Iterator previous(Iterator it, const Iterator& begin)
 {
     while (it != begin and (*(--it) & 0xC0) == 0x80)
            ;
@@ -46,7 +46,7 @@ Iterator previous(Iterator it, Iterator begin)
 // dth character after (or before if d < 0) the character
 // pointed by it
 template<typename Iterator>
-Iterator advance(Iterator it, Iterator end, CharCount d)
+Iterator advance(Iterator it, const Iterator& end, CharCount d)
 {
     if (d < 0)
     {
@@ -63,7 +63,7 @@ Iterator advance(Iterator it, Iterator end, CharCount d)
 
 // returns the character count between begin and end
 template<typename Iterator>
-CharCount distance(Iterator begin, Iterator end)
+CharCount distance(Iterator begin, const Iterator& end)
 {
     CharCount dist = 0;
     while (begin != end)
@@ -83,7 +83,7 @@ inline bool is_character_start(char c)
 
 // returns an iterator to the first byte of the character it is into
 template<typename Iterator>
-Iterator character_start(Iterator it, Iterator begin)
+Iterator character_start(Iterator it, const Iterator& begin)
 {
     while (it != begin and not is_character_start(*it))
         --it;
@@ -109,7 +109,7 @@ struct Pass
 // is pointed by it
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
          typename Iterator>
-Codepoint codepoint(Iterator it, Iterator end)
+Codepoint codepoint(Iterator it, const Iterator& end)
 {
     if (it == end)
         return InvalidPolicy{}(-1);
