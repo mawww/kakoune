@@ -10,7 +10,7 @@ namespace Kakoune
 
 Selection select_line(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator first = buffer.iterator_at(selection.cursor());
+    Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
     if (*first == '\n' and first + 1 != buffer.end())
         ++first;
 
@@ -26,7 +26,7 @@ Selection select_line(const Buffer& buffer, const Selection& selection)
 Selection select_matching(const Buffer& buffer, const Selection& selection)
 {
     Vector<Codepoint> matching_pairs = { '(', ')', '{', '}', '[', ']', '<', '>' };
-    Utf8Iterator it = buffer.iterator_at(selection.cursor());
+    Utf8Iterator it{buffer.iterator_at(selection.cursor()), buffer};
     Vector<Codepoint>::iterator match = matching_pairs.end();
     while (not is_eol(*it))
     {
@@ -82,7 +82,7 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
     const bool to_end   = flags & ObjectFlags::ToEnd;
     const bool nestable = matching.opening != matching.closing;
     auto pos = buffer.iterator_at(coord);
-    Utf8Iterator first = pos;
+    Utf8Iterator first{pos, buffer};
     if (to_begin)
     {
         int level = nestable ? init_level : 0;
@@ -103,7 +103,7 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
             return Optional<Selection>{};
     }
 
-    Utf8Iterator last = pos;
+    Utf8Iterator last{pos, buffer};
     if (to_end)
     {
         int level = nestable ? init_level : 0;
@@ -168,7 +168,7 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
 Selection select_to(const Buffer& buffer, const Selection& selection,
                     Codepoint c, int count, bool inclusive)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator end = begin;
     do
     {
@@ -185,7 +185,7 @@ Selection select_to(const Buffer& buffer, const Selection& selection,
 Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
                             Codepoint c, int count, bool inclusive)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator end = begin;
     do
     {
@@ -367,8 +367,8 @@ Selection select_whitespaces(const Buffer& buffer, const Selection& selection, O
             --last;
         }
     }
-    return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
-                                        : utf8_range(last, first);
+    return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
+                                        : Selection{last.coord(), first.coord()};
 }
 
 Selection select_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
@@ -511,8 +511,8 @@ Selection select_argument(const Buffer& buffer, const Selection& selection,
         --end;
 
     if (flags & ObjectFlags::ToBegin and not (flags & ObjectFlags::ToEnd))
-        return utf8_range(pos, begin);
-    return utf8_range(flags & ObjectFlags::ToBegin ? begin : pos, end);
+        return {pos.coord(), begin.coord()};
+    return {(flags & ObjectFlags::ToBegin ? begin : pos).coord(), end.coord()};
 }
 
 Selection select_lines(const Buffer& buffer, const Selection& selection)

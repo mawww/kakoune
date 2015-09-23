@@ -19,12 +19,18 @@ class iterator : public std::iterator<std::forward_iterator_tag,
                                       Codepoint, CharCount>
 {
 public:
-    iterator() = default;
-    iterator(Iterator it) : m_it(std::move(it)) {}
+    iterator(Iterator it, Iterator begin, Iterator end)
+        : m_it{std::move(it)}, m_begin{std::move(begin)}, m_end{std::move(end)}
+    {}
+
+    template<typename Container>
+    iterator(Iterator it, const Container& c)
+        : m_it{std::move(it)}, m_begin{begin(c)}, m_end{end(c)}
+    {}
 
     iterator& operator++()
     {
-        m_it = utf8::next(m_it, Iterator{});
+        m_it = utf8::next(m_it, m_end);
         invalidate_value();
         return *this;
     }
@@ -38,7 +44,7 @@ public:
 
     iterator& operator--()
     {
-        m_it = utf8::previous(m_it, Iterator{});
+        m_it = utf8::previous(m_it, m_begin);
         invalidate_value();
         return *this;
     }
@@ -75,25 +81,20 @@ public:
     bool operator==(const iterator& other) { return m_it == other.m_it; }
     bool operator!=(const iterator& other) { return m_it != other.m_it; }
 
-    bool operator< (const iterator& other) const
-    {
-        return m_it < other.m_it;
-    }
+    bool operator< (const iterator& other) const { return m_it < other.m_it; }
+    bool operator<= (const iterator& other) const { return m_it <= other.m_it; }
 
-    bool operator<= (const iterator& other) const
-    {
-        return m_it <= other.m_it;
-    }
+    bool operator> (const iterator& other) const { return m_it > other.m_it; }
+    bool operator>= (const iterator& other) const { return m_it >= other.m_it; }
 
-    bool operator> (const iterator& other) const
-    {
-        return m_it > other.m_it;
-    }
+    bool operator==(const Iterator& other) { return m_it == other; }
+    bool operator!=(const Iterator& other) { return m_it != other; }
 
-    bool operator>= (const iterator& other) const
-    {
-        return m_it >= other.m_it;
-    }
+    bool operator< (const Iterator& other) const { return m_it < other; }
+    bool operator<= (const Iterator& other) const { return m_it <= other; }
+
+    bool operator> (const Iterator& other) const { return m_it > other; }
+    bool operator>= (const Iterator& other) const { return m_it >= other; }
 
     CharCount operator-(const iterator& other) const
     {
@@ -108,31 +109,20 @@ public:
     const Iterator& base() const { return m_it; }
     Iterator& base() { return m_it; }
 
-protected:
-    void check_invariant() const
-    {
-        // always point to a character first byte;
-        // kak_assert(is_character_start(it));
-    }
-
 private:
     void invalidate_value() { m_value = -1; }
     Codepoint get_value() const
     {
         if (m_value == -1)
-            m_value = utf8::codepoint<InvalidPolicy>(m_it, Iterator{});
+            m_value = utf8::codepoint<InvalidPolicy>(m_it, m_end);
         return m_value;
     }
 
     Iterator m_it;
+    Iterator m_begin;
+    Iterator m_end;
     mutable Codepoint m_value = -1;
 };
-
-template<typename InvalidPolicy = utf8::InvalidPolicy::Pass, typename Iterator>
-iterator<Iterator, InvalidPolicy> make_iterator(Iterator it)
-{
-    return iterator<Iterator, InvalidPolicy>{std::move(it)};
-}
 
 }
 

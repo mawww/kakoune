@@ -637,10 +637,13 @@ void use_selection_as_search_pattern(Context& context, NormalParams)
     Vector<String> patterns;
     auto& sels = context.selections();
     const auto& buffer = context.buffer();
+    using Utf8It = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
     for (auto& sel : sels)
     {
-        auto begin = utf8::make_iterator(buffer.iterator_at(sel.min()));
-        auto end   = utf8::make_iterator(buffer.iterator_at(sel.max()))+1;
+        Utf8It begin{buffer.iterator_at(sel.min()), buffer};
+        Utf8It end{buffer.iterator_at(sel.max()), buffer};
+        ++end;
+
         auto content = "\\Q" + buffer.string(begin.base().coord(), end.base().coord()) + "\\E";
         if (smart)
         {

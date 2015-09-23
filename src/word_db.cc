@@ -30,10 +30,10 @@ UsedLetters used_letters(StringView str)
 static WordDB::WordList get_words(const SharedString& content)
 {
     WordDB::WordList res;
-    using Iterator = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
+    using Utf8It = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
     const char* word_start = content.begin();
     bool in_word = false;
-    for (Iterator it{word_start}, end{content.end()}; it != end; ++it)
+    for (Utf8It it{word_start, content}, end{content.end(), content}; it != end; ++it)
     {
         Codepoint c = *it;
         const bool word = is_word(c);

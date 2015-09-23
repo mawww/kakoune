@@ -394,8 +394,6 @@ void SelectionList::check_invariant() const
         kak_assert(buffer.is_valid(sel.cursor()));
         kak_assert(not buffer.is_end(sel.anchor()));
         kak_assert(not buffer.is_end(sel.cursor()));
-        kak_assert(utf8::is_character_start(buffer.byte_at(sel.anchor())));
-        kak_assert(utf8::is_character_start(buffer.byte_at(sel.cursor())));
     }
 #endif
 }

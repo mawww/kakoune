@@ -58,7 +58,7 @@ KeyList parse_keys(StringView str)
 {
     KeyList result;
     using Utf8It = utf8::iterator<const char*>;
-    for (Utf8It it = str.begin(), str_end = str.end(); it < str_end; ++it)
+    for (Utf8It it{str.begin(), str}, str_end{str.end(), str}; it < str_end; ++it)
     {
         if (*it != '<')
         {

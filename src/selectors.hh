@@ -48,7 +48,7 @@ inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 template<WordType word_type>
 Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
@@ -72,7 +72,7 @@ Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
 template<WordType word_type>
 Selection select_to_next_word_end(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
@@ -95,7 +95,7 @@ Selection select_to_next_word_end(const Buffer& buffer, const Selection& selecti
 template<WordType word_type>
 Selection select_to_previous_word(const Buffer& buffer, const Selection& selection)
 {
-    Utf8Iterator begin = buffer.iterator_at(selection.cursor());
+    Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin == buffer.begin())
         return selection;
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
@@ -160,7 +160,7 @@ Selection select_word(const Buffer& buffer,
                       const Selection& selection,
                       ObjectFlags flags)
 {
-    Utf8Iterator first = buffer.iterator_at(selection.cursor());
+    Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator last = first;
     if (is_word<word_type>(*first))
     {

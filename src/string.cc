@@ -225,12 +225,12 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
         throw runtime_error("Invalid max width");
 
     using Utf8It = utf8::iterator<const char*>;
-    Utf8It word_begin{text.begin()};
+    Utf8It word_begin{text.begin(), text};
     Utf8It word_end{word_begin};
-    Utf8It end{text.end()};
+    Utf8It end{text.end(), text};
     CharCount col = 0;
     Vector<StringView> lines;
-    Utf8It line_begin = text.begin();
+    Utf8It line_begin{text.begin(), text};
     Utf8It line_end = line_begin;
     while (word_begin != end)
     {
