@@ -61,24 +61,25 @@ Iterator advance(Iterator it, const Iterator& end, CharCount d)
     return it;
 }
 
-// returns the character count between begin and end
-template<typename Iterator>
-CharCount distance(Iterator begin, const Iterator& end)
-{
-    CharCount dist = 0;
-    while (begin != end)
-    {
-        if ((*begin++ & 0xC0) != 0x80)
-            ++dist;
-    }
-    return dist;
-}
-
 // return true if it points to the first byte of a (either single or
 // multibyte) character
 inline bool is_character_start(char c)
 {
     return (c & 0xC0) != 0x80;
+}
+
+// returns the character count between begin and end
+template<typename Iterator>
+CharCount distance(Iterator begin, const Iterator& end)
+{
+    CharCount dist = 0;
+
+    while (begin != end)
+    {
+        if (is_character_start(*begin++))
+            ++dist;
+    }
+    return dist;
 }
 
 // returns an iterator to the first byte of the character it is into
