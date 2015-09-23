@@ -36,12 +36,6 @@ public:
         return save;
     }
 
-    void advance(CharCount count, const iterator& end)
-    {
-        while (*this != end and count-- > 0)
-            ++*this;
-    }
-
     iterator& operator--()
     {
         m_it = utf8::previous(m_it, Iterator{});
@@ -101,18 +95,9 @@ public:
         return m_it >= other.m_it;
     }
 
-    CharCount operator-(iterator other) const
+    CharCount operator-(const iterator& other) const
     {
-        //kak_assert(other < *this);
-        check_invariant();
-        other.check_invariant();
-        CharCount dist = 0;
-        while (other.m_it < m_it)
-        {
-            ++dist;
-            ++other;
-        }
-        return dist;
+        return utf8::distance(other.m_it, m_it);
     }
 
     Codepoint operator*() const
