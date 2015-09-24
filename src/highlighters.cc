@@ -822,7 +822,13 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
 {
     if (flags != HighlightFlags::Highlight)
         return;
+
     const auto& buffer = context.buffer();
+    const Face primary_face = get_face("PrimarySelection");
+    const Face secondary_face = get_face("SecondarySelection");
+    const Face primary_cursor_face = get_face("PrimaryCursor");
+    const Face secondary_cursor_face = get_face("SecondaryCursor");
+
     for (size_t i = 0; i < context.selections().size(); ++i)
     {
         auto& sel = context.selections()[i];
@@ -831,17 +837,15 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
         ByteCoord end   = forward ? (ByteCoord)sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == context.selections().main_index());
-        Face sel_face = get_face(primary ? "PrimarySelection" : "SecondarySelection");
         highlight_range(display_buffer, begin, end, false,
-                        apply_face(sel_face));
+                        apply_face(primary ? primary_face : secondary_face));
     }
     for (size_t i = 0; i < context.selections().size(); ++i)
     {
         auto& sel = context.selections()[i];
         const bool primary = (i == context.selections().main_index());
-        Face cur_face = get_face(primary ? "PrimaryCursor" : "SecondaryCursor");
         highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
-                        apply_face(cur_face));
+                        apply_face(primary ? primary_cursor_face : secondary_cursor_face));
     }
 }
 
