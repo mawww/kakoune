@@ -28,6 +28,8 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
+else ifeq ($(os),Haiku)
+    LIBS += -lncursesw -lboost_regex -lnetwork -lbe
 else ifneq (,$(findstring CYGWIN,$(os)))
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else

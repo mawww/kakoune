@@ -21,6 +21,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+constexpr char control(char c) { return c & 037; }
+
 namespace Kakoune
 {
 
@@ -506,12 +508,12 @@ Key NCursesUI::get_key()
 
     if (c > 0 and c < 27)
     {
-        if (c == CTRL('l'))
+        if (c == control('l'))
         {
            redrawwin(m_window);
            redraw();
         }
-        if (c == CTRL('z'))
+        if (c == control('z'))
         {
             raise(SIGTSTP);
             return Key::Invalid;

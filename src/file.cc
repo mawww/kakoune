@@ -20,6 +20,12 @@
 #include <mach-o/dyld.h>
 #endif
 
+#if defined(__HAIKU__)
+#include <app/Application.h>
+#include <app/Roster.h>
+#include <storage/Path.h>
+#endif
+
 namespace Kakoune
 {
 
@@ -488,6 +494,13 @@ String get_kak_binary_path()
     String path = canonical_path;
     free(canonical_path);
     return path;
+#elif defined(__HAIKU__)
+    BApplication app("application/x-vnd.kakoune");
+    app_info info;
+    status_t status = app.GetAppInfo(&info);
+    kak_assert(status == B_OK);
+    BPath path(&info.ref);
+    return path.Path();
 #else
 # error "finding executable path is not implemented on this platform"
 #endif
