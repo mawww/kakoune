@@ -110,7 +110,7 @@ struct Pass
 // is pointed by it
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
          typename Iterator>
-Codepoint codepoint(Iterator it, const Iterator& end)
+Codepoint read_codepoint(Iterator& it, const Iterator& end)
 {
     if (it == end)
         return InvalidPolicy{}(-1);
@@ -124,14 +124,14 @@ Codepoint codepoint(Iterator it, const Iterator& end)
         return InvalidPolicy{}(byte);
 
     if ((byte & 0xE0) == 0xC0) // 110xxxxx
-        return ((byte & 0x1F) << 6) | (*it & 0x3F);
+        return ((byte & 0x1F) << 6) | (*it++ & 0x3F);
 
     if ((byte & 0xF0) == 0xE0) // 1110xxxx
     {
         Codepoint cp = ((byte & 0x0F) << 12) | ((*it++ & 0x3F) << 6);
         if (it == end)
             return InvalidPolicy{}(cp);
-        return cp | (*it & 0x3F);
+        return cp | (*it++ & 0x3F);
     }
 
     if ((byte & 0xF8) == 0xF0) // 11110xxx
@@ -142,9 +142,16 @@ Codepoint codepoint(Iterator it, const Iterator& end)
         cp |= (*it++ & 0x3F) << 6;
         if (it == end)
             return InvalidPolicy{}(cp);
-        return cp | (*it & 0x3F);
+        return cp | (*it++ & 0x3F);
     }
     return InvalidPolicy{}(byte);
+}
+
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
+         typename Iterator>
+Codepoint codepoint(Iterator it, const Iterator& end)
+{
+    return read_codepoint(it, end);
 }
 
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass>

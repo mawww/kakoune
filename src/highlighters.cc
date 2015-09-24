@@ -861,20 +861,19 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                 for (auto it  = buffer.iterator_at(atom_it->begin()),
                           end = buffer.iterator_at(atom_it->end()); it < end;)
                 {
-                    Codepoint cp = utf8::codepoint<utf8::InvalidPolicy::Pass>(it, end);
-                    auto next = utf8::next(it, end);
+                    auto coord = it.coord();
+                    Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
                     if (cp != '\n' and not iswprint(cp))
                     {
-                        if (it.coord() != atom_it->begin())
-                            atom_it = ++line.split(atom_it, it.coord());
-                        if (next.coord() < atom_it->end())
-                            atom_it = line.split(atom_it, next.coord());
+                        if (coord != atom_it->begin())
+                            atom_it = ++line.split(atom_it, coord);
+                        if (it.coord() < atom_it->end())
+                            atom_it = line.split(atom_it, it.coord());
 
                         atom_it->replace(format("U+{}", hex(cp)));
                         atom_it->face = { Color::Red, Color::Black };
                         break;
                     }
-                    it = next;
                 }
             }
         }
