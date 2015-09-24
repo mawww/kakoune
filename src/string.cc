@@ -148,6 +148,13 @@ InplaceString<15> to_string(int val)
     return res;
 }
 
+InplaceString<23> to_string(long int val)
+{
+    InplaceString<23> res;
+    res.m_length = sprintf(res.m_data, "%li", val);
+    return res;
+}
+
 InplaceString<23> to_string(size_t val)
 {
     InplaceString<23> res;
