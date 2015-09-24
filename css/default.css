@@ -66,6 +66,20 @@ a:hover {
     text-align: center;
 }
 
+#table-scripts tr > td:nth-child(3),
+#table-scripts tr > th:nth-child(3),
+#table-scripts tr > td:nth-child(4),
+#table-scripts tr > th:nth-child(4),
+#table-scripts tr > td:nth-child(5),
+#table-scripts tr > th:nth-child(5) {
+    text-align: center;
+}
+
+#table-scripts tr > td:nth-child(3),
+#table-scripts tr > th:nth-child(3) {
+    font-weight: bold;
+}
+
 .navbar-default {
     border-color: #ACACAC;
 }
