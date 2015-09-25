@@ -703,6 +703,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    the cursor when scrolling.
  * `eolformat` _string_ ('lf' or 'crlf'): the format of end of lines when
    writing a buffer, this is autodetected on load.
+ * `separator` _string_: maximum of 3 characters to separate the line numbers
+   column with the rest of the buffer, default is `|`
  * `BOM` _string_ ("no" or "utf-8"): define if the file should be written
    with an unicode byte order mark.
  * `complete_prefix` _bool_: when completing in command line, and multiple

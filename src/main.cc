@@ -191,6 +191,9 @@ void register_options()
                        "number of lines and columns to keep visible main cursor when scrolling",
                        CharCoord{0,0});
     reg.declare_option("eolformat", "end of line format: 'crlf' or 'lf'", "lf"_str);
+    reg.declare_option("separator",
+                       "3 characters to separate the line numbers column with the rest of the buffer",
+                       "|"_str);
     reg.declare_option("BOM", "insert a byte order mark when writing buffer",
                        "no"_str);
     reg.declare_option("complete_prefix",
