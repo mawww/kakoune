@@ -13,11 +13,15 @@ namespace Kakoune
 namespace utf8
 {
 
+template<typename Iterator>
+[[gnu::always_inline]]
+inline char read(Iterator& it) { char c = *it; ++it; return c; }
+
 // returns an iterator to next character first byte
 template<typename Iterator>
 Iterator next(Iterator it, const Iterator& end)
 {
-    if (it != end and *it++ & 0x80)
+    if (it != end and read(it) & 0x80)
         while (it != end and (*(it) & 0xC0) == 0x80)
             ++it;
     return it;
@@ -116,7 +120,7 @@ Codepoint read_codepoint(Iterator& it, const Iterator& end)
         return InvalidPolicy{}(-1);
     // According to rfc3629, UTF-8 allows only up to 4 bytes.
     // (21 bits codepoint)
-    unsigned char byte = *it++;
+    unsigned char byte = read(it);
     if (not (byte & 0x80)) // 0xxxxxxx
         return byte;
 
@@ -124,25 +128,25 @@ Codepoint read_codepoint(Iterator& it, const Iterator& end)
         return InvalidPolicy{}(byte);
 
     if ((byte & 0xE0) == 0xC0) // 110xxxxx
-        return ((byte & 0x1F) << 6) | (*it++ & 0x3F);
+        return ((byte & 0x1F) << 6) | (read(it) & 0x3F);
 
     if ((byte & 0xF0) == 0xE0) // 1110xxxx
     {
-        Codepoint cp = ((byte & 0x0F) << 12) | ((*it++ & 0x3F) << 6);
+        Codepoint cp = ((byte & 0x0F) << 12) | ((read(it) & 0x3F) << 6);
         if (it == end)
             return InvalidPolicy{}(cp);
-        return cp | (*it++ & 0x3F);
+        return cp | (read(it) & 0x3F);
     }
 
     if ((byte & 0xF8) == 0xF0) // 11110xxx
     {
-        Codepoint cp = ((byte & 0x0F) << 18) | ((*it++ & 0x3F) << 12);
+        Codepoint cp = ((byte & 0x0F) << 18) | ((read(it) & 0x3F) << 12);
         if (it == end)
             return InvalidPolicy{}(cp);
-        cp |= (*it++ & 0x3F) << 6;
+        cp |= (read(it) & 0x3F) << 6;
         if (it == end)
             return InvalidPolicy{}(cp);
-        return cp | (*it++ & 0x3F);
+        return cp | (read(it) & 0x3F);
     }
     return InvalidPolicy{}(byte);
 }
