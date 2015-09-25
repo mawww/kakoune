@@ -707,9 +707,10 @@ HighlighterAndId create_show_whitespaces_highlighter(HighlighterParameters param
     return {"show_whitespaces", make_simple_highlighter(show_whitespaces)};
 }
 
-template<bool relative, bool hl_cursor_line>
 void show_line_numbers(const Context& context, HighlightFlags flags,
-                       DisplayBuffer& display_buffer, BufferRange)
+                       DisplayBuffer& display_buffer, BufferRange,
+                       bool relative, bool hl_cursor_line,
+                       StringView separator)
 {
     const Face face = get_face("LineNumbers");
     const Face face_absolute = get_face("LineNumberCursor");
@@ -718,8 +719,8 @@ void show_line_numbers(const Context& context, HighlightFlags flags,
     for (LineCount c = last_line; c > 0; c /= 10)
         ++digit_count;
 
-    char format[] = "%?d│";
-    format[1] = '0' + digit_count + (relative ? 1 : 0);
+    char format[16];
+    format_to(format, "%{}d{}", digit_count + (relative ? 1 : 0), separator);
     int main_selection = (int)context.selections().main().cursor().line + 1;
     for (auto& line : display_buffer.lines())
     {
@@ -739,24 +740,23 @@ HighlighterAndId number_lines_factory(HighlighterParameters params)
 {
     static const ParameterDesc param_desc{
         { { "relative", { false, "" } },
+          { "separator", { true, "" } },
           { "hlcursor", { false, "" } } },
         ParameterDesc::Flags::None, 0, 0
     };
     ParametersParser parser(params, param_desc);
 
-    constexpr struct {
-        StringView name;
-        void (*func)(const Context&, HighlightFlags, DisplayBuffer&, BufferRange);
-    } funcs[] = {
-        { "number_lines", show_line_numbers<false, false> },
-        { "number_lines", show_line_numbers<false, true> },
-        { "number_lines_relative", show_line_numbers<true, false> },
-        { "number_lines_relative", show_line_numbers<true, true> },
-    };
-    const int index = (parser.get_switch("relative") ? 1 : 0) * 2 +
-                      (parser.get_switch("hlcursor") ? 1 : 0);
+    StringView separator = parser.get_switch("separator").value_or("│");
+    if (separator.length() > 10)
+        throw runtime_error("Separator length is limited to 10 bytes");
 
-    return {funcs[index].name.str(), make_simple_highlighter(funcs[index].func)};
+    using namespace std::placeholders;
+    auto func = std::bind(show_line_numbers, _1, _2, _3, _4,
+                          (bool)parser.get_switch("relative"),
+                          (bool)parser.get_switch("hlcursor"),
+                          separator.str());
+
+    return {"number_lines", make_simple_highlighter(std::move(func))};
 }
 
 void show_matching_char(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
@@ -1346,7 +1346,7 @@ void register_highlighters()
         "number_lines",
         { number_lines_factory,
           "Display line numbers \n"
-          "Parameters: -relative, -hlcursor\n" } });
+          "Parameters: -relative, -hlcursor, -separator <separator text>\n" } });
     registry.append({
         "show_matching",
         { create_matching_char_highlighter,
