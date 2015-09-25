@@ -966,9 +966,11 @@ general highlighters are:
        <option_name>.
  * `show_matching`: highlight matching char of the character under the selections
        cursor using `MatchingChar` face.
- * `number_lines \<-relative> \<-hlcursor>`: show line numbers. The -relative switch
-       will show line numbers relative to the main cursor line, the -hlcursor switch will
-       highlight the cursor line with a separate face.
+ * `number_lines \<-relative> \<-hlcursor> \<-separator <separator text> >`: show line numbers.
+       The -relative switch will show line numbers relative to the main cursor line, the
+       -hlcursor switch will highlight the cursor line with a separate face. With the
+       -separator switch one can specify a string to separate the line numbers column with
+       the rest of the buffer, default is `|`.
  * `fill <face>`: fill using given face, mostly useful with <<regions-highlighters,Regions highlighters>>
 
 Highlighting Groups
