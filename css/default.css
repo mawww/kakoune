@@ -66,6 +66,10 @@ a:hover {
     text-align: center;
 }
 
+#table-scripts {
+    margin-bottom: 0;
+}
+
 #table-scripts tr > td:nth-child(3),
 #table-scripts tr > th:nth-child(3),
 #table-scripts tr > td:nth-child(4),
