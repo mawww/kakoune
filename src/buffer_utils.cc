@@ -47,7 +47,7 @@ ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop, CharCoord 
 }
 
 Buffer* create_buffer_from_data(StringView data, StringView name,
-                                Buffer::Flags flags, time_t fs_timestamp)
+                                Buffer::Flags flags, timespec fs_timestamp)
 {
     bool bom = false, crlf = false;
 
@@ -98,7 +98,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
     if (buffer)
     {
         buffer->flags() |= Buffer::Flags::NoUndo;
-        buffer->reload({"\n"_ss}, 0);
+        buffer->reload({"\n"_ss}, InvalidTime);
     }
     else
         buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);

@@ -18,7 +18,7 @@ namespace Kakoune
 {
 
 Buffer::Buffer(String name, Flags flags, BufferLines lines,
-               time_t fs_timestamp)
+               timespec fs_timestamp)
     : Scope(GlobalScope::instance()),
       m_name((flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)),
       m_display_name((flags & Flags::File) ? compact_path(m_name) : m_name),
@@ -160,7 +160,7 @@ struct Buffer::Modification
     }
 };
 
-void Buffer::reload(BufferLines lines, time_t fs_timestamp)
+void Buffer::reload(BufferLines lines, timespec fs_timestamp)
 {
     if (lines.empty())
         lines.emplace_back(StringData::create("\n"));
@@ -531,13 +531,13 @@ ByteCoord Buffer::char_prev(ByteCoord coord) const
     return coord;
 }
 
-time_t Buffer::fs_timestamp() const
+timespec Buffer::fs_timestamp() const
 {
     kak_assert(m_flags & Flags::File);
     return m_fs_timestamp;
 }
 
-void Buffer::set_fs_timestamp(time_t ts)
+void Buffer::set_fs_timestamp(timespec ts)
 {
     kak_assert(m_flags & Flags::File);
     m_fs_timestamp = ts;

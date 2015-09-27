@@ -14,7 +14,7 @@ namespace Kakoune
 
 class Buffer;
 
-constexpr time_t InvalidTime = 0;
+constexpr timespec InvalidTime = { -1, -1 };
 
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
@@ -79,7 +79,7 @@ public:
     };
 
     Buffer(String name, Flags flags, BufferLines lines = {},
-           time_t fs_timestamp = InvalidTime);
+           timespec fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
@@ -93,8 +93,8 @@ public:
     BufferIterator erase(BufferIterator begin, BufferIterator end);
 
     size_t         timestamp() const;
-    time_t         fs_timestamp() const;
-    void           set_fs_timestamp(time_t ts);
+    timespec       fs_timestamp() const;
+    void           set_fs_timestamp(timespec ts);
 
     void           commit_undo_group();
     bool           undo();
@@ -152,7 +152,7 @@ public:
 
     void run_hook_in_own_context(StringView hook_name, StringView param);
 
-    void reload(BufferLines lines, time_t fs_timestamp = InvalidTime);
+    void reload(BufferLines lines, timespec fs_timestamp = InvalidTime);
 
     void check_invariant() const;
 
@@ -213,7 +213,7 @@ private:
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
-    time_t m_fs_timestamp;
+    timespec m_fs_timestamp;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state

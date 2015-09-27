@@ -34,7 +34,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
 
 Buffer* create_buffer_from_data(StringView data, StringView name,
                                 Buffer::Flags flags,
-                                time_t fs_timestamp = InvalidTime);
+                                timespec fs_timestamp = InvalidTime);
 
 void write_to_debug_buffer(StringView str);
 

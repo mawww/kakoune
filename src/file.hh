@@ -52,7 +52,17 @@ Vector<String> list_files(StringView directory);
 
 void make_directory(StringView dir);
 
-time_t get_fs_timestamp(StringView filename);
+timespec get_fs_timestamp(StringView filename);
+
+constexpr bool operator==(const timespec& lhs, const timespec& rhs)
+{
+    return lhs.tv_sec == rhs.tv_sec and lhs.tv_nsec == rhs.tv_nsec;
+}
+
+constexpr bool operator!=(const timespec& lhs, const timespec& rhs)
+{
+    return not (lhs == rhs);
+}
 
 CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
                                 ByteCount cursor_pos = -1);

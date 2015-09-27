@@ -180,13 +180,13 @@ Buffer* create_buffer_from_file(StringView filename)
         throw file_access_error(real_filename, "is a directory");
     if (S_ISFIFO(st.st_mode)) // Do not try to read fifos, use them as write only
         return create_buffer_from_data({}, real_filename,
-                                       Buffer::Flags::File, st.st_mtime);
+                                       Buffer::Flags::File, st.st_mtim);
 
     const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     auto unmap = on_scope_end([&]{ munmap((void*)data, st.st_size); });
 
     return create_buffer_from_data({data, data + st.st_size}, real_filename,
-                                   Buffer::Flags::File, st.st_mtime);
+                                   Buffer::Flags::File, st.st_mtim);
 }
 
 static void write(int fd, StringView data)
@@ -423,11 +423,11 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         return res;
     }
 
-    typedef decltype(stat::st_mtime) TimeSpec;
+    typedef decltype(stat::st_mtim) TimeSpec;
 
     struct CommandCache
     {
-        TimeSpec mtime = {};
+        TimeSpec mtim = {};
         Vector<String> commands;
     };
     static UnorderedMap<String, CommandCache, MemoryDomain::Commands> command_cache;
@@ -442,7 +442,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
             continue;
 
         auto& cache = command_cache[dirname];
-        if (memcmp(&cache.mtime, &st.st_mtime, sizeof(TimeSpec)) != 0)
+        if (memcmp(&cache.mtim, &st.st_mtim, sizeof(TimeSpec)) != 0)
         {
             auto filter = [&](const dirent& entry) {
                 struct stat st;
@@ -457,7 +457,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
             };
 
             cache.commands = list_files("", dirname, filter);
-            memcpy(&cache.mtime, &st.st_mtime, sizeof(TimeSpec));
+            memcpy(&cache.mtim, &st.st_mtim, sizeof(TimeSpec));
         }
         for (auto& cmd : cache.commands)
         {
@@ -471,12 +471,12 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     return res;
 }
 
-time_t get_fs_timestamp(StringView filename)
+timespec get_fs_timestamp(StringView filename)
 {
     struct stat st;
     if (stat(filename.zstr(), &st) != 0)
         return InvalidTime;
-    return st.st_mtime;
+    return st.st_mtim;
 }
 
 String get_kak_binary_path()
