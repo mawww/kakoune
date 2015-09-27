@@ -14,7 +14,8 @@ enum class Attribute : int
     Reverse   = 1 << 2,
     Blink     = 1 << 3,
     Bold      = 1 << 4,
-    Dim       = 1 << 5
+    Dim       = 1 << 5,
+    Italic    = 1 << 6,
 };
 
 template<> struct WithBitOps<Attribute> : std::true_type {};

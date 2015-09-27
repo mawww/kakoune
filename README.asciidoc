@@ -781,6 +781,9 @@ attributes is a string of letters each defining an attributes:
  * `u`: Underline
  * `r`: Reverse
  * `b`: Bold
+ * `B`: Blink
+ * `d`: Dim
+ * `i`: Italic
 
 Using named faces instead of facespec permits to change the effective faces
 afterwards.

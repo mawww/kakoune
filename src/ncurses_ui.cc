@@ -241,6 +241,9 @@ void set_face(WINDOW* window, Face face, const Face& default_face)
     set_attribute(window, A_BLINK, face.attributes & Attribute::Blink);
     set_attribute(window, A_BOLD, face.attributes & Attribute::Bold);
     set_attribute(window, A_DIM, face.attributes & Attribute::Dim);
+    #if defined(A_ITALIC)
+    set_attribute(window, A_ITALIC, face.attributes & Attribute::Italic);
+    #endif
 }
 
 static sig_atomic_t resize_pending = 0;
