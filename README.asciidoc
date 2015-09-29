@@ -1053,7 +1053,7 @@ Most programming languages can then be properly highlighted using a `regions`
 highlighter as root:
 
 -----------------------------------------------------------------
-addhl multi_region -default code <lang> \
+addhl regions -default code <lang> \
     string <str_opening> <str_closing> <str_recurse> \
     comment <comment_opening> <comment_closing> <comment_recurse>
 
