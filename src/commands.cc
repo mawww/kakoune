@@ -625,7 +625,7 @@ const CommandDesc rm_highlighter_cmd = {
         StringView path = parser[0];
         auto sep_it = find(reversed(path), '/');
         auto& group = sep_it != path.rend() ?
-            get_highlighter(context, {path.begin(), sep_it.base()-1})
+            get_highlighter(context, {path.begin(), sep_it.base()})
           : context.window().highlighters();
 
         group.remove_child({sep_it.base(), path.end()});
