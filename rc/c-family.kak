@@ -150,8 +150,8 @@ decl str-list alt_dirs ".;.."
 
 def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
     alt_dirs=$(echo ${kak_opt_alt_dirs} | sed -e 's/;/ /g')
-    file=$(basename ${kak_buffile})
-    dir=$(dirname ${kak_buffile})
+    file=$(basename "${kak_buffile}")
+    dir=$(dirname "${kak_buffile}")
 
     case ${file} in
         *.c|*.cc|*.cpp|*.cxx|*.C|*.inl|*.m)
