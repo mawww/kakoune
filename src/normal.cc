@@ -647,9 +647,9 @@ void use_selection_as_search_pattern(Context& context, NormalParams)
         auto content = "\\Q" + buffer.string(begin.base().coord(), end.base().coord()) + "\\E";
         if (smart)
         {
-            if (begin == buffer.begin() or (is_word(*begin) and not is_word(*(begin-1))))
+            if (is_word(*begin) and (begin == buffer.begin() or not is_word(*(begin-1))))
                 content = "\\b" + content;
-            if (end == buffer.end() or (is_word(*(end-1)) and not is_word(*end)))
+            if (is_word(*(end-1)) and (end == buffer.end() or not is_word(*end)))
                 content = content + "\\b";
         }
         patterns.push_back(std::move(content));
