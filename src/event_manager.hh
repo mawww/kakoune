@@ -34,7 +34,7 @@ public:
     void run(EventMode mode);
 
     void close_fd();
-    bool closed() const { return m_fd == -1; }
+    void disable() { m_fd = -1; }
 private:
 
     int       m_fd;
