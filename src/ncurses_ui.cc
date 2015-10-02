@@ -270,12 +270,7 @@ NCursesUI::NCursesUI()
     use_default_colors();
     set_escdelay(25);
 
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-    mouseinterval(0);
-    // force enable report mouse position
-    puts("\033[?1002h");
-    // force enable report focus events
-    puts("\033[?1004h");
+    enable_mouse(true);
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGINT, [](int){});
@@ -287,8 +282,7 @@ NCursesUI::NCursesUI()
 
 NCursesUI::~NCursesUI()
 {
-    puts("\033[?1004l");
-    puts("\033[?1002l");
+    enable_mouse(false);
     const bool changed_color = can_change_color();
     endwin();
     if (changed_color)
@@ -930,6 +924,29 @@ void NCursesUI::abort()
     endwin();
 }
 
+void NCursesUI::enable_mouse(bool enabled)
+{
+    if (enabled == m_mouse_enabled)
+        return;
+
+    m_mouse_enabled = enabled;
+    if (enabled)
+    {
+        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+        mouseinterval(0);
+        // force enable report mouse position
+        puts("\033[?1002h");
+        // force enable report focus events
+        puts("\033[?1004h");
+    }
+    else
+    {
+        mousemask(0, nullptr);
+        puts("\033[?1004l");
+        puts("\033[?1002l");
+    }
+}
+
 void NCursesUI::set_ui_options(const Options& options)
 {
     {
@@ -955,6 +972,11 @@ void NCursesUI::set_ui_options(const Options& options)
     }
 
     {
+        auto enable_mouse_it = options.find("ncurses_enable_mouse");
+        enable_mouse(enable_mouse_it == options.end() or
+                     enable_mouse_it->value == "yes" or
+                     enable_mouse_it->value == "true");
+
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(2) : 2;

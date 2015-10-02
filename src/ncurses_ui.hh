@@ -93,6 +93,9 @@ private:
     bool m_status_on_top = false;
     ConstArrayView<StringView> m_assistant;
 
+    void enable_mouse(bool enabled);
+
+    bool m_mouse_enabled = false;
     int m_wheel_down_button = 2;
     int m_wheel_up_button = 4;
 
