@@ -227,11 +227,14 @@ void register_options()
                        Ask);
     reg.declare_option("ui_options",
                        "colon separated list of <key>=<value> options that are "
-                       "passed to and interpreted by the ncurses user interface\n"
+                       "passed to and interpreted by the user interface\n"
+                       "\n"
+                       "The ncurses ui supports the following options:\n"
                        "<key>:                        <value>:\n"
-                       "    ncurses_assistant             clippy|cat|bool\n"
+                       "    ncurses_assistant             clippy|cat|none|off\n"
                        "    ncurses_status_on_top         bool\n"
-                       "    ncurses_set_title                 bool\n"
+                       "    ncurses_set_title             bool\n"
+                       "    ncurses_enable_mouse          bool\n"
                        "    ncurses_wheel_up_button       int\n"
                        "    ncurses_wheel_down_button     int\n",
                        UserInterface::Options{});
