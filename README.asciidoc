@@ -1205,8 +1205,6 @@ New commands can be defined using the `:def` command.
 
 `def` can also takes some flags:
 
- * `-env-params`: pass parameters given to commands in the environment as
-                  kak_paramN with N the parameter number
  * `-shell-params`: pass parameters given to commands as positional parameters
                     to any shell expansions used in the command.
  * `-file-completion`: try file completion on any parameter passed
