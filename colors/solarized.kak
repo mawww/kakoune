@@ -45,11 +45,13 @@
         face list       ${yellow}
 
         # and built in faces
-        face Default        ${base0},${base03}
-        face StatusLine     default,${base02}
-        face StatusCursor   ${base00},${base3}
-        face Information    ${base02},${base1}
-        face MenuBackground ${base02},${base01}
-        face MenuForeground ${cyan},${base01}
+        face Default          ${base0},${base03}
+        face LineNumbers      ${base0},${base03}
+        face LineNumberCursor default,${base03}+b
+        face StatusLine       default,${base02}
+        face StatusCursor     ${base00},${base3}
+        face Information      ${base02},${base1}
+        face MenuBackground   ${base02},${base01}
+        face MenuForeground   ${cyan},${base01}
     "
 }
