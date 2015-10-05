@@ -41,7 +41,7 @@ class UserInterface : public SafeCountable
 public:
     virtual ~UserInterface() {}
 
-    virtual void menu_show(ConstArrayView<String> choices,
+    virtual void menu_show(ConstArrayView<DisplayLine> choices,
                            CharCoord anchor, Face fg, Face bg,
                            MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;

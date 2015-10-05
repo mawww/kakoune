@@ -246,7 +246,8 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 {
     struct DummyUI : UserInterface
     {
-        void menu_show(ConstArrayView<String>, CharCoord, Face, Face, MenuStyle) override {}
+        void menu_show(ConstArrayView<DisplayLine>, CharCoord,
+                       Face, Face, MenuStyle) override {}
         void menu_select(int) override {}
         void menu_hide() override {}
 

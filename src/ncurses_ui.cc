@@ -338,28 +338,29 @@ void add_str(WINDOW* win, StringView str)
     waddnstr(win, str.begin(), (int)str.length());
 }
 
-void NCursesUI::draw_line(const DisplayLine& line, CharCount col_index,
-                          const Face& default_face) const
+static void draw_line(NCursesWin* window, const DisplayLine& line,
+                       CharCount col_index, CharCount max_column,
+                       const Face& default_face)
 {
     for (const DisplayAtom& atom : line)
     {
-        set_face(m_window, atom.face, default_face);
+        set_face(window, atom.face, default_face);
 
         StringView content = atom.content();
         if (content.empty())
             continue;
 
-        const auto remaining_columns = m_dimensions.column - col_index;
+        const auto remaining_columns = max_column - col_index;
         if (content.back() == '\n' and
             content.char_length() - 1 < remaining_columns)
         {
-            add_str(m_window, content.substr(0, content.length()-1));
-            waddch(m_window, ' ');
+            add_str(window, content.substr(0, content.length()-1));
+            waddch(window, ' ');
         }
         else
         {
             content = content.substr(0_char, remaining_columns);
-            add_str(m_window, content);
+            add_str(window, content);
             col_index += content.char_length();
         }
     }
@@ -377,7 +378,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
     {
         wmove(m_window, (int)line_index, 0);
         wclrtoeol(m_window);
-        draw_line(line, 0, default_face);
+        draw_line(m_window, line, 0, m_dimensions.column, default_face);
         ++line_index;
     }
 
@@ -402,7 +403,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
     wclrtoeol(m_window);
 
-    draw_line(status_line, 0, default_face);
+    draw_line(m_window, status_line, 0, m_dimensions.column, default_face);
 
     const auto mode_len = mode_line.length();
     const auto remaining = m_dimensions.column - status_line.length();
@@ -410,7 +411,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     {
         CharCount col = m_dimensions.column - mode_len;
         wmove(m_window, status_line_pos, (int)col);
-        draw_line(mode_line, col, default_face);
+        draw_line(m_window, mode_line, col, m_dimensions.column, default_face);
     }
     else if (remaining > 2)
     {
@@ -421,7 +422,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
 
         CharCount col = m_dimensions.column - remaining + 1;
         wmove(m_window, status_line_pos, (int)col);
-        draw_line(trimmed_mode_line, col, default_face);
+        draw_line(m_window, trimmed_mode_line, col, m_dimensions.column, default_face);
     }
 
     if (m_set_title)
@@ -620,14 +621,12 @@ void NCursesUI::draw_menu()
                                  + col;
             if (item_idx >= item_count)
                 break;
-            if (item_idx == m_selected_item)
-                wattron(m_menu.win, COLOR_PAIR(menu_fg));
 
-            StringView item = m_items[item_idx].substr(0_char, column_width);
-            add_str(m_menu.win, item);
-            const CharCount pad = column_width - item.char_length();
+            const DisplayLine& item = m_items[item_idx];
+            draw_line(m_menu.win, item, 0, column_width,
+                      item_idx == m_selected_item ? m_menu_fg : m_menu_bg);
+            const CharCount pad = column_width - item.length();
             add_str(m_menu.win, String{' ' COMMA pad});
-            wattron(m_menu.win, COLOR_PAIR(menu_bg));
         }
         const bool is_mark = line >= mark_line and
                              line < mark_line + mark_height;
@@ -639,7 +638,7 @@ void NCursesUI::draw_menu()
     m_dirty = true;
 }
 
-void NCursesUI::menu_show(ConstArrayView<String> items,
+void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
                           CharCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
@@ -664,8 +663,9 @@ void NCursesUI::menu_show(ConstArrayView<String> items,
     const CharCount maxlen = min((int)maxsize.column-2, 200);
     for (auto& item : items)
     {
-        m_items.push_back(item.substr(0_char, maxlen).str());
-        longest = max(longest, m_items.back().char_length());
+        m_items.push_back(item);
+        m_items.back().trim(0, maxlen, false);
+        longest = max(longest, m_items.back().length());
     }
     longest += 1;
 

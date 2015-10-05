@@ -421,13 +421,13 @@ void InsertCompleter::menu_show()
     const CharCount tabstop = m_options["tabstop"].get<int>();
     const CharCount column = get_column(m_context.buffer(), tabstop,
                                         m_completions.begin);
-    Vector<String> menu_entries;
+    Vector<DisplayLine> menu_entries;
     for (auto& candidate : m_matching_candidates)
     {
         const String& entry = candidate.menu_entry.empty() ?
             candidate.completion : candidate.menu_entry;
 
-        menu_entries.push_back(expand_tabs(entry, tabstop, column));
+        menu_entries.push_back({ expand_tabs(entry, tabstop, column), {} });
     }
 
     m_context.ui().menu_show(menu_entries, menu_pos,

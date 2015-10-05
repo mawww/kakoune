@@ -1406,12 +1406,12 @@ const CommandDesc menu_cmd = {
             return;
         }
 
-        Vector<String> choices;
+        Vector<DisplayLine> choices;
         Vector<String> commands;
         Vector<String> select_cmds;
         for (int i = 0; i < count; i += modulo)
         {
-            choices.push_back(parser[i]);
+            choices.push_back({ parser[i], {} });
             commands.push_back(parser[i+1]);
             if (with_select_cmds)
                 select_cmds.push_back(parser[i+2]);

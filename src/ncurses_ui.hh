@@ -31,7 +31,7 @@ public:
     bool is_key_available() override;
     Key  get_key() override;
 
-    void menu_show(ConstArrayView<String> items,
+    void menu_show(ConstArrayView<DisplayLine> items,
                    CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -54,8 +54,6 @@ public:
 private:
     void check_resize(bool force = false);
     void redraw();
-    void draw_line(const DisplayLine& line, CharCount col_index,
-                   const Face& default_face) const;
 
     NCursesWin* m_window = nullptr;
 
@@ -77,7 +75,7 @@ private:
     void mark_dirty(const Window& win);
 
     Window m_menu;
-    Vector<String> m_items;
+    Vector<DisplayLine> m_items;
     Face m_menu_fg;
     Face m_menu_bg;
     int m_selected_item = 0;

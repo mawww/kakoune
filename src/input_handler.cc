@@ -464,7 +464,7 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(InputHandler& input_handler, ConstArrayView<String> choices,
+    Menu(InputHandler& input_handler, ConstArrayView<DisplayLine> choices,
          MenuCallback callback)
         : InputMode(input_handler),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
@@ -479,8 +479,14 @@ public:
 
     void on_key(Key key, KeepAlive keep_alive) override
     {
-        auto match_filter = [this](const String& str) {
-            return regex_match(str.begin(), str.end(), m_filter);
+        auto match_filter = [this](const DisplayLine& choice) {
+            for (auto& atom : choice)
+            {
+                const auto& contents = atom.content();
+                if (regex_match(contents.begin(), contents.end(), m_filter))
+                    return true;
+            }
+            return false;
         };
 
         if (key == ctrl('m'))
@@ -564,7 +570,7 @@ public:
 private:
     MenuCallback m_callback;
 
-    using ChoiceList = Vector<String>;
+    using ChoiceList = Vector<DisplayLine>;
     const ChoiceList m_choices;
     ChoiceList::const_iterator m_selected;
 
@@ -823,10 +829,16 @@ private:
             const String& line = m_line_editor.line();
             m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
-            CandidateList& candidates = m_completions.candidates;
-            if (context().has_ui() and not candidates.empty())
-                context().ui().menu_show(candidates, CharCoord{}, get_face("MenuForeground"),
-                                         get_face("MenuBackground"), MenuStyle::Prompt);
+            if (context().has_ui() and not m_completions.candidates.empty())
+            {
+                Vector<DisplayLine> items;
+                for (auto& candidate : m_completions.candidates)
+                    items.push_back({ candidate, {} });
+                context().ui().menu_show(items, CharCoord{},
+                                         get_face("MenuForeground"),
+                                         get_face("MenuBackground"),
+                                         MenuStyle::Prompt);
+            }
         } catch (runtime_error&) {}
     }
 
@@ -1280,7 +1292,7 @@ void InputHandler::set_prompt_face(Face prompt_face)
         prompt->set_prompt_face(prompt_face);
 }
 
-void InputHandler::menu(ConstArrayView<String> choices, MenuCallback callback)
+void InputHandler::menu(ConstArrayView<DisplayLine> choices, MenuCallback callback)
 {
     push_mode(new InputModes::Menu(*this, choices, callback));
 }

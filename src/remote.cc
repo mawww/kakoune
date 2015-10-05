@@ -237,7 +237,7 @@ public:
     RemoteUI(int socket);
     ~RemoteUI();
 
-    void menu_show(ConstArrayView<String> choices,
+    void menu_show(ConstArrayView<DisplayLine> choices,
                    CharCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
@@ -287,7 +287,7 @@ RemoteUI::~RemoteUI()
     m_socket_watcher.close_fd();
 }
 
-void RemoteUI::menu_show(ConstArrayView<String> choices,
+void RemoteUI::menu_show(ConstArrayView<DisplayLine> choices,
                          CharCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {
@@ -468,7 +468,7 @@ void RemoteClient::process_next_message()
     {
     case RemoteUIMsg::MenuShow:
     {
-        auto choices = read_vector<String>(socket);
+        auto choices = read_vector<DisplayLine>(socket);
         auto anchor = read<CharCoord>(socket);
         auto fg = read<Face>(socket);
         auto bg = read<Face>(socket);
