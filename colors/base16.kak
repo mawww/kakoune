@@ -54,6 +54,7 @@
         face LineNumberCursor ${grey_light},rgb:282828+b
         face MenuForeground ${grey_light},blue
         face MenuBackground blue,${grey_light}
+        face MenuInfo ${cyan_light}
         face Information ${black_light},${cyan_light}
         face Error ${grey_light},${magenta_light}
         face StatusLine ${grey_light},${black_lighterer}

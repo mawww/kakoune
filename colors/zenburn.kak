@@ -52,3 +52,4 @@ face StatusCursor zencursor
 face Information zeninfo
 face MenuBackground zenmenubg
 face MenuForeground zenmenufg
+face MenuInfo rgb:cc9393

@@ -53,5 +53,6 @@
         face Information      ${base02},${base1}
         face MenuBackground   ${base02},${base01}
         face MenuForeground   ${cyan},${base01}
+        face MenuInfo         ${base03}
     "
 }

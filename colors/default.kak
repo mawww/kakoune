@@ -33,6 +33,7 @@ face LineNumbers default,default
 face LineNumberCursor default,default+r
 face MenuForeground white,blue
 face MenuBackground blue,white
+face MenuInfo cyan
 face Information black,yellow
 face Error black,red
 face StatusLine cyan,default
