@@ -180,7 +180,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     if (prefix.front() == '/')
     {
         for (auto& filename : Kakoune::complete_filename(prefix, Regex{}))
-            candidates.push_back({std::move(filename), ""});
+            candidates.push_back({ filename, "", { filename, {} } });
     }
     else
     {
