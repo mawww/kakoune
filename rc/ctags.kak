@@ -19,10 +19,10 @@ def -shell-params \
             /[^\t]+\t[^\t]+\t\/\^.*\$\// {
                 re=$0; sub(".*\t/\\^", "", re); sub("\\$/.*", "", re); gsub("(\\{|\\}).*$", "", re);
                 keys=re; gsub(/</, "<lt>", keys);
-                out = out " %{" $2 " [" re "]} %{try %{ edit %{" $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } }"
+                out = out " %{" $2 " {MenuInfo}" re "} %{try %{ edit %{" $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } }"
             }
             /[^\t]+\t[^\t]+\t([0-9]+)/ { out = out " %{" $2 ":" $3 "} %{edit %{" $2 "} %{" $3 "}}" }
-            END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -auto-single " out }'
+            END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
     }}
 
 def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
