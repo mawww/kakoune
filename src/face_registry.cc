@@ -14,9 +14,10 @@ static Face parse_face(StringView facedesc)
     if (bg_it != facedesc.end() and attr_it < bg_it)
         throw runtime_error("invalid face description, expected <fg>[,<bg>][+<attr>]");
     Face res;
-    res.fg = str_to_color({facedesc.begin(), std::min(attr_it, bg_it)});
+    res.fg = attr_it != facedesc.begin() ?
+        str_to_color({facedesc.begin(), std::min(attr_it, bg_it)}) : Color::Default;
     if (bg_it != facedesc.end())
-        res.bg = str_to_color({bg_it+1, attr_it});
+        res.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, attr_it}) : Color::Default;
     if (attr_it != facedesc.end())
     {
         for (++attr_it; attr_it != facedesc.end(); ++attr_it)
