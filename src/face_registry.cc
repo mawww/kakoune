@@ -104,6 +104,7 @@ FaceRegistry::FaceRegistry()
         { "LineNumberCursor", Face{ Color::Default, Color::Default, Attribute::Reverse } },
         { "MenuForeground", Face{ Color::White, Color::Blue } },
         { "MenuBackground", Face{ Color::Blue, Color::White } },
+        { "MenuInfo", Face{ Color::Cyan, Color::Default } },
         { "Information", Face{ Color::Black, Color::Yellow } },
         { "Error", Face{ Color::Black, Color::Red } },
         { "StatusLine", Face{ Color::Cyan, Color::Default } },

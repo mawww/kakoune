@@ -138,12 +138,16 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     candidates.reserve(matches.size());
     for (auto& m : matches)
     {
-        String menu_entry;
+        DisplayLine menu_entry;
         if (m.buffer)
         {
             const auto pad_len = longest + 1 - m.match.char_length();
-            menu_entry = m.match + String{' ', pad_len} + m.buffer->display_name();
+            menu_entry.push_back({ m.match.str(), {} });
+            menu_entry.push_back({ String{' ', pad_len}, {} });
+            menu_entry.push_back({ m.buffer->display_name(), get_face("MenuInfo") });
         }
+        else
+            menu_entry.push_back({ m.match.str(), {} });
 
         candidates.push_back({m.match.str(), "", std::move(menu_entry)});
     }
@@ -185,7 +189,10 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
             for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
-                candidates.push_back({filename.substr(dir.length()).str(), ""});
+            {
+                StringView candidate = filename.substr(dir.length());
+                candidates.push_back({candidate.str(), "", { candidate.str(), {} }});
+            }
         }
     }
     if (candidates.empty())
@@ -227,6 +234,10 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
             StringView prefix = buffer[coord.line].substr(
                 coord.column, cursor_pos.column - coord.column);
 
+
+            const CharCount tabstop = options["tabstop"].get<int>();
+            const CharCount column = get_column(buffer, tabstop, cursor_pos);
+
             InsertCompletion::CandidateList candidates;
             for (auto it = opt.begin() + 1; it != opt.end(); ++it)
             {
@@ -235,9 +246,10 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                 {
                     StringView completion = splitted[0];
                     StringView docstring = splitted.size() > 1 ? splitted[1] : StringView{};
-                    StringView menu_entry = splitted.size() > 2 ? splitted[2] : StringView{};
+                    StringView menu_entry = splitted.size() > 2 ? splitted[2] : splitted[0];
 
-                    candidates.push_back({completion.str(), docstring.str(), menu_entry.str()});
+                    candidates.push_back({completion.str(), docstring.str(),
+                                          { expand_tabs(menu_entry, tabstop, column), {} }});
                 }
             }
             return { coord, end, std::move(candidates), timestamp };
@@ -246,8 +258,11 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
     return {};
 }
 
-InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
+InsertCompletion complete_line(const Buffer& buffer, OptionManager& options, ByteCoord cursor_pos)
 {
+    const CharCount tabstop = options["tabstop"].get<int>();
+    const CharCount column = get_column(buffer, tabstop, cursor_pos);
+
     StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
     InsertCompletion::CandidateList candidates;
     for (LineCount l = 0_line; l < buffer.line_count(); ++l)
@@ -256,7 +271,11 @@ InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos)
             continue;
         ByteCount len = buffer[l].length();
         if (len > cursor_pos.column and std::equal(prefix.begin(), prefix.end(), buffer[l].begin()))
-            candidates.push_back({buffer[l].substr(0_byte, len-1).str(), ""});
+        {
+            StringView candidate = buffer[l].substr(0_byte, len-1);
+            candidates.push_back({candidate.str(), "",
+                                 { expand_tabs(candidate, tabstop, column), {} }});
+        }
     }
     if (candidates.empty())
         return {};
@@ -418,17 +437,9 @@ void InsertCompleter::menu_show()
         return;
     CharCoord menu_pos = m_context.window().display_position(m_completions.begin);
 
-    const CharCount tabstop = m_options["tabstop"].get<int>();
-    const CharCount column = get_column(m_context.buffer(), tabstop,
-                                        m_completions.begin);
     Vector<DisplayLine> menu_entries;
     for (auto& candidate : m_matching_candidates)
-    {
-        const String& entry = candidate.menu_entry.empty() ?
-            candidate.completion : candidate.menu_entry;
-
-        menu_entries.push_back({ expand_tabs(entry, tabstop, column), {} });
-    }
+        menu_entries.push_back(candidate.menu_entry);
 
     m_context.ui().menu_show(menu_entries, menu_pos,
                              get_face("MenuForeground"),
@@ -497,7 +508,7 @@ void InsertCompleter::explicit_word_complete()
 void InsertCompleter::explicit_line_complete()
 {
     try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
-        return complete_line(buffer, cursor_pos);
+        return complete_line(buffer, m_options, cursor_pos);
     });
 }
 

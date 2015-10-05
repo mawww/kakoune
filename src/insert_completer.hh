@@ -3,6 +3,7 @@
 
 #include "buffer.hh"
 #include "option_manager.hh"
+#include "display_buffer.hh"
 
 #include "optional.hh"
 
@@ -45,7 +46,7 @@ struct InsertCompletion
     {
         String completion;
         String docstring;
-        String menu_entry;
+        DisplayLine menu_entry;
 
         bool operator==(const Candidate& other) const { return completion == other.completion; }
         bool operator<(const Candidate& other) const { return completion < other.completion; }
