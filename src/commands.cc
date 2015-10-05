@@ -1386,7 +1386,8 @@ const CommandDesc menu_cmd = {
     "menu and execute commands for the selected item",
     ParameterDesc{
         { { "auto-single", { false, "instantly validate if only one item is available" } },
-          { "select-cmds", { false, "each item specify an additional command to run when selected" } } }
+          { "select-cmds", { false, "each item specify an additional command to run when selected" } },
+          { "markup", { false, "parse menu entries as markup text" } } }
     },
     CommandFlags::None,
     CommandHelper{},
@@ -1394,6 +1395,7 @@ const CommandDesc menu_cmd = {
     [](const ParametersParser& parser, Context& context)
     {
         const bool with_select_cmds = (bool)parser.get_switch("select-cmds");
+        const bool markup = (bool)parser.get_switch("markup");
         const size_t modulo = with_select_cmds ? 3 : 2;
 
         const size_t count = parser.positional_count();
@@ -1411,7 +1413,8 @@ const CommandDesc menu_cmd = {
         Vector<String> select_cmds;
         for (int i = 0; i < count; i += modulo)
         {
-            choices.push_back({ parser[i], {} });
+            choices.push_back(markup ? parse_display_line(parser[i])
+                                     : DisplayLine{ parser[i], {} });
             commands.push_back(parser[i+1]);
             if (with_select_cmds)
                 select_cmds.push_back(parser[i+2]);
