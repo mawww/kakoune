@@ -103,7 +103,7 @@ public:
 
     DisplayLine() = default;
     DisplayLine(AtomList atoms);
-    DisplayLine(String str, Face face)
+    DisplayLine(String str, Face face = Face{})
     { push_back({ std::move(str), face }); }
 
     iterator begin() { return m_atoms.begin(); }

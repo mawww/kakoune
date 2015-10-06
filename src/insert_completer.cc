@@ -142,12 +142,12 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         if (m.buffer)
         {
             const auto pad_len = longest + 1 - m.match.char_length();
-            menu_entry.push_back({ m.match.str(), {} });
-            menu_entry.push_back({ String{' ', pad_len}, {} });
+            menu_entry.push_back(m.match.str());
+            menu_entry.push_back(String{' ', pad_len});
             menu_entry.push_back({ m.buffer->display_name(), get_face("MenuInfo") });
         }
         else
-            menu_entry.push_back({ m.match.str(), {} });
+            menu_entry.push_back(m.match.str());
 
         candidates.push_back({m.match.str(), "", std::move(menu_entry)});
     }
@@ -180,7 +180,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     if (prefix.front() == '/')
     {
         for (auto& filename : Kakoune::complete_filename(prefix, Regex{}))
-            candidates.push_back({ filename, "", { filename, {} } });
+            candidates.push_back({ filename, "", filename });
     }
     else
     {
@@ -191,7 +191,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
             for (auto& filename : Kakoune::complete_filename(dir + prefix, Regex{}))
             {
                 StringView candidate = filename.substr(dir.length());
-                candidates.push_back({candidate.str(), "", { candidate.str(), {} }});
+                candidates.push_back({ candidate.str(), "", candidate.str() });
             }
         }
     }
@@ -246,10 +246,12 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                 {
                     StringView completion = splitted[0];
                     StringView docstring = splitted.size() > 1 ? splitted[1] : StringView{};
-                    StringView menu_entry = splitted.size() > 2 ? splitted[2] : splitted[0];
 
-                    candidates.push_back({completion.str(), docstring.str(),
-                                          { expand_tabs(menu_entry, tabstop, column), {} }});
+                    DisplayLine menu_entry = splitted.size() > 2 ?
+                        parse_display_line(expand_tabs(splitted[2], tabstop, column))
+                      : DisplayLine{ expand_tabs(splitted[0], tabstop, column) };
+
+                    candidates.push_back({completion.str(), docstring.str(), std::move(menu_entry)});
                 }
             }
             return { coord, end, std::move(candidates), timestamp };
@@ -274,7 +276,7 @@ InsertCompletion complete_line(const Buffer& buffer, OptionManager& options, Byt
         {
             StringView candidate = buffer[l].substr(0_byte, len-1);
             candidates.push_back({candidate.str(), "",
-                                 { expand_tabs(candidate, tabstop, column), {} }});
+                                  expand_tabs(candidate, tabstop, column)});
         }
     }
     if (candidates.empty())
