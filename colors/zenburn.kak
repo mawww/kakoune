@@ -6,7 +6,7 @@ face zenstatus       rgb:efdcbc,rgb:2a2a2a
 face zencursor       default,rgb:7f9f7f
 face zeninfo         rgb:cc9393,rgb:2a2a2a
 face zenmenubg       rgb:7f9f7f,rgb:4a4a4a
-face zenmenufg       rgb:8cd0d3,rgb:4a4a4a
+face zenmenufg       rgb:8cd0d3,rgb:5b5b5b
 face zentext         rgb:efefef
 face zenkeyword      rgb:f0dfaf+b
 face zenstorageClass rgb:c3bf9f+b
