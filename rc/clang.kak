@@ -61,7 +61,7 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
                                 for (id in completions)
                                 {
                                     menu=id
-                                    gsub(/operator/, "{keyword}operator{}", menu)
+                                    gsub(/(operator|new|delete)/, "{keyword}&{}", menu)
                                     print id  "@" completions[id] "@" menu
                                 }
                             }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
