@@ -61,7 +61,9 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
                                 for (id in docstrings)
                                 {
                                     menu=id
-                                    gsub(/(operator|new|delete)/, "{keyword}&{}", menu)
+                                    gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^[:alnum:]_])/, "{keyword}&{}", menu)
+                                    gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
+                                    gsub(/[^[:alnum:]{}_]+/, "{operator}&{}", menu)
                                     print id  "@" docstrings[id] "@" menu
                                 }
                             }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
