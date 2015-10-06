@@ -52,17 +52,17 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
                                  gsub(/:/, "\\:", id)
                                  desc=$4 ? $3 "\\n" $4 : $3
                                  gsub(/:/, "\\:", desc)
-                                 if (id in completions)
-                                     completions[id]=completions[id] "\\n" desc
+                                 if (id in docstrings)
+                                     docstrings[id]=docstrings[id] "\\n" desc
                                  else
-                                     completions[id]=desc
+                                     docstrings[id]=desc
                             }
                             END {
-                                for (id in completions)
+                                for (id in docstrings)
                                 {
                                     menu=id
                                     gsub(/(operator|new|delete)/, "{keyword}&{}", menu)
-                                    print id  "@" completions[id] "@" menu
+                                    print id  "@" docstrings[id] "@" menu
                                 }
                             }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
                 echo "eval -client ${kak_client} echo 'clang completion done'
