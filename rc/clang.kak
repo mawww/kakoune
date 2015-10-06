@@ -59,7 +59,11 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
                             }
                             END {
                                 for (id in completions)
-                                    print id  "@" completions[id]
+                                {
+                                    menu=id
+                                    gsub(/operator/, "{keyword}operator{}", menu)
+                                    print id  "@" completions[id] "@" menu
+                                }
                             }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
                 echo "eval -client ${kak_client} echo 'clang completion done'
                       set 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
