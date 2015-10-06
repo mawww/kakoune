@@ -595,9 +595,7 @@ void NCursesUI::draw_menu()
     if (not m_menu)
         return;
 
-    const auto menu_fg = get_color_pair(m_menu_fg);
     const auto menu_bg = get_color_pair(m_menu_bg);
-
     wattron(m_menu.win, COLOR_PAIR(menu_bg));
     wbkgdset(m_menu.win, COLOR_PAIR(menu_bg));
 
