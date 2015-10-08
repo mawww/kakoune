@@ -648,6 +648,7 @@ int main(int argc, char* argv[])
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGINT, [](int){});
     signal(SIGCHLD, [](int){});
 
     Vector<String> params;

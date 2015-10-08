@@ -260,7 +260,6 @@ NCursesUI::NCursesUI()
 
     signal(SIGWINCH, on_term_resize);
     signal(SIGCONT, on_term_resize);
-    signal(SIGINT, [](int){});
 
     check_resize(true);
 
@@ -276,7 +275,6 @@ NCursesUI::~NCursesUI()
         restore_colors();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGCONT, SIG_DFL);
-    signal(SIGINT, SIG_DFL);
 }
 
 void NCursesUI::Window::create(const CharCoord& p, const CharCoord& s)
