@@ -631,11 +631,14 @@ Server::Server(String session_name)
     m_listener.reset(new FDWatcher{listen_sock, accepter});
 }
 
-void Server::close_session()
+void Server::close_session(bool do_unlink)
 {
-    char socket_file[128];
-    format_to(socket_file, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
-    unlink(socket_file);
+    if (do_unlink)
+    {
+        char socket_file[128];
+        format_to(socket_file, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
+        unlink(socket_file);
+    }
     m_listener->close_fd();
     m_listener.reset();
 }

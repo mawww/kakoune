@@ -48,7 +48,7 @@ struct Server : public Singleton<Server>
     ~Server();
     const String& session() const { return m_session; }
 
-    void close_session();
+    void close_session(bool do_unlink = true);
 
 private:
     class Accepter;

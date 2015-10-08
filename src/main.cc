@@ -242,6 +242,27 @@ void register_options()
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
 }
 
+struct convert_to_client_mode
+{
+    String session;
+};
+
+static Client* local_client = nullptr;
+static bool convert_to_client_pending = false;
+
+pid_t fork_server_to_background()
+{
+    if (pid_t pid = fork())
+        return pid;
+
+    if (fork()) // double fork to orphan the server
+        exit(0);
+
+    write_stderr(format("Kakoune forked server to background ({}), for session '{}'\n",
+                        getpid(), Server::instance().session()));
+    return 0;
+}
+
 std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 {
     struct DummyUI : UserInterface
@@ -269,15 +290,52 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 
     struct LocalUI : NCursesUI
     {
+        LocalUI()
+        {
+            m_old_sighup = signal(SIGHUP, [](int) {
+                ClientManager::instance().remove_client(*local_client, false);
+            });
+
+            m_old_sigtstp = signal(SIGTSTP, [](int) {
+                if (ClientManager::instance().count() == 1 and
+                    *ClientManager::instance().begin() == local_client)
+                {
+                    // Suspend normally if we are the only client
+                    auto current = signal(SIGTSTP, static_cast<LocalUI&>(local_client->ui()).m_old_sigtstp);
+
+                    sigset_t unblock_sigtstp, old_mask;
+                    sigemptyset(&unblock_sigtstp);
+                    sigaddset(&unblock_sigtstp, SIGTSTP);
+                    sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
+
+                    raise(SIGTSTP);
+
+                    sigprocmask(SIG_SETMASK, &old_mask, nullptr);
+
+                    signal(SIGTSTP, current);
+                }
+                else
+                    convert_to_client_pending = true;
+           });
+        }
+
         ~LocalUI()
         {
-            if (not ClientManager::instance().empty() and fork())
+            signal(SIGHUP, m_old_sighup);
+            signal(SIGTSTP, m_old_sigtstp);
+            local_client = nullptr;
+            if (not convert_to_client_pending and
+                not ClientManager::instance().empty())
             {
                 this->NCursesUI::~NCursesUI();
-                write_stdout("detached from terminal\n");
-                exit(0);
+                if (fork_server_to_background())
+                    exit(0);
             }
         }
+
+    private:
+        sighandler_t m_old_sighup;
+        sighandler_t m_old_sigtstp;
     };
 
     if (not isatty(1))
@@ -298,20 +356,14 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 
 void create_local_client(std::unique_ptr<UserInterface> ui, StringView init_command, bool startup_error)
 {
-    static Client* client = ClientManager::instance().create_client(
+     local_client = ClientManager::instance().create_client(
         std::move(ui), get_env_vars(), init_command);
 
     if (startup_error)
-        client->print_status({
+        local_client->print_status({
             "error during startup, see *debug* buffer for details",
             get_face("Error")
         });
-
-    signal(SIGHUP, [](int) {
-        if (client)
-            ClientManager::instance().remove_client(*client, false);
-        client = nullptr;
-    });
 }
 
 void signal_handler(int signal)
@@ -475,6 +527,19 @@ int run_server(StringView session, StringView init_command,
             client_manager.handle_pending_inputs();
             buffer_manager.clear_buffer_trash();
             string_registry.purge_unused();
+
+            if (convert_to_client_pending)
+            {
+                ClientManager::instance().remove_client(*local_client, true);
+                convert_to_client_pending = false;
+
+                if (fork_server_to_background())
+                {
+                    String session = server.session();
+                    server.close_session(false);
+                    throw convert_to_client_mode{ std::move(session) };
+                }
+            }
         }
     }
     catch (const kill_session&) {}
@@ -657,11 +722,19 @@ int main(int argc, char* argv[])
                 files.emplace_back(parser[i]);
 
             StringView session = parser.get_switch("s").value_or(StringView{});
-            return run_server(session, init_command,
-                              (bool)parser.get_switch("n"),
-                              (bool)parser.get_switch("d"),
-                              (bool)parser.get_switch("u"),
-                              files);
+            try
+            {
+                return run_server(session, init_command,
+                                  (bool)parser.get_switch("n"),
+                                  (bool)parser.get_switch("d"),
+                                  (bool)parser.get_switch("u"),
+                                  files);
+            }
+            catch (convert_to_client_mode& convert)
+            {
+                raise(SIGTSTP);
+                return run_client(convert.session, "echo converted to client only mode");
+            }
         }
     }
     catch (Kakoune::parameter_error& error)
