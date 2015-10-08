@@ -7,7 +7,6 @@
 #include "register_manager.hh"
 #include "utf8_iterator.hh"
 
-#include <map>
 #include <algorithm>
 
 #define NCURSES_OPAQUE 0
@@ -60,15 +59,6 @@ static void set_attribute(WINDOW* window, int attribute, bool on)
         wattron(window, attribute);
     else
         wattroff(window, attribute);
-}
-
-static bool operator<(Color lhs, Color rhs)
-{
-    if (lhs.color == rhs.color and lhs.color == Color::RGB)
-        return lhs.r == rhs.r ? (lhs.g == rhs.g ? lhs.b < rhs.b
-                                                : lhs.g < rhs.g)
-                              : lhs.r < rhs.r;
-    return lhs.color < rhs.color;
 }
 
 template<typename T> T sq(T x) { return x * x; }
@@ -149,35 +139,22 @@ static void restore_colors()
     }
 }
 
-static int nc_color(Color color)
+int NCursesUI::get_color(Color color)
 {
-    static std::map<Color, int> colors = {
-        { Color::Default, -1 },
-        { Color::Black,   COLOR_BLACK },
-        { Color::Red,     COLOR_RED },
-        { Color::Green,   COLOR_GREEN },
-        { Color::Yellow,  COLOR_YELLOW },
-        { Color::Blue,    COLOR_BLUE },
-        { Color::Magenta, COLOR_MAGENTA },
-        { Color::Cyan,    COLOR_CYAN },
-        { Color::White,   COLOR_WHITE },
-    };
-    static int next_color = 16;
-
-    auto it = colors.find(color);
-    if (it != colors.end())
+    auto it = m_colors.find(color);
+    if (it != m_colors.end())
         return it->second;
     else if (can_change_color() and COLORS > 16)
     {
         kak_assert(color.color == Color::RGB);
-        if (next_color > COLORS)
-            next_color = 16;
-        init_color(next_color,
+        if (m_next_color > COLORS)
+            m_next_color = 16;
+        init_color(m_next_color,
                    color.r * 1000 / 255,
                    color.g * 1000 / 255,
                    color.b * 1000 / 255);
-        colors[color] = next_color;
-        return next_color++;
+        m_colors[color] = m_next_color;
+        return m_next_color++;
     }
     else
     {
@@ -200,25 +177,23 @@ static int nc_color(Color color)
     }
 }
 
-static int get_color_pair(const Face& face)
+int NCursesUI::get_color_pair(const Face& face)
 {
-    using ColorPair = std::pair<Color, Color>;
-    static UnorderedMap<ColorPair, int, MemoryDomain::Faces> colorpairs;
     static int next_pair = 1;
 
     ColorPair colors{face.fg, face.bg};
-    auto it = colorpairs.find(colors);
-    if (it != colorpairs.end())
+    auto it = m_colorpairs.find(colors);
+    if (it != m_colorpairs.end())
         return it->second;
     else
     {
-        init_pair(next_pair, nc_color(face.fg), nc_color(face.bg));
-        colorpairs[colors] = next_pair;
+        init_pair(next_pair, get_color(face.fg), get_color(face.bg));
+        m_colorpairs[colors] = next_pair;
         return next_pair++;
     }
 }
 
-void set_face(WINDOW* window, Face face, const Face& default_face)
+void NCursesUI::set_face(NCursesWin* window, Face face, const Face& default_face)
 {
     static int current_pair = -1;
 
@@ -259,7 +234,18 @@ NCursesUI::NCursesUI()
         if (m_input_callback)
             m_input_callback(mode);
       }},
-      m_assistant(assistant_clippy)
+      m_assistant(assistant_clippy),
+      m_colors{
+        { Color::Default, -1 },
+        { Color::Black,   COLOR_BLACK },
+        { Color::Red,     COLOR_RED },
+        { Color::Green,   COLOR_GREEN },
+        { Color::Yellow,  COLOR_YELLOW },
+        { Color::Blue,    COLOR_BLUE },
+        { Color::Magenta, COLOR_MAGENTA },
+        { Color::Cyan,    COLOR_CYAN },
+        { Color::White,   COLOR_WHITE },
+      }
 {
     initscr();
     raw();
@@ -340,9 +326,9 @@ void add_str(WINDOW* win, StringView str)
     waddnstr(win, str.begin(), (int)str.length());
 }
 
-static void draw_line(NCursesWin* window, const DisplayLine& line,
-                       CharCount col_index, CharCount max_column,
-                       const Face& default_face)
+void NCursesUI::draw_line(NCursesWin* window, const DisplayLine& line,
+                          CharCount col_index, CharCount max_column,
+                          const Face& default_face)
 {
     for (const DisplayAtom& atom : line)
     {

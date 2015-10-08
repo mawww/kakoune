@@ -6,6 +6,7 @@
 #include "face.hh"
 #include "user_interface.hh"
 #include "array_view.hh"
+#include "unordered_map.hh"
 
 namespace Kakoune
 {
@@ -55,9 +56,21 @@ private:
     void check_resize(bool force = false);
     void redraw();
 
+    int get_color(Color color);
+    int get_color_pair(const Face& face);
+    void set_face(NCursesWin* window, Face face, const Face& default_face);
+    void draw_line(NCursesWin* window, const DisplayLine& line,
+                   CharCount col_index, CharCount max_column,
+                   const Face& default_face);
+
     NCursesWin* m_window = nullptr;
 
     CharCoord m_dimensions;
+
+    using ColorPair = std::pair<Color, Color>;
+    UnorderedMap<Color, int, MemoryDomain::Faces> m_colors;
+    UnorderedMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
+    int m_next_color = 16;
 
     struct Window
     {
