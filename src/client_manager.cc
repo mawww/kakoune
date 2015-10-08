@@ -50,9 +50,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         client->context().hooks().run_hook("RuntimeError", error.what(),
                                            client->context());
     }
-    catch (Kakoune::client_removed&)
+    catch (Kakoune::client_removed& removed)
     {
-        m_clients.pop_back();
+        remove_client(*client, removed.graceful);
         return nullptr;
     }
 
@@ -69,13 +69,16 @@ void ClientManager::handle_pending_inputs() const
         client->handle_available_input(EventMode::Pending);
 }
 
-void ClientManager::remove_client(Client& client)
+void ClientManager::remove_client(Client& client, bool graceful)
 {
     auto it = find_if(m_clients,
                       [&](const std::unique_ptr<Client>& ptr)
                       { return ptr.get() == &client; });
     kak_assert(it != m_clients.end());
     m_clients.erase(it);
+
+    if (not graceful and m_clients.empty())
+        BufferManager::instance().backup_modified_buffers();
 }
 
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)

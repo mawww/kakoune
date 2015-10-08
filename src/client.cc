@@ -86,9 +86,9 @@ void Client::handle_available_input(EventMode mode)
         context().print_status({ error.what().str(), get_face("Error") });
         context().hooks().run_hook("RuntimeError", error.what(), context());
     }
-    catch (Kakoune::client_removed&)
+    catch (Kakoune::client_removed& removed)
     {
-        ClientManager::instance().remove_client(*this);
+        ClientManager::instance().remove_client(*this, removed.graceful);
     }
 }
 

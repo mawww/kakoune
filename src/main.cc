@@ -309,7 +309,7 @@ void create_local_client(std::unique_ptr<UserInterface> ui, StringView init_comm
 
     signal(SIGHUP, [](int) {
         if (client)
-            ClientManager::instance().remove_client(*client);
+            ClientManager::instance().remove_client(*client, false);
         client = nullptr;
     });
 }

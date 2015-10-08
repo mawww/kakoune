@@ -299,7 +299,7 @@ void quit()
         }
     }
     // unwind back to this client event handler.
-    throw client_removed{};
+    throw client_removed{ true };
 }
 
 const CommandDesc quit_cmd = {

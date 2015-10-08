@@ -391,12 +391,12 @@ Key RemoteUI::get_key()
     }
     catch (peer_disconnected&)
     {
-        throw client_removed{};
+        throw client_removed{ false };
     }
     catch (socket_error&)
     {
         write_to_debug_buffer("ungraceful deconnection detected");
-        throw client_removed{};
+        throw client_removed{ false };
     }
 }
 
