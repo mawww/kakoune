@@ -273,6 +273,7 @@ NCursesUI::NCursesUI()
     enable_mouse(true);
 
     signal(SIGWINCH, on_term_resize);
+    signal(SIGCONT, on_term_resize);
     signal(SIGINT, [](int){});
 
     check_resize(true);
@@ -288,6 +289,7 @@ NCursesUI::~NCursesUI()
     if (changed_color)
         restore_colors();
     signal(SIGWINCH, SIG_DFL);
+    signal(SIGCONT, SIG_DFL);
     signal(SIGINT, SIG_DFL);
 }
 
