@@ -130,15 +130,6 @@ constexpr struct { unsigned char r, g, b; } builtin_colors[] = {
     {0xd0,0xd0,0xd0}, {0xda,0xda,0xda}, {0xe4,0xe4,0xe4}, {0xee,0xee,0xee},
 };
 
-static void restore_colors()
-{
-    for (size_t i = 16; i < COLORS; ++i)
-    {
-        auto& c = builtin_colors[i];
-        init_color(i, c.r * 1000 / 255, c.g * 1000 / 255, c.b * 1000 / 255);
-    }
-}
-
 int NCursesUI::get_color(Color color)
 {
     auto it = m_colors.find(color);
@@ -269,10 +260,7 @@ NCursesUI::NCursesUI()
 NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
-    const bool changed_color = can_change_color();
     endwin();
-    if (changed_color)
-        restore_colors();
     signal(SIGWINCH, SIG_DFL);
     signal(SIGCONT, SIG_DFL);
 }
