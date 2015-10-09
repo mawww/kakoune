@@ -440,6 +440,23 @@ public:
 
     DisplayLine build_display_line(CharCount width)
     {
+        auto cleanup = [](StringView str) {
+            String res;
+            auto pos = str.begin();
+            for (auto it = str.begin(), end = str.end(); it != end; ++it)
+            {
+                char c = *it;
+                if (c == '\n' or c == '\r')
+                {
+                    res += StringView{pos, it};
+                    utf8::dump(std::back_inserter(res), c == '\n' ? 0x2424 : 0x240D);
+                    pos = it+1;
+                }
+            }
+            res += StringView{pos, str.end()};
+            return res;
+        };
+
         kak_assert(m_cursor_pos <= m_line.char_length());
         if (m_cursor_pos < m_display_pos)
             m_display_pos = m_cursor_pos;
@@ -447,12 +464,12 @@ public:
             m_display_pos = m_cursor_pos + 1 - width;
 
         if (m_cursor_pos == m_line.char_length())
-            return DisplayLine{{ {m_line.substr(m_display_pos, width-1).str(), get_face("StatusLine")},
-                                 {" "_str, get_face("StatusCursor")} }};
+            return DisplayLine{{ { cleanup(m_line.substr(m_display_pos, width-1)), get_face("StatusLine") },
+                                 { " "_str, get_face("StatusCursor")} } };
         else
-            return DisplayLine({ { m_line.substr(m_display_pos, m_cursor_pos - m_display_pos).str(), get_face("StatusLine") },
-                                 { m_line.substr(m_cursor_pos,1).str(), get_face("StatusCursor") },
-                                 { m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1).str(), get_face("StatusLine") } });
+            return DisplayLine({ { cleanup(m_line.substr(m_display_pos, m_cursor_pos - m_display_pos)), get_face("StatusLine") },
+                                 { cleanup(m_line.substr(m_cursor_pos,1)), get_face("StatusCursor") },
+                                 { cleanup(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), get_face("StatusLine") } });
     }
 private:
     CharCount      m_cursor_pos = 0;
