@@ -334,8 +334,9 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
         }
 
     private:
-        sighandler_t m_old_sighup;
-        sighandler_t m_old_sigtstp;
+        using SigHandler = void (*)(int);
+        SigHandler m_old_sighup;
+        SigHandler m_old_sigtstp;
     };
 
     if (not isatty(1))
