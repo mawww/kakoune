@@ -68,6 +68,17 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
     try %[ exec -draft "hm;<a-?>(class|struct|union)<ret><a-k>\`(class|struct|union)[^{}\n]+(\n)?\s*\{\'<ret><a-;>ma;<esc>" ]
 ]
 
+decl str c_astyle_options ""
+def c-format-astyle -docstring "Format C/C++/Obj-C code using the astyle utility" %{
+    %sh{
+        readonly x=$((kak_cursor_column - 1))
+        readonly y="${kak_cursor_line}"
+
+        echo "exec -draft %{%|astyle<space>${kak_opt_c_astyle_options// /<space>}<ret>}"
+        echo "exec gg ${y}g ${x}l"
+    }
+}
+
 # Regions definition are the same between c++ and objective-c
 %sh{
     for ft in c cpp objc; do
@@ -122,13 +133,18 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
 
     alias window alt c-family-alternative-file
     alias window comment-selection c-family-comment-selection
+
+    alias window format-code c-format-astyle
 ]
 
 hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
-    rmhooks window c-family-indent
     rmhooks window c-family-hooks
+    rmhooks window c-family-indent
+
     unalias window alt c-family-alternative-file
     unalias window comment-selection c-family-comment-selection
+
+    unalias window format-code
 ]
 
 hook global WinSetOption filetype=c %[ addhl ref c ]
