@@ -158,9 +158,8 @@ public:
           m_fs_check_timer{TimePoint::max(),
                            context().flags() & Context::Flags::Transient ?
                             Timer::Callback() : Timer::Callback([this](Timer& timer) {
-              if (not context().has_client())
-                  return;
-              context().client().check_if_buffer_needs_reloading();
+              if (context().has_client())
+                  context().client().check_if_buffer_needs_reloading();
               timer.set_next_date(Clock::now() + fs_check_timeout);
           })},
           m_single_command(single_command)
