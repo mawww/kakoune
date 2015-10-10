@@ -141,6 +141,75 @@
             </div>
 
             <div class="row-fluid">
+                <div id="kak-demos" class="col-sm-10 col-sm-offset-1">
+                    <div id="carousel-demos" class="carousel slide" data-ride="carousel" data-interval="false">
+                        <ol class="carousel-indicators">
+                            <li data-target="#carousel-demos" data-slide-to="0" class="active"></li>
+                            <li data-target="#carousel-demos" data-slide-to="1"></li>
+                            <li data-target="#carousel-demos" data-slide-to="2"></li>
+                            <li data-target="#carousel-demos" data-slide-to="3"></li>
+                        </ol>
+
+                        <div class="carousel-inner" role="listbox">
+                            <div class="item active">
+                                <video autoplay loop>
+                                    <source src="video/align.webm" type="video/webm">
+                                    Your browser does not support the <code>video</code> element.
+                                </video>
+
+                                <div class="demo-caption">
+                                    Automatically indent symbols, by aligning the cursors of the splitted selections
+                                </div>
+                            </div>
+
+                            <div class="item">
+                                <video autoplay loop>
+                                    <source src="video/gather.webm" type="video/webm">
+                                    Your browser does not support the <code>video</code> element.
+                                </video>
+
+                                <div class="demo-caption">
+                                    Predicated selection of text, saved into the internal buffer for further manipulation
+                                </div>
+                            </div>
+
+                            <div class="item">
+                                <video autoplay loop>
+                                    <source src="video/rename.webm" type="video/webm">
+                                    Your browser does not support the <code>video</code> element.
+                                </video>
+
+                                <div class="demo-caption">
+                                    Visual and interactive text replace within a selection
+                                </div>
+                            </div>
+
+                            <div class="item">
+                                <video autoplay loop>
+                                    <source src="video/swap.webm" type="video/webm">
+                                    Your browser does not support the <code>video</code> element.
+                                </video>
+
+                                <div class="demo-caption">
+                                    Rotation of multiple selections, splitted by a custom delimiter
+                                </div>
+                            </div>
+                        </div>
+
+                        <a class="left carousel-control" href="#carousel-demos" role="button" data-slide="prev">
+                            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="right carousel-control" href="#carousel-demos" role="button" data-slide="next">
+                            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row-fluid">
                 <div class="col-sm-10 col-sm-offset-1">
                     <div class="col-sm-12">
                         <h2 class="page-header">Screenshots</h2>
@@ -180,5 +249,8 @@
                 </div>
             </div>
         </div>
+
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     </body>
 </html>

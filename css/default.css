@@ -57,6 +57,11 @@ a:hover {
     background-color: #FAFAFA;
 }
 
+#kak-demos {
+    background-color: #EEE;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15) inset;
+}
+
 #footer {
     margin-top: 1em;
     padding: .5em;
@@ -84,6 +89,32 @@ a:hover {
     font-weight: bold;
 }
 
+#carousel-demos .carousel-inner .item > video {
+    display: block;
+    margin: 1em auto;
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+#carousel-demos .carousel-control.left,
+#carousel-demos .carousel-control.right {
+    background-image: none;
+}
+
+#carousel-demos ul.carousel-indicators,
+#carousel-demos ol.carousel-indicators {
+    margin-bottom: 5%;
+}
+
+#carousel-demos ul.carousel-indicators li.active,
+#carousel-demos ol.carousel-indicators li.active {
+    border: none;
+    border-radius: none;
+    width: 16px;
+    height: 16px;
+    background-image: url(../img/kakoune_logo_32.png);
+    background-size: cover;
+}
+
 .navbar-default {
     border-color: #ACACAC;
 }
@@ -109,6 +140,13 @@ a:hover {
 
 .feature-text {
     text-align: justify;
+    margin-bottom: 1em;
+}
+
+.demo-caption {
+    font-size: 1.1em;
+    font-style: italic;
+    text-align: center;
     margin-bottom: 1em;
 }
 
