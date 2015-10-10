@@ -890,6 +890,7 @@ Some parameters provide a way to change the context of execution:
      comma separated list <names>, '*' as a name can be used to iterate
      on all buffers.
  * `-no-hooks`: disable hook execution while executing the keys/commands
+ * `-with-maps`: use user key mapping in `:exec` instead of built in keys.
 
 The execution stops when the last key/command is reached, or an error
 is raised.
