@@ -423,9 +423,11 @@ void NCursesUI::check_resize(bool force)
     winsize ws;
     if (ioctl(fd, TIOCGWINSZ, (void*)&ws) == 0)
     {
+        const bool info = (bool)m_info;
+        const bool menu = (bool)m_menu;
         if (m_window) delwin(m_window);
-        if (m_info) m_info.destroy();
-        if (m_menu) m_menu.destroy();
+        if (info) m_info.destroy();
+        if (menu) m_menu.destroy();
 
         resize_term(ws.ws_row, ws.ws_col);
 
@@ -438,11 +440,13 @@ void NCursesUI::check_resize(bool force)
         if (char* csr = tigetstr((char*)"csr"))
             putp(tparm(csr, (long)0, (long)ws.ws_row));
 
-        if (not m_items.empty())
+        if (menu)
         {
             auto items = std::move(m_items);
             menu_show(items, m_menu_anchor, m_menu_fg, m_menu_bg, m_menu_style);
         }
+        if (info)
+            info_show(m_info_title, m_info_content, m_info_anchor, m_info_face, m_info_style);
     }
     else
         kak_assert(false);
@@ -824,11 +828,17 @@ void NCursesUI::info_show(StringView title, StringView content,
 {
     info_hide();
 
+    m_info_title = title.str();
+    m_info_content = content.str();
+    m_info_anchor = anchor;
+    m_info_face = face;
+    m_info_style = style;
+
     String info_box;
     if (style == InfoStyle::Prompt)
     {
-        info_box = make_info_box(title, content, m_dimensions.column,
-                                 m_assistant);
+        info_box = make_info_box(m_info_title, m_info_content,
+                                 m_dimensions.column, m_assistant);
         anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
     }
@@ -844,7 +854,7 @@ void NCursesUI::info_show(StringView title, StringView content,
         if (max_width < 4)
             return;
 
-        for (auto& line : wrap_lines(content, max_width))
+        for (auto& line : wrap_lines(m_info_content, max_width))
             info_box += line + "\n";
     }
 

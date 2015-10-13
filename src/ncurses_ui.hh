@@ -99,6 +99,11 @@ private:
     void draw_menu();
 
     Window m_info;
+    String m_info_title;
+    String m_info_content;
+    Face m_info_face;
+    CharCoord m_info_anchor;
+    InfoStyle m_info_style;
 
     FDWatcher     m_stdin_watcher;
     InputCallback m_input_callback;
