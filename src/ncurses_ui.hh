@@ -91,6 +91,8 @@ private:
     Vector<DisplayLine> m_items;
     Face m_menu_fg;
     Face m_menu_bg;
+    CharCoord m_menu_anchor;
+    MenuStyle m_menu_style;
     int m_selected_item = 0;
     int m_menu_columns = 1;
     LineCount m_menu_top_line = 0;

@@ -437,6 +437,12 @@ void NCursesUI::check_resize(bool force)
 
         if (char* csr = tigetstr((char*)"csr"))
             putp(tparm(csr, (long)0, (long)ws.ws_row));
+
+        if (not m_items.empty())
+        {
+            auto items = std::move(m_items);
+            menu_show(items, m_menu_anchor, m_menu_fg, m_menu_bg, m_menu_style);
+        }
     }
     else
         kak_assert(false);
@@ -618,6 +624,8 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
 
     m_menu_fg = fg;
     m_menu_bg = bg;
+    m_menu_style = style;
+    m_menu_anchor = anchor;
 
     if (style == MenuStyle::Prompt)
         anchor = CharCoord{m_status_on_top ? 0_line : m_dimensions.line, 0};
