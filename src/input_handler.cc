@@ -168,11 +168,9 @@ public:
     void on_enabled() override
     {
         if (context().has_client())
-        {
             context().client().check_if_buffer_needs_reloading();
-            m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
-        }
 
+        m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
         m_idle_timer.set_next_date(Clock::now() + idle_timeout);
 
         context().hooks().run_hook("NormalBegin", "", context());
@@ -1237,6 +1235,7 @@ InputHandler::InputHandler(SelectionList selections, Context::Flags flags, Strin
     : m_context(*this, std::move(selections), flags, std::move(name))
 {
     m_mode_stack.emplace_back(new InputModes::Normal(*this));
+    current_mode().on_enabled();
 }
 
 InputHandler::~InputHandler()
