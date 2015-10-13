@@ -1,27 +1,14 @@
 * Improve unicode text edition
 
-  - support reading/writing non utf8 encoded files
-
-  - more robust utf8 implementation
-
   - support multi column chars
 
   - right-to-left, bidirectional text
-
-* Detect crash recovery files when restarting
 
 * improve highlighters
 
   - folding support
 
-* improve info boxes
-
-  - Move info handling to client
-
-    . remove direct ui access from context
-
-    . Add support for 'transient' info, displayed for a certain
-      amount of time
+* markup support in info boxes
 
 * improve insert completion
 
@@ -44,9 +31,6 @@
 
 * Tree based undo
 
-* configurable evaluated (%sh{...}) strings ? use an option to define
-  the interpreters.
-
 * User defined text objects
 
 * multiple parameters support for normal mode commands ?
@@ -55,11 +39,7 @@
 
   - 1,2,3<a-space> remove selections 1, 2 and 3
 
-* Make kakoune self-documenting
-
-  - Improve in source doc strings, add minimal markup so that they
-    display nicely with different width (paragraph rewrapping and
-    explicit line break would go a long way)
+* Improve self-documenting
 
   - Generate documentation from Kakoune source
 
@@ -74,5 +54,3 @@
 
 * change command parsing to be more shell like
   (support -option="value with spaces" instead of requiring "-option=value with spaces")
-
-* Store pre parsed commands
