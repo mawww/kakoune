@@ -327,9 +327,11 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
             if (not convert_to_client_pending and
                 not ClientManager::instance().empty())
             {
-                this->NCursesUI::~NCursesUI();
                 if (fork_server_to_background())
+                {
+                    this->NCursesUI::~NCursesUI();
                     exit(0);
+                }
             }
         }
 
