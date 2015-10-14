@@ -19,11 +19,6 @@ struct InsertCompleterDesc
         Filename
     };
 
-    InsertCompleterDesc(Mode mode = Filename,
-                        Optional<String> param = Optional<String>{})
-        : mode{mode}, param{std::move(param)}
-    {}
-
     bool operator==(const InsertCompleterDesc& other) const
     { return mode == other.mode and param == other.param; }
 
