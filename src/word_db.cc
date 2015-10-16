@@ -139,11 +139,11 @@ int WordDB::get_word_occurences(StringView word) const
 UnitTest test_word_db{[]()
 {
     Buffer buffer("test", Buffer::Flags::None,
-                  { "tchou mutch\n"_ss,
-                    "tchou kanaky tchou\n"_ss,
-                    "\n"_ss,
-                    "tchaa tchaa\n"_ss,
-                    "allo\n"_ss});
+                  "tchou mutch\n"
+                  "tchou kanaky tchou\n"
+                  "\n"
+                  "tchaa tchaa\n"
+                  "allo\n");
     WordDB word_db(buffer);
     auto res = word_db.find_matching("", prefix_match);
     std::sort(res.begin(), res.end());

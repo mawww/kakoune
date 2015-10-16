@@ -17,7 +17,46 @@
 namespace Kakoune
 {
 
-Buffer::Buffer(String name, Flags flags, BufferLines lines,
+struct ParsedLines { BufferLines lines; bool bom, crlf; };
+
+static ParsedLines parse_lines(StringView data)
+{
+    bool bom = false, crlf = false;
+    const char* pos = data.begin();
+    if (data.substr(0, 3_byte) == "\xEF\xBB\xBF")
+    {
+        bom = true;
+        pos = data.begin() + 3;
+    }
+
+    BufferLines lines;
+    while (pos < data.end())
+    {
+        const char* line_end = pos;
+        while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
+             ++line_end;
+
+        lines.emplace_back(StringData::create({pos, line_end}, '\n'));
+
+        if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
+        {
+            crlf = true;
+            pos = line_end + 2;
+        }
+        else
+            pos = line_end + 1;
+    }
+
+    return { std::move(lines), bom, crlf };
+}
+
+static void apply_options(OptionManager& options, const ParsedLines& parsed_lines)
+{
+    options.get_local_option("eolformat").set<String>(parsed_lines.crlf ? "crlf" : "lf");
+    options.get_local_option("BOM").set<String>(parsed_lines.bom ? "utf-8" : "no");
+}
+
+Buffer::Buffer(String name, Flags flags, StringView data,
                timespec fs_timestamp)
     : Scope(GlobalScope::instance()),
       m_name((flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)),
@@ -30,17 +69,21 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     BufferManager::instance().register_buffer(*this);
     options().register_watcher(*this);
 
-    if (lines.empty())
-        lines.emplace_back(StringData::create("\n"));
+    ParsedLines parsed_lines = parse_lines(data);
+
+    if (parsed_lines.lines.empty())
+        parsed_lines.lines.emplace_back(StringData::create("\n"));
 
     #ifdef KAK_DEBUG
-    for (auto& line : lines)
+    for (auto& line : parsed_lines.lines)
         kak_assert(not (line->length == 0) and
                    line->data()[line->length-1] == '\n');
     #endif
-    static_cast<BufferLines&>(m_lines) = std::move(lines);
+    static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
 
     m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
+
+    apply_options(options(), parsed_lines);
 
     if (flags & Flags::File)
     {
@@ -160,10 +203,12 @@ struct Buffer::Modification
     }
 };
 
-void Buffer::reload(BufferLines lines, timespec fs_timestamp)
+void Buffer::reload(StringView data, timespec fs_timestamp)
 {
-    if (lines.empty())
-        lines.emplace_back(StringData::create("\n"));
+    ParsedLines parsed_lines = parse_lines(data);
+
+    if (parsed_lines.lines.empty())
+        parsed_lines.lines.emplace_back(StringData::create("\n"));
 
     const bool record_undo = not (m_flags & Flags::NoUndo);
 
@@ -173,14 +218,14 @@ void Buffer::reload(BufferLines lines, timespec fs_timestamp)
     {
         m_changes.push_back({ Change::Erase, true, {0,0}, line_count() });
 
-        static_cast<BufferLines&>(m_lines) = std::move(lines);
+        static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
 
         m_changes.push_back({ Change::Insert, true, {0,0}, line_count() });
     }
     else
     {
         auto diff = find_diff(m_lines.begin(), m_lines.size(),
-                              lines.begin(), (int)lines.size(),
+                              parsed_lines.lines.begin(), (int)parsed_lines.lines.size(),
                               [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                               { return lhs->hash == rhs->hash and lhs->strview() == rhs->strview(); });
 
@@ -196,10 +241,10 @@ void Buffer::reload(BufferLines lines, timespec fs_timestamp)
                 for (LineCount line = 0; line < d.len; ++line)
                     m_current_undo_group.emplace_back(
                         Modification::Insert, cur_line + line,
-                        SharedString{lines[(int)(d.posB + line)]});
+                        SharedString{parsed_lines.lines[(int)(d.posB + line)]});
 
                 m_changes.push_back({ Change::Insert, it == m_lines.end(), cur_line, cur_line + d.len });
-                m_lines.insert(it, &lines[d.posB], &lines[d.posB + d.len]);
+                m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
                 it = m_lines.begin() + (int)(cur_line + d.len);
             }
             else if (d.mode == Diff::Remove)
@@ -218,6 +263,8 @@ void Buffer::reload(BufferLines lines, timespec fs_timestamp)
     }
 
     commit_undo_group();
+
+    apply_options(options(), parsed_lines);
 
     m_last_save_undo_index = m_history_cursor - m_history.begin();
     m_fs_timestamp = fs_timestamp;
@@ -586,7 +633,7 @@ UnitTest test_buffer{[]()
 {
     Buffer empty_buffer("empty", Buffer::Flags::None, {});
 
-    Buffer buffer("test", Buffer::Flags::None, { "allo ?\n"_ss, "mais que fais la police\n"_ss,  " hein ?\n"_ss, " youpi\n"_ss });
+    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     kak_assert(buffer.line_count() == 4);
 
     BufferIterator pos = buffer.begin();
@@ -629,8 +676,7 @@ UnitTest test_buffer{[]()
 
 UnitTest test_undo{[]()
 {
-    BufferLines lines = { "allo ?\n"_ss, "mais que fais la police\n"_ss,  " hein ?\n"_ss, " youpi\n"_ss };
-    Buffer buffer("test", Buffer::Flags::None, lines);
+    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
     auto pos = buffer.insert(buffer.end(), "kanaky\n");
     buffer.erase(pos, buffer.end());
     buffer.insert(buffer.iterator_at(2_line), "tchou\n");
@@ -642,9 +688,11 @@ UnitTest test_undo{[]()
     buffer.redo();
     buffer.undo();
 
-    kak_assert((int)buffer.line_count() == lines.size());
-    for (size_t i = 0; i < lines.size(); ++i)
-        kak_assert(SharedString{lines[i]} == buffer[LineCount((int)i)]);
+    kak_assert((int)buffer.line_count() == 4);
+    kak_assert(buffer[0_line] == "allo ?\n");
+    kak_assert(buffer[1_line] == "mais que fais la police\n");
+    kak_assert(buffer[2_line] == " hein ?\n");
+    kak_assert(buffer[3_line] == " youpi\n");
 }};
 
 }

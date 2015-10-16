@@ -78,7 +78,7 @@ public:
         NoUndo = 8,
     };
 
-    Buffer(String name, Flags flags, BufferLines lines = {},
+    Buffer(String name, Flags flags, StringView data = {},
            timespec fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -152,7 +152,7 @@ public:
 
     void run_hook_in_own_context(StringView hook_name, StringView param);
 
-    void reload(BufferLines lines, timespec fs_timestamp = InvalidTime);
+    void reload(StringView data, timespec fs_timestamp = InvalidTime);
 
     void check_invariant() const;
 

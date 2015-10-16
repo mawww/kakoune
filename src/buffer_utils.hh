@@ -30,10 +30,6 @@ CharCount get_column(const Buffer& buffer,
 ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop,
                              CharCoord coord);
 
-Buffer* create_buffer(StringView data, StringView name,
-                      Buffer::Flags flags, timespec fs_timestamp);
-void reload_buffer(Buffer& buffer, StringView data, timespec fs_timestamp);
-
 Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
 Buffer* create_file_buffer(StringView filename);
 bool reload_file_buffer(Buffer& buffer);

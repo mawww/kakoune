@@ -105,7 +105,7 @@ bool operator==(const LineModification& lhs, const LineModification& rhs)
 UnitTest test_line_modifications{[]()
 {
     {
-        Buffer buffer("test", Buffer::Flags::None, { "line 1\n"_ss, "line 2\n"_ss });
+        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
         auto ts = buffer.timestamp();
         buffer.erase(buffer.iterator_at({1, 0}), buffer.iterator_at({2, 0}));
 
@@ -114,7 +114,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None, { "line 1\n"_ss, "line 2\n"_ss });
+        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
         auto ts = buffer.timestamp();
         buffer.insert(buffer.iterator_at({1, 7}), "line 3");
 
@@ -123,8 +123,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None,
-                      { "line 1\n"_ss, "line 2\n"_ss, "line 3\n"_ss });
+        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\nline 3\n");
 
         auto ts = buffer.timestamp();
         buffer.insert(buffer.iterator_at({1, 4}), "hoho\nhehe");
@@ -135,8 +134,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None,
-                      { "line 1\n"_ss, "line 2\n"_ss, "line 3\n"_ss, "line 4\n"_ss });
+        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\nline 3\nline 4\n");
 
         auto ts = buffer.timestamp();
         buffer.erase(buffer.iterator_at({0,0}), buffer.iterator_at({3,0}));
@@ -155,7 +153,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None, { "line 1\n"_ss });
+        Buffer buffer("test", Buffer::Flags::None, "line 1\n");
         auto ts = buffer.timestamp();
         buffer.insert(buffer.iterator_at({0,0}), "n");
         buffer.insert(buffer.iterator_at({0,1}), "e");

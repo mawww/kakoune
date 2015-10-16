@@ -457,13 +457,13 @@ int run_server(StringView session, StringView init_command,
     FaceRegistry        face_registry;
     ClientManager       client_manager;
 
-    UnitTest::run_all_tests();
-
     register_options();
     register_env_vars();
     register_registers();
     register_commands();
     register_highlighters();
+
+    UnitTest::run_all_tests();
 
     write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
@@ -601,8 +601,8 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
         }
         if (not isatty(0))
         {
-            Buffer* buffer = create_buffer(read_fd(0), "*stdin*",
-                                           Buffer::Flags::None, InvalidTime);
+            Buffer* buffer = new Buffer("*stdin*", Buffer::Flags::None,
+                                        read_fd(0), InvalidTime);
             apply_keys_to_buffer(*buffer);
             write_buffer_to_fd(*buffer, 1);
             buffer_manager.delete_buffer(*buffer);
