@@ -31,8 +31,9 @@ ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop,
                              CharCoord coord);
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll = false);
-Buffer* create_file_buffer(StringView filename);
-bool reload_file_buffer(Buffer& buffer);
+Buffer* open_file_buffer(StringView filename);
+Buffer* open_or_create_file_buffer(StringView filename);
+void reload_file_buffer(Buffer& buffer);
 
 void write_to_debug_buffer(StringView str);
 

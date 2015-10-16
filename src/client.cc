@@ -186,12 +186,9 @@ void Client::force_redraw()
 void Client::reload_buffer()
 {
     Buffer& buffer = context().buffer();
-    if (reload_file_buffer(buffer))
-        context().print_status({ format("'{}' reloaded", buffer.display_name()),
-                                 get_face("Information") });
-    else
-        context().print_status({ format("could not reload '{}'", buffer.display_name()),
-                                 get_face("Error") });
+    reload_file_buffer(buffer);
+    context().print_status({ format("'{}' reloaded", buffer.display_name()),
+                             get_face("Information") });
 }
 
 void Client::on_buffer_reload_key(Key key)

@@ -135,7 +135,7 @@ void edit(const ParametersParser& parser, Context& context)
 
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     Buffer* oldbuf = &context.buffer();
-    // TODO fifo reload
+
     if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
         reload_file_buffer(*buffer);
     else
@@ -154,16 +154,11 @@ void edit(const ParametersParser& parser, Context& context)
             buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
         else if (not buffer)
         {
-            buffer = create_file_buffer(name);
-            if (not buffer)
-            {
-                if (parser.get_switch("existing"))
-                    throw runtime_error(format("unable to open '{}'", name));
-
+            buffer = parser.get_switch("existing") ? open_file_buffer(name)
+                                                   : open_or_create_file_buffer(name);
+            if (buffer->flags() & Buffer::Flags::New)
                 context.print_status({ format("new file '{}'", name),
                                        get_face("StatusLine") });
-                buffer = new Buffer(name, Buffer::Flags::File | Buffer::Flags::New);
-            }
         }
     }
 

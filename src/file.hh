@@ -45,14 +45,14 @@ String read_file(StringView filename, bool text = false);
 
 struct MappedFile
 {
-    int fd;
-    const char* data = nullptr;
-    struct stat st {};
-
-    explicit operator bool() const { return fd != -1; }
-
     MappedFile(StringView filename);
     ~MappedFile();
+
+    operator StringView() const { return { data, (int)st.st_size }; }
+
+    int fd;
+    const char* data;
+    struct stat st {};
 };
 
 void write_buffer_to_file(Buffer& buffer, StringView filename);
@@ -60,6 +60,7 @@ void write_buffer_to_fd(Buffer& buffer, int fd);
 void write_buffer_to_backup_file(Buffer& buffer);
 
 String find_file(StringView filename, ConstArrayView<String> paths);
+bool file_exists(StringView filename);
 
 Vector<String> list_files(StringView directory);
 

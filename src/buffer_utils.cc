@@ -47,24 +47,30 @@ ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop, CharCoord 
     return (int)(it - line.begin());
 }
 
-Buffer* create_file_buffer(StringView filename)
+Buffer* open_file_buffer(StringView filename)
 {
-    if (MappedFile file_data{filename})
-        return new Buffer(filename.str(), Buffer::Flags::File,
-                          { file_data.data, (int)file_data.st.st_size },
-                          file_data.st.st_mtim);
-    return nullptr;
+    MappedFile file_data{filename};
+    return new Buffer(filename.str(), Buffer::Flags::File,
+                      file_data, file_data.st.st_mtim);
 }
 
-bool reload_file_buffer(Buffer& buffer)
+Buffer* open_or_create_file_buffer(StringView filename)
+{
+    if (file_exists(filename))
+    {
+        MappedFile file_data{filename};
+        return new Buffer(filename.str(), Buffer::Flags::File,
+                          file_data, file_data.st.st_mtim);
+    }
+    return new Buffer(filename.str(), Buffer::Flags::File | Buffer::Flags::New,
+                      {}, InvalidTime);
+}
+
+void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);
-    if (MappedFile file_data{buffer.name()})
-    {
-        buffer.reload({ file_data.data, (int)file_data.st.st_size }, file_data.st.st_mtim);
-        return true;
-    }
-    return false;
+    MappedFile file_data{buffer.name()};
+    buffer.reload(file_data, file_data.st.st_mtim);
 }
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll)

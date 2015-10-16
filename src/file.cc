@@ -165,7 +165,7 @@ MappedFile::MappedFile(StringView filename)
     if (fd == -1)
     {
         if (errno == ENOENT)
-            return;
+            throw file_not_found{real_filename};
 
         throw file_access_error(real_filename, strerror(errno));
     }
@@ -184,6 +184,13 @@ MappedFile::~MappedFile()
         munmap((void*)data, st.st_size);
         close(fd);
     }
+}
+
+bool file_exists(StringView filename)
+{
+    String real_filename = real_path(parse_filename(filename));
+    struct stat st;
+    return stat(real_filename.c_str(), &st) == 0;
 }
 
 static void write(int fd, StringView data)
