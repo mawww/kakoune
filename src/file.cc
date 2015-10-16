@@ -2,15 +2,11 @@
 
 #include "assert.hh"
 #include "buffer.hh"
-#include "buffer_manager.hh"
-#include "buffer_utils.hh"
 #include "unicode.hh"
 #include "regex.hh"
 #include "string.hh"
 
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -161,33 +157,33 @@ String read_file(StringView filename, bool text)
     return read_fd(fd, text);
 }
 
-Buffer* create_buffer_from_file(StringView filename)
+MappedFile::MappedFile(StringView filename)
 {
     String real_filename = real_path(parse_filename(filename));
 
-    int fd = open(real_filename.c_str(), O_RDONLY | O_NONBLOCK);
+    fd = open(real_filename.c_str(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
     {
         if (errno == ENOENT)
-            return nullptr;
+            return;
 
         throw file_access_error(real_filename, strerror(errno));
     }
-    auto close_fd = on_scope_end([&]{ close(fd); });
 
-    struct stat st;
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
         throw file_access_error(real_filename, "is a directory");
-    if (S_ISFIFO(st.st_mode)) // Do not try to read fifos, use them as write only
-        return create_buffer_from_data({}, real_filename,
-                                       Buffer::Flags::File, st.st_mtim);
 
-    const char* data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    auto unmap = on_scope_end([&]{ munmap((void*)data, st.st_size); });
+    data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+}
 
-    return create_buffer_from_data({data, data + st.st_size}, real_filename,
-                                   Buffer::Flags::File, st.st_mtim);
+MappedFile::~MappedFile()
+{
+    if (fd != -1)
+    {
+        munmap((void*)data, st.st_size);
+        close(fd);
+    }
 }
 
 static void write(int fd, StringView data)

@@ -6,6 +6,9 @@
 #include "exception.hh"
 #include "regex.hh"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 namespace Kakoune
 {
 
@@ -40,7 +43,17 @@ String get_kak_binary_path();
 String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
 
-Buffer* create_buffer_from_file(StringView filename);
+struct MappedFile
+{
+    int fd;
+    const char* data = nullptr;
+    struct stat st {};
+
+    explicit operator bool() const { return fd != -1; }
+
+    MappedFile(StringView filename);
+    ~MappedFile();
+};
 
 void write_buffer_to_file(Buffer& buffer, StringView filename);
 void write_buffer_to_fd(Buffer& buffer, int fd);

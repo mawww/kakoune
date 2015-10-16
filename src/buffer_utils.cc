@@ -2,6 +2,7 @@
 
 #include "buffer_manager.hh"
 #include "event_manager.hh"
+#include "file.hh"
 
 #include <unistd.h>
 #include <sys/select.h>
@@ -46,48 +47,81 @@ ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop, CharCoord 
     return (int)(it - line.begin());
 }
 
-Buffer* create_buffer_from_data(StringView data, StringView name,
-                                Buffer::Flags flags, timespec fs_timestamp)
+struct BufferData
 {
-    bool bom = false, crlf = false;
-
-    const char* pos = data.begin();
-    if (data.length() >= 3 and
-       data[0_byte] == '\xEF' and data[1_byte] == '\xBB' and data[2_byte] == '\xBF')
-    {
-        bom = true;
-        pos = data.begin() + 3;
-    }
-
     BufferLines lines;
-    while (pos < data.end())
+    bool bom = false;
+    bool crlf = false;
+
+    BufferData(StringView data)
     {
-        const char* line_end = pos;
-        while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
-             ++line_end;
-
-        lines.emplace_back(StringData::create({pos, line_end}, '\n'));
-
-        if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
+        const char* pos = data.begin();
+        if (data.length() >= 3 and
+           data[0_byte] == '\xEF' and data[1_byte] == '\xBB' and data[2_byte] == '\xBF')
         {
-            crlf = true;
-            pos = line_end + 2;
+            bom = true;
+            pos = data.begin() + 3;
         }
-        else
-            pos = line_end + 1;
+
+        while (pos < data.end())
+        {
+            const char* line_end = pos;
+            while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
+                 ++line_end;
+
+            lines.emplace_back(StringData::create({pos, line_end}, '\n'));
+
+            if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
+            {
+                crlf = true;
+                pos = line_end + 2;
+            }
+            else
+                pos = line_end + 1;
+        }
     }
 
-    Buffer* buffer = BufferManager::instance().get_buffer_ifp(name);
-    if (buffer)
-        buffer->reload(std::move(lines), fs_timestamp);
-    else
-        buffer = new Buffer{name.str(), flags, std::move(lines), fs_timestamp};
+    void apply_options(Buffer& buffer) const
+    {
+        OptionManager& options = buffer.options();
+        options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");
+        options.get_local_option("BOM").set<String>(bom ? "utf-8" : "no");
+    }
+};
 
-    OptionManager& options = buffer->options();
-    options.get_local_option("eolformat").set<String>(crlf ? "crlf" : "lf");
-    options.get_local_option("BOM").set<String>(bom ? "utf-8" : "no");
+Buffer* create_file_buffer(StringView filename)
+{
+    if (MappedFile file_data{filename})
+        return create_buffer({ file_data.data, (int)file_data.st.st_size }, filename,
+                             Buffer::Flags::File, file_data.st.st_mtim);
+    return nullptr;
+}
 
+bool reload_file_buffer(Buffer& buffer)
+{
+    kak_assert(buffer.flags() & Buffer::Flags::File);
+    if (MappedFile file_data{buffer.name()})
+    {
+        reload_buffer(buffer,  { file_data.data, (int)file_data.st.st_size }, file_data.st.st_mtim);
+        return true;
+    }
+    return false;
+}
+
+Buffer* create_buffer(StringView data, StringView name, Buffer::Flags flags,
+                      timespec fs_timestamp)
+{
+    BufferData buf_data(data);
+    Buffer* buffer = new Buffer{name.str(), flags, std::move(buf_data.lines), fs_timestamp};
+    buf_data.apply_options(*buffer);
     return buffer;
+}
+
+void reload_buffer(Buffer& buffer, StringView data, timespec fs_timestamp)
+{
+    BufferData buf_data(data);
+    buffer.reload(std::move(buf_data.lines), fs_timestamp);
+    buf_data.apply_options(buffer);
 }
 
 Buffer* create_fifo_buffer(String name, int fd, bool scroll)
@@ -185,7 +219,7 @@ void write_to_debug_buffer(StringView str)
     else
     {
         String line = str + ((str.empty() or str.back() != '\n') ? "\n" : "");
-        create_buffer_from_data(line, debug_buffer_name, Buffer::Flags::NoUndo);
+        create_buffer(line, debug_buffer_name, Buffer::Flags::NoUndo, InvalidTime);
     }
 }
 

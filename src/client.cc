@@ -185,14 +185,10 @@ void Client::force_redraw()
 
 void Client::reload_buffer()
 {
-    auto& buffer = context().buffer();
-    kak_assert(buffer.flags() & Buffer::Flags::File);
-    if (Buffer* buf = create_buffer_from_file(buffer.name()))
-    {
-        kak_assert(buf == &buffer);
+    Buffer& buffer = context().buffer();
+    if (reload_file_buffer(buffer))
         context().print_status({ format("'{}' reloaded", buffer.display_name()),
                                  get_face("Information") });
-    }
     else
         context().print_status({ format("could not reload '{}'", buffer.display_name()),
                                  get_face("Error") });

@@ -133,11 +133,12 @@ void edit(const ParametersParser& parser, Context& context)
                                                : context.buffer().name();
     auto& buffer_manager = BufferManager::instance();
 
-    Buffer* buffer = nullptr;
+    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     Buffer* oldbuf = &context.buffer();
-    if (not force_reload)
-        buffer = buffer_manager.get_buffer_ifp(name);
-    if (not buffer)
+    // TODO fifo reload
+    if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
+        reload_file_buffer(*buffer);
+    else
     {
         if (parser.get_switch("scratch"))
         {
@@ -151,9 +152,9 @@ void edit(const ParametersParser& parser, Context& context)
         }
         else if (auto fifo = parser.get_switch("fifo"))
             buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
-        else
+        else if (not buffer)
         {
-            buffer = create_buffer_from_file(name);
+            buffer = create_file_buffer(name);
             if (not buffer)
             {
                 if (parser.get_switch("existing"))

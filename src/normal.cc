@@ -191,7 +191,10 @@ void goto_commands(Context& context, NormalParams params)
                 if (path.empty())
                     throw runtime_error(format("unable to find file '{}'", filename));
 
-                Buffer* buffer = create_buffer_from_file(path);
+                Buffer* buffer = BufferManager::instance().get_buffer_ifp(path);
+                if (not buffer)
+                    buffer = create_file_buffer(path);
+
                 if (buffer == nullptr)
                     throw runtime_error(format("unable to open file '{}'", path));
 

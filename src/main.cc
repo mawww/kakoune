@@ -500,7 +500,7 @@ int run_server(StringView session, StringView init_command,
         {
             try
             {
-                if (not create_buffer_from_file(file))
+                if (create_file_buffer(file) == nullptr)
                     new Buffer(file.str(), Buffer::Flags::New | Buffer::Flags::File);
             }
             catch (Kakoune::runtime_error& error)
@@ -593,7 +593,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
 
         for (auto& file : files)
         {
-            Buffer* buffer = create_buffer_from_file(file);
+            Buffer* buffer = create_file_buffer(file);
             write_buffer_to_file(*buffer, file + ".kak-bak");
             apply_keys_to_buffer(*buffer);
             write_buffer_to_file(*buffer, file);
@@ -601,8 +601,8 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
         }
         if (not isatty(0))
         {
-            Buffer* buffer = create_buffer_from_data(read_fd(0), "*stdin*",
-                                                     Buffer::Flags::None);
+            Buffer* buffer = create_buffer(read_fd(0), "*stdin*",
+                                           Buffer::Flags::None, InvalidTime);
             apply_keys_to_buffer(*buffer);
             write_buffer_to_fd(*buffer, 1);
             buffer_manager.delete_buffer(*buffer);
