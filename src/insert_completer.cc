@@ -350,41 +350,6 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
 
 void InsertCompleter::update()
 {
-    if (m_completions.is_valid())
-    {
-        ByteCount longest_completion = 0;
-        for (auto& candidate : m_completions.candidates)
-             longest_completion = std::max(longest_completion, candidate.completion.length());
-
-        ByteCoord cursor = m_context.selections().main().cursor();
-        ByteCoord compl_beg = m_completions.begin;
-        if (cursor.line == compl_beg.line and
-            compl_beg.column <= cursor.column and
-            cursor.column < compl_beg.column + longest_completion)
-        {
-            String prefix = m_context.buffer().string(compl_beg, cursor);
-
-            if (m_context.buffer().timestamp() == m_completions.timestamp)
-                m_matching_candidates = m_completions.candidates;
-            else
-            {
-                m_matching_candidates.clear();
-                for (auto& candidate : m_completions.candidates)
-                {
-                    if (candidate.completion.substr(0, prefix.length()) == prefix)
-                        m_matching_candidates.push_back(candidate);
-                }
-            }
-            if (not m_matching_candidates.empty())
-            {
-                m_current_candidate = m_matching_candidates.size();
-                m_completions.end = cursor;
-                menu_show();
-                m_matching_candidates.push_back({prefix, ""});
-                return;
-            }
-        }
-    }
     reset();
     setup_ifn();
 }
