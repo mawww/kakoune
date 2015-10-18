@@ -1,5 +1,6 @@
-= image:{logo}[K,30,30] Kakoune image:{travis-img}[link="{travis-url}"]
+= image:{logo}[K,30,30,link="{website}"] Kakoune image:{travis-img}[link="{travis-url}"]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
+:website: http://kakoune.org
 :travis-img: https://travis-ci.org/mawww/kakoune.svg?branch=master
 :travis-url: https://travis-ci.org/mawww/kakoune
 :icons: font
@@ -7,6 +8,8 @@
 
 TL;DR
 -----
+
+{website}
 
 *Vim inspired* -- *Faster as in less keystrokes* --
 *Multiple selections* -- *Orthogonal design*
