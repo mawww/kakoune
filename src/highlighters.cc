@@ -359,9 +359,7 @@ private:
             // Thanks to the ensure_first_face_is_capture_0 method, we know
             // these point to the first/last matches capture 0.
             auto first_end = matches.begin()->end;
-            auto last_begin = (matches.end() - m_faces.size())->begin;
-
-            bool remove_last = true;
+            auto last_end = (matches.end() - m_faces.size())->end;
 
             // add regex matches from new begin to old first match end
             if (range.begin < old_range.begin)
@@ -371,11 +369,6 @@ private:
                 add_matches(buffer, new_matches, {range.begin, first_end});
                 matches.erase(matches.begin(), matches.begin() + m_faces.size());
 
-                // first matches was last matches as well, so
-                // make sure we do not try to remove them again.
-                if (matches.empty())
-                    remove_last = false;
-
                 std::copy(std::make_move_iterator(new_matches.begin()),
                           std::make_move_iterator(new_matches.end()),
                           std::inserter(matches, matches.begin()));
@@ -384,9 +377,7 @@ private:
             if (old_range.end < range.end)
             {
                 old_range.end = range.end;
-                if (remove_last)
-                    matches.erase(matches.end() - m_faces.size(), matches.end());
-                add_matches(buffer, matches, {last_begin, range.end});
+                add_matches(buffer, matches, {last_end, range.end});
             }
         }
         return it->matches;
