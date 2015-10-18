@@ -16,6 +16,7 @@ addhl -group / regions -default code golang \
     back_string '`' '`' '' \
     double_string '"' (?<!\\)(\\\\)*" '' \
     single_string "'" (?<!\\)(\\\\)*' '' \
+    comment /\* \*/ '' \
     comment '//' $ ''
 
 addhl -group /golang/back_string fill string
@@ -71,6 +72,45 @@ def golang-format-gofmt -docstring "Format the code using the gofmt utility" %{
     }
 }
 
+def golang-comment-selection -docstring "Comment the current selection" %{
+    try %{
+        ## The selection is empty
+        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
+
+        try %{
+            ## The selection has already been commented
+            exec -draft %{<a-K>\A/\*.*\*/\z<ret>}
+
+            ## Comment the selection
+            exec %{a */<esc>i/* <esc>3H}
+        } catch %{
+            ## Uncomment the commented selection
+            exec -draft %{s(\A/\* )|( \*/\z)<ret>d}
+        }
+    }
+}
+
+def golang-comment-line -docstring "Comment the current line" %{
+    ## Select the content of the line, without indentation
+    exec %{I<esc><a-l>}
+
+    try %{
+        ## There's no text on the line
+        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
+
+        try %{
+            ## The line has already been commented
+            exec -draft %{<a-K>^//<ret>}
+
+            ## Comment the line
+            exec %{i// <esc>3H}
+        } catch %{
+            ## Uncomment the line
+            exec -draft %{s^//\h*<ret>d}
+        }
+    }
+}
+
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -83,7 +123,9 @@ hook global WinSetOption filetype=golang %{
     hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
     hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
 
-    alias buffer format-code golang-format-gofmt
+    alias window format-code golang-format-gofmt
+    alias window comment-selection golang-comment-selection
+    alias window comment-line golang-comment-line
 }
 
 hook global WinSetOption filetype=(?!golang).* %{
@@ -92,5 +134,7 @@ hook global WinSetOption filetype=(?!golang).* %{
     rmhooks window golang-hooks
     rmhooks window golang-indent
 
-    unalias buffer format-code
+    unalias window format-code
+    unalias window comment-selection
+    unalias window comment-line
 }
