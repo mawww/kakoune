@@ -38,6 +38,15 @@ public:
         return res;
     }
 
+    struct RankedWord
+    {
+        StringView word;
+        int rank;
+    };
+    using RankedWordList = Vector<RankedWord>;
+
+    RankedWordList find_matching(StringView str);
+
     int get_word_occurences(StringView word) const;
 private:
     void update_db();

@@ -72,7 +72,7 @@ WordDB& get_word_db(const Buffer& buffer)
     return cache_val.as<WordDB>();
 }
 
-template<bool other_buffers, bool subseq>
+template<bool other_buffers>
 InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 {
    auto pos = buffer.iterator_at(cursor_pos);
@@ -93,23 +93,23 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 
     String current_word{begin, end};
 
-    struct MatchAndBuffer {
-        MatchAndBuffer(StringView m, const Buffer* b = nullptr) : match(m), buffer(b) {}
+    struct RankedWordAndBuffer : WordDB::RankedWord
+    {
+        RankedWordAndBuffer(StringView w, int r = 0, const Buffer* b = nullptr)
+            : WordDB::RankedWord{w, r}, buffer{b} {}
 
-        bool operator==(const MatchAndBuffer& other) const { return match == other.match; }
-        bool operator<(const MatchAndBuffer& other) const { return match < other.match; }
+        bool operator==(const RankedWordAndBuffer& other) const { return word == other.word; }
+        bool operator<(const RankedWordAndBuffer& other) const { return rank > other.rank; }
 
-        StringView match;
         const Buffer* buffer;
     };
-    Vector<MatchAndBuffer> matches;
+    Vector<RankedWordAndBuffer> matches;
 
     auto add_matches = [&](const Buffer& buf) {
         auto& word_db = get_word_db(buf);
-        auto bufmatches = word_db.find_matching(
-            prefix, subseq ? subsequence_match : prefix_match);
+        auto bufmatches = word_db.find_matching(prefix);
         for (auto& m : bufmatches)
-            matches.push_back({ m, &buf });
+            matches.push_back({ m.word, m.rank, &buf });
     };
 
     add_matches(buffer);
@@ -131,8 +131,8 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
 
     const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
-                                         [](const CharCount& lhs, const MatchAndBuffer& rhs)
-                                         { return std::max(lhs, rhs.match.char_length()); });
+                                         [](const CharCount& lhs, const RankedWordAndBuffer& rhs)
+                                         { return std::max(lhs, rhs.word.char_length()); });
 
     InsertCompletion::CandidateList candidates;
     candidates.reserve(matches.size());
@@ -141,15 +141,17 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         DisplayLine menu_entry;
         if (m.buffer)
         {
-            const auto pad_len = longest + 1 - m.match.char_length();
-            menu_entry.push_back(m.match.str());
+            const auto pad_len = longest + 1 - m.word.char_length();
+            menu_entry.push_back(m.word.str());
             menu_entry.push_back(String{' ', pad_len});
             menu_entry.push_back({ m.buffer->display_name(), get_face("MenuInfo") });
         }
         else
-            menu_entry.push_back(m.match.str());
+            menu_entry.push_back(m.word.str());
 
-        candidates.push_back({m.match.str(), "", std::move(menu_entry)});
+        menu_entry.push_back({ " " + to_string(m.rank), get_face("cyan") });
+
+        candidates.push_back({m.word.str(), "", std::move(menu_entry)});
     }
 
     return { begin.coord(), cursor_pos, std::move(candidates), buffer.timestamp() };
@@ -419,13 +421,11 @@ bool InsertCompleter::setup_ifn()
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
                 *completer.param == "buffer" and
-                (try_complete(complete_word<false, false>) or
-                 try_complete(complete_word<false, true>)))
+                try_complete(complete_word<false>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
                 *completer.param == "all" and
-                (try_complete(complete_word<true, false>) or
-                 try_complete(complete_word<true, true>)))
+                try_complete(complete_word<true>))
                 return true;
         }
         return false;
@@ -504,7 +504,7 @@ void InsertCompleter::explicit_file_complete()
 
 void InsertCompleter::explicit_word_complete()
 {
-    try_complete(complete_word<true, true>);
+    try_complete(complete_word<true>);
 }
 
 void InsertCompleter::explicit_line_complete()

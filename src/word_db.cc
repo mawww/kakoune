@@ -27,6 +27,13 @@ UsedLetters used_letters(StringView str)
     return res;
 }
 
+constexpr UsedLetters upper_mask = 0xFFFFFFC000000;
+
+UsedLetters to_lower(UsedLetters letters)
+{
+    return ((letters & upper_mask) >> 26) | (letters & (~upper_mask));
+}
+
 static WordDB::WordList get_words(const SharedString& content)
 {
     WordDB::WordList res;
@@ -136,6 +143,63 @@ int WordDB::get_word_occurences(StringView word) const
     return 0;
 }
 
+WordDB::RankedWordList WordDB::find_matching(StringView query)
+{
+    auto match_rank = [](StringView candidate, StringView query)
+    {
+        int rank = 0;
+        auto it = candidate.begin();
+        char prev = 0;
+        for (auto c : query)
+        {
+            if (it == candidate.end())
+                return 0;
+
+            const bool islow = islower(c);
+            auto eq_c = [islow, c](char ch) { return islow ? tolower(ch) == c : ch == c; };
+
+            if (eq_c(*it)) // improve rank on contiguous
+                ++rank;
+
+            while (!eq_c(*it))
+            {
+                prev = *it;
+                if (++it == candidate.end())
+                    return 0;
+            }
+            // Improve rank on word boundaries
+            if (prev == 0 or prev == '_' or
+                (islower(prev) and isupper(*it)))
+                rank += 5;
+
+            prev = c;
+            ++rank;
+            ++it;
+        }
+        return rank;
+    };
+
+    auto matches = [](UsedLetters query, UsedLetters letters)
+    {
+        return (query & letters) == query;
+    };
+
+    update_db();
+    const UsedLetters letters = used_letters(query);
+    RankedWordList res;
+    for (auto&& word : m_words)
+    {
+        UsedLetters word_letters = word.second.letters;
+        if (not matches(to_lower(letters), to_lower(word_letters)) or
+            not matches(letters & upper_mask, word_letters & upper_mask))
+            continue;
+        if (int rank = match_rank(word.first, query))
+            res.push_back({ word.first, rank });
+    }
+
+    return res;
+}
+
 UnitTest test_word_db{[]()
 {
     Buffer buffer("test", Buffer::Flags::None,
@@ -158,6 +222,11 @@ UnitTest test_word_db{[]()
     res = word_db.find_matching("", subsequence_match);
     std::sort(res.begin(), res.end());
     kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" });
+}};
+
+UnitTest test_used_letters{[]()
+{
+    kak_assert(used_letters("abcd") == to_lower(used_letters("abcdABCD")));
 }};
 
 }
