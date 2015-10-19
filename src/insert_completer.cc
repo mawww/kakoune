@@ -350,6 +350,9 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
 
 void InsertCompleter::update()
 {
+    if (m_explicit_completer and try_complete(m_explicit_completer))
+        return;
+
     reset();
     setup_ifn();
 }
@@ -357,6 +360,7 @@ void InsertCompleter::update()
 void InsertCompleter::reset()
 {
     m_completions = InsertCompletion{};
+    m_explicit_completer = nullptr;
     if (m_context.has_ui())
     {
         m_context.ui().menu_hide();
@@ -462,21 +466,26 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
 
 void InsertCompleter::explicit_file_complete()
 {
-    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
+    auto func = [this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_filename<false>(buffer, cursor_pos, m_options);
-    });
+    };
+    try_complete(func);
+    m_explicit_completer = func;
 }
 
 void InsertCompleter::explicit_word_complete()
 {
     try_complete(complete_word<true>);
+    m_explicit_completer = complete_word<true>;
 }
 
 void InsertCompleter::explicit_line_complete()
 {
-    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
+    auto func = [this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_line(buffer, m_options, cursor_pos);
-    });
+    };
+    try_complete(func);
+    m_explicit_completer = func;
 }
 
 }
