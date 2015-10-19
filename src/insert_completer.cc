@@ -127,8 +127,12 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         }
     }
     unordered_erase(matches, StringView{prefix});
-    std::sort(matches.begin(), matches.end());
+    std::sort(matches.begin(), matches.end(),
+              [](const RankedWordAndBuffer& lhs, const RankedWordAndBuffer& rhs) {
+                  return lhs.word < rhs.word;
+              });
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
+    std::sort(matches.begin(), matches.end());
 
     const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
                                          [](const CharCount& lhs, const RankedWordAndBuffer& rhs)
