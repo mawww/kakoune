@@ -127,12 +127,19 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         }
     }
     unordered_erase(matches, StringView{prefix});
+    // Sort by word, favoring lowercase
     std::sort(matches.begin(), matches.end(),
               [](const RankedWordAndBuffer& lhs, const RankedWordAndBuffer& rhs) {
-                  return lhs.word < rhs.word;
+                  return std::lexicographical_compare(
+                      lhs.word.begin(), lhs.word.end(), rhs.word.begin(), rhs.word.end(),
+                      [](char a, char b) {
+                          const bool low_a = islower(a), low_b = islower(b);
+                          return low_a == low_b ? a < b : low_a;
+                      });
               });
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
-    std::sort(matches.begin(), matches.end());
+    // Stable sort by rank to preserve by word sorting
+    std::stable_sort(matches.begin(), matches.end());
 
     const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
                                          [](const CharCount& lhs, const RankedWordAndBuffer& rhs)
