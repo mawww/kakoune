@@ -16,6 +16,7 @@ addhl -group / regions -default code golang \
     back_string '`' '`' '' \
     double_string '"' (?<!\\)(\\\\)*" '' \
     single_string "'" (?<!\\)(\\\\)*' '' \
+    comment /\* \*/ '' \
     comment '//' $ ''
 
 addhl -group /golang/back_string fill string
@@ -83,7 +84,7 @@ hook global WinSetOption filetype=golang %{
     hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
     hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
 
-    alias buffer format-code golang-format-gofmt
+    alias window format-code golang-format-gofmt
 }
 
 hook global WinSetOption filetype=(?!golang).* %{
@@ -92,5 +93,5 @@ hook global WinSetOption filetype=(?!golang).* %{
     rmhooks window golang-hooks
     rmhooks window golang-indent
 
-    unalias buffer format-code
+    unalias window format-code golang-format-gofmt
 }
