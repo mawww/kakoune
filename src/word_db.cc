@@ -34,9 +34,12 @@ UsedLetters to_lower(UsedLetters letters)
     return ((letters & upper_mask) >> 26) | (letters & (~upper_mask));
 }
 
-static WordDB::WordList get_words(const SharedString& content)
+using WordList = Vector<StringView>;
+
+
+static WordList get_words(const SharedString& content)
 {
-    WordDB::WordList res;
+    WordList res;
     using Utf8It = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
     const char* word_start = content.begin();
     bool in_word = false;
@@ -189,6 +192,12 @@ WordDB::RankedWordList WordDB::find_matching(StringView query)
     RankedWordList res;
     for (auto&& word : m_words)
     {
+        if (query.empty())
+        {
+            res.push_back({word.first, 1 });
+            continue;
+        }
+
         UsedLetters word_letters = word.second.letters;
         if (not matches(to_lower(letters), to_lower(word_letters)) or
             not matches(letters & upper_mask, word_letters & upper_mask))
@@ -202,6 +211,18 @@ WordDB::RankedWordList WordDB::find_matching(StringView query)
 
 UnitTest test_word_db{[]()
 {
+    auto cmp_words = [](const WordDB::RankedWord& lhs, const WordDB::RankedWord& rhs) {
+        return lhs.word < rhs.word;
+    };
+
+    auto eq = [](ArrayView<const WordDB::RankedWord> lhs, const WordList& rhs) {
+        return lhs.size() == rhs.size() and
+            std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+                       [](const WordDB::RankedWord& lhs, const StringView& rhs) {
+                           return lhs.word == rhs;
+                       });
+    };
+
     Buffer buffer("test", Buffer::Flags::None,
                   "tchou mutch\n"
                   "tchou kanaky tchou\n"
@@ -209,19 +230,19 @@ UnitTest test_word_db{[]()
                   "tchaa tchaa\n"
                   "allo\n");
     WordDB word_db(buffer);
-    auto res = word_db.find_matching("", prefix_match);
-    std::sort(res.begin(), res.end());
-    kak_assert(res == WordDB::WordList{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" });
+    auto res = word_db.find_matching("");
+    std::sort(res.begin(), res.end(), cmp_words);
+    kak_assert(eq(res, WordList{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" }));
     kak_assert(word_db.get_word_occurences("tchou") == 3);
     kak_assert(word_db.get_word_occurences("allo") == 1);
     buffer.erase(buffer.iterator_at({1, 6}), buffer.iterator_at({4, 0}));
-    res = word_db.find_matching("", prefix_match);
-    std::sort(res.begin(), res.end());
-    kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "tchou" });
+    res = word_db.find_matching("");
+    std::sort(res.begin(), res.end(), cmp_words);
+    kak_assert(eq(res, WordList{ "allo" COMMA "mutch" COMMA "tchou" }));
     buffer.insert(buffer.iterator_at({1, 0}), "re");
-    res = word_db.find_matching("", subsequence_match);
-    std::sort(res.begin(), res.end());
-    kak_assert(res == WordDB::WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" });
+    res = word_db.find_matching("");
+    std::sort(res.begin(), res.end(), cmp_words);
+    kak_assert(eq(res, WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" }));
 }};
 
 UnitTest test_used_letters{[]()

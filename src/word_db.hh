@@ -22,22 +22,6 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
-    using WordList = Vector<StringView>;
-    template<typename MatchFunc>
-    WordList find_matching(StringView str, MatchFunc match)
-    {
-        update_db();
-        const UsedLetters letters = used_letters(str);
-        WordList res;
-        for (auto&& word : m_words)
-        {
-            if ((letters & word.second.letters) == letters and
-                match(word.first, str))
-                res.push_back(word.first);
-        }
-        return res;
-    }
-
     struct RankedWord
     {
         StringView word;
