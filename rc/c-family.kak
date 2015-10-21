@@ -133,6 +133,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
 
     alias window alt c-family-alternative-file
     alias window comment-selection c-family-comment-selection
+    alias window comment-line c-family-comment-line
 
     alias window format-code c-format-astyle
 ]
@@ -143,8 +144,9 @@ hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
 
     unalias window alt c-family-alternative-file
     unalias window comment-selection c-family-comment-selection
+    unalias window comment-line c-family-comment-line
 
-    unalias window format-code
+    unalias window format-code c-format-astyle
 ]
 
 hook global WinSetOption filetype=c %[ addhl ref c ]
