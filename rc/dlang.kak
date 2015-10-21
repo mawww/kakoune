@@ -22,8 +22,8 @@ addhl -group / regions -default code dlang \
     comment '//' $ ''
 
 addhl -group /dlang/string fill string
-addhl -group /dlang/verbatim_string fill rgb:FF40D4
-addhl -group /dlang/verbatim_string_prefixed fill rgb:FF40D4
+addhl -group /dlang/verbatim_string fill magenta
+addhl -group /dlang/verbatim_string_prefixed fill magenta
 addhl -group /dlang/token fill meta
 addhl -group /dlang/disabled fill rgb:777777
 addhl -group /dlang/comment fill comment
@@ -93,7 +93,7 @@ hook global WinSetOption filetype=dlang %{
     hook window InsertChar \{ -group dlang-indent _dlang-indent-on-opening-curly-brace
     hook window InsertChar \} -group dlang-indent _dlang-indent-on-closing-curly-brace
 
-    alias buffer format-code dlang-format-dfmt
+    alias window format-code dlang-format-dfmt
 }
 
 hook global WinSetOption filetype=(?!dlang).* %{
@@ -102,5 +102,5 @@ hook global WinSetOption filetype=(?!dlang).* %{
     rmhooks window dlang-hooks
     rmhooks window dlang-indent
 
-    unalias buffer format-code
+    unalias window format-code dlang-format-dfmt
 }
