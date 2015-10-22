@@ -146,42 +146,8 @@ int WordDB::get_word_occurences(StringView word) const
     return 0;
 }
 
-WordDB::RankedWordList WordDB::find_matching(StringView query)
+RankedMatchList WordDB::find_matching(StringView query)
 {
-    auto match_rank = [](StringView candidate, StringView query)
-    {
-        int rank = 0;
-        auto it = candidate.begin();
-        char prev = 0;
-        for (auto c : query)
-        {
-            if (it == candidate.end())
-                return 0;
-
-            const bool islow = islower(c);
-            auto eq_c = [islow, c](char ch) { return islow ? tolower(ch) == c : ch == c; };
-
-            if (eq_c(*it)) // improve rank on contiguous
-                ++rank;
-
-            while (!eq_c(*it))
-            {
-                prev = *it;
-                if (++it == candidate.end())
-                    return 0;
-            }
-            // Improve rank on word boundaries
-            if (prev == 0 or prev == '_' or
-                (islower(prev) and isupper(*it)))
-                rank += 5;
-
-            prev = c;
-            ++rank;
-            ++it;
-        }
-        return rank;
-    };
-
     auto matches = [](UsedLetters query, UsedLetters letters)
     {
         return (query & letters) == query;
@@ -189,7 +155,7 @@ WordDB::RankedWordList WordDB::find_matching(StringView query)
 
     update_db();
     const UsedLetters letters = used_letters(query);
-    RankedWordList res;
+    RankedMatchList res;
     for (auto&& word : m_words)
     {
         if (query.empty())
@@ -211,14 +177,14 @@ WordDB::RankedWordList WordDB::find_matching(StringView query)
 
 UnitTest test_word_db{[]()
 {
-    auto cmp_words = [](const WordDB::RankedWord& lhs, const WordDB::RankedWord& rhs) {
+    auto cmp_words = [](const RankedMatch& lhs, const RankedMatch& rhs) {
         return lhs.word < rhs.word;
     };
 
-    auto eq = [](ArrayView<const WordDB::RankedWord> lhs, const WordList& rhs) {
+    auto eq = [](ArrayView<const RankedMatch> lhs, const WordList& rhs) {
         return lhs.size() == rhs.size() and
             std::equal(lhs.begin(), lhs.end(), rhs.begin(),
-                       [](const WordDB::RankedWord& lhs, const StringView& rhs) {
+                       [](const RankedMatch& lhs, const StringView& rhs) {
                            return lhs.word == rhs;
                        });
     };

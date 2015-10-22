@@ -5,6 +5,7 @@
 #include "shared_string.hh"
 #include "unordered_map.hh"
 #include "vector.hh"
+#include "ranked_match.hh"
 
 #include <bitset>
 
@@ -22,14 +23,7 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) = default;
 
-    struct RankedWord
-    {
-        StringView word;
-        int rank;
-    };
-    using RankedWordList = Vector<RankedWord>;
-
-    RankedWordList find_matching(StringView str);
+    RankedMatchList find_matching(StringView str);
 
     int get_word_occurences(StringView word) const;
 private:

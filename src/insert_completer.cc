@@ -93,17 +93,17 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 
     String current_word{begin, end};
 
-    struct RankedWordAndBuffer : WordDB::RankedWord
+    struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedWordAndBuffer(StringView w, int r = 0, const Buffer* b = nullptr)
-            : WordDB::RankedWord{w, r}, buffer{b} {}
+        RankedMatchAndBuffer(StringView w, int r = 0, const Buffer* b = nullptr)
+            : RankedMatch{w, r}, buffer{b} {}
 
-        bool operator==(const RankedWordAndBuffer& other) const { return word == other.word; }
-        bool operator<(const RankedWordAndBuffer& other) const { return rank > other.rank; }
+        bool operator==(const RankedMatchAndBuffer& other) const { return word == other.word; }
+        bool operator<(const RankedMatchAndBuffer& other) const { return rank > other.rank; }
 
         const Buffer* buffer;
     };
-    Vector<RankedWordAndBuffer> matches;
+    Vector<RankedMatchAndBuffer> matches;
 
     auto add_matches = [&](const Buffer& buf) {
         auto& word_db = get_word_db(buf);
@@ -129,7 +129,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     unordered_erase(matches, StringView{prefix});
     // Sort by word, favoring lowercase
     std::sort(matches.begin(), matches.end(),
-              [](const RankedWordAndBuffer& lhs, const RankedWordAndBuffer& rhs) {
+              [](const RankedMatchAndBuffer& lhs, const RankedMatchAndBuffer& rhs) {
                   return std::lexicographical_compare(
                       lhs.word.begin(), lhs.word.end(), rhs.word.begin(), rhs.word.end(),
                       [](char a, char b) {
@@ -142,7 +142,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     std::stable_sort(matches.begin(), matches.end());
 
     const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
-                                         [](const CharCount& lhs, const RankedWordAndBuffer& rhs)
+                                         [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
                                          { return std::max(lhs, rhs.word.char_length()); });
 
     InsertCompletion::CandidateList candidates;
