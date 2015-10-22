@@ -19,11 +19,15 @@ namespace Kakoune
 
 class Context;
 using CommandParameters = ConstArrayView<String>;
-using Command = std::function<void (const ParametersParser& parser, Context& context)>;
+using Command = std::function<void (const ParametersParser& parser,
+                                    Context& context,
+                                    const ShellContext& shell_context)>;
+
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
                                                     CommandParameters,
                                                     size_t, ByteCount)>;
+
 using CommandHelper = std::function<String (const Context& context, CommandParameters)>;
 
 enum class CommandFlags
@@ -84,7 +88,9 @@ public:
 
 private:
     void execute_single_command(CommandParameters params,
-                                Context& context, CharCoord pos) const;
+                                Context& context,
+                                const ShellContext& shell_context,
+                                CharCoord pos) const;
 
     struct CommandDescriptor
     {

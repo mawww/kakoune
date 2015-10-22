@@ -405,6 +405,7 @@ CommandManager::find_command(const Context& context, const String& name) const
 
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
+                                            const ShellContext& shell_context,
                                             CharCoord pos) const
 {
     if (params.empty())
@@ -419,7 +420,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     {
         ParametersParser parameter_parser(param_view,
                                           command_it->second.param_desc);
-        command_it->second.command(parameter_parser, context);
+        command_it->second.command(parameter_parser, context, shell_context);
     }
     catch (runtime_error& error)
     {
@@ -444,7 +445,7 @@ void CommandManager::execute(StringView command_line,
 
         if (it->type() == Token::Type::CommandSeparator)
         {
-            execute_single_command(params, context, command_coord);
+            execute_single_command(params, context, shell_context, command_coord);
             params.clear();
         }
         // Shell expand are retokenized
@@ -464,7 +465,7 @@ void CommandManager::execute(StringView command_line,
         else
             params.push_back(expand_token(*it, context, shell_context));
     }
-    execute_single_command(params, context, command_coord);
+    execute_single_command(params, context, shell_context, command_coord);
 }
 
 CommandInfo CommandManager::command_info(const Context& context, StringView command_line) const
