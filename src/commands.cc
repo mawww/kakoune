@@ -675,8 +675,8 @@ const CommandDesc add_hook_cmd = {
             ScopedSetBool disable_history{context.history_disabled()};
 
             if (regex_match(param.begin(), param.end(), regex))
-                CommandManager::instance().execute(command, context, {},
-                                                   { { "hook_param", param.str() } });
+                CommandManager::instance().execute(command, context,
+                                                   { {}, { { "hook_param", param.str() } } });
         };
         auto group = parser.get_switch("group").value_or(StringView{});
         get_scope(parser[0], context).hooks().add_hook(parser[1], group.str(), hook_func);
@@ -738,7 +738,7 @@ void define_command(const ParametersParser& parser, Context& context)
     {
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional };
         cmd = [=](const ParametersParser& parser, Context& context) {
-            CommandManager::instance().execute(commands, context, params_to_shell(parser));
+            CommandManager::instance().execute(commands, context, { params_to_shell(parser) });
         };
     }
     else
@@ -795,13 +795,15 @@ void define_command(const ParametersParser& parser, Context& context)
         {
             if (flags == CompletionFlags::Fast) // no shell on fast completion
                 return Completions{};
-            EnvVarMap vars = {
-                { "token_to_complete", to_string(token_to_complete) },
-                { "pos_in_token",      to_string(pos_in_token) }
+
+            ShellContext shell_context{
+                params,
+                { { "token_to_complete", to_string(token_to_complete) },
+                  { "pos_in_token",      to_string(pos_in_token) } }
             };
             String output = ShellManager::instance().eval(shell_cmd, context, {},
                                                           ShellManager::Flags::WaitForStdout,
-                                                          params, vars).first;
+                                                          shell_context).first;
             return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
         };
     }

@@ -83,7 +83,7 @@ pid_t spawn_process(StringView cmdline, ConstArrayView<String> params, ConstArra
 
 std::pair<String, int> ShellManager::eval(
     StringView cmdline, const Context& context, StringView input,
-    Flags flags, ConstArrayView<String> params, const EnvVarMap& env_vars)
+    Flags flags, const ShellContext& shell_context)
 {
     static const Regex re(R"(\bkak_(\w+)\b)");
 
@@ -100,10 +100,10 @@ std::pair<String, int> ShellManager::eval(
         if (find_if(kak_env, match_name) != kak_env.end())
             continue;
 
-        auto var_it = env_vars.find(name);
+        auto var_it = shell_context.env_vars.find(name);
         try
         {
-            const String& value = var_it != env_vars.end() ?
+            const String& value = var_it != shell_context.env_vars.end() ?
                 var_it->value : get_val(name, context);
 
             kak_env.push_back(format("kak_{}={}", name, value));
@@ -111,7 +111,7 @@ std::pair<String, int> ShellManager::eval(
     }
 
     Pipe child_stdin, child_stdout, child_stderr;
-    pid_t pid = spawn_process(cmdline, params, kak_env,
+    pid_t pid = spawn_process(cmdline, shell_context.params, kak_env,
                               child_stdin, child_stdout, child_stderr);
 
     child_stdin.close_read_fd();

@@ -485,7 +485,7 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        const LineCount line = str_to_int_ifp(expand(option_name, context, {}, EnvVarMap{})).value_or(0) - 1;
+        const LineCount line = str_to_int_ifp(expand(option_name, context)).value_or(0) - 1;
         if (line < 0)
             return;
 
@@ -527,7 +527,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        const CharCount column = str_to_int_ifp(expand(option_name, context, {}, EnvVarMap{})).value_or(0) - 1;
+        const CharCount column = str_to_int_ifp(expand(option_name, context)).value_or(0) - 1;
         if (column < 0)
             return;
 

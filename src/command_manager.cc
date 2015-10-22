@@ -323,8 +323,7 @@ TokenList parse(StringView line)
 }
 
 String expand_token(const Token& token, const Context& context,
-                    ConstArrayView<String> shell_params,
-                    const EnvVarMap& env_vars)
+                    const ShellContext& shell_context)
 {
     auto& content = token.content();
     switch (token.type())
@@ -332,20 +331,20 @@ String expand_token(const Token& token, const Context& context,
     case Token::Type::ShellExpand:
         return ShellManager::instance().eval(content, context, {},
                                              ShellManager::Flags::WaitForStdout,
-                                             shell_params, env_vars).first;
+                                             shell_context).first;
     case Token::Type::RegisterExpand:
         return context.main_sel_register_value(content).str();
     case Token::Type::OptionExpand:
         return context.options()[content].get_as_string();
     case Token::Type::ValExpand:
     {
-        auto it = env_vars.find(content);
-        if (it != env_vars.end())
+        auto it = shell_context.env_vars.find(content);
+        if (it != shell_context.env_vars.end())
             return it->value;
         return ShellManager::instance().get_val(content, context);
     }
     case Token::Type::RawEval:
-        return expand(content, context, shell_params, env_vars);
+        return expand(content, context, shell_context);
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
         return content;
@@ -357,8 +356,7 @@ String expand_token(const Token& token, const Context& context,
 }
 
 String expand(StringView str, const Context& context,
-              ConstArrayView<String> shell_params,
-              const EnvVarMap& env_vars)
+              const ShellContext& shell_context)
 {
     Reader reader{str};
     String res;
@@ -380,7 +378,7 @@ String expand(StringView str, const Context& context,
         {
             res += reader.substr_from(beg);
             Token token = parse_percent_token<true>(reader);
-            res += expand_token(token, context, shell_params, env_vars);
+            res += expand_token(token, context, shell_context);
             beg = (++reader).pos;
         }
         else
@@ -431,9 +429,7 @@ void CommandManager::execute_single_command(CommandParameters params,
 }
 
 void CommandManager::execute(StringView command_line,
-                             Context& context,
-                             ConstArrayView<String> shell_params,
-                             const EnvVarMap& env_vars)
+                             Context& context, const ShellContext& shell_context)
 {
     TokenList tokens = parse<true>(command_line);
     if (tokens.empty())
@@ -455,8 +451,7 @@ void CommandManager::execute(StringView command_line,
         else if (it->type() == Token::Type::ShellExpand)
         {
             auto shell_tokens = parse<true>(expand_token(*it, context,
-                                                         shell_params,
-                                                         env_vars));
+                                                         shell_context));
             it = tokens.erase(it);
             for (Token& token : shell_tokens)
                 it = ++tokens.emplace(it, std::move(token));
@@ -467,8 +462,7 @@ void CommandManager::execute(StringView command_line,
             it -= shell_tokens.size() + 1;
         }
         else
-            params.push_back(expand_token(*it, context, shell_params,
-                                          env_vars));
+            params.push_back(expand_token(*it, context, shell_context));
     }
     execute_single_command(params, context, command_coord);
 }

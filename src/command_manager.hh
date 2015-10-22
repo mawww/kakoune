@@ -61,8 +61,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(StringView command_line, Context& context,
-                 ConstArrayView<String> shell_params = {},
-                 const EnvVarMap& env_vars = EnvVarMap{});
+                 const ShellContext& shell_context = {});
 
     Completions complete(const Context& context, CompletionFlags flags,
                          StringView command_line, ByteCount cursor_pos);
@@ -104,8 +103,7 @@ private:
 };
 
 String expand(StringView str, const Context& context,
-              ConstArrayView<String> shell_params = {},
-              const EnvVarMap& env_vars = EnvVarMap{});
+              const ShellContext& shell_context = {});
 
 }
 

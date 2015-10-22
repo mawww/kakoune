@@ -14,6 +14,12 @@ class Context;
 
 using EnvVarRetriever = std::function<String (StringView name, const Context&)>;
 
+struct ShellContext
+{
+    ConstArrayView<String> params;
+    EnvVarMap env_vars;
+};
+
 class ShellManager : public Singleton<ShellManager>
 {
 public:
@@ -28,8 +34,7 @@ public:
     std::pair<String, int> eval(StringView cmdline, const Context& context,
                                 StringView input = {},
                                 Flags flags = Flags::WaitForStdout,
-                                ConstArrayView<String> params = {},
-                                const EnvVarMap& env_vars = EnvVarMap{});
+                                const ShellContext& shell_context = {});
 
     void register_env_var(StringView str, bool prefix, EnvVarRetriever retriever);
     String get_val(StringView name, const Context& context) const;
