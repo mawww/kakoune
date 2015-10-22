@@ -62,16 +62,6 @@ def -hidden _golang-indent-on-closing-curly-brace %[
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
-def golang-format-gofmt -docstring "Format the code using the gofmt utility" %{
-    %sh{
-        readonly x=$((kak_cursor_column - 1))
-        readonly y="${kak_cursor_line}"
-
-        echo "exec -draft %{%|gofmt<ret>}"
-        echo "exec gg ${y}g ${x}l"
-    }
-}
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -84,7 +74,7 @@ hook global WinSetOption filetype=golang %{
     hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
     hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
 
-    alias window format-code golang-format-gofmt
+    set window formatcmd "gofmt"
 }
 
 hook global WinSetOption filetype=(?!golang).* %{
@@ -92,6 +82,4 @@ hook global WinSetOption filetype=(?!golang).* %{
 
     rmhooks window golang-hooks
     rmhooks window golang-indent
-
-    unalias window format-code golang-format-gofmt
 }
