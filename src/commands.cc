@@ -1016,19 +1016,22 @@ const CommandDesc set_option_cmd = {
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
     {
-        if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
-        else if (token_to_complete == 1)
-            return { 0_byte, params[1].length(),
-                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
-        else if (token_to_complete == 2 and
-                 GlobalScope::instance().option_registry().option_exists(params[1]))
+        const bool add = params.size() > 1 and params[0] == "-add";
+        const int start = add ? 1 : 0;
+
+        if (token_to_complete == start)
+            return { 0_byte, params[start].length(),
+                     complete(params[start], pos_in_token, scopes) };
+        else if (token_to_complete == start + 1)
+            return { 0_byte, params[start + 1].length(),
+                     GlobalScope::instance().option_registry().complete_option_name(params[start + 1], pos_in_token) };
+        else if (not add and token_to_complete == start + 2  and
+                 GlobalScope::instance().option_registry().option_exists(params[start + 1]))
         {
-            OptionManager& options = get_scope(params[0], context).options();
-            String val = options[params[1]].get_as_string();
-            if (prefix_match(val, params[2]))
-                return { 0_byte, params[2].length(), { std::move(val) } };
+            OptionManager& options = get_scope(params[start], context).options();
+            String val = options[params[start + 1]].get_as_string();
+            if (prefix_match(val, params[start + 2]))
+                return { 0_byte, params[start + 2].length(), { std::move(val) } };
         }
         return Completions{};
     },
