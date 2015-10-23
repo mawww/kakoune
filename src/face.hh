@@ -10,12 +10,13 @@ namespace Kakoune
 enum class Attribute : int
 {
     Normal    = 0,
-    Underline = 1 << 1,
-    Reverse   = 1 << 2,
-    Blink     = 1 << 3,
-    Bold      = 1 << 4,
-    Dim       = 1 << 5,
-    Italic    = 1 << 6,
+    Exclusive = 1 << 1,
+    Underline = 1 << 2,
+    Reverse   = 1 << 3,
+    Blink     = 1 << 4,
+    Bold      = 1 << 5,
+    Dim       = 1 << 6,
+    Italic    = 1 << 7,
 };
 
 template<> struct WithBitOps<Attribute> : std::true_type {};
@@ -45,9 +46,10 @@ constexpr bool operator!=(const Face& lhs, const Face& rhs)
 
 constexpr Face merge_faces(const Face& base, const Face& face)
 {
-    return { face.fg == Color::Default ? base.fg : face.fg,
-             face.bg == Color::Default ? base.bg : face.bg,
-             face.attributes | base.attributes };
+    return face.attributes & Attribute::Exclusive ?
+       face : Face{ face.fg == Color::Default ? base.fg : face.fg,
+                    face.bg == Color::Default ? base.bg : face.bg,
+                    face.attributes | base.attributes };
 }
 
 }

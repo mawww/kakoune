@@ -24,6 +24,7 @@ static Face parse_face(StringView facedesc)
         {
             switch (*attr_it)
             {
+                case 'e': res.attributes |= Attribute::Exclusive; break;
                 case 'u': res.attributes |= Attribute::Underline; break;
                 case 'r': res.attributes |= Attribute::Reverse; break;
                 case 'b': res.attributes |= Attribute::Bold; break;
