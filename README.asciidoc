@@ -787,6 +787,7 @@ attributes is a string of letters each defining an attributes:
  * `B`: Blink
  * `d`: Dim
  * `i`: Italic
+ * `e`: Exclusive, override previous faces instead of merging with them
 
 Using named faces instead of facespec permits to change the effective faces
 afterwards.
