@@ -310,7 +310,7 @@ TokenList parse(StringView line)
 
             if (not str.empty())
                 result.emplace_back(Token::Type::Raw, start, reader.pos,
-                                    coord, std::move(unescape(str, "%", '\\')));
+                                    coord, unescape(str, "%", '\\'));
         }
 
         if (is_command_separator(*reader))
