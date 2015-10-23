@@ -65,7 +65,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(StringView command_line, Context& context,
-                 const ShellContext& shell_context = {});
+                 const ShellContext& shell_context = ShellContext{});
 
     Completions complete(const Context& context, CompletionFlags flags,
                          StringView command_line, ByteCount cursor_pos);
@@ -109,7 +109,7 @@ private:
 };
 
 String expand(StringView str, const Context& context,
-              const ShellContext& shell_context = {});
+              const ShellContext& shell_context = ShellContext{});
 
 }
 
