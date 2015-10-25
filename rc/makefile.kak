@@ -26,5 +26,10 @@ addhl -group /makefile/content regex [+?:]= 0:operator
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=makefile %{ addhl ref makefile }
+hook global WinSetOption filetype=makefile %{
+    addhl ref makefile
+
+    set window comment_selection_chars ""
+    set window comment_line_chars "#"
+}
 hook global WinSetOption filetype=(?!makefile).* %{ rmhl makefile }

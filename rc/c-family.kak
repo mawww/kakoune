@@ -121,8 +121,6 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     hook window InsertChar \} -group c-family-indent _c-family-indent-on-closing-curly-brace
 
     alias window alt c-family-alternative-file
-    alias window comment-selection c-family-comment-selection
-    alias window comment-line c-family-comment-line
 
     set window formatcmd "astyle"
 ]
@@ -132,8 +130,6 @@ hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
     rmhooks window c-family-indent
 
     unalias window alt c-family-alternative-file
-    unalias window comment-selection c-family-comment-selection
-    unalias window comment-line c-family-comment-line
 ]
 
 hook global WinSetOption filetype=c %[ addhl ref c ]
@@ -188,42 +184,3 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
        echo "echo -color Error 'alternative file not found'"
     fi
 }}
-
-def c-family-comment-selection -docstring "Comment the current selection" %{
-    try %{
-        ## The selection is empty
-        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
-
-        try %{
-            ## The selection has already been commented
-            exec -draft %{<a-K>\A/\*.*\*/\z<ret>}
-
-            ## Comment the selection
-            exec %{a */<esc>i/* <esc>3H}
-        } catch %{
-            ## Uncomment the commented selection
-            exec -draft %{s(\A/\* )|( \*/\z)<ret>d}
-        }
-    }
-}
-
-def c-family-comment-line -docstring "Comment the current line" %{
-    ## Select the content of the line, without indentation
-    exec %{I<esc><a-l>}
-
-    try %{
-        ## There's no text on the line
-        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
-
-        try %{
-            ## The line has already been commented
-            exec -draft %{<a-K>^//<ret>}
-
-            ## Comment the line
-            exec %{i// <esc>3H}
-        } catch %{
-            ## Uncomment the line
-            exec -draft %{s^//\h*<ret>d}
-        }
-    }
-}
