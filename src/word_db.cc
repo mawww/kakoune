@@ -160,7 +160,7 @@ RankedMatchList WordDB::find_matching(StringView query)
     {
         if (query.empty())
         {
-            res.push_back({word.first, 1 });
+            res.push_back(RankedMatch{word.first, query});
             continue;
         }
 
@@ -168,8 +168,9 @@ RankedMatchList WordDB::find_matching(StringView query)
         if (not matches(to_lower(letters), to_lower(word_letters)) or
             not matches(letters & upper_mask, word_letters & upper_mask))
             continue;
-        if (int rank = match_rank(word.first, query))
-            res.push_back({ word.first, rank });
+
+        if (RankedMatch match{word.first, query})
+            res.push_back(match);
     }
 
     return res;
@@ -178,14 +179,14 @@ RankedMatchList WordDB::find_matching(StringView query)
 UnitTest test_word_db{[]()
 {
     auto cmp_words = [](const RankedMatch& lhs, const RankedMatch& rhs) {
-        return lhs.word < rhs.word;
+        return lhs.candidate() < rhs.candidate();
     };
 
     auto eq = [](ArrayView<const RankedMatch> lhs, const WordList& rhs) {
         return lhs.size() == rhs.size() and
             std::equal(lhs.begin(), lhs.end(), rhs.begin(),
                        [](const RankedMatch& lhs, const StringView& rhs) {
-                           return lhs.word == rhs;
+                           return lhs.candidate() == rhs;
                        });
     };
 

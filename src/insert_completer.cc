@@ -95,11 +95,13 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(StringView w, int r = 0, const Buffer* b = nullptr)
-            : RankedMatch{w, r}, buffer{b} {}
+        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b = nullptr)
+            : RankedMatch{m}, buffer{b} {}
 
-        bool operator==(const RankedMatchAndBuffer& other) const { return word == other.word; }
-        bool operator<(const RankedMatchAndBuffer& other) const { return rank > other.rank; }
+        bool operator==(StringView other) const { return candidate() == other; }
+
+        bool operator==(const RankedMatchAndBuffer& other) const { return RankedMatch::operator==(other); }
+        bool operator<(const RankedMatchAndBuffer& other) const { return RankedMatch::operator<(other);; }
 
         const Buffer* buffer;
     };
@@ -109,7 +111,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         auto& word_db = get_word_db(buf);
         auto bufmatches = word_db.find_matching(prefix);
         for (auto& m : bufmatches)
-            matches.push_back({ m.word, m.rank, &buf });
+            matches.push_back({ m, &buf });
     };
 
     add_matches(buffer);
@@ -127,23 +129,12 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         }
     }
     unordered_erase(matches, StringView{prefix});
-    // Sort by word, favoring lowercase
-    std::sort(matches.begin(), matches.end(),
-              [](const RankedMatchAndBuffer& lhs, const RankedMatchAndBuffer& rhs) {
-                  return std::lexicographical_compare(
-                      lhs.word.begin(), lhs.word.end(), rhs.word.begin(), rhs.word.end(),
-                      [](char a, char b) {
-                          const bool low_a = islower(a), low_b = islower(b);
-                          return low_a == low_b ? a < b : low_a;
-                      });
-              });
+    std::sort(matches.begin(), matches.end());
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
-    // Stable sort by rank to preserve by word sorting
-    std::stable_sort(matches.begin(), matches.end());
 
     const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
                                          [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
-                                         { return std::max(lhs, rhs.word.char_length()); });
+                                         { return std::max(lhs, rhs.candidate().char_length()); });
 
     InsertCompletion::CandidateList candidates;
     candidates.reserve(matches.size());
@@ -152,17 +143,15 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         DisplayLine menu_entry;
         if (m.buffer)
         {
-            const auto pad_len = longest + 1 - m.word.char_length();
-            menu_entry.push_back(m.word.str());
+            const auto pad_len = longest + 1 - m.candidate().char_length();
+            menu_entry.push_back(m.candidate().str());
             menu_entry.push_back(String{' ', pad_len});
             menu_entry.push_back({ m.buffer->display_name(), get_face("MenuInfo") });
         }
         else
-            menu_entry.push_back(m.word.str());
+            menu_entry.push_back(m.candidate().str());
 
-        menu_entry.push_back({ " " + to_string(m.rank), get_face("cyan") });
-
-        candidates.push_back({m.word.str(), "", std::move(menu_entry)});
+        candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
     }
 
     return { begin.coord(), cursor_pos, std::move(candidates), buffer.timestamp() };

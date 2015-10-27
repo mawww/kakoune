@@ -3,7 +3,7 @@
 namespace Kakoune
 {
 
-int match_rank(StringView candidate, StringView query)
+static bool match_rank(StringView candidate, StringView query)
 {
     int rank = 0;
     auto it = candidate.begin();
@@ -35,6 +35,31 @@ int match_rank(StringView candidate, StringView query)
         ++it;
     }
     return rank;
+}
+
+RankedMatch::RankedMatch(StringView candidate, StringView query)
+{
+    if (candidate.empty() or query.empty())
+    {
+        m_candidate = candidate;
+        return;
+    }
+
+    m_match_rank = match_rank(candidate, query);
+}
+
+bool RankedMatch::operator<(const RankedMatch& other) const
+{
+    if (m_match_rank == other.m_match_rank)
+       return std::lexicographical_compare(
+           m_candidate.begin(), m_candidate.end(),
+           other.m_candidate.begin(), other.m_candidate.end(),
+           [](char a, char b) {
+               const bool low_a = islower(a), low_b = islower(b);
+               return low_a == low_b ? a < b : low_a;
+           });
+
+    return m_match_rank < other.m_match_rank;
 }
 
 }
