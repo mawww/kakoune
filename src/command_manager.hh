@@ -19,11 +19,15 @@ namespace Kakoune
 
 class Context;
 using CommandParameters = ConstArrayView<String>;
-using Command = std::function<void (const ParametersParser& parser, Context& context)>;
+using Command = std::function<void (const ParametersParser& parser,
+                                    Context& context,
+                                    const ShellContext& shell_context)>;
+
 using CommandCompleter = std::function<Completions (const Context& context,
                                                     CompletionFlags,
                                                     CommandParameters,
                                                     size_t, ByteCount)>;
+
 using CommandHelper = std::function<String (const Context& context, CommandParameters)>;
 
 enum class CommandFlags
@@ -61,8 +65,7 @@ class CommandManager : public Singleton<CommandManager>
 {
 public:
     void execute(StringView command_line, Context& context,
-                 ConstArrayView<String> shell_params = {},
-                 const EnvVarMap& env_vars = EnvVarMap{});
+                 const ShellContext& shell_context = ShellContext{});
 
     Completions complete(const Context& context, CompletionFlags flags,
                          StringView command_line, ByteCount cursor_pos);
@@ -85,7 +88,9 @@ public:
 
 private:
     void execute_single_command(CommandParameters params,
-                                Context& context, CharCoord pos) const;
+                                Context& context,
+                                const ShellContext& shell_context,
+                                CharCoord pos) const;
 
     struct CommandDescriptor
     {
@@ -104,8 +109,7 @@ private:
 };
 
 String expand(StringView str, const Context& context,
-              ConstArrayView<String> shell_params = {},
-              const EnvVarMap& env_vars = EnvVarMap{});
+              const ShellContext& shell_context = ShellContext{});
 
 }
 

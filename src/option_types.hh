@@ -16,6 +16,7 @@ namespace Kakoune
 
 inline String option_to_string(StringView opt) { return opt.str(); }
 inline void option_from_string(StringView str, String& opt) { opt = str.str(); }
+inline bool option_add(String& opt, const String& val) { opt += val; return not val.empty(); }
 
 inline String option_to_string(int opt) { return to_string(opt); }
 inline void option_from_string(StringView str, int& opt) { opt = str_to_int(str); }

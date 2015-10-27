@@ -70,17 +70,6 @@ def -hidden _dlang-indent-on-closing-curly-brace %[
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
 
-decl str dlang_dfmt_options ""
-def dlang-format-dfmt -docstring "Format the code using the dfmt utility" %{
-    %sh{
-        readonly x=$((kak_cursor_column - 1))
-        readonly y="${kak_cursor_line}"
-
-        echo "exec -draft %{%|dfmt<space>${kak_opt_dlang_dfmt_options// /<space>}<ret>}"
-        echo "exec gg ${y}g ${x}l"
-    }
-}
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -93,7 +82,7 @@ hook global WinSetOption filetype=dlang %{
     hook window InsertChar \{ -group dlang-indent _dlang-indent-on-opening-curly-brace
     hook window InsertChar \} -group dlang-indent _dlang-indent-on-closing-curly-brace
 
-    alias window format-code dlang-format-dfmt
+    set window formatcmd "dfmt"
 }
 
 hook global WinSetOption filetype=(?!dlang).* %{
@@ -101,6 +90,4 @@ hook global WinSetOption filetype=(?!dlang).* %{
 
     rmhooks window dlang-hooks
     rmhooks window dlang-indent
-
-    unalias window format-code dlang-format-dfmt
 }

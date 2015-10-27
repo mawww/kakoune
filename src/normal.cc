@@ -381,8 +381,7 @@ void pipe(Context& context, NormalParams)
                         in += '\n';
                     auto out = ShellManager::instance().eval(
                         real_cmd, context, in,
-                        ShellManager::Flags::WaitForStdout,
-                        {}, EnvVarMap{}).first;
+                        ShellManager::Flags::WaitForStdout).first;
 
                     if ((insert_eol or sel.max() == buffer.back_coord()) and
                         out.back() == '\n')
@@ -397,8 +396,7 @@ void pipe(Context& context, NormalParams)
                 for (auto& sel : selections)
                     ShellManager::instance().eval(real_cmd, context,
                                                   content(buffer, sel),
-                                                  ShellManager::Flags::None,
-                                                  {}, EnvVarMap{});
+                                                  ShellManager::Flags::None);
             }
         });
 }
@@ -425,9 +423,8 @@ void insert_output(Context& context, NormalParams)
             if (real_cmd.empty())
                 return;
 
-            auto str = ShellManager::instance().eval(real_cmd, context, {},
-                                                     ShellManager::Flags::WaitForStdout,
-                                                     {}, EnvVarMap{}).first;
+            auto str = ShellManager::instance().eval(
+                real_cmd, context, {}, ShellManager::Flags::WaitForStdout).first;
             ScopedEdition edition(context);
             context.selections().insert(str, mode);
         });
@@ -781,8 +778,7 @@ void keep_pipe(Context& context, NormalParams)
             for (auto& sel : context.selections())
             {
                 if (shell_manager.eval(cmdline, context, content(buffer, sel),
-                                       ShellManager::Flags::None,
-                                       {}, EnvVarMap{}).second == 0)
+                                       ShellManager::Flags::None).second == 0)
                     keep.push_back(sel);
             }
             if (keep.empty())
