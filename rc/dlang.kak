@@ -83,6 +83,7 @@ hook global WinSetOption filetype=dlang %{
     hook window InsertChar \} -group dlang-indent _dlang-indent-on-closing-curly-brace
 
     set window formatcmd "dfmt"
+    set window comment_selection_chars "/+:+/"
 }
 
 hook global WinSetOption filetype=(?!dlang).* %{
