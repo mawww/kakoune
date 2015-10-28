@@ -134,7 +134,7 @@ private:
 
         auto clamp_line = [&](LineCount line) { return clamp(line, 0_line, line_count-1); };
         auto min_coord = buffer.offset_coord(clamp_line(win_pos.line + scrolloff.line), win_pos.column);
-        auto max_coord = buffer.offset_coord(clamp_line(win_pos.line + win_dim.line - scrolloff.line), win_pos.column);
+        auto max_coord = buffer.offset_coord(clamp_line(win_pos.line + win_dim.line - 1 - scrolloff.line), win_pos.column);
 
         selections = SelectionList{buffer, clamp(cursor, min_coord, max_coord)};
 
