@@ -141,8 +141,19 @@ hook global WinSetOption filetype=(?!cpp$).* %[ rmhl cpp ]
 hook global WinSetOption filetype=objc %[ addhl ref objc ]
 hook global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
 
+decl str c_include_guard_style "ifdef"
 def -hidden _c-family-insert-include-guards %{
-    exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
+    %sh{
+        case "${kak_opt_c_include_guard_style,,}" in
+            ifdef)
+                echo "exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>"
+                ;;
+            pragma)
+                echo "exec ggi#pragma<space>once<esc>"
+                ;;
+            *);;
+        esac
+    }
 }
 
 hook global BufNew .*\.(h|hh|hpp|hxx|H) _c-family-insert-include-guards
