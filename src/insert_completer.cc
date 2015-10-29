@@ -233,29 +233,46 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
 
         if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column)
         {
-            StringView prefix = buffer[coord.line].substr(
+            StringView query = buffer[coord.line].substr(
                 coord.column, cursor_pos.column - coord.column);
-
 
             const CharCount tabstop = options["tabstop"].get<int>();
             const CharCount column = get_column(buffer, tabstop, cursor_pos);
 
-            InsertCompletion::CandidateList candidates;
+            struct RankedMatchAndInfo : RankedMatch
+            {
+                using RankedMatch::RankedMatch;
+                using RankedMatch::operator==;
+                using RankedMatch::operator<;
+
+                StringView docstring;
+                DisplayLine menu_entry;
+            };
+
+            Vector<RankedMatchAndInfo> matches;
+
             for (auto it = opt.begin() + 1; it != opt.end(); ++it)
             {
                 auto splitted = split(*it, '@');
-                if (not splitted.empty() and prefix_match(splitted[0], prefix))
+                if (splitted.empty())
+                    continue;
+                if (RankedMatchAndInfo match{splitted[0], query})
                 {
-                    StringView completion = splitted[0];
-                    StringView docstring = splitted.size() > 1 ? splitted[1] : StringView{};
-
-                    DisplayLine menu_entry = splitted.size() > 2 ?
+                    match.docstring = splitted.size() > 1 ? splitted[1] : StringView{};
+                    match.menu_entry = splitted.size() > 2 ?
                         parse_display_line(expand_tabs(splitted[2], tabstop, column))
                       : DisplayLine{ expand_tabs(splitted[0], tabstop, column) };
 
-                    candidates.push_back({completion.str(), docstring.str(), std::move(menu_entry)});
+                    matches.push_back(std::move(match));
                 }
             }
+            std::sort(matches.begin(), matches.end());
+            InsertCompletion::CandidateList candidates;
+            candidates.reserve(matches.size());
+            for (auto& match : matches)
+                candidates.push_back({ match.candidate().str(), match.docstring.str(),
+                                       std::move(match.menu_entry) });
+
             return { coord, end, std::move(candidates), timestamp };
         }
     }
