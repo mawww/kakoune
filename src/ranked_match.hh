@@ -19,7 +19,10 @@ struct RankedMatch
 
 private:
     StringView m_candidate;
-    int m_match_rank = 0;
+    bool m_first_char_match = false;
+    bool m_prefix = false;
+    int m_word_boundary_match_count = 0;
+    bool m_only_word_boundary = false;
 };
 
 using RankedMatchList = Vector<RankedMatch>;
