@@ -16,13 +16,10 @@ hook global BufCreate .*\.pl %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default code perl \
-    command '(?:[^\$]|^)`' '`' '' \
-    command '\<qx/' (?<!\\)(\\\\)*/ '' \
-    double_string '(?:[^\$]|^)"' (?<!\\)(\\\\)*" '' \
-    double_string '\<q(q|w)/' (?<!\\)(\\\\)*/ '' \
-    single_string "(?:[^\$]|^)'" (?<!\\)(\\\\)*' '' \
-    single_string "\<q/" (?<!\\)(\\\\)*/ '' \
-    comment '(?:[^\$]|^)#' $ ''
+    command '(?<!\$)`' (?<!\\)(\\\\)*` '' \
+    double_string '(?<!\$)"' (?<!\\)(\\\\)*" '' \
+    single_string "(?<!\$)'" (?<!\\)(\\\\)*' '' \
+    comment '(?<!\$)#' $ ''
 
 addhl -group /perl/command fill magenta
 addhl -group /perl/double_string fill string
