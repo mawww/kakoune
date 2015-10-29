@@ -40,8 +40,8 @@ addons:
       name: "mawww/kakoune"
       description: "Build submitted via Travis CI"
     notification_email: frrrwww@gmail.com
-    build_command_prepend: "make clean"
-    build_command: "make -j4"
+    build_command_prepend: "cd src && make clean"
+    build_command: "cd src && make -j4"
     branch_pattern: master
 
 script: cd src && make && make test
