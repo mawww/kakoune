@@ -121,8 +121,6 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     hook window InsertChar \} -group c-family-indent _c-family-indent-on-closing-curly-brace
 
     alias window alt c-family-alternative-file
-    alias window comment-selection c-family-comment-selection
-    alias window comment-line c-family-comment-line
 
     set window formatcmd "astyle"
 ]
@@ -132,8 +130,6 @@ hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
     rmhooks window c-family-indent
 
     unalias window alt c-family-alternative-file
-    unalias window comment-selection c-family-comment-selection
-    unalias window comment-line c-family-comment-line
 ]
 
 hook global WinSetOption filetype=c %[ addhl ref c ]
@@ -145,8 +141,19 @@ hook global WinSetOption filetype=(?!cpp$).* %[ rmhl cpp ]
 hook global WinSetOption filetype=objc %[ addhl ref objc ]
 hook global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
 
+decl str c_include_guard_style "ifdef"
 def -hidden _c-family-insert-include-guards %{
-    exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>
+    %sh{
+        case "${kak_opt_c_include_guard_style,,}" in
+            ifdef)
+                echo "exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>"
+                ;;
+            pragma)
+                echo "exec ggi#pragma<space>once<esc>"
+                ;;
+            *);;
+        esac
+    }
 }
 
 hook global BufNew .*\.(h|hh|hpp|hxx|H) _c-family-insert-include-guards
@@ -188,42 +195,3 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
        echo "echo -color Error 'alternative file not found'"
     fi
 }}
-
-def c-family-comment-selection -docstring "Comment the current selection" %{
-    try %{
-        ## The selection is empty
-        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
-
-        try %{
-            ## The selection has already been commented
-            exec -draft %{<a-K>\A/\*.*\*/\z<ret>}
-
-            ## Comment the selection
-            exec %{a */<esc>i/* <esc>3H}
-        } catch %{
-            ## Uncomment the commented selection
-            exec -draft %{s(\A/\* )|( \*/\z)<ret>d}
-        }
-    }
-}
-
-def c-family-comment-line -docstring "Comment the current line" %{
-    ## Select the content of the line, without indentation
-    exec %{I<esc><a-l>}
-
-    try %{
-        ## There's no text on the line
-        exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
-
-        try %{
-            ## The line has already been commented
-            exec -draft %{<a-K>^//<ret>}
-
-            ## Comment the line
-            exec %{i// <esc>3H}
-        } catch %{
-            ## Uncomment the line
-            exec -draft %{s^//\h*<ret>d}
-        }
-    }
-}

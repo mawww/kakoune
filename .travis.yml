@@ -21,6 +21,9 @@ install:
     elif [ $TRAVIS_OS_NAME = osx ]; then
        brew outdated boost || brew upgrade boost;
     fi;
+env:
+  global:
+   - secure: "R+NxqtytOslIcQ/eCbLoZhImsgYdJnljfjANdieFQGune9ACPPQL0YanXkF49c9SWGBSxrAcute0egQzv2CU2+ivSQIX/xnMebKHiOmSPYBoxX+VgxLT3U1itUYlpYwixo9rF8UnGdlgXid6oENSiCvfWtNKoM2qOL0Ttw31J9E="
 
 addons:
   apt:
@@ -32,5 +35,13 @@ addons:
       - g++-4.8
       - libncursesw5-dev
       - libboost-regex1.55-dev
+  coverity_scan:
+    project:
+      name: "mawww/kakoune"
+      description: "Build submitted via Travis CI"
+    notification_email: frrrwww@gmail.com
+    build_command_prepend: "make clean"
+    build_command: "make -j4"
+    branch_pattern: master
 
 script: cd src && make && make test

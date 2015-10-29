@@ -75,6 +75,8 @@ hook global WinSetOption filetype=css %[
     hook window InsertEnd  .* -group css-hooks  _css_filter_around_selections
     hook window InsertChar \n -group css-indent _css_indent_on_new_line
     hook window InsertChar \} -group css-indent _css_indent_on_closing_curly_brace
+
+    set comment_line_chars ""
 ]
 
 hook global WinSetOption filetype=(?!css).* %{
