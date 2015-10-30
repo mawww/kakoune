@@ -25,7 +25,7 @@ public:
 
     template<typename Container>
     iterator(Iterator it, const Container& c)
-        : m_it{std::move(it)}, m_begin{begin(c)}, m_end{end(c)}
+        : m_it{std::move(it)}, m_begin{std::begin(c)}, m_end{std::end(c)}
     {}
 
     iterator& operator++()

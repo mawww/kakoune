@@ -10,6 +10,7 @@
 #include "user_interface.hh"
 #include "window.hh"
 #include "word_db.hh"
+#include "utf8_iterator.hh"
 
 #include <numeric>
 
@@ -75,23 +76,24 @@ WordDB& get_word_db(const Buffer& buffer)
 template<bool other_buffers>
 InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 {
-   auto pos = buffer.iterator_at(cursor_pos);
-   if (pos == buffer.begin() or not is_word(*utf8::previous(pos, buffer.begin())))
-       return {};
+    using Utf8It = utf8::iterator<BufferIterator>;
+    Utf8It pos{buffer.iterator_at(cursor_pos), buffer};
+    if (pos == buffer.begin() or not is_word(*(pos-1)))
+        return {};
 
-    auto end = buffer.iterator_at(cursor_pos);
+    auto end = Utf8It{buffer.iterator_at(cursor_pos), buffer};
     auto begin = end-1;
     while (begin != buffer.begin() and is_word(*begin))
         --begin;
     if (not is_word(*begin))
         ++begin;
 
-    String prefix{begin, end};
+    String prefix{begin.base(), end.base()};
 
     while (end != buffer.end() and is_word(*end))
         ++end;
 
-    String current_word{begin, end};
+    String current_word{begin.base(), end.base()};
 
     struct RankedMatchAndBuffer : RankedMatch
     {
@@ -153,7 +155,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
     }
 
-    return { begin.coord(), cursor_pos, std::move(candidates), buffer.timestamp() };
+    return { begin.base().coord(), cursor_pos, std::move(candidates), buffer.timestamp() };
 }
 
 template<bool require_slash>
