@@ -89,6 +89,8 @@ private:
     InsertCompletion m_completions;
     CandidateList    m_matching_candidates;
     int              m_current_candidate = -1;
+
+    std::function<InsertCompletion (const Buffer&, ByteCoord)> m_explicit_completer;
 };
 
 }

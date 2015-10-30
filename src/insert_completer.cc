@@ -72,7 +72,7 @@ WordDB& get_word_db(const Buffer& buffer)
     return cache_val.as<WordDB>();
 }
 
-template<bool other_buffers, bool subseq>
+template<bool other_buffers>
 InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 {
    auto pos = buffer.iterator_at(cursor_pos);
@@ -93,21 +93,22 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 
     String current_word{begin, end};
 
-    struct MatchAndBuffer {
-        MatchAndBuffer(StringView m, const Buffer* b = nullptr) : match(m), buffer(b) {}
+    struct RankedMatchAndBuffer : RankedMatch
+    {
+        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b = nullptr)
+            : RankedMatch{m}, buffer{b} {}
 
-        bool operator==(const MatchAndBuffer& other) const { return match == other.match; }
-        bool operator<(const MatchAndBuffer& other) const { return match < other.match; }
+        using RankedMatch::operator==;
+        using RankedMatch::operator<;
+        bool operator==(StringView other) const { return candidate() == other; }
 
-        StringView match;
         const Buffer* buffer;
     };
-    Vector<MatchAndBuffer> matches;
+    Vector<RankedMatchAndBuffer> matches;
 
     auto add_matches = [&](const Buffer& buf) {
         auto& word_db = get_word_db(buf);
-        auto bufmatches = word_db.find_matching(
-            prefix, subseq ? subsequence_match : prefix_match);
+        auto bufmatches = word_db.find_matching(prefix);
         for (auto& m : bufmatches)
             matches.push_back({ m, &buf });
     };
@@ -131,8 +132,8 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
 
     const auto longest = std::accumulate(matches.begin(), matches.end(), 0_char,
-                                         [](const CharCount& lhs, const MatchAndBuffer& rhs)
-                                         { return std::max(lhs, rhs.match.char_length()); });
+                                         [](const CharCount& lhs, const RankedMatchAndBuffer& rhs)
+                                         { return std::max(lhs, rhs.candidate().char_length()); });
 
     InsertCompletion::CandidateList candidates;
     candidates.reserve(matches.size());
@@ -141,15 +142,15 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         DisplayLine menu_entry;
         if (m.buffer)
         {
-            const auto pad_len = longest + 1 - m.match.char_length();
-            menu_entry.push_back(m.match.str());
+            const auto pad_len = longest + 1 - m.candidate().char_length();
+            menu_entry.push_back(m.candidate().str());
             menu_entry.push_back(String{' ', pad_len});
             menu_entry.push_back({ m.buffer->display_name(), get_face("MenuInfo") });
         }
         else
-            menu_entry.push_back(m.match.str());
+            menu_entry.push_back(m.candidate().str());
 
-        candidates.push_back({m.match.str(), "", std::move(menu_entry)});
+        candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
     }
 
     return { begin.coord(), cursor_pos, std::move(candidates), buffer.timestamp() };
@@ -216,7 +217,7 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                          str_to_int({match[2].first, match[2].second}) - 1 };
         if (not buffer.is_valid(coord))
             return {};
-        auto end = coord;
+        auto end = cursor_pos;
         if (match[3].matched)
         {
             ByteCount len = str_to_int({match[3].first, match[3].second});
@@ -231,29 +232,46 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
 
         if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column)
         {
-            StringView prefix = buffer[coord.line].substr(
+            StringView query = buffer[coord.line].substr(
                 coord.column, cursor_pos.column - coord.column);
-
 
             const CharCount tabstop = options["tabstop"].get<int>();
             const CharCount column = get_column(buffer, tabstop, cursor_pos);
 
-            InsertCompletion::CandidateList candidates;
+            struct RankedMatchAndInfo : RankedMatch
+            {
+                using RankedMatch::RankedMatch;
+                using RankedMatch::operator==;
+                using RankedMatch::operator<;
+
+                StringView docstring;
+                DisplayLine menu_entry;
+            };
+
+            Vector<RankedMatchAndInfo> matches;
+
             for (auto it = opt.begin() + 1; it != opt.end(); ++it)
             {
                 auto splitted = split(*it, '@');
-                if (not splitted.empty() and prefix_match(splitted[0], prefix))
+                if (splitted.empty())
+                    continue;
+                if (RankedMatchAndInfo match{splitted[0], query})
                 {
-                    StringView completion = splitted[0];
-                    StringView docstring = splitted.size() > 1 ? splitted[1] : StringView{};
-
-                    DisplayLine menu_entry = splitted.size() > 2 ?
+                    match.docstring = splitted.size() > 1 ? splitted[1] : StringView{};
+                    match.menu_entry = splitted.size() > 2 ?
                         parse_display_line(expand_tabs(splitted[2], tabstop, column))
                       : DisplayLine{ expand_tabs(splitted[0], tabstop, column) };
 
-                    candidates.push_back({completion.str(), docstring.str(), std::move(menu_entry)});
+                    matches.push_back(std::move(match));
                 }
             }
+            std::sort(matches.begin(), matches.end());
+            InsertCompletion::CandidateList candidates;
+            candidates.reserve(matches.size());
+            for (auto& match : matches)
+                candidates.push_back({ match.candidate().str(), match.docstring.str(),
+                                       std::move(match.menu_entry) });
+
             return { coord, end, std::move(candidates), timestamp };
         }
     }
@@ -348,41 +366,9 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
 
 void InsertCompleter::update()
 {
-    if (m_completions.is_valid())
-    {
-        ByteCount longest_completion = 0;
-        for (auto& candidate : m_completions.candidates)
-             longest_completion = std::max(longest_completion, candidate.completion.length());
+    if (m_explicit_completer and try_complete(m_explicit_completer))
+        return;
 
-        ByteCoord cursor = m_context.selections().main().cursor();
-        ByteCoord compl_beg = m_completions.begin;
-        if (cursor.line == compl_beg.line and
-            compl_beg.column <= cursor.column and
-            cursor.column < compl_beg.column + longest_completion)
-        {
-            String prefix = m_context.buffer().string(compl_beg, cursor);
-
-            if (m_context.buffer().timestamp() == m_completions.timestamp)
-                m_matching_candidates = m_completions.candidates;
-            else
-            {
-                m_matching_candidates.clear();
-                for (auto& candidate : m_completions.candidates)
-                {
-                    if (candidate.completion.substr(0, prefix.length()) == prefix)
-                        m_matching_candidates.push_back(candidate);
-                }
-            }
-            if (not m_matching_candidates.empty())
-            {
-                m_current_candidate = m_matching_candidates.size();
-                m_completions.end = cursor;
-                menu_show();
-                m_matching_candidates.push_back({prefix, ""});
-                return;
-            }
-        }
-    }
     reset();
     setup_ifn();
 }
@@ -390,6 +376,7 @@ void InsertCompleter::update()
 void InsertCompleter::reset()
 {
     m_completions = InsertCompletion{};
+    m_explicit_completer = nullptr;
     if (m_context.has_ui())
     {
         m_context.ui().menu_hide();
@@ -419,13 +406,11 @@ bool InsertCompleter::setup_ifn()
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
                 *completer.param == "buffer" and
-                (try_complete(complete_word<false, false>) or
-                 try_complete(complete_word<false, true>)))
+                try_complete(complete_word<false>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
                 *completer.param == "all" and
-                (try_complete(complete_word<true, false>) or
-                 try_complete(complete_word<true, true>)))
+                try_complete(complete_word<true>))
                 return true;
         }
         return false;
@@ -497,21 +482,26 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
 
 void InsertCompleter::explicit_file_complete()
 {
-    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
+    auto func = [this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_filename<false>(buffer, cursor_pos, m_options);
-    });
+    };
+    try_complete(func);
+    m_explicit_completer = func;
 }
 
 void InsertCompleter::explicit_word_complete()
 {
-    try_complete(complete_word<true, true>);
+    try_complete(complete_word<true>);
+    m_explicit_completer = complete_word<true>;
 }
 
 void InsertCompleter::explicit_line_complete()
 {
-    try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
+    auto func = [this](const Buffer& buffer, ByteCoord cursor_pos) {
         return complete_line(buffer, m_options, cursor_pos);
-    });
+    };
+    try_complete(func);
+    m_explicit_completer = func;
 }
 
 }
