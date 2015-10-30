@@ -42,6 +42,6 @@ addons:
     notification_email: frrrwww@gmail.com
     build_command_prepend: "cd src && make clean"
     build_command: "make -j4"
-    branch_pattern: master
+    branch_pattern: coverity-scan
 
 script: cd src && make && make test
