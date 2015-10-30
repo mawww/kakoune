@@ -217,7 +217,7 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                          str_to_int({match[2].first, match[2].second}) - 1 };
         if (not buffer.is_valid(coord))
             return {};
-        auto end = coord;
+        auto end = cursor_pos;
         if (match[3].matched)
         {
             ByteCount len = str_to_int({match[3].first, match[3].second});
