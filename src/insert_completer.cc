@@ -98,10 +98,9 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
         RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b = nullptr)
             : RankedMatch{m}, buffer{b} {}
 
+        using RankedMatch::operator==;
+        using RankedMatch::operator<;
         bool operator==(StringView other) const { return candidate() == other; }
-
-        bool operator==(const RankedMatchAndBuffer& other) const { return RankedMatch::operator==(other); }
-        bool operator<(const RankedMatchAndBuffer& other) const { return RankedMatch::operator<(other);; }
 
         const Buffer* buffer;
     };
