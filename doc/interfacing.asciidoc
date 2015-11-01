@@ -19,7 +19,8 @@ For example, one can echo the current time in Kakoune status line using:
 
 For asynchronous operations, the Kakoune Unix stream socket can be used. This
 is the same socket that Kakoune clients connect to. It is available through
-+kak_session+ environment variable: the socket is +/tmp/kak-${kak_session}+
++kak_session+ environment variable: the socket is
++/tmp/kakoune/${username}/${kak_session}+
 
 For example, we can echo a message in Kakoune in 10 seconds with:
 
@@ -78,25 +79,25 @@ and some hooks for this filetype will have been written
 Completion candidates
 ---------------------
 
-Most of the time, filetype specific completion should be provided by
-external programs.
+Filetype specific completion should be provided by external programs.
 
 external completions are provided using an option to store completion, which
 have the following format.
 
 ----
-line.column[+len]@timestamp:candidate1[@desc1]:candidate2[@desc2]:...
+line.column[+len]@timestamp:candidate1[@desc1[@menu1]]:candidate2[@desc2[@menu2]]:...
 ----
 
 the first element of this string list specify where and when this completions
 applies, the others are simply completion candidates, eventually containing
-a descriptive text (after an `@` separator).
+a descriptive text (after an `@` separator), and a separate menu text (after
+the second `@` separator).
 
 to effectively use that completion option, it should get added to the completers
 option.
 
 ---
-set -add buffer completers option=my_option_name
+set buffer completers "option=my_option_name:%opt{completers}"
 ---
 
 As a completion program may take some time to compute the candidates, it should
