@@ -101,7 +101,7 @@ Kakoune dependencies are:
 
  * A C++11 compliant compiler (GCC >= 4.8 or clang >= 3.4)
  * boost (>= 1.50)
- * ncurses with wide-characters support (>= 5.3, generally refered as libncursesw)
+ * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
 
 To build, just type *make* in the src directory
 
