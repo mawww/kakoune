@@ -28,6 +28,10 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
+else ifeq ($(os),FreeBSD)
+    LIBS += -ltinfow -lncursesw -lboost_regex
+    CPPFLAGS += -I/usr/local/include
+    LDFLAGS += -L/usr/local/lib
 else ifeq ($(os),Haiku)
     LIBS += -lncursesw -lboost_regex -lnetwork -lbe
 else ifneq (,$(findstring CYGWIN,$(os)))
