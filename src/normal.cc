@@ -239,19 +239,23 @@ void view_commands(Context& context, NormalParams params)
         if (not cp or not context.has_window())
             return;
 
-        LineCount cursor_line = context.selections().main().cursor().line;
+        const ByteCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
         switch (tolower(*cp))
         {
         case 'v':
         case 'c':
-            context.window().center_line(cursor_line);
+            context.window().center_line(cursor.line);
+            break;
+        case 'm':
+            context.window().center_column(
+                context.buffer()[cursor.line].char_count_to(cursor.column));
             break;
         case 't':
-            context.window().display_line_at(cursor_line, 0);
+            context.window().display_line_at(cursor.line, 0);
             break;
         case 'b':
-            context.window().display_line_at(cursor_line, window.dimensions().line-1);
+            context.window().display_line_at(cursor.line, window.dimensions().line-1);
             break;
         case 'h':
             context.window().scroll(-std::max<CharCount>(1, params.count));
@@ -267,7 +271,8 @@ void view_commands(Context& context, NormalParams params)
             break;
         }
     }, "view",
-    "v,c:  center cursor   \n"
+    "v,c:  center cursor (vertically)\n"
+    "m:    center cursor (horzontally)\n"
     "t:    cursor on top   \n"
     "b:    cursor on bottom\n"
     "h:    scroll left     \n"

@@ -23,10 +23,13 @@ public:
     const CharCoord& dimensions() const { return m_dimensions; }
     void set_dimensions(CharCoord dimensions);
 
+    void scroll(LineCount offset);
     void center_line(LineCount buffer_line);
     void display_line_at(LineCount buffer_line, LineCount display_line);
-    void scroll(LineCount offset);
+
     void scroll(CharCount offset);
+    void center_column(CharCount buffer_column);
+    void display_column_at(CharCount buffer_column, CharCount display_column);
 
     const DisplayBuffer& update_display_buffer(const Context& context);
 

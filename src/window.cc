@@ -40,6 +40,11 @@ Window::~Window()
     options().unregister_watcher(*this);
 }
 
+void Window::scroll(LineCount offset)
+{
+    m_position.line = std::max(0_line, m_position.line + offset);
+}
+
 void Window::display_line_at(LineCount buffer_line, LineCount display_line)
 {
     if (display_line >= 0 or display_line < m_dimensions.line)
@@ -51,14 +56,20 @@ void Window::center_line(LineCount buffer_line)
     display_line_at(buffer_line, m_dimensions.line/2_line);
 }
 
-void Window::scroll(LineCount offset)
-{
-    m_position.line = std::max(0_line, m_position.line + offset);
-}
-
 void Window::scroll(CharCount offset)
 {
     m_position.column = std::max(0_char, m_position.column + offset);
+}
+
+void Window::display_column_at(CharCount buffer_column, CharCount display_column)
+{
+    if (display_column >= 0 or display_column < m_dimensions.column)
+        m_position.column = std::max(0_char, buffer_column - display_column);
+}
+
+void Window::center_column(CharCount buffer_column)
+{
+    display_column_at(buffer_column, m_dimensions.column/2_char);
 }
 
 size_t Window::compute_hash(const Context& context) const
