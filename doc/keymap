@@ -4,16 +4,16 @@
 │  lower│ 1     │ 2     │ 3     │ 4     │ 5     │ 6     │ 7     │ 8     │ 9     │ 0     │       │       ┃              ┃
 ┢━━━━━━━┷━━━┱───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┺━━━┳━━━━━━━━━━┫
 ┃ ↹         ┃ record│     ᵐʷ│     ᵐʷ│  paste│     ᵐʳ│       │  redo │ INSERT│  above│ before│      ᵐ│      ᵐ┃          ┃
-┃           ┠┄┄┄┄┄┄┄┤   next│   word├REPLACE┤to char├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄OPEN┄┄┼┄PASTE┄┤ object│ object┃ ⏎        ┃
+┃           ┠┄MACRO┄┤   next│   word├REPLACE┤to char├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄OPEN┄┄┼┄PASTE┄┤ object│ object┃ ⏎        ┃
 ┃           ┃ replay│   word│    end│   char│       │  yank │  undo │ insert│  below│  after│  begin│    end┃          ┃
 ┣━━━━━━━━━━━┻━┱─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┴─┬─────┺━┓        ┃
 ┃ ⇬           ┃ APPEND│  split│       │     ᵐʳ│     ᵐᵍ│     ᵐˡ│      ᵐ│      ᵐ│     ᵐˡ│cmdline│use reg│   pipe┃        ┃
 ┃             ┠┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┤   find│  goto │       │       │       │       ├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┨        ┃
 ┃             ┃ append│ select│ delete│   char│       │     ← │     ↓ │     ↑ │     → │ cursor│ rotate│eschook┃        ┃
 ┣━━━━━━━━━┳━━━┹───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┬───┴───┲━━━┷━━━━━━━┻━━━━━━━━┫
-┃         ┃ indent│       │      ᵐ│copysel│      ᵛ│     ᵐʷ│     ᵐʳ│       │ dedent│ indent│     ᵐʳ┃                    ┃
-┃         ┠┄┄┄┄┄┄┄┤  marks│ select├┄┄┄┄┄┄┄┤   view│   prev│ search│  match├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┤ search┃                    ┃
-┃ ⇧       ┃ dedent│       │   line│ change│   cmds│   word│   next│   char│   user│ repeat│       ┃ ⇧                  ┃
+┃         ┃ indent│   save│      ᵐ│copysel│      ᵛ│     ᵐʷ│     ᵐʳ│       │ dedent│ indent│     ᵐʳ┃                    ┃
+┃         ┠┄┄┄┄┄┄┄┼┄MARKS┄┤ select├┄┄┄┄┄┄┄┤   view│   prev│ search│  match├┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┤ search┃                    ┃
+┃ ⇧       ┃ dedent│restore│   line│ change│   cmds│   word│   next│   char│   user│ repeat│       ┃ ⇧                  ┃
 ┣━━━━━━━━━┻┳━━━━━━┷━━━┳━━━┷━━━━━┱─┴───────┴───────┴───────┴───────┴───────┴─┲━━━━━┷━━━━┳━━┷━━━━━━━╋━━━━━━━━━┳━━━━━━━━━━┫
 ┃          ┃          ┃         ┃                                           ┃          ┃          ┃         ┃          ┃
 ┃          ┃          ┃         ┃              clear selections             ┃          ┃          ┃         ┃          ┃
