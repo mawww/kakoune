@@ -505,6 +505,11 @@ String get_kak_binary_path()
     kak_assert(status == B_OK);
     BPath path(&info.ref);
     return path.Path();
+#elif defined(__DragonFly__)
+    ssize_t res = readlink("/proc/curproc/file", buffer, 2048);
+    kak_assert(res != -1);
+    buffer[res] = '\0';
+    return buffer;
 #else
 # error "finding executable path is not implemented on this platform"
 #endif
