@@ -388,7 +388,7 @@ CandidateList complete_filename(StringView prefix,
     const bool check_ignored_regex = not ignored_regex.empty() and
         not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
 
-    auto filter = [&](const dirent& entry)
+    auto filter = [&ignored_regex, check_ignored_regex](const dirent& entry)
     {
         return not check_ignored_regex or
                not regex_match(entry.d_name, ignored_regex);
@@ -409,7 +409,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     if (not dirname.empty())
     {
         char buffer[PATH_MAX+1];
-        auto filter = [&](const dirent& entry)
+        auto filter = [&dirname, &buffer](const dirent& entry)
         {
             struct stat st;
             format_to(buffer, "{}{}", dirname, entry.d_name);
@@ -448,7 +448,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         auto& cache = command_cache[dirname];
         if (memcmp(&cache.mtim, &st.st_mtim, sizeof(TimeSpec)) != 0)
         {
-            auto filter = [&](const dirent& entry) {
+            auto filter = [&dirname](const dirent& entry) {
                 struct stat st;
                 char buffer[PATH_MAX+1];
                 format_to(buffer, "{}/{}", dirname, entry.d_name);
