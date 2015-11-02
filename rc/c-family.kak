@@ -94,19 +94,19 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 
 # c specific
 addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-addhl -group /c/code regex "\<(void|int|char|unsigned|float|double|size_t)\>" 0:type
+addhl -group /c/code regex "\<(void|char|short|int|long|signed|unsigned|float|double|size_t)\>" 0:type
 addhl -group /c/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|sizeof)\>" 0:keyword
-addhl -group /c/code regex "\<(const|inline|static|volatile|struct|enum|union|typedef|extern)\>" 0:attribute
+addhl -group /c/code regex "\<(const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict)\>" 0:attribute
 
 # c++ specific
 addhl -group /cpp/code regex %{\<(this|true|false|NULL|nullptr|)\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-addhl -group /cpp/code regex "\<(void|int|char|unsigned|float|double|bool|size_t)\>" 0:type
+addhl -group /cpp/code regex "\<(void|char|short|int|long|signed|unsigned|float|double|size_t|bool)\>" 0:type
 addhl -group /cpp/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|and_eq|or|or_eq|not|operator|explicit|(?:reinterpret|const|static|dynamic)_cast|sizeof|alignof|alignas|decltype)\>" 0:keyword
 addhl -group /cpp/code regex "\<(const|constexpr|mutable|auto|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
 
 # objective-c specific
 addhl -group /objc/code regex %{\<(self|nil|id|super|TRUE|FALSE|YES|NO|NULL)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-addhl -group /objc/code regex "\<(void|int|char|unsigned|float|bool|size_t|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString)\>" 0:type
+addhl -group /objc/code regex "\<(void|char|short|int|long|signed|unsigned|float|bool|size_t|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString)\>" 0:type
 addhl -group /objc/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return)\>" 0:keyword
 addhl -group /objc/code regex "\<(const|auto|inline|static|volatile|struct|enum|union|typedef|extern|__block|nonatomic|assign|copy|strong|retain|weak|readonly)\>" 0:attribute
 addhl -group /objc/code regex "@(property|synthesize|interface|implementation|protocol|end|selector|autoreleasepool|try|catch|class|synchronized)\>" 0:attribute
