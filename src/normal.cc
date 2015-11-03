@@ -128,11 +128,9 @@ void goto_commands(Context& context, NormalParams params)
                 select<mode, select_to_line_begin<true>>(context, {});
                 break;
             case 'j':
-            {
                 context.push_jump();
                 select_coord<mode>(buffer, buffer.line_count() - 1, context.selections());
                 break;
-            }
             case 'e':
                 context.push_jump();
                 select_coord<mode>(buffer, buffer.back_coord(), context.selections());
@@ -177,8 +175,8 @@ void goto_commands(Context& context, NormalParams params)
                 const Selection& sel = context.selections().main();
                 String filename = content(buffer, sel);
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
-                for (auto c : forbidden)
-                    if (contains(filename, c))
+                for (auto c : filename)
+                    if (contains(forbidden, c))
                         return;
 
                 auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
