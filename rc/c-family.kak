@@ -93,12 +93,24 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 }
 
 # c specific
+addhl -group /c/code regex %{\<(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)[uU]?[lL]{0,2}\>} 0:value
+addhl -group /c/code regex %{\<[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?([fF]|[lL])?\>} 0:value
+addhl -group /c/code regex %{\<[0-9]+[eE][+-]?[0-9]+([fF]|[lL])?\>} 0:value
+addhl -group /c/code regex %{\<0[xX][0-9a-fA-F]+\.[0-9a-fA-F]*([pP][+-]?[0-9]+)?([fF]|[lL])?\>} 0:value
+addhl -group /c/code regex %{\<0[xX][0-9a-fA-F]+[pP][+-]?[0-9]+([fF]|[lL])?\>} 0:value
+
 addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 addhl -group /c/code regex "\<(void|char|short|int|long|signed|unsigned|float|double|size_t)\>" 0:type
 addhl -group /c/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|sizeof)\>" 0:keyword
 addhl -group /c/code regex "\<(const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict)\>" 0:attribute
 
 # c++ specific
+addhl -group /cpp/code regex %{\<(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)[uU]?[lL]{0,2}\>} 0:value
+addhl -group /cpp/code regex %{\<[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?([fF]|[lL])?\>} 0:value
+addhl -group /cpp/code regex %{\<[0-9]+[eE][+-]?[0-9]+([fF]|[lL])?\>} 0:value
+addhl -group /cpp/code regex %{\<0[xX][0-9a-fA-F]+\.[0-9a-fA-F]*([pP][+-]?[0-9]+)?([fF]|[lL])?\>} 0:value
+addhl -group /cpp/code regex %{\<0[xX][0-9a-fA-F]+[pP][+-]?[0-9]+([fF]|[lL])?\>} 0:value
+
 addhl -group /cpp/code regex %{\<(this|true|false|NULL|nullptr|)\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 addhl -group /cpp/code regex "\<(void|char|short|int|long|signed|unsigned|float|double|size_t|bool)\>" 0:type
 addhl -group /cpp/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return|using|try|catch|throw|new|delete|and|and_eq|or|or_eq|not|operator|explicit|(?:reinterpret|const|static|dynamic)_cast|sizeof|alignof|alignas|decltype)\>" 0:keyword
