@@ -38,11 +38,15 @@ struct RefPtr
         return *this;
     }
 
+    [[gnu::always_inline]]
     T* operator->() const { return m_ptr; }
+    [[gnu::always_inline]]
     T& operator*() const { return *m_ptr; }
 
+    [[gnu::always_inline]]
     T* get() const { return m_ptr; }
 
+    [[gnu::always_inline]]
     explicit operator bool() const { return m_ptr; }
 
     void reset(T* ptr = nullptr)
