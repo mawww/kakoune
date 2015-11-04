@@ -590,7 +590,10 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
     }
     if (result.empty())
         throw runtime_error("nothing selected");
-    selections = std::move(result);
+
+    // Avoid SelectionList::operator=(Vector<Selection>) as we know result is
+    // already sorted and non overlapping.
+    selections = SelectionList{buffer, std::move(result)};
 }
 
 void split_selections(SelectionList& selections, const Regex& regex)
