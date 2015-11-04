@@ -24,7 +24,7 @@ public:
     using difference_type = size_t;
     using pointer = const value_type*;
     using reference = const value_type&;
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_category = std::bidirectional_iterator_tag;
 
     BufferIterator() : m_buffer(nullptr) {}
     BufferIterator(const Buffer& buffer, ByteCoord coord);
