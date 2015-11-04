@@ -573,10 +573,9 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
         for (; re_it != re_end; ++re_it)
         {
             auto begin = ensure_char_start(buffer, (*re_it)[0].first);
-            auto end = ensure_char_start(buffer, (*re_it)[0].second);
-
             if (begin == sel_end)
                 continue;
+            auto end = ensure_char_start(buffer, (*re_it)[0].second);
 
             CaptureList captures;
             for (auto& match : *re_it)
