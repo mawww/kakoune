@@ -43,16 +43,13 @@ inline ByteCount Buffer::distance(ByteCoord begin, ByteCoord end) const
 {
     if (begin > end)
         return -distance(end, begin);
-    ByteCount res = 0;
-    for (LineCount l = begin.line; l <= end.line; ++l)
-    {
-        ByteCount len = m_lines[l].length();
-        res += len;
-        if (l == begin.line)
-            res -= begin.column;
-        if (l == end.line)
-            res -= len - end.column;
-    }
+    if (begin.line == end.line)
+        return end.column - begin.column;
+
+    ByteCount res = m_lines[begin.line].length() - begin.column;
+    for (LineCount l = begin.line+1; l < end.line; ++l)
+        res += m_lines[l].length();
+    res += end.column;
     return res;
 }
 
