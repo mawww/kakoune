@@ -34,11 +34,8 @@ addhl -group /ragel/code regex \<(action|alnum|alpha|any|ascii|case|cntrl|contai
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _ragel_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _ragel_indent_on_char "

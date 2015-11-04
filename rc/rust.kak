@@ -36,11 +36,8 @@ addhl -group /rust/code regex \<(Share|Copy|Send|Sized|Add|Sub|Mul|Div|Rem|Neg|N
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _rust_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _rust_indent_on_new_line %~

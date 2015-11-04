@@ -39,11 +39,8 @@ addhl -group /scala/code regex "'[_A-Za-z0-9$]+" 0:identifier
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _scala_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _scala_indent_on_new_line %[

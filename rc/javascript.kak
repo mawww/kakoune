@@ -40,11 +40,8 @@ addhl -group /javascript/code regex \<(break|case|catch|class|const|continue|deb
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _javascript_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _javascript_indent_on_char %<

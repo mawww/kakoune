@@ -41,11 +41,8 @@ addhl -group /css/selector regex [*]|[#.][A-Za-z][A-Za-z0-9_-]* 0:identifier
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _css_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _css_indent_on_new_line %[

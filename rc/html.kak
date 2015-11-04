@@ -38,11 +38,8 @@ addhl -group /html/tag/content/string fill string
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _html_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _html_indent_on_char %{

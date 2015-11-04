@@ -52,8 +52,8 @@ def -hidden _markdown_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
-        # filter previous line
-        try %{ exec -draft k : _markdown_filter_around_selections <ret> }
+        # remove trailing white spaces
+        try %{ exec -draft -itersel %{ k<a-x> s \h+$ <ret> d } }
         # copy block quote(s), list item prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K((>\h*)|[*+-])+\h* <ret> y j p }
     }

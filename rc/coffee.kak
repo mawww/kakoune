@@ -50,11 +50,8 @@ addhl -group /coffee/code regex \<(break|case|catch|class|const|continue|debugge
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _coffee_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _coffee_indent_on_new_line %{

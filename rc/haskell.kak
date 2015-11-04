@@ -36,11 +36,8 @@ addhl -group /haskell/code regex \<(Int|Integer|Char|Bool|Float|Double|IO|Void|A
 # http://en.wikibooks.org/wiki/Haskell/Indentation
 
 def -hidden _haskell_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _haskell_indent_on_new_line %{

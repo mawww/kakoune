@@ -26,11 +26,8 @@ addhl -group /json/code regex \<(true|false|null)\> 0:value
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _json_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _json_indent_on_char "

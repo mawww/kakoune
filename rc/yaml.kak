@@ -32,11 +32,8 @@ addhl -group /yaml/code regex \<(true|false|null)\> 0:value
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _yaml_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h+$ <ret> d }
-    }
+    # remove trailing white spaces
+    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
 def -hidden _yaml_indent_on_new_line %{
