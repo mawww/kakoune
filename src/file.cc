@@ -12,6 +12,10 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#if defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#endif
+
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
 #define st_mtim st_mtimespec
@@ -490,6 +494,11 @@ String get_kak_binary_path()
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
     kak_assert(res != -1);
     buffer[res] = '\0';
+    return buffer;
+#elif defined(__FreeBSD__)
+    int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+    size_t res = sizeof(buffer);
+    sysctl(mib, 4, buffer, &res, NULL, 0);
     return buffer;
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048;
