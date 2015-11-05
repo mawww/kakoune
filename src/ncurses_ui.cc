@@ -968,13 +968,13 @@ void NCursesUI::set_ui_options(const Options& options)
                      enable_mouse_it->value == "yes" or
                      enable_mouse_it->value == "true");
 
-        auto wheel_down_it = options.find("ncurses_wheel_down_button");
-        m_wheel_down_button = wheel_down_it != options.end() ?
-            str_to_int_ifp(wheel_down_it->value).value_or(2) : 2;
-
         auto wheel_up_it = options.find("ncurses_wheel_up_button");
         m_wheel_up_button = wheel_up_it != options.end() ?
             str_to_int_ifp(wheel_up_it->value).value_or(4) : 4;
+
+        auto wheel_down_it = options.find("ncurses_wheel_down_button");
+        m_wheel_down_button = wheel_down_it != options.end() ?
+            str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
     }
 }
 
