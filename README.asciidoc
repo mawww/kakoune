@@ -386,6 +386,8 @@ view.
  * `vk`: scroll the window count line upward
  * `vl`: scroll the window count columns right
 
+Using `V` will lock view mode until `<esc>` is hit
+
 Marks
 ~~~~~
 

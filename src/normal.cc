@@ -229,10 +229,18 @@ void goto_commands(Context& context, NormalParams params)
     }
 }
 
+template<bool lock>
 void view_commands(Context& context, NormalParams params)
 {
+    const int count = params.count;
     on_next_key_with_autoinfo(context, KeymapMode::View,
-                             [params](Key key, Context& context) {
+                             [count](Key key, Context& context) {
+        if (key == Key::Escape)
+            return;
+
+        if (lock)
+            view_commands<true>(context, {});
+
         auto cp = key.codepoint();
         if (not cp or not context.has_window())
             return;
@@ -256,16 +264,16 @@ void view_commands(Context& context, NormalParams params)
             context.window().display_line_at(cursor.line, window.dimensions().line-1);
             break;
         case 'h':
-            context.window().scroll(-std::max<CharCount>(1, params.count));
+            context.window().scroll(-std::max<CharCount>(1, count));
             break;
         case 'j':
-            context.window().scroll( std::max<LineCount>(1, params.count));
+            context.window().scroll( std::max<LineCount>(1, count));
             break;
         case 'k':
-            context.window().scroll(-std::max<LineCount>(1, params.count));
+            context.window().scroll(-std::max<LineCount>(1, count));
             break;
         case 'l':
-            context.window().scroll( std::max<CharCount>(1, params.count));
+            context.window().scroll( std::max<CharCount>(1, count));
             break;
         }
     }, "view",
@@ -1496,7 +1504,8 @@ static NormalCmdDesc cmds[] =
     { 'g', "go to location", goto_commands<SelectMode::Replace> },
     { 'G', "extend to location", goto_commands<SelectMode::Extend> },
 
-    { 'v', "move view", view_commands },
+    { 'v', "move view", view_commands<false> },
+    { 'V', "move view (locked)", view_commands<true> },
 
     { 'y', "yank selected text", yank },
     { 'p', "paste after selected text", repeated<paste<InsertMode::Append>> },
