@@ -2,13 +2,16 @@
 
 #include "string.hh"
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__GLIBC__) || defined(__APPLE__)
 # include <execinfo.h>
-# include <stdlib.h>
 #elif defined(__CYGWIN__)
 # include <windows.h>
 # include <dbghelp.h>
 # include <stdio.h>
+#endif
+
+#if defined(__linux__) || defined(__APPLE__)
+# include <stdlib.h>
 #endif
 
 namespace Kakoune
@@ -16,7 +19,7 @@ namespace Kakoune
 
 Backtrace::Backtrace()
 {
-    #if defined(__linux__) || defined(__APPLE__)
+    #if defined(__GLIBC__) || defined(__APPLE__)
     num_frames = backtrace(stackframes, max_frames);
     #elif defined(__CYGWIN__)
     num_frames = CaptureStackBackTrace(0, max_frames, stackframes, nullptr);
@@ -25,7 +28,7 @@ Backtrace::Backtrace()
 
 String Backtrace::desc() const
 {
-    #if defined(__linux__) || defined(__APPLE__)
+    #if defined(__GLIBC__) || defined(__APPLE__)
     char** symbols = backtrace_symbols(stackframes, num_frames);
     ByteCount size = 0;
     for (int i = 0; i < num_frames; ++i)

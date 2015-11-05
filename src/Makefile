@@ -1,4 +1,6 @@
 debug ?= yes
+pedantic ?= yes
+
 ifeq ($(debug),yes)
     CPPFLAGS += -DKAK_DEBUG
     suffix := .debug
@@ -11,6 +13,10 @@ else
     endif
 endif
 
+ifeq ($(pedantic),yes)
+    CXXFLAGS += -pedantic
+endif
+
 sources := $(wildcard *.cc)
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
@@ -21,8 +27,6 @@ DESTDIR ?= # root dir
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
-
-CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -pedantic
 
 os := $(shell uname)
 
@@ -45,6 +49,8 @@ else
     CPPFLAGS += -I/usr/include/ncursesw
     LDFLAGS += -rdynamic
 endif
+
+CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare
 
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
