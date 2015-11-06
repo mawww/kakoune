@@ -56,11 +56,6 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 
 using StringDataPtr = RefPtr<StringData>;
 
-inline StringDataPtr operator"" _ss(const char* ptr, size_t len)
-{
-    return StringData::create({ptr, (int)len});
-}
-
 class SharedString : public StringView
 {
 public:
