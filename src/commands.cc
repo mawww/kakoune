@@ -1004,10 +1004,19 @@ static String option_doc_helper(const Context& context, CommandParameters params
     return format("{}: {}", desc->name(), desc->docstring());
 }
 
+static OptionManager& get_options(StringView scope, const Context& context, StringView option_name)
+{
+    if (scope == "current")
+        return context.options()[option_name].manager();
+    return get_scope(scope, context).options();
+}
+
 const CommandDesc set_option_cmd = {
     "set",
     nullptr,
-    "set <switches> <scope> <name> <value>: set option <name> in <scope> to <value>",
+    "set <switches> <scope> <name> <value>: set option <name> in <scope> to <value>\n"
+    "<scope> can be global, buffer, window, or current which refers to the narrowest\n"
+    "scope the option is set in",
     ParameterDesc{
         { { "add", { false, "add to option rather than replacing it" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 3, 3
@@ -1020,6 +1029,8 @@ const CommandDesc set_option_cmd = {
     {
         const bool add = params.size() > 1 and params[0] == "-add";
         const int start = add ? 1 : 0;
+
+        static constexpr auto scopes = { "global", "buffer", "window", "current" };
 
         if (token_to_complete == start)
             return { 0_byte, params[start].length(),
@@ -1039,7 +1050,7 @@ const CommandDesc set_option_cmd = {
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Option& opt = get_scope(parser[0], context).options().get_local_option(parser[1]);
+        Option& opt = get_options(parser[0], context, parser[1]).get_local_option(parser[1]);
         if (parser.get_switch("add"))
             opt.add_from_string(parser[2]);
         else
@@ -1050,7 +1061,9 @@ const CommandDesc set_option_cmd = {
 const CommandDesc unset_option_cmd = {
     "unset",
     nullptr,
-    "unset <scope> <name>: remove <name> option from scope, falling back on parent scope value",
+    "unset <scope> <name>: remove <name> option from scope, falling back on parent scope value"
+    "<scope> can be buffer, window, or current which refers to the narrowest\n"
+    "scope the option is set in",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     option_doc_helper,
@@ -1060,7 +1073,7 @@ const CommandDesc unset_option_cmd = {
     {
         if (token_to_complete == 0)
         {
-            static constexpr auto scopes = { "buffer", "window" };
+            static constexpr auto scopes = { "buffer", "window", "current" };
             return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
         }
         else if (token_to_complete == 1)
@@ -1073,7 +1086,7 @@ const CommandDesc unset_option_cmd = {
         if (parser[0] == "global")
             throw runtime_error("Cannot unset options in global scope");
 
-        get_scope(parser[0], context).options().unset_option(parser[1]);
+        get_options(parser[0], context, parser[1]).unset_option(parser[1]);
     }
 };
 
