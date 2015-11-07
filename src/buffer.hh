@@ -126,7 +126,7 @@ public:
     StringView operator[](LineCount line) const
     { return m_lines[line]; }
 
-    StringDataPtr line_storage(LineCount line) const
+    const StringDataPtr& line_storage(LineCount line) const
     { return m_lines.get_storage(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
