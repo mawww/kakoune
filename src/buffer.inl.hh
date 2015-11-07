@@ -108,19 +108,23 @@ inline ByteCoord Buffer::end_coord() const
 }
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, ByteCoord coord)
-    : m_buffer(&buffer), m_coord(coord)
+    : m_buffer(&buffer), m_coord(coord),
+      m_line_length((*m_buffer)[m_coord.line].length()),
+      m_line_count(buffer.line_count())
 {
     kak_assert(m_buffer and m_buffer->is_valid(m_coord));
 }
 
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const
 {
-    return (m_buffer == iterator.m_buffer and m_coord == iterator.m_coord);
+    kak_assert(m_buffer == iterator.m_buffer);
+    return m_coord == iterator.m_coord;
 }
 
 inline bool BufferIterator::operator!=(const BufferIterator& iterator) const
 {
-    return (m_buffer != iterator.m_buffer or m_coord != iterator.m_coord);
+    kak_assert(m_buffer == iterator.m_buffer);
+    return m_coord != iterator.m_coord;
 }
 
 inline bool BufferIterator::operator<(const BufferIterator& iterator) const
@@ -178,25 +182,44 @@ inline BufferIterator BufferIterator::operator-(ByteCount size) const
 inline BufferIterator& BufferIterator::operator+=(ByteCount size)
 {
     m_coord = m_buffer->advance(m_coord, size);
+    m_line_length = m_buffer->line_storage(m_coord.line)->length;
     return *this;
 }
 
 inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 {
     m_coord = m_buffer->advance(m_coord, -size);
+    m_line_length = m_buffer->line_storage(m_coord.line)->length;
     return *this;
 }
 
-[[gnu::always_inline]]
 inline BufferIterator& BufferIterator::operator++()
 {
-    m_coord = m_buffer->next(m_coord);
+    if (m_coord.column < m_line_length - 1)
+        ++m_coord.column;
+    else if (m_coord.line == m_line_count - 1)
+        m_coord.column = m_line_length;
+    else
+    {
+        ++m_coord.line;
+        m_coord.column = 0;
+        m_line_length = m_buffer->line_storage(m_coord.line)->length;
+    }
     return *this;
 }
 
 inline BufferIterator& BufferIterator::operator--()
 {
-    m_coord = m_buffer->prev(m_coord);
+    if (m_coord.column == 0)
+    {
+        if (m_coord.line > 0)
+        {
+            m_line_length = m_buffer->line_storage(--m_coord.line)->length;
+            m_coord.column = m_line_length - 1;
+        }
+    }
+    else
+       --m_coord.column;
     return *this;
 }
 
