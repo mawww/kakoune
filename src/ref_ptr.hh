@@ -38,6 +38,14 @@ struct RefPtr
         return *this;
     }
 
+    RefPtr& operator=(T* ptr)
+    {
+        release();
+        m_ptr = ptr;
+        acquire();
+        return *this;
+    }
+
     [[gnu::always_inline]]
     T* operator->() const { return m_ptr; }
     [[gnu::always_inline]]

@@ -29,7 +29,6 @@ public:
 
     Buffer* get_buffer_ifp(StringView name);
     Buffer& get_buffer(StringView name);
-    void    set_last_used_buffer(Buffer& buffer);
 
     void backup_modified_buffers();
 

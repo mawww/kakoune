@@ -160,14 +160,15 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             case 'a':
             {
-                auto& buffer_manager = BufferManager::instance();
-                auto it = buffer_manager.begin();
-                if (it->get() == &buffer and ++it == buffer_manager.end())
+                Buffer* target = nullptr;
+                if (not context.has_client() or
+                    not (target = context.client().last_buffer()))
+                {
+                    context.print_status({"no last buffer", get_face("Error")});
                     break;
-                Buffer& target = **it;
-                BufferManager::instance().set_last_used_buffer(buffer);
+                }
                 context.push_jump();
-                context.change_buffer(target);
+                context.change_buffer(*target);
                 break;
             }
             case 'f':
@@ -195,8 +196,6 @@ void goto_commands(Context& context, NormalParams params)
 
                 if (buffer != &context.buffer())
                 {
-                    Buffer* oldbuf = &context.buffer();
-                    BufferManager::instance().set_last_used_buffer(*oldbuf);
                     context.push_jump();
                     context.change_buffer(*buffer);
                 }
@@ -1113,7 +1112,6 @@ void jump(Context& context, NormalParams)
 
     Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
-    BufferManager::instance().set_last_used_buffer(buffer);
     if (&buffer != oldbuf)
         context.change_buffer(buffer);
     context.selections_write_only() = jump;

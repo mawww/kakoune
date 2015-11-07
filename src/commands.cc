@@ -134,7 +134,6 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     auto& buffer_manager = BufferManager::instance();
 
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
-    Buffer* oldbuf = &context.buffer();
 
     if (force_reload and buffer and buffer->flags() & Buffer::Flags::File)
         reload_file_buffer(*buffer);
@@ -143,11 +142,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         if (parser.get_switch("scratch"))
         {
             if (Buffer* buf = buffer_manager.get_buffer_ifp(name))
-            {
                 buffer_manager.delete_buffer(*buf);
-                if (buf == oldbuf)
-                    oldbuf = nullptr;
-            }
             buffer = new Buffer(name, Buffer::Flags::None);
         }
         else if (auto fifo = parser.get_switch("fifo"))
@@ -161,9 +156,6 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
                                        get_face("StatusLine") });
         }
     }
-
-    if (oldbuf)
-        buffer_manager.set_last_used_buffer(*oldbuf);
 
     const size_t param_count = parser.positional_count();
     if (buffer != &context.buffer() or param_count > 1)
@@ -379,12 +371,9 @@ const CommandDesc buffer_cmd = {
     buffer_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Buffer* oldbuf = &context.buffer();
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
-
-        if (&buffer != oldbuf)
+        if (&buffer != &context.buffer())
         {
-            BufferManager::instance().set_last_used_buffer(*oldbuf);
             context.push_jump();
             context.change_buffer(buffer);
         }
@@ -417,7 +406,6 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
 
     if (newbuf != oldbuf)
     {
-        BufferManager::instance().set_last_used_buffer(*oldbuf);
         context.push_jump();
         context.change_buffer(*newbuf);
     }
