@@ -249,15 +249,15 @@ public:
             throw runtime_error("wrong parameter count");
 
         FacesSpec faces;
-        for (auto it = params.begin() + 1;  it != params.end(); ++it)
+        for (auto& spec : params.subrange(1, params.size()-1))
         {
-            auto colon = find(*it, ':');
-            if (colon == it->end())
-                throw runtime_error("wrong face spec: '" + *it +
+            auto colon = find(spec, ':');
+            if (colon == spec.end())
+                throw runtime_error("wrong face spec: '" + spec +
                                      "' expected <capture>:<facespec>");
-            get_face({colon+1, it->end()}); // throw if wrong face spec
-            int capture = str_to_int({it->begin(), colon});
-            faces.emplace_back(capture, String{colon+1, it->end()});
+            get_face({colon+1, spec.end()}); // throw if wrong face spec
+            int capture = str_to_int({spec.begin(), colon});
+            faces.emplace_back(capture, String{colon+1, spec.end()});
         }
 
         String id = "hlregex'" + params[0] + "'";
@@ -429,46 +429,39 @@ make_dynamic_regex_highlighter(RegexGetter regex_getter, FaceGetter face_getter)
         std::move(regex_getter), std::move(face_getter));
 }
 
-HighlighterAndId create_search_highlighter(HighlighterParameters params)
+HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
 {
-    if (params.size() != 0)
-        throw runtime_error("wrong parameter count");
+    if (params.size() < 2)
+        throw runtime_error("Wrong parameter count");
 
-    auto get_face = [](const Context& context){
-        return FacesSpec{ { 0, "Search" } };
-    };
-    auto get_regex = [](const Context& context){
-        auto s = context.main_sel_register_value("/");
+    FacesSpec faces;
+    for (auto& spec : params.subrange(1, params.size()-1))
+    {
+        auto colon = find(spec, ':');
+        if (colon == spec.end())
+            throw runtime_error("wrong face spec: '" + spec +
+                                 "' expected <capture>:<facespec>");
+        get_face({colon+1, spec.end()}); // throw if wrong face spec
+        int capture = str_to_int({spec.begin(), colon});
+        faces.emplace_back(capture, String{colon+1, spec.end()});
+    }
+
+    auto get_face = [faces](const Context& context){ return faces;; };
+
+    String expr = params[0];
+    auto get_regex = [expr](const Context& context){
         try
         {
-            return s.empty() ? Regex{} : Regex{s.begin(), s.end()};
+            auto re = expand(expr, context);
+            return re.empty() ? Regex{} : Regex{re};
         }
-        catch (regex_error& err)
+        catch (runtime_error& err)
         {
+            write_to_debug_buffer(format("Error while evaluating dynamic regex expression", err.what()));
             return Regex{};
         }
     };
-    return {"hlsearch", make_dynamic_regex_highlighter(get_regex, get_face)};
-}
-
-HighlighterAndId create_regex_option_highlighter(HighlighterParameters params)
-{
-    if (params.size() != 2)
-        throw runtime_error("wrong parameter count");
-
-    String facespec = params[1];
-    auto get_face = [=](const Context&){
-        return FacesSpec{ { 0, facespec } };
-    };
-
-    String option_name = params[0];
-    // verify option type now
-    GlobalScope::instance().options()[option_name].get<Regex>();
-
-    auto get_regex = [option_name](const Context& context){
-        return context.options()[option_name].get<Regex>();
-    };
-    return {"hloption_" + option_name, make_dynamic_regex_highlighter(get_regex, get_face)};
+    return {format("dynregex_{}", expr), make_dynamic_regex_highlighter(get_regex, get_face)};
 }
 
 HighlighterAndId create_line_highlighter(HighlighterParameters params)
@@ -1375,14 +1368,10 @@ void register_highlighters()
           "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
           "Highlights the matches for captures from the regex with the given faces" } });
     registry.append({
-        "regex_option",
-        { create_regex_option_highlighter,
-          "Parameters: <option name> <face>\n"
-          "Highlight matches for the regex stored in <option name> with <face>" } });
-    registry.append({
-        "search",
-        { create_search_highlighter,
-          "Highlight the current search pattern with the Search face" } });
+        "dynregex",
+        { create_dynamic_regex_highlighter,
+          "Parameters: <expr> <capture num>:<face> <capture num>:<face>...\n"
+          "Evaluate expression at every redraw to gather a regex" } });
     registry.append({
         "group",
         { create_highlighter_group,
