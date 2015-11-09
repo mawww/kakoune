@@ -610,14 +610,15 @@ void regex_prompt(Context& context, const String prompt, T func)
 }
 
 template<SelectMode mode, Direction direction>
-void search(Context& context, NormalParams)
+void search(Context& context, NormalParams params)
 {
+    const char reg = tolower(params.reg ? params.reg : '/');
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
-                 [](Regex ex, PromptEvent event, Context& context) {
+                 [reg](Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
-                         ex = Regex{context.main_sel_register_value("/")};
+                         ex = Regex{context.main_sel_register_value(reg)};
                      else if (event == PromptEvent::Validate)
-                         RegisterManager::instance()['/'] = ex.str();
+                         RegisterManager::instance()[reg] = ex.str();
                      if (not ex.empty() and not ex.str().empty())
                          select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
                  });
@@ -626,7 +627,8 @@ void search(Context& context, NormalParams)
 template<SelectMode mode, Direction direction>
 void search_next(Context& context, NormalParams params)
 {
-    StringView str = context.main_sel_register_value("/");
+    const char reg = tolower(params.reg ? params.reg : '/');
+    StringView str = context.main_sel_register_value(reg);
     if (not str.empty())
     {
         Regex ex{str};
@@ -639,7 +641,7 @@ void search_next(Context& context, NormalParams params)
 }
 
 template<bool smart>
-void use_selection_as_search_pattern(Context& context, NormalParams)
+void use_selection_as_search_pattern(Context& context, NormalParams params)
 {
     Vector<String> patterns;
     auto& sels = context.selections();
@@ -662,36 +664,40 @@ void use_selection_as_search_pattern(Context& context, NormalParams)
         patterns.push_back(std::move(content));
     }
 
+    const char reg = tolower(params.reg ? params.reg : '/');
+
     context.print_status({
-        format("search pattern set to '{}'", patterns[sels.main_index()]),
+        format("register '{}' set to '{}'", reg, patterns[sels.main_index()]),
         get_face("Information") });
 
-    RegisterManager::instance()['/'] = patterns;
+    RegisterManager::instance()[reg] = patterns;
 
     // Hack, as Window do not take register state into account
     if (context.has_window())
         context.window().force_redraw();
 }
 
-void select_regex(Context& context, NormalParams)
+void select_regex(Context& context, NormalParams params)
 {
-    regex_prompt(context, "select:", [](Regex ex, PromptEvent event, Context& context) {
+    const char reg = tolower(params.reg ? params.reg : '/');
+    regex_prompt(context, "select:", [reg](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
-            ex = Regex{context.main_sel_register_value("/")};
+            ex = Regex{context.main_sel_register_value(reg)};
         else if (event == PromptEvent::Validate)
-            RegisterManager::instance()['/'] = ex.str();
+            RegisterManager::instance()[reg] = ex.str();
         if (not ex.empty() and not ex.str().empty())
             select_all_matches(context.selections(), ex);
     });
 }
 
-void split_regex(Context& context, NormalParams)
+void split_regex(Context& context, NormalParams params)
 {
-    regex_prompt(context, "split:", [](Regex ex, PromptEvent event, Context& context) {
+    const char reg = tolower(params.reg ? params.reg : '/');
+    regex_prompt(context, "split:", [reg](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
-            ex = Regex{context.main_sel_register_value("/")};
+            ex = Regex{context.main_sel_register_value(reg)};
         else if (event == PromptEvent::Validate)
-            RegisterManager::instance()['/'] = ex.str();
+            RegisterManager::instance()[reg] = ex.str();
         if (not ex.empty() and not ex.str().empty())
             split_selections(context.selections(), ex);
     });
