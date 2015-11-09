@@ -145,6 +145,12 @@ private:
     ByteCoord m_anchor;
 };
 
+constexpr StringView register_doc =
+    "Special registers:\n"
+    "    * %: buffer name\n"
+    "    * .: selection contents\n"
+    "    * #: selection index\n";
+
 class Normal : public InputMode
 {
 public:
@@ -186,30 +192,19 @@ public:
 
     void on_key(Key key, KeepAlive keep_alive) override
     {
-        if (m_mouse_handler.handle_key(key, context()))
-            return;
-
-        if (m_waiting_for_reg)
-        {
-            if (auto cp = key.codepoint())
-                m_params.reg = *cp;
-            m_waiting_for_reg = false;
-            return;
-        }
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
-            if (do_restore_hooks)
+            if (m_hooks_disabled and do_restore_hooks)
             {
                 context().user_hooks_disabled().unset();
                 m_hooks_disabled = false;
             }
         });
 
-        context().print_status({});
-        if (context().has_ui())
-            context().ui().info_hide();
-
         auto cp = key.codepoint();
+
+        if (m_mouse_handler.handle_key(key, context()))
+            m_idle_timer.set_next_date(Clock::now() + idle_timeout);
         if (cp and isdigit(*cp))
         {
             int new_val = m_params.count * 10 + *cp - '0';
@@ -230,15 +225,22 @@ public:
         }
         else if (key == '"')
         {
-            m_waiting_for_reg = true;
+            on_next_key_with_autoinfo(context(), KeymapMode::None,
+                [this](Key key, Context&) {
+                    if (auto cp = key.codepoint())
+                        m_params.reg = *cp;
+                }, "Enter target register", register_doc);
         }
         else
         {
             if (m_single_command)
                 pop_mode(keep_alive);
 
-            if (m_hooks_disabled)
-                do_restore_hooks = true;
+            context().print_status({});
+            if (context().has_ui())
+                context().ui().info_hide();
+
+            do_restore_hooks = true;
             auto it = std::lower_bound(keymap.begin(), keymap.end(), key,
                                        [](const NormalCmdDesc& lhs, const Key& rhs)
                                        { return lhs.key < rhs; });
@@ -281,7 +283,6 @@ public:
 private:
     NormalParams m_params = { 0, 0 };
     bool m_hooks_disabled = false;
-    bool m_waiting_for_reg = false;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
@@ -619,12 +620,6 @@ String common_prefix(ConstArrayView<String> strings)
     }
     return res;
 }
-
-constexpr StringView register_doc =
-    "Special registers:\n"
-    "    * %: buffer name\n"
-    "    * .: selection contents\n"
-    "    * #: selection index\n";
 
 class Prompt : public InputMode
 {
