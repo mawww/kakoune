@@ -570,6 +570,7 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
         RegexIt re_it(buffer.iterator_at(sel.min()), sel_end, regex);
         RegexIt re_end;
 
+        const unsigned mark_count = regex.mark_count();
         for (; re_it != re_end; ++re_it)
         {
             auto begin = ensure_char_start(buffer, (*re_it)[0].first);
@@ -578,8 +579,10 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
             auto end = ensure_char_start(buffer, (*re_it)[0].second);
 
             CaptureList captures;
+            captures.reserve(mark_count);
             for (auto& match : *re_it)
-                captures.emplace_back(match.first, match.second);
+                captures.push_back(buffer.string(match.first.coord(),
+                                                 match.second.coord()));
 
             result.push_back(
                 keep_direction({ begin.coord(),
