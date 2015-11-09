@@ -402,7 +402,7 @@ public:
         FacesSpec face = m_face_getter(context);
         if (regex != m_last_regex or face != m_last_face)
         {
-            m_last_regex = regex;
+            m_last_regex = std::move(regex);
             m_last_face = face;
             if (not m_last_regex.empty())
                 m_highlighter.reset(m_last_regex, m_last_face);
@@ -428,7 +428,6 @@ make_dynamic_regex_highlighter(RegexGetter regex_getter, FaceGetter face_getter)
     return make_unique<DynamicRegexHighlighter<RegexGetter, FaceGetter>>(
         std::move(regex_getter), std::move(face_getter));
 }
-
 
 HighlighterAndId create_search_highlighter(HighlighterParameters params)
 {
