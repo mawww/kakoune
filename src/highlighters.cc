@@ -478,14 +478,24 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
         throw runtime_error("wrong parameter count");
 
     String facespec = params[1];
-    String option_name = params[0];
+    String line_expr = params[0];
 
     get_face(facespec); // validate facespec
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        const LineCount line = str_to_int_ifp(expand(option_name, context)).value_or(0) - 1;
+        LineCount line = -1;
+        try
+        {
+            line = str_to_int_ifp(expand(line_expr, context)).value_or(0) - 1;
+        }
+        catch (runtime_error& err)
+        {
+            write_to_debug_buffer(
+                format("Error evaluating highlight line expression: {}", err.what()));
+        }
+
         if (line < 0)
             return;
 
@@ -520,14 +530,24 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         throw runtime_error("wrong parameter count");
 
     String facespec = params[1];
-    String option_name = params[0];
+    String col_expr = params[0];
 
     get_face(facespec); // validate facespec
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        const CharCount column = str_to_int_ifp(expand(option_name, context)).value_or(0) - 1;
+        CharCount column = -1;
+        try
+        {
+            column = str_to_int_ifp(expand(col_expr, context)).value_or(0) - 1;
+        }
+        catch (runtime_error& err)
+        {
+            write_to_debug_buffer(
+                format("Error evaluating highlight column expression: {}", err.what()));
+        }
+
         if (column < 0)
             return;
 
