@@ -120,9 +120,12 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
                                        client->context().name(),
                                        buffer.display_name()));
 
-        // change client context to edit the first buffer which is not the
-        // specified one. As BufferManager stores buffer according to last
-        // access, this selects a sensible buffer to display.
+        if (Buffer* last_buffer = client->last_buffer())
+        {
+            client->context().change_buffer(*last_buffer);
+            continue;
+        }
+
         for (auto& buf : BufferManager::instance())
         {
             if (buf.get() != &buffer)
