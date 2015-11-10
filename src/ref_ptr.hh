@@ -24,11 +24,15 @@ struct RefPtr
 
     RefPtr& operator=(const RefPtr& other)
     {
-        release();
-        m_ptr = other.m_ptr;
-        acquire();
+        if (other.m_ptr != m_ptr)
+        {
+            release();
+            m_ptr = other.m_ptr;
+            acquire();
+        }
         return *this;
     }
+
     RefPtr& operator=(RefPtr&& other)
     {
         release();
@@ -40,9 +44,12 @@ struct RefPtr
 
     RefPtr& operator=(T* ptr)
     {
-        release();
-        m_ptr = ptr;
-        acquire();
+        if (ptr != m_ptr)
+        {
+            release();
+            m_ptr = ptr;
+            acquire();
+        }
         return *this;
     }
 
