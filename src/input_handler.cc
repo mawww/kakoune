@@ -149,7 +149,12 @@ constexpr StringView register_doc =
     "Special registers:\n"
     "    * %: buffer name\n"
     "    * .: selection contents\n"
-    "    * #: selection index\n";
+    "    * #: selection index\n"
+    "    * [0-9]: selections capture group\n"
+    "    * \": default yank/paste register\n"
+    "    * @: default macro register\n"
+    "    * /: default search register\n"
+    "    * ^: default mark register\n";
 
 class Normal : public InputMode
 {

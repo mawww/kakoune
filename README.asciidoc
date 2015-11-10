@@ -851,6 +851,16 @@ contain some special data:
  * `.`: current selection contents
  * `#`: selection indices (first selection has 1, second has 2, ...)
 
+Default registers
+^^^^^^^^^^^^^^^^^
+
+Most commands using a register default to a specific one if not specified:
+
+ * `"`: default yank, used by yanking and pasting commands like `y`, `p` and `R`
+ * `/`: default search register, used by regex based commands like `s`, `*` or `/`
+ * `@`: default macro register, used by `q` and `Q`
+ * `^`: default mark register, used by `z` and `Z`
+
 Macros
 ~~~~~~
 
