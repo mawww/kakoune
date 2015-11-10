@@ -142,9 +142,6 @@ BufferIterator Buffer::iterator_at(ByteCoord coord) const
 
 ByteCoord Buffer::clamp(ByteCoord coord) const
 {
-    if (m_lines.empty())
-        return ByteCoord{};
-
     coord.line = Kakoune::clamp(coord.line, 0_line, line_count() - 1);
     ByteCount max_col = std::max(0_byte, m_lines[coord.line].length() - 1);
     coord.column = Kakoune::clamp(coord.column, 0_byte, max_col);

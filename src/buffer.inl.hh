@@ -102,8 +102,6 @@ inline ByteCoord Buffer::back_coord() const
 
 inline ByteCoord Buffer::end_coord() const
 {
-    if (m_lines.empty())
-        return { 0_line, 0 };
     return { line_count() - 1, m_lines.back().length() };
 }
 
