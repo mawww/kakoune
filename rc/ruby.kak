@@ -64,17 +64,17 @@ def -hidden _ruby_filter_around_selections %{
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _ruby_indent_on_char "
-    eval -draft -itersel %_
+def -hidden _ruby_indent_on_char %<
+    eval -draft -itersel %<
         # deindent on (else|elsif|end|rescue|when) keyword insertion
         try %{ exec -draft <space> <a-i>w <a-k> (else|elsif|end|rescue|when) <ret> <a-lt> }
         # align closer token to its opener when alone on a line
-        try %/ exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> /
-    _
-"
+        try %< exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> >
+    >
+>
 
-def -hidden _ruby_indent_on_new_line "
-    eval -draft -itersel '
+def -hidden _ruby_indent_on_new_line %(
+    eval -draft -itersel %(
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
@@ -82,11 +82,11 @@ def -hidden _ruby_indent_on_new_line "
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
         # indent after (else|elsif|rescue|when) keywords and lines beginning / ending with opener token
-        try %_ exec -draft <space> k x <a-k> (else|elsif|rescue|when)|^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        try %( exec -draft <space> k x <a-k> (else|elsif|rescue|when)|^\h*[[{]|[[{]$ <ret> j <a-gt> )
         # indent after (begin|case|class|def|do|if|loop|module|unless|until|while) keywords and add _end_ keyword
         try %{ exec -draft <space> k x <a-k> (begin|case|class|def|do|(?<!els)if|loop|module|unless|until|while) <ret> x y p j a end <esc> k <a-gt> }
-    '
-"
+    )
+)
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾

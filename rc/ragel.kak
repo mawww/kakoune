@@ -38,16 +38,16 @@ def -hidden _ragel_filter_around_selections %{
     try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-def -hidden _ragel_indent_on_char "
-    eval -draft -itersel %_
+def -hidden _ragel_indent_on_char %<
+    eval -draft -itersel %<
         # align closer token to its opener when alone on a line
-        try %/ exec -draft <a-h> <a-k> ^\h+[]})]$ <ret>        m         s \`|.\' <ret> 1<a-&> /
-        try %/ exec -draft <a-h> <a-k> ^\h+  [*]$ <ret> <a-?> [*]$ <ret> s \`|.\' <ret> 1<a-&> /
-    _
-"
+        try %< exec -draft <a-h> <a-k> ^\h+[]})]$ <ret>        m         s \`|.\' <ret> 1<a-&> >
+        try %< exec -draft <a-h> <a-k> ^\h+  [*]$ <ret> <a-?> [*]$ <ret> s \`|.\' <ret> 1<a-&> >
+    >
+>
 
-def -hidden _ragel_indent_on_new_line "
-    eval -draft -itersel '
+def -hidden _ragel_indent_on_new_line %<
+    eval -draft -itersel %<
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
@@ -55,9 +55,9 @@ def -hidden _ragel_indent_on_new_line "
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
         # indent after lines ending with opener token
-        try %_ exec -draft k x <a-k> [[{(*]$ <ret> j <a-gt> _
-    '
-"
+        try %< exec -draft k x <a-k> [[{(*]$ <ret> j <a-gt> >
+    >
+>
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
