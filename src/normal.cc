@@ -114,7 +114,7 @@ void goto_commands(Context& context, NormalParams params)
             if (not cp)
                 return;
             auto& buffer = context.buffer();
-            switch (tolower(*cp))
+            switch (to_lower(*cp))
             {
             case 'g':
             case 'k':
@@ -246,7 +246,7 @@ void view_commands(Context& context, NormalParams params)
 
         const ByteCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
-        switch (tolower(*cp))
+        switch (to_lower(*cp))
         {
         case 'v':
         case 'c':
@@ -306,26 +306,32 @@ void replace_with_char(Context& context, NormalParams)
     }, "replace with char", "enter char to replace with\n");
 }
 
-Codepoint to_lower(Codepoint cp) { return tolower(cp); }
-Codepoint to_upper(Codepoint cp) { return toupper(cp); }
-
 Codepoint swap_case(Codepoint cp)
 {
-    Codepoint res = std::tolower(cp);
-    return res == cp ? std::toupper(cp) : res;
+    Codepoint res = to_lower(cp);
+    return res == cp ? to_upper(cp) : res;
 }
 
 template<Codepoint (*func)(Codepoint)>
-void for_each_char(Context& context, NormalParams)
+void for_each_codepoint(Context& context, NormalParams)
 {
+    using Utf8It = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
+
     ScopedEdition edition(context);
-    Vector<String> sels = context.selections_content();
-    for (auto& sel : sels)
+    Buffer& buffer = context.buffer();
+    SelectionList& selections = context.selections();
+    Vector<String> strings;
+    for (auto& sel : selections)
     {
-        for (auto& c : sel)
-            c = func(c);
+        String str;
+        for (auto begin = Utf8It{buffer.iterator_at(sel.min()), buffer},
+                  end = Utf8It{buffer.iterator_at(sel.max()), buffer}+1;
+             begin != end; ++begin)
+            utf8::dump(std::back_inserter(str), func(*begin));
+
+        strings.push_back(std::move(str));
     }
-    context.selections().insert(sels, InsertMode::Replace);
+    selections.insert(strings, InsertMode::Replace);
 }
 
 void command(Context& context, NormalParams)
@@ -612,7 +618,7 @@ void regex_prompt(Context& context, const String prompt, T func)
 template<SelectMode mode, Direction direction>
 void search(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '/');
+    const char reg = to_lower(params.reg ? params.reg : '/');
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
                  [reg](Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
@@ -627,7 +633,7 @@ void search(Context& context, NormalParams params)
 template<SelectMode mode, Direction direction>
 void search_next(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '/');
+    const char reg = to_lower(params.reg ? params.reg : '/');
     StringView str = context.main_sel_register_value(reg);
     if (not str.empty())
     {
@@ -664,7 +670,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
         patterns.push_back(std::move(content));
     }
 
-    const char reg = tolower(params.reg ? params.reg : '/');
+    const char reg = to_lower(params.reg ? params.reg : '/');
 
     context.print_status({
         format("register '{}' set to '{}'", reg, patterns[sels.main_index()]),
@@ -679,7 +685,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
 
 void select_regex(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '/');
+    const char reg = to_lower(params.reg ? params.reg : '/');
     regex_prompt(context, "select:", [reg](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value(reg)};
@@ -692,7 +698,7 @@ void select_regex(Context& context, NormalParams params)
 
 void split_regex(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '/');
+    const char reg = to_lower(params.reg ? params.reg : '/');
     regex_prompt(context, "split:", [reg](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value(reg)};
@@ -1074,7 +1080,7 @@ void start_or_end_macro_recording(Context& context, NormalParams params)
         context.input_handler().stop_recording();
     else
     {
-        const char reg = tolower(params.reg ? params.reg : '@');
+        const char reg = to_lower(params.reg ? params.reg : '@');
         if (not is_basic_alpha(reg) and reg != '@')
             throw runtime_error("Macros can only use the '@' and alphabetic registers");
         context.input_handler().start_recording(reg);
@@ -1089,7 +1095,7 @@ void end_macro_recording(Context& context, NormalParams)
 
 void replay_macro(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '@');
+    const char reg = to_lower(params.reg ? params.reg : '@');
     if (not is_basic_alpha(reg) and reg != '@')
         throw runtime_error("Macros can only use the '@' and alphabetic registers");
 
@@ -1280,7 +1286,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
 
 void save_selections(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '^');
+    const char reg = to_lower(params.reg ? params.reg : '^');
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
@@ -1296,7 +1302,7 @@ void save_selections(Context& context, NormalParams params)
 
 void restore_selections(Context& context, NormalParams params)
 {
-    const char reg = tolower(params.reg ? params.reg : '^');
+    const char reg = to_lower(params.reg ? params.reg : '^');
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
 
@@ -1617,9 +1623,9 @@ static NormalCmdDesc cmds[] =
 
     { Key::Escape, "end macro recording", end_macro_recording },
 
-    { '`', "convert to lower case in selections", for_each_char<to_lower> },
-    { '~', "convert to upper case in selections", for_each_char<to_upper> },
-    { alt('`'),  "swap case in selections", for_each_char<swap_case> },
+    { '`', "convert to lower case in selections", for_each_codepoint<to_lower> },
+    { '~', "convert to upper case in selections", for_each_codepoint<to_upper> },
+    { alt('`'),  "swap case in selections", for_each_codepoint<swap_case> },
 
     { '&', "align selection cursors", align },
     { alt('&'), "copy indentation", copy_indent },

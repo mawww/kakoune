@@ -63,6 +63,12 @@ inline CharCategories categorize(Codepoint c)
                              : CharCategories::Punctuation;
 }
 
+inline Codepoint to_lower(Codepoint cp) { return towlower((wchar_t)cp); }
+inline Codepoint to_upper(Codepoint cp) { return towupper((wchar_t)cp); }
+
+inline char to_lower(char c) { return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c; }
+inline char to_upper(char c) { return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c; }
+
 }
 
 #endif // unicode_hh_INCLUDED

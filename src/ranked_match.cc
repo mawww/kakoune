@@ -24,7 +24,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
         if (not is_word_boundary)
             continue;
 
-        const Codepoint lc = tolower(c);
+        const Codepoint lc = to_lower(c);
         for (; qit != query.end(); ++qit)
         {
             const Codepoint qc = *qit;
@@ -43,7 +43,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
 
 static bool smartcase_eq(Codepoint query, Codepoint candidate)
 {
-    return query == (islower(query) ? tolower(candidate) : candidate);
+    return query == (islower(query) ? to_lower(candidate) : candidate);
 }
 
 static bool subsequence_match_smart_case(StringView str, StringView subseq)
