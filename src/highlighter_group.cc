@@ -48,11 +48,14 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
         return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
     }
 
-    auto c = transformed(filtered(m_highlighters,
-                                  [=](const HighlighterMap::Element& hl)
-                                  { return not group or hl.value->has_children(); }),
-                         HighlighterMap::get_id);
-    return { 0, 0, complete(path, cursor_pos, c) };
+    auto candidates = complete(
+        path, cursor_pos,
+        transformed(filtered(m_highlighters,
+                             [=](const HighlighterMap::Element& hl)
+                             { return not group or hl.value->has_children(); }),
+                    HighlighterMap::get_id));
+
+    return { 0, 0, std::move(candidates) };
 }
 
 }
