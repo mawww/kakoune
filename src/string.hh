@@ -110,7 +110,7 @@ public:
     const char* data() const { return m_data.data(); }
 
     [[gnu::always_inline]]
-    ByteCount length() const { return (int)m_data.length(); }
+    ByteCount length() const { return m_data.length(); }
 
     [[gnu::always_inline]]
     const char* c_str() const { return m_data.c_str(); }
