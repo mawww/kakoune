@@ -58,7 +58,7 @@ private:
     SafePtr<const Buffer> m_buffer;
     ByteCoord m_coord;
     ByteCount m_line_length;
-    LineCount m_line_count;
+    LineCount m_last_line;
 };
 
 using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;

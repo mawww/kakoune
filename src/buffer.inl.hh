@@ -108,7 +108,7 @@ inline ByteCoord Buffer::end_coord() const
 inline BufferIterator::BufferIterator(const Buffer& buffer, ByteCoord coord)
     : m_buffer(&buffer), m_coord(coord),
       m_line_length((*m_buffer)[m_coord.line].length()),
-      m_line_count(buffer.line_count())
+      m_last_line(buffer.line_count()-1)
 {
     kak_assert(m_buffer and m_buffer->is_valid(m_coord));
 }
@@ -193,11 +193,7 @@ inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 
 inline BufferIterator& BufferIterator::operator++()
 {
-    if (m_coord.column < m_line_length - 1)
-        ++m_coord.column;
-    else if (m_coord.line == m_line_count - 1)
-        m_coord.column = m_line_length;
-    else
+    if (++m_coord.column == m_line_length and m_coord.line != m_last_line)
     {
         ++m_coord.line;
         m_coord.column = 0;
@@ -208,13 +204,10 @@ inline BufferIterator& BufferIterator::operator++()
 
 inline BufferIterator& BufferIterator::operator--()
 {
-    if (m_coord.column == 0)
+    if (m_coord.column == 0 and m_coord.line > 0)
     {
-        if (m_coord.line > 0)
-        {
-            m_line_length = m_buffer->line_storage(--m_coord.line)->length;
-            m_coord.column = m_line_length - 1;
-        }
+        m_line_length = m_buffer->line_storage(--m_coord.line)->length;
+        m_coord.column = m_line_length - 1;
     }
     else
        --m_coord.column;
