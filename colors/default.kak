@@ -40,4 +40,3 @@ face StatusLine cyan,default
 face StatusCursor black,cyan
 face Prompt yellow,default
 face MatchingChar default,default+b
-face Search default,default+u
