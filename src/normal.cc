@@ -351,10 +351,14 @@ void command(Context& context, NormalParams)
                 context.ui().info_hide();
                 if (event == PromptEvent::Change and context.options()["autoinfo"].get<int>() > 0)
                 {
+                    Face face = get_face("Information");
+                    if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))
+                        context.ui().info_show("prompt", "commands preceded by a blank wont be saved to history",
+                                               CharCoord{}, face, InfoStyle::Prompt);
+
                     auto info = CommandManager::instance().command_info(context, cmdline);
-                    Face col = get_face("Information");
                     if (not info.first.empty() and not info.second.empty())
-                        context.ui().info_show(info.first, info.second, CharCoord{}, col, InfoStyle::Prompt);
+                        context.ui().info_show(info.first, info.second, CharCoord{}, face, InfoStyle::Prompt);
                 }
             }
             if (event == PromptEvent::Validate)
