@@ -412,11 +412,14 @@ public:
         else if (key == ctrlalt('e'))
             to_next_word_end<WORD>(m_cursor_pos, m_line);
         else if (auto cp = key.codepoint())
-        {
-            m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(*cp)
-                   + m_line.substr(m_cursor_pos);
-            ++m_cursor_pos;
-        }
+            insert(*cp);
+    }
+
+    void insert(Codepoint cp)
+    {
+        m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(cp)
+               + m_line.substr(m_cursor_pos);
+        ++m_cursor_pos;
     }
 
     void insert(StringView str)
@@ -626,6 +629,17 @@ String common_prefix(ConstArrayView<String> strings)
     return res;
 }
 
+static Optional<Codepoint> get_raw_codepoint(Key key)
+{
+    if (auto cp = key.codepoint())
+        return cp;
+    else if (key.modifiers == Key::Modifiers::Control and
+             ((key.key >= '@' and key.key <= '_') or
+              (key.key >= 'a' and key.key <= 'z')))
+        return {(Codepoint)(to_upper((char)key.key) - '@')};
+    return {};
+}
+
 class Prompt : public InputMode
 {
 public:
@@ -687,6 +701,18 @@ public:
                     }
                 }, "Enter register name", register_doc);
             return;
+        }
+        else if (key == ctrl('v'))
+        {
+            on_next_key_with_autoinfo(context(), KeymapMode::None,
+                [this](Key key, Context&) {
+                    if (auto cp = get_raw_codepoint(key))
+                    {
+                        m_line_editor.insert(*cp);
+                        display();
+                        m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                    }
+                }, "raw insert", "enter key to insert");
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
@@ -1100,6 +1126,19 @@ public:
         }
         else if (key == ctrl('u'))
             context().buffer().commit_undo_group();
+        else if (key == ctrl('v'))
+        {
+            on_next_key_with_autoinfo(context(), KeymapMode::None,
+                [this](Key key, Context&) {
+                    if (auto cp = get_raw_codepoint(key))
+                    {
+                        insert(*cp);
+                        context().hooks().run_hook("InsertKey", key_to_str(key), context());
+                        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+                    }
+                }, "raw insert", "enter key to insert");
+            update_completions = false;
+        }
         else if (key == alt(';'))
         {
             push_mode(new Normal(context().input_handler(), true));
