@@ -160,6 +160,20 @@ cave resolve -x kakoune
 --------------------------------
 ====
 
+[TIP]
+.openSUSE
+====
+kakoune can be found in the https://build.opensuse.org/package/show/editors/kakoune[editors] devel project.
+Make sure to adjust the link below to point to the repository of your openSUSE version.
+
+--------------------------------
+#Example for Tumbleweed:
+sudo zypper addrepo http://download.opensuse.org/repositories/editors/openSUSE_Factory/editors.repo
+sudo zypper refresh
+sudo zypper install kakoune
+--------------------------------
+====
+
 Running
 ~~~~~~~
 
