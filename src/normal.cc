@@ -1073,11 +1073,6 @@ void select_to_next_char(Context& context, NormalParams params)
     }, "select to next char","enter char to select to");
 }
 
-static bool is_basic_alpha(Codepoint c)
-{
-    return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
-}
-
 void start_or_end_macro_recording(Context& context, NormalParams params)
 {
     if (context.input_handler().is_recording())

@@ -42,6 +42,11 @@ inline bool is_punctuation(Codepoint c)
     return not (is_word(c) or is_horizontal_blank(c) or is_eol(c));
 }
 
+inline bool is_basic_alpha(Codepoint c)
+{
+    return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
+}
+
 enum class CharCategories
 {
     Blank,
