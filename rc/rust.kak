@@ -10,6 +10,7 @@ hook global BufSetOption mimetype=text/x-rust %{
 
 hook global BufCreate .*[.](rust|rs) %{
     set buffer filetype rust
+    set buffer mimetype ''
 }
 
 # Highlighters
