@@ -215,9 +215,30 @@ Insert Mode
 ~~~~~~~~~~~
 
 When entering insert mode, keys are now directly inserted before each selections
-cursor. A few additional keys are supported, like arrow keys to move around, however
-their use is not encouraged. You can go back to normal mode by pressing the `<esc>`
-key.
+cursor. Some additional keys are recognized in insert mode:
+
+ * `<esc>`: leave insert mode
+ * `<backspace>`: delete characters before cursors
+ * `<del>`: delete characters under cursors
+ * `<left>, <right>, <up>, <down>`: move the cursors in given direction
+ * `<home>`: move cursors to line begin
+ * `<end>`: move cursors to end of line
+
+ * `<c-n>`: select next completion candidate
+ * `<c-p>`: select previous completion candidate
+ * `<c-x>`: explicit insert completion query, followed by:
+   - `f`: explicit file completion
+   - `w`: explicit word completion
+   - `l`: explicit line completion
+ * `<c-o>`: disable automatic completion for this insert session
+
+ * `<c-r>`: insert contents of the register given by next key
+ * `<c-v>`: insert next keystroke directly into the buffer,
+    without interpretting it.
+
+ * `<c-u>`: commit changes up to now as a single undo group.
+
+ * `<a-;>`: escape to normal mode for a single command
 
 Movement
 ~~~~~~~~
@@ -486,9 +507,41 @@ Commands
 When pressing `:` in normal mode, Kakoune will open a prompt to enter a command.
 
 Commands are used for non editing tasks, such as opening a buffer, writing the
-current one, quitting, etc. You can cycle through the command history with
-`<c-p>` and `<c-n>`. Commands starting with horizontal whitespace (e.g. a
-space) will not be saved in the command history.
+current one, quitting, etc.
+
+A few keys are recognized by prompt mode to help editing a command:
+
+ * `<ret>`: validate prompt
+ * `<esc>`: abandon without
+
+ * `<left> or <a-h>`: move cursor to previous character
+ * `<right> or <a-l>`: move cursor to previous character
+ * `<home>`: move cursor to first character
+ * `<end>`: move cursor to passed last character
+ * `<backspace> or <a-x>`: erase character before cursor
+ * `<del> or <a-d>`: erase character under cursor
+
+ * `<c-w>`: avance to next word begin
+ * `<c-a-w>`: advance to next WORD begin
+ * `<c-b>`: go back to previous word begin
+ * `<c-a-b>`: go back to previous WORD begin
+ * `<c-e>`: advance to next word end
+ * `<c-a-e>`: advance to next word end
+
+ * `<up> or <c-p>`: select previous entry in history
+ * `<down> or <c-n>`: select next entry in history
+
+ * `<tab>`: select next completion candidate
+ * `<backtab>`: select previous completion candidate
+
+ * `<c-r>`: insert then content of the register given by next key.
+ * `<c-v>`: insert next keystroke without interpretting it
+
+ * `<c-o>`: disable auto completion for this prompt
+
+
+Commands starting with horizontal whitespace (e.g. a space) will not be
+saved in the command history.
 
 Basic Commands
 ~~~~~~~~~~~~~~
@@ -526,7 +579,7 @@ When entering a command, parameters are separated by whitespace (shell like),
 if you want to give parameters with spaces, you should quote them.
 
 Kakoune support three string syntax:
- 
+
  * `'strings'`: uninterpreted strings, you can use `\'` to escape the separator,
      every other char is itself.
 
@@ -721,7 +774,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    as candidates on filename completion (except if the text being completed
    already matches it).
  * `disabled_hooks` _regex_: hooks whose group matches this regex wont be
-   executed. For example indentation hooks can be disabled with '.*-indent'. 
+   executed. For example indentation hooks can be disabled with '.*-indent'.
  * `filetype` _str_: arbitrary string defining the type of the file
    filetype dependant actions should hook on this option changing for
    activation/deactivation.
@@ -929,7 +982,6 @@ using *control-x*, followed, by:
  * *f* : filename completion
  * *w* : buffer word completion
  * *l* : buffer line completion
- * *o* : option based completion
 
 Completion candidates can be selected using `ctrl-n` and `ctrl-p`.
 
@@ -1198,9 +1250,9 @@ Key Mapping
 
 You can redefine a key's meaning using the map command
 
-------------------------------------------------------
+--------------------------------
 :map <scope> <mode> <key> <keys>
-------------------------------------------------------
+--------------------------------
 
 with `scope` being one of `global`, `buffer` or `window` (or any prefix),
 mode being `insert`, `normal`, `prompt`, `menu` or `user` (or any prefix), `key` being
@@ -1245,7 +1297,7 @@ Some helper commands can be used to define composite commands:
 
  * `:prompt <prompt> <register> <command>`: Prompt the user for a string, when
      the user validates, store the result in given <register> and run <commmand>.
-     the -init <str> switch allows setting initial content. 
+     the -init <str> switch allows setting initial content.
  * `:onkey <register> <command>`: Wait for next key from user, writes it into given
      <register> and execute commands.
  * `:menu <label1> <commands1> <label2> <commands2>...`: display a menu using
