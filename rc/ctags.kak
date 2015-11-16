@@ -6,7 +6,10 @@
 decl str-list ctagsfiles 'tags'
 
 def -shell-params \
-    -shell-completion 'readtags -p "$1" | cut -f 1 | sort | uniq' \
+    -shell-completion '
+        ( for tags in $(echo "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
+              do readtags -t "${tags}" -p "$1"
+          done ) | cut -f 1 | sort | uniq' \
     -docstring 'Jump to tag definition' \
     tag \
     %{ %sh{
@@ -16,12 +19,13 @@ def -shell-params \
                 readtags -t "${tags}" ${tagname}
             done
         ) | awk -F '\t|\n' -e '
-            /[^\t]+\t[^\t]+\t\/\^.*\$\// {
-                re=$0; sub(".*\t/\\^", "", re); sub("\\$/.*", "", re); gsub("(\\{|\\}).*$", "", re);
-                keys=re; gsub(/</, "<lt>", keys);
+            /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
+                re=$0;
+                sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
+                keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
                 out = out " %{" $2 " {MenuInfo}" re "} %{try %{ edit %{" $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } }"
             }
-            /[^\t]+\t[^\t]+\t([0-9]+)/ { out = out " %{" $2 ":" $3 "} %{edit %{" $2 "} %{" $3 "}}" }
+            /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{edit %{" $2 "} %{" $3 "}}" }
             END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
     }}
 
