@@ -10,6 +10,7 @@ decl str termcmd %sh{
                        'xterm          -e sh -c' \
                        'roxterm        -e sh -c' \
                        'mintty         -e sh -c' \
+                       'sakura         -e      ' \
                        'gnome-terminal -e      ' \
                        'xfce4-terminal -e      ' ; do
             terminal=${termcmd%% *}
