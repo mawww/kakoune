@@ -245,6 +245,7 @@ void register_options()
 struct convert_to_client_mode
 {
     String session;
+    String buffer_name;
 };
 
 static Client* local_client = nullptr;
@@ -532,6 +533,8 @@ int run_server(StringView session, StringView init_command,
 
             if (convert_to_client_pending)
             {
+                String buffer_name = local_client->context().buffer().name();
+
                 ClientManager::instance().remove_client(*local_client, true);
                 convert_to_client_pending = false;
 
@@ -539,7 +542,7 @@ int run_server(StringView session, StringView init_command,
                 {
                     String session = server.session();
                     server.close_session(false);
-                    throw convert_to_client_mode{ std::move(session) };
+                    throw convert_to_client_mode{ std::move(session), std::move(buffer_name) };
                 }
             }
         }
@@ -736,7 +739,9 @@ int main(int argc, char* argv[])
             catch (convert_to_client_mode& convert)
             {
                 raise(SIGTSTP);
-                return run_client(convert.session, "echo converted to client only mode");
+                return run_client(convert.session,
+                                  format("try %^buffer '{}'^; echo converted to client only mode",
+                                         escape(convert.buffer_name, "'^", '\\')));
             }
         }
     }
