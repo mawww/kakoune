@@ -1,5 +1,8 @@
 # termcmd should be set such as the next argument is the whole
-# command line to execute
+# command line to execute. You may override it using
+# set global termcmd '...' in your kakrc file
+# see (https://github.com/mawww/kakoune#51-kakrc)
+
 decl str termcmd %sh{
     if [ -n "$TMUX" ]; then
         echo "'tmux split-window -h'"
