@@ -18,6 +18,8 @@ main() {
     name=$(basename $PWD)
     if ! test -e cmd; then
       echo "$indent$name"
+    elif test -x enabled && ! ./enabled; then
+      echo "$indent$name (disabled)" | colorize yellow normal
     else
       number_tests=$(($number_tests + 1))
       touch in; cp in out

@@ -1,0 +1,2 @@
+#!/bin/sh
+locale | grep LC_CTYPE | grep 'utf8\|UTF-8' > /dev/null
