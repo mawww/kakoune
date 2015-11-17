@@ -40,7 +40,7 @@ def -hidden -shell-params tmux_override_termcmd %{
             echo "
                 set current termcmd '${cmd_override}'
                 eval new $@
-                set current termcmd '${termcmd}'
+                set current termcmd '${termcmd//'/\\'}'
             "
         fi
     }
