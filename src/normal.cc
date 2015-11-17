@@ -334,7 +334,7 @@ void for_each_codepoint(Context& context, NormalParams)
     selections.insert(strings, InsertMode::Replace);
 }
 
-void command(Context& context, NormalParams)
+void command(Context& context, NormalParams params)
 {
     if (not CommandManager::has_instance())
         return;
@@ -345,7 +345,7 @@ void command(Context& context, NormalParams)
            StringView cmd_line, ByteCount pos) {
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
         },
-        [](StringView cmdline, PromptEvent event, Context& context) {
+        [params](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_ui())
             {
                 context.ui().info_hide();
@@ -362,7 +362,14 @@ void command(Context& context, NormalParams)
                 }
             }
             if (event == PromptEvent::Validate)
-                CommandManager::instance().execute(cmdline, context);
+            {
+                EnvVarMap env_vars = {
+                    { "count", to_string(params.count) },
+                    { "register", String{params.reg} }
+                };
+                CommandManager::instance().execute(
+                    cmdline, context, { {}, env_vars });
+            }
         });
 }
 
