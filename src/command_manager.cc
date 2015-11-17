@@ -571,10 +571,10 @@ Completions CommandManager::complete(const Context& context,
             if (prefix_match(command.first, prefix))
                 result.candidates.push_back(command.first);
         }
-        for (auto& alias : context.aliases())
+        for (auto& alias : context.aliases().flatten_aliases())
         {
-            if (prefix_match(alias.key, prefix))
-                result.candidates.push_back(alias.key);
+            if (prefix_match(alias.first, prefix))
+                result.candidates.push_back(alias.first.str());
         }
         std::sort(result.candidates.begin(), result.candidates.end());
         return result;

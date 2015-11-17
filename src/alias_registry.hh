@@ -18,10 +18,9 @@ public:
 
     using AliasMap = IdMap<String, MemoryDomain::Aliases>;
     using iterator = AliasMap::const_iterator;
-    iterator begin() const { return m_aliases.begin(); }
-    iterator end() const { return m_aliases.end(); }
 
     Vector<StringView> aliases_for(StringView command) const;
+    Vector<std::pair<StringView, StringView>> flatten_aliases() const;
 
 private:
     friend class Scope;
