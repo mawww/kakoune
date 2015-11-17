@@ -21,7 +21,7 @@ decl str termcmd %sh{
 def -docstring 'create a new kak client for current session' \
     -shell-params \
     -command-completion \
-    new %{ %sh{
+    x11-new %{ %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
            echo "echo -color Error 'termcmd option is not set'"
            exit
@@ -30,16 +30,17 @@ def -docstring 'create a new kak client for current session' \
         setsid ${kak_opt_termcmd} "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
 }}
 
-def -docstring 'focus given client' \
+def -docstring 'focus given client\'s window' \
     -shell-params -client-completion \
-    focus-default %{ %sh{
-    if [ $# -gt 1 ]; then
-        echo "echo -color Error 'too many arguments, use focus [client]'"
-    elif [ $# -eq 1 ]; then
-        echo "eval -client '$1' focus"
-    else
-        xdotool windowactivate $kak_client_env_WINDOWID > /dev/null
-    fi
+    x11-focus %{ %sh{
+        if [ $# -gt 1 ]; then
+            echo "echo -color Error 'too many arguments, use focus [client]'"
+        elif [ $# -eq 1 ]; then
+            echo "eval -client '$1' focus"
+        else
+            xdotool windowactivate $kak_client_env_WINDOWID > /dev/null
+        fi
 } }
-## Create an alias to the default focus callback to allow overriding from custom scripts (i.e. tmux)
-alias global focus focus-default
+
+alias global focus x11-focus
+alias global new x11-new
