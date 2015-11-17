@@ -112,7 +112,10 @@ def clang-disable-autocomplete -docstring "Disable automatic clang completion" %
 def -hidden clang-show-error-info %{ %sh{
     echo "${kak_opt_clang_errors}" | while read line; do
         case "${line}" in
-           ${kak_cursor_line},*) echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} %{${line#*,}}" ;;
+           ${kak_cursor_line},*)
+                desc=$(echo ${line#*,} | sed -e "s/'/\\\\'/g")
+                echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
+            ;;
         esac
     done
 } }
