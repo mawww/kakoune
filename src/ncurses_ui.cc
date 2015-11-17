@@ -645,7 +645,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_items.clear(); // make sure it is empty
     m_items.reserve(item_count);
     CharCount longest = 0;
-    const CharCount maxlen = min((int)maxsize.column-2, 200);
+    const CharCount maxlen = min((int)maxsize.column-1, 200);
     for (auto& item : items)
     {
         m_items.push_back(item);
