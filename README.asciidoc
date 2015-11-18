@@ -726,15 +726,16 @@ Options are typed, their type can be
 
  * `int`: an integer number
  * `bool`: a boolean value, `yes/true` or `no/false`
- * `yesnoask`: similar to a boolean, but the additional
-   value `ask` is supported.
  * `str`: a string, some freeform text
  * `coord`: a line,column pair (separated by comma)
  * `regex`: as a string but the `set` commands will complain
    if the entered text is not a valid regex.
  * `{int,str}-list`: a list, elements are separated by a colon (:)
   if an element needs to contain a colon, it can be escaped with a
-   backslash.
+  backslash.
+ * `enum(value1|value2|...)`: an enum, taking on of the given values
+ * `flags(value1|value2|...)`: a set of flags, taking a combination
+   of the given values joined by `|`.
 
 Options value can be changed using the `set` commands:
 
@@ -781,7 +782,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    candidates exist, enable completion with common prefix.
  * `incsearch` _bool_: execute search as it is typed
  * `aligntab` _bool_: use tabs for alignement command
- * `autoinfo` _bool_: display automatic information box for certain commands.
+ * `autoinfo` _flags(command|onkey|normal)_: display automatic information
+   box in the enabled contexts.
  * `autoshowcompl` _bool_: automatically display possible completions when
    editing a prompt.
  * `ignored_files` _regex_: filenames matching this regex wont be considered
@@ -804,7 +806,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
      element of the list should follow the format:
      _<line>.<column>[+<length>]@<timestamp>_ to define where the completion
      apply in the buffer, and the other strings are the candidates.
- * `autoreload` _yesnoask_: auto reload the buffers when an external
+ * `autoreload` _enum(yes|no|ask)_: auto reload the buffers when an external
    modification is detected.
  * `modelinefmt` _string_: A format string used to generate the mode line, that
    string is first expanded as a command line would be (expanding `%...{...}`

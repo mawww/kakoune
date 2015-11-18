@@ -103,13 +103,13 @@ private:
     int    m_handle_key_level = 0;
 };
 
-bool show_auto_info_ifn(StringView title, StringView info, const Context& context);
+bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context);
 
 template<typename Cmd>
 void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
                                StringView title, StringView info)
 {
-    const bool hide = show_auto_info_ifn(title, info, context);
+    const bool hide = show_auto_info_ifn(title, info, AutoInfo::OnKey, context);
     context.input_handler().on_next_key(
         keymap_mode, [hide,cmd](Key key, Context& context) mutable {
             if (hide)

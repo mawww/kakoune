@@ -1221,7 +1221,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
     // Disable these options to avoid costly code paths (and potential screen
     // redraws) That are useful only in interactive contexts.
-    DisableOption<int> disable_autoinfo(context, "autoinfo");
+    DisableOption<AutoInfo> disable_autoinfo(context, "autoinfo");
     DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
     DisableOption<bool> disable_incsearch(context, "incsearch");
 

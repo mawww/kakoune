@@ -201,7 +201,7 @@ void register_options()
                        true);
     reg.declare_option("autoinfo",
                        "automatically display contextual help",
-                       1);
+                       AutoInfo::Command | AutoInfo::OnKey);
     reg.declare_option("autoshowcompl",
                        "automatically display possible completions for prompts",
                        true);

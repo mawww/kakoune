@@ -7,6 +7,7 @@
 #include "coord.hh"
 #include "array_view.hh"
 #include "id_map.hh"
+#include "flags.hh"
 
 #include <tuple>
 #include <vector>
@@ -220,6 +221,45 @@ inline void option_from_string(StringView str, YesNoAsk& opt)
         opt = Ask;
     else
         throw runtime_error(format("invalid value '{}', expected yes, no or ask", str));
+}
+
+enum class AutoInfo
+{
+    None = 0,
+    Command = 1 << 0,
+    OnKey   = 1 << 1,
+    Normal  = 1 << 2
+};
+
+template<>
+struct WithBitOps<AutoInfo> : std::true_type {};
+
+inline String option_to_string(AutoInfo opt)
+{
+    String res;
+    if (opt & AutoInfo::Command)
+        res = "command";
+    if (opt & AutoInfo::OnKey)
+        res += res.empty() ? "onkey" : "|onkey";
+    if (opt & AutoInfo::Normal)
+        res += res.empty() ? "normal" : "|normal";
+    return res;
+}
+
+inline void option_from_string(StringView str, AutoInfo& opt)
+{
+    opt = AutoInfo::None;
+    for (auto s : split(str, '|'))
+    {
+        if (s == "command")
+            opt |= AutoInfo::Command;
+        else if (s == "onkey")
+            opt |= AutoInfo::OnKey;
+        else if (s == "normal")
+            opt |= AutoInfo::Normal;
+        else
+            throw runtime_error(format("invalid value '{}'", s));
+    }
 }
 
 }

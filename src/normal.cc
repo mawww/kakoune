@@ -349,7 +349,8 @@ void command(Context& context, NormalParams params)
             if (context.has_ui())
             {
                 context.ui().info_hide();
-                if (event == PromptEvent::Change and context.options()["autoinfo"].get<int>() > 0)
+                auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
+                if (event == PromptEvent::Change and autoinfo & AutoInfo::Command)
                 {
                     Face face = get_face("Information");
                     if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))

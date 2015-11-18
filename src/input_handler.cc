@@ -251,7 +251,8 @@ public:
                                        { return lhs.key < rhs; });
             if (it != keymap.end() and it->key == key)
             {
-                if (context().options()["autoinfo"].get<int>() >= 2 and context().has_ui())
+                auto autoinfo = context().options()["autoinfo"].get<AutoInfo>();
+                if (autoinfo & AutoInfo::Normal and context().has_ui())
                     context().ui().info_show(key_to_str(key), it->docstring, CharCoord{},
                                              get_face("Information"), InfoStyle::Prompt);
 
@@ -1413,13 +1414,15 @@ DisplayLine InputHandler::mode_line() const
     return current_mode().mode_line();
 }
 
-
-bool show_auto_info_ifn(StringView title, StringView info, const Context& context)
+bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)
 {
-    if (context.options()["autoinfo"].get<int>() < 1 or not context.has_ui())
+    if ((context.options()["autoinfo"].get<AutoInfo>() & mask) or
+        not context.has_ui())
         return false;
+
     Face face = get_face("Information");
     context.ui().info_show(title, info, CharCoord{}, face, InfoStyle::Prompt);
     return true;
 }
+
 }
