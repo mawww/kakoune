@@ -644,18 +644,23 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const int item_count = items.size();
     m_items.clear(); // make sure it is empty
     m_items.reserve(item_count);
-    CharCount longest = 0;
-    const CharCount maxlen = min((int)maxsize.column-1, 200);
+    CharCount longest = 1;
+    for (auto& item : items)
+        longest = max(longest, item.length());
+
+    const bool is_prompt = style == MenuStyle::Prompt;
+    m_menu_columns = is_prompt ? max((int)((maxsize.column - 1) / longest), 1) : 1;
+
+    CharCount maxlen = maxsize.column-1;
+    if (m_menu_columns > 1)
+        maxlen = maxlen / m_menu_columns - 1;
+
     for (auto& item : items)
     {
         m_items.push_back(item);
         m_items.back().trim(0, maxlen, false);
-        longest = max(longest, m_items.back().length());
+        kak_assert(m_items.back().length() <= maxlen);
     }
-    longest += 1;
-
-    const bool is_prompt = style == MenuStyle::Prompt;
-    m_menu_columns = is_prompt ? (int)((maxsize.column - 1) / longest) : 1;
 
     int height = min(10, div_round_up(item_count, m_menu_columns));
 
@@ -665,7 +670,7 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_selected_item = item_count;
     m_menu_top_line = 0;
 
-    int width = is_prompt ? (int)maxsize.column : (int)longest;
+    auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
     m_menu.create({line, anchor.column}, {height, width});
     draw_menu();
 }
