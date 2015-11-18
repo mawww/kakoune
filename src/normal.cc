@@ -630,14 +630,20 @@ template<SelectMode mode, Direction direction>
 void search(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
+    int count = params.count;
     regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
-                 [reg](Regex ex, PromptEvent event, Context& context) {
+                 [reg, count](Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
                          ex = Regex{context.main_sel_register_value(reg)};
                      else if (event == PromptEvent::Validate)
                          RegisterManager::instance()[reg] = ex.str();
                      if (not ex.empty() and not ex.str().empty())
-                         select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+                     {
+                         int c = count;
+                         do {
+                             select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+                         } while (--c > 0);
+                     }
                  });
 }
 
