@@ -234,7 +234,7 @@ IdMap<Val, domain> read_idmap(int socket)
 class RemoteUI : public UserInterface
 {
 public:
-    RemoteUI(int socket);
+    RemoteUI(int socket, CharCoord dimensions);
     ~RemoteUI();
 
     void menu_show(ConstArrayView<DisplayLine> choices,
@@ -272,11 +272,12 @@ private:
 };
 
 
-RemoteUI::RemoteUI(int socket)
+RemoteUI::RemoteUI(int socket, CharCoord dimensions)
     : m_socket_watcher(socket, [this](FDWatcher&, EventMode mode) {
                            if (m_input_callback)
                                m_input_callback(mode);
-                       })
+                       }),
+      m_dimensions(dimensions)
 {
     write_to_debug_buffer(format("remote client connected: {}", m_socket_watcher.fd()));
 }
@@ -438,6 +439,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         Message msg(sock);
         msg.write(init_command.data(), (int)init_command.length());
         msg.write((char)0);
+        msg.write(m_ui->dimensions());
         msg.write(env_vars);
     }
 
@@ -581,8 +583,9 @@ private:
             }
             if (c == 0) // end of initial command stream, go to interactive ui
             {
+                CharCoord dimensions = read<CharCoord>(socket);
                 EnvVarMap env_vars = read_idmap<String, MemoryDomain::EnvVars>(socket);
-                std::unique_ptr<UserInterface> ui{new RemoteUI{socket}};
+                std::unique_ptr<UserInterface> ui{new RemoteUI{socket, dimensions}};
                 ClientManager::instance().create_client(std::move(ui),
                                                         std::move(env_vars),
                                                         m_buffer);
