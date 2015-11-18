@@ -1360,7 +1360,7 @@ const CommandDesc prompt_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& params, Context& context, const ShellContext&)
+    [](const ParametersParser& params, Context& context, const ShellContext& shell_context)
     {
         if (params[1].length() != 1)
             throw runtime_error("register name should be a single character");
@@ -1376,7 +1376,7 @@ const CommandDesc prompt_cmd = {
                     return;
                 RegisterManager::instance()[reg] = ConstArrayView<String>(str.str());
 
-                CommandManager::instance().execute(command, context);
+                CommandManager::instance().execute(command, context, shell_context);
             });
     }
 };
@@ -1394,7 +1394,7 @@ const CommandDesc menu_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         const bool with_select_cmds = (bool)parser.get_switch("select-cmds");
         const bool markup = (bool)parser.get_switch("markup");
@@ -1425,9 +1425,9 @@ const CommandDesc menu_cmd = {
         context.input_handler().menu(choices,
             [=](int choice, MenuEvent event, Context& context) {
                 if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
-                  CommandManager::instance().execute(commands[choice], context);
+                  CommandManager::instance().execute(commands[choice], context, shell_context);
                 if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
-                  CommandManager::instance().execute(select_cmds[choice], context);
+                  CommandManager::instance().execute(select_cmds[choice], context, shell_context);
             });
     }
 };
@@ -1440,14 +1440,14 @@ const CommandDesc onkey_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         String reg = parser[0];
         String command = parser[1];
         context.input_handler().on_next_key(KeymapMode::None,
                                             [=](Key key, Context& context) {
             RegisterManager::instance()[reg] = key_to_str(key);
-            CommandManager::instance().execute(command, context);
+            CommandManager::instance().execute(command, context, shell_context);
         });
     }
 };
