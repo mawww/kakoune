@@ -240,6 +240,7 @@ void register_options()
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
+    reg.declare_option("debug", "various debug flags", DebugFlags::None);
 }
 
 struct convert_to_client_mode

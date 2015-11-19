@@ -87,6 +87,9 @@ std::pair<String, int> ShellManager::eval(
 {
     static const Regex re(R"(\bkak_(\w+)\b)");
 
+    if (context.options()["debug"].get<DebugFlags>() & DebugFlags::Shell)
+        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+
     Vector<String> kak_env;
     for (RegexIterator<const char*> it{cmdline.begin(), cmdline.end(), re}, end;
          it != end; ++it)

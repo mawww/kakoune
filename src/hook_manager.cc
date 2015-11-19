@@ -49,6 +49,8 @@ void HookManager::run_hook(StringView hook_name,
     if (hook_list_it == m_hook.end())
         return;
 
+    const bool trace = context.options()["debug"].get<DebugFlags>() & DebugFlags::Hooks;
+
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
     bool hook_error = false;
     for (auto& hook : hook_list_it->value)
@@ -59,6 +61,9 @@ void HookManager::run_hook(StringView hook_name,
 
         try
         {
+            if (trace)
+                write_to_debug_buffer(format("hook {}/{}", hook_name, hook.key));
+
             hook.value(param, context);
         }
         catch (runtime_error& err)

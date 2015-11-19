@@ -223,24 +223,15 @@ inline void option_from_string(StringView str, YesNoAsk& opt)
         throw runtime_error(format("invalid value '{}', expected yes, no or ask", str));
 }
 
-enum class AutoInfo
+template<typename T> struct EnumInfo;
+
+template<typename Flags,
+         typename = EnableIfWithBitOps<Flags>,
+         typename = decltype(EnumInfo<Flags>::values(), EnumInfo<Flags>::names())>
+String option_to_string(Flags flags)
 {
-    None = 0,
-    Command = 1 << 0,
-    OnKey   = 1 << 1,
-    Normal  = 1 << 2
-};
-
-template<>
-struct WithBitOps<AutoInfo> : std::true_type {};
-
-constexpr AutoInfo autoinfo_values[] = { AutoInfo::Command, AutoInfo::OnKey, AutoInfo::Normal };
-constexpr StringView autoinfo_names[] = { "command", "onkey", "normal" };
-
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
-String to_string(Flags flags, ArrayView<const Flags> values, ArrayView<const StringView> names)
-{
-    kak_assert(values.size() == names.size());
+    auto names = EnumInfo<Flags>::names();
+    auto values = EnumInfo<Flags>::values();
     String res;
     for (int i = 0; i < values.size(); ++i)
     {
@@ -253,11 +244,14 @@ String to_string(Flags flags, ArrayView<const Flags> values, ArrayView<const Str
     return res;
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
-Flags string_to_flags(StringView str, ArrayView<const Flags> values, ArrayView<const StringView> names)
+template<typename Flags,
+         typename = EnableIfWithBitOps<Flags>,
+         typename = decltype(EnumInfo<Flags>::values(), EnumInfo<Flags>::names())>
+void option_from_string(StringView str, Flags& flags)
 {
-    kak_assert(values.size() == names.size());
-    Flags flags{};
+    auto names = EnumInfo<Flags>::names();
+    auto values = EnumInfo<Flags>::values();
+    flags = Flags{};
     for (auto s : split(str, '|'))
     {
         auto it = std::find(names.begin(), names.end(), s);
@@ -265,18 +259,58 @@ Flags string_to_flags(StringView str, ArrayView<const Flags> values, ArrayView<c
             throw runtime_error(format("invalid flag value '{}'", s));
         flags |= values[it - names.begin()];
     }
-    return flags;
 }
 
-inline String option_to_string(AutoInfo opt)
+enum class AutoInfo
 {
-    return to_string<AutoInfo>(opt, autoinfo_values, autoinfo_names);
-}
+    None = 0,
+    Command = 1 << 0,
+    OnKey   = 1 << 1,
+    Normal  = 1 << 2
+};
 
-inline void option_from_string(StringView str, AutoInfo& opt)
+template<>
+struct WithBitOps<AutoInfo> : std::true_type {};
+
+template<> struct EnumInfo<AutoInfo>
 {
-    opt = string_to_flags<AutoInfo>(str, autoinfo_values, autoinfo_names);
-}
+    static ArrayView<const AutoInfo> values()
+    {
+        static constexpr AutoInfo values[] = { AutoInfo::Command, AutoInfo::OnKey, AutoInfo::Normal };
+        return { values };
+    }
+
+    static ArrayView<const StringView> names()
+    {
+        static constexpr StringView names[] = { "command", "onkey", "normal" };
+        return { names };
+    }
+};
+
+enum class DebugFlags
+{
+    None  = 0,
+    Hooks = 1 << 0,
+    Shell = 1 << 1,
+};
+
+template<>
+struct WithBitOps<DebugFlags> : std::true_type {};
+
+template<> struct EnumInfo<DebugFlags>
+{
+    static ArrayView<const DebugFlags> values()
+    {
+        static constexpr DebugFlags values[] = { DebugFlags::Hooks, DebugFlags::Shell };
+        return { values };
+    }
+
+    static ArrayView<const StringView> names()
+    {
+        static constexpr StringView names[] = { "hooks", "shell" };
+        return { names };
+    }
+};
 
 }
 
