@@ -168,11 +168,14 @@ void write_to_debug_buffer(StringView str)
     }
 
     constexpr StringView debug_buffer_name = "*debug*";
+    // Try to ensure we keep an empty line at the end of the debug buffer
+    // where the user can put its cursor to scroll with new messages
+    const bool eol_back = not str.empty() and str.back() == '\n';
     if (Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name))
-        buffer->insert(buffer->end(), str);
+        buffer->insert(buffer->end()-1, eol_back ? str : str + "\n");
     else
     {
-        String line = str + ((str.empty() or str.back() != '\n') ? "\n" : "");
+        String line = str + (eol_back ? "\n" : "\n\n");
         new Buffer(debug_buffer_name.str(), Buffer::Flags::NoUndo, line, InvalidTime);
     }
 }
