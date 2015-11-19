@@ -30,7 +30,7 @@ Completions shell_complete(const Context& context, CompletionFlags flags,
                                                   cursor_pos - word_start);
     else
         completions.candidates = complete_filename(prefix.substr(word_start, word_end),
-                                                   context.options()["ignored_files"].get<Regex>(), 
+                                                   context.options()["ignored_files"].get<Regex>(),
                                                    cursor_pos - word_start);
     return completions;
 }
