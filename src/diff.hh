@@ -32,7 +32,7 @@ private:
     int size;
 };
 
-struct Snake{ int x, y, u, v; bool add; }; 
+struct Snake{ int x, y, u, v; bool add; };
 
 template<typename Iterator, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(Iterator a, int N, Iterator b, int M,
