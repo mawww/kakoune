@@ -234,32 +234,48 @@ enum class AutoInfo
 template<>
 struct WithBitOps<AutoInfo> : std::true_type {};
 
+constexpr AutoInfo autoinfo_values[] = { AutoInfo::Command, AutoInfo::OnKey, AutoInfo::Normal };
+constexpr StringView autoinfo_names[] = { "command", "onkey", "normal" };
+
+template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+String to_string(Flags flags, ArrayView<const Flags> values, ArrayView<const StringView> names)
+{
+    kak_assert(values.size() == names.size());
+    String res;
+    for (int i = 0; i < values.size(); ++i)
+    {
+        if (not (flags & values[i]))
+            continue;
+        if (not res.empty())
+            res += "|";
+        res += names[i];
+    }
+    return res;
+}
+
+template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+Flags string_to_flags(StringView str, ArrayView<const Flags> values, ArrayView<const StringView> names)
+{
+    kak_assert(values.size() == names.size());
+    Flags flags{};
+    for (auto s : split(str, '|'))
+    {
+        auto it = std::find(names.begin(), names.end(), s);
+        if (it == names.end())
+            throw runtime_error(format("invalid flag value '{}'", s));
+        flags |= values[it - names.begin()];
+    }
+    return flags;
+}
+
 inline String option_to_string(AutoInfo opt)
 {
-    String res;
-    if (opt & AutoInfo::Command)
-        res = "command";
-    if (opt & AutoInfo::OnKey)
-        res += res.empty() ? "onkey" : "|onkey";
-    if (opt & AutoInfo::Normal)
-        res += res.empty() ? "normal" : "|normal";
-    return res;
+    return to_string<AutoInfo>(opt, autoinfo_values, autoinfo_names);
 }
 
 inline void option_from_string(StringView str, AutoInfo& opt)
 {
-    opt = AutoInfo::None;
-    for (auto s : split(str, '|'))
-    {
-        if (s == "command")
-            opt |= AutoInfo::Command;
-        else if (s == "onkey")
-            opt |= AutoInfo::OnKey;
-        else if (s == "normal")
-            opt |= AutoInfo::Normal;
-        else
-            throw runtime_error(format("invalid value '{}'", s));
-    }
+    opt = string_to_flags<AutoInfo>(str, autoinfo_values, autoinfo_names);
 }
 
 }
