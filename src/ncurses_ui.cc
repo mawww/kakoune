@@ -649,10 +649,10 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         longest = max(longest, item.length());
 
     const bool is_prompt = style == MenuStyle::Prompt;
-    m_menu_columns = is_prompt ? max((int)((maxsize.column - 1) / longest), 1) : 1;
+    m_menu_columns = is_prompt ? max((int)((maxsize.column-1) / (longest+1)), 1) : 1;
 
     CharCount maxlen = maxsize.column-1;
-    if (m_menu_columns > 1)
+    if (m_menu_columns > 1 and item_count > 1)
         maxlen = maxlen / m_menu_columns - 1;
 
     for (auto& item : items)
