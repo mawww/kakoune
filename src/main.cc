@@ -224,7 +224,7 @@ void register_options()
                        }), OptionFlags::None);
     reg.declare_option("autoreload",
                        "autoreload buffer when a filesystem modification is detected",
-                       Ask);
+                       Autoreload::Ask);
     reg.declare_option("ui_options",
                        "colon separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"

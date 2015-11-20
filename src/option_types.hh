@@ -8,6 +8,7 @@
 #include "array_view.hh"
 #include "id_map.hh"
 #include "flags.hh"
+#include "enum.hh"
 
 #include <tuple>
 #include <vector>
@@ -192,101 +193,6 @@ inline String option_to_string(const LineAndColumn<EffectiveType, LineType, Colu
     return format("{},{}", opt.line, opt.column);
 }
 
-enum YesNoAsk
-{
-    Yes,
-    No,
-    Ask
-};
-
-inline String option_to_string(YesNoAsk opt)
-{
-    switch (opt)
-    {
-        case Yes: return "yes";
-        case No:  return "no";
-        case Ask: return "ask";
-    }
-    kak_assert(false);
-    return "ask";
-}
-
-inline void option_from_string(StringView str, YesNoAsk& opt)
-{
-    if (str == "yes" or str == "true")
-        opt = Yes;
-    else if (str == "no" or str == "false")
-        opt = No;
-    else if (str == "ask")
-        opt = Ask;
-    else
-        throw runtime_error(format("invalid value '{}', expected yes, no or ask", str));
-}
-
-template<typename T> struct EnumInfo;
-
-template<typename Flags,
-         typename = EnableIfWithBitOps<Flags>,
-         typename = decltype(EnumInfo<Flags>::values(), EnumInfo<Flags>::names())>
-String option_to_string(Flags flags)
-{
-    auto names = EnumInfo<Flags>::names();
-    auto values = EnumInfo<Flags>::values();
-    String res;
-    for (int i = 0; i < values.size(); ++i)
-    {
-        if (not (flags & values[i]))
-            continue;
-        if (not res.empty())
-            res += "|";
-        res += names[i];
-    }
-    return res;
-}
-
-template<typename Flags,
-         typename = EnableIfWithBitOps<Flags>,
-         typename = decltype(EnumInfo<Flags>::values(), EnumInfo<Flags>::names())>
-void option_from_string(StringView str, Flags& flags)
-{
-    auto names = EnumInfo<Flags>::names();
-    auto values = EnumInfo<Flags>::values();
-    flags = Flags{};
-    for (auto s : split(str, '|'))
-    {
-        auto it = std::find(names.begin(), names.end(), s);
-        if (it == names.end())
-            throw runtime_error(format("invalid flag value '{}'", s));
-        flags |= values[it - names.begin()];
-    }
-}
-
-enum class AutoInfo
-{
-    None = 0,
-    Command = 1 << 0,
-    OnKey   = 1 << 1,
-    Normal  = 1 << 2
-};
-
-template<>
-struct WithBitOps<AutoInfo> : std::true_type {};
-
-template<> struct EnumInfo<AutoInfo>
-{
-    static ArrayView<const AutoInfo> values()
-    {
-        static constexpr AutoInfo values[] = { AutoInfo::Command, AutoInfo::OnKey, AutoInfo::Normal };
-        return { values };
-    }
-
-    static ArrayView<const StringView> names()
-    {
-        static constexpr StringView names[] = { "command", "onkey", "normal" };
-        return { names };
-    }
-};
-
 enum class DebugFlags
 {
     None  = 0,
@@ -297,20 +203,13 @@ enum class DebugFlags
 template<>
 struct WithBitOps<DebugFlags> : std::true_type {};
 
-template<> struct EnumInfo<DebugFlags>
+constexpr Array<EnumDesc<DebugFlags>, 2> enum_desc(DebugFlags)
 {
-    static ArrayView<const DebugFlags> values()
-    {
-        static constexpr DebugFlags values[] = { DebugFlags::Hooks, DebugFlags::Shell };
-        return { values };
-    }
-
-    static ArrayView<const StringView> names()
-    {
-        static constexpr StringView names[] = { "hooks", "shell" };
-        return { names };
-    }
-};
+    return { {
+        { DebugFlags::Hooks, "hooks" },
+        { DebugFlags::Shell, "shell" }
+    } };
+}
 
 }
 

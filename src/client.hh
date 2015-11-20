@@ -7,6 +7,7 @@
 #include "safe_ptr.hh"
 #include "utils.hh"
 #include "option_manager.hh"
+#include "enum.hh"
 
 namespace Kakoune
 {
@@ -83,6 +84,24 @@ private:
 
     SafePtr<Buffer> m_last_buffer;
 };
+
+enum class Autoreload
+{
+    Yes,
+    No,
+    Ask
+};
+
+constexpr Array<EnumDesc<Autoreload>, 5> enum_desc(Autoreload)
+{
+    return { {
+        { Autoreload::Yes, "yes" },
+        { Autoreload::No, "no" },
+        { Autoreload::Ask, "ask" },
+        { Autoreload::Yes, "true" },
+        { Autoreload::No, "false" }
+    } };
+}
 
 }
 

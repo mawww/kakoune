@@ -236,15 +236,15 @@ void Client::check_if_buffer_needs_reloading()
         return;
 
     Buffer& buffer = context().buffer();
-    auto reload = context().options()["autoreload"].get<YesNoAsk>();
-    if (not (buffer.flags() & Buffer::Flags::File) or reload == No)
+    auto reload = context().options()["autoreload"].get<Autoreload>();
+    if (not (buffer.flags() & Buffer::Flags::File) or reload == Autoreload::No)
         return;
 
     const String& filename = buffer.name();
     timespec ts = get_fs_timestamp(filename);
     if (ts == InvalidTime or ts == buffer.fs_timestamp())
         return;
-    if (reload == Ask)
+    if (reload == Autoreload::Ask)
     {
         m_ui->info_show(
             format("reload '{}' ?", buffer.display_name()),

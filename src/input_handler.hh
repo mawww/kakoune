@@ -103,6 +103,26 @@ private:
     int    m_handle_key_level = 0;
 };
 
+enum class AutoInfo
+{
+    None = 0,
+    Command = 1 << 0,
+    OnKey   = 1 << 1,
+    Normal  = 1 << 2
+};
+
+template<>
+struct WithBitOps<AutoInfo> : std::true_type {};
+
+constexpr Array<EnumDesc<AutoInfo>, 3> enum_desc(AutoInfo)
+{
+    return { {
+        { AutoInfo::Command, "command"},
+        { AutoInfo::OnKey, "onkey"},
+        { AutoInfo::Normal, "normal" }
+    } };
+}
+
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context);
 
 template<typename Cmd>
