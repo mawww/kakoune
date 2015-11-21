@@ -1416,7 +1416,7 @@ DisplayLine InputHandler::mode_line() const
 
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)
 {
-    if ((context.options()["autoinfo"].get<AutoInfo>() & mask) or
+    if (not (context.options()["autoinfo"].get<AutoInfo>() & mask) or
         not context.has_ui())
         return false;
 
