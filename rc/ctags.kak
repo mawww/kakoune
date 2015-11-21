@@ -59,17 +59,37 @@ def ctags-enable-autoinfo -docstring "Automatically display ctags information ab
 
 def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ rmhooks window ctags-autoinfo }
 
-decl str ctagsopts "-R ."
+decl str ctagsopts "-R"
+decl str ctagspaths "."
 
-def gentags -docstring 'Generate tag file asynchronously' %{
+def ctags-generate -docstring 'Generate tag file asynchronously' %{
     echo -color Information "launching tag generation in the background"
     %sh{ (
-        if ctags -f .tags.kaktmp ${kak_opt_ctagsopts}; then
+        while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
+        trap 'rmdir .tags.kaklock' EXIT
+
+        if ctags -f .tags.kaktmp ${kak_opt_ctagsopts} ${kak_opt_ctagspaths}; then
             mv .tags.kaktmp tags
             msg="tags generation complete"
         else
             msg="tags generation failed"
         fi
+
         echo "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
     ) > /dev/null 2>&1 < /dev/null & }
+}
+
+def update-tags -docstring 'Update tags for the given file' %{
+        %sh{ (
+            while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
+	        trap 'rmdir .tags.kaklock' EXIT
+
+            if ctags -f .file_tags.kaktmp ${kak_opt_ctagsopts} $kak_bufname; then
+                grep -Fv "$(printf '\t%s\t' "$kak_bufname")" tags | grep -v '^!' | sort --merge - .file_tags.kaktmp > .tags.kaktmp
+                mv .tags.kaktmp tags
+                msg="tags updated for $kak_bufname"
+            else
+                msg="tags update failed for $kak_bufname"
+            fi
+        ) > /dev/null 2>&1 < /dev/null & }
 }
