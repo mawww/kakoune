@@ -110,13 +110,10 @@ def clang-disable-autocomplete -docstring "Disable automatic clang completion" %
 }
 
 def -hidden clang-show-error-info %{ %sh{
-    echo "${kak_opt_clang_errors}" | while read line; do
-        case "${line}" in
-           ${kak_cursor_line},*)
-                desc=$(echo ${line#*,} | sed -e "s/'/\\\\'/g")
-                echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
-            ;;
-        esac
+    echo "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | while read line; do
+        desc=$(echo ${line} | sed -e "s/^[[:digit:]]\+,//g; s/'/\\\\'/g")
+        echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
+        break
     done
 } }
 
@@ -149,3 +146,14 @@ def clang-diagnostics-next -docstring "Jump to the next line that contains an er
         fi
     )
 } }
+
+def -allow-override -hidden clang-show-completion-info %[
+	eval -draft %[
+        exec '{(b'
+		%sh[
+            msg=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' )
+		    echo "echo -debug -- %{$msg}"
+		    desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
+			echo "eval -client $kak_client info -anchor ${kak_cursor_line}.${kak_cursor_column} ${desc}"
+	] ]
+]
