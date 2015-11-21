@@ -7,6 +7,8 @@
 #include "face_registry.hh"
 #include "regex.hh"
 
+#include <chrono>
+
 namespace Kakoune
 {
 
@@ -49,7 +51,12 @@ void HookManager::run_hook(StringView hook_name,
     if (hook_list_it == m_hook.end())
         return;
 
-    const bool trace = context.options()["debug"].get<DebugFlags>() & DebugFlags::Hooks;
+    using Clock = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+
+    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    const bool profile = debug_flags & DebugFlags::Profile;
+    auto start_time = profile ? Clock::now() : TimePoint{};
 
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
     bool hook_error = false;
@@ -61,7 +68,7 @@ void HookManager::run_hook(StringView hook_name,
 
         try
         {
-            if (trace)
+            if (debug_flags & DebugFlags::Hooks)
                 write_to_debug_buffer(format("hook {}/{}", hook_name, hook.key));
 
             hook.value(param, context);
@@ -78,6 +85,13 @@ void HookManager::run_hook(StringView hook_name,
         context.print_status({
             format("Error running hooks for '{}' '{}', see *debug* buffer",
                    hook_name, param), get_face("Error") });
+
+    if (profile)
+    {
+        auto end_time = Clock::now();
+        auto full = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        write_to_debug_buffer(format("hook '{}({})' took {} ms", hook_name, param, (size_t)full.count()));
+    }
 }
 
 }

@@ -5,6 +5,8 @@
 #include "event_manager.hh"
 #include "file.hh"
 
+#include <chrono>
+
 #include <cstring>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -87,8 +89,15 @@ std::pair<String, int> ShellManager::eval(
 {
     static const Regex re(R"(\bkak_(\w+)\b)");
 
-    if (context.options()["debug"].get<DebugFlags>() & DebugFlags::Shell)
+    using Clock = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+
+    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    const bool profile = debug_flags & DebugFlags::Profile;
+    if (debug_flags & DebugFlags::Shell)
         write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+
+    auto start_time = profile ? Clock::now() : TimePoint{};
 
     Vector<String> kak_env;
     for (RegexIterator<const char*> it{cmdline.begin(), cmdline.end(), re}, end;
@@ -113,6 +122,8 @@ std::pair<String, int> ShellManager::eval(
         } catch (runtime_error&) {}
     }
 
+    auto spawn_time = profile ? Clock::now() : TimePoint{};
+
     Pipe child_stdin, child_stdout, child_stderr;
     pid_t pid = spawn_process(cmdline, shell_context.params, kak_env,
                               child_stdin, child_stdout, child_stderr);
@@ -123,6 +134,8 @@ std::pair<String, int> ShellManager::eval(
 
     write(child_stdin.write_fd(), input.data(), (int)input.length());
     child_stdin.close_write_fd();
+
+    auto wait_time = profile ? Clock::now() : TimePoint{};
 
     struct PipeReader : FDWatcher
     {
@@ -169,6 +182,16 @@ std::pair<String, int> ShellManager::eval(
 
     if (not stderr_contents.empty())
         write_to_debug_buffer(format("shell stderr: <<<\n{}>>>", stderr_contents));
+
+    if (profile)
+    {
+        TimePoint end_time = Clock::now();
+        auto full = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        auto spawn = std::chrono::duration_cast<std::chrono::milliseconds>(wait_time - spawn_time);
+        auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - wait_time);
+        write_to_debug_buffer(format("shell execution took {} ms (spawn: {}, wait: {})",
+                                     (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
+    }
 
     return { stdout_contents, WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
