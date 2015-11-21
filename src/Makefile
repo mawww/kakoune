@@ -24,6 +24,8 @@ deps := $(addprefix ., $(sources:.cc=$(suffix).d))
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
 
+NCURSESW_INCLUDE ?= /usr/include/ncursesw
+
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
@@ -46,7 +48,7 @@ else ifneq (,$(findstring CYGWIN,$(os)))
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else
     LIBS += -lncursesw -lboost_regex
-    CPPFLAGS += -I/usr/include/ncursesw
+    CPPFLAGS += -I$(NCURSESW_INCLUDE)
     LDFLAGS += -rdynamic
 endif
 
