@@ -720,7 +720,11 @@ int main(int argc, char* argv[])
                     return -1;
                 }
             }
-            return run_client(*server_session, init_command);
+            String new_files;
+            for (auto name : parser)
+                new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
+
+            return run_client(*server_session, new_files + init_command);
         }
         else
         {
