@@ -1354,22 +1354,54 @@ const CommandDesc prompt_cmd = {
     "prompt <prompt> <register> <command>: prompt the use to enter a text string "
     "stores it in <register> and then executes <command>",
     ParameterDesc{
-        { { "init", { true, "set initial prompt content" } } },
+        { { "init", { true, "set initial prompt content" } },
+          { "file-completion", { false, "use file completion for prompt" } },
+          { "client-completion", { false, "use client completion for prompt" } },
+          { "buffer-completion", { false, "use buffer completion for prompt" } },
+          { "command-completion", { false, "use command completion for prompt" } } },
         ParameterDesc::Flags::None, 3, 3
     },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& params, Context& context, const ShellContext& shell_context)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        if (params[1].length() != 1)
+        if (parser[1].length() != 1)
             throw runtime_error("register name should be a single character");
-        const char reg = params[1][0_byte];
-        const String& command = params[2];
-        auto initstr = params.get_switch("init").value_or(StringView{});
+        const char reg = parser[1][0_byte];
+        const String& command = parser[2];
+        auto initstr = parser.get_switch("init").value_or(StringView{});
+
+        Completer completer;
+        if (parser.get_switch("file-completion"))
+            completer = [](const Context& context, CompletionFlags,
+                           StringView prefix, ByteCount cursor_pos) -> Completions {
+                auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+                return { 0_byte, cursor_pos,
+                         complete_filename(prefix, ignored_files, cursor_pos) };
+            };
+        else if (parser.get_switch("client-completion"))
+            completer = [](const Context& context, CompletionFlags,
+                           StringView prefix, ByteCount cursor_pos) -> Completions {
+                 return { 0_byte, cursor_pos,
+                          ClientManager::instance().complete_client_name(prefix, cursor_pos) };
+            };
+        else if (parser.get_switch("buffer-completion"))
+            completer = [](const Context& context, CompletionFlags,
+                           StringView prefix, ByteCount cursor_pos) -> Completions {
+                 return { 0_byte, cursor_pos,
+                          complete_buffer_name(prefix, cursor_pos) };
+            };
+        else if (parser.get_switch("command-completion"))
+            completer = [](const Context& context, CompletionFlags flags,
+                           StringView prefix, ByteCount cursor_pos) -> Completions {
+                return CommandManager::instance().complete(
+                    context, flags, prefix, cursor_pos);
+            };
+
 
         context.input_handler().prompt(
-            params[0], initstr.str(), get_face("Prompt"), Completer{},
+            parser[0], initstr.str(), get_face("Prompt"), std::move(completer),
             [=](StringView str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)
