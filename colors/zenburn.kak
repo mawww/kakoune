@@ -61,6 +61,9 @@
         face Information ${zeninfo}
         face Error default,red
         face StatusLine ${zenstatus}
+        face StatusLineMode ${zentext}
+        face StatusLineInfo ${zenconstant}
+        face StatusLineValue ${zennumber}
         face StatusCursor ${zencursor}
         face Prompt yellow
         face MatchingChar default+b

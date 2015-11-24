@@ -58,6 +58,9 @@
         face Information        ${base02},${base1}
         face Error              default,red
         face StatusLine         default,${base02}
+        face StatusLineMode     ${orange}
+        face StatusLineInfo     ${cyan}
+        face StatusLineValue    ${green}
         face StatusCursor       ${base00},${base3}
         face Prompt             yellow
         face MatchingChar       default+b

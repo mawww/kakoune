@@ -58,6 +58,9 @@
         face Information ${black_light},${cyan_light}
         face Error ${grey_light},${magenta_light}
         face StatusLine ${grey_light},${black_lighterer}
+        face StatusLineMode ${orange_dark}
+        face StatusLineInfo ${cyan_light}
+        face StatusLineValue ${green_dark}
         face StatusCursor ${black_lighterer},${cyan_light}
         face Prompt ${black_light},${cyan_light}
         face MatchingChar ${cyan_light},${black_light}+b

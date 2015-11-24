@@ -37,6 +37,9 @@ face MenuInfo cyan
 face Information black,yellow
 face Error black,red
 face StatusLine cyan,default
+face StatusLineMode yellow,default
+face StatusLineInfo blue,default
+face StatusLineValue green,default
 face StatusCursor black,cyan
 face Prompt yellow,default
 face MatchingChar default,default+b
