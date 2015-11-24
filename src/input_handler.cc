@@ -270,16 +270,16 @@ public:
 
     DisplayLine mode_line() const override
     {
-        AtomList atoms = { { to_string(context().selections().size()) + " sel", Face(Color::Blue) } };
+        AtomList atoms = { { to_string(context().selections().size()) + " sel", get_face("StatusLineInfo") } };
         if (m_params.count != 0)
         {
-            atoms.push_back({ "; param=", Face(Color::Yellow) });
-            atoms.push_back({ to_string(m_params.count), Face(Color::Green) });
+            atoms.push_back({ " param=", get_face("StatusLineInfo") });
+            atoms.push_back({ to_string(m_params.count), get_face("StatusLineValue") });
         }
         if (m_params.reg)
         {
-            atoms.push_back({ "; reg=", Face(Color::Yellow) });
-            atoms.push_back({ StringView(m_params.reg).str(), Face(Color::Green) });
+            atoms.push_back({ " reg=", get_face("StatusLineInfo") });
+            atoms.push_back({ StringView(m_params.reg).str(), get_face("StatusLineValue") });
         }
         return atoms;
     }
@@ -586,7 +586,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "menu", Face(Color::Yellow) };
+        return { "menu", get_face("StatusLineMode") };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Menu; }
@@ -854,7 +854,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "prompt", Face(Color::Yellow) };
+        return { "prompt", get_face("StatusLineMode") };
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -944,7 +944,7 @@ public:
 
     DisplayLine mode_line() const override
     {
-        return { "enter key", Face(Color::Yellow) };
+        return { "enter key", get_face("StatusLineMode") };
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
@@ -1157,8 +1157,8 @@ public:
     DisplayLine mode_line() const override
     {
         auto num_sel = context().selections().size();
-        return {AtomList{ { "insert ", Face(Color::Green) },
-                          { format( "{} sel", num_sel), Face(Color::Blue) } }};
+        return {AtomList{ { "insert ", get_face("StatusLineMode") },
+                          { format( "{} sel", num_sel), get_face("StatusLineInfo") } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
