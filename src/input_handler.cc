@@ -231,9 +231,16 @@ public:
         else if (key == '"')
         {
             on_next_key_with_autoinfo(context(), KeymapMode::None,
-                [this](Key key, Context&) {
+                [this](Key key, Context& context) {
                     if (auto cp = key.codepoint())
-                        m_params.reg = *cp;
+                    {
+                        if (*cp <= 127)
+                            m_params.reg = *cp;
+                        else
+                            context.print_status(
+                                { format("invalid register '{}'", *cp),
+                                  get_face("Error") });
+                    }
                 }, "Enter target register", register_doc);
         }
         else
