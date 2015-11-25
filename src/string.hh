@@ -124,6 +124,8 @@ public:
     void resize(ByteCount size) { m_data.resize((size_t)(int)size); }
     void reserve(ByteCount size) { m_data.reserve((size_t)(int)size); }
 
+    static const String ms_empty;
+
 private:
     Content m_data;
 };

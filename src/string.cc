@@ -10,6 +10,8 @@
 namespace Kakoune
 {
 
+const String String::ms_empty;
+
 Vector<String> split(StringView str, char separator, char escape)
 {
     Vector<String> res;
