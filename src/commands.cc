@@ -1198,7 +1198,8 @@ const ParameterDesc context_wrap_params = {
       { "draft",      { false, "run in a disposable context" } },
       { "no-hooks",   { false, "disable hooks" } },
       { "with-maps",  { false, "use user defined key mapping when executing keys" } },
-      { "itersel",    { false, "run once for each selection with that selection as the only one" } } },
+      { "itersel",    { false, "run once for each selection with that selection as the only one" } },
+      { "save-regs",  { true, "restore all given registers after execution" } } },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 1
 };
 
@@ -1216,6 +1217,41 @@ private:
     T m_prev_value;
 };
 
+class RegisterRestorer
+{
+public:
+    RegisterRestorer(char name, const Context& context)
+      : m_name(name)
+    {
+        ConstArrayView<String> save = RegisterManager::instance()[name].values(context);
+        m_save = Vector<String>(save.begin(), save.end());
+    }
+
+    RegisterRestorer(RegisterRestorer&& other) noexcept
+        : m_save(std::move(other.m_save)), m_name(other.m_name)
+    {
+        other.m_name = 0;
+    }
+
+    RegisterRestorer& operator=(RegisterRestorer&& other) noexcept
+    {
+        m_save = std::move(other.m_save);
+        m_name = other.m_name;
+        other.m_name = 0;
+        return *this;
+    }
+
+    ~RegisterRestorer()
+    {
+        if (m_name != 0)
+            RegisterManager::instance()[m_name] = m_save;
+    }
+
+private:
+    Vector<String> m_save;
+    char           m_name;
+};
+
 template<typename Func>
 void context_wrap(const ParametersParser& parser, Context& context, Func func)
 {
@@ -1228,6 +1264,13 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     const bool disable_hooks = parser.get_switch("no-hooks") or
                                context.user_hooks_disabled();
     const bool disable_keymaps = not parser.get_switch("with-maps");
+
+    Vector<RegisterRestorer> saved_registers;
+    if (auto regs = parser.get_switch("save-regs"))
+    {
+        for (auto& r : *regs)
+            saved_registers.emplace_back(r, context);
+    }
 
     ClientManager& cm = ClientManager::instance();
     if (auto bufnames = parser.get_switch("buffer"))
@@ -1650,24 +1693,6 @@ const CommandDesc change_working_directory_cmd = {
         if (chdir(parse_filename(parser[0]).c_str()) != 0)
             throw runtime_error(format("cannot change to directory '{}'", parser[0]));
     }
-};
-
-class RegisterRestorer
-{
-public:
-    RegisterRestorer(char name, const Context& context)
-      : m_name(name)
-    {
-        ConstArrayView<String> save = RegisterManager::instance()[name].values(context);
-        m_save = Vector<String>(save.begin(), save.end());
-    }
-
-    ~RegisterRestorer()
-    { RegisterManager::instance()[m_name] = m_save; }
-
-private:
-    Vector<String> m_save;
-    char           m_name;
 };
 
 }
