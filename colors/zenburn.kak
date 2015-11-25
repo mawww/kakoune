@@ -61,8 +61,8 @@
         face Information ${zeninfo}
         face Error default,red
         face StatusLine ${zenstatus}
-        face StatusLineMode ${zentext}
-        face StatusLineInfo ${zenconstant}
+        face StatusLineMode ${zencomment}
+        face StatusLineInfo ${zenspecial}
         face StatusLineValue ${zennumber}
         face StatusCursor ${zencursor}
         face Prompt yellow
