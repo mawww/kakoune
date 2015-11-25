@@ -147,6 +147,11 @@ void register_env_vars()
 
 void register_registers()
 {
+    RegisterManager& register_manager = RegisterManager::instance();
+
+    for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@")
+        register_manager.add_register(c, make_unique<StaticRegister>());
+
     using StringList = Vector<String, MemoryDomain::Registers>;
     static const struct {
         char name;
@@ -165,20 +170,21 @@ void register_registers()
         } }
     };
 
-    RegisterManager& register_manager = RegisterManager::instance();
     for (auto& dyn_reg : dyn_regs)
-        register_manager.register_dynamic_register(dyn_reg.name, dyn_reg.func);
+        register_manager.add_register(dyn_reg.name, make_unique<DynamicRegister>(dyn_reg.func));
 
     for (size_t i = 0; i < 10; ++i)
     {
-        register_manager.register_dynamic_register('0'+i,
+        register_manager.add_register('0'+i, make_unique<DynamicRegister>(
             [i](const Context& context) {
                 StringList result;
                 for (auto& sel : context.selections())
                     result.emplace_back(i < sel.captures().size() ? sel.captures()[i] : "");
                 return result;
-            });
+            }));
     }
+
+    register_manager.add_register('_', make_unique<NullRegister>());
 }
 
 void register_options()
