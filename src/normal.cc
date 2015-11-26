@@ -704,26 +704,28 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
 void select_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    regex_prompt(context, "select:", [reg](Regex ex, PromptEvent event, Context& context) {
+    unsigned capture = (unsigned)params.count;
+    regex_prompt(context, "select:", [reg, capture](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value(reg)};
         else if (event == PromptEvent::Validate)
             RegisterManager::instance()[reg] = ex.str();
         if (not ex.empty() and not ex.str().empty())
-            select_all_matches(context.selections(), ex);
+            select_all_matches(context.selections(), ex, capture);
     });
 }
 
 void split_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    regex_prompt(context, "split:", [reg](Regex ex, PromptEvent event, Context& context) {
+    unsigned capture = (unsigned)params.count;
+    regex_prompt(context, "split:", [reg, capture](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value(reg)};
         else if (event == PromptEvent::Validate)
             RegisterManager::instance()[reg] = ex.str();
         if (not ex.empty() and not ex.str().empty())
-            split_selections(context.selections(), ex);
+            split_selections(context.selections(), ex, capture);
     });
 }
 

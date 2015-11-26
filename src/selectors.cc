@@ -560,8 +560,12 @@ void select_buffer(SelectionList& selections)
 
 using RegexIt = RegexIterator<BufferIterator>;
 
-void select_all_matches(SelectionList& selections, const Regex& regex)
+void select_all_matches(SelectionList& selections, const Regex& regex, unsigned capture)
 {
+    const unsigned mark_count = regex.mark_count();
+    if (capture > mark_count)
+        throw runtime_error("invalid capture number");
+
     Vector<Selection> result;
     auto& buffer = selections.buffer();
     for (auto& sel : selections)
@@ -570,13 +574,12 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
         RegexIt re_it(buffer.iterator_at(sel.min()), sel_end, regex);
         RegexIt re_end;
 
-        const unsigned mark_count = regex.mark_count();
         for (; re_it != re_end; ++re_it)
         {
-            auto begin = ensure_char_start(buffer, (*re_it)[0].first);
+            auto begin = ensure_char_start(buffer, (*re_it)[capture].first);
             if (begin == sel_end)
                 continue;
-            auto end = ensure_char_start(buffer, (*re_it)[0].second);
+            auto end = ensure_char_start(buffer, (*re_it)[capture].second);
 
             CaptureList captures;
             captures.reserve(mark_count);
@@ -598,8 +601,11 @@ void select_all_matches(SelectionList& selections, const Regex& regex)
     selections = SelectionList{buffer, std::move(result)};
 }
 
-void split_selections(SelectionList& selections, const Regex& regex)
+void split_selections(SelectionList& selections, const Regex& regex, unsigned capture)
 {
+    if (capture > regex.mark_count())
+        throw runtime_error("invalid capture number");
+
     Vector<Selection> result;
     auto& buffer = selections.buffer();
     auto buf_end = buffer.end();
@@ -612,13 +618,13 @@ void split_selections(SelectionList& selections, const Regex& regex)
 
         for (; re_it != re_end; ++re_it)
         {
-            BufferIterator end = (*re_it)[0].first;
+            BufferIterator end = (*re_it)[capture].first;
             if (end == buf_end)
                 continue;
 
             end = ensure_char_start(buffer, end);
             result.push_back(keep_direction({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() }, sel));
-            begin = ensure_char_start(buffer, (*re_it)[0].second);
+            begin = ensure_char_start(buffer, (*re_it)[capture].second);
         }
         if (begin.coord() <= sel.max())
             result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));
