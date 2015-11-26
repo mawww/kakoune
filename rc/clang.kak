@@ -148,12 +148,12 @@ def clang-diagnostics-next -docstring "Jump to the next line that contains an er
 } }
 
 def -allow-override -hidden clang-show-completion-info %[
-	eval -draft %[
+    eval -draft %[
         exec '{(b'
-		%sh[
+        %sh[
             msg=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' )
-		    echo "echo -debug -- %{$msg}"
-		    desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
-			echo "eval -client $kak_client info -anchor ${kak_cursor_line}.${kak_cursor_column} ${desc}"
-	] ]
+            echo "echo -debug -- %{$msg}"
+            desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
+            echo "eval -client $kak_client info -anchor ${kak_cursor_line}.${kak_cursor_column} ${desc}"
+    ] ]
 ]
