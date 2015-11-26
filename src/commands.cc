@@ -1266,11 +1266,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     const bool disable_keymaps = not parser.get_switch("with-maps");
 
     Vector<RegisterRestorer> saved_registers;
-    if (auto regs = parser.get_switch("save-regs"))
-    {
-        for (auto& r : *regs)
-            saved_registers.emplace_back(r, context);
-    }
+    for (auto& r : parser.get_switch("save-regs").value_or("/\"|^@"))
+        saved_registers.emplace_back(r, context);
 
     ClientManager& cm = ClientManager::instance();
     if (auto bufnames = parser.get_switch("buffer"))
@@ -1699,9 +1696,6 @@ const CommandDesc change_working_directory_cmd = {
 
 void exec_keys(ConstArrayView<Key> keys, Context& context)
 {
-    RegisterRestorer quote('"', context);
-    RegisterRestorer slash('/', context);
-
     ScopedEdition edition(context);
 
     for (auto& key : keys)
