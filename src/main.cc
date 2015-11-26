@@ -44,14 +44,6 @@ String runtime_directory()
     return "/usr/share/kak";
 }
 
-static void write(int fd, StringView str)
-{
-    write(fd, str.data(), (size_t)(int)str.length());
-}
-
-static void write_stdout(StringView str) { write(1, str); }
-static void write_stderr(StringView str) { write(2, str); }
-
 void register_env_vars()
 {
     static const struct {

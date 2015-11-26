@@ -132,7 +132,7 @@ std::pair<String, int> ShellManager::eval(
     child_stdout.close_write_fd();
     child_stderr.close_write_fd();
 
-    write(child_stdin.write_fd(), input.data(), (int)input.length());
+    write(child_stdin.write_fd(), input);
     child_stdin.close_write_fd();
 
     auto wait_time = profile ? Clock::now() : TimePoint{};

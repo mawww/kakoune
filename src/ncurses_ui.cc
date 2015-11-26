@@ -3,6 +3,7 @@
 #include "containers.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
+#include "file.hh"
 #include "keys.hh"
 #include "register_manager.hh"
 #include "utf8_iterator.hh"
@@ -405,7 +406,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         for (auto& atom : mode_line)
             title += atom.content();
         title += " - Kakoune\007";
-        write(1, title.data(), (int)title.length());
+        write_stdout(title);
     }
 
     m_dirty = true;

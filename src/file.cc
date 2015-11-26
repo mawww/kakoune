@@ -197,7 +197,7 @@ bool file_exists(StringView filename)
     return stat(real_filename.c_str(), &st) == 0;
 }
 
-static void write(int fd, StringView data)
+void write(int fd, StringView data)
 {
     const char* ptr = data.data();
     ssize_t count   = (int)data.length();

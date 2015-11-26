@@ -162,8 +162,8 @@ void write_to_debug_buffer(StringView str)
 {
     if (not BufferManager::has_instance())
     {
-        write(2, str.data(), (int)str.length());
-        write(2, "\n", 1);
+        write_stderr(str);
+        write_stderr("\n");
         return;
     }
 

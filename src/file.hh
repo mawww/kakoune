@@ -42,6 +42,10 @@ String get_kak_binary_path();
 
 String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
+void write(int fd, StringView data);
+inline void write_stdout(StringView str) { write(1, str); }
+inline void write_stderr(StringView str) { write(2, str); }
+
 
 struct MappedFile
 {
