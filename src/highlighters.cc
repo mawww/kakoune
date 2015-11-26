@@ -18,6 +18,7 @@
 #include "utf8_iterator.hh"
 
 #include <locale>
+#include <cstdio>
 
 namespace Kakoune
 {
