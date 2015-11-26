@@ -659,7 +659,6 @@ const CommandDesc add_hook_cmd = {
             if (context.user_hooks_disabled())
                 return;
 
-            // Do not let hooks touch prompt history
             ScopedSetBool disable_history{context.history_disabled()};
 
             if (regex_match(param.begin(), param.end(), regex))
@@ -1261,9 +1260,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
-    const bool disable_hooks = parser.get_switch("no-hooks") or
-                               context.user_hooks_disabled();
-    const bool disable_keymaps = not parser.get_switch("with-maps");
+    const bool no_hooks = parser.get_switch("no-hooks") or context.user_hooks_disabled();
+    const bool no_keymaps = not parser.get_switch("with-maps");
 
     Vector<RegisterRestorer> saved_registers;
     for (auto& r : parser.get_switch("save-regs").value_or("/\"|^@"))
@@ -1277,10 +1275,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
                                        Context::Flags::Transient};
             Context& c = input_handler.context();
 
-            // Propagate user hooks disabled status to the temporary context
-            ScopedSetBool hook_disable(c.user_hooks_disabled(), disable_hooks);
-            ScopedSetBool keymaps_disable(c.keymaps_disabled(), disable_keymaps);
-            ScopedSetBool disable_history{c.history_disabled()};
+            ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
+            ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
+            ScopedSetBool disable_history(c.history_disabled());
 
             func(parser, c);
         };
@@ -1314,9 +1311,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         if (real_context->is_editing())
             c.disable_undo_handling();
 
-        ScopedSetBool hook_disable(c.user_hooks_disabled(), disable_hooks);
-        ScopedSetBool keymaps_disable(c.keymaps_disabled(), disable_keymaps);
-        ScopedSetBool disable_history{c.history_disabled()};
+        ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
+        ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
+        ScopedSetBool disable_history(c.history_disabled());
 
         if (parser.get_switch("itersel"))
         {
@@ -1341,11 +1338,13 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         if (parser.get_switch("itersel"))
             throw runtime_error("-itersel makes no sense without -draft");
 
-        ScopedSetBool hook_disable(real_context->user_hooks_disabled(), disable_hooks);
-        ScopedSetBool keymaps_disable(real_context->keymaps_disabled(), disable_keymaps);
-        ScopedSetBool disable_history{real_context->history_disabled()};
+        Context& c = *real_context;
 
-        func(parser, *real_context);
+        ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
+        ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
+        ScopedSetBool disable_history(c.history_disabled());
+
+        func(parser, c);
     }
 }
 
@@ -1448,6 +1447,8 @@ const CommandDesc prompt_cmd = {
                     return;
                 RegisterManager::instance()[reg] = ConstArrayView<String>(str.str());
 
+                ScopedSetBool disable_history{context.history_disabled()};
+
                 CommandManager::instance().execute(command, context, shell_context);
             });
     }
@@ -1478,6 +1479,8 @@ const CommandDesc menu_cmd = {
 
         if (count == modulo and parser.get_switch("auto-single"))
         {
+            ScopedSetBool disable_history{context.history_disabled()};
+
             CommandManager::instance().execute(parser[1], context);
             return;
         }
@@ -1496,6 +1499,8 @@ const CommandDesc menu_cmd = {
 
         context.input_handler().menu(choices,
             [=](int choice, MenuEvent event, Context& context) {
+                ScopedSetBool disable_history{context.history_disabled()};
+
                 if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
                   CommandManager::instance().execute(commands[choice], context, shell_context);
                 if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
@@ -1519,6 +1524,8 @@ const CommandDesc onkey_cmd = {
         context.input_handler().on_next_key(KeymapMode::None,
                                             [=](Key key, Context& context) {
             RegisterManager::instance()[reg] = key_to_str(key);
+            ScopedSetBool disable_history{context.history_disabled()};
+
             CommandManager::instance().execute(command, context, shell_context);
         });
     }
