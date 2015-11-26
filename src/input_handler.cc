@@ -984,6 +984,7 @@ public:
 
         last_insert().mode = mode;
         last_insert().keys.clear();
+        last_insert().disable_hooks = m_disable_hooks;
         context().hooks().run_hook("InsertBegin", "", context());
         prepare(m_insert_mode);
     }
@@ -1330,6 +1331,8 @@ void InputHandler::repeat_last_insert()
 
     Vector<Key> keys;
     swap(keys, m_last_insert.keys);
+    ScopedSetBool disable_hooks(context().user_hooks_disabled(),
+                                m_last_insert.disable_hooks);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.
     push_mode(new InputModes::Insert(*this, m_last_insert.mode));

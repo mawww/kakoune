@@ -94,8 +94,8 @@ private:
     void push_mode(InputMode* new_mode);
     std::unique_ptr<InputMode> pop_mode(InputMode* current_mode);
 
-    struct Insertion{ InsertMode mode; Vector<Key> keys; };
-    Insertion m_last_insert = {InsertMode::Insert, {}};
+    struct Insertion{ InsertMode mode; Vector<Key> keys; bool disable_hooks; };
+    Insertion m_last_insert = { InsertMode::Insert, {}, false };
 
     char   m_recording_reg = 0;
     String m_recorded_keys;
