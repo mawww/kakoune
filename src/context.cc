@@ -99,6 +99,13 @@ void Context::push_jump()
     m_current_jump = m_jump_list.end();
 }
 
+void Context::drop_jump()
+{
+    if (not m_jump_list.empty())
+        m_jump_list.pop_back();
+    m_current_jump = m_jump_list.end();
+}
+
 const SelectionList& Context::jump_forward()
 {
     if (m_current_jump != m_jump_list.end() and

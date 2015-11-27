@@ -1151,6 +1151,12 @@ void push_selections(Context& context, NormalParams)
                            get_face("Information") });
 }
 
+void drop_jump(Context& context, NormalParams)
+{
+    context.drop_jump();
+    context.print_status({ "dropped last jump",  get_face("Information") });
+}
+
 void align(Context& context, NormalParams)
 {
     auto& selections = context.selections();
@@ -1629,6 +1635,7 @@ static NormalCmdDesc cmds[] =
     { ctrl('i'), "jump forward in jump list",jump<Forward> },
     { ctrl('o'), "jump backward in jump list", jump<Backward> },
     { ctrl('s'), "push current selections in jump list", push_selections },
+    { ctrl('d'), "drop last jump from jump list", drop_jump },
 
     { '\'', "rotate main selection", rotate_selections },
     { alt('\''), "rotate selections content", rotate_selections_content },

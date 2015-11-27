@@ -114,6 +114,7 @@ public:
     StringView main_sel_register_value(StringView reg) const;
 
     void push_jump();
+    void drop_jump();
     const SelectionList& jump_forward();
     const SelectionList& jump_backward();
     void forget_jumps_to_buffer(Buffer& buffer);
