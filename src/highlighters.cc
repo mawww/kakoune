@@ -193,12 +193,6 @@ private:
     ValueId m_id;
 };
 
-static bool overlaps(const BufferRange& lhs, const BufferRange& rhs)
-{
-    return lhs.begin < rhs.begin ? lhs.end > rhs.begin
-                                 : rhs.end > lhs.begin;
-}
-
 using FacesSpec = Vector<std::pair<size_t, String>, MemoryDomain::Highlight>;
 
 class RegexHighlighter : public Highlighter
@@ -212,6 +206,11 @@ public:
 
     void highlight(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange range) override
     {
+        auto overlaps = [](const BufferRange& lhs, const BufferRange& rhs) {
+            return lhs.begin < rhs.begin ? lhs.end > rhs.begin
+                                         : rhs.end > lhs.begin;
+        };
+
         if (flags != HighlightFlags::Highlight or not overlaps(display_buffer.range(), range))
             return;
 

@@ -29,7 +29,7 @@ namespace
 
 struct Pipe
 {
-    Pipe() { pipe(m_fd); }
+    Pipe() { ::pipe(m_fd); }
     ~Pipe() { close_read_fd(); close_write_fd(); }
 
     int read_fd() const { return m_fd[0]; }
@@ -143,7 +143,7 @@ std::pair<String, int> ShellManager::eval(
             : FDWatcher(pipe.read_fd(),
                         [&contents, &pipe](FDWatcher& watcher, EventMode) {
                             char buffer[1024];
-                            size_t size = read(pipe.read_fd(), buffer, 1024);
+                            size_t size = ::read(pipe.read_fd(), buffer, 1024);
                             if (size <= 0)
                             {
                                 pipe.close_read_fd();
