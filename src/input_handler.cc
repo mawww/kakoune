@@ -972,9 +972,9 @@ public:
           m_autoshowcompl(true),
           m_idle_timer{TimePoint::max(),
                        [this](Timer& timer) {
-                           context().hooks().run_hook("InsertIdle", "", context());
                            if (m_autoshowcompl)
                                m_completer.update();
+                           context().hooks().run_hook("InsertIdle", "", context());
                        }},
           m_disable_hooks{context().user_hooks_disabled()}
     {
