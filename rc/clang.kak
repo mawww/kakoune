@@ -93,13 +93,27 @@ def -shell-params clang-parse -docstring "Parse the contents of the current buff
 
 def clang-complete -docstring "Complete the current selection with clang" %{ clang-parse -complete }
 
+def -hidden clang-show-completion-info %[ try %[
+    eval -draft %[
+        exec '<space>{(<a-k>^\(<ret>b'
+        %sh[
+            desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g; s/\\:/:/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
+            if [ -n "$desc" ]; then
+                echo "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} %{${desc}}}"
+            fi
+    ] ]
+] ]
+
 def clang-enable-autocomplete -docstring "Enable completion with clang" %{
     set window completers "option=clang_completions:%opt{completers}"
-    hook window -group clang-autocomplete InsertIdle .* %{ try %{
-        exec -draft <a-h><a-k>(\.|->|::).\'<ret>
-        echo 'completing...'
-        clang-complete
-    } }
+    hook window -group clang-autocomplete InsertIdle .* %{
+        try %{
+            exec -draft <a-h><a-k>(\.|->|::).\'<ret>
+            echo 'completing...'
+            clang-complete
+        }
+        clang-show-completion-info
+    }
     alias window complete clang-complete
 }
 
@@ -109,12 +123,11 @@ def clang-disable-autocomplete -docstring "Disable automatic clang completion" %
     unalias window complete clang-complete
 }
 
-def -hidden clang-show-error-info %{ %sh{
-    echo "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | while read line; do
+def -allow-override -hidden clang-show-error-info %{ %sh{
+    echo "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | if read line; then
         desc=$(echo ${line} | sed -e "s/^[[:digit:]]\+,//g; s/'/\\\\'/g")
         echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
-        break
-    done
+    fi
 } }
 
 def clang-enable-diagnostics -docstring "Activate automatic diagnostics of the code by clang" %{
@@ -146,14 +159,3 @@ def clang-diagnostics-next -docstring "Jump to the next line that contains an er
         fi
     )
 } }
-
-def -allow-override -hidden clang-show-completion-info %[
-    eval -draft %[
-        exec '{(b'
-        %sh[
-            msg=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' )
-            echo "echo -debug -- %{$msg}"
-            desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
-            echo "eval -client $kak_client info -anchor ${kak_cursor_line}.${kak_cursor_column} ${desc}"
-    ] ]
-]
