@@ -643,8 +643,7 @@ int run_pipe(StringView session)
     return 0;
 }
 
-int main(int argc, char* argv[])
-{
+__attribute__((constructor(100))) void startup() {
     setlocale(LC_ALL, "");
 
     signal(SIGSEGV, signal_handler);
@@ -654,7 +653,11 @@ int main(int argc, char* argv[])
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, [](int){});
     signal(SIGCHLD, [](int){});
+}
 
+
+int main(int argc, char* argv[])
+{
     Vector<String> params;
     for (size_t i = 1; i < argc; ++i)
         params.push_back(argv[i]);
