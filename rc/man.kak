@@ -38,13 +38,23 @@ def -shell-params \
     prefix=${1:0:${kak_pos_in_token}}
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
         candidate=$(basename ${page%%.[1-8]*})
+        pagenum=$(sed -r 's,^.+/.+\.([1-8][^.]*)\..+$,\1,' <<< $page)
         case $candidate in
             *\*) ;;
-            *) echo $candidate ;;
+            *) echo $candidate\($pagenum\);;
         esac
     done
   } \
   man -docstring "Manpages viewer wrapper" %{ %sh{
-    [ -z "$@" ] && set -- "$kak_selection"
-    echo "eval -try-client %opt{docsclient} _man $@"
+    subject=${@-$kak_selection}
+    pagenum=""
+
+    ## The completion suggestions display the page number, strip them if present
+    if [[ $subject =~ [a-zA-Z_-]+\([^\)]+\) ]]; then
+        pagenum=${subject##*\(}
+        pagenum=${pagenum:0:$((${#pagenum} - 1))}
+        subject=${subject%%\(*}
+    fi
+
+    echo "eval -try-client %opt{docsclient} _man $pagenum $subject"
 } }
