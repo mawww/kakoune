@@ -721,9 +721,23 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     const String& commands = parser[1];
     Command cmd;
     ParameterDesc desc;
-    if (parser.get_switch("shell-params"))
+    if (auto params = parser.get_switch("params"))
     {
-        desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional };
+        size_t min = 0, max = -1;
+        StringView counts = *params;
+        static const Regex re{R"((\d+)?..(\d+)?)"};
+        MatchResults<const char*> res;
+        if (regex_match(counts.begin(), counts.end(), res, re))
+        {
+            if (res[1].matched)
+                min = (size_t)str_to_int({res[1].first, res[1].second});
+            if (res[2].matched)
+                max = (size_t)str_to_int({res[2].first, res[2].second});
+        }
+        else
+            min = max = (size_t)str_to_int(counts);
+
+        desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, min, max };
         cmd = [=](const ParametersParser& parser, Context& context, const ShellContext&) {
             CommandManager::instance().execute(commands, context, { params_to_shell(parser) });
         };
@@ -815,15 +829,16 @@ const CommandDesc define_command_cmd = {
     nullptr,
     "def <switches> <name> <cmds>: define a command <name> executing <cmds>",
     ParameterDesc{
-        { { "shell-params",      { false, "pass parameters to each shell escape as $0..$N" } },
-          { "allow-override",    { false, "allow overriding an existing command" } },
-          { "hidden",            { false, "do not display the command in completion candidates" } },
-          { "docstring",         { true,  "define the documentation string for command" } },
-          { "file-completion",   { false, "complete parameters using filename completion" } },
-          { "client-completion", { false, "complete parameters using client name completion" } },
-          { "buffer-completion", { false, "complete parameters using buffer name completion" } },
+        { { "params",             { true, "take parameters, accessible to each shell escape as $0..$N\n"
+                                          "parameter should take the form <count> or <min>..<max> (both omittable)" } },
+          { "allow-override",     { false, "allow overriding an existing command" } },
+          { "hidden",             { false, "do not display the command in completion candidates" } },
+          { "docstring",          { true,  "define the documentation string for command" } },
+          { "file-completion",    { false, "complete parameters using filename completion" } },
+          { "client-completion",  { false, "complete parameters using client name completion" } },
+          { "buffer-completion",  { false, "complete parameters using buffer name completion" } },
           { "command-completion", { false, "complete parameters using kakoune command completion" } },
-          { "shell-completion",  { true,  "complete the parameters using the given shell-script" } } },
+          { "shell-completion",   { true,  "complete the parameters using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
     },

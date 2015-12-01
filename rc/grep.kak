@@ -2,7 +2,7 @@ decl str grepcmd 'grep -RHn'
 decl str toolsclient
 decl -hidden int _grep_current_line 0
 
-def -shell-params -file-completion \
+def -params .. -file-completion \
     grep -docstring "Grep utility wrapper" %{ %sh{
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}

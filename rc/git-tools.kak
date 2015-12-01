@@ -25,7 +25,7 @@ decl line-flag-list git_diff_flags
 
 face GitBlame default,magenta
 
-def -shell-params \
+def -params 1.. \
   -docstring %sh{printf "%%{Git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}"} \
   -shell-completion %{
     shift $(expr ${kak_token_to_complete})

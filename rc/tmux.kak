@@ -12,7 +12,7 @@ hook global KakBegin .* %{
 }
 
 ## Temporarily override the default client creation command
-def -hidden -shell-params tmux-new-impl %{
+def -hidden -params 1.. tmux-new-impl %{
     %sh{
         if [ -z "$TMUX" ]; then
             echo "echo -color Error This command is only available in a tmux session"
@@ -25,20 +25,20 @@ def -hidden -shell-params tmux-new-impl %{
     }
 }
 
-def tmux-new-vertical -shell-params -command-completion -docstring "Create a new vertical pane in tmux" %{
+def tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane in tmux" %{
     %sh{ echo "tmux-new-impl 'split-window -v' $@" }
 }
 
-def tmux-new-horizontal -shell-params -command-completion -docstring "Create a new horizontal pane in tmux" %{
+def tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane in tmux" %{
     %sh{ echo "tmux-new-impl 'split-window -h' $@" }
 }
 
-def tmux-new-window -shell-params -command-completion -docstring "Create a new horizontal pane in tmux" %{
+def tmux-new-window -params .. -command-completion -docstring "Create a new horizontal pane in tmux" %{
     %sh{ echo "tmux-new-impl 'new-window' $@" }
 }
 
 def -docstring "focus given client" \
-    -shell-params -client-completion \
+    -params 0..1 -client-completion \
     tmux-focus %{ %sh{
     if [ $# -gt 1 ]; then
         echo "echo -color Error 'too many arguments, use focus [client]'"

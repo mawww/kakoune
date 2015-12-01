@@ -5,7 +5,7 @@
 
 decl str-list ctagsfiles 'tags'
 
-def -shell-params \
+def -params 0..1 \
     -shell-completion '
         ( for tags in $(echo "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
               do readtags -t "${tags}" -p "$1"

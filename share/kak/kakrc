@@ -1,11 +1,11 @@
-def -shell-params runtime %{ %sh{
+def -params 1.. runtime %{ %sh{
     while [ $# -gt 0 ]; do
         echo "source '${kak_runtime}/$1'"
         shift
     done
 }}
 
-def -shell-params -docstring "colorscheme <name>: enable named colorscheme" \
+def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
   -shell-completion %{
     prefix=${1:0:${kak_pos_in_token}}
     (

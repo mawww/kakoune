@@ -14,7 +14,7 @@ hook global WinSetOption filetype=(?!man).* %{
     rmhooks window man-hooks
 }
 
-def -hidden -shell-params _man %{ %sh{
+def -hidden -params .. _man %{ %sh{
     manout=$(mktemp /tmp/kak-man-XXXXXX)
     colout=$(mktemp /tmp/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" > $manout
@@ -33,7 +33,7 @@ def -hidden -shell-params _man %{ %sh{
     fi
 } }
 
-def -shell-params \
+def -params .. \
   -shell-completion %{
     prefix=${1:0:${kak_pos_in_token}}
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do

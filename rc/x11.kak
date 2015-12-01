@@ -19,7 +19,7 @@ decl str termcmd %sh{
 }
 
 def -docstring 'create a new kak client for current session' \
-    -shell-params \
+    -params .. \
     -command-completion \
     x11-new %{ %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
@@ -31,7 +31,7 @@ def -docstring 'create a new kak client for current session' \
 }}
 
 def -docstring 'focus given client\'s window' \
-    -shell-params -client-completion \
+    -params 0..1 -client-completion \
     x11-focus %{ %sh{
         if [ $# -gt 1 ]; then
             echo "echo -color Error 'too many arguments, use focus [client]'"

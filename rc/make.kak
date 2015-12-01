@@ -2,7 +2,7 @@ decl str makecmd make
 decl str toolsclient
 decl -hidden int _make_current_error_line
 
-def -shell-params make -docstring "Make utility wrapper" %{ %sh{
+def -params .. make -docstring "Make utility wrapper" %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
