@@ -1696,6 +1696,8 @@ const CommandDesc change_working_directory_cmd = {
     {
         if (chdir(parse_filename(parser[0]).c_str()) != 0)
             throw runtime_error(format("cannot change to directory '{}'", parser[0]));
+        for (auto& buffer : BufferManager::instance())
+            buffer->update_display_name();
     }
 };
 

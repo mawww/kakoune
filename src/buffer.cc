@@ -135,6 +135,12 @@ bool Buffer::set_name(String name)
     return false;
 }
 
+void Buffer::update_display_name()
+{
+    if (m_flags & Flags::File)
+        m_display_name = compact_path(m_name);
+}
+
 BufferIterator Buffer::iterator_at(ByteCoord coord) const
 {
     return is_end(coord) ? end() : BufferIterator(*this, clamp(coord));
