@@ -54,6 +54,7 @@ struct Token
         RegisterExpand,
         OptionExpand,
         ValExpand,
+        ArgExpand,
         CommandSeparator
     };
     Token() : m_type(Type::Raw) {}
@@ -198,6 +199,8 @@ Token::Type token_type(StringView type_name)
         return Token::Type::OptionExpand;
     else if (type_name == "val")
         return Token::Type::ValExpand;
+    else if (type_name == "arg")
+        return Token::Type::ArgExpand;
     else if (throw_on_invalid)
         throw unknown_expand{type_name};
     else
@@ -342,6 +345,20 @@ String expand_token(const Token& token, const Context& context,
         if (it != shell_context.env_vars.end())
             return it->value;
         return ShellManager::instance().get_val(content, context);
+    }
+    case Token::Type::ArgExpand:
+    {
+        if (content == "#")
+            return to_string(shell_context.params.size());
+        else if (content == "@")
+            return join(shell_context.params, ' ');
+
+        const int arg = str_to_int(content)-1;
+        if (arg < 0)
+            throw runtime_error("invalid argument index");
+        if (arg < shell_context.params.size())
+            return shell_context.params[arg];
+        return {};
     }
     case Token::Type::RawEval:
         return expand(content, context, shell_context);

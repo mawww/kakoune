@@ -629,6 +629,9 @@ Supported types are:
      option
  * `val`: value expansion, gives access to the environment variable available
      to the Shell expansion. The `kak_` prefix is not used there.
+ * `arg`: argument expansion, gives access to the arguments of the current
+     command, the content can be a number, or `#` for the argument count,
+     or `@` for all arguments concatenated.
 
 for example you can display last search pattern with
 
