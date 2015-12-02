@@ -348,17 +348,14 @@ String expand_token(const Token& token, const Context& context,
     }
     case Token::Type::ArgExpand:
     {
-        if (content == "#")
-            return to_string(shell_context.params.size());
-        else if (content == "@")
-            return join(shell_context.params, ' ');
+        auto& params = shell_context.params;
+        if (content == '@')
+            return join(params, ' ');
 
         const int arg = str_to_int(content)-1;
         if (arg < 0)
             throw runtime_error("invalid argument index");
-        if (arg < shell_context.params.size())
-            return shell_context.params[arg];
-        return {};
+        return arg < params.size() ? params[arg] : String{};
     }
     case Token::Type::RawEval:
         return expand(content, context, shell_context);
