@@ -1295,15 +1295,20 @@ New commands can be defined using the `:def` command.
 
 `def` can also takes some flags:
 
- * `-shell-params`: pass parameters given to commands as positional parameters
-                    to any shell expansions used in the command.
+ * `-params <num>`: the command accept <num> parameters, with <num>
+    either a number, or of the form <min>..<max>, with both <min> and
+    <max> omittable.
  * `-file-completion`: try file completion on any parameter passed
-                       to this command
+    to this command
+ * `-client-completion`: try client name completion on any parameter
+    passed to this command
+ * `-buffer-completion`: try buffer name completion on any parameter
+    passed to this command
  * `-shell-completion`: following string is a shell command which takes
-                        parameters as positional params and output one
-                        completion candidate per line.
+    parameters as positional params and output one completion candidate
+    per line.
  * `-allow-override`: allow the new command to replace an exisiting one
-                      with the same name.
+    with the same name.
  * `-hidden`: do not show the command in command name completions
  * `-docstring`: define the documentation string for the command
 
