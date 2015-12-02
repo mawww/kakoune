@@ -8,11 +8,15 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
     %sh{
         function escape_regex_chars {
             ## Escape characters that can be interpreted as modifiers/repetitors by the regex engine
-            sed -r 's,(\*|\+|\[|\]|\{\}|\||\(|\)|\?),\\\1,g' <<< "$@"
+            sed -r 's,(\*|\+|\[|\]|\{\}|\||\(|\)|\?|\^|\$),\\\1,g' <<< "$@"
+        }
+        function exec_proof {
+            ## Replace some special characters that are interpreted differently in `exec`
+            sed -r -e 's,<,<lt,g' -e 's,>,gt>,g' -e 's,<lt\b,<lt>,g' -e 's,\bgt>,<gt>,g' <<< "$@"
         }
 
-        readonly opening="${kak_opt_comment_selection_chars%%:*}"
-        readonly closing="${kak_opt_comment_selection_chars##*:}"
+        readonly opening=$(exec_proof "${kak_opt_comment_selection_chars%%:*}")
+        readonly closing=$(exec_proof "${kak_opt_comment_selection_chars##*:}")
         readonly opening_escaped=$(escape_regex_chars "${opening}")
         readonly closing_escaped=$(escape_regex_chars "${closing}")
 
