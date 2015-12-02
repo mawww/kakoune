@@ -26,15 +26,15 @@ def -hidden -params 1.. tmux-new-impl %{
 }
 
 def tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane in tmux" %{
-    %sh{ echo "tmux-new-impl 'split-window -v' $@" }
+    tmux-new-impl 'split-window -v' %arg{@}
 }
 
 def tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane in tmux" %{
-    %sh{ echo "tmux-new-impl 'split-window -h' $@" }
+    tmux-new-impl 'split-window -h' %arg{@}
 }
 
 def tmux-new-window -params .. -command-completion -docstring "Create a new horizontal pane in tmux" %{
-    %sh{ echo "tmux-new-impl 'new-window' $@" }
+    tmux-new-impl 'new-window' %arg{@}
 }
 
 def -docstring "focus given client" \
