@@ -5,7 +5,7 @@ decl -hidden str-list clang_completions
 decl -hidden line-flag-list clang_flags
 decl -hidden str clang_errors
 
-def clang-parse -docstring "Parse the contents of the current buffer with clang" %{
+def clang-parse -params 0..1 -docstring "Parse the contents of the current buffer with clang" %{
     %sh{
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
