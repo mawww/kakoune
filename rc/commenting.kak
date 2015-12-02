@@ -30,10 +30,10 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
                 exec -draft %{<a-K>\A${opening_escaped}.*${closing_escaped}\z<ret>}
 
                 ## Comment the selection
-                exec %{a ${closing}<esc>i${opening} <esc>$((${#opening} + 1))H}
+                exec %{a${closing}<esc>i${opening}<esc>${#opening}H}
             } catch %{
                 ## Uncomment the commented selection
-                exec -draft %{s(\A${opening_escaped} )|( ${closing_escaped}\z)<ret>d}
+                exec -draft %{s(\A${opening_escaped})|(${closing_escaped}\z)<ret>d}
             }
         }"
     }
@@ -67,7 +67,7 @@ def comment-line -docstring "Comment/uncomment the current line" %{
                 exec -draft %{<a-K>^${opening_escaped}<ret>}
 
                 ## Comment the line
-                exec %{i${opening} <esc>$((${#opening} + 1))H}
+                exec %{i${opening}<esc>${#opening}H}
             } catch %{
                 ## Uncomment the line
                 exec -draft %{s^${opening_escaped}\h*<ret>d}
