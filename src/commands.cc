@@ -1085,10 +1085,10 @@ const CommandDesc unset_option_cmd = {
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        if (parser[0] == "global")
+        auto& options = get_options(parser[0], context, parser[1]);
+        if (&options == &GlobalScope::instance().options())
             throw runtime_error("Cannot unset options in global scope");
-
-        get_options(parser[0], context, parser[1]).unset_option(parser[1]);
+        options.unset_option(parser[1]);
     }
 };
 
