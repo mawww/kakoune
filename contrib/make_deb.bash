@@ -104,6 +104,10 @@ function main {
     echo "Setting the prefix of the installation procedure"
     sed -r -i 's,(PREFIX \?=) .+,\1 /usr,' "${DIR_KAKOUNE}/Makefile"
 
+## FIXME: make a patch
+    echo "Removing debug symbols from the compilation flags"
+    sed -r -i 's,^(CXXFLAGS.+)-g\b,\1,' "${DIR_KAKOUNE}/Makefile"
+
     echo "Creating a tar archive of the code"
     tar cf "${DIR_KAKOUNE}.tar" "${DIR_KAKOUNE}"
 
@@ -149,6 +153,7 @@ function main {
     replace_field Section debian/control editors
 
 ## TODO: generate a changelog
+    echo -e "kakoune (${VERSION_KAKOUNE}) stable; urgency=low\n\n  * Initial release\n\n -- ${maintainer_fullname} <${maintainer_email}>  $(date -R)" > debian/changelog
 
     echo "Modifying the source in the copyright file"
     replace_field Source debian/copyright "${DEFAULT_PACKAGE_SOURCE}"
@@ -157,11 +162,11 @@ function main {
     replace_field License debian/copyright "${DEFAULT_PACKAGE_LICENSE}"
 
     echo "Building the package"
-    debuild
+    debuild -eCXXFLAGS="" -i -us -uc -b
 
-    readonly PATH_PACKAGE_CREATED=$(find "${PATH_DIR_TMP}" -type f -iname "${DIR_KAKOUNE}-\*.deb" | sed -n 1p)
+    readonly PATH_PACKAGE_CREATED=$(find "${PATH_DIR_TMP}" -type f -iname 'kakoune_*.deb' | sed -n 1p)
     if [ -z "${PATH_PACKAGE_CREATED}" ]; then
-        echo "WARNING: no package was create, check the logs at ${PATH_DIR_TMP}"
+        echo "WARNING: no package was created, check the logs at ${PATH_DIR_TMP}"
         exit 1
     fi
 
