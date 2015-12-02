@@ -479,6 +479,9 @@ void CommandManager::execute(StringView command_line,
 
             it -= shell_tokens.size() + 1;
         }
+        else if (it->type() == Token::Type::ArgExpand and it->content() == '@')
+            std::copy(shell_context.params.begin(), shell_context.params.end(),
+                      std::back_inserter(params));
         else
             params.push_back(expand_token(*it, context, shell_context));
     }
