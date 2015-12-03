@@ -556,23 +556,26 @@ int run_server(StringView session, StringView init_command,
     return 0;
 }
 
-int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
+int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView> files, bool quiet)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
     ShellManager    shell_manager;
+    CommandManager  command_manager;
     BufferManager   buffer_manager;
     RegisterManager register_manager;
+    ClientManager   client_manager;
 
     register_options();
     register_env_vars();
     register_registers();
+    register_commands();
 
     try
     {
         auto keys = parse_keys(keystr);
 
-        auto apply_keys_to_buffer = [&](Buffer& buffer)
+        auto apply_to_buffer = [&](Buffer& buffer)
         {
             try
             {
@@ -580,6 +583,10 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
                     { buffer, Selection{{0,0}, buffer.back_coord()} },
                     Context::Flags::Transient
                 };
+
+                if (not commands.empty())
+                    command_manager.execute(commands, input_handler.context(),
+                                            ShellContext{});
 
                 for (auto& key : keys)
                     input_handler.handle_key(key);
@@ -596,7 +603,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
         {
             Buffer* buffer = open_file_buffer(file);
             write_buffer_to_file(*buffer, file + ".kak-bak");
-            apply_keys_to_buffer(*buffer);
+            apply_to_buffer(*buffer);
             write_buffer_to_file(*buffer, file);
             buffer_manager.delete_buffer(*buffer);
         }
@@ -604,7 +611,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet)
         {
             Buffer* buffer = new Buffer("*stdin*", Buffer::Flags::None,
                                         read_fd(0), InvalidTime);
-            apply_keys_to_buffer(*buffer);
+            apply_to_buffer(*buffer);
             write_buffer_to_fd(*buffer, 1);
             buffer_manager.delete_buffer(*buffer);
         }
@@ -697,16 +704,17 @@ int main(int argc, char* argv[])
             }
             return run_pipe(*session);
         }
-        else if (auto keys = parser.get_switch("f"))
+
+        auto init_command = parser.get_switch("e").value_or(StringView{});
+
+        if (auto keys = parser.get_switch("f"))
         {
             Vector<StringView> files;
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-            return run_filter(*keys, files, (bool)parser.get_switch("q"));
+            return run_filter(*keys, init_command, files, (bool)parser.get_switch("q"));
         }
-
-        auto init_command = parser.get_switch("e").value_or(StringView{});
 
         if (auto server_session = parser.get_switch("c"))
         {
