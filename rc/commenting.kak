@@ -8,7 +8,7 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
     %sh{
         function exec_proof {
             ## Replace the '<' sign that is interpreted differently in `exec`
-            sed -r 's,<,<lt>,g' <<< "$@"
+            echo "$@" | sed -r 's,<,<lt>,g'
         }
 
         readonly opening=$(exec_proof "${kak_opt_comment_selection_chars%%:*}")
@@ -39,13 +39,8 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
 
 def comment-line -docstring "Comment/uncomment the current line" %{
     %sh{
-        function escape_regex_chars {
-            ## Escape characters that can be interpreted as modifiers/repetitors by the regex engine
-            sed -r 's,(\*|\+|\[|\]|\{\}|\||\(|\)|\?),\\\1,g' <<< "$@"
-        }
-
         readonly opening="${kak_opt_comment_line_chars}"
-        readonly opening_escaped=$(escape_regex_chars "${opening}")
+        readonly opening_escaped="\Q${opening}\E"
 
         if [ -z "${opening}" ]; then
             echo "The \`comment_line_chars\` variable is empty, couldn't comment the line" >&2
