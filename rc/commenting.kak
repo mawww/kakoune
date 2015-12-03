@@ -6,15 +6,13 @@ decl str comment_line_chars "//"
 
 def comment-selection -docstring "Comment/uncomment the current selection" %{
     %sh{
-        function escape_regex_chars {
-            ## Escape characters that can be interpreted as modifiers/repetitors by the regex engine
-            sed -r 's,(\*|\+|\[|\]|\{\}|\||\(|\)|\?),\\\1,g' <<< "$@"
+        function exec_proof {
+            ## Replace the '<' sign that is interpreted differently in `exec`
+            sed -r 's,<,<lt>,g' <<< "$@"
         }
 
-        readonly opening="${kak_opt_comment_selection_chars%%:*}"
-        readonly closing="${kak_opt_comment_selection_chars##*:}"
-        readonly opening_escaped=$(escape_regex_chars "${opening}")
-        readonly closing_escaped=$(escape_regex_chars "${closing}")
+        readonly opening=$(exec_proof "${kak_opt_comment_selection_chars%%:*}")
+        readonly closing=$(exec_proof "${kak_opt_comment_selection_chars##*:}")
 
         if [ -z "${opening}" -o -z "${closing}" ]; then
             echo "The \`comment_selection_chars\` variable is empty, couldn't comment the selection" >&2
@@ -27,13 +25,13 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
 
             try %{
                 ## The selection has already been commented
-                exec -draft %{<a-K>\A${opening_escaped}.*${closing_escaped}\z<ret>}
+                exec -draft %{<a-K>\A\Q${opening}\E.*\Q${closing}\E\z<ret>}
 
                 ## Comment the selection
-                exec %{a ${closing}<esc>i${opening} <esc>$((${#opening} + 1))H}
+                exec %{a${closing}<esc>i${opening}<esc>${#opening}H}
             } catch %{
                 ## Uncomment the commented selection
-                exec -draft %{s(\A${opening_escaped} )|( ${closing_escaped}\z)<ret>d}
+                exec -draft %{s(\A\Q${opening}\E)|(\Q${closing}\E\z)<ret>d}
             }
         }"
     }
@@ -67,7 +65,7 @@ def comment-line -docstring "Comment/uncomment the current line" %{
                 exec -draft %{<a-K>^${opening_escaped}<ret>}
 
                 ## Comment the line
-                exec %{i${opening} <esc>$((${#opening} + 1))H}
+                exec %{i${opening}<esc>${#opening}H}
             } catch %{
                 ## Uncomment the line
                 exec -draft %{s^${opening_escaped}\h*<ret>d}
