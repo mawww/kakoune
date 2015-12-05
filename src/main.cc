@@ -357,18 +357,6 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
     return make_unique<LocalUI>();
 }
 
-void create_local_client(std::unique_ptr<UserInterface> ui, StringView init_command, bool startup_error)
-{
-     local_client = ClientManager::instance().create_client(
-        std::move(ui), get_env_vars(), init_command);
-
-    if (startup_error)
-        local_client->print_status({
-            "error during startup, see *debug* buffer for details",
-            get_face("Error")
-        });
-}
-
 void signal_handler(int signal)
 {
     NCursesUI::abort();
@@ -518,7 +506,16 @@ int run_server(StringView session, StringView init_command,
         new Buffer("*scratch*", Buffer::Flags::None);
 
     if (not daemon)
-        create_local_client(create_local_ui(dummy_ui), init_command, startup_error);
+    {
+         local_client = client_manager.create_client(
+            create_local_ui(dummy_ui), get_env_vars(), init_command);
+
+        if (startup_error)
+            local_client->print_status({
+                "error during startup, see *debug* buffer for details",
+                get_face("Error")
+            });
+    }
 
     try
     {
