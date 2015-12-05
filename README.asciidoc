@@ -649,8 +649,13 @@ Some of Kakoune state is available through environment variables:
 
  * `kak_selection`: content of the main selection
  * `kak_selections`: content of the selection separated by colons, colons in
-    the selection contents are escapted with a backslash.
+        the selection contents are escapted with a backslash.
+ * `kak_selection_desc`: range of the main selection, represented as `anchor,cursor`;
+        anchor and cursor are in this format: `line.column` 
+ * `kak_selections_desc`: range of the selecations separated by colons
  * `kak_bufname`: name of the current buffer
+ * `kak_buffile`: full path of the file or same as `kak_bufname` when
+       there's not associated file
  * `kak_buflist`: the current buffer list, each buffer seperated by a colon
  * `kak_timestamp`: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
@@ -658,11 +663,16 @@ Some of Kakoune state is available through environment variables:
  * `kak_opt_<name>`: value of option <name>
  * `kak_reg_<r>`: value of register <r>
  * `kak_socket`: filename of session socket (/tmp/kak-<session>)
+ * `kak_session`: name of the current session
  * `kak_client`: name of current client
  * `kak_cursor_line`: line of the end of the main selection
  * `kak_cursor_column`: column of the end of the main selection (in byte)
  * `kak_cursor_char_column`: column of the end of the main selection (in character)
+ * `kak_window_width`: widh of the current kakoune window
+ * `kak_window_height`: height of the current kakoune window
  * `kak_hook_param`: filtering text passed to the currently executing hook
+ * `kak_client_env_<name>`: value of the <name> variable in the client environment.
+	Example: $kak_client_env_SHELL is the SHELL variable
 
 Note that in order to make only needed information available, Kakoune needs
 to find the environment variable reference in the shell script executed.
