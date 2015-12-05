@@ -43,8 +43,9 @@ private:
     int m_fd[2];
 };
 
-pid_t spawn_process(StringView cmdline, ConstArrayView<String> params, ConstArrayView<String> kak_env,
-                    const Pipe& child_stdout, const Pipe& child_stdin, const Pipe& child_stderr)
+template<typename Func>
+pid_t spawn_shell(StringView cmdline, ConstArrayView<String> params,
+                  ConstArrayView<String> kak_env, Func setup_child)
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
@@ -65,39 +66,16 @@ pid_t spawn_process(StringView cmdline, ConstArrayView<String> params, ConstArra
     if (pid_t pid = fork())
         return pid;
 
-    auto move = [](int oldfd, int newfd) { dup2(oldfd, newfd); close(oldfd); };
-
-    close(child_stdout.write_fd());
-    move(child_stdout.read_fd(), 0);
-
-    close(child_stdin.read_fd());
-    move(child_stdin.write_fd(), 1);
-
-    close(child_stderr.read_fd());
-    move(child_stderr.write_fd(), 2);
+    setup_child();
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
     exit(-1);
     return -1;
 }
 
-}
-
-std::pair<String, int> ShellManager::eval(
-    StringView cmdline, const Context& context, StringView input,
-    Flags flags, const ShellContext& shell_context)
+Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
 {
     static const Regex re(R"(\bkak_(\w+)\b)");
-
-    using Clock = std::chrono::steady_clock;
-    using TimePoint = Clock::time_point;
-
-    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
-    const bool profile = debug_flags & DebugFlags::Profile;
-    if (debug_flags & DebugFlags::Shell)
-        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
-
-    auto start_time = profile ? Clock::now() : TimePoint{};
 
     Vector<String> kak_env;
     for (RegexIterator<const char*> it{cmdline.begin(), cmdline.end(), re}, end;
@@ -116,17 +94,49 @@ std::pair<String, int> ShellManager::eval(
         try
         {
             const String& value = var_it != shell_context.env_vars.end() ?
-                var_it->value : get_val(name, context);
+                var_it->value : ShellManager::instance().get_val(name, context);
 
             kak_env.push_back(format("kak_{}={}", name, value));
         } catch (runtime_error&) {}
     }
 
+    return kak_env;
+}
+
+}
+
+std::pair<String, int> ShellManager::eval(
+    StringView cmdline, const Context& context, StringView input,
+    Flags flags, const ShellContext& shell_context)
+{
+    using Clock = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+
+    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
+    const bool profile = debug_flags & DebugFlags::Profile;
+    if (debug_flags & DebugFlags::Shell)
+        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+
+    auto start_time = profile ? Clock::now() : TimePoint{};
+
+    auto kak_env = generate_env(cmdline, context, shell_context);
+
     auto spawn_time = profile ? Clock::now() : TimePoint{};
 
     Pipe child_stdin, child_stdout, child_stderr;
-    pid_t pid = spawn_process(cmdline, shell_context.params, kak_env,
-                              child_stdin, child_stdout, child_stderr);
+    pid_t pid = spawn_shell(cmdline, shell_context.params, kak_env,
+                            [&child_stdin, &child_stdout, &child_stderr] {
+        auto move = [](int oldfd, int newfd) { dup2(oldfd, newfd); close(oldfd); };
+
+        close(child_stdin.write_fd());
+        move(child_stdin.read_fd(), 0);
+
+        close(child_stdout.read_fd());
+        move(child_stdout.write_fd(), 1);
+
+        close(child_stderr.read_fd());
+        move(child_stderr.write_fd(), 2);
+    });
 
     child_stdin.close_read_fd();
     child_stdout.close_write_fd();
