@@ -735,10 +735,9 @@ static CharCoord compute_needed_size(StringView str)
     return res;
 }
 
-static CharCoord compute_pos(CharCoord anchor, CharCoord size, CharCoord scrsize,
-                             CharCoord rect_to_avoid_pos = CharCoord{},
-                             CharCoord rect_to_avoid_size = CharCoord{},
-                             bool prefer_above = false)
+static CharCoord compute_pos(CharCoord anchor, CharCoord size,
+                             NCursesUI::Rect rect, NCursesUI::Rect to_avoid,
+                             bool prefer_above)
 {
     CharCoord pos;
     if (prefer_above)
@@ -747,30 +746,30 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size, CharCoord scrsize
         if (pos.line < 0)
             prefer_above = false;
     }
+    auto rect_end = rect.pos + rect.size;
     if (not prefer_above)
     {
         pos = anchor + CharCoord{1_line};
-        if (pos.line + size.line >= scrsize.line)
-            pos.line = max(0_line, anchor.line - size.line);
+        if (pos.line + size.line > rect_end.line)
+            pos.line = max(rect.pos.line, anchor.line - size.line);
     }
-    if (pos.column + size.column >= scrsize.column)
-        pos.column = max(0_char, scrsize.column - size.column);
+    if (pos.column + size.column > rect_end.column)
+        pos.column = max(rect.pos.column, rect_end.column - size.column);
 
-    if (rect_to_avoid_size != CharCoord{})
+    if (to_avoid.size != CharCoord{})
     {
-        CharCoord rectbeg = rect_to_avoid_pos;
-        CharCoord rectend = rectbeg + rect_to_avoid_size;
+        CharCoord to_avoid_end = to_avoid.pos + to_avoid.size;
 
         CharCoord end = pos + size;
 
         // check intersection
-        if (not (end.line < rectbeg.line or end.column < rectbeg.column or
-                 pos.line > rectend.line or pos.column > rectend.column))
+        if (not (end.line < to_avoid.pos.line or end.column < to_avoid.pos.column or
+                 pos.line > to_avoid_end.line or pos.column > to_avoid_end.column))
         {
-            pos.line = min(rectbeg.line, anchor.line) - size.line;
+            pos.line = min(to_avoid.pos.line, anchor.line) - size.line;
             // if above does not work, try below
             if (pos.line < 0)
-                pos.line = max(rectend.line, anchor.line);
+                pos.line = max(to_avoid_end.line, anchor.line);
         }
     }
 
@@ -865,14 +864,14 @@ void NCursesUI::info_show(StringView title, StringView content,
     }
 
     CharCoord size = compute_needed_size(info_box), pos;
+    const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
     if (style == InfoStyle::MenuDoc and m_menu)
         pos = m_menu.pos + CharCoord{0_line, m_menu.size.column};
     else
-        pos = compute_pos(anchor, size, m_dimensions, m_menu.pos, m_menu.size,
-                          style == InfoStyle::InlineAbove);
+        pos = compute_pos(anchor, size, rect, m_menu, style == InfoStyle::InlineAbove);
 
-    // The info window will hide the status line
-    if (pos.line + size.line > m_dimensions.line)
+    // The info box does not fit
+    if (pos < rect.pos or pos + size > rect.pos + rect.size)
         return;
 
     m_info.create(pos, size);

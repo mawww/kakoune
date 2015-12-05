@@ -52,6 +52,12 @@ public:
     CharCoord dimensions() override;
 
     static void abort();
+
+    struct Rect
+    {
+        CharCoord pos;
+        CharCoord size;
+    };
 private:
     void check_resize(bool force = false);
     void redraw();
@@ -72,7 +78,7 @@ private:
     UnorderedMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
     int m_next_color = 16;
 
-    struct Window
+    struct Window : Rect
     {
         void create(const CharCoord& pos, const CharCoord& size);
         void destroy();
@@ -81,8 +87,6 @@ private:
         explicit operator bool() const { return win; }
 
         NCursesWin* win = nullptr;
-        CharCoord pos;
-        CharCoord size;
     };
 
     void mark_dirty(const Window& win);
