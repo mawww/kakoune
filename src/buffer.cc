@@ -17,43 +17,47 @@
 namespace Kakoune
 {
 
-struct ParsedLines { BufferLines lines; bool bom, crlf; };
+struct ParsedLines
+{
+    BufferLines lines;
+    ByteOrderMark bom = ByteOrderMark::None;
+    EolFormat eolformat = EolFormat::Lf;
+};
 
 static ParsedLines parse_lines(StringView data)
 {
-    bool bom = false, crlf = false;
+    ParsedLines res;
     const char* pos = data.begin();
     if (data.substr(0, 3_byte) == "\xEF\xBB\xBF")
     {
-        bom = true;
+        res.bom = ByteOrderMark::Utf8;
         pos = data.begin() + 3;
     }
 
-    BufferLines lines;
     while (pos < data.end())
     {
         const char* line_end = pos;
         while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
              ++line_end;
 
-        lines.emplace_back(StringData::create({pos, line_end}, '\n'));
+        res.lines.emplace_back(StringData::create({pos, line_end}, '\n'));
 
         if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
         {
-            crlf = true;
+            res.eolformat = EolFormat::Crlf;
             pos = line_end + 2;
         }
         else
             pos = line_end + 1;
     }
 
-    return { std::move(lines), bom, crlf };
+    return res;
 }
 
 static void apply_options(OptionManager& options, const ParsedLines& parsed_lines)
 {
-    options.get_local_option("eolformat").set<String>(parsed_lines.crlf ? "crlf" : "lf");
-    options.get_local_option("BOM").set<String>(parsed_lines.bom ? "utf-8" : "no");
+    options.get_local_option("eolformat").set(parsed_lines.eolformat);
+    options.get_local_option("BOM").set(parsed_lines.bom);
 }
 
 Buffer::Buffer(String name, Flags flags, StringView data,

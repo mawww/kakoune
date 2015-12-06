@@ -215,14 +215,14 @@ void write(int fd, StringView data)
 
 void write_buffer_to_fd(Buffer& buffer, int fd)
 {
-    const String& eolformat = buffer.options()["eolformat"].get<String>();
+    auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
     StringView eoldata;
-    if (eolformat == "crlf")
+    if (eolformat == EolFormat::Crlf)
         eoldata = "\r\n";
     else
         eoldata = "\n";
 
-    if (buffer.options()["BOM"].get<String>() == "utf-8")
+    if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
         ::write(fd, "\xEF\xBB\xBF", 3);
 
     for (LineCount i = 0; i < buffer.line_count(); ++i)
