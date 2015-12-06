@@ -786,9 +786,9 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    0 means a tab character.
  * `scrolloff` _coord_: number of lines,columns to keep visible around
    the cursor when scrolling.
- * `eolformat` _string_ ('lf' or 'crlf'): the format of end of lines when
+ * `eolformat` _enum(lf|crlf)_: the format of end of lines when
    writing a buffer, this is autodetected on load.
- * `BOM` _string_ ("no" or "utf-8"): define if the file should be written
+ * `BOM` _enum(none|utf8)_: define if the file should be written
    with an unicode byte order mark.
  * `complete_prefix` _bool_: when completing in command line, and multiple
    candidates exist, enable completion with common prefix.
@@ -820,6 +820,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
      apply in the buffer, and the other strings are the candidates.
  * `autoreload` _enum(yes|no|ask)_: auto reload the buffers when an external
    modification is detected.
+ * `debug` _flags(hooks|shell|profile)_: dump various debug information in
+   the `*debug*` buffer.
  * `modelinefmt` _string_: A format string used to generate the mode line, that
    string is first expanded as a command line would be (expanding `%...{...}`
    strings), then markup tags are applied (see <<Markup strings>>).
