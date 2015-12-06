@@ -54,7 +54,7 @@ addhl -group /exheres-0-licence-groups regex ^(\S+) 0:type
 addhl -group /exheres-0-licence-groups regex ^#.*?$ 0:comment
 
 hook global WinSetOption filetype=exheres-0-licence-groups %{ addhl ref exheres-0-licence-groups }
-hook global WinSetOption filetype=(?!exheres-0-licence-groups).* %{ rm exheres-0-licence-groups }
+hook global WinSetOption filetype=(?!exheres-0-licence-groups).* %{ rmhl exheres-0-licence-groups }
 
 ## Paludis configurations
 ### options.conf
@@ -76,7 +76,7 @@ addhl -group /paludis-key-value-conf regex ^[\s\t]?(\S+)[\s\t+]=[\s\t+](.*?)$ 1:
 addhl -group /paludis-key-value-conf regex ^#.*?$ 0:comment
 
 hook global WinSetOption filetype=paludis-key-value-conf %{ addhl ref paludis-key-value-conf }
-hook global WinSetOption filetype=(?!paludis-key-value-conf).* %{ rm paludis-key-value-conf }
+hook global WinSetOption filetype=(?!paludis-key-value-conf).* %{ rmhl paludis-key-value-conf }
 
 ## mirrors.conf
 addhl -group / group paludis-mirrors-conf
@@ -84,7 +84,7 @@ addhl -group /paludis-mirrors-conf regex ^[\s\t+]?(\S+)[\s\t+](.*?)$ 1:type 2:va
 addhl -group /paludis-mirrors-conf regex ^#.*?$ 0:comment
 
 hook global WinSetOption filetype=paludis-mirrors-conf %{ addhl ref paludis-mirrors-conf }
-hook global WinSetOption filetype=(?!paludis-mirrors-conf).* %{ rm paludis-mirrors-conf }
+hook global WinSetOption filetype=(?!paludis-mirrors-conf).* %{ rmhl paludis-mirrors-conf }
 
 ## package_(unmask|mask).conf, platforms.conf
 addhl -group / group paludis-specs-conf
@@ -93,7 +93,7 @@ addhl -group /paludis-specs-conf regex ^(\S+/\S+) 0:type
 addhl -group /paludis-specs-conf regex ^#.*?$ 0:comment
 
 hook global WinSetOption filetype=paludis-specs-conf %{ addhl ref paludis-specs-conf }
-hook global WinSetOption filetype=(?!paludis-specs-conf).* %{ rm paludis-specs-conf }
+hook global WinSetOption filetype=(?!paludis-specs-conf).* %{ rmhl paludis-specs-conf }
 
 ## News items (GLEP42)
 addhl -group / group glep42
