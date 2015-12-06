@@ -50,4 +50,4 @@ addons:
     build_command: "make -j4"
     branch_pattern: coverity-scan
 
-script: cd src && make && make test
+script: export POSIXLY_CORRECT=1 && cd src && make && make test && make test-kakrc

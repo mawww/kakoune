@@ -84,6 +84,9 @@ kak : $(objects)
 
 test:
 	cd ../test && ./run
+	
+test-kakrc:
+	cd ../test && ./run -l
 tags:
 	ctags -R
 man: ../doc/kak.1.gz

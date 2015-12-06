@@ -26,3 +26,5 @@ Usage
 To test, just type +run [test]+ in the +test+ directory.
 It will print each passing test.  If a test fails, a {unified-context-diff}[unified context diff]
 is printed showing the test’s expected output and the actual output.
+
+Pass the -l switch as the first argument to load the kakrc for the unit tests
