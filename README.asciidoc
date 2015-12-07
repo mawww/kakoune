@@ -432,6 +432,7 @@ using `"<reg>` prefix.
 
 `Z` will save the current selections to the register.
 `z` will restore the selections from the register.
+`alt-z` will add the selections from the register to the existing ones.
 
 Jump list
 ~~~~~~~~~

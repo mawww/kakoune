@@ -1321,6 +1321,7 @@ void save_selections(Context& context, NormalParams params)
     context.print_status({format("Saved selections in register '{}'", reg), get_face("Information")});
 }
 
+template<bool add>
 void restore_selections(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '^');
@@ -1348,11 +1349,26 @@ void restore_selections(Context& context, NormalParams params)
 
     SelectionList sel_list{buffer, std::move(sels), timestamp};
 
-    if (&buffer != &context.buffer())
-        context.change_buffer(buffer);
+    if (not add)
+    {
+        if (&buffer != &context.buffer())
+            context.change_buffer(buffer);
+    }
+    else
+    {
+        if (&buffer != &context.buffer())
+            throw runtime_error("Cannot add selections from another buffer");
+
+        sel_list.update();
+        int main_index = sel_list.size() + context.selections_write_only().main_index();
+        for (auto& sel : context.selections())
+            sel_list.push_back(std::move(sel));
+
+        sel_list.set_main_index(main_index);
+        sel_list.sort_and_merge_overlapping();
+    }
 
     context.selections_write_only() = std::move(sel_list);
-
     context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
 }
 
@@ -1671,7 +1687,8 @@ static NormalCmdDesc cmds[] =
     { Key::PageUp,   "scroll one page up", scroll<Key::PageUp> },
     { Key::PageDown, "scroll one page down", scroll<Key::PageDown> },
 
-    { 'z', "restore selections", restore_selections },
+    { 'z', "restore selections", restore_selections<false> },
+    { alt('z'), "append saved selections", restore_selections<true> },
     { 'Z', "save selections", save_selections },
 };
 
