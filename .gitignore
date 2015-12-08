@@ -1,6 +1,7 @@
 *.o
 .*.d
 *.pyc
+src/user.mk
 src/kak
 tags
 GPATH

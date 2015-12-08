@@ -1,3 +1,5 @@
+-include user.mk
+
 debug ?= yes
 pedantic ?= yes
 
@@ -75,6 +77,11 @@ XDG_CONFIG_HOME ?= $(HOME)/.config
 userconfig:
 	mkdir -p $(XDG_CONFIG_HOME)/kak/autoload
 	ln -s $(CURDIR)/../rc/*.kak $(XDG_CONFIG_HOME)/kak/autoload/
+
+usermk:
+	# do not overwrite user.mk if it already exists
+	yes "$(locale nostr)" | cp -i ../contrib/user.mk user.mk 2> /dev/null
+	$(EDITOR) user.mk
 
 install: kak
 	mkdir -p $(bindir)
