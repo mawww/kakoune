@@ -10,7 +10,7 @@ main() {
   work=$(mktemp -d /tmp/kak-tests.XXXXXXXX)
   cp -R . $work
   trap "rm -R $work" EXIT
-  for dir in $(find $dirs -type d); do
+  for dir in $(find $dirs -type d | sort); do
     cd $test/$dir;
     test_files=$(ls out selections state 2>/dev/null)
     cd $work/$dir;
