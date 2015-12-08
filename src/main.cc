@@ -557,6 +557,7 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
+    EventManager    event_manager;
     ShellManager    shell_manager;
     CommandManager  command_manager;
     BufferManager   buffer_manager;
