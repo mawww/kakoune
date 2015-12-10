@@ -100,7 +100,9 @@ String compact_path(StringView filename)
     String real_filename = real_path(filename);
 
     char cwd[1024];
-    getcwd(cwd, 1024);
+    if (!::getcwd(cwd, 1024))
+        throw runtime_error(format("unable to get the current working directory (errno: {})", ::strerror(errno)));
+
     String real_cwd = real_path(cwd) + "/";
     if (prefix_match(real_filename, real_cwd))
         return real_filename.substr(real_cwd.length()).str();
@@ -223,7 +225,8 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         eoldata = "\n";
 
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
-        ::write(fd, "\xEF\xBB\xBF", 3);
+        if (::write(fd, "\xEF\xBB\xBF", 3) < 0)
+            throw runtime_error(format("unable to write data to the buffer (fd: {}; errno: {})", fd, ::strerror(errno)));
 
     for (LineCount i = 0; i < buffer.line_count(); ++i)
     {
