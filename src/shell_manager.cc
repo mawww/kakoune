@@ -29,7 +29,10 @@ namespace
 
 struct Pipe
 {
-    Pipe() { ::pipe(m_fd); }
+    Pipe() {
+        if (::pipe(m_fd) < 0)
+            throw runtime_error(format("unable to create pipe (fds: {}/{}; errno: {})", m_fd[0], m_fd[1], ::strerror(errno)));
+    }
     ~Pipe() { close_read_fd(); close_write_fd(); }
 
     int read_fd() const { return m_fd[0]; }
