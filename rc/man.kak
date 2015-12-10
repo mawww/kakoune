@@ -38,7 +38,7 @@ def -params .. \
     prefix=${1:0:${kak_pos_in_token}}
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
         candidate=$(basename ${page%%.[1-8]*})
-        pagenum=$(sed -r 's,^.+/.+\.([1-8][^.]*)\..+$,\1,' <<< $page)
+        pagenum=$(echo $page | sed 's/^.*\([1-8][a-z]*\)$/\1/')
         case $candidate in
             *\*) ;;
             *) echo $candidate\($pagenum\);;
