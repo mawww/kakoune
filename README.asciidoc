@@ -658,7 +658,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_selections_desc`: range of the selecations separated by colons
  * `kak_bufname`: name of the current buffer
  * `kak_buffile`: full path of the file or same as `kak_bufname` when
-       there's not associated file
+       there's no associated file
  * `kak_buflist`: the current buffer list, each buffer seperated by a colon
  * `kak_timestamp`: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
@@ -671,7 +671,7 @@ Some of Kakoune state is available through environment variables:
  * `kak_cursor_line`: line of the end of the main selection
  * `kak_cursor_column`: column of the end of the main selection (in byte)
  * `kak_cursor_char_column`: column of the end of the main selection (in character)
- * `kak_window_width`: widh of the current kakoune window
+ * `kak_window_width`: width of the current kakoune window
  * `kak_window_height`: height of the current kakoune window
  * `kak_hook_param`: filtering text passed to the currently executing hook
  * `kak_client_env_<name>`: value of the <name> variable in the client environment.
