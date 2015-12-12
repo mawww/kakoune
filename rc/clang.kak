@@ -75,8 +75,8 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
-                        /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/\1|red|█/; p }
-                        /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1|yellow|█/; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? (fatal )?error/ { s/^<stdin>:([0-9]+):.*/\1|{red}█/; p }
+                        /^<stdin>:[0-9]+:([0-9]+:)? warning/ { s/^<stdin>:([0-9]+):.*/\1|{yellow}█/; p }
                     " | paste -s -d ':')
 
             errors=$(cat ${dir}/stderr | sed -rne "
@@ -131,7 +131,7 @@ def -allow-override -hidden clang-show-error-info %{ %sh{
 } }
 
 def clang-enable-diagnostics -docstring "Activate automatic diagnostics of the code by clang" %{
-    addhl flag_lines default clang_flags'
+    addhl flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
 }
 

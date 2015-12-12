@@ -944,22 +944,37 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
         }
 
         auto def_face = get_face(default_face);
+        Vector<DisplayLine> display_lines;
+        for (auto& line : lines)
+        {
+            display_lines.push_back(parse_display_line(std::get<1>(line)));
+            for (auto& atom : display_lines.back())
+                atom.face = merge_faces(def_face, atom.face);
+        }
 
         CharCount width = 0;
-        for (auto& l : lines)
-             width = std::max(width, std::get<2>(l).char_length());
-        const String empty{' ', width};
+        for (auto& l : display_lines)
+             width = std::max(width, l.length());
+        const DisplayAtom empty{String{' ', width}, def_face};
         for (auto& line : display_buffer.lines())
         {
             int line_num = (int)line.range().begin.line + 1;
             auto it = find_if(lines,
                               [&](const LineAndFlag& l)
                               { return std::get<0>(l) == line_num; });
-            String content = it != lines.end() ? std::get<2>(*it) : empty;
-            content += String(' ', width - content.char_length());
-            DisplayAtom atom{std::move(content)};
-            atom.face = it != lines.end() ? merge_faces(get_face(std::get<1>(*it)), def_face) : def_face;
-            line.insert(line.begin(), std::move(atom));
+            if (it == lines.end())
+                line.insert(line.begin(), empty);
+            else
+            {
+                DisplayLine& display_line = display_lines[it - lines.begin()];
+                DisplayAtom padding_atom{String(' ', width - display_line.length()), def_face};
+                auto it = std::copy(std::make_move_iterator(display_line.begin()),
+                                    std::make_move_iterator(display_line.end()),
+                                    std::inserter(line, line.begin()));
+
+                if (padding_atom.length() != 0)
+                    *it++ = std::move(padding_atom);
+            }
         }
     };
 

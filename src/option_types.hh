@@ -253,7 +253,8 @@ inline void option_from_string(StringView str, TimestampedList<T>& opt)
 {
     auto it = find(str, ':');
     opt.timestamp = str_to_int({str.begin(), it});
-    option_from_string({it+1, str.end()}, opt.list);
+    if (it != str.end())
+        option_from_string({it+1, str.end()}, opt.list);
 }
 
 template<typename T>
