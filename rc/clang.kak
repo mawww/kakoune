@@ -2,7 +2,7 @@ decl str clang_options
 
 decl -hidden str clang_tmp_dir
 decl -hidden str-list clang_completions
-decl -hidden line-flag-list clang_flags
+decl -hidden line-flags clang_flags
 decl -hidden str clang_errors
 
 def clang-parse -params 0..1 -docstring "Parse the contents of the current buffer with clang" %{
@@ -85,7 +85,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
 
-            echo "set 'buffer=${kak_buffile}' clang_flags %{${flags}}
+            echo "set 'buffer=${kak_buffile}' clang_flags %{${kak_timestamp}:${flags}}
                   set 'buffer=${kak_buffile}' clang_errors '${errors}'" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
@@ -131,7 +131,7 @@ def -allow-override -hidden clang-show-error-info %{ %sh{
 } }
 
 def clang-enable-diagnostics -docstring "Activate automatic diagnostics of the code by clang" %{
-    addhl flag_lines default clang_flags
+    addhl flag_lines default clang_flags'
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
 }
 

@@ -904,13 +904,44 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     get_face(default_face); // validate param
 
     // throw if wrong option type
-    GlobalScope::instance().options()[option_name].get<Vector<LineAndFlag, MemoryDomain::Options>>();
+    GlobalScope::instance().options()[option_name].get<TimestampedList<LineAndFlag>>();
 
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        auto& lines_opt = context.options()[option_name];
-        auto& lines = lines_opt.get<Vector<LineAndFlag, MemoryDomain::Options>>();
+        auto& line_flags = context.options()[option_name].get_mutable<TimestampedList<LineAndFlag>>();
+        auto& lines = line_flags.list;
+
+        auto& buffer = context.buffer();
+        if (line_flags.timestamp != buffer.timestamp())
+        {
+            std::sort(lines.begin(), lines.end(),
+                      [](const LineAndFlag& lhs, const LineAndFlag& rhs)
+                      { return std::get<0>(lhs) < std::get<0>(rhs); });
+
+            auto modifs = compute_line_modifications(buffer, line_flags.timestamp);
+            auto ins_pos = lines.begin();
+            for (auto it = lines.begin(); it != lines.end(); ++it)
+            {
+                auto& line = std::get<0>(*it); // that line is 1 based as it comes from user side
+                auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), line-1,
+                                                 [](const LineCount& l, const LineModification& c)
+                                                 { return l < c.old_line; });
+                if (modif_it != modifs.begin())
+                {
+                    auto& prev = *(modif_it-1);
+                    if (line-1 < prev.old_line + prev.num_removed)
+                        continue; // line removed
+
+                    line += prev.diff();
+                }
+
+                if (ins_pos != it)
+                    *ins_pos = std::move(*it);
+                ++ins_pos;
+            }
+            line_flags.timestamp = buffer.timestamp();
+        }
 
         auto def_face = get_face(default_face);
 

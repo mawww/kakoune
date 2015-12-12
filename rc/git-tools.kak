@@ -20,8 +20,8 @@ hook global WinSetOption filetype=(?!git-status).* %{
     rmhl git-status-highlight
 }
 
-decl line-flag-list git_blame_flags
-decl line-flag-list git_diff_flags
+decl line-flags git_blame_flags
+decl line-flags git_diff_flags
 
 face GitBlame default,magenta
 
@@ -62,7 +62,7 @@ def -params 1.. \
         (
             echo "eval -client '$kak_client' %{
                       try %{ addhl flag_lines GitBlame git_blame_flags }
-                      set buffer=$kak_bufname git_blame_flags ''
+                      set buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk -e '
                   function send_flags(text, flag, i) {
@@ -75,7 +75,7 @@ def -params 1.. \
                           flag=flag ":" line+i "|default|" text
                       }
                       cmd = "kak -p " ENVIRON["kak_session"]
-                      print "set -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags %{" flag "}" | cmd
+                      print "set -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags %{:" flag "}" | cmd
                       close(cmd)
                   }
                   /^([0-9a-f]{40}) ([0-9]+) ([0-9]+) ([0-9]+)/ {
@@ -97,7 +97,7 @@ def -params 1.. \
         git diff -U0 $kak_buffile | awk -e '
             BEGIN {
                 line=0
-                flags="0|red|."
+                flags=ENVIRON["kak_timestamp"]
             }
             /^---.*/ {}
             /^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@.*/ {

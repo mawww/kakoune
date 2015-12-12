@@ -1104,7 +1104,7 @@ const CommandDesc declare_option_cmd = {
     "    regex: regular expression\n"
     "    int-list: list of integers\n"
     "    str-list: list of character strings\n"
-    "    line-flag-list: list of line flags\n",
+    "    line-flags: list of line flags\n",
     ParameterDesc{
         { { "hidden",    { false, "do not display option name when completing" } },
           { "docstring", { true,  "specify option description" } } },
@@ -1136,8 +1136,8 @@ const CommandDesc declare_option_cmd = {
             opt = &reg.declare_option<Vector<int, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
             opt = &reg.declare_option<Vector<String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
-        else if (parser[0] == "line-flag-list")
-            opt = &reg.declare_option<Vector<LineAndFlag, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
+        else if (parser[0] == "line-flags")
+            opt = &reg.declare_option<TimestampedList<LineAndFlag>>(parser[1], docstring, {}, flags);
         else
             throw runtime_error(format("unknown type {}", parser[0]));
 

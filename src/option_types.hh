@@ -223,6 +223,45 @@ constexpr Array<EnumDesc<DebugFlags>, 3> enum_desc(DebugFlags)
     } };
 }
 
+template<typename T>
+struct TimestampedList
+{
+    size_t timestamp;
+    Vector<T, MemoryDomain::Options> list;
+};
+
+template<typename T>
+inline bool operator==(const TimestampedList<T>& lhs, const TimestampedList<T>& rhs)
+{
+    return lhs.timestamp == rhs.timestamp and lhs.list == rhs.list;
+}
+
+template<typename T>
+inline bool operator!=(const TimestampedList<T>& lhs, const TimestampedList<T>& rhs)
+{
+    return not (lhs == rhs);
+}
+
+template<typename T>
+inline String option_to_string(const TimestampedList<T>& opt)
+{
+    return format("{}:{}", opt.timestamp, option_to_string(opt.list));
+}
+
+template<typename T>
+inline void option_from_string(StringView str, TimestampedList<T>& opt)
+{
+    auto it = find(str, ':');
+    opt.timestamp = str_to_int({str.begin(), it});
+    option_from_string({it+1, str.end()}, opt.list);
+}
+
+template<typename T>
+inline bool option_add(TimestampedList<T>& opt, StringView str)
+{
+    return option_add(opt.list, str);
+}
+
 }
 
 #endif // option_types_hh_INCLUDED
