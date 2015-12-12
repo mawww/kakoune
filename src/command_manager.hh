@@ -61,6 +61,44 @@ private:
 
 using CommandInfo = std::pair<String, String>;
 
+struct Token
+{
+    enum class Type
+    {
+        Raw,
+        RawQuoted,
+        RawEval,
+        ShellExpand,
+        RegisterExpand,
+        OptionExpand,
+        ValExpand,
+        ArgExpand,
+        CommandSeparator
+    };
+    Token() : m_type(Type::Raw) {}
+
+    Token(Type type, ByteCount b, ByteCount e, CharCoord coord, String str = "")
+        : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(std::move(str)) {}
+
+    Type type() const { return m_type; }
+    ByteCount begin() const { return m_begin; }
+    ByteCount end() const { return m_end; }
+    CharCoord coord() const { return m_coord; }
+    const String& content() const { return m_content; }
+
+private:
+    Type   m_type;
+    ByteCount m_begin;
+    ByteCount m_end;
+    CharCoord m_coord;
+    String m_content;
+};
+
+using TokenList = Vector<Token>;
+
+template<bool throw_on_unterminated>
+TokenList parse(StringView line);
+
 class CommandManager : public Singleton<CommandManager>
 {
 public:

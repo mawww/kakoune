@@ -449,6 +449,17 @@ HighlighterAndId create_dynamic_regex_highlighter(HighlighterParameters params)
     auto get_face = [faces](const Context& context){ return faces;; };
 
     String expr = params[0];
+    auto tokens = parse<true>(expr);
+    if (tokens.size() == 1 and tokens[0].type() == Token::Type::OptionExpand and
+        GlobalScope::instance().options()[tokens[0].content()].is_of_type<Regex>())
+    {
+        String option_name = tokens[0].content();
+        auto get_regex =  [option_name](const Context& context) {
+            return context.options()[option_name].get<Regex>();
+        };
+        return {format("dynregex_{}", expr), make_dynamic_regex_highlighter(get_regex, get_face)};
+    }
+
     auto get_regex = [expr](const Context& context){
         try
         {

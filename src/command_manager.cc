@@ -43,41 +43,6 @@ struct parse_error : runtime_error
 namespace
 {
 
-struct Token
-{
-    enum class Type
-    {
-        Raw,
-        RawQuoted,
-        RawEval,
-        ShellExpand,
-        RegisterExpand,
-        OptionExpand,
-        ValExpand,
-        ArgExpand,
-        CommandSeparator
-    };
-    Token() : m_type(Type::Raw) {}
-
-    Token(Type type, ByteCount b, ByteCount e, CharCoord coord, String str = "")
-        : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(std::move(str)) {}
-
-    Type type() const { return m_type; }
-    ByteCount begin() const { return m_begin; }
-    ByteCount end() const { return m_end; }
-    CharCoord coord() const { return m_coord; }
-    const String& content() const { return m_content; }
-
-private:
-    Type   m_type;
-    ByteCount m_begin;
-    ByteCount m_end;
-    CharCoord m_coord;
-    String m_content;
-};
-
-using TokenList = Vector<Token>;
-
 struct Reader
 {
 public:
@@ -278,6 +243,50 @@ Token parse_percent_token(Reader& reader)
     }
 }
 
+String expand_token(const Token& token, const Context& context,
+                    const ShellContext& shell_context)
+{
+    auto& content = token.content();
+    switch (token.type())
+    {
+    case Token::Type::ShellExpand:
+        return ShellManager::instance().eval(content, context, {},
+                                             ShellManager::Flags::WaitForStdout,
+                                             shell_context).first;
+    case Token::Type::RegisterExpand:
+        return context.main_sel_register_value(content).str();
+    case Token::Type::OptionExpand:
+        return context.options()[content].get_as_string();
+    case Token::Type::ValExpand:
+    {
+        auto it = shell_context.env_vars.find(content);
+        if (it != shell_context.env_vars.end())
+            return it->value;
+        return ShellManager::instance().get_val(content, context);
+    }
+    case Token::Type::ArgExpand:
+    {
+        auto& params = shell_context.params;
+        if (content == '@')
+            return join(params, ' ');
+
+        const int arg = str_to_int(content)-1;
+        if (arg < 0)
+            throw runtime_error("invalid argument index");
+        return arg < params.size() ? params[arg] : String{};
+    }
+    case Token::Type::RawEval:
+        return expand(content, context, shell_context);
+    case Token::Type::Raw:
+    case Token::Type::RawQuoted:
+        return content;
+    default: kak_assert(false);
+    }
+    return {};
+}
+
+}
+
 template<bool throw_on_unterminated>
 TokenList parse(StringView line)
 {
@@ -323,50 +332,6 @@ TokenList parse(StringView line)
         ++reader;
     }
     return result;
-}
-
-String expand_token(const Token& token, const Context& context,
-                    const ShellContext& shell_context)
-{
-    auto& content = token.content();
-    switch (token.type())
-    {
-    case Token::Type::ShellExpand:
-        return ShellManager::instance().eval(content, context, {},
-                                             ShellManager::Flags::WaitForStdout,
-                                             shell_context).first;
-    case Token::Type::RegisterExpand:
-        return context.main_sel_register_value(content).str();
-    case Token::Type::OptionExpand:
-        return context.options()[content].get_as_string();
-    case Token::Type::ValExpand:
-    {
-        auto it = shell_context.env_vars.find(content);
-        if (it != shell_context.env_vars.end())
-            return it->value;
-        return ShellManager::instance().get_val(content, context);
-    }
-    case Token::Type::ArgExpand:
-    {
-        auto& params = shell_context.params;
-        if (content == '@')
-            return join(params, ' ');
-
-        const int arg = str_to_int(content)-1;
-        if (arg < 0)
-            throw runtime_error("invalid argument index");
-        return arg < params.size() ? params[arg] : String{};
-    }
-    case Token::Type::RawEval:
-        return expand(content, context, shell_context);
-    case Token::Type::Raw:
-    case Token::Type::RawQuoted:
-        return content;
-    default: kak_assert(false);
-    }
-    return {};
-}
-
 }
 
 String expand(StringView str, const Context& context,
