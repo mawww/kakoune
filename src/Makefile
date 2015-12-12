@@ -72,10 +72,6 @@ clean:
 
 XDG_CONFIG_HOME ?= $(HOME)/.config
 
-userconfig:
-	mkdir -p $(XDG_CONFIG_HOME)/kak/autoload
-	ln -s $(CURDIR)/../rc/*.kak $(XDG_CONFIG_HOME)/kak/autoload/
-
 install: kak
 	mkdir -p $(bindir)
 	install -m 0755 kak $(bindir)
@@ -89,4 +85,4 @@ install: kak
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/* $(docdir)
 
-.PHONY: tags userconfig install
+.PHONY: tags install
