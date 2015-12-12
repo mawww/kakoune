@@ -87,12 +87,12 @@ private:
     Context m_context;
 
     friend class InputMode;
-    Vector<std::unique_ptr<InputMode>> m_mode_stack;
+    Vector<RefPtr<InputMode>> m_mode_stack;
 
     InputMode& current_mode() const { return *m_mode_stack.back(); }
 
     void push_mode(InputMode* new_mode);
-    std::unique_ptr<InputMode> pop_mode(InputMode* current_mode);
+    void pop_mode(InputMode* current_mode);
 
     struct Insertion{ InsertMode mode; Vector<Key> keys; bool disable_hooks; };
     Insertion m_last_insert = { InsertMode::Insert, {}, false };

@@ -17,7 +17,7 @@
 namespace Kakoune
 {
 
-class InputMode
+class InputMode : public RefCountable
 {
 public:
     InputMode(InputHandler& input_handler) : m_input_handler(input_handler) {}
@@ -25,7 +25,7 @@ public:
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    void handle_key(Key key) { on_key(key, {}); }
+    void handle_key(Key key) { RefPtr<InputMode> keep_alive{this}; on_key(key); }
 
     virtual void on_enabled() {}
     virtual void on_disabled() {}
@@ -39,21 +39,16 @@ public:
     Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
-    // KeepAlive is usedto make sure the current InputMode
-    // stays alive until the end of the on_key method
-    struct KeepAlive { std::shared_ptr<InputMode> ptr; };
-
-    virtual void on_key(Key key, KeepAlive keep_alive) = 0;
+    virtual void on_key(Key key) = 0;
 
     void push_mode(InputMode* new_mode)
     {
         m_input_handler.push_mode(new_mode);
     }
 
-    void pop_mode(KeepAlive& keep_alive)
+    void pop_mode()
     {
-        kak_assert(not keep_alive.ptr);
-        keep_alive.ptr = m_input_handler.pop_mode(this);
+        m_input_handler.pop_mode(this);
     }
 private:
     InputHandler& m_input_handler;
@@ -195,7 +190,7 @@ public:
         context().hooks().run_hook("NormalEnd", "", context());
     }
 
-    void on_key(Key key, KeepAlive keep_alive) override
+    void on_key(Key key) override
     {
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
@@ -246,7 +241,7 @@ public:
         else
         {
             if (m_single_command)
-                pop_mode(keep_alive);
+                pop_mode();
 
             context().print_status({});
             if (context().has_ui())
@@ -508,7 +503,7 @@ public:
         context().ui().menu_select(0);
     }
 
-    void on_key(Key key, KeepAlive keep_alive) override
+    void on_key(Key key) override
     {
         auto match_filter = [this](const DisplayLine& choice) {
             for (auto& atom : choice)
@@ -525,7 +520,7 @@ public:
             if (context().has_ui())
                 context().ui().menu_hide();
             context().print_status(DisplayLine{});
-            pop_mode(keep_alive);
+            pop_mode();
             int selected = m_selected - m_choices.begin();
             m_callback(selected, MenuEvent::Validate, context());
             return;
@@ -543,7 +538,7 @@ public:
             {
                 if (context().has_ui())
                     context().ui().menu_hide();
-                pop_mode(keep_alive);
+                pop_mode();
                 int selected = m_selected - m_choices.begin();
                 m_callback(selected, MenuEvent::Abort, context());
             }
@@ -665,7 +660,7 @@ public:
         display();
     }
 
-    void on_key(Key key, KeepAlive keep_alive) override
+    void on_key(Key key) override
     {
         History& history = ms_history[m_prompt];
         const String& line = m_line_editor.line();
@@ -678,7 +673,7 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
-            pop_mode(keep_alive);
+            pop_mode();
             // call callback after pop_mode so that callback
             // may change the mode
             m_callback(line, PromptEvent::Validate, context());
@@ -691,7 +686,7 @@ public:
             context().print_status(DisplayLine{});
             if (context().has_ui())
                 context().ui().menu_hide();
-            pop_mode(keep_alive);
+            pop_mode();
             m_callback(line, PromptEvent::Abort, context());
             return;
         }
@@ -943,9 +938,9 @@ public:
     NextKey(InputHandler& input_handler, KeymapMode keymap_mode, KeyCallback callback)
         : InputMode(input_handler), m_keymap_mode(keymap_mode), m_callback(std::move(callback)) {}
 
-    void on_key(Key key, KeepAlive keep_alive) override
+    void on_key(Key key) override
     {
-        pop_mode(keep_alive);
+        pop_mode();
         m_callback(key, context());
     }
 
@@ -1013,7 +1008,7 @@ public:
         m_idle_timer.set_next_date(TimePoint::max());
     }
 
-    void on_key(Key key, KeepAlive keep_alive) override
+    void on_key(Key key) override
     {
         auto& buffer = context().buffer();
         last_insert().keys.push_back(key);
@@ -1028,7 +1023,7 @@ public:
             context().hooks().run_hook("InsertEnd", "", context());
 
             m_completer.reset();
-            pop_mode(keep_alive);
+            pop_mode();
         }
         else if (key == Key::Backspace)
         {
@@ -1296,16 +1291,14 @@ void InputHandler::push_mode(InputMode* new_mode)
     new_mode->on_enabled();
 }
 
-std::unique_ptr<InputMode> InputHandler::pop_mode(InputMode* mode)
+void InputHandler::pop_mode(InputMode* mode)
 {
-    kak_assert(m_mode_stack.back() == mode);
+    kak_assert(m_mode_stack.back().get() == mode);
     kak_assert(m_mode_stack.size() > 1);
 
     current_mode().on_disabled();
-    std::unique_ptr<InputMode> res = std::move(m_mode_stack.back());
     m_mode_stack.pop_back();
     current_mode().on_enabled();
-    return res;
 }
 
 void InputHandler::reset_normal_mode()

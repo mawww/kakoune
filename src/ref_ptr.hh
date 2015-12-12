@@ -103,6 +103,23 @@ private:
     }
 };
 
+struct RefCountable
+{
+    int refcount = 0;
+    virtual ~RefCountable() = default;
+
+    friend void inc_ref_count(RefCountable* r, void*)
+    {
+        ++r->refcount;
+    }
+
+    friend void dec_ref_count(RefCountable* r, void*)
+    {
+        if (--r->refcount == 0)
+            delete r;
+    }
+};
+
 }
 
 #endif // ref_ptr_hh_INCLUDED
