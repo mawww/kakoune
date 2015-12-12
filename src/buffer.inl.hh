@@ -91,8 +91,10 @@ inline size_t Buffer::timestamp() const
 
 inline ConstArrayView<Buffer::Change> Buffer::changes_since(size_t timestamp) const
 {
-    return { m_changes.data() + timestamp,
-             m_changes.data() + m_changes.size() };
+    if (timestamp < m_changes.size())
+        return { m_changes.data() + timestamp,
+                 m_changes.data() + m_changes.size() };
+    return {};
 }
 
 inline ByteCoord Buffer::back_coord() const
