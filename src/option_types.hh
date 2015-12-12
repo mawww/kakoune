@@ -18,11 +18,16 @@ namespace Kakoune
 
 inline String option_to_string(StringView opt) { return opt.str(); }
 inline void option_from_string(StringView str, String& opt) { opt = str.str(); }
-inline bool option_add(String& opt, const String& val) { opt += val; return not val.empty(); }
+inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
 
 inline String option_to_string(int opt) { return to_string(opt); }
 inline void option_from_string(StringView str, int& opt) { opt = str_to_int(str); }
-inline bool option_add(int& opt, int val) { opt += val; return val != 0; }
+inline bool option_add(int& opt, StringView str)
+{
+    auto val = str_to_int(str);
+    opt += val;
+    return val != 0;
+}
 
 inline String option_to_string(bool opt) { return opt ? "true" : "false"; }
 inline void option_from_string(StringView str, bool& opt)
@@ -64,9 +69,13 @@ void option_from_string(StringView str, Vector<T, domain>& opt)
 }
 
 template<typename T, MemoryDomain domain>
-bool option_add(Vector<T, domain>& opt, const Vector<T, domain>& vec)
+bool option_add(Vector<T, domain>& opt, StringView str)
 {
-    std::copy(vec.begin(), vec.end(), back_inserter(opt));
+    Vector<T, domain> vec;
+    option_from_string(str, vec);
+    std::copy(std::make_move_iterator(vec.begin()),
+              std::make_move_iterator(vec.end()),
+              back_inserter(opt));
     return not vec.empty();
 }
 
@@ -165,14 +174,15 @@ inline void option_from_string(StringView str, StronglyTypedNumber<RealType, Val
 
 template<typename RealType, typename ValueType>
 inline bool option_add(StronglyTypedNumber<RealType, ValueType>& opt,
-                       StronglyTypedNumber<RealType, ValueType> val)
+                       StringView str)
 {
+    int val = str_to_int(str);
     opt += val;
     return val != 0;
 }
 
 template<typename T>
-bool option_add(T&, const T&)
+bool option_add(T&, StringView str)
 {
     throw runtime_error("no add operation supported for this option type");
 }

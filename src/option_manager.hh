@@ -135,9 +135,7 @@ public:
     }
     void add_from_string(StringView str) override
     {
-        T val;
-        option_from_string(str, val);
-        if (option_add(m_value, val))
+        if (option_add(m_value, str))
             m_manager.on_option_changed(*this);
     }
 
