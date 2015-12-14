@@ -16,6 +16,7 @@ main() {
     cd $work/$dir;
     indent="$(echo "${dir}/" | sed -e 's|[^/]*/\+|  |g')"
     name=$(basename $PWD)
+    should_fail=$(test ! -e error; echo $?)
     if ! test -e cmd; then
       echo "$indent$name"
     elif test -x enabled && ! ./enabled; then
@@ -34,6 +35,10 @@ main() {
         catch %{
           exec gg
         }
+        hook global RuntimeError .+ %{
+          nop %sh{echo '\$kak_hook_param' > stderr}
+          quit!
+        }
         exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
         eval -buffer *debug* write debug
         nop %sh{
@@ -46,32 +51,46 @@ main() {
       "
       ${test}/../src/kak out -n -u -e "$kak_commands"
       retval=$?
-      if [ $retval -ne 0 ]; then
+      if [ $should_fail = 0 ]; then
+        if [ $retval -ne 0 ]; then
           echo "Kakoune returned error $retval"
-      fi
-      for expect in $test_files; do
-        if cmp -s $test/$dir/$expect $expect; then
-          echo "$indent$name" | colorize green normal
-        else
-          number_failures=$(($number_failures + 1))
-          echo "$indent$name" | colorize red normal
-          echo
-          diff -u $test/$dir/$expect $expect | while read -r line; do
-            first_character=$(echo "$line" | cut -b 1)
-            case $first_character in
-              +) color=green ;;
-              -) color=red ;;
-              @) color=magenta ;;
-              *) color=none ;;
-            esac
-            echo "$line" | colorize $color normal
-          done
-          echo
-          echo "debug buffer:" | colorize yellow normal
-          cat debug
-          echo
         fi
-      done
+        for expect in $test_files; do
+          if cmp -s $test/$dir/$expect $expect; then
+            echo "$indent$name" | colorize green normal
+          else
+            number_failures=$(($number_failures + 1))
+            echo "$indent$name" | colorize red normal
+            echo
+            diff -u $test/$dir/$expect $expect | while read -r line; do
+              first_character=$(echo "$line" | cut -b 1)
+              case $first_character in
+                +) color=green ;;
+                -) color=red ;;
+                @) color=magenta ;;
+                *) color=none ;;
+              esac
+              echo "$line" | colorize $color normal
+            done
+            echo
+            echo "debug buffer:" | colorize yellow normal
+            cat debug
+            echo
+          fi
+        done
+      else
+        color=green
+        if [ ! -e stderr ]; then
+          if [ $retval -eq 0 ]; then
+            color=red
+            number_failures=$(($number_failures + 1))
+          fi
+        elif [ -s error -a ! $(cmp -s error stderr) ]; then
+          color=yellow
+        fi
+
+        echo "$indent$name" | colorize $color normal
+      fi
     fi
   done
   if expr $number_failures > 0; then
