@@ -42,13 +42,16 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     m_clients.emplace_back(client);
     try
     {
-        CommandManager::instance().execute(init_commands, client->context());
-    }
-    catch (Kakoune::runtime_error& error)
-    {
-        client->context().print_status({ error.what().str(), get_face("Error") });
-        client->context().hooks().run_hook("RuntimeError", error.what(),
-                                           client->context());
+        try
+        {
+            CommandManager::instance().execute(init_commands, client->context());
+        }
+        catch (Kakoune::runtime_error& error)
+        {
+            client->context().print_status({ error.what().str(), get_face("Error") });
+            client->context().hooks().run_hook("RuntimeError", error.what(),
+                                               client->context());
+        }
     }
     catch (Kakoune::client_removed& removed)
     {
