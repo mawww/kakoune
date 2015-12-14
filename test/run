@@ -15,11 +15,8 @@ main() {
     test_files=$(ls out selections state 2>/dev/null)
     cd $work/$dir;
     indent="$(echo "${dir}/" | sed -e 's|[^/]*/\+|  |g')"
-    name=$(echo ${PWD##*/} | sed 's/-fail^//')
-    should_fail=0
-    if [ ${PWD##*-} = fail ]; then
-      should_fail=1
-    fi
+    name=$(basename $PWD)
+    should_fail=$(test ! -e error; echo $?)
     if ! test -e cmd; then
       echo "$indent$name"
     elif test -x enabled && ! ./enabled; then
@@ -37,6 +34,10 @@ main() {
         } \
         catch %{
           exec gg
+        }
+        hook global RuntimeError .+ %{
+          nop %sh{echo '\$kak_hook_param' > stderr}
+          quit!
         }
         exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
         eval -buffer *debug* write debug
@@ -78,10 +79,16 @@ main() {
           fi
         done
       else
-        if [ $retval -eq 0 ]; then
-          color=red
+        color=green
+        if [ ! -e stderr ]; then
+          if [ $retval -eq 0 ]; then
+            color=red
+            number_failures=$(($number_failures + 1))
+          fi
+        elif [ -s error -a ! $(cmp -s error stderr) ]; then
+          color=yellow
         fi
-        color=${color:-green}
+
         echo "$indent$name" | colorize $color normal
       fi
     fi
