@@ -36,7 +36,7 @@ main() {
           exec gg
         }
         hook global RuntimeError .+ %{
-          nop %sh{echo '\$kak_hook_param' > stderr}
+          nop %sh{echo \"\$kak_hook_param\" > stderr}
           quit!
         }
         exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
@@ -85,8 +85,11 @@ main() {
             color=red
             number_failures=$(($number_failures + 1))
           fi
-        elif [ -s error -a ! $(cmp -s error stderr) ]; then
-          color=yellow
+        else
+            sed -ri 's/^[0-9]+:[0-9]+: //g' stderr
+            if [ -s error ] && ! cmp -s error stderr; then
+              color=yellow
+            fi
         fi
 
         echo "$indent$name" | colorize $color normal
