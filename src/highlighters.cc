@@ -940,6 +940,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
                     *ins_pos = std::move(*it);
                 ++ins_pos;
             }
+            lines.erase(ins_pos, lines.end());
             line_flags.timestamp = buffer.timestamp();
         }
 
