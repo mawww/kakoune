@@ -13,24 +13,23 @@ hook global BufCreate .*[.](js) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default code javascript \
-    double_string '"' (?<!\\)(\\\\)*"        '' \
-    single_string "'" "'"                    '' \
-    comment       //  '$'                    '' \
-    comment      /[*] [*]/                   '' \
-    regex         /   (?<!\\)(\\\\)*/[gimy]* ''
+    double_string '"'  (?<!\\)(\\\\)*"        '' \
+    single_string "'"  (?<!\\)(\\\\)*'        '' \
+    comment       //   '$'                    '' \
+    comment       /\*  \*/                    ''
 
 # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, y → sticky
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
 
 addhl -group /javascript/double_string fill string
 addhl -group /javascript/single_string fill string
-addhl -group /javascript/regex         fill meta
 addhl -group /javascript/comment       fill comment
 
 addhl -group /javascript/code regex \$\w* 0:identifier
 addhl -group /javascript/code regex \<(document|false|null|parent|self|this|true|undefined|window)\> 0:value
 addhl -group /javascript/code regex "-?[0-9]*\.?[0-9]+" 0:value
 addhl -group /javascript/code regex \<(Array|Boolean|Date|Function|Number|Object|RegExp|String)\> 0:type
+addhl -group /javascript/code regex (?<=\W)/[^\n/]+/[gimy]* 0:meta
 
 # Keywords are collected at
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
