@@ -168,7 +168,9 @@ public:
     };
     ZeroTerminatedString zstr() const { return {begin(), end()}; }
 
+#ifndef __clang__
     [[gnu::optimize(3)]] // this is recursive for constexpr reason
+#endif
     static constexpr ByteCount strlen(const char* s)
     {
         return *s == 0 ? 0 : strlen(s+1) + 1;
