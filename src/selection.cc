@@ -196,7 +196,7 @@ const Buffer::Change* backward_sorted_until(const Buffer::Change* first, const B
     return last;
 }
 
-void update_forward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& selections, size_t& main)
+void update_forward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& selections)
 {
     ForwardChangesTracker changes_tracker;
 
@@ -216,12 +216,10 @@ void update_forward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& s
         advance_while_relevant(sel_max);
         sel_max = changes_tracker.get_new_coord_tolerant(sel_max);
     }
-    selections.erase(merge_overlapping(selections.begin(), selections.end(), main, overlaps),
-                     selections.end());
     kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
 }
 
-void update_backward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& selections, size_t& main)
+void update_backward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& selections)
 {
     ForwardChangesTracker changes_tracker;
 
@@ -251,8 +249,6 @@ void update_backward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& 
         advance_while_relevant(sel_max);
         sel_max = changes_tracker.get_new_coord_tolerant(sel_max);
     }
-    selections.erase(merge_overlapping(selections.begin(), selections.end(), main, overlaps),
-                     selections.end());
     kak_assert(std::is_sorted(selections.begin(), selections.end(), compare_selections));
 }
 
@@ -272,7 +268,8 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
         size_t dummy = 0;
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, ranges, dummy);
+            update_forward({ change_it, forward_end }, ranges);
+            ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
             prev_size = ranges.size();
 
             ForwardChangesTracker changes_tracker;
@@ -287,7 +284,8 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
         }
         else
         {
-            update_backward({ change_it, backward_end }, ranges, dummy);
+            update_backward({ change_it, backward_end }, ranges);
+            ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
             prev_size = ranges.size();
 
             using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
@@ -345,14 +343,17 @@ void SelectionList::update()
 
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, m_selections, m_main);
+            update_forward({ change_it, forward_end }, m_selections);
             change_it = forward_end;
         }
         else
         {
-            update_backward({ change_it, backward_end }, m_selections, m_main);
+            update_backward({ change_it, backward_end }, m_selections);
             change_it = backward_end;
         }
+        m_selections.erase(
+            merge_overlapping(m_selections.begin(), m_selections.end(),
+                              m_main, overlaps), m_selections.end());
         kak_assert(std::is_sorted(m_selections.begin(), m_selections.end(),
                                   compare_selections));
     }
