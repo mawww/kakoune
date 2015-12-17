@@ -982,6 +982,48 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
     return {"hlflags_" + params[1], make_simple_highlighter(func) };
 }
 
+HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+
+    const String& option_name = params[0];
+
+    // throw if wrong option type
+    GlobalScope::instance().options()[option_name].get<TimestampedList<RangeAndFace>>();
+
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer, BufferRange)
+    {
+        auto& range_and_faces = context.options()[option_name].get_mutable<TimestampedList<RangeAndFace>>();
+        auto& ranges = range_and_faces.list;
+
+        auto& buffer = context.buffer();
+        if (range_and_faces.timestamp != buffer.timestamp())
+        {
+            // TODO: update ranges to current timestamp
+            return;
+        }
+
+        for (auto& range : ranges)
+        {
+            try
+            {
+                auto& r = std::get<0>(range);
+                if (not buffer.is_valid(r.begin) or not buffer.is_valid(r.end))
+                    continue;
+
+                highlight_range(display_buffer, r.begin, r.end, true,
+                                apply_face(get_face(std::get<1>(range))));
+            }
+            catch (runtime_error&)
+            {}
+        }
+    };
+
+    return {"hlranges_" + params[1], make_simple_highlighter(func) };
+}
+
 HighlighterAndId create_highlighter_group(HighlighterParameters params)
 {
     if (params.size() != 1)
@@ -1441,6 +1483,11 @@ void register_highlighters()
           "Parameters: <option name> <bg color>\n"
           "Display flags specified in the line-flag-list option <option name>\n"
           "A line-flag is written: <line>|<fg color>|<text>, the list is : separated" } });
+    registry.append({
+        "ranges",
+        { create_ranges_highlighter,
+          "Parameters: <option name>\n"
+          "Use the range-faces option given as parameter to highlight buffer\n" } });
     registry.append({
         "line",
         { create_line_highlighter,

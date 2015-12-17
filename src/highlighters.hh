@@ -10,6 +10,7 @@ namespace Kakoune
 void register_highlighters();
 
 using LineAndFlag = std::tuple<LineCount, String>;
+using RangeAndFace = std::tuple<BufferRange, String>;
 
 }
 

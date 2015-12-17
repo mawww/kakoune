@@ -9,6 +9,33 @@
 namespace Kakoune
 {
 
+String option_to_string(BufferRange range)
+{
+    return format("{}.{},{}.{}",
+                  range.begin.line+1, range.begin.column+1,
+                  range.end.line+1, range.end.column+1);
+}
+
+void option_from_string(StringView str, BufferRange& opt)
+{
+    auto comma = find(str, ',');
+    auto dot_begin = find(StringView{str.begin(), comma}, '.');
+    auto dot_end = find(StringView{comma, str.end()}, '.');
+
+    if (comma == str.end() or dot_begin == comma or dot_end == str.end())
+        throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", str));
+
+    ByteCoord begin{str_to_int({str.begin(), dot_begin}) - 1,
+                    str_to_int({dot_begin+1, comma}) - 1};
+
+    ByteCoord end{str_to_int({comma+1, dot_end}) - 1,
+                  str_to_int({dot_end+1, str.end()}) - 1};
+
+    opt.begin = begin;
+    opt.end = end;
+}
+
+
 StringView DisplayAtom::content() const
 {
     switch (m_type)
