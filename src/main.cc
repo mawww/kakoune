@@ -25,7 +25,6 @@
 
 #include <fcntl.h>
 #include <locale>
-#include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -292,16 +291,16 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
     {
         LocalUI()
         {
-            m_old_sighup = signal(SIGHUP, [](int) {
+            m_old_sighup = set_signal_wrapper(SIGHUP, [](int) {
                 ClientManager::instance().remove_client(*local_client, false);
             });
 
-            m_old_sigtstp = signal(SIGTSTP, [](int) {
+            m_old_sigtstp = set_signal_wrapper(SIGTSTP, [](int) {
                 if (ClientManager::instance().count() == 1 and
                     *ClientManager::instance().begin() == local_client)
                 {
                     // Suspend normally if we are the only client
-                    auto current = signal(SIGTSTP, static_cast<LocalUI&>(local_client->ui()).m_old_sigtstp);
+                    auto current = set_signal_wrapper(SIGTSTP, static_cast<LocalUI&>(local_client->ui()).m_old_sigtstp);
 
                     sigset_t unblock_sigtstp, old_mask;
                     sigemptyset(&unblock_sigtstp);
@@ -312,7 +311,7 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 
                     sigprocmask(SIG_SETMASK, &old_mask, nullptr);
 
-                    signal(SIGTSTP, current);
+                    set_signal_wrapper(SIGTSTP, current);
                 }
                 else
                     convert_to_client_pending = true;
@@ -321,8 +320,8 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
 
         ~LocalUI()
         {
-            signal(SIGHUP, m_old_sighup);
-            signal(SIGTSTP, m_old_sigtstp);
+            set_signal_wrapper(SIGHUP, m_old_sighup);
+            set_signal_wrapper(SIGTSTP, m_old_sigtstp);
             local_client = nullptr;
             if (not convert_to_client_pending and
                 not ClientManager::instance().empty())
@@ -430,7 +429,7 @@ int run_server(StringView session, StringView init_command,
                                 session, child));
             exit(0);
         }
-        signal(SIGTERM, [](int) { terminate = true; });
+        set_signal_wrapper(SIGTERM, [](int) { terminate = true; });
     }
 
     StringRegistry      string_registry;
@@ -652,13 +651,13 @@ int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "");
 
-    signal(SIGSEGV, signal_handler);
-    signal(SIGFPE,  signal_handler);
-    signal(SIGQUIT, signal_handler);
-    signal(SIGTERM, signal_handler);
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGINT, [](int){});
-    signal(SIGCHLD, [](int){});
+    set_signal_wrapper(SIGSEGV, signal_handler);
+    set_signal_wrapper(SIGFPE,  signal_handler);
+    set_signal_wrapper(SIGQUIT, signal_handler);
+    set_signal_wrapper(SIGTERM, signal_handler);
+    set_signal_wrapper(SIGPIPE, SIG_IGN);
+    set_signal_wrapper(SIGINT, [](int){});
+    set_signal_wrapper(SIGCHLD, [](int){});
 
     Vector<String> params;
     for (size_t i = 1; i < argc; ++i)
