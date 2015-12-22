@@ -87,12 +87,7 @@ void Context::push_jump()
 {
     const SelectionList& jump = selections();
     if (m_current_jump != m_jump_list.end())
-    {
-        auto begin = m_current_jump;
-        if (&buffer() != &begin->buffer() or *begin != jump)
-            ++begin;
-        m_jump_list.erase(begin, m_jump_list.end());
-    }
+        m_jump_list.erase(m_current_jump+1, m_jump_list.end());
     m_jump_list.erase(std::remove(begin(m_jump_list), end(m_jump_list), jump),
                       end(m_jump_list));
     m_jump_list.push_back(jump);
