@@ -61,7 +61,7 @@ struct JumpList
 private:
     using Contents = Vector<SelectionList, MemoryDomain::Selections>;
     Contents           m_jumps;
-    Contents::iterator m_current = m_jumps.begin();
+    size_t m_current = 0;
 };
 
 // A Context is used to access non singleton objects for various services

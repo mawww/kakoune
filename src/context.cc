@@ -85,27 +85,27 @@ void Context::print_status(DisplayLine status) const
 
 void JumpList::push(SelectionList jump)
 {
-    if (m_current != m_jumps.end())
-        m_jumps.erase(m_current+1, m_jumps.end());
+    if (m_current != m_jumps.size())
+        m_jumps.erase(m_jumps.begin()+m_current+1, m_jumps.end());
     m_jumps.erase(std::remove(begin(m_jumps), end(m_jumps), jump),
                       end(m_jumps));
     m_jumps.push_back(jump);
-    m_current = m_jumps.end();
+    m_current = m_jumps.size();
 }
 
 void JumpList::drop()
 {
     if (not m_jumps.empty())
         m_jumps.pop_back();
-    m_current = m_jumps.end();
+    m_current = m_jumps.size();
 }
 
 const SelectionList& JumpList::forward()
 {
-    if (m_current != m_jumps.end() and
-        m_current + 1 != m_jumps.end())
+    if (m_current != m_jumps.size() and
+        m_current + 1 != m_jumps.size())
     {
-        SelectionList& res = *++m_current;
+        SelectionList& res = m_jumps[++m_current];
         res.update();
         return res;
     }
@@ -114,24 +114,23 @@ const SelectionList& JumpList::forward()
 
 const SelectionList& JumpList::backward(const SelectionList& current)
 {
-    if (m_current != m_jumps.end() and
-        *m_current != current)
+    if (m_current != m_jumps.size() and
+        m_jumps[m_current] != current)
     {
         push(current);
-        SelectionList& res = *--m_current;
+        SelectionList& res = m_jumps[--m_current];
         res.update();
         return res;
     }
-    if (m_current != m_jumps.begin())
+    if (m_current != 0)
     {
-        if (m_current == m_jumps.end())
+        if (m_current == m_jumps.size())
         {
             push(current);
-            --m_current;
-            if (m_current == m_jumps.begin())
+            if (--m_current == 0)
                 throw runtime_error("no previous jump");
         }
-        SelectionList& res = *--m_current;
+        SelectionList& res = m_jumps[--m_current];
         res.update();
         return res;
     }
@@ -140,19 +139,19 @@ const SelectionList& JumpList::backward(const SelectionList& current)
 
 void JumpList::forget_buffer(Buffer& buffer)
 {
-    for (auto it = m_jumps.begin(); it != m_jumps.end();)
+    for (size_t i = 0; i < m_jumps.size();)
     {
-        if (&it->buffer() == &buffer)
+        if (&m_jumps[i].buffer() == &buffer)
         {
-            if (it < m_current)
+            if (i < m_current)
                 --m_current;
-            else if (it == m_current)
-                m_current = m_jumps.end()-1;
+            else if (i == m_current)
+                m_current = m_jumps.size()-1;
 
-            it = m_jumps.erase(it);
+            m_jumps.erase(m_jumps.begin() + i);
         }
         else
-            ++it;
+            ++i;
     }
 }
 
