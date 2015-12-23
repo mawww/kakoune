@@ -304,7 +304,10 @@ private:
         kak_assert(matches.size() % m_faces.size() == 0);
         using RegexIt = RegexIterator<BufferIterator>;
         RegexIt re_it{buffer.iterator_at(range.begin),
-                      buffer.iterator_at(range.end), m_regex};
+                      buffer.iterator_at(range.end), m_regex,
+                      match_flags(is_bol(range.begin),
+                                  is_eol(buffer, range.end),
+                                  is_eow(buffer, range.end))};
         RegexIt re_end;
         for (; re_it != re_end; ++re_it)
         {

@@ -54,7 +54,7 @@ Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
         ++begin;
 
-    skip_while(begin, buffer.end(), is_eol);
+    skip_while(begin, buffer.end(), [](Codepoint c){ return is_eol(c); });
     if (begin == buffer.end())
         return selection;
     Utf8Iterator end = begin+1;
@@ -78,7 +78,7 @@ Selection select_to_next_word_end(const Buffer& buffer, const Selection& selecti
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
         ++begin;
 
-    skip_while(begin, buffer.end(), is_eol);
+    skip_while(begin, buffer.end(), [](Codepoint c){ return is_eol(c); });
     if (begin == buffer.end())
         return selection;
     Utf8Iterator end = begin;
@@ -101,7 +101,7 @@ Selection select_to_previous_word(const Buffer& buffer, const Selection& selecti
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin-1)))
         --begin;
 
-    skip_while_reverse(begin, buffer.begin(), is_eol);
+    skip_while_reverse(begin, buffer.begin(), [](Codepoint c){ return is_eol(c); });
     Utf8Iterator end = begin;
     skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
 
@@ -231,12 +231,16 @@ void select_buffer(SelectionList& selections);
 
 enum Direction { Forward, Backward };
 
-inline bool find_last_match(BufferIterator begin, const BufferIterator& end,
+inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
                             MatchResults<BufferIterator>& res,
                             const Regex& regex)
 {
     MatchResults<BufferIterator> matches;
-    while (regex_search(begin, end, matches, regex))
+    const bool is_pos_eol = is_eol(buffer, pos.coord());
+    const bool is_pos_eow = is_eow(buffer, pos.coord());
+    auto begin = buffer.begin();
+    while (regex_search(begin, pos, matches, regex,
+                        match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
     {
         if (begin == matches[0].second)
             break;
@@ -252,11 +256,12 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
                           const Regex& ex)
 {
     if (direction == Forward)
-        return (regex_search(pos, buffer.end(), matches, ex) or
+        return (regex_search(pos, buffer.end(), matches, ex,
+                             match_flags(is_bol(pos.coord()), true, true)) or
                 regex_search(buffer.begin(), buffer.end(), matches, ex));
     else
-        return (find_last_match(buffer.begin(), pos, matches, ex) or
-                find_last_match(buffer.begin(), buffer.end(), matches, ex));
+        return (find_last_match(buffer, pos, matches, ex) or
+                find_last_match(buffer, buffer.end(), matches, ex));
 }
 
 inline BufferIterator ensure_char_start(const Buffer& buffer, const BufferIterator& it)

@@ -70,6 +70,16 @@ using RegexIterator = regex_ns::regex_iterator<Iterator>;
 template<typename Iterator>
 using MatchResults = regex_ns::match_results<Iterator>;
 
+namespace RegexConstant = regex_ns::regex_constants;
+
+inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool eow)
+{
+    return (bol ? RegexConstant::match_default : RegexConstant::match_not_bol |
+                                                 RegexConstant::match_prev_avail) |
+           (eol ? RegexConstant::match_default : RegexConstant::match_not_eol) |
+           (eow ? RegexConstant::match_default : RegexConstant::match_not_eow);
+}
+
 String option_to_string(const Regex& re);
 void option_from_string(StringView str, Regex& re);
 

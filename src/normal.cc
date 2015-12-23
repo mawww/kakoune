@@ -797,8 +797,9 @@ void keep(Context& context, NormalParams)
         Vector<Selection> keep;
         for (auto& sel : context.selections())
         {
-            if (regex_search(buffer.iterator_at(sel.min()),
-                             utf8::next(buffer.iterator_at(sel.max()), buffer.end()), ex) == matching)
+            auto begin = buffer.iterator_at(sel.min());
+            auto end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
+            if (regex_search(begin, end, ex, RegexConstant::match_any) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())

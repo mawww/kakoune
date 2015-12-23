@@ -4,6 +4,9 @@
 #include "buffer.hh"
 #include "selection.hh"
 
+#include "utf8_iterator.hh"
+#include "unicode.hh"
+
 namespace Kakoune
 {
 
@@ -22,6 +25,25 @@ inline CharCount char_length(const Buffer& buffer, const Selection& range)
 {
     return utf8::distance(buffer.iterator_at(range.min()),
                           buffer.iterator_at(buffer.char_next(range.max())));
+}
+
+inline bool is_bol(ByteCoord coord)
+{
+    return coord.column == 0;
+}
+
+inline bool is_eol(const Buffer& buffer, ByteCoord coord)
+{
+    return buffer.is_end(coord) or buffer[coord.line].length() == coord.column+1;
+}
+
+inline bool is_eow(const Buffer& buffer, ByteCoord coord)
+{
+    if (buffer.is_end(coord) or coord == ByteCoord{0,0})
+        return true;
+
+    auto it = utf8::iterator<BufferIterator>(buffer.iterator_at(coord), buffer);
+    return is_word(*(it-1)) and not is_word(*it);
 }
 
 CharCount get_column(const Buffer& buffer,

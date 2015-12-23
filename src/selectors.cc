@@ -307,7 +307,8 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, Obj
 
     if ((flags & ObjectFlags::ToBegin) and first != buffer.begin())
     {
-        skip_while_reverse(first, buffer.begin(), is_eol);
+        skip_while_reverse(first, buffer.begin(),
+                           [](Codepoint c){ return is_eol(c); });
         if (flags & ObjectFlags::ToEnd)
             last = first;
         while (first != buffer.begin())
@@ -331,7 +332,8 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, Obj
             if (last != buffer.begin() and is_eol(*last) and is_eol(*(last-1)))
             {
                 if (not (flags & ObjectFlags::Inner))
-                    skip_while(last, buffer.end(), is_eol);
+                    skip_while(last, buffer.end(),
+                               [](Codepoint c){ return is_eol(c); });
                 break;
             }
             ++last;
@@ -570,8 +572,12 @@ void select_all_matches(SelectionList& selections, const Regex& regex, unsigned 
     auto& buffer = selections.buffer();
     for (auto& sel : selections)
     {
+        auto sel_beg = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        RegexIt re_it(buffer.iterator_at(sel.min()), sel_end, regex);
+        const auto flags = match_flags(is_bol(sel_beg.coord()),
+                                       is_eol(buffer, sel_end.coord()),
+                                       is_eow(buffer, sel_end.coord()));
+        RegexIt re_it(sel_beg, sel_end, regex, flags);
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
@@ -613,7 +619,11 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
     {
         auto begin = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
-        RegexIt re_it(begin, sel_end, regex);
+        const auto flags = match_flags(is_bol(begin.coord()),
+                                       is_eol(buffer, sel_end.coord()),
+                                       is_eow(buffer, sel_end.coord()));
+
+        RegexIt re_it(begin, sel_end, regex, flags);
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
