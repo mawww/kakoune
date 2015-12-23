@@ -413,7 +413,7 @@ int run_client(StringView session, StringView init_command)
 
 int run_server(StringView session, StringView init_command,
                bool ignore_kakrc, bool daemon, bool dummy_ui,
-               ConstArrayView<StringView> files)
+               ConstArrayView<StringView> files, LineCount target_line)
 {
     static bool terminate = false;
     if (daemon)
@@ -509,6 +509,10 @@ int run_server(StringView session, StringView init_command,
     {
          local_client = client_manager.create_client(
             create_local_ui(dummy_ui), get_env_vars(), init_command);
+
+        auto& selections = local_client->context().selections_write_only();
+        auto& buffer = selections.buffer();
+        selections = SelectionList(buffer, buffer.clamp(target_line));
 
         if (startup_error)
             local_client->print_status({
@@ -732,9 +736,21 @@ int main(int argc, char* argv[])
         }
         else
         {
+            LineCount target_line = 0;
             Vector<StringView> files;
-            for (size_t i = 0; i < parser.positional_count(); ++i)
-                files.emplace_back(parser[i]);
+            for (auto& name : parser)
+            {
+                if (not name.empty() and name[0_byte] == '+')
+                {
+                    if (auto line = str_to_int_ifp(name.substr(1_byte)))
+                    {
+                        target_line =  *line - 1;
+                        continue;
+                    }
+                }
+
+                files.emplace_back(name);
+            }
 
             StringView session = parser.get_switch("s").value_or(StringView{});
             try
@@ -743,7 +759,7 @@ int main(int argc, char* argv[])
                                   (bool)parser.get_switch("n"),
                                   (bool)parser.get_switch("d"),
                                   (bool)parser.get_switch("u"),
-                                  files);
+                                  files, target_line);
             }
             catch (convert_to_client_mode& convert)
             {
