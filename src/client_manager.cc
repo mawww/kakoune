@@ -111,7 +111,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 {
     for (auto& client : m_clients)
     {
-        client->context().forget_jumps_to_buffer(buffer);
+        client->context().jump_list().forget_buffer(buffer);
         if (client->last_buffer() == &buffer)
             client->set_last_buffer(nullptr);
 

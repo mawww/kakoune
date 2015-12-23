@@ -83,74 +83,73 @@ void Context::print_status(DisplayLine status) const
         client().print_status(std::move(status));
 }
 
-void Context::push_jump()
+void JumpList::push(SelectionList jump)
 {
-    const SelectionList& jump = selections();
-    if (m_current_jump != m_jump_list.end())
-        m_jump_list.erase(m_current_jump+1, m_jump_list.end());
-    m_jump_list.erase(std::remove(begin(m_jump_list), end(m_jump_list), jump),
-                      end(m_jump_list));
-    m_jump_list.push_back(jump);
-    m_current_jump = m_jump_list.end();
+    if (m_current != m_jumps.end())
+        m_jumps.erase(m_current+1, m_jumps.end());
+    m_jumps.erase(std::remove(begin(m_jumps), end(m_jumps), jump),
+                      end(m_jumps));
+    m_jumps.push_back(jump);
+    m_current = m_jumps.end();
 }
 
-void Context::drop_jump()
+void JumpList::drop()
 {
-    if (not m_jump_list.empty())
-        m_jump_list.pop_back();
-    m_current_jump = m_jump_list.end();
+    if (not m_jumps.empty())
+        m_jumps.pop_back();
+    m_current = m_jumps.end();
 }
 
-const SelectionList& Context::jump_forward()
+const SelectionList& JumpList::forward()
 {
-    if (m_current_jump != m_jump_list.end() and
-        m_current_jump + 1 != m_jump_list.end())
+    if (m_current != m_jumps.end() and
+        m_current + 1 != m_jumps.end())
     {
-        SelectionList& res = *++m_current_jump;
+        SelectionList& res = *++m_current;
         res.update();
         return res;
     }
     throw runtime_error("no next jump");
 }
 
-const SelectionList& Context::jump_backward()
+const SelectionList& JumpList::backward(const SelectionList& current)
 {
-    if (m_current_jump != m_jump_list.end() and
-        *m_current_jump != selections())
+    if (m_current != m_jumps.end() and
+        *m_current != current)
     {
-        push_jump();
-        SelectionList& res = *--m_current_jump;
+        push(current);
+        SelectionList& res = *--m_current;
         res.update();
         return res;
     }
-    if (m_current_jump != m_jump_list.begin())
+    if (m_current != m_jumps.begin())
     {
-        if (m_current_jump == m_jump_list.end())
+        if (m_current == m_jumps.end())
         {
-            push_jump();
-            --m_current_jump;
-            if (m_current_jump == m_jump_list.begin())
+            push(current);
+            --m_current;
+            if (m_current == m_jumps.begin())
                 throw runtime_error("no previous jump");
         }
-        SelectionList& res = *--m_current_jump;
+        SelectionList& res = *--m_current;
         res.update();
         return res;
     }
     throw runtime_error("no previous jump");
 }
 
-void Context::forget_jumps_to_buffer(Buffer& buffer)
+void JumpList::forget_buffer(Buffer& buffer)
 {
-    for (auto it = m_jump_list.begin(); it != m_jump_list.end();)
+    for (auto it = m_jumps.begin(); it != m_jumps.end();)
     {
         if (&it->buffer() == &buffer)
         {
-            if (it < m_current_jump)
-                --m_current_jump;
-            else if (it == m_current_jump)
-                m_current_jump = m_jump_list.end()-1;
+            if (it < m_current)
+                --m_current;
+            else if (it == m_current)
+                m_current = m_jumps.end()-1;
 
-            it = m_jump_list.erase(it);
+            it = m_jumps.erase(it);
         }
         else
             ++it;

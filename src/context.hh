@@ -50,6 +50,20 @@ private:
     bool m_condition;
 };
 
+struct JumpList
+{
+    void push(SelectionList jump);
+    void drop();
+    const SelectionList& forward();
+    const SelectionList& backward(const SelectionList& current);
+    void forget_buffer(Buffer& buffer);
+
+private:
+    using Contents = Vector<SelectionList, MemoryDomain::Selections>;
+    Contents           m_jumps;
+    Contents::iterator m_current = m_jumps.begin();
+};
+
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
@@ -113,12 +127,6 @@ public:
 
     StringView main_sel_register_value(StringView reg) const;
 
-    void push_jump();
-    void drop_jump();
-    const SelectionList& jump_forward();
-    const SelectionList& jump_backward();
-    void forget_jumps_to_buffer(Buffer& buffer);
-
     const String& name() const { return m_name; }
     void set_name(String name) { m_name = std::move(name); }
 
@@ -135,6 +143,9 @@ public:
     const NestedBool& history_disabled() const { return m_history_disabled; }
 
     Flags flags() const { return m_flags; }
+
+    JumpList& jump_list() { return m_jump_list; }
+    void push_jump() { m_jump_list.push(selections()); }
 
 private:
     void begin_edition();
@@ -153,9 +164,7 @@ private:
 
     String m_name;
 
-    using JumpList = Vector<SelectionList>;
-    JumpList           m_jump_list;
-    JumpList::iterator m_current_jump = m_jump_list.begin();
+    JumpList m_jump_list;
 
     NestedBool m_user_hooks_disabled;
     NestedBool m_keymaps_disabled;

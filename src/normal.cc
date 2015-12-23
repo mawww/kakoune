@@ -1135,7 +1135,8 @@ template<Direction direction>
 void jump(Context& context, NormalParams)
 {
     auto jump = (direction == Forward) ?
-                 context.jump_forward() : context.jump_backward();
+                 context.jump_list().forward() :
+                 context.jump_list().backward(context.selections());
 
     Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
@@ -1153,7 +1154,7 @@ void push_selections(Context& context, NormalParams)
 
 void drop_jump(Context& context, NormalParams)
 {
-    context.drop_jump();
+    context.jump_list().drop();
     context.print_status({ "dropped last jump",  get_face("Information") });
 }
 
