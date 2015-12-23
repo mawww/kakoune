@@ -58,6 +58,13 @@ struct JumpList
     const SelectionList& backward(const SelectionList& current);
     void forget_buffer(Buffer& buffer);
 
+    friend bool operator==(const JumpList& lhs, const JumpList& rhs)
+    {
+        return lhs.m_jumps == rhs.m_jumps and lhs.m_current == rhs.m_current;
+    }
+
+    friend bool operator!=(const JumpList& lhs, const JumpList& rhs) { return not (lhs == rhs); }
+
 private:
     using Contents = Vector<SelectionList, MemoryDomain::Selections>;
     Contents           m_jumps;
