@@ -93,13 +93,6 @@ void JumpList::push(SelectionList jump)
     m_current = m_jumps.size();
 }
 
-void JumpList::drop()
-{
-    if (not m_jumps.empty())
-        m_jumps.pop_back();
-    m_current = m_jumps.size();
-}
-
 const SelectionList& JumpList::forward()
 {
     if (m_current != m_jumps.size() and

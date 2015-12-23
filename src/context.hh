@@ -53,7 +53,6 @@ private:
 struct JumpList
 {
     void push(SelectionList jump);
-    void drop();
     const SelectionList& forward();
     const SelectionList& backward(const SelectionList& current);
     void forget_buffer(Buffer& buffer);
