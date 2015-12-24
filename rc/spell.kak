@@ -9,7 +9,7 @@ def spell %{
         echo "set buffer spell_tmp_file ${file}"
     }
     %sh{
-        sed -ie 's/^/^/' $kak_opt_spell_tmp_file
+        sed -i 's/^/^/' $kak_opt_spell_tmp_file
         aspell -a < $kak_opt_spell_tmp_file 2>&1 | {
             line_num=1
             regions=$kak_timestamp
