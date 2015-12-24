@@ -507,12 +507,15 @@ int run_server(StringView session, StringView init_command,
 
     if (not daemon)
     {
-         local_client = client_manager.create_client(
+        local_client = client_manager.create_client(
             create_local_ui(dummy_ui), get_env_vars(), init_command);
 
-        auto& selections = local_client->context().selections_write_only();
-        auto& buffer = selections.buffer();
-        selections = SelectionList(buffer, buffer.clamp(target_line));
+        if (local_client)
+        {
+            auto& selections = local_client->context().selections_write_only();
+            auto& buffer = selections.buffer();
+            selections = SelectionList(buffer, buffer.clamp(target_line));
+        }
 
         if (startup_error)
             local_client->print_status({
