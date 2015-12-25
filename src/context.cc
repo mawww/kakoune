@@ -75,6 +75,8 @@ void Context::set_window(Window& window)
 {
     kak_assert(&window.buffer() == &buffer());
     m_window.reset(&window);
+    if (has_ui())
+        m_window->set_dimensions(ui().dimensions());
 }
 
 void Context::print_status(DisplayLine status) const
