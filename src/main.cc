@@ -515,6 +515,7 @@ int run_server(StringView session, StringView init_command,
             auto& selections = local_client->context().selections_write_only();
             auto& buffer = selections.buffer();
             selections = SelectionList(buffer, buffer.clamp(target_line));
+            local_client->context().window().center_line(target_line);
         }
 
         if (startup_error)
