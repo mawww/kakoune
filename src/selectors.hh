@@ -247,7 +247,18 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
         begin = matches[0].second;
         res.swap(matches);
     }
-    return not res.empty();
+    if (not res.empty())
+    {
+        begin = utf8::next(res[0].first, pos);
+        while (begin != pos and regex_search(begin, pos, matches, regex,
+                                             match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+        {
+            begin = utf8::next(matches[0].first, pos);
+            res.swap(matches);
+        }
+        return true;
+    }
+    return false;
 }
 
 template<Direction direction>
