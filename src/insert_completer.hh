@@ -23,7 +23,7 @@ struct InsertCompleterDesc
     { return mode == other.mode and param == other.param; }
 
     bool operator!=(const InsertCompleterDesc& other) const
-    { return !(*this == other); }
+    { return not (*this == other); }
 
     Mode mode;
     Optional<String> param;

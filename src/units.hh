@@ -105,7 +105,7 @@ public:
 
     [[gnu::always_inline]]
     constexpr bool operator!() const
-    { return !m_value; }
+    { return not m_value; }
 
     [[gnu::always_inline]]
     explicit constexpr operator ValueType() const { return m_value; }
