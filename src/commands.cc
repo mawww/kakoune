@@ -184,9 +184,9 @@ ParameterDesc edit_params{
       { "scroll",   { false, "place the initial cursor so that the fifo will scroll to show new data" } } },
       ParameterDesc::Flags::None, 0, 3
 };
- const CommandDesc edit_cmd = {
-             "edit",
-             "e",
+const CommandDesc edit_cmd = {
+    "edit",
+    "e",
     "edit [<switches>] <filename> [<line> [<column>]]: open the given filename in a buffer",
     edit_params,
     CommandFlags::None,
