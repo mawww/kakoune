@@ -1129,7 +1129,11 @@ void replay_macro(Context& context, NormalParams params)
 
     auto keys = parse_keys(reg_val[0]);
     ScopedEdition edition(context);
-    do { exec_keys(keys, context); } while (--params.count > 0);
+    do
+    {
+        for (auto& key : keys)
+            context.input_handler().handle_key(key);
+    } while (--params.count > 0);
 }
 
 template<Direction direction>
@@ -1411,7 +1415,8 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         auto mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedEdition edition(context);
-        exec_keys(mapping, context);
+        for (auto& key : mapping)
+            context.input_handler().handle_key(key);
     }, "user mapping", "enter user key");
 }
 

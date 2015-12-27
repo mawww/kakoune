@@ -1394,7 +1394,10 @@ const CommandDesc exec_string_cmd = {
                 KeyList param_keys = parse_keys(param);
                 keys.insert(keys.end(), param_keys.begin(), param_keys.end());
             }
-            exec_keys(keys, context);
+
+            ScopedEdition edition(context);
+            for (auto& key : keys)
+                context.input_handler().handle_key(key);
         });
     }
 };
@@ -1730,14 +1733,6 @@ const CommandDesc change_working_directory_cmd = {
     }
 };
 
-}
-
-void exec_keys(ConstArrayView<Key> keys, Context& context)
-{
-    ScopedEdition edition(context);
-
-    for (auto& key : keys)
-        context.input_handler().handle_key(key);
 }
 
 void register_commands()
