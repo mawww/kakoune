@@ -315,6 +315,14 @@ const CommandDesc force_quit_cmd = {
     [](const ParametersParser&, Context&, const ShellContext&){ quit<true>(); }
 };
 
+template<bool force>
+void write_quit(const ParametersParser& parser, Context& context,
+                const ShellContext& shell_context)
+{
+    write_buffer(parser, context, shell_context);
+    quit<force>();
+}
+
 const CommandDesc write_quit_cmd = {
     "wq",
     nullptr,
@@ -323,11 +331,7 @@ const CommandDesc write_quit_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
-        write_buffer(parser, context, shell_context);
-        quit<false>();
-    }
+    write_quit<false>
 };
 
 const CommandDesc force_write_quit_cmd = {
@@ -339,11 +343,7 @@ const CommandDesc force_write_quit_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
-        write_buffer(parser, context, shell_context);
-        quit<true>();
-    }
+    write_quit<true>
 };
 
 const CommandDesc writeall_quit_cmd = {
