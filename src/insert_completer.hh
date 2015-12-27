@@ -76,8 +76,8 @@ public:
 private:
     bool setup_ifn();
 
-    template<typename CompleteFunc>
-    bool try_complete(CompleteFunc complete_func);
+    template<typename Func>
+    bool try_complete(Func complete_func);
     void on_option_changed(const Option& opt) override;
 
     void menu_show();
@@ -90,7 +90,8 @@ private:
     CandidateList    m_matching_candidates;
     int              m_current_candidate = -1;
 
-    std::function<InsertCompletion (const Buffer&, ByteCoord)> m_explicit_completer;
+    using CompleteFunc = InsertCompletion (const Buffer&, ByteCoord, const OptionManager& options);
+    std::function<CompleteFunc> m_explicit_completer;
 };
 
 }

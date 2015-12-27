@@ -819,6 +819,8 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
      element of the list should follow the format:
      _<line>.<column>[+<length>]@<timestamp>_ to define where the completion
      apply in the buffer, and the other strings are the candidates.
+ * `static_words` _str-list_: list of words that are always added to completion
+     candidates when completing words in insert mode.
  * `autoreload` _enum(yes|no|ask)_: auto reload the buffers when an external
    modification is detected.
  * `debug` _flags(hooks|shell|profile)_: dump various debug information in

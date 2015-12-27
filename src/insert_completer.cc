@@ -74,7 +74,7 @@ WordDB& get_word_db(const Buffer& buffer)
 }
 
 template<bool other_buffers>
-InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
+InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const OptionManager& options)
 {
     using Utf8It = utf8::iterator<BufferIterator>;
     Utf8It pos{buffer.iterator_at(cursor_pos), buffer};
@@ -129,6 +129,20 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
             add_matches(*buf);
         }
     }
+
+    {
+        using StaticWords = Vector<String, MemoryDomain::Options>;
+        const StaticWords& static_words = options["static_words"].get<StaticWords>();
+
+        for (auto& word : static_words)
+        {
+            if (prefix.empty())
+                matches.push_back(RankedMatch{word, prefix});
+            else if (RankedMatch match{word, prefix})
+                matches.push_back(match);
+        }
+    }
+
     unordered_erase(matches, StringView{prefix});
     std::sort(matches.begin(), matches.end());
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
@@ -160,7 +174,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos)
 
 template<bool require_slash>
 InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
-                                   OptionManager& options)
+                                   const OptionManager& options)
 {
     auto pos = buffer.iterator_at(cursor_pos);
     auto begin = pos;
@@ -204,7 +218,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
 }
 
 InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
-                                 OptionManager& options, StringView option_name)
+                                 const OptionManager& options, StringView option_name)
 {
     const StringList& opt = options[option_name].get<StringList>();
     if (opt.empty())
@@ -280,7 +294,7 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
     return {};
 }
 
-InsertCompletion complete_line(const Buffer& buffer, OptionManager& options, ByteCoord cursor_pos)
+InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos, const OptionManager& options)
 {
     const CharCount tabstop = options["tabstop"].get<int>();
     const CharCount column = get_column(buffer, tabstop, cursor_pos);
@@ -395,15 +409,12 @@ bool InsertCompleter::setup_ifn()
         for (auto& completer : completers)
         {
             if (completer.mode == InsertCompleterDesc::Filename and
-                try_complete([this](const Buffer& buffer, ByteCoord cursor_pos) {
-                    return complete_filename<true>(buffer, cursor_pos,
-                                                   m_options);
-                }))
+                try_complete(complete_filename<true>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Option and
-                try_complete([&,this](const Buffer& buffer, ByteCoord cursor_pos) {
-                   return complete_option(buffer, cursor_pos,
-                                          m_options, *completer.param);
+                try_complete([&,this](const Buffer& buffer, ByteCoord cursor_pos,
+                                      const OptionManager& options) {
+                   return complete_option(buffer, cursor_pos, options, *completer.param);
                 }))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
@@ -457,14 +468,14 @@ void InsertCompleter::on_option_changed(const Option& opt)
     }
 }
 
-template<typename CompleteFunc>
-bool InsertCompleter::try_complete(CompleteFunc complete_func)
+template<typename Func>
+bool InsertCompleter::try_complete(Func complete_func)
 {
     auto& buffer = m_context.buffer();
     ByteCoord cursor_pos = m_context.selections().main().cursor();
     try
     {
-        m_completions = complete_func(buffer, cursor_pos);
+        m_completions = complete_func(buffer, cursor_pos, m_options);
     }
     catch (runtime_error& e)
     {
@@ -484,11 +495,8 @@ bool InsertCompleter::try_complete(CompleteFunc complete_func)
 
 void InsertCompleter::explicit_file_complete()
 {
-    auto func = [this](const Buffer& buffer, ByteCoord cursor_pos) {
-        return complete_filename<false>(buffer, cursor_pos, m_options);
-    };
-    try_complete(func);
-    m_explicit_completer = func;
+    try_complete(complete_filename<false>);
+    m_explicit_completer = complete_filename<false>;
 }
 
 void InsertCompleter::explicit_word_complete()
@@ -499,11 +507,8 @@ void InsertCompleter::explicit_word_complete()
 
 void InsertCompleter::explicit_line_complete()
 {
-    auto func = [this](const Buffer& buffer, ByteCoord cursor_pos) {
-        return complete_line(buffer, m_options, cursor_pos);
-    };
-    try_complete(func);
-    m_explicit_completer = func;
+    try_complete(complete_line);
+    m_explicit_completer = complete_line;
 }
 
 }

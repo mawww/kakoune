@@ -123,6 +123,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     alias window alt c-family-alternative-file
 
     set window formatcmd "astyle"
+    set window static_words "void:char:short:int:long:signed:unsigned:float:double:size_t:while:for:if:else:do:switch:case:default:goto:asm:break:continue:return:sizeof:const:auto:register:inline:static:volatile:struct:enum:union:typedef:extern:restrict"
 ]
 
 hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[

@@ -220,6 +220,8 @@ void register_options()
                            InsertCompleterDesc{ InsertCompleterDesc::Filename },
                            InsertCompleterDesc{ InsertCompleterDesc::Word, "all"_str }
                        }), OptionFlags::None);
+    reg.declare_option("static_words", "list of words to always consider for insert word completion",
+                   Vector<String, MemoryDomain::Options>{});
     reg.declare_option("autoreload",
                        "autoreload buffer when a filesystem modification is detected",
                        Autoreload::Ask);
