@@ -1,14 +1,17 @@
 #ifndef insert_completer_hh_INCLUDED
 #define insert_completer_hh_INCLUDED
 
-#include "buffer.hh"
 #include "option_manager.hh"
 #include "display_buffer.hh"
+#include "vector.hh"
 
 #include "optional.hh"
 
 namespace Kakoune
 {
+
+class Buffer;
+struct Key;
 
 struct InsertCompleterDesc
 {
@@ -82,16 +85,13 @@ private:
 
     void menu_show();
 
-    using CandidateList = InsertCompletion::CandidateList;
-
     const Context&   m_context;
     OptionManager&   m_options;
     InsertCompletion m_completions;
-    CandidateList    m_matching_candidates;
     int              m_current_candidate = -1;
 
     using CompleteFunc = InsertCompletion (const Buffer&, ByteCoord, const OptionManager& options);
-    std::function<CompleteFunc> m_explicit_completer;
+    CompleteFunc* m_explicit_completer = nullptr;
 };
 
 }

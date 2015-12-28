@@ -339,10 +339,10 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
         return;
 
     auto& buffer = m_context.buffer();
-    m_current_candidate = (m_current_candidate + offset) % (int)m_matching_candidates.size();
+    m_current_candidate = (m_current_candidate + offset) % (int)m_completions.candidates.size();
     if (m_current_candidate < 0)
-        m_current_candidate += m_matching_candidates.size();
-    const InsertCompletion::Candidate& candidate = m_matching_candidates[m_current_candidate];
+        m_current_candidate += m_completions.candidates.size();
+    const InsertCompletion::Candidate& candidate = m_completions.candidates[m_current_candidate];
     auto& selections = m_context.selections();
     const auto& cursor_pos = selections.main().cursor();
     const auto prefix_len = buffer.distance(m_completions.begin, cursor_pos);
@@ -438,7 +438,7 @@ void InsertCompleter::menu_show()
     CharCoord menu_pos = m_context.window().display_position(m_completions.begin);
 
     Vector<DisplayLine> menu_entries;
-    for (auto& candidate : m_matching_candidates)
+    for (auto& candidate : m_completions.candidates)
         menu_entries.push_back(candidate.menu_entry);
 
     m_context.ui().menu_show(menu_entries, menu_pos,
@@ -451,8 +451,8 @@ void InsertCompleter::menu_show()
 void InsertCompleter::on_option_changed(const Option& opt)
 {
     // Do not reset the menu if the user has selected an entry
-    if (not m_matching_candidates.empty() and
-        m_current_candidate != m_matching_candidates.size() - 1)
+    if (not m_completions.candidates.empty() and
+        m_current_candidate != m_completions.candidates.size() - 1)
         return;
 
     auto& completers = m_options["completers"].get<InsertCompleterDescList>();
@@ -486,10 +486,9 @@ bool InsertCompleter::try_complete(Func complete_func)
         return false;
 
     kak_assert(cursor_pos >= m_completions.begin);
-    m_matching_candidates = m_completions.candidates;
-    m_current_candidate = m_matching_candidates.size();
+    m_current_candidate = m_completions.candidates.size();
     menu_show();
-    m_matching_candidates.push_back({buffer.string(m_completions.begin, m_completions.end), ""});
+    m_completions.candidates.push_back({buffer.string(m_completions.begin, m_completions.end), ""});
     return true;
 }
 
