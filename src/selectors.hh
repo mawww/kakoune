@@ -239,13 +239,12 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
     const bool is_pos_eol = is_eol(buffer, pos.coord());
     const bool is_pos_eow = is_eow(buffer, pos.coord());
     auto begin = buffer.begin();
-    while (regex_search(begin, pos, matches, regex,
-                        match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+    while (begin != pos and regex_search(begin, pos, matches, regex,
+                                         match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
     {
-        if (begin == matches[0].second)
-            break;
-        begin = matches[0].second;
-        res.swap(matches);
+        begin = utf8::next(matches[0].first, pos);
+        if (res.empty() or matches[0].second > res[0].second)
+            res.swap(matches);
     }
     return not res.empty();
 }
