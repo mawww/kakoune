@@ -587,6 +587,13 @@ Basic Commands
       `:nop %sh{ echo echo tchou }` will not, but both will execute the
       shell command.
 
+Multiple commands
+~~~~~~~~~~~~~~~~~
+
+Multiple commands can be separated either by new lines or by semicolons,
+as such a semicolon must be escaped with `\;` to be considered as a literal
+semicolon argument.
+
 String syntax
 ~~~~~~~~~~~~~
 
