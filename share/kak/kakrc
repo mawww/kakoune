@@ -7,7 +7,7 @@ def -params 1.. runtime %{ %sh{
 
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
   -shell-completion %{
-    prefix=${1:0:${kak_pos_in_token}}
+    prefix=$(echo ${1} | cut -c-${kak_pos_in_token})
     (
       localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
       for col in ${kak_runtime}/colors/*.kak ${localconfdir}/colors/*.kak; do
