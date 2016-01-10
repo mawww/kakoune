@@ -250,8 +250,8 @@ NCursesUI::NCursesUI()
 
     enable_mouse(true);
 
-    set_signal_wrapper(SIGWINCH, on_term_resize);
-    set_signal_wrapper(SIGCONT, on_term_resize);
+    set_signal_handler(SIGWINCH, on_term_resize);
+    set_signal_handler(SIGCONT, on_term_resize);
 
     check_resize(true);
 
@@ -262,8 +262,8 @@ NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
     endwin();
-    set_signal_wrapper(SIGWINCH, SIG_DFL);
-    set_signal_wrapper(SIGCONT, SIG_DFL);
+    set_signal_handler(SIGWINCH, SIG_DFL);
+    set_signal_handler(SIGCONT, SIG_DFL);
 }
 
 void NCursesUI::Window::create(const CharCoord& p, const CharCoord& s)

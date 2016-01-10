@@ -14,8 +14,6 @@
 namespace Kakoune
 {
 
-typedef void(*SignalHandler)(int);
-
 enum class EventMode
 {
     Normal,
@@ -94,7 +92,9 @@ private:
     TimePoint        m_last;
 };
 
-SignalHandler set_signal_wrapper(int signum, SignalHandler handler);
+using SignalHandler = void(*)(int);
+
+SignalHandler set_signal_handler(int signum, SignalHandler handler);
 
 }
 

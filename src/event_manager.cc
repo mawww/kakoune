@@ -133,7 +133,7 @@ void EventManager::force_signal(int fd)
     FD_SET(fd, &m_forced_fd);
 }
 
-SignalHandler set_signal_wrapper(int signum, SignalHandler handler)
+SignalHandler set_signal_handler(int signum, SignalHandler handler)
 {
     struct sigaction new_action, old_action;
 
