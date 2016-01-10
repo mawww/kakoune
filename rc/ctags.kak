@@ -7,7 +7,7 @@ decl str-list ctagsfiles 'tags'
 
 def -params 0..1 \
     -shell-completion '
-        ( for tags in $(echo "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
+        ( for tags in $(printf %s "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
               do readtags -t "${tags}" -p "$1"
           done ) | cut -f 1 | sort | uniq' \
     -docstring 'Jump to tag definition' \
@@ -15,7 +15,7 @@ def -params 0..1 \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
         (
-            for tags in $(echo "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
+            for tags in $(printf %s "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
                 readtags -t "${tags}" ${tagname}
             done
         ) | awk -F '\t|\n' -e '

@@ -16,15 +16,15 @@ def spell %{
             while read line; do
                 case $line in
                    \&*)
-                       word=$(echo "$line" | cut -d ' ' -f 2)
-                       begin=$(echo "$line" | cut -d ' ' -f 4 | sed 's/:$//')
+                       word=$(printf %s "$line" | cut -d ' ' -f 2)
+                       begin=$(printf %s "$line" | cut -d ' ' -f 4 | sed 's/:$//')
                        end=$((begin + ${#word}))
                        # echo "echo -debug -- line: $line_num, word: $word, begin: $begin, end: $end"
                        regions="$regions:$line_num.$begin,$line_num.$end|Error"
                        ;;
                    '#'*)
-                       word=$(echo "$line" | cut -d ' ' -f 2)
-                       begin=$(echo "$line" | cut -d ' ' -f 3)
+                       word=$(printf %s "$line" | cut -d ' ' -f 2)
+                       begin=$(printf %s "$line" | cut -d ' ' -f 3)
                        end=$((begin + ${#word}))
                        # echo "echo -debug -- line: $line_num, word: $word, begin: $begin, end: $end"
                        regions="$regions:$line_num.$begin,$line_num.$end|Error"

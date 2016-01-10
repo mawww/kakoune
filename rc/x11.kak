@@ -12,7 +12,7 @@ decl str termcmd %sh{
                    'xfce4-terminal -e      ' ; do
         terminal=${termcmd%% *}
         if which $terminal > /dev/null 2>&1; then
-            echo "'$termcmd'"
+            printf %s "'$termcmd'"
             exit
         fi
     done

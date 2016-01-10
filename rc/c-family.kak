@@ -162,7 +162,7 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) _c-family-insert-include-guards
 decl str-list alt_dirs ".;.."
 
 def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
-    alt_dirs=$(echo ${kak_opt_alt_dirs} | sed -e 's/;/ /g')
+    alt_dirs=$(printf %s "${kak_opt_alt_dirs}" | sed -e 's/;/ /g')
     file=$(basename "${kak_buffile}")
     dir=$(dirname "${kak_buffile}")
 

@@ -118,14 +118,14 @@ def clang-enable-autocomplete -docstring "Enable completion with clang" %{
 }
 
 def clang-disable-autocomplete -docstring "Disable automatic clang completion" %{
-    set window completers %sh{ echo "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
+    set window completers %sh{ printf %s "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
     rmhooks window clang-autocomplete
     unalias window complete clang-complete
 }
 
 def -allow-override -hidden clang-show-error-info %{ %sh{
-    echo "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | if read line; then
-        desc=$(echo ${line} | sed -e "s/^[[:digit:]]\+,//g; s/'/\\\\'/g")
+    printf %s "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | if read line; then
+        desc=$(printf %s ${line} | sed -e "s/^[[:digit:]]\+,//g; s/'/\\\\'/g")
         echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
     fi
 } }
@@ -141,7 +141,7 @@ def clang-disable-diagnostics -docstring "Disable automatic diagnostics of the c
 }
 
 def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{ %sh{
-    echo "${kak_opt_clang_errors}" | (
+    printf %s "${kak_opt_clang_errors}" | (
         line=-1
         first_line=-1
         while read line_content; do
