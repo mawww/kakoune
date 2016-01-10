@@ -22,7 +22,6 @@ def -hidden -params .. _man %{ %sh{
     col -b > ${colout} < ${manout}
     rm ${manout}
     if [ "${retval}" -eq 0 ]; then
-        echo "${output}" |
         echo "edit! -scratch '*man*'
               exec |cat<space>${colout}<ret>gk
               nop %sh{rm ${colout}}
