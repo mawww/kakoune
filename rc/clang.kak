@@ -141,7 +141,7 @@ def clang-disable-diagnostics -docstring "Disable automatic diagnostics of the c
 }
 
 def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{ %sh{
-    printf %s "${kak_opt_clang_errors}" | (
+    echo "${kak_opt_clang_errors}" | (
         line=-1
         first_line=-1
         while read line_content; do
