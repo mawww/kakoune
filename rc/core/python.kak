@@ -37,11 +37,6 @@ addhl -group /python/code regex \<(bool|buffer|bytearray|complex|dict|file|float
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _python_filter_around_selections %{
-    # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
-}
-
 def -hidden _python_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
@@ -60,13 +55,11 @@ def -hidden _python_indent_on_new_line %{
 
 hook global WinSetOption filetype=python %{
     addhl ref python
-
-    hook window InsertEnd  .* -group python-hooks  _python_filter_around_selections
     hook window InsertChar \n -group python-indent _python_indent_on_new_line
+    set window formatcmd "pythontidy"
 }
 
 hook global WinSetOption filetype=(?!python).* %{
     rmhl python
     rmhooks window python-indent
-    rmhooks window python-hooks
 }
