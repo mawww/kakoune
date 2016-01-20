@@ -415,7 +415,10 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    format_to(addr.sun_path, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, session);
+    if (find(session, '/')!= session.end())
+        format_to(addr.sun_path, "/tmp/kakoune/{}", session);
+    else
+        format_to(addr.sun_path, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, session);
     return addr;
 }
 
