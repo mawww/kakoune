@@ -1,4 +1,4 @@
-hook global BufCreate .*\.(repo|service|target|socket|ini) %{
+hook global BufCreate .*\.(repo|service|target|socket|ini|cfg) %{
     set buffer filetype ini-file
 }
 
