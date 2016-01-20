@@ -77,7 +77,7 @@ hook global WinSetOption filetype=python %{
     addhl ref python
     hook window InsertChar \n -group python-indent _python_indent_on_new_line
 
-    set window formatcmd "pythontidy"
+    set window formatcmd "autopep8 -"
 
     %sh{
         # FIXME: the following line tricks kakoune into adding those variables to the environment for later indirection expansion
