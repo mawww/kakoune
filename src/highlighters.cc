@@ -1024,7 +1024,7 @@ HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
         }
     };
 
-    return {"hlranges_" + params[1], make_simple_highlighter(func) };
+    return {"hlranges_" + params[0], make_simple_highlighter(func) };
 }
 
 HighlighterAndId create_highlighter_group(HighlighterParameters params)
