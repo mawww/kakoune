@@ -1,6 +1,8 @@
 # http://ruby-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+# require commenting.kak
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -97,6 +99,9 @@ hook global WinSetOption filetype=ruby %{
     hook window InsertEnd  .* -group ruby-hooks  _ruby_filter_around_selections
     hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
+
+    set window comment_line_chars '#'
+    set window comment_selection_chars '^begin=:^=end'
 }
 
 hook global WinSetOption filetype=(?!ruby).* %{
