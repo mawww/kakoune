@@ -1,7 +1,7 @@
 decl -hidden range-faces spell_regions
 decl -hidden str spell_tmp_file
 
-def spell %{
+def -params ..1 spell -docstring "Check spelling of the current buffer with aspell (the first optional argument is the language against which the check will be performed)" %{
     try %{ addhl ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d -t kak-spell.XXXXXXXX)/buffer
@@ -9,8 +9,17 @@ def spell %{
         echo "set buffer spell_tmp_file ${file}"
     }
     %sh{
+        if [ $# -ge 1 ]; then
+            if [ ${#1} -ne 2 -a ${#1} -ne 5 ]; then
+                echo "echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)"
+                rm -r $(dirname $kak_opt_spell_tmp_file)
+                exit 1
+            else
+                options="-l $1"
+            fi
+        fi
         sed -i 's/^/^/' $kak_opt_spell_tmp_file
-        aspell -a < $kak_opt_spell_tmp_file 2>&1 | {
+        aspell -a $options < $kak_opt_spell_tmp_file 2>&1 | {
             line_num=1
             regions=$kak_timestamp
             while read line; do
