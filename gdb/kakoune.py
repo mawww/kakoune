@@ -131,6 +131,18 @@ class LineCount:
     def to_string(self):
         return self.val["m_value"]
 
+class Color:
+    """Print a Color"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        if self.val["color"] == gdb.lookup_type("Kakoune::Color::NamedColor")["Kakoune::Color::RGB"].enumval:
+            return "%s #%02x%02x%02x" % (self.val["color"], self.val["r"], self.val["g"], self.val["b"])
+        else:
+            return self.val["color"]
+
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
     pp.add_printer('ArrayView',      '^Kakoune::ArrayView<.*>$',     ArrayView)
@@ -147,5 +159,6 @@ def build_pretty_printer():
     pp.add_printer('LineCount',      '^Kakoune::LineCount$',         LineCount)
     pp.add_printer('CharCount',      '^Kakoune::CharCount$',         CharCount)
     pp.add_printer('ByteCount',      '^Kakoune::ByteCount$',         ByteCount)
+    pp.add_printer('Color',          '^Kakoune::Color$',             Color)
     return pp
 
