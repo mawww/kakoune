@@ -647,6 +647,80 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
     return {"hlcol_" + params[0], make_simple_highlighter(std::move(func))};
 }
 
+HighlighterAndId create_wrap_highlighter(HighlighterParameters params)
+{
+    if (params.size() != 1)
+        throw runtime_error("wrong parameter count");
+
+    String col_expr = params[0];
+
+    auto func = [=](const Context& context, HighlightFlags flags,
+                    DisplayBuffer& display_buffer, BufferRange)
+    {
+        ColumnCount column = -1;
+        try
+        {
+            column = str_to_int_ifp(expand(col_expr, context)).value_or(0) - 1;
+        }
+        catch (runtime_error& err)
+        {
+            write_to_debug_buffer(
+                format("Error evaluating highlight column expression: {}", err.what()));
+        }
+
+        if (column < 0)
+            return;
+
+        const Buffer& buffer = context.buffer();
+        const int tabstop = context.options()["tabstop"].get<int>();
+        const auto line_count = display_buffer.lines().size();
+        for (auto it = display_buffer.lines().begin();
+             it != display_buffer.lines().end(); ++it)
+        {
+            const LineCount buf_line = it->range().begin.line;
+            int line_split_count = 1;
+            const ByteCount line_length = buffer[buf_line].length();
+            auto get_coord = [&](ColumnCount c) {
+                auto col = get_byte_to_column(
+                    buffer, tabstop, {buf_line, c});
+                return BufferCoord{buf_line, col};
+            };
+
+            auto coord = get_coord(column * line_split_count++);
+            if (buffer.is_valid(coord) and not buffer.is_end(coord))
+            {
+                for (auto atom_it = it->begin();
+                     coord.column != line_length and atom_it != it->end(); )
+                {
+                    if (!atom_it->has_buffer_range() or
+                        coord < atom_it->begin() or coord >= atom_it->end())
+                    {
+                        ++atom_it;
+                        continue;
+                    }
+
+                    auto& line = *it;
+
+                    if (coord > atom_it->begin())
+                        atom_it = ++line.split(atom_it, coord);
+                    if (buffer.next(coord) < atom_it->end())
+                        atom_it = line.split(atom_it, buffer.next(coord));
+
+                    DisplayLine new_line{ AtomList{ atom_it, line.end() } };
+                    line.erase(atom_it, line.end());
+                    it = display_buffer.lines().insert(it+1, new_line);
+
+                    coord = get_coord(column * line_split_count++);
+                    atom_it = it->begin();
+                }
+            }
+        }
+        display_buffer.lines().resize(line_count);
+    };
+
+    return {"wrap_" + params[0], make_simple_highlighter(std::move(func))};
+}
+
 void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
@@ -1574,6 +1648,11 @@ void register_highlighters()
         { create_column_highlighter,
           "Parameters: <value string> <face>\n"
           "Highlight the column given by evaluating <value string> with <face>" } });
+    registry.insert({
+        "wrap",
+        { create_wrap_highlighter,
+          "Parameters: <value string>\n"
+          "Wrap lines to given column" } });
     registry.insert({
         "ref",
         { create_reference_highlighter,
