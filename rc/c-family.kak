@@ -112,7 +112,7 @@ addhl -group /objc/code regex "\<(const|auto|inline|static|volatile|struct|enum|
 addhl -group /objc/code regex "@(property|synthesize|interface|implementation|protocol|end|selector|autoreleasepool|try|catch|class|synchronized)\>" 0:attribute
 addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 
-hook global WinSetOption filetype=(c|cpp|objc) %[
+hook global WinSetOption filetype=(c|cpp|objc|java) %[
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group c-family-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
 
@@ -126,7 +126,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     set window static_words "void:char:short:int:long:signed:unsigned:float:double:size_t:while:for:if:else:do:switch:case:default:goto:asm:break:continue:return:sizeof:const:auto:register:inline:static:volatile:struct:enum:union:typedef:extern:restrict"
 ]
 
-hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
+hook global WinSetOption filetype=(?!(c|cpp|objc|java)$).* %[
     rmhooks window c-family-hooks
     rmhooks window c-family-indent
 
