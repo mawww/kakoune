@@ -2,6 +2,7 @@
 
 #include "optional.hh"
 #include "string.hh"
+#include "unit_tests.hh"
 
 #include <algorithm>
 
@@ -73,20 +74,22 @@ Selection select_matching(const Buffer& buffer, const Selection& selection)
     return selection;
 }
 
-static Optional<Selection> find_surrounding(const Buffer& buffer,
-                                            ByteCoord coord,
-                                            MatchingPair matching,
-                                            ObjectFlags flags, int init_level)
+template<typename Iterator>
+Optional<std::pair<Iterator, Iterator>>
+find_surrounding(Iterator begin, Iterator end,
+                 Iterator pos, MatchingPair matching,
+                 ObjectFlags flags, int init_level)
 {
+    using Utf8It = utf8::iterator<Iterator>;
+
     const bool to_begin = flags & ObjectFlags::ToBegin;
     const bool to_end   = flags & ObjectFlags::ToEnd;
     const bool nestable = matching.opening != matching.closing;
-    auto pos = buffer.iterator_at(coord);
-    Utf8Iterator first{pos, buffer};
+    Utf8It first{pos, begin, end};
     if (to_begin)
     {
         int level = nestable ? init_level : 0;
-        while (first != buffer.begin())
+        while (first != begin)
         {
             if (nestable and first != pos and *first == matching.closing)
                 ++level;
@@ -100,14 +103,14 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
             --first;
         }
         if (level != 0 or *first != matching.opening)
-            return Optional<Selection>{};
+            return {};
     }
 
-    Utf8Iterator last{pos, buffer};
+    Utf8It last{pos, begin, end};
     if (to_end)
     {
         int level = nestable ? init_level : 0;
-        while (last != buffer.end())
+        while (last != end)
         {
             if (nestable and last != pos and *last == matching.opening)
                 ++level;
@@ -120,8 +123,8 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
             }
             ++last;
         }
-        if (level != 0 or last == buffer.end())
-            return Optional<Selection>{};
+        if (level != 0 or last == end)
+            return {};
     }
 
     if (flags & ObjectFlags::Inner)
@@ -131,7 +134,17 @@ static Optional<Selection> find_surrounding(const Buffer& buffer,
         if (to_end and first != last)
             --last;
     }
-    return to_end ? utf8_range(first, last) : utf8_range(last, first);
+    return to_end ? std::pair<Iterator, Iterator>{first.base(), last.base()}
+                  : std::pair<Iterator, Iterator>{last.base(), first.base()};
+}
+
+template<typename Container, typename Iterator>
+Optional<std::pair<Iterator, Iterator>>
+find_surrounding(const Container& container, Iterator pos,
+                 MatchingPair matching, ObjectFlags flags, int init_level)
+{
+    return find_surrounding(begin(container), end(container), pos,
+                            matching, flags, init_level);
 }
 
 Selection select_surrounding(const Buffer& buffer, const Selection& selection,
@@ -142,8 +155,9 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
     auto pos = selection.cursor();
     if (not nestable or flags & ObjectFlags::Inner)
     {
-        if (auto res = find_surrounding(buffer, pos, matching, flags, level))
-            return *res;
+        if (auto res = find_surrounding(buffer, buffer.iterator_at(pos),
+                                        matching, flags, level))
+            return utf8_range(res->first, res->second);
         return selection;
     }
 
@@ -152,17 +166,22 @@ Selection select_surrounding(const Buffer& buffer, const Selection& selection,
         (flags == ObjectFlags::ToEnd and c == matching.closing))
         ++level;
 
-    auto res = find_surrounding(buffer, pos, matching, flags, level);
+    auto res = find_surrounding(buffer, buffer.iterator_at(pos),
+                                matching, flags, level);
     if (not res)
         return selection;
 
+    Selection sel = utf8_range(res->first, res->second);
+
     if (flags == (ObjectFlags::ToBegin | ObjectFlags::ToEnd) and
-        res->min() == selection.min() and res->max() == selection.max())
+        sel.min() == selection.min() and sel.max() == selection.max())
     {
-        if (auto res_parent = find_surrounding(buffer, pos, matching, flags, level+1))
-            return Selection{*res_parent};
+        if (auto res_parent = find_surrounding(buffer.begin(), buffer.end(),
+                                               buffer.iterator_at(pos),
+                                               matching, flags, level+1))
+            return utf8_range(res_parent->first, res_parent->second);
     }
-    return *res;
+    return sel;
 }
 
 Selection select_to(const Buffer& buffer, const Selection& selection,
@@ -641,5 +660,22 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
     }
     selections = std::move(result);
 }
+
+UnitTest test_find_surrounding{[]()
+{
+    StringView s("[salut { toi[] }]");
+    {
+        auto res = find_surrounding(s, s.begin() + 10, { '{', '}' },
+                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
+
+        kak_assert(res and StringView{res->first COMMA res->second+1} == "{ toi[] }");
+    }
+    {
+        auto res = find_surrounding(s, s.begin() + 10, { '[', ']' },
+                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0);
+
+        kak_assert(res and StringView{res->first COMMA res->second+1} == "salut { toi[] }");
+    }
+}};
 
 }

@@ -40,6 +40,11 @@ void skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
 
 using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
 
+inline Selection utf8_range(const BufferIterator& first, const BufferIterator& last)
+{
+    return {first.coord(), last.coord()};
+}
+
 inline Selection utf8_range(const Utf8Iterator& first, const Utf8Iterator& last)
 {
     return {first.base().coord(), last.base().coord()};
