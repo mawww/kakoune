@@ -1,6 +1,8 @@
 # http://ruby-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+# require commenting.kak
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -60,33 +62,40 @@ addhl -group /ruby/code regex \<(alias|and|begin|break|case|class|def|defined|do
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _ruby_filter_around_selections %{
-    # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    eval -draft -itersel %{
+        exec <a-x>
+        # remove trailing white spaces
+        try %{ exec -draft s \h + $ <ret> d }
+    }
 }
 
-def -hidden _ruby_indent_on_char %<
-    eval -draft -itersel %<
-        # deindent on (else|elsif|end|rescue|when) keyword insertion
-        try %{ exec -draft <space> <a-i>w <a-k> (else|elsif|end|rescue|when) <ret> <a-lt> }
-        # align closer token to its opener when alone on a line
-        try %< exec -draft <a-h> <a-k> ^\h+[]}]$ <ret> m s \`|.\' <ret> 1<a-&> >
-    >
->
+def -hidden _ruby_indent_on_char %{
+    eval -draft -itersel %{
+        # align middle and end structures to start
+        try %{ exec -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-\;> <a-?> ^ \h * (if)                                                       <ret> s \A | \Z <ret> \' <a-&> }
+        try %{ exec -draft <a-x> <a-k> ^ \h * (when)       $ <ret> <a-\;> <a-?> ^ \h * (case)                                                     <ret> s \A | \Z <ret> \' <a-&> }
+        try %{ exec -draft <a-x> <a-k> ^ \h * (rescue)     $ <ret> <a-\;> <a-?> ^ \h * (begin)                                                    <ret> s \A | \Z <ret> \' <a-&> }
+        try %{ exec -draft <a-x> <a-k> ^ \h * (end)        $ <ret> <a-\;> <a-?> ^ \h * (begin|case|class|def|do|for|if|module|unless|until|while) <ret> s \A | \Z <ret> \' <a-&> }
+    }
+}
 
-def -hidden _ruby_indent_on_new_line %(
-    eval -draft -itersel %(
+def -hidden _ruby_indent_on_new_line %{
+    eval -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft K <a-&> }
         # filter previous line
         try %{ exec -draft k : _ruby_filter_around_selections <ret> }
         # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
-        # indent after (else|elsif|rescue|when) keywords and lines beginning / ending with opener token
-        try %( exec -draft <space> k x <a-k> (else|elsif|rescue|when)|^\h*[[{]|[[{]$ <ret> j <a-gt> )
-        # indent after (begin|case|class|def|do|if|loop|module|unless|until|while) keywords and add _end_ keyword
-        try %{ exec -draft <space> k x <a-k> (begin|case|class|def|do|(?<!els)if|loop|module|unless|until|while) <ret> x y p j a end <esc> k <a-gt> }
-    )
-)
+        try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
+        # indent after start structure
+        try %{ exec -draft k x <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
+        # wisely add end structure
+        eval -save-regs x %{
+            try %{ exec -draft k x s ^ \h + <ret> \" x y } catch %{ reg x '' }
+            try %{ exec -draft k x <a-k> ^ <c-r> x (begin|case|class|def|do|for|if|module|unless|until|while) <ret> j <a-a> i X <a-\;> K <a-K> ^ <c-r> x (for|function|if|while) . * \n <c-r> x end $ <ret> j x y p j a end <esc> <a-lt> }
+        }
+    }
+}
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -97,6 +106,9 @@ hook global WinSetOption filetype=ruby %{
     hook window InsertEnd  .* -group ruby-hooks  _ruby_filter_around_selections
     hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
+
+    set window comment_line_chars '#'
+    set window comment_selection_chars '^begin=:^=end'
 }
 
 hook global WinSetOption filetype=(?!ruby).* %{
