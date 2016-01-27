@@ -7,7 +7,7 @@ namespace Kakoune
 {
 
 [[gnu::always_inline]]
-inline char Buffer::byte_at(ByteCoord c) const
+inline const char& Buffer::byte_at(ByteCoord c) const
 {
     kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
     return m_lines[c.line][c.column];
@@ -152,12 +152,12 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
 }
 
 [[gnu::always_inline]]
-inline char BufferIterator::operator*() const
+inline const char& BufferIterator::operator*() const
 {
     return m_buffer->byte_at(m_coord);
 }
 
-inline char BufferIterator::operator[](size_t n) const
+inline const char& BufferIterator::operator[](size_t n) const
 {
     return m_buffer->byte_at(m_buffer->advance(m_coord, n));
 }

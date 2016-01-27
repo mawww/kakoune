@@ -64,8 +64,8 @@ public:
     bool operator>  (const BufferIterator& iterator) const;
     bool operator>= (const BufferIterator& iterator) const;
 
-    char   operator* () const;
-    char   operator[](size_t n) const;
+    const char& operator* () const;
+    const char& operator[](size_t n) const;
     size_t operator- (const BufferIterator& iterator) const;
 
     BufferIterator operator+ (ByteCount size) const;
@@ -133,7 +133,7 @@ public:
 
     String         string(ByteCoord begin, ByteCoord end) const;
 
-    char           byte_at(ByteCoord c) const;
+    const char&    byte_at(ByteCoord c) const;
     ByteCount      distance(ByteCoord begin, ByteCoord end) const;
     ByteCoord      advance(ByteCoord coord, ByteCount count) const;
     ByteCoord      next(ByteCoord coord) const;
