@@ -941,23 +941,26 @@ void select_object(Context& context, NormalParams params)
 
         static constexpr struct
         {
-            MatchingPair pair;
+            StringView opening;
+            StringView closing;
             Codepoint name;
         } surrounding_pairs[] = {
-            { { '(', ')' }, 'b' },
-            { { '{', '}' }, 'B' },
-            { { '[', ']' }, 'r' },
-            { { '<', '>' }, 'a' },
-            { { '"', '"' }, 'Q' },
-            { { '\'', '\'' }, 'q' },
-            { { '`', '`' }, 'g' },
+            { "(", ")", 'b' },
+            { "{", "}", 'B' },
+            { "[", "]", 'r' },
+            { "<", ">", 'a' },
+            { "\"", "\"", 'Q' },
+            { "'", "'", 'q' },
+            { "`", "`", 'g' },
         };
         for (auto& sur : surrounding_pairs)
         {
-            if (sur.pair.opening == *cp or sur.pair.closing == *cp or
+            if (sur.opening[0_char] == *cp or
+                sur.closing[0_char] == *cp or
                 (sur.name != 0 and sur.name == *cp))
                 return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                       sur.pair, level, flags));
+                                                       sur.opening, sur.closing,
+                                                       level, flags));
         }
     }, "select object",
     "b,(,):  parenthesis block\n"
