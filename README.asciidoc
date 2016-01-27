@@ -517,6 +517,8 @@ object you want.
  * `␣`: select the whitespaces
  * `i`: select the current indentation block
  * `n`: select the number
+ * `:`: select user defined object, will prompt
+   for open and close text.
 
 For nestable objects, a count can be used in order to specify which surrounding
 level to select.

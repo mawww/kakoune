@@ -935,8 +935,28 @@ void select_object(Context& context, NormalParams params)
         }
 
         if (*cp == 'u')
-        {
             return select<mode>(context, std::bind(select_argument, _1, _2, level, flags));
+
+        if (*cp == ':')
+        {
+            context.input_handler().prompt(
+                "opening:", "", get_face("Prompt"), complete_nothing,
+                [level](StringView cmdline, PromptEvent event, Context& context) {
+                    if (event != PromptEvent::Validate)
+                        return;
+
+                    String opening = cmdline.str();
+                    context.input_handler().prompt(
+                        "closing:", "", get_face("Prompt"), complete_nothing,
+                        [level, opening](StringView cmdline, PromptEvent event, Context& context) {
+                            if (event != PromptEvent::Validate)
+                                return;
+
+                            String closing = cmdline.str();
+                            return select<mode>(context, std::bind(select_surrounding, _1, _2,
+                                                                   opening, closing, level, flags));
+                        });
+                });
         }
 
         static constexpr struct
@@ -977,7 +997,8 @@ void select_object(Context& context, NormalParams params)
     "␣:    whitespaces        \n"
     "i:    indent             \n"
     "u:    argument           \n"
-    "n:    number             \n");
+    "n:    number             \n"
+    "::    prompt for object  \n");
 }
 
 template<Key::NamedKey key>

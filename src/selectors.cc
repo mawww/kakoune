@@ -728,6 +728,12 @@ UnitTest test_find_surrounding{[]()
         auto res = find_surrounding(s, s.begin() + 6, '[', ']', ObjectFlags::ToBegin, 0);
         kak_assert(not res);
     }
+    s = "begin tchou begin tchaa end end";
+    {
+        auto res = find_surrounding(s, s.begin() + 6, "begin", "end",
+                                    ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
+        kak_assert(res and StringView{res->first COMMA res->second+1} == s);
+    }
 }};
 
 }
