@@ -2,7 +2,6 @@
 #define ranked_match_hh_INCLUDED
 
 #include "string.hh"
-#include "vector.hh"
 
 namespace Kakoune
 {
@@ -24,8 +23,6 @@ private:
     int m_word_boundary_match_count = 0;
     bool m_only_word_boundary = false;
 };
-
-using RankedMatchList = Vector<RankedMatch>;
 
 }
 

@@ -15,6 +15,8 @@ namespace Kakoune
 using UsedLetters = std::bitset<64>;
 UsedLetters used_letters(StringView str);
 
+using RankedMatchList = Vector<RankedMatch>;
+
 // maintain a database of words available in a buffer
 class WordDB
 {
