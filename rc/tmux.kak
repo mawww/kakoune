@@ -33,7 +33,7 @@ def tmux-new-horizontal -params .. -command-completion -docstring "Create a new 
     tmux-new-impl 'split-window -h' %arg{@}
 }
 
-def tmux-new-window -params .. -command-completion -docstring "Create a new horizontal pane in tmux" %{
+def tmux-new-window -params .. -command-completion -docstring "Create a new window in tmux" %{
     tmux-new-impl 'new-window' %arg{@}
 }
 
