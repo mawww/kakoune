@@ -12,7 +12,7 @@ def -docstring 'create a new window for repl interaction' \
 }}
 
 def x11-send-text -docstring "send selected text to the repl window" %{
-    %sh{
+    nop %sh{
         echo "${kak_selection}" | xsel -i
         wid=$(xdotool getactivewindow)
         xdotool search --name kak_repl_window windowactivate

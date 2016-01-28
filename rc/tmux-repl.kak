@@ -38,7 +38,7 @@ def tmux-repl-window -params 0..1 -command-completion -docstring "Create a new w
 }
 
 def tmux-send-text -docstring "Send selected text to the repl pane in tmux" %{
-    %sh{
+    nop %sh{
         tmux set-buffer -b kak_selection "${kak_selection}"
         kak_orig_window=$(tmux display-message -p '#I')
         kak_orig_pane=$(tmux display-message -p '#P')
