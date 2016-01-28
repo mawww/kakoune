@@ -1,5 +1,5 @@
 hook global BufCreate .*\.(repo|service|target|socket|ini|cfg) %{
-    set buffer filetype ini-file
+    set buffer filetype ini
 }
 
 addhl -group / regions -default code ini-highlighter \
@@ -10,10 +10,10 @@ addhl -group /ini-highlighter/code regex "^\h*([^\[][^=\n]*=)([^\n]*)" 1:identif
 
 addhl -group /ini-highlighter/comment fill comment
 
-hook global WinSetOption filetype=ini-file %{
+hook global WinSetOption filetype=ini %{
     addhl ref ini-highlighter
 }
 
-hook global WinSetOption filetype=(?!ini-file).* %{
+hook global WinSetOption filetype=(?!ini).* %{
     rmhl ini-highlighter
 }
