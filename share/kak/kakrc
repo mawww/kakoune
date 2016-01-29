@@ -36,7 +36,9 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     autoload() {
         dir=$1
         for rcfile in ${dir}/*.kak; do
-            echo "try %{ source '${rcfile}' } catch %{ echo -debug Autoload: could not load '${rcfile}' }";
+            if [ -f "$rcfile" ]; then
+                echo "try %{ source '${rcfile}' } catch %{ echo -debug Autoload: could not load '${rcfile}' }";
+            fi
         done
         for subdir in ${dir}/*; do
             if [ -d "$subdir" ]; then
