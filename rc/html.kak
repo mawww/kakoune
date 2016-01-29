@@ -60,6 +60,52 @@ def -hidden _html_indent_on_new_line %{
     }
 }
 
+def -hidden -params 1 _html_select_tag %{
+    ## Select everything till the closest opened bracket followed by the name of the tag
+    ## Select everything till the closed bracket followed by a slash sign and the name of the tag
+    ## Extend the selection to the next closed bracket (closing tag)
+    exec "
+        <a-?><lt>%arg{1}\><ret>
+        ; ?<lt>/%arg{1}\><ret>
+        ?><ret>
+    "
+}
+
+def -params 1 html-select-tag-outer -docstring "Select the closest HTML tag from the cursor, and it's content (first parameter: name of the tag)" %{
+    try %{
+        eval _html_select_tag %arg{1}
+    } catch %{
+        echo -color Error No such tag
+    }
+}
+
+def -params 1 html-select-tag-inner -docstring "Select the content of the closest HTML tag from the cursor (first parameter: name of the tag)" %{
+    try %{
+        eval _html_select_tag %arg{1}
+        ## Since the entire tag is selected after the call to the above function, extending will remove from the current selection
+        ## Extend the selection to the closest opened bracket (closing tag)
+        ## Extend the selection to the closest closed bracket (opening tag)
+        exec %{
+            <a-F><lt>H
+            <a-;>
+            F>L
+        }
+
+        ## The following two scopes will move the selection to the next/previous line if the closing/opening tag are at the end/beginning of a line
+        ## I.e. "<tag>$" or "^/<tag>"
+        try %{
+            exec -draft s\`><ret>
+            exec J<a-H>
+        }
+        try %{
+            exec -draft s<lt>\'<ret>
+            exec <a-\;>K<a-L>
+        }
+    } catch %{
+        echo -color Error No such tag
+    }
+}
+
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
