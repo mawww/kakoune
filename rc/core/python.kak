@@ -12,21 +12,12 @@ hook global BufCreate .*[.](py) %{
     set buffer filetype python
 }
 
-# Grammar
-# ‾‾‾‾‾‾‾
-
-decl -hidden str-list python_values "True:False:None"
-decl -hidden str-list python_meta "import:from"
-# Keyword list is collected using `keyword.kwlist` from `keyword`
-decl -hidden str-list python_keywords "and:as:assert:break:class:continue:def:del:elif:else:except:exec:finally:for:global:if:in:is:lambda:not:or:pass:print:raise:return:try:while:with:yield"
-decl -hidden str-list python_types "bool:buffer:bytearray:complex:dict:file:float:frozenset:int:list:long:memoryview:object:set:str:tuple:unicode:xrange"
-
 ## FIXME: this variable should be a `flags` type var
 # Enumeration that dictates what keywords are statically completed upon
 decl str python_static_complete 'values|meta|keywords|types'
 
-# Highlighters
-# ‾‾‾‾‾‾‾‾‾‾‾‾
+# Highlighters & Completion
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default code python \
     double_string '"""' '"""'            '' \
@@ -40,18 +31,39 @@ addhl -group /python/single_string fill string
 addhl -group /python/comment       fill comment
 
 %sh{
-    # Add an highligher for a given group of keywords declared previously
-    function addhl_str_list {
-        local format=$(printf "$2" "${1//:/|}")
-        echo "addhl -group /python/code regex ${format} ${3}:${4}"
-    }
+    # Grammar
+    values="True:False:None"
+    meta="import:from"
+    # Keyword list is collected using `keyword.kwlist` from `keyword`
+    keywords="and:as:assert:break:class:continue:def:del:elif:else:except:exec:finally:for:global:if:in:is:lambda:not:or:pass:print:raise:return:try:while:with:yield"
+    types="bool:buffer:bytearray:complex:dict:file:float:frozenset:int:list:long:memoryview:object:set:str:tuple:unicode:xrange"
 
-    addhl_str_list "$kak_opt_python_values" '\<(%s)\>' 0 value
-    addhl_str_list "$kak_opt_python_meta" '\<(%s)\>' 0 meta
-    addhl_str_list "$kak_opt_python_keywords" '\<(%s)\>' 0 keyword
+    echo "addhl -group /python/code regex '\<(${values//:/|})\>' 0:value"
+    echo "addhl -group /python/code regex '\<(${meta//:/|})\>' 0:meta"
+    echo "addhl -group /python/code regex '\<(${keywords//:/|})\>' 0:keyword"
 
     # Highlight types, when they are not used as constructors
-    addhl_str_list "$kak_opt_python_types" '\<(%s)\>[^(]' 1 type
+    echo "addhl -group /python/code regex '\<(${types//:/|})\>[^(]' 1:type"
+
+    # Add the keywords to the static_words list every time a python buffer is opened
+    # Refresh the completed words everytime the python_static_complete option is modified too
+    echo "
+        def -hidden _python_set_static_completion %{ %sh{
+            echo \"set buffer static_words ''\"
+            values='${values}'; meta='${meta}'; keywords='${keywords}'; types='${types}';
+            for flag in \${kak_opt_python_static_complete//|/ }; do
+                keywords_hl=\${!flag}
+                if [ -n \"\${keywords_hl}\" ]; then
+                    echo \"set -add buffer static_words '\${keywords_hl}'\"
+                else
+                    echo \"Unsupported flag: \${flag}\" >&2
+                    break
+                fi
+            done
+        } }
+        hook global WinSetOption filetype=python %{ _python_set_static_completion }
+        hook global BufSetOption python_static_complete=.* %{ _python_set_static_completion }
+    "
 }
 
 # Commands
@@ -78,22 +90,6 @@ hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-indent _python_indent_on_new_line
 
     set window formatcmd "autopep8 -"
-
-    %sh{
-        # FIXME: the following line tricks kakoune into adding those variables to the environment for later indirection expansion
-        # kak_opt_python_values kak_opt_python_meta kak_opt_python_keywords kak_opt_python_types
-        for flag in ${kak_opt_python_static_complete//|/ }; do
-            keywords_var="kak_opt_python_${flag}"
-            keywords=${!keywords_var}
-
-            if [ -n "${keywords}" ]; then
-                echo "set -add window static_words '${keywords}'"
-            else
-                echo "Unsupported flag: ${flag}" >&2
-                break
-            fi
-        done
-    }
 }
 
 hook global WinSetOption filetype=(?!python).* %{
