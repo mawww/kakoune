@@ -2,11 +2,14 @@ decl str docsclient
 
 hook global WinSetOption filetype=man %{
     addhl group man-highlight
+    # Sections
     addhl -group man-highlight regex ^\S.*?$ 0:blue
-    addhl -group man-highlight regex ^\h+-+[-a-zA-Z_]+ 0:yellow
-    addhl -group man-highlight regex [-a-zA-Z_.]+\(\d\) 0:green
-    hook window -group man-hooks NormalKey <c-m> man
-    set buffer tabstop 8
+    # Subsections
+    addhl -group man-highlight regex '^ {3}\S.*?$' 0:default+b
+    # Command line options
+    addhl -group man-highlight regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
+    # References to other manpages
+    addhl -group man-highlight regex [-a-zA-Z0-9_.]+\(\d\) 0:green
 }
 
 hook global WinSetOption filetype=(?!man).* %{
@@ -19,7 +22,7 @@ def -hidden -params .. _man %{ %sh{
     colout=$(mktemp /tmp/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" > $manout
     retval=$?
-    col -b > ${colout} < ${manout}
+    col -b -x > ${colout} < ${manout}
     rm ${manout}
     if [ "${retval}" -eq 0 ]; then
         echo "edit! -scratch '*man*'
