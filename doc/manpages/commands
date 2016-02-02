@@ -1,0 +1,185 @@
+.TH KAKOUNE 1 "" "" "COMMANDS"
+
+.SS Primitives
+.TP
+.BR e[dit] " <filename> [<line> [<column>]]"
+open buffer on file, go to given line and column. If file is already opened, just switch to this file. Use edit! to force reloading
+.TP
+.BR w[rite] " [<filename>]"
+write buffer to <filename> or use it's name if filename is not given
+.TP
+.BR w[rite]a[ll]
+write all buffers that are associated to a file
+.TP
+.BR q[uit]
+exit Kakoune, use quit! to force quitting even if there is some unsaved buffers remaining
+.TP
+.BR wq
+write current buffer and quit
+.TP
+.BR b[uffer] " <name>"
+switch to buffer <name>
+.TP
+.BR d[el]b[uf] " [<name>]"
+delete the buffer <name>, use d[el]b[uf]! to force deleting a modified buffer
+.TP
+.BR source " <filename>"
+execute commands in <filename>
+.TP
+.BR runtime " <filename>"
+execute commands in <filename>, <filename> is relative to kak executable path
+.TP
+.BR colorscheme " <name>"
+load named colorscheme
+.TP
+.BR nameclient " <name>"
+set current client name
+.TP
+.BR namebuf " <name>"
+set current buffer name
+.TP
+.BR echo " <text>"
+show <text> in status line
+.TP
+.BR nop
+does nothing, but arguments will be evaluated (e.g. shell expansion)
+.TP
+.BR set " <scope> <name> <value>"
+change the value of an option (c.f. the 'options' documentation page)
+.TP
+.BR alias " <scope> <name> <command>"
+define a new alias, within the context of a scope
+.TP
+.BR unalias " <scope> <name> [<command>]"
+remove an alias if its current value is the same as the one passed as an optional parameter, remove it unconditionally otherwise
+.TP
+.BR decl " [-hidden] <type> <name> [<value>]"
+declare a new option, the -hidden hides the option in completion suggestions (c.f. the 'options' documentation page)
+.TP
+.BR face " <name> <facespec>"
+define a face (c.f. the 'faces' documentation page)
+.TP
+.BR exec " [<flags>] <key> …"
+execute a series of keys, as if they were hit (c.f. the 'execeval' documentation page)
+.TP
+.BR eval " [<flags>] <command> …"
+execute commands, as if they were entered in the command prompt (c.f. the 'execeval' documentation page)
+.TP
+.BR def " [<flags>] <name> <command>"
+define a new command (c.f. the 'Declaring new commands' section below)
+.TP
+.BR map " <scope> <mode> <key> <keys>"
+bind a combination of keys to another one (c.f. the 'commands' documentation page)
+.TP
+.BR hook " [-group <group>] <scope> <hook_name> <filtering_regex> <command>"
+execute a command whenever an event is triggered (c.f. the 'hooks' documentation page)
+.TP
+.BR rmhooks " <scope> <group>"
+remove every hooks in
+.IR <scope>
+that are part of the given
+.IR <group>
+(c.f. the 'hooks' documentation page)
+.TP
+.BR addhl " [<flags>] <highlighter_name> <highlighter_parameters> …"
+add a highlighter to the current window (c.f. the 'highlighters' documentation page)
+.TP
+.BR rmhl " <highlighter_id>"
+remove the highlighter whose id is
+.IR highlighter_id
+(c.f. the 'highlighters' documentation page)
+
+.SS Helpers
+Kakoune provides some helper commands that can be used to define composite commands:
+.TP
+.BR prompt " <prompt> <register> <command>"
+prompt the user for a string, when the user validates, store the result in given
+.IR <register> " and run " <commmand> "."
+the
+.IR -init <str>
+switch allows setting initial content
+.TP
+.BR onkey " <register> <command>"
+wait for next key from user, writes it into given <register> and execute commands
+.TP
+.BR menu " <label1> <commands1> <label2> <commands2> …"
+display a menu using labels, the selected label’s commands are executed. menu can take an
+.IR -auto-single
+argument, to automatically run commands when only one choice is provided, and a
+.IR -select-cmds
+argument, in which case menu takes three argument per item, the last one being a command to execute when the item is selected (but not validated)
+.TP
+.BR info " <text>"
+display text in an information box, at can take an
+.IR -anchor
+option, which accepts left, right and cursor as value, in order to specify where the info box should be anchored relative to the main selection
+.TP
+.BR try " <commands> catch <on_error_commands>"
+prevent an error in
+.IR <commands>
+from aborting the whole commands execution, execute
+.IR <on_error_commands>
+instead. If nothing is to be done on error, the catch part can be ommitted
+.TP
+.BR reg " <name> <content>"
+set register
+.IR <name> " to " <content>
+.RE
+
+Note that those commands are also available in the interactive mode, but are not really useful in that context.
+
+.SS Multiple commands
+Commands (c.f. previous sections) can be chained, by being separated either by new lines or by semicolons, as such a
+semicolon must be escaped with a backslash (\;) to be considered as a literal semicolon argument
+
+.SS Declaring new commands
+
+New commands can be defined using the
+.IR def
+command:
+
+.RS 3
+.TP
+.BR def " [flags] <command_name> <commands>"
+.RE
+
+.IR <commands>
+is a string containing the commands to execute, and
+.IR flags
+can be any combination of the following parameters:
+
+.RS 3
+.TP
+.BR -params " <num>"
+the command accepts a
+.IR <num>
+parameter, which can be either a number, or of the form <min>..<max>, with both <min> and <max> omittable
+.TP
+.BR -file-completion
+try file completion on any parameter passed to this command
+.TP
+.BR -client-completion
+try client name completion on any parameter passed to this command
+.TP
+.BR -buffer-completion
+try buffer name completion on any parameter passed to this command
+.TP
+.BR -shell-completion
+following string is a shell command which takes parameters as positional params and output one completion candidate per line
+.TP
+.BR -allow-override
+allow the new command to replace an exisiting one with the same name
+.TP
+.BR -hidden
+do not show the command in command name completions
+.TP
+.BR -docstring
+define the documentation string for the command
+.RE
+
+Using shell expansion allows to define complex commands or to access Kakoune state:
+
+.RS 3
+.TP
+.BR def " print_selection %{ echo %sh{ ${kak_selection} } }"
+.RE

@@ -1,0 +1,56 @@
+.TH KAKOUNE 1 "" "" "REGISTERS"
+
+.SS Registers
+.TP
+Registers are named lists of text -instead of simply text- in order to interact well with multiselection. \
+They are used for various purposes, like storing the last yanked test, or the captured groups associated with the selections.
+
+.SS Interacting
+.TP
+.BR <c-r><c>
+when in insert mode or in a prompt, insert the value stored in the
+.IR <c>
+register (single character)
+.TP
+.BR """<c>
+in normal mode, select the
+.IR <c>
+register (single character)
+
+.SS Default registers
+.TP
+Most commands using a register default to a specific one if not specified:
+
+.RS 7
+.TP
+.BR """
+default yank, used by yanking and pasting commands like
+.IR y ", " p " and " R
+.TP
+.BR /
+default search register, used by regex based commands like
+.IR s ", " * " or " /
+.TP
+.BR @
+default macro register, used by
+.IR q " and " Q
+.TP
+.BR ^
+default mark register, used by
+.IR z " and " Z
+
+.SS Special registers
+.TP
+Some registers are not general purposes, they cannot be written to, but they contain some special dat
+
+.RS 7
+.TP
+.BR %
+current buffer name
+.TP
+.BR .
+current selection contents
+.TP
+.BR #
+selection indices (first selection has 1, second has 2, …)
+.RE
