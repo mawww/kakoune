@@ -29,6 +29,7 @@ NCURSESW_INCLUDE ?= /usr/include/ncursesw
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
+mandir := $(DESTDIR)$(PREFIX)/man/man1
 
 os := $(shell uname)
 
@@ -66,13 +67,15 @@ test:
 	cd ../test && ./run
 tags:
 	ctags -R
+man:
+	gzip -fk ../doc/kakoune.1
 
 clean:
 	rm -f .*.o .*.d kak tags
 
 XDG_CONFIG_HOME ?= $(HOME)/.config
 
-install: kak
+install: kak man
 	mkdir -p $(bindir)
 	install -m 0755 kak $(bindir)
 	mkdir -p $(sharedir)/rc
@@ -84,5 +87,6 @@ install: kak
 	mkdir -p $(docdir)
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/* $(docdir)
+	install -m 0644 ../doc/kakoune.1.gz $(mandir)
 
 .PHONY: tags install
