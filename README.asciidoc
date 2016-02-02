@@ -272,6 +272,10 @@ Movement
  * `e`: select preceding whitespaces and the word on the right of selection end
  * `alt-[wbe]`: same as [wbe] but select WORD instead of word
 
+ * `f`: select to the next occurence of given character
+ * `t`: select until the next occurence of given character
+ * `<alt-[ft]>`: same as [ft] but in the other direction
+
  * `m`: select to matching character
  * `M`: extend selection to matching character
 
