@@ -1,12 +1,9 @@
-
-decl str doc_path "/usr/share/doc/kak/manpages"
-
 def -hidden -params 1..2 _doc-open %{
     %sh{
         manout=$(mktemp /tmp/kak-man-XXXXXX)
         colout=$(mktemp /tmp/kak-man-XXXXXX)
 
-        MANWIDTH=${kak_window_width} man -l "$1" > $manout
+        MANWIDTH=${kak_window_width} man "$1" > $manout
         retval=$?
 
         col -b -x > ${colout} < ${manout}
@@ -32,13 +29,13 @@ def -hidden -params 1..2 _doc-open %{
 
 def -params 1..2 \
     -shell-completion %{
-        find "${kak_opt_doc_path}" -type f -iname "*$@*.gz" -printf '%f\n' | while read l; do
+        find "${kak_runtime}/../doc/kak/manpages/" -type f -iname "*$@*.gz" -printf '%f\n' | while read l; do
             echo "${l%.*}"
         done
     } \
     doc -docstring "Open a buffer containing the documentation about a given subject" %{
     %sh{
-        readonly PATH_DOC="${kak_opt_doc_path}/${1}.gz"
+        readonly PATH_DOC="${kak_runtime}/../doc/kak/manpages/${1}.gz"
 
         shift
         if [ ! -f "${PATH_DOC}" ]; then
