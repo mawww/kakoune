@@ -50,8 +50,11 @@ addhl -group /coffee/code regex \<(break|case|catch|class|const|continue|debugge
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _coffee_filter_around_selections %{
-    # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    eval -draft -itersel %{
+        exec <a-x>
+        # remove trailing white spaces
+        try %{ exec -draft s \h + $ <ret> d }
+    }
 }
 
 def -hidden _coffee_indent_on_new_line %{
@@ -61,9 +64,9 @@ def -hidden _coffee_indent_on_new_line %{
         # filter previous line
         try %{ exec -draft k : _coffee_filter_around_selections <ret> }
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
-        # indent after lines beginning with token and ending with ->
-        try %_ exec -draft k x <a-k> ^\h*(case|catch|class|else|finally|for|function|if|switch|try|while|with)|(->)$ <ret> j <a-gt> _
+        try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
+        # indent after start structure
+        try %{ exec -draft k x <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) | (->) $ <ret> j <a-gt> }
     }
 }
 
