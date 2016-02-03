@@ -67,8 +67,9 @@ test:
 	cd ../test && ./run
 tags:
 	ctags -R
-man:
-	gzip -fk ../doc/kakoune.1
+man: ../doc/kakoune.1.txt
+	a2x -f manpage $<
+	gzip -fk $(basename $<)
 
 clean:
 	rm -f .*.o .*.d kak tags
