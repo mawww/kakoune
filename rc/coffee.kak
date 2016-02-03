@@ -60,7 +60,7 @@ def -hidden _coffee_filter_around_selections %{
 def -hidden _coffee_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft K <a-&> }
         # filter previous line
         try %{ exec -draft k : _coffee_filter_around_selections <ret> }
         # copy '#' comment prefix and following white spaces
