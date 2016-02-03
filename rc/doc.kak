@@ -21,7 +21,7 @@ def -hidden -params 1..2 _doc-open %{
             "
 
             if [ $# -gt 1 ]; then
-                echo "try %{ exec '%<a-s><a-k>^\s+\S*\Q${2}\E<ret>\'' } catch %{ exec <space>gg }"
+                echo "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${2}\E<ret>\'' } catch %{ exec <space>gg }"
             fi
         else
            echo "echo -color Error %{doc '$@' failed: see *debug* buffer for details}"
@@ -32,11 +32,13 @@ def -hidden -params 1..2 _doc-open %{
 
 def -params 1..2 \
     -shell-completion %{
-        find "${kak_opt_doc_path}" -type f -iname "*$@*" -printf '%f\n'
+        find "${kak_opt_doc_path}" -type f -iname "*$@*.gz" -printf '%f\n' | while read l; do
+            echo "${l%.*}"
+        done
     } \
     doc -docstring "Open a buffer containing the documentation about a given subject" %{
     %sh{
-        readonly PATH_DOC="${kak_opt_doc_path}/${1}"
+        readonly PATH_DOC="${kak_opt_doc_path}/${1}.gz"
 
         shift
         if [ ! -f "${PATH_DOC}" ]; then
