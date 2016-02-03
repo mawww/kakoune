@@ -1,6 +1,8 @@
 # http://coffeescript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+# require commenting.kak
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -50,20 +52,23 @@ addhl -group /coffee/code regex \<(break|case|catch|class|const|continue|debugge
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _coffee_filter_around_selections %{
-    # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    eval -draft -itersel %{
+        exec <a-x>
+        # remove trailing white spaces
+        try %{ exec -draft s \h + $ <ret> d }
+    }
 }
 
 def -hidden _coffee_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft K <a-&> }
         # filter previous line
         try %{ exec -draft k : _coffee_filter_around_selections <ret> }
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
-        # indent after lines beginning with token and ending with ->
-        try %_ exec -draft k x <a-k> ^\h*(case|catch|class|else|finally|for|function|if|switch|try|while|with)|(->)$ <ret> j <a-gt> _
+        try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
+        # indent after start structure
+        try %{ exec -draft k x <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
 }
 
@@ -75,6 +80,9 @@ hook global WinSetOption filetype=coffee %{
 
     hook window InsertEnd  .* -group coffee-hooks  _coffee_filter_around_selections
     hook window InsertChar \n -group coffee-indent _coffee_indent_on_new_line
+
+    set window comment_line_chars '#'
+    set window comment_selection_chars '###:###'
 }
 
 hook global WinSetOption filetype=(?!coffee).* %{
