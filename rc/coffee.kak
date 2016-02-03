@@ -66,7 +66,7 @@ def -hidden _coffee_indent_on_new_line %{
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
         # indent after start structure
-        try %{ exec -draft k x <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (->) $ <ret> j <a-gt> }
+        try %{ exec -draft k x <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
 }
 
