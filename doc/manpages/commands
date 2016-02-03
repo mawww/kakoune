@@ -1,0 +1,154 @@
+KAKOUNE(1)
+==========
+
+NAME
+----
+commands - a
+
+Primitives
+----------
+*e[dit]* <filename> [<line> [<column>]]::
+	open buffer on file, go to given line and column. If file is already opened, just switch to this file. Use edit! to force reloading
+
+*w[rite]* [<filename>]::
+	write buffer to <filename> or use it's name if filename is not given
+
+*w[rite]a[ll]*::
+	write all buffers that are associated to a file
+
+*q[uit]*::
+	exit Kakoune, use quit! to force quitting even if there is some unsaved buffers remaining
+
+*wq*::
+	write current buffer and quit
+
+*b[uffer]* <name>::
+	switch to buffer <name>
+
+*d[el]b[uf]* [<name>]::
+	delete the buffer <name>, use d[el]b[uf]! to force deleting a modified buffer
+
+*source* <filename>::
+	execute commands in <filename>
+
+*runtime* <filename>::
+	execute commands in <filename>, <filename> is relative to kak executable path
+
+*colorscheme* <name>::
+	load named colorscheme
+
+*nameclient* <name>::
+	set current client name
+
+*namebuf* <name>::
+	set current buffer name
+
+*echo* <text>::
+	show <text> in status line
+
+*nop*::
+	does nothing, but arguments will be evaluated (e.g. shell expansion)
+
+*set* <scope> <name> <value>::
+	change the value of an option (c.f. the 'options' documentation page)
+
+*alias* <scope> <name> <command>::
+	define a new alias, within the context of a scope
+
+*unalias* <scope> <name> [<command>]::
+	remove an alias if its current value is the same as the one passed as an optional parameter, remove it unconditionally otherwise
+
+*decl* [-hidden] <type> <name> [<value>]::
+	declare a new option, the -hidden hides the option in completion suggestions (c.f. the 'options' documentation page)
+
+*face* <name> <facespec>::
+	define a face (c.f. the 'faces' documentation page)
+
+*exec* [<flags>] <key> ...::
+	execute a series of keys, as if they were hit (c.f. the 'execeval' documentation page)
+
+*eval* [<flags>] <command> ...::
+	execute commands, as if they were entered in the command prompt (c.f. the 'execeval' documentation page)
+
+*def* [<flags>] <name> <command>::
+	define a new command (c.f. the 'Declaring new commands' section below)
+
+*map* <scope> <mode> <key> <keys>::
+	bind a combination of keys to another one (c.f. the 'commands' documentation page)
+
+*hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
+	execute a command whenever an event is triggered (c.f. the 'hooks' documentation page)
+
+*rmhooks* <scope> <group>::
+	remove every hooks in *scope* that are part of the given *group* (c.f. the 'hooks' documentation page)
+
+*addhl* [<flags>] <highlighter_name> <highlighter_parameters> ...::
+	add a highlighter to the current window (c.f. the 'highlighters' documentation page)
+
+*rmhl* <highlighter_id>::
+	remove the highlighter whose id is *highlighter_id* (c.f. the 'highlighters' documentation page)
+
+Helpers
+-------
+Kakoune provides some helper commands that can be used to define composite commands:
+
+*prompt* <prompt> <register> <command>::
+	prompt the user for a string, when the user validates, store the result in given *register* and run *commmand*. the *-init <str>* switch allows setting initial content
+
+*onkey* <register> <command>::
+	wait for next key from user, writes it into given <register> and execute commands
+
+*menu* <label1> <commands1> <label2> <commands2> ...::
+	display a menu using labels, the selected label’s commands are executed. menu can take an *-auto-single* argument, to automatically run commands when only one choice is provided, and a *-select-cmds* argument, in which case menu takes three argument per item, the last one being a command to execute when the item is selected (but not validated)
+
+*info* <text>::
+	display text in an information box, at can take an *-anchor* option, which accepts left, right and cursor as value, in order to specify where the info box should be anchored relative to the main selection
+
+*try* <commands> catch <on_error_commands>::
+	prevent an error in *commands* from aborting the whole commands execution, execute *on_error_commands* instead. If nothing is to be done on error, the catch part can be ommitted
+
+*reg* <name> <content>::
+	set register *name* to *content*
+
+Note that those commands are also available in the interactive mode, but are not really useful in that context.
+
+Multiple commands
+-----------------
+Commands (c.f. previous sections) can be chained, by being separated either by new lines or by semicolons, as such a semicolon must be escaped with a backslash (\;) to be considered as a literal semicolon argument
+
+Declaring new commands
+----------------------
+New commands can be defined using the *def* command:
+
+*def* [flags] <command_name> <commands>::
+	*commands* is a string containing the commands to execute, and *flags* can be any combination of the following parameters:
+
+*-params* <num>::
+	the command accepts a *num* parameter, which can be either a number, or of the form <min>..<max>, with both <min> and <max> omittable
+
+*-file-completion*::
+	try file completion on any parameter passed to this command
+
+*-client-completion*::
+	try client name completion on any parameter passed to this command
+
+*-buffer-completion*::
+	try buffer name completion on any parameter passed to this command
+
+*-shell-completion*::
+	following string is a shell command which takes parameters as positional params and output one completion candidate per line
+
+*-allow-override*::
+	allow the new command to replace an exisiting one with the same name
+
+*-hidden*::
+	do not show the command in command name completions
+
+*-docstring*::
+	define the documentation string for the command
+
+Using shell expansion allows to define complex commands or to access Kakoune state:
+
+--------------------------------------------------------
+def " print_selection %{ echo %sh{ ${kak_selection} } }"
+--------------------------------------------------------

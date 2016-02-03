@@ -1,0 +1,123 @@
+KAKOUNE(1)
+==========
+
+NAME
+----
+hooks - a
+
+Description
+-----------
+
+Commands can be registred to be executed when certain events arise. To register a hook use the following command:
+
+----------------------------------------------------------------------
+hook [-group <group>] <scope> <hook_name> <filtering_regex> <commands>
+----------------------------------------------------------------------
+
+*scope* can be one of *global*, *buffer* or *window*.
+
+*command* is a string containing the commands to execute when the hook is called.
+
+For example to automatically use line numbering with .cc files, use the following command:
+
+----------------------------------------------------
+hook global WinCreate .*\.cc %{ addhl number_lines }
+----------------------------------------------------
+
+if *group* is given, make this hook part of the named group. Groups are used for removing hooks with the following
+command:
+
+-----------------------
+rmhooks <scope> <group>
+-----------------------
+
+A call to the command above will remove every hooks in *scope* that are part of the given *group*.
+
+Default hooks
+-------------
+*NormalIdle*::
+	a certain duration has passed since last key was pressed in normal mode
+
+*NormalBegin*::
+	entering normal mode
+
+*NormalEnd*::
+	leaving normal mode
+
+*NormalKey*::
+	a key is received in normal mode, the key is used for filtering
+
+*InsertIdle*::
+	a certain duration has passed since last key was pressed in insert mode
+
+*InsertBegin*::
+	entering insert mode
+
+*InsertEnd*::
+	leaving insert mode
+
+*InsertKey*::
+	a key is received in insert mode, the key is used for filtering
+
+*InsertMove*::
+	the cursor moved (without inserting) in insert mode, the key that triggered the move is used for filtering
+
+*WinCreate*::
+	a window was created, the filtering text is the buffer name
+
+*WinClose*::
+	a window was detroyed, the filtering text is the buffer name
+
+*WinDisplay*::
+	a window was bound a client, the filtering text is the buffer name
+
+*WinSetOption*::
+	an option was set in a window context, the filtering text is *<option_name>=<new_value>*
+
+*BufSetOption*::
+	an option was set in a buffer context, the filtering text is *<option_name>=<new_value>*
+
+*BufNew*::
+	a buffer for a new file has been created, filename is used for filtering
+
+*BufOpen*::
+	a buffer for an existing file has been created, filename is used for filtering
+
+*BufCreate*::
+	a buffer has been created, filename is used for filtering
+
+*BufWritePre*::
+	executed just before a buffer is written, filename is used for filtering
+
+*BufWritePost*::
+	executed just after a buffer is written, filename is used for filtering
+
+*BufClose*::
+	executed when a buffer is deleted, while it is still valid
+
+*BufOpenFifo*::
+	executed when a buffer opens a fifo
+
+*BufReadFifo*::
+	executed after some data has been red from a fifo and inserted in the buffer
+
+*BufCloseFifo*::
+	executed when a fifo buffer closes its fifo file descriptor either because the buffer is being deleted,
+	or because the writing end has been closed
+
+*RuntimeError*::
+	an error was encountered while executing an user command the error message is used for filtering
+
+*KakBegin*::
+	kakoune has started, this hook is called just after reading the user configuration files
+
+*KakEnd*::
+	kakoune is quitting
+
+*FocusIn*::
+	on supported clients, triggered when the client gets focused. the filtering text is the client name
+
+*FocusOut*::
+	on supported clients, triggered when the client gets unfocused. the filtering text is the client name
+
+When not specified, the filtering text is an empty string.
