@@ -1,580 +1,578 @@
-.TH KAKOUNE 1 "" "" "SHORTCUTS"
+KAKOUNE(1)
+==========
 
-.SS Insert mode
-.TP
-.BR <esc>
-leave insert mode
-.TP
-.BR <backspace>
-delete characters before cursors
-.TP
-.BR <del>
-delete characters under cursors
-.TP
-.BR <left>,\ <right>,\ <up>,\ <down>
-move the cursors in given direction
-.TP
-.BR <home>
-move cursors to line begin
-.TP
-.BR <end>
-move cursors to end of line
-.TP
-.BR <c-n>
-select next completion candidate
-.TP
-.BR <c-p>
-select previous completion candidate
-.TP
-.BR <c-x>
-explicit insert completion query, followed by:
-.RS 7
-.TP
-.BR f
-explicit file completion
-.TP
-.BR w
-explicit word completion
-.TP
-.BR l
-explicit line completion
-.RE
-.TP
-.BR <c-o>
-disable automatic completion for this insert session
-.TP
-.BR <c-r>
-insert contents of the register given by next key
-.TP
-.BR <c-v>
-insert next keystroke directly into the buffer, without interpreting it
-.TP
-.BR <c-u>
-commit changes up to now as a single undo group
-.TP
-.BR <a-;>
-escape to normal mode for a single command
+NAME
+----
+shortcuts - a
 
-.SS Movement
-"word" is a sequence of alphanumeric characters or underscore, and "WORD" is a sequence of non whitespace characters
+Insert mode
+-----------
+*<esc>*::
+	leave insert mode
 
-.TP
-.BR h
-select the character on the left of selection end
-.TP
-.BR j
-select the character below the selection end
-.TP
-.BR k
-select the character above the selection end
-.TP
-.BR l
-select the character on the right of selection end
-.TP
-.BR w
-select the word and following whitespaces on the right of selection end
-.TP
-.BR b
-select preceding whitespaces and the word on the left of selection end
-.TP
-.BR e
-select preceding whitespaces and the word on the right of selection end
-.TP
-.BR <a-[wbe]>
-same as [wbe] but select WORD instead of word
-.TP
-.BR f
-select to the next occurence of given character
-.TP
-.BR t
-select until the next occurence of given character
-.TP
-.BR <a-[ft]>
-same as [ft] but in the other direction
-.TP
-.BR m
-select to matching character
-.TP
-.BR M
-extend selection to matching character
-.TP
-.BR x
-select line on which selection end lies (or next line when end lies on an end-of-line)
-.TP
-.BR <a-x>
-expand selections to contain full lines (including end-of-lines)
-.TP
-.BR <a-X>
-trim selections to only contain full lines (not including last end-of-line)
-.TP
-.BR %
-select whole buffer
-.TP
-.BR <a-h>
-select to line begin
-.TP
-.BR <a-l>
-select to line end
-.TP
-.BR /
-search (select next match)
-.TP
-.BR <a-/>
-search (select previous match)
-.TP
-.BR ?
-search (extend to next match)
-.TP
-.BR <a-?>
-search (extend to previous match)
-.TP
-.BR n
-select next match
-.TP
-.BR N
-add a new selection with next match
-.TP
-.BR <a-n>
-select previous match
-.TP
-.BR <a-N>
-add a new selection with previous match
-.TP
-.BR pageup
-scroll up
-.TP
-.BR pagedown
-scroll down
-.TP
-.BR '
-rotate selections (the main selection becomes the next one)
-.TP
-.BR ;
-reduce selections to their cursor
-.TP
-.BR <a-;>
-flip the selections direction
-.TP
-.BR <a-:>
-ensure selections are in forward direction (cursor after anchor)
+*<backspace>*::
+	delete characters before cursors
 
-.SS Changes
-.TP
-.BR i
-enter insert mode before current selection
-.TP
-.BR a
-enter insert mode after current selection
-.TP
-.BR d
-yank and delete current selection
-.TP
-.BR c
-yank and delete current selection and enter insert mode
-.TP
-.BR .
-repeat last insert mode change (`i`, `a`, or `c, including the inserted text)
-.TP
-.BR I
-enter insert mode at current selection begin line start
-.TP
-.BR A
-enter insert mode at current selection end line end
-.TP
-.BR o
-enter insert mode in a new line below current selection end
-.TP
-.BR O
-enter insert mode in a new line above current selection begin
-.TP
-.BR y
-yank selections
-.TP
-.BR p
-paste after current selection end
-.TP
-.BR P
-paste before current selection begin
-.TP
-.BR <a-p>
-paste all after current selection end, and select each pasted string
-.TP
-.BR <a-P>
-paste all before current selection begin, and select each pasted string
-.TP
-.BR R
-replace current selection with yanked text
-.TP
-.BR r
-replace each character with the next entered one
-.TP
-.BR <a-j>
-join selected lines
-.TP
-.BR <a-J>
-join selected lines and select spaces inserted in place of line breaks
-.TP
-.BR >
-indent selected lines
-.TP
-.BR <a->>
-indent selected lines, including empty lines
-.TP
-.BR <
-deindent selected lines
-.TP
-.BR <a-<>
-deindent selected lines, do not remove incomplete indent (3 leading spaces when indent is 4)
-.TP
-.BR !
-insert command output before selection
-.TP
-.BR a-!
-append command output after selection
-.TP
-.BR u
-undo last change
-.TP
-.BR U
-redo last change
-.TP
-.BR &
-align selection, align the cursor of selections by inserting spaces before the first character of the selection
-.TP
-.BR <a-&>
-copy indent, copy the indentation of the main selection (or the count one if a count is given) to all other ones
-.TP
-.BR `
-to lower case
-.TP
-.BR ~
-to upper case
-.TP
-.BR <a-`>
-swap case
-.TP
-.BR @
-convert tabs to spaces in current selections, uses the buffer tabstop option or the count parameter for tabstop
-.TP
-.BR <a-@>
-convert spaces to tabs in current selections, uses the buffer tabstop option or the count parameter for tabstop
-.TP
-.BR <a-'>
-rotate selections content, if specified, the count groups selections, so
-.IR 3<a-'>
-rotate (1, 2, 3) and (3, 4, 6) independently
+*<del>*::
+	delete characters under cursors
 
-.SS Goto Commands
-If a count is given prior to hitting `g`, `g` will jump to the given line
+*<left>*, *<right>*, *<up>*, *<down>*::
+	move the cursors in given direction
 
-.TP
-.BR gh
-select to line begin
-.TP
-.BR gl
-select to line end
-.TP
-.BR gg,\ gk
-go to the first line
-.TP
-.BR gj
-go to the last line
-.TP
-.BR ge
-go to last char of last line
-.TP
-.BR gt
-go to the first displayed line
-.TP
-.BR gc
-go to the middle displayed line
-.TP
-.BR gb
-go to the last displayed line
-.TP
-.BR ga
-go to the previous (alternate) buffer
-.TP
-.BR gf
-open the file whose name is selected
-.TP
-.BR g.
-go to last buffer modifiction position
+*<home>*::
+	move cursors to line begin
 
-.SS View commands
-.TP
-.BR V
-lock view mode until <esc> is hit
-.TP
-.BR vv,\ vc
-center the main selection in the window
-.TP
-.BR vt
-scroll to put the main selection on the top line of the window
-.TP
-.BR vb
-scroll to put the main selection on the bottom line of the window
-.TP
-.BR vh
-scroll the window count columns left
-.TP
-.BR vj
-scroll the window count line downward
-.TP
-.BR vk
-scroll the window count line upward
-.TP
-.BR vl
-scroll the window count columns right
+*<end>*::
+	move cursors to end of line
+
+*<c-n>*::
+	select next completion candidate
+
+*<c-p>*::
+	select previous completion candidate
+
+*<c-x>*::
+	explicit insert completion query, followed by:
+
+	*f*:::
+		explicit file completion
+
+	*w*:::
+		explicit word completion
+
+	*l*:::
+		explicit line completion
+
+*<c-o>*::
+	disable automatic completion for this insert session
+
+*<c-r>*::
+	insert contents of the register given by next key
+
+*<c-v>*::
+	insert next keystroke directly into the buffer, without interpreting it
+
+*<c-u>*::
+	commit changes up to now as a single undo group
+
+*<a-;>*::
+	escape to normal mode for a single command
+
+Movement
+--------
+'word' is a sequence of alphanumeric characters or underscore, and 'WORD' is a sequence of non whitespace characters
+
+*h*::
+	select the character on the left of selection end
+
+*j*::
+	select the character below the selection end
+
+*k*::
+	select the character above the selection end
+
+*l*::
+	select the character on the right of selection end
+
+*w*::
+	select the word and following whitespaces on the right of selection end
+
+*b*::
+	select preceding whitespaces and the word on the left of selection end
+
+*e*::
+	select preceding whitespaces and the word on the right of selection end
+
+*<a-[wbe]>*::
+	same as [wbe] but select WORD instead of word
+
+*f*::
+	select to the next occurence of given character
+
+*t*::
+	select until the next occurence of given character
+
+*<a-[ft]>*::
+	same as [ft] but in the other direction
+
+*m*::
+	select to matching character
+
+*M*::
+	extend selection to matching character
+
+*x*::
+	select line on which selection end lies (or next line when end lies on an end-of-line)
+
+*<a-x>*::
+	expand selections to contain full lines (including end-of-lines)
+
+*<a-X>*::
+	trim selections to only contain full lines (not including last end-of-line)
+
+*%*::
+	select whole buffer
+
+*<a-h>*::
+	select to line begin
+
+*<a-l>*::
+	select to line end
+
+*/*::
+	search (select next match)
+
+*<a-/>*::
+	search (select previous match)
+
+*?*::
+	search (extend to next match)
+
+*<a-?>*::
+	search (extend to previous match)
+
+*n*::
+	select next match
+
+*N*::
+	add a new selection with next match
+
+*<a-n>*::
+	select previous match
+
+*<a-N>*::
+	add a new selection with previous match
+
+*pageup*::
+	scroll up
+
+*pagedown*::
+	scroll down
+
+*'*::
+	rotate selections (the main selection becomes the next one)
+
+*;*::
+	reduce selections to their cursor
+
+*<a-;>*::
+	flip the selections direction
+
+*<a-:>*::
+	ensure selections are in forward direction (cursor after anchor)
+
+Changes
+-------
+
+*i*::
+	enter insert mode before current selection
+
+*a*::
+	enter insert mode after current selection
+
+*d*::
+	yank and delete current selection
+
+*c*::
+	yank and delete current selection and enter insert mode
+
+*.*::
+	repeat last insert mode change (*i*, *a*, or *c*, including the inserted text)
+
+*I*::
+	enter insert mode at current selection begin line start
+
+*A*::
+	enter insert mode at current selection end line end
+
+*o*::
+	enter insert mode in a new line below current selection end
+
+*O*::
+	enter insert mode in a new line above current selection begin
+
+*y*::
+	yank selections
+
+*p*::
+	paste after current selection end
+
+*P*::
+	paste before current selection begin
+
+*<a-p>*::
+	paste all after current selection end, and select each pasted string
+
+*<a-P>*::
+	paste all before current selection begin, and select each pasted string
+
+*R*::
+	replace current selection with yanked text
+
+*r*::
+	replace each character with the next entered one
+
+*<a-j>*::
+	join selected lines
+
+*<a-J>*::
+	join selected lines and select spaces inserted in place of line breaks
+
+*>*::
+	indent selected lines
+
+*<a->>*::
+	indent selected lines, including empty lines
+
+*<*::
+	deindent selected lines
+
+*<a-<>*::
+	deindent selected lines, do not remove incomplete indent (3 leading spaces when indent is 4)
+
+*!*::
+	insert command output before selection
+
+*a-!*::
+	append command output after selection
+
+*u*::
+	undo last change
+
+*U*::
+	redo last change
+
+*&*::
+	align selection, align the cursor of selections by inserting spaces before the first character of the selection
+
+*<a-&>*::
+	copy indent, copy the indentation of the main selection (or the count one if a count is given) to all other ones
+
+*`*::
+	to lower case
+
+*~*::
+	to upper case
+
+*<a-`>*::
+	swap case
+
+*@*::
+	convert tabs to spaces in current selections, uses the buffer tabstop option or the count parameter for tabstop
+
+*<a-@>*::
+	convert spaces to tabs in current selections, uses the buffer tabstop option or the count parameter for tabstop
+
+*<a-'>*::
+	rotate selections content, if specified, the count groups selections, so the following command
+
+		3<a-'>
+
+	rotate (1, 2, 3) and (3, 4, 6) independently
+
+Goto Commands
+-------------
+If a count is given prior to hitting *g*, *g* will jump to the given line
+
+*gh*::
+	select to line begin
+
+*gl*::
+	select to line end
+
+*gg*, *gk*::
+	go to the first line
+
+*gj*::
+	go to the last line
+
+*ge*::
+	go to last char of last line
+
+*gt*::
+	go to the first displayed line
+
+*gc*::
+	go to the middle displayed line
+
+*gb*::
+	go to the last displayed line
+
+*ga*::
+	go to the previous (alternate) buffer
+
+*gf*::
+	open the file whose name is selected
+
+*g.*::
+	go to last buffer modifiction position
+
+View commands
+-------------
+
+*V*::
+	lock view mode until <esc> is hit
+
+*vv*, *vc*::
+	center the main selection in the window
+
+*vt*::
+	scroll to put the main selection on the top line of the window
+
+*vb*::
+	scroll to put the main selection on the bottom line of the window
+
+*vh*::
+	scroll the window count columns left
+
+*vj*::
+	scroll the window count line downward
+
+*vk*::
+	scroll the window count line upward
+
+*vl*::
+	scroll the window count columns right
 
 
-.SS Marks
-Marks use the
-.IR ^
-register by default
-.TP
-.BR Z
-will save the current selections to the register
-.TP
-.BR z
-will restore the selections from the register
-.TP
-.BR <a-z>
-will add the selections from the register to the existing ones
+Marks
+-----
+Marks use the *^* register by default.
 
-.SS Macros
-Macros use the
-.IR @
-register by default
-.TP
-.BR Q
-record a macro
-.TP
-.BR q
-play a recorded macro
+*Z*::
+	will save the current selections to the register
 
-.SS Searching
-Searches use the
-.IR /
-register by default
-.TP
-.BR *
-set the search pattern to the current selection (automatically detects word boundaries)
-.TP
-.BR <a-*>
-set the search pattern to the current selection (verbatim, no smart detection)
+*z*::
+	will restore the selections from the register
 
-.SS Jump list
-.TP
-.BR <c-i>
-Jump forward
-.TP
-.BR <c-o>
-Jump backward
-.TP
-.BR <c-s>
-save current selections
+*<a-z>*::
+	will add the selections from the register to the existing ones
 
-.SS Multiple selections
-.TP
-.BR s
-create a selection
-.TP
-.BR <a-s>
-split the current selections on line boundaries
-.TP
-.BR S
-split the current selection
-.TP
-.BR C
-copy the current selection to the next line
-.TP
-.BR <a-C>
-copy the current selection to the previous line
-.TP
-.BR <space>
-clear a multiple selection
-.TP
-.BR <a-space>
-clear the current selection
-.TP
-.BR <a-k>
-keep the selections that match the given regex
-.TP
-.BR <a-K>
-clear selections that match the given regex
-.TP
-.BR |
-pipe each selection through the given external filter program and replace the selection with its output
-.TP
-.BR <a-|>
-pipe each selection through the given external filter program and ignore its output
-.TP
-.BR $
-pipe each selection to the given shell command
+Macros
+------
+Macros use the *@* register by default
 
-.SS Object Selection
-.TP
-.BR <a-a>
-selects the whole object
-.TP
-.BR <a-i>
-selects the inner object, that is the object excluding it's surrounder
-.TP
-.BR [
-selects to object start
-.TP
-.BR ]
-selects to object end
-.TP
-.BR {
-extends selections to object start
-.TP
-.BR }
-extends selections to object end
+*Q*::
+	record a macro
+
+*q*::
+	play a recorded macro
+
+Searching
+---------
+Searches use the */* register by default
+
+***::
+	set the search pattern to the current selection (automatically detects word boundaries)
+
+*<a-***>*::
+	set the search pattern to the current selection (verbatim, no smart detection)
+
+Jump list
+---------
+
+*<c-i>*::
+	Jump forward
+
+*<c-o>*::
+	Jump backward
+
+*<c-s>*::
+	save current selections
+
+Multiple selections
+-------------------
+
+*s*::
+	create a selection
+
+*<a-s>*::
+	split the current selections on line boundaries
+
+*S*::
+	split the current selection
+
+*C*::
+	copy the current selection to the next line
+
+*<a-C>*::
+	copy the current selection to the previous line
+
+*<space>*::
+	clear a multiple selection
+
+*<a-space>*::
+	clear the current selection
+
+*<a-k>*::
+	keep the selections that match the given regex
+
+*<a-K>*::
+	clear selections that match the given regex
+
+*|*::
+	pipe each selection through the given external filter program and replace the selection with its output
+
+*<a-|>*::
+	pipe each selection through the given external filter program and ignore its output
+
+*$*::
+	pipe each selection to the given shell command
+
+Object Selection
+----------------
+
+*<a-a>*::
+	selects the whole object
+
+*<a-i>*::
+	selects the inner object, that is the object excluding it's surrounder
+
+*[*::
+	selects to object start
+
+*]*::
+	selects to object end
+
+*{*::
+	extends selections to object start
+
+*}*::
+	extends selections to object end
 .RE
 
 After this key, you need to enter a second key in order to specify which object you want
-.TP
-.BR b,\ (,\ )
-select the enclosing parenthesis
-.TP
-.BR B,\ {,\ }
-select the enclosing {} block
-.TP
-.BR r,\ [,\ ]
-select the enclosing [] block
-.TP
-.BR a,\ <,\ >
-select the enclosing <> block
-.TP
-.BR "
-select the enclosing double quoted string
-.TP
-.BR '
-select the enclosing single quoted string
-.TP
-.BR `
-select the enclosing grave quoted string
-.TP
-.BR w
-select the whole word
-.TP
-.BR W
-select the whole WORD
-.TP
-.BR s
-select the sentence
-.TP
-.BR p
-select the paragraph
-.TP
-.BR ␣
-select the whitespaces
-.TP
-.BR i
-select the current indentation block
-.TP
-.BR n
-select the number
-.TP
-.BR :
-select user defined object, will prompt for open and close text
 
-.SS Prompt Commands
-.TP
-.BR <ret>
-validate prompt
-.TP
-.BR <esc>
-abandon without
-.TP
-.BR <left>,\ <a-h>
-move cursor to previous character
-.TP
-.BR <right>,\ <a-l>
-move cursor to previous character
-.TP
-.BR <home>
-move cursor to first character
-.TP
-.BR <end>
-move cursor to passed last character
-.TP
-.BR <backspace>,\ <a-x>
-erase character before cursor
-.TP
-.BR <del>,\ <a-d>
-erase character under cursor
-.TP
-.BR <c-w>
-avance to next word begin
-.TP
-.BR <c-a-w>
-advance to next WORD begin
-.TP
-.BR <c-b>
-go back to previous word begin
-.TP
-.BR <c-a-b>
-go back to previous WORD begin
-.TP
-.BR <c-e>
-advance to next word end
-.TP
-.BR <c-a-e>
-advance to next word end
-.TP
-.BR <up>,\ <c-p>
-select previous entry in history
-.TP
-.BR <down>,\ <c-n>
-select next entry in history
-.TP
-.BR <tab>
-select next completion candidate
-.TP
-.BR <backtab>
-select previous completion candidate
-.TP
-.BR <c-r>
-insert then content of the register given by next key
-.TP
-.BR <c-v>
-insert next keystroke without interpretting it
-.TP
-.BR <c-o>
-disable auto completion for this prompt
+*b*, *(*, *)*::
+	select the enclosing parenthesis
 
-.SS Key mapping
+*B*, *{*, *}*::
+	select the enclosing {} block
+
+*r*, *[*, *]*::
+	select the enclosing [] block
+
+*a*, *<*, *>*::
+	select the enclosing <> block
+
+*"*::
+	select the enclosing double quoted string
+
+*'*::
+	select the enclosing single quoted string
+
+*`*::
+	select the enclosing grave quoted string
+
+*w*::
+	select the whole word
+
+*W*::
+	select the whole WORD
+
+*s*::
+	select the sentence
+
+*p*::
+	select the paragraph
+
+*␣*::
+	select the whitespaces
+
+*i*::
+	select the current indentation block
+
+*n*::
+	select the number
+
+*:*::
+	select user defined object, will prompt for open and close text
+
+Prompt Commands
+---------------
+
+*<ret>*::
+	validate prompt
+
+*<esc>*::
+	abandon without
+
+*<left>*, *<a-h>*::
+	move cursor to previous character
+
+*<right>*, *<a-l>*::
+	move cursor to previous character
+
+*<home>*::
+	move cursor to first character
+
+*<end>*::
+	move cursor to passed last character
+
+*<backspace>*, *<a-x>*::
+	erase character before cursor
+
+*<del>*, *<a-d>*::
+	erase character under cursor
+
+*<c-w>*::
+	avance to next word begin
+
+*<c-a-w>*::
+	advance to next WORD begin
+
+*<c-b>*::
+	go back to previous word begin
+
+*<c-a-b>*::
+	go back to previous WORD begin
+
+*<c-e>*::
+	advance to next word end
+
+*<c-a-e>*::
+	advance to next word end
+
+*<up>*, *<c-p>*::
+	select previous entry in history
+
+*<down>*, *<c-n>*::
+	select next entry in history
+
+*<tab>*::
+	select next completion candidate
+
+*<backtab>*::
+	select previous completion candidate
+
+*<c-r>*::
+	insert then content of the register given by next key
+
+*<c-v>*::
+	insert next keystroke without interpretting it
+
+*<c-o>*::
+	disable auto completion for this prompt
+
+Key mapping
+-----------
 Mapping a combination of keys to another one (a.k.a. key mapping or binding) can be done with the following command:
 
-.TP
-.BR map " <scope> <mode> <key> <keys>"
-.RS 3
-.TP
-.BR scope
-can be one of
-.IR global ", " window " or " buffer
-.TP
-.BR mode
-can be one of
-.IR insert ", " normal ", " prompt ", " menu ", " user
-or a one character long arbitrary prefix (the
-.IR user
-mode uses the
-.IR ,
-prefix)
-.TP
-.BR key
-the key to which the combination will be bound
-.TP
-.BR keys
-string that lists the keys that will be executed when
-.IR key
-is hit
-.RE
+-------------------------------
+map <scope> <mode> <key> <keys>
+-------------------------------
 
-Keys are always executed within the
-.IR normal
-mode
+*scope*::
+	can be one of *global*, *window* or *buffer*
+
+*mode*::
+	can be one of *insert*, *normal*, *prompt*, *menu*, *user* or a one character long arbitrary prefix (the
+	*user* mode uses the *,* prefix)
+
+*key*::
+	the key to which the combination will be bound
+
+*keys*::
+	string that lists the keys that will be executed when *key* is hit
+
+Keys are always executed within the *normal* mode.

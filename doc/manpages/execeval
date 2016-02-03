@@ -1,53 +1,49 @@
-.TH KAKOUNE 1 "" "" "EXEC & EVAL"
+KAKOUNE(1)
+==========
 
-.TP
-The
-.IR exec " and " eval
-commands can be used to run Kakoune commands, and should be used as follows:
+NAME
+----
+execeval - a
 
-.RS 3
-.TP
-.BR exec " [<flags>] <key> …"
-.TP
-.BR eval " [<flags>] <command> …"
-.RE
+Description
+-----------
+The *exec* and *eval* commands can be used to run Kakoune commands, and should be used as follows:
 
-.IR exec
-runs keys as if they were pressed, whereas
-.IR eval
-executes its given paremeters as if they were entered in the command prompt. \
-By default, their execution happens within the context of the current client, \
-and stops when the last key/command is reached, or an error is raised.
+----------------------------
+exec [<flags>] <key> ...
+eval [<flags>] <command> ...
+----------------------------
 
-.SS Optional flags
-.TP
-.BR -client " <name>"
-execute in the context of the client named
-.IR <name>
-.TP
-.BR -try-client " <name>"
-execute in the context of the client named
-.IR <name>
-if such client exists, or else in the current context
-.TP
-.BR -draft
-execute in a copy of the context of the selected client modifications to the selections or input state will not affect the client. This permits to make some modification to the buffer without modifying the user’s selection
-.TP
-.BR -itersel " (requires -draft)"
-execute once per selection, in a context with only the considered selection. This permits to avoid cases where the selections may get merged
-.TP
-.BR -buffer " <names>"
-execute in the context of each buffers in the comma separated list
-.IR <names> ", " *
-as a name can be used to iterate on all buffers
-.TP
-.BR -no-hooks
-disable hook execution while executing the keys/commands
-.TP
-.BR -with-maps
-use user key mapping in
-.IR exec
-instead of built in keys
-.TP
-.BR -save-regs " <regs>"
-regs is a string of registers to be restored after execution
+*exec* runs keys as if they were pressed, whereas *eval* executes its given paremeters as if they were entered in
+the command prompt. By default, their execution happens within the context of the current client, and stops when
+the last key/command is reached, or an error is raised.
+
+Optional flags
+--------------
+*-client* <name>::
+	execute in the context of the client named *name*
+
+*-try-client* <name>::
+	execute in the context of the client named *name* if such client exists, or else in the current context
+
+*-draft*::
+	execute in a copy of the context of the selected client modifications to the selections or input state
+	will not affect the client. This permits to make some modification to the buffer without modifying the
+	user’s selection
+
+*-itersel* (requires -draft)::
+	execute once per selection, in a context with only the considered selection. This permits to avoid cases
+	where the selections may get merged
+
+*-buffer* <names>::
+	execute in the context of each buffers in the comma separated list *names*, as a name can be used to
+	iterate on all buffers
+
+*-no-hooks*::
+	disable hook execution while executing the keys/commands
+
+*-with-maps*::
+	use user key mapping in instead of built in keys (*exec* only)
+
+*-save-regs* <regs>::
+	regs is a string of registers to be restored after execution

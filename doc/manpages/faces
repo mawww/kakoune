@@ -1,100 +1,93 @@
-.TH KAKOUNE 1 "" "" "FACES"
+KAKOUNE(1)
+==========
 
-.SS Declaration
-.TP
-A "face" refers how the specified text is displayed, it has a foreground color, a background color, and some attributes. The value of a face has the following format:
-.IR fg_color[,bg_color][+attributes]
+NAME
+----
+faces - a
 
-.TP
-.BR fg_color ", " bg_color
-a color whose value can be expressed in the following formats:
-.RS 7
-.TP
-.BR black ", " red ", " green ", " yellow ", " blue ", " magenta ", " cyan ", " white
-a named color
-.TP
-.BR default
-keep the existing color
-.TP
-.BR rgb:RRGGBB
-hexadecimal value
-.RE
-.TP
-.BR attributes
-string whose individual letters set an attribute:
-.RS 7
-.TP
-.BR u
-underline
-.TP
-.BR r
-reverse
-.TP
-.BR b
-bold
-.TP
-.BR B
-blink
-.TP
-.BR d
-dim
-.TP
-.BR i
-italic
-.TP
-.BR e
-exclusive, override previous faces instead of merging with them
-.RE
+Declaration
+-----------
+A 'face' refers how the specified text is displayed, it has a foreground color, a background color, and some
+attributes. The value of a face has the following format:
 
-.SS Builtin faces
-.TP
+--------------------------------
+fg_color[,bg_color][+attributes]
+--------------------------------
+
+'fg_color', 'bg_color'::
+	a color whose value can be expressed in the following formats:
+		*black*, *red*, *green*, *yellow*, *blue*, *magenta*, *cyan*, *white*:::
+			a named color
+		*default*:::
+			keep the existing color
+		*rgb:RRGGBB*:::
+			hexadecimal value
+
+'attributes'::
+	string whose individual letters set an attribute:
+		*u*:::
+			underline
+		*r*:::
+			reverse
+		*b*:::
+			bold
+		*B*:::
+			blink
+		*d*:::
+			dim
+		*i*:::
+			italic
+		*e*:::
+			exclusive, override previous faces instead of merging with them
+
+Builtin faces
+-------------
 The following default faces are used by color schemes to highlight certains areas of the user interface:
 
-.TP
-.BR Default
-default colors
-.TP
-.BR PrimarySelection
-main selection face for every selected character except the cursor
-.TP
-.BR SecondarySelection
-secondary selection face for every selected character except the cursor
-.TP
-.BR PrimaryCursor
-cursor of the primary selection
-.TP
-.BR SecondaryCursor
-cursor of the secondary selection
-.TP
-.BR LineNumbers
-face used by the number_lines highlighter
-.TP
-.BR LineNumberAbsolute
-face used to highlight the line number of the main selection
-.TP
-.BR MenuForeground
-face for the selected element in menus
-.TP
-.BR MenuBackground
-face for the not selected elements in menus
-.TP
-.BR Information
-face for the informations windows and information messages
-.TP
-.BR Error
-face of error messages
-.TP
-.BR StatusLine
-face used for the status line
-.TP
-.BR StatusCursor
-face used for the status line cursor
-.TP
-.BR Prompt
-face used prompt displayed on the status line
-.TP
-.BR MatchingChar
-face used by the show_matching highlighter
-.TP
-.BR Search
-face used to highlight search results
+*Default*::
+	default colors
+
+*PrimarySelection*::
+	main selection face for every selected character except the cursor
+
+*SecondarySelection*::
+	secondary selection face for every selected character except the cursor
+
+*PrimaryCursor*::
+	cursor of the primary selection
+
+*SecondaryCursor*::
+	cursor of the secondary selection
+
+*LineNumbers*::
+	face used by the number_lines highlighter
+
+*LineNumberAbsolute*::
+	face used to highlight the line number of the main selection
+
+*MenuForeground*::
+	face for the selected element in menus
+
+*MenuBackground*::
+	face for the not selected elements in menus
+
+*Information*::
+	face for the informations windows and information messages
+
+*Error*::
+	face of error messages
+
+*StatusLine*::
+	face used for the status line
+
+*StatusCursor*::
+	face used for the status line cursor
+
+*Prompt*::
+	face used prompt displayed on the status line
+
+*MatchingChar*::
+	face used by the show_matching highlighter
+
+*Search*::
+	face used to highlight search results
