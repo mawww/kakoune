@@ -72,22 +72,38 @@ void Window::center_column(CharCount buffer_column)
     display_column_at(buffer_column, m_dimensions.column/2_char);
 }
 
-size_t Window::compute_hash(const Context& context) const
+Window::Setup Window::build_setup(const Context& context) const
 {
-    size_t res = hash_values(m_position, context.ui().dimensions(), context.buffer().timestamp());
+    Vector<BufferRange> selections;
+    for (auto& sel : context.selections())
+        selections.push_back({sel.cursor(), sel.anchor()});
 
-    auto& selections = context.selections();
-    res = combine_hash(res, hash_value(selections.main_index()));
-    for (auto& sel : selections)
-        res = combine_hash(res, hash_values((const ByteCoord&)sel.cursor(), sel.anchor()));
-
-    return res;
+    return { m_position,
+             context.ui().dimensions(),
+             context.buffer().timestamp(),
+             context.selections().main_index(),
+             std::move(selections) };
 }
 
 bool Window::needs_redraw(const Context& context) const
 {
-    size_t hash = compute_hash(context);
-    return hash != m_hash;
+    auto& selections = context.selections();
+
+    if (m_position != m_last_setup.position or
+        context.ui().dimensions() != m_last_setup.dimensions or
+        context.buffer().timestamp() != m_last_setup.timestamp or
+        selections.main_index() != m_last_setup.main_selection or
+        selections.size() != m_last_setup.selections.size())
+        return true;
+
+    for (int i = 0; i < selections.size(); ++i)
+    {
+        if (selections[i].cursor() != m_last_setup.selections[i].begin or
+            selections[i].anchor() != m_last_setup.selections[i].end)
+            return true;
+    }
+
+    return false;
 }
 
 const DisplayBuffer& Window::update_display_buffer(const Context& context)
@@ -120,7 +136,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         line.trim(m_position.column, m_dimensions.column, true);
     m_display_buffer.optimize();
 
-    m_hash = compute_hash(context);
+    m_last_setup = build_setup(context);
 
     return m_display_buffer;
 }

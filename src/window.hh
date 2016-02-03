@@ -41,7 +41,7 @@ public:
     Buffer& buffer() const { return *m_buffer; }
 
     bool needs_redraw(const Context& context) const;
-    void force_redraw() { m_hash = -1; }
+    void force_redraw() { m_last_setup = Setup{}; }
 
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
     ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
@@ -55,8 +55,6 @@ private:
 
     void run_hook_in_own_context(StringView hook_name, StringView param);
 
-    size_t compute_hash(const Context& context) const;
-
     SafePtr<Buffer> m_buffer;
 
     CharCoord m_position;
@@ -66,8 +64,16 @@ private:
     HighlighterGroup m_highlighters;
     HighlighterGroup m_builtin_highlighters;
 
-    // hash used to determine if a redraw is necessary
-    size_t m_hash = -1;
+    struct Setup
+    {
+        CharCoord position;
+        CharCoord dimensions;
+        size_t timestamp;
+        size_t main_selection;
+        Vector<BufferRange> selections;
+    };
+    Setup build_setup(const Context& context) const;
+    Setup m_last_setup;
 };
 
 }
