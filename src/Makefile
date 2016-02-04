@@ -83,7 +83,7 @@ test:
 tags:
 	ctags -R
 
-man: ../doc/kakoune.1.gz
+man: ../doc/kak.1.gz
 doc: $(addsuffix .1,$(addprefix ../doc/manpages/,$(docs)))
 	@for f in $^; do \
 		pagename="$${f##*/}"; pagename="$${pagename%.*}"; \
@@ -115,6 +115,6 @@ install: kak man doc
 	mkdir -p $(mandir)
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
-	install -m 0644 ../doc/kakoune.1.gz $(mandir)
+	install -m 0644 ../doc/kak.1.gz $(mandir)
 
 .PHONY: tags install
