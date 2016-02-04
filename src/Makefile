@@ -111,9 +111,9 @@ install: kak man doc
 	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
 	mkdir -p $(sharedir)/colors
 	install -m 0644 ../colors/* $(sharedir)/colors
-	mkdir -p $(docdir)
+	mkdir -p $(docdir)/manpages
 	install -m 0644 ../README.asciidoc $(docdir)
-	install -m 0644 ../doc/* $(docdir)
+	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
 	install -m 0644 ../doc/kakoune.1.gz $(mandir)
 
 .PHONY: tags install
