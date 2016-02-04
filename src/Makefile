@@ -101,9 +101,13 @@ XDG_CONFIG_HOME ?= $(HOME)/.config
 install: kak man doc
 	mkdir -p $(bindir)
 	install -m 0755 kak $(bindir)
-	mkdir -p $(sharedir)/rc
+	mkdir -p $(sharedir)/rc/base
+	mkdir -p $(sharedir)/rc/core
+	mkdir -p $(sharedir)/rc/extra
 	install -m 0644 ../share/kak/kakrc $(sharedir)
-	install -m 0644 ../rc/* $(sharedir)/rc
+	install -m 0644 ../rc/base/* $(sharedir)/rc/base
+	install -m 0644 ../rc/core/* $(sharedir)/rc/core
+	install -m 0644 ../rc/extra/* $(sharedir)/rc/extra
 	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
 	mkdir -p $(sharedir)/colors
 	install -m 0644 ../colors/* $(sharedir)/colors
