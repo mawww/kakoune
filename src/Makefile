@@ -112,6 +112,7 @@ install: kak man doc
 	mkdir -p $(sharedir)/colors
 	install -m 0644 ../colors/* $(sharedir)/colors
 	mkdir -p $(docdir)/manpages
+	mkdir -p $(mandir)
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
 	install -m 0644 ../doc/kakoune.1.gz $(mandir)
