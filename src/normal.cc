@@ -366,7 +366,7 @@ void command(Context& context, NormalParams params)
             {
                 EnvVarMap env_vars = {
                     { "count", to_string(params.count) },
-                    { "register", String{params.reg} }
+                    { "register", String{&params.reg, 1} }
                 };
                 CommandManager::instance().execute(
                     cmdline, context, { {}, env_vars });

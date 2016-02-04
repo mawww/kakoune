@@ -59,7 +59,7 @@ struct Regex : boost::regex
         : boost::regex(begin, end, flags) {}
         catch (std::runtime_error& err) { throw regex_error(err.what()); }
 
-    String str() const { auto s = boost::regex::str(); return {s.begin(), s.end()}; }
+    String str() const { auto s = boost::regex::str(); return {s.data(), (int)s.length()}; }
 };
 namespace regex_ns = boost;
 #endif

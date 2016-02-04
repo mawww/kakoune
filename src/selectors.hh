@@ -289,7 +289,8 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
         begin = ensure_char_start(buffer, matches[0].first);
         end = ensure_char_start(buffer, matches[0].second);
         for (auto& match : matches)
-            captures.emplace_back(match.first, match.second);
+            captures.push_back(buffer.string(match.first.coord(),
+                                             match.second.coord()));
     }
     if (not found or begin == buffer.end())
         throw runtime_error(format("'{}': no matches found", regex.str()));

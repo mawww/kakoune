@@ -88,12 +88,12 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const
     if (not is_word(*begin))
         ++begin;
 
-    String prefix{begin.base(), end.base()};
+    auto prefix = buffer.string(begin.base().coord(), end.base().coord());
 
     while (end != buffer.end() and is_word(*end))
         ++end;
 
-    String current_word{begin.base(), end.base()};
+    auto current_word = buffer.string(begin.base().coord(), end.base().coord());
 
     struct RankedMatchAndBuffer : RankedMatch
     {
@@ -189,7 +189,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     if (begin == pos)
         return {};
 
-    String prefix{begin, pos};
+    auto prefix = buffer.string(begin.coord(), pos.coord());
     if (require_slash and not contains(prefix, '/'))
         return {};
 

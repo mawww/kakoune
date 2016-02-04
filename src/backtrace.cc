@@ -32,7 +32,7 @@ String Backtrace::desc() const
     char** symbols = backtrace_symbols(stackframes, num_frames);
     ByteCount size = 0;
     for (int i = 0; i < num_frames; ++i)
-        size += StringView::strlen(symbols[i]) + 1;
+        size += strlen(symbols[i]) + 1;
 
     String res; res.reserve(size);
     for (int i = 0; i < num_frames; ++i)

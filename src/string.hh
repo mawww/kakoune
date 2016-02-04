@@ -85,6 +85,12 @@ private:
     const Type& type() const { return *static_cast<const Type*>(this); }
 };
 
+[[gnu::optimize(3)]] // this is recursive for constexpr reason
+constexpr ByteCount strlen(const char* s)
+{
+    return *s == 0 ? 0 : strlen(s+1) + 1;
+}
+
 class String : public StringOps<String, char>
 {
 public:
@@ -92,16 +98,14 @@ public:
                                       Allocator<char, MemoryDomain::String>>;
 
     String() {}
-    String(const char* content) : m_data(content) {}
+    String(const char* content) : m_data(content, (size_t)(int)strlen(content)) {}
     String(const char* content, ByteCount len) : m_data(content, (size_t)(int)len) {}
-    explicit String(char content, CharCount count = 1) : m_data((size_t)(int)count, content) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
         while (count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
     }
-    template<typename Iterator>
-    String(Iterator begin, Iterator end) : m_data(begin, end) {}
+    String(const char* begin, const char* end) : m_data(begin, end-begin) {}
 
     [[gnu::always_inline]]
     char* data() { return &m_data[0]; }
@@ -148,7 +152,7 @@ public:
     [[gnu::always_inline]]
     constexpr ByteCount length() const { return m_length; }
 
-    String str() const { return {begin(), end()}; }
+    String str() const { return {m_data, m_length}; }
 
     struct ZeroTerminatedString
     {
@@ -167,12 +171,6 @@ public:
 
     };
     ZeroTerminatedString zstr() const { return {begin(), end()}; }
-
-    [[gnu::optimize(3)]] // this is recursive for constexpr reason
-    static constexpr ByteCount strlen(const char* s)
-    {
-        return *s == 0 ? 0 : strlen(s+1) + 1;
-    }
 
 private:
     const char* m_data = nullptr;
