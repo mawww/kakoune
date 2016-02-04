@@ -38,7 +38,7 @@ NCURSESW_INCLUDE ?= /usr/include/ncursesw
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
-mandir := $(DESTDIR)$(PREFIX)/man/man1
+mandir := $(DESTDIR)$(PREFIX)/share/man/man1
 
 os := $(shell uname)
 
@@ -112,6 +112,7 @@ install: kak man doc
 	mkdir -p $(sharedir)/colors
 	install -m 0644 ../colors/* $(sharedir)/colors
 	mkdir -p $(docdir)/manpages
+	mkdir -p $(mandir)
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
 	install -m 0644 ../doc/kakoune.1.gz $(mandir)
