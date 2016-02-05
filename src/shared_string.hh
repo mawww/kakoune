@@ -56,48 +56,6 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 
 using StringDataPtr = RefPtr<StringData>;
 
-class SharedString : public StringView
-{
-public:
-    SharedString() = default;
-    SharedString(StringView str)
-    {
-        if (not str.empty())
-        {
-            m_storage = StringData::create(str);
-            StringView::operator=(m_storage->strview());
-        }
-    }
-    struct NoCopy{};
-    SharedString(StringView str, NoCopy) : StringView(str) {}
-
-    SharedString(const char* str) : SharedString(StringView{str}) {}
-
-    SharedString acquire_substr(ByteCount from, ByteCount length = INT_MAX) const
-    {
-        return SharedString{StringView::substr(from, length), m_storage};
-    }
-    SharedString acquire_substr(CharCount from, CharCount length = INT_MAX) const
-    {
-        return SharedString{StringView::substr(from, length), m_storage};
-    }
-
-    explicit SharedString(StringDataPtr storage)
-        : StringView{storage->strview()}, m_storage(std::move(storage)) {}
-
-    friend size_t hash_value(const SharedString& str)
-    {
-        return str.m_storage ? str.m_storage->hash : hash_data(str.data(), (int)str.length());
-    }
-
-private:
-    SharedString(StringView str, StringDataPtr storage)
-        : StringView{str}, m_storage(std::move(storage)) {}
-
-    friend class StringRegistry;
-    StringDataPtr m_storage;
-};
-
 class StringRegistry : public Singleton<StringRegistry>
 {
 public:

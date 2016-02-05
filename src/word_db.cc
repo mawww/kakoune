@@ -37,7 +37,7 @@ UsedLetters to_lower(UsedLetters letters)
 using WordList = Vector<StringView>;
 
 
-static WordList get_words(const SharedString& content)
+static WordList get_words(StringView content)
 {
     WordList res;
     using Utf8It = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
@@ -56,29 +56,36 @@ static WordList get_words(const SharedString& content)
         {
             const ByteCount start = word_start - content.begin();
             const ByteCount length = it.base() - word_start;
-            res.push_back(content.acquire_substr(start, length));
+            res.push_back(content.substr(start, length));
             in_word = false;
         }
     }
     return res;
 }
 
-void WordDB::add_words(const SharedString& line)
+void WordDB::add_words(StringView line)
 {
     for (auto& w : get_words(line))
     {
-        WordDB::WordInfo& info = m_words[SharedString{intern(w)}];
-        ++info.refcount;
-        if (info.letters.none())
+        auto it = m_words.find(w);
+        if (it == m_words.end())
+        {
+            auto word = intern(w);
+            WordDB::WordInfo& info = m_words[word->strview()];
+            info.word = word;
             info.letters = used_letters(w);
+            ++info.refcount;
+        }
+        else
+            ++ it->second.refcount;
     }
 }
 
-void WordDB::remove_words(const SharedString& line)
+void WordDB::remove_words(StringView line)
 {
     for (auto& w : get_words(line))
     {
-        auto it = m_words.find({w, SharedString::NoCopy()});
+        auto it = m_words.find(w);
         kak_assert(it != m_words.end() and it->second.refcount > 0);
         if (--it->second.refcount == 0)
             m_words.erase(it);
@@ -92,7 +99,7 @@ WordDB::WordDB(const Buffer& buffer)
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         m_lines.push_back(buffer.line_storage(line));
-        add_words(SharedString{m_lines.back()});
+        add_words(m_lines.back()->strview());
     }
 }
 
@@ -123,13 +130,13 @@ void WordDB::update_db()
         while (old_line < modif.old_line + modif.num_removed)
         {
             kak_assert(old_line < m_lines.size());
-            remove_words(SharedString{m_lines[(int)old_line++]});
+            remove_words(m_lines[(int)old_line++]->strview());
         }
 
         for (auto l = 0_line; l < modif.num_added; ++l)
         {
             new_lines.push_back(buffer.line_storage(modif.new_line + l));
-            add_words(SharedString{new_lines.back()});
+            add_words(new_lines.back()->strview());
         }
     }
     while (old_line != (int)m_lines.size())
@@ -140,7 +147,7 @@ void WordDB::update_db()
 
 int WordDB::get_word_occurences(StringView word) const
 {
-    auto it = m_words.find({word, SharedString::NoCopy()});
+    auto it = m_words.find(word);
     if (it != m_words.end())
         return it->second.refcount;
     return 0;

@@ -30,15 +30,16 @@ public:
     int get_word_occurences(StringView word) const;
 private:
     void update_db();
-    void add_words(const SharedString& line);
-    void remove_words(const SharedString& line);
+    void add_words(StringView line);
+    void remove_words(StringView line);
 
     struct WordInfo
     {
+        StringDataPtr word;
         UsedLetters letters;
         int refcount;
     };
-    using WordToInfo = UnorderedMap<SharedString, WordInfo, MemoryDomain::WordDB>;
+    using WordToInfo = UnorderedMap<StringView, WordInfo, MemoryDomain::WordDB>;
     using Lines = Vector<StringDataPtr, MemoryDomain::WordDB>;
 
     SafePtr<const Buffer> m_buffer;
