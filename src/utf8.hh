@@ -178,6 +178,20 @@ ByteCount codepoint_size(char byte)
 
 struct invalid_codepoint{};
 
+inline ByteCount codepoint_size(Codepoint cp)
+{
+    if (cp <= 0x7F)
+        return 1;
+    else if (cp <= 0x7FF)
+        return 2;
+    else if (cp <= 0xFFFF)
+        return 3;
+    else if (cp <= 0x10FFFF)
+        return 4;
+    else
+        throw invalid_codepoint{};
+}
+
 template<typename OutputIterator>
 void dump(OutputIterator&& it, Codepoint cp)
 {

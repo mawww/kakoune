@@ -420,7 +420,7 @@ public:
 
     void insert(Codepoint cp)
     {
-        m_line = m_line.substr(0, m_cursor_pos) + codepoint_to_str(cp)
+        m_line = m_line.substr(0, m_cursor_pos) + String{cp}
                + m_line.substr(m_cursor_pos);
         ++m_cursor_pos;
     }
@@ -1187,7 +1187,7 @@ private:
 
     void insert(Codepoint key)
     {
-        auto str = codepoint_to_str(key);
+        String str{key};
         context().selections().insert(str, InsertMode::InsertCursor);
         context().hooks().run_hook("InsertChar", str, context());
     }

@@ -131,7 +131,7 @@ String key_to_str(Key key)
         res = "F" + to_string((int)(key.key - Key::F1 + 1));
     }
     else
-        res = codepoint_to_str(key.key);
+        res = String{key.key};
 
     switch (key.modifiers)
     {

@@ -102,6 +102,7 @@ public:
     String(const char* content, ByteCount len) : m_data(content, (size_t)(int)len) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
+        reserve(utf8::codepoint_size(cp) * (int)count);
         while (count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
     }
@@ -250,13 +251,6 @@ String join(const Container& container, char joiner, bool esc_joiner = true)
 inline String operator"" _str(const char* str, size_t)
 {
     return String(str);
-}
-
-inline String codepoint_to_str(Codepoint cp)
-{
-    String str;
-    utf8::dump(std::back_inserter(str), cp);
-    return str;
 }
 
 int str_to_int(StringView str); // throws on error
