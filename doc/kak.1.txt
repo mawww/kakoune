@@ -1,9 +1,9 @@
-kakoune(1)
-==========
+kak(1)
+======
 
 NAME
 ----
-kakoune - a vim inspired, selection oriented code editor
+kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------

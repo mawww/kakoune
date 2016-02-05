@@ -20,15 +20,16 @@ endif
 sources := $(wildcard *.cc)
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
-docs := commands \
-		execeval \
-		expansions \
-		faces \
-		highlighters \
-		hooks \
-		options \
-		registers \
-		shortcuts \
+docs := ../doc/manpages/commands \
+		../doc/manpages/execeval \
+		../doc/manpages/expansions \
+		../doc/manpages/faces \
+		../doc/manpages/highlighters \
+		../doc/manpages/hooks \
+		../doc/manpages/options \
+		../doc/manpages/registers \
+		../doc/manpages/shortcuts
+mandocs := $(addsuffix .gz,$(docs))
 
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
@@ -38,12 +39,13 @@ NCURSESW_INCLUDE ?= /usr/include/ncursesw
 bindir := $(DESTDIR)$(PREFIX)/bin
 sharedir := $(DESTDIR)$(PREFIX)/share/kak
 docdir := $(DESTDIR)$(PREFIX)/share/doc/kak
-mandir := $(DESTDIR)$(PREFIX)/man/man1
+mandir := $(DESTDIR)$(PREFIX)/share/man/man1
 
 os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
+    A2X ?= a2x.py
 else ifeq ($(os),FreeBSD)
     LIBS += -ltinfow -lncursesw -lboost_regex
     CPPFLAGS += -I/usr/local/include
@@ -62,6 +64,10 @@ else
     LDFLAGS += -rdynamic
 endif
 
+# The `a2x` tool is used as-is (`a2x.py`) in some distributions, or as a symlink in others (`a2x` → `a2x.py`)
+# Picking the right name is done in the system detection switch above
+A2X ?= a2x
+
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare
 
 kak : $(objects)
@@ -72,26 +78,30 @@ kak : $(objects)
 .%$(suffix).o: %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MD -MP -MF $(addprefix ., $(<:.cc=$(suffix).d)) -c -o $@ $<
 
-%.1: %
-	a2x -f manpage $<
-%.1.gz: %.1.txt
-	a2x -f manpage $<
+# Generate the man page
+../doc/kak.1.gz: ../doc/kak.1.txt
+	$(A2X) -f manpage $<
 	gzip -f $(basename $<)
+
+# Generate the editor's documentation pages
+# Since `a2x` won't generate man pages if some sections are missing (which we don't need),
+# we generate the pages, patch them and then compress them
+$(mandocs): $(docs)
+	@for f in $^; do \
+		pagename="$${f##*/}"; pagename="$${pagename%.*}"; \
+		$(A2X) -f manpage "$$f"; \
+		sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$${pagename^^}\"," \
+					-e "/^\.SH \"NAME\"/,+1d" "$${f}.1"; \
+		gzip -f "$${f}.1"; \
+		mv "$${f}.1.gz" "$${f/.1/}.gz"; \
+	done
 
 test:
 	cd ../test && ./run
 tags:
 	ctags -R
-
-man: ../doc/kakoune.1.gz
-doc: $(addsuffix .1,$(addprefix ../doc/manpages/,$(docs)))
-	@for f in $^; do \
-		pagename="$${f##*/}"; pagename="$${pagename%.*}"; \
-		sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$${pagename^^}\"," \
-					-e "/^\.SH \"NAME\"/,+1d" $$f; \
-		gzip -f "$$f"; \
-		mv "$${f}.gz" "$${f/.1/}.gz"; \
-	done
+man: ../doc/kak.1.gz
+doc: $(mandocs)
 
 clean:
 	rm -f .*.o .*.d kak tags
@@ -112,8 +122,9 @@ install: kak man doc
 	mkdir -p $(sharedir)/colors
 	install -m 0644 ../colors/* $(sharedir)/colors
 	mkdir -p $(docdir)/manpages
+	mkdir -p $(mandir)
 	install -m 0644 ../README.asciidoc $(docdir)
 	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
-	install -m 0644 ../doc/kakoune.1.gz $(mandir)
+	install -m 0644 ../doc/kak.1.gz $(mandir)
 
 .PHONY: tags install
