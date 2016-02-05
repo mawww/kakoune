@@ -67,7 +67,7 @@ void WordDB::add_words(const SharedString& line)
 {
     for (auto& w : get_words(line))
     {
-        WordDB::WordInfo& info = m_words[intern(w)];
+        WordDB::WordInfo& info = m_words[SharedString{intern(w)}];
         ++info.refcount;
         if (info.letters.none())
             info.letters = used_letters(w);

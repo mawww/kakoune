@@ -102,14 +102,14 @@ class StringRegistry : public Singleton<StringRegistry>
 {
 public:
     void debug_stats() const;
-    SharedString intern(StringView str);
+    StringDataPtr intern(StringView str);
     void purge_unused();
 
 private:
-    UnorderedSet<SharedString, MemoryDomain::SharedString> m_strings;
+    UnorderedMap<StringView, StringDataPtr, MemoryDomain::SharedString> m_strings;
 };
 
-inline SharedString intern(StringView str)
+inline StringDataPtr intern(StringView str)
 {
     return StringRegistry::instance().intern(str);
 }

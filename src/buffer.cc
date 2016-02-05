@@ -199,9 +199,9 @@ struct Buffer::Modification
 
     Type      type;
     ByteCoord coord;
-    SharedString content;
+    StringDataPtr content;
 
-    Modification(Type type, ByteCoord coord, SharedString content)
+    Modification(Type type, ByteCoord coord, StringDataPtr content)
         : type(type), coord(coord), content(std::move(content)) {}
 
     Modification inverse() const
@@ -248,7 +248,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 for (LineCount line = 0; line < d.len; ++line)
                     m_current_undo_group.emplace_back(
                         Modification::Insert, cur_line + line,
-                        SharedString{parsed_lines.lines[(int)(d.posB + line)]});
+                        parsed_lines.lines[(int)(d.posB + line)]);
 
                 m_changes.push_back({ Change::Insert, it == m_lines.end(), cur_line, cur_line + d.len });
                 m_lines.insert(it, &parsed_lines.lines[d.posB], &parsed_lines.lines[d.posB + d.len]);
@@ -261,7 +261,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
                 for (LineCount line = d.len-1; line >= 0; --line)
                     m_current_undo_group.emplace_back(
                         Modification::Erase, cur_line + line,
-                        SharedString{m_lines.get_storage(cur_line + line)});
+                        m_lines.get_storage(cur_line + line));
 
                 it = m_lines.erase(it, it + d.len);
                 m_changes.push_back({ Change::Erase, it == m_lines.end(), cur_line, cur_line + d.len });
@@ -433,7 +433,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
 
 void Buffer::apply_modification(const Modification& modification)
 {
-    StringView content = modification.content;
+    StringView content = modification.content->strview();
     ByteCoord coord = modification.coord;
 
     kak_assert(is_valid(coord));
@@ -467,7 +467,7 @@ BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
     if (content.empty())
         return pos;
 
-    SharedString real_content;
+    StringDataPtr real_content;
     if (pos == end() and content.back() != '\n')
         real_content = intern(content + "\n");
     else
@@ -478,7 +478,7 @@ BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
     auto coord = pos == end() ? ByteCoord{line_count()} : pos.coord();
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
-    return {*this, do_insert(pos.coord(), real_content)};
+    return {*this, do_insert(pos.coord(), real_content->strview())};
 }
 
 BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
