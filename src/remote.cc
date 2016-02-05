@@ -164,7 +164,7 @@ String read<String>(int socket)
     String res;
     if (length > 0)
     {
-        res.resize((int)length);
+        res.force_size((int)length);
         read(socket, &res[0_byte], (int)length);
     }
     return res;

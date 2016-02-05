@@ -8,7 +8,7 @@
 #include "utf8.hh"
 #include "vector.hh"
 
-#include <string>
+#include <string.h>
 #include <climits>
 
 namespace Kakoune
@@ -94,9 +94,6 @@ constexpr ByteCount strlen(const char* s)
 class String : public StringOps<String, char>
 {
 public:
-    using Content = std::basic_string<char, std::char_traits<char>,
-                                      Allocator<char, MemoryDomain::String>>;
-
     String() {}
     String(const char* content) : m_data(content, (size_t)(int)strlen(content)) {}
     String(const char* content, ByteCount len) : m_data(content, (size_t)(int)len) {}
@@ -109,30 +106,78 @@ public:
     String(const char* begin, const char* end) : m_data(begin, end-begin) {}
 
     [[gnu::always_inline]]
-    char* data() { return &m_data[0]; }
+    char* data() { return m_data.data(); }
 
     [[gnu::always_inline]]
     const char* data() const { return m_data.data(); }
 
     [[gnu::always_inline]]
-    ByteCount length() const { return m_data.length(); }
+    ByteCount length() const { return m_data.size(); }
 
     [[gnu::always_inline]]
-    const char* c_str() const { return m_data.c_str(); }
+    const char* c_str() const { return m_data.data(); }
 
     [[gnu::always_inline]]
     void append(const char* data, ByteCount count) { m_data.append(data, (size_t)(int)count); }
 
     void clear() { m_data.clear(); }
 
-    void push_back(char c) { m_data.push_back(c); }
-    void resize(ByteCount size) { m_data.resize((size_t)(int)size); }
+    void push_back(char c) { m_data.append(&c, 1); }
+    void force_size(ByteCount size) { m_data.force_size((size_t)(int)size); }
     void reserve(ByteCount size) { m_data.reserve((size_t)(int)size); }
 
     static const String ms_empty;
 
+    union Data
+    {
+        using Alloc = Allocator<char, MemoryDomain::String>;
+
+        struct Long
+        {
+            char* ptr;
+            size_t size;
+            size_t capacity;
+        } l;
+
+        struct Short
+        {
+            static constexpr size_t capacity = sizeof(Long) - 2;
+            char string[capacity+1];
+            unsigned char size;
+        } s;
+
+        Data() { set_empty(); }
+        Data(const char* data, size_t size, size_t capacity);
+        Data(const char* data, size_t size) : Data(data, size, size) {}
+        Data(const Data& other) : Data{other.data(), other.size()} {}
+
+        ~Data() { release(); }
+        Data(Data&& other) noexcept;
+        Data& operator=(const Data& other);
+        Data& operator=(Data&& other) noexcept;
+
+        bool is_long() const { return (s.size & 1) == 0; }
+        size_t size() const { return is_long() ? l.size : (s.size >> 1); }
+        size_t capacity() const { return is_long() ? l.capacity : Short::capacity; }
+
+        const char* data() const { return is_long() ? l.ptr : s.string; }
+        char* data() { return is_long() ? l.ptr : s.string; }
+
+	template<bool copy = true>
+        void reserve(size_t new_capacity);
+        void force_size(size_t new_size);
+        void append(const char* str, size_t len);
+        void clear();
+
+    private:
+        void release();
+        void set_empty() { s.size = 1; }
+        void set_size(size_t size);
+        void set_short(const char* data, size_t size);
+    };
+
 private:
-    Content m_data;
+    Data m_data;
 };
 
 class StringView : public StringOps<StringView, const char>
@@ -162,12 +207,12 @@ public:
             if (*end == '\0')
                 unowned = begin;
             else
-                owned = String::Content(begin, end);
+                owned = String::Data(begin, end - begin);
         }
-        operator const char*() const { return unowned ? unowned : owned.c_str(); }
+        operator const char*() const { return unowned ? unowned : owned.data(); }
 
     private:
-        String::Content owned;
+        String::Data owned;
         const char* unowned = nullptr;
 
     };
