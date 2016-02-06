@@ -129,7 +129,7 @@ Builtin options
 			if *yes*, or *true* the status line will be placed at the top of the terminal rather than at the bottom
 
 		*ncurses_assistant*:::
-			specify the nice assistant you get in info boxes, can be *clippy* (the default), *cat* or *none*
+			specify the nice assistant you get in info boxes, can be *clippy* (the default), *cat*, *owl*, *gnu*, *dilbert*, *tux* or *none*
 
 		*ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
 			specify which button send for wheel down/up events
