@@ -20,16 +20,8 @@ endif
 sources := $(wildcard *.cc)
 objects := $(addprefix ., $(sources:.cc=$(suffix).o))
 deps := $(addprefix ., $(sources:.cc=$(suffix).d))
-docs := ../doc/manpages/commands \
-		../doc/manpages/execeval \
-		../doc/manpages/expansions \
-		../doc/manpages/faces \
-		../doc/manpages/highlighters \
-		../doc/manpages/hooks \
-		../doc/manpages/options \
-		../doc/manpages/registers \
-		../doc/manpages/shortcuts
-mandocs := $(addsuffix .gz,$(docs))
+docs := $(wildcard ../doc/manpages/*.asciidoc)
+mandocs := $(docs:.asciidoc=.gz)
 
 PREFIX ?= /usr/local
 DESTDIR ?= # root dir
@@ -86,15 +78,12 @@ kak : $(objects)
 # Generate the editor's documentation pages
 # Since `a2x` won't generate man pages if some sections are missing (which we don't need),
 # we generate the pages, patch them and then compress them
-$(mandocs): $(docs)
-	@for f in $^; do \
-		pagename="$${f##*/}"; pagename="$${pagename%.*}"; \
-		$(A2X) -f manpage "$$f"; \
-		sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$${pagename^^}\"," \
-					-e "/^\.SH \"NAME\"/,+1d" "$${f}.1"; \
-		gzip -f "$${f}.1"; \
-		mv "$${f}.1.gz" "$${f/.1/}.gz"; \
-	done
+../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
+	$(A2X) -f manpage $<
+	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$(basename $(notdir $<))\"," \
+	-e "/^\.SH \"NAME\"/,+1d" $(@:.gz=.1)
+	gzip -f $(@:.gz=.1)
+	mv $(@:.gz=.1.gz) $@
 
 test:
 	cd ../test && ./run
