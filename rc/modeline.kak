@@ -7,8 +7,6 @@
 ## Only a few options are supported, in order to prevent the
 ## buffers from poking around the configuration too much
 
-# Set to 'true' to parse modelines in buffers
-decl bool modeline "true"
 # Amount of lines that will be checked at the beginning and the end of the buffer
 decl int modelines 5
 
@@ -106,21 +104,14 @@ def -hidden _modeline-parse %{
     }
 }
 
+# Add the following function to a hook on BufOpen to automatically parse modelines
 # Select the first and last `modelines` lines in the buffer, only keep modelines
-def -hidden _modeline-crunch %{
+def modeline-parse %{
     try %{
         exec -draft "\%
 s(\`(^[^\n]*\n?){%opt{modelines}})|((^[^\n]*\n?){%opt{modelines}}\')<ret>
 s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret>
 <a-s>
 :eval -draft -itersel _modeline-parse<ret>"
-    }
-}
-
-hook global BufOpen .* %{
-    %sh{
-        if [ "${kak_opt_modeline}" = true ]; then
-            echo "eval _modeline-crunch"
-        fi
     }
 }
