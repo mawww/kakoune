@@ -7,7 +7,6 @@
 #include "keys.hh"
 #include "register_manager.hh"
 #include "utf8_iterator.hh"
-#include "assistant.h"
 
 #include <algorithm>
 
