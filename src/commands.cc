@@ -17,6 +17,7 @@
 #include "option_manager.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
+#include "ranked_match.hh"
 #include "register_manager.hh"
 #include "remote.hh"
 #include "shell_manager.hh"
@@ -60,24 +61,17 @@ const PerArgumentCommandCompleter filename_completer({
 static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_pos)
 {
     prefix = prefix.substr(0, cursor_pos);
-    const bool include_dirs = contains(prefix, '/');
-    CandidateList prefix_result, subsequence_result;
+    Vector<RankedMatch> matches;
     for (auto& buffer : BufferManager::instance())
     {
-        String name = buffer->display_name();
-        StringView match_name = name;
-        if (not include_dirs and buffer->flags() & Buffer::Flags::File)
-        {
-            auto it = find(reversed(name), '/');
-            if (it != name.rend())
-                match_name = StringView{it.base() + 2, name.end()};
-        }
-        if (prefix_match(match_name, prefix))
-            prefix_result.push_back(name);
-        if (subsequence_match(name, prefix))
-            subsequence_result.push_back(name);
+        if (RankedMatch match{buffer->display_name(), prefix})
+            matches.push_back(match);
     }
-    return prefix_result.empty() ? subsequence_result : prefix_result;
+    std::sort(matches.begin(), matches.end());
+    CandidateList res;
+    for (auto& m : matches)
+        res.push_back(m.candidate().str());
+    return res;
 }
 
 const PerArgumentCommandCompleter buffer_completer({
