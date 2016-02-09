@@ -60,18 +60,8 @@ const PerArgumentCommandCompleter filename_completer({
 
 static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_pos)
 {
-    prefix = prefix.substr(0, cursor_pos);
-    Vector<RankedMatch> matches;
-    for (auto& buffer : BufferManager::instance())
-    {
-        if (RankedMatch match{buffer->display_name(), prefix})
-            matches.push_back(match);
-    }
-    std::sort(matches.begin(), matches.end());
-    CandidateList res;
-    for (auto& m : matches)
-        res.push_back(m.candidate().str());
-    return res;
+    auto c = transformed(BufferManager::instance(), [](const SafePtr<Buffer>& b){ return b->display_name(); });
+    return complete(prefix, cursor_pos, c);
 }
 
 const PerArgumentCommandCompleter buffer_completer({

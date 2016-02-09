@@ -176,7 +176,7 @@ CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {
     auto c = transformed(m_clients, [](const std::unique_ptr<Client>& c){ return c->context().name(); });
-    return complete(prefix, cursor_pos, c, prefix_match, subsequence_match);
+    return complete(prefix, cursor_pos, c);
 }
 
 }

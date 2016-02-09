@@ -2,10 +2,12 @@
 #define completion_hh_INCLUDED
 
 #include <functional>
+#include <algorithm>
 
 #include "units.hh"
 #include "string.hh"
 #include "vector.hh"
+#include "ranked_match.hh"
 
 namespace Kakoune
 {
@@ -53,41 +55,22 @@ inline Completions offset_pos(Completions completion, ByteCount offset)
              std::move(completion.candidates) };
 }
 
-namespace detail
-{
-    template<typename Container, typename Func>
-    void do_matches(Container&& container, StringView prefix,
-                    CandidateList& res, Func match_func)
-    {
-        for (auto&& elem : container)
-            if (match_func(elem, prefix))
-                res.push_back(elem);
-    }
-
-    template<typename Container, typename Func, typename... Rest>
-    void do_matches(Container&& container, StringView prefix,
-                    CandidateList& res, Func match_func, Rest... rest)
-    {
-        do_matches(container, prefix, res, match_func);
-        if (res.empty())
-            do_matches(container, prefix, res, rest...);
-    }
-}
-
-template<typename Container, typename... MatchFunc>
-CandidateList complete(StringView prefix, ByteCount cursor_pos,
-                       const Container& container, MatchFunc... match_func)
-{
-    CandidateList res;
-    detail::do_matches(container, prefix.substr(0, cursor_pos), res, match_func...);
-    return res;
-}
-
 template<typename Container>
 CandidateList complete(StringView prefix, ByteCount cursor_pos,
                        const Container& container)
 {
-    return complete(prefix, cursor_pos, container, prefix_match);
+    prefix = prefix.substr(0, cursor_pos);
+    Vector<RankedMatch> matches;
+    for (const auto& str : container)
+    {
+        if (RankedMatch match{str, prefix})
+            matches.push_back(match);
+    }
+    std::sort(matches.begin(), matches.end());
+    CandidateList res;
+    for (auto& m : matches)
+        res.push_back(m.candidate().str());
+    return res;
 }
 
 }
