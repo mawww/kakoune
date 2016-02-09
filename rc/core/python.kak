@@ -12,10 +12,6 @@ hook global BufCreate .*[.](py) %{
     set buffer filetype python
 }
 
-## FIXME: this variable should be a `flags` type var
-# Enumeration that dictates what keywords are statically completed upon
-decl str python_static_complete 'values|meta|keywords|types'
-
 # Highlighters & Completion
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -38,32 +34,19 @@ addhl -group /python/comment       fill comment
     keywords="and:as:assert:break:class:continue:def:del:elif:else:except:exec:finally:for:global:if:in:is:lambda:not:or:pass:print:raise:return:try:while:with:yield"
     types="bool:buffer:bytearray:complex:dict:file:float:frozenset:int:list:long:memoryview:object:set:str:tuple:unicode:xrange"
 
-    echo "addhl -group /python/code regex '\<(${values//:/|})\>' 0:value"
-    echo "addhl -group /python/code regex '\<(${meta//:/|})\>' 0:meta"
-    echo "addhl -group /python/code regex '\<(${keywords//:/|})\>' 0:keyword"
+    echo "
+        addhl -group /python/code regex '\<(${values//:/|})\>' 0:value
+        addhl -group /python/code regex '\<(${meta//:/|})\>' 0:meta
+        addhl -group /python/code regex '\<(${keywords//:/|})\>' 0:keyword
+    "
 
     # Highlight types, when they are not used as constructors
     echo "addhl -group /python/code regex '\<(${types//:/|})\>[^(]' 1:type"
 
-    # Add the keywords to the static_words list every time a python buffer is opened
-    # Refresh the completed words everytime the python_static_complete option is modified too
-    echo "
-        def -hidden _python_set_static_completion %{ %sh{
-            echo \"set buffer static_words ''\"
-            values='${values}'; meta='${meta}'; keywords='${keywords}'; types='${types}';
-            for flag in \${kak_opt_python_static_complete//|/ }; do
-                keywords_hl=\${!flag}
-                if [ -n \"\${keywords_hl}\" ]; then
-                    echo \"set -add buffer static_words '\${keywords_hl}'\"
-                else
-                    echo \"Unsupported flag: \${flag}\" >&2
-                    break
-                fi
-            done
-        } }
-        hook global WinSetOption filetype=python %{ _python_set_static_completion }
-        hook global BufSetOption python_static_complete=.* %{ _python_set_static_completion }
-    "
+    # Pass the language's tokens to the static completion script
+    echo "hook global KakBegin .* %{ try %{
+        static-complete-initialize python values=${values} meta=${meta} keywords=${keywords} types=${types}
+    } }"
 }
 
 # Commands
