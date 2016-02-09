@@ -2,6 +2,8 @@
 .*.d
 *.pyc
 src/kak
+doc/kak.1.gz
+doc/manpages/*.gz
 tags
 GPATH
 GRTAGS
