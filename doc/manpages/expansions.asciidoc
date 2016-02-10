@@ -10,17 +10,20 @@ Strings
 \'strings'::
 	uninterpreted strings, use a backslash (\\') to escape the separator
 "strings"::
-	expanded strings, % strings (c.f. next section) contained are expended, use a backslash (\\%) to escape the separator
+	expanded strings, % strings (c.f. next section) contained are expended,
+	use a backslash (\\%) to escape the separator
 %\{strings\}::
 	these strings are very useful when entering commands
 +
-	* the '{' and '}' delimiters are configurable, you can use any non alphanumeric character
+	* the '{' and '}' delimiters are configurable, you can use any non
+	alphanumeric character
 +
 ----------------------------------------------------------
 e.g. %[string], %<string>, %(string), %~string~, %!string!
 ----------------------------------------------------------
-	* if the character following '%' is one of '{[(<', then the closing one is the matching '}])>' and the
-	delimiters are not escapable but are nestable
+	* if the character following '%' is one of '{[(<', then the closing
+	one is the matching '}])>' and the delimiters are not escapable but
+	are nestable
 +
 -----------------------------------------------------------
 e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
@@ -29,40 +32,46 @@ e.g. %{ roger {}; } is a valid string, %{ marcel \} as well
 Typed expansions
 ----------------
 *sh*::
-	shell expansion, similar to posix shell '$(...)' construct (c.f. next section)
+	shell expansion, similar to posix shell '$(...)' construct (c.f. next
+	section)
 *reg*::
-	register expansion, will be replaced by the content of the given register
+	register expansion, will be replaced by the content of the given
+	register
 *opt*::
 	option expansion, will be replaced with the value of the given option
 *val*::
-	value expansion, gives access to the environment variable available to the Shell expansion. The 'kak_'
-	prefix is not used there
+	value expansion, gives access to the environment variable available
+	to the Shell expansion. The 'kak_' prefix is not used there
 *arg*::
-	argument expansion, gives access to the arguments of the current command, the content can be a number,
-	or @ for all arguments
+	argument expansion, gives access to the arguments of the current
+	command, the content can be a number, or @ for all arguments
 
 Shell expansions
 ----------------
-The '%sh{...}' expansion replaces its content with the output of the shell commands in it. The following environment
-variables are used to pass informations about Kakoune's state:
+The '%sh{...}' expansion replaces its content with the output of the
+shell commands in it. The following environment variables are used to pass
+informations about Kakoune's state:
 
 *kak_selection*::
 	content of the main selection
 *kak_selections*::
-	content of the selection separated by colons, colons in the selection contents are escapted with a backslash
+	content of the selection separated by colons, colons in the selection
+	contents are escapted with a backslash
 *kak_selection_desc*::
-	range of the main selection, represented as anchor,cursor; anchor and cursor are in this format: line.column
+	range of the main selection, represented as anchor,cursor; anchor
+	and cursor are in this format: line.column
 *kak_selections_desc*::
 	range of the selecations separated by colons
 *kak_bufname*::
 	name of the current buffer
 *kak_buffile*::
-	full path of the file or same as kak_bufname when there’s no associated file
+	full path of the file or same as kak_bufname when there’s no
+	associated file
 *kak_buflist*::
 	the current buffer list, each buffer seperated by a colon
 *kak_timestamp*::
-	timestamp of the current buffer, the timestamp is an integer value which is incremented each time the
-	buffer is modified
+	timestamp of the current buffer, the timestamp is an integer value
+	which is incremented each time the buffer is modified
 *kak_runtime*::
 	directory containing the kak binary
 *kak_opt_<name>*::
@@ -88,15 +97,18 @@ variables are used to pass informations about Kakoune's state:
 *kak_hook_param*::
 	filtering text passed to the currently executing hook
 *kak_client_env_<name>*::
-	value of the *name* variable in the client environment (e.g. *$kak_client_env_SHELL* is the SHELL variable)
+	value of the *name* variable in the client environment
+	(e.g. *$kak_client_env_SHELL* is the SHELL variable)
 
-Note that in order for Kakoune to pass a value in the environment, the variable has to be spelled out within the
-body of the expansion
+Note that in order for Kakoune to pass a value in the environment, the
+variable has to be spelled out within the body of the expansion
 
 Markup strings
 --------------
-In certain contexts, Kakoune can take a markup string, which is a string containing formatting informations.
-In these strings, the {facename} syntax will enable the face facename until another face gets activated, or the
-end of the string is reached.
-Literal '{' characters shall be written '\{', and a literal backslash ('\') that preceeds a '{' character shall
-be escaped as well ('\\').
+In certain contexts, Kakoune can take a markup string, which is a string
+containing formatting informations.  In these strings, the {facename}
+syntax will enable the face facename until another face gets activated,
+or the end of the string is reached.
+
+Literal '{' characters shall be written '\{', and a literal backslash ('\')
+that preceeds a '{' character shall be escaped as well ('\\').

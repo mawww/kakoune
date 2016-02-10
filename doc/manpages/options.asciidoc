@@ -16,14 +16,17 @@ Types
 *coord*::
 	a line, column pair (separated by comma)
 *regex*::
-	as a string but the set commands will complain if the entered text is not a valid regex
+	as a string but the set commands will complain if the entered text
+	is not a valid regex
 *int-list*, *str-list*::
-	a list, elements are separated by a colon (:) if an element needs to contain a colon, it can be escaped
+	a list, elements are separated by a colon (:) if an element needs
+	to contain a colon, it can be escaped
 	with a backslash
 *enum(value1|value2|...)*::
 	an enum, taking one of the given values
 *flags(value1|value2|...)*::
-	a set of flags, taking a combination of the given values joined by a '|' character
+	a set of flags, taking a combination of the given values joined by a
+	'|' character
 
 Scopes
 ------
@@ -34,12 +37,14 @@ Scopes
 *global*::
 	global context linked to the instance of Kakoune
 
-Options can have individual values that change from one scope to the other, which will be considered one after
-another in the following order: *window* →  *buffer* →  *global*.
-That means that two windows on the same buffer can use different options (e.g. different *filetype*).
-However some options might end up being ignored if their scope is not in the command context.
-For example, writing a file never uses the *window* scope when considering options, so any option related to
-writing won't be taken into account if set in the *window* scope (e.g. *BOM*, *eolformat*).
+Options can have individual values that change from one scope to the other,
+which will be considered one after another in the following order: *window*
+→  *buffer* →  *global*.  That means that two windows on the same buffer
+can use different options (e.g. different *filetype*).  However some options
+might end up being ignored if their scope is not in the command context.
+For example, writing a file never uses the *window* scope when considering
+options, so any option related to writing won't be taken into account if
+set in the *window* scope (e.g. *BOM*, *eolformat*).
 
 Builtin options
 ---------------
@@ -51,16 +56,19 @@ Builtin options
 	width (in spaces) used for indentation, 0 means a tab character
 
 *scrolloff* 'coord'::
-	number of lines, columns to keep visible around the cursor when scrolling
+	number of lines, columns to keep visible around the cursor when
+	scrolling
 
 *eolformat* 'enum(lf|crlf)'::
-	the format of end of lines when writing a buffer, this is autodetected on load
+	the format of end of lines when writing a buffer, this is autodetected
+	on load
 
 *BOM* 'enum(none|utf8)'::
 	define if the file should be written with an unicode byte order mark
 
 *complete_prefix* 'bool'::
-	when completing in command line, and multiple candidates exist, enable completion with common prefix
+	when completing in command line, and multiple candidates exist,
+	enable completion with common prefix
 
 *incsearch* 'bool'::
 	execute search as it is typed
@@ -75,38 +83,45 @@ Builtin options
 	automatically display possible completions when editing a prompt
 
 *ignored_files* 'regex'::
-	filenames matching this regex wont be considered as candidates on filename completion (except if the text
-	being completed already matches it)
+	filenames matching this regex wont be considered as candidates on
+	filename completion (except if the text being completed already
+	matches it)
 
 *disabled_hooks* 'regex'::
-	hooks whose group matches this regex wont be executed. For example indentation hooks can be disabled with '.*-indent'
+	hooks whose group matches this regex wont be executed. For example
+	indentation hooks can be disabled with '.*-indent'
 
 *filetype* 'str'::
-	arbitrary string defining the type of the file filetype dependant actions should hook on this option
-	changing for activation/deactivation
+	arbitrary string defining the type of the file filetype dependant
+	actions should hook on this option changing for activation/deactivation
 
 *path* 'str-list'::
 	directories to search for gf command
 
 *completers* 'str-list'::
-	completion engines to use for insert mode completion (they are tried in order until one generates
-	candidates). Existing completers are:
+	completion engines to use for insert mode completion (they are tried
+	in order until one generates candidates). Existing completers are:
 
 	*word=all*, *word=buffer*:::
-		which complete using words in all buffers (*word=all*) or only the current one (*word=buffer*)
+		which complete using words in all buffers (*word=all*)
+		or only the current one (*word=buffer*)
 
 	*filename*:::
-		which tries to detect when a filename is being entered and provides completion based on local filesystem
+		which tries to detect when a filename is being entered and
+		provides completion based on local filesystem
 
 	*option=<opt-name>*:::
-		where *opt-name* is a 'str-list' option. The first element of the list should follow the format:
+		where *opt-name* is a 'str-list' option. The first element
+		of the list should follow the format:
 
 			<line>.<column>[+<length>]@<timestamp>
 
-		to define where the completion apply in the buffer, and the other strings are the candidates
+		to define where the completion apply in the buffer, and the
+		other strings are the candidates
 
 	*static_words* 'str-list':::
-		list of words that are always added to completion candidates when completing words in insert mode
+		list of words that are always added to completion candidates
+		when completing words in insert mode
 
 *autoreload* 'enum(yes|no|ask)'::
 	auto reload the buffers when an external modification is detected
@@ -115,21 +130,25 @@ Builtin options
 	dump various debug information in the '\*debug*' buffer
 
 *modelinefmt* 'string'::
-	A format string used to generate the mode line, that string is first expanded as a command line would be
-	(expanding '%...{...}' strings), then markup tags are applied (c.f. the 'Expansions' documentation page)
+	A format string used to generate the mode line, that string is first
+	expanded as a command line would be (expanding '%...{...}' strings),
+	then markup tags are applied (c.f. the 'Expansions' documentation page)
 
 *ui_options*::
-	colon separated list of key=value pairs that are forwarded to the user interface implementation. The
-	NCurses UI support the following options:
+	colon separated list of key=value pairs that are forwarded to the user
+	interface implementation. The NCurses UI support the following options:
 
 		*ncurses_set_title*:::
-			if *yes* or *true*, the terminal emulator title will be changed
+			if *yes* or *true*, the terminal emulator title will
+			be changed
 
 		*ncurses_status_on_top*:::
-			if *yes*, or *true* the status line will be placed at the top of the terminal rather than at the bottom
+			if *yes*, or *true* the status line will be placed
+			at the top of the terminal rather than at the bottom
 
 		*ncurses_assistant*:::
-			specify the nice assistant you get in info boxes, can be *clippy* (the default), *cat* or *none*
+			specify the nice assistant you get in info boxes,
+			can be *clippy* (the default), *cat* or *none*
 
 		*ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
 			specify which button send for wheel down/up events

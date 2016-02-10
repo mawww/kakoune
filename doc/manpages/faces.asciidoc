@@ -7,8 +7,9 @@ faces - a
 
 Declaration
 -----------
-A 'face' refers how the specified text is displayed, it has a foreground color, a background color, and some
-attributes. The value of a face has the following format:
+A 'face' refers how the specified text is displayed, it has a foreground
+color, a background color, and some attributes. The value of a face has the
+following format:
 
 --------------------------------
 fg_color[,bg_color][+attributes]
@@ -38,11 +39,13 @@ fg_color[,bg_color][+attributes]
 		*i*:::
 			italic
 		*e*:::
-			exclusive, override previous faces instead of merging with them
+			exclusive, override previous faces instead of merging
+			with them
 
 Builtin faces
 -------------
-The following default faces are used by color schemes to highlight certains areas of the user interface:
+The following default faces are used by color schemes to highlight certains
+areas of the user interface:
 
 *Default*::
 	default colors

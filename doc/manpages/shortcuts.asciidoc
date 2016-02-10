@@ -60,7 +60,8 @@ Insert mode
 
 Movement
 --------
-'word' is a sequence of alphanumeric characters or underscore, and 'WORD' is a sequence of non whitespace characters
+'word' is a sequence of alphanumeric characters or underscore, and 'WORD'
+is a sequence of non whitespace characters
 
 *h*::
 	select the character on the left of selection end
@@ -102,13 +103,15 @@ Movement
 	extend selection to matching character
 
 *x*::
-	select line on which selection end lies (or next line when end lies on an end-of-line)
+	select line on which selection end lies (or next line when end lies
+	on an end-of-line)
 
 *<a-x>*::
 	expand selections to contain full lines (including end-of-lines)
 
 *<a-X>*::
-	trim selections to only contain full lines (not including last end-of-line)
+	trim selections to only contain full lines (not including last
+	end-of-line)
 
 *%*::
 	select whole buffer
@@ -177,7 +180,8 @@ Changes
 	yank and delete current selection and enter insert mode
 
 *.*::
-	repeat last insert mode change (*i*, *a*, or *c*, including the inserted text)
+	repeat last insert mode change (*i*, *a*, or *c*, including the
+	inserted text)
 
 *I*::
 	enter insert mode at current selection begin line start
@@ -228,7 +232,16 @@ Changes
 	deindent selected lines
 
 *<a-<>*::
-	deindent selected lines, do not remove incomplete indent (3 leading spaces when indent is 4)
+	deindent selected lines, do not remove incomplete indent (3 leading
+	spaces when indent is 4)
+
+*|*::
+	pipe each selection through the given external filter program and
+	replace the selection with its output
+
+*<a-|>*::
+	pipe each selection through the given external filter program and
+	ignore its output
 
 *!*::
 	insert command output before selection
@@ -243,10 +256,12 @@ Changes
 	redo last change
 
 *&*::
-	align selection, align the cursor of selections by inserting spaces before the first character of the selection
+	align selection, align the cursor of selections by inserting spaces
+	before the first character of the selection
 
 *<a-&>*::
-	copy indent, copy the indentation of the main selection (or the count one if a count is given) to all other ones
+	copy indent, copy the indentation of the main selection (or the
+	count one if a count is given) to all other ones
 
 *`*::
 	to lower case
@@ -258,13 +273,16 @@ Changes
 	swap case
 
 *@*::
-	convert tabs to spaces in current selections, uses the buffer tabstop option or the count parameter for tabstop
+	convert tabs to spaces in current selections, uses the buffer tabstop
+	option or the count parameter for tabstop
 
 *<a-@>*::
-	convert spaces to tabs in current selections, uses the buffer tabstop option or the count parameter for tabstop
+	convert spaces to tabs in current selections, uses the buffer tabstop
+	option or the count parameter for tabstop
 
 *<a-'>*::
-	rotate selections content, if specified, the count groups selections, so the following command
+	rotate selections content, if specified, the count groups selections,
+	so the following command
 
 		3<a-'>
 
@@ -363,10 +381,12 @@ Searching
 Searches use the */* register by default
 
 ***::
-	set the search pattern to the current selection (automatically detects word boundaries)
+	set the search pattern to the current selection (automatically
+	detects word boundaries)
 
 *<a-***>*::
-	set the search pattern to the current selection (verbatim, no smart detection)
+	set the search pattern to the current selection (verbatim, no smart
+	detection)
 
 Jump list
 ---------
@@ -410,14 +430,9 @@ Multiple selections
 *<a-K>*::
 	clear selections that match the given regex
 
-*|*::
-	pipe each selection through the given external filter program and replace the selection with its output
-
-*<a-|>*::
-	pipe each selection through the given external filter program and ignore its output
-
 *$*::
-	pipe each selection to the given shell command
+	pipe each selection to the given shell command and keep the ones
+	for which the shell returned 0
 
 Object Selection
 ----------------
@@ -439,9 +454,9 @@ Object Selection
 
 *}*::
 	extends selections to object end
-.RE
 
-After this key, you need to enter a second key in order to specify which object you want
+After these keys, you need to enter a second key in order to specify which
+object you want
 
 *b*, *(*, *)*::
 	select the enclosing parenthesis
@@ -556,7 +571,8 @@ Prompt Commands
 
 Key mapping
 -----------
-Mapping a combination of keys to another one (a.k.a. key mapping or binding) can be done with the following command:
+Mapping a combination of keys to another one (a.k.a. key mapping or binding)
+can be done with the following command:
 
 -------------------------------
 map <scope> <mode> <key> <keys>
@@ -566,8 +582,8 @@ map <scope> <mode> <key> <keys>
 	can be one of *global*, *window* or *buffer*
 
 *mode*::
-	can be one of *insert*, *normal*, *prompt*, *menu*, *user* or a one character long arbitrary prefix (the
-	*user* mode uses the *,* prefix)
+	can be one of *insert*, *normal*, *prompt*, *menu*, *user* or a one
+	character long arbitrary prefix (the *user* mode uses the *,* prefix)
 
 *key*::
 	the key to which the combination will be bound

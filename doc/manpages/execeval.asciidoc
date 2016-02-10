@@ -7,15 +7,17 @@ execeval - a
 
 Description
 -----------
-The *exec* and *eval* commands can be used to run Kakoune commands, and should be used as follows:
+The *exec* and *eval* commands can be used to run Kakoune commands, and
+should be used as follows:
 
 ----------------------------
 exec [<flags>] <key> ...
 eval [<flags>] <command> ...
 ----------------------------
 
-*exec* runs keys as if they were pressed, whereas *eval* executes its given paremeters as if they were entered in
-the command prompt. By default, their execution happens within the context of the current client, and stops when
+*exec* runs keys as if they were pressed, whereas *eval* executes its given
+paremeters as if they were entered in the command prompt. By default, their
+execution happens within the context of the current client, and stops when
 the last key/command is reached, or an error is raised.
 
 Optional flags
@@ -24,20 +26,23 @@ Optional flags
 	execute in the context of the client named *name*
 
 *-try-client* <name>::
-	execute in the context of the client named *name* if such client exists, or else in the current context
+	execute in the context of the client named *name* if such client
+	exists, or else in the current context
 
 *-draft*::
-	execute in a copy of the context of the selected client modifications to the selections or input state
-	will not affect the client. This permits to make some modification to the buffer without modifying the
-	user’s selection
+	execute in a copy of the context of the selected client. Modifications
+	to the selections or input state will not affect the client. This
+	permits to make some modification to the buffer without modifying
+	the user’s selection
 
 *-itersel* (requires -draft)::
-	execute once per selection, in a context with only the considered selection. This permits to avoid cases
-	where the selections may get merged
+	execute once per selection, in a context with only the considered
+	selection. This permits to avoid cases where the selections may
+	get merged
 
 *-buffer* <names>::
-	execute in the context of each buffers in the comma separated list *names*, as a name can be used to
-	iterate on all buffers
+	execute in the context of each buffers in the comma separated list
+	*names*, as a name can be used to iterate on all buffers
 
 *-no-hooks*::
 	disable hook execution while executing the keys/commands
