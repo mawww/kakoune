@@ -97,7 +97,8 @@ CandidateList FaceRegistry::complete_alias_name(StringView prefix,
     using ValueType = std::pair<String, FaceOrAlias>;
     return complete(prefix, cursor_pos,
                     transformed(m_aliases,
-                                [](const ValueType& v){ return v.first; }));
+                                [](const ValueType& v) -> const String&
+                                { return v.first; }));
 }
 
 FaceRegistry::FaceRegistry()

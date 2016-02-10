@@ -60,7 +60,10 @@ const PerArgumentCommandCompleter filename_completer({
 
 static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_pos)
 {
-    auto c = transformed(BufferManager::instance(), [](const SafePtr<Buffer>& b){ return b->display_name(); });
+    auto c = transformed(BufferManager::instance(),
+                         [](const SafePtr<Buffer>& b) -> const String&
+                         { return b->display_name(); });
+
     return complete(prefix, cursor_pos, c);
 }
 

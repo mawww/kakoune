@@ -59,6 +59,10 @@ template<typename Container>
 CandidateList complete(StringView prefix, ByteCount cursor_pos,
                        const Container& container)
 {
+    using std::begin;
+    static_assert(not std::is_same<decltype(*begin(container)), String>::value,
+                  "complete require long lived strings");
+
     prefix = prefix.substr(0, cursor_pos);
     Vector<RankedMatch> matches;
     for (const auto& str : container)
