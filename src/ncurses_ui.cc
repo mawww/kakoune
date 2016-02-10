@@ -31,29 +31,6 @@ using std::max;
 
 struct NCursesWin : WINDOW {};
 
-static constexpr StringView assistant_cat[] =
-    { R"(  ___            )",
-      R"( (__ \           )",
-      R"(   / /          ╭)",
-      R"(  .' '·.        │)",
-      R"( '      ”       │)",
-      R"( ╰       /\_/|  │)",
-      R"(  | .         \ │)",
-      R"(  ╰_J`    | | | ╯)",
-      R"(      ' \__- _/  )",
-      R"(      \_\   \_\  )",
-      R"(                 )"};
-
-static constexpr StringView assistant_clippy[] =
-    { " ╭──╮   ",
-      " │  │   ",
-      " @  @  ╭",
-      " ││ ││ │",
-      " ││ ││ ╯",
-      " │╰─╯│  ",
-      " ╰───╯  ",
-      "        " };
-
 static void set_attribute(WINDOW* window, int attribute, bool on)
 {
     if (on)
@@ -226,7 +203,7 @@ NCursesUI::NCursesUI()
         if (m_input_callback)
             m_input_callback(mode);
       }},
-      m_assistant(assistant_clippy),
+      m_assistant(assistant::clippy),
       m_colors{
         { Color::Default, -1 },
         { Color::Black,   COLOR_BLACK },
@@ -947,12 +924,19 @@ void NCursesUI::set_ui_options(const Options& options)
 {
     {
         auto it = options.find("ncurses_assistant");
-        if (it == options.end() or it->value == "clippy")
-            m_assistant = assistant_clippy;
-        else if (it->value == "cat")
-            m_assistant = assistant_cat;
+        if (it == options.end())
+            m_assistant = assistant::clippy;
         else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
+        else
+        {
+            if (it->value == "clippy") m_assistant = assistant::clippy;
+            else if (it->value == "cat") m_assistant = assistant::cat;
+            else if (it->value == "owl") m_assistant = assistant::owl;
+            else if (it->value == "gnu") m_assistant = assistant::gnu;
+            else if (it->value == "dilbert") m_assistant = assistant::dilbert;
+            else if (it->value == "tux") m_assistant = assistant::tux;
+        }
     }
 
     {
