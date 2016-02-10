@@ -1,5 +1,5 @@
 ##
-## modeline.kak by lenormf
+## modeline.kak bylno|\'<ret> %opt{modeline}k %opt{modeline}X
 ##
 
 ## Currently supported modeline format: vim
@@ -7,7 +7,8 @@
 ## Only a few options are supported, in order to prevent the
 ## buffers from poking around the configuration too much
 
-# Amount of lines that will be checked at the beginning and the end of the buffer
+# Amount of additional lines that will be checked at the beginning
+# and the end of the buffer
 decl int modelines 5
 
 def -hidden _modeline-parse %{
@@ -107,11 +108,9 @@ def -hidden _modeline-parse %{
 # Add the following function to a hook on BufOpen to automatically parse modelines
 # Select the first and last `modelines` lines in the buffer, only keep modelines
 def modeline-parse %{
-    try %{
-        exec -draft "\%
-s(\`(^[^\n]*\n?){%opt{modelines}})|((^[^\n]*\n?){%opt{modelines}}\')<ret>
-s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret>
-<a-s>
-:eval -draft -itersel _modeline-parse<ret>"
-    }
+    try %{ eval -draft %{
+        exec \%s\`|.\'<ret> %opt{modelines}k <a-x> %opt{modelines}X \
+             s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret>
+        eval -draft -itersel _modeline-parse
+    } }
 }
