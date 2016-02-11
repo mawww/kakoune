@@ -1,5 +1,5 @@
 ##
-## modeline.kak bylno|\'<ret> %opt{modeline}k %opt{modeline}X
+## modeline.kak by lenormf
 ##
 
 ## Currently supported modeline format: vim
