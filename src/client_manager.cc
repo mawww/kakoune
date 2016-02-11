@@ -134,6 +134,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
             if (buf.get() != &buffer)
             {
                client->context().change_buffer(*buf);
+               client->set_last_buffer(nullptr);
                break;
             }
         }

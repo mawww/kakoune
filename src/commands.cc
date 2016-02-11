@@ -1288,8 +1288,14 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             func(parser, c);
         };
         if (*bufnames == "*")
-            for (auto buffer : BufferManager::instance())
+        {
+            // copy buffer list as we might be mutating the buffer list
+            // in the loop.
+            Vector<SafePtr<Buffer>> buffers{BufferManager::instance().begin(),
+                                            BufferManager::instance().end()};
+            for (auto buffer : buffers)
                 context_wrap_for_buffer(*buffer);
+        }
         else
             for (auto& name : split(*bufnames, ','))
                 context_wrap_for_buffer(BufferManager::instance().get_buffer(name));
