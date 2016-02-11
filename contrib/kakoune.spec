@@ -9,6 +9,7 @@ Source0:        kakoune-d1b81c8f.tar
 
 BuildRequires:  boost-devel >= 1.50
 BuildRequires:  ncurses-devel >= 5.3
+BuildRequires:  asciidoc
 Requires:       boost >= 1.50
 Requires:       ncurses-libs >= 5.3
 
@@ -33,10 +34,15 @@ cd src
 %files
 %doc
 %{_bindir}/*
+%{_mandir}/man1/kak*
 %{_datadir}/doc/kak/*
 %{_datadir}/kak/*
 
 %changelog
+* Thu Feb 11 2016 jkonecny <jkonecny@redhat.com> - 0-158.20160210git050484eb
+- Add new build requires asciidoc
+- Use new man pages
+
 * Sat Mar 28 2015 jkonecny <jkonecny@redhat.com> - 0-5.20150328gitd1b81c8f
 - Automated git update by dgroc script new hash: d1b81c8f
 
