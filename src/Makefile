@@ -81,7 +81,7 @@ kak : $(objects)
 ../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
 	$(A2X) --no-xmllint -f manpage $<
 	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$(basename $(notdir $<))\"," \
-	-e "/^\.SH \"NAME\"/,+1d" $(@:.gz=.1)
+	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.1)
 	gzip -f $(@:.gz=.1)
 	mv $(@:.gz=.1.gz) $@
 
