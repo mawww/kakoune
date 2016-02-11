@@ -72,14 +72,14 @@ kak : $(objects)
 
 # Generate the man page
 ../doc/kak.1.gz: ../doc/kak.1.txt
-	$(A2X) -f manpage $<
+	$(A2X) --no-xmllint -f manpage $<
 	gzip -f $(basename $<)
 
 # Generate the editor's documentation pages
 # Since `a2x` won't generate man pages if some sections are missing (which we don't need),
 # we generate the pages, patch them and then compress them
 ../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
-	$(A2X) -f manpage $<
+	$(A2X) --no-xmllint -f manpage $<
 	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$(basename $(notdir $<))\"," \
 	-e "/^\.SH \"NAME\"/,+1d" $(@:.gz=.1)
 	gzip -f $(@:.gz=.1)
