@@ -178,15 +178,27 @@ void register_registers()
     register_manager.add_register('_', make_unique<NullRegister>());
 }
 
+static void check_positive(const int& val)
+{
+    if (val < 1)
+        throw runtime_error{"value should be strictly positive"};
+}
+
+static void check_scrolloff(const CharCoord& so)
+{
+    if (so.line < 0 or so.column < 0)
+        throw runtime_error{"scroll offset must be positive or zero"};
+}
+
 void register_options()
 {
     OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
-    reg.declare_option("tabstop", "size of a tab character", 8);
-    reg.declare_option("indentwidth", "indentation width", 4);
-    reg.declare_option("scrolloff",
-                       "number of lines and columns to keep visible main cursor when scrolling",
-                       CharCoord{0,0});
+    reg.declare_option<int, check_positive>("tabstop", "size of a tab character", 8);
+    reg.declare_option<int, check_positive>("indentwidth", "indentation width", 4);
+    reg.declare_option<CharCoord, check_scrolloff>(
+        "scrolloff", "number of lines and columns to keep visible main cursor when scrolling",
+        {0,0});
     reg.declare_option("eolformat", "end of line format: crlf or lf", EolFormat::Lf);
     reg.declare_option("BOM", "insert a byte order mark when writing buffer (none or utf8)",
                        ByteOrderMark::None);

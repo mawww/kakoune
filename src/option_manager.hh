@@ -115,6 +115,7 @@ public:
 
     void set(T value, bool notify = true)
     {
+        validate(value);
         if (m_value != value)
         {
             m_value = std::move(value);
@@ -141,11 +142,6 @@ public:
             m_manager.on_option_changed(*this);
     }
 
-    Option* clone(OptionManager& manager) const override
-    {
-        return new TypedOption{manager, m_desc, m_value};
-    }
-
     using Alloc = Allocator<TypedOption, MemoryDomain::Options>;
     static void* operator new (std::size_t sz)
     {
@@ -158,7 +154,21 @@ public:
         return Alloc{}.deallocate(reinterpret_cast<TypedOption*>(ptr), 1);
     }
 private:
+    virtual void validate(const T& value) const {}
     T m_value;
+};
+
+template<typename T, void (*validator)(const T&)>
+class TypedCheckedOption : public TypedOption<T>
+{
+    using TypedOption<T>::TypedOption;
+
+    Option* clone(OptionManager& manager) const override
+    {
+        return new TypedCheckedOption{manager, this->m_desc, this->get()};
+    }
+
+    void validate(const T& value) const override { if (validator != nullptr) validator(value); }
 };
 
 template<typename T> const T& Option::get() const
@@ -199,7 +209,7 @@ class OptionsRegistry
 public:
     OptionsRegistry(OptionManager& global_manager) : m_global_manager(global_manager) {}
 
-    template<typename T>
+    template<typename T, void (*validator)(const T&) = nullptr>
     Option& declare_option(const String& name, const String& docstring,
                            const T& value,
                            OptionFlags flags = OptionFlags::None)
@@ -213,7 +223,7 @@ public:
             throw runtime_error(format("option '{}' already declared with different type or flags", name));
         }
         m_descs.emplace_back(new OptionDesc{name, docstring, flags});
-        opts.emplace_back(new TypedOption<T>{m_global_manager, *m_descs.back(), value});
+        opts.emplace_back(new TypedCheckedOption<T, validator>{m_global_manager, *m_descs.back(), value});
         return *opts.back();
     }
 
