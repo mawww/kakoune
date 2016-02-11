@@ -37,7 +37,6 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
-    A2X ?= a2x.py
 else ifeq ($(os),FreeBSD)
     LIBS += -ltinfow -lncursesw -lboost_regex
     CPPFLAGS += -I/usr/local/include
@@ -56,10 +55,6 @@ else
     LDFLAGS += -rdynamic
 endif
 
-# The `a2x` tool is used as-is (`a2x.py`) in some distributions, or as a symlink in others (`a2x` → `a2x.py`)
-# Picking the right name is done in the system detection switch above
-A2X ?= a2x
-
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 
 kak : $(objects)
@@ -72,16 +67,16 @@ kak : $(objects)
 
 # Generate the man page
 ../doc/kak.1.gz: ../doc/kak.1.txt
-	$(A2X) -f manpage $<
+	a2x --no-xmllint -f manpage $<
 	gzip -f $(basename $<)
 
 # Generate the editor's documentation pages
 # Since `a2x` won't generate man pages if some sections are missing (which we don't need),
 # we generate the pages, patch them and then compress them
 ../doc/manpages/%.gz: ../doc/manpages/%.asciidoc
-	$(A2X) -f manpage $<
+	a2x --no-xmllint -f manpage $<
 	sed -i -r -e "s,^\.TH .+,.TH KAKOUNE 1 \"\" \"\" \"$(basename $(notdir $<))\"," \
-	-e "/^\.SH \"NAME\"/,+1d" $(@:.gz=.1)
+	-e "/^\.SH \"NAME\"/{N;d;}" $(@:.gz=.1)
 	gzip -f $(@:.gz=.1)
 	mv $(@:.gz=.1.gz) $@
 
