@@ -94,10 +94,9 @@ void FaceRegistry::register_alias(const String& name, const String& facedesc,
 CandidateList FaceRegistry::complete_alias_name(StringView prefix,
                                                 ByteCount cursor_pos) const
 {
-    using ValueType = std::pair<String, FaceOrAlias>;
     return complete(prefix, cursor_pos,
                     transformed(m_aliases,
-                                [](const ValueType& v) -> const String&
+                                [](const AliasMap::value_type& v) -> const String&
                                 { return v.first; }));
 }
 
