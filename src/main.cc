@@ -178,10 +178,14 @@ void register_registers()
     register_manager.add_register('_', make_unique<NullRegister>());
 }
 
-static void check_positive(const int& val)
+static void check_tabstop(const int& val)
 {
-    if (val < 1)
-        throw runtime_error{"value should be strictly positive"};
+    if (val < 1) throw runtime_error{"tabstop should be strictly positive"};
+}
+
+static void check_indentwidth(const int& val)
+{
+    if (val < 0) throw runtime_error{"indentwidth should be positive or zero"};
 }
 
 static void check_scrolloff(const CharCoord& so)
@@ -194,8 +198,8 @@ void register_options()
 {
     OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
-    reg.declare_option<int, check_positive>("tabstop", "size of a tab character", 8);
-    reg.declare_option<int, check_positive>("indentwidth", "indentation width", 4);
+    reg.declare_option<int, check_tabstop>("tabstop", "size of a tab character", 8);
+    reg.declare_option<int, check_indentwidth>("indentwidth", "indentation width", 4);
     reg.declare_option<CharCoord, check_scrolloff>(
         "scrolloff", "number of lines and columns to keep visible main cursor when scrolling",
         {0,0});
