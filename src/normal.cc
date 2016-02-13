@@ -908,6 +908,15 @@ void deindent(Context& context, NormalParams)
 template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
 void select_object(Context& context, NormalParams params)
 {
+    auto get_title = [] {
+        const auto whole_flags = (ObjectFlags::ToBegin | ObjectFlags::ToEnd);
+        const bool whole = (flags & whole_flags) == whole_flags;
+        return format("select {}{}object{}",
+                      whole ? "" : "to ",
+                      flags & ObjectFlags::Inner ? "inner " : "",
+                      whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
+    };
+
     const int level = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [level](Key key, Context& context) {
@@ -982,7 +991,7 @@ void select_object(Context& context, NormalParams params)
                                                        sur.opening, sur.closing,
                                                        level, flags));
         }
-    }, "select object",
+    }, get_title(),
     "b,(,):  parenthesis block\n"
     "B,{,}:  braces block     \n"
     "r,[,]:  brackets block   \n"
@@ -1102,6 +1111,12 @@ template<> struct WithBitOps<SelectFlags> : std::true_type {};
 template<SelectFlags flags>
 void select_to_next_char(Context& context, NormalParams params)
 {
+    auto get_title = [] {
+        return format("{}select {} next char",
+                      flags & SelectFlags::Reverse ? "reverse " : "",
+                      flags & SelectFlags::Inclusive ? "onto" : "to");
+    };
+
     on_next_key_with_autoinfo(context, KeymapMode::None,
                              [params](Key key, Context& context) {
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
@@ -1111,7 +1126,7 @@ void select_to_next_char(Context& context, NormalParams params)
                 context,
                 std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
                           _1, _2, *cp, params.count, flags & SelectFlags::Inclusive));
-    }, "select to next char","enter char to select to");
+    }, get_title(),"enter char to select to");
 }
 
 void start_or_end_macro_recording(Context& context, NormalParams params)
