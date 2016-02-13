@@ -280,6 +280,8 @@ String unescape(StringView str, StringView characters, char escape);
 
 String indent(StringView str, StringView indent = "    ");
 
+String replace(StringView str, StringView substr, StringView replacement);
+
 template<typename Container>
 String join(const Container& container, char joiner, bool esc_joiner = true)
 {

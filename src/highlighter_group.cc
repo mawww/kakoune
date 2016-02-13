@@ -14,6 +14,8 @@ void HighlighterGroup::highlight(const Context& context, HighlightFlags flags,
 
 void HighlighterGroup::add_child(HighlighterAndId&& hl)
 {
+    hl.first = replace(hl.first, "/", "<slash>");
+
     if (m_highlighters.contains(hl.first))
         throw runtime_error(format("duplicate id: '{}'", hl.first));
 

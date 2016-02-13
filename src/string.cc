@@ -241,6 +241,22 @@ String indent(StringView str, StringView indent)
     return res;
 }
 
+String replace(StringView str, StringView substr, StringView replacement)
+{
+    String res;
+    for (auto it = str.begin(); it != str.end(); )
+    {
+        auto match = std::search(it, str.end(), substr.begin(), substr.end());
+        res += StringView{it, match};
+        if (match == str.end())
+            break;
+
+        res += replacement;
+        it = match + (int)substr.length();
+    }
+    return res;
+}
+
 Optional<int> str_to_int_ifp(StringView str)
 {
     unsigned int res = 0;
@@ -503,6 +519,8 @@ UnitTest test_string{[]()
     kak_assert(str_to_int(to_string(INT_MIN)) == INT_MIN);
     kak_assert(str_to_int("00") == 0);
     kak_assert(str_to_int("-0") == 0);
+
+    kak_assert(replace("tchou/tcha/tchi", "/", "!!") == "tchou!!tcha!!tchi");
 }};
 
 }
