@@ -243,13 +243,18 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
     MatchResults<BufferIterator> matches;
     const bool is_pos_eol = is_eol(buffer, pos.coord());
     const bool is_pos_eow = is_eow(buffer, pos.coord());
-    auto begin = buffer.begin();
+    auto& matches_cache = buffer.get_regex_cache(regex.str());
+    ByteCoord search_start = matches_cache.preceding_match_start(pos.coord()).value_or(ByteCoord(0,0));
+    BufferIterator begin(buffer, search_start);
     while (begin != pos and regex_search(begin, pos, matches, regex,
                                          match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
     {
         begin = utf8::next(matches[0].first, pos);
         if (res.empty() or matches[0].second > res[0].second)
+        {
+            matches_cache.insert(matches[0].second.coord(), matches[0].first.coord());
             res.swap(matches);
+        }
     }
     return not res.empty();
 }
