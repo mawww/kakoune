@@ -241,22 +241,29 @@ namespace
 // a cache to hold reverse search result
 struct MatchesCache
 {
-	friend MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex);
+    using Match = std::pair<ByteCoord, ByteCoord>;
+    friend MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex);
     MatchesCache() : valid_at(0) {};
-    void insert(ByteCoord end, ByteCoord start)
+    void add_match(ByteCoord start, ByteCoord end)
     {
-	    matches.insert(std::make_pair(end, start));
+        if (matches.empty() or end > matches.back().second)
+            matches.push_back(std::make_pair(start, end));
     }
     Optional<ByteCoord> preceding_match_start(const ByteCoord& before) const
     {
-        auto it = matches.lower_bound(before);
+        auto it = std::lower_bound(matches.begin(), matches.end(), before,
+                                   [](const Match& lhs, const ByteCoord& rhs)
+                                   {
+                                       return lhs.second < rhs;
+                                   });
         if (it != matches.begin())
-            return Optional<ByteCoord>((--it)->second);
+            return Optional<ByteCoord>((--it)->first);
         return Optional<ByteCoord>();
     }
 private:
-    // maps the end of a match to its start
-    std::map<ByteCoord, ByteCoord> matches;
+    // known matches (pair of beginning and end coordinates)
+    // strictly sorted by end coordinates
+    Vector<Match> matches;
     size_t valid_at;
     String regex;
 };
@@ -278,13 +285,18 @@ MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex)
     else if (cache.valid_at < stamp)
     {
         auto changes = buffer.changes_since(cache.valid_at);
-        const auto& min_change = std::min_element(changes.begin(), changes.end(),
+        const auto& highest_change = std::min_element(changes.begin(), changes.end(),
                                                   [](const Buffer::Change& lhs, const Buffer::Change& rhs)
                                                   {
                                                       return lhs.begin < rhs.begin;
                                                   });
-        auto& map = cache.matches;
-        map.erase(map.lower_bound(min_change->begin), map.end());
+        auto& m = cache.matches;
+        m.erase(std::lower_bound(m.begin(), m.end(), highest_change->begin,
+                                 [](const MatchesCache::Match& lhs, const ByteCoord& rhs)
+                                 {
+                                     return lhs.second < rhs;
+                                 }),
+                m.end());
         cache.valid_at = stamp;
     }
     return cache;
@@ -307,7 +319,7 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
         begin = utf8::next(matches[0].first, pos);
         if (res.empty() or matches[0].second > res[0].second)
         {
-            matches_cache.insert(matches[0].second.coord(), matches[0].first.coord());
+            matches_cache.add_match(matches[0].first.coord(), matches[0].second.coord());
             res.swap(matches);
         }
     }
