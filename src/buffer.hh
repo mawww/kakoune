@@ -9,8 +9,6 @@
 #include "value.hh"
 #include "vector.hh"
 
-#include <map>
-
 namespace Kakoune
 {
 
@@ -199,22 +197,6 @@ public:
     };
     ConstArrayView<Change> changes_since(size_t timestamp) const;
 
-    // a cache to hold reverse search result
-    struct MatchesCache
-    {
-        friend class Buffer;
-        MatchesCache() : valid_at(0) {};
-        void insert(ByteCoord end, ByteCoord start);
-        Optional<ByteCoord> preceding_match_start(ByteCoord before) const;
-    private:
-        // maps the end of a match to its start
-        std::map<ByteCoord, ByteCoord> matches;
-        size_t valid_at;
-        String regex;
-    };
-
-    MatchesCache& get_regex_cache(StringView regex) const;
-
     String debug_description() const;
 private:
 
@@ -263,8 +245,6 @@ private:
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
     timespec m_fs_timestamp;
-
-    mutable MatchesCache m_cache;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state

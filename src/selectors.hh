@@ -8,6 +8,8 @@
 #include "utf8_iterator.hh"
 #include "regex.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
 
@@ -234,7 +236,60 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
 
 void select_buffer(SelectionList& selections);
 
-enum Direction { Forward, Backward };
+namespace
+{
+// a cache to hold reverse search result
+struct MatchesCache
+{
+	friend MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex);
+    MatchesCache() : valid_at(0) {};
+    void insert(ByteCoord end, ByteCoord start)
+    {
+	    matches.insert(std::make_pair(end, start));
+    }
+    Optional<ByteCoord> preceding_match_start(const ByteCoord& before) const
+    {
+        auto it = matches.lower_bound(before);
+        if (it != matches.begin())
+            return Optional<ByteCoord>((--it)->second);
+        return Optional<ByteCoord>();
+    }
+private:
+    // maps the end of a match to its start
+    std::map<ByteCoord, ByteCoord> matches;
+    size_t valid_at;
+    String regex;
+};
+
+MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex)
+{
+    static const ValueId regex_cache_id = ValueId::get_free_id();
+    Value& value = buffer.values()[regex_cache_id];
+    if (not value)
+        value = Value(MatchesCache());
+    auto& cache = value.as<MatchesCache>();
+    size_t stamp = buffer.timestamp();
+    if (StringView(cache.regex) != regex)
+    {
+        cache.matches.clear();
+        cache.regex = regex.str();
+        cache.valid_at = stamp;
+    }
+    else if (cache.valid_at < stamp)
+    {
+        auto changes = buffer.changes_since(cache.valid_at);
+        const auto& min_change = std::min_element(changes.begin(), changes.end(),
+                                                  [](const Buffer::Change& lhs, const Buffer::Change& rhs)
+                                                  {
+                                                      return lhs.begin < rhs.begin;
+                                                  });
+        auto& map = cache.matches;
+        map.erase(map.lower_bound(min_change->begin), map.end());
+        cache.valid_at = stamp;
+    }
+    return cache;
+}
+}
 
 inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
                             MatchResults<BufferIterator>& res,
@@ -243,7 +298,7 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
     MatchResults<BufferIterator> matches;
     const bool is_pos_eol = is_eol(buffer, pos.coord());
     const bool is_pos_eow = is_eow(buffer, pos.coord());
-    auto& matches_cache = buffer.get_regex_cache(regex.str());
+    auto& matches_cache = get_regex_cache(buffer, regex.str());
     ByteCoord search_start = matches_cache.preceding_match_start(pos.coord()).value_or(ByteCoord(0,0));
     BufferIterator begin(buffer, search_start);
     while (begin != pos and regex_search(begin, pos, matches, regex,
@@ -258,6 +313,8 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
     }
     return not res.empty();
 }
+
+enum Direction { Forward, Backward };
 
 template<Direction direction>
 bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,

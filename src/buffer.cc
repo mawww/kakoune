@@ -636,43 +636,6 @@ String Buffer::debug_description() const
                   content_size, additional_size);
 }
 
-void Buffer::MatchesCache::insert(ByteCoord end, ByteCoord start)
-{
-    matches.insert(std::make_pair(end, start));
-}
-
-Optional<ByteCoord> Buffer::MatchesCache::preceding_match_start(ByteCoord before) const
-{
-    auto it = matches.lower_bound(before);
-    if (it != matches.begin())
-        return Optional<ByteCoord>((--it)->second);
-    return Optional<ByteCoord>();
-}
-
-Buffer::MatchesCache& Buffer::get_regex_cache(StringView regex) const
-{
-    size_t stamp = timestamp();
-    if (StringView(m_cache.regex) != regex)
-    {
-        m_cache.matches.clear();
-        m_cache.regex = regex.str();
-        m_cache.valid_at = stamp;
-    }
-    else if (m_cache.valid_at < stamp)
-    {
-        auto changes = changes_since(m_cache.valid_at);
-        auto min_change = std::min_element(changes.begin(), changes.end(),
-                                    [](const Change& lhs, const Change& rhs)
-                                    {
-                                        return lhs.begin < rhs.begin;
-                                    });
-        auto& map = m_cache.matches;
-        map.erase(map.lower_bound(min_change->begin), map.end());
-        m_cache.valid_at = stamp;
-    }
-    return m_cache;
-}
-
 UnitTest test_buffer{[]()
 {
     Buffer empty_buffer("empty", Buffer::Flags::None, {});
