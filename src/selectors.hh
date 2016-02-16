@@ -241,29 +241,7 @@ namespace
 // a cache to hold reverse search result
 struct MatchesCache
 {
-    using Match = std::pair<ByteCoord, ByteCoord>;
-    friend MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex);
-    MatchesCache() : valid_at(0) {};
-    void add_match(ByteCoord start, ByteCoord end)
-    {
-        if (matches.empty() or end > matches.back().second)
-            matches.push_back(std::make_pair(start, end));
-    }
-    Optional<ByteCoord> preceding_match_start(const ByteCoord& before) const
-    {
-        auto it = std::lower_bound(matches.begin(), matches.end(), before,
-                                   [](const Match& lhs, const ByteCoord& rhs)
-                                   {
-                                       return lhs.second < rhs;
-                                   });
-        if (it != matches.begin())
-            return Optional<ByteCoord>((--it)->first);
-        return Optional<ByteCoord>();
-    }
-private:
-    // known matches (pair of beginning and end coordinates)
-    // strictly sorted by end coordinates
-    Vector<Match> matches;
+    Vector<MatchResults<BufferIterator>> matches;
     size_t valid_at;
     String regex;
 };
@@ -276,27 +254,10 @@ MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex)
         value = Value(MatchesCache());
     auto& cache = value.as<MatchesCache>();
     size_t stamp = buffer.timestamp();
-    if (StringView(cache.regex) != regex)
+    if (cache.regex != regex or stamp != cache.valid_at)
     {
         cache.matches.clear();
         cache.regex = regex.str();
-        cache.valid_at = stamp;
-    }
-    else if (cache.valid_at < stamp)
-    {
-        auto changes = buffer.changes_since(cache.valid_at);
-        const auto& highest_change = std::min_element(changes.begin(), changes.end(),
-                                                  [](const Buffer::Change& lhs, const Buffer::Change& rhs)
-                                                  {
-                                                      return lhs.begin < rhs.begin;
-                                                  });
-        auto& m = cache.matches;
-        m.erase(std::lower_bound(m.begin(), m.end(), highest_change->begin,
-                                 [](const MatchesCache::Match& lhs, const ByteCoord& rhs)
-                                 {
-                                     return lhs.second < rhs;
-                                 }),
-                m.end());
         cache.valid_at = stamp;
     }
     return cache;
@@ -307,22 +268,44 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
                             MatchResults<BufferIterator>& res,
                             const Regex& regex)
 {
-    MatchResults<BufferIterator> matches;
-    const bool is_pos_eol = is_eol(buffer, pos.coord());
-    const bool is_pos_eow = is_eow(buffer, pos.coord());
-    auto& matches_cache = get_regex_cache(buffer, regex.str());
-    ByteCoord search_start = matches_cache.preceding_match_start(pos.coord()).value_or(ByteCoord(0,0));
-    BufferIterator begin(buffer, search_start);
-    while (begin != pos and regex_search(begin, pos, matches, regex,
-                                         match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+    auto& cache = get_regex_cache(buffer, regex.str()).matches;
+    auto it = std::upper_bound(cache.begin(), cache.end(), pos,
+                               [](const BufferIterator& lhs, const MatchResults<BufferIterator>& rhs)
+                               {
+                                   return lhs < rhs[0].second;
+                               });
+    if (it == cache.end())
     {
-        begin = utf8::next(matches[0].first, pos);
-        if (res.empty() or matches[0].second > res[0].second)
+        MatchResults<BufferIterator> matches;
+        const bool is_pos_eol = is_eol(buffer, pos.coord());
+        const bool is_pos_eow = is_eow(buffer, pos.coord());
+        BufferIterator begin;
+        if (cache.empty())
         {
-            matches_cache.add_match(matches[0].first.coord(), matches[0].second.coord());
-            res.swap(matches);
+            begin = buffer.begin();
+        }
+        else
+        {
+            res = cache.back();
+            begin = utf8::next(res[0].first, pos);
+        }
+        while (begin != pos and regex_search(begin, pos, matches, regex,
+                                             match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+        {
+            begin = utf8::next(matches[0].first, pos);
+            if (res.empty() or matches[0].second > res[0].second)
+            {
+                cache.push_back(matches);
+                res.swap(matches);
+            }
         }
     }
+    else if (it != cache.begin())
+    {
+        res = *(it-1);
+    }
+    // if the iterator is at the beginning, the match will be found by the
+    // second call to find_last_match()
     return not res.empty();
 }
 
