@@ -28,12 +28,8 @@ addhl -group /makefile/content regex [+?:]= 0:operator
 
 def -hidden _makefile_fix_whitespaces %{
     try %{
-        exec -draft "
-            \%
-s^[^\s][^:\n]+:[^\n]*\n(^\h+[^\n]+\n?)+<ret>
-s {%opt{tabstop}}<ret>
-c<tab><esc>
-        "
+        exec -draft <esc>K <a-k>^\S[^:\v]*:[^:=]<ret>
+        exec <tab>
     }
 }
 
@@ -43,7 +39,7 @@ c<tab><esc>
 hook global WinSetOption filetype=makefile %{
     addhl ref makefile
 
-    hook buffer BufWritePre .* -group makefile-indent _makefile_fix_whitespaces
+    hook window InsertChar \n -group makefile-indent _makefile_fix_whitespaces
 
     set window comment_selection_chars ""
     set window comment_line_chars "#"
@@ -51,5 +47,5 @@ hook global WinSetOption filetype=makefile %{
 
 hook global WinSetOption filetype=(?!makefile).* %{
     rmhl makefile
-    rmhooks buffer makefile-indent
+    rmhooks window makefile-indent
 }
