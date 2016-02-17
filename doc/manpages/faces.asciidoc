@@ -94,3 +94,6 @@ areas of the user interface:
 
 *Search*::
 	face used to highlight search results
+
+*BufferPadding*::
+	face applied on the characters that follow the last line of a buffer

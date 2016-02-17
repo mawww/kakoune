@@ -920,6 +920,7 @@ There are some builtins faces used by internal Kakoune functionalities:
  * `Prompt`: face used prompt displayed on the status line
  * `MatchingChar`: face used by the show_matching highlighter
  * `Search`: face used to highlight search results
+ * `BufferPadding`: face applied on the characters that follow the last line of a buffer
 
 Advanced topics
 ---------------
