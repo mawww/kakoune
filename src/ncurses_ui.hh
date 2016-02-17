@@ -13,6 +13,8 @@ namespace Kakoune
 
 struct NCursesWin;
 
+enum BufferPaddingType { None, Single, Fill };
+
 class NCursesUI : public UserInterface
 {
 public:
@@ -23,7 +25,8 @@ public:
     NCursesUI& operator=(const NCursesUI&) = delete;
 
     void draw(const DisplayBuffer& display_buffer,
-              const Face& default_face) override;
+              const Face& default_face,
+              const Face& padding_face) override;
 
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
@@ -120,6 +123,9 @@ private:
     bool m_mouse_enabled = false;
     int m_wheel_up_button = 4;
     int m_wheel_down_button = 5;
+
+    String		  	  m_buffer_padding_str = "~";
+    BufferPaddingType m_buffer_padding_type = BufferPaddingType::None;
 
     bool m_set_title = true;
 

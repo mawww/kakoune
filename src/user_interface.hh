@@ -53,7 +53,8 @@ public:
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
-                      const Face& default_face) = 0;
+                      const Face& default_face,
+                      const Face& padding_face) = 0;
 
     virtual void draw_status(const DisplayLine& status_line,
                              const DisplayLine& mode_line,

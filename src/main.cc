@@ -251,7 +251,9 @@ void register_options()
                        "    ncurses_set_title             bool\n"
                        "    ncurses_enable_mouse          bool\n"
                        "    ncurses_wheel_up_button       int\n"
-                       "    ncurses_wheel_down_button     int\n",
+                       "    ncurses_wheel_down_button     int\n"
+                       "    ncurses_buffer_padding_str           str\n"
+                       "    ncurses_buffer_padding_type          fill|single|off\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
@@ -292,7 +294,7 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
         void info_show(StringView, StringView, CharCoord, Face, InfoStyle) override {}
         void info_hide() override {}
 
-        void draw(const DisplayBuffer&, const Face&) override {}
+        void draw(const DisplayBuffer&, const Face&, const Face&) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
         CharCoord dimensions() override { return {24,80}; }
         bool is_key_available() override { return false; }

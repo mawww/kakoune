@@ -249,7 +249,8 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
-              const Face& default_face) override;
+              const Face& default_face,
+              const Face& padding_face) override;
 
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
@@ -334,12 +335,14 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
-                    const Face& default_face)
+                    const Face& default_face,
+                    const Face& padding_face)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Draw);
     msg.write(display_buffer);
     msg.write(default_face);
+    msg.write(padding_face);
 }
 
 void RemoteUI::draw_status(const DisplayLine& status_line,
@@ -504,7 +507,8 @@ void RemoteClient::process_next_message()
     {
         auto display_buffer = read<DisplayBuffer>(socket);
         auto default_face = read<Face>(socket);
-        m_ui->draw(display_buffer, default_face);
+        auto padding_face = read<Face>(socket);
+        m_ui->draw(display_buffer, default_face, padding_face);
         break;
     }
     case RemoteUIMsg::DrawStatus:

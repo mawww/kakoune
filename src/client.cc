@@ -166,7 +166,7 @@ void Client::redraw_ifn()
 
     const bool needs_redraw = window.needs_redraw(context());
     if (needs_redraw)
-        ui.draw(window.update_display_buffer(context()), get_face("Default"));
+        ui.draw(window.update_display_buffer(context()), get_face("Default"), get_face("BufferPadding"));
 
     DisplayLine mode_line = generate_mode_line();
     if (needs_redraw or
