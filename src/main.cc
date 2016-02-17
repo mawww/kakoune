@@ -252,8 +252,8 @@ void register_options()
                        "    ncurses_enable_mouse          bool\n"
                        "    ncurses_wheel_up_button       int\n"
                        "    ncurses_wheel_down_button     int\n"
-                       "    ncurses_buffer_padding_str           str\n"
-                       "    ncurses_buffer_padding_type          fill|single|off\n",
+                       "    ncurses_buffer_padding_str    str\n"
+                       "    ncurses_buffer_padding_type   fill|single|off\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
