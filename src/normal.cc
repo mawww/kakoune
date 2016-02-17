@@ -667,6 +667,12 @@ void search_next(Context& context, NormalParams params)
 template<bool smart>
 void use_selection_as_search_pattern(Context& context, NormalParams params)
 {
+    auto has_upper =  [](const String &s) -> bool {
+        for (CharCount i = 0; i < s.char_length(); i++)
+            if (std::iswupper(s[i]))
+                return true;
+        return false;
+    };
     Vector<String> patterns;
     auto& sels = context.selections();
     const auto& buffer = context.buffer();
@@ -677,13 +683,16 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
         Utf8It end{buffer.iterator_at(sel.max()), buffer};
         ++end;
 
-        auto content = "\\Q" + buffer.string(begin.base().coord(), end.base().coord()) + "\\E";
+        auto buffer_string = buffer.string(begin.base().coord(), end.base().coord());
+        auto content = "\\Q" + buffer_string + "\\E";
         if (smart)
         {
             if (is_word(*begin) and (begin == buffer.begin() or not is_word(*(begin-1))))
                 content = "\\b" + content;
             if (is_word(*(end-1)) and (end == buffer.end() or not is_word(*end)))
                 content = content + "\\b";
+            if (not has_upper(buffer_string))
+                content = "(?i)" + content;
         }
         patterns.push_back(std::move(content));
     }
