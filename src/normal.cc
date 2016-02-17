@@ -670,22 +670,13 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
     Vector<String> patterns;
     auto& sels = context.selections();
     const auto& buffer = context.buffer();
-    using Utf8It = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
     for (auto& sel : sels)
     {
-        Utf8It begin{buffer.iterator_at(sel.min()), buffer};
-        Utf8It end{buffer.iterator_at(sel.max()), buffer};
-        ++end;
-
-        auto content = "\\Q" + buffer.string(begin.base().coord(), end.base().coord()) + "\\E";
-        if (smart)
-        {
-            if (is_word(*begin) and (begin == buffer.begin() or not is_word(*(begin-1))))
-                content = "\\b" + content;
-            if (is_word(*(end-1)) and (end == buffer.end() or not is_word(*end)))
-                content = content + "\\b";
-        }
-        patterns.push_back(std::move(content));
+        const auto beg = sel.min(), end = buffer.char_next(sel.max());
+        patterns.push_back(format("{}\\Q{}\\E{}",
+                                  smart and is_bow(buffer, beg) ? "\\b" : "",
+                                  buffer.string(beg, end),
+                                  smart and is_eow(buffer, end) ? "\\b" : ""));
     }
 
     const char reg = to_lower(params.reg ? params.reg : '/');

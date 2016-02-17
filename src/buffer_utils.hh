@@ -37,6 +37,15 @@ inline bool is_eol(const Buffer& buffer, ByteCoord coord)
     return buffer.is_end(coord) or buffer[coord.line].length() == coord.column+1;
 }
 
+inline bool is_bow(const Buffer& buffer, ByteCoord coord)
+{
+    auto it = utf8::iterator<BufferIterator>(buffer.iterator_at(coord), buffer);
+    if (coord == ByteCoord{0,0})
+        return is_word(*it);
+
+    return not is_word(*(it-1)) and is_word(*it);
+}
+
 inline bool is_eow(const Buffer& buffer, ByteCoord coord)
 {
     if (buffer.is_end(coord) or coord == ByteCoord{0,0})
