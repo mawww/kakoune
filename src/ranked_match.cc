@@ -11,7 +11,7 @@ using Utf8It = utf8::iterator<const char*>;
 static int count_word_boundaries_match(StringView candidate, StringView query)
 {
     int count = 0;
-    Utf8It qit{query.begin(), query};
+    Utf8It query_it{query.begin(), query};
     Codepoint prev = 0;
     for (Utf8It it{candidate.begin(), candidate}; it != candidate.end(); ++it)
     {
@@ -25,17 +25,17 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
             continue;
 
         const Codepoint lc = to_lower(c);
-        for (; qit != query.end(); ++qit)
+        for (auto qit = query_it; qit != query.end(); ++qit)
         {
             const Codepoint qc = *qit;
             if (qc == (islower(qc) ? lc  : c))
             {
                 ++count;
-                ++qit;
+                query_it = qit+1;
                 break;
             }
         }
-        if (qit == query.end())
+        if (query_it == query.end())
             break;
     }
     return count;
@@ -112,6 +112,10 @@ bool RankedMatch::operator<(const RankedMatch& other) const
 
 UnitTest test_ranked_match{[] {
     kak_assert(count_word_boundaries_match("run_all_tests", "rat") == 3);
+    kak_assert(count_word_boundaries_match("run_all_tests", "at") == 2);
+    kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "wm") == 2);
+    kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cobm") == 3);
+    kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cWBM") == 4);
 }};
 
 }
