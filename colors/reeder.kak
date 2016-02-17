@@ -64,6 +64,6 @@
         face StatusCursor       ${orange},${white_light}
         face Prompt             ${black_light}
         face MatchingChar       default+b
-        face BufferPadding		${grey_dark},${white}
+        face BufferPadding      ${grey_dark},${white}
     "
 }

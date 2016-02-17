@@ -121,7 +121,7 @@ FaceRegistry::FaceRegistry()
         { "StatusCursor", Face{ Color::Black, Color::Cyan } },
         { "Prompt", Face{ Color::Yellow, Color::Default } },
         { "MatchingChar", Face{ Color::Default, Color::Default, Attribute::Bold } },
-        { "BufferPadding", Face{ Color::Blue, Color::Default, Attribute::Bold } },
+        { "BufferPadding", Face{ Color::Blue, Color::Default } },
       }
 {}
 

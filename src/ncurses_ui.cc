@@ -7,7 +7,6 @@
 #include "keys.hh"
 #include "register_manager.hh"
 #include "utf8_iterator.hh"
-#include "face_registry.hh"
 
 #include <algorithm>
 
@@ -361,7 +360,7 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         ++line_index;
     }
 
-    set_face(m_window, { Color::Blue, Color::Default }, padding_face);
+    set_face(m_window, padding_face, default_face);
 
     const DisplayLine padding_line = m_buffer_padding_str;
     const DisplayLine* padding_line_ptr = m_buffer_padding_type != BufferPaddingType::None ?
