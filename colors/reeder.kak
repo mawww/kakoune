@@ -52,8 +52,8 @@
         face SecondaryCursor    ${black},white
         face LineNumbers        ${grey_dark},${white}
         face LineNumberCursor   ${grey_dark},${brown_lighter}
-        face MenuForeground     ${orange},${black}
-        face MenuBackground     default,${black}
+        face MenuForeground     ${orange},${brown_lighter}
+        face MenuBackground     ${black_light},${brown_lighter}
         face MenuInfo           default,${black}
         face Information        ${black_light},${brown_lighter}
         face Error              default,${red}
