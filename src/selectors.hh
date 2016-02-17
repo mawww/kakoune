@@ -8,6 +8,8 @@
 #include "utf8_iterator.hh"
 #include "regex.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
 
@@ -234,25 +236,80 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection);
 
 void select_buffer(SelectionList& selections);
 
-enum Direction { Forward, Backward };
+namespace
+{
+// a cache to hold reverse search result
+struct MatchesCache
+{
+    Vector<MatchResults<BufferIterator>> matches;
+    size_t valid_at;
+    String regex;
+};
+
+MatchesCache& get_regex_cache(const Buffer& buffer, StringView regex)
+{
+    static const ValueId regex_cache_id = ValueId::get_free_id();
+    Value& value = buffer.values()[regex_cache_id];
+    if (not value)
+        value = Value(MatchesCache());
+    auto& cache = value.as<MatchesCache>();
+    size_t stamp = buffer.timestamp();
+    if (cache.regex != regex or stamp != cache.valid_at)
+    {
+        cache.matches.clear();
+        cache.regex = regex.str();
+        cache.valid_at = stamp;
+    }
+    return cache;
+}
+}
 
 inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
                             MatchResults<BufferIterator>& res,
                             const Regex& regex)
 {
-    MatchResults<BufferIterator> matches;
-    const bool is_pos_eol = is_eol(buffer, pos.coord());
-    const bool is_pos_eow = is_eow(buffer, pos.coord());
-    auto begin = buffer.begin();
-    while (begin != pos and regex_search(begin, pos, matches, regex,
-                                         match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+    auto& cache = get_regex_cache(buffer, regex.str()).matches;
+    auto it = std::upper_bound(cache.begin(), cache.end(), pos,
+                               [](const BufferIterator& lhs, const MatchResults<BufferIterator>& rhs)
+                               {
+                                   return lhs < rhs[0].second;
+                               });
+    if (it == cache.end())
     {
-        begin = utf8::next(matches[0].first, pos);
-        if (res.empty() or matches[0].second > res[0].second)
-            res.swap(matches);
+        MatchResults<BufferIterator> matches;
+        const bool is_pos_eol = is_eol(buffer, pos.coord());
+        const bool is_pos_eow = is_eow(buffer, pos.coord());
+        BufferIterator begin;
+        if (cache.empty())
+        {
+            begin = buffer.begin();
+        }
+        else
+        {
+            res = cache.back();
+            begin = utf8::next(res[0].first, pos);
+        }
+        while (begin != pos and regex_search(begin, pos, matches, regex,
+                                             match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+        {
+            begin = utf8::next(matches[0].first, pos);
+            if (res.empty() or matches[0].second > res[0].second)
+            {
+                cache.push_back(matches);
+                res.swap(matches);
+            }
+        }
     }
+    else if (it != cache.begin())
+    {
+        res = *(it-1);
+    }
+    // if the iterator is at the beginning, the match will be found by the
+    // second call to find_last_match()
     return not res.empty();
 }
+
+enum Direction { Forward, Backward };
 
 template<Direction direction>
 bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
