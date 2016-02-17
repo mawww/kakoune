@@ -67,5 +67,6 @@
         face StatusCursor ${zencursor}
         face Prompt yellow
         face MatchingChar default+b
+        face BufferPadding ${zenkeyword},${zenbackground}
     "
 }

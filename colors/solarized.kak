@@ -64,5 +64,6 @@
         face StatusCursor       ${base00},${base3}
         face Prompt             yellow
         face MatchingChar       default+b
+        face BufferPadding		${base01},${base03}
     "
 }

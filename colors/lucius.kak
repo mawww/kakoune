@@ -66,5 +66,6 @@
         face StatusCursor default,${lucius_blue}
         face Prompt ${lucius_lighter_grey}
         face MatchingChar ${lucius_lighter_grey},${lucius_bright_green}
+        face BufferPadding ${lucius_green},${lucius_darker_grey}
     "
 }
