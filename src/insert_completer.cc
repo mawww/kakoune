@@ -370,6 +370,8 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
         if (not candidate.docstring.empty())
             m_context.ui().info_show(candidate.completion, candidate.docstring, CharCoord{},
                                      get_face("Information"), InfoStyle::MenuDoc);
+        else
+            m_context.ui().info_hide();
     }
 
     for (auto i = 0_byte; i < prefix_len; ++i)
