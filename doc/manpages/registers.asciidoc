@@ -29,7 +29,7 @@ Most commands using a register default to a specific one if not specified:
 	and *R*
 
 */*::
-	default search register, used by regex based commands like *s*, *\**
+	default search register, used by regex based commands like *s*, ***
 	or */*
 
 *@*::
@@ -37,6 +37,10 @@ Most commands using a register default to a specific one if not specified:
 
 *^*::
 	default mark register, used by *z* and *Z*
+
+*|*::
+	default shell command register, used by command that spawn a subshell such as
+	*|*, *<a-|>*, *!* or *<a-!>*
 
 Special registers
 -----------------

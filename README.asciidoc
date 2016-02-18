@@ -965,6 +965,7 @@ Most commands using a register default to a specific one if not specified:
  * `/`: default search register, used by regex based commands like `s`, `*` or `/`
  * `@`: default macro register, used by `q` and `Q`
  * `^`: default mark register, used by `z` and `Z`
+ * `|`: default shell command register, used by command that spawn a subshell such as `|`, `<a-|>`, `!` or `<a-!>`
 
 Macros
 ~~~~~~
@@ -995,6 +996,9 @@ the `:exec` and `:eval` commands can be used for running Kakoune commands.
 paremeters as if they were entered in the command prompt. By default,
 they do their execution in the context of the current client.
 
+These two commands also save the following registers, who are then restored
+when the commands have been executed: `/`, `"`, `|`, `^`, `@`.
+
 Some parameters provide a way to change the context of execution:
 
  * `-client <name>`: execute in the context of the client named <name>
@@ -1013,7 +1017,7 @@ Some parameters provide a way to change the context of execution:
  * `-no-hooks`: disable hook execution while executing the keys/commands
  * `-with-maps`: use user key mapping in `:exec` instead of built in keys.
  * `-save-regs <regs>`: regs is a string of registers to be restored after
-    execution.
+    execution (overwrites the list of registers saved by default)
 
 The execution stops when the last key/command is reached, or an error
 is raised.
