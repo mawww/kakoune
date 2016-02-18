@@ -20,6 +20,9 @@ paremeters as if they were entered in the command prompt. By default, their
 execution happens within the context of the current client, and stops when
 the last key/command is reached, or an error is raised.
 
+These two commands also save the following registers, who are then restored
+when the commands have been executed: */*, *"*, *|*, *^*, *@*.
+
 Optional flags
 --------------
 *-client* <name>::
@@ -51,4 +54,5 @@ Optional flags
 	use user key mapping in instead of built in keys (*exec* only)
 
 *-save-regs* <regs>::
-	regs is a string of registers to be restored after execution
+	regs is a string of registers to be restored after execution (overwrites
+	the list of registers saved by default, c.f. description)
