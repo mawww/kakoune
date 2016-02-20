@@ -28,7 +28,7 @@ addhl -group /makefile/content regex [+?:]= 0:operator
 
 def -hidden _makefile_fix_whitespaces %{
     try %{
-        exec -draft <esc>K <a-k>^\S[^:\v]*:[^:=]<ret>
+        exec -draft <esc> K<a-i>p <a-k>^\S[^:\v]*:[^:=]<ret>
         exec <tab>
     }
 }
