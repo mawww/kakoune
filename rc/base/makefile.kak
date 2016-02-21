@@ -28,8 +28,13 @@ addhl -group /makefile/content regex [+?:]= 0:operator
 
 def -hidden _makefile_fix_whitespaces %{
     try %{
-        exec -draft <esc> K<a-i>p <a-k>^\S[^:\v]*:[^:=]<ret>
+        ## If the line above is a target or begins with a tab, then add another tab
+        exec -draft <esc> K <a-k>^(\S[^:\v]*:[^:=]|\t\S)<ret>
         exec <tab>
+    } catch %{
+        ## If we hit the return key twice while implementing a target,
+        ## we remove the tab character left alone on the previous line
+        try %{ exec -draft <esc> K s^\t$<ret>d }
     }
 }
 
