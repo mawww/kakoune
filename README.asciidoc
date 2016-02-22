@@ -472,6 +472,9 @@ A multiselection can also be obtained with `S`, which splits the current
 selection according to the regex entered. To split a comma separated list,
 use `S` then ', *'
 
+The regex syntax supported by Kakoune is the Perl one and is describe  
+here <<Regex syntax>>.
+
 `s` and `S` share the search pattern with `/`, and hence entering an empty
 pattern uses the last one.
 
@@ -986,6 +989,18 @@ begins and/or ends at word boundaries and set the search pattern accordingly.
 
 with `alt-*` you can set the search pattern to the current seletion without
 Kakoune trying to be smart.
+
+Regex syntax
+~~~~~~~~~~~~
+
+The regex syntax supported by Kakoune is the Perl syntax currently provided 
+by Boost :
+http://www.boost.org/doc/libs/release/libs/regex/doc/html/boost_regex/syntax/perl_syntax.html[Perl Regular Expression Syntax].
+
+Tips
+^^^^
+
+* It is possible to make case insensitive regex by prefixing expression with `(?i)`
 
 Exec and Eval
 ~~~~~~~~~~~~~
