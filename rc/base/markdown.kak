@@ -41,7 +41,7 @@ addhl -group /markdown/content regex ^([-=~]+)\n[^\n\h].*?\n\1$ 0:block
 addhl -group /markdown/content regex \B\+[^\n]+?\+\B 0:mono
 addhl -group /markdown/content regex \b_[^\n]+?_\b 0:italic
 addhl -group /markdown/content regex \B\*[^\n]+?\*\B 0:bold
-addhl -group /markdown/content regex <[a-z]+://.*?> 0:link
+addhl -group /markdown/content regex <(([a-z]+://.*?)|((mailto:)?[\w+-]+@[a-z]+[.][a-z]+))> 0:link
 addhl -group /markdown/content regex ^\h*(>\h*)+ 0:comment
 addhl -group /markdown/content regex \H\K\h\h$ 0:PrimarySelection
 
