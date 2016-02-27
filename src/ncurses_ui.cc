@@ -443,11 +443,11 @@ void NCursesUI::check_resize(bool force)
 
         if (menu)
         {
-            auto items = std::move(m_items);
-            menu_show(items, m_menu_anchor, m_menu_fg, m_menu_bg, m_menu_style);
+            auto items = std::move(m_menu.items);
+            menu_show(items, m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
         }
         if (info)
-            info_show(m_info_title, m_info_content, m_info_anchor, m_info_face, m_info_style);
+            info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
     }
     else
         kak_assert(false);
@@ -580,34 +580,34 @@ void NCursesUI::draw_menu()
     if (not m_menu)
         return;
 
-    const auto menu_bg = get_color_pair(m_menu_bg);
+    const auto menu_bg = get_color_pair(m_menu.bg);
     wattron(m_menu.win, COLOR_PAIR(menu_bg));
     wbkgdset(m_menu.win, COLOR_PAIR(menu_bg));
 
-    const int item_count = (int)m_items.size();
-    const LineCount menu_lines = div_round_up(item_count, m_menu_columns);
+    const int item_count = (int)m_menu.items.size();
+    const LineCount menu_lines = div_round_up(item_count, m_menu.columns);
     const LineCount& win_height = m_menu.size.line;
     kak_assert(win_height <= menu_lines);
 
-    const CharCount column_width = (m_menu.size.column - 1) / m_menu_columns;
+    const CharCount column_width = (m_menu.size.column - 1) / m_menu.columns;
 
     const LineCount mark_height = min(div_round_up(sq(win_height), menu_lines),
                                       win_height);
-    const LineCount mark_line = (win_height - mark_height) * m_menu_top_line /
+    const LineCount mark_line = (win_height - mark_height) * m_menu.top_line /
                                 max(1_line, menu_lines - win_height);
     for (auto line = 0_line; line < win_height; ++line)
     {
         wmove(m_menu.win, (int)line, 0);
-        for (int col = 0; col < m_menu_columns; ++col)
+        for (int col = 0; col < m_menu.columns; ++col)
         {
-            const int item_idx = (int)(m_menu_top_line + line) * m_menu_columns
+            const int item_idx = (int)(m_menu.top_line + line) * m_menu.columns
                                  + col;
             if (item_idx >= item_count)
                 break;
 
-            const DisplayLine& item = m_items[item_idx];
+            const DisplayLine& item = m_menu.items[item_idx];
             draw_line(m_menu.win, item, 0, column_width,
-                      item_idx == m_selected_item ? m_menu_fg : m_menu_bg);
+                      item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg);
             const CharCount pad = column_width - item.length();
             add_str(m_menu.win, String{' ' COMMA pad});
         }
@@ -627,10 +627,10 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
 {
     menu_hide();
 
-    m_menu_fg = fg;
-    m_menu_bg = bg;
-    m_menu_style = style;
-    m_menu_anchor = anchor;
+    m_menu.fg = fg;
+    m_menu.bg = bg;
+    m_menu.style = style;
+    m_menu.anchor = anchor;
 
     if (style == MenuStyle::Prompt)
         anchor = CharCoord{m_status_on_top ? 0_line : m_dimensions.line, 0};
@@ -643,33 +643,33 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
         return;
 
     const int item_count = items.size();
-    m_items.clear(); // make sure it is empty
-    m_items.reserve(item_count);
+    m_menu.items.clear(); // make sure it is empty
+    m_menu.items.reserve(item_count);
     CharCount longest = 1;
     for (auto& item : items)
         longest = max(longest, item.length());
 
     const bool is_prompt = style == MenuStyle::Prompt;
-    m_menu_columns = is_prompt ? max((int)((maxsize.column-1) / (longest+1)), 1) : 1;
+    m_menu.columns = is_prompt ? max((int)((maxsize.column-1) / (longest+1)), 1) : 1;
 
     CharCount maxlen = maxsize.column-1;
-    if (m_menu_columns > 1 and item_count > 1)
-        maxlen = maxlen / m_menu_columns - 1;
+    if (m_menu.columns > 1 and item_count > 1)
+        maxlen = maxlen / m_menu.columns - 1;
 
     for (auto& item : items)
     {
-        m_items.push_back(item);
-        m_items.back().trim(0, maxlen, false);
-        kak_assert(m_items.back().length() <= maxlen);
+        m_menu.items.push_back(item);
+        m_menu.items.back().trim(0, maxlen, false);
+        kak_assert(m_menu.items.back().length() <= maxlen);
     }
 
-    int height = min(10, div_round_up(item_count, m_menu_columns));
+    int height = min(10, div_round_up(item_count, m_menu.columns));
 
     int line = (int)anchor.line + 1;
     if (line + height >= (int)maxsize.line)
         line = (int)anchor.line - height;
-    m_selected_item = item_count;
-    m_menu_top_line = 0;
+    m_menu.selected_item = item_count;
+    m_menu.top_line = 0;
 
     auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
     m_menu.create({line, anchor.column}, {height, width});
@@ -678,23 +678,23 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
 
 void NCursesUI::menu_select(int selected)
 {
-    const int item_count = m_items.size();
-    const LineCount menu_lines = div_round_up(item_count, m_menu_columns);
+    const int item_count = m_menu.items.size();
+    const LineCount menu_lines = div_round_up(item_count, m_menu.columns);
     if (selected < 0 or selected >= item_count)
     {
-        m_selected_item = -1;
-        m_menu_top_line = 0;
+        m_menu.selected_item = -1;
+        m_menu.top_line = 0;
     }
     else
     {
-        m_selected_item = selected;
-        const LineCount selected_line = m_selected_item / m_menu_columns;
+        m_menu.selected_item = selected;
+        const LineCount selected_line = m_menu.selected_item / m_menu.columns;
         const LineCount win_height = m_menu.size.line;
         kak_assert(menu_lines >= win_height);
-        if (selected_line < m_menu_top_line)
-            m_menu_top_line = selected_line;
-        if (selected_line >= m_menu_top_line + win_height)
-            m_menu_top_line = min(selected_line, menu_lines - win_height);
+        if (selected_line < m_menu.top_line)
+            m_menu.top_line = selected_line;
+        if (selected_line >= m_menu.top_line + win_height)
+            m_menu.top_line = min(selected_line, menu_lines - win_height);
     }
     draw_menu();
 }
@@ -703,7 +703,7 @@ void NCursesUI::menu_hide()
 {
     if (not m_menu)
         return;
-    m_items.clear();
+    m_menu.items.clear();
     mark_dirty(m_menu);
     m_menu.destroy();
     m_dirty = true;
@@ -833,16 +833,16 @@ void NCursesUI::info_show(StringView title, StringView content,
 {
     info_hide();
 
-    m_info_title = title.str();
-    m_info_content = content.str();
-    m_info_anchor = anchor;
-    m_info_face = face;
-    m_info_style = style;
+    m_info.title = title.str();
+    m_info.content = content.str();
+    m_info.anchor = anchor;
+    m_info.face = face;
+    m_info.style = style;
 
     String info_box;
     if (style == InfoStyle::Prompt)
     {
-        info_box = make_info_box(m_info_title, m_info_content,
+        info_box = make_info_box(m_info.title, m_info.content,
                                  m_dimensions.column, m_assistant);
         anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
@@ -859,7 +859,7 @@ void NCursesUI::info_show(StringView title, StringView content,
         if (max_width < 4)
             return;
 
-        for (auto& line : wrap_lines(m_info_content, max_width))
+        for (auto& line : wrap_lines(m_info.content, max_width))
             info_box += line + "\n";
     }
 

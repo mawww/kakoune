@@ -91,23 +91,28 @@ private:
 
     void mark_dirty(const Window& win);
 
-    Window m_menu;
-    Vector<DisplayLine> m_items;
-    Face m_menu_fg;
-    Face m_menu_bg;
-    CharCoord m_menu_anchor;
-    MenuStyle m_menu_style;
-    int m_selected_item = 0;
-    int m_menu_columns = 1;
-    LineCount m_menu_top_line = 0;
+    struct Menu : Window
+    {
+        Vector<DisplayLine> items;
+        Face fg;
+        Face bg;
+        CharCoord anchor;
+        MenuStyle style;
+        int selected_item = 0;
+        int columns = 1;
+        LineCount top_line = 0;
+    } m_menu;
+
     void draw_menu();
 
-    Window m_info;
-    String m_info_title;
-    String m_info_content;
-    Face m_info_face;
-    CharCoord m_info_anchor;
-    InfoStyle m_info_style;
+    struct Info : Window
+    {
+        String title;
+        String content;
+        Face face;
+        CharCoord anchor;
+        InfoStyle style;
+    } m_info;
 
     FDWatcher     m_stdin_watcher;
     InputCallback m_input_callback;
