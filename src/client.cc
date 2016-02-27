@@ -4,12 +4,12 @@
 #include "context.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
-#include "user_interface.hh"
 #include "file.hh"
 #include "remote.hh"
 #include "client_manager.hh"
 #include "command_manager.hh"
 #include "event_manager.hh"
+#include "user_interface.hh"
 #include "window.hh"
 
 #include <signal.h>
@@ -31,8 +31,11 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     context().set_client(*this);
     context().set_window(*m_window);
 
+    m_window->set_dimensions(m_ui->dimensions());
     m_window->options().register_watcher(*this);
+
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
+    m_ui->set_input_callback([this](EventMode mode) { handle_available_input(mode); });
 }
 
 Client::~Client()
@@ -154,19 +157,43 @@ void Client::change_buffer(Buffer& buffer)
 
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
-    m_window->set_dimensions(ui().dimensions());
+    m_window->set_dimensions(m_ui->dimensions());
 
     m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
+}
+
+static bool is_inline(InfoStyle style)
+{
+    return style == InfoStyle::Inline or
+           style == InfoStyle::InlineAbove or
+           style == InfoStyle::InlineBelow;
 }
 
 void Client::redraw_ifn()
 {
     Window& window = context().window();
-    UserInterface& ui = context().ui();
 
     const bool needs_redraw = window.needs_redraw(context());
     if (needs_redraw)
-        ui.draw(window.update_display_buffer(context()), get_face("Default"));
+    {
+        auto window_pos = window.position();
+        m_ui->draw(window.update_display_buffer(context()), get_face("Default"));
+
+	// window moved, reanchor eventual menu and info
+        if (window_pos != window.position())
+        {
+            if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline)
+            {
+                m_ui->menu_show(m_menu.items, window.display_position(m_menu.anchor),
+                                get_face("MenuForeground"), get_face("MenuBackground"), m_menu.style);
+                m_ui->menu_select(m_menu.selected);
+            }
+            if (not m_info.content.empty() and is_inline(m_info.style))
+                m_ui->info_show(m_info.title, m_info.content,
+                                window.display_position(m_info.anchor),
+                                get_face("Information"), m_info.style);
+        }
+    }
 
     DisplayLine mode_line = generate_mode_line();
     if (needs_redraw or
@@ -176,10 +203,10 @@ void Client::redraw_ifn()
         m_mode_line = std::move(mode_line);
         m_status_line = m_pending_status_line;
 
-        ui.draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
+        m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
     }
 
-    ui.refresh();
+    m_ui->refresh();
 }
 
 void Client::force_redraw()
@@ -275,6 +302,38 @@ void Client::on_option_changed(const Option& option)
 {
     if (option.name() == "ui_options")
         m_ui->set_ui_options(option.get<UserInterface::Options>());
+}
+
+void Client::menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style)
+{
+    m_menu = Menu{ std::move(choices), anchor, style, -1 };
+    CharCoord ui_anchor = style == MenuStyle::Inline ? context().window().display_position(anchor) : CharCoord{};
+    m_ui->menu_show(m_menu.items, ui_anchor, get_face("MenuForeground"), get_face("MenuBackground"), style);
+}
+
+void Client::menu_select(int selected)
+{
+    m_menu.selected = selected;
+    m_ui->menu_select(selected);
+}
+
+void Client::menu_hide()
+{
+    m_menu = Menu{};
+    m_ui->menu_hide();
+}
+
+void Client::info_show(String title, String content, ByteCoord anchor, InfoStyle style)
+{
+    m_info = Info{ std::move(title), std::move(content), anchor, style };
+    CharCoord ui_anchor = is_inline(style) ? context().window().display_position(anchor) : CharCoord{};
+    m_ui->info_show(m_info.title, m_info.content, ui_anchor, get_face("Information"), style);
+}
+
+void Client::info_hide()
+{
+    m_info = Info{};
+    m_ui->info_hide();
 }
 
 }

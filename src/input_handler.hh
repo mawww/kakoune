@@ -8,8 +8,8 @@
 #include "keys.hh"
 #include "string.hh"
 #include "utils.hh"
-#include "user_interface.hh"
 #include "safe_ptr.hh"
+#include "display_buffer.hh"
 
 namespace Kakoune
 {
@@ -32,7 +32,6 @@ using PromptCallback = std::function<void (StringView, PromptEvent, Context&)>;
 using KeyCallback = std::function<void (Key, Context&)>;
 
 class InputMode;
-class DisplayLine;
 enum class InsertMode : unsigned;
 enum class KeymapMode : char;
 
@@ -62,7 +61,7 @@ public:
     // abort or validation with corresponding MenuEvent value
     // returns to normal mode after validation if callback does
     // not change the mode itself
-    void menu(ConstArrayView<DisplayLine> choices, MenuCallback callback);
+    void menu(Vector<DisplayLine> choices, MenuCallback callback);
 
     // execute callback on next keypress and returns to normal mode
     // if callback does not change the mode itself
@@ -124,6 +123,7 @@ constexpr Array<EnumDesc<AutoInfo>, 3> enum_desc(AutoInfo)
 }
 
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context);
+void hide_auto_info_ifn(const Context& context, bool hide);
 
 template<typename Cmd>
 void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, Cmd cmd,
@@ -132,11 +132,11 @@ void on_next_key_with_autoinfo(const Context& context, KeymapMode keymap_mode, C
     const bool hide = show_auto_info_ifn(title, info, AutoInfo::OnKey, context);
     context.input_handler().on_next_key(
         keymap_mode, [hide,cmd](Key key, Context& context) mutable {
-            if (hide)
-                context.ui().info_hide();
+            hide_auto_info_ifn(context, hide);
             cmd(key, context);
     });
 }
+
 }
 
 #endif // input_handler_hh_INCLUDED

@@ -107,9 +107,6 @@ public:
     InputHandler& input_handler() const;
     bool has_input_handler() const { return (bool)m_input_handler; }
 
-    UserInterface& ui() const;
-    bool has_ui() const { return has_client(); }
-
     SelectionList& selections();
     const SelectionList& selections() const;
     Vector<String>  selections_content() const;

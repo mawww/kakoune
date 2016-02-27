@@ -2,12 +2,12 @@
 
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "client.hh"
 #include "context.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "file.hh"
 #include "regex.hh"
-#include "user_interface.hh"
 #include "window.hh"
 #include "word_db.hh"
 #include "utf8_iterator.hh"
@@ -364,14 +364,14 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
     m_completions.end = cursor_pos;
     m_completions.begin = buffer.advance(cursor_pos, -candidate.completion.length());
     m_completions.timestamp = buffer.timestamp();
-    if (m_context.has_ui())
+    if (m_context.has_client())
     {
-        m_context.ui().menu_select(m_current_candidate);
+        m_context.client().menu_select(m_current_candidate);
         if (not candidate.docstring.empty())
-            m_context.ui().info_show(candidate.completion, candidate.docstring, CharCoord{},
-                                     get_face("Information"), InfoStyle::MenuDoc);
+            m_context.client().info_show(candidate.completion, candidate.docstring,
+                                         {}, InfoStyle::MenuDoc);
         else
-            m_context.ui().info_hide();
+            m_context.client().info_hide();
     }
 
     for (auto i = 0_byte; i < prefix_len; ++i)
@@ -395,10 +395,10 @@ void InsertCompleter::reset()
 {
     m_completions = InsertCompletion{};
     m_explicit_completer = nullptr;
-    if (m_context.has_ui())
+    if (m_context.has_client())
     {
-        m_context.ui().menu_hide();
-        m_context.ui().info_hide();
+        m_context.client().menu_hide();
+        m_context.client().info_hide();
     }
 }
 
@@ -435,19 +435,16 @@ bool InsertCompleter::setup_ifn()
 
 void InsertCompleter::menu_show()
 {
-    if (not m_context.has_ui())
+    if (not m_context.has_client())
         return;
-    CharCoord menu_pos = m_context.window().display_position(m_completions.begin);
 
     Vector<DisplayLine> menu_entries;
     for (auto& candidate : m_completions.candidates)
         menu_entries.push_back(candidate.menu_entry);
 
-    m_context.ui().menu_show(menu_entries, menu_pos,
-                             get_face("MenuForeground"),
-                             get_face("MenuBackground"),
-                             MenuStyle::Inline);
-    m_context.ui().menu_select(m_current_candidate);
+    m_context.client().menu_show(std::move(menu_entries), m_completions.begin,
+                                 MenuStyle::Inline);
+    m_context.client().menu_select(m_current_candidate);
 }
 
 void InsertCompleter::on_option_changed(const Option& opt)

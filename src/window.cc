@@ -5,7 +5,7 @@
 #include "highlighter.hh"
 #include "hook_manager.hh"
 #include "input_handler.hh"
-#include "user_interface.hh"
+#include "client.hh"
 
 #include <algorithm>
 #include <sstream>
@@ -79,7 +79,7 @@ Window::Setup Window::build_setup(const Context& context) const
         selections.push_back({sel.cursor(), sel.anchor()});
 
     return { m_position,
-             context.ui().dimensions(),
+             context.client().dimensions(),
              context.buffer().timestamp(),
              context.selections().main_index(),
              std::move(selections) };
@@ -90,7 +90,7 @@ bool Window::needs_redraw(const Context& context) const
     auto& selections = context.selections();
 
     if (m_position != m_last_setup.position or
-        context.ui().dimensions() != m_last_setup.dimensions or
+        context.client().dimensions() != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
         selections.size() != m_last_setup.selections.size())
@@ -111,7 +111,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
-    m_dimensions = context.ui().dimensions();
+    m_dimensions = context.client().dimensions();
     if (m_dimensions == CharCoord{0,0})
         return m_display_buffer;
 

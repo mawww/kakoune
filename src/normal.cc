@@ -16,7 +16,6 @@
 #include "selectors.hh"
 #include "shell_manager.hh"
 #include "string.hh"
-#include "user_interface.hh"
 #include "window.hh"
 
 namespace Kakoune
@@ -346,20 +345,19 @@ void command(Context& context, NormalParams params)
                return CommandManager::instance().complete(context, flags, cmd_line, pos);
         },
         [params](StringView cmdline, PromptEvent event, Context& context) {
-            if (context.has_ui())
+            if (context.has_client())
             {
-                context.ui().info_hide();
+                context.client().info_hide();
                 auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
                 if (event == PromptEvent::Change and autoinfo & AutoInfo::Command)
                 {
-                    Face face = get_face("Information");
                     if (cmdline.length() == 1 and is_horizontal_blank(cmdline[0_byte]))
-                        context.ui().info_show("prompt", "commands preceded by a blank wont be saved to history",
-                                               CharCoord{}, face, InfoStyle::Prompt);
+                        context.client().info_show("prompt", "commands preceded by a blank wont be saved to history",
+                                                   {}, InfoStyle::Prompt);
 
                     auto info = CommandManager::instance().command_info(context, cmdline);
                     if (not info.first.empty() and not info.second.empty())
-                        context.ui().info_show(info.first, info.second, CharCoord{}, face, InfoStyle::Prompt);
+                        context.client().info_show(info.first, info.second, {}, InfoStyle::Prompt);
                 }
             }
             if (event == PromptEvent::Validate)
@@ -586,8 +584,8 @@ void regex_prompt(Context& context, const String prompt, T func)
         [=](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
-                if (event != PromptEvent::Change and context.has_ui())
-                    context.ui().info_hide();
+                if (event != PromptEvent::Change and context.has_client())
+                    context.client().info_hide();
 
                 const bool incsearch = context.options()["incsearch"].get<bool>();
                 if (incsearch)

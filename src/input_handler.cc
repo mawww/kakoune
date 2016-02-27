@@ -10,7 +10,6 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "unordered_map.hh"
-#include "user_interface.hh"
 #include "utf8.hh"
 #include "window.hh"
 
@@ -244,8 +243,8 @@ public:
                 pop_mode();
 
             context().print_status({});
-            if (context().has_ui())
-                context().ui().info_hide();
+            if (context().has_client())
+                context().client().info_hide();
 
             do_restore_hooks = true;
             auto it = std::lower_bound(keymap.begin(), keymap.end(), key,
@@ -254,9 +253,9 @@ public:
             if (it != keymap.end() and it->key == key)
             {
                 auto autoinfo = context().options()["autoinfo"].get<AutoInfo>();
-                if (autoinfo & AutoInfo::Normal and context().has_ui())
-                    context().ui().info_show(key_to_str(key), it->docstring, CharCoord{},
-                                             get_face("Information"), InfoStyle::Prompt);
+                if (autoinfo & AutoInfo::Normal and context().has_client())
+                    context().client().info_show(key_to_str(key), it->docstring.str(),
+                                                 {}, InfoStyle::Prompt);
 
                 // reset m_params now to be reentrant
                 NormalParams params = m_params;
@@ -490,17 +489,16 @@ private:
 class Menu : public InputMode
 {
 public:
-    Menu(InputHandler& input_handler, ConstArrayView<DisplayLine> choices,
+    Menu(InputHandler& input_handler, Vector<DisplayLine> choices,
          MenuCallback callback)
         : InputMode(input_handler),
           m_callback(callback), m_choices(choices.begin(), choices.end()),
           m_selected(m_choices.begin())
     {
-        if (not context().has_ui())
+        if (not context().has_client())
             return;
-        context().ui().menu_show(choices, CharCoord{}, get_face("MenuForeground"),
-                                 get_face("MenuBackground"), MenuStyle::Prompt);
-        context().ui().menu_select(0);
+        context().client().menu_show(std::move(choices), {}, MenuStyle::Prompt);
+        context().client().menu_select(0);
     }
 
     void on_key(Key key) override
@@ -517,8 +515,8 @@ public:
 
         if (key == ctrl('m'))
         {
-            if (context().has_ui())
-                context().ui().menu_hide();
+            if (context().has_client())
+                context().client().menu_hide();
             context().print_status(DisplayLine{});
             pop_mode();
             int selected = m_selected - m_choices.begin();
@@ -536,8 +534,8 @@ public:
             }
             else
             {
-                if (context().has_ui())
-                    context().ui().menu_hide();
+                if (context().has_client())
+                    context().client().menu_hide();
                 pop_mode();
                 int selected = m_selected - m_choices.begin();
                 m_callback(selected, MenuEvent::Abort, context());
@@ -576,10 +574,10 @@ public:
             select(it);
         }
 
-        if (m_edit_filter and context().has_ui())
+        if (m_edit_filter and context().has_client())
         {
             auto prompt = "filter:"_str;
-            auto width = context().ui().dimensions().column - prompt.char_length();
+            auto width = context().client().dimensions().column - prompt.char_length();
             auto display_line = m_filter_editor.build_display_line(width);
             display_line.insert(display_line.begin(), { prompt, get_face("Prompt") });
             context().print_status(display_line);
@@ -604,8 +602,8 @@ private:
     {
         m_selected = it;
         int selected = m_selected - m_choices.begin();
-        if (context().has_ui())
-            context().ui().menu_select(selected);
+        if (context().has_client())
+            context().client().menu_select(selected);
         m_callback(selected, MenuEvent::Select, context());
     }
 
@@ -671,8 +669,8 @@ public:
             if (not context().history_disabled())
                 history_push(history, line);
             context().print_status(DisplayLine{});
-            if (context().has_ui())
-                context().ui().menu_hide();
+            if (context().has_client())
+                context().client().menu_hide();
             pop_mode();
             // call callback after pop_mode so that callback
             // may change the mode
@@ -684,8 +682,8 @@ public:
             if (not context().history_disabled())
                 history_push(history, line);
             context().print_status(DisplayLine{});
-            if (context().has_ui())
-                context().ui().menu_hide();
+            if (context().has_client())
+                context().client().menu_hide();
             pop_mode();
             m_callback(line, PromptEvent::Abort, context());
             return;
@@ -811,8 +809,8 @@ public:
             }
 
             const String& completion = candidates[m_current_completion];
-            if (context().has_ui())
-                context().ui().menu_select(m_current_completion);
+            if (context().has_client())
+                context().client().menu_select(m_current_completion);
 
             m_line_editor.insert_from(line.char_count_to(m_completions.start),
                                       completion);
@@ -872,15 +870,12 @@ private:
             const String& line = m_line_editor.line();
             m_completions = m_completer(context(), flags, line,
                                         line.byte_count_to(m_line_editor.cursor_pos()));
-            if (context().has_ui() and not m_completions.candidates.empty())
+            if (context().has_client() and not m_completions.candidates.empty())
             {
                 Vector<DisplayLine> items;
                 for (auto& candidate : m_completions.candidates)
                     items.push_back({ candidate, {} });
-                context().ui().menu_show(items, CharCoord{},
-                                         get_face("MenuForeground"),
-                                         get_face("MenuBackground"),
-                                         MenuStyle::Prompt);
+                context().client().menu_show(items, {}, MenuStyle::Prompt);
             }
         } catch (runtime_error&) {}
     }
@@ -889,16 +884,16 @@ private:
     {
         m_current_completion = -1;
         m_completions.candidates.clear();
-        if (context().has_ui())
-            context().ui().menu_hide();
+        if (context().has_client())
+            context().client().menu_hide();
     }
 
     void display()
     {
-        if (not context().has_ui())
+        if (not context().has_client())
             return;
 
-        auto width = context().ui().dimensions().column - m_prompt.char_length();
+        auto width = context().client().dimensions().column - m_prompt.char_length();
         auto display_line = m_line_editor.build_display_line(width);
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
@@ -1350,9 +1345,9 @@ void InputHandler::set_prompt_face(Face prompt_face)
         prompt->set_prompt_face(prompt_face);
 }
 
-void InputHandler::menu(ConstArrayView<DisplayLine> choices, MenuCallback callback)
+void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
 {
-    push_mode(new InputModes::Menu(*this, choices, callback));
+    push_mode(new InputModes::Menu(*this, std::move(choices), callback));
 }
 
 void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
@@ -1420,12 +1415,17 @@ DisplayLine InputHandler::mode_line() const
 bool show_auto_info_ifn(StringView title, StringView info, AutoInfo mask, const Context& context)
 {
     if (not (context.options()["autoinfo"].get<AutoInfo>() & mask) or
-        not context.has_ui())
+        not context.has_client())
         return false;
 
-    Face face = get_face("Information");
-    context.ui().info_show(title, info, CharCoord{}, face, InfoStyle::Prompt);
+    context.client().info_show(title.str(), info.str(), {}, InfoStyle::Prompt);
     return true;
+}
+
+void hide_auto_info_ifn(const Context& context, bool hide)
+{
+    if (hide)
+        context.client().info_hide();
 }
 
 }

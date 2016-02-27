@@ -8,11 +8,11 @@
 #include "utils.hh"
 #include "option_manager.hh"
 #include "enum.hh"
+#include "user_interface.hh"
 
 namespace Kakoune
 {
 
-class UserInterface;
 class Window;
 class String;
 struct Key;
@@ -34,12 +34,19 @@ public:
     // handle all the keys currently available in the user interface
     void handle_available_input(EventMode mode);
 
+    void menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style);
+    void menu_select(int selected);
+    void menu_hide();
+
+    void info_show(String title, String content, ByteCoord anchor, InfoStyle style);
+    void info_hide();
+
     void print_status(DisplayLine status_line);
+
+    CharCoord dimensions() const { return m_ui->dimensions(); }
 
     void force_redraw();
     void redraw_ifn();
-
-    UserInterface& ui() const { return *m_ui; }
 
     void check_if_buffer_needs_reloading();
 
@@ -77,6 +84,22 @@ private:
     DisplayLine m_status_line;
     DisplayLine m_pending_status_line;
     DisplayLine m_mode_line;
+
+    struct Menu
+    {
+        Vector<DisplayLine> items;
+        ByteCoord anchor;
+        MenuStyle style;
+        int selected;
+    } m_menu;
+
+    struct Info
+    {
+        String title;
+        String content;
+        ByteCoord anchor;
+        InfoStyle style;
+    } m_info;
 
     Vector<Key, MemoryDomain::Client> m_pending_keys;
 

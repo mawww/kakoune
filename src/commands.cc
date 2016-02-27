@@ -22,7 +22,6 @@
 #include "remote.hh"
 #include "shell_manager.hh"
 #include "string.hh"
-#include "user_interface.hh"
 #include "window.hh"
 
 #include <sys/types.h>
@@ -1522,7 +1521,7 @@ const CommandDesc menu_cmd = {
                 select_cmds.push_back(parser[i+2]);
         }
 
-        context.input_handler().menu(choices,
+        context.input_handler().menu(std::move(choices),
             [=](int choice, MenuEvent event, Context& context) {
                 ScopedSetBool disable_history{context.history_disabled()};
 
@@ -1571,20 +1570,24 @@ const CommandDesc info_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context.ui().info_hide();
+        if (not context.has_client())
+            return;
+
+        context.client().info_hide();
         if (parser.positional_count() > 0)
         {
             InfoStyle style = InfoStyle::Prompt;
-            CharCoord pos;
+            ByteCoord pos;
             if (auto anchor = parser.get_switch("anchor"))
             {
                 auto dot = find(*anchor, '.');
                 if (dot == anchor->end())
                     throw runtime_error("expected <line>.<column> for anchor");
-                ByteCoord coord{str_to_int({anchor->begin(), dot})-1,
+
+                pos = ByteCoord{str_to_int({anchor->begin(), dot})-1,
                                 str_to_int({dot+1, anchor->end()})-1};
-                pos = context.window().display_position(coord);
                 style = InfoStyle::Inline;
+
                 if (auto placement = parser.get_switch("placement"))
                 {
                     if (*placement == "above")
@@ -1596,7 +1599,7 @@ const CommandDesc info_cmd = {
                 }
             }
             auto title = parser.get_switch("title").value_or(StringView{});
-            context.ui().info_show(title, parser[0], pos, get_face("Information"), style);
+            context.client().info_show(title.str(), parser[0], pos, style);
         }
     }
 };

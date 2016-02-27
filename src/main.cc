@@ -265,6 +265,7 @@ struct convert_to_client_mode
 };
 
 static Client* local_client = nullptr;
+static UserInterface* local_ui = nullptr;
 static bool convert_to_client_pending = false;
 
 pid_t fork_server_to_background()
@@ -309,6 +310,8 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
     {
         LocalUI()
         {
+            kak_assert(not local_ui);
+            local_ui = this;
             m_old_sighup = set_signal_handler(SIGHUP, [](int) {
                 ClientManager::instance().remove_client(*local_client, false);
             });
@@ -318,7 +321,7 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
                     *ClientManager::instance().begin() == local_client)
                 {
                     // Suspend normally if we are the only client
-                    auto current = set_signal_handler(SIGTSTP, static_cast<LocalUI&>(local_client->ui()).m_old_sigtstp);
+                    auto current = set_signal_handler(SIGTSTP, static_cast<LocalUI*>(local_ui)->m_old_sigtstp);
 
                     sigset_t unblock_sigtstp, old_mask;
                     sigemptyset(&unblock_sigtstp);
@@ -341,6 +344,7 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
             set_signal_handler(SIGHUP, m_old_sighup);
             set_signal_handler(SIGTSTP, m_old_sigtstp);
             local_client = nullptr;
+            local_ui = nullptr;
             if (not convert_to_client_pending and
                 not ClientManager::instance().empty())
             {

@@ -2,7 +2,6 @@
 
 #include "alias_registry.hh"
 #include "client.hh"
-#include "user_interface.hh"
 #include "register_manager.hh"
 #include "window.hh"
 
@@ -49,13 +48,6 @@ Client& Context::client() const
     return *m_client;
 }
 
-UserInterface& Context::ui() const
-{
-    if (not has_ui())
-        throw runtime_error("no user interface in context");
-    return client().ui();
-}
-
 Scope& Context::scope() const
 {
     if (has_window())
@@ -75,8 +67,6 @@ void Context::set_window(Window& window)
 {
     kak_assert(&window.buffer() == &buffer());
     m_window.reset(&window);
-    if (has_ui())
-        m_window->set_dimensions(ui().dimensions());
 }
 
 void Context::print_status(DisplayLine status) const

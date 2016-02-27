@@ -6,7 +6,6 @@
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
-#include "user_interface.hh"
 #include "window.hh"
 
 namespace Kakoune
@@ -58,10 +57,6 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
         remove_client(*client, removed.graceful);
         return nullptr;
     }
-
-    client->ui().set_input_callback([client](EventMode mode) {
-        client->handle_available_input(mode);
-    });
 
     return client;
 }
