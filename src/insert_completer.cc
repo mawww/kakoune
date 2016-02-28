@@ -241,9 +241,8 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
         }
         size_t timestamp = (size_t)str_to_int({match[4].first, match[4].second});
         auto changes = buffer.changes_since(timestamp);
-        if (find_if(changes, [&](const Buffer::Change& change){
-                        return change.begin < coord;
-                    }) != changes.end())
+        if (contains_that(changes, [&](const Buffer::Change& change)
+                          { return change.begin < coord; }))
             return {};
 
         if (cursor_pos.line == coord.line and cursor_pos.column >= coord.column)

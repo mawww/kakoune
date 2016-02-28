@@ -66,8 +66,8 @@ EnableIfWithoutBitOps<Enum> option_from_string(StringView str, Enum& e)
 {
     constexpr auto desc = enum_desc(Enum{});
     auto it = find_if(desc, [str](const EnumDesc<Enum>& d) { return d.name == str; });
-        if (it == desc.end())
-            throw runtime_error(format("invalid enum value '{}'", str));
+    if (it == desc.end())
+        throw runtime_error(format("invalid enum value '{}'", str));
     e = it->value;
 }
 

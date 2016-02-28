@@ -162,6 +162,12 @@ bool contains(Container&& container, const T& value)
     return find(container, value) != end(container);
 }
 
+template<typename Container, typename T>
+bool contains_that(Container&& container, T op)
+{
+    return find_if(container, op) != end(container);
+}
+
 template<typename Container, typename U>
 void unordered_erase(Container&& vec, U&& value)
 {

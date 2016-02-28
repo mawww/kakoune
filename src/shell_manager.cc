@@ -90,7 +90,7 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
             return s.length() > name.length()  and
                    prefix_match(s, name) and s[name.length()] == '=';
         };
-        if (find_if(kak_env, match_name) != kak_env.end())
+        if (contains_that(kak_env, match_name))
             continue;
 
         auto var_it = shell_context.env_vars.find(name);

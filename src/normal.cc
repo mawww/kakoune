@@ -172,18 +172,15 @@ void goto_commands(Context& context, NormalParams params)
             }
             case 'f':
             {
-                const Selection& sel = context.selections().main();
-                String filename = content(buffer, sel);
+                auto filename = content(buffer, context.selections().main());
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
-                for (auto c : filename)
-                    if (contains(forbidden, c))
-                        return;
+                if (contains_that(filename, [](char c){ return contains(forbidden, c); }))
+                    return;
 
                 auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
-                const String& buffer_name = buffer.name();
-                auto it = find(reversed(buffer_name), '/');
-                if (it != buffer_name.rend())
-                    paths.insert(paths.begin(), String{buffer_name.begin(), it.base()});
+                StringView buffer_dir = split_path(buffer.name()).first;
+                if (not buffer_dir.empty())
+                    paths.insert(paths.begin(), buffer_dir.str());
 
                 String path = find_file(filename, paths);
                 if (path.empty())
