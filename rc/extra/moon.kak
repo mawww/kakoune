@@ -11,7 +11,7 @@ hook global BufSetOption mimetype=text/x-moon %{
 }
 
 hook global BufCreate .*[.](moon) %{
-    set buffer filetype moon
+    set buffer mimetype text/x-moon
 }
 
 # Highlighters
