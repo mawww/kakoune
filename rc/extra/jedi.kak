@@ -1,5 +1,6 @@
 decl -hidden str jedi_tmp_dir
 decl -hidden str-list jedi_completions
+decl str-list jedi_python_path ''
 
 def jedi-complete -docstring "Complete the current selection with jedi" %{
     %sh{
@@ -15,6 +16,7 @@ def jedi-complete -docstring "Complete the current selection with jedi" %{
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
 
+            export PYTHONPATH="$kak_opt_jedi_python_path:$PYTHONPATH" 
             compl=$(python 2> "${dir}/fifo" <<-END
 		import jedi
 		script=jedi.Script(open('$dir/buf', 'r').read(), $kak_cursor_line, $kak_cursor_column - 1, '$kak_buffile')
