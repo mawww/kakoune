@@ -46,18 +46,22 @@ static bool smartcase_eq(Codepoint query, Codepoint candidate)
     return query == (islower(query) ? to_lower(candidate) : candidate);
 }
 
-static bool subsequence_match_smart_case(StringView str, StringView subseq)
+static bool subsequence_match_smart_case(StringView str, StringView subseq, int& index_sum)
 {
+    index_sum = 0;
     Utf8It it{str.begin(), str};
+    int index = 0;
     for (Utf8It subseq_it{subseq.begin(), subseq}; subseq_it != subseq.end(); ++subseq_it)
     {
         if (it == str.end())
             return false;
         while (not smartcase_eq(*subseq_it, *it))
         {
+            ++index;
             if (++it == str.end())
                 return false;
         }
+        index_sum += index++;
         ++it;
     }
     return true;
@@ -74,7 +78,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
         return;
     }
 
-    if (not subsequence_match_smart_case(candidate, query))
+    if (not subsequence_match_smart_case(candidate, query, m_match_index_sum))
         return;
 
     m_candidate = candidate;
@@ -87,6 +91,9 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
 
 bool RankedMatch::operator<(const RankedMatch& other) const
 {
+    if (m_first_char_match != other.m_first_char_match)
+        return m_first_char_match;
+
     if (m_only_word_boundary and other.m_only_word_boundary)
     {
         if (m_word_boundary_match_count != other.m_word_boundary_match_count)
@@ -101,8 +108,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
 
-    if (m_first_char_match != other.m_first_char_match)
-        return m_first_char_match;
+    if (m_match_index_sum != other.m_match_index_sum)
+        return m_match_index_sum < other.m_match_index_sum;
 
     return std::lexicographical_compare(
         Utf8It{m_candidate.begin(), m_candidate}, Utf8It{m_candidate.end(), m_candidate},
