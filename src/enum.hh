@@ -43,8 +43,10 @@ EnableIfWithoutBitOps<Enum, String> option_to_string(Enum e)
 {
     constexpr auto desc = enum_desc(Enum{});
     auto it = find_if(desc, [e](const EnumDesc<Enum>& d) { return d.value == e; });
-    kak_assert(it != desc.end());
-    return it->name.str();
+    if (it != desc.end())
+        return it->name.str();
+    kak_assert(false);
+    return {};
 }
 
 template<typename Flags, typename = decltype(enum_desc(Flags{}))>
