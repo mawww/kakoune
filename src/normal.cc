@@ -182,11 +182,7 @@ void goto_commands(Context& context, NormalParams params)
                 if (not buffer_dir.empty())
                     paths.insert(paths.begin(), buffer_dir.str());
 
-                const auto& suffixes = context.options()["suffixes"].get<Vector<String, MemoryDomain::Options>>();
                 String path = find_file(filename, paths);
-                for (auto it = suffixes.begin(); path.empty() and it != suffixes.end(); ++it)
-                    path = find_file(filename + *it, paths);
-
                 if (path.empty())
                     throw runtime_error(format("unable to find file '{}'", filename));
 
