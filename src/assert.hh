@@ -4,10 +4,10 @@
 namespace Kakoune
 {
 
-class String;
+class StringView;
 
 // return true if user asked to ignore the error
-bool notify_fatal_error(const String& message);
+bool notify_fatal_error(StringView message);
 
 void on_assert_failed(const char* message);
 

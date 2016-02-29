@@ -25,10 +25,10 @@ private:
     String m_message;
 };
 
-bool notify_fatal_error(const String& msg)
+bool notify_fatal_error(StringView msg)
 {
 #if defined(__CYGWIN__)
-    int res = MessageBox(NULL, msg.c_str(), "Kakoune: fatal error",
+    int res = MessageBox(NULL, msg.zstr(), "Kakoune: fatal error",
                          MB_OKCANCEL | MB_ICONERROR);
     switch (res)
     {
