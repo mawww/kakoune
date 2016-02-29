@@ -455,22 +455,34 @@ void insert_output(Context& context, NormalParams)
 
 template<Direction direction, SelectMode mode>
 void select_next_match(const Buffer& buffer, SelectionList& selections,
-                       const Regex& regex)
+                       const Regex& regex, bool& main_wrapped)
 {
+    const int main_index = selections.main_index();
+    bool wrapped = false;
     if (mode == SelectMode::Replace)
     {
-        for (auto& sel : selections)
-            sel = keep_direction(find_next_match<direction>(buffer, sel, regex), sel);
+        for (int i = 0; i < selections.size(); ++i)
+        {
+            auto& sel = selections[i];
+            sel = keep_direction(find_next_match<direction>(buffer, sel, regex, wrapped), sel);
+            if (i == main_index)
+                main_wrapped = wrapped;
+        }
     }
     if (mode == SelectMode::Extend)
     {
-        for (auto& sel : selections)
-            sel.merge_with(find_next_match<direction>(buffer, sel, regex));
+        for (int i = 0; i < selections.size(); ++i)
+        {
+            auto& sel = selections[i];
+            sel.merge_with(find_next_match<direction>(buffer, sel, regex, wrapped));
+            if (i == main_index)
+                main_wrapped = wrapped;
+        }
     }
     else if (mode == SelectMode::Append)
     {
         auto sel = keep_direction(
-            find_next_match<direction>(buffer, selections.main(), regex),
+            find_next_match<direction>(buffer, selections.main(), regex, main_wrapped),
             selections.main());
         selections.push_back(std::move(sel));
         selections.set_main_index(selections.size() - 1);
@@ -635,9 +647,10 @@ void search(Context& context, NormalParams params)
                          RegisterManager::instance()[reg] = ex.str();
                      if (not ex.empty() and not ex.str().empty())
                      {
+                         bool main_wrapped = false;
                          int c = count;
                          do {
-                             select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+                             select_next_match<direction, mode>(context.buffer(), context.selections(), ex, main_wrapped);
                          } while (--c > 0);
                      }
                  });
@@ -651,9 +664,15 @@ void search_next(Context& context, NormalParams params)
     if (not str.empty())
     {
         Regex ex{str};
+        bool main_wrapped = false;
         do {
-            select_next_match<direction, mode>(context.buffer(), context.selections(), ex);
+            bool wrapped = false;
+            select_next_match<direction, mode>(context.buffer(), context.selections(), ex, wrapped);
+            main_wrapped = main_wrapped or wrapped;
         } while (--params.count > 0);
+
+        if (main_wrapped)
+            context.print_status({"main selection search wrapped around buffer", get_face("Information")});
     }
     else
         throw runtime_error("no search pattern");

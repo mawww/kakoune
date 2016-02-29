@@ -257,15 +257,24 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
 template<Direction direction>
 bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
                           MatchResults<BufferIterator>& matches,
-                          const Regex& ex)
+                          const Regex& ex, bool& wrapped)
 {
+    wrapped = false;
     if (direction == Forward)
-        return (regex_search(pos, buffer.end(), matches, ex,
-                             match_flags(is_bol(pos.coord()), true, true)) or
-                regex_search(buffer.begin(), buffer.end(), matches, ex));
+    {
+        if (regex_search(pos, buffer.end(), matches, ex,
+                         match_flags(is_bol(pos.coord()), true, true)))
+            return true;
+        wrapped = true;
+        return regex_search(buffer.begin(), buffer.end(), matches, ex);
+    }
     else
-        return (find_last_match(buffer, pos, matches, ex) or
-                find_last_match(buffer, buffer.end(), matches, ex));
+    {
+        if (find_last_match(buffer, pos, matches, ex))
+            return true;
+        wrapped = true;
+        return find_last_match(buffer, buffer.end(), matches, ex);
+    }
 }
 
 inline BufferIterator ensure_char_start(const Buffer& buffer, const BufferIterator& it)
@@ -275,7 +284,7 @@ inline BufferIterator ensure_char_start(const Buffer& buffer, const BufferIterat
 }
 
 template<Direction direction>
-Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex)
+Selection find_next_match(const Buffer& buffer, const Selection& sel, const Regex& regex, bool& wrapped)
 {
     auto begin = buffer.iterator_at(direction == Backward ? sel.min() : sel.max());
     auto end = begin;
@@ -284,7 +293,7 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     MatchResults<BufferIterator> matches;
     bool found = false;
     auto pos = direction == Forward ? utf8::next(begin, buffer.end()) : begin;
-    if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex)))
+    if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex, wrapped)))
     {
         begin = ensure_char_start(buffer, matches[0].first);
         end = ensure_char_start(buffer, matches[0].second);
