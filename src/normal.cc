@@ -182,7 +182,11 @@ void goto_commands(Context& context, NormalParams params)
                 if (not buffer_dir.empty())
                     paths.insert(paths.begin(), buffer_dir.str());
 
+                const auto& suffixes = context.options()["suffixes"].get<Vector<String, MemoryDomain::Options>>();
                 String path = find_file(filename, paths);
+                for (auto it = suffixes.begin(); path.empty() and it != suffixes.end(); ++it)
+                    path = find_file(filename + *it, paths);
+
                 if (path.empty())
                     throw runtime_error(format("unable to find file '{}'", filename));
 
@@ -1015,24 +1019,22 @@ void select_object(Context& context, NormalParams params)
     "::    prompt for object  \n");
 }
 
-template<Key::NamedKey key>
+template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams)
 {
-    static_assert(key == Key::PageUp or key == Key::PageDown,
-                  "scrool only implements PageUp and PageDown");
     Window& window = context.window();
     Buffer& buffer = context.buffer();
     CharCoord position = window.position();
     LineCount cursor_line = 0;
 
-    if (key == Key::PageUp)
+    if (direction == Backward)
     {
-        position.line -= (window.dimensions().line - 2);
+        position.line -= (window.dimensions().line - 2) / (half ? 2 : 1);
         cursor_line = position.line;
     }
-    else if (key == Key::PageDown)
+    else if (direction == Forward)
     {
-        position.line += (window.dimensions().line - 2);
+        position.line += (window.dimensions().line - 2) / (half ? 2 : 1);
         cursor_line = position.line + window.dimensions().line - 1;
     }
     auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
@@ -1725,11 +1727,13 @@ static NormalCmdDesc cmds[] =
     { Key::Up,    "move up", move<LineCount, Backward> },
     { Key::Right, "move right", move<CharCount, Forward> },
 
-    { ctrl('b'), "scroll one page up", scroll<Key::PageUp> },
-    { ctrl('f'), "scroll one page down", scroll<Key::PageDown> },
+    { ctrl('b'), "scroll one page up", scroll<Backward > },
+    { ctrl('f'), "scroll one page down", scroll<Forward> },
+    { ctrl('u'), "scroll half a page up", scroll<Backward, true> },
+    { ctrl('d'), "scroll half a page down", scroll<Forward, true> },
 
-    { Key::PageUp,   "scroll one page up", scroll<Key::PageUp> },
-    { Key::PageDown, "scroll one page down", scroll<Key::PageDown> },
+    { Key::PageUp,   "scroll one page up", scroll<Backward> },
+    { Key::PageDown, "scroll one page down", scroll<Forward> },
 
     { 'z', "restore selections", restore_selections<false> },
     { alt('z'), "append saved selections", restore_selections<true> },
