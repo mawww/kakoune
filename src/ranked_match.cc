@@ -91,6 +91,9 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
 
 bool RankedMatch::operator<(const RankedMatch& other) const
 {
+    if (m_prefix != other.m_prefix)
+        return m_prefix;
+
     if (m_first_char_match != other.m_first_char_match)
         return m_first_char_match;
 
@@ -101,9 +104,6 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     }
     else if (m_only_word_boundary or other.m_only_word_boundary)
         return  m_only_word_boundary;
-
-    if (m_prefix != other.m_prefix)
-        return m_prefix;
 
     if (m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
