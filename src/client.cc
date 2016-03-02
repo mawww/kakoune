@@ -276,12 +276,11 @@ void Client::check_if_buffer_needs_reloading()
         return;
     if (reload == Autoreload::Ask)
     {
-        m_ui->info_show(
-            format("reload '{}' ?", buffer.display_name()),
-            format("'{}' was modified externally\n"
-                   "press <ret> or y to reload, <esc> or n to keep",
-                   buffer.display_name()),
-            CharCoord{}, get_face("Information"), InfoStyle::Prompt);
+        StringView bufname = buffer.display_name();
+        info_show(format("reload '{}' ?", bufname),
+                  format("'{}' was modified externally\n"
+                         "press <ret> or y to reload, <esc> or n to keep",
+                         bufname), {}, InfoStyle::Prompt);
 
         m_buffer_reload_dialog_opened = true;
         m_input_handler.on_next_key(KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
