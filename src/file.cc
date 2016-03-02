@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "unicode.hh"
+#include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
 
@@ -333,8 +334,7 @@ void make_directory(StringView dir)
 }
 
 template<typename Filter>
-Vector<String> list_files(StringView prefix, StringView dirname,
-                          Filter filter)
+Vector<String> list_files(StringView dirname, Filter filter)
 {
     char buffer[PATH_MAX+1];
     format_to(buffer, "{}", dirname);
@@ -345,43 +345,39 @@ Vector<String> list_files(StringView prefix, StringView dirname,
     auto closeDir = on_scope_end([=]{ closedir(dir); });
 
     Vector<String> result;
-    Vector<String> subseq_result;
     while (dirent* entry = readdir(dir))
     {
-        if (not filter(*entry))
-            continue;
-
         StringView filename = entry->d_name;
-        if (filename.empty())
+        if (filename.empty() or not filter(*entry))
             continue;
 
-        const bool match_prefix = prefix_match(filename, prefix);
-        const bool match_subseq = subsequence_match(filename, prefix);
         struct stat st;
-        if (match_prefix or match_subseq)
-        {
-            auto fmt_str = (dirname.empty() or dirname.back() == '/') ? "{}{}" : "{}/{}";
-            format_to(buffer, fmt_str, dirname, filename);
-            if (stat(buffer, &st) != 0)
-                continue;
+        auto fmt_str = (dirname.empty() or dirname.back() == '/') ? "{}{}" : "{}/{}";
+        format_to(buffer, fmt_str, dirname, filename);
+        if (stat(buffer, &st) != 0)
+            continue;
 
-            if (S_ISDIR(st.st_mode))
-                filename = format_to(buffer, "{}/", filename);
-            if (prefix.length() != 0 or filename[0_byte] != '.')
-            {
-                if (match_prefix)
-                    result.push_back(filename.str());
-                if (match_subseq)
-                    subseq_result.push_back(filename.str());
-            }
-        }
+        if (S_ISDIR(st.st_mode))
+            filename = format_to(buffer, "{}/", filename);
+        result.push_back(filename.str());
     }
-    return result.empty() ? subseq_result : result;
+    return result;
 }
 
 Vector<String> list_files(StringView directory)
 {
-    return list_files("", directory, [](const dirent&) { return true; });
+    return list_files(directory, [](const dirent& entry) {
+                          return StringView{entry.d_name}.substr(0_byte, 1_byte) != ".";
+                      });
+}
+
+static CandidateList candidates(ConstArrayView<RankedMatch> matches, StringView dirname)
+{
+    CandidateList res;
+    res.reserve(matches.size());
+    for (auto& match : matches)
+        res.push_back(dirname + match.candidate());
+    return res;
 }
 
 CandidateList complete_filename(StringView prefix,
@@ -394,17 +390,22 @@ CandidateList complete_filename(StringView prefix,
 
     const bool check_ignored_regex = not ignored_regex.empty() and
         not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
+    const bool include_hidden = fileprefix.substr(0_byte, 1_byte) == ".";
 
-    auto filter = [&ignored_regex, check_ignored_regex](const dirent& entry)
+    auto filter = [&ignored_regex, check_ignored_regex, include_hidden](const dirent& entry)
     {
-        return not check_ignored_regex or
-               not regex_match(entry.d_name, ignored_regex);
+        return (include_hidden or StringView{entry.d_name}.substr(0_byte, 1_byte) != ".") and
+               (not check_ignored_regex or not regex_match(entry.d_name, ignored_regex));
     };
-    Vector<String> res = list_files(fileprefix, dirname, filter);
-    for (auto& file : res)
-        file = dirname + file;
-    std::sort(res.begin(), res.end());
-    return res;
+    auto files = list_files(dirname, filter);
+    Vector<RankedMatch> matches;
+    for (auto& file : files)
+    {
+        if (RankedMatch match{file, fileprefix})
+            matches.push_back(match);
+    }
+    std::sort(matches.begin(), matches.end());
+    return candidates(matches, dirname);
 }
 
 Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
@@ -415,11 +416,11 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 
     if (not dirname.empty())
     {
-        char buffer[PATH_MAX+1];
-        auto filter = [&dirname, &buffer](const dirent& entry)
+        auto filter = [&dirname](const dirent& entry)
         {
-            struct stat st;
+            char buffer[PATH_MAX+1];
             format_to(buffer, "{}{}", dirname, entry.d_name);
+            struct stat st;
             if (stat(buffer, &st) != 0)
                 return false;
             bool executable = (st.st_mode & S_IXUSR)
@@ -427,11 +428,15 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
                             | (st.st_mode & S_IXOTH);
             return S_ISDIR(st.st_mode) or (S_ISREG(st.st_mode) and executable);
         };
-        Vector<String> res = list_files(fileprefix, dirname, filter);
-        for (auto& file : res)
-            file = dirname + file;
-        std::sort(res.begin(), res.end());
-        return res;
+        auto files = list_files(dirname, filter);
+        Vector<RankedMatch> matches;
+        for (auto& file : files)
+        {
+            if (RankedMatch match{file, real_prefix})
+                matches.push_back(match);
+        }
+        std::sort(matches.begin(), matches.end());
+        return candidates(matches, dirname);
     }
 
     typedef decltype(stat::st_mtim) TimeSpec;
@@ -443,7 +448,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     };
     static UnorderedMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
-    Vector<String> res;
+    Vector<RankedMatch> matches;
     for (auto dir : split(getenv("PATH"), ':'))
     {
         auto dirname = ((not dir.empty() and dir.back() == '/') ? dir.substr(0, dir.length()-1) : dir).str();
@@ -467,19 +472,19 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
                 return S_ISREG(st.st_mode) and executable;
             };
 
-            cache.commands = list_files("", dirname, filter);
+            cache.commands = list_files(dirname, filter);
             memcpy(&cache.mtim, &st.st_mtim, sizeof(TimeSpec));
         }
         for (auto& cmd : cache.commands)
         {
-            if (prefix_match(cmd, fileprefix))
-                res.push_back(cmd);
+            if (RankedMatch match{cmd, fileprefix})
+                matches.push_back(match);
         }
     }
-    std::sort(res.begin(), res.end());
-    auto it = std::unique(res.begin(), res.end());
-    res.erase(it, res.end());
-    return res;
+    std::sort(matches.begin(), matches.end());
+    auto it = std::unique(matches.begin(), matches.end());
+    matches.erase(it, matches.end());
+    return candidates(matches, "");
 }
 
 timespec get_fs_timestamp(StringView filename)
