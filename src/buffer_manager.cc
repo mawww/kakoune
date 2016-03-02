@@ -16,21 +16,13 @@ struct name_not_unique : runtime_error
     name_not_unique() : runtime_error("buffer name is already in use") {}
 };
 
-BufferManager::BufferManager()
-{
-    kak_assert(ClientManager::has_instance());
-}
-
 BufferManager::~BufferManager()
 {
-    kak_assert(ClientManager::has_instance());
+    kak_assert(not ClientManager::has_instance());
 
     // delete remaining buffers
     while (not m_buffers.empty())
-    {
-        ClientManager::instance().ensure_no_client_uses_buffer(*m_buffers.front().get());
         delete m_buffers.front().get();
-    }
 }
 
 void BufferManager::register_buffer(Buffer& buffer)
