@@ -459,12 +459,12 @@ int run_server(StringView session, StringView init_command,
     GlobalScope         global_scope;
     ShellManager        shell_manager;
     CommandManager      command_manager;
-    BufferManager       buffer_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
     DefinedHighlighters defined_highlighters;
     FaceRegistry        face_registry;
     ClientManager       client_manager;
+    BufferManager       buffer_manager;
 
     register_options();
     register_env_vars();
@@ -589,9 +589,9 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
     EventManager    event_manager;
     ShellManager    shell_manager;
     CommandManager  command_manager;
-    BufferManager   buffer_manager;
     RegisterManager register_manager;
     ClientManager   client_manager;
+    BufferManager   buffer_manager;
 
     register_options();
     register_env_vars();
