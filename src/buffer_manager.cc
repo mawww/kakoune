@@ -16,11 +16,21 @@ struct name_not_unique : runtime_error
     name_not_unique() : runtime_error("buffer name is already in use") {}
 };
 
+BufferManager::BufferManager()
+{
+    kak_assert(ClientManager::has_instance());
+}
+
 BufferManager::~BufferManager()
 {
+    kak_assert(ClientManager::has_instance());
+
     // delete remaining buffers
     while (not m_buffers.empty())
+    {
+        ClientManager::instance().ensure_no_client_uses_buffer(*m_buffers.front().get());
         delete m_buffers.front().get();
+    }
 }
 
 void BufferManager::register_buffer(Buffer& buffer)
@@ -62,8 +72,7 @@ void BufferManager::delete_buffer(Buffer& buffer)
                       { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
 
-    if (ClientManager::has_instance())
-        ClientManager::instance().ensure_no_client_uses_buffer(buffer);
+    ClientManager::instance().ensure_no_client_uses_buffer(buffer);
 
     m_buffers.erase(it);
     m_buffer_trash.emplace_back(&buffer);
@@ -106,8 +115,7 @@ void BufferManager::clear_buffer_trash()
 
         // Do that again, to be tolerant in some corner cases, where a buffer is
         // deleted during its creation
-        if (ClientManager::has_instance())
-            ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
+        ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
 
         delete buffer;
     }

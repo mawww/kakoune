@@ -16,6 +16,7 @@ public:
     using BufferList = Vector<SafePtr<Buffer>>;
     using iterator = BufferList::const_iterator;
 
+    BufferManager();
     ~BufferManager();
 
     void register_buffer(Buffer& buffer);
