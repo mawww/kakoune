@@ -30,11 +30,6 @@ struct Regex : std::regex
         : std::regex(re.begin(), re.end(), flags), m_str(re.str()) {}
         catch (std::runtime_error& err) { throw regex_error(err.what()); }
 
-    template<typename Iterator>
-    Regex(Iterator begin, Iterator end, flag_type flags = ECMAScript) try
-        : std::regex(begin, end, flags), m_str(begin, end) {}
-        catch (std::runtime_error& err) { throw regex_error(err.what()); }
-
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
     bool operator!=(const Regex& other) const { return m_str != other.m_str; }
@@ -52,11 +47,6 @@ struct Regex : boost::regex
 
     explicit Regex(StringView re, flag_type flags = ECMAScript) try
         : boost::regex(re.begin(), re.end(), flags) {}
-        catch (std::runtime_error& err) { throw regex_error(err.what()); }
-
-    template<typename Iterator>
-    Regex(Iterator begin, Iterator end, flag_type flags = ECMAScript) try
-        : boost::regex(begin, end, flags) {}
         catch (std::runtime_error& err) { throw regex_error(err.what()); }
 
     String str() const { auto s = boost::regex::str(); return {s.data(), (int)s.length()}; }

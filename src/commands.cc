@@ -671,8 +671,7 @@ const CommandDesc add_hook_cmd = {
     },
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Regex regex(parser[2].begin(), parser[2].end(),
-                    Regex::optimize | Regex::nosubs | Regex::ECMAScript);
+        Regex regex(parser[2], Regex::optimize | Regex::nosubs | Regex::ECMAScript);
         const String& command = parser[3];
 
         auto hook_func = [=](StringView param, Context& context) {

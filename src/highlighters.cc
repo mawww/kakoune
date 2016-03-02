@@ -263,7 +263,7 @@ public:
 
         String id = "hlregex'" + params[0] + "'";
 
-        Regex ex{params[0].begin(), params[0].end(), Regex::optimize};
+        Regex ex{params[0], Regex::optimize};
 
         return {id, make_unique<RegexHighlighter>(std::move(ex),
                                                   std::move(faces))};
