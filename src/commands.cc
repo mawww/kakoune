@@ -57,13 +57,46 @@ const PerArgumentCommandCompleter filename_completer({
                                              cursor_pos) }; }
 });
 
-static CandidateList complete_buffer_name(StringView prefix, ByteCount cursor_pos)
+static CandidateList complete_buffer_name(StringView query, ByteCount cursor_pos)
 {
-    auto c = transformed(BufferManager::instance(),
-                         [](const SafePtr<Buffer>& b) -> const String&
-                         { return b->display_name(); });
+    struct RankedMatchAndBuffer : RankedMatch
+    {
+        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b = nullptr)
+            : RankedMatch{m}, buffer{b} {}
 
-    return complete(prefix, cursor_pos, c);
+        using RankedMatch::operator==;
+        using RankedMatch::operator<;
+
+        const Buffer* buffer;
+    };
+
+    query = query.substr(0, cursor_pos);
+    Vector<RankedMatchAndBuffer> filename_matches;
+    Vector<RankedMatchAndBuffer> matches;
+    for (const auto& buffer : BufferManager::instance())
+    {
+        StringView bufname = buffer->display_name();
+        if (buffer->flags() & Buffer::Flags::File)
+        {
+            if (RankedMatch match{split_path(bufname).second, query})
+            {
+                filename_matches.emplace_back(match, buffer.get());
+                continue;
+            }
+        }
+        if (RankedMatch match{bufname, query})
+            matches.emplace_back(match, buffer.get());
+    }
+    std::sort(filename_matches.begin(), filename_matches.end());
+    std::sort(matches.begin(), matches.end());
+
+    CandidateList res;
+    for (auto& match : filename_matches)
+        res.push_back(match.buffer->display_name());
+    for (auto& match : matches)
+        res.push_back(match.buffer->display_name());
+
+    return res;
 }
 
 const PerArgumentCommandCompleter buffer_completer({
