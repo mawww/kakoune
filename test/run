@@ -54,30 +54,33 @@ main() {
       if [ $should_fail = 0 ]; then
         if [ $retval -ne 0 ]; then
           echo "Kakoune returned error $retval"
+          number_failures=$(($number_failures + 1))
+          echo "$indent$name" | colorize red normal
+        else
+          for expect in $test_files; do
+            if cmp -s $test/$dir/$expect $expect; then
+              echo "$indent$name" | colorize green normal
+            else
+              number_failures=$(($number_failures + 1))
+              echo "$indent$name" | colorize red normal
+              echo
+              diff -u $test/$dir/$expect $expect | while read -r line; do
+                first_character=$(echo "$line" | cut -b 1)
+                case $first_character in
+                  +) color=green ;;
+                  -) color=red ;;
+                  @) color=magenta ;;
+                  *) color=none ;;
+                esac
+                echo "$line" | colorize $color normal
+              done
+              echo
+              echo "debug buffer:" | colorize yellow normal
+              cat debug
+              echo
+            fi
+          done
         fi
-        for expect in $test_files; do
-          if cmp -s $test/$dir/$expect $expect; then
-            echo "$indent$name" | colorize green normal
-          else
-            number_failures=$(($number_failures + 1))
-            echo "$indent$name" | colorize red normal
-            echo
-            diff -u $test/$dir/$expect $expect | while read -r line; do
-              first_character=$(echo "$line" | cut -b 1)
-              case $first_character in
-                +) color=green ;;
-                -) color=red ;;
-                @) color=magenta ;;
-                *) color=none ;;
-              esac
-              echo "$line" | colorize $color normal
-            done
-            echo
-            echo "debug buffer:" | colorize yellow normal
-            cat debug
-            echo
-          fi
-        done
       else
         color=green
         if [ ! -e stderr ]; then
