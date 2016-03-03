@@ -123,7 +123,7 @@ def clang-disable-autocomplete -docstring "Disable automatic clang completion" %
     unalias window complete clang-complete
 }
 
-def -allow-override -hidden clang-show-error-info %{ %sh{
+def -hidden clang-show-error-info %{ %sh{
     printf %s "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | if read line; then
         desc=$(printf %s "${line}" | sed -e "s/^[[:digit:]]\+,//g; s/'/\\\\'/g")
         echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
@@ -141,7 +141,7 @@ def clang-disable-diagnostics -docstring "Disable automatic diagnostics of the c
 }
 
 def clang-diagnostics-next -docstring "Jump to the next line that contains an error" %{ %sh{
-    echo "${kak_opt_clang_errors}" | (
+    printf "%s\n" "${kak_opt_clang_errors}" | (
         line=-1
         first_line=-1
         while read line_content; do
