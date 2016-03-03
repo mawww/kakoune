@@ -33,6 +33,8 @@ public:
     bool   empty() const { return m_clients.empty(); }
     size_t count() const { return m_clients.size(); }
 
+    void clear();
+
     void   ensure_no_client_uses_buffer(Buffer& buffer);
 
     WindowAndSelections get_free_window(Buffer& buffer);

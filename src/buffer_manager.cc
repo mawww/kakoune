@@ -18,7 +18,8 @@ struct name_not_unique : runtime_error
 
 BufferManager::~BufferManager()
 {
-    kak_assert(not ClientManager::has_instance());
+    // Make sure not clients exists
+    ClientManager::instance().clear();
 
     // delete remaining buffers
     while (not m_buffers.empty())

@@ -14,6 +14,12 @@ namespace Kakoune
 ClientManager::ClientManager() = default;
 ClientManager::~ClientManager()
 {
+    clear();
+}
+
+void ClientManager::clear()
+{
+    m_free_windows.clear();
     // So that clients destructor find the client manager empty
     // so that local UI does not fork.
     ClientList clients = std::move(m_clients);
