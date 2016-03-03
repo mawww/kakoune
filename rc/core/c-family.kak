@@ -113,6 +113,11 @@ addhl -group /objc/code regex "@(property|synthesize|interface|implementation|pr
 addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 
 hook global WinSetOption filetype=(c|cpp|objc) %[
+    try %{ # we might be switching from one c-family language to another
+        rmhooks window c-family-hooks
+        rmhooks window c-family-indent
+    }
+
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group c-family-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
 
