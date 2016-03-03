@@ -11,7 +11,7 @@ hook global BufSetOption mimetype=text/x-lua %{
 }
 
 hook global BufCreate .*[.](lua) %{
-    set buffer filetype lua
+    set buffer mimetype text/x-lua
 }
 
 # Highlighters
