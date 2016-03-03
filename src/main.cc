@@ -805,17 +805,17 @@ int main(int argc, char* argv[])
     }
     catch (Kakoune::exception& error)
     {
-        on_assert_failed(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()).c_str());
+        write_stderr(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()));
         return -1;
     }
     catch (std::exception& error)
     {
-        on_assert_failed(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()).c_str());
+        write_stderr(format("uncaught exception ({}):\n{}", typeid(error).name(), error.what()));
         return -1;
     }
     catch (...)
     {
-        on_assert_failed("uncaught exception");
+        write_stderr("uncaught exception");
         return -1;
     }
     return 0;
