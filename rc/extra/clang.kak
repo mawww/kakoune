@@ -99,7 +99,7 @@ def -hidden clang-show-completion-info %[ try %[
         %sh[
             desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g; s/\\:/:/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
             if [ -n "$desc" ]; then
-                echo "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} %{${desc}}}"
+                echo "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
             fi
     ] ]
 ] ]
