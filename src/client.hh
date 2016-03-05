@@ -74,6 +74,7 @@ private:
 
     DisplayLine generate_mode_line() const;
 
+    bool m_ui_dirty = false;
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<Window> m_window;
 

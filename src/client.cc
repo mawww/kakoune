@@ -36,6 +36,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
 
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_input_callback([this](EventMode mode) { handle_available_input(mode); });
+    m_ui_dirty = true;
 }
 
 Client::~Client()
@@ -158,6 +159,7 @@ void Client::change_buffer(Buffer& buffer)
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
     m_window->set_dimensions(m_ui->dimensions());
+    m_ui_dirty = true;
 
     m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
 }
@@ -193,6 +195,7 @@ void Client::redraw_ifn()
                                 window.display_position(m_info.anchor),
                                 get_face("Information"), m_info.style);
         }
+        m_ui_dirty = true;
     }
 
     DisplayLine mode_line = generate_mode_line();
@@ -204,9 +207,14 @@ void Client::redraw_ifn()
         m_status_line = m_pending_status_line;
 
         m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
+        m_ui_dirty = true;
     }
 
-    m_ui->refresh();
+    if (m_ui_dirty)
+    {
+        m_ui_dirty = false;
+        m_ui->refresh();
+    }
 }
 
 void Client::force_redraw()
@@ -300,7 +308,10 @@ StringView Client::get_env_var(StringView name) const
 void Client::on_option_changed(const Option& option)
 {
     if (option.name() == "ui_options")
+    {
         m_ui->set_ui_options(option.get<UserInterface::Options>());
+        m_ui_dirty = true;
+    }
 }
 
 void Client::menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style)
@@ -308,18 +319,21 @@ void Client::menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle 
     m_menu = Menu{ std::move(choices), anchor, style, -1 };
     CharCoord ui_anchor = style == MenuStyle::Inline ? context().window().display_position(anchor) : CharCoord{};
     m_ui->menu_show(m_menu.items, ui_anchor, get_face("MenuForeground"), get_face("MenuBackground"), style);
+    m_ui_dirty = true;
 }
 
 void Client::menu_select(int selected)
 {
     m_menu.selected = selected;
     m_ui->menu_select(selected);
+    m_ui_dirty = true;
 }
 
 void Client::menu_hide()
 {
     m_menu = Menu{};
     m_ui->menu_hide();
+    m_ui_dirty = true;
 }
 
 void Client::info_show(String title, String content, ByteCoord anchor, InfoStyle style)
@@ -327,12 +341,14 @@ void Client::info_show(String title, String content, ByteCoord anchor, InfoStyle
     m_info = Info{ std::move(title), std::move(content), anchor, style };
     CharCoord ui_anchor = is_inline(style) ? context().window().display_position(anchor) : CharCoord{};
     m_ui->info_show(m_info.title, m_info.content, ui_anchor, get_face("Information"), style);
+    m_ui_dirty = true;
 }
 
 void Client::info_hide()
 {
     m_info = Info{};
     m_ui->info_hide();
+    m_ui_dirty = true;
 }
 
 }
