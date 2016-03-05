@@ -396,7 +396,7 @@ Changes
 Goto Commands
 ~~~~~~~~~~~~~
 
-Commands begining with g are used to goto certain position and or buffer:
+Commands beginning with g are used to goto certain position and or buffer:
 
  * `gh`: select to line begin
  * `gl`: select to line end
@@ -412,7 +412,7 @@ Commands begining with g are used to goto certain position and or buffer:
  * `ga`: go to the previous (alternate) buffer
  * `gf`: open the file whose name is selected
 
- * `g.`: go to last buffer modifiction position
+ * `g.`: go to last buffer modification position
 
 If a count is given prior to hitting `g`, `g` will jump to the given line.
 Using `G` will extend the selection rather than jump.
@@ -420,7 +420,7 @@ Using `G` will extend the selection rather than jump.
 View commands
 ~~~~~~~~~~~~~
 
-Some commands, all begining with v permit to manipulate the current
+Some commands, all beginning with v permit to manipulate the current
 view.
 
  * `vv` or `vc`: center the main selection in the window
@@ -437,7 +437,7 @@ Marks
 ~~~~~
 
 Current selections position can be saved in a register and restored later on.
-By default, marks us the '^' register, but using the register can be set
+By default, marks use the '^' register, but using the register can be set
 using `"<reg>` prefix.
 
 `Z` will save the current selections to the register.
@@ -461,7 +461,7 @@ Multi Selection
 Kak was designed from the start to handle multiple selections.
 One way to get a multiselection is via the `s` key.
 
-For example, to change all occurences of word 'roger' to word 'marcel'
+For example, to change all occurrences of word 'roger' to word 'marcel'
 in a paragraph, here is what can be done:
 
 select the paragraph with enough `x`. press `s` and enter roger, then enter.
@@ -548,7 +548,7 @@ A few keys are recognized by prompt mode to help editing a command:
  * `<backspace> or <a-x>`: erase character before cursor
  * `<del> or <a-d>`: erase character under cursor
 
- * `<c-w>`: avance to next word begin
+ * `<c-w>`: advance to next word begin
  * `<c-a-w>`: advance to next WORD begin
  * `<c-b>`: go back to previous word begin
  * `<c-a-b>`: go back to previous WORD begin
@@ -562,7 +562,7 @@ A few keys are recognized by prompt mode to help editing a command:
  * `<backtab>`: select previous completion candidate
 
  * `<c-r>`: insert then content of the register given by next key.
- * `<c-v>`: insert next keystroke without interpretting it
+ * `<c-v>`: insert next keystroke without interpreting it
 
  * `<c-o>`: disable auto completion for this prompt
 
@@ -671,14 +671,14 @@ Some of Kakoune state is available through environment variables:
 
  * `kak_selection`: content of the main selection
  * `kak_selections`: content of the selection separated by colons, colons in
-        the selection contents are escapted with a backslash.
+        the selection contents are escaped with a backslash.
  * `kak_selection_desc`: range of the main selection, represented as `anchor,cursor`;
         anchor and cursor are in this format: `line.column` 
  * `kak_selections_desc`: range of the selecations separated by colons
  * `kak_bufname`: name of the current buffer
  * `kak_buffile`: full path of the file or same as `kak_bufname` when
        there's no associated file
- * `kak_buflist`: the current buffer list, each buffer seperated by a colon
+ * `kak_buflist`: the current buffer list, each buffer separated by a colon
  * `kak_timestamp`: timestamp of the current buffer, the timestamp is an
        integer value which is incremented each time the buffer is modified.
  * `kak_runtime`: directory containing the kak binary
@@ -714,7 +714,7 @@ Markup strings
 In certain context, kakoune can take a markup string, which is a string containing
 formatting informations. In these strings, syntax `{facename}` will enable the
 face _facename_ until another face gets activated (or the end of the string.
-Literal `{` shall be written `\{`, and literal `\` that preceed a `{` shall
+Literal `{` shall be written `\{`, and literal `\` that precede a `{` shall
 be written `\\`
 
 Configuration & Autoloading
@@ -745,7 +745,7 @@ Color Schemes
 
 Kakoune ships with some color schemes that are installed to
 `../share/kak/colors/`. If `$XDG_CONFIG_HOME/kak/colors/` is present
-the builtin commmand `colorscheme` will offer completion for those
+the builtin command `colorscheme` will offer completion for those
 color schemes. If a scheme is duplicated in userspace it will take
 precedence.
 
@@ -813,7 +813,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
  * `complete_prefix` _bool_: when completing in command line, and multiple
    candidates exist, enable completion with common prefix.
  * `incsearch` _bool_: execute search as it is typed
- * `aligntab` _bool_: use tabs for alignement command
+ * `aligntab` _bool_: use tabs for alignment command
  * `autoinfo` _flags(command|onkey|normal)_: display automatic information
    box in the enabled contexts.
  * `autoshowcompl` _bool_: automatically display possible completions when
@@ -932,7 +932,7 @@ storing the last yanked test, or the captured groups associated with the
 selections.
 
 Yanking and pasting uses the register `"`, however most commands using a register
-can have their default register overriden by using the `"` key followed by the
+can have their default register overridden by using the `"` key followed by the
 register. For example `"sy` will yank (`y` command) in the `s` register. `"sp`
 will paste from the `s` register.
 
@@ -985,7 +985,7 @@ Using the `*` key, you can set the search pattern to the current selection.
 This tries to be intelligent. It will for example detect if the current selection
 begins and/or ends at word boundaries and set the search pattern accordingly.
 
-with `alt-*` you can set the search pattern to the current seletion without
+with `alt-*` you can set the search pattern to the current selection without
 Kakoune trying to be smart.
 
 Exec and Eval
@@ -1034,7 +1034,7 @@ Insert mode completion
 
 Kakoune can propose completions while inserting text, the `completers` option
 controls automatic completion, which kicks in when a certain idle timeout is
-reached (100 milliseconds). Insert mode completion can be explicitely triggered
+reached (100 milliseconds). Insert mode completion can be explicitly triggered
 using *control-x*, followed, by:
 
  * *f* : filename completion
@@ -1058,7 +1058,7 @@ command. This provides a few advantages:
    or any other modes (using `:onkey` or `:menu` for example), and these modes
    will get back to the insert mode afterwards.
 
-This feature is tailored for scripting/macros, as it provides a more predictible
+This feature is tailored for scripting/macros, as it provides a more predictable
 behaviour than leaving insert mode with `<esc>`, executing normal mode command
 and entering back insert mode (with which binding ?)
 
@@ -1089,7 +1089,7 @@ general highlighters are:
        For example: `:addhl regex //(\h`TODO:)?[^\n]` 0:cyan 1:yellow,red`
        will highlight C++ style comments in cyan, with an eventual 'TODO:' in
        yellow on red background.
- * `dynregex`: Similar to regex, but expand (like a command paramater would) the
+ * `dynregex`: Similar to regex, but expand (like a command parameter would) the
        given expression before building a regex from the result.
  * `flag_lines <flag> <option_name>`: add a column in front of text, and display the
        given flag in it for everly line contained in the int-list option named
@@ -1134,7 +1134,7 @@ Regions highlighters
 A special highlighter provides a way to segment the buffer into regions, which are
 to be highlighted differently.
 
-A region is defined by 4 parametes:
+A region is defined by 4 parameters:
 
 ------------------------------------
 <name> <opening> <closing> <recurse>
@@ -1223,7 +1223,7 @@ the `ref` can reference any named highlighter in the shared namespace.
 Hooks
 ~~~~~
 
-Commands can be registred to be executed when certain events arise.
+Commands can be registered to be executed when certain events arise.
 To register a hook use the hook command.
 
 -----------------------------------------------------------------------
@@ -1268,7 +1268,7 @@ existing hooks are:
  * `InsertMove`: The cursor moved (without inserting) in insert mode, the key
        that triggered the move is used for filtering
  * `WinCreate`: A window was created, the filtering text is the buffer name
- * `WinClose`: A window was detroyed, the filtering text is the buffer name
+ * `WinClose`: A window was destroyed, the filtering text is the buffer name
  * `WinDisplay`: A window was bound a client, the filtering text is the buffer
        name
  * `WinSetOption`: An option was set in a window context, the filtering text
@@ -1344,7 +1344,7 @@ New commands can be defined using the `:def` command.
  * `-shell-completion`: following string is a shell command which takes
     parameters as positional params and output one completion candidate
     per line.
- * `-allow-override`: allow the new command to replace an exisiting one
+ * `-allow-override`: allow the new command to replace an existing one
     with the same name.
  * `-hidden`: do not show the command in command name completions
  * `-docstring`: define the documentation string for the command
