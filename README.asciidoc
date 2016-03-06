@@ -998,11 +998,6 @@ The regex syntax supported by Kakoune is the Perl syntax currently provided
 by Boost :
 http://www.boost.org/doc/libs/release/libs/regex/doc/html/boost_regex/syntax/perl_syntax.html[Perl Regular Expression Syntax].
 
-Tips
-^^^^
-
-* It is possible to make case insensitive regex by prefixing expression with `(?i)`
-
 Exec and Eval
 ~~~~~~~~~~~~~
 
