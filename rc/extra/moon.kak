@@ -36,6 +36,31 @@ addhl -group /moon/code regex \<(and|break|catch|class|continue|do|else(if)?|exp
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+def moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+    case $kak_buffile in
+        *spec/*_spec.moon)
+            altfile=$(eval echo $(echo $kak_buffile | sed -e s+spec/+'*'/+';'s/_spec//))
+            [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
+        ;;
+        *.moon)
+            path=$kak_buffile
+            dirs=$(while [ $path ]; do echo $path; path=${path%/*}; done | tail -n +2)
+            for dir in $dirs; do
+                altdir=$dir/spec
+                if [ -d $altdir ]; then
+                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed -e s+[^/]'*'/++';'s/.moon$/_spec.moon/)
+                    break
+                fi
+            done
+            [ ! -d $altdir ] && echo "echo -color Error 'spec/ not found'" && exit
+        ;;
+        *)
+            echo "echo -color Error 'alternative file not found'" && exit
+        ;;
+    esac
+    echo "edit $altfile"
+}}
+
 def -hidden _moon_filter_around_selections %{
     eval -draft -itersel %{
         exec <a-x>
@@ -80,6 +105,8 @@ hook global WinSetOption filetype=moon %{
     hook window InsertChar .* -group moon-indent _moon_indent_on_char
     hook window InsertChar \n -group moon-indent _moon_indent_on_new_line
 
+    alias window alt moon-alternative-file
+
     set window comment_line_chars '--'
     set window comment_selection_chars ''
 }
@@ -88,4 +115,6 @@ hook global WinSetOption filetype=(?!moon).* %{
     rmhl moon
     rmhooks window moon-indent
     rmhooks window moon-hooks
+
+    unalias window alt moon-alternative-file
 }
