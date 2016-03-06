@@ -14,6 +14,7 @@
 #include "insert_completer.hh"
 #include "shared_string.hh"
 #include "ncurses_ui.hh"
+#include "json_ui.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
 #include "remote.hh"
@@ -406,13 +407,18 @@ void signal_handler(int signal)
         abort();
 }
 
-int run_client(StringView session, StringView init_command)
+int run_client(StringView session, StringView init_command, bool json_ui = false)
 {
     try
     {
         EventManager event_manager;
-        RemoteClient client{session, make_unique<NCursesUI>(),
-                            get_env_vars(), init_command};
+        std::unique_ptr<UserInterface> ui;
+        if (json_ui)
+            ui = make_unique<JsonUI>();
+        else
+            ui = make_unique<NCursesUI>();
+
+        RemoteClient client{session, std::move(ui), get_env_vars(), init_command};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
@@ -700,6 +706,7 @@ int main(int argc, char* argv[])
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
                    { "u", { false, "use a dummy user interface, for testing purposes" } },
+                   { "j", { false, "use a jsonrpc user interface, only available in client mode" } },
                    { "l", { false, "list existing sessions" } } }
     };
     try
@@ -754,7 +761,7 @@ int main(int argc, char* argv[])
             for (auto name : parser)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + init_command);
+            return run_client(*server_session, new_files + init_command, (bool)parser.get_switch("j"));
         }
         else
         {
