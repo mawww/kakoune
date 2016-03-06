@@ -99,6 +99,22 @@ const T& clamp(const T& val, const T& min, const T& max)
     return (val < min ? min : (val > max ? max : val));
 }
 
+template<typename Iterator, typename EndIterator, typename T>
+bool skip_while(Iterator& it, const EndIterator& end, T condition)
+{
+    while (it != end and condition(*it))
+        ++it;
+    return it != end;
+}
+
+template<typename Iterator, typename BeginIterator, typename T>
+bool skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
+{
+    while (it != begin and condition(*it))
+        --it;
+    return condition(*it);
+}
+
 }
 
 #endif // utils_hh_INCLUDED

@@ -24,20 +24,6 @@ inline Selection target_eol(Selection sel)
     return sel;
 }
 
-template<typename Iterator, typename EndIterator, typename T>
-void skip_while(Iterator& it, const EndIterator& end, T condition)
-{
-    while (it != end and condition(*it))
-        ++it;
-}
-
-template<typename Iterator, typename BeginIterator, typename T>
-void skip_while_reverse(Iterator& it, const BeginIterator& begin, T condition)
-{
-    while (it != begin and condition(*it))
-        --it;
-}
-
 using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
 
 inline Selection utf8_range(const BufferIterator& first, const BufferIterator& last)
@@ -59,8 +45,8 @@ Selection select_to_next_word(const Buffer& buffer, const Selection& selection)
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
         ++begin;
 
-    skip_while(begin, buffer.end(), [](Codepoint c){ return is_eol(c); });
-    if (begin == buffer.end())
+    if (not skip_while(begin, buffer.end(),
+                       [](Codepoint c) { return is_eol(c); }))
         return selection;
     Utf8Iterator end = begin+1;
 
@@ -83,8 +69,8 @@ Selection select_to_next_word_end(const Buffer& buffer, const Selection& selecti
     if (categorize<word_type>(*begin) != categorize<word_type>(*(begin+1)))
         ++begin;
 
-    skip_while(begin, buffer.end(), [](Codepoint c){ return is_eol(c); });
-    if (begin == buffer.end())
+    if (not skip_while(begin, buffer.end(),
+                       [](Codepoint c) { return is_eol(c); }))
         return selection;
     Utf8Iterator end = begin;
     skip_while(end, buffer.end(), is_horizontal_blank);
@@ -112,15 +98,10 @@ Selection select_to_previous_word(const Buffer& buffer, const Selection& selecti
 
     bool with_end = false;
     if (word_type == Word and is_punctuation(*end))
-    {
-        skip_while_reverse(end, buffer.begin(), is_punctuation);
-        with_end = is_punctuation(*end);
-    }
+        with_end = skip_while_reverse(end, buffer.begin(), is_punctuation);
+
     else if (is_word<word_type>(*end))
-    {
-        skip_while_reverse(end, buffer.begin(), is_word<word_type>);
-        with_end = is_word<word_type>(*end);
-    }
+        with_end = skip_while_reverse(end, buffer.begin(), is_word<word_type>);
 
     return utf8_range(begin, with_end ? end : end+1);
 }
