@@ -55,7 +55,7 @@ private:
     FDWatcher m_stdin_watcher;
     Vector<Key> m_pending_keys;
     CharCoord m_dimensions;
-    String m_incoming_text;
+    String m_requests;
 };
 
 }

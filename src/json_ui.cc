@@ -276,14 +276,11 @@ parse_json(const char* pos, const char* end)
                 return {};
 
             if (*pos == ',')
-            {
                 ++pos;
-                continue;
-            }
-            if (*pos == ']')
+            else if (*pos == ']')
                 return Result{std::move(array), pos+1};
             else
-                throw runtime_error("unable to parse array, expected , or ]");
+                throw runtime_error("unable to parse array, expected ',' or ']'");
         }
     }
     if (*pos == '{')
@@ -312,17 +309,14 @@ parse_json(const char* pos, const char* end)
                 return {};
 
             if (*pos == ',')
-            {
                 ++pos;
-                continue;
-            }
-            if (*pos == '}')
+            else if (*pos == '}')
                 return Result{std::move(object), pos+1};
             else
-                throw runtime_error("unable to parse object, expected , or }");
+                throw runtime_error("unable to parse object, expected ',' or '}'");
         }
     }
-    return {};
+    throw runtime_error("Could not parse json");
 }
 
 void JsonUI::eval_json(const Value& json)
@@ -349,6 +343,15 @@ void JsonUI::eval_json(const Value& json)
             for (auto& key : parse_keys(key_val.as<String>()))
                 m_pending_keys.push_back(key);
         }
+    }
+    else if (method == "resize")
+    {
+        if (params.size() != 2)
+            throw runtime_error("resize expects 2 parameters");
+
+        CharCoord dim{params[0].as<int>(), params[1].as<int>()};
+        m_dimensions = dim;
+        m_pending_keys.push_back(resize(dim));
     }
     else
         throw runtime_error("unknown method");
@@ -377,18 +380,26 @@ void JsonUI::parse_requests(EventMode mode)
         if (size == -1 or size == 0)
             break;
 
-        m_incoming_text += StringView{buf, buf + size};
+        m_requests += StringView{buf, buf + size};
     }
 
-    if (not m_incoming_text.empty())
+    if (not m_requests.empty())
     {
         Value json;
         const char* pos;
-        std::tie(json, pos) = parse_json(m_incoming_text.begin(), m_incoming_text.end());
+        std::tie(json, pos) = parse_json(m_requests.begin(), m_requests.end());
         if (json)
         {
-            eval_json(json);
-            m_incoming_text = String{pos, m_incoming_text.end()};
+            try
+            {
+                eval_json(json);
+            }
+            catch (runtime_error& error)
+            {
+                write_stderr(format("error while executing request '{}': '{}'",
+                                    StringView{m_requests.begin(), pos}, error.what()));
+            }
+            m_requests = String{pos, m_requests.end()};
         }
     }
 
@@ -402,6 +413,5 @@ UnitTest test_json_parser{[]()
     auto value = std::get<0>(parse_json(json.begin(), json.end()));
     kak_assert(value);
 }};
-
 
 }
