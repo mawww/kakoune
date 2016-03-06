@@ -1,0 +1,46 @@
+Json-Rpc user interface
+=======================
+
+Kakoune user interfaces can be implemented through the json-rpc 2.0 protocol.
+
+By launching kakoune in client mode with the `-j` option, the launched client
+will write json-rpc requests on stdout and read json-rpc requests on stdin.
+Errors will be reported on stderr (not in json format).
+
+Kakoune requests are always using positional parameters, never named, and
+Kakoune wont be able to parse named parameters in requests.
+
+Here are the data structures used:
+
+* Color: a string, either a named color, or #rrggbb
+* Attribute: one of {exclusive, underline, reverse, blink, bold, dim, italic}
+* Face { Color fg; Color bg; Array<Attribute> attributes; }
+* Atom { Face face; String contents; }
+* Line : Array of Atom
+* Coord { int line; int column }
+
+Here are the requests that can be written by the json ui on stdout:
+
+* draw(Array<Line> lines, Face default_face)
+* draw_status(Line status_line, Line mode_line,
+              Face default_face)
+* menu_show(Array<Line> items, Coord anchor, Face fg, Face bg,
+            String style)
+  style can be:
+  - prompt: display the menu as a prompt menu (anchor is ignored)
+  - inline: display the menu next to (above or below) the anchor coordinate
+* menu_select(int selected)
+* menu_hide()
+* info_show(String title, String content, Coord anchor, Face face, String style)
+  style can be:
+  - prompt: display the info as a prompt info (anchor is ignored)
+  - inline: display the info next to (above or below) the anchor coordinate
+  - inlineAbove: display the info next to (above) the anchor coordinate
+  - inlineBelow: display the info next to (below) the anchor coordinate
+  - menuDoc: display the info next to the menu, as a documentation for it
+* info_hide()
+
+The requests that the json ui can interpret on stdin are:
+
+* keys(String key1, String key2...): keystrokes
+* resize(int x, int y): notify ui resize
