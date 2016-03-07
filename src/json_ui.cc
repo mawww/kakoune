@@ -29,6 +29,7 @@ template<typename T, MemoryDomain D>
 String to_json(const Vector<T, D>& vec) { return to_json(ArrayView<const T>{vec}); }
 
 String to_json(int i) { return to_string(i); }
+String to_json(bool b) { return b ? "true" : "false"; }
 String to_json(StringView str)
 {
     String res;
