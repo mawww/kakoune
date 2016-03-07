@@ -29,7 +29,31 @@ template<typename T, MemoryDomain D>
 String to_json(const Vector<T, D>& vec) { return to_json(ArrayView<const T>{vec}); }
 
 String to_json(int i) { return to_string(i); }
-String to_json(StringView s) { return format(R"("{}")", escape(s, "\"", '\\')); }
+String to_json(StringView str)
+{
+    String res;
+    res.reserve(str.length() + 4);
+    res += '"';
+    for (auto it = str.begin(), end = str.end(); it != end; )
+    {
+        auto next = std::find_if(it, end, [](char c) {
+            return c == '\\' or c == '"' or (c >= 0 and c <= 0x1F);
+        });
+
+        res += StringView{it, next};
+        if (next == end)
+            break;
+
+        char buf[7] = {'\\', *next, 0};
+        if (*next >= 0 and *next <= 0x1F)
+            sprintf(buf, "\\u%04x", *next);
+
+        res += buf;
+        it = next+1;
+    }
+    res += '"';
+    return res;
+}
 
 String to_json(Color color)
 {
