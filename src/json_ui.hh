@@ -39,7 +39,7 @@ public:
                    InfoStyle style) override;
     void info_hide() override;
 
-    void refresh() override;
+    void refresh(bool force) override;
 
     void set_input_callback(InputCallback callback) override;
 

@@ -296,7 +296,7 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
         CharCoord dimensions() override { return {24,80}; }
         bool is_key_available() override { return false; }
         Key  get_key() override { return Key::Invalid; }
-        void refresh() override {}
+        void refresh(bool) override {}
         void set_input_callback(InputCallback) override {}
         void set_ui_options(const Options&) override {}
     };

@@ -77,6 +77,8 @@ void Client::handle_available_input(EventMode mode)
             {
                 if (*key == ctrl('c'))
                     killpg(getpgrp(), SIGINT);
+                if (*key == ctrl('l'))
+                    redraw_ifn(true);
                 else if (*key == Key::FocusIn)
                     context().hooks().run_hook("FocusIn", context().name(), context());
                 else if (*key == Key::FocusOut)
@@ -171,18 +173,18 @@ static bool is_inline(InfoStyle style)
            style == InfoStyle::InlineBelow;
 }
 
-void Client::redraw_ifn()
+void Client::redraw_ifn(bool force)
 {
     Window& window = context().window();
 
     const bool needs_redraw = window.needs_redraw(context());
-    if (needs_redraw)
+    if (needs_redraw or force)
     {
         auto window_pos = window.position();
         m_ui->draw(window.update_display_buffer(context()), get_face("Default"));
 
 	// window moved, reanchor eventual menu and info
-        if (window_pos != window.position())
+        if (force or window_pos != window.position())
         {
             if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline)
             {
@@ -199,7 +201,7 @@ void Client::redraw_ifn()
     }
 
     DisplayLine mode_line = generate_mode_line();
-    if (needs_redraw or
+    if (force or needs_redraw or
         m_status_line.atoms() != m_pending_status_line.atoms() or
         mode_line.atoms() != m_mode_line.atoms())
     {
@@ -210,10 +212,10 @@ void Client::redraw_ifn()
         m_ui_dirty = true;
     }
 
-    if (m_ui_dirty)
+    if (m_ui_dirty or force)
     {
         m_ui_dirty = false;
-        m_ui->refresh();
+        m_ui->refresh(force);
     }
 }
 

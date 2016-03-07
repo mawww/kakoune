@@ -197,9 +197,9 @@ void JsonUI::info_hide()
     rpc_call("info_hide");
 }
 
-void JsonUI::refresh()
+void JsonUI::refresh(bool force)
 {
-    rpc_call("refresh");
+    rpc_call("refresh", force);
 }
 
 void JsonUI::set_input_callback(InputCallback callback)

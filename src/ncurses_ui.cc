@@ -301,9 +301,12 @@ void NCursesUI::redraw()
     doupdate();
 }
 
-void NCursesUI::refresh()
+void NCursesUI::refresh(bool force)
 {
-    if (m_dirty)
+    if (force)
+        redrawwin(m_window);
+
+    if (m_dirty or force)
         redraw();
     m_dirty = false;
 }
@@ -491,11 +494,6 @@ Key NCursesUI::get_key()
 
     if (c > 0 and c < 27)
     {
-        if (c == control('l'))
-        {
-           redrawwin(m_window);
-           redraw();
-        }
         if (c == control('z'))
         {
             raise(SIGTSTP);

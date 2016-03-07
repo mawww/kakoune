@@ -46,7 +46,7 @@ public:
     CharCoord dimensions() const { return m_ui->dimensions(); }
 
     void force_redraw();
-    void redraw_ifn();
+    void redraw_ifn(bool force = false);
 
     void check_if_buffer_needs_reloading();
 
