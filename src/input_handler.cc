@@ -762,51 +762,16 @@ public:
             const bool reverse = (key == Key::BackTab);
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
-            bool updated_completions = false;
             if (candidates.empty())
-            {
                 refresh_completions(CompletionFlags::None);
 
-                if (candidates.empty())
-                    return;
-                updated_completions = true;
-            }
-            bool did_prefix = false;
-            if (m_current_completion == -1 and
-                context().options()["complete_prefix"].get<bool>())
-            {
-                const String& line = m_line_editor.line();
-                CandidateList& candidates = m_completions.candidates;
-                String prefix = common_prefix(candidates);
-                if (m_completions.end - m_completions.start > prefix.length())
-                    prefix = line.substr(m_completions.start,
-                                         m_completions.end - m_completions.start).str();
+            if (candidates.empty())
+                return;
 
-                if (not prefix.empty())
-                {
-                    auto it = find(candidates, prefix);
-                    if (it == candidates.end())
-                    {
-                        m_current_completion = candidates.size();
-                        candidates.push_back(prefix);
-                    }
-                    else
-                        m_current_completion = it - candidates.begin();
-
-                    CharCount start = line.char_count_to(m_completions.start);
-                    // When we just updated completions, select the common
-                    // prefix even if it was the currently entered text.
-                    did_prefix = updated_completions or
-                                 prefix != line.substr(start, m_line_editor.cursor_pos() - start);
-                }
-            }
-            if (not did_prefix)
-            {
-                if (not reverse and ++m_current_completion >= candidates.size())
-                    m_current_completion = 0;
-                else if (reverse and --m_current_completion < 0)
-                    m_current_completion = candidates.size()-1;
-            }
+            if (not reverse and ++m_current_completion >= candidates.size())
+                m_current_completion = 0;
+            else if (reverse and --m_current_completion < 0)
+                m_current_completion = candidates.size()-1;
 
             const String& completion = candidates[m_current_completion];
             if (context().has_client())

@@ -66,10 +66,6 @@ Builtin options
 *BOM* 'enum(none|utf8)'::
 	define if the file should be written with an unicode byte order mark
 
-*complete_prefix* 'bool'::
-	when completing in command line, and multiple candidates exist,
-	enable completion with common prefix
-
 *incsearch* 'bool'::
 	execute search as it is typed
 

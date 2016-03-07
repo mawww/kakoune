@@ -206,9 +206,6 @@ void register_options()
     reg.declare_option("eolformat", "end of line format: crlf or lf", EolFormat::Lf);
     reg.declare_option("BOM", "insert a byte order mark when writing buffer (none or utf8)",
                        ByteOrderMark::None);
-    reg.declare_option("complete_prefix",
-                       "complete up to common prefix in tab completion",
-                       true);
     reg.declare_option("incsearch",
                        "incrementaly apply search/select/split regex",
                        true);
