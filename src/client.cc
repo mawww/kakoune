@@ -77,8 +77,6 @@ void Client::handle_available_input(EventMode mode)
             {
                 if (*key == ctrl('c'))
                     killpg(getpgrp(), SIGINT);
-                if (*key == ctrl('l'))
-                    redraw_ifn(true);
                 else if (*key == Key::FocusIn)
                     context().hooks().run_hook("FocusIn", context().name(), context());
                 else if (*key == Key::FocusOut)

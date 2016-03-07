@@ -1560,6 +1560,12 @@ void ensure_forward(Context& context, NormalParams)
     context.selections().check_invariant();
 }
 
+void force_redraw(Context& context, NormalParams)
+{
+    if (context.has_client())
+        context.client().redraw_ifn(true);
+}
+
 static NormalCmdDesc cmds[] =
 {
     { 'h', "move left", move<CharCount, Backward> },
@@ -1734,6 +1740,8 @@ static NormalCmdDesc cmds[] =
     { 'z', "restore selections", restore_selections<false> },
     { alt('z'), "append saved selections", restore_selections<true> },
     { 'Z', "save selections", save_selections },
+
+    { ctrl('l'), "force redraw", force_redraw },
 };
 
 KeyMap keymap = cmds;
