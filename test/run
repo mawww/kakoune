@@ -49,7 +49,7 @@ main() {
         write out
         quit!
       "
-      ${test}/../src/kak out -n -u -e "$kak_commands"
+      ${test}/../src/kak out -n -ui dummy -e "$kak_commands"
       retval=$?
       if [ $should_fail = 0 ]; then
         if [ $retval -ne 0 ]; then

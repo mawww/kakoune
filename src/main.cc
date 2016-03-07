@@ -262,6 +262,13 @@ struct convert_to_client_mode
     String buffer_name;
 };
 
+enum class UIType
+{
+    NCurses,
+    Json,
+    Dummy,
+};
+
 static Client* local_client = nullptr;
 static UserInterface* local_ui = nullptr;
 static bool convert_to_client_pending = false;
@@ -279,7 +286,7 @@ pid_t fork_server_to_background()
     return 0;
 }
 
-std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
+std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 {
     struct DummyUI : UserInterface
     {
@@ -301,8 +308,19 @@ std::unique_ptr<UserInterface> create_local_ui(bool dummy_ui)
         void set_ui_options(const Options&) override {}
     };
 
-    if (dummy_ui)
-        return make_unique<DummyUI>();
+    switch (ui_type)
+    {
+        case UIType::NCurses: return make_unique<NCursesUI>();
+        case UIType::Json: return make_unique<JsonUI>();
+        case UIType::Dummy: return make_unique<DummyUI>();
+    }
+    throw logic_error{};
+}
+
+std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
+{
+    if (ui_type != UIType::NCurses)
+        return make_ui(ui_type);
 
     struct LocalUI : NCursesUI
     {
@@ -407,18 +425,12 @@ void signal_handler(int signal)
         abort();
 }
 
-int run_client(StringView session, StringView init_command, bool json_ui = false)
+int run_client(StringView session, StringView init_command, UIType ui_type)
 {
     try
     {
         EventManager event_manager;
-        std::unique_ptr<UserInterface> ui;
-        if (json_ui)
-            ui = make_unique<JsonUI>();
-        else
-            ui = make_unique<NCursesUI>();
-
-        RemoteClient client{session, std::move(ui), get_env_vars(), init_command};
+        RemoteClient client{session, make_ui(ui_type), get_env_vars(), init_command};
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
@@ -436,7 +448,7 @@ int run_client(StringView session, StringView init_command, bool json_ui = false
 }
 
 int run_server(StringView session, StringView init_command,
-               bool ignore_kakrc, bool daemon, bool dummy_ui,
+               bool ignore_kakrc, bool daemon, UIType ui_type,
                ConstArrayView<StringView> files, LineCount target_line)
 {
     static bool terminate = false;
@@ -532,7 +544,7 @@ int run_server(StringView session, StringView init_command,
     if (not daemon)
     {
         local_client = client_manager.create_client(
-            create_local_ui(dummy_ui), get_env_vars(), init_command);
+            create_local_ui(ui_type), get_env_vars(), init_command);
 
         if (local_client)
         {
@@ -705,8 +717,7 @@ int main(int argc, char* argv[])
                    { "p", { true,  "just send stdin as commands to the given session" } },
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
-                   { "u", { false, "use a dummy user interface, for testing purposes" } },
-                   { "j", { false, "use a jsonrpc user interface, only available in client mode" } },
+                   { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } } }
     };
     try
@@ -737,6 +748,17 @@ int main(int argc, char* argv[])
         }
 
         auto init_command = parser.get_switch("e").value_or(StringView{});
+        auto ui_name = parser.get_switch("ui").value_or("ncurses");
+        UIType ui_type;
+        if (ui_name == "ncurses") ui_type = UIType::NCurses;
+        else if (ui_name == "json") ui_type = UIType::Json;
+        else if (ui_name == "dummy") ui_type = UIType::Dummy;
+        else
+        {
+            write_stderr(format("error: unknown ui type: '{}'", ui_name));
+            return -1;
+        }
+
 
         if (auto keys = parser.get_switch("f"))
         {
@@ -761,7 +783,7 @@ int main(int argc, char* argv[])
             for (auto name : parser)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + init_command, (bool)parser.get_switch("j"));
+            return run_client(*server_session, new_files + init_command, ui_type);
         }
         else
         {
@@ -787,15 +809,14 @@ int main(int argc, char* argv[])
                 return run_server(session, init_command,
                                   (bool)parser.get_switch("n"),
                                   (bool)parser.get_switch("d"),
-                                  (bool)parser.get_switch("u"),
-                                  files, target_line);
+                                  ui_type, files, target_line);
             }
             catch (convert_to_client_mode& convert)
             {
                 raise(SIGTSTP);
                 return run_client(convert.session,
                                   format("try %^buffer '{}'^; echo converted to client only mode",
-                                         escape(convert.buffer_name, "'^", '\\')));
+                                         escape(convert.buffer_name, "'^", '\\')), ui_type);
             }
         }
     }
