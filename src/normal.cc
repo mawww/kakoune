@@ -1563,7 +1563,10 @@ void ensure_forward(Context& context, NormalParams)
 void force_redraw(Context& context, NormalParams)
 {
     if (context.has_client())
-        context.client().redraw_ifn(true);
+    {
+        context.client().force_redraw();
+        context.client().redraw_ifn();
+    }
 }
 
 static NormalCmdDesc cmds[] =

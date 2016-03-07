@@ -46,7 +46,7 @@ public:
     CharCoord dimensions() const { return m_ui->dimensions(); }
 
     void force_redraw();
-    void redraw_ifn(bool force = false);
+    void redraw_ifn();
 
     void check_if_buffer_needs_reloading();
 
@@ -74,7 +74,6 @@ private:
 
     DisplayLine generate_mode_line() const;
 
-    bool m_ui_dirty = false;
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<Window> m_window;
 
@@ -83,8 +82,20 @@ private:
     InputHandler m_input_handler;
 
     DisplayLine m_status_line;
-    DisplayLine m_pending_status_line;
     DisplayLine m_mode_line;
+
+    enum PendingUI : int
+    {
+        MenuShow   = 1 << 0,
+        MenuSelect = 1 << 1,
+        MenuHide   = 1 << 2,
+        InfoShow   = 1 << 3,
+        InfoHide   = 1 << 4,
+        StatusLine = 1 << 5,
+        Draw       = 1 << 6,
+        Refresh    = 1 << 7,
+    };
+    int m_ui_pending = 0;
 
     struct Menu
     {
