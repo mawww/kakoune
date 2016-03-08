@@ -1,0 +1,7 @@
+addhl regions -default code regions_test \
+    string %{"} %{(?<!\\)(\\\\)*"} '' \
+    shell '\$\{' '\}' '\{'
+
+addhl -group regions_test/code fill yellow
+addhl -group regions_test/string fill green
+addhl -group regions_test/shell fill red

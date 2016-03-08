@@ -12,7 +12,7 @@ main() {
   trap "rm -R $work" EXIT
   for dir in $(find $dirs -type d | sort); do
     cd $test/$dir;
-    test_files=$(ls out selections state 2>/dev/null)
+    test_files=$(ls out selections state display 2>/dev/null)
     cd $work/$dir;
     indent="$(echo "${dir}/" | sed -e 's|[^/]*/\+|  |g')"
     name=$(basename $PWD)
@@ -26,6 +26,8 @@ main() {
       touch in; cp in out
       kak_commands="
         set global autoreload yes
+        set global autoinfo ''
+        set global autoshowcompl false
         try %{
           source rc
         }
@@ -40,6 +42,7 @@ main() {
           quit!
         }
         exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
+        exec <c-l>
         eval -buffer *debug* write debug
         nop %sh{
           IFS==
@@ -49,7 +52,9 @@ main() {
         write out
         quit!
       "
-      ${test}/../src/kak out -n -ui dummy -e "$kak_commands"
+      session="kak-test-$(echo -n "$dir" | sed -e 's+^\./++; s+/+-+g')"
+      rm -f /tmp/kakoune/$USER/$session
+      ${test}/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
       retval=$?
       if [ $should_fail = 0 ]; then
         if [ $retval -ne 0 ]; then
