@@ -235,7 +235,9 @@ void Client::redraw_ifn()
 
 void Client::force_redraw()
 {
-    m_ui_pending |= Refresh;
+    m_ui_pending |= Refresh | Draw |
+        (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect) |
+        (m_info.content.empty() ? InfoHide : InfoShow);
 }
 
 void Client::reload_buffer()
