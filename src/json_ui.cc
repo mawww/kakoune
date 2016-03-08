@@ -261,6 +261,10 @@ parse_json(const char* pos, const char* end)
         skip_while(digit_end, end, is_digit);
         return Result{ Value{str_to_int({pos, end})}, digit_end };
     }
+    if (end - pos > 4 and StringView{pos, pos+4} == "true")
+        return Result{ Value{true}, pos+4 };
+    if (end - pos > 5 and StringView{pos, pos+5} == "false")
+        return Result{ Value{false}, pos+5 };
     if (*pos == '"')
     {
         String value;
