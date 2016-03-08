@@ -39,7 +39,7 @@ addhl -group /moon/code regex \<(and|break|catch|class|continue|do|else(if)?|exp
 def moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.moon)
-            altfile=$(eval echo $(echo $kak_buffile | sed -e s+spec/+'*'/+';'s/_spec//))
+            altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
             [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
         ;;
         *.moon)
@@ -48,7 +48,7 @@ def moon-alternative-file -docstring 'Jump to the alternate file (implementation
             for dir in $dirs; do
                 altdir=$dir/spec
                 if [ -d $altdir ]; then
-                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed -e s+[^/]'*'/++';'s/.moon$/_spec.moon/)
+                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed s+[^/]'*'/++';'s/.moon$/_spec.moon/)
                     break
                 fi
             done
