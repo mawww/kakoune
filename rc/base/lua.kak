@@ -35,7 +35,7 @@ addhl -group /lua/code regex \<(and|break|do|else|elseif|end|false|for|function|
 def lua-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.lua)
-            altfile=$(eval echo $(echo $kak_buffile | sed -e s+spec/+'*'/+';'s/_spec//))
+            altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
             [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
         ;;
         *.lua)
@@ -44,7 +44,7 @@ def lua-alternative-file -docstring 'Jump to the alternate file (implementation 
             for dir in $dirs; do
                 altdir=$dir/spec
                 if [ -d $altdir ]; then
-                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed -e s+[^/]'*'/++';'s/.lua$/_spec.lua/)
+                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed s+[^/]'*'/++';'s/.lua$/_spec.lua/)
                     break
                 fi
             done
