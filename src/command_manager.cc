@@ -512,6 +512,17 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
     return res;
 }
 
+Completions CommandManager::complete_command_name(const Context& context,
+                                                  StringView query) const
+{
+    return{0, query.length(), Kakoune::complete(query, query.length(), concatenated(
+        transformed(filtered(m_commands, [](const CommandMap::value_type& cmd)
+                             { return not (cmd.second.flags & CommandFlags::Hidden); }),
+                    [](const CommandMap::value_type& cmd) { return StringView{cmd.first}; }),
+        transformed(context.aliases().flatten_aliases(),
+                    [](AliasRegistry::AliasDesc alias) { return alias.first; })))};
+}
+
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
                                      StringView command_line,
@@ -533,33 +544,16 @@ Completions CommandManager::complete(const Context& context,
         }
     }
 
+    const bool is_last_token = tok_idx == tokens.size();
     // command name completion
     if (tokens.empty() or
-        (tok_idx == cmd_idx and (tok_idx == tokens.size() or
+        (tok_idx == cmd_idx and (is_last_token or
                                  tokens[tok_idx].type() == Token::Type::Raw or
                                  tokens[tok_idx].type() == Token::Type::RawQuoted)))
     {
-        const bool is_end_token = tok_idx == tokens.size();
-        ByteCount cmd_start =  is_end_token ? cursor_pos
-                                            : tokens[tok_idx].begin();
-        Completions result(cmd_start, cursor_pos);
-        StringView prefix = command_line.substr(cmd_start,
-                                                cursor_pos - cmd_start);
-
-        for (auto& command : m_commands)
-        {
-            if (command.second.flags & CommandFlags::Hidden)
-                continue;
-            if (prefix_match(command.first, prefix))
-                result.candidates.push_back(command.first);
-        }
-        for (auto& alias : context.aliases().flatten_aliases())
-        {
-            if (prefix_match(alias.first, prefix))
-                result.candidates.push_back(alias.first.str());
-        }
-        std::sort(result.candidates.begin(), result.candidates.end());
-        return result;
+        auto cmd_start = is_last_token ? cursor_pos : tokens[tok_idx].begin();
+        StringView query = command_line.substr(cmd_start, cursor_pos - cmd_start);
+        return offset_pos(complete_command_name(context, query), cmd_start);
     }
 
     kak_assert(not tokens.empty());
@@ -628,18 +622,7 @@ Completions CommandManager::complete(const Context& context,
     StringView prefix = params[token_to_complete].substr(0, pos_in_token);
 
     if (token_to_complete == 0)
-    {
-        CandidateList candidates;
-        for (auto& command : m_commands)
-        {
-            if (command.second.flags & CommandFlags::Hidden)
-                continue;
-            if (prefix_match(command.first, prefix))
-                candidates.push_back(command.first);
-        }
-        std::sort(candidates.begin(), candidates.end());
-        return {0, pos_in_token, std::move(candidates)};
-    }
+        return complete_command_name(context, prefix);
     else
     {
         const String& command_name = params[0];
