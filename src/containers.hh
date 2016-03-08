@@ -85,7 +85,7 @@ struct FilterView
     };
 
     FilterView(Container& container, Filter filter)
-        : m_container{container}, m_filter{std::move(filter)} {}
+        : m_container(container), m_filter(std::move(filter)) {}
 
     Iterator begin() const { return {*this, m_container.begin(), m_container.end()}; }
     Iterator end()   const { return {*this, m_container.end(), m_container.end()}; }
@@ -143,7 +143,7 @@ struct TransformView
     };
 
     TransformView(Container& container, Transform transform)
-        : m_container{container}, m_transform{std::move(transform)} {}
+        : m_container(container), m_transform(std::move(transform)) {}
 
     Iterator begin() const { return {*this, m_container.begin()}; }
     Iterator end()   const { return {*this, m_container.end()}; }
@@ -207,7 +207,7 @@ struct ConcatView
     };
 
     ConcatView(Container1& container1, Container2& container2)
-        : m_container1{container1}, m_container2{container2} {}
+        : m_container1(container1), m_container2(container2) {}
 
     Iterator begin() const { return {m_container1.begin(), m_container1.end(), m_container2.begin()}; }
     Iterator end()   const { return {m_container1.end(), m_container1.end(), m_container2.end()}; }
