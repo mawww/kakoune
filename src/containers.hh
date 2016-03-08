@@ -8,11 +8,21 @@
 namespace Kakoune
 {
 
+template<typename Factory>
+struct ContainerView { Factory factory; };
+
+template<typename Container, typename Factory>
+auto operator| (Container&& container, ContainerView<Factory> view) ->
+    decltype(view.factory(std::forward<Container>(container)))
+{
+    return view.factory(std::forward<Container>(container));
+}
+
 template<typename Container>
-struct ReversedContainer
+struct ReverseView
 {
     using iterator = decltype(std::declval<Container>().rbegin());
-    ReversedContainer(Container& container) : m_container(container) {}
+    ReverseView(Container& container) : m_container(container) {}
 
     iterator begin() { return m_container.rbegin(); }
     iterator end()   { return m_container.rend(); }
@@ -21,166 +31,186 @@ private:
     Container& m_container;
 };
 
-template<typename Container>
-ReversedContainer<Container> reversed(Container&& container)
+struct ReverseFactory
 {
-    return ReversedContainer<Container>(container);
-}
-
-template<typename Iterator, typename Filter>
-struct FilteredIterator : std::iterator<std::forward_iterator_tag,
-                                        typename Iterator::value_type>
-{
-    FilteredIterator(Filter filter, Iterator it, Iterator end)
-        : m_it{std::move(it)}, m_end{std::move(end)}, m_filter{std::move(filter)}
+    template<typename Container>
+    ReverseView<Container> operator()(Container&& container) const
     {
-        do_filter();
+        return {container};
     }
-
-    auto operator*() -> decltype(*std::declval<Iterator>()) { return *m_it; }
-    FilteredIterator& operator++() { ++m_it; do_filter(); return *this; }
-    FilteredIterator operator++(int) { auto copy = *this; ++(*this); return copy; }
-
-    friend bool operator==(const FilteredIterator& lhs, const FilteredIterator& rhs)
-    {
-        return lhs.m_it == rhs.m_it;
-    }
-
-    friend bool operator!=(const FilteredIterator& lhs, const FilteredIterator& rhs)
-    {
-        return not (lhs == rhs);
-    }
-
-    Iterator base() const { return m_it; }
-
-private:
-    void do_filter()
-    {
-        while (m_it != m_end and not m_filter(*m_it))
-            ++m_it;
-    }
-
-    Iterator m_it;
-    Iterator m_end;
-    Filter   m_filter;
 };
 
+inline ContainerView<ReverseFactory> reverse() { return {}; }
+
 template<typename Container, typename Filter>
-struct FilteredContainer
+struct FilterView
 {
-    using iterator = FilteredIterator<decltype(begin(std::declval<Container>())), Filter>;
-    FilteredContainer(Container& container, Filter filter)
+    using ContainerIt = decltype(begin(std::declval<Container>()));
+
+    struct Iterator : std::iterator<std::forward_iterator_tag,
+                                    typename ContainerIt::value_type>
+    {
+        Iterator(const FilterView& view, ContainerIt it, ContainerIt end)
+            : m_it{std::move(it)}, m_end{std::move(end)}, m_view{view}
+        {
+            do_filter();
+        }
+
+        auto operator*() -> decltype(*std::declval<ContainerIt>()) { return *m_it; }
+        Iterator& operator++() { ++m_it; do_filter(); return *this; }
+        Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+        {
+            return lhs.m_it == rhs.m_it;
+        }
+
+        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
+        {
+            return not (lhs == rhs);
+        }
+
+        const ContainerIt& base() const { return m_it; }
+
+    private:
+        void do_filter()
+        {
+            while (m_it != m_end and not m_view.m_filter(*m_it))
+                ++m_it;
+        }
+
+        ContainerIt m_it;
+        ContainerIt m_end;
+        const FilterView& m_view;
+    };
+
+    FilterView(Container& container, Filter filter)
         : m_container{container}, m_filter{std::move(filter)} {}
 
-    iterator begin() const { return {m_filter, m_container.begin(), m_container.end()}; }
-    iterator end()   const { return {m_filter, m_container.end(), m_container.end()}; }
+    Iterator begin() const { return {*this, m_container.begin(), m_container.end()}; }
+    Iterator end()   const { return {*this, m_container.end(), m_container.end()}; }
 
 private:
     Container& m_container;
     Filter m_filter;
 };
 
-template<typename Container, typename Filter>
-FilteredContainer<Container, Filter> filtered(Container&& container, Filter filter)
+template<typename Filter>
+struct FilterFactory
 {
-    return {container, std::move(filter)};
-}
+    template<typename Container>
+    FilterView<Container, Filter> operator()(Container&& container) const { return {container, std::move(m_filter)}; }
+
+    Filter m_filter;
+};
+
+template<typename Filter>
+inline ContainerView<FilterFactory<Filter>> filter(Filter f) { return {std::move(f)}; }
 
 template<typename I, typename T>
 using TransformedResult = decltype(std::declval<T>()(*std::declval<I>()));
 
-template<typename Iterator, typename Transform>
-struct TransformedIterator : std::iterator<std::forward_iterator_tag,
-                                           typename std::remove_reference<TransformedResult<Iterator, Transform>>::type>
-{
-    TransformedIterator(Transform transform, Iterator it)
-        : m_it{std::move(it)}, m_transform{std::move(transform)} {}
-
-    auto operator*() -> TransformedResult<Iterator, Transform> { return m_transform(*m_it); }
-    TransformedIterator& operator++() { ++m_it; return *this; }
-    TransformedIterator operator++(int) { auto copy = *this; ++m_it; return copy; }
-
-    friend bool operator==(const TransformedIterator& lhs, const TransformedIterator& rhs)
-    {
-        return lhs.m_it == rhs.m_it;
-    }
-
-    friend bool operator!=(const TransformedIterator& lhs, const TransformedIterator& rhs)
-    {
-        return not (lhs == rhs);
-    }
-
-    Iterator base() const { return m_it; }
-
-private:
-    Iterator m_it;
-    Transform m_transform;
-};
-
 template<typename Container, typename Transform>
-struct TransformedContainer
+struct TransformView
 {
-    using iterator = TransformedIterator<decltype(begin(std::declval<Container>())), Transform>;
-    TransformedContainer(Container& container, Transform transform)
+    using ContainerIt = decltype(begin(std::declval<Container>()));
+
+    struct Iterator : std::iterator<std::forward_iterator_tag,
+                                    typename std::remove_reference<TransformedResult<ContainerIt, Transform>>::type>
+    {
+        Iterator(const TransformView& view, ContainerIt it)
+            : m_it{std::move(it)}, m_view{view} {}
+
+        auto operator*() -> TransformedResult<ContainerIt, Transform> { return m_view.m_transform(*m_it); }
+        Iterator& operator++() { ++m_it; return *this; }
+        Iterator operator++(int) { auto copy = *this; ++m_it; return copy; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+        {
+            return lhs.m_it == rhs.m_it;
+        }
+
+        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
+        {
+            return not (lhs == rhs);
+        }
+
+        ContainerIt base() const { return m_it; }
+
+    private:
+        ContainerIt m_it;
+        const TransformView& m_view;
+    };
+
+    TransformView(Container& container, Transform transform)
         : m_container{container}, m_transform{std::move(transform)} {}
 
-    iterator begin() const { return {m_transform, m_container.begin()}; }
-    iterator end()   const { return {m_transform, m_container.end()}; }
+    Iterator begin() const { return {*this, m_container.begin()}; }
+    Iterator end()   const { return {*this, m_container.end()}; }
 
 private:
     Container& m_container;
     Transform m_transform;
 };
 
-template<typename Container, typename Transform>
-TransformedContainer<Container, Transform> transformed(Container&& container, Transform transform)
+template<typename Transform>
+struct TransformFactory
 {
-    return {container, std::move(transform)};
-}
+    template<typename Container>
+    TransformView<Container, Transform> operator()(Container&& container) const { return {container, std::move(m_transform)}; }
 
-template<typename Iterator1, typename Iterator2, typename ValueType = typename Iterator1::value_type>
-struct ConcatenatedIterator : std::iterator<std::forward_iterator_tag, ValueType>
-{
-    static_assert(std::is_convertible<typename Iterator1::value_type, ValueType>::value, "");
-    static_assert(std::is_convertible<typename Iterator2::value_type, ValueType>::value, "");
-
-    ConcatenatedIterator(Iterator1 it1, Iterator1 end1, Iterator2 it2)
-        : m_it1(std::move(it1)), m_end1(std::move(end1)), m_it2(std::move(it2)) {}
-
-    decltype(*std::declval<Iterator1>()) operator*() { return is2() ? *m_it2 : *m_it1; }
-    ConcatenatedIterator& operator++() { if (is2()) ++m_it2; else ++m_it1; return *this; }
-    ConcatenatedIterator operator++(int) { auto copy = *this; ++*this; return copy; }
-
-    friend bool operator==(const ConcatenatedIterator& lhs, const ConcatenatedIterator& rhs)
-    {
-        return lhs.m_it1 == rhs.m_it1 and lhs.m_end1 == rhs.m_end1 and lhs.m_it2 == rhs.m_it2;
-    }
-
-    friend bool operator!=(const ConcatenatedIterator& lhs, const ConcatenatedIterator& rhs)
-    {
-        return not (lhs == rhs);
-    }
-
-private:
-    bool is2() const { return m_it1 == m_end1; }
-
-    Iterator1 m_it1;
-    Iterator1 m_end1;
-    Iterator2 m_it2;
+    Transform m_transform;
 };
+
+template<typename Transform>
+inline ContainerView<TransformFactory<Transform>> transform(Transform t) { return {std::move(t)}; }
+
 
 
 template<typename Container1, typename Container2>
-struct ConcatenatedContainer
+struct ConcatView
 {
-    using iterator = ConcatenatedIterator<decltype(begin(std::declval<Container1>())),
-                                          decltype(begin(std::declval<Container2>()))>;
+    using ContainerIt1 = decltype(begin(std::declval<Container1>()));
+    using ContainerIt2 = decltype(begin(std::declval<Container2>()));
+    using ValueType = typename ContainerIt1::value_type;
 
-    ConcatenatedContainer(Container1& container1, Container2& container2)
+    struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
+    {
+        static_assert(std::is_convertible<typename ContainerIt1::value_type, ValueType>::value, "");
+        static_assert(std::is_convertible<typename ContainerIt2::value_type, ValueType>::value, "");
+
+        Iterator(ContainerIt1 it1, ContainerIt1 end1, ContainerIt2 it2)
+            : m_it1(std::move(it1)), m_end1(std::move(end1)),
+              m_it2(std::move(it2)) {}
+
+        decltype(*std::declval<ContainerIt1>()) operator*() { return is2() ? *m_it2 : *m_it1; }
+        Iterator& operator++() { if (is2()) ++m_it2; else ++m_it1; return *this; }
+        Iterator operator++(int) { auto copy = *this; ++*this; return copy; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+        {
+            return lhs.m_it1 == rhs.m_it1 and lhs.m_end1 == rhs.m_end1 and
+                   lhs.m_it2 == rhs.m_it2;
+        }
+
+        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
+        {
+            return not (lhs == rhs);
+        }
+
+    private:
+        bool is2() const { return m_it1 == m_end1; }
+
+        ContainerIt1 m_it1;
+        ContainerIt1 m_end1;
+        ContainerIt2 m_it2;
+    };
+
+    ConcatView(Container1& container1, Container2& container2)
         : m_container1{container1}, m_container2{container2} {}
 
-    iterator begin() const { return {m_container1.begin(), m_container1.end(), m_container2.begin()}; }
-    iterator end()   const { return {m_container1.end(), m_container1.end(), m_container2.end()}; }
+    Iterator begin() const { return {m_container1.begin(), m_container1.end(), m_container2.begin()}; }
+    Iterator end()   const { return {m_container1.end(), m_container1.end(), m_container2.end()}; }
 
 private:
     Container1& m_container1;
@@ -188,7 +218,7 @@ private:
 };
 
 template<typename Container1, typename Container2>
-ConcatenatedContainer<Container1, Container2> concatenated(Container1&& container1, Container2&& container2)
+ConcatView<Container1, Container2> concatenated(Container1&& container1, Container2&& container2)
 {
     return {container1, container2};
 }

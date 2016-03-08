@@ -95,9 +95,8 @@ CandidateList FaceRegistry::complete_alias_name(StringView prefix,
                                                 ByteCount cursor_pos) const
 {
     return complete(prefix, cursor_pos,
-                    transformed(m_aliases,
-                                [](const AliasMap::value_type& v) -> const String&
-                                { return v.first; }));
+                    m_aliases | transform([](const AliasMap::value_type& v) -> const String&
+                                          { return v.first; }));
 }
 
 FaceRegistry::FaceRegistry()

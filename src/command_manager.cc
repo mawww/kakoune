@@ -515,12 +515,15 @@ CommandInfo CommandManager::command_info(const Context& context, StringView comm
 Completions CommandManager::complete_command_name(const Context& context,
                                                   StringView query) const
 {
-    return{0, query.length(), Kakoune::complete(query, query.length(), concatenated(
-        transformed(filtered(m_commands, [](const CommandMap::value_type& cmd)
-                             { return not (cmd.second.flags & CommandFlags::Hidden); }),
-                    [](const CommandMap::value_type& cmd) { return StringView{cmd.first}; }),
-        transformed(context.aliases().flatten_aliases(),
-                    [](AliasRegistry::AliasDesc alias) { return alias.first; })))};
+    auto candidates = Kakoune::complete(
+        query, query.length(), concatenated(
+            m_commands
+            | filter([](const CommandMap::value_type& cmd) { return not (cmd.second.flags & CommandFlags::Hidden); })
+            | transform([](const CommandMap::value_type& cmd) { return StringView{cmd.first}; }),
+            context.aliases().flatten_aliases()
+            | transform([](AliasRegistry::AliasDesc alias) { return alias.first; })));
+
+    return {0, query.length(), std::move(candidates)};
 }
 
 Completions CommandManager::complete(const Context& context,

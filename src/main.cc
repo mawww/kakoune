@@ -61,9 +61,9 @@ void register_env_vars()
         }, {
             "buflist", false,
             [](StringView name, const Context& context)
-            { return join(transformed(BufferManager::instance(),
-                                      [](const SafePtr<Buffer>& b)
-                                      { return b->display_name(); }), ':'); }
+            { return join(BufferManager::instance() |
+                          transform([](const SafePtr<Buffer>& b)
+                                    { return b->display_name(); }), ':'); }
         }, {
             "timestamp", false,
             [](StringView name, const Context& context) -> String
@@ -520,7 +520,7 @@ int run_server(StringView session, StringView init_command,
     {
         // create buffers in reverse order so that the first given buffer
         // is the most recently created one.
-        for (auto& file : reversed(files))
+        for (auto& file : files | reverse())
         {
             try
             {
