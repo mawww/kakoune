@@ -75,9 +75,11 @@ main() {
                 echo "$line" | colorize $color normal
               done
               echo
-              echo "debug buffer:" | colorize yellow normal
-              cat debug
-              echo
+              if test -e debug; then
+                echo "debug buffer:" | colorize yellow normal
+                cat debug
+                echo
+              fi
             fi
           done
         fi
