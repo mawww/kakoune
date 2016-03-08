@@ -105,7 +105,7 @@ struct FilterFactory
 };
 
 template<typename Filter>
-inline ContainerView<FilterFactory<Filter>> filter(Filter f) { return {std::move(f)}; }
+inline ContainerView<FilterFactory<Filter>> filter(Filter f) { return {{std::move(f)}}; }
 
 template<typename I, typename T>
 using TransformedResult = decltype(std::declval<T>()(*std::declval<I>()));
@@ -163,7 +163,7 @@ struct TransformFactory
 };
 
 template<typename Transform>
-inline ContainerView<TransformFactory<Transform>> transform(Transform t) { return {std::move(t)}; }
+inline ContainerView<TransformFactory<Transform>> transform(Transform t) { return {{std::move(t)}}; }
 
 
 
