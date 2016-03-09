@@ -104,7 +104,8 @@ inline ByteCoord Buffer::back_coord() const
 
 inline ByteCoord Buffer::end_coord() const
 {
-    return { line_count() - 1, m_lines.back().length() };
+    return m_lines.empty() ?
+        ByteCoord{0,0} : ByteCoord{ line_count() - 1, m_lines.back().length() };
 }
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, ByteCoord coord)
