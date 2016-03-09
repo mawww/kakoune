@@ -672,6 +672,10 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
     m_menu.create({line, anchor.column}, {height, width});
     draw_menu();
+
+    if (m_info)
+        info_show(m_info.title, m_info.content,
+                  m_info.anchor, m_info.face, m_info.style);
 }
 
 void NCursesUI::menu_select(int selected)
