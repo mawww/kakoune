@@ -763,7 +763,11 @@ public:
             CandidateList& candidates = m_completions.candidates;
             // first try, we need to ask our completer for completions
             if (candidates.empty())
+            {
                 refresh_completions(CompletionFlags::None);
+                if (candidates.size() > 1)
+                    return;
+            }
 
             if (candidates.empty())
                 return;
