@@ -36,7 +36,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
 
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_input_callback([this](EventMode mode) { handle_available_input(mode); });
-    m_ui_dirty = true;
+    force_redraw();
 }
 
 Client::~Client()
@@ -101,7 +101,8 @@ void Client::handle_available_input(EventMode mode)
 
 void Client::print_status(DisplayLine status_line)
 {
-    m_pending_status_line = std::move(status_line);
+    m_status_line = std::move(status_line);
+    m_ui_pending |= StatusLine;
 }
 
 DisplayLine Client::generate_mode_line() const
@@ -159,7 +160,7 @@ void Client::change_buffer(Buffer& buffer)
     context().selections_write_only() = std::move(ws.selections);
     context().set_window(*m_window);
     m_window->set_dimensions(m_ui->dimensions());
-    m_ui_dirty = true;
+    force_redraw();
 
     m_window->hooks().run_hook("WinDisplay", buffer.name(), context());
 }
@@ -174,9 +175,20 @@ static bool is_inline(InfoStyle style)
 void Client::redraw_ifn()
 {
     Window& window = context().window();
+    if (window.needs_redraw(context()))
+        m_ui_pending |= Draw;
 
-    const bool needs_redraw = window.needs_redraw(context());
-    if (needs_redraw)
+    DisplayLine mode_line = generate_mode_line();
+    if (mode_line.atoms() != m_mode_line.atoms())
+    {
+        m_ui_pending |= StatusLine;
+        m_mode_line = std::move(mode_line);
+    }
+
+    if (m_ui_pending == 0)
+        return;
+
+    if (m_ui_pending & Draw)
     {
         auto window_pos = window.position();
         m_ui->draw(window.update_display_buffer(context()), get_face("Default"));
@@ -185,42 +197,47 @@ void Client::redraw_ifn()
         if (window_pos != window.position())
         {
             if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline)
-            {
-                m_ui->menu_show(m_menu.items, window.display_position(m_menu.anchor),
-                                get_face("MenuForeground"), get_face("MenuBackground"), m_menu.style);
-                m_ui->menu_select(m_menu.selected);
-            }
+                m_ui_pending |= (MenuShow | MenuSelect);
             if (not m_info.content.empty() and is_inline(m_info.style))
-                m_ui->info_show(m_info.title, m_info.content,
-                                window.display_position(m_info.anchor),
-                                get_face("Information"), m_info.style);
+                m_ui_pending |= InfoShow;
         }
-        m_ui_dirty = true;
     }
 
-    DisplayLine mode_line = generate_mode_line();
-    if (needs_redraw or
-        m_status_line.atoms() != m_pending_status_line.atoms() or
-        mode_line.atoms() != m_mode_line.atoms())
+    if (m_ui_pending & MenuShow)
     {
-        m_mode_line = std::move(mode_line);
-        m_status_line = m_pending_status_line;
+        const CharCoord ui_anchor = m_menu.style == MenuStyle::Inline ?
+            window.display_position(m_menu.anchor) : CharCoord{};
+        m_ui->menu_show(m_menu.items, ui_anchor,
+                        get_face("MenuForeground"), get_face("MenuBackground"),
+                        m_menu.style);
+    }
+    if (m_ui_pending & MenuSelect)
+        m_ui->menu_select(m_menu.selected);
+    if (m_ui_pending & MenuHide)
+        m_ui->menu_hide();
 
+    if (m_ui_pending & InfoShow)
+    {
+        const CharCoord ui_anchor = is_inline(m_info.style) ?
+            window.display_position(m_info.anchor) : CharCoord{};
+        m_ui->info_show(m_info.title, m_info.content, ui_anchor,
+                        get_face("Information"), m_info.style);
+    }
+    if (m_ui_pending & InfoHide)
+        m_ui->info_hide();
+
+    if (m_ui_pending & StatusLine)
         m_ui->draw_status(m_status_line, m_mode_line, get_face("StatusLine"));
-        m_ui_dirty = true;
-    }
 
-    if (m_ui_dirty)
-    {
-        m_ui_dirty = false;
-        m_ui->refresh();
-    }
+    m_ui->refresh(m_ui_pending | Refresh);
+    m_ui_pending = 0;
 }
 
 void Client::force_redraw()
 {
-    if (m_window)
-        m_window->force_redraw();
+    m_ui_pending |= Refresh | Draw | StatusLine |
+        (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect) |
+        (m_info.content.empty() ? InfoHide : InfoShow);
 }
 
 void Client::reload_buffer()
@@ -310,45 +327,43 @@ void Client::on_option_changed(const Option& option)
     if (option.name() == "ui_options")
     {
         m_ui->set_ui_options(option.get<UserInterface::Options>());
-        m_ui_dirty = true;
+        m_ui_pending |= Draw;
     }
 }
 
 void Client::menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style)
 {
     m_menu = Menu{ std::move(choices), anchor, style, -1 };
-    CharCoord ui_anchor = style == MenuStyle::Inline ? context().window().display_position(anchor) : CharCoord{};
-    m_ui->menu_show(m_menu.items, ui_anchor, get_face("MenuForeground"), get_face("MenuBackground"), style);
-    m_ui_dirty = true;
+    m_ui_pending |= MenuShow;
+    m_ui_pending &= ~MenuHide;
 }
 
 void Client::menu_select(int selected)
 {
     m_menu.selected = selected;
-    m_ui->menu_select(selected);
-    m_ui_dirty = true;
+    m_ui_pending |= MenuSelect;
+    m_ui_pending &= ~MenuHide;
 }
 
 void Client::menu_hide()
 {
     m_menu = Menu{};
-    m_ui->menu_hide();
-    m_ui_dirty = true;
+    m_ui_pending |= MenuHide;
+    m_ui_pending &= ~(MenuShow | MenuSelect);
 }
 
 void Client::info_show(String title, String content, ByteCoord anchor, InfoStyle style)
 {
     m_info = Info{ std::move(title), std::move(content), anchor, style };
-    CharCoord ui_anchor = is_inline(style) ? context().window().display_position(anchor) : CharCoord{};
-    m_ui->info_show(m_info.title, m_info.content, ui_anchor, get_face("Information"), style);
-    m_ui_dirty = true;
+    m_ui_pending |= InfoShow;
+    m_ui_pending &= ~InfoHide;
 }
 
 void Client::info_hide()
 {
     m_info = Info{};
-    m_ui->info_hide();
-    m_ui_dirty = true;
+    m_ui_pending |= InfoHide;
+    m_ui_pending &= ~InfoShow;
 }
 
 }

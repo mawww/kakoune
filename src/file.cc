@@ -63,7 +63,7 @@ String parse_filename(StringView filename)
 
 std::pair<StringView, StringView> split_path(StringView path)
 {
-    auto it = find(reversed(path), '/');
+    auto it = find(path | reverse(), '/');
     if (it == path.rend())
         return { {}, path };
     const char* slash = it.base()-1;

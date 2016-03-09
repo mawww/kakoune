@@ -555,8 +555,8 @@ String selection_to_string(const Selection& selection)
 
 String selection_list_to_string(const SelectionList& selections)
 {
-    return join(transformed(selections, [](const Selection& s)
-                            { return selection_to_string(s); }),
+    return join(selections | transform([](const Selection& s)
+                                       { return selection_to_string(s); }),
                 ':', false);
 }
 

@@ -52,10 +52,9 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
 
     auto candidates = complete(
         path, cursor_pos,
-        transformed(filtered(m_highlighters,
-                             [=](const HighlighterMap::Element& hl)
-                             { return not group or hl.value->has_children(); }),
-                    HighlighterMap::get_id));
+        m_highlighters | filter([=](const HighlighterMap::Element& hl)
+                                { return not group or hl.value->has_children(); })
+                       | transform(HighlighterMap::get_id));
 
     return { 0, 0, std::move(candidates) };
 }

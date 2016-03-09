@@ -304,7 +304,7 @@ bool Buffer::undo()
 
     --m_history_cursor;
 
-    for (const Modification& modification : reversed(*m_history_cursor))
+    for (const Modification& modification : *m_history_cursor | reverse())
         apply_modification(modification.inverse());
     return true;
 }

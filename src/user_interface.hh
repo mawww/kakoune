@@ -63,7 +63,7 @@ public:
     virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;
 
-    virtual void refresh() = 0;
+    virtual void refresh(bool force) = 0;
 
     virtual void set_input_callback(InputCallback callback) = 0;
 

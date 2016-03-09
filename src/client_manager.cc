@@ -87,7 +87,7 @@ void ClientManager::remove_client(Client& client, bool graceful)
 
 WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
 {
-    auto it = find_if(reversed(m_free_windows),
+    auto it = find_if(m_free_windows | reverse(),
                       [&](const WindowAndSelections& ws)
                       { return &ws.window->buffer() == &buffer; });
 
@@ -177,10 +177,8 @@ void ClientManager::redraw_clients() const
 CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {
-    auto c = transformed(m_clients,
-                         [](const std::unique_ptr<Client>& c) -> const String&
-                         { return c->context().name(); });
-
+    auto c = m_clients | transform([](const std::unique_ptr<Client>& c) -> const String&
+                                   { return c->context().name(); });
     return complete(prefix, cursor_pos, c);
 }
 

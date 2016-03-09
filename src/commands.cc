@@ -543,7 +543,7 @@ Completions add_highlighter_completer(
     if (token_to_complete == 1 and params[0] == "-group")
         return complete_highlighter(context, params[1], pos_in_token, true);
     else if (token_to_complete == 0 or (token_to_complete == 2 and params[0] == "-group"))
-        return { 0_byte, arg.length(), complete(arg, pos_in_token, transformed(HighlighterRegistry::instance(), HighlighterRegistry::get_id)) };
+        return { 0_byte, arg.length(), complete(arg, pos_in_token, HighlighterRegistry::instance() | transform(HighlighterRegistry::get_id)) };
     return Completions{};
 }
 
@@ -626,7 +626,7 @@ const CommandDesc rm_highlighter_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         StringView path = parser[0];
-        auto sep_it = find(reversed(path), '/');
+        auto sep_it = find(path | reverse(), '/');
         auto& group = sep_it != path.rend() ?
             get_highlighter(context, {path.begin(), sep_it.base()})
           : context.window().highlighters();

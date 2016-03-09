@@ -255,7 +255,7 @@ public:
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
-    void refresh() override;
+    void refresh(bool force) override;
 
     bool is_key_available() override;
     Key  get_key() override;
@@ -353,10 +353,11 @@ void RemoteUI::draw_status(const DisplayLine& status_line,
     msg.write(default_face);
 }
 
-void RemoteUI::refresh()
+void RemoteUI::refresh(bool force)
 {
     Message msg(m_socket_watcher.fd());
     msg.write(RemoteUIMsg::Refresh);
+    msg.write(force);
 }
 
 void RemoteUI::set_ui_options(const Options& options)
@@ -516,7 +517,7 @@ void RemoteClient::process_next_message()
         break;
     }
     case RemoteUIMsg::Refresh:
-        m_ui->refresh();
+        m_ui->refresh(read<bool>(socket));
         break;
     case RemoteUIMsg::SetOptions:
         m_ui->set_ui_options(read_idmap<String, MemoryDomain::Options>(socket));

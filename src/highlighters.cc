@@ -1303,7 +1303,7 @@ public:
             return offset_pos(hl.complete_child(path.substr(offset), cursor_pos - offset, group), offset);
         }
 
-        auto container = transformed(m_groups, decltype(m_groups)::get_id);
+        auto container = m_groups | transform(decltype(m_groups)::get_id);
         return { 0, 0, complete(path, cursor_pos, container) };
     }
 

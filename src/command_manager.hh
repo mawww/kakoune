@@ -130,6 +130,8 @@ private:
                                 const ShellContext& shell_context,
                                 CharCoord pos) const;
 
+    Completions complete_command_name(const Context& context, StringView query) const;
+
     struct CommandDescriptor
     {
         Command command;

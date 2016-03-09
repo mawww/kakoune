@@ -301,9 +301,12 @@ void NCursesUI::redraw()
     doupdate();
 }
 
-void NCursesUI::refresh()
+void NCursesUI::refresh(bool force)
 {
-    if (m_dirty)
+    if (force)
+        redrawwin(m_window);
+
+    if (m_dirty or force)
         redraw();
     m_dirty = false;
 }
@@ -491,11 +494,6 @@ Key NCursesUI::get_key()
 
     if (c > 0 and c < 27)
     {
-        if (c == control('l'))
-        {
-           redrawwin(m_window);
-           redraw();
-        }
         if (c == control('z'))
         {
             raise(SIGTSTP);
@@ -674,6 +672,10 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     auto width = is_prompt ? maxsize.column : min(longest+1, maxsize.column);
     m_menu.create({line, anchor.column}, {height, width});
     draw_menu();
+
+    if (m_info)
+        info_show(m_info.title, m_info.content,
+                  m_info.anchor, m_info.face, m_info.style);
 }
 
 void NCursesUI::menu_select(int selected)

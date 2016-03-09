@@ -128,7 +128,7 @@ find_surrounding(Iterator begin, Iterator end,
     {
         using RevIt = std::reverse_iterator<Iterator>;
         auto res = find_closing(RevIt{pos+1}, RevIt{begin},
-                                reversed(closing), reversed(opening),
+                                closing | reverse(), opening | reverse(),
                                 init_level, nestable);
         if (not res)
             return {};
