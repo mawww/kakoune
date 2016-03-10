@@ -61,14 +61,6 @@ addhl -group /ruby/code regex \<(alias|and|begin|break|case|class|def|defined|do
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _ruby_filter_around_selections %{
-    eval -draft -itersel %{
-        exec <a-x>
-        # remove trailing white spaces
-        try %{ exec -draft s \h + $ <ret> d }
-    }
-}
-
 def -hidden _ruby_indent_on_char %{
     eval -draft -itersel %{
         # align middle and end structures to start
@@ -83,8 +75,6 @@ def -hidden _ruby_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft K <a-&> }
-        # filter previous line
-        try %{ exec -draft k : _ruby_filter_around_selections <ret> }
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
         # indent after start structure
@@ -103,7 +93,6 @@ def -hidden _ruby_indent_on_new_line %{
 hook global WinSetOption filetype=ruby %{
     addhl ref ruby
 
-    hook window InsertEnd  .* -group ruby-hooks  _ruby_filter_around_selections
     hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
 
