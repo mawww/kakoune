@@ -34,6 +34,15 @@ addhl -group /python/comment       fill comment
     keywords="and:as:assert:break:class:continue:def:del:elif:else:except:exec:finally:for:global:if:in:is:lambda:not:or:pass:print:raise:return:try:while:with:yield"
     types="bool:buffer:bytearray:complex:dict:file:float:frozenset:int:list:long:memoryview:object:set:str:tuple:unicode:xrange"
 
+    # Add the language's grammar to the static completion list
+    echo "hook global WinSetOption filetype=python %{
+        set -add window static_words '${values}'
+        set -add window static_words '${meta}'
+        set -add window static_words '${keywords}'
+        set -add window static_words '${types}'
+    }"
+
+    # Highlight keywords
     echo "
         addhl -group /python/code regex '\<(${values//:/|})\>' 0:value
         addhl -group /python/code regex '\<(${meta//:/|})\>' 0:meta
@@ -42,11 +51,6 @@ addhl -group /python/comment       fill comment
 
     # Highlight types, when they are not used as constructors
     echo "addhl -group /python/code regex '\<(${types//:/|})\>[^(]' 1:type"
-
-    # Pass the language's tokens to the static completion script
-    echo "hook global KakBegin .* %{ try %{
-        static-complete-initialize python values=${values} meta=${meta} keywords=${keywords} types=${types}
-    } }"
 }
 
 # Commands
