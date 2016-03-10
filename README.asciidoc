@@ -119,6 +119,15 @@ its source directory, type *make install*, you can specify the `PREFIX` and
 [TIP]
 .Homebrew (OSX)
 ====
+NOTE: The ncurses library that comes with OSX is not new enough to support some of the mouse based features of Kakoune
+(only tested on OSX 10.11.3, where the packaged ncurses library is version 5.4, whereas the latest version is 6.0).
+Currently, a fresh Kakoune install requires that you install ncurses 6.0. You can install ncurses 6.0 via Homebrew,
+-----------------------------------------------------------------------------------------------
+brew tap homebrew/dupes
+brew install homebrew/dupes/ncurses
+-----------------------------------------------------------------------------------------------
+
+Then, to install,
 -----------------------------------------------------------------------------------------------
 brew install --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/contrib/kakoune.rb
 -----------------------------------------------------------------------------------------------
