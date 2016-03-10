@@ -75,10 +75,15 @@ def -hidden _ruby_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft K <a-&> }
-        # copy _#_ comment prefix and following white spaces
-        try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
         # indent after start structure
         try %{ exec -draft k x <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
+    }
+}
+
+def -hidden _ruby_insert_on_new_line %{
+    eval -draft -itersel %{
+        # copy _#_ comment prefix and following white spaces
+        try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
         # wisely add end structure
         eval -save-regs x %{
             try %{ exec -draft k x s ^ \h + <ret> \" x y } catch %{ reg x '' }
@@ -95,6 +100,7 @@ hook global WinSetOption filetype=ruby %{
 
     hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
+    hook window InsertChar \n -group ruby-insert _ruby_insert_on_new_line
 
     set window comment_line_chars '#'
     set window comment_selection_chars '^begin=:^=end'
