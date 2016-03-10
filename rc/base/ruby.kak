@@ -109,6 +109,11 @@ hook global WinSetOption filetype=ruby %{
 
     set window comment_line_chars '#'
     set window comment_selection_chars '^begin=:^=end'
+
+    # Rubocop requires a filepath that will be used when generating the errors summary,
+    # even though it's reading anonymous data on stdin
+    # It also leaves an ugly separator on the first line on the output
+    set window formatcmd 'rubocop --auto-correct --stdin - -o /dev/null | sed 1d'
 }
 
 hook global WinSetOption filetype=(?!ruby).* %{
