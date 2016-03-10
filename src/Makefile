@@ -37,6 +37,8 @@ os := $(shell uname)
 
 ifeq ($(os),Darwin)
     LIBS += -lncurses -lboost_regex-mt
+    CPPFLAGS += -I/usr/local/opt/ncurses/include
+    LDFLAGS += -L/usr/local/opt/ncurses/lib
 else ifeq ($(os),FreeBSD)
     LIBS += -ltinfow -lncursesw -lboost_regex
     CPPFLAGS += -I/usr/local/include
