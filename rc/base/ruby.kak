@@ -61,6 +61,14 @@ addhl -group /ruby/code regex \<(alias|and|begin|break|case|class|def|defined|do
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+def -hidden _ruby_filter_around_selections %{
+    eval -draft -itersel %{
+        exec <a-x>
+        # remove trailing white spaces
+        try %{ exec -draft s \h + $ <ret> d }
+    }
+}
+
 def -hidden _ruby_indent_on_char %{
     eval -draft -itersel %{
         # align middle and end structures to start
@@ -75,6 +83,8 @@ def -hidden _ruby_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft K <a-&> }
+        # filter previous line
+        try %{ exec -draft k : _ruby_filter_around_selections <ret> }
         # indent after start structure
         try %{ exec -draft k x <a-k> ^ \h * (begin|case|class|def|do|else|elsif|ensure|for|if|module|rescue|unless|until|when|while) \b <ret> j <a-gt> }
     }
