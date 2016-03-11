@@ -1302,9 +1302,8 @@ void InputHandler::prompt(StringView prompt, String initstr,
                           Face prompt_face, Completer completer,
                           PromptCallback callback)
 {
-    push_mode(new InputModes::Prompt(*this, prompt, initstr,
-                                             prompt_face, completer,
-                                             callback));
+    push_mode(new InputModes::Prompt(*this, prompt, initstr, prompt_face,
+                                     completer, callback));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
