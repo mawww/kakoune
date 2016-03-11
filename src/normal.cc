@@ -953,23 +953,24 @@ void select_object(Context& context, NormalParams params)
 
         if (*cp == ':')
         {
+            const bool info = show_auto_info_ifn(
+                "Enter object desc", "format: <open text>,<close text>",
+                AutoInfo::Command, context);
+
             context.input_handler().prompt(
-                "opening:", "", get_face("Prompt"), complete_nothing,
-                [level](StringView cmdline, PromptEvent event, Context& context) {
+                "object desc:", "", get_face("Prompt"), complete_nothing,
+                [level,info](StringView cmdline, PromptEvent event, Context& context) {
+                    if (event != PromptEvent::Change)
+                        hide_auto_info_ifn(context, info);
                     if (event != PromptEvent::Validate)
                         return;
 
-                    String opening = cmdline.str();
-                    context.input_handler().prompt(
-                        "closing:", "", get_face("Prompt"), complete_nothing,
-                        [level, opening](StringView cmdline, PromptEvent event, Context& context) {
-                            if (event != PromptEvent::Validate)
-                                return;
+                    Vector<String> params = split(cmdline, ',', '\\');
+                    if (params.size() != 2)
+                        throw runtime_error{"desc parsing failed, expected <open>,<close>"};
 
-                            String closing = cmdline.str();
-                            return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                                   opening, closing, level, flags));
-                        });
+                    return select<mode>(context, std::bind(select_surrounding, _1, _2,
+                                                           params[0], params[1], level, flags));
                 });
         }
 
@@ -1012,7 +1013,7 @@ void select_object(Context& context, NormalParams params)
     "i:    indent             \n"
     "u:    argument           \n"
     "n:    number             \n"
-    "::    prompt for object  \n");
+    "::    custom object desc \n");
 }
 
 template<Direction direction, bool half = false>
