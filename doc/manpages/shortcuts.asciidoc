@@ -225,7 +225,7 @@ Changes
 *>*::
 	indent selected lines
 
-*<a->>*::
+*<a\->>*::
 	indent selected lines, including empty lines
 
 *<*::
@@ -284,7 +284,9 @@ Changes
 	rotate selections content, if specified, the count groups selections,
 	so the following command
 
-		3<a-'>
+----------
+    3<a-'>
+----------
 
 	rotate (1, 2, 3) and (3, 4, 6) independently
 
