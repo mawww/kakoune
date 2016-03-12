@@ -17,9 +17,9 @@ struct Value
     Value() = default;
 
     template<typename T,
-             typename = typename std::enable_if<not std::is_same<Value, T>::value>::type>
+             typename = std::enable_if_t<not std::is_same<Value, T>::value>>
     Value(T&& val)
-        : m_value{new Model<typename std::remove_reference<T>::type>{std::forward<T>(val)}} {}
+        : m_value{new Model<std::remove_reference_t<T>>{std::forward<T>(val)}} {}
 
     Value(const Value& val) = delete;
     Value(Value&&) = default;

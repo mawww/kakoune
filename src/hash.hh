@@ -19,10 +19,10 @@ size_t hash_value(const Type&... val)
 }
 
 template<typename Type>
-typename std::enable_if<std::is_enum<Type>::value, size_t>::type
+std::enable_if_t<std::is_enum<Type>::value, size_t>
 hash_value(const Type& val)
 {
-    return hash_value((typename std::underlying_type<Type>::type)val);
+    return hash_value((std::underlying_type_t<Type>)val);
 }
 
 template<typename Type>

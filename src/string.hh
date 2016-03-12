@@ -93,10 +93,12 @@ private:
     const Type& type() const { return *static_cast<const Type*>(this); }
 };
 
-[[gnu::optimize(3)]] // this is recursive for constexpr reason
 constexpr ByteCount strlen(const char* s)
 {
-    return *s == 0 ? 0 : strlen(s+1) + 1;
+    int i = 0;
+    while (*s++ != 0)
+        ++i;
+    return {i};
 }
 
 class String : public StringOps<String, char>
@@ -406,12 +408,12 @@ to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 namespace detail
 {
 
-template<typename T> using IsString = std::is_convertible<T, StringView>;
+template<typename T> constexpr bool is_string = std::is_convertible<T, StringView>::value;
 
-template<typename T, class = typename std::enable_if<not IsString<T>::value>::type>
+template<typename T, class = std::enable_if_t<not is_string<T>>>
 auto format_param(const T& val) -> decltype(to_string(val)) { return to_string(val); }
 
-template<typename T, class = typename std::enable_if<IsString<T>::value>::type>
+template<typename T, class = std::enable_if_t<is_string<T>>>
 StringView format_param(const T& val) { return val; }
 
 }

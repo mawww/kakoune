@@ -75,13 +75,13 @@ std::unique_ptr<Register> make_dyn_reg(Func func)
     {
         throw runtime_error("this register is not assignable");
     };
-    return make_unique<DynamicRegister<Func, decltype(setter)>>(std::move(func), setter);
+    return std::make_unique<DynamicRegister<Func, decltype(setter)>>(std::move(func), setter);
 }
 
 template<typename Getter, typename Setter>
 std::unique_ptr<Register> make_dyn_reg(Getter getter, Setter setter)
 {
-    return make_unique<DynamicRegister<Getter, Setter>>(std::move(getter), std::move(setter));
+    return std::make_unique<DynamicRegister<Getter, Setter>>(std::move(getter), std::move(setter));
 }
 
 class NullRegister : public Register

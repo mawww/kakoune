@@ -12,13 +12,13 @@ template<typename Flags>
 constexpr bool with_bit_ops(Meta::Type<Flags>) { return false; }
 
 template<typename Flags>
-using UnderlyingType = typename std::underlying_type<Flags>::type;
+using UnderlyingType = std::underlying_type_t<Flags>;
 
 template<typename Flags, typename T = void>
-using EnableIfWithBitOps = typename std::enable_if<with_bit_ops(Meta::Type<Flags>{}), T>::type;
+using EnableIfWithBitOps = std::enable_if_t<with_bit_ops(Meta::Type<Flags>{}), T>;
 
 template<typename Flags, typename T = void>
-using EnableIfWithoutBitOps = typename std::enable_if<not with_bit_ops(Meta::Type<Flags>{}), T>::type;
+using EnableIfWithoutBitOps = std::enable_if_t<not with_bit_ops(Meta::Type<Flags>{}), T>;
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
 constexpr Flags operator|(Flags lhs, Flags rhs)

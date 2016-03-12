@@ -129,7 +129,7 @@ struct TransformView
     using ContainerIt = IteratorOf<Container>;
 
     struct Iterator : std::iterator<std::forward_iterator_tag,
-                                    typename std::remove_reference<TransformedResult<ContainerIt, Transform>>::type>
+                                    std::remove_reference_t<TransformedResult<ContainerIt, Transform>>>
     {
         Iterator(const TransformView& view, ContainerIt it)
             : m_it{std::move(it)}, m_view{view} {}

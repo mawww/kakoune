@@ -110,7 +110,7 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
                       { return &ws.window->buffer() == &buffer; });
 
     if (it == m_free_windows.rend())
-        return { make_unique<Window>(buffer), { buffer, Selection{} } };
+        return { std::make_unique<Window>(buffer), { buffer, Selection{} } };
 
     it->window->force_redraw();
     WindowAndSelections res = std::move(*it);

@@ -223,7 +223,7 @@ public:
                                         : format("[{}] - {}", option_type_name(Meta::Type<T>{}), docstring);
         m_descs.emplace_back(new OptionDesc{name.str(), std::move(doc), flags});
         return *opts.insert({m_descs.back()->name(),
-                             make_unique<TypedCheckedOption<T, validator>>(m_global_manager, *m_descs.back(), value)});
+                             std::make_unique<TypedCheckedOption<T, validator>>(m_global_manager, *m_descs.back(), value)});
     }
 
     const OptionDesc* option_desc(StringView name) const

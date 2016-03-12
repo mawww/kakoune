@@ -182,7 +182,7 @@ void register_registers()
     RegisterManager& register_manager = RegisterManager::instance();
 
     for (auto c : "abcdefghijklmnopqrstuvwxyz/\"|^@:")
-        register_manager.add_register(c, make_unique<StaticRegister>());
+        register_manager.add_register(c, std::make_unique<StaticRegister>());
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 
@@ -228,7 +228,7 @@ void register_registers()
             }));
     }
 
-    register_manager.add_register('_', make_unique<NullRegister>());
+    register_manager.add_register('_', std::make_unique<NullRegister>());
 }
 
 static void check_tabstop(const int& val)
@@ -376,9 +376,9 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 
     switch (ui_type)
     {
-        case UIType::NCurses: return make_unique<NCursesUI>();
-        case UIType::Json: return make_unique<JsonUI>();
-        case UIType::Dummy: return make_unique<DummyUI>();
+        case UIType::NCurses: return std::make_unique<NCursesUI>();
+        case UIType::Json: return std::make_unique<JsonUI>();
+        case UIType::Dummy: return std::make_unique<DummyUI>();
     }
     throw logic_error{};
 }
@@ -470,7 +470,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
         create_fifo_buffer("*stdin*", fd, Buffer::Flags::None);
     }
 
-    return make_unique<LocalUI>();
+    return std::make_unique<LocalUI>();
 }
 
 int run_client(StringView session, StringView client_init,
