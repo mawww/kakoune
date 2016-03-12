@@ -97,7 +97,8 @@ def -hidden clang-show-completion-info %[ try %[
     eval -draft %[
         exec '<space>{(<a-k>^\(<ret>b'
         %sh[
-            desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g; s/\\:/:/g' | grep "^${kak_selection}@" | head -n1 | sed -e 's/.*[^\\]@\(.*[^\\]\)@.*$/\1/' )
+            # desc=$(echo "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g;' | sed -ne "/^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\:/:/g; p }")
+            desc=$(echo "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\\:/:/g; P }; D")
             if [ -n "$desc" ]; then
                 echo "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
             fi
