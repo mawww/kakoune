@@ -124,7 +124,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const
     {
         for (const auto& buf : BufferManager::instance())
         {
-            if (buf.get() == &buffer)
+            if (buf.get() == &buffer or buf->flags() & Buffer::Flags::Debug)
                 continue;
             add_matches(*buf);
         }

@@ -176,7 +176,7 @@ void write_to_debug_buffer(StringView str)
     else
     {
         String line = str + (eol_back ? "\n" : "\n\n");
-        new Buffer(debug_buffer_name.str(), Buffer::Flags::NoUndo, line, InvalidTime);
+        new Buffer(debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug, line, InvalidTime);
     }
 }
 

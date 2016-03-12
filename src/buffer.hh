@@ -102,10 +102,11 @@ public:
     enum class Flags
     {
         None = 0,
-        File = 1,
-        New  = 2,
-        Fifo = 4,
-        NoUndo = 8,
+        File   = 1 << 0,
+        New    = 1 << 1,
+        Fifo   = 1 << 2,
+        NoUndo = 1 << 3,
+        Debug  = 1 << 4
     };
 
     Buffer(String name, Flags flags, StringView data = {},
