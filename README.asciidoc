@@ -585,31 +585,41 @@ saved in the command history.
 Basic Commands
 ~~~~~~~~~~~~~~
 
- * `e[dit] <filename> [<line> [<column>]]`: open buffer on file, go to given
+Some commands take an esclamation mark (`!`), which can be used to force
+the execution of the command (i.e. to quit a modified buffer, the
+command `q!` has to be used).
+
+ * `cd <directory>`: change the current directory to the one passed
+ * `e[dit][!] <filename> [<line> [<column>]]`: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
      use edit! to force reloading.
  * `w[rite] [<filename>]`: write buffer to <filename> or use it's name if
-      filename is not given.
+     filename is not given.
  * `w[rite]a[ll]`: write all buffers that are associated to a file.
- * `q[uit]`: exit Kakoune, use quit! to force quitting even if there is some
-      unsaved buffers remaining.
- * `wq`: write current buffer and quit
+ * `q[uit][!]`: exit Kakoune, use quit! to force quitting even if there is some
+     unsaved buffers remaining.
+ * `kill`: terminate the current session, all the clients as well as the server
+ * `w[a]q[!]`: write the current buffer (or all buffers when `waq` is used) and quit
  * `b[uffer] <name>`: switch to buffer <name>
- * `d[el]b[uf] [<name>]`: delete the buffer <name>, use d[el]b[uf]! to force
-      deleting a modified buffer.
+ * `b[uffer]n[ext]`: switch to the next buffer
+ * `b[uffer]p[rev]`: switch to the previous buffer
+ * `d[el]b[uf][!] [<name>]`: delete the buffer <name>
  * `source <filename>`: execute commands in <filename>
  * `runtime <filename>`: execute commands in <filename>, <filename>
-      is relative to kak executable path.
+     is relative to kak executable path.
  * `colorscheme <name>`: load named colorscheme.
  * `nameclient <name>`: set current client name
  * `namebuf <name>`: set current buffer name
- * `echo <text>`: show <text> in status line
+ * `echo [options] <text>`: show <text> in status line, with the following options:
+   ** `-color` <face>: print the given text with <face>, most commonly `Error` or `Information`
+   ** `-markup`: expand the markup strings in <text>
+   ** `-debug`: print the given text to the `\*debug*` buffer
  * `nop`: does nothing, but as with every other commands, arguments may be
-      evaluated. So nop can be used for example to execute a shell command
-      while being sure that it's output will not be interpreted by kak.
-      `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
-      `:nop %sh{ echo echo tchou }` will not, but both will execute the
-      shell command.
+     evaluated. So nop can be used for example to execute a shell command
+     while being sure that it's output will not be interpreted by kak.
+     `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
+     `:nop %sh{ echo echo tchou }` will not, but both will execute the
+     shell command.
 
 Multiple commands
 ~~~~~~~~~~~~~~~~~
@@ -1375,24 +1385,28 @@ Kakoune state:
 
 Some helper commands can be used to define composite commands:
 
- * `:prompt <prompt> <register> <command>`: Prompt the user for a string, when
+ * `prompt <prompt> <register> <command>`: Prompt the user for a string, when
      the user validates, store the result in given <register> and run <commmand>.
      the -init <str> switch allows setting initial content.
- * `:onkey <register> <command>`: Wait for next key from user, writes it into given
+ * `onkey <register> <command>`: Wait for next key from user, writes it into given
      <register> and execute commands.
- * `:menu <label1> <commands1> <label2> <commands2>...`: display a menu using
+ * `menu <label1> <commands1> <label2> <commands2>...`: display a menu using
      labels, the selected label's commands are executed.
      `menu` can take a -auto-single argument, to automatically run commands
      when only one choice is provided. and a -select-cmds argument, in which
      case menu takes three argument per item, the last one being a command
      to execute when the item is selected (but not validated).
- * `:info <text>`: display text in an information box, at can take a -anchor
+ * `info <text>`: display text in an information box, at can take a -anchor
      option, which accepts `left`, `right` and `cursor` as value, in order to
      specify where the info box should be anchored relative to the main selection.
- * `:try <commands> catch <on_error_commands>`: prevent an error in <commands>
+ * `try <commands> catch <on_error_commands>`: prevent an error in <commands>
      from aborting the whole commands execution, execute <on_error_commands>
      instead. If nothing is to be done on error, the catch part can be ommitted.
- * `:reg <name> <content>`: set register <name> to <content>
+ * `reg <name> <content>`: set register <name> to <content>
+ * `select <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...`:
+     replace the current selections with the one described in the argument
+ * `debug {info,buffers,options,memory,shared-strings}`: print some debug
+     information in the `*debug*` buffer
 
 Note that these commands are available in interactive command mode, but are
 not that useful in this context.

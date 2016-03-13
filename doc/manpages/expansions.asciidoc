@@ -8,7 +8,7 @@ expansions - a
 Strings
 -------
 \'strings'::
-	uninterpreted strings, use a backslash (\\') to escape the separator
+	uninterpreted strings, use a backslash (\') to escape the separator
 "strings"::
 	expanded strings, % strings (c.f. next section) contained are expended,
 	use a backslash (\\%) to escape the separator

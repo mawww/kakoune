@@ -7,7 +7,15 @@ commands - a
 
 Primitives
 ----------
-*e[dit]* <filename> [<line> [<column>]]::
+
+Some commands take an esclamation mark (*!*), which can be used to force
+the execution of the command (i.e. to quit a modified buffer, the
+command *q!* has to be used).
+
+*cd* <directory>::
+	change the current directory to the one passed
+
+*e[dit][!]* <filename> [<line> [<column>]]::
 	open buffer on file, go to given line and column. If file is already
 	opened, just switch to this file. Use edit! to force reloading
 
@@ -17,19 +25,27 @@ Primitives
 *w[rite]a[ll]*::
 	write all buffers that are associated to a file
 
-*q[uit]*::
+*q[uit][!]*::
 	exit Kakoune, use quit! to force quitting even if there is some
 	unsaved buffers remaining
 
-*wq*::
-	write current buffer and quit
+*kill*::
+	terminate the current session, all the clients as well as the server
+
+*w[a]q[!]*::
+	write the current buffer (or all buffers when *waq* is used) and quit
 
 *b[uffer]* <name>::
 	switch to buffer <name>
 
-*d[el]b[uf]* [<name>]::
-	delete the buffer <name>, use d[el]b[uf]! to force deleting a
-	modified buffer
+*b[uffer]n[ext]*::
+	switch to the next buffer
+
+*b[uffer]p[rev]*::
+	switch to the previous buffer
+
+*d[el]b[uf][!]* [<name>]::
+	delete the buffer <name>
 
 *source* <filename>::
 	execute commands in <filename>
@@ -47,14 +63,26 @@ Primitives
 *namebuf* <name>::
 	set current buffer name
 
-*echo* <text>::
-	show <text> in status line
+*echo* [options] <text>::
+	show *text* in status line, with the following *options*:
+
+	*-color* <face>:::
+		print the given text with *face*, most commonly *Error* or *Information*
+
+	*-markup*:::
+		expand the markup strings in *text* (c.f. the 'expansions' documentation page)
+
+	*-debug*:::
+		print the given text to the *\*debug** buffer
 
 *nop*::
 	does nothing, but arguments will be evaluated (e.g. shell expansion)
 
 *set* <scope> <name> <value>::
 	change the value of an option (c.f. the 'options' documentation page)
+
+*unset* <scope> <name>::
+	unset the value of an option (c.f. the 'options' documentation page)
 
 *alias* <scope> <name> <command>::
 	define a new alias, within the context of a scope
@@ -123,10 +151,17 @@ commands:
 	last one being a command to execute when the item is selected (but
 	not validated)
 
-*info* <text>::
-	display text in an information box, at can take an *-anchor* option,
-	which accepts left, right and cursor as value, in order to specify
-	where the info box should be anchored relative to the main selection
+*info* [options] <text>::
+	display text in an information box with the following *options*:
+
+	*-anchor* <line>.<column>:::
+		print the text at the given coordinates
+
+	*-placement* {above,below}:::
+		set the placement relative to the anchor
+
+	*-title* <text>:::
+		set the title of the message box
 
 *try* <commands> catch <on_error_commands>::
 	prevent an error in *commands* from aborting the whole commands
@@ -135,6 +170,12 @@ commands:
 
 *reg* <name> <content>::
 	set register *name* to *content*
+
+*select* <anchor_line>.<anchor_column>,<cursor_line>.<cursor_column>:...::
+	replace the current selections with the one described in the argument
+
+*debug* {info,buffers,options,memory,shared-strings}::
+	print some debug information in the *\*debug** buffer
 
 Note that those commands are also available in the interactive mode, but
 are not really useful in that context.
@@ -153,30 +194,30 @@ New commands can be defined using the *def* command:
 	*commands* is a string containing the commands to execute, and *flags*
 	can be any combination of the following parameters:
 
-*-params* <num>::
+*-params* <num>:::
 	the command accepts a *num* parameter, which can be either a number,
 	or of the form <min>..<max>, with both <min> and <max> omittable
 
-*-file-completion*::
+*-file-completion*:::
 	try file completion on any parameter passed to this command
 
-*-client-completion*::
+*-client-completion*:::
 	try client name completion on any parameter passed to this command
 
-*-buffer-completion*::
+*-buffer-completion*:::
 	try buffer name completion on any parameter passed to this command
 
-*-shell-completion*::
+*-shell-completion*:::
 	following string is a shell command which takes parameters as
 	positional params and output one completion candidate per line
 
-*-allow-override*::
+*-allow-override*:::
 	allow the new command to replace an exisiting one with the same name
 
-*-hidden*::
+*-hidden*:::
 	do not show the command in command name completions
 
-*-docstring*::
+*-docstring*:::
 	define the documentation string for the command
 
 Using shell expansion allows to define complex commands or to access Kakoune
