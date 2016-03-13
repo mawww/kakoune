@@ -1,46 +1,41 @@
 ## Maximum amount of characters per line
 decl int autowrap_column 80
 
-def -hidden _autowrap-break-line %{
+# remove the whitespaces selected by `autowrap-line`
+# and handle "recursive" calls when needed
+def -hidden _autowrap-cut-selection %{
     try %{
-        ## <a-:><a-;>: ensure that the cursor is located after the anchor, then reverse the
-        ##             selection (make sure the cursor is at the beginning of the selection)
-        ## <a-k>(?=[^\n]*\h)(?=[^\n]*[^\h])[^\n]{%opt{autowrap_column},}[^\n]<ret>: make sure
-        ##             the selection is wrap-able (contains at least an horizontal space, any
-        ##             non-whitespace character, and at least "autowrap_column" characters)
-        ## %opt{autowrap_column}l: place the cursor on the "autowrap_column"th character
-        ## <a-i>w<a-;>;i<ret><esc>: move the cursor to the beginning of the word (if it overlaps
-        ##             the "autowrap_column"th column), or do nothing if the "autowrap_column"th
-        ##             character is a horizontal space, and insert a newline
-        ## <a-x>:_autowrap-break-line: select the second half of the buffer that was just split,
-        ##             and call itself recursively until all lines in the selection
-        ##             are correctly split
-        exec -draft "<a-:><a-;>
-                    <a-k>(?=[^\n]*\h)(?=[^\n]*[^\h])[^\n]{%opt{autowrap_column},}[^\n]<ret>
-                    %opt{autowrap_column}l
-                    <a-i>w<a-;>;i<ret><esc>
-                    <a-x>:_autowrap-break-line<ret>"
+        # remove the whitespaces
+        # then save the indentation of the original line and apply it to the new one
+        exec -draft c<ret><esc> K <a-s> \' <a-&>
+        # if there's text after the current line, merge the two
+        exec xX <a-k>[^\n]\n[^\n]<ret> <a-j>
     }
+    eval autowrap-line
 }
 
-## Automatically wrap the selection
-def autowrap-selection -docstring "Wrap the selection" %{
-    eval -draft _autowrap-break-line
-
+def autowrap-line -docstring "Wrap the current line" %{ eval -draft %{
     try %{
-        exec -draft "<a-k>^[^\n]*\h*\n\h*[^\n]+$<ret>
-                    s\h*\n\h*(?=[^\z])<ret>c<ret><esc>"
+        # check that the line is too long and has to be wrapped
+        exec "<a-x> s^(?=.*\h).{%opt{autowrap_column}}[^\n]<ret>"
+        try %{
+            # either select the trailing whitespaces, or the ones before the last word of the line
+            exec s\h+(?=[^\h]+\')|\h+\'<ret>
+            eval _autowrap-cut-selection
+        } catch %{ try %{
+            # wrap the line on the first whitespace that's past the column limit
+            exec "x s^[^\h]{%opt{autowrap_column},}\K\h+<ret>"
+            eval _autowrap-cut-selection
+        } }
     }
-}
+} }
 
-## Add a hook that will wrap the entire line every time a key is pressed
 def autowrap-enable -docstring "Wrap the lines in which characters are inserted" %{
     hook -group autowrap window InsertChar [^\n] %{
-        exec -draft "<a-x>:autowrap-selection<ret>"
+        eval autowrap-line
     }
 }
 
-## Disable the automatic line wrapping, autowrap-selection remains available though
 def autowrap-disable -docstring "Disable automatic line wrapping" %{
     rmhooks window autowrap
 }
