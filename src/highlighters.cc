@@ -12,6 +12,7 @@
 #include "option_types.hh"
 #include "parameters_parser.hh"
 #include "register_manager.hh"
+#include "regex.hh"
 #include "string.hh"
 #include "window.hh"
 #include "utf8.hh"

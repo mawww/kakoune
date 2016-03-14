@@ -6,8 +6,9 @@
 #include "exception.hh"
 #include "flags.hh"
 #include "option_types.hh"
-#include "regex.hh"
 #include "vector.hh"
+
+#include <memory>
 
 namespace Kakoune
 {
