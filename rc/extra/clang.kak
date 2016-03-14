@@ -37,7 +37,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                 *) ft=c++ ;;
             esac
 
-            if [ "$1" == "-complete" ]; then
+            if [ "$1" = "-complete" ]; then
                 pos=-:${kak_cursor_line}:${kak_cursor_column}
                 header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
                 compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \

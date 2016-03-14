@@ -37,7 +37,7 @@ def -hidden -params .. _man %{ %sh{
 
 def -params .. \
   -shell-completion %{
-    prefix=${1:0:${kak_pos_in_token}}
+    prefix=$(echo "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
         candidate=$(basename ${page%%.[1-8]*})
         pagenum=$(printf %s "$page" | sed -r 's,^.+/.+\.([1-8][^.]*)\..+$,\1,')
@@ -52,7 +52,7 @@ def -params .. \
     pagenum=""
 
     ## The completion suggestions display the page number, strip them if present
-    if [[ $subject =~ [a-zA-Z_-]+\([^\)]+\) ]]; then
+    if expr "$subject" : '[a-zA-Z_-]+\([^\)]+\)'; then
         pagenum=${subject##*\(}
         pagenum=${pagenum:0:$((${#pagenum} - 1))}
         subject=${subject%%\(*}
