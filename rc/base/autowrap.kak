@@ -7,7 +7,7 @@ def -hidden _autowrap-cut-selection %{
     try %{
         # remove the whitespaces
         # then save the indentation of the original line and apply it to the new one
-        exec -draft c<ret><esc> K <a-s> \' <a-&>
+        exec -draft c<ret><esc> K <a-&>
         # if there's text after the current line, merge the two
         exec xX <a-k>[^\n]\n[^\n]<ret> <a-j>
     }
