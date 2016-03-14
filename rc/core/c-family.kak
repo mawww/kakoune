@@ -94,23 +94,94 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 
 # c specific
 addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-addhl -group /c/code regex "\<(void|char|short|int|long|signed|unsigned|float|double|size_t)\>" 0:type
-addhl -group /c/code regex "\<(while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof)\>" 0:keyword
-addhl -group /c/code regex "\<(const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict)\>" 0:attribute
+%sh{
+    # Grammar
+    keywords="while:for:if:else:do:switch:case:default:goto:asm:break:continue:return:sizeof"
+    attributes="const:auto:register:inline:static:volatile:struct:enum:union:typedef:extern:restrict"
+    types="void:char:short:int:long:signed:unsigned:float:double:size_t"
+
+    # Add the language's grammar to the static completion list
+    echo "hook global WinSetOption filetype=c %{
+        set window static_words '${keywords}'
+        set -add window static_words '${attributes}'
+        set -add window static_words '${types}'
+    }"
+
+    # Highlight keywords
+    echo "
+        addhl -group /c/code regex \<(${keywords//:/|})\> 0:keyword
+        addhl -group /c/code regex \<(${attributes//:/|})\> 0:attribute
+        addhl -group /c/code regex \<(${types//:/|})\> 0:type
+    "
+}
 
 # c++ specific
-addhl -group /cpp/code regex %{\<(this|true|false|NULL|nullptr|)\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-addhl -group /cpp/code regex "\<(void|char|short|int|long|signed|unsigned|float|double|size_t|bool)\>" 0:type
-addhl -group /cpp/code regex "\<(while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|using|try|catch|throw|new|delete|and|and_eq|or|or_eq|not|operator|explicit|(?:reinterpret|const|static|dynamic)_cast|sizeof|alignof|alignas|decltype)\>" 0:keyword
-addhl -group /cpp/code regex "\<(const|constexpr|mutable|auto|noexcept|namespace|inline|static|volatile|class|struct|enum|union|public|protected|private|template|typedef|virtual|friend|extern|typename|override|final)\>" 0:attribute
+addhl -group /cpp/code regex %{\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+
+%sh{
+    # Grammar
+    keywords="while:for:if:else:do:switch:case:default:goto:asm:break:continue"
+    keywords="${keywords}:return:using:try:catch:throw:new:delete:and:and_eq:or"
+    keywords="${keywords}:or_eq:not:operator:explicit:reinterpret_cast"
+    keywords="${keywords}:const_cast:static_cast:dynamic_cast:sizeof:alignof"
+    keywords="${keywords}:alignas:decltype"
+    attributes="const:constexpr:mutable:auto:noexcept:namespace:inline:static"
+    attributes="${attributes}:volatile:class:struct:enum:union:public:protected"
+    attributes="${attributes}:private:template:typedef:virtual:friend:extern"
+    attributes="${attributes}:typename:override:final"
+    types="void:char:short:int:long:signed:unsigned:float:double:size_t:bool"
+    values="this:true:false:NULL:nullptr"
+
+    # Add the language's grammar to the static completion list
+    echo "hook global WinSetOption filetype=cpp %{
+        set window static_words '${keywords}'
+        set -add window static_words '${attributes}'
+        set -add window static_words '${types}'
+        set -add window static_words '${values}'
+    }"
+
+    # Highlight keywords
+    echo "
+        addhl -group /cpp/code regex \<(${keywords//:/|})\> 0:keyword
+        addhl -group /cpp/code regex \<(${attributes//:/|})\> 0:attribute
+        addhl -group /cpp/code regex \<(${types//:/|})\> 0:type
+        addhl -group /cpp/code regex \<(${values//:/|})\> 0:value
+    "
+}
 
 # objective-c specific
-addhl -group /objc/code regex %{\<(self|nil|id|super|TRUE|FALSE|YES|NO|NULL)\>|\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
-addhl -group /objc/code regex "\<(void|char|short|int|long|signed|unsigned|float|bool|size_t|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString)\>" 0:type
-addhl -group /objc/code regex "\<(while|for|if|else|do|switch|case|default|goto|break|continue|return)\>" 0:keyword
-addhl -group /objc/code regex "\<(const|auto|inline|static|volatile|struct|enum|union|typedef|extern|__block|nonatomic|assign|copy|strong|retain|weak|readonly)\>" 0:attribute
-addhl -group /objc/code regex "@(property|synthesize|interface|implementation|protocol|end|selector|autoreleasepool|try|catch|class|synchronized)\>" 0:attribute
-addhl -group /objc/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
+addhl -group /objc/code regex %{\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+
+%sh{
+    # Grammar
+    keywords="while:for:if:else:do:switch:case:default:goto:break:continue:return"
+    attributes="const:auto:inline:static:volatile:struct:enum:union:typedef"
+    attributes="${attributes}:extern:__block:nonatomic:assign:copy:strong"
+    attributes="${attributes}:retain:weak:readonly:IBAction:IBOutlet"
+    types="void:char:short:int:long:signed:unsigned:float:bool:size_t"
+    types="${types}:instancetype:BOOL:NSInteger:NSUInteger:CGFloat:NSString"
+    values="self:nil:id:super:TRUE:FALSE:YES:NO:NULL"
+    decorators="property:synthesize:interface:implementation:protocol:end"
+    decorators="${decorators}:selector:autoreleasepool:try:catch:class:synchronized"
+
+    # Add the language's grammar to the static completion list
+    echo "hook global WinSetOption filetype=objc %{
+        set window static_words '${keywords}'
+        set -add window static_words '${attributes}'
+        set -add window static_words '${types}'
+        set -add window static_words '${values}'
+        set -add window static_words '${decorators}'
+    }"
+
+    # Highlight keywords
+    echo "
+        addhl -group /objc/code regex \<(${keywords//:/|})\> 0:keyword
+        addhl -group /objc/code regex \<(${attributes//:/|})\> 0:attribute
+        addhl -group /objc/code regex \<(${types//:/|})\> 0:type
+        addhl -group /objc/code regex \<(${values//:/|})\> 0:value
+        addhl -group /objc/code regex @(${decorators//:/|})\> 0:attribute
+    "
+}
 
 hook global WinSetOption filetype=(c|cpp|objc) %[
     try %{ # we might be switching from one c-family language to another
@@ -128,7 +199,6 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
     alias window alt c-family-alternative-file
 
     set window formatcmd "astyle"
-    set window static_words "void:char:short:int:long:signed:unsigned:float:double:size_t:while:for:if:else:do:switch:case:default:goto:asm:break:continue:return:sizeof:const:auto:register:inline:static:volatile:struct:enum:union:typedef:extern:restrict"
 ]
 
 hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[

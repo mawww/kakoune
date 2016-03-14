@@ -20,8 +20,22 @@ addhl -group /makefile/comment fill comment
 addhl -group /makefile/eval fill value
 
 addhl -group /makefile/content regex ^[\w.%]+\h*:\s 0:identifier
-addhl -group /makefile/content regex \b(ifeq|ifneq|else|endif)\b 0:keyword
 addhl -group /makefile/content regex [+?:]= 0:operator
+
+%sh{
+    # Grammar
+    keywords="ifeq:ifneq:else:endif"
+
+    # Add the language's grammar to the static completion list
+    echo "hook global WinSetOption filetype=makefile %{
+        set window static_words '${keywords}'
+    }"
+
+    # Highlight keywords
+    echo "
+        addhl -group /makefile/content regex \<(${keywords//:/|})\> 0:keyword
+    "
+}
 
 # Commands
 # ‾‾‾‾‾‾‾‾

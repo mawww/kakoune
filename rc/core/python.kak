@@ -12,8 +12,8 @@ hook global BufCreate .*[.](py) %{
     set buffer filetype python
 }
 
-# Highlighters
-# ‾‾‾‾‾‾‾‾‾‾‾‾
+# Highlighters & Completion
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default code python \
     double_string '"""' '"""'            '' \
@@ -26,21 +26,35 @@ addhl -group /python/double_string fill string
 addhl -group /python/single_string fill string
 addhl -group /python/comment       fill comment
 
-addhl -group /python/code regex \<(True|False|None)\> 0:value
-addhl -group /python/code regex \<(import|from)\> 0:meta
+%sh{
+    # Grammar
+    values="True:False:None"
+    meta="import:from"
+    # Keyword list is collected using `keyword.kwlist` from `keyword`
+    keywords="and:as:assert:break:class:continue:def:del:elif:else:except:exec:finally:for:global:if:in:is:lambda:not:or:pass:print:raise:return:try:while:with:yield"
+    types="bool:buffer:bytearray:complex:dict:file:float:frozenset:int:list:long:memoryview:object:set:str:tuple:unicode:xrange"
 
-# Keyword list is collected using `keyword.kwlist` from `keyword`
-addhl -group /python/code regex \<(and|as|assert|break|class|continue|def|del|elif|else|except|exec|finally|for|global|if|in|is|lambda|not|or|pass|print|raise|return|try|while|with|yield)\> 0:keyword
-# Highlight types, when they are not used as constructors
-addhl -group /python/code regex \<(bool|buffer|bytearray|complex|dict|file|float|frozenset|int|list|long|memoryview|object|set|str|tuple|unicode|xrange)\>[^(] 1:type
+    # Add the language's grammar to the static completion list
+    echo "hook global WinSetOption filetype=python %{
+        set window static_words '${values}'
+        set -add window static_words '${meta}'
+        set -add window static_words '${keywords}'
+        set -add window static_words '${types}'
+    }"
+
+    # Highlight keywords
+    echo "
+        addhl -group /python/code regex '\<(${values//:/|})\>' 0:value
+        addhl -group /python/code regex '\<(${meta//:/|})\>' 0:meta
+        addhl -group /python/code regex '\<(${keywords//:/|})\>' 0:keyword
+    "
+
+    # Highlight types, when they are not used as constructors
+    echo "addhl -group /python/code regex '\<(${types//:/|})\>[^(]' 1:type"
+}
 
 # Commands
 # ‾‾‾‾‾‾‾‾
-
-def -hidden _python_filter_around_selections %{
-    # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
-}
 
 def -hidden _python_indent_on_new_line %{
     eval -draft -itersel %{
@@ -60,13 +74,12 @@ def -hidden _python_indent_on_new_line %{
 
 hook global WinSetOption filetype=python %{
     addhl ref python
-
-    hook window InsertEnd  .* -group python-hooks  _python_filter_around_selections
     hook window InsertChar \n -group python-indent _python_indent_on_new_line
+
+    set window formatcmd "autopep8 -"
 }
 
 hook global WinSetOption filetype=(?!python).* %{
     rmhl python
     rmhooks window python-indent
-    rmhooks window python-hooks
 }
