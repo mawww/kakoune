@@ -178,6 +178,9 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     while (begin != buffer.begin() and is_filename(*(begin-1)))
         --begin;
 
+    if (begin != buffer.begin() and *begin == '/' and *(begin-1) == '~')
+        --begin;
+
     if (begin == pos)
         return {};
 
@@ -186,7 +189,7 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
         return {};
 
     InsertCompletion::CandidateList candidates;
-    if (prefix.front() == '/')
+    if (prefix.front() == '/' or prefix.front() == '~')
     {
         for (auto& filename : Kakoune::complete_filename(prefix, Regex{}))
             candidates.push_back({ filename, "", filename });
