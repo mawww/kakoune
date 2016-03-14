@@ -12,26 +12,14 @@
 
 * improve insert completion
 
-  - Use some kind of ranking to sort completions
-
   - Detect when the following text is matching the inserted completion
 
   - Support multiple completion points
     (1.1@0:comp1:comp2:comp3:1.5@0:comp1:comp2:comp3)
 
-  - smarter behaviour to keep completion available longer
-
-    . keep per line timestamps
-
-    . update completion options when lines are added/deleted
-
-* spelling support
-
 * investigate 'kakdiff'
 
 * Tree based undo
-
-* User defined text objects
 
 * multiple parameters support for normal mode commands ?
 
