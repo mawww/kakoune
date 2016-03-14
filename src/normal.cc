@@ -1457,6 +1457,7 @@ void exec_user_mappings(Context& context, NormalParams params)
             return;
 
         auto mapping = context.keymaps().get_mapping(key, KeymapMode::User);
+        ScopedSetBool disable_keymaps(context.keymaps_disabled());
         ScopedEdition edition(context);
         for (auto& key : mapping)
             context.input_handler().handle_key(key);
