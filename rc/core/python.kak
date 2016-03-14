@@ -28,14 +28,14 @@ addhl -group /python/comment       fill comment
 
 %sh{
     # Grammar
-    values="True:False:None"
-    meta="import:from"
+    values="True|False|None"
+    meta="import|from"
     # Keyword list is collected using `keyword.kwlist` from `keyword`
-    keywords="and:as:assert:break:class:continue:def:del:elif:else:except:exec:finally:for:global:if:in:is:lambda:not:or:pass:print:raise:return:try:while:with:yield"
-    types="bool:buffer:bytearray:complex:dict:file:float:frozenset:int:list:long:memoryview:object:set:str:tuple:unicode:xrange"
+    keywords="and|as|assert|break|class|continue|def|del|elif|else|except|exec|finally|for|global|if|in|is|lambda|not|or|pass|print|raise|return|try|while|with|yield"
+    types="bool|buffer|bytearray|complex|dict|file|float|frozenset|int|list|long|memoryview|object|set|str|tuple|unicode|xrange"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=python %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=python %{
         set window static_words '${values}'
         set -add window static_words '${meta}'
         set -add window static_words '${keywords}'
@@ -44,13 +44,13 @@ addhl -group /python/comment       fill comment
 
     # Highlight keywords
     echo "
-        addhl -group /python/code regex '\<(${values//:/|})\>' 0:value
-        addhl -group /python/code regex '\<(${meta//:/|})\>' 0:meta
-        addhl -group /python/code regex '\<(${keywords//:/|})\>' 0:keyword
+        addhl -group /python/code regex '\<(${values})\>' 0:value
+        addhl -group /python/code regex '\<(${meta})\>' 0:meta
+        addhl -group /python/code regex '\<(${keywords})\>' 0:keyword
     "
 
     # Highlight types, when they are not used as constructors
-    echo "addhl -group /python/code regex '\<(${types//:/|})\>[^(]' 1:type"
+    echo "addhl -group /python/code regex '\<(${types})\>[^(]' 1:type"
 }
 
 # Commands

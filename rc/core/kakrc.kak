@@ -10,21 +10,21 @@ addhl -group / regions -default code kakrc \
 
 %sh{
     # Grammar
-    keywords="hook:rmhooks:addhl:rmhl:exec:eval:source:runtime:def:alias"
-    keywords="${keywords}:unalias:decl:echo:edit:set:map:face:prompt:menu:info"
-    keywords="${keywords}:try:catch:nameclient:namebuf:cd:colorscheme"
-    values="default:black:red:green:yellow:blue:magenta:cyan:white"
+    keywords="hook|rmhooks|addhl|rmhl|exec|eval|source|runtime|def|alias"
+    keywords="${keywords}|unalias|decl|echo|edit|set|map|face|prompt|menu|info"
+    keywords="${keywords}|try|catch|nameclient|namebuf|cd|colorscheme"
+    values="default|black|red|green|yellow|blue|magenta|cyan|white"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=kak %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=kak %{
         set window static_words '${keywords}'
         set -add window static_words '${values}'
     }"
 
     # Highlight keywords
     echo "
-        addhl -group /kakrc/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /kakrc/code regex \<(${values//:/|})\> 0:value
+        addhl -group /kakrc/code regex \<(${keywords})\> 0:keyword
+        addhl -group /kakrc/code regex \<(${values})\> 0:value
     "
 }
 

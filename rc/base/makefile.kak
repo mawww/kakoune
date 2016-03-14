@@ -24,16 +24,16 @@ addhl -group /makefile/content regex [+?:]= 0:operator
 
 %sh{
     # Grammar
-    keywords="ifeq:ifneq:else:endif"
+    keywords="ifeq|ifneq|else|endif"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=makefile %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=makefile %{
         set window static_words '${keywords}'
     }"
 
     # Highlight keywords
     echo "
-        addhl -group /makefile/content regex \<(${keywords//:/|})\> 0:keyword
+        addhl -group /makefile/content regex \<(${keywords})\> 0:keyword
     "
 }
 

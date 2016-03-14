@@ -28,23 +28,23 @@ addhl -group /perl/comment fill comment
 
 %sh{
     # Grammar
-    keywords="else:lock:qw:elsif:lt:qx:eq:exp:ne:sub:for:no:my:not:tr:goto:and:foreach:or:break:exit:unless:cmp:ge:package:until:continue:gt:while:if:qq:xor:do:le:qr:return"
-    attributes="END:AUTOLOAD:BEGIN:CHECK:UNITCHECK:INIT:DESTROY"
-    attributes="${attributes}:length:setpgrp:endgrent:link:setpriority:endhostent:listen:setprotoent:endnetent:local:setpwent"
-    attributes="${attributes}:endprotoent:localtime:setservent:endpwent:log:setsockopt:endservent:lstat:shift:eof:map:shmctl:eval:mkdir:shmget:exec:msgctl:shmread"
-    attributes="${attributes}:exists:msgget:shmwrite:msgrcv:shutdown:fcntl:msgsnd:sin:fileno:sleep:flock:next:socket:fork:socketpair:format:oct:sort"
-    attributes="${attributes}:formline:open:splice:getc:opendir:split:getgrent:ord:sprintf:getgrgid:our:sqrt:getgrnam:pack:srand:gethostbyaddr:pipe:stat:gethostbyname"
-    attributes="${attributes}:pop:state:gethostent:pos:study:getlogin:print:substr:getnetbyaddr:printf:symlink:abs:getnetbyname:prototype:syscall:accept:getnetent"
-    attributes="${attributes}:push:sysopen:alarm:getpeername:quotemeta:sysread:atan2:getpgrp:rand:sysseek:getppid:read:system:getpriority:readdir:syswrite:bind"
-    attributes="${attributes}:getprotobyname:readline:tell:binmode:getprotobynumber:readlink:telldir:bless:getprotoent:readpipe:tie:getpwent:recv:tied:caller"
-    attributes="${attributes}:getpwnam:redo:time:chdir:getpwuid:ref:times:getservbyname:rename:truncate:chmod:getservbyport:require:uc:chomp:getservent:reset:ucfirst"
-    attributes="${attributes}:chop:getsockname:umask:chown:getsockopt:reverse:undef:chr:glob:rewinddir:chroot:gmtime:rindex:unlink:close:rmdir:unpack"
-    attributes="${attributes}:closedir:grep:say:unshift:connect:hex:scalar:untie:cos:index:seek:use:crypt:seekdir:utime:dbmclose:int:select:values:dbmopen:ioctl:semctl"
-    attributes="${attributes}:vec:defined:join:semget:wait:delete:keys:semop:waitpid:kill:send:wantarray:die:last:setgrent:warn:dump:lc:sethostent:write:each:lcfirst:setnetent"
-    values="ARGV:STDERR:STDOUT:ARGVOUT:STDIN:__DATA__:__END__:__FILE__:__LINE__:__PACKAGE__"
+    keywords="else|lock|qw|elsif|lt|qx|eq|exp|ne|sub|for|no|my|not|tr|goto|and|foreach|or|break|exit|unless|cmp|ge|package|until|continue|gt|while|if|qq|xor|do|le|qr|return"
+    attributes="END|AUTOLOAD|BEGIN|CHECK|UNITCHECK|INIT|DESTROY"
+    attributes="${attributes}|length|setpgrp|endgrent|link|setpriority|endhostent|listen|setprotoent|endnetent|local|setpwent"
+    attributes="${attributes}|endprotoent|localtime|setservent|endpwent|log|setsockopt|endservent|lstat|shift|eof|map|shmctl|eval|mkdir|shmget|exec|msgctl|shmread"
+    attributes="${attributes}|exists|msgget|shmwrite|msgrcv|shutdown|fcntl|msgsnd|sin|fileno|sleep|flock|next|socket|fork|socketpair|format|oct|sort"
+    attributes="${attributes}|formline|open|splice|getc|opendir|split|getgrent|ord|sprintf|getgrgid|our|sqrt|getgrnam|pack|srand|gethostbyaddr|pipe|stat|gethostbyname"
+    attributes="${attributes}|pop|state|gethostent|pos|study|getlogin|print|substr|getnetbyaddr|printf|symlink|abs|getnetbyname|prototype|syscall|accept|getnetent"
+    attributes="${attributes}|push|sysopen|alarm|getpeername|quotemeta|sysread|atan2|getpgrp|rand|sysseek|getppid|read|system|getpriority|readdir|syswrite|bind"
+    attributes="${attributes}|getprotobyname|readline|tell|binmode|getprotobynumber|readlink|telldir|bless|getprotoent|readpipe|tie|getpwent|recv|tied|caller"
+    attributes="${attributes}|getpwnam|redo|time|chdir|getpwuid|ref|times|getservbyname|rename|truncate|chmod|getservbyport|require|uc|chomp|getservent|reset|ucfirst"
+    attributes="${attributes}|chop|getsockname|umask|chown|getsockopt|reverse|undef|chr|glob|rewinddir|chroot|gmtime|rindex|unlink|close|rmdir|unpack"
+    attributes="${attributes}|closedir|grep|say|unshift|connect|hex|scalar|untie|cos|index|seek|use|crypt|seekdir|utime|dbmclose|int|select|values|dbmopen|ioctl|semctl"
+    attributes="${attributes}|vec|defined|join|semget|wait|delete|keys|semop|waitpid|kill|send|wantarray|die|last|setgrent|warn|dump|lc|sethostent|write|each|lcfirst|setnetent"
+    values="ARGV|STDERR|STDOUT|ARGVOUT|STDIN|__DATA__|__END__|__FILE__|__LINE__|__PACKAGE__"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=perl %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=perl %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${values}'
@@ -52,9 +52,9 @@ addhl -group /perl/comment fill comment
 
     # Highlight keywords
     echo "
-        addhl -group /perl/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /perl/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /perl/code regex \<(${values//:/|})\> 0:value
+        addhl -group /perl/code regex \<(${keywords})\> 0:keyword
+        addhl -group /perl/code regex \<(${attributes})\> 0:attribute
+        addhl -group /perl/code regex \<(${values})\> 0:value
     "
 }
 

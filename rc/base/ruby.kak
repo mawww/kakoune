@@ -54,17 +54,17 @@ addhl -group /ruby/code regex \<([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\
 
 %sh{
     # Grammar
-    # Keywords are collected searching for keyword_ at
+    # Keywords are collected searching for keywords at
     # https://github.com/ruby/ruby/blob/trunk/parse.y
-    keywords="alias:and:begin:break:case:class:def:defined:do:else:elsif:end"
-    keywords="${keywords}:ensure:false:for:if:in:module:next:nil:not:or:redo"
-    keywords="${keywords}:rescue:retry:return:self:super:then:true:undef:unless:until:when:while:yield"
-    attributes="attr_reader:attr_writer:attr_accessor"
-    values="false:true:nil"
-    meta="require:include"
+    keywords="alias|and|begin|break|case|class|def|defined|do|else|elsif|end"
+    keywords="${keywords}|ensure|false|for|if|in|module|next|nil|not|or|redo"
+    keywords="${keywords}|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield"
+    attributes="attr_reader|attr_writer|attr_accessor"
+    values="false|true|nil"
+    meta="require|include"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=ruby %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=ruby %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${values}'
@@ -73,10 +73,10 @@ addhl -group /ruby/code regex \<([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\
 
     # Highlight keywords
     echo "
-        addhl -group /ruby/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /ruby/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /ruby/code regex \<(${values//:/|})\> 0:value
-        addhl -group /ruby/code regex \<(${meta//:/|})\> 0:meta
+        addhl -group /ruby/code regex \<(${keywords})\> 0:keyword
+        addhl -group /ruby/code regex \<(${attributes})\> 0:attribute
+        addhl -group /ruby/code regex \<(${values})\> 0:value
+        addhl -group /ruby/code regex \<(${meta})\> 0:meta
     "
 }
 

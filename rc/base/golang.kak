@@ -28,15 +28,15 @@ addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\<([0-9]+|0[xX][0-9a-fA-
 
 %sh{
     # Grammar
-    keywords="break:default:defer:else:fallthrough:for:func:go:goto:if:import"
-    keywords="${keywords}:interface:make:new:package:range:return:select:case:switch:type:continue"
+    keywords="break|default|defer|else|fallthrough|for|func|go|goto|if|import"
+    keywords="${keywords}|interface|make|new|package|range|return|select|case|switch|type|continue"
     attributes="const"
-    types="bool:byte:chan:complex128:complex64:float32:float64:int:int16:int32"
-    types="${types}:int64:int8:interface:intptr:map:rune:string:struct:uint:uint16:uint32:uint64:uint8"
-    values="false:true:nil"
+    types="bool|byte|chan|complex128|complex64|float32|float64|int|int16|int32"
+    types="${types}|int64|int8|interface|intptr|map|rune|string|struct|uint|uint16|uint32|uint64|uint8"
+    values="false|true|nil"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=golang %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=golang %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -45,10 +45,10 @@ addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\<([0-9]+|0[xX][0-9a-fA-
 
     # Highlight keywords
     echo "
-        addhl -group /golang/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /golang/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /golang/code regex \<(${types//:/|})\> 0:type
-        addhl -group /golang/code regex \<(${values//:/|})\> 0:value
+        addhl -group /golang/code regex \<(${keywords})\> 0:keyword
+        addhl -group /golang/code regex \<(${attributes})\> 0:attribute
+        addhl -group /golang/code regex \<(${types})\> 0:type
+        addhl -group /golang/code regex \<(${values})\> 0:value
     "
 }
 

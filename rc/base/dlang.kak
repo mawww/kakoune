@@ -35,25 +35,25 @@ addhl -group /dlang/code regex "\<(this)\>\s*[^(]" 1:value
 
 %sh{
     # Grammar
-    keywords="alias:asm:assert:body:cast:class:delegate:delete:enum:function"
-    keywords="${keywords}:import:in:interface:invariant:is:lazy:mixin:module"
-    keywords="${keywords}:new:out:pragma:struct:super:typeid:typeof:union"
-    keywords="${keywords}:unittest:__parameters:__traits:__vector:break:case"
-    keywords="${keywords}:catch:continue:default:do:else:finally:for:foreach"
-    keywords="${keywords}:foreach_reverse:goto:if:return:switch:throw:try:with:while"
-    attributes="abstract:align:auto:const:debug:deprecated:export:extern:final"
-    attributes="${attributes}:immutable:inout:nothrow:package:private:protected"
-    attributes="${attributes}:public:pure:ref:override:scope:shared:static:synchronized:version:__gshared"
-    types="bool:byte:cdouble:cfloat:char:creal:dchar:double:dstring:float"
-    types="${types}:idouble:ifloat:int:ireal:long:ptrdiff_t:real:size_t:short"
-    types="${types}:string:ubyte:uint:ulong:ushort:void:wchar:wstring"
-    values="true:false:null:__FILE__:__MODULE__:__LINE__:__FUNCTION__"
-    values="${values}:__PRETTY_FUNCTION__:__DATE__:__EOF__:__TIME__"
-    values="${values}:__TIMESTAMP__:__VENDOR__:__VERSION__"
-    decorators="disable:property:nogc:safe:trusted:system"
+    keywords="alias|asm|assert|body|cast|class|delegate|delete|enum|function"
+    keywords="${keywords}|import|in|interface|invariant|is|lazy|mixin|module"
+    keywords="${keywords}|new|out|pragma|struct|super|typeid|typeof|union"
+    keywords="${keywords}|unittest|__parameters|__traits|__vector|break|case"
+    keywords="${keywords}|catch|continue|default|do|else|finally|for|foreach"
+    keywords="${keywords}|foreach_reverse|goto|if|return|switch|throw|try|with|while"
+    attributes="abstract|align|auto|const|debug|deprecated|export|extern|final"
+    attributes="${attributes}|immutable|inout|nothrow|package|private|protected"
+    attributes="${attributes}|public|pure|ref|override|scope|shared|static|synchronized|version|__gshared"
+    types="bool|byte|cdouble|cfloat|char|creal|dchar|double|dstring|float"
+    types="${types}|idouble|ifloat|int|ireal|long|ptrdiff_t|real|size_t|short"
+    types="${types}|string|ubyte|uint|ulong|ushort|void|wchar|wstring"
+    values="true|false|null|__FILE__|__MODULE__|__LINE__|__FUNCTION__"
+    values="${values}|__PRETTY_FUNCTION__|__DATE__|__EOF__|__TIME__"
+    values="${values}|__TIMESTAMP__|__VENDOR__|__VERSION__"
+    decorators="disable|property|nogc|safe|trusted|system"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=dlang %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=dlang %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -63,11 +63,11 @@ addhl -group /dlang/code regex "\<(this)\>\s*[^(]" 1:value
 
     # Highlight keywords
     echo "
-        addhl -group /dlang/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /dlang/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /dlang/code regex \<(${types//:/|})\> 0:type
-        addhl -group /dlang/code regex \<(${values//:/|})\> 0:value
-        addhl -group /dlang/code regex @(${decorators//:/|})\> 0:attribute
+        addhl -group /dlang/code regex \<(${keywords})\> 0:keyword
+        addhl -group /dlang/code regex \<(${attributes})\> 0:attribute
+        addhl -group /dlang/code regex \<(${types})\> 0:type
+        addhl -group /dlang/code regex \<(${values})\> 0:value
+        addhl -group /dlang/code regex @(${decorators})\> 0:attribute
     "
 }
 

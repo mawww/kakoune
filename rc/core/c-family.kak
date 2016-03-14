@@ -96,12 +96,12 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 %sh{
     # Grammar
-    keywords="while:for:if:else:do:switch:case:default:goto:asm:break:continue:return:sizeof"
-    attributes="const:auto:register:inline:static:volatile:struct:enum:union:typedef:extern:restrict"
-    types="void:char:short:int:long:signed:unsigned:float:double:size_t"
+    keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof"
+    attributes="const|auto|register|inline|static|volatile|struct|enum|union|typedef|extern|restrict"
+    types="void|char|short|int|long|signed|unsigned|float|double|size_t"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=c %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=c %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -109,9 +109,9 @@ addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
 
     # Highlight keywords
     echo "
-        addhl -group /c/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /c/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /c/code regex \<(${types//:/|})\> 0:type
+        addhl -group /c/code regex \<(${keywords})\> 0:keyword
+        addhl -group /c/code regex \<(${attributes})\> 0:attribute
+        addhl -group /c/code regex \<(${types})\> 0:type
     "
 }
 
@@ -120,20 +120,20 @@ addhl -group /cpp/code regex %{\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
 
 %sh{
     # Grammar
-    keywords="while:for:if:else:do:switch:case:default:goto:asm:break:continue"
-    keywords="${keywords}:return:using:try:catch:throw:new:delete:and:and_eq:or"
-    keywords="${keywords}:or_eq:not:operator:explicit:reinterpret_cast"
-    keywords="${keywords}:const_cast:static_cast:dynamic_cast:sizeof:alignof"
-    keywords="${keywords}:alignas:decltype"
-    attributes="const:constexpr:mutable:auto:noexcept:namespace:inline:static"
-    attributes="${attributes}:volatile:class:struct:enum:union:public:protected"
-    attributes="${attributes}:private:template:typedef:virtual:friend:extern"
-    attributes="${attributes}:typename:override:final"
-    types="void:char:short:int:long:signed:unsigned:float:double:size_t:bool"
-    values="this:true:false:NULL:nullptr"
+    keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue"
+    keywords="${keywords}|return|using|try|catch|throw|new|delete|and|and_eq|or"
+    keywords="${keywords}|or_eq|not|operator|explicit|reinterpret_cast"
+    keywords="${keywords}|const_cast|static_cast|dynamic_cast|sizeof|alignof"
+    keywords="${keywords}|alignas|decltype"
+    attributes="const|constexpr|mutable|auto|noexcept|namespace|inline|static"
+    attributes="${attributes}|volatile|class|struct|enum|union|public|protected"
+    attributes="${attributes}|private|template|typedef|virtual|friend|extern"
+    attributes="${attributes}|typename|override|final"
+    types="void|char|short|int|long|signed|unsigned|float|double|size_t|bool"
+    values="this|true|false|NULL|nullptr"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=cpp %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=cpp %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -142,10 +142,10 @@ addhl -group /cpp/code regex %{\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
 
     # Highlight keywords
     echo "
-        addhl -group /cpp/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /cpp/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /cpp/code regex \<(${types//:/|})\> 0:type
-        addhl -group /cpp/code regex \<(${values//:/|})\> 0:value
+        addhl -group /cpp/code regex \<(${keywords})\> 0:keyword
+        addhl -group /cpp/code regex \<(${attributes})\> 0:attribute
+        addhl -group /cpp/code regex \<(${types})\> 0:type
+        addhl -group /cpp/code regex \<(${values})\> 0:value
     "
 }
 
@@ -154,18 +154,18 @@ addhl -group /objc/code regex %{\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 %sh{
     # Grammar
-    keywords="while:for:if:else:do:switch:case:default:goto:break:continue:return"
-    attributes="const:auto:inline:static:volatile:struct:enum:union:typedef"
-    attributes="${attributes}:extern:__block:nonatomic:assign:copy:strong"
-    attributes="${attributes}:retain:weak:readonly:IBAction:IBOutlet"
-    types="void:char:short:int:long:signed:unsigned:float:bool:size_t"
-    types="${types}:instancetype:BOOL:NSInteger:NSUInteger:CGFloat:NSString"
-    values="self:nil:id:super:TRUE:FALSE:YES:NO:NULL"
-    decorators="property:synthesize:interface:implementation:protocol:end"
-    decorators="${decorators}:selector:autoreleasepool:try:catch:class:synchronized"
+    keywords="while|for|if|else|do|switch|case|default|goto|break|continue|return"
+    attributes="const|auto|inline|static|volatile|struct|enum|union|typedef"
+    attributes="${attributes}|extern|__block|nonatomic|assign|copy|strong"
+    attributes="${attributes}|retain|weak|readonly|IBAction|IBOutlet"
+    types="void|char|short|int|long|signed|unsigned|float|bool|size_t"
+    types="${types}|instancetype|BOOL|NSInteger|NSUInteger|CGFloat|NSString"
+    values="self|nil|id|super|TRUE|FALSE|YES|NO|NULL"
+    decorators="property|synthesize|interface|implementation|protocol|end"
+    decorators="${decorators}|selector|autoreleasepool|try|catch|class|synchronized"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=objc %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=objc %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -175,11 +175,11 @@ addhl -group /objc/code regex %{\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
     # Highlight keywords
     echo "
-        addhl -group /objc/code regex \<(${keywords//:/|})\> 0:keyword
-        addhl -group /objc/code regex \<(${attributes//:/|})\> 0:attribute
-        addhl -group /objc/code regex \<(${types//:/|})\> 0:type
-        addhl -group /objc/code regex \<(${values//:/|})\> 0:value
-        addhl -group /objc/code regex @(${decorators//:/|})\> 0:attribute
+        addhl -group /objc/code regex \<(${keywords})\> 0:keyword
+        addhl -group /objc/code regex \<(${attributes})\> 0:attribute
+        addhl -group /objc/code regex \<(${types})\> 0:type
+        addhl -group /objc/code regex \<(${values})\> 0:value
+        addhl -group /objc/code regex @(${decorators})\> 0:attribute
     "
 }
 

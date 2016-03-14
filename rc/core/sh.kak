@@ -17,20 +17,20 @@ addhl -group /sh/comment fill comment
 
 %sh{
     # Grammar
-    keywords="alias:bind:builtin:caller:case:cd:command:coproc:declare:do:done"
-    keywords="${keywords}:echo:elif:else:enable:esac:exit:fi:for:function:help"
-    keywords="${keywords}:if:in:let:local:logout:mapfile:printf:read:readarray"
-    keywords="${keywords}:readonly:return:select:set:shift:source:test:then"
-    keywords="${keywords}:time:type:typeset:ulimit:unalias:until:while"
+    keywords="alias|bind|builtin|caller|case|cd|command|coproc|declare|do|done"
+    keywords="${keywords}|echo|elif|else|enable|esac|exit|fi|for|function|help"
+    keywords="${keywords}|if|in|let|local|logout|mapfile|printf|read|readarray"
+    keywords="${keywords}|readonly|return|select|set|shift|source|test|then"
+    keywords="${keywords}|time|type|typeset|ulimit|unalias|until|while"
 
     # Add the language's grammar to the static completion list
-    echo "hook global WinSetOption filetype=sh %{
+    sed 's,|,:,g' <<< "hook global WinSetOption filetype=sh %{
         set window static_words '${keywords}'
     }"
 
     # Highlight keywords
     echo "
-        addhl -group /sh/code regex \<(${keywords//:/|})\> 0:keyword
+        addhl -group /sh/code regex \<(${keywords})\> 0:keyword
     "
 }
 
