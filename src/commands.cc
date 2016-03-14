@@ -61,7 +61,7 @@ static CandidateList complete_buffer_name(StringView query, ByteCount cursor_pos
 {
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b = nullptr)
+        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b)
             : RankedMatch{m}, buffer{b} {}
 
         using RankedMatch::operator==;

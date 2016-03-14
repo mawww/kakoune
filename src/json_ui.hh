@@ -8,7 +8,7 @@
 namespace Kakoune
 {
 
-class Value;
+struct Value;
 
 class JsonUI : public UserInterface
 {

@@ -97,7 +97,7 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const
 
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b = nullptr)
+        RankedMatchAndBuffer(const RankedMatch& m, const Buffer* b)
             : RankedMatch{m}, buffer{b} {}
 
         using RankedMatch::operator==;
@@ -130,18 +130,10 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const
         }
     }
 
-    {
-        using StaticWords = Vector<String, MemoryDomain::Options>;
-        const StaticWords& static_words = options["static_words"].get<StaticWords>();
-
-        for (auto& word : static_words)
-        {
-            if (prefix.empty())
-                matches.push_back(RankedMatch{word, prefix});
-            else if (RankedMatch match{word, prefix})
-                matches.push_back(match);
-        }
-    }
+    using StaticWords = Vector<String, MemoryDomain::Options>;
+    for (auto& word : options["static_words"].get<StaticWords>())
+        if (RankedMatch match{word, prefix})
+            matches.emplace_back(match, nullptr);
 
     unordered_erase(matches, StringView{prefix});
     std::sort(matches.begin(), matches.end());
