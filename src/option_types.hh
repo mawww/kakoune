@@ -108,9 +108,9 @@ template<typename Key, typename Value, MemoryDomain domain>
 String option_to_string(const HashMap<Key, Value, domain>& opt)
 {
     String res;
-    for (auto it = begin(opt); it != end(opt); ++it)
+    for (auto it = opt.begin(); it != opt.end(); ++it)
     {
-        if (it != begin(opt))
+        if (it != opt.begin())
             res += list_separator;
         String elem = escape(option_to_string(it->key), '=', '\\') + "=" +
                       escape(option_to_string(it->value), '=', '\\');

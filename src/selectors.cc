@@ -365,6 +365,7 @@ find_surrounding(const Container& container, Iterator pos,
                  StringView opening, StringView closing,
                  ObjectFlags flags, int init_level)
 {
+    using std::begin; using std::end;
     return find_surrounding(begin(container), end(container), pos,
                             opening, closing, flags, init_level);
 }

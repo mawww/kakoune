@@ -12,9 +12,11 @@ namespace Kakoune
 template<typename Factory>
 struct ContainerView { Factory factory; };
 
+template<typename Factory>
+ContainerView<Factory> make_view(Factory factory) { return {factory}; }
+
 template<typename Container, typename Factory>
-auto operator| (Container&& container, ContainerView<Factory> view) ->
-    decltype(view.factory(std::forward<Container>(container)))
+decltype(auto) operator| (Container&& container, ContainerView<Factory> view)
 {
     return view.factory(std::forward<Container>(container));
 }
@@ -307,32 +309,31 @@ ConcatView<Container1, Container2> concatenated(Container1&& container1, Contain
     return {container1, container2};
 }
 
-// Todo: move that into the following functions once we can remove the decltype
-//       return type.
-using std::begin;
-using std::end;
-
 template<typename Container, typename T>
-auto find(Container&& container, const T& value) -> decltype(begin(container))
+auto find(Container&& container, const T& value)
 {
+    using std::begin; using std::end;
     return std::find(begin(container), end(container), value);
 }
 
 template<typename Container, typename T>
-auto find_if(Container&& container, T op) -> decltype(begin(container))
+auto find_if(Container&& container, T op)
 {
+    using std::begin; using std::end;
     return std::find_if(begin(container), end(container), op);
 }
 
 template<typename Container, typename T>
 bool contains(Container&& container, const T& value)
 {
+    using std::end;
     return find(container, value) != end(container);
 }
 
 template<typename Container, typename T>
 bool contains_that(Container&& container, T op)
 {
+    using std::end;
     return find_if(container, op) != end(container);
 }
 

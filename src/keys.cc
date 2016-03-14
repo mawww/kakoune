@@ -100,7 +100,7 @@ KeyList parse_keys(StringView str)
 
         auto name_it = find_if(keynamemap, [&desc](const KeyAndName& item)
                                            { return item.name == desc; });
-        if (name_it != end(keynamemap))
+        if (name_it != std::end(keynamemap))
             result.push_back(canonicalize_ifn({ modifier, name_it->key }));
         else if (desc.char_length() == 1)
             result.emplace_back(modifier, desc[0_char]);
@@ -151,7 +151,7 @@ String key_to_str(Key key)
     String res;
     auto it = find_if(keynamemap, [&key](const KeyAndName& item)
                                   { return item.key == key.key; });
-    if (it != end(keynamemap))
+    if (it != std::end(keynamemap))
     {
         named = true;
         res = it->name;
