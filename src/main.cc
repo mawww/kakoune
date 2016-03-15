@@ -290,6 +290,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 {
     struct DummyUI : UserInterface
     {
+        DummyUI() { set_signal_handler(SIGINT, SIG_DFL); }
         void menu_show(ConstArrayView<DisplayLine>, CharCoord,
                        Face, Face, MenuStyle) override {}
         void menu_select(int) override {}
