@@ -441,6 +441,7 @@ public:
     {
         m_line = std::move(line);
         m_cursor_pos = m_line.char_length();
+        m_display_pos = 0;
     }
 
     const String& line() const { return m_line; }
