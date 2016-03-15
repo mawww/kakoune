@@ -655,7 +655,6 @@ public:
         if (m_autoshowcompl)
             refresh_completions(CompletionFlags::Fast);
         m_line_editor.reset(std::move(initstr));
-        display();
     }
 
     void on_key(Key key) override
@@ -867,6 +866,8 @@ private:
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
     }
+
+    void on_enabled() override { display(); }
 
     PromptCallback m_callback;
     Completer      m_completer;
