@@ -63,7 +63,7 @@ def -hidden _modeline-parse %{
                 BOM
             )
 
-            grep -qw "${key}" <<< "${OPTS_ALLOWED[@]}" || {
+            printf %s "${OPTS_ALLOWED[@]}" | grep -qw "${key}" || {
                 printf %s "Unsupported kakoune variable: ${key}" >&2;
                 return;
             }
@@ -77,9 +77,10 @@ def -hidden _modeline-parse %{
         # It will also convert the ':' seperators beween the option=value pairs
         # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
         options=(
-            $(sed -r -e 's/^(.+\s\w+:\s?(set?)?\s)//' \
-                     -e 's/:?\s[^a-zA-Z0-9_=-]+$//' \
-                     -e 's/:/ /g' <<< "${kak_selection}")
+            $(printf %s "${kak_selection}" | sed -r \
+                    -e 's/^(.+\s\w+:\s?(set?)?\s)//' \
+                    -e 's/:?\s[^a-zA-Z0-9_=-]+$//' \
+                    -e 's/:/ /g')
         )
 
         case "${kak_selection}" in
