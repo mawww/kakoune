@@ -14,12 +14,12 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         latest_backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -newer "${kak_bufname}" -name "\.${buffer_basename}\.kak\.*" -printf '%A@/%p\n' 2>/dev/null \
                              | sort -n -t. -k1 | sed -nr 's/^[^\/]+\///;$p')
         if [ -z "${latest_backup_path}" ]; then
-            echo "eval -draft %{ autorestore-purge-backups }";
+            printf %s "eval -draft %{ autorestore-purge-backups }";
             exit;
         fi
 
         ## Replace the content of the buffer with the content of the backup file
-        echo "
+        printf %s "
             exec -draft %{ %d!cat<space>${latest_backup_path}<ret>d }
             echo -color Information 'Backup restored'
         "
@@ -28,7 +28,7 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         ## the current buffer has been saved
         ## If the autorestore_purge_restored option has been unset right after the
         ## buffer was restored, do not remove the backup
-        echo "
+        printf %s "
             hook -group autorestore global BufWritePost (.+/)?${kak_bufname} %{
                 nop %sh{
                     if [ \"\${kak_opt_autorestore_purge_restored}\" = true ]; then

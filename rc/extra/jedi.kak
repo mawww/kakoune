@@ -6,12 +6,12 @@ def jedi-complete -docstring "Complete the current selection with jedi" %{
     %sh{
         dir=$(mktemp -d -t kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
-        echo "set buffer jedi_tmp_dir ${dir}"
-        echo "write ${dir}/buf"
+        printf %s "set buffer jedi_tmp_dir ${dir}"
+        printf %s "write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_jedi_tmp_dir}
-        echo "eval -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
+        printf %s "eval -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         (
             cd $(dirname ${kak_buffile})
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"

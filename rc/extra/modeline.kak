@@ -35,17 +35,17 @@ def -hidden _modeline-parse %{
                     case "${value}" in
                         unix) tr="eolformat lf";;
                         dos) tr="eolformat crlf";;
-                        *) echo "Unsupported file format: ${value}" >&2;;
+                        *) printf %s "Unsupported file format: ${value}" >&2;;
                     esac
                 ;;
                 ft) ;&
                 filetype) tr="filetype ${value}";;
                 bomb) tr="BOM utf8";;
                 nobomb) tr="BOM none";;
-                *) echo "Unsupported vim variable: ${key}" >&2;;
+                *) printf %s "Unsupported vim variable: ${key}" >&2;;
             esac
 
-            [ -n "${tr}" ] && echo "set buffer ${tr}"
+            [ -n "${tr}" ] && printf %s "set buffer ${tr}"
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -64,11 +64,11 @@ def -hidden _modeline-parse %{
             )
 
             grep -qw "${key}" <<< "${OPTS_ALLOWED[@]}" || {
-                echo "Unsupported kakoune variable: ${key}" >&2;
+                printf %s "Unsupported kakoune variable: ${key}" >&2;
                 return;
             }
 
-            echo "set buffer ${key} ${value}"
+            printf %s "set buffer ${key} ${value}"
         }
 
         # The following subshell will keep the actual options of the modeline, and strip:
@@ -87,7 +87,7 @@ def -hidden _modeline-parse %{
             *vim:*) type_selection="vim";;
             *kak:*) ;&
             *kakoune:*) type_selection="kakoune";;
-            *) echo "echo -debug Unsupported modeline format";;
+            *) printf %s "echo -debug Unsupported modeline format";;
         esac
         [ -n "${type_selection}" ] || exit 1
 
@@ -100,7 +100,7 @@ def -hidden _modeline-parse %{
                 kakoune) tr=$(translate_opt_kakoune "${name_option}" "${value_option}");;
             esac
 
-            [ -n "${tr}" ] && echo "${tr}"
+            [ -n "${tr}" ] && printf %s "${tr}"
         done
     }
 }

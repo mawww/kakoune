@@ -25,25 +25,25 @@ def -hidden -params .. _man %{ %sh{
     col -b -x > ${colout} < ${manout}
     rm ${manout}
     if [ "${retval}" -eq 0 ]; then
-        echo "edit! -scratch '*man*'
+        printf %s "edit! -scratch '*man*'
               exec |cat<space>${colout}<ret>gk
               nop %sh{rm ${colout}}
               set buffer filetype man"
     else
-       echo "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
+       printf %s "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
        rm ${colout}
     fi
 } }
 
 def -params .. \
   -shell-completion %{
-    prefix=$(echo "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
+    prefix=$(printf %s "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
         candidate=$(basename ${page%%.[1-8]*})
         pagenum=$(printf %s "$page" | sed -r 's,^.+/.+\.([1-8][^.]*)\..+$,\1,')
         case $candidate in
             *\*) ;;
-            *) echo $candidate\($pagenum\);;
+            *) printf %s $candidate\($pagenum\);;
         esac
     done
   } \
@@ -56,5 +56,5 @@ def -params .. \
         subject=${subject%%\(*}
     fi
 
-    echo "eval -collapse-jumps -try-client %opt{docsclient} _man $pagenum $subject"
+    printf %s "eval -collapse-jumps -try-client %opt{docsclient} _man $pagenum $subject"
 } }

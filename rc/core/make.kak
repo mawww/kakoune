@@ -7,7 +7,7 @@ def -params .. make -docstring "Make utility wrapper" %{ %sh{
      mkfifo ${output}
      ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
-     echo "eval -try-client '$kak_opt_toolsclient' %{
+     printf %s "eval -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *make*
                set buffer filetype make
                set buffer _make_current_error_line 0

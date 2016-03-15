@@ -4,8 +4,8 @@
 hook global KakBegin .* %{
     %sh{
         if [ -n "$TMUX" ]; then
-            echo "alias global repl tmux-repl-horizontal"
-            echo "alias global send-text tmux-send-text"
+            printf %s "alias global repl tmux-repl-horizontal"
+            printf %s "alias global send-text tmux-send-text"
         fi
     }
 }
@@ -13,7 +13,7 @@ hook global KakBegin .* %{
 def -hidden -params 1..2 tmux-repl-impl %{
     %sh{
         if [ -z "$TMUX" ]; then
-            echo "echo -color Error This command is only available in a tmux session"
+            printf %s "echo -color Error This command is only available in a tmux session"
             exit
         fi
         tmux_args="$1"

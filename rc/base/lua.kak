@@ -35,12 +35,12 @@ addhl -group /lua/code regex \b(and|break|do|else|elseif|end|false|for|function|
 def lua-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.lua)
-            altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
-            [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
+            altfile=$(eval printf %s $(printf %s $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
+            [ ! -f $altfile ] && printf %s "echo -color Error 'implementation file not found'" && exit
         ;;
         *.lua)
             path=$kak_buffile
-            dirs=$(while [ $path ]; do echo $path; path=${path%/*}; done | tail -n +2)
+            dirs=$(while [ $path ]; do printf %s $path; path=${path%/*}; done | tail -n +2)
             for dir in $dirs; do
                 altdir=$dir/spec
                 if [ -d $altdir ]; then
@@ -48,13 +48,13 @@ def lua-alternative-file -docstring 'Jump to the alternate file (implementation 
                     break
                 fi
             done
-            [ ! -d $altdir ] && echo "echo -color Error 'spec/ not found'" && exit
+            [ ! -d $altdir ] && printf %s "echo -color Error 'spec/ not found'" && exit
         ;;
         *)
-            echo "echo -color Error 'alternative file not found'" && exit
+            printf %s "echo -color Error 'alternative file not found'" && exit
         ;;
     esac
-    echo "edit $altfile"
+    printf %s "edit $altfile"
 }}
 
 def -hidden _lua_filter_around_selections %{

@@ -4,7 +4,7 @@ def -docstring 'create a new window for repl interaction' \
     -command-completion \
     x11-repl %{ %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -color Error 'termcmd option is not set'"
+           printf %s "echo -color Error 'termcmd option is not set'"
            exit
         fi
         if [ $# -eq 0 ]; then cmd="bash"; else cmd="$1"; fi
@@ -13,7 +13,7 @@ def -docstring 'create a new window for repl interaction' \
 
 def x11-send-text -docstring "send selected text to the repl window" %{
     nop %sh{
-        echo "${kak_selection}" | xsel -i
+        printf %s "${kak_selection}" | xsel -i
         wid=$(xdotool getactivewindow)
         xdotool search --name kak_repl_window windowactivate
         xdotool key --clearmodifiers "Shift+Insert"

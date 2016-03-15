@@ -23,7 +23,7 @@ def -docstring 'create a new kak client for current session' \
     -command-completion \
     x11-new %{ %sh{
         if [ -z "${kak_opt_termcmd}" ]; then
-           echo "echo -color Error 'termcmd option is not set'"
+           printf %s "echo -color Error 'termcmd option is not set'"
            exit
         fi
         if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
@@ -34,9 +34,9 @@ def -docstring 'focus given client\'s window' \
     -params 0..1 -client-completion \
     x11-focus %{ %sh{
         if [ $# -gt 1 ]; then
-            echo "echo -color Error 'too many arguments, use focus [client]'"
+            printf %s "echo -color Error 'too many arguments, use focus [client]'"
         elif [ $# -eq 1 ]; then
-            echo "eval -client '$1' focus"
+            printf %s "eval -client '$1' focus"
         else
             xdotool windowactivate $kak_client_env_WINDOWID > /dev/null
         fi

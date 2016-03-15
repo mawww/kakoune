@@ -5,13 +5,13 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
     try %{ addhl ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d -t kak-spell.XXXXXXXX)/buffer
-        echo "write ${file}"
-        echo "set buffer spell_tmp_file ${file}"
+        printf %s "write ${file}"
+        printf %s "set buffer spell_tmp_file ${file}"
     }
     %sh{
         if [ $# -ge 1 ]; then
             if [ ${#1} -ne 2 -a ${#1} -ne 5 ]; then
-                echo "echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)"
+                printf %s "echo -color Error Invalid language code (examples of expected format: en, en_US, en-US)"
                 rm -r $(dirname $kak_opt_spell_tmp_file)
                 exit 1
             else
@@ -31,14 +31,14 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
                        word=$(printf %s "$line" | cut -d ' ' -f 2)
                        begin=${begin:-$(printf %s "$line" | cut -d ' ' -f 3)}
                        end=$((begin + ${#word}))
-                       # echo "echo -debug -- line: $line_num, word: $word, begin: $begin, end: $end"
+                       # printf %s "echo -debug -- line: $line_num, word: $word, begin: $begin, end: $end"
                        regions="$regions:$line_num.$begin,$line_num.$end|Error"
                        ;;
                    '') ((++line_num)) ;;
                    *) ;;
                 esac
             done
-            echo "set buffer spell_regions %{$regions}"
+            printf %s "set buffer spell_regions %{$regions}"
         }
         rm -r $(dirname $kak_opt_spell_tmp_file)
     }

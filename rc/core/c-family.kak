@@ -218,10 +218,10 @@ def -hidden _c-family-insert-include-guards %{
     %sh{
         case "${kak_opt_c_include_guard_style,,}" in
             ifdef)
-                echo "exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>"
+                printf %s "exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>"
                 ;;
             pragma)
-                echo "exec ggi#pragma<space>once<esc>"
+                printf %s "exec ggi#pragma<space>once<esc>"
                 ;;
             *);;
         esac
@@ -257,13 +257,13 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
             done
         ;;
         *)
-            echo "echo -color Error 'extension not recognized'"
+            printf %s "echo -color Error 'extension not recognized'"
             exit
         ;;
     esac
     if [ -f ${altname} ]; then
-       echo "edit '${altname}'"
+       printf %s "edit '${altname}'"
     else
-       echo "echo -color Error 'alternative file not found'"
+       printf %s "echo -color Error 'alternative file not found'"
     fi
 }}
