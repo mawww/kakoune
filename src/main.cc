@@ -450,7 +450,7 @@ int run_client(StringView session, StringView init_command, UIType ui_type)
 
 int run_server(StringView session, StringView init_command,
                bool ignore_kakrc, bool daemon, UIType ui_type,
-               ConstArrayView<StringView> files, LineCount target_line)
+               ConstArrayView<StringView> files, ByteCoord target_coord)
 {
     static bool terminate = false;
     if (daemon)
@@ -551,8 +551,8 @@ int run_server(StringView session, StringView init_command,
         {
             auto& selections = local_client->context().selections_write_only();
             auto& buffer = selections.buffer();
-            selections = SelectionList(buffer, buffer.clamp(target_line));
-            local_client->context().window().center_line(target_line);
+            selections = SelectionList(buffer, buffer.clamp(target_coord));
+            local_client->context().window().center_line(target_coord.line);
         }
 
         if (startup_error)
@@ -788,15 +788,19 @@ int main(int argc, char* argv[])
         }
         else
         {
-            LineCount target_line = 0;
+            ByteCoord target_coord;
             Vector<StringView> files;
             for (auto& name : parser)
             {
                 if (not name.empty() and name[0_byte] == '+')
                 {
-                    if (auto line = str_to_int_ifp(name.substr(1_byte)))
+                    auto colon = find(name, ':');
+                    if (auto line = str_to_int_ifp({name.begin()+1, colon}))
                     {
-                        target_line =  *line - 1;
+                        target_coord.line = *line - 1;
+                        if (colon != name.end())
+                            target_coord.column = str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1;
+
                         continue;
                     }
                 }
@@ -810,7 +814,7 @@ int main(int argc, char* argv[])
                 return run_server(session, init_command,
                                   (bool)parser.get_switch("n"),
                                   (bool)parser.get_switch("d"),
-                                  ui_type, files, target_line);
+                                  ui_type, files, target_coord);
             }
             catch (convert_to_client_mode& convert)
             {
