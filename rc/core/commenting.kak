@@ -14,7 +14,7 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
         readonly opening=$(exec_proof "${kak_opt_comment_selection_chars%%:*}")
         readonly closing=$(exec_proof "${kak_opt_comment_selection_chars##*:}")
 
-        if [ -z "${opening}" -o -z "${closing}" ]; then
+        if [ -z "${opening}" ] || [ -z "${closing}" ]; then
             printf %s "The \`comment_selection_chars\` variable is empty, couldn't comment the selection" >&2
             exit
         fi
