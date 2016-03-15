@@ -345,57 +345,42 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
     ByteCoord begin;
     ByteCoord end;
     const bool at_end = is_end(pos);
-    // if we inserted at the end of the buffer, we have created a new
-    // line without inserting a '\n'
     if (at_end)
+        pos = line_count();
+
+    const StringView prefix = at_end ?
+        StringView{} : m_lines[pos.line].substr(0, pos.column);
+    const StringView suffix = at_end ?
+        StringView{} : m_lines[pos.line].substr(pos.column);
+
+    LineList new_lines;
+    ByteCount start = 0;
+    for (ByteCount i = 0; i < content.length(); ++i)
     {
-        ByteCount start = 0;
-        for (ByteCount i = 0; i < content.length(); ++i)
+        if (content[i] == '\n')
         {
-            if (content[i] == '\n')
-            {
-                m_lines.push_back(StringData::create(content.substr(start, i + 1 - start)));
-                start = i + 1;
-            }
+            StringView line = content.substr(start, i + 1 - start);
+            new_lines.push_back(StringData::create(start == 0 ? prefix + line : line));
+            start = i + 1;
         }
-        if (start != content.length())
-            m_lines.push_back(StringData::create(content.substr(start)));
-
-        begin = pos.column == 0 ? pos : ByteCoord{ pos.line + 1, 0 };
-        end = ByteCoord{ line_count(), 0 };
     }
-    else
-    {
-        StringView prefix = m_lines[pos.line].substr(0, pos.column);
-        StringView suffix = m_lines[pos.line].substr(pos.column);
+    if (start == 0)
+        new_lines.push_back(StringData::create(prefix + content + suffix));
+    else if (start != content.length() or not suffix.empty())
+        new_lines.push_back(StringData::create(content.substr(start) + suffix));
 
-        LineList new_lines;
+    auto line_it = m_lines.begin() + (int)pos.line;
+    auto new_lines_it = new_lines.begin();
+    if (not at_end)
+        *line_it++ = std::move(*new_lines_it++);
 
-        ByteCount start = 0;
-        for (ByteCount i = 0; i < content.length(); ++i)
-        {
-            if (content[i] == '\n')
-            {
-                StringView line = content.substr(start, i + 1 - start);
-                new_lines.push_back(StringData::create(start == 0 ? prefix + line : line));
-                start = i + 1;
-            }
-        }
-        if (start == 0)
-            new_lines.push_back(StringData::create(prefix + content + suffix));
-        else if (start != content.length() or not suffix.empty())
-            new_lines.push_back(StringData::create(content.substr(start) + suffix));
+    m_lines.insert(line_it,
+                   std::make_move_iterator(new_lines_it),
+                   std::make_move_iterator(new_lines.end()));
 
-        auto line_it = m_lines.begin() + (int)pos.line;
-        *line_it = std::move(*new_lines.begin());
-
-        m_lines.insert(line_it+1, std::make_move_iterator(new_lines.begin() + 1),
-                       std::make_move_iterator(new_lines.end()));
-
-        begin = pos;
-        const LineCount last_line = pos.line + new_lines.size() - 1;
-        end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
-    }
+    begin = pos;
+    const LineCount last_line = pos.line + new_lines.size() - 1;
+    end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, at_end, begin, end });
     return begin;
