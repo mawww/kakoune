@@ -686,8 +686,7 @@ UnitTest test_undo{[]()
     buffer.insert(buffer.iterator_at(2_line), "tchou\n");
     buffer.insert(buffer.iterator_at(2_line), "mutch\n");
     buffer.erase(buffer.iterator_at({2, 1}), buffer.iterator_at({2, 5}));
-    buffer.erase(buffer.iterator_at(2_line), buffer.end());
-    buffer.insert(buffer.end(), "youpi");
+    buffer.replace(buffer.iterator_at(2_line), buffer.end(), "youpi");
     buffer.undo();
     buffer.redo();
     buffer.undo();
