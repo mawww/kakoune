@@ -342,8 +342,6 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
     if (content.empty())
         return pos;
 
-    ByteCoord begin;
-    ByteCoord end;
     const bool at_end = is_end(pos);
     if (at_end)
         pos = line_count();
@@ -378,12 +376,11 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
                    std::make_move_iterator(new_lines_it),
                    std::make_move_iterator(new_lines.end()));
 
-    begin = pos;
     const LineCount last_line = pos.line + new_lines.size() - 1;
-    end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
+    const ByteCoord end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
-    m_changes.push_back({ Change::Insert, at_end, begin, end });
-    return begin;
+    m_changes.push_back({ Change::Insert, at_end, pos, end });
+    return pos;
 }
 
 ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
