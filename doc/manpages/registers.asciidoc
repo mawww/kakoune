@@ -55,3 +55,15 @@ contain some special data
 
 *#*::
 	selection indices (first selection has 1, second has 2, ...)
+
+Integer registers
+-----------------
+Registers *1* to *9* hold the grouped sub-matches of the regular
+expression used to make the last selection. Example: applying the
+following regular expression to the date of the day would put the day of
+the week in register *1*, the month in register *2*, and the day of the
+month in register *3*, but select the entire date:
+
+--------------------
+(\w+) (\w+) (\d+) .+
+--------------------
