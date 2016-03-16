@@ -8,7 +8,7 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
     %sh{
         function exec_proof {
             ## Replace the '<' sign that is interpreted differently in `exec`
-            printf %s "$@" | sed -r 's,<,<lt>,g'
+            printf %s "$@" | sed 's,<,<lt>,g'
         }
 
         readonly opening=$(exec_proof "${kak_opt_comment_selection_chars%%:*}")
