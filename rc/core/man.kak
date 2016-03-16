@@ -40,10 +40,10 @@ def -params .. \
     prefix=$(printf %s "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
         candidate=$(basename ${page%%.[1-8]*})
-        pagenum=$(printf %s "$page" | sed -r 's,^.+/.+\.([1-8][^.]*)\..+$,\1,')
+        pagenum=$(printf %s "$page" | sed 's,^.*\.\([1-8].*\)\..*$,\1,')
         case $candidate in
             *\*) ;;
-            *) printf %s $candidate\($pagenum\);;
+            *) printf %s\\n $candidate\($pagenum\);;
         esac
     done
   } \
