@@ -343,8 +343,9 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
         return pos;
 
     const bool at_end = is_end(pos);
+    const bool append_lines = at_end and (m_lines.empty() or byte_at(back_coord()) == '\n');
     if (at_end)
-        pos = line_count();
+        pos = append_lines ? line_count() : end_coord();
 
     const StringView prefix = at_end ?
         StringView{} : m_lines[pos.line].substr(0, pos.column);
@@ -369,7 +370,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
 
     auto line_it = m_lines.begin() + (int)pos.line;
     auto new_lines_it = new_lines.begin();
-    if (not at_end)
+    if (not append_lines)
         *line_it++ = std::move(*new_lines_it++);
 
     m_lines.insert(line_it,
@@ -471,6 +472,25 @@ BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
         m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
                                           intern(string(begin.coord(), end.coord())));
     return {*this, do_erase(begin.coord(), end.coord())};
+}
+
+BufferIterator Buffer::replace(const BufferIterator& begin, const BufferIterator& end, StringView content)
+{
+    if (not (m_flags & Flags::NoUndo))
+        m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
+                                          intern(string(begin.coord(), end.coord())));
+    auto pos = do_erase(begin.coord(), end.coord());
+
+    StringDataPtr real_content;
+    if (is_end(pos) and content.back() != '\n')
+        real_content = intern(content + "\n");
+    else
+        real_content = intern(content);
+
+    auto coord = is_end(pos) ? ByteCoord{line_count()} : pos;
+    if (not (m_flags & Flags::NoUndo))
+        m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
+    return {*this, do_insert(pos, real_content->strview())};
 }
 
 bool Buffer::is_modified() const

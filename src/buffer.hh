@@ -123,6 +123,7 @@ public:
 
     BufferIterator insert(const BufferIterator& pos, StringView content);
     BufferIterator erase(BufferIterator begin, BufferIterator end);
+    BufferIterator replace(const BufferIterator& begin, const BufferIterator& end, StringView content);
 
     size_t         timestamp() const;
     timespec       fs_timestamp() const;

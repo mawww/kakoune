@@ -439,7 +439,7 @@ BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode m
     case InsertMode::InsertCursor:
         return buffer.iterator_at(sel.cursor());
     case InsertMode::Replace:
-        return erase(buffer, sel);
+        return {}; // replace is handled specially, by calling Buffer::replace
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
@@ -482,21 +482,24 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         changes_tracker.update(*m_buffer, m_timestamp);
 
         const String& str = strings[std::min(index, strings.size()-1)];
-        if (str.empty())
-        {
-            if (mode == InsertMode::Replace)
-                sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
-            continue;
-        }
 
-        pos = m_buffer->insert(pos, str);
+        if (mode == InsertMode::Replace)
+            pos = replace(*m_buffer, sel, str);
+        else
+            pos = m_buffer->insert(pos, str);
 
         auto& change = m_buffer->changes_since(m_timestamp).back();
-        changes_tracker.update(change);
+        changes_tracker.update(*m_buffer, m_timestamp);
         m_timestamp = m_buffer->timestamp();
 
         if (select_inserted or mode == InsertMode::Replace)
         {
+            if (str.empty())
+            {
+                sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
+                continue;
+            }
+
             // we want min and max from *before* we do any change
             auto& min = sel.min();
             auto& max = sel.max();
@@ -505,6 +508,9 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         }
         else
         {
+            if (str.empty())
+                continue;
+
             sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), change.begin, change.end));
             sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), change.begin, change.end));
         }

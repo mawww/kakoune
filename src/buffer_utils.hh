@@ -21,6 +21,13 @@ inline BufferIterator erase(Buffer& buffer, const Selection& range)
                         buffer.iterator_at(buffer.char_next(range.max())));
 }
 
+inline BufferIterator replace(Buffer& buffer, const Selection& range, StringView content)
+{
+    return buffer.replace(buffer.iterator_at(range.min()),
+                          buffer.iterator_at(buffer.char_next(range.max())),
+                          content);
+}
+
 inline CharCount char_length(const Buffer& buffer, const Selection& range)
 {
     return utf8::distance(buffer.iterator_at(range.min()),
