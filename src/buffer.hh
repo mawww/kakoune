@@ -121,9 +121,9 @@ public:
     bool set_name(String name);
     void update_display_name();
 
-    BufferIterator insert(const BufferIterator& pos, StringView content);
-    BufferIterator erase(BufferIterator begin, BufferIterator end);
-    BufferIterator replace(const BufferIterator& begin, const BufferIterator& end, StringView content);
+    ByteCoord insert(ByteCoord pos, StringView content);
+    ByteCoord erase(ByteCoord begin, ByteCoord end);
+    ByteCoord replace(ByteCoord begin, ByteCoord end, StringView content);
 
     size_t         timestamp() const;
     timespec       fs_timestamp() const;

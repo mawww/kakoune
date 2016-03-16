@@ -439,47 +439,49 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-BufferIterator Buffer::insert(const BufferIterator& pos, StringView content)
+ByteCoord Buffer::insert(ByteCoord pos, StringView content)
 {
-    kak_assert(is_valid(pos.coord()));
+    kak_assert(is_valid(pos));
     if (content.empty())
         return pos;
 
     StringDataPtr real_content;
-    if (pos == end() and content.back() != '\n')
+    if (is_end(pos) and content.back() != '\n')
         real_content = intern(content + "\n");
     else
         real_content = intern(content);
 
     // for undo and redo purpose it is better to use one past last line rather
     // than one past last char coord.
-    auto coord = pos == end() ? ByteCoord{line_count()} : pos.coord();
+    auto coord = is_end(pos) ? ByteCoord{line_count()} : pos;
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
-    return {*this, do_insert(pos.coord(), real_content->strview())};
+    return do_insert(pos, real_content->strview());
 }
 
-BufferIterator Buffer::erase(BufferIterator begin, BufferIterator end)
+ByteCoord Buffer::erase(ByteCoord begin, ByteCoord end)
 {
-    // do not erase last \n except if we erase from the start of a line
-    if (end == this->end() and (begin.coord().column != 0 or begin == this->begin()))
-        --end;
+    kak_assert(is_valid(begin) and is_valid(end));
+    // do not erase last \n except if we erase from the start of a line, and normalize
+    // end coord
+    if (is_end(end))
+        end = (begin.column != 0 or begin == ByteCoord{0,0}) ? prev(end) : end_coord();
 
-    if (begin == end)
+    if (begin >= end) // use >= to handle case where begin is {line_count}
         return begin;
 
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
-                                          intern(string(begin.coord(), end.coord())));
-    return {*this, do_erase(begin.coord(), end.coord())};
+        m_current_undo_group.emplace_back(Modification::Erase, begin,
+                                          intern(string(begin, end)));
+    return do_erase(begin, end);
 }
 
-BufferIterator Buffer::replace(const BufferIterator& begin, const BufferIterator& end, StringView content)
+ByteCoord Buffer::replace(ByteCoord begin, ByteCoord end, StringView content)
 {
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.emplace_back(Modification::Erase, begin.coord(),
-                                          intern(string(begin.coord(), end.coord())));
-    auto pos = do_erase(begin.coord(), end.coord());
+        m_current_undo_group.emplace_back(Modification::Erase, begin,
+                                          intern(string(begin, end)));
+    auto pos = do_erase(begin, end);
 
     StringDataPtr real_content;
     if (is_end(pos) and content.back() != '\n')
@@ -490,7 +492,7 @@ BufferIterator Buffer::replace(const BufferIterator& begin, const BufferIterator
     auto coord = is_end(pos) ? ByteCoord{line_count()} : pos;
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
-    return {*this, do_insert(pos, real_content->strview())};
+    return do_insert(pos, real_content->strview());
 }
 
 bool Buffer::is_modified() const
@@ -650,7 +652,7 @@ UnitTest test_buffer{[]()
     kak_assert(pos.coord() == ByteCoord{0 COMMA 6});
     pos += 1;
     kak_assert(pos.coord() == ByteCoord{1 COMMA 0});
-    buffer.insert(pos, "tchou kanaky\n");
+    buffer.insert(pos.coord(), "tchou kanaky\n");
     kak_assert(buffer.line_count() == 5);
     BufferIterator pos2 = buffer.end();
     pos2 -= 9;
@@ -661,16 +663,16 @@ UnitTest test_buffer{[]()
 
     // check insert at end behaviour: auto add end of line if necessary
     pos = buffer.end()-1;
-    buffer.insert(pos, "tchou");
+    buffer.insert(pos.coord(), "tchou");
     kak_assert(buffer.string(pos.coord(), buffer.end_coord()) == StringView{"tchou\n"});
 
     pos = buffer.end()-1;
-    buffer.insert(buffer.end(), "kanaky\n");
+    buffer.insert(buffer.end_coord(), "kanaky\n");
     kak_assert(buffer.string((pos+1).coord(), buffer.end_coord()) == StringView{"kanaky\n"});
 
     buffer.commit_undo_group();
-    buffer.erase(pos+1, buffer.end());
-    buffer.insert(buffer.end(), "mutch\n");
+    buffer.erase((pos+1).coord(), buffer.end_coord());
+    buffer.insert(buffer.end_coord(), "mutch\n");
     buffer.commit_undo_group();
     buffer.undo();
     kak_assert(buffer.string(buffer.advance(buffer.end_coord(), -7), buffer.end_coord()) == StringView{"kanaky\n"});
@@ -681,12 +683,12 @@ UnitTest test_buffer{[]()
 UnitTest test_undo{[]()
 {
     Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
-    auto pos = buffer.insert(buffer.end(), "kanaky\n");
-    buffer.erase(pos, buffer.end());
-    buffer.insert(buffer.iterator_at(2_line), "tchou\n");
-    buffer.insert(buffer.iterator_at(2_line), "mutch\n");
-    buffer.erase(buffer.iterator_at({2, 1}), buffer.iterator_at({2, 5}));
-    buffer.replace(buffer.iterator_at(2_line), buffer.end(), "youpi");
+    auto pos = buffer.insert(buffer.end_coord(), "kanaky\n");
+    buffer.erase(pos, buffer.end_coord());
+    buffer.insert(2_line, "tchou\n");
+    buffer.insert(2_line, "mutch\n");
+    buffer.erase({2, 1}, {2, 5});
+    buffer.replace(2_line, buffer.end_coord(), "youpi");
     buffer.undo();
     buffer.redo();
     buffer.undo();

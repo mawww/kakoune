@@ -1244,7 +1244,7 @@ void align(Context& context, NormalParams)
                 auto spaces = targetcol - (tabs ? (tabcol + tabs * tabstop) : inscol);
                 padstr = String{ '\t', tabs } + String{ ' ', spaces };
             }
-            buffer.insert(buffer.iterator_at(insert_coord), std::move(padstr));
+            buffer.insert(insert_coord, std::move(padstr));
         }
         selections.update();
     }
@@ -1283,8 +1283,7 @@ void copy_indent(Context& context, NormalParams params)
         ByteCount i = 0;
         while (i < line.length() and is_horizontal_blank(line[i]))
             ++i;
-        buffer.erase(buffer.iterator_at(l), buffer.iterator_at({l, i}));
-        buffer.insert(buffer.iterator_at(l), indent);
+        buffer.replace(l, {l, i}, indent);
     }
 }
 

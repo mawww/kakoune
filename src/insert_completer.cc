@@ -350,8 +350,8 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
         if (cursor.column >= prefix_len and (pos + suffix_len) != buffer.end() and
             std::equal(ref.begin(), ref.end(), pos - prefix_len))
         {
-            pos = buffer.erase(pos - prefix_len, pos + suffix_len);
-            buffer.insert(pos, candidate.completion);
+            buffer.replace((pos - prefix_len).coord(),
+                           (pos + suffix_len).coord(), candidate.completion);
             const_cast<SelectionList&>(selections).update();
         }
     }

@@ -430,32 +430,32 @@ void SelectionList::avoid_eol()
     }
 }
 
-BufferIterator prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
+ByteCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
 {
     switch (mode)
     {
     case InsertMode::Insert:
-        return buffer.iterator_at(sel.min());
+        return sel.min();
     case InsertMode::InsertCursor:
-        return buffer.iterator_at(sel.cursor());
+        return sel.cursor();
     case InsertMode::Replace:
         return {}; // replace is handled specially, by calling Buffer::replace
     case InsertMode::Append:
     {
         // special case for end of lines, append to current line instead
-        auto pos = buffer.iterator_at(sel.max());
-        return *pos == '\n' ? pos : utf8::next(pos, buffer.end());
+        auto pos = sel.max();
+        return buffer.byte_at(pos) == '\n' ? pos : buffer.char_next(pos);
     }
     case InsertMode::InsertAtLineBegin:
-        return buffer.iterator_at(sel.min().line);
+        return sel.min().line;
     case InsertMode::AppendAtLineEnd:
-        return buffer.iterator_at({sel.max().line, buffer[sel.max().line].length() - 1});
+        return {sel.max().line, buffer[sel.max().line].length() - 1};
     case InsertMode::InsertAtNextLineBegin:
-        return buffer.iterator_at(sel.max().line+1);
+        return sel.max().line+1;
     case InsertMode::OpenLineBelow:
-        return buffer.insert(buffer.iterator_at(sel.max().line + 1), "\n");
+        return buffer.insert(sel.max().line + 1, "\n");
     case InsertMode::OpenLineAbove:
-        return buffer.insert(buffer.iterator_at(sel.min().line), "\n");
+        return buffer.insert(sel.min().line, "\n");
     }
     kak_assert(false);
     return {};
@@ -496,7 +496,7 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         {
             if (str.empty())
             {
-                sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
+                sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
                 continue;
             }
 
@@ -535,7 +535,7 @@ void SelectionList::erase()
         kak_assert(m_buffer->is_valid(sel.cursor()));
 
         auto pos = Kakoune::erase(*m_buffer, sel);
-        sel.anchor() = sel.cursor() = m_buffer->clamp(pos.coord());
+        sel.anchor() = sel.cursor() = m_buffer->clamp(pos);
         changes_tracker.update(*m_buffer, m_timestamp);
     }
 

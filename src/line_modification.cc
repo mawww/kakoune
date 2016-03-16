@@ -107,7 +107,7 @@ UnitTest test_line_modifications{[]()
     {
         Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
         auto ts = buffer.timestamp();
-        buffer.erase(buffer.iterator_at({1, 0}), buffer.iterator_at({2, 0}));
+        buffer.erase({1, 0}, {2, 0});
 
         auto modifs = compute_line_modifications(buffer, ts);
         kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 1 COMMA 1 COMMA 1 COMMA 0 });
@@ -116,7 +116,7 @@ UnitTest test_line_modifications{[]()
     {
         Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
         auto ts = buffer.timestamp();
-        buffer.insert(buffer.iterator_at({1, 7}), "line 3");
+        buffer.insert({1, 7}, "line 3");
 
         auto modifs = compute_line_modifications(buffer, ts);
         kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 2 COMMA 2 COMMA 0 COMMA 1 });
@@ -126,8 +126,8 @@ UnitTest test_line_modifications{[]()
         Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\nline 3\n");
 
         auto ts = buffer.timestamp();
-        buffer.insert(buffer.iterator_at({1, 4}), "hoho\nhehe");
-        buffer.erase(buffer.iterator_at({0, 0}), buffer.iterator_at({1, 0}));
+        buffer.insert({1, 4}, "hoho\nhehe");
+        buffer.erase({0, 0}, {1, 0});
 
         auto modifs = compute_line_modifications(buffer, ts);
         kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 2 COMMA 2 });
@@ -137,14 +137,14 @@ UnitTest test_line_modifications{[]()
         Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\nline 3\nline 4\n");
 
         auto ts = buffer.timestamp();
-        buffer.erase(buffer.iterator_at({0,0}), buffer.iterator_at({3,0}));
-        buffer.insert(buffer.iterator_at({1,0}), "newline 1\nnewline 2\nnewline 3\n");
-        buffer.erase(buffer.iterator_at({0,0}), buffer.iterator_at({1,0}));
+        buffer.erase({0,0}, {3,0});
+        buffer.insert({1,0}, "newline 1\nnewline 2\nnewline 3\n");
+        buffer.erase({0,0}, {1,0});
         {
             auto modifs = compute_line_modifications(buffer, ts);
             kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 4 COMMA 3 });
         }
-        buffer.insert(buffer.iterator_at({3,0}), "newline 4\n");
+        buffer.insert({3,0}, "newline 4\n");
 
         {
             auto modifs = compute_line_modifications(buffer, ts);
@@ -155,9 +155,9 @@ UnitTest test_line_modifications{[]()
     {
         Buffer buffer("test", Buffer::Flags::None, "line 1\n");
         auto ts = buffer.timestamp();
-        buffer.insert(buffer.iterator_at({0,0}), "n");
-        buffer.insert(buffer.iterator_at({0,1}), "e");
-        buffer.insert(buffer.iterator_at({0,2}), "w");
+        buffer.insert({0,0}, "n");
+        buffer.insert({0,1}, "e");
+        buffer.insert({0,2}, "w");
         auto modifs = compute_line_modifications(buffer, ts);
         kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 1 COMMA 1 });
     }

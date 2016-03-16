@@ -122,21 +122,21 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         do
         {
             count = read(fifo, data, buffer_size);
-            auto pos = buffer->end()-1;
+            auto pos = buffer->back_coord();
 
-            bool prevent_scrolling = pos == buffer->begin() and not scroll;
+            const bool prevent_scrolling = pos == ByteCoord{0,0} and not scroll;
             if (prevent_scrolling)
-                ++pos;
+                pos = buffer->next(pos);
 
             buffer->insert(pos, StringView(data, data+count));
 
             if (count > 0 and prevent_scrolling)
             {
-                buffer->erase(buffer->begin(), buffer->begin()+1);
+                buffer->erase({0,0}, buffer->next({0,0}));
                 // in the other case, the buffer will have automatically
                 // inserted a \n to guarantee its invariant.
                 if (data[count-1] == '\n')
-                    buffer->insert(buffer->end(), "\n");
+                    buffer->insert(buffer->end_coord(), "\n");
             }
 
             FD_ZERO(&rfds);
@@ -172,7 +172,7 @@ void write_to_debug_buffer(StringView str)
     // where the user can put its cursor to scroll with new messages
     const bool eol_back = not str.empty() and str.back() == '\n';
     if (Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name))
-        buffer->insert(buffer->end()-1, eol_back ? str : str + "\n");
+        buffer->insert(buffer->back_coord(), eol_back ? str : str + "\n");
     else
     {
         String line = str + (eol_back ? "\n" : "\n\n");

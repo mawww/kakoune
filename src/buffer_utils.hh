@@ -15,17 +15,14 @@ inline String content(const Buffer& buffer, const Selection& range)
     return buffer.string(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferIterator erase(Buffer& buffer, const Selection& range)
+inline ByteCoord erase(Buffer& buffer, const Selection& range)
 {
-    return buffer.erase(buffer.iterator_at(range.min()),
-                        buffer.iterator_at(buffer.char_next(range.max())));
+    return buffer.erase(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferIterator replace(Buffer& buffer, const Selection& range, StringView content)
+inline ByteCoord replace(Buffer& buffer, const Selection& range, StringView content)
 {
-    return buffer.replace(buffer.iterator_at(range.min()),
-                          buffer.iterator_at(buffer.char_next(range.max())),
-                          content);
+    return buffer.replace(range.min(), buffer.char_next(range.max()), content);
 }
 
 inline CharCount char_length(const Buffer& buffer, const Selection& range)
