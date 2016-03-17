@@ -415,21 +415,14 @@ void Buffer::apply_modification(const Modification& modification)
     ByteCoord coord = modification.coord;
 
     kak_assert(is_valid(coord));
-    // in modifications, end coords should be {line_count(), 0}
-    kak_assert((m_lines.empty() and coord == ByteCoord{0,0} ) or
-               coord != ByteCoord(line_count()-1, m_lines.back().length()));
-
     switch (modification.type)
     {
     case Modification::Insert:
-    {
         do_insert(coord, content);
         break;
-    }
     case Modification::Erase:
     {
-        ByteCount count = content.length();
-        ByteCoord end = advance(coord, count);
+        auto end = advance(coord, content.length());
         kak_assert(string(coord, end) == content);
         do_erase(coord, end);
         break;
@@ -453,7 +446,7 @@ ByteCoord Buffer::insert(ByteCoord pos, StringView content)
 
     // for undo and redo purpose it is better to use one past last line rather
     // than one past last char coord.
-    auto coord = is_end(pos) ? ByteCoord{line_count()} : pos;
+    auto coord = is_end(pos) ? line_count() : pos;
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
     return do_insert(pos, real_content->strview());
@@ -489,7 +482,10 @@ ByteCoord Buffer::replace(ByteCoord begin, ByteCoord end, StringView content)
     else
         real_content = intern(content);
 
-    auto coord = is_end(pos) ? ByteCoord{line_count()} : pos;
+    bool last_char_is_eol = not (m_lines.empty() or
+                                 m_lines.back().empty() or
+                                 m_lines.back().back() != '\n');
+    auto coord = is_end(pos) and last_char_is_eol ? line_count() : pos;
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Insert, coord, real_content);
     return do_insert(pos, real_content->strview());
