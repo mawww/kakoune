@@ -398,16 +398,15 @@ void pipe(Context& context, NormalParams)
                 Vector<String> strings;
                 for (auto& sel : selections)
                 {
-                    auto in = content(buffer, sel);
-                    bool insert_eol = in.back() != '\n';
+                    String in = content(buffer, sel);
+                    const bool insert_eol = in.back() != '\n';
                     if (insert_eol)
                         in += '\n';
-                    auto out = ShellManager::instance().eval(
+                    String out = ShellManager::instance().eval(
                         real_cmd, context, in,
                         ShellManager::Flags::WaitForStdout).first;
 
-                    if ((insert_eol or sel.max() == buffer.back_coord()) and
-                        out.back() == '\n')
+                    if (insert_eol and out.back() == '\n')
                         out = out.substr(0, out.length()-1).str();
                     strings.push_back(std::move(out));
                 }
