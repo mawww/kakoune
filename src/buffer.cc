@@ -347,7 +347,7 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
     if (at_end)
         pos = append_lines ? line_count() : end_coord();
 
-    const StringView prefix = at_end ?
+    const StringView prefix = append_lines ?
         StringView{} : m_lines[pos.line].substr(0, pos.column);
     const StringView suffix = at_end ?
         StringView{} : m_lines[pos.line].substr(pos.column);
