@@ -76,8 +76,8 @@ void HookManager::run_hook(StringView hook_name,
         catch (runtime_error& err)
         {
             hook_error = true;
-            write_to_debug_buffer(format("error running hook {}/{}: {}",
-                               hook_name, hook.key, err.what()));
+            write_to_debug_buffer(format("error running hook {}({})/{}: {}",
+                               hook_name, param, hook.key, err.what()));
         }
     }
 
