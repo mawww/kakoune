@@ -16,13 +16,13 @@ addhl -group / regions -default code kakrc \
     values="default|black|red|green|yellow|blue|magenta|cyan|white"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=kak %{
+    printf %s "hook global WinSetOption filetype=kak %{
         set window static_words '${keywords}'
         set -add window static_words '${values}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
+    printf %s "
         addhl -group /kakrc/code regex \<(${keywords})\> 0:keyword
         addhl -group /kakrc/code regex \<(${values})\> 0:value
     "

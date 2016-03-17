@@ -101,14 +101,14 @@ addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
     types="void|char|short|int|long|signed|unsigned|float|double|size_t"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=c %{
+    printf %s "hook global WinSetOption filetype=c %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
+    printf %s "
         addhl -group /c/code regex \<(${keywords})\> 0:keyword
         addhl -group /c/code regex \<(${attributes})\> 0:attribute
         addhl -group /c/code regex \<(${types})\> 0:type
@@ -133,15 +133,15 @@ addhl -group /cpp/code regex %{\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
     values="this|true|false|NULL|nullptr"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=cpp %{
+    printf %s "hook global WinSetOption filetype=cpp %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
         set -add window static_words '${values}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
+    printf %s "
         addhl -group /cpp/code regex \<(${keywords})\> 0:keyword
         addhl -group /cpp/code regex \<(${attributes})\> 0:attribute
         addhl -group /cpp/code regex \<(${types})\> 0:type
@@ -165,16 +165,16 @@ addhl -group /objc/code regex %{\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
     decorators="${decorators}|selector|autoreleasepool|try|catch|class|synchronized"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=objc %{
+    printf %s "hook global WinSetOption filetype=objc %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
         set -add window static_words '${values}'
         set -add window static_words '${decorators}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
+    printf %s "
         addhl -group /objc/code regex \<(${keywords})\> 0:keyword
         addhl -group /objc/code regex \<(${attributes})\> 0:attribute
         addhl -group /objc/code regex \<(${types})\> 0:type

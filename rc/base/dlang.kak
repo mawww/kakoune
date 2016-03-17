@@ -53,16 +53,16 @@ addhl -group /dlang/code regex "\<(this)\>\s*[^(]" 1:value
     decorators="disable|property|nogc|safe|trusted|system"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=dlang %{
+    printf %s "hook global WinSetOption filetype=dlang %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
         set -add window static_words '${values}'
         set -add window static_words '${decorators}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
+    printf %s "
         addhl -group /dlang/code regex \<(${keywords})\> 0:keyword
         addhl -group /dlang/code regex \<(${attributes})\> 0:attribute
         addhl -group /dlang/code regex \<(${types})\> 0:type

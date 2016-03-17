@@ -35,22 +35,22 @@ addhl -group /python/comment       fill comment
     types="bool|buffer|bytearray|complex|dict|file|float|frozenset|int|list|long|memoryview|object|set|str|tuple|unicode|xrange"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=python %{
+    printf %s "hook global WinSetOption filetype=python %{
         set window static_words '${values}'
         set -add window static_words '${meta}'
         set -add window static_words '${keywords}'
         set -add window static_words '${types}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
+    printf %s "
         addhl -group /python/code regex '\<(${values})\>' 0:value
         addhl -group /python/code regex '\<(${meta})\>' 0:meta
         addhl -group /python/code regex '\<(${keywords})\>' 0:keyword
     "
 
     # Highlight types, when they are not used as constructors
-    echo "addhl -group /python/code regex '\<(${types})\>[^(]' 1:type"
+    printf %s "addhl -group /python/code regex '\<(${types})\>[^(]' 1:type"
 }
 
 # Commands

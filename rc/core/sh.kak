@@ -24,14 +24,12 @@ addhl -group /sh/comment fill comment
     keywords="${keywords}|time|type|typeset|ulimit|unalias|until|while"
 
     # Add the language's grammar to the static completion list
-    sed 's,|,:,g' <<< "hook global WinSetOption filetype=sh %{
+    printf %s "hook global WinSetOption filetype=sh %{
         set window static_words '${keywords}'
-    }"
+    }" | sed 's,|,:,g'
 
     # Highlight keywords
-    echo "
-        addhl -group /sh/code regex \<(${keywords})\> 0:keyword
-    "
+    printf %s "addhl -group /sh/code regex \<(${keywords})\> 0:keyword"
 }
 
 addhl -group /sh/code regex [\[\]\(\)&|]{2}|\[\s|\s\] 0:operator
