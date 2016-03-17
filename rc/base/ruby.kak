@@ -27,7 +27,8 @@ addhl -group / regions -default code ruby       \
     literal       '%[iqrswxIQRSWX]\(' \)     \( \
     literal       '%[iqrswxIQRSWX]\{' \}     \{ \
     literal       '%[iqrswxIQRSWX]\[' \]     \[ \
-    literal       '%[iqrswxIQRSWX]<'   >      <
+    literal       '%[iqrswxIQRSWX]<'   >      < \
+    division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
