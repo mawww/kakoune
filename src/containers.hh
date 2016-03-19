@@ -72,7 +72,7 @@ struct FilterView
             do_filter();
         }
 
-        auto operator*() -> decltype(*std::declval<ContainerIt>()) { return *m_it; }
+        decltype(auto) operator*() { return *m_it; }
         Iterator& operator++() { ++m_it; do_filter(); return *this; }
         Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
 
@@ -122,21 +122,18 @@ struct FilterFactory
 template<typename Filter>
 inline ContainerView<FilterFactory<Filter>> filter(Filter f) { return {{std::move(f)}}; }
 
-template<typename I, typename T>
-using TransformedResult = decltype(std::declval<T>()(*std::declval<I>()));
-
 template<typename Container, typename Transform>
 struct TransformView
 {
     using ContainerIt = IteratorOf<Container>;
+    using ResType = decltype(std::declval<Transform>()(*std::declval<ContainerIt>()));
 
-    struct Iterator : std::iterator<std::forward_iterator_tag,
-                                    std::remove_reference_t<TransformedResult<ContainerIt, Transform>>>
+    struct Iterator : std::iterator<std::forward_iterator_tag, std::remove_reference_t<ResType>>
     {
         Iterator(const TransformView& view, ContainerIt it)
             : m_it{std::move(it)}, m_view{view} {}
 
-        auto operator*() -> TransformedResult<ContainerIt, Transform> { return m_view.m_transform(*m_it); }
+        decltype(auto) operator*() { return m_view.m_transform(*m_it); }
         Iterator& operator++() { ++m_it; return *this; }
         Iterator operator++(int) { auto copy = *this; ++m_it; return copy; }
 
@@ -352,6 +349,7 @@ void unordered_erase(Container&& vec, U&& value)
 template<typename Container, typename Init, typename BinOp>
 Init accumulate(Container&& c, Init&& init, BinOp&& op)
 {
+    using std::begin; using std::end;
     return std::accumulate(begin(c), end(c), init, op);
 }
 
