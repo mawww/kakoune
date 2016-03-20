@@ -35,16 +35,18 @@ hook global WinSetOption filetype=(?!grep).* %{ rmhl grep; rmhooks buffer grep-h
 decl str jumpclient
 
 def grep-jump %{
-    try %{
-        exec 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
-        set buffer _grep_current_line %val{cursor_line}
-        eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
-        try %{ focus %opt{jumpclient} }
+    eval -collapse-jumps %{
+        try %{
+            exec 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
+            set buffer _grep_current_line %val{cursor_line}
+            eval -try-client %opt{jumpclient} edit -existing %reg{1} %reg{2} %reg{3}
+            try %{ focus %opt{jumpclient} }
+        }
     }
 }
 
 def grep-next -docstring 'Jump to next grep match' %{
-    eval -try-client %opt{jumpclient} %{
+    eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         exec "%opt{_grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
         grep-jump
@@ -53,7 +55,7 @@ def grep-next -docstring 'Jump to next grep match' %{
 }
 
 def grep-prev -docstring 'Jump to previous grep match' %{
-    eval -try-client %opt{jumpclient} %{
+    eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         exec "%opt{_grep_current_line}g<a-/>^[^:]+:\d+:<ret>"
         grep-jump

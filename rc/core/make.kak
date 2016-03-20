@@ -32,22 +32,24 @@ hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-h
 decl str jumpclient
 
 def make-jump -docstring 'Jump to error location' %{
-    try %{
-        exec gl<a-?> "Entering directory" <ret>
-        exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
-        set buffer _make_current_error_line %val{cursor_line}
-        eval -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information %{%reg{5}}"
-        try %{ focus %opt{jumpclient} }
-    } catch %{
-        exec <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
-        set buffer _make_current_error_line %val{cursor_line}
-        eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2} %reg{3}; echo -color Information %{%reg{4}}"
-        try %{ focus %opt{jumpclient} }
+    eval -collapse-jumps %{
+        try %{
+            exec gl<a-?> "Entering directory" <ret>
+            exec s "Entering directory '([^']+)'.*\n([^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+            set buffer _make_current_error_line %val{cursor_line}
+            eval -try-client %opt{jumpclient} "edit -existing %reg{1}/%reg{2} %reg{3} %reg{4}; echo -color Information %{%reg{5}}"
+            try %{ focus %opt{jumpclient} }
+        } catch %{
+            exec <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\'" <ret>l
+            set buffer _make_current_error_line %val{cursor_line}
+            eval -try-client %opt{jumpclient} "edit -existing %reg{1} %reg{2} %reg{3}; echo -color Information %{%reg{4}}"
+            try %{ focus %opt{jumpclient} }
+        }
     }
 }
 
 def make-next -docstring 'Jump to next error' %{
-    eval -try-client %opt{jumpclient} %{
+    eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{_make_current_error_line}g<a-l>/[0-9]+: (?:fatal )?error:<ret>"
         make-jump
@@ -56,7 +58,7 @@ def make-next -docstring 'Jump to next error' %{
 }
 
 def make-prev -docstring 'Jump to previous error' %{
-    eval -try-client %opt{jumpclient} %{
+    eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{_make_current_error_line}g<a-h><a-/>[0-9]+: (?:fatal )?error:<ret>"
         make-jump
