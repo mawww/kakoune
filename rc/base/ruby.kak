@@ -27,7 +27,8 @@ addhl -group / regions -default code ruby       \
     literal       '%[iqrswxIQRSWX]\(' \)     \( \
     literal       '%[iqrswxIQRSWX]\{' \}     \{ \
     literal       '%[iqrswxIQRSWX]\[' \]     \[ \
-    literal       '%[iqrswxIQRSWX]<'   >      <
+    literal       '%[iqrswxIQRSWX]<'   >      < \
+    division '[\w\)\]](/|(\h+/\h+))' '\w' '' # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result
@@ -60,6 +61,31 @@ addhl -group /ruby/code regex \<(alias|and|begin|break|case|class|def|defined|do
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+
+def ruby-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
+    case $kak_buffile in
+        *spec/*_spec.rb)
+            altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
+            [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
+        ;;
+        *.rb)
+            path=$kak_buffile
+            dirs=$(while [ $path ]; do echo $path; path=${path%/*}; done | tail -n +2)
+            for dir in $dirs; do
+                altdir=$dir/spec
+                if [ -d $altdir ]; then
+                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed s+[^/]'*'/++';'s/.rb$/_spec.rb/)
+                    break
+                fi
+            done
+            [ ! -d $altdir ] && echo "echo -color Error 'spec/ not found'" && exit
+        ;;
+        *)
+            echo "echo -color Error 'alternative file not found'" && exit
+        ;;
+    esac
+    echo "edit $altfile"
+}}
 
 def -hidden _ruby_filter_around_selections %{
     eval -draft -itersel %{
@@ -112,6 +138,8 @@ hook global WinSetOption filetype=ruby %{
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
     hook window InsertChar \n -group ruby-insert _ruby_insert_on_new_line
 
+    alias window alt ruby-alternative-file
+
     set window comment_line_chars '#'
     set window comment_selection_chars '^begin=:^=end'
 
@@ -125,4 +153,6 @@ hook global WinSetOption filetype=(?!ruby).* %{
     rmhl ruby
     rmhooks window ruby-indent
     rmhooks window ruby-hooks
+
+    unalias window alt ruby-alternative-file
 }
