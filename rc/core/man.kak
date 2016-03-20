@@ -49,12 +49,10 @@ def -params .. \
   } \
   man -docstring "Manpages viewer wrapper" %{ %sh{
     subject=${@-$kak_selection}
-    pagenum=""
 
     ## The completion suggestions display the page number, strip them if present
-    if expr "$subject" : '[a-zA-Z_-]+\([^\)]+\)'; then
-        pagenum=${subject##*\(}
-        pagenum=${pagenum:0:$((${#pagenum} - 1))}
+    pagenum=$(expr "$subject" : '.*(\([1-8].*\))')
+    if [ -n "$pagenum" ]; then
         subject=${subject%%\(*}
     fi
 
