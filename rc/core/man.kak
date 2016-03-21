@@ -56,5 +56,5 @@ def -params .. \
         subject=${subject%%\(*}
     fi
 
-    echo "eval -try-client %opt{docsclient} _man $pagenum $subject"
+    echo "eval -collapse-jumps -try-client %opt{docsclient} _man $pagenum $subject"
 } }
