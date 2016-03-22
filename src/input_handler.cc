@@ -1325,6 +1325,35 @@ void InputHandler::on_next_key(KeymapMode keymap_mode, KeyCallback callback)
     push_mode(new InputModes::NextKey(*this, keymap_mode, callback));
 }
 
+InputHandler::ScopedForceNormal::ScopedForceNormal(InputHandler& handler)
+    : m_handler(handler), m_mode(nullptr)
+{
+    if (handler.m_mode_stack.size() == 1)
+        return;
+
+    handler.push_mode(new InputModes::Normal(handler));
+    m_mode = handler.m_mode_stack.back().get();
+}
+
+InputHandler::ScopedForceNormal::~ScopedForceNormal()
+{
+    if (not m_mode)
+        return;
+
+    kak_assert(m_handler.m_mode_stack.size() > 1);
+
+    if (m_mode == m_handler.m_mode_stack.back().get())
+        m_handler.pop_mode(m_mode);
+    else
+    {
+        auto it = find_if(m_handler.m_mode_stack,
+                          [this](const RefPtr<InputMode>& m)
+                          { return m.get() == m_mode; });
+        kak_assert(it != m_handler.m_mode_stack.end());
+        m_handler.m_mode_stack.erase(it);
+    }
+}
+
 static bool is_valid(Key key)
 {
     return key != Key::Invalid and

@@ -82,6 +82,17 @@ public:
 
     DisplayLine mode_line() const;
 
+    // Force an input handler into normal mode temporarily
+    struct ScopedForceNormal
+    {
+        ScopedForceNormal(InputHandler& handler);
+        ~ScopedForceNormal();
+
+    private:
+        InputHandler& m_handler;
+        InputMode* m_mode;
+    };
+
 private:
     Context m_context;
 
