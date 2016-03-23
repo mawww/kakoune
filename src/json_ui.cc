@@ -8,6 +8,7 @@
 #include "unit_tests.hh"
 
 #include <utility>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -405,7 +406,7 @@ void JsonUI::parse_requests(EventMode mode)
     char buf[bufsize];
     while (stdin_ready())
     {
-        ssize_t size = read(0, buf, bufsize);
+        ssize_t size = ::read(0, buf, bufsize);
         if (size == -1 or size == 0)
             break;
 
