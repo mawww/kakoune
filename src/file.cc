@@ -389,13 +389,13 @@ CandidateList complete_filename(StringView prefix,
     std::tie(dirname, fileprefix) = split_path(real_prefix);
 
     const bool check_ignored_regex = not ignored_regex.empty() and
-        not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
+        not Kakoune::regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
     const bool include_hidden = fileprefix.substr(0_byte, 1_byte) == ".";
 
     auto filter = [&ignored_regex, check_ignored_regex, include_hidden](const dirent& entry)
     {
         return (include_hidden or StringView{entry.d_name}.substr(0_byte, 1_byte) != ".") and
-               (not check_ignored_regex or not regex_match(entry.d_name, ignored_regex));
+               (not check_ignored_regex or not Kakoune::regex_match(entry.d_name, ignored_regex));
     };
     auto files = list_files(dirname, filter);
     Vector<RankedMatch> matches;
