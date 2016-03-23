@@ -52,7 +52,7 @@ else ifeq ($(os),DragonFly)
 else ifneq (,$(findstring CYGWIN,$(os)))
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else
-    LIBS += -lncursesw -lboost_regex
+    LIBS += -lncursesw -lboost_regex -licuuc
     CPPFLAGS += -I$(NCURSESW_INCLUDE)
     LDFLAGS += -rdynamic
 endif
