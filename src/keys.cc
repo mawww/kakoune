@@ -114,7 +114,23 @@ KeyList parse_keys(StringView str)
 String key_to_str(Key key)
 {
     if (key.modifiers & Key::Modifiers::MouseEvent)
-        return "<mouse event>";
+    {
+        const auto coord = key.coord() + CharCoord{1,1};
+        switch (key.modifiers)
+        {
+            case Key::Modifiers::MousePos:
+                return format("<mouse:move:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MousePress:
+                return format("<mouse:press:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MouseRelease:
+                return format("<mouse:release:{}.{}>", coord.line, coord.column);
+            case Key::Modifiers::MouseWheelDown:
+                return "<mouse:wheel_down>";
+            case Key::Modifiers::MouseWheelUp:
+                return "<mouse:wheel_up>";
+            default: kak_assert(false);
+        }
+    }
 
     bool named = false;
     String res;
