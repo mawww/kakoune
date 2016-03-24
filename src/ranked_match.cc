@@ -49,20 +49,21 @@ static bool smartcase_eq(Codepoint query, Codepoint candidate)
 static bool subsequence_match_smart_case(StringView str, StringView subseq, int& index_sum)
 {
     index_sum = 0;
-    Utf8It it{str.begin(), str};
+    auto it = str.begin();
     int index = 0;
-    for (Utf8It subseq_it{subseq.begin(), subseq}; subseq_it != subseq.end(); ++subseq_it)
+    for (auto subseq_it = subseq.begin(); subseq_it != subseq.end();
+         subseq_it = utf8::next(subseq_it, subseq.end()))
     {
         if (it == str.end())
             return false;
-        while (not smartcase_eq(*subseq_it, *it))
+        const Codepoint c = utf8::codepoint(subseq_it, subseq.end());
+        while (not smartcase_eq(c, utf8::read_codepoint(it, subseq.end())))
         {
             ++index;
-            if (++it == str.end())
+            if (it == str.end())
                 return false;
         }
         index_sum += index++;
-        ++it;
     }
     return true;
 }
