@@ -21,7 +21,7 @@ private:
     bool m_first_char_match = false;
     bool m_prefix = false;
     int m_word_boundary_match_count = 0;
-    int m_match_index_sum;
+    int m_match_index_sum = 0;
     bool m_only_word_boundary = false;
 };
 

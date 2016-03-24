@@ -91,6 +91,8 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
 
 bool RankedMatch::operator<(const RankedMatch& other) const
 {
+    kak_assert((bool)*this and (bool)other);
+
     if (m_prefix != other.m_prefix)
         return m_prefix;
 
