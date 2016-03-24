@@ -22,19 +22,26 @@ template<typename Container>
 struct ReverseView
 {
     using iterator = decltype(std::declval<Container>().rbegin());
-    ReverseView(Container& container) : m_container(container) {}
 
     iterator begin() { return m_container.rbegin(); }
     iterator end()   { return m_container.rend(); }
 
-private:
-    Container& m_container;
+    Container m_container;
 };
+
+template<typename C>
+using RemoveReference = typename std::remove_reference<C>::type;
 
 struct ReverseFactory
 {
     template<typename Container>
-    ReverseView<Container> operator()(Container&& container) const
+    ReverseView<RemoveReference<Container>> operator()(Container&& container) const
+    {
+        return {std::move(container)};
+    }
+
+    template<typename Container>
+    ReverseView<Container&> operator()(Container& container) const
     {
         return {container};
     }
@@ -84,14 +91,10 @@ struct FilterView
         const FilterView& m_view;
     };
 
-    FilterView(Container& container, Filter filter)
-        : m_container(container), m_filter(std::move(filter)) {}
-
     Iterator begin() const { return {*this, m_container.begin(), m_container.end()}; }
     Iterator end()   const { return {*this, m_container.end(), m_container.end()}; }
 
-private:
-    Container& m_container;
+    Container m_container;
     Filter m_filter;
 };
 
@@ -99,7 +102,10 @@ template<typename Filter>
 struct FilterFactory
 {
     template<typename Container>
-    FilterView<Container, Filter> operator()(Container&& container) const { return {container, std::move(m_filter)}; }
+    FilterView<Container&, Filter> operator()(Container& container) const { return {container, std::move(m_filter)}; }
+
+    template<typename Container>
+    FilterView<RemoveReference<Container>, Filter> operator()(Container&& container) const { return {std::move(container), std::move(m_filter)}; }
 
     Filter m_filter;
 };
@@ -142,14 +148,10 @@ struct TransformView
         const TransformView& m_view;
     };
 
-    TransformView(Container& container, Transform transform)
-        : m_container(container), m_transform(std::move(transform)) {}
-
     Iterator begin() const { return {*this, m_container.begin()}; }
     Iterator end()   const { return {*this, m_container.end()}; }
 
-private:
-    Container& m_container;
+    Container m_container;
     Transform m_transform;
 };
 
@@ -157,14 +159,16 @@ template<typename Transform>
 struct TransformFactory
 {
     template<typename Container>
-    TransformView<Container, Transform> operator()(Container&& container) const { return {container, std::move(m_transform)}; }
+    TransformView<Container&, Transform> operator()(Container& container) const { return {container, std::move(m_transform)}; }
+
+    template<typename Container>
+    TransformView<RemoveReference<Container>, Transform> operator()(Container&& container) const { return {std::move(container), std::move(m_transform)}; }
 
     Transform m_transform;
 };
 
 template<typename Transform>
 inline ContainerView<TransformFactory<Transform>> transform(Transform t) { return {{std::move(t)}}; }
-
 
 
 template<typename Container1, typename Container2>
