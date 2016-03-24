@@ -124,13 +124,13 @@ public:
                           CommandHelper helper = CommandHelper(),
                           CommandCompleter completer = CommandCompleter());
 
+    Completions complete_command_name(const Context& context, StringView query, bool with_aliases) const;
+
 private:
     void execute_single_command(CommandParameters params,
                                 Context& context,
                                 const ShellContext& shell_context,
                                 CharCoord pos) const;
-
-    Completions complete_command_name(const Context& context, StringView query) const;
 
     struct CommandDescriptor
     {

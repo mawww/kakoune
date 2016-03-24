@@ -867,6 +867,21 @@ const CommandDesc define_command_cmd = {
     define_command
 };
 
+static Completions complete_scope(const Context&, CompletionFlags,
+                                  const String& prefix, ByteCount cursor_pos)
+{
+   auto scopes = {"global", "buffer", "window"};
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+}
+
+
+static Completions complete_command_name(const Context& context, CompletionFlags,
+                                         const String& prefix, ByteCount cursor_pos)
+{
+   return CommandManager::instance().complete_command_name(
+       context, prefix.substr(0, cursor_pos), false);
+}
+
 const CommandDesc alias_cmd = {
     "alias",
     nullptr,
@@ -874,7 +889,9 @@ const CommandDesc alias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    PerArgumentCommandCompleter({
+        complete_scope, complete_nothing, complete_command_name
+    }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
@@ -893,7 +910,10 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    PerArgumentCommandCompleter({
+        complete_scope, complete_nothing, complete_command_name
+
+    }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
