@@ -286,7 +286,6 @@ void NCursesUI::Window::refresh()
     if (not win)
         return;
 
-    redrawwin(win);
     CharCoord max_pos = pos + size - CharCoord{1,1};
     pnoutrefresh(win, 0, 0, (int)pos.line, (int)pos.column,
                  (int)max_pos.line, (int)max_pos.column);
