@@ -135,6 +135,7 @@ Vector<String> split(StringView str, char separator, char escape)
 {
     Vector<String> res;
     auto it = str.begin();
+    auto start = it;
     while (it != str.end())
     {
         res.emplace_back();
@@ -144,21 +145,24 @@ Vector<String> split(StringView str, char separator, char escape)
             auto c = *it;
             if (c == escape and it + 1 != str.end() and *(it+1) == separator)
             {
-                element += separator;
+                element += StringView{start, it+1};
+                element.back() = separator;
                 it += 2;
+                start = it;
             }
             else if (c == separator)
             {
+                element += StringView{start, it};
                 ++it;
+                start = it;
                 break;
             }
             else
-            {
-                element += c;
                 ++it;
-            }
         }
     }
+    if (start != str.end())
+        res.back() += StringView{start, str.end()};
     return res;
 }
 
