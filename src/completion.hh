@@ -43,7 +43,7 @@ using Completer = std::function<Completions (const Context&, CompletionFlags,
 inline Completions complete_nothing(const Context& context, CompletionFlags,
                                     StringView, ByteCount cursor_pos)
 {
-    return Completions(cursor_pos, cursor_pos);
+    return {cursor_pos, cursor_pos};
 }
 
 Completions shell_complete(const Context& context, CompletionFlags,
