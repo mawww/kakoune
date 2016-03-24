@@ -765,7 +765,8 @@ public:
             if (candidates.empty())
             {
                 refresh_completions(CompletionFlags::None);
-                if (candidates.size() > 1)
+                if ((not m_prefix_in_completions and candidates.size() > 1) or
+                    candidates.size() > 2)
                     return;
             }
 
@@ -786,7 +787,8 @@ public:
 
             // when we have only one completion candidate, make next tab complete
             // from the new content.
-            if (candidates.size() == 1)
+            if (candidates.size() == 1 or
+                (m_prefix_in_completions and candidates.size() == 2))
             {
                 m_current_completion = -1;
                 candidates.clear();
@@ -845,6 +847,15 @@ private:
                 for (auto& candidate : m_completions.candidates)
                     items.push_back({ candidate, {} });
                 context().client().menu_show(items, {}, MenuStyle::Prompt);
+
+                auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
+                if (not contains(m_completions.candidates, prefix))
+                {
+                    m_completions.candidates.push_back(prefix.str());
+                    m_prefix_in_completions = true;
+                }
+                else
+                    m_prefix_in_completions = false;
             }
         } catch (runtime_error&) {}
     }
@@ -876,6 +887,7 @@ private:
     Face           m_prompt_face;
     Completions    m_completions;
     int            m_current_completion = -1;
+    bool           m_prefix_in_completions = false;
     String         m_prefix;
     LineEditor     m_line_editor;
     bool           m_autoshowcompl;
