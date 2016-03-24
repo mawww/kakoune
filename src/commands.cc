@@ -827,6 +827,36 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             return Completions{ 0_byte, pos_in_token, split(output, '\n', 0) };
         };
     }
+    else if (auto shell_cmd_opt = parser.get_switch("shell-candidates"))
+    {
+        String shell_cmd = shell_cmd_opt->str();
+        Vector<String> candidates;
+        int token = -1;
+        completer = [shell_cmd, candidates, token](
+            const Context& context, CompletionFlags flags, CommandParameters params,
+            size_t token_to_complete, ByteCount pos_in_token) mutable
+        {
+            if (token != token_to_complete)
+            {
+                if (flags == CompletionFlags::Fast) // no shell on fast completion
+                    return Completions{};
+
+                ShellContext shell_context{
+                    params,
+                    { { "token_to_complete", to_string(token_to_complete) } }
+                };
+                String output = ShellManager::instance().eval(shell_cmd, context, {},
+                                                              ShellManager::Flags::WaitForStdout,
+                                                              shell_context).first;
+                candidates = split(output, '\n', 0);
+                token = token_to_complete;
+            }
+
+            return token == token_to_complete ?
+                Completions{ 0_byte, pos_in_token, complete(params[token_to_complete], pos_in_token, candidates) }
+              : Completions{};
+        };
+    }
     else if (parser.get_switch("command-completion"))
     {
         completer = [](const Context& context, CompletionFlags flags,
@@ -857,7 +887,8 @@ const CommandDesc define_command_cmd = {
           { "client-completion",  { false, "complete parameters using client name completion" } },
           { "buffer-completion",  { false, "complete parameters using buffer name completion" } },
           { "command-completion", { false, "complete parameters using kakoune command completion" } },
-          { "shell-completion",   { true,  "complete the parameters using the given shell-script" } } },
+          { "shell-completion",   { true,  "complete the parameters using the given shell-script" } },
+          { "shell-candidates",   { true,  "get the parameter candidates using the given shell-script" } } },
         ParameterDesc::Flags::None,
         2, 2
     },
