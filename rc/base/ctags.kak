@@ -6,9 +6,9 @@
 decl str-list ctagsfiles 'tags'
 
 def -params 0..1 \
-    -shell-candidates '
+    -shell-completion '
         ( for tags in $(printf %s "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
-              do readtags -t "${tags}" -p ""
+              do readtags -t "${tags}" -p "$1"
           done ) | cut -f 1 | sort | uniq' \
     -docstring 'Jump to tag definition' \
     tag \
