@@ -8,34 +8,7 @@
 namespace Kakoune
 {
 
-UsedLetters used_letters(StringView str)
-{
-    UsedLetters res;
-    for (auto c : str)
-    {
-        if (c >= 'a' and c <= 'z')
-            res.set(c - 'a');
-        else if (c >= 'A' and c <= 'Z')
-            res.set(c - 'A' + 26);
-        else if (c == '_')
-            res.set(53);
-        else if (c == '-')
-            res.set(54);
-        else
-            res.set(63);
-    }
-    return res;
-}
-
-constexpr UsedLetters upper_mask = 0xFFFFFFC000000;
-
-UsedLetters to_lower(UsedLetters letters)
-{
-    return ((letters & upper_mask) >> 26) | (letters & (~upper_mask));
-}
-
 using WordList = Vector<StringView>;
-
 
 static WordList get_words(StringView content)
 {
@@ -155,11 +128,6 @@ int WordDB::get_word_occurences(StringView word) const
 
 RankedMatchList WordDB::find_matching(StringView query)
 {
-    auto matches = [](UsedLetters query, UsedLetters letters)
-    {
-        return (query & letters) == query;
-    };
-
     update_db();
     const UsedLetters letters = used_letters(query);
     RankedMatchList res;
@@ -171,12 +139,7 @@ RankedMatchList WordDB::find_matching(StringView query)
             continue;
         }
 
-        UsedLetters word_letters = word.second.letters;
-        if (not matches(to_lower(letters), to_lower(word_letters)) or
-            not matches(letters & upper_mask, word_letters & upper_mask))
-            continue;
-
-        if (RankedMatch match{word.first, query})
+        if (RankedMatch match{word.first, word.second.letters, query, letters})
             res.push_back(match);
     }
 
@@ -217,11 +180,6 @@ UnitTest test_word_db{[]()
     res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
     kak_assert(eq(res, WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" }));
-}};
-
-UnitTest test_used_letters{[]()
-{
-    kak_assert(used_letters("abcd") == to_lower(used_letters("abcdABCD")));
 }};
 
 }

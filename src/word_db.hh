@@ -7,13 +7,8 @@
 #include "vector.hh"
 #include "ranked_match.hh"
 
-#include <bitset>
-
 namespace Kakoune
 {
-
-using UsedLetters = std::bitset<64>;
-UsedLetters used_letters(StringView str);
 
 using RankedMatchList = Vector<RankedMatch>;
 

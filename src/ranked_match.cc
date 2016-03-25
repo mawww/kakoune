@@ -6,6 +6,30 @@
 namespace Kakoune
 {
 
+UsedLetters used_letters(StringView str)
+{
+    UsedLetters res = 0;
+    for (auto c : str)
+    {
+        if (c >= 'a' and c <= 'z')
+            res |= 1uL << (c - 'a');
+        else if (c >= 'A' and c <= 'Z')
+            res |= 1uL << (c - 'A' + 26);
+        else if (c == '_')
+            res |= 1uL << 53;
+        else if (c == '-')
+            res |= 1uL << 54;
+        else
+            res |= 1uL << 63;
+    }
+    return res;
+}
+
+bool matches(UsedLetters query, UsedLetters letters)
+{
+    return (query & letters) == query;
+}
+
 using Utf8It = utf8::iterator<const char*>;
 
 static int count_word_boundaries_match(StringView candidate, StringView query)
@@ -68,26 +92,36 @@ static bool subsequence_match_smart_case(StringView str, StringView subseq, int&
     return true;
 }
 
-RankedMatch::RankedMatch(StringView candidate, StringView query)
+template<typename TestFunc>
+RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
 {
     if (candidate.empty() or query.length() > candidate.length())
         return;
 
     if (query.empty())
+        m_candidate = candidate;
+    else if (func() and  subsequence_match_smart_case(candidate, query, m_match_index_sum))
     {
         m_candidate = candidate;
-        return;
+
+        m_first_char_match = smartcase_eq(query[0], candidate[0]);
+        m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
+        m_only_word_boundary = m_word_boundary_match_count == query.length();
+        m_prefix = std::equal(query.begin(), query.end(), candidate.begin(), smartcase_eq);
     }
+}
 
-    if (not subsequence_match_smart_case(candidate, query, m_match_index_sum))
-        return;
+RankedMatch::RankedMatch(StringView candidate, UsedLetters candidate_letters,
+                         StringView query, UsedLetters query_letters)
+    : RankedMatch{candidate, query, [&] {
+        return matches(to_lower(query_letters), to_lower(candidate_letters)) and
+               matches(query_letters & upper_mask, candidate_letters & upper_mask);
+    }} {}
 
-    m_candidate = candidate;
 
-    m_first_char_match = smartcase_eq(query[0], candidate[0]);
-    m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
-    m_only_word_boundary = m_word_boundary_match_count == query.length();
-    m_prefix = std::equal(query.begin(), query.end(), candidate.begin(), smartcase_eq);
+RankedMatch::RankedMatch(StringView candidate, StringView query)
+    : RankedMatch{candidate, query, [] { return true; }}
+{
 }
 
 bool RankedMatch::operator<(const RankedMatch& other) const
@@ -129,6 +163,11 @@ UnitTest test_ranked_match{[] {
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "wm") == 2);
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cobm") == 3);
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cWBM") == 4);
+}};
+
+UnitTest test_used_letters{[]()
+{
+    kak_assert(used_letters("abcd") == to_lower(used_letters("abcdABCD")));
 }};
 
 }
