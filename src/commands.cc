@@ -830,7 +830,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     else if (auto shell_cmd_opt = parser.get_switch("shell-candidates"))
     {
         String shell_cmd = shell_cmd_opt->str();
-        Vector<String> candidates;
+        Vector<std::pair<String, UsedLetters>> candidates;
         int token = -1;
         completer = [shell_cmd, candidates, token](
             const Context& context, CompletionFlags flags, CommandParameters params,
@@ -848,13 +848,29 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                 String output = ShellManager::instance().eval(shell_cmd, context, {},
                                                               ShellManager::Flags::WaitForStdout,
                                                               shell_context).first;
-                candidates = split(output, '\n', 0);
+                candidates.clear();
+                for (auto c : output | split<StringView>('\n'))
+                    candidates.push_back({c.str(), used_letters(c)});
                 token = token_to_complete;
             }
 
-            return token == token_to_complete ?
-                Completions{ 0_byte, pos_in_token, complete(params[token_to_complete], pos_in_token, candidates) }
-              : Completions{};
+            if (token != token_to_complete)
+                return Completions{};
+
+            StringView query = params[token_to_complete].substr(0, pos_in_token);
+            UsedLetters query_letters = used_letters(query);
+            Vector<RankedMatch> matches;
+            for (const auto& candidate : candidates)
+            {
+                if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
+                    matches.push_back(match);
+            }
+            std::sort(matches.begin(), matches.end());
+            CandidateList res;
+            for (auto& m : matches)
+                res.push_back(m.candidate().str());
+
+            return Completions{ 0_byte, pos_in_token, std::move(res) };
         };
     }
     else if (parser.get_switch("command-completion"))
