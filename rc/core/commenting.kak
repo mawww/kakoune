@@ -57,13 +57,13 @@ def comment-line -docstring "Comment/uncomment the current line" %{
 
             try %{
                 ## The line has already been commented
-                exec -draft %{<a-K>^${opening_escaped}<ret>}
+                exec -draft %{<a-K>\A${opening_escaped}<ret>}
 
                 ## Comment the line
                 exec %{i${opening}<esc>${#opening}H}
             } catch %{
                 ## Uncomment the line
-                exec -draft %{s^${opening_escaped}\h*<ret>d}
+                exec -draft %{s\A${opening_escaped}\h*<ret>d}
             }
         }"
     }
