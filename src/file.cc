@@ -449,7 +449,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
     static UnorderedMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
     Vector<RankedMatch> matches;
-    for (auto dir : split(getenv("PATH"), ':'))
+    for (auto dir : StringView{getenv("PATH")} | split<StringView>(':'))
     {
         auto dirname = ((not dir.empty() and dir.back() == '/') ? dir.substr(0, dir.length()-1) : dir).str();
 

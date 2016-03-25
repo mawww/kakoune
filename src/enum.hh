@@ -54,7 +54,7 @@ EnableIfWithBitOps<Flags> option_from_string(StringView str, Flags& flags)
 {
     constexpr auto desc = enum_desc(Flags{});
     flags = Flags{};
-    for (auto s : split(str, '|'))
+    for (auto s : str | split<StringView>('|'))
     {
         auto it = find_if(desc, [s](const EnumDesc<Flags>& d) { return d.name == s; });
         if (it == desc.end())

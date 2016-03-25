@@ -49,10 +49,16 @@ struct ReverseFactory
 
 inline ContainerView<ReverseFactory> reverse() { return {}; }
 
+template<typename Container>
+using IteratorOf = decltype(std::begin(std::declval<Container>()));
+
+template<typename Container>
+using ValueOf = typename Container::value_type;
+
 template<typename Container, typename Filter>
 struct FilterView
 {
-    using ContainerIt = decltype(begin(std::declval<Container>()));
+    using ContainerIt = IteratorOf<Container>;
 
     struct Iterator : std::iterator<std::forward_iterator_tag,
                                     typename ContainerIt::value_type>
@@ -119,7 +125,7 @@ using TransformedResult = decltype(std::declval<T>()(*std::declval<I>()));
 template<typename Container, typename Transform>
 struct TransformView
 {
-    using ContainerIt = decltype(begin(std::declval<Container>()));
+    using ContainerIt = IteratorOf<Container>;
 
     struct Iterator : std::iterator<std::forward_iterator_tag,
                                     typename std::remove_reference<TransformedResult<ContainerIt, Transform>>::type>
@@ -170,6 +176,78 @@ struct TransformFactory
 template<typename Transform>
 inline ContainerView<TransformFactory<Transform>> transform(Transform t) { return {{std::move(t)}}; }
 
+template<typename Container, typename Separator = ValueOf<Container>,
+         typename ValueTypeParam = void>
+struct SplitView
+{
+    using ContainerIt = IteratorOf<Container>;
+    using ValueType = typename std::conditional<std::is_same<void, ValueTypeParam>::value,
+                                                std::pair<IteratorOf<Container>, IteratorOf<Container>>,
+                                                ValueTypeParam>::type;
+
+    struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
+    {
+        Iterator(ContainerIt pos, ContainerIt end, char separator)
+         : pos(pos), sep(pos), end(end), separator(separator)
+        {
+            while (sep != end and *sep != separator)
+                ++sep;
+        }
+
+        Iterator& operator++() { advance(); return *this; }
+        Iterator operator++(int) { auto copy = *this; advance(); return copy; }
+
+        bool operator==(const Iterator& other) const { return pos == other.pos; }
+        bool operator!=(const Iterator& other) const { return pos != other.pos; }
+
+        ValueType operator*() { return {pos, sep}; }
+
+    private:
+        void advance()
+        {
+            if (sep == end)
+            {
+                pos = end;
+                return;
+            }
+
+            pos = sep+1;
+            for (sep = pos; sep != end; ++sep)
+            {
+                if (*sep == separator)
+                    break;
+            }
+        }
+
+        ContainerIt pos;
+        ContainerIt sep;
+        ContainerIt end;
+        Separator separator;
+    };
+
+    Iterator begin() const { return {m_container.begin(), m_container.end(), m_separator}; }
+    Iterator end()   const { return {m_container.end(), m_container.end(), m_separator}; }
+
+    Container m_container;
+    Separator m_separator;
+};
+
+template<typename ValueType, typename Separator>
+struct SplitViewFactory
+{
+    template<typename Container>
+    SplitView<RemoveReference<Container>, Separator, ValueType>
+    operator()(Container&& container) const { return {std::move(container), std::move(separator)}; }
+
+    template<typename Container>
+    SplitView<Container&, Separator, ValueType>
+    operator()(Container& container) const { return {container, std::move(separator)}; }
+
+    Separator separator;
+};
+
+template<typename ValueType = void, typename Separator>
+ContainerView<SplitViewFactory<ValueType, Separator>> split(Separator separator) { return {{std::move(separator)}}; }
 
 template<typename Container1, typename Container2>
 struct ConcatView

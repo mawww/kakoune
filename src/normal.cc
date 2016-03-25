@@ -1385,7 +1385,7 @@ void restore_selections(Context& context, NormalParams params)
     size_t timestamp = str_to_int({percent + 1, desc.end()});
 
     Vector<Selection> sels;
-    for (auto sel_desc : split({desc.begin(), arobase}, ':'))
+    for (auto sel_desc : StringView{desc.begin(), arobase} | split<StringView>(':'))
         sels.push_back(selection_from_string(sel_desc));
 
     SelectionList sel_list{buffer, std::move(sels), timestamp};
