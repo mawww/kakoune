@@ -17,7 +17,7 @@ before_install:
 
 install:
   - if [ $TRAVIS_OS_NAME = linux -a "$CXX" = "g++" ]; then
-        export CXX=g++-4.8;
+        export CXX=g++-4.9;
     elif [ $TRAVIS_OS_NAME = osx ]; then
        brew outdated boost || brew upgrade boost;
     fi;
@@ -31,8 +31,8 @@ addons:
       - boost-latest
       - ubuntu-toolchain-r-test
     packages:
-      - libstdc++-4.8-dev
-      - g++-4.8
+      - libstdc++-4.9-dev
+      - g++-4.9
       - libncursesw5-dev
       - libboost-regex1.55-dev
   coverity_scan:
