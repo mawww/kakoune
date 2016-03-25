@@ -16,8 +16,12 @@ before_install:
     fi;
 
 install:
-  - if [ $TRAVIS_OS_NAME = linux -a "$CXX" = "g++" ]; then
+  - if [ $TRAVIS_OS_NAME = linux ]; then
+      if [ "$CXX" = "clang++" ]; then
+        export CXX=clang++-3.5;
+      elif [ "$CXX" = "g++" ]; then
         export CXX=g++-4.9;
+      fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
        brew outdated boost || brew upgrade boost;
     fi;
@@ -30,7 +34,9 @@ addons:
     sources:
       - boost-latest
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.5
     packages:
+      - clang-3.5
       - libstdc++-4.9-dev
       - g++-4.9
       - libncursesw5-dev
