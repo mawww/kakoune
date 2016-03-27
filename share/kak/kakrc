@@ -57,6 +57,10 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
         autoload ${kak_runtime}/autoload
     fi
 
+    if [ -f "${kak_runtime}/kakrc.local" ]; then
+        echo "source '${kak_runtime}/kakrc.local'"
+    fi
+
     if [ -f "${localconfdir}/kakrc" ]; then
         echo "source '${localconfdir}/kakrc'"
     fi
