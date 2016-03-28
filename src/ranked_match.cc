@@ -148,13 +148,18 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_match_index_sum != other.m_match_index_sum)
         return m_match_index_sum < other.m_match_index_sum;
 
-    return std::lexicographical_compare(
-        Utf8It{m_candidate.begin(), m_candidate}, Utf8It{m_candidate.end(), m_candidate},
-        Utf8It{other.m_candidate.begin(), other.m_candidate}, Utf8It{other.m_candidate.end(), other.m_candidate},
-        [](Codepoint a, Codepoint b) {
-            const bool low_a = islower(a), low_b = islower(b);
-            return low_a == low_b ? a < b : low_a;
-        });
+    for (Utf8It it1{m_candidate.begin(), m_candidate}, it2{other.m_candidate.begin(), other.m_candidate};
+         it1 != m_candidate.end() and it2 != other.m_candidate.end(); ++it1, ++it2)
+    {
+        const auto cp1 = *it1, cp2 = *it2;
+        if (cp1 != cp2)
+        {
+            const bool low1 = islower(cp1), low2 = islower(cp2);
+            return low1 == low2 ? cp1 < cp2 : low2;
+        }
+    }
+
+    return false;
 }
 
 UnitTest test_ranked_match{[] {
