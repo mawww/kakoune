@@ -866,6 +866,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                     matches.push_back(match);
             }
             std::sort(matches.begin(), matches.end());
+            matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
             CandidateList res;
             for (auto& m : matches)
                 res.push_back(m.candidate().str());
