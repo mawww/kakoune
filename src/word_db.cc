@@ -133,12 +133,6 @@ RankedMatchList WordDB::find_matching(StringView query)
     RankedMatchList res;
     for (auto&& word : m_words)
     {
-        if (query.empty())
-        {
-            res.push_back(RankedMatch{word.first, query});
-            continue;
-        }
-
         if (RankedMatch match{word.first, word.second.letters, query, letters})
             res.push_back(match);
     }
