@@ -101,6 +101,7 @@ private:
     {
         Vector<DisplayLine> items;
         ByteCoord anchor;
+        CharCoord ui_anchor;
         MenuStyle style;
         int selected;
     } m_menu;
@@ -110,6 +111,7 @@ private:
         String title;
         String content;
         ByteCoord anchor;
+        CharCoord ui_anchor;
         InfoStyle style;
     } m_info;
 

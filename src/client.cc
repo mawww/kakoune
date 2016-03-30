@@ -190,24 +190,21 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & Draw)
     {
-        auto window_pos = window.position();
         m_ui->draw(window.update_display_buffer(context()), get_face("Default"));
 
-	// window moved, reanchor eventual menu and info
-        if (window_pos != window.position())
-        {
-            if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline)
-                m_ui_pending |= (MenuShow | MenuSelect);
-            if (not m_info.content.empty() and is_inline(m_info.style))
-                m_ui_pending |= InfoShow;
-        }
+        if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline and
+            m_menu.ui_anchor != window.display_position(m_menu.anchor))
+            m_ui_pending |= (MenuShow | MenuSelect);
+        if (not m_info.content.empty() and is_inline(m_info.style) and
+            m_info.ui_anchor != window.display_position(m_info.anchor))
+            m_ui_pending |= InfoShow;
     }
 
     if (m_ui_pending & MenuShow)
     {
-        const CharCoord ui_anchor = m_menu.style == MenuStyle::Inline ?
+        m_menu.ui_anchor = m_menu.style == MenuStyle::Inline ?
             window.display_position(m_menu.anchor) : CharCoord{};
-        m_ui->menu_show(m_menu.items, ui_anchor,
+        m_ui->menu_show(m_menu.items, m_menu.ui_anchor,
                         get_face("MenuForeground"), get_face("MenuBackground"),
                         m_menu.style);
     }
@@ -218,9 +215,9 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & InfoShow)
     {
-        const CharCoord ui_anchor = is_inline(m_info.style) ?
+        m_info.ui_anchor = is_inline(m_info.style) ?
             window.display_position(m_info.anchor) : CharCoord{};
-        m_ui->info_show(m_info.title, m_info.content, ui_anchor,
+        m_ui->info_show(m_info.title, m_info.content, m_info.ui_anchor,
                         get_face("Information"), m_info.style);
     }
     if (m_ui_pending & InfoHide)
@@ -333,7 +330,7 @@ void Client::on_option_changed(const Option& option)
 
 void Client::menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style)
 {
-    m_menu = Menu{ std::move(choices), anchor, style, -1 };
+    m_menu = Menu{ std::move(choices), anchor, {}, style, -1 };
     m_ui_pending |= MenuShow;
     m_ui_pending &= ~MenuHide;
 }
@@ -354,7 +351,7 @@ void Client::menu_hide()
 
 void Client::info_show(String title, String content, ByteCoord anchor, InfoStyle style)
 {
-    m_info = Info{ std::move(title), std::move(content), anchor, style };
+    m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
     m_ui_pending |= InfoShow;
     m_ui_pending &= ~InfoHide;
 }
