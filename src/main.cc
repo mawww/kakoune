@@ -145,29 +145,28 @@ void register_registers()
         register_manager.add_register(c, make_unique<StaticRegister>());
 
     using StringList = Vector<String, MemoryDomain::Registers>;
-    static const struct {
-        char name;
-        StringList (*func)(const Context&);
-    } dyn_regs[] = {
-        { '%', [](const Context& context) { return StringList{{context.buffer().display_name()}}; } },
-        { '.', [](const Context& context) {
+
+    register_manager.add_register('%', make_dyn_reg(
+        [](const Context& context)
+        { return StringList{{context.buffer().display_name()}}; }));
+
+    register_manager.add_register('.', make_dyn_reg(
+        [](const Context& context) {
             auto content = context.selections_content();
             return StringList{content.begin(), content.end()};
-        } },
-        { '#', [](const Context& context) {
+         }));
+
+    register_manager.add_register('#', make_dyn_reg(
+        [](const Context& context) {
             StringList res;
             for (size_t i = 1; i < context.selections().size()+1; ++i)
                 res.push_back(to_string((int)i));
             return res;
-        } }
-    };
-
-    for (auto& dyn_reg : dyn_regs)
-        register_manager.add_register(dyn_reg.name, make_unique<DynamicRegister>(dyn_reg.func));
+        }));
 
     for (size_t i = 0; i < 10; ++i)
     {
-        register_manager.add_register('0'+i, make_unique<DynamicRegister>(
+        register_manager.add_register('0'+i, make_dyn_reg(
             [i](const Context& context) {
                 StringList result;
                 for (auto& sel : context.selections())

@@ -8,8 +8,6 @@
 #include "string.hh"
 #include "vector.hh"
 
-#include <functional>
-
 namespace Kakoune
 {
 
@@ -46,14 +44,13 @@ protected:
     Vector<String, MemoryDomain::Registers> m_content;
 };
 
-using RegisterRetriever = std::function<Vector<String, MemoryDomain::Registers> (const Context&)>;
-
 // Dynamic value register, use it's RegisterRetriever
 // to get it's value when needed.
+template<typename Func>
 class DynamicRegister : public StaticRegister
 {
 public:
-    DynamicRegister(RegisterRetriever function)
+    DynamicRegister(Func function)
         : m_function(std::move(function)) {}
 
     Register& operator=(ConstArrayView<String> values) override
@@ -68,8 +65,14 @@ public:
     }
 
 private:
-    RegisterRetriever m_function;
+    Func m_function;
 };
+
+template<typename Func>
+std::unique_ptr<Register> make_dyn_reg(Func func)
+{
+    return make_unique<DynamicRegister<Func>>(std::move(func));
+}
 
 class NullRegister : public Register
 {
