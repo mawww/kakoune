@@ -145,6 +145,7 @@ constexpr StringView register_doc =
     "    * .: selection contents\n"
     "    * #: selection index\n"
     "    * [0-9]: selections capture group\n"
+    "    * _: null register\n"
     "    * \": default yank/paste register\n"
     "    * @: default macro register\n"
     "    * /: default search register\n"

@@ -56,6 +56,9 @@ contain some special data
 *#*::
 	selection indices (first selection has 1, second has 2, ...)
 
+*_*::
+	null register, always empty
+
 Integer registers
 -----------------
 Registers *1* to *9* hold the grouped sub-matches of the regular

@@ -975,6 +975,7 @@ contain some special data:
  * `%`: current buffer name
  * `.`: current selection contents
  * `#`: selection indices (first selection has 1, second has 2, ...)
+ * `_`: null register, always empty
 
 Default registers
 ^^^^^^^^^^^^^^^^^
