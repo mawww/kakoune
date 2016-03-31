@@ -41,6 +41,17 @@ function replace_field {
         || echo "${field_name}: ${field_value}" >> "${path_file}"
 }
 
+## Append a value to a field
+function append_field {
+    local field_name="$1"
+    local path_file="$2"
+    local field_value="$3"
+
+    grep -q "^${field_name}: " "${path_file}" \
+        && sed -r -i "s#^(${field_name}:)\s*(.+)\$#\1 \2, ${field_value}#" "${path_file}" \
+        || echo "${field_name}: ${field_value}" >> "${path_file}"
+}
+
 function main {
     readonly PATH_DIR_CURRENT="${PWD}"
     local maintainer_email="${DEBEMAIL}"
@@ -152,6 +163,12 @@ function main {
     echo "Assigning a section to the control file"
     replace_field Section debian/control editors
 
+    echo "Adding asciidoc to the list of build dependencies"
+    append_field Build-Depends debian/control 'asciidoc'
+
+    echo "Adding package recommendations"
+    replace_field Suggests debian/control 'tmux, x11-utils, xdotool, clang, exuberant-ctags'
+
 ## TODO: generate a changelog
     echo -e "kakoune (${VERSION_KAKOUNE}) stable; urgency=low\n\n  * Initial release\n\n -- ${maintainer_fullname} <${maintainer_email}>  $(date -R)" > debian/changelog
 
@@ -160,6 +177,12 @@ function main {
 
     echo "Modifying the license in the copyright file"
     replace_field License debian/copyright "${DEFAULT_PACKAGE_LICENSE}"
+
+    echo "Generating an NROFF man page"
+    a2x --no-xmllint -f manpage "${PATH_DIR_TMP}/doc/kak.1.txt"
+
+    echo "Copying the generated manpage into the build directory"
+    mv "${PATH_DIR_TMP}/doc/kak.1" debian/kak.1.ex
 
     echo "Building the package"
     debuild -eCXXFLAGS="" -i -us -uc -b
