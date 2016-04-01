@@ -20,13 +20,13 @@ hook global BufCreate .*[.](pug|jade) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default code pug                 \
-		text          ^\h*\|\s     $                      '' \
+    text          ^\h*\|\s     $                      '' \
     text          ^\h*([A-Za-z][A-Za-z0-9_-]*)?(\#[A-Za-z][A-Za-z0-9_-]*)?((?:\.[A-Za-z][A-Za-z0-9_-]*)*)?(?<=\S)\h+\K.* $ '' \
-		javascript    ^\h*[-=!]    $                      '' \
+    javascript    ^\h*[-=!]    $                      '' \
     double_string '"'          (?:(?<!\\)(\\\\)*"|$)  '' \
     single_string "'"          (?:(?<!\\)(\\\\)*'|$)  '' \
     comment       //           $                      '' \
-	  attribute    \(            \)                     \( \
+    attribute    \(            \)                     \( \
     puglang      ^\h*\<(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin)\> $ '' \
 
 # Filters
