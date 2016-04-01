@@ -29,6 +29,9 @@ inline bool option_add(int& opt, StringView str)
     return val != 0;
 }
 
+inline String option_to_string(size_t opt) { return to_string(opt); }
+inline void option_from_string(StringView str, size_t& opt) { opt = str_to_int(str); }
+
 inline String option_to_string(bool opt) { return opt ? "true" : "false"; }
 inline void option_from_string(StringView str, bool& opt)
 {
@@ -223,45 +226,48 @@ constexpr Array<EnumDesc<DebugFlags>, 3> enum_desc(DebugFlags)
     } };
 }
 
-template<typename T>
-struct TimestampedList
+template<typename P, typename T>
+struct PrefixedList
 {
-    size_t timestamp;
+    P prefix;
     Vector<T, MemoryDomain::Options> list;
 };
 
-template<typename T>
-inline bool operator==(const TimestampedList<T>& lhs, const TimestampedList<T>& rhs)
+template<typename P, typename T>
+inline bool operator==(const PrefixedList<P, T>& lhs, const PrefixedList<P, T>& rhs)
 {
-    return lhs.timestamp == rhs.timestamp and lhs.list == rhs.list;
+    return lhs.prefix == rhs.prefix and lhs.list == rhs.list;
 }
 
-template<typename T>
-inline bool operator!=(const TimestampedList<T>& lhs, const TimestampedList<T>& rhs)
+template<typename P, typename T>
+inline bool operator!=(const PrefixedList<P, T>& lhs, const PrefixedList<P, T>& rhs)
 {
     return not (lhs == rhs);
 }
 
-template<typename T>
-inline String option_to_string(const TimestampedList<T>& opt)
+template<typename P, typename T>
+inline String option_to_string(const PrefixedList<P, T>& opt)
 {
-    return format("{}:{}", opt.timestamp, option_to_string(opt.list));
+    return format("{}:{}", opt.prefix, option_to_string(opt.list));
 }
 
-template<typename T>
-inline void option_from_string(StringView str, TimestampedList<T>& opt)
+template<typename P, typename T>
+inline void option_from_string(StringView str, PrefixedList<P, T>& opt)
 {
     auto it = find(str, ':');
-    opt.timestamp = str_to_int({str.begin(), it});
+    option_from_string(StringView{str.begin(), it}, opt.prefix);
     if (it != str.end())
         option_from_string({it+1, str.end()}, opt.list);
 }
 
-template<typename T>
-inline bool option_add(TimestampedList<T>& opt, StringView str)
+template<typename P, typename T>
+inline bool option_add(PrefixedList<P, T>& opt, StringView str)
 {
     return option_add(opt.list, str);
 }
+
+template<typename T>
+using TimestampedList = PrefixedList<size_t, T>;
 
 }
 

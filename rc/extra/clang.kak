@@ -1,7 +1,7 @@
 decl str clang_options
 
 decl -hidden str clang_tmp_dir
-decl -hidden str-list clang_completions
+decl -hidden completions clang_completions
 decl -hidden line-flags clang_flags
 decl -hidden str clang_errors
 
@@ -50,8 +50,10 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                                  gsub(/ +$/, "", $3)
                                  id=substr($2, 1, length($2)-1)
                                  gsub(/:/, "\\:", id)
+                                 gsub(/\|/, "\\\|", id)
                                  desc=$4 ? $3 "\\n" $4 : $3
                                  gsub(/:/, "\\:", desc)
+                                 gsub(/\|/, "\\\|", desc)
                                  if (id in docstrings)
                                      docstrings[id]=docstrings[id] "\\n" desc
                                  else
@@ -64,7 +66,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                                     gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^[:alnum:]_])/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
                                     gsub(/[^[:alnum:]{}_]+/, "{operator}&{}", menu)
-                                    print id  "@" docstrings[id] "@" menu
+                                    print id  "|" docstrings[id] "|" menu
                                 }
                             }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
                 echo "eval -client ${kak_client} echo 'clang completion done'

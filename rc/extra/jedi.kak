@@ -1,5 +1,5 @@
 decl -hidden str jedi_tmp_dir
-decl -hidden str-list jedi_completions
+decl -hidden completions jedi_completions
 decl str-list jedi_python_path ''
 
 def jedi-complete -docstring "Complete the current selection with jedi" %{
@@ -20,10 +20,11 @@ def jedi-complete -docstring "Complete the current selection with jedi" %{
             compl=$(python 2> "${dir}/fifo" <<-END
 		import jedi
 		script=jedi.Script(open('$dir/buf', 'r').read(), $kak_cursor_line, $kak_cursor_column - 1, '$kak_buffile')
-		print ':'.join([str(c.name) + "@" + str(c.docstring()).replace(":", "\\:") for c in script.completions()])
+		print ':'.join([(str(c.name).replace("|", "\\|") + "|" + str(c.docstring()).replace("|", "\\|")).replace(":", "\\:") + "|" + str(c.name).replace("|", "\\|") for c in script.completions()]).replace("'", r"\\\\'")
 		END
             )
-            echo "eval -client ${kak_client} %[ echo completed; set 'buffer=${kak_buffile}' jedi_completions %[${header}:${compl}] ]" | kak -p ${kak_session}
+            printf %s "${compl}" > /tmp/kak-jedi-out
+            printf %s "eval -client ${kak_client} 'echo completed; set %{buffer=${kak_buffile}} jedi_completions \'${header}:${compl}\''" | kak -p ${kak_session}
             rm -r ${dir}
         ) > /dev/null 2>&1 < /dev/null &
     }

@@ -917,13 +917,13 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
         auto& lines = line_flags.list;
 
         auto& buffer = context.buffer();
-        if (line_flags.timestamp != buffer.timestamp())
+        if (line_flags.prefix != buffer.timestamp())
         {
             std::sort(lines.begin(), lines.end(),
                       [](const LineAndFlag& lhs, const LineAndFlag& rhs)
                       { return std::get<0>(lhs) < std::get<0>(rhs); });
 
-            auto modifs = compute_line_modifications(buffer, line_flags.timestamp);
+            auto modifs = compute_line_modifications(buffer, line_flags.prefix);
             auto ins_pos = lines.begin();
             for (auto it = lines.begin(); it != lines.end(); ++it)
             {
@@ -945,7 +945,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
                 ++ins_pos;
             }
             lines.erase(ins_pos, lines.end());
-            line_flags.timestamp = buffer.timestamp();
+            line_flags.prefix = buffer.timestamp();
         }
 
         auto def_face = get_face(default_face);
@@ -1003,7 +1003,7 @@ HighlighterAndId create_ranges_highlighter(HighlighterParameters params)
         auto& ranges = range_and_faces.list;
 
         auto& buffer = context.buffer();
-        if (range_and_faces.timestamp != buffer.timestamp())
+        if (range_and_faces.prefix != buffer.timestamp())
         {
             // TODO: update ranges to current timestamp
             return;

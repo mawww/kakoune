@@ -215,11 +215,11 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
 InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
                                  const OptionManager& options, StringView option_name)
 {
-    const StringList& opt = options[option_name].get<StringList>();
-    if (opt.empty())
+    const CompletionList& opt = options[option_name].get<CompletionList>();
+    if (opt.list.empty())
         return {};
 
-    auto& desc = opt[0];
+    auto& desc = opt.prefix;
     static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
     MatchResults<String::const_iterator> match;
     if (regex_match(desc.begin(), desc.end(), match, re))
@@ -260,17 +260,15 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
 
             Vector<RankedMatchAndInfo> matches;
 
-            for (auto it = opt.begin() + 1; it != opt.end(); ++it)
+            for (auto& candidate : opt.list)
             {
-                auto splitted = split(*it, '@');
-                if (splitted.empty())
-                    continue;
-                if (RankedMatchAndInfo match{splitted[0], query})
+                if (RankedMatchAndInfo match{std::get<0>(candidate), query})
                 {
-                    match.docstring = splitted.size() > 1 ? splitted[1] : StringView{};
-                    match.menu_entry = splitted.size() > 2 ?
-                        parse_display_line(expand_tabs(splitted[2], tabstop, column))
-                      : DisplayLine{ expand_tabs(splitted[0], tabstop, column) };
+                    match.docstring = std::get<1>(candidate);
+                    auto& menu = std::get<2>(candidate);
+                    match.menu_entry = not menu.empty() ?
+                        parse_display_line(expand_tabs(menu, tabstop, column))
+                      : DisplayLine{ expand_tabs(menu, tabstop, column) };
 
                     matches.push_back(std::move(match));
                 }

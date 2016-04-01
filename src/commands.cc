@@ -19,6 +19,7 @@
 #include "parameters_parser.hh"
 #include "ranked_match.hh"
 #include "register_manager.hh"
+#include "insert_completer.hh"
 #include "remote.hh"
 #include "shell_manager.hh"
 #include "string.hh"
@@ -1191,6 +1192,7 @@ const CommandDesc declare_option_cmd = {
     "    regex: regular expression\n"
     "    int-list: list of integers\n"
     "    str-list: list of character strings\n"
+    "    completions: list of completion candidates"
     "    line-flags: list of line flags\n"
     "    range-faces: list of range faces\n",
     ParameterDesc{
@@ -1224,6 +1226,8 @@ const CommandDesc declare_option_cmd = {
             opt = &reg.declare_option<Vector<int, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
             opt = &reg.declare_option<Vector<String, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
+        else if (parser[0] == "completions")
+            opt = &reg.declare_option<CompletionList>(parser[1], docstring, {}, flags);
         else if (parser[0] == "line-flags")
             opt = &reg.declare_option<TimestampedList<LineAndFlag>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "range-faces")
