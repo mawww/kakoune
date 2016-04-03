@@ -376,37 +376,47 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
         throw runtime_error("Invalid max width");
 
     using Utf8It = utf8::iterator<const char*>;
-    Utf8It word_begin{text.begin(), text};
-    Utf8It word_end{word_begin};
+    Utf8It it{text.begin(), text};
     Utf8It end{text.end(), text};
-    CharCount col = 0;
-    Vector<StringView> lines;
-    Utf8It line_begin{text.begin(), text};
-    Utf8It line_end = line_begin;
-    while (word_begin != end)
-    {
-        const CharCategories cat = categorize(*word_begin);
-        do
-        {
-            ++word_end;
-        } while (word_end != end and categorize(*word_end) == cat);
+    Utf8It line_begin = it;
+    Utf8It last_word_end = it;
 
-        col += word_end - word_begin;
-        if ((word_begin != line_begin and col > max_width) or
-            cat == CharCategories::EndOfLine)
+    Vector<StringView> lines;
+    while (it != end)
+    {
+        const CharCategories cat = categorize(*it);
+        if (cat == CharCategories::EndOfLine)
         {
+            lines.emplace_back(line_begin.base(), it.base());
+            line_begin = it = it+1;
+            continue;
+        }
+
+        Utf8It word_end = it+1;
+        while (word_end != end and categorize(*word_end) == cat)
+            ++word_end;
+
+        while (word_end - line_begin >= max_width)
+        {
+            auto line_end = last_word_end <= line_begin ? line_begin + max_width
+                                                        : last_word_end;
             lines.emplace_back(line_begin.base(), line_end.base());
-            line_begin = (cat == CharCategories::EndOfLine or
-                          cat == CharCategories::Blank) ? word_end : word_begin;
-            col = word_end - line_begin;
+
+            while (line_end != end and is_horizontal_blank(*line_end))
+                ++line_end;
+
+            if (line_end != end and *line_end == '\n')
+                ++line_end;
+
+            it = line_begin = line_end;
         }
         if (cat == CharCategories::Word or cat == CharCategories::Punctuation)
-            line_end = word_end;
+            last_word_end = word_end;
 
-        word_begin = word_end;
+        it = word_end;
     }
-    if (line_begin != word_begin)
-        lines.emplace_back(line_begin.base(), word_begin.base());
+    if (line_begin != end)
+        lines.emplace_back(line_begin.base(), text.end());
     return lines;
 }
 
@@ -499,6 +509,15 @@ UnitTest test_string{[]()
     kak_assert(splitedview[4] == "kanaky");
     kak_assert(splitedview[5] == "hihi\\");
     kak_assert(splitedview[6] == "");
+
+    Vector<StringView> wrapped = wrap_lines("wrap this paragraph\n respecting whitespaces and much_too_long_words", 16);
+    kak_assert(wrapped.size() == 6);
+    kak_assert(wrapped[0] == "wrap this");
+    kak_assert(wrapped[1] == "paragraph");
+    kak_assert(wrapped[2] == " respecting");
+    kak_assert(wrapped[3] == "whitespaces and");
+    kak_assert(wrapped[4] == "much_too_long_wo");
+    kak_assert(wrapped[5] == "rds");
 
     kak_assert(escape("youpi:matin:tchou:", ':', '\\') == "youpi\\:matin\\:tchou\\:");
     kak_assert(unescape("youpi\\:matin\\:tchou\\:", ':', '\\') == "youpi:matin:tchou:");
