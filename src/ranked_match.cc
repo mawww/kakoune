@@ -106,7 +106,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         m_first_char_match = smartcase_eq(query[0], candidate[0]);
         m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
         m_only_word_boundary = m_word_boundary_match_count == query.length();
-        m_prefix = std::equal(query.begin(), query.end(), candidate.begin(), smartcase_eq);
+        m_prefix = std::equal(query.begin(), query.end(), candidate.begin());
     }
 }
 
