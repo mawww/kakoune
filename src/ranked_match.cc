@@ -154,7 +154,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         if (cp1 != cp2)
         {
             const bool low1 = islower(cp1), low2 = islower(cp2);
-            return low1 == low2 ? cp1 < cp2 : low2;
+            return low1 == low2 ? cp1 < cp2 : low1;
         }
     }
 
