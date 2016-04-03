@@ -58,14 +58,13 @@ enum class CharCategories
 template<WordType word_type = Word>
 inline CharCategories categorize(Codepoint c)
 {
-    if (is_word(c))
-        return CharCategories::Word;
     if (is_eol(c))
         return CharCategories::EndOfLine;
     if (is_horizontal_blank(c))
         return CharCategories::Blank;
-    return word_type == WORD ? CharCategories::Word
-                             : CharCategories::Punctuation;
+    if (word_type == WORD or is_word(c))
+        return CharCategories::Word;
+    return CharCategories::Punctuation;
 }
 
 inline Codepoint to_lower(Codepoint cp) { return towlower((wchar_t)cp); }
