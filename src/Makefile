@@ -36,9 +36,11 @@ mandir := $(DESTDIR)$(PREFIX)/share/man/man1
 os := $(shell uname)
 
 ifeq ($(os),Darwin)
+    ## XXX
+    PKG_CONFIG_PATH := /usr/local/opt/icu4c/lib/pkgconfig
     LIBS += -lncurses -lboost_regex-mt
-    CPPFLAGS += -I/usr/local/opt/ncurses/include
-    LDFLAGS += -L/usr/local/opt/ncurses/lib
+    CPPFLAGS += -I/usr/local/opt/ncurses/include -I/usr/local/opt/icu4c/include
+    LDFLAGS += -L/usr/local/opt/ncurses/lib -L/usr/local/opt/icu4c/lib
 else ifeq ($(os),FreeBSD)
     LIBS += -ltinfow -lncursesw -lboost_regex
     CPPFLAGS += -I/usr/local/include
@@ -57,10 +59,13 @@ else
     LDFLAGS += -rdynamic
 endif
 
+## XXX
+LIBS += $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs icu-uc || icu-config --ldflags)
+CXXFLAGS += -Wl,-v -v
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 
 kak : $(objects)
-	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(objects) -o $@ $(LDFLAGS) $(LIBS)
 
 -include $(deps)
 

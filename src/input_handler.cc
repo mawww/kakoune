@@ -509,7 +509,7 @@ public:
             for (auto& atom : choice)
             {
                 const auto& contents = atom.content();
-                if (regex_match(contents.begin(), contents.end(), m_filter))
+                if (Kakoune::regex_match(contents.begin(), contents.end(), m_filter))
                     return true;
             }
             return false;

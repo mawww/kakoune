@@ -63,7 +63,7 @@ void HookManager::run_hook(StringView hook_name,
     for (auto& hook : hook_list_it->value)
     {
         if (not hook.key.empty() and not disabled_hooks.empty() and
-            regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
+            Kakoune::regex_match(hook.key.begin(), hook.key.end(), disabled_hooks))
             continue;
 
         try

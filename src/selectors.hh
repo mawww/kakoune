@@ -225,7 +225,7 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
     const bool is_pos_eol = is_eol(buffer, pos.coord());
     const bool is_pos_eow = is_eow(buffer, pos.coord());
     auto begin = buffer.begin();
-    while (begin != pos and regex_search(begin, pos, matches, regex,
+    while (begin != pos and Kakoune::regex_search(begin, pos, matches, regex,
                                          match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
     {
         begin = utf8::next(matches[0].first, pos);
@@ -243,11 +243,11 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
     wrapped = false;
     if (direction == Forward)
     {
-        if (regex_search(pos, buffer.end(), matches, ex,
+        if (Kakoune::regex_search(pos, buffer.end(), matches, ex,
                          match_flags(is_bol(pos.coord()), true, true)))
             return true;
         wrapped = true;
-        return regex_search(buffer.begin(), buffer.end(), matches, ex);
+        return Kakoune::regex_search(buffer.begin(), buffer.end(), matches, ex);
     }
     else
     {

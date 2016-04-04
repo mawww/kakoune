@@ -4,7 +4,8 @@ class Kakoune < Formula
   homepage "https://github.com/mawww/kakoune"
   head "https://github.com/mawww/kakoune.git"
 
-  depends_on 'boost'
+  depends_on 'icu4c'
+  depends_on 'boost' => 'with-icu4c'
   depends_on 'asciidoc'
 
   def install

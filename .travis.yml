@@ -23,7 +23,8 @@ install:
         export CXX=g++-4.9;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
-       brew outdated boost || brew upgrade boost;
+      brew install icu4c;
+      brew outdated boost || brew upgrade boost --with-icu4c;
     fi;
 env:
   global:
@@ -41,6 +42,7 @@ addons:
       - g++-4.9
       - libncursesw5-dev
       - libboost-regex1.55-dev
+      - libicu-dev
   coverity_scan:
     project:
       name: "mawww/kakoune"

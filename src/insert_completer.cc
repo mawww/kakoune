@@ -222,7 +222,7 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
     auto& desc = opt.prefix;
     static const Regex re(R"((\d+)\.(\d+)(?:\+(\d+))?@(\d+))");
     MatchResults<String::const_iterator> match;
-    if (regex_match(desc.begin(), desc.end(), match, re))
+    if (Kakoune::regex_match(desc.begin(), desc.end(), match, re))
     {
         ByteCoord coord{ str_to_int({match[1].first, match[1].second}) - 1,
                          str_to_int({match[2].first, match[2].second}) - 1 };

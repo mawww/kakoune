@@ -681,7 +681,7 @@ const CommandDesc add_hook_cmd = {
 
             ScopedSetBool disable_history{context.history_disabled()};
 
-            if (regex_match(param.begin(), param.end(), regex))
+            if (Kakoune::regex_match(param.begin(), param.end(), regex))
                 CommandManager::instance().execute(command, context,
                                                    { {}, { { "hook_param", param.str() } } });
         };
@@ -747,7 +747,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         StringView counts = *params;
         static const Regex re{R"((\d+)?..(\d+)?)"};
         MatchResults<const char*> res;
-        if (regex_match(counts.begin(), counts.end(), res, re))
+        if (Kakoune::regex_match(counts.begin(), counts.end(), res, re))
         {
             if (res[1].matched)
                 min = (size_t)str_to_int({res[1].first, res[1].second});
