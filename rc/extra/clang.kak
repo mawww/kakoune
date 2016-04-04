@@ -44,16 +44,19 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                     -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
                         awk -F ': ' -e '
                             /^COMPLETION:/ && ! /\(Hidden\)/ {
+                                 id=$2
+                                 gsub(/ +$/, "", id)
+                                 gsub(/:/, "\\:", id)
+                                 gsub(/\|/, "\\|", id)
+
                                  gsub(/[[{<]#|#[}>]/, "", $3)
                                  gsub(/#]/, " ", $3)
                                  gsub(/:: /, "::", $3)
                                  gsub(/ +$/, "", $3)
-                                 id=substr($2, 1, length($2)-1)
-                                 gsub(/:/, "\\:", id)
-                                 gsub(/\|/, "\\\|", id)
                                  desc=$4 ? $3 "\\n" $4 : $3
+
                                  gsub(/:/, "\\:", desc)
-                                 gsub(/\|/, "\\\|", desc)
+                                 gsub(/\|/, "\\|", desc)
                                  if (id in docstrings)
                                      docstrings[id]=docstrings[id] "\\n" desc
                                  else
@@ -68,7 +71,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                                     gsub(/[^[:alnum:]{}_]+/, "{operator}&{}", menu)
                                     print id  "|" docstrings[id] "|" menu
                                 }
-                            }' | sort | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
+                            }' | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
                 echo "eval -client ${kak_client} echo 'clang completion done'
                       set 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
             else
