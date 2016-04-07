@@ -1826,7 +1826,15 @@ const CommandDesc change_working_directory_cmd = {
     single_name_param,
     CommandFlags::None,
     CommandHelper{},
-    filename_completer,
+    PerArgumentCommandCompleter{{
+         [](const Context& context, CompletionFlags flags,
+            const String& prefix, ByteCount cursor_pos) -> Completions {
+             return { 0_byte, cursor_pos,
+                      complete_filename(prefix,
+                                        context.options()["ignored_files"].get<Regex>(),
+                                        cursor_pos, true) };
+        }
+    }},
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
         if (chdir(parse_filename(parser[0]).c_str()) != 0)

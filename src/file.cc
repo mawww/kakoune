@@ -348,13 +348,13 @@ Vector<String> list_files(StringView dirname, Filter filter)
     while (dirent* entry = readdir(dir))
     {
         StringView filename = entry->d_name;
-        if (filename.empty() or not filter(*entry))
+        if (filename.empty())
             continue;
 
         struct stat st;
         auto fmt_str = (dirname.empty() or dirname.back() == '/') ? "{}{}" : "{}/{}";
         format_to(buffer, fmt_str, dirname, filename);
-        if (stat(buffer, &st) != 0)
+        if (stat(buffer, &st) != 0 or not filter(*entry, st))
             continue;
 
         if (S_ISDIR(st.st_mode))
@@ -366,7 +366,7 @@ Vector<String> list_files(StringView dirname, Filter filter)
 
 Vector<String> list_files(StringView directory)
 {
-    return list_files(directory, [](const dirent& entry) {
+    return list_files(directory, [](const dirent& entry, const struct stat&) {
                           return StringView{entry.d_name}.substr(0_byte, 1_byte) != ".";
                       });
 }
@@ -380,9 +380,8 @@ static CandidateList candidates(ConstArrayView<RankedMatch> matches, StringView 
     return res;
 }
 
-CandidateList complete_filename(StringView prefix,
-                                const Regex& ignored_regex,
-                                ByteCount cursor_pos)
+CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
+                                ByteCount cursor_pos, bool only_dir)
 {
     String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
     StringView dirname, fileprefix;
@@ -392,10 +391,11 @@ CandidateList complete_filename(StringView prefix,
         not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
     const bool include_hidden = fileprefix.substr(0_byte, 1_byte) == ".";
 
-    auto filter = [&ignored_regex, check_ignored_regex, include_hidden](const dirent& entry)
+    auto filter = [&ignored_regex, check_ignored_regex, include_hidden, only_dir](const dirent& entry, struct stat& st)
     {
         return (include_hidden or StringView{entry.d_name}.substr(0_byte, 1_byte) != ".") and
-               (not check_ignored_regex or not regex_match(entry.d_name, ignored_regex));
+               (not check_ignored_regex or not regex_match(entry.d_name, ignored_regex)) and
+               (not only_dir or S_ISDIR(st.st_mode));
     };
     auto files = list_files(dirname, filter);
     Vector<RankedMatch> matches;
@@ -416,13 +416,8 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
 
     if (not dirname.empty())
     {
-        auto filter = [&dirname](const dirent& entry)
+        auto filter = [&dirname](const dirent& entry, const struct stat& st)
         {
-            char buffer[PATH_MAX+1];
-            format_to(buffer, "{}{}", dirname, entry.d_name);
-            struct stat st;
-            if (stat(buffer, &st) != 0)
-                return false;
             bool executable = (st.st_mode & S_IXUSR)
                             | (st.st_mode & S_IXGRP)
                             | (st.st_mode & S_IXOTH);
@@ -460,12 +455,7 @@ Vector<String> complete_command(StringView prefix, ByteCount cursor_pos)
         auto& cache = command_cache[dirname];
         if (memcmp(&cache.mtim, &st.st_mtim, sizeof(TimeSpec)) != 0)
         {
-            auto filter = [&dirname](const dirent& entry) {
-                struct stat st;
-                char buffer[PATH_MAX+1];
-                format_to(buffer, "{}/{}", dirname, entry.d_name);
-                if (stat(buffer, &st))
-                    return false;
+            auto filter = [&dirname](const dirent& entry, const struct stat& st) {
                 bool executable = (st.st_mode & S_IXUSR)
                                 | (st.st_mode & S_IXGRP)
                                 | (st.st_mode & S_IXOTH);

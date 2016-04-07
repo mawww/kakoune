@@ -83,7 +83,7 @@ constexpr bool operator!=(const timespec& lhs, const timespec& rhs)
 }
 
 CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
-                                ByteCount cursor_pos = -1);
+                                ByteCount cursor_pos = -1, bool only_dir = false);
 
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 
