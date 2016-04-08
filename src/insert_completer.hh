@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-class Buffer;
+class SelectionList;
 struct Key;
 
 struct InsertCompleterDesc
@@ -92,7 +92,7 @@ private:
     InsertCompletion m_completions;
     int              m_current_candidate = -1;
 
-    using CompleteFunc = InsertCompletion (const Buffer&, ByteCoord, const OptionManager& options);
+    using CompleteFunc = InsertCompletion (const SelectionList& sels, const OptionManager& options);
     CompleteFunc* m_explicit_completer = nullptr;
 };
 

@@ -74,8 +74,11 @@ WordDB& get_word_db(const Buffer& buffer)
 }
 
 template<bool other_buffers>
-InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const OptionManager& options)
+InsertCompletion complete_word(const SelectionList& sels, const OptionManager& options)
 {
+    const Buffer& buffer = sels.buffer();
+    ByteCoord cursor_pos = sels.main().cursor();
+
     using Utf8It = utf8::iterator<BufferIterator>;
     Utf8It pos{buffer.iterator_at(cursor_pos), buffer};
     if (pos == buffer.begin() or not is_word(*(pos-1)))
@@ -165,10 +168,11 @@ InsertCompletion complete_word(const Buffer& buffer, ByteCoord cursor_pos, const
 }
 
 template<bool require_slash>
-InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
+InsertCompletion complete_filename(const SelectionList& sels,
                                    const OptionManager& options)
 {
-    auto pos = buffer.iterator_at(cursor_pos);
+    const Buffer& buffer = sels.buffer();
+    auto pos = buffer.iterator_at(sels.main().cursor());
     auto begin = pos;
 
     auto is_filename = [](char c)
@@ -212,9 +216,13 @@ InsertCompletion complete_filename(const Buffer& buffer, ByteCoord cursor_pos,
     return { begin.coord(), pos.coord(), std::move(candidates), buffer.timestamp() };
 }
 
-InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
-                                 const OptionManager& options, StringView option_name)
+InsertCompletion complete_option(const SelectionList& sels,
+                                 const OptionManager& options,
+                                 StringView option_name)
 {
+    const Buffer& buffer = sels.buffer();
+    ByteCoord cursor_pos = sels.main().cursor();
+
     const CompletionList& opt = options[option_name].get<CompletionList>();
     if (opt.list.empty())
         return {};
@@ -286,8 +294,11 @@ InsertCompletion complete_option(const Buffer& buffer, ByteCoord cursor_pos,
     return {};
 }
 
-InsertCompletion complete_line(const Buffer& buffer, ByteCoord cursor_pos, const OptionManager& options)
+InsertCompletion complete_line(const SelectionList& sels, const OptionManager& options)
 {
+    const Buffer& buffer = sels.buffer();
+    ByteCoord cursor_pos = sels.main().cursor();
+
     const CharCount tabstop = options["tabstop"].get<int>();
     const CharCount column = get_column(buffer, tabstop, cursor_pos);
 
@@ -406,9 +417,8 @@ bool InsertCompleter::setup_ifn()
                 try_complete(complete_filename<true>))
                 return true;
             if (completer.mode == InsertCompleterDesc::Option and
-                try_complete([&,this](const Buffer& buffer, ByteCoord cursor_pos,
-                                      const OptionManager& options) {
-                   return complete_option(buffer, cursor_pos, options, *completer.param);
+                try_complete([&,this](const SelectionList& sels, const OptionManager& options) {
+                   return complete_option(sels, options, *completer.param);
                 }))
                 return true;
             if (completer.mode == InsertCompleterDesc::Word and
@@ -462,11 +472,10 @@ void InsertCompleter::on_option_changed(const Option& opt)
 template<typename Func>
 bool InsertCompleter::try_complete(Func complete_func)
 {
-    auto& buffer = m_context.buffer();
-    ByteCoord cursor_pos = m_context.selections().main().cursor();
+    auto& sels = m_context.selections();
     try
     {
-        m_completions = complete_func(buffer, cursor_pos, m_options);
+        m_completions = complete_func(sels, m_options);
     }
     catch (runtime_error& e)
     {
@@ -476,10 +485,10 @@ bool InsertCompleter::try_complete(Func complete_func)
     if (not m_completions.is_valid())
         return false;
 
-    kak_assert(cursor_pos >= m_completions.begin);
+    kak_assert(m_completions.begin <= sels.main().cursor());
     m_current_candidate = m_completions.candidates.size();
     menu_show();
-    m_completions.candidates.push_back({buffer.string(m_completions.begin, m_completions.end), ""});
+    m_completions.candidates.push_back({sels.buffer().string(m_completions.begin, m_completions.end), ""});
     return true;
 }
 
