@@ -8,7 +8,7 @@ hooks - a
 Description
 -----------
 
-Commands can be registred to be executed when certain events arise. To
+Commands can be registered to be executed when certain events arise. To
 register a hook use the following command:
 
 ----------------------------------------------------------------------
@@ -71,7 +71,7 @@ Default hooks
 	a window was created, the filtering text is the buffer name
 
 *WinClose*::
-	a window was detroyed, the filtering text is the buffer name
+	a window was destroyed, the filtering text is the buffer name
 
 *WinDisplay*::
 	a window was bound a client, the filtering text is the buffer name

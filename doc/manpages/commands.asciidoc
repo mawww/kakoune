@@ -8,7 +8,7 @@ commands - a
 Primitives
 ----------
 
-Some commands take an esclamation mark (*!*), which can be used to force
+Some commands take an exclamation mark (*!*), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
 command *q!* has to be used).
 
@@ -166,7 +166,7 @@ commands:
 *try* <commands> catch <on_error_commands>::
 	prevent an error in *commands* from aborting the whole commands
 	execution, execute *on_error_commands* instead. If nothing is to be
-	done on error, the catch part can be ommitted
+	done on error, the catch part can be omitted
 
 *reg* <name> <content>::
 	set register *name* to *content*
@@ -212,7 +212,7 @@ New commands can be defined using the *def* command:
 	positional params and output one completion candidate per line
 
 *-allow-override*:::
-	allow the new command to replace an exisiting one with the same name
+	allow the new command to replace an existing one with the same name
 
 *-hidden*:::
 	do not show the command in command name completions

@@ -70,7 +70,7 @@ Builtin options
 	execute search as it is typed
 
 *aligntab* 'bool'::
-	use tabs for alignement command
+	use tabs for alignment command
 
 *autoinfo* 'flags(command|onkey|normal)'::
 	display automatic information box in the enabled contexts

@@ -13,7 +13,7 @@ Kakoune is written in C++11, here are the main coding style points:
 
  * public interface before private methods/data when defining a class
 
- * use +override+ keyword for overriden virtual methods
+ * use +override+ keyword for overridden virtual methods
 
  * opening brackets on their own lines by default, except when declaring
    an object where the opening bracket follows the equal sign.
@@ -65,7 +65,7 @@ Kakrc coding style
    as executed by a POSIX shell. Avoid non posix extensions to common
    tools.
 
- * Avoid too much comlexity/logic in kak scripts. They are not meant
+ * Avoid too much complexity/logic in kak scripts. They are not meant
    to implement generic tools, only to transform a general tool output
    to Kakoune commands.
 

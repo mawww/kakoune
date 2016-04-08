@@ -44,7 +44,7 @@ fg_color[,bg_color][+attributes]
 
 Builtin faces
 -------------
-The following default faces are used by color schemes to highlight certains
+The following default faces are used by color schemes to highlight certain
 areas of the user interface:
 
 *Default*::

@@ -56,19 +56,19 @@ informations about Kakoune's state:
 	content of the main selection
 *kak_selections*::
 	content of the selection separated by colons, colons in the selection
-	contents are escapted with a backslash
+	contents are escaped with a backslash
 *kak_selection_desc*::
 	range of the main selection, represented as anchor,cursor; anchor
 	and cursor are in this format: line.column
 *kak_selections_desc*::
-	range of the selecations separated by colons
+	range of the selections separated by colons
 *kak_bufname*::
 	name of the current buffer
 *kak_buffile*::
 	full path of the file or same as kak_bufname when there’s no
 	associated file
 *kak_buflist*::
-	the current buffer list, each buffer seperated by a colon
+	the current buffer list, each buffer separated by a colon
 *kak_timestamp*::
 	timestamp of the current buffer, the timestamp is an integer value
 	which is incremented each time the buffer is modified
@@ -111,4 +111,4 @@ syntax will enable the face facename until another face gets activated,
 or the end of the string is reached.
 
 Literal '{' characters shall be written '\{', and a literal backslash ('\')
-that preceeds a '{' character shall be escaped as well ('\\').
+that precedes a '{' character shall be escaped as well ('\\').

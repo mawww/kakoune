@@ -90,7 +90,7 @@ things easier to understand, bugs easier to fix, and code easier to change.
 
    - Either we want a direct result, and we need to be synchronous with
      the user, so getting a 4x speed up is meaningless, we need to have an
-     algorithm which appears instantaneous the the user.
+     algorithm which appears instantaneous the user.
 
    - Or we want an asynchronous result, and then the processing is best left
      to a helper command which can be reused with other Unix tools.
