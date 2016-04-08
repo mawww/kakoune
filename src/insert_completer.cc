@@ -84,19 +84,27 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     if (pos == buffer.begin() or not is_word(*(pos-1)))
         return {};
 
-    auto end = Utf8It{buffer.iterator_at(cursor_pos), buffer};
-    auto begin = end-1;
-    while (begin != buffer.begin() and is_word(*begin))
-        --begin;
-    if (not is_word(*begin))
-        ++begin;
+    ByteCoord word_begin;
+    String prefix;
+    IdMap<int> sel_word_counts;
+    for (int i = 0; i < sels.size(); ++i)
+    {
+        auto end = Utf8It{buffer.iterator_at(sels[i].cursor()), buffer};
+        auto begin = end-1;
+        if (not skip_while_reverse(begin, buffer.begin(), is_word))
+            ++begin;
 
-    auto prefix = buffer.string(begin.base().coord(), end.base().coord());
+        if (i == sels.main_index())
+        {
+            word_begin = begin.base().coord();
+            prefix = buffer.string(word_begin, end.base().coord());
+        }
 
-    while (end != buffer.end() and is_word(*end))
-        ++end;
+        skip_while(end, buffer.end(), is_word);
 
-    auto current_word = buffer.string(begin.base().coord(), end.base().coord());
+        auto word = buffer.string(begin.base().coord(), end.base().coord());
+        ++sel_word_counts[word];
+    }
 
     struct RankedMatchAndBuffer : RankedMatch
     {
@@ -120,8 +128,12 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
 
     add_matches(buffer);
 
-    if (get_word_db(buffer).get_word_occurences(current_word) <= 1)
-        unordered_erase(matches, StringView{current_word});
+    // Remove words that are being edited
+    for (auto& word_count : sel_word_counts)
+    {
+        if (get_word_db(buffer).get_word_occurences(word_count.key) <= word_count.value)
+            unordered_erase(matches, StringView{word_count.key});
+    }
 
     if (other_buffers)
     {
@@ -164,7 +176,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
         candidates.push_back({m.candidate().str(), "", std::move(menu_entry)});
     }
 
-    return { begin.base().coord(), cursor_pos, std::move(candidates), buffer.timestamp() };
+    return { word_begin, cursor_pos, std::move(candidates), buffer.timestamp() };
 }
 
 template<bool require_slash>
