@@ -527,6 +527,8 @@ object you want.
  * `"`: select the enclosing double quoted string
  * `'`: select the enclosing single quoted string
  * ```: select the enclosing grave quoted string
+ * `-` or `d`: select the enclosing kebab-case word
+ * `_` or `l`: select the enclosing snake_case word
  * `w`: select the whole word
  * `W`: select the whole WORD
  * `s`: select the sentence

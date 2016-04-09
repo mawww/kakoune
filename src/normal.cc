@@ -986,6 +986,8 @@ void select_object(Context& context, NormalParams params)
             { "\"", "\"", 'Q' },
             { "'", "'", 'q' },
             { "`", "`", 'g' },
+            { "-", "-", 'd' },
+            { "_", "_", 'l' },
         };
         for (auto& sur : surrounding_pairs)
         {
@@ -1004,6 +1006,8 @@ void select_object(Context& context, NormalParams params)
     "\",Q:  double quote string\n"
     "',q:  single quote string\n"
     "`,g:  grave quote string \n"
+    "-,d:  dash               \n"
+    "_,l:  underscore         \n"
     "w:    word               \n"
     "W:    WORD               \n"
     "s:    sentence           \n"
