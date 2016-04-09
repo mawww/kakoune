@@ -33,6 +33,11 @@
 
 using namespace Kakoune;
 
+struct startup_error : Kakoune::runtime_error
+{
+    using Kakoune::runtime_error::runtime_error;
+};
+
 String runtime_directory()
 {
     char relpath[PATH_MAX+1];
@@ -384,7 +389,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
     };
 
     if (not isatty(1))
-        throw runtime_error("stdout is not a tty");
+        throw startup_error("stdout is not a tty");
 
     if (not isatty(0))
     {
@@ -836,6 +841,11 @@ int main(int argc, char* argv[])
                             "{}", error.what(),
                             generate_switches_doc(param_desc.switches)));
        return -1;
+    }
+    catch (startup_error& error)
+    {
+        write_stderr(format("Could not start kakoune: {}\n", error.what()));
+        return -1;
     }
     catch (Kakoune::exception& error)
     {
