@@ -89,9 +89,10 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     IdMap<int> sel_word_counts;
     for (int i = 0; i < sels.size(); ++i)
     {
-        auto end = Utf8It{buffer.iterator_at(sels[i].cursor()), buffer};
-        auto begin = end-1;
-        if (not skip_while_reverse(begin, buffer.begin(), is_word))
+        Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
+        Utf8It begin = end-1;
+        if (not skip_while_reverse(begin, buffer.begin(),
+                                   [](Codepoint c) { return is_word(c); }))
             ++begin;
 
         if (i == sels.main_index())
@@ -100,7 +101,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
             prefix = buffer.string(word_begin, end.base().coord());
         }
 
-        skip_while(end, buffer.end(), is_word);
+        skip_while(end, buffer.end(), [](Codepoint c) { return is_word(c); });
 
         auto word = buffer.string(begin.base().coord(), end.base().coord());
         ++sel_word_counts[word];
