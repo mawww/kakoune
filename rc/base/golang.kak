@@ -24,11 +24,33 @@ addhl -group /golang/double_string fill string
 addhl -group /golang/single_string fill string
 addhl -group /golang/comment fill comment
 
-addhl -group /golang/code regex %{\<(false|true|nil)\>} 0:value
 addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\<([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\>} 0:value
-addhl -group /golang/code regex \<(break|default|defer|else|fallthrough|for|func|go|goto|if|import|interface|make|new|package|range|return|select|case|switch|type|continue)\> 0:keyword
-addhl -group /golang/code regex \<(bool|byte|chan|complex128|complex64|float32|float64|int|int16|int32|int64|int8|interface|intptr|map|rune|string|struct|uint|uint16|uint32|uint64|uint8)\> 0:type
-addhl -group /golang/code regex \<(const)\> 0:attribute
+
+%sh{
+    # Grammar
+    keywords="break|default|defer|else|fallthrough|for|func|go|goto|if|import"
+    keywords="${keywords}|interface|make|new|package|range|return|select|case|switch|type|continue"
+    attributes="const"
+    types="bool|byte|chan|complex128|complex64|float32|float64|int|int16|int32"
+    types="${types}|int64|int8|interface|intptr|map|rune|string|struct|uint|uint16|uint32|uint64|uint8"
+    values="false|true|nil"
+
+    # Add the language's grammar to the static completion list
+    printf %s "hook global WinSetOption filetype=golang %{
+        set window static_words '${keywords}'
+        set -add window static_words '${attributes}'
+        set -add window static_words '${types}'
+        set -add window static_words '${values}'
+    }" | sed 's,|,:,g'
+
+    # Highlight keywords
+    printf %s "
+        addhl -group /golang/code regex \<(${keywords})\> 0:keyword
+        addhl -group /golang/code regex \<(${attributes})\> 0:attribute
+        addhl -group /golang/code regex \<(${types})\> 0:type
+        addhl -group /golang/code regex \<(${values})\> 0:value
+    "
+}
 
 # Commands
 # ‾‾‾‾‾‾‾‾

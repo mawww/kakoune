@@ -26,8 +26,38 @@ addhl -group /perl/double_string fill string
 addhl -group /perl/single_string fill string
 addhl -group /perl/comment fill comment
 
-addhl -group /perl/code regex \<__(DATA|END|FILE|LINE|PACKAGE)__\> 0:value
-addhl -group /perl/code regex \<(ARGV|STDERR|STDOUT|ARGVOUT|STDIN)\> 0:value
+%sh{
+    # Grammar
+    keywords="else|lock|qw|elsif|lt|qx|eq|exp|ne|sub|for|no|my|not|tr|goto|and|foreach|or|break|exit|unless|cmp|ge|package|until|continue|gt|while|if|qq|xor|do|le|qr|return"
+    attributes="END|AUTOLOAD|BEGIN|CHECK|UNITCHECK|INIT|DESTROY"
+    attributes="${attributes}|length|setpgrp|endgrent|link|setpriority|endhostent|listen|setprotoent|endnetent|local|setpwent"
+    attributes="${attributes}|endprotoent|localtime|setservent|endpwent|log|setsockopt|endservent|lstat|shift|eof|map|shmctl|eval|mkdir|shmget|exec|msgctl|shmread"
+    attributes="${attributes}|exists|msgget|shmwrite|msgrcv|shutdown|fcntl|msgsnd|sin|fileno|sleep|flock|next|socket|fork|socketpair|format|oct|sort"
+    attributes="${attributes}|formline|open|splice|getc|opendir|split|getgrent|ord|sprintf|getgrgid|our|sqrt|getgrnam|pack|srand|gethostbyaddr|pipe|stat|gethostbyname"
+    attributes="${attributes}|pop|state|gethostent|pos|study|getlogin|print|substr|getnetbyaddr|printf|symlink|abs|getnetbyname|prototype|syscall|accept|getnetent"
+    attributes="${attributes}|push|sysopen|alarm|getpeername|quotemeta|sysread|atan2|getpgrp|rand|sysseek|getppid|read|system|getpriority|readdir|syswrite|bind"
+    attributes="${attributes}|getprotobyname|readline|tell|binmode|getprotobynumber|readlink|telldir|bless|getprotoent|readpipe|tie|getpwent|recv|tied|caller"
+    attributes="${attributes}|getpwnam|redo|time|chdir|getpwuid|ref|times|getservbyname|rename|truncate|chmod|getservbyport|require|uc|chomp|getservent|reset|ucfirst"
+    attributes="${attributes}|chop|getsockname|umask|chown|getsockopt|reverse|undef|chr|glob|rewinddir|chroot|gmtime|rindex|unlink|close|rmdir|unpack"
+    attributes="${attributes}|closedir|grep|say|unshift|connect|hex|scalar|untie|cos|index|seek|use|crypt|seekdir|utime|dbmclose|int|select|values|dbmopen|ioctl|semctl"
+    attributes="${attributes}|vec|defined|join|semget|wait|delete|keys|semop|waitpid|kill|send|wantarray|die|last|setgrent|warn|dump|lc|sethostent|write|each|lcfirst|setnetent"
+    values="ARGV|STDERR|STDOUT|ARGVOUT|STDIN|__DATA__|__END__|__FILE__|__LINE__|__PACKAGE__"
+
+    # Add the language's grammar to the static completion list
+    printf %s "hook global WinSetOption filetype=perl %{
+        set window static_words '${keywords}'
+        set -add window static_words '${attributes}'
+        set -add window static_words '${values}'
+    }" | sed 's,|,:,g'
+
+    # Highlight keywords
+    printf %s "
+        addhl -group /perl/code regex \<(${keywords})\> 0:keyword
+        addhl -group /perl/code regex \<(${attributes})\> 0:attribute
+        addhl -group /perl/code regex \<(${values})\> 0:value
+    "
+}
+
 addhl -group /perl/code regex (?!\$)-?([0-9]*\.(?!0[xXbB]))?\<([0-9]+|0[xX][0-9a-fA-F]+|0[bb][01_]+)\.?([eE][+-]?[0-9]+)?i?\> 0:value
 addhl -group /perl/code regex %{\$!|\$"|\$#|\$\$|\$%|\$&|\$'|\$\(|\$\)|\$\*|\$\+|\$,|\$_|\$-|\$`|\$\.|\$/|\$:|\$;|\$<|\$=|\$>|\$\?|\$@|\$\[|\$\\|\$\]|\$\^|\$\||\$~|%!|@\+|@-|@_} 0:value
 addhl -group /perl/code regex (%ENV|%INC|%OVERLOAD|%SIG|@ARGV|@INC|@LAST_MATCH_START) 0:value
@@ -37,20 +67,6 @@ addhl -group /perl/code regex \$\^(RE_TRIE_MAXBUF|TAINT|UNICODE|UTF8LOCALE|WARNI
 
 addhl -group /perl/code regex \$[0-9]+ 0:attribute
 addhl -group /perl/code regex \<-(B|b|C|c|d|e|f|g|k|l|M|O|o|p|r|R|S|s|T|t|u|w|W|X|x|z)\> 0:attribute
-addhl -group /perl/code regex \<(END|AUTOLOAD|BEGIN|CHECK|UNITCHECK|INIT|DESTROY)\> 0:attribute
-addhl -group /perl/code regex \<(length|setpgrp|endgrent|link|setpriority|endhostent|listen|setprotoent|endnetent|local|setpwent)\> 0:attribute
-addhl -group /perl/code regex \<(endprotoent|localtime|setservent|endpwent|log|setsockopt|endservent|lstat|shift|eof|map|shmctl|eval|mkdir|shmget|exec|msgctl|shmread)\> 0:attribute
-addhl -group /perl/code regex \<(exists|msgget|shmwrite|msgrcv|shutdown|fcntl|msgsnd|sin|fileno|sleep|flock|next|socket|fork|socketpair|format|oct|sort)\> 0:attribute
-addhl -group /perl/code regex \<(formline|open|splice|getc|opendir|split|getgrent|ord|sprintf|getgrgid|our|sqrt|getgrnam|pack|srand|gethostbyaddr|pipe|stat|gethostbyname)\> 0:attribute
-addhl -group /perl/code regex \<(pop|state|gethostent|pos|study|getlogin|print|substr|getnetbyaddr|printf|symlink|abs|getnetbyname|prototype|syscall|accept|getnetent)\> 0:attribute
-addhl -group /perl/code regex \<(push|sysopen|alarm|getpeername|quotemeta|sysread|atan2|getpgrp|rand|sysseek|getppid|read|system|getpriority|readdir|syswrite|bind)\> 0:attribute
-addhl -group /perl/code regex \<(getprotobyname|readline|tell|binmode|getprotobynumber|readlink|telldir|bless|getprotoent|readpipe|tie|getpwent|recv|tied|caller)\> 0:attribute
-addhl -group /perl/code regex \<(getpwnam|redo|time|chdir|getpwuid|ref|times|getservbyname|rename|truncate|chmod|getservbyport|require|uc|chomp|getservent|reset|ucfirst)\> 0:attribute
-addhl -group /perl/code regex \<(chop|getsockname|umask|chown|getsockopt|reverse|undef|chr|glob|rewinddir|chroot|gmtime|rindex|unlink|close|rmdir|unpack)\> 0:attribute
-addhl -group /perl/code regex \<(closedir|grep|say|unshift|connect|hex|scalar|untie|cos|index|seek|use|crypt|seekdir|utime|dbmclose|int|select|values|dbmopen|ioctl|semctl)\> 0:attribute
-addhl -group /perl/code regex \<(vec|defined|join|semget|wait|delete|keys|semop|waitpid|kill|send|wantarray|die|last|setgrent|warn|dump|lc|sethostent|write|each|lcfirst|setnetent)\> 0:attribute
-
-addhl -group /perl/code regex \<(else|lock|qw|elsif|lt|qx|eq||exp|ne|sub|for|no|my|not|tr|goto|and|foreach|or|break|exit|unless|cmp|ge|package|until|continue|gt|while|if|qq|xor|do|le|qr|return)\> 0:keyword
 
 addhl -group /perl/code regex %{(?:\<[stqrmwy]+)?/[^\n/]*/([msixpodualngecr]+\>)?} 0:magenta
 addhl -group /perl/code regex %{(?:\<[stqrmwy]+)?/[^\n/]+/[^\n/]*/([msixpeodualngcr]+\>)?} 0:magenta

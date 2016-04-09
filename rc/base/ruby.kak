@@ -52,12 +52,34 @@ addhl -group /ruby/comment fill comment
 addhl -group /ruby/literal fill meta
 
 addhl -group /ruby/code regex \<([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\w*[=?!]?) 0:identifier
-addhl -group /ruby/code regex \<(require|include)\> 0:meta
-addhl -group /ruby/code regex \<(attr_(reader|writer|accessor))\> 0:attribute
 
-# Keywords are collected searching for keyword_ at
-# https://github.com/ruby/ruby/blob/trunk/parse.y
-addhl -group /ruby/code regex \<(alias|and|begin|break|case|class|def|defined|do|else|elsif|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield)\> 0:keyword
+%sh{
+    # Grammar
+    # Keywords are collected searching for keywords at
+    # https://github.com/ruby/ruby/blob/trunk/parse.y
+    keywords="alias|and|begin|break|case|class|def|defined|do|else|elsif|end"
+    keywords="${keywords}|ensure|false|for|if|in|module|next|nil|not|or|redo"
+    keywords="${keywords}|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield"
+    attributes="attr_reader|attr_writer|attr_accessor"
+    values="false|true|nil"
+    meta="require|include"
+
+    # Add the language's grammar to the static completion list
+    printf %s "hook global WinSetOption filetype=ruby %{
+        set window static_words '${keywords}'
+        set -add window static_words '${attributes}'
+        set -add window static_words '${values}'
+        set -add window static_words '${meta}'
+    }" | sed 's,|,:,g'
+
+    # Highlight keywords
+    printf %s "
+        addhl -group /ruby/code regex \<(${keywords})\> 0:keyword
+        addhl -group /ruby/code regex \<(${attributes})\> 0:attribute
+        addhl -group /ruby/code regex \<(${values})\> 0:value
+        addhl -group /ruby/code regex \<(${meta})\> 0:meta
+    "
+}
 
 # Commands
 # ‾‾‾‾‾‾‾‾
