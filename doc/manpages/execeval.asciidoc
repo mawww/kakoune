@@ -16,7 +16,7 @@ eval [<flags>] <command> ...
 ----------------------------
 
 *exec* runs keys as if they were pressed, whereas *eval* executes its given
-paremeters as if they were entered in the command prompt. By default, their
+parameters as if they were entered in the command prompt. By default, their
 execution happens within the context of the current client, and stops when
 the last key/command is reached, or an error is raised.
 

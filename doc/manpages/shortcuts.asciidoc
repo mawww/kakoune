@@ -88,10 +88,10 @@ is a sequence of non whitespace characters
 	same as [wbe] but select WORD instead of word
 
 *f*::
-	select to the next occurence of given character
+	select to the next occurrence of given character
 
 *t*::
-	select until the next occurence of given character
+	select until the next occurrence of given character
 
 *<a-[ft]>*::
 	same as [ft] but in the other direction
@@ -325,7 +325,7 @@ If a count is given prior to hitting *g*, *g* will jump to the given line
 	open the file whose name is selected
 
 *g.*::
-	go to last buffer modifiction position
+	go to last buffer modification position
 
 View commands
 -------------
@@ -566,7 +566,7 @@ Prompt Commands
 	insert then content of the register given by next key
 
 *<c-v>*::
-	insert next keystroke without interpretting it
+	insert next keystroke without interpreting it
 
 *<c-o>*::
 	disable auto completion for this prompt

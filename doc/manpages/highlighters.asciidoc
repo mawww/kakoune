@@ -40,12 +40,12 @@ General highlighters
 	in yellow on red background
 
 *dynregex*::
-	Similar to regex, but expand (like a command paramater would) the
+	Similar to regex, but expand (like a command parameter would) the
 	given expression before building a regex from the result
 
 *flag_lines* <flag> <option_name>::
 	add a column in front of text, and display the given flag in it for
-	everly line contained in the int-list option named <option_name>
+	every line contained in the int-list option named <option_name>
 
 *show_matching*::
 	highlight matching char of the character under the selections cursor
