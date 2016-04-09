@@ -36,10 +36,7 @@ addhl -group /python/comment       fill comment
 
     # Add the language's grammar to the static completion list
     printf %s "hook global WinSetOption filetype=python %{
-        set window static_words '${values}'
-        set -add window static_words '${meta}'
-        set -add window static_words '${keywords}'
-        set -add window static_words '${types}'
+        set window static_words '${values}:${meta}:${keywords}:${types}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords

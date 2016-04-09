@@ -45,9 +45,7 @@ addhl -group /perl/comment fill comment
 
     # Add the language's grammar to the static completion list
     printf %s "hook global WinSetOption filetype=perl %{
-        set window static_words '${keywords}'
-        set -add window static_words '${attributes}'
-        set -add window static_words '${values}'
+        set window static_words '${keywords}:${attributes}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords

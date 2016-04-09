@@ -17,8 +17,7 @@ addhl -group / regions -default code kakrc \
 
     # Add the language's grammar to the static completion list
     printf %s "hook global WinSetOption filetype=kak %{
-        set window static_words '${keywords}'
-        set -add window static_words '${values}'
+        set window static_words '${keywords}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
