@@ -115,6 +115,11 @@ void register_env_vars()
             { auto coord = context.selections().main().cursor();
               return to_string(context.buffer()[coord.line].char_count_to(coord.column) + 1); }
         }, {
+            "cursor_byte_offset", false,
+            [](StringView name, const Context& context) -> String
+            { auto cursor = context.selections().main().cursor();
+              return to_string(context.buffer().distance(context.buffer().begin().coord(), cursor)); }
+        }, {
             "selection_desc", false,
             [](StringView name, const Context& context)
             { return selection_to_string(context.selections().main()); }
