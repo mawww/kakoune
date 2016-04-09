@@ -118,7 +118,7 @@ void register_env_vars()
             "cursor_byte_offset", false,
             [](StringView name, const Context& context) -> String
             { auto cursor = context.selections().main().cursor();
-              return to_string(context.buffer().distance(context.buffer().begin().coord(), cursor)); }
+              return to_string(context.buffer().distance({0,0}, cursor)); }
         }, {
             "selection_desc", false,
             [](StringView name, const Context& context)
