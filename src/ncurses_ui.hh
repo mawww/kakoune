@@ -13,8 +13,6 @@ namespace Kakoune
 
 struct NCursesWin;
 
-enum BufferPaddingType { None, Single, Fill };
-
 class NCursesUI : public UserInterface
 {
 public:
@@ -128,9 +126,6 @@ private:
     bool m_mouse_enabled = false;
     int m_wheel_up_button = 4;
     int m_wheel_down_button = 5;
-
-    String            m_buffer_padding_str = "~";
-    BufferPaddingType m_buffer_padding_type = BufferPaddingType::None;
 
     bool m_set_title = true;
 
