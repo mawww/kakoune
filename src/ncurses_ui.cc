@@ -362,7 +362,9 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         ++line_index;
     }
 
+    wbkgdset(m_window, COLOR_PAIR(get_color_pair(padding_face)));
     set_face(m_window, padding_face, default_face);
+
     while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
     {
         wmove(m_window, (int)line_index++, 0);
