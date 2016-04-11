@@ -43,3 +43,4 @@ face StatusCursor rgb:434343,rgb:CDCDFD
 face Prompt rgb:F8F8FF,rgb:4078C0
 face MatchingChar rgb:F8F8FF,rgb:4078C0+b
 face Search default,default+u
+face BufferPadding rgb:A0A0A0,rgb:F8F8FF

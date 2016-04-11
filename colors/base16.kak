@@ -64,5 +64,6 @@
         face StatusCursor ${black_lighterer},${cyan_light}
         face Prompt ${black_light},${cyan_light}
         face MatchingChar ${cyan_light},${black_light}+b
+        face BufferPadding ${cyan_light},${black_lighter}
     "
 }

@@ -168,9 +168,9 @@ JsonUI::JsonUI()
 }
 
 void JsonUI::draw(const DisplayBuffer& display_buffer,
-                  const Face& default_face)
+                  const Face& default_face, const Face& padding_face)
 {
-    rpc_call("draw", display_buffer.lines(), default_face);
+    rpc_call("draw", display_buffer.lines(), default_face, padding_face);
 }
 
 void JsonUI::draw_status(const DisplayLine& status_line,

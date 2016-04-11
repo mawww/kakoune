@@ -343,8 +343,11 @@ void NCursesUI::draw_line(NCursesWin* window, const DisplayLine& line,
     }
 }
 
+static const DisplayLine empty_line = String(" ");
+
 void NCursesUI::draw(const DisplayBuffer& display_buffer,
-                     const Face& default_face)
+                     const Face& default_face,
+                     const Face& padding_face)
 {
     wbkgdset(m_window, COLOR_PAIR(get_color_pair(default_face)));
 
@@ -359,12 +362,18 @@ void NCursesUI::draw(const DisplayBuffer& display_buffer,
         ++line_index;
     }
 
-    set_face(m_window, { Color::Blue, Color::Default }, default_face);
+    set_face(m_window, padding_face, default_face);
+
+    const DisplayLine padding_line = m_buffer_padding_str;
+    const DisplayLine* padding_line_ptr = m_buffer_padding_type != BufferPaddingType::None ?
+                                            &padding_line : &empty_line;
     while (line_index < m_dimensions.line + (m_status_on_top ? 1 : 0))
     {
         wmove(m_window, (int)line_index++, 0);
         wclrtoeol(m_window);
-        waddch(m_window, '~');
+        draw_line(m_window, *padding_line_ptr, 0, m_dimensions.column, padding_face);
+        if (m_buffer_padding_type == BufferPaddingType::Single)
+            padding_line_ptr = &empty_line;
     }
 
     m_dirty = true;
@@ -981,6 +990,20 @@ void NCursesUI::set_ui_options(const Options& options)
         auto wheel_down_it = options.find("ncurses_wheel_down_button");
         m_wheel_down_button = wheel_down_it != options.end() ?
             str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
+    }
+
+    {
+        auto padding_str_it = options.find("ncurses_buffer_padding_str");
+        m_buffer_padding_str = padding_str_it == options.end() or !padding_str_it->value.length() ?
+                                "~" : padding_str_it->value;
+
+        auto padding_type_it = options.find("ncurses_buffer_padding_type");
+        if (padding_type_it == options.end() or padding_type_it->value == "fill")
+            m_buffer_padding_type = BufferPaddingType::Fill;
+        else if (padding_type_it->value == "single")
+            m_buffer_padding_type = BufferPaddingType::Single;
+        else
+            m_buffer_padding_type = BufferPaddingType::None;
     }
 }
 

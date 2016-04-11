@@ -190,7 +190,8 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & Draw)
     {
-        m_ui->draw(window.update_display_buffer(context()), get_face("Default"));
+        m_ui->draw(window.update_display_buffer(context()),
+                   get_face("Default"), get_face("BufferPadding"));
 
         if (not m_menu.items.empty() and m_menu.style == MenuStyle::Inline and
             m_menu.ui_anchor != window.display_position(m_menu.anchor))

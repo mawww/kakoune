@@ -43,3 +43,4 @@ face StatusLineValue green,default
 face StatusCursor black,cyan
 face Prompt yellow,default
 face MatchingChar default,default+b
+face BufferPadding blue,default

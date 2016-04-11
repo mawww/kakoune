@@ -19,7 +19,8 @@ public:
     JsonUI& operator=(const JsonUI&) = delete;
 
     void draw(const DisplayBuffer& display_buffer,
-              const Face& default_face) override;
+              const Face& default_face,
+              const Face& buffer_padding) override;
 
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,

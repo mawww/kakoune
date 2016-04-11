@@ -21,7 +21,7 @@ Here are the data structures used:
 
 Here are the requests that can be written by the json ui on stdout:
 
-* draw(Array<Line> lines, Face default_face)
+* draw(Array<Line> lines, Face default_face, Face padding_face)
 * draw_status(Line status_line, Line mode_line,
               Face default_face)
 * menu_show(Array<Line> items, Coord anchor, Face fg, Face bg,
