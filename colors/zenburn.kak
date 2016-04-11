@@ -22,6 +22,7 @@
     zenstring="rgb:cc9393"
     zenexception="rgb:c3bf9f+b"
     zenmatching="rgb:3f3f3f,rgb:8cd0d3"
+    zenpadding="rgb:f0dfaf,rgb:3f3f3f+b"
 
     echo "
         # then we map them to code
@@ -67,6 +68,6 @@
         face StatusCursor ${zencursor}
         face Prompt yellow
         face MatchingChar default+b
-        face BufferPadding ${zenkeyword},${zenbackground}
+        face BufferPadding ${zenpadding}
     "
 }
