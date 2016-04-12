@@ -155,7 +155,7 @@ hook global WinSetOption filetype=ruby %{
 
     hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
-    hook window InsertChar \n -group ruby-insert _ruby_insert_on_new_line
+    hook window InsertChar \n -group ruby-indent _ruby_insert_on_new_line
 
     alias window alt ruby-alternative-file
 
