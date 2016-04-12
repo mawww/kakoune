@@ -18,7 +18,8 @@ def -hidden -params 1..2 _doc-open %{
             "
 
             if [ $# -gt 1 ]; then
-                echo "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${2}\E<ret>\'' } catch %{ exec <space>gg }"
+                needle=$(printf %s "$2" | sed 's,<,<lt>,g')
+                echo "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${needle}\E<ret>\'' } catch %{ exec <space>gg }"
             fi
         else
            echo "echo -color Error %{doc '$@' failed: see *debug* buffer for details}"
