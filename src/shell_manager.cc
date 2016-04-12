@@ -29,8 +29,10 @@ namespace
 
 struct Pipe
 {
-    Pipe() {
-        if (::pipe(m_fd) < 0)
+    Pipe(bool create = true)
+        : m_fd{-1, -1}
+    {
+        if (create and ::pipe(m_fd) < 0)
             throw runtime_error(format("unable to create pipe (fds: {}/{}; errno: {})", m_fd[0], m_fd[1], ::strerror(errno)));
     }
     ~Pipe() { close_read_fd(); close_write_fd(); }
@@ -126,13 +128,16 @@ std::pair<String, int> ShellManager::eval(
 
     auto spawn_time = profile ? Clock::now() : TimePoint{};
 
-    Pipe child_stdin, child_stdout, child_stderr;
+    Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
     pid_t pid = spawn_shell(cmdline, shell_context.params, kak_env,
                             [&child_stdin, &child_stdout, &child_stderr] {
         auto move = [](int oldfd, int newfd) { dup2(oldfd, newfd); close(oldfd); };
 
-        close(child_stdin.write_fd());
-        move(child_stdin.read_fd(), 0);
+        if (child_stdin.read_fd() != -1)
+        {
+            close(child_stdin.write_fd());
+            move(child_stdin.read_fd(), 0);
+        }
 
         close(child_stdout.read_fd());
         move(child_stdout.write_fd(), 1);
