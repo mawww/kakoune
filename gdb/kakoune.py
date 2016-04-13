@@ -48,6 +48,18 @@ class LineAndColumn:
                                self.val['column'])
 
 
+class ByteCoordAndTarget:
+    """Print a ByteCoordAndTarget"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        value_type = self.val.type.unqualified()
+        return "%s(%s, %s, %s)" % (value_type, self.val['line'],
+                                   self.val['column'], self.val['target'])
+
+
 class BufferIterator:
     """ Print a BufferIterator"""
 
@@ -175,19 +187,17 @@ class Color:
 
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
-    pp.add_printer('ArrayView',      '^Kakoune::ArrayView<.*>$',     ArrayView)
-    pp.add_printer('LineAndColumn',  '^Kakoune::LineAndColumn<.*>$', LineAndColumn)
-    pp.add_printer('ByteCoord',      '^Kakoune::ByteCoord$',         LineAndColumn)
-    pp.add_printer('CharCoord',      '^Kakoune::CharCoord$',         LineAndColumn)
-    pp.add_printer('BufferIterator', '^Kakoune::BufferIterator$',    BufferIterator)
-    pp.add_printer('String',         '^Kakoune::String$',            String)
-    pp.add_printer('StringView',     '^Kakoune::StringView$',        StringView)
-    pp.add_printer('SharedString',   '^Kakoune::SharedString$',      StringView)
-    pp.add_printer('StringDataPtr',  '^Kakoune::RefPtr<Kakoune::StringData,.*>$', StringDataPtr)
-    pp.add_printer('RefPtr',         '^Kakoune::RefPtr<.*>$',        RefPtr)
-    pp.add_printer('Option',         '^Kakoune::Option$',            Option)
-    pp.add_printer('LineCount',      '^Kakoune::LineCount$',         LineCount)
-    pp.add_printer('CharCount',      '^Kakoune::CharCount$',         CharCount)
-    pp.add_printer('ByteCount',      '^Kakoune::ByteCount$',         ByteCount)
-    pp.add_printer('Color',          '^Kakoune::Color$',             Color)
+    pp.add_printer('ArrayView', '^Kakoune::(Const)?ArrayView<.*>$', ArrayView)
+    pp.add_printer('LineAndColumn', '^Kakoune::(Byte|Char)Coord$', LineAndColumn)
+    pp.add_printer('ByteCoordAndTarget', '^Kakoune::ByteCoordAndTarget$', ByteCoordAndTarget)
+    pp.add_printer('BufferIterator', '^Kakoune::BufferIterator$', BufferIterator)
+    pp.add_printer('String', '^Kakoune::String$', String)
+    pp.add_printer('StringView', '^Kakoune::(StringView|SharedString)$', StringView)
+    pp.add_printer('StringDataPtr', '^Kakoune::StringDataPtr$', StringDataPtr)
+    pp.add_printer('RefPtr', '^Kakoune::RefPtr<.*>$',  RefPtr)
+    pp.add_printer('Option', '^Kakoune::Option$', Option)
+    pp.add_printer('LineCount', '^Kakoune::LineCount$', LineCount)
+    pp.add_printer('CharCount', '^Kakoune::CharCount$', CharCount)
+    pp.add_printer('ByteCount', '^Kakoune::ByteCount$', ByteCount)
+    pp.add_printer('Color', '^Kakoune::Color$', Color)
     return pp
