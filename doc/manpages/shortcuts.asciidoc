@@ -472,13 +472,13 @@ object you want
 *a*, *<*, *>*::
 	select the enclosing <> block
 
-*"*::
+*"*, *Q*::
 	select the enclosing double quoted string
 
-*'*::
+*'*, *q*::
 	select the enclosing single quoted string
 
-*`*::
+*`*, *g*::
 	select the enclosing grave quoted string
 
 *w*::
@@ -501,6 +501,9 @@ object you want
 
 *n*::
 	select the number
+
+*u*::
+	select the argument
 
 *:*::
 	select user defined object, will prompt for open and close text
