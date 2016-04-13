@@ -1,21 +1,23 @@
 import gdb.printing
 
+
 class ArrayIterator:
-    def __init__ (self, data, count):
+    def __init__(self, data, count):
         self.data = data
         self.count = count
         self.index = 0
 
-    def __iter__ (self):
+    def __iter__(self):
         return self
 
-    def next (self):
+    def next(self):
         if self.index == self.count:
             raise StopIteration
 
         index = self.index
         self.index = self.index + 1
         return ('[%d]' % index, (self.data + index).dereference())
+
 
 class ArrayView:
     """Print a ArrayView"""
@@ -30,8 +32,9 @@ class ArrayView:
         return ArrayIterator(self.val['m_pointer'], self.val['m_size'])
 
     def to_string(self):
-        value_type = self.val.type.template_argument(0).unqualified().strip_typedefs()
-        return "ArrayView<%s>" % (value_type)
+        type = self.val.type.template_argument(0).unqualified().strip_typedefs()
+        return "ArrayView<%s>" % (type)
+
 
 class LineAndColumn:
     """Print a LineAndColumn"""
@@ -41,7 +44,9 @@ class LineAndColumn:
 
     def to_string(self):
         value_type = self.val.type.unqualified()
-        return "%s(%s, %s)" % (value_type, self.val['line'], self.val['column'])
+        return "%s(%s, %s)" % (value_type, self.val['line'],
+                               self.val['column'])
+
 
 class BufferIterator:
     """ Print a BufferIterator"""
@@ -50,10 +55,14 @@ class BufferIterator:
         self.val = val
 
     def to_string(self):
+        line = self.val['m_coord']['line']
+        column = self.val['m_coord']['column']
         if self.val['m_buffer']['m_ptr'] != 0:
-            return "buffer<%s>@(%s, %s)" % (self.val['m_buffer']['m_ptr'].dereference()['m_name'], self.val['m_coord']['line'], self.val['m_coord']['column'])
+            buf = self.val['m_buffer']['m_ptr'].dereference()['m_name']
+            return "buffer<%s>@(%s, %s)" % (buf, line, column)
         else:
-            return "buffer<none>@(%s, %s)" % (self.val['m_coord']['line'], self.val['m_coord']['column'])
+            return "buffer<none>@(%s, %s)" % (line, column)
+
 
 class String:
     """ Print a String"""
@@ -62,7 +71,15 @@ class String:
         self.val = val
 
     def to_string(self):
-        return "%s" % (self.val['m_data'])
+        data = self.val["m_data"]
+        if (data["s"]["size"] & 1) != 1:
+            ptr = data["l"]["ptr"]
+            len = data["l"]["size"]
+        else:
+            ptr = data["s"]["string"]
+            len = data["s"]["size"] >> 1
+        return "\"%s\"" % (ptr.string("utf-8", "ignore", len))
+
 
 class StringView:
     """ Print a StringView"""
@@ -71,7 +88,9 @@ class StringView:
         self.val = val
 
     def to_string(self):
-        return "\"%s\"" % (self.val['m_data'].string("utf-8", "ignore", self.val['m_length']['m_value']))
+        len = self.val['m_length']['m_value']
+        return "\"%s\"" % (self.val['m_data'].string("utf-8", "ignore", len))
+
 
 class StringDataPtr:
     """ Print a RefPtr<StringData>"""
@@ -82,8 +101,11 @@ class StringDataPtr:
     def to_string(self):
         ptr = self.val['m_ptr']
         str_type = gdb.lookup_type("char").pointer()
-        content = (ptr + 1).cast(str_type).string("utf-8", "ignore", ptr.dereference()['length'])
-        return "\"%s\" (ref:%d)" % (content.replace("\n", "\\n"), ptr.dereference()['refcount'])
+        len = ptr.dereference()['length']
+        refcount = ptr.dereference()['refcount']
+        content = (ptr + 1).cast(str_type).string("utf-8", "ignore", len)
+        return "\"%s\" (ref:%d)" % (content.replace("\n", "\\n"), refcount)
+
 
 class RefPtr:
     """ Print a RefPtr"""
@@ -95,6 +117,7 @@ class RefPtr:
         ptr = self.val['m_ptr']
         return "\"refptr %s\"" % (ptr)
 
+
 class Option:
     """ Print a Option"""
 
@@ -103,6 +126,7 @@ class Option:
 
     def to_string(self):
         return self.val["m_value"]
+
 
 class CharCount:
     """Print a CharCount"""
@@ -113,6 +137,7 @@ class CharCount:
     def to_string(self):
         return self.val["m_value"]
 
+
 class ByteCount:
     """Print a ByteCount"""
 
@@ -121,6 +146,7 @@ class ByteCount:
 
     def to_string(self):
         return self.val["m_value"]
+
 
 class LineCount:
     """Print a LineCount"""
@@ -131,6 +157,7 @@ class LineCount:
     def to_string(self):
         return self.val["m_value"]
 
+
 class Color:
     """Print a Color"""
 
@@ -138,10 +165,13 @@ class Color:
         self.val = val
 
     def to_string(self):
-        if self.val["color"] == gdb.lookup_type("Kakoune::Color::NamedColor")["Kakoune::Color::RGB"].enumval:
-            return "%s #%02x%02x%02x" % (self.val["color"], self.val["r"], self.val["g"], self.val["b"])
+        named_color = gdb.lookup_type("Kakoune::Color::NamedColor")
+        if self.val["color"] == named_color["Kakoune::Color::RGB"].enumval:
+            return "%s #%02x%02x%02x" % (self.val["color"], self.val["r"],
+                                         self.val["g"], self.val["b"])
         else:
             return self.val["color"]
+
 
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
@@ -161,4 +191,3 @@ def build_pretty_printer():
     pp.add_printer('ByteCount',      '^Kakoune::ByteCount$',         ByteCount)
     pp.add_printer('Color',          '^Kakoune::Color$',             Color)
     return pp
-
