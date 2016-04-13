@@ -1402,7 +1402,7 @@ void InputHandler::handle_key(Key key)
         {
             write_to_debug_buffer("Macro recording started but not finished");
             m_recording_reg = 0;
-            m_handle_key_level = -1;
+            m_recording_level = -1;
         }
     }
 }
