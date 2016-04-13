@@ -305,6 +305,14 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             change_it = backward_end;
         }
 
+        const auto end_coord = buffer.end_coord();
+        for (auto it = ranges.begin() + prev_size; it != ranges.end(); ++it)
+        {
+            it->anchor() = std::min(it->anchor(), end_coord);
+            it->cursor() = std::min<ByteCoord>(it->cursor(), end_coord);
+        }
+
+
         kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(), compare_selections));
         std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
         ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
