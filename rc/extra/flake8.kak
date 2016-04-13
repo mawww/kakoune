@@ -10,35 +10,33 @@ def flake8-lint -params 0..1 -docstring "Lint the contents of the current buffer
         echo "set buffer flake8_tmp_dir ${dir}"
         echo "write ${dir}/buf"
     }
+
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
     %sh{
         dir=${kak_opt_flake8_tmp_dir}
         echo "eval -draft %{
-                  edit! -fifo ${dir}/fifo *flake8-output*
-                  set buffer filetype make
-                  set buffer _make_current_error_line 0
-                  hook -group fifo buffer BufCloseFifo .* %{
-                      nop %sh{ rm -r ${dir} }
-                      rmhooks buffer fifo
-                  }
-              }"
+            edit! -fifo ${dir}/fifo *flake8-output*
+            set buffer filetype make
+            set buffer _make_current_error_line 0
+            hook -group fifo buffer BufCloseFifo .* %{
+                nop %sh{ rm -r ${dir} }
+                rmhooks buffer fifo
+            }
+        }"
         # this runs in a detached shell, asynchronously, so that kakoune does
         # not hang while flake8 is running.
-		(
-			flake8 --ignore=${kak_opt_flake8_options} - < ${dir}/buf > ${dir}/stderr
-
+        (
+            flake8 --ignore=${kak_opt_flake8_options} - < ${dir}/buf > ${dir}/stderr
             flags=$(cat ${dir}/stderr | sed -rne "
-						/^stdin:[0-9]+:[0-9]+:? (W|F|C|N).*/ { s/^stdin:([0-9]+):.*/\1|{yellow}█/; p }
-						/^stdin:[0-9]+:[0-9]+:? E.*/ { s/^stdin:([0-9]+):.*/\1|{red}█/; p }
-                    " | paste -s -d ':')
-
+                /^stdin:[0-9]+:[0-9]+:? (W|F|C|N).*/ { s/^stdin:([0-9]+):.*/\1|{yellow}█/; p }
+                /^stdin:[0-9]+:[0-9]+:? E.*/ { s/^stdin:([0-9]+):.*/\1|{red}█/; p }
+            " | paste -s -d ':')
             errors=$(cat ${dir}/stderr | sed -rne "
-						/^stdin:[0-9]+:[0-9]+:?.*/ { s/^stdin:([0-9]+):([0-9]+:)? (.*) /\1,\3/; s/'/\\\\'/g; p }
-                     " | sort -n)
+                /^stdin:[0-9]+:[0-9]+:?.*/ { s/^stdin:([0-9]+):([0-9]+:)? (.*) /\1,\3/; s/'/\\\\'/g; p }
+            " | sort -n)
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
-
             echo "set 'buffer=${kak_buffile}' flake8_flags %{${kak_timestamp}:${flags}}
                   set 'buffer=${kak_buffile}' flake8_errors '${errors}'" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
@@ -80,4 +78,4 @@ def flake8-diagnostics-next -docstring "Jump to the next line that contains an e
             echo 'echo -color Error no next flake8 diagnostic'
         fi
     )
-} }
+}}
