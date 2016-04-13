@@ -109,6 +109,7 @@ private:
 
     char   m_recording_reg = 0;
     String m_recorded_keys;
+    int    m_recording_level = -1;
 
     int    m_handle_key_level = 0;
 };

@@ -1395,14 +1395,22 @@ void InputHandler::handle_key(Key key)
 
         // do not record the key that made us enter or leave recording mode,
         // and the ones that are triggered recursively by previous keys.
-        if (was_recording and is_recording() and m_handle_key_level == 1)
+        if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
             m_recorded_keys += key_to_str(key);
+
+        if (m_handle_key_level < m_recording_level)
+        {
+            write_to_debug_buffer("Macro recording started but not finished");
+            m_recording_reg = 0;
+            m_handle_key_level = -1;
+        }
     }
 }
 
 void InputHandler::start_recording(char reg)
 {
     kak_assert(m_recording_reg == 0);
+    m_recording_level = m_handle_key_level;
     m_recorded_keys = "";
     m_recording_reg = reg;
 }
@@ -1417,6 +1425,7 @@ void InputHandler::stop_recording()
     kak_assert(m_recording_reg != 0);
     RegisterManager::instance()[m_recording_reg] = ConstArrayView<String>(m_recorded_keys);
     m_recording_reg = 0;
+    m_recording_level = -1;
 }
 
 DisplayLine InputHandler::mode_line() const
