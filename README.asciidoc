@@ -524,9 +524,9 @@ object you want.
  * `B`, `{` or `}`: select the enclosing {} block
  * `r`, `[` or `]`: select the enclosing [] block
  * `a`, `<` or `>`: select the enclosing <> block
- * `"`: select the enclosing double quoted string
- * `'`: select the enclosing single quoted string
- * ```: select the enclosing grave quoted string
+ * `"` or `Q`: select the enclosing double quoted string
+ * `'` or `q`: select the enclosing single quoted string
+ * ``` or `g`: select the enclosing grave quoted string
  * `w`: select the whole word
  * `W`: select the whole WORD
  * `s`: select the sentence
@@ -534,6 +534,7 @@ object you want.
  * `␣`: select the whitespaces
  * `i`: select the current indentation block
  * `n`: select the number
+ * `u`: select the argument
  * `:`: select user defined object, will prompt
    for open and close text.
 
