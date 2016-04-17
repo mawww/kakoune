@@ -112,31 +112,15 @@ void OptionManager::on_option_changed(const Option& option)
         watcher->on_option_changed(option);
 }
 
-template<typename Container, typename MatchingFunc>
-static CandidateList get_matching_names(const Container& options, MatchingFunc func)
-{
-    CandidateList result;
-    for (auto& option : options)
-    {
-        if (option->flags() & OptionFlags::Hidden)
-            continue;
-
-        const auto& name = option->name();
-        if (func(name))
-            result.push_back(name);
-    }
-    return result;
-}
-
 CandidateList OptionsRegistry::complete_option_name(StringView prefix,
                                                     ByteCount cursor_pos) const
 {
-    using namespace std::placeholders;
-    auto real_prefix = prefix.substr(0, cursor_pos);
-    auto result = get_matching_names(m_descs, std::bind(prefix_match, _1, real_prefix));
-    if (result.empty())
-        result = get_matching_names(m_descs, std::bind(subsequence_match, _1, real_prefix));
-    return result;
+    using OptionPtr = std::unique_ptr<OptionDesc>;
+    return complete(prefix, cursor_pos, m_descs |
+                    filter([](const OptionPtr& desc)
+                           { return not (desc->flags() & OptionFlags::Hidden); }) |
+                    transform([](const OptionPtr& desc) -> const String&
+                              { return desc->name(); }));
 }
 
 }
