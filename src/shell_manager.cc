@@ -234,4 +234,12 @@ String ShellManager::get_val(StringView name, const Context& context) const
     return env_var->func(name, context);
 }
 
+CandidateList ShellManager::complete_env_var(StringView prefix,
+                                             ByteCount cursor_pos) const
+{
+    return complete(prefix, cursor_pos, m_env_vars |
+                    transform([](const EnvVarDesc& desc) -> const String&
+                              { return desc.str; }));
+}
+
 }

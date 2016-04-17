@@ -582,6 +582,11 @@ Completions CommandManager::complete(const Context& context,
         return offset_pos(shell_complete(context, flags, tokens[tok_idx].content(),
                                          cursor_pos_in_token), start);
 
+    case Token::Type::ValExpand:
+        return {start , cursor_pos,
+                ShellManager::instance().complete_env_var(
+                    tokens[tok_idx].content(), cursor_pos_in_token) };
+
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
     case Token::Type::RawEval:

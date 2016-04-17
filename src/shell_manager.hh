@@ -6,6 +6,7 @@
 #include "flags.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "completion.hh"
 
 namespace Kakoune
 {
@@ -38,6 +39,8 @@ public:
 
     void register_env_var(StringView str, bool prefix, EnvVarRetriever retriever);
     String get_val(StringView name, const Context& context) const;
+
+    CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
 
 private:
     struct EnvVarDesc { String str; bool prefix; EnvVarRetriever func; };
