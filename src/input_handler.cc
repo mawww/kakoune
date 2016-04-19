@@ -647,10 +647,10 @@ class Prompt : public InputMode
 {
 public:
     Prompt(InputHandler& input_handler, StringView prompt,
-           String initstr, Face face, Completer completer,
-           PromptCallback callback)
+           String initstr, Face face, bool password,
+           Completer completer, PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
-          m_completer(completer), m_callback(callback),
+          m_password(password), m_completer(completer), m_callback(callback),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()}
     {
         m_history_it = ms_history[m_prompt].end();
@@ -875,7 +875,9 @@ private:
             return;
 
         auto width = context().client().dimensions().column - m_prompt.char_length();
-        auto display_line = m_line_editor.build_display_line(width);
+        DisplayLine display_line;
+        if (not m_password)
+            display_line = m_line_editor.build_display_line(width);
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
     }
@@ -892,6 +894,7 @@ private:
     String         m_prefix;
     LineEditor     m_line_editor;
     bool           m_autoshowcompl;
+    bool           m_password;
 
     using History = Vector<String, MemoryDomain::History>;
     static UnorderedMap<String, History, MemoryDomain::History> ms_history;
@@ -1314,11 +1317,11 @@ void InputHandler::repeat_last_insert()
 }
 
 void InputHandler::prompt(StringView prompt, String initstr,
-                          Face prompt_face, Completer completer,
-                          PromptCallback callback)
+                          Face prompt_face, bool password,
+                          Completer completer, PromptCallback callback)
 {
     push_mode(new InputModes::Prompt(*this, prompt, initstr, prompt_face,
-                                     completer, callback));
+                                     password, completer, callback));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)

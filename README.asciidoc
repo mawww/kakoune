@@ -1391,7 +1391,8 @@ Some helper commands can be used to define composite commands:
 
  * `prompt <prompt> <register> <command>`: Prompt the user for a string, when
      the user validates, store the result in given <register> and run <commmand>.
-     the -init <str> switch allows setting initial content.
+     the -init <str> switch allows setting initial content and -password allow
+     not to show the entered text (and clears the register after command execution).
  * `onkey <register> <command>`: Wait for next key from user, writes it into given
      <register> and execute commands.
  * `menu <label1> <commands1> <label2> <commands2>...`: display a menu using

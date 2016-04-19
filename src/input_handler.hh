@@ -53,8 +53,8 @@ public:
     // returns to normal mode after validation if callback does
     // not change the mode itself
     void prompt(StringView prompt, String initstr,
-                Face prompt_face, Completer completer,
-                PromptCallback callback);
+                Face prompt_face, bool password,
+                Completer completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);
 
     // enter menu mode, callback is called on each selection change,

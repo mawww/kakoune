@@ -137,7 +137,8 @@ commands:
 *prompt* <prompt> <register> <command>::
 	prompt the user for a string, when the user validates, store the
 	result in given *register* and run *commmand*. the *-init <str>*
-	switch allows setting initial content
+	switch allows setting initial content, the *-password* switch hides
+        the entered text and clears the register after command execution.
 
 *onkey* <register> <command>::
 	wait for next key from user, writes it into given <register> and

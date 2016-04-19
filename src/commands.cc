@@ -1524,6 +1524,7 @@ const CommandDesc prompt_cmd = {
     "stores it in <register> and then executes <command>",
     ParameterDesc{
         { { "init", { true, "set initial prompt content" } },
+          { "password", { false, "Do not display entered text and clear reg after command" } },
           { "file-completion", { false, "use file completion for prompt" } },
           { "client-completion", { false, "use client completion for prompt" } },
           { "buffer-completion", { false, "use buffer completion for prompt" } },
@@ -1568,9 +1569,11 @@ const CommandDesc prompt_cmd = {
                     context, flags, prefix, cursor_pos);
             };
 
+        const bool password = (bool)parser.get_switch("password");
 
         context.input_handler().prompt(
-            parser[0], initstr.str(), get_face("Prompt"), std::move(completer),
+            parser[0], initstr.str(), get_face("Prompt"),
+            password, std::move(completer),
             [=](StringView str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)
@@ -1580,6 +1583,9 @@ const CommandDesc prompt_cmd = {
                 ScopedSetBool disable_history{context.history_disabled()};
 
                 CommandManager::instance().execute(command, context, shell_context);
+
+                if (password)
+                    RegisterManager::instance()[reg] = ConstArrayView<String>("");
             });
     }
 };
