@@ -1585,7 +1585,11 @@ const CommandDesc prompt_cmd = {
                 CommandManager::instance().execute(command, context, shell_context);
 
                 if (password)
+                {
+                    const String& str = RegisterManager::instance()[reg].values(context)[0];
+                    memset(const_cast<String&>(str).data(), 0, (int)str.length());
                     RegisterManager::instance()[reg] = ConstArrayView<String>("");
+                }
             });
     }
 };
