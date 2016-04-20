@@ -31,7 +31,7 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
         echo "
             hook -group autorestore global BufWritePost (.+/)?${kak_bufname} %{
                 nop %sh{
-                    if [ \"\${kak_opt_autorestore_purge_restored,,}\" = true ]; then
+                    if [ \"\${kak_opt_autorestore_purge_restored}\" = true ]; then
                         rm -f '${latest_backup_path}'
                     fi
                 }
