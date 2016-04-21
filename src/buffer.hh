@@ -49,7 +49,7 @@ class BufferIterator
 {
 public:
     using value_type = char;
-    using difference_type = size_t;
+    using difference_type = ssize_t;
     using pointer = const value_type*;
     using reference = const value_type&;
     using iterator_category = std::bidirectional_iterator_tag;
