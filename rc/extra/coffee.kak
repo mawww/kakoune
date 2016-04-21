@@ -43,10 +43,10 @@ addhl -group /coffee/comment fill comment
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords
 # http://coffeescript.org/documentation/docs/lexer.html#section-63
 addhl -group /coffee/code regex [$@]\w* 0:identifier
-addhl -group /coffee/code regex \<(Array|Boolean|Date|Function|Number|Object|RegExp|String)\> 0:type
-addhl -group /coffee/code regex \<(document|false|no|null|off|on|parent|self|this|true|undefined|window|yes)\> 0:value
-addhl -group /coffee/code regex \<(and|is|isnt|not|or)\> 0:operator
-addhl -group /coffee/code regex \<(break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|native|new|package|private|protected|public|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\> 0:keyword
+addhl -group /coffee/code regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String)\b 0:type
+addhl -group /coffee/code regex \b(document|false|no|null|off|on|parent|self|this|true|undefined|window|yes)\b 0:value
+addhl -group /coffee/code regex \b(and|is|isnt|not|or)\b 0:operator
+addhl -group /coffee/code regex \b(break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|native|new|package|private|protected|public|return|static|super|switch|throw|try|typeof|var|void|while|with|yield)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

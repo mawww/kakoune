@@ -21,8 +21,8 @@ addhl -group / regions -default code cabal \
 
 addhl -group /cabal/comment fill comment
 
-addhl -group /cabal/code regex \<(true|false)\>|(([<>]?=?)?\d+(\.\d+)+) 0:value
-addhl -group /cabal/code regex \<(if|else)\> 0:keyword
+addhl -group /cabal/code regex \b(true|false)\b|(([<>]?=?)?\d+(\.\d+)+) 0:value
+addhl -group /cabal/code regex \b(if|else)\b 0:keyword
 addhl -group /cabal/code regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:identifier
 
 # Commands

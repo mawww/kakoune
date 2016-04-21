@@ -31,7 +31,7 @@ addhl -group /moon/single_string fill string
 addhl -group /moon/comment fill comment
 
 addhl -group /moon/code regex ([.\\](?=[A-Za-z]\w*))|(\b[A-Za-z]\w*:)|(\b[A-Za-z]\w*\K!+)|(\W\K[@:][A-Za-z]\w*) 0:identifier
-addhl -group /moon/code regex \<(and|break|catch|class|continue|do|else(if)?|export|extends|false|finally|for|from|if|import|in|local|nil|not|or|return|super|switch|then|true|try|unless|using|when|while|with)\> 0:keyword
+addhl -group /moon/code regex \b(and|break|catch|class|continue|do|else(if)?|export|extends|false|finally|for|from|if|import|in|local|nil|not|or|return|super|switch|then|true|try|unless|using|when|while|with)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

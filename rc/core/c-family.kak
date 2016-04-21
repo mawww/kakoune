@@ -93,7 +93,7 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
 }
 
 # c specific
-addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+addhl -group /c/code regex %{\bNULL\b|\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 %sh{
     # Grammar
     keywords="while|for|if|else|do|switch|case|default|goto|asm|break|continue|return|sizeof"
@@ -109,14 +109,14 @@ addhl -group /c/code regex %{\<NULL\>|\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
 
     # Highlight keywords
     printf %s "
-        addhl -group /c/code regex \<(${keywords})\> 0:keyword
-        addhl -group /c/code regex \<(${attributes})\> 0:attribute
-        addhl -group /c/code regex \<(${types})\> 0:type
+        addhl -group /c/code regex \b(${keywords})\b 0:keyword
+        addhl -group /c/code regex \b(${attributes})\b 0:attribute
+        addhl -group /c/code regex \b(${types})\b 0:type
     "
 }
 
 # c++ specific
-addhl -group /cpp/code regex %{\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+addhl -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 %sh{
     # Grammar
@@ -142,15 +142,15 @@ addhl -group /cpp/code regex %{\<-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
 
     # Highlight keywords
     printf %s "
-        addhl -group /cpp/code regex \<(${keywords})\> 0:keyword
-        addhl -group /cpp/code regex \<(${attributes})\> 0:attribute
-        addhl -group /cpp/code regex \<(${types})\> 0:type
-        addhl -group /cpp/code regex \<(${values})\> 0:value
+        addhl -group /cpp/code regex \b(${keywords})\b 0:keyword
+        addhl -group /cpp/code regex \b(${attributes})\b 0:attribute
+        addhl -group /cpp/code regex \b(${types})\b 0:type
+        addhl -group /cpp/code regex \b(${values})\b 0:value
     "
 }
 
 # objective-c specific
-addhl -group /objc/code regex %{\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
+addhl -group /objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
 %sh{
     # Grammar
@@ -171,11 +171,11 @@ addhl -group /objc/code regex %{\<-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
 
     # Highlight keywords
     printf %s "
-        addhl -group /objc/code regex \<(${keywords})\> 0:keyword
-        addhl -group /objc/code regex \<(${attributes})\> 0:attribute
-        addhl -group /objc/code regex \<(${types})\> 0:type
-        addhl -group /objc/code regex \<(${values})\> 0:value
-        addhl -group /objc/code regex @(${decorators})\> 0:attribute
+        addhl -group /objc/code regex \b(${keywords})\b 0:keyword
+        addhl -group /objc/code regex \b(${attributes})\b 0:attribute
+        addhl -group /objc/code regex \b(${types})\b 0:type
+        addhl -group /objc/code regex \b(${values})\b 0:value
+        addhl -group /objc/code regex @(${decorators})\b 0:attribute
     "
 }
 

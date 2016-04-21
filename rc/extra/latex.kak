@@ -20,9 +20,9 @@ addhl -group / regions -default content latex \
 
 addhl -group /latex/comment fill comment
 # Scopes, starting with a backslash
-addhl -group /latex/content regex '\\\w+\>' 0:keyword
+addhl -group /latex/content regex '\\\w+\b' 0:keyword
 # Options passed to scopes, between brackets
-addhl -group /latex/content regex '\\\w+\>\[([^]]+)\]' 1:value
+addhl -group /latex/content regex '\\\w+\b\[([^]]+)\]' 1:value
 # Content between dollar signs/pairs
 addhl -group /latex/content regex '\$\$?[^$]+\$\$?' 0:magenta
 # Emphasized text

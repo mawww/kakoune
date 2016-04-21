@@ -7,7 +7,7 @@ hook global WinSetOption filetype=git-commit %{
     addhl -group git-commit-highlight regex "\`[^\n]{1,50}" 0:yellow
     addhl -group git-commit-highlight regex "\`[^\n]*\n\h*(?!#)([^\n]*)\n?" 1:default,red
     addhl -group git-commit-highlight regex "^\h*#[^\n]*\n" 0:cyan,default
-    addhl -group git-commit-highlight regex "\<(?:(modified)|(deleted)|(new file)|(renamed)):([^\n]*)\n" 1:yellow 2:red 3:green 4:blue 5:magenta
+    addhl -group git-commit-highlight regex "\b(?:(modified)|(deleted)|(new file)|(renamed)):([^\n]*)\n" 1:yellow 2:red 3:green 4:blue 5:magenta
 }
 
 hook global WinSetOption filetype=(?!git-commit).* %{

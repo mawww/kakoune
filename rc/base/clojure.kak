@@ -21,7 +21,7 @@ addhl -group / group clojure
 
 addhl -group /clojure ref lisp
 
-addhl -group /clojure regex \<(clojure.core/['/\w]+)\> 0:keyword
+addhl -group /clojure regex \b(clojure.core/['/\w]+)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

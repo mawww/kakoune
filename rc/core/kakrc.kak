@@ -22,15 +22,15 @@ addhl -group / regions -default code kakrc \
 
     # Highlight keywords
     printf %s "
-        addhl -group /kakrc/code regex \<(${keywords})\> 0:keyword
-        addhl -group /kakrc/code regex \<(${values})\> 0:value
+        addhl -group /kakrc/code regex \b(${keywords})\b 0:keyword
+        addhl -group /kakrc/code regex \b(${values})\b 0:value
     "
 }
 
-addhl -group /kakrc/code regex \<rgb:[0-9a-fA-F]{6}\> 0:value
-addhl -group /kakrc/code regex (?:\<hook)\h+(?:(global|buffer|window)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:identifier 4:string
-addhl -group /kakrc/code regex (?:\<set)\h+(?:(global|buffer|window)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:identifier 4:string
-addhl -group /kakrc/code regex (?:\<map)\h+(?:(global|buffer|window)|(\S+))\h+(?:(normal|insert|prompt|menu)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:attribute 4:error 5:identifier 6:string
+addhl -group /kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
+addhl -group /kakrc/code regex (?:\bhook)\h+(?:(global|buffer|window)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:identifier 4:string
+addhl -group /kakrc/code regex (?:\bset)\h+(?:(global|buffer|window)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:identifier 4:string
+addhl -group /kakrc/code regex (?:\bmap)\h+(?:(global|buffer|window)|(\S+))\h+(?:(normal|insert|prompt|menu)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:attribute 4:error 5:identifier 6:string
 
 addhl -group /kakrc/double_string fill string
 addhl -group /kakrc/single_string fill string

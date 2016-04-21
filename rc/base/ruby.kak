@@ -51,7 +51,7 @@ addhl -group /ruby/comment fill comment
 
 addhl -group /ruby/literal fill meta
 
-addhl -group /ruby/code regex \<([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\w*[=?!]?) 0:identifier
+addhl -group /ruby/code regex \b([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\w*[=?!]?) 0:identifier
 
 %sh{
     # Grammar
@@ -71,10 +71,10 @@ addhl -group /ruby/code regex \<([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\
 
     # Highlight keywords
     printf %s "
-        addhl -group /ruby/code regex \<(${keywords})\> 0:keyword
-        addhl -group /ruby/code regex \<(${attributes})\> 0:attribute
-        addhl -group /ruby/code regex \<(${values})\> 0:value
-        addhl -group /ruby/code regex \<(${meta})\> 0:meta
+        addhl -group /ruby/code regex \b(${keywords})\b 0:keyword
+        addhl -group /ruby/code regex \b(${attributes})\b 0:attribute
+        addhl -group /ruby/code regex \b(${values})\b 0:value
+        addhl -group /ruby/code regex \b(${meta})\b 0:meta
     "
 }
 

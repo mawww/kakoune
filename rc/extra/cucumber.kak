@@ -55,7 +55,7 @@ addhl -group /cucumber/language regex \S+$ 0:value
 #   …
 # }
 
-addhl -group /cucumber/code regex \<(Feature|Business\h+Need|Ability|Background|Scenario|Scenario\h+Outline|Scenario\h+Template|Examples|Scenarios|Given|When|Then|And|But)\> 0:keyword
+addhl -group /cucumber/code regex \b(Feature|Business\h+Need|Ability|Background|Scenario|Scenario\h+Outline|Scenario\h+Template|Examples|Scenarios|Given|When|Then|And|But)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

@@ -22,10 +22,10 @@ addhl -group / regions -default code lisp \
 addhl -group /lisp/string  fill string
 addhl -group /lisp/comment fill comment
 
-addhl -group /lisp/code regex \<(nil|true|false)\> 0:value
+addhl -group /lisp/code regex \b(nil|true|false)\b 0:value
 addhl -group /lisp/code regex (((\Q***\E)|(///)|(\Q+++\E)){1,3})|(1[+-])|(<|>|<=|=|>=|) 0:operator
-addhl -group /lisp/code regex \<(([':]\w+)|([*]\H+[*]))\> 0:identifier
-addhl -group /lisp/code regex \<(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\> 0:keyword
+addhl -group /lisp/code regex \b(([':]\w+)|([*]\H+[*]))\b 0:identifier
+addhl -group /lisp/code regex \b(def[a-z]+|if|do|let|lambda|catch|and|assert|while|def|do|fn|finally|let|loop|new|quote|recur|set!|throw|try|var|case|if-let|if-not|when|when-first|when-let|when-not|(cond(->|->>)?))\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

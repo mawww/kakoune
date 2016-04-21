@@ -28,11 +28,11 @@ addhl -group /scala/comment fill comment
 # Keywords are collected at
 # http://tutorialspoint.com/scala/scala_basic_syntax.htm
 
-addhl -group /scala/code regex \<(import|package)\> 0:meta
-addhl -group /scala/code regex \<(this|true|false|null)\> 0:value
-addhl -group /scala/code regex \<(become|case|catch|class|def|do|else|extends|final|finally|for|forSome|goto|if|initialize|macro|match|new|object|onTransition|return|startWith|stay|throw|trait|try|unbecome|using|val|var|when|while|with|yield)\> 0:keyword
-addhl -group /scala/code regex \<(abstract|final|implicit|implicitly|lazy|override|private|protected|require|sealed|super)\> 0:attribute
-addhl -group /scala/code regex \<(⇒|=>|<:|:>|=:=|::|&&|\|\|)\> 0:operator
+addhl -group /scala/code regex \b(import|package)\b 0:meta
+addhl -group /scala/code regex \b(this|true|false|null)\b 0:value
+addhl -group /scala/code regex \b(become|case|catch|class|def|do|else|extends|final|finally|for|forSome|goto|if|initialize|macro|match|new|object|onTransition|return|startWith|stay|throw|trait|try|unbecome|using|val|var|when|while|with|yield)\b 0:keyword
+addhl -group /scala/code regex \b(abstract|final|implicit|implicitly|lazy|override|private|protected|require|sealed|super)\b 0:attribute
+addhl -group /scala/code regex \b(⇒|=>|<:|:>|=:=|::|&&|\|\|)\b 0:operator
 addhl -group /scala/code regex "'[_A-Za-z0-9$]+" 0:identifier
 
 # Commands

@@ -28,7 +28,7 @@ addhl -group /fish/comment       fill comment
 addhl -group /fish/code regex (\$\w+)|(\{\$\w+\}) 0:identifier
 
 # Command names are collected using `builtin --names` and 'eval' from `functions --names`
-addhl -group /fish/code regex \<(and|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|echo|else|emit|end|eval|exec|exit|fg|for|function|functions|history|if|jobs|not|or|printf|pwd|random|read|return|set|set_color|source|status|switch|test|ulimit|while)\> 0:keyword
+addhl -group /fish/code regex \b(and|begin|bg|bind|block|break|breakpoint|builtin|case|cd|command|commandline|complete|contains|continue|count|echo|else|emit|end|eval|exec|exit|fg|for|function|functions|history|if|jobs|not|or|printf|pwd|random|read|return|set|set_color|source|status|switch|test|ulimit|while)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

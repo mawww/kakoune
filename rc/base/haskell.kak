@@ -25,10 +25,10 @@ addhl -group /haskell/string  fill string
 addhl -group /haskell/comment fill comment
 addhl -group /haskell/macro   fill meta
 
-addhl -group /haskell/code regex \<(import)\> 0:meta
-addhl -group /haskell/code regex \<(True|False)\> 0:value
-addhl -group /haskell/code regex \<(as|case|class|data|default|deriving|do|else|hiding|if|in|infix|infixl|infixr|instance|let|module|newtype|of|qualified|then|type|where)\> 0:keyword
-addhl -group /haskell/code regex \<(Int|Integer|Char|Bool|Float|Double|IO|Void|Addr|Array|String)\> 0:type
+addhl -group /haskell/code regex \b(import)\b 0:meta
+addhl -group /haskell/code regex \b(True|False)\b 0:value
+addhl -group /haskell/code regex \b(as|case|class|data|default|deriving|do|else|hiding|if|in|infix|infixl|infixr|instance|let|module|newtype|of|qualified|then|type|where)\b 0:keyword
+addhl -group /haskell/code regex \b(Int|Integer|Char|Bool|Float|Double|IO|Void|Addr|Array|String)\b 0:type
 
 # Commands
 # ‾‾‾‾‾‾‾‾

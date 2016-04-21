@@ -28,10 +28,10 @@ addhl -group /dlang/token fill meta
 addhl -group /dlang/disabled fill rgb:777777
 addhl -group /dlang/comment fill comment
 
-addhl -group /dlang/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\>} 0:value
+addhl -group /dlang/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value
 addhl -group /dlang/code regex %{'((\\.)?|[^'\\])'} 0:value
-addhl -group /dlang/code regex "-?([0-9_]*\.(?!0[xXbB]))?\<([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\>" 0:value
-addhl -group /dlang/code regex "\<(this)\>\s*[^(]" 1:value
+addhl -group /dlang/code regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
+addhl -group /dlang/code regex "\b(this)\b\s*[^(]" 1:value
 
 %sh{
     # Grammar
@@ -59,11 +59,11 @@ addhl -group /dlang/code regex "\<(this)\>\s*[^(]" 1:value
 
     # Highlight keywords
     printf %s "
-        addhl -group /dlang/code regex \<(${keywords})\> 0:keyword
-        addhl -group /dlang/code regex \<(${attributes})\> 0:attribute
-        addhl -group /dlang/code regex \<(${types})\> 0:type
-        addhl -group /dlang/code regex \<(${values})\> 0:value
-        addhl -group /dlang/code regex @(${decorators})\> 0:attribute
+        addhl -group /dlang/code regex \b(${keywords})\b 0:keyword
+        addhl -group /dlang/code regex \b(${attributes})\b 0:attribute
+        addhl -group /dlang/code regex \b(${types})\b 0:type
+        addhl -group /dlang/code regex \b(${values})\b 0:value
+        addhl -group /dlang/code regex @(${decorators})\b 0:attribute
     "
 }
 

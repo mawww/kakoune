@@ -18,8 +18,8 @@ hook global BufCreate .*[.](html) %{
 addhl -group / regions html                  \
     comment <!--     -->                  '' \
     tag     <          >                  '' \
-    style   <style\>.*?>\K  (?=</style>)  '' \
-    script  <script\>.*?>\K (?=</script>) ''
+    style   <style\b.*?>\K  (?=</style>)  '' \
+    script  <script\b.*?>\K (?=</script>) ''
 
 addhl -group /html/comment fill comment
 

@@ -29,7 +29,7 @@ addhl -group /sh/comment fill comment
     }" | sed 's,|,:,g'
 
     # Highlight keywords
-    printf %s "addhl -group /sh/code regex \<(${keywords})\> 0:keyword"
+    printf %s "addhl -group /sh/code regex \b(${keywords})\b 0:keyword"
 }
 
 addhl -group /sh/code regex [\[\]\(\)&|]{2}|\[\s|\s\] 0:operator

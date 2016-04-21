@@ -32,7 +32,7 @@ addhl -group /makefile/content regex [+?:]= 0:operator
     }" | sed 's,|,:,g'
 
     # Highlight keywords
-    printf %s "addhl -group /makefile/content regex \<(${keywords})\> 0:keyword"
+    printf %s "addhl -group /makefile/content regex \b(${keywords})\b 0:keyword"
 }
 
 # Commands

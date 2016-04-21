@@ -41,13 +41,13 @@ addhl -group /python/comment       fill comment
 
     # Highlight keywords
     printf %s "
-        addhl -group /python/code regex '\<(${values})\>' 0:value
-        addhl -group /python/code regex '\<(${meta})\>' 0:meta
-        addhl -group /python/code regex '\<(${keywords})\>' 0:keyword
+        addhl -group /python/code regex '\b(${values})\b' 0:value
+        addhl -group /python/code regex '\b(${meta})\b' 0:meta
+        addhl -group /python/code regex '\b(${keywords})\b' 0:keyword
     "
 
     # Highlight types, when they are not used as constructors
-    printf %s "addhl -group /python/code regex '\<(${types})\>[^(]' 1:type"
+    printf %s "addhl -group /python/code regex '\b(${types})\b[^(]' 1:type"
 }
 
 # Commands

@@ -20,7 +20,7 @@ addhl -group / regions -default code json \
 
 addhl -group /json/string fill string
 
-addhl -group /json/code regex \<(true|false|null)\> 0:value
+addhl -group /json/code regex \b(true|false|null)\b 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾

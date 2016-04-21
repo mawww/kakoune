@@ -26,7 +26,7 @@ addhl -group /yaml/comment       fill comment
 
 addhl -group /yaml/code regex ^(---|\.\.\.)$ 0:meta
 addhl -group /yaml/code regex ^(\h*:\w*) 0:keyword
-addhl -group /yaml/code regex \<(true|false|null)\> 0:value
+addhl -group /yaml/code regex \b(true|false|null)\b 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾

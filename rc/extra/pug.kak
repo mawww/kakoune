@@ -27,7 +27,7 @@ addhl -group / regions -default code pug                 \
     single_string "'"          (?:(?<!\\)(\\\\)*'|$)  '' \
     comment       //           $                      '' \
     attribute    \(            \)                     \( \
-    puglang      ^\h*\<(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin)\> $ '' \
+    puglang      ^\h*\b(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin)\b $ '' \
 
 # Filters
 # ‾‾‾‾‾‾‾
@@ -38,7 +38,7 @@ addhl -group /pug/comment          fill    comment
 addhl -group /pug/javascript       ref     javascript
 addhl -group /pug/attribute        ref     javascript
 addhl -group /pug/puglang          ref     javascript
-addhl -group /pug/puglang          regex   \<(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin|of|in)\> 0:keyword
+addhl -group /pug/puglang          regex   \b(\block|extends|include|append|prepend|if|unless|else|case|when|default|each|while|mixin|of|in)\b 0:keyword
 addhl -group /pug/attribute        regex   [()=]                             0:operator
 addhl -group /pug/text             regex   \h*(\|)                           1:meta
 addhl -group /pug/code             regex   ^\h*([A-Za-z][A-Za-z0-9_-]*)      1:type

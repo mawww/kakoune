@@ -27,7 +27,7 @@ addhl -group /lua/string fill string
 
 addhl -group /lua/comment fill comment
 
-addhl -group /lua/code regex \<(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\> 0:keyword
+addhl -group /lua/code regex \b(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b 0:keyword
 
 # Commands
 # ‾‾‾‾‾‾‾‾

@@ -24,7 +24,7 @@ addhl -group /golang/double_string fill string
 addhl -group /golang/single_string fill string
 addhl -group /golang/comment fill comment
 
-addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\<([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\>} 0:value
+addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
 
 %sh{
     # Grammar
@@ -42,10 +42,10 @@ addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\<([0-9]+|0[xX][0-9a-fA-
 
     # Highlight keywords
     printf %s "
-        addhl -group /golang/code regex \<(${keywords})\> 0:keyword
-        addhl -group /golang/code regex \<(${attributes})\> 0:attribute
-        addhl -group /golang/code regex \<(${types})\> 0:type
-        addhl -group /golang/code regex \<(${values})\> 0:value
+        addhl -group /golang/code regex \b(${keywords})\b 0:keyword
+        addhl -group /golang/code regex \b(${attributes})\b 0:attribute
+        addhl -group /golang/code regex \b(${types})\b 0:type
+        addhl -group /golang/code regex \b(${values})\b 0:value
     "
 }
 
