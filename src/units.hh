@@ -1,6 +1,7 @@
 #ifndef units_hh_INCLUDED
 #define units_hh_INCLUDED
 
+#include "assert.hh"
 #include "hash.hh"
 
 #include <type_traits>
@@ -115,7 +116,9 @@ public:
     friend size_t hash_value(RealType val) { return hash_value(val.m_value); }
     friend size_t abs(RealType val) { return val.m_value < ValueType(0) ? -val.m_value : val.m_value; }
 
-private:
+    explicit operator size_t() { kak_assert(m_value >= 0); return (size_t)m_value; }
+
+protected:
     ValueType m_value;
 };
 
