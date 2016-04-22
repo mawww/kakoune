@@ -15,10 +15,12 @@ namespace utf8
 // on unicode codepoints instead.
 template<typename Iterator,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
-class iterator : public std::iterator<std::forward_iterator_tag,
+class iterator : public std::iterator<std::bidirectional_iterator_tag,
                                       Codepoint, CharCount>
 {
 public:
+    iterator() = default;
+
     iterator(Iterator it, Iterator begin, Iterator end)
         : m_it{std::move(it)}, m_begin{std::move(begin)}, m_end{std::move(end)}
     {}
@@ -78,8 +80,8 @@ public:
         return res;
     }
 
-    bool operator==(const iterator& other) { return m_it == other.m_it; }
-    bool operator!=(const iterator& other) { return m_it != other.m_it; }
+    bool operator==(const iterator& other) const { return m_it == other.m_it; }
+    bool operator!=(const iterator& other) const { return m_it != other.m_it; }
 
     bool operator< (const iterator& other) const { return m_it < other.m_it; }
     bool operator<= (const iterator& other) const { return m_it <= other.m_it; }
