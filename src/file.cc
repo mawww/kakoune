@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <stdlib.h>
 
 #if defined(__FreeBSD__)
 #include <sys/sysctl.h>
