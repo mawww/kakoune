@@ -164,7 +164,7 @@ inline const char& BufferIterator::operator[](size_t n) const
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
     kak_assert(m_buffer == iterator.m_buffer);
-    return (size_t)(int)m_buffer->distance(iterator.m_coord, m_coord);
+    return (size_t)m_buffer->distance(iterator.m_coord, m_coord);
 }
 
 inline BufferIterator BufferIterator::operator+(ByteCount size) const

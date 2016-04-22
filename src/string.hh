@@ -95,8 +95,8 @@ class String : public StringOps<String, char>
 {
 public:
     String() {}
-    String(const char* content) : m_data(content, (size_t)(int)strlen(content)) {}
-    String(const char* content, ByteCount len) : m_data(content, (size_t)(int)len) {}
+    String(const char* content) : m_data(content, (size_t)strlen(content)) {}
+    String(const char* content, ByteCount len) : m_data(content, (size_t)len) {}
     explicit String(Codepoint cp, CharCount count = 1)
     {
         reserve(utf8::codepoint_size(cp) * (int)count);
@@ -118,13 +118,13 @@ public:
     const char* c_str() const { return m_data.data(); }
 
     [[gnu::always_inline]]
-    void append(const char* data, ByteCount count) { m_data.append(data, (size_t)(int)count); }
+    void append(const char* data, ByteCount count) { m_data.append(data, (size_t)count); }
 
     void clear() { m_data.clear(); }
 
     void push_back(char c) { m_data.append(&c, 1); }
-    void force_size(ByteCount size) { m_data.force_size((size_t)(int)size); }
-    void reserve(ByteCount size) { m_data.reserve((size_t)(int)size); }
+    void force_size(ByteCount size) { m_data.force_size((size_t)size); }
+    void reserve(ByteCount size) { m_data.reserve((size_t)size); }
 
     static const String ms_empty;
 
