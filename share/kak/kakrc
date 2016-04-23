@@ -28,7 +28,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
             echo "source '${kak_runtime}/colors/$1.kak'"
         fi
     else
-        echo -color Error 'Usage: colorscheme <scheme name>'
+        echo "echo -color Error 'Usage: colorscheme <scheme name>'"
     fi
 }}
 
