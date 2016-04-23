@@ -35,17 +35,17 @@ def -hidden _modeline-parse %{
                     case "${value}" in
                         unix) tr="eolformat lf";;
                         dos) tr="eolformat crlf";;
-                        *) printf %s "Unsupported file format: ${value}" >&2;;
+                        *) printf %s\\n "echo -debug 'Unsupported file format: ${value}'";;
                     esac
                 ;;
                 ft) ;&
                 filetype) tr="filetype ${value}";;
                 bomb) tr="BOM utf8";;
                 nobomb) tr="BOM none";;
-                *) printf %s "Unsupported vim variable: ${key}" >&2;;
+                *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
             esac
 
-            [ -n "${tr}" ] && printf %s "set buffer ${tr}"
+            [ -n "${tr}" ] && printf %s\\n "set buffer ${tr}"
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -63,12 +63,12 @@ def -hidden _modeline-parse %{
                 BOM
             )
 
-            printf %s "${OPTS_ALLOWED[@]}" | grep -qw "${key}" || {
-                printf %s "Unsupported kakoune variable: ${key}" >&2;
+            printf %s\\n "${OPTS_ALLOWED[@]}" | grep -qw "${key}" || {
+                printf %s\\n "echo -debug 'Unsupported kakoune variable: ${key}'";
                 return;
             }
 
-            printf %s "set buffer ${key} ${value}"
+            printf %s\\n "set buffer ${key} ${value}"
         }
 
         # The following subshell will keep the actual options of the modeline, and strip:
@@ -77,7 +77,7 @@ def -hidden _modeline-parse %{
         # It will also convert the ':' seperators beween the option=value pairs
         # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
         options=(
-            $(printf %s "${kak_selection}" | sed -r \
+            $(printf %s\\n "${kak_selection}" | sed -r \
                     -e 's/^(.+\s\w+:\s?(set?)?\s)//' \
                     -e 's/:?\s[^a-zA-Z0-9_=-]+$//' \
                     -e 's/:/ /g')
@@ -88,7 +88,7 @@ def -hidden _modeline-parse %{
             *vim:*) type_selection="vim";;
             *kak:*) ;&
             *kakoune:*) type_selection="kakoune";;
-            *) printf %s "echo -debug Unsupported modeline format";;
+            *) echo "echo -debug Unsupported modeline format";;
         esac
         [ -n "${type_selection}" ] || exit 1
 
@@ -101,7 +101,7 @@ def -hidden _modeline-parse %{
                 kakoune) tr=$(translate_opt_kakoune "${name_option}" "${value_option}");;
             esac
 
-            [ -n "${tr}" ] && printf %s "${tr}"
+            [ -n "${tr}" ] && printf %s\\n "${tr}"
         done
     }
 }

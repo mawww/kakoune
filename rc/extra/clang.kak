@@ -9,14 +9,14 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
     %sh{
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
-        printf %s "set buffer clang_tmp_dir ${dir}"
-        printf %s "write ${dir}/buf"
+        printf %s\\n "set buffer clang_tmp_dir ${dir}"
+        printf %s\\n "write ${dir}/buf"
     }
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.
     %sh{
         dir=${kak_opt_clang_tmp_dir}
-        printf %s "eval -draft %{
+        printf %s\\n "eval -draft %{
                   edit! -fifo ${dir}/fifo *clang-output*
                   set buffer filetype make
                   set buffer _make_current_error_line 0
@@ -72,11 +72,11 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                                     print id  "|" docstrings[id] "|" menu
                                 }
                             }' | paste -s -d ':' | sed -e "s/\\\\n/\\n/g; s/'/\\\\'/g")
-                printf %s "eval -client ${kak_client} echo 'clang completion done'
+                printf %s\\n "eval -client ${kak_client} echo 'clang completion done'
                       set 'buffer=${kak_buffile}' clang_completions '${header}:${compl}'" | kak -p ${kak_session}
             else
                 clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} - < ${dir}/buf 2> ${dir}/stderr
-                printf %s "eval -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
+                printf %s\\n "eval -client ${kak_client} echo 'clang parsing done'" | kak -p ${kak_session}
             fi
 
             flags=$(cat ${dir}/stderr | sed -rne "
@@ -90,7 +90,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
 
             sed -e "s|<stdin>|${kak_bufname}|g" < ${dir}/stderr > ${dir}/fifo
 
-            printf %s "set 'buffer=${kak_buffile}' clang_flags %{${kak_timestamp}:${flags}}
+            printf %s\\n "set 'buffer=${kak_buffile}' clang_flags %{${kak_timestamp}:${flags}}
                   set 'buffer=${kak_buffile}' clang_errors '${errors}'" | kak -p ${kak_session}
         ) > /dev/null 2>&1 < /dev/null &
     }
@@ -102,14 +102,9 @@ def -hidden clang-show-completion-info %[ try %[
     eval -draft %[
         exec '<space>{(<a-k>^\(<ret>b'
         %sh[
-<<<<<<< f877c388fea0e794f663d62e3508c5d11832601e
-            desc=$(echo "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\\:/:/g; P }; D")
-=======
-            # desc=$(printf %s "${kak_opt_clang_completions}" | sed -e 's/\([^\\]\):/\1\n/g;' | sed -ne "/^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\:/:/g; p }")
-            desc=$(printf %s "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\\:/:/g; P }; D")
->>>>>>> Replace non POSIX calls to `echo` with `printf %s`
+            desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\\:/:/g; P }; D")
             if [ -n "$desc" ]; then
-                printf %s "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
+                printf %s\\n "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
             fi
     ] ]
 ] ]
@@ -128,21 +123,15 @@ def clang-enable-autocomplete -docstring "Enable completion with clang" %{
 }
 
 def clang-disable-autocomplete -docstring "Disable automatic clang completion" %{
-    set window completers %sh{ printf %s "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
+    set window completers %sh{ printf %s\\n "'${kak_opt_completers}'" | sed -e 's/option=clang_completions://g' }
     rmhooks window clang-autocomplete
     unalias window complete clang-complete
 }
 
 def -hidden clang-show-error-info %{ %sh{
-<<<<<<< f877c388fea0e794f663d62e3508c5d11832601e
-    desc=$(printf %s "${kak_opt_clang_errors}" | sed -ne "/^${kak_cursor_line},.*/ { s/^[[:digit:]]\+,//g; s/'/\\\\'/g; p }")
+    desc=$(printf %s\\n "${kak_opt_clang_errors}" | sed -ne "/^${kak_cursor_line},.*/ { s/^[[:digit:]]\+,//g; s/'/\\\\'/g; p }")
     if [ -n "$desc" ]; then
-        echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
-=======
-    printf %s "${kak_opt_clang_errors}" | grep "^${kak_cursor_line},.*" | if read line; then
-        desc=$(printf %s "${line}" | sed -e "s/^[[:digit:]]\+,//g; s/'/\\\\'/g")
-        printf %s "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
->>>>>>> Replace non POSIX calls to `echo` with `printf %s`
+        printf %s\\n "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
     fi
 } }
 
@@ -169,9 +158,9 @@ def clang-diagnostics-next -docstring "Jump to the next line that contains an er
         done
         line=$((line == -1 ? first_line : line))
         if [ ${line} -ne -1 ]; then
-            printf %s "exec ${line} g"
+            printf %s\\n "exec ${line} g"
         else
-            printf %s 'echo -color Error no next clang diagnostic'
+            echo 'echo -color Error no next clang diagnostic'
         fi
     )
 } }

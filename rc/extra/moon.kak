@@ -39,12 +39,12 @@ addhl -group /moon/code regex \b(and|break|catch|class|continue|do|else(if)?|exp
 def moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ %sh{
     case $kak_buffile in
         *spec/*_spec.moon)
-            altfile=$(eval printf %s $(printf %s $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
-            [ ! -f $altfile ] && printf %s "echo -color Error 'implementation file not found'" && exit
+            altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
+            [ ! -f $altfile ] && echo "echo -color Error 'implementation file not found'" && exit
         ;;
         *.moon)
             path=$kak_buffile
-            dirs=$(while [ $path ]; do printf %s $path; path=${path%/*}; done | tail -n +2)
+            dirs=$(while [ $path ]; do printf %s\\n $path; path=${path%/*}; done | tail -n +2)
             for dir in $dirs; do
                 altdir=$dir/spec
                 if [ -d $altdir ]; then
@@ -52,13 +52,13 @@ def moon-alternative-file -docstring 'Jump to the alternate file (implementation
                     break
                 fi
             done
-            [ ! -d $altdir ] && printf %s "echo -color Error 'spec/ not found'" && exit
+            [ ! -d $altdir ] && echo "echo -color Error 'spec/ not found'" && exit
         ;;
         *)
-            printf %s "echo -color Error 'alternative file not found'" && exit
+            echo "echo -color Error 'alternative file not found'" && exit
         ;;
     esac
-    printf %s "edit $altfile"
+    printf %s\\n "edit $altfile"
 }}
 
 def -hidden _moon_filter_around_selections %{

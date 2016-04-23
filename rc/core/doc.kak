@@ -10,7 +10,7 @@ def -hidden -params 1..2 _doc-open %{
         rm ${manout}
 
         if [ "${retval}" -eq 0 ]; then
-            printf %s "
+            printf %s\\n "
                 edit! -scratch '*doc*'
                 exec |cat<space>${colout}<ret>gg
                 nop %sh{rm ${colout}}
@@ -18,11 +18,11 @@ def -hidden -params 1..2 _doc-open %{
             "
 
             if [ $# -gt 1 ]; then
-                needle=$(printf %s "$2" | sed 's,<,<lt>,g')
-                printf %s "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${needle}\E<ret>\'' } catch %{ exec <space>gg }"
+                needle=$(printf %s\\n "$2" | sed 's,<,<lt>,g')
+                printf %s\\n "try %{ exec '%<a-s><a-k>(?i)^\h+[^\n]*?\Q${needle}\E<ret>\'' } catch %{ exec <space>gg }"
             fi
         else
-           printf %s "echo -color Error %{doc '$@' failed: see *debug* buffer for details}"
+           printf %s\\n "echo -color Error %{doc '$@' failed: see *debug* buffer for details}"
            rm ${colout}
         fi
     }
@@ -31,7 +31,7 @@ def -hidden -params 1..2 _doc-open %{
 def -params 1..2 \
     -shell-completion %{
         find "${kak_runtime}/../doc/kak/manpages/" -type f -iname "*$@*.gz" -printf '%f\n' | while read l; do
-            printf %s "${l%.*}"
+            printf %s\\n "${l%.*}"
         done
     } \
     doc -docstring "Open a buffer containing the documentation about a given subject" %{
@@ -40,10 +40,10 @@ def -params 1..2 \
 
         shift
         if [ ! -f "${PATH_DOC}" ]; then
-            printf %s "echo -color Error No such doc file: ${PATH_DOC}"
+            printf %s\\n "echo -color Error No such doc file: ${PATH_DOC}"
             exit
         fi
 
-        printf %s "eval -try-client %opt{docsclient} _doc-open ${PATH_DOC} $@"
+        printf %s\\n "eval -try-client %opt{docsclient} _doc-open ${PATH_DOC} $@"
     }
 }

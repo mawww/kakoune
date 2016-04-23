@@ -44,7 +44,7 @@ def flake8-lint -params 0..1 -docstring "Lint the contents of the current buffer
 }
 
 def -hidden flake8-show-error-info %{ %sh{
-    desc=$(printf %s "${kak_opt_flake8_errors}" | sed -ne "/^${kak_cursor_line},.*/ { s/^[[:digit:]]\+,//g; s/'/\\\\'/g; p }")
+    desc=$(printf %s\\n "${kak_opt_flake8_errors}" | sed -ne "/^${kak_cursor_line},.*/ { s/^[[:digit:]]\+,//g; s/'/\\\\'/g; p }")
     if [ -n "$desc" ]; then
         echo "info -anchor ${kak_cursor_line}.${kak_cursor_column} '${desc}'"
     fi

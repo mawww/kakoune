@@ -77,7 +77,7 @@ def -hidden _c-family-indent-on-closing-curly-brace %[
             maybe_at=''
         fi
 
-        printf '%s' '
+        printf %s\\n '
             addhl -group / regions -default code FT \
                 string %{MAYBEAT(?<!QUOTE)"} %{(?<!\\)(\\\\)*"} "" \
                 comment /\* \*/ "" \
@@ -101,7 +101,7 @@ addhl -group /c/code regex %{\bNULL\b|\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
     types="void|char|short|int|long|signed|unsigned|float|double|size_t"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=c %{
+    printf %s\\n "hook global WinSetOption filetype=c %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -133,7 +133,7 @@ addhl -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
     values="this|true|false|NULL|nullptr"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=cpp %{
+    printf %s\\n "hook global WinSetOption filetype=cpp %{
         set window static_words '${keywords}'
         set -add window static_words '${attributes}'
         set -add window static_words '${types}'
@@ -165,7 +165,7 @@ addhl -group /objc/code regex %{\b-?\d+[fdiu]?|'((\\.)?|[^'\\])'} 0:value
     decorators="${decorators}|selector|autoreleasepool|try|catch|class|synchronized"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=objc %{
+    printf %s\\n "hook global WinSetOption filetype=objc %{
         set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
     }" | sed 's,|,:,g'
 
@@ -216,12 +216,12 @@ hook global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
 decl str c_include_guard_style "ifdef"
 def -hidden _c-family-insert-include-guards %{
     %sh{
-        case "${kak_opt_c_include_guard_style,,}" in
+        case "${kak_opt_c_include_guard_style}" in
             ifdef)
-                printf %s "exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>"
+                echo 'exec ggi<c-r>%<ret><esc>ggxs\.<ret>c_<esc><space>A_INCLUDED<esc>ggxyppI#ifndef<space><esc>jI#define<space><esc>jI#endif<space>//<space><esc>O<esc>'
                 ;;
             pragma)
-                printf %s "exec ggi#pragma<space>once<esc>"
+                echo 'exec ggi#pragma<space>once<esc>'
                 ;;
             *);;
         esac
@@ -233,7 +233,7 @@ hook global BufNew .*\.(h|hh|hpp|hxx|H) _c-family-insert-include-guards
 decl str-list alt_dirs ".;.."
 
 def c-family-alternative-file -docstring "Jump to the alternate file (header/implementation)" %{ %sh{
-    alt_dirs=$(printf %s "${kak_opt_alt_dirs}" | sed -e 's/;/ /g')
+    alt_dirs=$(printf %s\\n "${kak_opt_alt_dirs}" | sed -e 's/;/ /g')
     file=$(basename "${kak_buffile}")
     dir=$(dirname "${kak_buffile}")
 
@@ -257,13 +257,13 @@ def c-family-alternative-file -docstring "Jump to the alternate file (header/imp
             done
         ;;
         *)
-            printf %s "echo -color Error 'extension not recognized'"
+            echo "echo -color Error 'extension not recognized'"
             exit
         ;;
     esac
     if [ -f ${altname} ]; then
-       printf %s "edit '${altname}'"
+       printf %s\\n "edit '${altname}'"
     else
-       printf %s "echo -color Error 'alternative file not found'"
+       echo "echo -color Error 'alternative file not found'"
     fi
 }}

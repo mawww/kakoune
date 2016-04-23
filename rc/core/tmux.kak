@@ -5,8 +5,10 @@
 hook global KakBegin .* %{
     %sh{
         if [ -n "$TMUX" ]; then
-            printf %s "alias global focus tmux-focus"
-            printf %s "alias global new tmux-new-horizontal"
+            echo "
+                alias global focus tmux-focus
+                alias global new tmux-new-horizontal
+            "
         fi
     }
 }
@@ -15,7 +17,7 @@ hook global KakBegin .* %{
 def -hidden -params 1.. tmux-new-impl %{
     %sh{
         if [ -z "$TMUX" ]; then
-            printf %s "echo -color Error This command is only available in a tmux session"
+            echo "echo -color Error 'This command is only available in a tmux session'"
             exit
         fi
         tmux_args="$1"
@@ -41,9 +43,9 @@ def -docstring "focus given client" \
     -params 0..1 -client-completion \
     tmux-focus %{ %sh{
     if [ $# -gt 1 ]; then
-        printf %s "echo -color Error 'too many arguments, use focus [client]'"
+        echo "echo -color Error 'too many arguments, use focus [client]'"
     elif [ $# -eq 1 ]; then
-        printf %s "eval -client '$1' focus"
+        printf %s\\n "eval -client '$1' focus"
     elif [ -n "${kak_client_env_TMUX}" ]; then
         TMUX="${kak_client_env_TMUX}" tmux select-pane -t "${kak_client_env_TMUX_PANE}" > /dev/null
     fi

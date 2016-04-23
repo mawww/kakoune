@@ -65,7 +65,7 @@ addhl -group /ruby/code regex \b([A-Za-z]\w*:)|([$@][A-Za-z]\w*)|(\W\K:[A-Za-z]\
     meta="require|include"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=ruby %{
+    printf %s\\n "hook global WinSetOption filetype=ruby %{
         set window static_words '${keywords}:${attributes}:${values}:${meta}'
     }" | sed 's,|,:,g'
 

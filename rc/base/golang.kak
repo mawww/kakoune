@@ -36,7 +36,7 @@ addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-
     values="false|true|nil"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=golang %{
+    printf %s\\n "hook global WinSetOption filetype=golang %{
         set window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 

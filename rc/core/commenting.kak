@@ -8,18 +8,18 @@ def comment-selection -docstring "Comment/uncomment the current selection" %{
     %sh{
         function exec_proof {
             ## Replace the '<' sign that is interpreted differently in `exec`
-            printf %s "$@" | sed 's,<,<lt>,g'
+            printf %s\\n "$@" | sed 's,<,<lt>,g'
         }
 
         readonly opening=$(exec_proof "${kak_opt_comment_selection_chars%%:*}")
         readonly closing=$(exec_proof "${kak_opt_comment_selection_chars##*:}")
 
         if [ -z "${opening}" ] || [ -z "${closing}" ]; then
-            printf %s "The \`comment_selection_chars\` variable is empty, couldn't comment the selection" >&2
+            echo "echo -debug 'The \`comment_selection_chars\` variable is empty, could not comment the selection'"
             exit
         fi
 
-        printf %s "try %{
+        printf %s\\n "try %{
             ## The selection is empty
             exec -draft %{<a-K>\A[\h\v\n]*\z<ret>}
 
@@ -43,11 +43,11 @@ def comment-line -docstring "Comment/uncomment the current line" %{
         readonly opening_escaped="\Q${opening}\E"
 
         if [ -z "${opening}" ]; then
-            printf %s "The \`comment_line_chars\` variable is empty, couldn't comment the line" >&2
+            echo "echo -debug 'The \`comment_line_chars\` variable is empty, could not comment the line'"
             exit
         fi
 
-        printf %s "
+        printf %s\\n "
         ## Select the content of the line, without indentation
         exec %{I<esc><a-l>}
 

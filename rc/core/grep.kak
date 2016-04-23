@@ -12,7 +12,7 @@ def -params .. -file-completion \
          ( ${kak_opt_grepcmd} "${kak_selection}" | tr -d '\r' > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
      fi
 
-     printf %s "eval -try-client '$kak_opt_toolsclient' %{
+     printf %s\\n "eval -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *grep*
                set buffer filetype grep
                set buffer _grep_current_line 0

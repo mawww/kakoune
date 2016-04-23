@@ -6,9 +6,9 @@ def format -docstring "Format the entire buffer with an external utility" %{
             readonly x=$((kak_cursor_column - 1))
             readonly y="${kak_cursor_line}"
 
-            printf %s "exec -draft %{%|${kak_opt_formatcmd// /<space>}<ret>}"
+            printf %s\\n "exec -draft %{%|${kak_opt_formatcmd// /<space>}<ret>}"
             ## Try to restore the position of the cursor as it was prior to formatting
-            printf %s "exec gg ${y}g ${x}l"
+            printf %s\\n "exec gg ${y}g ${x}l"
         fi
     }
 }

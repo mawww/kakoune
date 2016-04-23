@@ -7,7 +7,7 @@ decl str-list ctagsfiles 'tags'
 
 def -params 0..1 \
     -shell-completion '
-        ( for tags in $(printf %s "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
+        ( for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
               do readtags -t "${tags}" -p "$1"
           done ) | cut -f 1 | sort | uniq' \
     -docstring 'Jump to tag definition' \
@@ -15,7 +15,7 @@ def -params 0..1 \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
         (
-            for tags in $(printf %s "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
+            for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
                 readtags -t "${tags}" ${tagname}
             done
         ) | awk -F '\t|\n' -e '
@@ -34,7 +34,7 @@ def tag-complete -docstring "Insert completion candidates for the current select
     %sh{ (
         compl=$(readtags -p "$kak_selection" | cut -f 1 | sort | uniq | sed -e 's/:/\\:/g' | sed -e 's/\n/:/g' )
         compl="${kak_cursor_line}.${kak_cursor_column}+${#kak_selection}@${kak_timestamp}:${compl}"
-        printf %s "set buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
+        printf %s\\n "set buffer=$kak_bufname ctags_completions '${compl}'" | kak -p ${kak_session}
     ) > /dev/null 2>&1 < /dev/null & }
 }}
 
@@ -45,7 +45,7 @@ def ctags-funcinfo -docstring "Display ctags information about a selected functi
             %sh{
                 sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
                 if [ -n "$sigs" ]; then
-                    printf %s "eval -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
+                    printf %s\\n "eval -client ${kak_client} %{info -anchor $kak_cursor_line.$kak_cursor_column -placement above '$sigs'}"
                 fi
             }
         }
@@ -75,7 +75,7 @@ def ctags-generate -docstring 'Generate tag file asynchronously' %{
             msg="tags generation failed"
         fi
 
-        printf %s "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
+        printf %s\\n "eval -client $kak_client echo -color Information '${msg}'" | kak -p ${kak_session}
     ) > /dev/null 2>&1 < /dev/null & }
 }
 

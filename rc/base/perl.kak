@@ -44,7 +44,7 @@ addhl -group /perl/comment fill comment
     values="ARGV|STDERR|STDOUT|ARGVOUT|STDIN|__DATA__|__END__|__FILE__|__LINE__|__PACKAGE__"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=perl %{
+    printf %s\\n "hook global WinSetOption filetype=perl %{
         set window static_words '${keywords}:${attributes}:${values}'
     }" | sed 's,|,:,g'
 

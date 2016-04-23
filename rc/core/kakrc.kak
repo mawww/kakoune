@@ -16,7 +16,7 @@ addhl -group / regions -default code kakrc \
     values="default|black|red|green|yellow|blue|magenta|cyan|white"
 
     # Add the language's grammar to the static completion list
-    printf %s "hook global WinSetOption filetype=kak %{
+    printf %s\\n "hook global WinSetOption filetype=kak %{
         set window static_words '${keywords}:${values}'
     }" | sed 's,|,:,g'
 
