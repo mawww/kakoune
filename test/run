@@ -70,16 +70,7 @@ main() {
                 failed=yes
               fi
               echo
-              diff -u $test/$dir/$expect $expect | while read -r line; do
-                first_character=$(echo "$line" | cut -b 1)
-                case $first_character in
-                  +) color=green ;;
-                  -) color=red ;;
-                  @) color=magenta ;;
-                  *) color=none ;;
-                esac
-                echo "$line" | colorize $color normal
-              done
+              show_diff $test/$dir/$expect $expect
             fi
           done
           if [ "$failed" = no ]; then
@@ -95,20 +86,25 @@ main() {
           fi
         fi
       else
-        color=green
+        failed=no
         if [ ! -e stderr ]; then
           if [ $retval -eq 0 ]; then
-            color=red
+            echo "$indent$name" | colorize red normal
             number_failures=$(($number_failures + 1))
+            failed=yes
           fi
         else
             sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
             if [ -s error ] && ! cmp -s error stderr; then
-              color=yellow
+              echo "$indent$name" | colorize yellow normal
+              show_diff error stderr
+              failed=yes
             fi
         fi
 
-        echo "$indent$name" | colorize $color normal
+        if [ "$failed" = no ]; then
+          echo "$indent$name" | colorize green normal
+        fi
       fi
     fi
   done
@@ -151,5 +147,17 @@ colorize() {
   echo "$(get_ansi_code $color_name $style_name)$text$(get_ansi_code none none)"
 }
 
+show_diff() {
+  diff -u $1 $2 | while read -r line; do
+    first_character=$(echo "$line" | cut -b 1)
+    case $first_character in
+      +) color=green ;;
+      -) color=red ;;
+      @) color=magenta ;;
+      *) color=none ;;
+    esac
+    echo "$line" | colorize $color normal
+  done
+}
 
 main $@
