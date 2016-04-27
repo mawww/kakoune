@@ -396,7 +396,7 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
         while (word_end != end and categorize(*word_end) == cat)
             ++word_end;
 
-        while (word_end - line_begin >= max_width)
+        while (word_end > line_begin and word_end - line_begin >= max_width)
         {
             auto line_end = last_word_end <= line_begin ? line_begin + max_width
                                                         : last_word_end;
@@ -518,6 +518,12 @@ UnitTest test_string{[]()
     kak_assert(wrapped[3] == "whitespaces and");
     kak_assert(wrapped[4] == "much_too_long_wo");
     kak_assert(wrapped[5] == "rds");
+
+    Vector<StringView> wrapped2 = wrap_lines("error: unknown type", 7);
+    kak_assert(wrapped2.size() == 3);
+    kak_assert(wrapped2[0] == "error:");
+    kak_assert(wrapped2[1] == "unknown");
+    kak_assert(wrapped2[2] == "type");
 
     kak_assert(escape("youpi:matin:tchou:", ':', '\\') == "youpi\\:matin\\:tchou\\:");
     kak_assert(unescape("youpi\\:matin\\:tchou\\:", ':', '\\') == "youpi:matin:tchou:");
