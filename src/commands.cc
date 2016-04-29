@@ -271,10 +271,47 @@ const CommandDesc writeall_cmd = {
     [](const ParametersParser&, Context&, const ShellContext&){ write_all_buffers(); }
 };
 
+static void ensure_all_buffers_are_saved()
+{
+    Vector<String> names;
+    for (auto& buffer : BufferManager::instance())
+    {
+        if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
+            names.push_back(buffer->name());
+    }
+    if (not names.empty())
+    {
+        String message = "modified buffers remaining: [";
+        for (auto it = names.begin(); it != names.end(); ++it)
+        {
+            if (it != names.begin())
+                message += ", ";
+            message += *it;
+        }
+        message += "]";
+        throw runtime_error(message);
+    }
+}
+
 const CommandDesc kill_cmd = {
     "kill",
     nullptr,
     "kill current session, quit all clients and server",
+    no_params,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser&, Context&, const ShellContext&){
+        ensure_all_buffers_are_saved();
+        throw kill_session{};
+    }
+};
+
+
+const CommandDesc force_kill_cmd = {
+    "kill!",
+    nullptr,
+    "kill current session, quit all clients and server, do not check for unsaved buffers",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -286,26 +323,7 @@ template<bool force>
 void quit()
 {
     if (not force and ClientManager::instance().count() == 1)
-    {
-        Vector<String> names;
-        for (auto& buffer : BufferManager::instance())
-        {
-            if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
-                names.push_back(buffer->name());
-        }
-        if (not names.empty())
-        {
-            String message = "modified buffers remaining: [";
-            for (auto it = names.begin(); it != names.end(); ++it)
-            {
-                if (it != names.begin())
-                    message += ", ";
-                message += *it;
-            }
-            message += "]";
-            throw runtime_error(message);
-        }
-    }
+        ensure_all_buffers_are_saved();
     // unwind back to this client event handler.
     throw client_removed{ true };
 }
@@ -1872,8 +1890,9 @@ void register_commands()
     register_command(write_cmd);
     register_command(writeall_cmd);
     register_command(writeall_quit_cmd);
-    register_command(quit_cmd);
     register_command(kill_cmd);
+    register_command(force_kill_cmd);
+    register_command(quit_cmd);
     register_command(force_quit_cmd);
     register_command(write_quit_cmd);
     register_command(force_write_quit_cmd);

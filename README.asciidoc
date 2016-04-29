@@ -599,7 +599,8 @@ command `q!` has to be used).
  * `w[rite]a[ll]`: write all buffers that are associated to a file.
  * `q[uit][!]`: exit Kakoune, use quit! to force quitting even if there is some
      unsaved buffers remaining.
- * `kill`: terminate the current session, all the clients as well as the server
+ * `kill[!]`: terminate the current session, all the clients as well as the server,
+     use kill! to ignore unsaved buffers
  * `w[a]q[!]`: write the current buffer (or all buffers when `waq` is used) and quit
  * `b[uffer] <name>`: switch to buffer <name>
  * `b[uffer]n[ext]`: switch to the next buffer
