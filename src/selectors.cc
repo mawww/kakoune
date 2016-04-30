@@ -654,6 +654,7 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
     Vector<Selection> result;
     auto& buffer = selections.buffer();
     auto buf_end = buffer.end();
+    auto buf_begin = buffer.begin();
     for (auto& sel : selections)
     {
         auto begin = buffer.iterator_at(sel.min());
@@ -671,8 +672,12 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
             if (end == buf_end)
                 continue;
 
-            end = ensure_char_start(buffer, end);
-            result.push_back(keep_direction({ begin.coord(), (begin == end) ? end.coord() : utf8::previous(end, begin).coord() }, sel));
+            if (end != buf_begin)
+            {
+                end = ensure_char_start(buffer, end);
+                auto sel_end = (begin == end) ? end : utf8::previous(end, begin);
+                result.push_back(keep_direction({ begin.coord(), sel_end.coord() }, sel));
+            }
             begin = ensure_char_start(buffer, (*re_it)[capture].second);
         }
         if (begin.coord() <= sel.max())
