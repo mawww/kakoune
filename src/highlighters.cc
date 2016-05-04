@@ -683,6 +683,7 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
 void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
     const int tabstop = context.options()["tabstop"].get<int>();
+    auto whitespaceface = get_face("Whitespace");
     auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
     {
@@ -713,6 +714,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
                         atom_it->replace("·");
                     else if (c == '\n')
                         atom_it->replace("¬");
+                    atom_it->face = whitespaceface;
                     break;
                 }
             }
