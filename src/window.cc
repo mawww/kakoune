@@ -111,7 +111,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
-    m_dimensions = context.client().dimensions();
+    set_dimensions(context.client().dimensions());
     if (m_dimensions == CharCoord{0,0})
         return m_display_buffer;
 
@@ -149,7 +149,12 @@ void Window::set_position(CharCoord position)
 
 void Window::set_dimensions(CharCoord dimensions)
 {
-    m_dimensions = dimensions;
+    if (m_dimensions != dimensions)
+    {
+        m_dimensions = dimensions;
+        run_hook_in_own_context("WinResize", format("{}.{}", dimensions.line,
+                                                    dimensions.column));
+    }
 }
 
 static LineCount adapt_view_pos(LineCount line, LineCount offset,
