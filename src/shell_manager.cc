@@ -115,19 +115,18 @@ std::pair<String, int> ShellManager::eval(
     StringView cmdline, const Context& context, StringView input,
     Flags flags, const ShellContext& shell_context)
 {
-    using Clock = std::chrono::steady_clock;
-    using TimePoint = Clock::time_point;
+    using namespace std::chrono;
 
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
     if (debug_flags & DebugFlags::Shell)
         write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
 
-    auto start_time = profile ? Clock::now() : TimePoint{};
+    auto start_time = profile ? steady_clock::now() : steady_clock::time_point{};
 
     auto kak_env = generate_env(cmdline, context, shell_context);
 
-    auto spawn_time = profile ? Clock::now() : TimePoint{};
+    auto spawn_time = profile ? steady_clock::now() : steady_clock::time_point{};
 
     Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
     pid_t pid = spawn_shell(cmdline, shell_context.params, kak_env,
@@ -154,7 +153,7 @@ std::pair<String, int> ShellManager::eval(
     write(child_stdin.write_fd(), input);
     child_stdin.close_write_fd();
 
-    auto wait_time = profile ? Clock::now() : TimePoint{};
+    auto wait_time = profile ? steady_clock::now() : steady_clock::time_point{};
 
     struct PipeReader : FDWatcher
     {
@@ -204,10 +203,10 @@ std::pair<String, int> ShellManager::eval(
 
     if (profile)
     {
-        TimePoint end_time = Clock::now();
-        auto full = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        auto spawn = std::chrono::duration_cast<std::chrono::milliseconds>(wait_time - spawn_time);
-        auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - wait_time);
+        auto end_time = steady_clock::now();
+        auto full = duration_cast<milliseconds>(end_time - start_time);
+        auto spawn = duration_cast<milliseconds>(wait_time - spawn_time);
+        auto wait = duration_cast<milliseconds>(end_time - wait_time);
         write_to_debug_buffer(format("shell execution took {} ms (spawn: {}, wait: {})",
                                      (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
     }
