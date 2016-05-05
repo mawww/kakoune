@@ -16,14 +16,15 @@ hook global KakBegin .* %{
 ## Temporarily override the default client creation command
 def -hidden -params 1.. tmux-new-impl %{
     %sh{
-        if [ -z "$TMUX" ]; then
+        tmux=${kak_client_env_TMUX:-$TMUX}
+        if [ -z "$tmux" ]; then
             echo "echo -color Error 'This command is only available in a tmux session'"
             exit
         fi
         tmux_args="$1"
         shift
         if [ $# -ne 0 ]; then kakoune_params="-e '$@'"; fi
-        tmux $tmux_args "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
+        TMUX=$tmux tmux $tmux_args "kak -c ${kak_session} ${kakoune_params}" < /dev/null > /dev/null 2>&1 &
     }
 }
 
