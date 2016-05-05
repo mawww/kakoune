@@ -58,7 +58,7 @@ def -hidden _python_indent_on_new_line %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
         # filter previous line
-        try %{ exec -draft k : _python_filter_around_selections <ret> }
+        try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
         # indent after :
