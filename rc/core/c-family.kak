@@ -102,9 +102,7 @@ addhl -group /c/code regex %{\bNULL\b|\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=c %{
-        set window static_words '${keywords}'
-        set -add window static_words '${attributes}'
-        set -add window static_words '${types}'
+        set window static_words '${keywords}:${attributes}:${types}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
@@ -134,10 +132,7 @@ addhl -group /cpp/code regex %{\b-?(0x[0-9a-fA-F]+|\d+)[fdiu]?|'((\\.)?|[^'\\])'
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=cpp %{
-        set window static_words '${keywords}'
-        set -add window static_words '${attributes}'
-        set -add window static_words '${types}'
-        set -add window static_words '${values}'
+        set window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
