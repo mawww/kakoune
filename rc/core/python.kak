@@ -57,7 +57,7 @@ def -hidden _python_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space> K <a-&> }
-        # filter previous line
+        # cleanup trailing whitespaces from previous line
         try %{ exec -draft k <a-x> s \h+$ <ret> d }
         # copy '#' comment prefix and following white spaces
         try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
@@ -72,6 +72,8 @@ def -hidden _python_indent_on_new_line %{
 hook global WinSetOption filetype=python %{
     addhl ref python
     hook window InsertChar \n -group python-indent _python_indent_on_new_line
+    # cleanup trailing whitespaces on current line insert end
+    hook window InsertEnd .* -group python-indent %{ try %{ exec -draft \; <a-x> s ^\h+$ <ret> d } }
 
     set window formatcmd "autopep8 -"
 }
