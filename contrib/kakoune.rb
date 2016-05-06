@@ -5,7 +5,7 @@ class Kakoune < Formula
   head "https://github.com/mawww/kakoune.git"
 
   depends_on 'boost'
-  depends_on 'asciidoc'
+  depends_on 'asciidoc' => :build
 
   def install
     cd 'src' do
