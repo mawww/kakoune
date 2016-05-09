@@ -28,6 +28,8 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
                       std::move(name)},
       m_env_vars(env_vars)
 {
+    m_window->set_client(this);
+
     context().set_client(*this);
     context().set_window(*m_window);
 
@@ -42,6 +44,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
 Client::~Client()
 {
     m_window->options().unregister_watcher(*this);
+    m_window->set_client(nullptr);
 }
 
 Optional<Key> Client::get_next_key(EventMode mode)
@@ -149,11 +152,13 @@ void Client::change_buffer(Buffer& buffer)
 
     auto& client_manager = ClientManager::instance();
     m_window->options().unregister_watcher(*this);
+    m_window->set_client(nullptr);
     client_manager.add_free_window(std::move(m_window),
                                    std::move(context().selections()));
     WindowAndSelections ws = client_manager.get_free_window(buffer);
 
     m_window = std::move(ws.window);
+    m_window->set_client(this);
     m_window->options().register_watcher(*this);
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
 

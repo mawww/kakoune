@@ -377,6 +377,9 @@ void Window::run_hook_in_own_context(StringView hook_name, StringView param)
 {
     InputHandler hook_handler({ *m_buffer, Selection{} }, Context::Flags::Transient);
     hook_handler.context().set_window(*this);
+    if (m_client)
+        hook_handler.context().set_client(*m_client);
+
     hooks().run_hook(hook_name, param, hook_handler.context());
 }
 }

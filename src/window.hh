@@ -1,6 +1,7 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
+#include "client.hh"
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
 #include "option_manager.hh"
@@ -46,6 +47,8 @@ public:
     ByteCoord offset_coord(ByteCoord coord, CharCount offset);
     ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
 
+    void set_client(Client* client) { m_client = client; }
+
     void clear_display_buffer();
 private:
     Window(const Window&) = delete;
@@ -56,6 +59,7 @@ private:
     void run_hook_in_own_context(StringView hook_name, StringView param);
 
     SafePtr<Buffer> m_buffer;
+    SafePtr<Client> m_client;
 
     CharCoord m_position;
     CharCoord m_dimensions;
