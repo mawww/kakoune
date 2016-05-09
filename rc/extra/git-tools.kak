@@ -29,7 +29,7 @@ def -params 1.. \
   -docstring %sh{printf '%%{Git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}'} \
   -shell-completion %{
     shift $(expr ${kak_token_to_complete})
-    prefix=$(printf %s\\n "${1}" | cut -c1-${kak_pos_in_token} 2>/dev/null)
+    prefix=$(printf %s "${1}" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     (
       for cmd in add rm blame commit checkout diff hide-blame log show show-diff status update-diff; do
           expr "${cmd}" : "^\(${prefix}.*\)$"
@@ -48,7 +48,7 @@ def -params 1.. \
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
-        printf %s\\n "eval -try-client '$kak_opt_docsclient' %{
+        printf %s "eval -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set buffer filetype '${filetype}'
                   hook -group fifo buffer BufCloseFifo .* %{
@@ -60,7 +60,7 @@ def -params 1.. \
 
     run_git_blame() {
         (
-            printf %s\\n "eval -client '$kak_client' %{
+            printf %s "eval -client '$kak_client' %{
                       try %{ addhl flag_lines GitBlame git_blame_flags }
                       set buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
@@ -132,13 +132,12 @@ def -params 1.. \
         # fails, and generate COMMIT_EDITMSG
         GIT_EDITOR='' EDITOR='' git commit > /dev/null 2>&1
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
-        printf %s\\n "edit '$msgfile'
+        printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ %sh{
                   if git commit -F '$msgfile' --cleanup=strip $@ > /dev/null; then
-                     printf %s\\n 'eval -client $kak_client echo -color Information Commit succeeded'
-                     printf %s\\n 'delbuf'
+                     printf %s 'eval -client $kak_client echo -color Information Commit succeeded; delbuf'
                   else
-                     printf %s\\n 'eval -client $kak_client echo -color Error Commit failed'
+                     printf %s 'eval -client $kak_client echo -color Error Commit failed'
                   fi
               } }"
     }
@@ -147,7 +146,7 @@ def -params 1.. \
        show|log|diff|status) show_git_cmd_output "$@" ;;
        blame) shift; run_git_blame "$@" ;;
        hide-blame)
-            printf %s\\n "try %{
+            printf %s "try %{
                 set buffer=$kak_bufname git_blame_flags ''
                 rmhl hlflags_git_blame_flags
             }"
@@ -165,19 +164,19 @@ def -params 1.. \
        add)
            name="${2:-${kak_buffile}}"
            if git add -- "${name}" > /dev/null 2>&1; then
-              printf %s\\n "echo -color Information 'git: added ${name}'"
+              printf %s "echo -color Information 'git: added ${name}'"
            else
-              printf %s\\n "echo -color Error 'git: unable to add ${name}'"
+              printf %s "echo -color Error 'git: unable to add ${name}'"
            fi
            ;;
        rm)
            name="${2:-${kak_buffile}}"
            if git rm -- "${name}" > /dev/null 2>&1; then
-              printf %s\\n "echo -color Information 'git: removed ${name}'"
+              printf %s "echo -color Information 'git: removed ${name}'"
            else
-              printf %s\\n "echo -color Error 'git: unable to remove ${name}'"
+              printf %s "echo -color Error 'git: unable to remove ${name}'"
            fi
            ;;
-       *) printf %s\\n "echo -color Error %{unknown git command '$1'}"; exit ;;
+       *) printf %s "echo -color Error %{unknown git command '$1'}"; exit ;;
     esac
 }}
