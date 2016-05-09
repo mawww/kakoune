@@ -14,9 +14,11 @@ namespace utf8
 // adapter for an iterator on bytes which permits to iterate
 // on unicode codepoints instead.
 template<typename Iterator,
+         typename CodepointType = Codepoint,
+         typename DifferenceType = CharCount,
          typename InvalidPolicy = utf8::InvalidPolicy::Pass>
 class iterator : public std::iterator<std::bidirectional_iterator_tag,
-                                      Codepoint, CharCount>
+                                      CodepointType, DifferenceType>
 {
 public:
     iterator() = default;
@@ -58,7 +60,7 @@ public:
         return save;
     }
 
-    iterator operator+(CharCount count) const
+    iterator operator+(DifferenceType count) const
     {
         if (count < 0)
             return operator-(-count);
@@ -69,7 +71,7 @@ public:
         return res;
     }
 
-    iterator operator-(CharCount count) const
+    iterator operator-(DifferenceType count) const
     {
         if (count < 0)
             return operator+(-count);
@@ -98,12 +100,12 @@ public:
     bool operator> (const Iterator& other) const { return m_it > other; }
     bool operator>= (const Iterator& other) const { return m_it >= other; }
 
-    CharCount operator-(const iterator& other) const
+    DifferenceType operator-(const iterator& other) const
     {
-        return utf8::distance(other.m_it, m_it);
+        return (DifferenceType)utf8::distance(other.m_it, m_it);
     }
 
-    Codepoint operator*() const
+    CodepointType operator*() const
     {
         return get_value();
     }
@@ -113,17 +115,17 @@ public:
 
 private:
     void invalidate_value() { m_value = -1; }
-    Codepoint get_value() const
+    CodepointType get_value() const
     {
         if (m_value == -1)
-            m_value = utf8::codepoint<InvalidPolicy>(m_it, m_end);
+            m_value = (CodepointType)utf8::codepoint<InvalidPolicy>(m_it, m_end);
         return m_value;
     }
 
     Iterator m_it;
     Iterator m_begin;
     Iterator m_end;
-    mutable Codepoint m_value = -1;
+    mutable CodepointType m_value = -1;
 };
 
 }

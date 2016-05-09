@@ -24,7 +24,7 @@ inline Selection target_eol(Selection sel)
     return sel;
 }
 
-using Utf8Iterator = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
+using Utf8Iterator = utf8::iterator<BufferIterator>;
 
 inline Selection utf8_range(const BufferIterator& first, const BufferIterator& last)
 {

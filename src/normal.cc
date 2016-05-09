@@ -311,7 +311,7 @@ Codepoint swap_case(Codepoint cp)
 template<Codepoint (*func)(Codepoint)>
 void for_each_codepoint(Context& context, NormalParams)
 {
-    using Utf8It = utf8::iterator<BufferIterator, utf8::InvalidPolicy::Pass>;
+    using Utf8It = utf8::iterator<BufferIterator>;
 
     ScopedEdition edition(context);
     Buffer& buffer = context.buffer();

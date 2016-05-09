@@ -13,7 +13,7 @@ using WordList = Vector<StringView>;
 static WordList get_words(StringView content)
 {
     WordList res;
-    using Utf8It = utf8::iterator<const char*, utf8::InvalidPolicy::Pass>;
+    using Utf8It = utf8::iterator<const char*>;
     const char* word_start = content.begin();
     bool in_word = false;
     for (Utf8It it{word_start, content}, end{content.end(), content}; it != end; ++it)
