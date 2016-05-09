@@ -564,13 +564,13 @@ int run_server(StringView session, StringView init_command,
             auto& buffer = selections.buffer();
             selections = SelectionList(buffer, buffer.clamp(target_coord));
             local_client->context().window().center_line(target_coord.line);
-        }
 
-        if (startup_error)
-            local_client->print_status({
-                "error during startup, see *debug* buffer for details",
-                get_face("Error")
-            });
+            if (startup_error)
+                local_client->print_status({
+                    "error during startup, see *debug* buffer for details",
+                    get_face("Error")
+                });
+        }
     }
 
     try
