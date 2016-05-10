@@ -706,7 +706,7 @@ int run_pipe(StringView session)
 
 int main(int argc, char* argv[])
 {
-    setlocale(LC_ALL, "");
+    std::locale::global(std::locale(""));
 
     set_signal_handler(SIGSEGV, signal_handler);
     set_signal_handler(SIGFPE,  signal_handler);
