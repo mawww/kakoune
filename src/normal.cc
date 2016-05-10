@@ -1504,7 +1504,9 @@ void move(Context& context, NormalParams params)
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }
-    selections.avoid_eol();
+    if (std::is_same<Type, LineCount>::value)
+        selections.avoid_eol();
+
     selections.sort_and_merge_overlapping();
 }
 
