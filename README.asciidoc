@@ -162,6 +162,13 @@ yaourt -Sy kakoune-git
 ====
 
 [TIP]
+.Gentoo
+====
+Kakoune is found in portage as
+https://packages.gentoo.org/packages/app-editors/kakoune[app-editors/kakoune]
+====
+
+[TIP]
 .Exherbo
 ====
 --------------------------------
