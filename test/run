@@ -31,18 +31,14 @@ main() {
         set global autoreload yes
         set global autoinfo ''
         set global autoshowcompl false
+        try %{ source rc }
         try %{
-          source rc
-        }
-        try %{
-          exec '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
-        } \
-        catch %{
-          exec gg
-        }
+            exec '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
+        } catch %{ exec gg }
         hook global RuntimeError .+ %{
-          nop %sh{echo \"\$kak_hook_param\" > stderr}
-          quit!
+            echo -debug -- error: %val{hook_param}
+            eval -buffer *debug* write debug
+            quit!
         }
         exec '$(cat cmd | sed -e s/\'/\\\\\'/g)'
         exec <c-l>
