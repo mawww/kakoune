@@ -148,7 +148,7 @@ colorize() {
 }
 
 show_diff() {
-  diff -u $1 $2 | while read -r line; do
+  diff -u $1 $2 | while IFS='' read -r line; do
     first_character=$(echo "$line" | cut -b 1)
     case $first_character in
       +) color=green ;;
