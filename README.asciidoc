@@ -139,7 +139,7 @@ brew reinstall --HEAD https://raw.githubusercontent.com/mawww/kakoune/master/con
 ====
 
 [TIP]
-.Fedora 21/22/Rawhide & Epel 7
+.Fedora 22/23/24/Rawhide
 ====
 Use the https://copr.fedoraproject.org/coprs/jkonecny/kakoune/[copr] repository.
 
