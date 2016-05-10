@@ -615,20 +615,21 @@ void select_all_matches(SelectionList& selections, const Regex& regex, unsigned 
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
         const auto flags = match_flags(is_bol(sel_beg.coord()),
                                        is_eol(buffer, sel_end.coord()),
+                                       is_bow(buffer, sel_beg.coord()),
                                        is_eow(buffer, sel_end.coord()));
         RegexIt re_it(sel_beg, sel_end, regex, flags);
         RegexIt re_end;
 
         for (; re_it != re_end; ++re_it)
         {
-            auto begin = ensure_char_start(buffer, (*re_it)[capture].first);
+            auto begin = (*re_it)[capture].first;
             if (begin == sel_end)
                 continue;
-            auto end = ensure_char_start(buffer, (*re_it)[capture].second);
+            auto end = (*re_it)[capture].second;
 
             CaptureList captures;
             captures.reserve(mark_count);
-            for (auto& match : *re_it)
+            for (const auto& match : *re_it)
                 captures.push_back(buffer.string(match.first.coord(),
                                                  match.second.coord()));
 
@@ -661,6 +662,7 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
         const auto flags = match_flags(is_bol(begin.coord()),
                                        is_eol(buffer, sel_end.coord()),
+                                       is_bow(buffer, begin.coord()),
                                        is_eow(buffer, sel_end.coord()));
 
         RegexIt re_it(begin, sel_end, regex, flags);
@@ -674,11 +676,10 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
 
             if (end != buf_begin)
             {
-                end = ensure_char_start(buffer, end);
                 auto sel_end = (begin == end) ? end : utf8::previous(end, begin);
                 result.push_back(keep_direction({ begin.coord(), sel_end.coord() }, sel));
             }
-            begin = ensure_char_start(buffer, (*re_it)[capture].second);
+            begin = (*re_it)[capture].second;
         }
         if (begin.coord() <= sel.max())
             result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));

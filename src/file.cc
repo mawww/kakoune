@@ -394,8 +394,9 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
 
     auto filter = [&ignored_regex, check_ignored_regex, include_hidden, only_dir](const dirent& entry, struct stat& st)
     {
-        return (include_hidden or StringView{entry.d_name}.substr(0_byte, 1_byte) != ".") and
-               (not check_ignored_regex or not regex_match(entry.d_name, ignored_regex)) and
+        StringView name{entry.d_name};
+        return (include_hidden or name.substr(0_byte, 1_byte) != ".") and
+               (not check_ignored_regex or not regex_match(name.begin(), name.end(), ignored_regex)) and
                (not only_dir or S_ISDIR(st.st_mode));
     };
     auto files = list_files(dirname, filter);

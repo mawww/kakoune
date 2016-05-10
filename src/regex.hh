@@ -3,12 +3,9 @@
 
 #include "string.hh"
 #include "exception.hh"
+#include "utf8_iterator.hh"
 
-#ifdef KAK_USE_STDREGEX
-#include <regex>
-#else
 #include <boost/regex.hpp>
-#endif
 
 namespace Kakoune
 {
@@ -20,16 +17,12 @@ struct regex_error : runtime_error
     {}
 };
 
-#ifdef KAK_USE_STDREGEX
 // Regex that keeps track of its string representation
-struct Regex : std::regex
+struct Regex : boost::wregex
 {
     Regex() = default;
 
-    explicit Regex(StringView re, flag_type flags = ECMAScript) try
-        : std::regex(re.begin(), re.end(), flags), m_str(re.str()) {}
-        catch (std::runtime_error& err) { throw regex_error(err.what()); }
-
+    explicit Regex(StringView re, flag_type flags = ECMAScript);
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
     bool operator!=(const Regex& other) const { return m_str != other.m_str; }
@@ -39,35 +32,95 @@ struct Regex : std::regex
 private:
     String m_str;
 };
-namespace regex_ns = std;
-#else
-struct Regex : boost::regex
+
+template<typename It>
+using RegexUtf8It = utf8::iterator<It, wchar_t, ssize_t>;
+
+namespace RegexConstant = boost::regex_constants;
+
+template<typename Iterator>
+struct MatchResults : boost::match_results<RegexUtf8It<Iterator>>
 {
-    Regex() = default;
+    using ParentType = boost::match_results<RegexUtf8It<Iterator>>;
+    struct SubMatch : std::pair<Iterator, Iterator>
+    {
+        SubMatch() = default;
+        SubMatch(const boost::sub_match<RegexUtf8It<Iterator>>& m)
+            : std::pair<Iterator, Iterator>{m.first.base(), m.second.base()},
+              matched{m.matched}
+        {}
 
-    explicit Regex(StringView re, flag_type flags = ECMAScript) try
-        : boost::regex(re.begin(), re.end(), flags) {}
-        catch (std::runtime_error& err) { throw regex_error(err.what()); }
+        bool matched = false;
+    };
 
-    String str() const { auto s = boost::regex::str(); return {s.data(), (int)s.length()}; }
+    struct iterator : boost::match_results<RegexUtf8It<Iterator>>::iterator
+    {
+        using ParentType = typename boost::match_results<RegexUtf8It<Iterator>>::iterator;
+        iterator(const ParentType& it) : ParentType(it) {}
+
+        SubMatch operator*() const { return {ParentType::operator*()}; }
+    };
+
+    iterator begin() const { return {ParentType::begin()}; }
+    iterator cbegin() const { return {ParentType::cbegin()}; }
+    iterator end() const { return {ParentType::end()}; }
+    iterator cend() const { return {ParentType::cend()}; }
+
+    SubMatch operator[](size_t s) const { return {ParentType::operator[](s)}; }
 };
-namespace regex_ns = boost;
-#endif
 
 template<typename Iterator>
-using RegexIterator = regex_ns::regex_iterator<Iterator>;
-
-template<typename Iterator>
-using MatchResults = regex_ns::match_results<Iterator>;
-
-namespace RegexConstant = regex_ns::regex_constants;
-
-inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool eow)
+struct RegexIterator : boost::regex_iterator<RegexUtf8It<Iterator>>
 {
-    return (bol ? RegexConstant::match_default : RegexConstant::match_not_bol |
-                                                 RegexConstant::match_prev_avail) |
+    using ParentType = boost::regex_iterator<RegexUtf8It<Iterator>>;
+    using Utf8It = RegexUtf8It<Iterator>;
+    using ValueType = MatchResults<Iterator>;
+
+    RegexIterator() = default;
+    RegexIterator(Iterator begin, Iterator end, const Regex& re,
+                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+        : ParentType{Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re, flags} {}
+
+    const ValueType& operator*() const { return *reinterpret_cast<const ValueType*>(&ParentType::operator*()); }
+    const ValueType* operator->() const { return reinterpret_cast<const ValueType*>(ParentType::operator->()); }
+};
+
+inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool bow, bool eow)
+{
+    return (bol ? RegexConstant::match_default : RegexConstant::match_not_bol) |
            (eol ? RegexConstant::match_default : RegexConstant::match_not_eol) |
+           (bow ? RegexConstant::match_default : RegexConstant::match_not_bow) |
            (eow ? RegexConstant::match_default : RegexConstant::match_not_eow);
+}
+
+template<typename It>
+bool regex_match(It begin, It end, const Regex& re)
+{
+    using Utf8It = RegexUtf8It<It>;
+    return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+}
+
+template<typename It>
+bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
+{
+    using Utf8It = RegexUtf8It<It>;
+    return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+}
+
+template<typename It>
+bool regex_search(It begin, It end, const Regex& re,
+                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+{
+    using Utf8It = RegexUtf8It<It>;
+    return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+}
+
+template<typename It>
+bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
+                  RegexConstant::match_flag_type flags = RegexConstant::match_default)
+{
+    using Utf8It = RegexUtf8It<It>;
+    return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
 }
 
 String option_to_string(const Regex& re);

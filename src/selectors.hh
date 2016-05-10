@@ -226,7 +226,8 @@ inline bool find_last_match(const Buffer& buffer, const BufferIterator& pos,
     const bool is_pos_eow = is_eow(buffer, pos.coord());
     auto begin = buffer.begin();
     while (begin != pos and regex_search(begin, pos, matches, regex,
-                                         match_flags(is_bol(begin.coord()), is_pos_eol, is_pos_eow)))
+                                         match_flags(is_bol(begin.coord()), is_pos_eol,
+                                                     is_bow(buffer, begin.coord()), is_pos_eow)))
     {
         begin = utf8::next(matches[0].first, pos);
         if (res.empty() or matches[0].second > res[0].second)
@@ -244,7 +245,8 @@ bool find_match_in_buffer(const Buffer& buffer, const BufferIterator pos,
     if (direction == Forward)
     {
         if (regex_search(pos, buffer.end(), matches, ex,
-                         match_flags(is_bol(pos.coord()), true, true)))
+                         match_flags(is_bol(pos.coord()), true,
+                                     is_bow(buffer, pos.coord()), true)))
             return true;
         wrapped = true;
         return regex_search(buffer.begin(), buffer.end(), matches, ex);
@@ -276,9 +278,9 @@ Selection find_next_match(const Buffer& buffer, const Selection& sel, const Rege
     auto pos = direction == Forward ? utf8::next(begin, buffer.end()) : begin;
     if ((found = find_match_in_buffer<direction>(buffer, pos, matches, regex, wrapped)))
     {
-        begin = ensure_char_start(buffer, matches[0].first);
-        end = ensure_char_start(buffer, matches[0].second);
-        for (auto& match : matches)
+        begin = matches[0].first;
+        end = matches[0].second;
+        for (const auto& match : matches)
             captures.push_back(buffer.string(match.first.coord(),
                                              match.second.coord()));
     }

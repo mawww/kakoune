@@ -1,0 +1,1 @@
+addhl regex '[“”]' 0:red
