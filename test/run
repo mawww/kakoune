@@ -8,11 +8,14 @@ main() {
   dirs="${@:-.}"
   test=$(pwd)
   work=$(mktemp -d /tmp/kak-tests.XXXXXXXX)
-  cp -R . $work
   trap "rm -R $work" EXIT
   for dir in $(find $dirs -type d | sort); do
     cd $test/$dir;
     test_files=$(ls out selections state display 2>/dev/null)
+    mkdir -p $work/$dir
+    for file in $(ls in cmd rc 2>/dev/null); do
+        cp $file $work/$dir/
+    done
     cd $work/$dir;
     indent="$(echo "${dir}/" | sed -e 's|[^/]*/\+|  |g')"
     name=$(basename $PWD)
