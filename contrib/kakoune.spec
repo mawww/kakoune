@@ -1,11 +1,11 @@
 Name:           kakoune
 Version:        0
-Release:        5.20150328gitd1b81c8f%{?dist}
+Release:        208.20160511git84f62e6f%{?dist}
 Summary:        Vim inspired editor
 
 License:        Unlicense
-URL:            https://github.com/mawww/kakoune
-Source0:        kakoune-d1b81c8f.tar
+URL:            http://kakoune.org/
+Source0:        kakoune-84f62e6f.tar
 
 BuildRequires:  boost-devel >= 1.50
 BuildRequires:  ncurses-devel >= 5.3
@@ -25,7 +25,7 @@ make %{?_smp_mflags}
 
 %check
 cd src
-make test
+LANG=en_US.utf8 make test
 
 %install
 cd src
@@ -39,6 +39,10 @@ cd src
 %{_datadir}/kak/*
 
 %changelog
+* Wed May 11 2016 jkonecny <jkonecny@redhat.com> - 0-208.20160511git84f62e6f
+- Add LANG=en_US.UTF-8 to fix tests
+- Update to git: 84f62e6f
+
 * Thu Feb 11 2016 jkonecny <jkonecny@redhat.com> - 0-158.20160210git050484eb
 - Add new build requires asciidoc
 - Use new man pages
