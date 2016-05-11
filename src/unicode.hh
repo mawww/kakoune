@@ -2,6 +2,7 @@
 #define unicode_hh_INCLUDED
 
 #include <wctype.h>
+#include <locale>
 
 namespace Kakoune
 {
@@ -28,7 +29,7 @@ enum WordType { Word, WORD };
 template<WordType word_type = Word>
 inline bool is_word(Codepoint c)
 {
-    return c == '_' or iswalnum(c);
+    return c == '_' or std::isalnum((wchar_t)c, std::locale{});
 }
 
 template<>
@@ -67,8 +68,8 @@ inline CharCategories categorize(Codepoint c)
     return CharCategories::Punctuation;
 }
 
-inline Codepoint to_lower(Codepoint cp) { return towlower((wchar_t)cp); }
-inline Codepoint to_upper(Codepoint cp) { return towupper((wchar_t)cp); }
+inline Codepoint to_lower(Codepoint cp) { return std::tolower((wchar_t)cp, std::locale{}); }
+inline Codepoint to_upper(Codepoint cp) { return std::toupper((wchar_t)cp, std::locale{}); }
 
 inline char to_lower(char c) { return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c; }
 inline char to_upper(char c) { return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c; }

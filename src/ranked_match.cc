@@ -34,6 +34,7 @@ using Utf8It = utf8::iterator<const char*>;
 
 static int count_word_boundaries_match(StringView candidate, StringView query)
 {
+    std::locale locale;
     int count = 0;
     Utf8It query_it{query.begin(), query};
     Codepoint prev = 0;
@@ -41,8 +42,10 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
     {
         const Codepoint c = *it;
         const bool is_word_boundary = prev == 0 or
-                                      (!iswalnum(prev) and iswalnum(c)) or
-                                      (islower(prev) and isupper(c));
+                                      (!std::isalnum((wchar_t)prev, locale) and
+                                       std::isalnum((wchar_t)c, locale)) or
+                                      (std::islower((wchar_t)prev, locale) and
+                                       std::isupper((wchar_t)c, locale));
         prev = c;
 
         if (not is_word_boundary)
