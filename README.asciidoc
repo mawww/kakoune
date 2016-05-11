@@ -1125,7 +1125,7 @@ general highlighters are:
 
  * `regex <ex> <capture_id>:<face>...`: highlight a regex, takes the regex as
        first parameter, followed by any number of face parameters.
-       For example: `:addhl regex //(\h`TODO:)?[^\n]` 0:cyan 1:yellow,red`
+       For example: `:addhl regex (\hTODO:)?[^\n] 0:cyan 1:yellow,red`
        will highlight C++ style comments in cyan, with an eventual 'TODO:' in
        yellow on red background.
  * `dynregex`: Similar to regex, but expand (like a command parameter would) the
