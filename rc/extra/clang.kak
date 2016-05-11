@@ -100,9 +100,9 @@ def clang-complete -docstring "Complete the current selection with clang" %{ cla
 
 def -hidden clang-show-completion-info %[ try %[
     eval -draft %[
-        exec '<space>{(<a-k>^\(<ret>b'
+        exec <space>{( <a-k> ^\( <ret> b <a-k> \`\w+\' <ret>
         %sh[
-            desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}@/ { s/^[^@]\+@//; s/@.*$//; s/\\\:/:/g; P }; D")
+            desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; P }; D")
             if [ -n "$desc" ]; then
                 printf %s\\n "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
             fi
@@ -138,6 +138,7 @@ def -hidden clang-show-error-info %{ %sh{
 def clang-enable-diagnostics -docstring "Activate automatic diagnostics of the code by clang" %{
     addhl flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
+    hook window -group clang-diagnostics WinSetOption ^clang_errors=.* %{ info; clang-show-error-info }
 }
 
 def clang-disable-diagnostics -docstring "Disable automatic diagnostics of the code" %{
