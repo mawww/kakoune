@@ -35,7 +35,7 @@ public:
 
     void clear();
 
-    void   ensure_no_client_uses_buffer(Buffer& buffer);
+    void ensure_no_client_uses_buffer(Buffer& buffer);
 
     WindowAndSelections get_free_window(Buffer& buffer);
     void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
@@ -57,11 +57,13 @@ public:
     CandidateList complete_client_name(StringView name,
                                        ByteCount cursor_pos = -1) const;
 
+    void clear_window_trash();
 private:
     String generate_name() const;
 
     ClientList m_clients;
     Vector<WindowAndSelections, MemoryDomain::Client> m_free_windows;
+    Vector<std::unique_ptr<Window>> m_window_trash;
 };
 
 }

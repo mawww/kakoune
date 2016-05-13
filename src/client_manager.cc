@@ -143,7 +143,16 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     auto end = std::remove_if(m_free_windows.begin(), m_free_windows.end(),
                               [&buffer](const WindowAndSelections& ws)
                               { return &ws.window->buffer() == &buffer; });
+
+    for (auto it = end; it != m_free_windows.end(); ++it)
+        m_window_trash.push_back(std::move(it->window));
+
     m_free_windows.erase(end, m_free_windows.end());
+}
+
+void ClientManager::clear_window_trash()
+{
+    m_window_trash.clear();
 }
 
 bool ClientManager::validate_client_name(StringView name) const

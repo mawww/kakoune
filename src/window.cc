@@ -80,8 +80,7 @@ Window::Setup Window::build_setup(const Context& context) const
     for (auto& sel : context.selections())
         selections.push_back({sel.cursor(), sel.anchor()});
 
-    return { m_position,
-             context.client().dimensions(),
+    return { m_position, m_dimensions,
              context.buffer().timestamp(),
              context.selections().main_index(),
              std::move(selections) };
@@ -92,7 +91,7 @@ bool Window::needs_redraw(const Context& context) const
     auto& selections = context.selections();
 
     if (m_position != m_last_setup.position or
-        context.client().dimensions() != m_last_setup.dimensions or
+        m_dimensions != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
         selections.size() != m_last_setup.selections.size())
@@ -120,7 +119,6 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
-    set_dimensions(context.client().dimensions());
     if (m_dimensions == CharCoord{0,0})
         return m_display_buffer;
 
@@ -365,9 +363,8 @@ void Window::clear_display_buffer()
 
 void Window::on_option_changed(const Option& option)
 {
-    run_hook_in_own_context("WinSetOption",
-                            format("{}={}", option.name(), option.get_as_string()));
-
+    run_hook_in_own_context("WinSetOption", format("{}={}", option.name(),
+                                                   option.get_as_string()));
     // an highlighter might depend on the option, so we need to redraw
     force_redraw();
 }
