@@ -73,6 +73,9 @@ Default hooks
 *WinClose*::
 	a window was destroyed, the filtering text is the buffer name
 
+*WinResize*::
+	a window resized, the filtering text is *<line>.<column>*
+
 *WinDisplay*::
 	a window was bound a client, the filtering text is the buffer name
 
