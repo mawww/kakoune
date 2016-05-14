@@ -55,20 +55,22 @@ ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop, CharCoord 
 Buffer* open_file_buffer(StringView filename)
 {
     MappedFile file_data{filename};
-    return new Buffer(filename.str(), Buffer::Flags::File,
-                      file_data, file_data.st.st_mtim);
+    return BufferManager::instance().create_buffer(
+        filename.str(), Buffer::Flags::File, file_data, file_data.st.st_mtim);
 }
 
 Buffer* open_or_create_file_buffer(StringView filename)
 {
+    auto& buffer_manager = BufferManager::instance();
     if (file_exists(filename))
     {
         MappedFile file_data{filename};
-        return new Buffer(filename.str(), Buffer::Flags::File,
-                          file_data, file_data.st.st_mtim);
+        return buffer_manager.create_buffer(filename.str(), Buffer::Flags::File,
+                                            file_data, file_data.st.st_mtim);
     }
-    return new Buffer(filename.str(), Buffer::Flags::File | Buffer::Flags::New,
-                      {}, InvalidTime);
+    return buffer_manager.create_buffer(
+        filename.str(), Buffer::Flags::File | Buffer::Flags::New,
+        {}, InvalidTime);
 }
 
 void reload_file_buffer(Buffer& buffer)
@@ -82,14 +84,16 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
 {
     static ValueId s_fifo_watcher_id = ValueId::get_free_id();
 
-    Buffer* buffer = BufferManager::instance().get_buffer_ifp(name);
+    auto& buffer_manager = BufferManager::instance();
+    Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     if (buffer)
     {
         buffer->flags() |= Buffer::Flags::NoUndo;
         buffer->reload({}, InvalidTime);
     }
     else
-        buffer = new Buffer(std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+        buffer = buffer_manager.create_buffer(
+            std::move(name), Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
 
     auto watcher_deleter = [buffer](FDWatcher* watcher) {
         kak_assert(buffer->flags() & Buffer::Flags::Fifo);
@@ -176,7 +180,9 @@ void write_to_debug_buffer(StringView str)
     else
     {
         String line = str + (eol_back ? "\n" : "\n\n");
-        new Buffer(debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug, line, InvalidTime);
+        BufferManager::instance().create_buffer(
+            debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug,
+            line, InvalidTime);
     }
 }
 

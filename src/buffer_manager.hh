@@ -1,6 +1,7 @@
 #ifndef buffer_manager_hh_INCLUDED
 #define buffer_manager_hh_INCLUDED
 
+#include "buffer.hh"
 #include "completion.hh"
 #include "utils.hh"
 #include "safe_ptr.hh"
@@ -8,18 +9,17 @@
 namespace Kakoune
 {
 
-class Buffer;
-
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    using BufferList = Vector<SafePtr<Buffer>>;
+    using BufferList = Vector<std::unique_ptr<Buffer>>;
     using iterator = BufferList::const_iterator;
 
     ~BufferManager();
 
-    void register_buffer(Buffer& buffer);
-    void unregister_buffer(Buffer& buffer);
+    Buffer* create_buffer(String name, Buffer::Flags flags,
+                          StringView data = {},
+                          timespec fs_timestamp = InvalidTime);
 
     void delete_buffer(Buffer& buffer);
 

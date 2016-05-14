@@ -163,7 +163,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         {
             if (Buffer* buf = buffer_manager.get_buffer_ifp(name))
                 buffer_manager.delete_buffer(*buf);
-            buffer = new Buffer(name, Buffer::Flags::None);
+            buffer = buffer_manager.create_buffer(name, Buffer::Flags::None);
         }
         else if (auto fifo = parser.get_switch("fifo"))
             buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
@@ -423,7 +423,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
 {
     Buffer* oldbuf = &context.buffer();
     auto it = find_if(BufferManager::instance(),
-                      [oldbuf](const SafePtr<Buffer>& lhs)
+                      [oldbuf](const std::unique_ptr<Buffer>& lhs)
                       { return lhs.get() == oldbuf; });
 
     kak_assert(it != BufferManager::instance().end());
@@ -1412,8 +1412,10 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         {
             // copy buffer list as we might be mutating the buffer list
             // in the loop.
-            Vector<SafePtr<Buffer>> buffers{BufferManager::instance().begin(),
-                                            BufferManager::instance().end()};
+            auto ptrs = BufferManager::instance() |
+                transform([](const std::unique_ptr<Buffer>& ptr)
+                          { return ptr.get(); });
+            Vector<SafePtr<Buffer>> buffers{ptrs.begin(), ptrs.end()};
             for (auto buffer : buffers)
                 context_wrap_for_buffer(*buffer);
         }

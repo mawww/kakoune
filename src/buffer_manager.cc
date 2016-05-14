@@ -20,55 +20,32 @@ BufferManager::~BufferManager()
 {
     // Make sure not clients exists
     ClientManager::instance().clear();
-
-    // delete remaining buffers
-    while (not m_buffers.empty())
-        delete m_buffers.front().get();
 }
 
-void BufferManager::register_buffer(Buffer& buffer)
+Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
+                                     StringView data, timespec fs_timestamp)
 {
-    StringView name = buffer.name();
     for (auto& buf : m_buffers)
     {
         if (buf->name() == name)
             throw name_not_unique();
     }
 
-    m_buffers.emplace(m_buffers.begin(), &buffer);
-}
-
-void BufferManager::unregister_buffer(Buffer& buffer)
-{
-    for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
-    {
-        if (it->get() == &buffer)
-        {
-            m_buffers.erase(it);
-            return;
-        }
-    }
-    for (auto it = m_buffer_trash.begin(); it != m_buffer_trash.end(); ++it)
-    {
-        if (it->get() == &buffer)
-        {
-            m_buffer_trash.erase(it);
-            return;
-        }
-    }
-    kak_assert(false);
+    m_buffers.emplace(m_buffers.begin(), new Buffer{std::move(name), flags,
+                                                    data, fs_timestamp});
+    return m_buffers.front().get();
 }
 
 void BufferManager::delete_buffer(Buffer& buffer)
 {
-    auto it = find_if(m_buffers, [&](const SafePtr<Buffer>& p)
+    auto it = find_if(m_buffers, [&](const std::unique_ptr<Buffer>& p)
                       { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
 
     ClientManager::instance().ensure_no_client_uses_buffer(buffer);
 
+    m_buffer_trash.emplace_back(std::move(*it));
     m_buffers.erase(it);
-    m_buffer_trash.emplace_back(&buffer);
 }
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)
@@ -102,17 +79,17 @@ void BufferManager::backup_modified_buffers()
 
 void BufferManager::clear_buffer_trash()
 {
-    while (not m_buffer_trash.empty())
+    for (auto& buffer : m_buffer_trash)
     {
-        Buffer* buffer = m_buffer_trash.back().get();
-
         // Do that again, to be tolerant in some corner cases, where a buffer is
         // deleted during its creation
         ClientManager::instance().ensure_no_client_uses_buffer(*buffer);
         ClientManager::instance().clear_window_trash();
 
-        delete buffer;
+        buffer.reset();
     }
+
+    m_buffer_trash.clear();
 }
 
 }

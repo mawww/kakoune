@@ -70,7 +70,6 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_last_save_undo_index(0),
       m_fs_timestamp(fs_timestamp)
 {
-    BufferManager::instance().register_buffer(*this);
     options().register_watcher(*this);
 
     ParsedLines parsed_lines = parse_lines(data);
@@ -115,7 +114,6 @@ Buffer::~Buffer()
     run_hook_in_own_context("BufClose", m_name);
 
     options().unregister_watcher(*this);
-    BufferManager::instance().unregister_buffer(*this);
     m_values.clear();
 }
 

@@ -67,7 +67,7 @@ void register_env_vars()
             "buflist", false,
             [](StringView name, const Context& context)
             { return join(BufferManager::instance() |
-                          transform([](const SafePtr<Buffer>& b)
+                          transform([](const std::unique_ptr<Buffer>& b)
                                     { return b->display_name(); }), ':'); }
         }, {
             "timestamp", false,
@@ -551,7 +551,7 @@ int run_server(StringView session, StringView init_command,
          write_to_debug_buffer(format("error while opening command line files: {}", error.what()));
     }
     else
-        new Buffer("*scratch*", Buffer::Flags::None);
+        buffer_manager.create_buffer("*scratch*", Buffer::Flags::None);
 
     if (not daemon)
     {
@@ -664,8 +664,8 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
         }
         if (not isatty(0))
         {
-            Buffer* buffer = new Buffer("*stdin*", Buffer::Flags::None,
-                                        read_fd(0), InvalidTime);
+            Buffer* buffer = buffer_manager.create_buffer(
+                "*stdin*", Buffer::Flags::None, read_fd(0), InvalidTime);
             apply_to_buffer(*buffer);
             write_buffer_to_fd(*buffer, 1);
             buffer_manager.delete_buffer(*buffer);
