@@ -1,5 +1,8 @@
 decl str docsclient
 
+decl -hidden str _man_page
+decl -hidden str _man_subject
+
 hook global WinSetOption filetype=man %{
     addhl group man-highlight
     # Sections
@@ -10,6 +13,10 @@ hook global WinSetOption filetype=man %{
     addhl -group man-highlight regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
     # References to other manpages
     addhl -group man-highlight regex [-a-zA-Z0-9_.]+\(\d\) 0:green
+
+    hook -group man-hooks window WinResize .* %{
+        man "%opt{_man_subject}(%opt{_man_page})"
+    }
 }
 
 hook global WinSetOption filetype=(?!man).* %{
@@ -17,7 +24,7 @@ hook global WinSetOption filetype=(?!man).* %{
     rmhooks window man-hooks
 }
 
-def -hidden -params .. _man %{ %sh{
+def -hidden -params 1..2 _man %{ %sh{
     manout=$(mktemp /tmp/kak-man-XXXXXX)
     colout=$(mktemp /tmp/kak-man-XXXXXX)
     MANWIDTH=${kak_window_width} man "$@" > $manout
@@ -25,10 +32,20 @@ def -hidden -params .. _man %{ %sh{
     col -b -x > ${colout} < ${manout}
     rm ${manout}
     if [ "${retval}" -eq 0 ]; then
-        printf %s\\n "edit! -scratch '*man*'
-              exec |cat<space>${colout}<ret>gk
-              nop %sh{rm ${colout}}
-              set buffer filetype man"
+        printf %s\\n "
+                edit! -scratch '*man*'
+                exec |cat<space>${colout}<ret>gk
+                nop %sh{rm ${colout}}
+                set buffer filetype man
+                eval -draft -save-regs '/sp' %{
+                    exec %{
+                        t( \"sy
+                        /[^(]<ret> t) \"py
+                    }
+                    set buffer _man_subject %reg{s}
+                    set buffer _man_page %reg{p}
+                }
+        "
     else
        printf %s\\n "echo -color Error %{man '$@' failed: see *debug* buffer for details }"
        rm ${colout}
