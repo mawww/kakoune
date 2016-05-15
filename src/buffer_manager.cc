@@ -25,9 +25,11 @@ BufferManager::~BufferManager()
 Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
                                      StringView data, timespec fs_timestamp)
 {
+    auto path = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
     {
-        if (buf->name() == name)
+        if (buf->name() == name or
+            (buf->flags() & Buffer::Flags::File and buf->name() == path))
             throw name_not_unique();
     }
 

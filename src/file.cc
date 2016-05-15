@@ -90,7 +90,10 @@ String real_path(StringView filename)
 
         auto it = find(existing.rbegin(), existing.rend(), '/');
         if (it == existing.rend())
-            return filename.str();
+        {
+            char cwd[1024];
+            return format("{}/{}", getcwd(cwd, 1024), filename);
+        }
 
         existing = StringView{existing.begin(), it.base()-1};
         non_existing = StringView{it.base(), filename.end()};
