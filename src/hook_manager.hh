@@ -3,6 +3,7 @@
 
 #include "id_map.hh"
 #include "completion.hh"
+#include "safe_ptr.hh"
 
 namespace Kakoune
 {
@@ -10,7 +11,7 @@ namespace Kakoune
 class Context;
 using HookFunc = std::function<void (StringView, Context&)>;
 
-class HookManager
+class HookManager : public SafeCountable
 {
 public:
     HookManager(HookManager& parent) : m_parent(&parent) {}
@@ -27,7 +28,7 @@ private:
     // the only one allowed to construct a root hook manager
     friend class Scope;
 
-    HookManager* m_parent;
+    SafePtr<HookManager> m_parent;
     IdMap<IdMap<HookFunc, MemoryDomain::Hooks>, MemoryDomain::Hooks> m_hook;
 };
 
