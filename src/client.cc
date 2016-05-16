@@ -85,7 +85,10 @@ void Client::handle_available_input(EventMode mode)
                 else if (*key == Key::FocusOut)
                     context().hooks().run_hook("FocusOut", context().name(), context());
                 else if (key->modifiers == Key::Modifiers::Resize)
+                {
                     m_window->set_dimensions(m_ui->dimensions());
+                    force_redraw();
+                }
                 else
                     m_input_handler.handle_key(*key);
             }
