@@ -693,41 +693,41 @@ UnitTest test_find_surrounding{[]()
     {
         auto res = find_surrounding(s, s.begin() + 10, '{', '}',
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "{ toi[] }");
+        kak_assert(res and StringView{res->first, res->second+1} == "{ toi[] }");
     }
     {
         auto res = find_surrounding(s, s.begin() + 10, '[', ']',
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "salut { toi[] }");
+        kak_assert(res and StringView{res->first, res->second+1} == "salut { toi[] }");
     }
     {
         auto res = find_surrounding(s, s.begin(), '[', ']',
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "[salut { toi[] }]");
+        kak_assert(res and StringView{res->first, res->second+1} == "[salut { toi[] }]");
     }
     {
         auto res = find_surrounding(s, s.begin()+7, '{', '}',
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "{ toi[] }");
+        kak_assert(res and StringView{res->first, res->second+1} == "{ toi[] }");
     }
     {
         auto res = find_surrounding(s, s.begin() + 12, '[', ']',
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "]");
+        kak_assert(res and StringView{res->first, res->second+1} == "]");
     }
     {
         auto res = find_surrounding(s, s.begin() + 14, '[', ']',
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "[salut { toi[] }]");
+        kak_assert(res and StringView{res->first, res->second+1} == "[salut { toi[] }]");
     }
     {
         auto res = find_surrounding(s, s.begin() + 1, '[', ']', ObjectFlags::ToBegin, 0);
-        kak_assert(res and StringView{res->second COMMA res->first+1} == "[s");
+        kak_assert(res and StringView{res->second, res->first+1} == "[s");
     }
     s = "[]";
     {
         auto res = find_surrounding(s, s.begin() + 1, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == "[]");
+        kak_assert(res and StringView{res->first, res->second+1} == "[]");
     }
     s = "[*][] hehe";
     {
@@ -738,7 +738,7 @@ UnitTest test_find_surrounding{[]()
     {
         auto res = find_surrounding(s, s.begin() + 6, "begin", "end",
                                     ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0);
-        kak_assert(res and StringView{res->first COMMA res->second+1} == s);
+        kak_assert(res and StringView{res->first, res->second+1} == s);
     }
 }};
 

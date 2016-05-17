@@ -611,7 +611,7 @@ void NCursesUI::draw_menu()
             draw_line(m_menu.win, item, 0, column_width,
                       item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg);
             const CharCount pad = column_width - item.length();
-            add_str(m_menu.win, String{' ' COMMA pad});
+            add_str(m_menu.win, String{' ', pad});
         }
         const bool is_mark = line >= mark_line and
                              line < mark_line + mark_height;

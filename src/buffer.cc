@@ -639,13 +639,13 @@ UnitTest test_buffer{[]()
     BufferIterator pos = buffer.begin();
     kak_assert(*pos == 'a');
     pos += 6;
-    kak_assert(pos.coord() == ByteCoord{0 COMMA 6});
+    kak_assert(pos.coord() == ByteCoord{0, 6});
     ++pos;
-    kak_assert(pos.coord() == ByteCoord{1 COMMA 0});
+    kak_assert(pos.coord() == ByteCoord{1, 0});
     --pos;
-    kak_assert(pos.coord() == ByteCoord{0 COMMA 6});
+    kak_assert(pos.coord() == ByteCoord{0, 6});
     pos += 1;
-    kak_assert(pos.coord() == ByteCoord{1 COMMA 0});
+    kak_assert(pos.coord() == ByteCoord{1, 0});
     buffer.insert(pos.coord(), "tchou kanaky\n");
     kak_assert(buffer.line_count() == 5);
     BufferIterator pos2 = buffer.end();

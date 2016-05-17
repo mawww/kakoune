@@ -15,15 +15,14 @@ void on_assert_failed(const char* message);
 
 #define STRINGIFY(X) #X
 #define TOSTRING(X) STRINGIFY(X)
-#define COMMA ,
 
 #ifdef KAK_DEBUG
-    #define kak_assert(condition) \
-        if (not (condition)) \
-            on_assert_failed("assert failed \"" #condition \
+    #define kak_assert(...) \
+        if (not (__VA_ARGS__)) \
+            on_assert_failed("assert failed \"" #__VA_ARGS__ \
                              "\" at " __FILE__ ":" TOSTRING(__LINE__))
 #else
-    #define kak_assert(condition)
+    #define kak_assert(...)
 #endif
 
 

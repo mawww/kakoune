@@ -163,17 +163,17 @@ UnitTest test_word_db{[]()
     WordDB word_db(buffer);
     auto res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
-    kak_assert(eq(res, WordList{ "allo" COMMA "kanaky" COMMA "mutch" COMMA "tchaa" COMMA "tchou" }));
+    kak_assert(eq(res, WordList{ "allo", "kanaky", "mutch", "tchaa", "tchou" }));
     kak_assert(word_db.get_word_occurences("tchou") == 3);
     kak_assert(word_db.get_word_occurences("allo") == 1);
     buffer.erase({1, 6}, {4, 0});
     res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
-    kak_assert(eq(res, WordList{ "allo" COMMA "mutch" COMMA "tchou" }));
+    kak_assert(eq(res, WordList{ "allo", "mutch", "tchou" }));
     buffer.insert({1, 0}, "re");
     res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);
-    kak_assert(eq(res, WordList{ "allo" COMMA "mutch" COMMA "retchou" COMMA "tchou" }));
+    kak_assert(eq(res, WordList{ "allo", "mutch", "retchou", "tchou" }));
 }};
 
 }

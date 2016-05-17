@@ -110,7 +110,7 @@ UnitTest test_line_modifications{[]()
         buffer.erase({1, 0}, {2, 0});
 
         auto modifs = compute_line_modifications(buffer, ts);
-        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 1 COMMA 1 COMMA 1 COMMA 0 });
+        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 1, 1, 1, 0 });
     }
 
     {
@@ -119,7 +119,7 @@ UnitTest test_line_modifications{[]()
         buffer.insert({1, 7}, "line 3");
 
         auto modifs = compute_line_modifications(buffer, ts);
-        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 2 COMMA 2 COMMA 0 COMMA 1 });
+        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 2, 2, 0, 1 });
     }
 
     {
@@ -130,7 +130,7 @@ UnitTest test_line_modifications{[]()
         buffer.erase({0, 0}, {1, 0});
 
         auto modifs = compute_line_modifications(buffer, ts);
-        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 2 COMMA 2 });
+        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0, 0, 2, 2 });
     }
 
     {
@@ -142,13 +142,13 @@ UnitTest test_line_modifications{[]()
         buffer.erase({0,0}, {1,0});
         {
             auto modifs = compute_line_modifications(buffer, ts);
-            kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 4 COMMA 3 });
+            kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0, 0, 4, 3 });
         }
         buffer.insert({3,0}, "newline 4\n");
 
         {
             auto modifs = compute_line_modifications(buffer, ts);
-            kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 4 COMMA 4 });
+            kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0, 0, 4, 4 });
         }
     }
 
@@ -159,7 +159,7 @@ UnitTest test_line_modifications{[]()
         buffer.insert({0,1}, "e");
         buffer.insert({0,2}, "w");
         auto modifs = compute_line_modifications(buffer, ts);
-        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0 COMMA 0 COMMA 1 COMMA 1 });
+        kak_assert(modifs.size() == 1 and modifs[0] == LineModification{ 0, 0, 1, 1 });
     }
 }};
 
