@@ -150,8 +150,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_match_index_sum != other.m_match_index_sum)
         return m_match_index_sum < other.m_match_index_sum;
 
-    for (Utf8It it1{m_candidate.begin(), m_candidate}, it2{other.m_candidate.begin(), other.m_candidate};
-         it1 != m_candidate.end() and it2 != other.m_candidate.end(); ++it1, ++it2)
+    Utf8It it1{m_candidate.begin(), m_candidate}, it2{other.m_candidate.begin(), other.m_candidate};
+    for (; it1 != m_candidate.end() and it2 != other.m_candidate.end(); ++it1, ++it2)
     {
         const auto cp1 = *it1, cp2 = *it2;
         if (cp1 != cp2)
@@ -161,7 +161,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         }
     }
 
-    return false;
+    return it1 == m_candidate.end();
 }
 
 UnitTest test_ranked_match{[] {
@@ -170,6 +170,8 @@ UnitTest test_ranked_match{[] {
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "wm") == 2);
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cobm") == 3);
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cWBM") == 4);
+    kak_assert(RankedMatch{"source", "so"} < RankedMatch{"source_data", "so"});
+    kak_assert(not (RankedMatch{"source_data", "so"} < RankedMatch{"source", "so"}));
 }};
 
 UnitTest test_used_letters{[]()
