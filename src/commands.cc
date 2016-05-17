@@ -161,9 +161,14 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (parser.get_switch("scratch"))
         {
-            if (Buffer* buf = buffer_manager.get_buffer_ifp(name))
-                buffer_manager.delete_buffer(*buf);
-            buffer = buffer_manager.create_buffer(name, Buffer::Flags::None);
+            if (buffer and (force_reload or buffer->flags() != Buffer::Flags::None))
+            {
+                buffer_manager.delete_buffer(*buffer);
+                buffer = nullptr;
+            }
+
+            if (not buffer)
+                buffer = buffer_manager.create_buffer(name, Buffer::Flags::None);
         }
         else if (auto fifo = parser.get_switch("fifo"))
             buffer = open_fifo(name, *fifo, (bool)parser.get_switch("scroll"));
