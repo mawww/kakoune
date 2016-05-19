@@ -205,6 +205,11 @@ InsertCompletion complete_filename(const SelectionList& sels,
     if (require_slash and not contains(prefix, '/'))
         return {};
 
+    // Do not try to complete in that case as its unlikely to be a filename,
+    // and triggers network host search of cygwin.
+    if (prefix.substr(0_byte, 2_byte) == "//")
+        return {};
+
     InsertCompletion::CandidateList candidates;
     if (prefix.front() == '/' or prefix.front() == '~')
     {
