@@ -117,7 +117,7 @@ private:
     void invalidate_value() { m_value = -1; }
     CodepointType get_value() const
     {
-        if (m_value == -1)
+        if (m_value == (CodepointType)-1)
             m_value = (CodepointType)utf8::codepoint<InvalidPolicy>(m_it, m_end);
         return m_value;
     }
