@@ -884,7 +884,7 @@ void expand_unprintable(const Context& context, HighlightFlags flags, DisplayBuf
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint<utf8::InvalidPolicy::Pass>(it, end);
-                    if (cp != '\n' and not std::isprint((wchar_t)cp, std::locale{}))
+                    if (cp != '\n' and not iswprint((wchar_t)cp))
                     {
                         if (coord != atom_it->begin())
                             atom_it = ++line.split(atom_it, coord);

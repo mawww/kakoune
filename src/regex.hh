@@ -17,8 +17,10 @@ struct regex_error : runtime_error
     {}
 };
 
+using RegexBase = boost::basic_regex<wchar_t, boost::c_regex_traits<wchar_t>>;
+
 // Regex that keeps track of its string representation
-struct Regex : boost::wregex
+struct Regex : RegexBase
 {
     Regex() = default;
 
@@ -35,6 +37,10 @@ private:
 
 template<typename It>
 using RegexUtf8It = utf8::iterator<It, wchar_t, ssize_t>;
+
+template<typename It>
+using RegexIteratorBase = boost::regex_iterator<RegexUtf8It<It>, wchar_t,
+                                                boost::c_regex_traits<wchar_t>>;
 
 namespace RegexConstant = boost::regex_constants;
 
@@ -70,19 +76,18 @@ struct MatchResults : boost::match_results<RegexUtf8It<Iterator>>
 };
 
 template<typename Iterator>
-struct RegexIterator : boost::regex_iterator<RegexUtf8It<Iterator>>
+struct RegexIterator : RegexIteratorBase<Iterator>
 {
-    using ParentType = boost::regex_iterator<RegexUtf8It<Iterator>>;
     using Utf8It = RegexUtf8It<Iterator>;
     using ValueType = MatchResults<Iterator>;
 
     RegexIterator() = default;
     RegexIterator(Iterator begin, Iterator end, const Regex& re,
                   RegexConstant::match_flag_type flags = RegexConstant::match_default)
-        : ParentType{Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re, flags} {}
+        : RegexIteratorBase<Iterator>{Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re, flags} {}
 
-    const ValueType& operator*() const { return *reinterpret_cast<const ValueType*>(&ParentType::operator*()); }
-    const ValueType* operator->() const { return reinterpret_cast<const ValueType*>(ParentType::operator->()); }
+    const ValueType& operator*() const { return *reinterpret_cast<const ValueType*>(&RegexIteratorBase<Iterator>::operator*()); }
+    const ValueType* operator->() const { return reinterpret_cast<const ValueType*>(RegexIteratorBase<Iterator>::operator->()); }
 };
 
 inline RegexConstant::match_flag_type match_flags(bool bol, bool eol, bool bow, bool eow)
