@@ -158,7 +158,7 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         }
     }
 
-    return it1 == m_candidate.end();
+    return it1 == m_candidate.end() and it2 != other.m_candidate.end();
 }
 
 UnitTest test_ranked_match{[] {
@@ -169,6 +169,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cWBM") == 4);
     kak_assert(RankedMatch{"source", "so"} < RankedMatch{"source_data", "so"});
     kak_assert(not (RankedMatch{"source_data", "so"} < RankedMatch{"source", "so"}));
+    kak_assert(not (RankedMatch{"source", "so"} < RankedMatch{"source", "so"}));
 }};
 
 UnitTest test_used_letters{[]()
