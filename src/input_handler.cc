@@ -1426,7 +1426,10 @@ bool InputHandler::is_recording() const
 void InputHandler::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
-    RegisterManager::instance()[m_recording_reg] = ConstArrayView<String>(m_recorded_keys);
+
+    if (not m_recorded_keys.empty())
+        RegisterManager::instance()[m_recording_reg] = {m_recorded_keys};
+
     m_recording_reg = 0;
     m_recording_level = -1;
 }
