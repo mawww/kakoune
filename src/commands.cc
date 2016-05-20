@@ -1857,7 +1857,7 @@ const CommandDesc change_working_directory_cmd = {
     "cd",
     nullptr,
     "cd <dir>: change server working directory to <dir>",
-    single_name_param,
+    single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},
     PerArgumentCommandCompleter{{
@@ -1871,8 +1871,10 @@ const CommandDesc change_working_directory_cmd = {
     }},
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
-        if (chdir(parse_filename(parser[0]).c_str()) != 0)
-            throw runtime_error(format("cannot change to directory '{}'", parser[0]));
+
+        StringView target = parser.positional_count() == 1 ? parser[0] : "~";
+        if (chdir(parse_filename(target).c_str()) != 0)
+            throw runtime_error(format("cannot change to directory '{}'", target));
         for (auto& buffer : BufferManager::instance())
             buffer->update_display_name();
     }
