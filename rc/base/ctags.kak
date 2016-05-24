@@ -14,19 +14,18 @@ def -params 0..1 \
     tag \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
-        (
-            for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
-                readtags -t "${tags}" ${tagname}
-            done
-        ) | awk -F '\t|\n' -e '
+        for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
+            export tagroot="$(readlink -f $(dirname "$tags"))/"
+            readtags -t "${tags}" ${tagname} | awk -F '\t|\n' -e '
             /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
                 re=$0;
                 sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
                 keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
                 out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
             }
-            /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" $2 "} %{" $3 "}}}" }
+            /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
             END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
+        done
     }}
 
 def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
