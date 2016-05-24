@@ -171,7 +171,7 @@ hook global WinSetOption filetype=ruby %{
 hook global WinSetOption filetype=(?!ruby).* %{
     rmhl ruby
     rmhooks window ruby-indent
-    rmhooks window ruby-hooks
+    rmhooks window ruby-insert
 
     unalias window alt ruby-alternative-file
 }
