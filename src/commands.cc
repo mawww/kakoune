@@ -1871,8 +1871,7 @@ const CommandDesc change_working_directory_cmd = {
     }},
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
-
-        StringView target = parser.positional_count() == 1 ? parser[0] : "~";
+        StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
         if (chdir(parse_filename(target).c_str()) != 0)
             throw runtime_error(format("cannot change to directory '{}'", target));
         for (auto& buffer : BufferManager::instance())
