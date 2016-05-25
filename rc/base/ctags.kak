@@ -1,8 +1,8 @@
 # Kakoune Exuberant CTags support script
 #
-# This script requires the readtags command available in ctags source but
-# not installed by default
+# This script requires the readtags command available at http://ctags.io/
 
+# List of paths to a tags file
 decl str-list ctagsfiles 'tags'
 
 def -params 0..1 \
@@ -14,18 +14,27 @@ def -params 0..1 \
     tag \
     %{ %sh{
         export tagname=${1:-${kak_selection}}
+        tag_found=0
         for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
             export tagroot="$(readlink -f $(dirname "$tags"))/"
-            readtags -t "${tags}" ${tagname} | awk -F '\t|\n' -e '
-            /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
-                re=$0;
-                sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
-                keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-                out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
-            }
-            /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
-            END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
+            tagdata=$(readtags -t "${tags}" "${tagname}" 2>/dev/null)
+            if [ $? -ne 0 ] || [ -z "${tagdata}" ]; then
+                continue
+            fi
+            printf %s\\n "${tagdata}" | awk -F '\t|\n' -e '
+                /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
+                    re=$0;
+                    sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
+                    keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
+                    out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" ENVIRON["tagroot"] $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo -color Error unable to find tag } } }"
+                }
+                /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
+                END { if(length(out) != 0){ print "menu -markup -auto-single " out } }'
+            tag_found=1
         done
+        if [ $tag_found -eq 0 ]; then
+            printf %s\\n "echo -color Error no such tag: ${tagname}"
+        fi
     }}
 
 def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
