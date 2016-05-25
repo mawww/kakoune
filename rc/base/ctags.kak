@@ -16,21 +16,24 @@ def -params 0..1 \
         export tagname=${1:-${kak_selection}}
         tag_found=0
         for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
-            export tagroot="$(readlink -f $(dirname "$tags"))/"
             tagdata=$(readtags -t "${tags}" "${tagname}" 2>/dev/null)
             if [ $? -ne 0 ] || [ -z "${tagdata}" ]; then
                 continue
             fi
+            export tagroot=$(readlink -e $(dirname "$tags"))'/'
             printf %s\\n "${tagdata}" | awk -F '\t|\n' -e '
                 /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
                     re=$0;
                     sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
                     keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-                    out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" ENVIRON["tagroot"] $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo -color Error unable to find tag } } }"
+                    if(length(re) > 0){
+                        out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" ENVIRON["tagroot"] $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo -color Error unable to find tag } } }"
+                    }
                 }
                 /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
-                END { if(length(out) != 0){ print "menu -markup -auto-single " out } }'
+                END { if(length(out) > 0){ print "menu -markup -auto-single " out } }'
             tag_found=1
+            break
         done
         if [ $tag_found -eq 0 ]; then
             printf %s\\n "echo -color Error no such tag: ${tagname}"
