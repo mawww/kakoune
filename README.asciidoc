@@ -191,6 +191,19 @@ sudo zypper install kakoune
 --------------------------------
 ====
 
+[TIP]
+.Debian
+====
+There is a script in https://github.com/mawww/kakoune/blob/master/contrib/make_deb.bash[contrib/make_deb.bash] that can be used to generate a debian package for kakoune.
+You can then install the generated .deb package with the dpkg tool.
+
+--------------------------------
+./make_bash.bash -e "your_email" -f "your_username"
+sudo dpkg -i thePackageName.deb
+--------------------------------
+
+====
+
 Running
 ~~~~~~~
 
