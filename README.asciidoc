@@ -106,6 +106,16 @@ Kakoune dependencies are:
 
 To build, just type *make* in the src directory
 
+To build via CMake:
+
+[source,shell]
+---------------------------------
+mkdir build/; cd build
+cmake ../contrib && make
+# or with Ninja
+cmake ../contrib -GNinja && ninja
+---------------------------------
+
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
 on being in a Unix-like environment, no native Windows version is planned.
 
