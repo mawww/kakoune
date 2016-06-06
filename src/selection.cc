@@ -594,6 +594,9 @@ Selection selection_from_string(StringView desc)
 
 SelectionList selection_list_from_string(Buffer& buffer, StringView desc)
 {
+    if (desc.empty())
+        throw runtime_error{"empty selection description"};
+
     Vector<Selection> sels;
     for (auto sel_desc : desc | split<StringView>(':'))
         sels.push_back(selection_from_string(sel_desc));
