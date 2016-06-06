@@ -731,7 +731,8 @@ int main(int argc, char* argv[])
                    { "f", { true,  "act as a filter, executing given keys on given files" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
-                   { "l", { false, "list existing sessions" } } }
+                   { "l", { false, "list existing sessions" } },
+                   { "clear", { false, "clear dead sessions" } } }
     };
     try
     {
@@ -741,12 +742,26 @@ int main(int argc, char* argv[])
 
         ParametersParser parser(params, param_desc);
 
-        if (parser.get_switch("l"))
+        const bool list_sessions = (bool)parser.get_switch("l");
+        const bool clear_sessions = (bool)parser.get_switch("clear");
+        if (list_sessions or clear_sessions)
         {
-            for (auto& file : list_files(format("/tmp/kakoune/{}/", getpwuid(geteuid())->pw_name)))
-                write_stdout(format("{}\n", file));
+            StringView username = getpwuid(geteuid())->pw_name;
+            for (auto& session : list_files(format("/tmp/kakoune/{}/", username)))
+            {
+                const bool valid = check_session(session);
+                if (list_sessions)
+                    write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
+                if (not valid and clear_sessions)
+                {
+                    char socket_file[128];
+                    format_to(socket_file, "/tmp/kakoune/{}/{}", username, session);
+                    unlink(socket_file);
+                }
+            }
             return 0;
         }
+
         if (auto session = parser.get_switch("p"))
         {
             for (auto opt : { "c", "n", "s", "d", "e" })

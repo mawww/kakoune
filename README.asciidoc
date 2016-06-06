@@ -224,7 +224,13 @@ Just running *kak* launch a new kak session with a client on local terminal.
        acting as a remote control.
  * `-f <keys>`: Work as a filter, read every file given on the command line
        and stdin if piped in, and apply given keys on each.
- * `-l`: list existing sessions
+ * `-ui <userinterface>`: use given user interface, `<userinterface>` can be
+    - `ncurses`: default terminal user interface
+    - `dummy`: empty user interface not displaying anything
+    - `json`: json-rpc based user interface that writes json on stdout and
+        read keystrokes as json on stdin.
+ * `-l`: list existing sessions, and check the dead ones
+ * `-clear`: clear dead sessions socket files
 
 At startup, if `-n` is not specified, Kakoune will try to source the file
 `../share/kak/kakrc` relative to the kak binary. This kak file will then try

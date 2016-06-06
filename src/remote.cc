@@ -436,6 +436,14 @@ static int connect_to(StringView session)
     return sock;
 }
 
+bool check_session(StringView session)
+{
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    auto close_sock = on_scope_end([sock]{ close(sock); });
+    sockaddr_un addr = session_addr(session);
+    return connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) != -1;
+}
+
 RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& ui,
                            const EnvVarMap& env_vars, StringView init_command)
     : m_ui(std::move(ui))

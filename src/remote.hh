@@ -59,6 +59,8 @@ private:
     Vector<std::unique_ptr<Accepter>> m_accepters;
 };
 
+bool check_session(StringView session);
+
 }
 
 #endif // remote_hh_INCLUDED
