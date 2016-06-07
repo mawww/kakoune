@@ -278,6 +278,8 @@ enum class UIType
     NCurses,
     Json,
     Dummy,
+    Stdin,
+    Filter,
 };
 
 static Client* local_client = nullptr;
@@ -680,7 +682,7 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
     return 0;
 }
 
-int run_pipe(StringView session)
+int run_pipe(const StringView session)
 {
     char buf[512];
     String command;
@@ -721,19 +723,23 @@ int main(int argc, char* argv[])
     for (size_t i = 1; i < argc; ++i)
         params.push_back(argv[i]);
 
-    const ParameterDesc param_desc{
-        SwitchMap{ { "c", { true,  "connect to given session" } },
-                   { "e", { true,  "execute argument on initialisation" } },
-                   { "n", { false, "do not source kakrc files on startup" } },
-                   { "s", { true,  "set session name" } },
-                   { "d", { false, "run as a headless session (requires -s)" } },
-                   { "p", { true,  "just send stdin as commands to the given session" } },
-                   { "f", { true,  "act as a filter, executing given keys on given files" } },
-                   { "q", { false, "in filter mode, be quiet about errors applying keys" } },
-                   { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
-                   { "l", { false, "list existing sessions" } },
-                   { "clear", { false, "clear dead sessions" } } }
-    };
+    const ParameterDesc param_desc{SwitchMap{
+        {"m",
+         {true,
+          "Mode to run. Accepted options: "
+          "json, dummy, stdin, filter, daemon (headless), ncurses (default)"}},
+        {"c", {false, "connect to a running session"}},
+        {"s",
+         {true,
+          "specify session name when creating or connecting to sessions"}},
+        {"e", {true, "execute argument on initialisation"}},
+        {"nc", {false, "do not source kakrc files on startup"}},
+        {"l", {false, "list existing sessions"}},
+        {"prune", {false, "prune dead / stale sessions"}},
+        {"q", {false, "(filter-mode) run in quiet mode"}},
+        {"ks", {false, "(filter-mode) keystrokes to run in filter session"}},
+        {"h", {false, "print this help message"}},
+    }};
     try
     {
         std::sort(keymap.begin(), keymap.end(),
@@ -742,9 +748,14 @@ int main(int argc, char* argv[])
 
         ParametersParser parser(params, param_desc);
 
+        if ((bool)parser.get_switch('h')) {
+            write_stdout(generate_switches_doc(param_desc.switches));
+            return 0;
+        }
+
         const bool list_sessions = (bool)parser.get_switch("l");
-        const bool clear_sessions = (bool)parser.get_switch("clear");
-        if (list_sessions or clear_sessions)
+        const bool prune_sessions = (bool)parser.get_switch("prune");
+        if (list_sessions or prune_sessions)
         {
             StringView username = getpwuid(geteuid())->pw_name;
             for (auto& session : list_files(format("/tmp/kakoune/{}/", username)))
@@ -752,7 +763,7 @@ int main(int argc, char* argv[])
                 const bool valid = check_session(session);
                 if (list_sessions)
                     write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
-                if (not valid and clear_sessions)
+                if (not valid and prune_sessions)
                 {
                     char socket_file[128];
                     format_to(socket_file, "/tmp/kakoune/{}/{}", username, session);
@@ -762,44 +773,41 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        if (auto session = parser.get_switch("p"))
+        const StringView session = parser.get_switch("s").value_or(StringView{});
+        auto init_command = parser.get_switch("e").value_or(StringView{});
+        auto ui_name = parser.get_switch("m").value_or("ncurses");
+
+        if (ui_name == "stdin")
         {
-            for (auto opt : { "c", "n", "s", "d", "e" })
-            {
-                if (parser.get_switch(opt))
-                {
-                    write_stderr(format("error: -{} makes not sense with -p\n", opt));
-                    return -1;
-                }
-            }
-            return run_pipe(*session);
+            return run_pipe(session);
         }
 
-        auto init_command = parser.get_switch("e").value_or(StringView{});
-        auto ui_name = parser.get_switch("ui").value_or("ncurses");
         UIType ui_type;
         if (ui_name == "ncurses") ui_type = UIType::NCurses;
         else if (ui_name == "json") ui_type = UIType::Json;
         else if (ui_name == "dummy") ui_type = UIType::Dummy;
+        else if (ui_name == "daemon" || ui_name == "filter" || ui_name == "stdin" ) ;
         else
         {
             write_stderr(format("error: unknown ui type: '{}'", ui_name));
             return -1;
         }
 
-
-        if (auto keys = parser.get_switch("f"))
+        if (ui_name == "filter") 
         {
-            Vector<StringView> files;
-            for (size_t i = 0; i < parser.positional_count(); ++i)
-                files.emplace_back(parser[i]);
+            if (auto keys = parser.get_switch("ks"))
+            {
+                Vector<StringView> files;
+                for (size_t i = 0; i < parser.positional_count(); ++i)
+                    files.emplace_back(parser[i]);
 
-            return run_filter(*keys, init_command, files, (bool)parser.get_switch("q"));
+                return run_filter(*keys, init_command, files, (bool)parser.get_switch("q"));
+            }
         }
 
-        if (auto server_session = parser.get_switch("c"))
+        if ((bool)parser.get_switch("c"))
         {
-            for (auto opt : { "n", "s", "d" })
+            for (auto opt : { "nc" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -811,7 +819,7 @@ int main(int argc, char* argv[])
             for (auto name : parser)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(*server_session, new_files + init_command, ui_type);
+            return run_client(session, new_files + init_command, ui_type);
         }
         else
         {
@@ -835,12 +843,11 @@ int main(int argc, char* argv[])
                 files.emplace_back(name);
             }
 
-            StringView session = parser.get_switch("s").value_or(StringView{});
             try
             {
                 return run_server(session, init_command,
-                                  (bool)parser.get_switch("n"),
-                                  (bool)parser.get_switch("d"),
+                                  (bool)parser.get_switch("nc"),
+                                  ui_name == "daemon",
                                   ui_type, files, target_coord);
             }
             catch (convert_to_client_mode& convert)
