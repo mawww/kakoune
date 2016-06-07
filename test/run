@@ -53,7 +53,7 @@ main() {
       "
       session="kak-test-$(printf '%s' "$dir" | sed -e 's+^\./++; s+/+-+g')"
       rm -f /tmp/kakoune/$USER/$session
-      ${test}/../src/kak out -n -s "$session" -ui json -e "$kak_commands" > display
+      ${test}/../src/kak out -nc -s "$session" -m json -e "$kak_commands" > display
       retval=$?
       if [ $should_fail -eq 0 ]; then
         if [ $retval -ne 0 ]; then
