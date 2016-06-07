@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-q] [-u] [-n] [-l] [-e command] [-f command] [-p session_id] [-c session_id|[[-d] -s session_id] file ...
+*kak* [-n] [-l] [-e command] [-mode filter -ks command [-q]] [-s session_name] [-c -s session_name]|[-mode daemon -s session_name] file ...
 
 DESCRIPTION
 -----------
@@ -26,35 +26,45 @@ stays fixed and the cursor one moves around.
 
 OPTIONS
 -------
--q::
-	in filter mode, be quiet about errors applying keys
 
--u::
-	use a dummy user interface, for testing purposes
-
--n::
+-nc::
 	do not source kakrc files on startup
 
 -l::
 	list existing sessions
 
--d::
-	run as a headless session (requires -s)
+-prune::
+	prune dead / stale sessions
 
 -e <command>::
 	execute argument on initialisation
 
--f <command>::
-	act as a filter, executing given keys on given files
+-s <session_name>::
+	set session name
 
--p <session_id>::
-	just send stdin as commands to the given session
-
--c <session_id>::
+-c -s <session_name>::
 	connect to given session
 
--s <session_id>::
-	set session name
+-mode daemon::
+	run as a headless session (requires -s)
+
+-mode stdin -s <session_name>::
+	just send stdin as commands to the given session
+
+-mode json -s <session_name>::
+	open json-rpc connection to session
+
+-mode dummy::
+	use a dummy user interface, for testing purposes
+
+-mode filter::
+	run kak on files in a scriptable fashion
+
+-ks <keystrokes>::
+	in filter mode (-mode filter), keystrokes to send to kak for given files
+
+-q::
+	in filter mode (-mode filter), be quiet about errors applying keys
 
 file::
 	one or more files to edit
@@ -77,7 +87,7 @@ kak /path/to/file::
 kak ./file1.txt /path/to/file2.c::
 	Edit multiple files (multiple buffers will be created)
 
-kak -f "ggO// kak: tabstop=8<esc>" *.c::
+kak -mode filter -f "ggO// kak: tabstop=8<esc>" *.c::
 	Insert a modeline that sets the tabstop variable at the beginning of several source code files
 
 kak -e "man dup2"::
