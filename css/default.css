@@ -51,6 +51,18 @@ a:hover {
     background-color: #FAFAFA;
 }
 
+@media only screen and (min-width: 1280px) {
+    #kak-features > .row-fluid > .col-lg-4:nth-child(3n+1) {
+        clear: both;
+    }
+}
+
+@media only screen and (max-width: 1279px) {
+    #kak-features > .row-fluid > .col-sm-6:nth-child(2n+1) {
+        clear: both;
+    }
+}
+
 #kak-demos {
     background-color: #EEE;
     box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15) inset;
