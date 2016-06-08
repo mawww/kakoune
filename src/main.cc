@@ -279,7 +279,6 @@ enum class UIType
     Json,
     Dummy,
     Stdin,
-    Filter,
 };
 
 static Client* local_client = nullptr;
@@ -727,7 +726,7 @@ int main(int argc, char* argv[])
         {"m",
          {true,
           "Mode to run. Accepted options: "
-          "json, dummy, stdin, filter, daemon (headless), ncurses (default)"}},
+          "json, dummy, stdin, daemon (headless), ncurses (default)"}},
         {"c", {true, "connect to a running session"}},
         {"s", {true, "specify session name"}},
         {"e", {true, "execute argument on initialisation"}},
