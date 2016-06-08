@@ -612,7 +612,7 @@ int run_server(StringView session, StringView init_command,
     return 0;
 }
 
-int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView> files, bool quiet)
+int run_filter(StringView keystrokes, StringView commands, ConstArrayView<StringView> files, bool quiet)
 {
     StringRegistry  string_registry;
     GlobalScope     global_scope;
@@ -630,7 +630,7 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
 
     try
     {
-        auto keys = parse_keys(keystr);
+        auto keystr = parse_keys(keystrokes);
 
         auto apply_to_buffer = [&](Buffer& buffer)
         {
@@ -645,13 +645,13 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
                     command_manager.execute(commands, input_handler.context(),
                                             ShellContext{});
 
-                for (auto& key : keys)
+                for (auto& key : keystr)
                     input_handler.handle_key(key);
             }
             catch (Kakoune::runtime_error& err)
             {
                 if (not quiet)
-                    write_stderr(format("error while applying keys to buffer '{}': {}\n",
+                    write_stderr(format("error while applying keystrokes to buffer '{}': {}\n",
                                         buffer.display_name(), err.what()));
             }
         };
@@ -728,16 +728,14 @@ int main(int argc, char* argv[])
          {true,
           "Mode to run. Accepted options: "
           "json, dummy, stdin, filter, daemon (headless), ncurses (default)"}},
-        {"c", {false, "connect to a running session"}},
-        {"s",
-         {true,
-          "specify session name when creating or connecting to sessions"}},
+        {"c", {true, "connect to a running session"}},
+        {"s", {true, "specify session name"}},
         {"e", {true, "execute argument on initialisation"}},
-        {"nc", {false, "do not source kakrc files on startup"}},
+        {"-norc", {false, "do not source kakrc files on startup"}},
         {"l", {false, "list existing sessions"}},
         {"prune", {false, "prune dead / stale sessions"}},
-        {"q", {false, "(filter-mode) run in quiet mode"}},
-        {"ks", {false, "(filter-mode) keystrokes to run in filter session"}},
+        {"f", {true, "run kak as an awk/sed tool on files, specify keystrokes to run in kak"}},
+        {"q", {false, "(-f / filter-mode only) run in quiet mode"}},
         {"h", {false, "print this help message"}},
     }};
     try
@@ -773,41 +771,38 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        const StringView session = parser.get_switch("s").value_or(StringView{});
+        const StringView session_name = parser.get_switch("s").value_or(StringView{});
         auto init_command = parser.get_switch("e").value_or(StringView{});
         auto ui_name = parser.get_switch("m").value_or("ncurses");
 
         if (ui_name == "stdin")
         {
-            return run_pipe(session);
+            return run_pipe(session_name);
         }
 
         UIType ui_type;
         if (ui_name == "ncurses") ui_type = UIType::NCurses;
         else if (ui_name == "json") ui_type = UIType::Json;
         else if (ui_name == "dummy") ui_type = UIType::Dummy;
-        else if (ui_name == "daemon" || ui_name == "filter" || ui_name == "stdin" ) ;
+        else if (ui_name == "daemon" || ui_name == "stdin" ) ;
         else
         {
             write_stderr(format("error: unknown ui type: '{}'", ui_name));
             return -1;
         }
 
-        if (ui_name == "filter") 
+        if (auto keystrokes = parser.get_switch("f"))
         {
-            if (auto keys = parser.get_switch("ks"))
-            {
-                Vector<StringView> files;
-                for (size_t i = 0; i < parser.positional_count(); ++i)
-                    files.emplace_back(parser[i]);
+            Vector<StringView> files;
+            for (size_t i = 0; i < parser.positional_count(); ++i)
+                files.emplace_back(parser[i]);
 
-                return run_filter(*keys, init_command, files, (bool)parser.get_switch("q"));
-            }
+            return run_filter(*keystrokes, init_command, files, (bool)parser.get_switch("q"));
         }
 
-        if ((bool)parser.get_switch("c"))
+        if (auto server_session = parser.get_switch("c"))
         {
-            for (auto opt : { "nc" })
+            for (auto opt : { "-norc" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -819,7 +814,7 @@ int main(int argc, char* argv[])
             for (auto name : parser)
                 new_files += format("edit '{}';", escape(real_path(name), "'", '\\'));
 
-            return run_client(session, new_files + init_command, ui_type);
+            return run_client(*server_session, new_files + init_command, ui_type);
         }
         else
         {
@@ -845,8 +840,8 @@ int main(int argc, char* argv[])
 
             try
             {
-                return run_server(session, init_command,
-                                  (bool)parser.get_switch("nc"),
+                return run_server(session_name, init_command,
+                                  (bool)parser.get_switch("-norc"),
                                   ui_name == "daemon",
                                   ui_type, files, target_coord);
             }
