@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-n] [-l] [-e command] [-mode filter -ks command [-q]] [-s session_name] [-c -s session_name]|[-mode daemon -s session_name] file ...
+*kak* [-n] [-l] [-e command] [-f keystrokes [-q]] [-s session_name] [-c session_name]|[-mode daemon|dummy|json|ncurses|stdin] -s session_name] file ...
 
 DESCRIPTION
 -----------
@@ -27,7 +27,7 @@ stays fixed and the cursor one moves around.
 OPTIONS
 -------
 
--nc::
+--norc::
 	do not source kakrc files on startup
 
 -l::
@@ -40,9 +40,9 @@ OPTIONS
 	execute argument on initialisation
 
 -s <session_name>::
-	set session name
+	set session name for new sessions
 
--c -s <session_name>::
+-c <session_name>::
 	connect to given session
 
 -mode daemon::
@@ -57,14 +57,11 @@ OPTIONS
 -mode dummy::
 	use a dummy user interface, for testing purposes
 
--mode filter::
-	run kak on files in a scriptable fashion
-
--ks <keystrokes>::
-	in filter mode (-mode filter), keystrokes to send to kak for given files
+-f <keystrokes>::
+	run kak as a script on given files, accepts keystrokes to send to kak
 
 -q::
-	in filter mode (-mode filter), be quiet about errors applying keys
+	(with -f mode only), be quiet about errors applying keys
 
 file::
 	one or more files to edit
@@ -87,7 +84,7 @@ kak /path/to/file::
 kak ./file1.txt /path/to/file2.c::
 	Edit multiple files (multiple buffers will be created)
 
-kak -mode filter -f "ggO// kak: tabstop=8<esc>" *.c::
+kak -f "ggO// kak: tabstop=8<esc>" *.c::
 	Insert a modeline that sets the tabstop variable at the beginning of several source code files
 
 kak -e "man dup2"::
