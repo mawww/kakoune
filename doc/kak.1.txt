@@ -7,7 +7,7 @@ kak - a vim inspired, selection oriented code editor
 
 SYNOPSIS
 --------
-*kak* [-q] [-u] [-n] [-l] [-e command] [-f command] [-p session_id] [-c session_id|[[-d] -s session_id] file ...
+*kak* [-n] [-l] [-e command] [-f keystrokes [-q]] [-s session_name] [-c session_name]|[-mode daemon|dummy|json|ncurses|stdin] -s session_name] file ...
 
 DESCRIPTION
 -----------
@@ -26,35 +26,42 @@ stays fixed and the cursor one moves around.
 
 OPTIONS
 -------
--q::
-	in filter mode, be quiet about errors applying keys
 
--u::
-	use a dummy user interface, for testing purposes
-
--n::
+--norc::
 	do not source kakrc files on startup
 
 -l::
 	list existing sessions
 
--d::
-	run as a headless session (requires -s)
+-prune::
+	prune dead / stale sessions
 
 -e <command>::
 	execute argument on initialisation
 
--f <command>::
-	act as a filter, executing given keys on given files
+-s <session_name>::
+	set session name for new sessions
 
--p <session_id>::
-	just send stdin as commands to the given session
-
--c <session_id>::
+-c <session_name>::
 	connect to given session
 
--s <session_id>::
-	set session name
+-mode daemon::
+	run as a headless session (requires -s)
+
+-mode stdin -s <session_name>::
+	just send stdin as commands to the given session
+
+-mode json -s <session_name>::
+	open json-rpc connection to session
+
+-mode dummy::
+	use a dummy user interface, for testing purposes
+
+-f <keystrokes>::
+	run kak as a script on given files, accepts keystrokes to send to kak
+
+-q::
+	(with -f mode only), be quiet about errors applying keys
 
 file::
 	one or more files to edit
