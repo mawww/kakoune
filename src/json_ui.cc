@@ -295,7 +295,9 @@ parse_json(const char* pos, const char* end)
     if (*pos == '[')
     {
         JsonArray array;
-        ++pos;
+        if (*++pos == ']')
+            return Result{std::move(array), pos+1};
+
         while (true)
         {
             Value element;
@@ -317,7 +319,9 @@ parse_json(const char* pos, const char* end)
     if (*pos == '{')
     {
         JsonObject object;
-        ++pos;
+        if (*++pos == '}')
+            return Result{std::move(object), pos+1};
+
         while (true)
         {
             Value name_value;
@@ -349,6 +353,9 @@ parse_json(const char* pos, const char* end)
     }
     throw runtime_error("Could not parse json");
 }
+
+std::tuple<Value, const char*>
+parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
 
 void JsonUI::eval_json(const Value& json)
 {
@@ -418,7 +425,16 @@ void JsonUI::parse_requests(EventMode mode)
     {
         Value json;
         const char* pos;
-        std::tie(json, pos) = parse_json(m_requests.begin(), m_requests.end());
+        try
+        {
+            std::tie(json, pos) = parse_json(m_requests);
+        }
+        catch (runtime_error& error)
+        {
+            write_stderr(format("error while parsing requests '{}': '{}'",
+                                m_requests, error.what()));
+        }
+
         if (json)
         {
             try
@@ -440,9 +456,16 @@ void JsonUI::parse_requests(EventMode mode)
 
 UnitTest test_json_parser{[]()
 {
-    StringView json = R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })";
-    auto value = std::get<0>(parse_json(json.begin(), json.end()));
-    kak_assert(value);
+    {
+        auto value = std::get<0>(parse_json(R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })"));
+        kak_assert(value);
+    }
+
+    {
+        auto value = std::get<0>(parse_json("{}"));
+        kak_assert(value and value.is_a<JsonObject>());
+        kak_assert(value.as<JsonObject>().empty());
+    }
 }};
 
 }
