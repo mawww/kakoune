@@ -705,6 +705,15 @@ int run_pipe(StringView session)
     return 0;
 }
 
+UIType parse_ui_type(StringView ui_name)
+{
+    if (ui_name == "ncurses") return UIType::NCurses;
+    if (ui_name == "json") return UIType::Json;
+    if (ui_name == "dummy") return UIType::Dummy;
+
+    throw parameter_error(format("error: unknown ui type: '{}'", ui_name));
+}
+
 int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "");
@@ -776,17 +785,7 @@ int main(int argc, char* argv[])
         }
 
         auto init_command = parser.get_switch("e").value_or(StringView{});
-        auto ui_name = parser.get_switch("ui").value_or("ncurses");
-        UIType ui_type;
-        if (ui_name == "ncurses") ui_type = UIType::NCurses;
-        else if (ui_name == "json") ui_type = UIType::Json;
-        else if (ui_name == "dummy") ui_type = UIType::Dummy;
-        else
-        {
-            write_stderr(format("error: unknown ui type: '{}'", ui_name));
-            return -1;
-        }
-
+        const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("ncurses"));
 
         if (auto keys = parser.get_switch("f"))
         {
