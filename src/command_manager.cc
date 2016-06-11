@@ -5,6 +5,7 @@
 #include "context.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
+#include "scope_manager.hh"
 #include "utils.hh"
 #include "optional.hh"
 
@@ -158,6 +159,8 @@ Token::Type token_type(StringView type_name)
         return Token::Type::RawQuoted;
     else if (type_name == "sh")
         return Token::Type::ShellExpand;
+    else if (type_name == "m4")
+        return Token::Type::MfourExpand;
     else if (type_name == "reg")
         return Token::Type::RegisterExpand;
     else if (type_name == "opt")
@@ -196,7 +199,7 @@ Token parse_percent_token(Reader& reader)
 {
     ++reader;
     const ByteCount type_start = reader.pos;
-    while (reader and isalpha(*reader))
+    while (reader and isalnum(*reader))
         ++reader;
     StringView type_name = reader.substr_from(type_start);
 
@@ -251,6 +254,10 @@ String expand_token(const Token& token, const Context& context,
     {
     case Token::Type::ShellExpand:
         return ShellManager::instance().eval(content, context, {},
+                                             ShellManager::Flags::WaitForStdout,
+                                             shell_context).first;
+    case Token::Type::MfourExpand:
+        return ScopeManager::instance().eval("m4", content, context,
                                              ShellManager::Flags::WaitForStdout,
                                              shell_context).first;
     case Token::Type::RegisterExpand:
@@ -428,7 +435,7 @@ void CommandManager::execute(StringView command_line,
             params.clear();
         }
         // Shell expand are retokenized
-        else if (it->type() == Token::Type::ShellExpand)
+        else if (it->type() == Token::Type::ShellExpand || it->type() == Token::Type::MfourExpand)
         {
             auto shell_tokens = parse<true>(expand_token(*it, context,
                                                          shell_context));

@@ -20,6 +20,7 @@
 #include "remote.hh"
 #include "scope.hh"
 #include "shell_manager.hh"
+#include "scope_manager.hh"
 #include "string.hh"
 #include "unit_tests.hh"
 #include "window.hh"
@@ -143,8 +144,12 @@ void register_env_vars()
     } };
 
     ShellManager& shell_manager = ShellManager::instance();
+    ScopeManager& scope_manager = ScopeManager::instance();
     for (auto& env_var : env_vars)
+    {
         shell_manager.register_env_var(env_var.name, env_var.prefix, env_var.func);
+        scope_manager.register_env_var(env_var.name, env_var.prefix, env_var.func);
+    }
 }
 
 void register_registers()
@@ -485,6 +490,7 @@ int run_server(StringView session, StringView init_command,
     EventManager        event_manager;
     GlobalScope         global_scope;
     ShellManager        shell_manager;
+    ScopeManager        scope_manager;
     CommandManager      command_manager;
     RegisterManager     register_manager;
     HighlighterRegistry highlighter_registry;
@@ -616,6 +622,7 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
     GlobalScope     global_scope;
     EventManager    event_manager;
     ShellManager    shell_manager;
+    ScopeManager    scope_manager;
     CommandManager  command_manager;
     RegisterManager register_manager;
     ClientManager   client_manager;

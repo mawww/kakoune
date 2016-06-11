@@ -7,6 +7,7 @@
 #include "string.hh"
 #include "utils.hh"
 #include "completion.hh"
+#include "event_manager.hh"
 
 namespace Kakoune
 {
@@ -30,6 +31,27 @@ public:
     {
         None = 0,
         WaitForStdout = 1
+    };
+
+    struct Pipe
+    {
+        Pipe(bool create = true);
+        ~Pipe();
+
+        int read_fd() const { return m_fd[0]; }
+        int write_fd() const { return m_fd[1]; }
+
+        void close_read_fd() { close_fd(m_fd[0]); }
+        void close_write_fd() { close_fd(m_fd[1]); }
+
+    private:
+        void close_fd(int& fd);
+        int m_fd[2];
+    };
+
+    struct PipeReader : FDWatcher
+    {
+        PipeReader(Pipe& pipe, String& contents);
     };
 
     std::pair<String, int> eval(StringView cmdline, const Context& context,
