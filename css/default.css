@@ -16,6 +16,14 @@ a:hover {
     color: #f52500;
 }
 
+#translation-flags > li > a {
+    padding: 10px 7px;
+}
+
+#translation-flags > li:last-child > a {
+    padding-right: 25px;
+}
+
 #kak-preview {
     padding-top: 1.3em;
     padding-bottom: 1.3em;
