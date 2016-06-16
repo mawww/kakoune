@@ -287,7 +287,7 @@ void Client::close_buffer_reload_dialog()
 {
     kak_assert(m_buffer_reload_dialog_opened);
     m_buffer_reload_dialog_opened = false;
-    m_ui->info_hide();
+    info_hide();
     m_input_handler.reset_normal_mode();
 }
 

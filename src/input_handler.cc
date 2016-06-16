@@ -883,6 +883,7 @@ private:
     }
 
     void on_enabled() override { display(); }
+    void on_disabled() override { context().print_status({}); }
 
     PromptCallback m_callback;
     Completer      m_completer;
