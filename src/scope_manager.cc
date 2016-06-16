@@ -1,7 +1,8 @@
-#include "shell_manager.hh"
+#include "scope_manager.hh"
 
 #include "context.hh"
 #include "buffer_utils.hh"
+#include "event_manager.hh"
 #include "file.hh"
 
 #include <chrono>
@@ -17,55 +18,19 @@ extern char **environ;
 namespace Kakoune
 {
 
-ShellManager::ShellManager()
+ScopeManager::ScopeManager()
 {
     const char* path = getenv("PATH");
     auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
     setenv("PATH", new_path.c_str(), 1);
 }
 
-ShellManager::Pipe::Pipe(bool create)
-    : m_fd{-1, -1}
-{
-    if (create and ::pipe(m_fd) < 0)
-        throw runtime_error(format("unable to create pipe (fds: {}/{}; errno: {})", m_fd[0], m_fd[1], ::strerror(errno)));
-}
-
-ShellManager::Pipe::~Pipe() {
-    close_read_fd();
-    close_write_fd();
-}
-
-void ShellManager::Pipe::Pipe::close_fd(int& fd)
-{
-    if (fd != -1)
-    {
-        ::close(fd);
-        fd = -1;
-    }
-}
-
-ShellManager::PipeReader::PipeReader(Pipe& pipe, String& contents)
-    : FDWatcher(pipe.read_fd(),
-                [&contents, &pipe](FDWatcher& watcher, EventMode) {
-                    char buffer[1024];
-                    size_t size = ::read(pipe.read_fd(), buffer, 1024);
-                    if (size <= 0)
-                    {
-                        pipe.close_read_fd();
-                        watcher.disable();
-                        return;
-                    }
-                    contents += StringView{buffer, buffer+size};
-                })
-{}
-
 namespace
 {
 
 template<typename Func>
-static pid_t spawn_shell(StringView cmdline, ConstArrayView<String> params,
-                  ConstArrayView<String> kak_env, Func setup_child)
+static pid_t spawn_interpreter(String prog_path, ConstArrayView<String> params,
+                        ConstArrayView<String> kak_env, Func setup_child)
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
@@ -74,11 +39,7 @@ static pid_t spawn_shell(StringView cmdline, ConstArrayView<String> params,
         envptrs.push_back(env.c_str());
     envptrs.push_back(nullptr);
 
-    const char* shell = "/bin/sh";
-    auto cmdlinezstr = cmdline.zstr();
-    Vector<const char*> execparams = { shell, "-c", cmdlinezstr };
-    if (not params.empty())
-        execparams.push_back(shell);
+    Vector<const char*> execparams = { prog_path.data() };
     for (auto& param : params)
         execparams.push_back(param.c_str());
     execparams.push_back(nullptr);
@@ -88,62 +49,34 @@ static pid_t spawn_shell(StringView cmdline, ConstArrayView<String> params,
 
     setup_child();
 
-    execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
+    execve(prog_path.data(), (char* const*)execparams.data(), (char* const*)envptrs.data());
     exit(-1);
     return -1;
 }
 
-Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
-{
-    static const Regex re(R"(\bkak_(\w+)\b)");
-
-    Vector<String> kak_env;
-    for (RegexIterator<const char*> it{cmdline.begin(), cmdline.end(), re}, end;
-         it != end; ++it)
-    {
-        StringView name{(*it)[1].first, (*it)[1].second};
-
-        auto match_name = [&](const String& s) {
-            return s.length() > name.length()  and
-                   prefix_match(s, name) and s[name.length()] == '=';
-        };
-        if (contains_that(kak_env, match_name))
-            continue;
-
-        auto var_it = shell_context.env_vars.find(name);
-        try
-        {
-            const String& value = var_it != shell_context.env_vars.end() ?
-                var_it->value : ShellManager::instance().get_val(name, context);
-
-            kak_env.push_back(format("kak_{}={}", name, value));
-        } catch (runtime_error&) {}
-    }
-
-    return kak_env;
 }
 
-}
-
-std::pair<String, int> ShellManager::eval(
-    StringView cmdline, const Context& context, StringView input,
-    Flags flags, const ShellContext& shell_context)
+std::pair<String, int> ScopeManager::eval(char const *prog_binary,
+    StringView cmdline, const Context& context,
+    ShellManager::Flags flags, const ShellContext& shell_context)
 {
     using namespace std::chrono;
 
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
     if (debug_flags & DebugFlags::Shell)
-        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+        write_to_debug_buffer(format("scope({}):\n{}\n----\n", prog_binary, cmdline));
+
+    ConstArrayView<String> kak_env = {};
 
     auto start_time = profile ? steady_clock::now() : steady_clock::time_point{};
 
-    auto kak_env = generate_env(cmdline, context, shell_context);
-
     auto spawn_time = profile ? steady_clock::now() : steady_clock::time_point{};
 
-    Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
-    pid_t pid = spawn_shell(cmdline, shell_context.params, kak_env,
+    ShellManager::Pipe child_stdin, child_stdout, child_stderr;
+    pid_t pid = spawn_interpreter(format("/bin/{}", prog_binary),
+                                  shell_context.params,
+                                  kak_env,
                             [&child_stdin, &child_stdout, &child_stderr] {
         auto move = [](int oldfd, int newfd) { dup2(oldfd, newfd); close(oldfd); };
 
@@ -164,14 +97,14 @@ std::pair<String, int> ShellManager::eval(
     child_stdout.close_write_fd();
     child_stderr.close_write_fd();
 
-    write(child_stdin.write_fd(), input);
+    write(child_stdin.write_fd(), cmdline);
     child_stdin.close_write_fd();
 
     auto wait_time = profile ? steady_clock::now() : steady_clock::time_point{};
 
     String stdout_contents, stderr_contents;
-    PipeReader stdout_reader{child_stdout, stdout_contents};
-    PipeReader stderr_reader{child_stderr, stderr_contents};
+    ShellManager::PipeReader stdout_reader{child_stdout, stdout_contents};
+    ShellManager::PipeReader stderr_reader{child_stderr, stderr_contents};
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
@@ -186,7 +119,7 @@ std::pair<String, int> ShellManager::eval(
     bool terminated = waitpid(pid, &status, WNOHANG);
 
     while (not terminated or
-           ((flags & Flags::WaitForStdout) and
+           ((flags & ShellManager::Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
     {
         EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
@@ -210,13 +143,13 @@ std::pair<String, int> ShellManager::eval(
     return { stdout_contents, WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
 
-void ShellManager::register_env_var(StringView str, bool prefix,
+void ScopeManager::register_env_var(StringView str, bool prefix,
                                     EnvVarRetriever retriever)
 {
     m_env_vars.push_back({ str.str(), prefix, std::move(retriever) });
 }
 
-String ShellManager::get_val(StringView name, const Context& context) const
+String ScopeManager::get_val(StringView name, const Context& context) const
 {
     auto env_var = std::find_if(
         m_env_vars.begin(), m_env_vars.end(),
@@ -230,7 +163,7 @@ String ShellManager::get_val(StringView name, const Context& context) const
     return env_var->func(name, context);
 }
 
-CandidateList ShellManager::complete_env_var(StringView prefix,
+CandidateList ScopeManager::complete_env_var(StringView prefix,
                                              ByteCount cursor_pos) const
 {
     return complete(prefix, cursor_pos, m_env_vars |

@@ -69,6 +69,7 @@ struct Token
         RawQuoted,
         RawEval,
         ShellExpand,
+        MfourExpand,
         RegisterExpand,
         OptionExpand,
         ValExpand,
