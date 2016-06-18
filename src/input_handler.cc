@@ -702,6 +702,7 @@ public:
                         m_callback(m_line_editor.line(), PromptEvent::Change, context());
                     }
                 }, "Enter register name", register_doc);
+            display();
             return;
         }
         else if (key == ctrl('v'))
@@ -715,6 +716,8 @@ public:
                         m_callback(m_line_editor.line(), PromptEvent::Change, context());
                     }
                 }, "raw insert", "enter key to insert");
+            display();
+            return;
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
