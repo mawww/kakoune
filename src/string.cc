@@ -114,6 +114,21 @@ void String::Data::release()
         Alloc{}.deallocate(l.ptr, l.capacity+1);
 }
 
+void String::resize(ByteCount size, char c)
+{
+    const size_t target_size = (size_t)size;
+    const size_t current_size = m_data.size();
+    if (target_size < current_size)
+        m_data.set_size(target_size);
+    else if (target_size > current_size)
+    {
+        m_data.reserve(target_size);
+        m_data.set_size(target_size);
+        for (auto i = current_size; i < target_size; ++i)
+            m_data.data()[i] = c;
+    }
+}
+
 void String::Data::set_size(size_t size)
 {
     if (is_long())

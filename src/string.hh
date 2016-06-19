@@ -125,6 +125,7 @@ public:
     void push_back(char c) { m_data.append(&c, 1); }
     void force_size(ByteCount size) { m_data.force_size((size_t)size); }
     void reserve(ByteCount size) { m_data.reserve((size_t)size); }
+    void resize(ByteCount size, char c);
 
     static const String ms_empty;
 
@@ -165,6 +166,7 @@ public:
 
 	template<bool copy = true>
         void reserve(size_t new_capacity);
+        void set_size(size_t size);
         void force_size(size_t new_size);
         void append(const char* str, size_t len);
         void clear();
@@ -172,7 +174,6 @@ public:
     private:
         void release();
         void set_empty() { s.size = 1; }
-        void set_size(size_t size);
         void set_short(const char* data, size_t size);
     };
 
