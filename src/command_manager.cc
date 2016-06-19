@@ -7,6 +7,7 @@
 #include "shell_manager.hh"
 #include "utils.hh"
 #include "optional.hh"
+#include "containers.hh"
 
 #include <algorithm>
 
@@ -250,9 +251,22 @@ String expand_token(const Token& token, const Context& context,
     switch (token.type())
     {
     case Token::Type::ShellExpand:
-        return ShellManager::instance().eval(content, context, {},
-                                             ShellManager::Flags::WaitForStdout,
-                                             shell_context).first;
+    {
+        auto str = ShellManager::instance().eval(
+            content, context, {}, ShellManager::Flags::WaitForStdout,
+            shell_context).first;
+
+        int trailing_eol_count = 0;
+        for (auto c : str | reverse())
+        {
+            if (c != '\n')
+                break;
+            ++trailing_eol_count;
+        }
+        str.resize(str.length() - trailing_eol_count, 0);
+        return str;
+
+    }
     case Token::Type::RegisterExpand:
         return context.main_sel_register_value(content).str();
     case Token::Type::OptionExpand:
