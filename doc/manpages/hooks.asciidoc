@@ -63,6 +63,10 @@ Default hooks
 *InsertKey*::
 	a key is received in insert mode, the key is used for filtering
 
+*InsertChar*::
+	a character is received in insert mode, the character is used for
+	filtering
+
 *InsertMove*::
 	the cursor moved (without inserting) in insert mode, the key that
 	triggered the move is used for filtering
