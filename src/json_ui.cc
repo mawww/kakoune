@@ -261,7 +261,7 @@ parse_json(const char* pos, const char* end)
     {
         auto digit_end = pos;
         skip_while(digit_end, end, is_digit);
-        return Result{ Value{str_to_int({pos, end})}, digit_end };
+        return Result{ Value{str_to_int({pos, digit_end})}, digit_end };
     }
     if (end - pos > 4 and StringView{pos, pos+4} == "true")
         return Result{ Value{true}, pos+4 };
@@ -459,6 +459,12 @@ UnitTest test_json_parser{[]()
     {
         auto value = std::get<0>(parse_json(R"({ "jsonrpc": "2.0", "method": "keys", "params": [ "b", "l", "a", "h" ] })"));
         kak_assert(value);
+    }
+
+    {
+        auto value = std::get<0>(parse_json("[10,20]"));
+        kak_assert(value and value.is_a<JsonArray>());
+        kak_assert(value.as<JsonArray>().at(1).as<int>() == 20);
     }
 
     {
