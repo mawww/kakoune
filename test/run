@@ -33,7 +33,7 @@ main() {
         set global autoshowcompl false
         try %{ source rc }
         try %{
-            exec '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
+            exec -save-regs '/' '%s%\(\K[^)]+<ret><c-s>ld<a-t>(hHdi<c-u><esc><c-o>'
         } catch %{ exec gg }
         hook global RuntimeError .+ %{
             echo -debug -- error: %val{hook_param}
