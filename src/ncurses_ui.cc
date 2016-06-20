@@ -413,7 +413,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         for (auto& atom : mode_line)
             title += atom.content();
         title += " - Kakoune\007";
-        fputs(stdout, title.c_str());
+        fputs(title.c_str(), stdout);
         fflush(stdout);
     }
 
@@ -938,15 +938,15 @@ void NCursesUI::enable_mouse(bool enabled)
         mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
         mouseinterval(0);
         // force enable report mouse position
-        fputs(stdout, "\033[?1002h");
+        fputs("\033[?1002h", stdout);
         // force enable report focus events
-        fputs(stdout, "\033[?1004h");
+        fputs("\033[?1004h", stdout);
     }
     else
     {
         mousemask(0, nullptr);
-        fputs(stdout, "\033[?1004l");
-        fputs(stdout, "\033[?1002l");
+        fputs("\033[?1004l", stdout);
+        fputs("\033[?1002l", stdout);
     }
     fflush(stdout);
 }
