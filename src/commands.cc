@@ -1448,6 +1448,10 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
                                    real_context->name());
         Context& c = input_handler.context();
 
+        // Preserve window so that window scope is available
+        if (real_context->has_window())
+            c.set_window(real_context->window());
+
         // We do not want this draft context to commit undo groups if the real one is
         // going to commit the whole thing later
         if (real_context->is_editing())
