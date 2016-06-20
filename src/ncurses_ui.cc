@@ -413,7 +413,8 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         for (auto& atom : mode_line)
             title += atom.content();
         title += " - Kakoune\007";
-        write_stdout(title);
+        fputs(stdout, title.c_str());
+        fflush(stdout);
     }
 
     m_dirty = true;
@@ -446,7 +447,7 @@ void NCursesUI::check_resize(bool force)
         m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
 
         if (char* csr = tigetstr((char*)"csr"))
-            putp(csr);
+            putp(tiparm(csr, 0, ws.ws_row));
 
         if (menu)
         {
@@ -937,16 +938,17 @@ void NCursesUI::enable_mouse(bool enabled)
         mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
         mouseinterval(0);
         // force enable report mouse position
-        puts("\033[?1002h");
+        fputs(stdout, "\033[?1002h");
         // force enable report focus events
-        puts("\033[?1004h");
+        fputs(stdout, "\033[?1004h");
     }
     else
     {
         mousemask(0, nullptr);
-        puts("\033[?1004l");
-        puts("\033[?1002l");
+        fputs(stdout, "\033[?1004l");
+        fputs(stdout, "\033[?1002l");
     }
+    fflush(stdout);
 }
 
 void NCursesUI::set_ui_options(const Options& options)
