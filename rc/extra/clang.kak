@@ -42,7 +42,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                 header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
                 compl=$(clang++ -x ${ft} -fsyntax-only ${kak_opt_clang_options} \
                     -Xclang -code-completion-brief-comments -Xclang -code-completion-at=${pos} - < ${dir}/buf 2> ${dir}/stderr |
-                        awk -F ': ' -e '
+                        awk -F ': ' '
                             /^COMPLETION:/ && ! /\(Hidden\)/ {
                                  id=$2
                                  gsub(/ +$/, "", id)

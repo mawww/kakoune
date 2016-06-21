@@ -16,7 +16,7 @@ def -params 0..1 \
         export tagname=${1:-${kak_selection}}
         for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
             export tagroot="$(readlink -f $(dirname "$tags"))/"
-            readtags -t "${tags}" ${tagname} | awk -F '\t|\n' -e '
+            readtags -t "${tags}" ${tagname} | awk -F '\t|\n' '
             /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
                 re=$0;
                 sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);

@@ -64,7 +64,7 @@ def -params 1.. \
                       try %{ addhl flag_lines GitBlame git_blame_flags }
                       set buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
-                  git blame "$@" --incremental ${kak_buffile} | awk -e '
+                  git blame "$@" --incremental ${kak_buffile} | awk '
                   function send_flags(text, flag, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
@@ -94,7 +94,7 @@ def -params 1.. \
     }
 
     update_diff() {
-        git diff -U0 $kak_buffile | awk -e '
+        git diff -U0 $kak_buffile | awk '
             BEGIN {
                 line=0
                 flags=ENVIRON["kak_timestamp"]
