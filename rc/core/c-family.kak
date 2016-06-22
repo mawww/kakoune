@@ -10,7 +10,7 @@ hook global BufCreate .*\.c$ %{
 
 hook global BufCreate .*\.h$ %{
     try %{
-        exec %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
+        exec -draft %{%s\b::\b|\btemplate\h*<lt>|\bclass\h+\w+|\b(typename|namespace)\b|\b(public|private|protected)\h*:<ret>}
         set buffer filetype cpp
     } catch %{
         set buffer filetype c
