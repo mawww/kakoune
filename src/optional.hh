@@ -60,6 +60,14 @@ public:
         return false;
     }
 
+    template<typename... Args>
+    void emplace(Args&&... args)
+    {
+        destruct_ifn();
+        new (&m_value) T{std::forward<Args>(args)...};
+        m_valid = true;
+    }
+
     T& operator*()
     {
         kak_assert(m_valid);
