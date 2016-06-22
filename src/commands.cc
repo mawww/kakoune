@@ -1395,10 +1395,8 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     const bool no_hooks = parser.get_switch("no-hooks") or context.user_hooks_disabled();
     const bool no_keymaps = not parser.get_switch("with-maps");
 
-    const bool save_regs_by_default = (bool)parser.get_switch("draft") or
-                                      (bool)parser.get_switch("buffer");
     Vector<RegisterRestorer> saved_registers;
-    for (auto& r : parser.get_switch("save-regs").value_or(save_regs_by_default ? "/\"|^@" : ""))
+    for (auto& r : parser.get_switch("save-regs").value_or("/\"|^@"))
         saved_registers.emplace_back(r, context);
 
     ClientManager& cm = ClientManager::instance();
