@@ -121,6 +121,8 @@ Selection select_to_line_end(const Buffer& buffer, const Selection& selection)
     LineCount line = begin.line;
     ByteCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
                                    buffer.iterator_at(line)).coord();
+    if (end < begin) // Do not go backward when cursor is on eol
+        end = begin;
     return target_eol({only_move ? end : begin, end});
 }
 
