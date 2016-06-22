@@ -1430,67 +1430,68 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
         return;
     }
 
-    Context* real_context = &context;
+    Context* base_context = &context;
     if (auto client_name = parser.get_switch("client"))
-        real_context = &cm.get_client(*client_name).context();
+        base_context = &cm.get_client(*client_name).context();
     else if (auto client_name = parser.get_switch("try-client"))
     {
         if (Client* client = cm.get_client_ifp(*client_name))
-            real_context = &client->context();
+            base_context = &client->context();
     }
 
-    if (parser.get_switch("draft"))
+    Optional<InputHandler> input_handler;
+    Context* effective_context = base_context;
+
+    const bool draft = (bool)parser.get_switch("draft");
+    if (draft)
     {
-        InputHandler input_handler(real_context->selections(),
-                                   Context::Flags::Transient,
-                                   real_context->name());
-        Context& c = input_handler.context();
+        input_handler.emplace(base_context->selections(),
+                              Context::Flags::Transient,
+                              base_context->name());
+        effective_context = &input_handler->context();
 
         // Preserve window so that window scope is available
-        if (real_context->has_window())
-            c.set_window(real_context->window());
+        if (base_context->has_window())
+            effective_context->set_window(base_context->window());
 
         // We do not want this draft context to commit undo groups if the real one is
         // going to commit the whole thing later
-        if (real_context->is_editing())
-            c.disable_undo_handling();
+        if (base_context->is_editing())
+            effective_context->disable_undo_handling();
+    }
 
-        ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
-        ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
-        ScopedSetBool disable_history(c.history_disabled());
+    Context& c = *effective_context;
 
-        if (parser.get_switch("itersel"))
+    ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
+    ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
+    ScopedSetBool disable_history(c.history_disabled());
+
+    if (parser.get_switch("itersel"))
+    {
+        SelectionList sels{base_context->selections()};
+        ScopedEdition edition{c};
+        for (auto& sel : sels)
         {
-            SelectionList sels{real_context->selections()};
-            ScopedEdition edition{c};
-            for (auto& sel : sels)
-            {
-                c.selections_write_only() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
-                c.selections().update();
+            c.selections_write_only() = SelectionList{ sels.buffer(), sel, sels.timestamp() };
+            c.selections().update();
 
-                func(parser, c);
-
-                if (&sels.buffer() != &c.buffer())
-                    throw runtime_error("the buffer has changed while iterating on selections");
-            }
-        }
-        else
             func(parser, c);
+
+            if (&sels.buffer() != &c.buffer())
+                throw runtime_error("the buffer has changed while iterating on selections");
+        }
+
+        if (not draft)
+        {
+            sels.update();
+            c.selections_write_only() = std::move(sels);
+        }
     }
     else
     {
-        if (parser.get_switch("itersel"))
-            throw runtime_error("-itersel makes no sense without -draft");
-
-        Context& c = *real_context;
-
-        const bool collapse_jumps = (bool)parser.get_switch("collapse-jumps");
+        const bool collapse_jumps = not draft and (bool)parser.get_switch("collapse-jumps");
         SelectionList jump = c.selections();
         JumpList original_jump_list = collapse_jumps ? c.jump_list() : JumpList{};
-
-        ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
-        ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
-        ScopedSetBool disable_history(c.history_disabled());
 
         func(parser, c);
 
