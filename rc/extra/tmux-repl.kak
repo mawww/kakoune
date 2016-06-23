@@ -3,11 +3,21 @@
 
 hook global KakBegin .* %{
     %sh{
+        VERSION_TMUX=$(tmux -V)
+        VERSION_TMUX=$(expr "${VERSION_TMUX}" : 'tmux \([0-9]*\).*')
+
         if [ -n "$TMUX" ]; then
-            echo "
-                alias global repl tmux-repl-horizontal
-                alias global send-text tmux-send-text
-            "
+            if [ "${VERSION_TMUX}" -gt 1 ]; then
+                echo "
+                    alias global repl tmux-repl-horizontal
+                    alias global send-text _tmux-send-text
+                "
+            else
+                echo "
+                    alias global repl _tmux-repl-disabled
+                    alias global send-text _tmux-repl-disabled
+                "
+            fi
         fi
     }
 }
@@ -39,7 +49,7 @@ def tmux-repl-window -params 0..1 -command-completion -docstring "Create a new w
     tmux-repl-impl 'new-window' %arg{@}
 }
 
-def tmux-send-text -docstring "Send selected text to the repl pane in tmux" %{
+def -hidden _tmux-send-text -docstring "Send selected text to the repl pane in tmux" %{
     nop %sh{
         tmux set-buffer -b kak_selection "${kak_selection}"
         kak_orig_window=$(tmux display-message -p '#I')
@@ -51,3 +61,8 @@ def tmux-send-text -docstring "Send selected text to the repl pane in tmux" %{
         tmux select-pane -t:.${kak_orig_pane}
     }
 }
+
+def -hidden _tmux-repl-disabled %{ %sh{
+    VERSION_TMUX=$(tmux -V)
+    printf %s "echo -color Error %{The version of tmux is too old: got ${VERSION_TMUX}, expected >= 2.x}"
+} }
