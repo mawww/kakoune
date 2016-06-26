@@ -10,7 +10,7 @@
 namespace Kakoune
 {
 
-class SelectionList;
+struct SelectionList;
 struct Key;
 
 struct InsertCompleterDesc
