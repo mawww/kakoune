@@ -51,6 +51,16 @@ void HookManager::run_hook(StringView hook_name,
     if (hook_list_it == m_hook.end())
         return;
 
+    if (contains(m_running_hooks, std::make_pair(hook_name, param)))
+    {
+        auto error = format("recursive call of hook {}/{}, aborting", hook_name, param);
+        write_to_debug_buffer(error);
+        throw runtime_error(std::move(error));
+    }
+
+    m_running_hooks.emplace_back(hook_name, param);
+    auto pop_running_hook = on_scope_end([this]{ m_running_hooks.pop_back(); });
+
     using Clock = std::chrono::steady_clock;
     using TimePoint = Clock::time_point;
 
