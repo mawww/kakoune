@@ -40,7 +40,7 @@ def tag-complete -docstring "Insert completion candidates for the current select
 def ctags-funcinfo -docstring "Display ctags information about a selected function" %{
     eval -draft %{
         try %{
-            exec '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
+            exec -no-hooks '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
             %sh{
                 sigs=$(readtags -e ${kak_selection%(} | grep kind:f | sed -re 's/^(\S+).*((class|struct|namespace):(\S+))?.*signature:(.*)$/\5 [\4::\1]/')
                 if [ -n "$sigs" ]; then
@@ -52,8 +52,8 @@ def ctags-funcinfo -docstring "Display ctags information about a selected functi
 }
 
 def ctags-enable-autoinfo -docstring "Automatically display ctags information about function" %{
-     hook window -group ctags-autoinfo NormalKey .* ctags-funcinfo
-     hook window -group ctags-autoinfo InsertKey .* ctags-funcinfo
+     hook window -group ctags-autoinfo NormalIdle .* ctags-funcinfo
+     hook window -group ctags-autoinfo InsertIdle .* ctags-funcinfo
 }
 
 def ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ rmhooks window ctags-autoinfo }
