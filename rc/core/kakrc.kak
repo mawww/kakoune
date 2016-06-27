@@ -28,9 +28,9 @@ addhl -group / regions -default code kakrc \
 }
 
 addhl -group /kakrc/code regex \brgb:[0-9a-fA-F]{6}\b 0:value
-addhl -group /kakrc/code regex (?:\bhook)\h+(?:(global|buffer|window)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:identifier 4:string
-addhl -group /kakrc/code regex (?:\bset)\h+(?:(global|buffer|window)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:identifier 4:string
-addhl -group /kakrc/code regex (?:\bmap)\h+(?:(global|buffer|window)|(\S+))\h+(?:(normal|insert|prompt|menu)|(\S+))\h+(\S+)\h+(\S+)? 1:attribute 2:error 3:attribute 4:error 5:identifier 6:string
+addhl -group /kakrc/code regex (?:\bhook)\h+(?:-group\h+\S+\h+)?(?:(global|buffer|window)|(\S+))\h+(\S+) 1:attribute 2:error 3:identifier
+addhl -group /kakrc/code regex (?:\bset)\h+(?:-add)?\h+(?:(global|buffer|window)|(\S+))\h+(\S+) 1:attribute 2:error 3:identifier
+addhl -group /kakrc/code regex (?:\bmap)\h+(?:(global|buffer|window)|(\S+))\h+(?:(normal|insert|menu|prompt|goto|view|user|object)|(\S+))\h+(\S+) 1:attribute 2:error 3:attribute 4:error 5:identifier
 
 addhl -group /kakrc/double_string fill string
 addhl -group /kakrc/single_string fill string
