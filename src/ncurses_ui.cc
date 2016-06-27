@@ -447,7 +447,7 @@ void NCursesUI::check_resize(bool force)
         m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
 
         if (char* csr = tigetstr((char*)"csr"))
-            putp(tiparm(csr, 0, ws.ws_row));
+            putp(tparm(csr, 0, ws.ws_row));
 
         if (menu)
         {
