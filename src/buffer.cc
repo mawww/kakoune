@@ -34,6 +34,7 @@ static ParsedLines parse_lines(StringView data)
         pos = data.begin() + 3;
     }
 
+    res.eolformat = EolFormat::Crlf;
     while (pos < data.end())
     {
         const char* line_end = pos;
@@ -44,11 +45,13 @@ static ParsedLines parse_lines(StringView data)
 
         if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
         {
-            res.eolformat = EolFormat::Crlf;
             pos = line_end + 2;
         }
         else
+        {
+            res.eolformat = EolFormat::Lf;
             pos = line_end + 1;
+        }
     }
 
     return res;
