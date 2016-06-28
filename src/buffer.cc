@@ -34,21 +34,20 @@ static ParsedLines parse_lines(StringView data)
         pos = data.begin() + 3;
     }
 
+    bool has_crlf = false, has_lf = false;
+    for (auto it = pos; it != data.end(); ++it)
+    {
+        if (*it == '\n')
+            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+    }
+    const bool crlf = has_crlf and not has_lf;
+    res.eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+
     while (pos < data.end())
     {
-        const char* line_end = pos;
-        while (line_end < data.end() and *line_end != '\r' and *line_end != '\n')
-             ++line_end;
-
-        res.lines.emplace_back(StringData::create({pos, line_end}, '\n'));
-
-        if (line_end+1 != data.end() and *line_end == '\r' and *(line_end+1) == '\n')
-        {
-            res.eolformat = EolFormat::Crlf;
-            pos = line_end + 2;
-        }
-        else
-            pos = line_end + 1;
+        const char* eol = std::find(pos, data.end(), '\n');
+        res.lines.emplace_back(StringData::create({pos, eol - (crlf and eol != data.end() ? 1 : 0)}, '\n'));
+        pos = eol + 1;
     }
 
     return res;
@@ -628,6 +627,39 @@ String Buffer::debug_description() const
                   (m_flags & Flags::NoUndo) ? "NoUndo " : "",
                   content_size, additional_size);
 }
+
+UnitTest test_parse_line{[]
+{
+    {
+        auto lines = parse_lines("foo\nbar\nbaz\n");
+        kak_assert(lines.eolformat == EolFormat::Lf);
+        kak_assert(lines.bom == ByteOrderMark::None);
+        kak_assert(lines.lines.size() == 3);
+        kak_assert(lines.lines[0]->strview() == "foo\n");
+        kak_assert(lines.lines[1]->strview() == "bar\n");
+        kak_assert(lines.lines[2]->strview() == "baz\n");
+    }
+
+    {
+        auto lines = parse_lines("\xEF\xBB\xBF" "foo\nbar\r\nbaz");
+        kak_assert(lines.eolformat == EolFormat::Lf);
+        kak_assert(lines.bom == ByteOrderMark::Utf8);
+        kak_assert(lines.lines.size() == 3);
+        kak_assert(lines.lines[0]->strview() == "foo\n");
+        kak_assert(lines.lines[1]->strview() == "bar\r\n");
+        kak_assert(lines.lines[2]->strview() == "baz\n");
+    }
+
+    {
+        auto lines = parse_lines("foo\r\nbar\r\nbaz\r\n");
+        kak_assert(lines.eolformat == EolFormat::Crlf);
+        kak_assert(lines.bom == ByteOrderMark::None);
+        kak_assert(lines.lines.size() == 3);
+        kak_assert(lines.lines[0]->strview() == "foo\n");
+        kak_assert(lines.lines[1]->strview() == "bar\n");
+        kak_assert(lines.lines[2]->strview() == "baz\n");
+    }
+}};
 
 UnitTest test_buffer{[]()
 {
