@@ -1,5 +1,6 @@
 #include "json_ui.hh"
 
+#include "containers.hh"
 #include "display_buffer.hh"
 #include "keys.hh"
 #include "file.hh"
@@ -423,34 +424,32 @@ void JsonUI::parse_requests(EventMode mode)
 
     if (not m_requests.empty())
     {
-        Value json;
-        const char* pos;
+        const char* pos = nullptr;
         try
         {
+            Value json;
             std::tie(json, pos) = parse_json(m_requests);
+            if (json)
+                eval_json(json);
         }
         catch (runtime_error& error)
         {
-            write_stderr(format("error while parsing requests '{}': '{}'",
+            write_stderr(format("error while handling requests '{}': '{}'",
                                 m_requests, error.what()));
-        }
 
-        if (json)
-        {
-            try
-            {
-                eval_json(json);
-            }
-            catch (runtime_error& error)
-            {
-                write_stderr(format("error while executing request '{}': '{}'",
-                                    StringView{m_requests.begin(), pos}, error.what()));
-            }
-            m_requests = String{pos, m_requests.end()};
+            // try to salvage request by dropping its first line
+            auto eol = find(m_requests, '\n');
+            if (eol != m_requests.end())
+                m_requests = String{eol+1, m_requests.end()};
+            else
+                m_requests = String{};
+
         }
+        if (pos)
+            m_requests = String{pos, m_requests.end()};
     }
 
-    while (not m_pending_keys.empty())
+    while (m_input_callback and not m_pending_keys.empty())
         m_input_callback(mode);
 }
 
