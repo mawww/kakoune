@@ -13,9 +13,9 @@ def shebang-detect -docstring "Detect the shebang at the top of the buffer and a
         %sh{
             filetype=''
             case \"\${kak_reg_m}\" in
-                zsh|bash|csh|ksh|sh) filetype=sh;;
-                python|python2|python3) filetype=python;;
-                lua|perl|ruby) filetype=\"\${kak_reg_m}\";;
+                zsh|bash|csh|ksh) filetype=sh;;
+                python2|python3) filetype=python;;
+                *) filetype=\"\${kak_reg_m}\";;
             esac
             if [ -n \"\${filetype}\" ]; then
                 printf %s \"set buffer filetype \${filetype}\"
