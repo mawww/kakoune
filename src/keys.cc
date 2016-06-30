@@ -131,6 +131,11 @@ String key_to_str(Key key)
             default: kak_assert(false);
         }
     }
+    else if (key.modifiers == Key::Modifiers::Resize)
+    {
+        auto size = key.coord() + CharCoord{1,1};
+        return format("<resize:{}.{}>", size.line, size.column);
+    }
 
     bool named = false;
     String res;
