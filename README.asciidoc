@@ -14,6 +14,7 @@ TL;DR
 *Vim inspired* -- *Faster as in less keystrokes* --
 *Multiple selections* -- *Orthogonal design*
 
+[source,shell]
 ---------------------------------------------
 git clone http://github.com/mawww/kakoune.git
 cd kakoune/src
