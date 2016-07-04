@@ -18,6 +18,10 @@ struct name_not_unique : runtime_error
 
 BufferManager::~BufferManager()
 {
+    // Move buffers to m_buffer_trash to avoid running BufClose
+    // hook while clearing m_buffers
+    m_buffer_trash = std::move(m_buffers);
+
     // Make sure not clients exists
     ClientManager::instance().clear();
 }
