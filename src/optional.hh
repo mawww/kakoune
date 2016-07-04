@@ -51,13 +51,8 @@ public:
 
     bool operator==(const Optional& other) const
     {
-        if (m_valid == other.m_valid)
-        {
-            if (m_valid)
-                return m_value == other.m_value;
-            return true;
-        }
-        return false;
+        return m_valid == other.m_valid and
+               (not m_valid or m_value == other.m_value);
     }
 
     template<typename... Args>
