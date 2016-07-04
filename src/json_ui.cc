@@ -360,6 +360,9 @@ parse_json(StringView json) { return parse_json(json.begin(), json.end()); }
 
 void JsonUI::eval_json(const Value& json)
 {
+    if (not json.is_a<JsonObject>())
+        throw runtime_error("json request is not an object");
+
     const JsonObject& object = json.as<JsonObject>();
     auto json_it = object.find("jsonrpc");
     if (json_it == object.end() or json_it->value.as<String>() != "2.0")
@@ -436,14 +439,8 @@ void JsonUI::parse_requests(EventMode mode)
         {
             write_stderr(format("error while handling requests '{}': '{}'",
                                 m_requests, error.what()));
-
             // try to salvage request by dropping its first line
-            auto eol = find(m_requests, '\n');
-            if (eol != m_requests.end())
-                m_requests = String{eol+1, m_requests.end()};
-            else
-                m_requests = String{};
-
+            pos = std::min(m_requests.end(), find(m_requests, '\n')+1);
         }
         if (pos)
             m_requests = String{pos, m_requests.end()};
