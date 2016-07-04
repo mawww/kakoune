@@ -4,8 +4,9 @@ Json-Rpc user interface
 Kakoune user interfaces can be implemented through the json-rpc 2.0 protocol.
 
 By launching kakoune in client mode with the `-ui json` option, the launched
-client will write json-rpc requests on stdout and read json-rpc requests
-on stdin.  Errors will be reported on stderr (not in json format).
+client will write newline separated json-rpc requests on stdout and read
+json-rpc requests on stdin.  Errors will be reported on stderr (not in
+json format).
 
 Kakoune requests are always using positional parameters, never named, and
 Kakoune wont be able to parse named parameters in requests.
