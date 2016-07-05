@@ -258,7 +258,7 @@ void Client::on_buffer_reload_key(Key key)
 {
     auto& buffer = context().buffer();
 
-    if (key == 'y' or key == ctrl('m'))
+    if (key == 'y' or key == Key::Return)
         reload_buffer();
     else if (key == 'n' or key == Key::Escape)
     {

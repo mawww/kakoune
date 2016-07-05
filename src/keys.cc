@@ -23,9 +23,9 @@ static Key canonicalize_ifn(Key key)
 
 Optional<Codepoint> Key::codepoint() const
 {
-    if (*this == ctrl('m'))
+    if (*this == Key::Return)
         return '\n';
-    if (*this == ctrl('i'))
+    if (*this == Key::Tab)
         return '\t';
     if (modifiers == Modifiers::None and key > 27 and
         (key < 0xD800 or key > 0xDFFF)) // avoid surrogates
@@ -35,9 +35,9 @@ Optional<Codepoint> Key::codepoint() const
 
 struct KeyAndName { const char* name; Codepoint key; };
 static constexpr KeyAndName keynamemap[] = {
-    { "ret", '\r' },
+    { "ret", Key::Return },
     { "space", ' ' },
-    { "tab", '\t' },
+    { "tab", Key::Tab },
     { "lt", '<' },
     { "gt", '>' },
     { "backspace", Key::Backspace},

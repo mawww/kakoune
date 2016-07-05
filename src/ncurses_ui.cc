@@ -499,6 +499,10 @@ Key NCursesUI::get_key()
 
     if (c > 0 and c < 27)
     {
+        if (c == control('m') or c == control('j'))
+            return Key::Return;
+        if (c == control('i'))
+            return Key::Tab;
         if (c == control('z'))
         {
             raise(SIGTSTP);

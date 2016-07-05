@@ -515,7 +515,7 @@ public:
             return false;
         };
 
-        if (key == ctrl('m'))
+        if (key == Key::Return)
         {
             if (context().has_client())
                 context().client().menu_hide();
@@ -543,7 +543,7 @@ public:
                 m_callback(selected, MenuEvent::Abort, context());
             }
         }
-        else if (key == Key::Down or key == ctrl('i') or
+        else if (key == Key::Down or key == Key::Tab or
                  key == ctrl('n') or (not m_edit_filter and key == 'j'))
         {
             auto it = std::find_if(m_selected+1, m_choices.end(), match_filter);
@@ -665,7 +665,7 @@ public:
         const String& line = m_line_editor.line();
         bool showcompl = false;
 
-        if (key == ctrl('m')) // enter
+        if (key == Key::Return)
         {
             if (not context().history_disabled())
                 history_push(history, line);
@@ -761,7 +761,7 @@ public:
                 showcompl = true;
             }
         }
-        else if (key == ctrl('i') or key == Key::BackTab) // tab completion
+        else if (key == Key::Tab or key == Key::BackTab) // tab completion
         {
             const bool reverse = (key == Key::BackTab);
             CandidateList& candidates = m_completions.candidates;
