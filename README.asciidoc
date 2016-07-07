@@ -198,7 +198,7 @@ There is a script in https://github.com/mawww/kakoune/blob/master/contrib/make_d
 You can then install the generated .deb package with the dpkg tool.
 
 --------------------------------
-./make_bash.bash -e "your_email" -f "your_username"
+./make_deb.bash -e "your_email" -f "your_username"
 sudo dpkg -i thePackageName.deb
 --------------------------------
 
