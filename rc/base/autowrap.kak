@@ -5,7 +5,7 @@ decl int autowrap_column 80
 # This can potentially break formatting of documents containing markup (e.g. markdown)
 decl bool autowrap_format_paragraph yes
 # Command to which the paragraphs to wrap will be passed, all occurences of '%c' are replaced with `autowrap_column`
-decl str autowrap_fmtcmd 'fmt -s -w %c'
+decl str autowrap_fmtcmd 'fold -s -w %c'
 
 def -hidden autowrap-cursor %{ eval -draft %{
     try %{
