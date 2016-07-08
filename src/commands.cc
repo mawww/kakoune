@@ -1469,6 +1469,9 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     if (parser.get_switch("itersel"))
     {
         SelectionList sels{base_context->selections()};
+        Vector<Selection> new_sels;
+        size_t main = 0;
+        size_t timestamp = c.buffer().timestamp();
         ScopedEdition edition{c};
         for (auto& sel : sels)
         {
@@ -1479,12 +1482,20 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
             if (&sels.buffer() != &c.buffer())
                 throw runtime_error("the buffer has changed while iterating on selections");
+
+            if (not draft)
+            {
+                update_selections(new_sels, main, c.buffer(), timestamp);
+                timestamp = c.buffer().timestamp();
+                for (auto& sel : c.selections())
+                    new_sels.push_back(sel);
+            }
         }
 
         if (not draft)
         {
-            sels.update();
-            c.selections_write_only() = std::move(sels);
+            c.selections_write_only() = SelectionList(c.buffer(), new_sels);
+            c.selections().sort_and_merge_overlapping();
         }
     }
     else

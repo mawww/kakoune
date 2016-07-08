@@ -55,6 +55,9 @@ inline bool overlaps(const Selection& lhs, const Selection& rhs)
                                   : lhs.min() <= rhs.max();
 }
 
+void update_selections(Vector<Selection>& selections, size_t& main,
+                       Buffer& buffer, size_t timestamp);
+
 enum class InsertMode : unsigned
 {
     Insert,

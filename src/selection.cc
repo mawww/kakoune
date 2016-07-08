@@ -337,12 +337,12 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
     return ranges;
 }
 
-void SelectionList::update()
+void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp)
 {
-    if (m_timestamp == m_buffer->timestamp())
+    if (timestamp == buffer.timestamp())
         return;
 
-    auto changes = m_buffer->changes_since(m_timestamp);
+    auto changes = buffer.changes_since(timestamp);
     auto change_it = changes.begin();
     while (change_it != changes.end())
     {
@@ -351,28 +351,33 @@ void SelectionList::update()
 
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, m_selections);
+            update_forward({ change_it, forward_end }, selections);
             change_it = forward_end;
         }
         else
         {
-            update_backward({ change_it, backward_end }, m_selections);
+            update_backward({ change_it, backward_end }, selections);
             change_it = backward_end;
         }
-        m_selections.erase(
-            merge_overlapping(m_selections.begin(), m_selections.end(),
-                              m_main, overlaps), m_selections.end());
-        kak_assert(std::is_sorted(m_selections.begin(), m_selections.end(),
+        selections.erase(
+            merge_overlapping(selections.begin(), selections.end(),
+                              main, overlaps), selections.end());
+        kak_assert(std::is_sorted(selections.begin(), selections.end(),
                                   compare_selections));
     }
-    for (auto& sel : m_selections)
+    for (auto& sel : selections)
     {
-        sel.anchor() = m_buffer->clamp(sel.anchor());
-        sel.cursor() = m_buffer->clamp(sel.cursor());
+        sel.anchor() = buffer.clamp(sel.anchor());
+        sel.cursor() = buffer.clamp(sel.cursor());
     }
-    m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps), end());
-    check_invariant();
+    selections.erase(merge_overlapping(selections.begin(), selections.end(),
+                                       main, overlaps), selections.end());
+}
 
+void SelectionList::update()
+{
+    update_selections(m_selections, m_main, *m_buffer, m_timestamp);
+    check_invariant();
     m_timestamp = m_buffer->timestamp();
 }
 
