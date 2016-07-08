@@ -1,39 +1,38 @@
-## Maximum amount of characters per line
+# Maximum amount of characters per line
 decl int autowrap_column 80
 
-# remove the whitespaces selected by `autowrap-line`
-# and handle "recursive" calls when needed
-def -hidden _autowrap-cut-selection %{
-    try %{
-        # remove the whitespaces
-        # then save the indentation of the original line and apply it to the new one
-        exec -draft c<ret><esc> K <a-&>
-        # if there's text after the current line, merge the two
-        exec xX <a-k>[^\n]\n[^\n]<ret> <a-j>
-    }
-    eval autowrap-line
-}
+# If enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
+# This can potentially break formatting of documents containing markup (e.g. markdown)
+decl bool autowrap_format_paragraph yes
+# Command to which the paragraphs to wrap will be passed, all occurences of '%c' are replaced with `autowrap_column`
+decl str autowrap_fmtcmd 'fmt -s -w %c'
 
-def autowrap-line -docstring "Wrap the current line" %{ eval -draft %{
+def -hidden autowrap-cursor %{ eval -draft %{
     try %{
-        # check that the line is too long and has to be wrapped
-        exec "<a-x> s^(?=.*\h).{%opt{autowrap_column}}[^\n]<ret>"
+        ## if the line isn't too long, do nothing
+        exec -draft "<a-x><a-k>^[^\n]{%opt{autowrap_column},}<ret>"
+
         try %{
-            # either select the trailing whitespaces, or the ones before the last word of the line
-            exec s\h+(?=[^\h]+\')|\h+\'<ret>
-            eval _autowrap-cut-selection
-        } catch %{ try %{
-            # wrap the line on the first whitespace that's past the column limit
-            exec "x s^[^\h]{%opt{autowrap_column},}\K\h+<ret>"
-            eval _autowrap-cut-selection
-        } }
+            ## if we're adding characters past the limit, just wrap them around
+            exec "<a-h><a-k>.{%opt{autowrap_column},}<ret>1s(\h+)[^\h]+\'<ret>c<ret><esc>"
+        } catch %{
+            ## if we're adding characters in the middle of a sentence, use
+            ## the `fmtcmd` command to wrap the entire paragraph
+            %sh{
+                if [[ "${kak_opt_autowrap_format_paragraph}" = true ]] \
+                    && [[ -n "${kak_opt_autowrap_fmtcmd}" ]]; then
+                    format_cmd=$(printf %s "${kak_opt_autowrap_fmtcmd}" \
+                                 | sed -e "s/%c/${kak_opt_autowrap_column}/g" \
+                                       -e 's/ /<space>/g')
+                    printf %s "exec -draft <a-i>p|${format_cmd}<ret>"
+                fi
+            }
+        }
     }
 } }
 
 def autowrap-enable -docstring "Wrap the lines in which characters are inserted" %{
-    hook -group autowrap window InsertChar [^\n] %{
-        eval autowrap-line
-    }
+    hook -group autowrap window InsertChar [^\n] autowrap-cursor
 }
 
 def autowrap-disable -docstring "Disable automatic line wrapping" %{
