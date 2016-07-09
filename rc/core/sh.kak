@@ -32,7 +32,7 @@ addhl -group /sh/comment fill comment
     printf %s "addhl -group /sh/code regex \b(${keywords})\b 0:keyword"
 }
 
-addhl -group /sh/code regex [\[\]\(\)&|]{2}|\[\s|\s\] 0:operator
+addhl -group /sh/code regex [\[\]\(\)&|]{1,2} 0:operator
 addhl -group /sh/code regex (\w+)= 1:identifier
 addhl -group /sh/code regex ^\h*(\w+)\h*\(\) 1:identifier
 
