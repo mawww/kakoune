@@ -69,8 +69,6 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_last_save_undo_index(0),
       m_fs_timestamp(fs_timestamp)
 {
-    options().register_watcher(*this);
-
     ParsedLines parsed_lines = parse_lines(data);
 
     if (parsed_lines.lines.empty())
@@ -87,9 +85,24 @@ Buffer::Buffer(String name, Flags flags, StringView data,
 
     apply_options(options(), parsed_lines);
 
-    if (flags & Flags::File)
+    // now we may begin to record undo data
+    if (not (flags & Flags::NoUndo))
+        m_flags &= ~Flags::NoUndo;
+}
+
+void Buffer::on_registered()
+{
+    // Ignore debug buffer, as it can be created in many
+    // corner cases (including while destroying the BufferManager
+    // if a BufClose hooks triggers writing to it.
+    if (m_flags & Flags::Debug)
+        return;
+
+    options().register_watcher(*this);
+
+    if (m_flags & Flags::File)
     {
-        if (flags & Flags::New)
+        if (m_flags & Buffer::Flags::New)
             run_hook_in_own_context("BufNew", m_name);
         else
         {
@@ -100,19 +113,21 @@ Buffer::Buffer(String name, Flags flags, StringView data,
 
     run_hook_in_own_context("BufCreate", m_name);
 
-    // now we may begin to record undo data
-    if (not (flags & Flags::NoUndo))
-        m_flags &= ~Flags::NoUndo;
-
     for (auto& option : options().flatten_options())
         on_option_changed(*option);
 }
 
-Buffer::~Buffer()
+void Buffer::on_unregistered()
 {
-    run_hook_in_own_context("BufClose", m_name);
+    if (m_flags & Flags::Debug)
+        return;
 
     options().unregister_watcher(*this);
+    run_hook_in_own_context("BufClose", m_name);
+}
+
+Buffer::~Buffer()
+{
     m_values.clear();
 }
 

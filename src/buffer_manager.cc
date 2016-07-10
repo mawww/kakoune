@@ -22,6 +22,9 @@ BufferManager::~BufferManager()
     // hook while clearing m_buffers
     m_buffer_trash = std::move(m_buffers);
 
+    for (auto& buffer : m_buffer_trash)
+        buffer->on_unregistered();
+
     // Make sure not clients exists
     ClientManager::instance().clear();
 }
@@ -37,9 +40,12 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
             throw name_not_unique();
     }
 
-    m_buffers.emplace(m_buffers.begin(), new Buffer{std::move(name), flags,
-                                                    data, fs_timestamp});
-    return m_buffers.front().get();
+    m_buffers.emplace(m_buffers.begin(),
+                      new Buffer{std::move(name), flags, data, fs_timestamp});
+    auto& buffer = *m_buffers.front();
+    buffer.on_registered();
+
+    return &buffer;
 }
 
 void BufferManager::delete_buffer(Buffer& buffer)
@@ -48,10 +54,13 @@ void BufferManager::delete_buffer(Buffer& buffer)
                       { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
 
+
     ClientManager::instance().ensure_no_client_uses_buffer(buffer);
 
     m_buffer_trash.emplace_back(std::move(*it));
     m_buffers.erase(it);
+
+    buffer.on_unregistered();
 }
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)

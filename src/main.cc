@@ -664,11 +664,11 @@ int run_filter(StringView keystr, StringView commands, ConstArrayView<StringView
         }
         if (not isatty(0))
         {
-            Buffer* buffer = buffer_manager.create_buffer(
+            Buffer& buffer = *buffer_manager.create_buffer(
                 "*stdin*", Buffer::Flags::None, read_fd(0), InvalidTime);
-            apply_to_buffer(*buffer);
-            write_buffer_to_fd(*buffer, 1);
-            buffer_manager.delete_buffer(*buffer);
+            apply_to_buffer(buffer);
+            write_buffer_to_fd(buffer, 1);
+            buffer_manager.delete_buffer(buffer);
         }
     }
     catch (Kakoune::runtime_error& err)

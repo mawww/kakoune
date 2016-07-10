@@ -200,6 +200,10 @@ public:
     ConstArrayView<Change> changes_since(size_t timestamp) const;
 
     String debug_description() const;
+
+    // Methods called by the buffer manager
+    void on_registered();
+    void on_unregistered();
 private:
 
     void on_option_changed(const Option& option) override;
