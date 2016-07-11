@@ -53,9 +53,9 @@ void HookManager::run_hook(StringView hook_name,
 
     if (contains(m_running_hooks, std::make_pair(hook_name, param)))
     {
-        auto error = format("recursive call of hook {}/{}, aborting", hook_name, param);
+        auto error = format("recursive call of hook {}/{}, not executing", hook_name, param);
         write_to_debug_buffer(error);
-        throw runtime_error(std::move(error));
+        return;
     }
 
     m_running_hooks.emplace_back(hook_name, param);
