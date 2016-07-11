@@ -231,6 +231,7 @@ Just running *kak* launch a new kak session with a client on local terminal.
         read keystrokes as json on stdin.
  * `-l`: list existing sessions, and check the dead ones
  * `-clear`: clear dead sessions socket files
+ * `-ro`: prevent modifications to all buffers from being saved to disk
 
 At startup, if `-n` is not specified, Kakoune will try to source the file
 `../share/kak/kakrc` relative to the kak binary. This kak file will then try
@@ -861,6 +862,9 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    writing a buffer, this is autodetected on load.
  * `BOM` _enum(none|utf8)_: define if the file should be written
    with an unicode byte order mark.
+ * `readonly` _bool_: prevent modifications from being saved to disk, all
+   buffers if set to `true` in the `global` scope, or current buffer if set in
+   the `buffer` scope.
  * `incsearch` _bool_: execute search as it is typed
  * `aligntab` _bool_: use tabs for alignment command
  * `autoinfo` _flags(command|onkey|normal)_: display automatic information
