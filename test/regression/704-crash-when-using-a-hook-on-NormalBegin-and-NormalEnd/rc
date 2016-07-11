@@ -1,0 +1,2 @@
+hook global NormalBegin .* 'exec s'
+hook global NormalEnd .* 'exec s'
