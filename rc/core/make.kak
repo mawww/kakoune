@@ -24,7 +24,7 @@ addhl -group /make line %{%opt{_make_current_error_line}} default+b
 
 hook global WinSetOption filetype=make %{
     addhl ref make
-    hook buffer -group make-hooks NormalKey <c-m> make-jump
+    hook buffer -group make-hooks NormalKey <ret> make-jump
 }
 
 hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }
