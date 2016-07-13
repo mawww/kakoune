@@ -337,6 +337,12 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
     return ranges;
 }
 
+static void clamp(Selection& sel, const Buffer& buffer)
+{
+    sel.anchor() = buffer.clamp(sel.anchor());
+    sel.cursor() = buffer.clamp(sel.cursor());
+}
+
 void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buffer, size_t timestamp)
 {
     if (timestamp == buffer.timestamp())
@@ -366,10 +372,8 @@ void update_selections(Vector<Selection>& selections, size_t& main, Buffer& buff
                                   compare_selections));
     }
     for (auto& sel : selections)
-    {
-        sel.anchor() = buffer.clamp(sel.anchor());
-        sel.cursor() = buffer.clamp(sel.cursor());
-    }
+        clamp(sel, buffer);
+
     selections.erase(merge_overlapping(selections.begin(), selections.end(),
                                        main, overlaps), selections.end());
 }
@@ -604,7 +608,11 @@ SelectionList selection_list_from_string(Buffer& buffer, StringView desc)
 
     Vector<Selection> sels;
     for (auto sel_desc : desc | split<StringView>(':'))
-        sels.push_back(selection_from_string(sel_desc));
+    {
+        auto sel = selection_from_string(sel_desc);
+        clamp(sel, buffer);
+        sels.push_back(sel);
+    }
     return {buffer, std::move(sels)};
 }
 
