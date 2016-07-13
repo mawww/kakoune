@@ -1,0 +1,90 @@
+Why Kakoune
+===========
+
+Why invest time into text editing
+---------------------------------
+
+While discussing with fellow developpers, I was a few times asked the
+following question: We spend most of our time as developpers thinking, not
+editing code, so why invest time into mastering a complicated code editor,
+and why lose some cognitive resources on thinking about text edition instead
+of about the real programming problem.
+
+I think this point of view is misguided, for a few reasons:
+
+* Despite their name, code editors are not only about edition, but also about
+code navigation. Programming is a hard task partly due to the huge amount of
+context we have to keep in mind, and being able to quickly navigate code helps
+us refresh that context, by looking at definitions, implementations, comments.
+
+* Although code edition itself is not the most important part of programming,
+it still takes non negligible time to perform, and can be optimized by using
+better tools. 
+
+* Finally, a programming career spans a few decades, so investing a few weeks
+to improve our editing and navigating speed is definitely worth it.
+
+Why a modal text editor
+-----------------------
+
+What is modal text editing
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that we have, hopefully, established that investing time into mastering  
+text editing is worth it, lets focus on why I think modal text editors are the
+way to go.
+
+The first thing to realize that that non modal text editor are extremely biased
+towards insertion. They make insertion easy (by making the default behaviour of
+most keys to insert a character into the buffer) at the expense of making most
+other operations suboptimal, by requiring hard to reach keys or modifiers (or,
+even worse, moving your hand all the way to your mouse).
+
+Insertion is an key part of text editing, and is worth optimizing, which is
+the whole point of completion systems. But it is only a small part of text
+editing, we spend a huge amount of our editing time navigating, moving code
+around, copying, pasting and reformating.
+
+Modal editors, on the other hand, and by modal here I focus mostly on the vi
+lineage, default to whats called 'normal' mode, which is tailored towards non
+insertion operations, (copy, pasting, navigation), but still give access to a
+fully blown insertion mode a single keystroke away.
+
+Modal editing as a text edition language
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Many vi users have any epiphany when they realize that vi does not just
+provide a set of modes making various text editing shortcuts easier to type,
+but actually provides a text editing language.
+
+<explain what we mean by text editing language>
+
+This language allows the programmer to express his intent much more closely
+than in other editors; of course most editors can express "delete the word
+after the next parenthesis", but more often than not, expressing that intent
+is more cumbersome than simply doing an ad-hoc edition. Text editing as a
+language changes that, by making clearly expressing your intent the fastest
+way to do your edit.
+
+This is a desirable property because a lot of text editing operations are
+repetitive, but on only structurally similar text: the subject text are
+different, but they follow the same structure. Being able to express the
+text edition at the structural level allows for reusable commands, and make
+the compute do the repetitive job.
+
+Another often overlooked property of using text edition language is that
+its fun. Programmers are problem solvers, we enjoy solving problems, and
+we enjoy even more solving them with a clean and efficient solution. This
+kind of text editor transform a dull and repetitive edition task into an
+interesting puzzle to solve, and thats an engaging thing.
+
+Think about it this way: Yes programming is about thinking, concentrating
+on a design problem, or on a bug, understanding what needs to be done,
+designing a solution, and the writing it. More often that not, once you get
+to the writing phase, most of the thinking, problem solving, part is done,
+now the remaining task is just editing the code.  Modal editors make this
+phase both faster, and more fun.
+
+
+Why Kakoune
+-----------
