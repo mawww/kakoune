@@ -16,7 +16,7 @@ def -hidden autowrap-cursor %{ eval -save-regs '/"|^@m' %{
             reg m "%val{selections_desc}"
 
             ## if we're adding characters past the limit, just wrap them around
-            exec "<a-h><a-k>.{%opt{autowrap_column},}\h*[^\s]<ret>1s.{%opt{autowrap_column}}[^\h]*(\h+)<ret>c<ret><esc>"
+            exec -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\'<ret>c<ret><esc>"
         } catch %{
             ## if we're adding characters in the middle of a sentence, use
             ## the `fmtcmd` command to wrap the entire paragraph
