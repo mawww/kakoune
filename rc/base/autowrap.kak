@@ -3,7 +3,7 @@ decl int autowrap_column 80
 
 # If enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
 # This can potentially break formatting of documents containing markup (e.g. markdown)
-decl bool autowrap_format_paragraph yes
+decl bool autowrap_format_paragraph no
 # Command to which the paragraphs to wrap will be passed, all occurences of '%c' are replaced with `autowrap_column`
 decl str autowrap_fmtcmd 'fold -s -w %c'
 
@@ -26,7 +26,7 @@ def -hidden autowrap-cursor %{ eval -save-regs '/"|^@m' %{
                     format_cmd=$(printf %s "${kak_opt_autowrap_fmtcmd}" \
                                  | sed "s/%c/${kak_opt_autowrap_column}/g")
                     printf %s "
-                        exec '<a-]>p<a-x>|${format_cmd}<ret>'
+                        exec '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
                         try %{ exec s\h+$<ret> d }
                         select '${kak_reg_m}'
                     "
