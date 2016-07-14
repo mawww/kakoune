@@ -613,6 +613,10 @@ SelectionList selection_list_from_string(Buffer& buffer, StringView desc)
         clamp(sel, buffer);
         sels.push_back(sel);
     }
+    size_t main = 0;
+    std::sort(sels.begin(), sels.end(), compare_selections);
+    sels.erase(merge_overlapping(sels.begin(), sels.end(), main, overlaps), sels.end());
+
     return {buffer, std::move(sels)};
 }
 
