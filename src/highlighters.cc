@@ -1260,6 +1260,7 @@ public:
 
         auto last_begin = (begin == regions.begin()) ?
                              ByteCoord{0,0} : (begin-1)->end;
+        kak_assert(begin <= end);
         for (; begin != end; ++begin)
         {
             if (apply_default and last_begin < begin->begin)
