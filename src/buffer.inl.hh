@@ -110,7 +110,7 @@ inline ByteCoord Buffer::end_coord() const
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, ByteCoord coord)
     : m_buffer(&buffer), m_coord(coord),
-      m_line_length((*m_buffer)[m_coord.line].length()),
+      m_line((*m_buffer)[coord.line]),
       m_last_line(buffer.line_count()-1)
 {
     kak_assert(m_buffer and m_buffer->is_valid(m_coord));
@@ -153,7 +153,7 @@ inline bool BufferIterator::operator>=(const BufferIterator& iterator) const
 [[gnu::always_inline]]
 inline const char& BufferIterator::operator*() const
 {
-    return m_buffer->byte_at(m_coord);
+    return m_line[m_coord.column];
 }
 
 inline const char& BufferIterator::operator[](size_t n) const
@@ -181,24 +181,23 @@ inline BufferIterator BufferIterator::operator-(ByteCount size) const
 inline BufferIterator& BufferIterator::operator+=(ByteCount size)
 {
     m_coord = m_buffer->advance(m_coord, size);
-    m_line_length = m_buffer->line_storage(m_coord.line)->length;
+    m_line = (*m_buffer)[m_coord.line];
     return *this;
 }
 
 inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 {
     m_coord = m_buffer->advance(m_coord, -size);
-    m_line_length = m_buffer->line_storage(m_coord.line)->length;
+    m_line = (*m_buffer)[m_coord.line];
     return *this;
 }
 
 inline BufferIterator& BufferIterator::operator++()
 {
-    if (++m_coord.column == m_line_length and m_coord.line != m_last_line)
+    if (++m_coord.column == m_line.length() and m_coord.line != m_last_line)
     {
-        ++m_coord.line;
+        m_line = (*m_buffer)[++m_coord.line];
         m_coord.column = 0;
-        m_line_length = m_buffer->line_storage(m_coord.line)->length;
     }
     return *this;
 }
@@ -207,8 +206,8 @@ inline BufferIterator& BufferIterator::operator--()
 {
     if (m_coord.column == 0 and m_coord.line > 0)
     {
-        m_line_length = m_buffer->line_storage(--m_coord.line)->length;
-        m_coord.column = m_line_length - 1;
+        m_line = (*m_buffer)[--m_coord.line];
+        m_coord.column = m_line.length() - 1;
     }
     else
        --m_coord.column;
