@@ -67,6 +67,7 @@ Iterator advance(Iterator it, const Iterator& end, CharCount d)
 
 // return true if it points to the first byte of a (either single or
 // multibyte) character
+[[gnu::always_inline]]
 inline bool is_character_start(char c)
 {
     return (c & 0xC0) != 0x80;
@@ -80,7 +81,7 @@ CharCount distance(Iterator begin, const Iterator& end)
 
     while (begin != end)
     {
-        if (is_character_start(*begin++))
+        if (is_character_start(read(begin)))
             ++dist;
     }
     return dist;
