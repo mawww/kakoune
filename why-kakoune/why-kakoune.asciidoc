@@ -120,11 +120,11 @@ Improving on the editing model
 vi basic grammar is *verb* followed by *object*, its nice because it matches
 well with the order we use in english, "delete word". On the other hand,
 it does not match well with the nature of what we express: There is only a
-handfull of *verbs* in text edition, and they dont compose, contrarily to
-*objects* which can be arbitrarily complex, and difficult to express. That
-means that errors are not handled well. If you express your object wrongly
-with a delete verb, the wrong text will get deleted, you will need to undo,
-and try again.
+handfull of *verbs* in text edition (*d*elete, *y*ank, *p*aste, *i*nsert...),
+and they dont compose, contrarily to *objects* which can be arbitrarily
+complex, and difficult to express. That means that errors are not handled
+well. If you express your object wrongly with a delete verb, the wrong text
+will get deleted, you will need to undo, and try again.
 
 Kakoune grammar is *object* followed by *verb*, combined with instantaneous
 feedback, that means you always see the current object (In Kakoune we call
@@ -161,3 +161,7 @@ end up with one selection for each match of your regex and use the insert
 mode to do your change. Globally replacing foo with bar would be done with
 `%sfoo<ret>cbar<esc>` which is just the combination of basic building blocks.
 
+Multiple selections provides us with a very powerfull to express structural
+selection: we can subselect matches inside the current selections, keep
+selections containing/not containing a match, split selections on a regex,
+swap selections contents...
