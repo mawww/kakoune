@@ -17,6 +17,14 @@ template<typename Iterator>
 [[gnu::always_inline]]
 inline char read(Iterator& it) { char c = *it; ++it; return c; }
 
+// return true if it points to the first byte of a (either single or
+// multibyte) character
+[[gnu::always_inline]]
+inline bool is_character_start(char c)
+{
+    return (c & 0xC0) != 0x80;
+}
+
 // returns an iterator to next character first byte
 template<typename Iterator>
 Iterator next(Iterator it, const Iterator& end)
@@ -52,25 +60,26 @@ Iterator previous(Iterator it, const Iterator& begin)
 template<typename Iterator>
 Iterator advance(Iterator it, const Iterator& end, CharCount d)
 {
+    if (it == end)
+        return it;
+
     if (d < 0)
     {
-       while (it != end and d++)
-           it = utf8::previous(it, end);
+        while (it != end and d != 0)
+        {
+            if (is_character_start(*--it))
+                ++d;
+        }
     }
-    else
+    else if (d > 0)
     {
-        while (it != end and d--)
-           it = utf8::next(it, end);
+        while (it != end and d != 0)
+        {
+            if (is_character_start(*++it))
+                --d;
+        }
     }
     return it;
-}
-
-// return true if it points to the first byte of a (either single or
-// multibyte) character
-[[gnu::always_inline]]
-inline bool is_character_start(char c)
-{
-    return (c & 0xC0) != 0x80;
 }
 
 // returns the character count between begin and end
