@@ -37,7 +37,7 @@ hook global BufSetOption mimetype=text/x-objc %{
 
 def -hidden _c-family-trim-autoindent %[ eval -draft -itersel %[
     ## remove the line if it's empty when leaving the insert mode
-    try %[ exec <a-x> <a-k>^\h+$<ret> d ]
+    try %[ exec <a-x> 1s^(\h+)$<ret> d ]
 ] ]
 
 def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
