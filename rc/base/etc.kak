@@ -30,8 +30,8 @@ hook global WinSetOption filetype=(?!etc-hosts).*       %{ rmhl etc-hosts }
 
 ## /etc/fstab
 addhl -group / group etc-fstab
+addhl -group /etc-fstab regex ^(\S{1,})\s+?(\S{1,})\s+?(\S{1,})\s+?(\S{1,})\s+?(\S{1,})\s+?(\S{1,})(?:\s+)?$ 1:keyword 2:value 3:type 4:string 5:attribute 6:attribute
 addhl -group /etc-fstab regex \#.*?$ 0:comment
-addhl -group /etc-fstab regex ^(\S+)\s+(\S+)\s+(\S+)\s+(?:(\S+,?)+)\s+([0-9])\s+([0-9]) 1:keyword 2:value 3:type 4:string 5:attribute 6:attribute
 
 hook global WinSetOption filetype=etc-fstab             %{ addhl ref etc-fstab }
 hook global WinSetOption filetype=(?!etc-fstab).*       %{ rmhl etc-fstab }
