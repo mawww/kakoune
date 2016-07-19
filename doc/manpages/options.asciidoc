@@ -22,6 +22,10 @@ Types
 	a list, elements are separated by a colon (:) if an element needs
 	to contain a colon, it can be escaped
 	with a backslash
+*range-faces*::
+	a list, elements are separated by a colon (:), of pairs of buffer
+	range (`<begin line>.<begin column>,<end line>.<end column>`) and
+	face (separated by `|`)
 *enum(value1|value2|...)*::
 	an enum, taking one of the given values
 *flags(value1|value2|...)*::

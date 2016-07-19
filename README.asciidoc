@@ -816,6 +816,9 @@ Options are typed, their type can be
  * `{int,str}-list`: a list, elements are separated by a colon (:)
   if an element needs to contain a colon, it can be escaped with a
   backslash.
+ * `range-faces`: a list, elements are separated by a colon (:), of
+  a buffer range (<begin line>.<begin column>,<end line>.<end column>)
+  and a face (separated by `|`)
  * `enum(value1|value2|...)`: an enum, taking on of the given values
  * `flags(value1|value2|...)`: a set of flags, taking a combination
    of the given values joined by `|`.
@@ -1160,6 +1163,7 @@ general highlighters are:
        -separator switch one can specify a string to separate the line numbers column with
        the rest of the buffer, default is `|`.
  * `fill <face>`: fill using given face, mostly useful with <<regions-highlighters,Regions highlighters>>
+ * `ranges <option_name>`: use the data in the range-faces option of the given name to highlight the buffer.
 
 Highlighting Groups
 ^^^^^^^^^^^^^^^^^^^

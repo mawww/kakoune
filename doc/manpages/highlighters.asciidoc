@@ -64,6 +64,10 @@ General highlighters
 		specify a string to separate the line numbers column with
 		the rest of the buffer (default is '|')
 
+*ranges* <option_name>::
+	use the data in the range-faces option of the given name to highlight
+	the buffer.
+
 *fill* <face>::
 	fill using the given *face*, mostly useful with regions highlighters
 
