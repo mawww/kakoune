@@ -241,13 +241,21 @@ private:
     Flags  m_flags;
 
     using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
-    using  History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
 
-    History           m_history;
-    History::iterator m_history_cursor;
-    UndoGroup         m_current_undo_group;
+    struct HistoryNode : SafeCountable
+    {
+        HistoryNode(HistoryNode* parent);
 
-    size_t m_last_save_undo_index;
+        SafePtr<HistoryNode> parent;
+        UndoGroup undo_group;
+        Vector<std::unique_ptr<HistoryNode>> childs;
+        SafePtr<HistoryNode> redo_child;
+    };
+
+    HistoryNode           m_history;
+    SafePtr<HistoryNode>  m_history_cursor;
+    SafePtr<HistoryNode>  m_last_save_history_cursor;
+    UndoGroup             m_current_undo_group;
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 

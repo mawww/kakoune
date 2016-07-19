@@ -59,15 +59,17 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
     options.get_local_option("BOM").set(parsed_lines.bom);
 }
 
+Buffer::HistoryNode::HistoryNode(HistoryNode* parent) : parent(parent) {}
+
 Buffer::Buffer(String name, Flags flags, StringView data,
                timespec fs_timestamp)
-    : Scope(GlobalScope::instance()),
-      m_name((flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)),
-      m_display_name((flags & Flags::File) ? compact_path(m_name) : m_name),
-      m_flags(flags | Flags::NoUndo),
-      m_history(), m_history_cursor(m_history.begin()),
-      m_last_save_undo_index(0),
-      m_fs_timestamp(fs_timestamp)
+    : Scope{GlobalScope::instance()},
+      m_name{(flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)},
+      m_display_name{(flags & Flags::File) ? compact_path(m_name) : m_name},
+      m_flags{flags | Flags::NoUndo},
+      m_history{nullptr}, m_history_cursor{&m_history},
+      m_last_save_history_cursor{&m_history},
+      m_fs_timestamp{fs_timestamp}
 {
     ParsedLines parsed_lines = parse_lines(data);
 
@@ -285,7 +287,7 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
 
     apply_options(options(), parsed_lines);
 
-    m_last_save_undo_index = m_history_cursor - m_history.begin();
+    m_last_save_history_cursor = m_history_cursor;
     m_fs_timestamp = fs_timestamp;
 }
 
@@ -297,41 +299,40 @@ void Buffer::commit_undo_group()
     if (m_current_undo_group.empty())
         return;
 
-    m_history.erase(m_history_cursor, m_history.end());
-
-    m_history.push_back(std::move(m_current_undo_group));
+    auto* node = new HistoryNode{m_history_cursor.get()};
+    node->undo_group = std::move(m_current_undo_group);
     m_current_undo_group.clear();
-    m_history_cursor = m_history.end();
 
-    if (m_history.size() < m_last_save_undo_index)
-        m_last_save_undo_index = -1;
+    m_history_cursor->childs.emplace_back(node);
+    m_history_cursor->redo_child = node;
+    m_history_cursor = node;
 }
 
 bool Buffer::undo()
 {
     commit_undo_group();
 
-    if (m_history_cursor == m_history.begin())
+    if (not m_history_cursor->parent)
         return false;
 
-    --m_history_cursor;
-
-    for (const Modification& modification : *m_history_cursor | reverse())
+    for (const Modification& modification : m_history_cursor->undo_group | reverse())
         apply_modification(modification.inverse());
+
+    m_history_cursor = m_history_cursor->parent;
     return true;
 }
 
 bool Buffer::redo()
 {
-    if (m_history_cursor == m_history.end())
+    if (not m_history_cursor->redo_child)
         return false;
 
     kak_assert(m_current_undo_group.empty());
 
-    for (const Modification& modification : *m_history_cursor)
-        apply_modification(modification);
+    m_history_cursor = m_history_cursor->redo_child.get();
 
-    ++m_history_cursor;
+    for (const Modification& modification : m_history_cursor->undo_group)
+        apply_modification(modification);
     return true;
 }
 
@@ -505,8 +506,7 @@ ByteCoord Buffer::replace(ByteCoord begin, ByteCoord end, StringView content)
 
 bool Buffer::is_modified() const
 {
-    size_t history_cursor_index = m_history_cursor - m_history.begin();
-    return m_last_save_undo_index != history_cursor_index
+    return m_history_cursor != m_last_save_history_cursor
            or not m_current_undo_group.empty();
 }
 
@@ -516,9 +516,7 @@ void Buffer::notify_saved()
         commit_undo_group();
 
     m_flags &= ~Flags::New;
-    size_t history_cursor_index = m_history_cursor - m_history.begin();
-    if (m_last_save_undo_index != history_cursor_index)
-        m_last_save_undo_index = history_cursor_index;
+    m_last_save_history_cursor = m_history_cursor;
     m_fs_timestamp = get_fs_timestamp(m_name);
 }
 
@@ -625,9 +623,9 @@ void Buffer::run_hook_in_own_context(StringView hook_name, StringView param)
 
 ByteCoord Buffer::last_modification_coord() const
 {
-    if (m_history.empty())
+    if (m_history_cursor.get() == &m_history)
         return {};
-    return m_history.back().back().coord;
+    return m_history_cursor->undo_group.back().coord;
 }
 
 String Buffer::debug_description() const
@@ -636,10 +634,14 @@ String Buffer::debug_description() const
     for (auto& line : m_lines)
         content_size += (int)line->strview().length();
 
-    size_t additional_size = 0;
-    for (auto& undo_group : m_history)
-        additional_size += undo_group.size() * sizeof(Modification);
-    additional_size += m_changes.size() * sizeof(Change);
+    static size_t (*count_mem)(const HistoryNode&) = [](const HistoryNode& node) {
+        size_t size = node.undo_group.size() * sizeof(Modification);
+        for (auto& child : node.childs)
+            size += count_mem(*child);
+        return size;
+    };
+    const size_t additional_size = count_mem(m_history) +
+        m_changes.size() * sizeof(Change);
 
     return format("{}\nFlags: {}{}{}{}\nUsed mem: content={} additional={}\n",
                   display_name(),
