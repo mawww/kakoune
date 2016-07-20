@@ -132,8 +132,9 @@ public:
     void           set_fs_timestamp(timespec ts);
 
     void           commit_undo_group();
-    bool           undo();
-    bool           redo();
+    bool           undo() noexcept;
+    bool           redo() noexcept;
+    bool           move_to(size_t history_id) noexcept;
 
     String         string(ByteCoord begin, ByteCoord end) const;
 
@@ -245,8 +246,9 @@ private:
 
     struct HistoryNode : SafeCountable, UseMemoryDomain<MemoryDomain::BufferMeta>
     {
-        HistoryNode(HistoryNode* parent);
+        HistoryNode(size_t id, HistoryNode* parent);
 
+        size_t id;
         SafePtr<HistoryNode> parent;
         UndoGroup undo_group;
         Vector<std::unique_ptr<HistoryNode>, MemoryDomain::BufferMeta> childs;
@@ -254,10 +256,15 @@ private:
         TimePoint timepoint;
     };
 
+    size_t                m_next_history_id = 0;
     HistoryNode           m_history;
     SafePtr<HistoryNode>  m_history_cursor;
     SafePtr<HistoryNode>  m_last_save_history_cursor;
     UndoGroup             m_current_undo_group;
+
+    void move_to(HistoryNode* history_node) noexcept;
+
+    template<typename Func> HistoryNode* find_history_node(HistoryNode* node, const Func& func);
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
