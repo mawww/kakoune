@@ -1,13 +1,12 @@
 #include "hook_manager.hh"
 
+#include "clock.hh"
 #include "containers.hh"
 #include "context.hh"
 #include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "regex.hh"
-
-#include <chrono>
 
 namespace Kakoune
 {
@@ -60,9 +59,6 @@ void HookManager::run_hook(StringView hook_name,
 
     m_running_hooks.emplace_back(hook_name, param);
     auto pop_running_hook = on_scope_end([this]{ m_running_hooks.pop_back(); });
-
-    using Clock = std::chrono::steady_clock;
-    using TimePoint = Clock::time_point;
 
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;

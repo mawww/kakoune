@@ -1,6 +1,7 @@
 #include "window.hh"
 
 #include "assert.hh"
+#include "clock.hh"
 #include "context.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
@@ -9,7 +10,6 @@
 #include "buffer_utils.hh"
 
 #include <algorithm>
-#include <chrono>
 #include <sstream>
 
 namespace Kakoune
@@ -109,12 +109,10 @@ bool Window::needs_redraw(const Context& context) const
 
 const DisplayBuffer& Window::update_display_buffer(const Context& context)
 {
-    using namespace std::chrono;
-
     const bool profile = context.options()["debug"].get<DebugFlags>() &
                         DebugFlags::Profile;
 
-    auto start_time = profile ? steady_clock::now() : steady_clock::time_point{};
+    auto start_time = profile ? Clock::now() : Clock::time_point{};
 
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
@@ -147,7 +145,8 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
     {
-        auto duration = duration_cast<milliseconds>(steady_clock::now() - start_time);
+        using namespace std::chrono;
+        auto duration = duration_cast<milliseconds>(Clock::now() - start_time);
         write_to_debug_buffer(format("window display update for '{}' took {} ms",
                                      buffer().display_name(), (size_t)duration.count()));
     }
