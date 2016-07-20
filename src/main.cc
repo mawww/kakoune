@@ -779,7 +779,7 @@ int main(int argc, char* argv[])
 
         if (auto session = parser.get_switch("p"))
         {
-            for (auto opt : { "c", "n", "s", "d", "e" })
+            for (auto opt : { "c", "n", "s", "d", "e", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -795,6 +795,12 @@ int main(int argc, char* argv[])
 
         if (auto keys = parser.get_switch("f"))
         {
+            if (parser.get_switch("ro"))
+            {
+                write_stderr("error: -ro makes not sense with -f\n");
+                return -1;
+            }
+
             Vector<StringView> files;
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
@@ -805,7 +811,7 @@ int main(int argc, char* argv[])
 
         if (auto server_session = parser.get_switch("c"))
         {
-            for (auto opt : { "n", "s", "d" })
+            for (auto opt : { "n", "s", "d", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
