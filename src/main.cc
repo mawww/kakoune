@@ -783,7 +783,7 @@ int main(int argc, char* argv[])
             {
                 if (parser.get_switch(opt))
                 {
-                    write_stderr(format("error: -{} makes not sense with -p\n", opt));
+                    write_stderr(format("error: -{} is incompatible with -p\n", opt));
                     return -1;
                 }
             }
@@ -797,7 +797,7 @@ int main(int argc, char* argv[])
         {
             if (parser.get_switch("ro"))
             {
-                write_stderr("error: -ro makes not sense with -f\n");
+                write_stderr("error: -ro is incompatible with -f\n");
                 return -1;
             }
 
@@ -815,7 +815,7 @@ int main(int argc, char* argv[])
             {
                 if (parser.get_switch(opt))
                 {
-                    write_stderr(format("error: -{} makes not sense with -c\n", opt));
+                    write_stderr(format("error: -{} is incompatible with -c\n", opt));
                     return -1;
                 }
             }
