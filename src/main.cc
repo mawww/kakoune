@@ -265,6 +265,7 @@ void register_options()
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
+    reg.declare_option("readonly", "prevent buffers from being modified", false);
 }
 
 struct convert_to_client_mode
@@ -460,7 +461,7 @@ int run_client(StringView session, StringView init_command, UIType ui_type)
 }
 
 int run_server(StringView session, StringView init_command,
-               bool ignore_kakrc, bool daemon, UIType ui_type,
+               bool ignore_kakrc, bool daemon, bool readonly, UIType ui_type,
                ConstArrayView<StringView> files, ByteCoord target_coord)
 {
     static bool terminate = false;
@@ -503,6 +504,8 @@ int run_server(StringView session, StringView init_command,
 
     write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
+    GlobalScope::instance().options().get_local_option("readonly").set(readonly);
+
     Server server(session.empty() ? to_string(getpid()) : session.str());
 
     bool startup_error = false;
@@ -536,7 +539,9 @@ int run_server(StringView session, StringView init_command,
         {
             try
             {
-                open_or_create_file_buffer(file);
+                Buffer *buffer = open_or_create_file_buffer(file);
+                if (readonly)
+                    buffer->flags() |= Buffer::Flags::ReadOnly;
             }
             catch (Kakoune::runtime_error& error)
             {
@@ -741,7 +746,8 @@ int main(int argc, char* argv[])
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
                    { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
-                   { "clear", { false, "clear dead sessions" } } }
+                   { "clear", { false, "clear dead sessions" } },
+                   { "ro", { false, "readonly mode" } } }
     };
     try
     {
@@ -793,7 +799,8 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < parser.positional_count(); ++i)
                 files.emplace_back(parser[i]);
 
-            return run_filter(*keys, init_command, files, (bool)parser.get_switch("q"));
+            return run_filter(*keys, init_command, files,
+                              (bool)parser.get_switch("q"));
         }
 
         if (auto server_session = parser.get_switch("c"))
@@ -840,6 +847,7 @@ int main(int argc, char* argv[])
                 return run_server(session, init_command,
                                   (bool)parser.get_switch("n"),
                                   (bool)parser.get_switch("d"),
+                                  (bool)parser.get_switch("ro"),
                                   ui_type, files, target_coord);
             }
             catch (convert_to_client_mode& convert)
