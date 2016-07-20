@@ -651,13 +651,26 @@ Server::Server(String session_name)
     m_listener.reset(new FDWatcher{listen_sock, accepter});
 }
 
+bool Server::rename_session(const String& name)
+{
+    String old_socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
+    String new_socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, name);
+
+    if (link(old_socket_file.c_str(), new_socket_file.c_str()) != 0)
+        return false;
+
+    unlink(old_socket_file.c_str());
+
+    m_session = name;
+    return true;
+}
+
 void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
     {
-        char socket_file[128];
-        format_to(socket_file, "/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
-        unlink(socket_file);
+        String socket_file = format("/tmp/kakoune/{}/{}", getpwuid(geteuid())->pw_name, m_session);
+        unlink(socket_file.c_str());
     }
     m_listener->close_fd();
     m_listener.reset();
