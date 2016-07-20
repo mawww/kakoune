@@ -310,31 +310,38 @@ void Buffer::commit_undo_group()
     m_history_cursor = node;
 }
 
-bool Buffer::undo() noexcept
+bool Buffer::undo(size_t count) noexcept
 {
     commit_undo_group();
 
     if (not m_history_cursor->parent)
         return false;
 
-    for (const Modification& modification : m_history_cursor->undo_group | reverse())
-        apply_modification(modification.inverse());
+    while (count-- and m_history_cursor->parent)
+    {
+        for (const Modification& modification : m_history_cursor->undo_group | reverse())
+            apply_modification(modification.inverse());
 
-    m_history_cursor = m_history_cursor->parent;
+        m_history_cursor = m_history_cursor->parent;
+    }
+
     return true;
 }
 
-bool Buffer::redo() noexcept
+bool Buffer::redo(size_t count) noexcept
 {
     if (not m_history_cursor->redo_child)
         return false;
 
     kak_assert(m_current_undo_group.empty());
 
-    m_history_cursor = m_history_cursor->redo_child.get();
+    while (count-- and m_history_cursor->redo_child)
+    {
+        m_history_cursor = m_history_cursor->redo_child.get();
 
-    for (const Modification& modification : m_history_cursor->undo_group)
-        apply_modification(modification);
+        for (const Modification& modification : m_history_cursor->undo_group)
+            apply_modification(modification);
+    }
     return true;
 }
 
@@ -826,8 +833,8 @@ UnitTest test_undo{[]()
     buffer.commit_undo_group();
     buffer.erase({2, 1}, {2, 5});                             // change 5
     buffer.commit_undo_group();
-    buffer.undo();
-    buffer.redo();
+    buffer.undo(2);
+    buffer.redo(2);
     buffer.undo();
     buffer.replace(2_line, buffer.end_coord(), "foo");        // change 6
     buffer.commit_undo_group();

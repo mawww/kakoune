@@ -1414,37 +1414,34 @@ void restore_selections(Context& context, NormalParams params)
     context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
 }
 
-void undo(Context& context, NormalParams)
+void undo(Context& context, NormalParams params)
 {
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
-    bool res = buffer.undo();
-    if (res)
+    if (buffer.undo(std::max(1, params.count)))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
     }
-    else if (not res)
+    else
         context.print_status({ "nothing left to undo", get_face("Information") });
 }
 
-void redo(Context& context, NormalParams)
+void redo(Context& context, NormalParams params)
 {
     using namespace std::placeholders;
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
-    bool res = buffer.redo();
-    if (res)
+    if (buffer.redo(std::max(1, params.count)))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
     }
-
-    else if (not res)
+    else
         context.print_status({ "nothing left to redo", get_face("Information") });
 }
 

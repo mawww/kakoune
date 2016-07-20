@@ -132,8 +132,8 @@ public:
     void           set_fs_timestamp(timespec ts);
 
     void           commit_undo_group();
-    bool           undo() noexcept;
-    bool           redo() noexcept;
+    bool           undo(size_t count = 1) noexcept;
+    bool           redo(size_t count = 1) noexcept;
     bool           move_to(size_t history_id) noexcept;
 
     String         string(ByteCoord begin, ByteCoord end) const;
