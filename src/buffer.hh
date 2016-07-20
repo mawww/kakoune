@@ -1,6 +1,7 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
+#include "clock.hh"
 #include "coord.hh"
 #include "flags.hh"
 #include "safe_ptr.hh"
@@ -250,6 +251,7 @@ private:
         UndoGroup undo_group;
         Vector<std::unique_ptr<HistoryNode>, MemoryDomain::BufferMeta> childs;
         SafePtr<HistoryNode> redo_child;
+        TimePoint timepoint;
     };
 
     HistoryNode           m_history;

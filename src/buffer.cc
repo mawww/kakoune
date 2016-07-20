@@ -59,7 +59,9 @@ static void apply_options(OptionManager& options, const ParsedLines& parsed_line
     options.get_local_option("BOM").set(parsed_lines.bom);
 }
 
-Buffer::HistoryNode::HistoryNode(HistoryNode* parent) : parent(parent) {}
+Buffer::HistoryNode::HistoryNode(HistoryNode* parent)
+    : parent(parent), timepoint{Clock::now()}
+{}
 
 Buffer::Buffer(String name, Flags flags, StringView data,
                timespec fs_timestamp)
