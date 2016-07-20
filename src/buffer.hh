@@ -135,6 +135,7 @@ public:
     bool           undo(size_t count = 1) noexcept;
     bool           redo(size_t count = 1) noexcept;
     bool           move_to(size_t history_id) noexcept;
+    size_t         current_history_id() const noexcept;
 
     String         string(ByteCoord begin, ByteCoord end) const;
 

@@ -425,6 +425,11 @@ bool Buffer::move_to(size_t history_id) noexcept
     return true;
 }
 
+size_t Buffer::current_history_id() const noexcept
+{
+    return m_history_cursor->id;
+}
+
 void Buffer::check_invariant() const
 {
 #ifdef KAK_DEBUG

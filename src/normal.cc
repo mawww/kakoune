@@ -1431,10 +1431,28 @@ void undo(Context& context, NormalParams params)
 
 void redo(Context& context, NormalParams params)
 {
-    using namespace std::placeholders;
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
     if (buffer.redo(std::max(1, params.count)))
+    {
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.selections_write_only() = std::move(ranges);
+        context.selections().avoid_eol();
+    }
+    else
+        context.print_status({ "nothing left to redo", get_face("Information") });
+}
+
+template<Direction direction>
+void move_in_history(Context& context, NormalParams params)
+{
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    const size_t count = (size_t)std::max(1, params.count);
+    const size_t history_id = buffer.current_history_id() +
+        (direction == Direction::Forward ? count : -count);
+    if (buffer.move_to(history_id))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
@@ -1679,6 +1697,8 @@ static NormalCmdDesc cmds[] =
 
     { 'u', "undo", undo },
     { 'U', "redo", redo },
+    { alt('u'), "move backward in history", move_in_history<Direction::Backward> },
+    { alt('U'), "move forward in history", move_in_history<Direction::Forward> },
 
     { alt('i'), "select inner object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner> },
     { alt('a'), "select whole object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },
