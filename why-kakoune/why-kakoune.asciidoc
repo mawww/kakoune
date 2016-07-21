@@ -136,7 +136,7 @@ lack of interactivity. Because of the *verb* followed by *object* grammar,
 vi changes are made in the dark, we dont see their effect until the whole
 editing *sentence* is finished. `dtf` will delete to next *f*, if you then
 realize that was one *f* before the one you targeted, you need to undo,
-go back to your initial position, and try again with `d2tf`. In kakout you
+go back to your initial position, and try again with `d2tf`. In kakoune you
 would to `tf` see immediatly that is not the *f* you were looking for, type
 `Tf` to extend the selection until that *f*, then `d` to delete. At each
 step you get visual feedback and have the opportunity to correct.
@@ -165,3 +165,21 @@ Multiple selections provides us with a very powerfull to express structural
 selection: we can subselect matches inside the current selections, keep
 selections containing/not containing a match, split selections on a regex,
 swap selections contents...
+
+For example, convert from `snake_case_style` to `camelCaseStyle` can be done
+by selecting the word (with `w` for example) then subselecting underscores
+in the word with `s_<ret>`, deleting these with `d`, then upper casing the
+selected characters with `~`. The inverse operation could be done by selecting
+the word, then subselecting the upper case characters with `s[A-Z]<ret>`
+lower casing them with ``` and then inserting an underscode before them with
+`i_<esc>` This operation could be put in a macro, and would be reusable
+easily to convert any identifier.
+
+Another example would be parameter swapping, if you had `func(arg2, arg1);`
+you could select the contents of the parenthesis with `<a-i>(`, split the
+selection on comma with `S, <ret>`, and swap selection contents with `<a-'>`.
+
+A better unix citizen
+~~~~~~~~~~~~~~~~~~~~~
+
+
