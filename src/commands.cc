@@ -242,7 +242,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
     // if the buffer is in read-only mode and we try to save it directly
     // or we try to write to it indirectly using e.g. a symlink, throw an error
     if ((context.buffer().flags() & Buffer::Flags::ReadOnly)
-        && (parser.positional_count() == 0 || real_path(parser[0]) == buffer.name()))
+        and (parser.positional_count() == 0 or real_path(parser[0]) == buffer.name()))
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
     auto filename = parser.positional_count() == 0 ?

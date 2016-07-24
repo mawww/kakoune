@@ -79,7 +79,7 @@ void BufferManager::backup_modified_buffers()
     for (auto& buf : m_buffers)
     {
         if ((buf->flags() & Buffer::Flags::File) and buf->is_modified()
-            and !(buf->flags() & Buffer::Flags::ReadOnly))
+            and not (buf->flags() & Buffer::Flags::ReadOnly))
             write_buffer_to_backup_file(*buf);
     }
 }
