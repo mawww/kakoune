@@ -1449,18 +1449,22 @@ void move_in_history(Context& context, NormalParams params)
 {
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
-    const size_t count = (size_t)std::max(1, params.count);
-    const size_t history_id = buffer.current_history_id() +
+    const int count = std::max(1, params.count);
+    const int history_id = (int)buffer.current_history_id() +
         (direction == Direction::Forward ? count : -count);
-    if (buffer.move_to(history_id))
+    if (buffer.move_to((size_t)history_id))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
+
+        context.print_status({ format("moved to change #{}", history_id),
+                               get_face("Information") });
     }
     else
-        context.print_status({ "nothing left to redo", get_face("Information") });
+        context.print_status({ format("no such change: #{}", history_id),
+                               get_face("Information") });
 }
 
 void exec_user_mappings(Context& context, NormalParams params)
