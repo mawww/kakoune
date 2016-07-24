@@ -239,6 +239,12 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
     if (parser.positional_count() == 0 and !(buffer.flags() & Buffer::Flags::File))
         throw runtime_error("cannot write a non file buffer without a filename");
 
+    // if the buffer is in read-only mode and we try to save it directly
+    // or we try to write to it indirectly using e.g. a symlink, throw an error
+    if ((context.buffer().flags() & Buffer::Flags::ReadOnly)
+        and (parser.positional_count() == 0 or real_path(parser[0]) == buffer.name()))
+        throw runtime_error("cannot overwrite the buffer when in readonly mode");
+
     auto filename = parser.positional_count() == 0 ?
                         buffer.name() : parse_filename(parser[0]);
     write_buffer_to_file(buffer, filename);
@@ -260,7 +266,8 @@ void write_all_buffers()
 {
     for (auto& buffer : BufferManager::instance())
     {
-        if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified())
+        if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified()
+            and !(buffer->flags() & Buffer::Flags::ReadOnly))
             write_buffer_to_file(*buffer, buffer->name());
     }
 }

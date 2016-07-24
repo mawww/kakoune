@@ -101,12 +101,13 @@ class Buffer : public SafeCountable, public OptionManagerWatcher, public Scope
 public:
     enum class Flags
     {
-        None = 0,
-        File   = 1 << 0,
-        New    = 1 << 1,
-        Fifo   = 1 << 2,
-        NoUndo = 1 << 3,
-        Debug  = 1 << 4
+        None     = 0,
+        File     = 1 << 0,
+        New      = 1 << 1,
+        Fifo     = 1 << 2,
+        NoUndo   = 1 << 3,
+        Debug    = 1 << 4,
+        ReadOnly = 1 << 5,
     };
 
     Buffer(String name, Flags flags, StringView data = {},

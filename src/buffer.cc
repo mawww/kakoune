@@ -606,6 +606,13 @@ void Buffer::set_fs_timestamp(timespec ts)
 
 void Buffer::on_option_changed(const Option& option)
 {
+    if (option.name() == "readonly")
+    {
+        if (option.get<bool>())
+            m_flags |= Flags::ReadOnly;
+        else
+            m_flags &= ~Flags::ReadOnly;
+    }
     run_hook_in_own_context("BufSetOption",
                             format("{}={}", option.name(), option.get_as_string()));
 }

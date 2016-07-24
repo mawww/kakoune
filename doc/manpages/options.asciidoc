@@ -70,6 +70,11 @@ Builtin options
 *BOM* 'enum(none|utf8)'::
 	define if the file should be written with an unicode byte order mark
 
+*readonly* 'bool'::
+	prevent modifications from being saved to disk, all
+	buffers if set to `true` in the `global` scope, or current buffer if set in
+	the `buffer` scope.
+
 *incsearch* 'bool'::
 	execute search as it is typed
 
