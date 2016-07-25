@@ -1,11 +1,10 @@
 #include "shell_manager.hh"
 
+#include "clock.hh"
 #include "context.hh"
 #include "buffer_utils.hh"
 #include "event_manager.hh"
 #include "file.hh"
-
-#include <chrono>
 
 #include <cstring>
 #include <sys/types.h>
@@ -115,18 +114,16 @@ std::pair<String, int> ShellManager::eval(
     StringView cmdline, const Context& context, StringView input,
     Flags flags, const ShellContext& shell_context)
 {
-    using namespace std::chrono;
-
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
     if (debug_flags & DebugFlags::Shell)
         write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
 
-    auto start_time = profile ? steady_clock::now() : steady_clock::time_point{};
+    auto start_time = profile ? Clock::now() : Clock::time_point{};
 
     auto kak_env = generate_env(cmdline, context, shell_context);
 
-    auto spawn_time = profile ? steady_clock::now() : steady_clock::time_point{};
+    auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
     Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
     pid_t pid = spawn_shell(cmdline, shell_context.params, kak_env,
@@ -153,7 +150,7 @@ std::pair<String, int> ShellManager::eval(
     write(child_stdin.write_fd(), input);
     child_stdin.close_write_fd();
 
-    auto wait_time = profile ? steady_clock::now() : steady_clock::time_point{};
+    auto wait_time = profile ? Clock::now() : Clock::time_point{};
 
     struct PipeReader : FDWatcher
     {
@@ -203,7 +200,8 @@ std::pair<String, int> ShellManager::eval(
 
     if (profile)
     {
-        auto end_time = steady_clock::now();
+        using namespace std::chrono;
+        auto end_time = Clock::now();
         auto full = duration_cast<milliseconds>(end_time - start_time);
         auto spawn = duration_cast<milliseconds>(wait_time - spawn_time);
         auto wait = duration_cast<milliseconds>(end_time - wait_time);

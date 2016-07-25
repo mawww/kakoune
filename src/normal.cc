@@ -1414,38 +1414,57 @@ void restore_selections(Context& context, NormalParams params)
     context.print_status({format("Restored selections from register '{}'", reg), get_face("Information")});
 }
 
-void undo(Context& context, NormalParams)
+void undo(Context& context, NormalParams params)
 {
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
-    bool res = buffer.undo();
-    if (res)
+    if (buffer.undo(std::max(1, params.count)))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
     }
-    else if (not res)
+    else
         context.print_status({ "nothing left to undo", get_face("Information") });
 }
 
-void redo(Context& context, NormalParams)
+void redo(Context& context, NormalParams params)
 {
-    using namespace std::placeholders;
     Buffer& buffer = context.buffer();
     size_t timestamp = buffer.timestamp();
-    bool res = buffer.redo();
-    if (res)
+    if (buffer.redo(std::max(1, params.count)))
     {
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
         context.selections().avoid_eol();
     }
-
-    else if (not res)
+    else
         context.print_status({ "nothing left to redo", get_face("Information") });
+}
+
+template<Direction direction>
+void move_in_history(Context& context, NormalParams params)
+{
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    const int count = std::max(1, params.count);
+    const int history_id = (int)buffer.current_history_id() +
+        (direction == Direction::Forward ? count : -count);
+    if (buffer.move_to((size_t)history_id))
+    {
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.selections_write_only() = std::move(ranges);
+        context.selections().avoid_eol();
+
+        context.print_status({ format("moved to change #{}", history_id),
+                               get_face("Information") });
+    }
+    else
+        context.print_status({ format("no such change: #{}", history_id),
+                               get_face("Information") });
 }
 
 void exec_user_mappings(Context& context, NormalParams params)
@@ -1682,6 +1701,8 @@ static NormalCmdDesc cmds[] =
 
     { 'u', "undo", undo },
     { 'U', "redo", redo },
+    { alt('u'), "move backward in history", move_in_history<Direction::Backward> },
+    { alt('U'), "move forward in history", move_in_history<Direction::Forward> },
 
     { alt('i'), "select inner object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner> },
     { alt('a'), "select whole object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd> },

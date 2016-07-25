@@ -1,6 +1,7 @@
 #ifndef buffer_hh_INCLUDED
 #define buffer_hh_INCLUDED
 
+#include "clock.hh"
 #include "coord.hh"
 #include "flags.hh"
 #include "safe_ptr.hh"
@@ -131,8 +132,10 @@ public:
     void           set_fs_timestamp(timespec ts);
 
     void           commit_undo_group();
-    bool           undo();
-    bool           redo();
+    bool           undo(size_t count = 1) noexcept;
+    bool           redo(size_t count = 1) noexcept;
+    bool           move_to(size_t history_id) noexcept;
+    size_t         current_history_id() const noexcept;
 
     String         string(ByteCoord begin, ByteCoord end) const;
 
@@ -241,13 +244,28 @@ private:
     Flags  m_flags;
 
     using  UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
-    using  History = Vector<UndoGroup, MemoryDomain::BufferMeta>;
 
-    History           m_history;
-    History::iterator m_history_cursor;
-    UndoGroup         m_current_undo_group;
+    struct HistoryNode : SafeCountable, UseMemoryDomain<MemoryDomain::BufferMeta>
+    {
+        HistoryNode(size_t id, HistoryNode* parent);
 
-    size_t m_last_save_undo_index;
+        size_t id;
+        SafePtr<HistoryNode> parent;
+        UndoGroup undo_group;
+        Vector<std::unique_ptr<HistoryNode>, MemoryDomain::BufferMeta> childs;
+        SafePtr<HistoryNode> redo_child;
+        TimePoint timepoint;
+    };
+
+    size_t                m_next_history_id = 0;
+    HistoryNode           m_history;
+    SafePtr<HistoryNode>  m_history_cursor;
+    SafePtr<HistoryNode>  m_last_save_history_cursor;
+    UndoGroup             m_current_undo_group;
+
+    void move_to(HistoryNode* history_node) noexcept;
+
+    template<typename Func> HistoryNode* find_history_node(HistoryNode* node, const Func& func);
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 

@@ -1,11 +1,11 @@
 #ifndef event_manager_hh_INCLUDED
 #define event_manager_hh_INCLUDED
 
+#include "clock.hh"
 #include "utils.hh"
 #include "flags.hh"
 #include "vector.hh"
 
-#include <chrono>
 #include <functional>
 
 #include <sys/select.h>
@@ -40,9 +40,6 @@ private:
     int       m_fd;
     Callback  m_callback;
 };
-
-using Clock = std::chrono::steady_clock;
-using TimePoint = Clock::time_point;
 
 class Timer
 {
