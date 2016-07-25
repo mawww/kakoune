@@ -194,6 +194,7 @@ def build_pretty_printer():
     pp.add_printer('String', '^Kakoune::String$', String)
     pp.add_printer('StringView', '^Kakoune::(StringView|SharedString)$', StringView)
     pp.add_printer('StringDataPtr', '^Kakoune::StringDataPtr$', StringDataPtr)
+    pp.add_printer('StringDataPtr', '^Kakoune::RefPtr<Kakoune::StringData,.*>$', StringDataPtr)
     pp.add_printer('RefPtr', '^Kakoune::RefPtr<.*>$',  RefPtr)
     pp.add_printer('Option', '^Kakoune::Option$', Option)
     pp.add_printer('LineCount', '^Kakoune::LineCount$', LineCount)
