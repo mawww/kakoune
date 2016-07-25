@@ -71,5 +71,5 @@ def iterm-new-window -params .. -command-completion -docstring "Create a new iTe
 
 def iterm-focus -params 0..1 -client-completion -docstring "Focus the given client in iTerm" %{
     # Should be possible using ${kak_client_env_ITERM_SESSION_ID}.
-     %sh{echo "echo -color Error 'Not implemented yet for iTerm'"} 
+     %sh{echo "echo -color Error 'Not implemented yet for iTerm'"}
 }
