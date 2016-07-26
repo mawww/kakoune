@@ -45,7 +45,7 @@ constexpr Array<EnumDesc<ByteOrderMark>, 2> enum_desc(ByteOrderMark)
 
 class Buffer;
 
-constexpr struct timespec InvalidTime = { -1, -1 };
+constexpr timespec InvalidTime = { -1, -1 };
 
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
@@ -114,7 +114,7 @@ public:
     };
 
     Buffer(String name, Flags flags, StringView data = {},
-           struct timespec fs_timestamp = InvalidTime);
+           timespec fs_timestamp = InvalidTime);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
@@ -130,8 +130,8 @@ public:
     ByteCoord replace(ByteCoord begin, ByteCoord end, StringView content);
 
     size_t         timestamp() const;
-    struct timespec fs_timestamp() const;
-    void           set_fs_timestamp(struct timespec ts);
+    timespec       fs_timestamp() const;
+    void           set_fs_timestamp(timespec ts);
 
     void           commit_undo_group();
     bool           undo(size_t count = 1) noexcept;
@@ -191,7 +191,7 @@ public:
 
     void run_hook_in_own_context(StringView hook_name, StringView param);
 
-    void reload(StringView data, struct timespec fs_timestamp = InvalidTime);
+    void reload(StringView data, timespec fs_timestamp = InvalidTime);
 
     void check_invariant() const;
 
@@ -271,7 +271,7 @@ private:
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
-    struct timespec m_fs_timestamp;
+    timespec m_fs_timestamp;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state
