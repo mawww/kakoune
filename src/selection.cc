@@ -400,15 +400,21 @@ void SelectionList::check_invariant() const
     if (timestamp != m_timestamp)
         return;
 
-    for (size_t i = 0; i < size(); ++i)
+    const auto end_coord = buffer.end_coord();
+    ByteCoord last_min{0,0};
+    for (auto& sel : m_selections)
     {
-        auto& sel = (*this)[i];
-        if (i+1 < size())
-            kak_assert((*this)[i].min() <= (*this)[i+1].min());
-        kak_assert(buffer.is_valid(sel.anchor()));
-        kak_assert(buffer.is_valid(sel.cursor()));
-        kak_assert(not buffer.is_end(sel.anchor()));
-        kak_assert(not buffer.is_end(sel.cursor()));
+        auto& min = sel.min();
+        kak_assert(min >= last_min);
+        last_min = min;
+
+        const auto anchor = sel.anchor();
+        kak_assert(anchor >= ByteCoord{0,0} and anchor < end_coord);
+        kak_assert(anchor.column < buffer[anchor.line].length());
+
+        const auto cursor = sel.cursor();
+        kak_assert(cursor >= ByteCoord{0,0} and cursor < end_coord);
+        kak_assert(cursor.column < buffer[cursor.line].length());
     }
 #endif
 }
