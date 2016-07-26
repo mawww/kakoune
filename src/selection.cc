@@ -65,7 +65,8 @@ ByteCoord update_erase(ByteCoord coord, ByteCoord begin, ByteCoord end)
 
 bool compare_selections(const Selection& lhs, const Selection& rhs)
 {
-    return lhs.min() < rhs.min();
+    const auto lmin = lhs.min(), rmin = rhs.min();
+    return lmin == rmin ? lhs.max() < rhs.max() : lmin < rmin;
 }
 
 template<typename Iterator, typename OverlapsFunc>
@@ -305,17 +306,15 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
             change_it = backward_end;
         }
 
-        const auto end_coord = buffer.end_coord();
-        for (auto it = ranges.begin() + prev_size; it != ranges.end(); ++it)
-        {
-            it->anchor() = std::min(it->anchor(), end_coord);
-            it->cursor() = std::min<ByteCoord>(it->cursor(), end_coord);
-        }
-
-
         kak_assert(std::is_sorted(ranges.begin() + prev_size, ranges.end(), compare_selections));
         std::inplace_merge(ranges.begin(), ranges.begin() + prev_size, ranges.end(), compare_selections);
-        ranges.erase(merge_overlapping(ranges.begin(), ranges.end(), dummy, overlaps), ranges.end());
+    }
+
+    const auto end_coord = buffer.end_coord();
+    for (auto& range : ranges)
+    {
+        range.anchor() = std::min(range.anchor(), end_coord);
+        range.cursor() = std::min<ByteCoord>(range.cursor(), end_coord);
     }
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
@@ -326,6 +325,9 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
 
     for (auto& sel : ranges)
     {
+        kak_assert(buffer.is_valid(sel.anchor()));
+        kak_assert(buffer.is_valid(sel.cursor()));
+
         if (buffer.is_end(sel.anchor()))
             sel.anchor() = buffer.back_coord();
         if (buffer.is_end(sel.cursor()))
