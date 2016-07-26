@@ -996,6 +996,14 @@ void select_object(Context& context, NormalParams params)
                                                        sur.opening, sur.closing,
                                                        level, flags));
         }
+
+        if (is_punctuation(*cp))
+        {
+            StringView strview_codepoint{String(*cp)};
+            return select<mode>(context, std::bind(select_surrounding, _1, _2,
+                                                   strview_codepoint, strview_codepoint,
+                                                   level, flags));
+        }
     }, get_title(),
     "b,(,):  parenthesis block\n"
     "B,{,}:  braces block     \n"
