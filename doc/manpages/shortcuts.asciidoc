@@ -252,8 +252,14 @@ Changes
 *u*::
 	undo last change
 
+*<a-u>*::
+	move backward in history
+
 *U*::
 	redo last change
+
+*<a-U>*::
+	move forward in history
 
 *&*::
 	align selection, align the cursor of selections by inserting spaces
