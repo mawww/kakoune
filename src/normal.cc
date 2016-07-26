@@ -924,8 +924,8 @@ void select_object(Context& context, NormalParams params)
     const int level = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [level](Key key, Context& context) {
-        auto cp = key.codepoint();
-        if (not cp)
+        auto cp = key.codepoint().value_or(Codepoint{0});
+        if (cp == 0)
             return;
 
         static constexpr struct
@@ -943,14 +943,14 @@ void select_object(Context& context, NormalParams params)
         };
         for (auto& sel : selectors)
         {
-            if (*cp == sel.key)
+            if (cp == sel.key)
                 return select<mode>(context, std::bind(sel.func, _1, _2, flags));
         }
 
-        if (*cp == 'u')
+        if (cp == 'u')
             return select<mode>(context, std::bind(select_argument, _1, _2, level, flags));
 
-        if (*cp == ':')
+        if (cp == ':')
         {
             const bool info = show_auto_info_ifn(
                 "Enter object desc", "format: <open text>,<close text>",
@@ -989,19 +989,19 @@ void select_object(Context& context, NormalParams params)
         };
         for (auto& sur : surrounding_pairs)
         {
-            if (sur.opening[0_char] == *cp or
-                sur.closing[0_char] == *cp or
-                (sur.name != 0 and sur.name == *cp))
+            if (sur.opening[0_char] == cp or
+                sur.closing[0_char] == cp or
+                (sur.name != 0 and sur.name == cp))
                 return select<mode>(context, std::bind(select_surrounding, _1, _2,
                                                        sur.opening, sur.closing,
                                                        level, flags));
         }
 
-        if (is_punctuation(*cp))
+        if (is_punctuation(cp))
         {
-            StringView strview_codepoint{String(*cp)};
+            auto utf8cp = to_string(cp);
             return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                   strview_codepoint, strview_codepoint,
+                                                   utf8cp, utf8cp,
                                                    level, flags));
         }
     }, get_title(),
