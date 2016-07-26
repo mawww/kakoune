@@ -71,7 +71,7 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_flags{flags | Flags::NoUndo},
       m_history{m_next_history_id++, nullptr}, m_history_cursor{&m_history},
       m_last_save_history_cursor{&m_history},
-      m_fs_timestamp{fs_timestamp}
+      m_fs_timestamp{fs_timestamp.tv_sec, fs_timestamp.tv_nsec}
 {
     ParsedLines parsed_lines = parse_lines(data);
 
