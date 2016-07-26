@@ -10,6 +10,8 @@
 #include "value.hh"
 #include "vector.hh"
 
+#include <time.h>
+
 namespace Kakoune
 {
 
