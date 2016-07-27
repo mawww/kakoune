@@ -1431,7 +1431,6 @@ void undo(Context& context, NormalParams params)
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
-        context.selections().avoid_eol();
     }
     else
         context.print_status({ "nothing left to undo", get_face("Information") });
@@ -1446,7 +1445,6 @@ void redo(Context& context, NormalParams params)
         auto ranges = compute_modified_ranges(buffer, timestamp);
         if (not ranges.empty())
             context.selections_write_only() = std::move(ranges);
-        context.selections().avoid_eol();
     }
     else
         context.print_status({ "nothing left to redo", get_face("Information") });
