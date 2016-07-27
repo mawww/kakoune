@@ -850,21 +850,22 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
     const Face primary_cursor_face = get_face("PrimaryCursor");
     const Face secondary_cursor_face = get_face("SecondaryCursor");
 
-    for (size_t i = 0; i < context.selections().size(); ++i)
+    const auto& selections = context.selections();
+    for (size_t i = 0; i < selections.size(); ++i)
     {
-        auto& sel = context.selections()[i];
+        auto& sel = selections[i];
         const bool forward = sel.anchor() <= sel.cursor();
         ByteCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
         ByteCoord end   = forward ? (ByteCoord)sel.cursor() : buffer.char_next(sel.anchor());
 
-        const bool primary = (i == context.selections().main_index());
+        const bool primary = (i == selections.main_index());
         highlight_range(display_buffer, begin, end, false,
                         apply_face(primary ? primary_face : secondary_face));
     }
-    for (size_t i = 0; i < context.selections().size(); ++i)
+    for (size_t i = 0; i < selections.size(); ++i)
     {
-        auto& sel = context.selections()[i];
-        const bool primary = (i == context.selections().main_index());
+        auto& sel = selections[i];
+        const bool primary = (i == selections.main_index());
         highlight_range(display_buffer, sel.cursor(), buffer.char_next(sel.cursor()), false,
                         apply_face(primary ? primary_cursor_face : secondary_cursor_face));
     }
