@@ -34,7 +34,7 @@ public:
 
     iterator& operator++()
     {
-        m_it = utf8::next(m_it, m_end);
+        utf8::to_next(m_it, m_end);
         invalidate_value();
         return *this;
     }
@@ -48,7 +48,7 @@ public:
 
     iterator& operator--()
     {
-        m_it = utf8::previous(m_it, m_begin);
+        utf8::to_previous(m_it, m_begin);
         invalidate_value();
         return *this;
     }

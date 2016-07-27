@@ -25,13 +25,19 @@ inline bool is_character_start(char c)
     return (c & 0xC0) != 0x80;
 }
 
-// returns an iterator to next character first byte
 template<typename Iterator>
-Iterator next(Iterator it, const Iterator& end)
+void to_next(Iterator& it, const Iterator& end)
 {
     if (it != end and read(it) & 0x80)
         while (it != end and (*(it) & 0xC0) == 0x80)
             ++it;
+}
+
+// returns an iterator to next character first byte
+template<typename Iterator>
+Iterator next(Iterator it, const Iterator& end)
+{
+    to_next(it, end);
     return it;
 }
 
@@ -45,12 +51,17 @@ Iterator finish(Iterator it, const Iterator& end)
     return it;
 }
 
+template<typename Iterator>
+void to_previous(Iterator& it, const Iterator& begin)
+{
+    while (it != begin and (*(--it) & 0xC0) == 0x80)
+           ;
+}
 // returns an iterator to the previous character first byte
 template<typename Iterator>
 Iterator previous(Iterator it, const Iterator& begin)
 {
-    while (it != begin and (*(--it) & 0xC0) == 0x80)
-           ;
+    to_previous(it, begin);
     return it;
 }
 
