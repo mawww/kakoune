@@ -48,7 +48,7 @@ struct Server : public Singleton<Server>
     ~Server();
     const String& session() const { return m_session; }
 
-    bool rename_session(const String& name);
+    bool rename_session(StringView name);
     void close_session(bool do_unlink = true);
 
 private:

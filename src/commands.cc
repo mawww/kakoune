@@ -1902,10 +1902,10 @@ const CommandDesc change_working_directory_cmd = {
     }
 };
 
-const CommandDesc change_session_name = {
-    "session",
+const CommandDesc set_session_name = {
+    "namesession",
     nullptr,
-    "session <name>: change remote session name",
+    "namesession <name>: change remote session name",
     ParameterDesc{{}, ParameterDesc::Flags::None, 1, 1},
     CommandFlags::None,
     CommandHelper{},
@@ -1914,10 +1914,6 @@ const CommandDesc change_session_name = {
     {
         if (not Server::instance().rename_session(parser[0]))
             throw runtime_error(format("Cannot rename current session: '{}' may be already in use", parser[0]));
-
-        // update modeline
-        for (auto& client : ClientManager::instance())
-            client->redraw_ifn();
     }
 };
 
@@ -1978,7 +1974,7 @@ void register_commands()
     register_command(set_register_cmd);
     register_command(select_cmd);
     register_command(change_working_directory_cmd);
-    register_command(change_session_name);
+    register_command(set_session_name);
 }
 
 }
