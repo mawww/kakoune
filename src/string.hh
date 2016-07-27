@@ -192,6 +192,7 @@ public:
     StringView(const String& str) : m_data{str.data()}, m_length{(int)str.length()} {}
     StringView(const char& c) : m_data(&c), m_length(1) {}
     StringView(int c) = delete;
+    StringView(Codepoint c) = delete;
 
     [[gnu::always_inline]]
     constexpr const char* data() const { return m_data; }
