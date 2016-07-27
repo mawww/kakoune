@@ -63,6 +63,9 @@ command *q!* has to be used).
 *namebuf* <name>::
 	set current buffer name
 
+*namesession* <name>::
+	set current session name
+
 *echo* [options] <text>::
 	show *text* in status line, with the following *options*:
 
