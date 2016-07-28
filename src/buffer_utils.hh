@@ -31,6 +31,11 @@ inline CharCount char_length(const Buffer& buffer, const Selection& range)
                           buffer.iterator_at(buffer.char_next(range.max())));
 }
 
+inline CharCount char_length(const Buffer& buffer, const ByteCoord& begin, const ByteCoord& end)
+{
+    return utf8::distance(buffer.iterator_at(begin), buffer.iterator_at(end));
+}
+
 inline bool is_bol(ByteCoord coord)
 {
     return coord.column == 0;

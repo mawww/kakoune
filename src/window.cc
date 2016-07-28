@@ -200,9 +200,8 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer, CharCount o
                     if (atom.type() == DisplayAtom::BufferRange)
                     {
                         auto& buf = atom.buffer();
-                        pos_beg = buffer_column
-                                + utf8::distance(buf.iterator_at(atom.begin()),
-                                                 buf.iterator_at(pos));
+                        pos_beg = buffer_column +
+                            char_length(buf, atom.begin(), pos);
                         pos_end = pos_beg+1;
                     }
                     else
@@ -273,8 +272,7 @@ CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
             coord >= atom.begin() and coord < atom.end())
         {
             if (atom.type() == DisplayAtom::BufferRange)
-                column += utf8::distance(buffer.iterator_at(atom.begin()),
-                                         buffer.iterator_at(coord));
+                column += char_length(buffer, atom.begin(), coord);
             return column;
         }
         column += atom.length();

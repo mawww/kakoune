@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "buffer.hh"
+#include "buffer_utils.hh"
 #include "utf8.hh"
 
 #include "face_registry.hh"
@@ -62,8 +63,7 @@ CharCount DisplayAtom::length() const
     switch (m_type)
     {
         case BufferRange:
-           return utf8::distance(m_buffer->iterator_at(m_range.begin),
-                                 m_buffer->iterator_at(m_range.end));
+           return char_length(*m_buffer, m_range.begin, m_range.end);
         case Text:
         case ReplacedBufferRange:
            return m_text.char_length();
