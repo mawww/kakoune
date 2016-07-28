@@ -924,8 +924,8 @@ void select_object(Context& context, NormalParams params)
     const int level = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
                              [level](Key key, Context& context) {
-        auto cp = key.codepoint().value_or(Codepoint{0});
-        if (cp == 0)
+        auto cp = key.codepoint().value_or((Codepoint)-1);
+        if (cp == -1)
             return;
 
         static constexpr struct
