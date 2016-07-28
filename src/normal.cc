@@ -1027,25 +1027,9 @@ template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams)
 {
     Window& window = context.window();
-    Buffer& buffer = context.buffer();
-    CharCoord position = window.position();
-    LineCount cursor_line = 0;
+    const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1);
 
-    if (direction == Backward)
-    {
-        position.line -= (window.dimensions().line - 2) / (half ? 2 : 1);
-        cursor_line = position.line;
-    }
-    else if (direction == Forward)
-    {
-        position.line += (window.dimensions().line - 2) / (half ? 2 : 1);
-        cursor_line = position.line + window.dimensions().line - 1;
-    }
-    auto cursor_pos = utf8::advance(buffer.iterator_at(position.line),
-                                    buffer.iterator_at(position.line+1),
-                                    position.column);
-    select_coord(buffer, cursor_pos.coord(), context.selections());
-    window.set_position(position);
+    scroll_window(context, direction == Direction::Forward ? offset : -offset);
 }
 
 template<Direction direction>

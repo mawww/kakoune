@@ -95,12 +95,12 @@ struct MouseHandler
 
         case Key::Modifiers::MouseWheelDown:
             m_dragging = false;
-            wheel(context, 3);
+            scroll_window(context, 3);
             return true;
 
         case Key::Modifiers::MouseWheelUp:
             m_dragging = false;
-            wheel(context, -3);
+            scroll_window(context, -3);
             return true;
 
         default: return false;
@@ -108,32 +108,6 @@ struct MouseHandler
     }
 
 private:
-    void wheel(Context& context, LineCount offset)
-    {
-        Window& window = context.window();
-        Buffer& buffer = context.buffer();
-
-        CharCoord win_pos = window.position();
-        CharCoord win_dim = window.dimensions();
-
-        const CharCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
-        const CharCoord scrolloff =
-            std::min(context.options()["scrolloff"].get<CharCoord>(), max_offset);
-
-        const LineCount line_count = buffer.line_count();
-        win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
-
-        SelectionList& selections = context.selections();
-        const ByteCoord cursor = selections.main().cursor();
-
-        auto clamp_line = [&](LineCount line) { return clamp(line, 0_line, line_count-1); };
-        auto min_coord = buffer.offset_coord(clamp_line(win_pos.line + scrolloff.line), win_pos.column);
-        auto max_coord = buffer.offset_coord(clamp_line(win_pos.line + win_dim.line - 1 - scrolloff.line), win_pos.column);
-
-        selections = SelectionList{buffer, clamp(cursor, min_coord, max_coord)};
-
-        window.set_position(win_pos);
-    }
 
     bool m_dragging = false;
     ByteCoord m_anchor;
@@ -1457,6 +1431,33 @@ void hide_auto_info_ifn(const Context& context, bool hide)
 {
     if (hide)
         context.client().info_hide();
+}
+
+void scroll_window(Context& context, LineCount offset)
+{
+    Window& window = context.window();
+    Buffer& buffer = context.buffer();
+
+    CharCoord win_pos = window.position();
+    CharCoord win_dim = window.dimensions();
+
+    const CharCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
+    const CharCoord scrolloff =
+        std::min(context.options()["scrolloff"].get<CharCoord>(), max_offset);
+
+    const LineCount line_count = buffer.line_count();
+    win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
+
+    SelectionList& selections = context.selections();
+    const ByteCoord cursor = selections.main().cursor();
+
+    auto clamp_line = [&](LineCount line) { return clamp(line, 0_line, line_count-1); };
+    auto min_coord = buffer.offset_coord(clamp_line(win_pos.line + scrolloff.line), win_pos.column);
+    auto max_coord = buffer.offset_coord(clamp_line(win_pos.line + win_dim.line - 1 - scrolloff.line), win_pos.column);
+
+    selections = SelectionList{buffer, clamp(cursor, min_coord, max_coord)};
+
+    window.set_position(win_pos);
 }
 
 }
