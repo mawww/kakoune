@@ -124,6 +124,8 @@ struct SelectionList
     bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
     bool operator!=(const SelectionList& other) const { return not ((*this) == other); }
 
+    void sort();
+    void merge_overlapping();
     void sort_and_merge_overlapping();
 
     Buffer& buffer() const { return *m_buffer; }

@@ -1513,10 +1513,12 @@ void move(Context& context, NormalParams params)
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }
+    selections.sort();
+
     if (std::is_same<Type, LineCount>::value)
         selections.avoid_eol();
 
-    selections.sort_and_merge_overlapping();
+    selections.merge_overlapping();
 }
 
 void select_whole_buffer(Context& context, NormalParams)

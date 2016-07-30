@@ -419,7 +419,7 @@ void SelectionList::check_invariant() const
 #endif
 }
 
-void SelectionList::sort_and_merge_overlapping()
+void SelectionList::sort()
 {
     if (size() == 1)
         return;
@@ -434,7 +434,21 @@ void SelectionList::sort_and_merge_overlapping()
                                    return begin < main_begin;
                            });
     std::stable_sort(begin(), end(), compare_selections);
-    m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps), end());
+}
+
+void SelectionList::merge_overlapping()
+{
+    if (size() == 1)
+        return;
+
+    m_selections.erase(Kakoune::merge_overlapping(begin(), end(),
+                                                  m_main, overlaps), end());
+}
+
+void SelectionList::sort_and_merge_overlapping()
+{
+    sort();
+    merge_overlapping();
 }
 
 static inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
@@ -547,9 +561,7 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
 void SelectionList::erase()
 {
     update();
-
-    m_selections.erase(merge_overlapping(begin(), end(), m_main, overlaps),
-                       end());
+    merge_overlapping();
 
     ForwardChangesTracker changes_tracker;
     for (auto& sel : m_selections)
