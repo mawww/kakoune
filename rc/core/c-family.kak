@@ -53,11 +53,7 @@ def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
     ## indent after a statement not followed by an opening brace
     try %[ exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> ]
     ## align to the opening parenthesis when inserting a newline
-    try %[ eval -draft %[
-        exec {b L
-        try %[ exec -draft s^\h+<ret> d ]
-        exec <a-s> &
-    ] ]
+    try %[ exec -draft {b <a-k>\`\(<ret> L s\`|.\'<ret> & ]
 ] ]
 
 def -hidden _c-family-indent-on-opening-curly-brace %[
