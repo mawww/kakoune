@@ -272,6 +272,7 @@ struct convert_to_client_mode
 {
     String session;
     String buffer_name;
+    String selections;
 };
 
 enum class UIType
@@ -592,6 +593,7 @@ int run_server(StringView session, StringView init_command,
             if (convert_to_client_pending)
             {
                 String buffer_name = local_client->context().buffer().name();
+                String selections = selection_list_to_string(local_client->context().selections());
 
                 ClientManager::instance().remove_client(*local_client, true);
                 convert_to_client_pending = false;
@@ -600,7 +602,7 @@ int run_server(StringView session, StringView init_command,
                 {
                     String session = server.session();
                     server.close_session(false);
-                    throw convert_to_client_mode{ std::move(session), std::move(buffer_name) };
+                    throw convert_to_client_mode{ std::move(session), std::move(buffer_name), std::move(selections) };
                 }
             }
         }
@@ -860,8 +862,8 @@ int main(int argc, char* argv[])
             {
                 raise(SIGTSTP);
                 return run_client(convert.session,
-                                  format("try %^buffer '{}'^; echo converted to client only mode",
-                                         escape(convert.buffer_name, "'^", '\\')), ui_type);
+                                  format("try %^buffer '{}'; select '{}'^; echo converted to client only mode",
+                                         escape(convert.buffer_name, "'^", '\\'), convert.selections), ui_type);
             }
         }
     }
