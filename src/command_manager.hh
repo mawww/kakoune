@@ -126,6 +126,8 @@ public:
 
     Completions complete_command_name(const Context& context, StringView query, bool with_aliases) const;
 
+    void clear_last_complete_command() { m_last_complete_command = String{}; }
+
 private:
     void execute_single_command(CommandParameters params,
                                 Context& context,
@@ -143,6 +145,7 @@ private:
     };
     using CommandMap = UnorderedMap<String, CommandDescriptor, MemoryDomain::Commands>;
     CommandMap m_commands;
+    String m_last_complete_command;
 
     CommandMap::const_iterator find_command(const Context& context,
                                             const String& name) const;

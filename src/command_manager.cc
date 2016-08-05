@@ -609,6 +609,11 @@ Completions CommandManager::complete(const Context& context,
             return Completions{};
 
         const String& command_name = tokens[cmd_idx].content();
+        if (command_name != m_last_complete_command)
+        {
+            m_last_complete_command = command_name;
+            flags |= CompletionFlags::Start;
+        }
 
         auto command_it = find_command(context, command_name);
         if (command_it == m_commands.end() or
@@ -652,6 +657,11 @@ Completions CommandManager::complete(const Context& context,
     else
     {
         const String& command_name = params[0];
+        if (command_name != m_last_complete_command)
+        {
+            m_last_complete_command = command_name;
+            flags |= CompletionFlags::Start;
+        }
 
         auto command_it = find_command(context, command_name);
         if (command_it != m_commands.end() and command_it->second.completer)

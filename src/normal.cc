@@ -335,6 +335,8 @@ void command(Context& context, NormalParams params)
     if (not CommandManager::has_instance())
         return;
 
+    CommandManager::instance().clear_last_complete_command();
+
     context.input_handler().prompt(
         ":", "", get_face("Prompt"), false,
         [](const Context& context, CompletionFlags flags,

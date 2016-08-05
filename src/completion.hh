@@ -4,6 +4,7 @@
 #include <functional>
 #include <algorithm>
 
+#include "flags.hh"
 #include "units.hh"
 #include "string.hh"
 #include "vector.hh"
@@ -34,9 +35,13 @@ struct Completions
 
 enum class CompletionFlags
 {
-    None,
-    Fast
+    None = 0,
+    Fast = 1 << 0,
+    Start = 1 << 2,
 };
+
+template<> struct WithBitOps<CompletionFlags> : std::true_type {};
+
 using Completer = std::function<Completions (const Context&, CompletionFlags,
                                              StringView, ByteCount)>;
 

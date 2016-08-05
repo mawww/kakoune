@@ -843,7 +843,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                         CommandParameters params,
                         size_t token_to_complete, ByteCount pos_in_token)
         {
-            if (flags == CompletionFlags::Fast) // no shell on fast completion
+            if (flags & CompletionFlags::Fast) // no shell on fast completion
                 return Completions{};
 
             ShellContext shell_context{
@@ -866,9 +866,12 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             const Context& context, CompletionFlags flags, CommandParameters params,
             size_t token_to_complete, ByteCount pos_in_token) mutable
         {
+            if (flags & CompletionFlags::Start)
+                token = -1;
+
             if (token != token_to_complete)
             {
-                if (flags == CompletionFlags::Fast) // no shell on fast completion
+                if (flags & CompletionFlags::Fast) // no shell on fast completion
                     return Completions{};
 
                 ShellContext shell_context{
@@ -883,9 +886,6 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                     candidates.push_back({c.str(), used_letters(c)});
                 token = token_to_complete;
             }
-
-            if (token != token_to_complete)
-                return Completions{};
 
             StringView query = params[token_to_complete].substr(0, pos_in_token);
             UsedLetters query_letters = used_letters(query);
