@@ -42,8 +42,13 @@ def -hidden _c-family-trim-autoindent %[ eval -draft -itersel %[
 
 def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
     exec \;
-    ## indent new lines with the same level as the previous one
-    exec -draft K <a-&>
+    try %[
+        ## if previous line closed a paren, copy indent of the opening paren line
+        exec -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?$<ret> m<a-\;>J s\`|.\'<ret> 1<a-&>
+    ] catch %[
+        ## else indent new lines with the same level as the previous one
+        exec -draft K <a-&>
+    ]
     ## remove previous empty lines resulting from the automatic indent
     try %[ exec -draft k <a-x>H <a-k>^\h+$<ret> d ]
     ## indent after an opening brace
