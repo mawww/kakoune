@@ -35,26 +35,30 @@ hook global BufSetOption mimetype=text/x-objc %{
     set buffer filetype objc
 }
 
-def -hidden _c-family-indent-on-new-line %~
-    eval -draft -itersel %=
-        # preserve previous line indent
-        try %{ exec -draft \;K<a-&> }
-        # indent after lines ending with { or (
-        try %[ exec -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
-        # cleanup trailing white space son previous line
-        try %{ exec -draft k<a-x> s \h+$ <ret>d }
-        # align to opening paren of previous line
-        try %{ exec -draft [( <a-k> \`\([^\n]+\n[^\n]*\n?\' <ret> s \`\(\h*.|.\' <ret> '<a-;>' & }
-        # align to previous statement start when previous line closed a parenthesis
-        # try %{ exec -draft <a-?>\)M<a-k>\`\(.*\)[^\n()]*\n\h*\n?\'<ret>s\`|.\'<ret>1<a-&> }
-        # copy // comments prefix
-        try %{ exec -draft \;<c-s>k<a-x> s ^\h*\K/{2,} <ret> y<c-o><c-o>P<esc> }
-        # indent after visibility specifier
-        try %[ exec -draft k<a-x> <a-k> ^\h*(public|private|protected):\h*$ <ret> j<a-gt> ]
-        # indent after if|else|while|for
-        try %[ exec -draft \;<a-F>)MB <a-k> \`(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\' <ret> s \`|.\' <ret> 1<a-&>1<a-space><a-gt> ]
-    =
-~
+def -hidden _c-family-trim-autoindent %[ eval -draft -itersel %[
+    ## remove the line if it's empty when leaving the insert mode
+    try %[ exec <a-x> 1s^(\h+)$<ret> d ]
+] ]
+
+def -hidden _c-family-indent-on-newline %[ eval -draft -itersel %[
+    exec \;
+    ## indent new lines with the same level as the previous one
+    exec -draft K <a-&>
+    ## remove previous empty lines resulting from the automatic indent
+    try %[ exec -draft k <a-x>H <a-k>^\h+$<ret> d ]
+    ## indent after an opening brace
+    try %[ exec -draft K s\{\h*$<ret> j <a-gt> ]
+    ## indent after a label
+    try %[ exec -draft K <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> ]
+    ## indent after a statement not followed by an opening brace
+    try %[ exec -draft k <a-x> <a-k>\b(if|else|for|while)\h*\(.+?\)\h*$<ret> j <a-gt> ]
+    ## align to the opening parenthesis when inserting a newline
+    try %[ eval -draft %[
+        exec {b L
+        try %[ exec -draft s^\h+<ret> d ]
+        exec <a-s> &
+    ] ]
+] ]
 
 def -hidden _c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
@@ -64,8 +68,60 @@ def -hidden _c-family-indent-on-opening-curly-brace %[
 def -hidden _c-family-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
-    # add ; after } if class or struct definition
-    try %[ exec -draft "hm;<a-?>(class|struct|union)<ret><a-k>\`(class|struct|union)[^{}\n]+(\n)?\s*\{\'<ret><a-;>ma;<esc>" ]
+]
+
+def -hidden _c-family-insert-on-closing-curly-brace %[
+    # add a semicolon after a closing brace if part of a class, union or struct definition
+    try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>^\h*(class|struct|union)<ret> a\;<esc> ]
+]
+
+def -hidden _c-family-insert-on-newline %[
+    exec \;
+    try %[
+        eval -draft %[
+            ## copy the commenting prefix
+            exec -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
+            try %[
+                ## if the previous comment isn't empty, create a new one
+                exec <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>p
+            ] catch %[
+                ## if there is no text in the previous comment, remove it completely
+                exec d
+            ]
+        ]
+    ]
+    try %[
+        eval -draft %[
+            ## select the previous line
+            exec k <a-x>
+
+            try %{
+                ## if the previous line isn't within a comment scope, break
+                exec <a-k>^(\h*/\*|\h+\*[^/])<ret>
+                ## simple test to check that the previous comment has been left open
+                exec <a-K>\*/\h*$<ret>
+
+                try %[
+                    ## if the next line is a comment line, add a star
+                    exec -draft 2j<a-x><a-k>^\h+\*<ret>
+                    exec -draft j<a-x>s^\h*<ret>a*<space><esc>
+                ] catch %[
+                    try %[
+                        ## if the previous line is an empty comment line, close the comment scope
+                        exec -draft <a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                    ] catch %[
+                        ## if the previous line is a non-empty comment line, add a star
+                        exec -draft j<a-x>s^\h*<ret>a*<space><esc>
+                    ]
+                ]
+
+                ## trim trailing whitespace on the previous line
+                try %[ exec -draft 1s(\h+)$<ret>d ]
+                ## align the new star with the previous one
+                exec J<a-x>1s^[^*]*(\*)<ret>&
+            }
+        ]
+    ]
 ]
 
 # Regions definition are the same between c++ and objective-c
@@ -180,12 +236,12 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
         rmhooks window c-family-indent
     }
 
-    # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group c-family-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
-
-    hook window InsertChar \n -group c-family-indent _c-family-indent-on-new-line
-    hook window InsertChar \{ -group c-family-indent _c-family-indent-on-opening-curly-brace
-    hook window InsertChar \} -group c-family-indent _c-family-indent-on-closing-curly-brace
+    hook -group c-family-indent window InsertEnd .* _c-family-trim-autoindent
+    hook -group c-family-indent window InsertChar \n _c-family-indent-on-newline
+    hook -group c-family-indent window InsertChar \{ _c-family-indent-on-opening-curly-brace
+    hook -group c-family-indent window InsertChar \} _c-family-indent-on-closing-curly-brace
+    hook -group c-family-insert window InsertChar \} _c-family-insert-on-closing-curly-brace
+    hook -group c-family-insert window InsertChar \n _c-family-insert-on-newline
 
     alias window alt c-family-alternative-file
 
@@ -195,6 +251,7 @@ hook global WinSetOption filetype=(c|cpp|objc) %[
 hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
     rmhooks window c-family-hooks
     rmhooks window c-family-indent
+    rmhooks window c-family-insert
 
     unalias window alt c-family-alternative-file
 ]
