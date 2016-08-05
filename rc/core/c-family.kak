@@ -76,7 +76,7 @@ def -hidden _c-family-insert-on-closing-curly-brace %[
     try %[ exec -itersel -draft hm<a-x>B<a-x><a-k>^\h*(class|struct|union)<ret> a\;<esc> ]
 ]
 
-def -hidden _c-family-insert-on-newline %[
+def -hidden _c-family-insert-on-newline %[ eval -draft %[
     exec \;
     try %[
         eval -draft %[
@@ -92,38 +92,33 @@ def -hidden _c-family-insert-on-newline %[
         ]
     ]
     try %[
-        eval -draft %[
-            ## select the previous line
-            exec k <a-x>
+        ## select the previous line
+        exec k <a-x>
+        ## if the previous line isn't within a comment scope, break
+        exec <a-k>^(\h*/\*|\h+\*[^/])<ret>
+        ## simple test to check that the previous comment has been left open
+        exec <a-K>\*/\h*$<ret>
 
-            try %{
-                ## if the previous line isn't within a comment scope, break
-                exec <a-k>^(\h*/\*|\h+\*[^/])<ret>
-                ## simple test to check that the previous comment has been left open
-                exec <a-K>\*/\h*$<ret>
-
-                try %[
-                    ## if the next line is a comment line, add a star
-                    exec -draft 2j<a-x><a-k>^\h+\*<ret>
-                    exec -draft j<a-x>s^\h*<ret>a*<space><esc>
-                ] catch %[
-                    try %[
-                        ## if the previous line is an empty comment line, close the comment scope
-                        exec -draft <a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
-                    ] catch %[
-                        ## if the previous line is a non-empty comment line, add a star
-                        exec -draft j<a-x>s^\h*<ret>a*<space><esc>
-                    ]
-                ]
-
-                ## trim trailing whitespace on the previous line
-                try %[ exec -draft 1s(\h+)$<ret>d ]
-                ## align the new star with the previous one
-                exec J<a-x>1s^[^*]*(\*)<ret>&
-            }
+        try %[
+            ## if the next line is a comment line, add a star
+            exec -draft 2j<a-x><a-k>^\h+\*<ret>
+            exec -draft j<a-x>s^\h*<ret>a*<space><esc>
+        ] catch %[
+            try %[
+                ## if the previous line is an empty comment line, close the comment scope
+                exec -draft <a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+            ] catch %[
+                ## if the previous line is a non-empty comment line, add a star
+                exec -draft j<a-x>s^\h*<ret>a*<space><esc>
+            ]
         ]
+
+        ## trim trailing whitespace on the previous line
+        try %[ exec -draft 1s(\h+)$<ret>d ]
+        ## align the new star with the previous one
+        exec J<a-x>1s^[^*]*(\*)<ret>&
     ]
-]
+] ]
 
 # Regions definition are the same between c++ and objective-c
 %sh{
