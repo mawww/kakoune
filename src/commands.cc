@@ -1524,7 +1524,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 const CommandDesc exec_string_cmd = {
     "exec",
     nullptr,
-    "exec <switches> <keys>: execute given keys in normal mode as if entered by user",
+    "exec <switches> <keys>: execute given keys as if entered by user",
     context_wrap_params,
     CommandFlags::None,
     CommandHelper{},
@@ -1538,8 +1538,6 @@ const CommandDesc exec_string_cmd = {
                 KeyList param_keys = parse_keys(param);
                 keys.insert(keys.end(), param_keys.begin(), param_keys.end());
             }
-
-            InputHandler::ScopedForceNormal force_normal{context.input_handler()};
 
             ScopedEdition edition(context);
             for (auto& key : keys)
