@@ -211,7 +211,7 @@ public:
     OptionsRegistry(OptionManager& global_manager) : m_global_manager(global_manager) {}
 
     template<typename T, void (*validator)(const T&) = nullptr>
-    Option& declare_option(const String& name, const String& docstring,
+    Option& declare_option(StringView name, StringView docstring,
                            const T& value,
                            OptionFlags flags = OptionFlags::None)
     {
@@ -223,7 +223,7 @@ public:
                 return **it;
             throw runtime_error(format("option '{}' already declared with different type or flags", name));
         }
-        m_descs.emplace_back(new OptionDesc{name, docstring, flags});
+        m_descs.emplace_back(new OptionDesc{name.str(), docstring.str(), flags});
         opts.emplace_back(new TypedCheckedOption<T, validator>{m_global_manager, *m_descs.back(), value});
         return *opts.back();
     }
