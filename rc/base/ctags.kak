@@ -6,10 +6,14 @@
 decl str-list ctagsfiles 'tags'
 
 def -params 0..1 \
-    -shell-completion '
-        ( for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr \':\' \'\n\');
-              do readtags -t "${tags}" -p "$1"
-          done ) | cut -f 1 | sort | uniq' \
+    -shell-candidates '
+        ( for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr \':\' \'\n\'); do
+              namecache=$(dirname ${tags})/.kak.$(basename ${tags}).namecache
+              if [ -z "$(find ${namecache} -prune -newer ${tags})" ]; then
+                  cat ${tags} | cut -f 1 | uniq > ${namecache}
+              fi
+              cat ${namecache}
+          done )' \
     -docstring 'Jump to tag definition' \
     tag \
     %{ %sh{
