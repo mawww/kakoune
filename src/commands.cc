@@ -37,6 +37,18 @@
 namespace Kakoune
 {
 
+template<>
+struct option_type_name<TimestampedList<LineAndFlag>>
+{
+    static StringView name() { return "line-flags"; }
+};
+
+template<>
+struct option_type_name<TimestampedList<RangeAndFace>>
+{
+    static StringView name() { return "range-faces"; }
+};
+
 namespace
 {
 

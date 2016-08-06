@@ -16,9 +16,25 @@
 namespace Kakoune
 {
 
-inline String option_to_string(StringView opt) { return opt.str(); }
-inline void option_from_string(StringView str, String& opt) { opt = str.str(); }
-inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
+template<typename T, typename = void> struct option_type_name;
+template<typename T> using void_t = void;
+
+template<typename T>
+struct option_type_name<T, void_t<decltype(T::option_type_name)>>
+{
+    static decltype(T::option_type_name) name() { return T::option_type_name; }
+};
+
+template<typename Enum>
+struct option_type_name<Enum, typename std::enable_if<std::is_enum<Enum>::value>::type>
+{
+    static String name()
+    {
+        constexpr StringView type = WithBitOps<Enum>::value ? "flags" : "enum";
+        auto name = enum_desc(Enum{});
+        return type + "(" + join(name | transform([](const EnumDesc<Enum>& d) { return d.name; }), '|') + ")";
+    }
+};
 
 inline String option_to_string(int opt) { return to_string(opt); }
 inline void option_from_string(StringView str, int& opt) { opt = str_to_int(str); }
@@ -28,6 +44,7 @@ inline bool option_add(int& opt, StringView str)
     opt += val;
     return val != 0;
 }
+template<> struct option_type_name<int> { static StringView name() { return "int"; } };
 
 inline String option_to_string(size_t opt) { return to_string(opt); }
 inline void option_from_string(StringView str, size_t& opt) { opt = str_to_int(str); }
@@ -42,6 +59,7 @@ inline void option_from_string(StringView str, bool& opt)
     else
         throw runtime_error("boolean values are either true, yes, false or no");
 }
+template<> struct option_type_name<bool> { static StringView name() { return "bool"; } };
 
 constexpr char list_separator = ':';
 
@@ -82,6 +100,12 @@ bool option_add(Vector<T, domain>& opt, StringView str)
     return not vec.empty();
 }
 
+template<typename T, MemoryDomain D>
+struct option_type_name<Vector<T, D>>
+{
+    static String name() { return option_type_name<T>::name() + StringView{"-list"}; }
+};
+
 template<typename Value, MemoryDomain domain>
 String option_to_string(const IdMap<Value, domain>& opt)
 {
@@ -113,6 +137,12 @@ void option_from_string(StringView str, IdMap<Value, domain>& opt)
         opt.append({ std::move(key), std::move(value) });
     }
 }
+
+template<typename T, MemoryDomain D>
+struct option_type_name<IdMap<T, D>>
+{
+    static String name() { return format("str-to-{}-map", option_type_name<T>::name()); }
+};
 
 constexpr char tuple_separator = '|';
 

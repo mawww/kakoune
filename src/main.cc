@@ -213,8 +213,8 @@ void register_options()
     reg.declare_option<CharCoord, check_scrolloff>(
         "scrolloff", "number of lines and columns to keep visible main cursor when scrolling",
         {0,0});
-    reg.declare_option("eolformat", "end of line format: crlf or lf", EolFormat::Lf);
-    reg.declare_option("BOM", "insert a byte order mark when writing buffer (none or utf8)",
+    reg.declare_option("eolformat", "end of line format", EolFormat::Lf);
+    reg.declare_option("BOM", "byte order mark to use when writing buffer",
                        ByteOrderMark::None);
     reg.declare_option("incsearch",
                        "incrementaly apply search/select/split regex",

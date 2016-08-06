@@ -103,6 +103,8 @@ struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
     [[gnu::always_inline]]
     constexpr CharCoord(LineCount line = 0, CharCount column = 0)
         : LineAndColumn(line, column) {}
+
+    static constexpr const char* option_type_name = "coord";
 };
 
 struct ByteCoordAndTarget : ByteCoord

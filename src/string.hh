@@ -128,6 +128,7 @@ public:
     void resize(ByteCount size, char c);
 
     static const String ms_empty;
+    static constexpr const char* option_type_name = "str";
 
     union Data
     {
@@ -304,6 +305,10 @@ inline String operator"" _str(const char* str, size_t)
 
 int str_to_int(StringView str); // throws on error
 Optional<int> str_to_int_ifp(StringView str);
+
+inline String option_to_string(StringView opt) { return opt.str(); }
+inline void option_from_string(StringView str, String& opt) { opt = str.str(); }
+inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
 
 template<size_t N>
 struct InplaceString
