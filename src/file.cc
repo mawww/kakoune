@@ -216,7 +216,7 @@ void write(int fd, StringView data)
         count -= written;
 
         if (written == -1)
-            throw file_access_error("fd: " + to_string(fd), strerror(errno));
+            throw file_access_error(format("fd: {}", fd), strerror(errno));
     }
 }
 

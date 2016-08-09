@@ -548,9 +548,8 @@ void RemoteClient::write_next_key()
 void send_command(StringView session, StringView command)
 {
     int sock = connect_to(session);
-    if (::write(sock, command.data(), (int)command.length()) < 0)
-        throw runtime_error(format("unable to write data to socket (fd: {}; errno: {})", sock, ::strerror(errno)));
-    close(sock);
+    auto close_sock = on_scope_end([sock]{ close(sock); });
+    write(sock, command);
 }
 
 
