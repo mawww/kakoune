@@ -98,7 +98,7 @@ void Buffer::on_registered()
 {
     // Ignore debug buffer, as it can be created in many
     // corner cases (including while destroying the BufferManager
-    // if a BufClose hooks triggers writing to it.
+    // if a BufClose hooks triggers writing to it).
     if (m_flags & Flags::Debug)
         return;
 
