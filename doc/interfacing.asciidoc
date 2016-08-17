@@ -85,13 +85,13 @@ external completions are provided using an option to store completion, which
 have the following format.
 
 ----
-line.column[+len]@timestamp:candidate1[|desc1[|menu1]]:candidate2[|desc2[|menu2]]:...
+line.column[+len]@timestamp:candidate1|desc1|menu1:candidate2|desc2|menu2:...
 ----
 
 the first element of this string list specify where and when this completions
-applies, the others are simply completion candidates, eventually containing
-a descriptive text (after an `|` separator), and a separate menu text (after
-the second `|` separator).
+applies, the others are a triplet `<completion text>|<docstring>|<menu text>`
+
+The menu text is a a markup string, so it can contain `{face}` directives.
 
 to effectively use that completion option, it should get added to the completers
 option.
