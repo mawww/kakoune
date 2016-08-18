@@ -20,7 +20,7 @@ install:
       if [ "$CXX" = "clang++" ]; then
         export CXX=clang++-3.5;
       elif [ "$CXX" = "g++" ]; then
-        export CXX=g++-4.9;
+        export CXX=g++-5;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
        brew outdated boost || brew upgrade boost;
@@ -37,8 +37,8 @@ addons:
       - llvm-toolchain-precise-3.5
     packages:
       - clang-3.5
-      - libstdc++-4.9-dev
-      - g++-4.9
+      - libstdc++-5-dev
+      - g++-5
       - libncursesw5-dev
       - libboost-regex1.55-dev
   coverity_scan:
