@@ -31,7 +31,7 @@ struct Regex : RegexBase
 
     const String& str() const { return m_str; }
 
-    static constexpr StringView option_type_name = "regex";
+    static constexpr const char* option_type_name = "regex";
 
 private:
     String m_str;
