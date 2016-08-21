@@ -91,8 +91,8 @@ public:
     using OptionList = Vector<const Option*>;
     OptionList flatten_options() const;
 
-    void register_watcher(OptionManagerWatcher& watcher);
-    void unregister_watcher(OptionManagerWatcher& watcher);
+    void register_watcher(OptionManagerWatcher& watcher) const;
+    void unregister_watcher(OptionManagerWatcher& watcher) const;
 
     void on_option_changed(const Option& option) override;
 private:
@@ -105,7 +105,7 @@ private:
     Vector<std::unique_ptr<Option>, MemoryDomain::Options> m_options;
     OptionManager* m_parent;
 
-    Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
+    mutable Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
 };
 
 template<typename T>

@@ -26,13 +26,13 @@ OptionManager::~OptionManager()
     kak_assert(m_watchers.empty());
 }
 
-void OptionManager::register_watcher(OptionManagerWatcher& watcher)
+void OptionManager::register_watcher(OptionManagerWatcher& watcher) const
 {
     kak_assert(not contains(m_watchers, &watcher));
     m_watchers.push_back(&watcher);
 }
 
-void OptionManager::unregister_watcher(OptionManagerWatcher& watcher)
+void OptionManager::unregister_watcher(OptionManagerWatcher& watcher) const
 {
     auto it = find(m_watchers.begin(), m_watchers.end(), &watcher);
     kak_assert(it != m_watchers.end());
