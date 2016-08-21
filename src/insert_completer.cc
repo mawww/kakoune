@@ -76,12 +76,15 @@ WordDB& get_word_db(const Buffer& buffer)
 template<bool other_buffers>
 InsertCompletion complete_word(const SelectionList& sels, const OptionManager& options)
 {
+    StringView extra_word_char = options["completion_extra_word_char"].get<String>();
+    auto is_word_pred = [extra_word_char](Codepoint c) { return is_word(c) or contains(extra_word_char, c); };
+
     const Buffer& buffer = sels.buffer();
     ByteCoord cursor_pos = sels.main().cursor();
 
     using Utf8It = utf8::iterator<BufferIterator>;
     Utf8It pos{buffer.iterator_at(cursor_pos), buffer};
-    if (pos == buffer.begin() or not is_word(*(pos-1)))
+    if (pos == buffer.begin() or not is_word_pred(*(pos-1)))
         return {};
 
     ByteCoord word_begin;
@@ -92,7 +95,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
         Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
         Utf8It begin = end-1;
         if (not skip_while_reverse(begin, buffer.begin(),
-                                   [](Codepoint c) { return is_word(c); }))
+                                   [&](Codepoint c) { return is_word_pred(c); }))
             ++begin;
 
         if (i == sels.main_index())
@@ -101,7 +104,7 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
             prefix = buffer.string(word_begin, end.base().coord());
         }
 
-        skip_while(end, buffer.end(), [](Codepoint c) { return is_word(c); });
+        skip_while(end, buffer.end(), [&](Codepoint c) { return is_word_pred(c); });
 
         auto word = buffer.string(begin.base().coord(), end.base().coord());
         ++sel_word_counts[word];

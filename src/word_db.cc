@@ -10,7 +10,7 @@ namespace Kakoune
 
 using WordList = Vector<StringView>;
 
-static WordList get_words(StringView content)
+static WordList get_words(StringView content, StringView extra_word_chars)
 {
     WordList res;
     using Utf8It = utf8::iterator<const char*>;
@@ -19,7 +19,7 @@ static WordList get_words(StringView content)
     for (Utf8It it{word_start, content}, end{content.end(), content}; it != end; ++it)
     {
         Codepoint c = *it;
-        const bool word = is_word(c);
+        const bool word = is_word(c) or contains(extra_word_chars, c);
         if (not in_word and word)
         {
             word_start = it.base();
@@ -36,9 +36,14 @@ static WordList get_words(StringView content)
     return res;
 }
 
+static StringView get_extra_word_chars(const Buffer& buffer)
+{
+    return buffer.options()["completion_extra_word_char"].get<String>();
+}
+
 void WordDB::add_words(StringView line)
 {
-    for (auto& w : get_words(line))
+    for (auto& w : get_words(line, get_extra_word_chars(*m_buffer)))
     {
         auto it = m_words.find(w);
         if (it == m_words.end())
@@ -56,7 +61,7 @@ void WordDB::add_words(StringView line)
 
 void WordDB::remove_words(StringView line)
 {
-    for (auto& w : get_words(line))
+    for (auto& w : get_words(line, get_extra_word_chars(*m_buffer)))
     {
         auto it = m_words.find(w);
         kak_assert(it != m_words.end() and it->second.refcount > 0);
@@ -66,14 +71,44 @@ void WordDB::remove_words(StringView line)
 }
 
 WordDB::WordDB(const Buffer& buffer)
-    : m_buffer{&buffer}, m_timestamp{buffer.timestamp()}
+    : m_buffer{&buffer}
 {
+    buffer.options().register_watcher(*this);
+    rebuild_db();
+}
+
+WordDB::WordDB(WordDB&& other)
+    : m_buffer{std::move(other.m_buffer)},
+      m_lines{std::move(other.m_lines)},
+      m_words{std::move(other.m_words)},
+      m_timestamp{other.m_timestamp}
+{
+    kak_assert(m_buffer);
+    m_buffer->options().unregister_watcher(other);
+    other.m_buffer = nullptr;
+
+    m_buffer->options().register_watcher(*this);
+}
+
+WordDB::~WordDB()
+{
+    if (m_buffer)
+        m_buffer->options().unregister_watcher(*this);
+}
+
+void WordDB::rebuild_db()
+{
+    auto& buffer = *m_buffer;
+
+    m_words.clear();
+    m_lines.clear();
     m_lines.reserve((int)buffer.line_count());
     for (auto line = 0_line, end = buffer.line_count(); line < end; ++line)
     {
         m_lines.push_back(buffer.line_storage(line));
         add_words(m_lines.back()->strview());
     }
+    m_timestamp = buffer.timestamp();
 }
 
 void WordDB::update_db()
@@ -116,6 +151,12 @@ void WordDB::update_db()
         new_lines.push_back(std::move(m_lines[(int)old_line++]));
 
     m_lines = std::move(new_lines);
+}
+
+void WordDB::on_option_changed(const Option& option)
+{
+    if (option.name() == "completion_extra_word_char")
+        rebuild_db();
 }
 
 int WordDB::get_word_occurences(StringView word) const

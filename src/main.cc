@@ -266,6 +266,9 @@ void register_options()
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} "_str);
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
     reg.declare_option("readonly", "prevent buffers from being modified", false);
+    reg.declare_option("completion_extra_word_char",
+                       "Additional characters to be considered as words for insert completion",
+                       ""_str);
 }
 
 struct convert_to_client_mode

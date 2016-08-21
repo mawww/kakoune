@@ -124,9 +124,13 @@ Builtin options
 		to define where the completion apply in the buffer, and the
 		other strings are the candidates
 
-	*static_words* 'str-list':::
-		list of words that are always added to completion candidates
-		when completing words in insert mode
+*static_words* 'str-list'::
+	list of words that are always added to completion candidates
+	when completing words in insert mode
+
+*completions_extra_word_chars* 'str'::
+	a string containing all additional character that should be considered
+	as word character for the purpose of insert mode completion.
 
 *autoreload* 'enum(yes|no|ask)'::
 	auto reload the buffers when an external modification is detected

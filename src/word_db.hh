@@ -13,12 +13,13 @@ namespace Kakoune
 using RankedMatchList = Vector<RankedMatch>;
 
 // maintain a database of words available in a buffer
-class WordDB
+class WordDB : public OptionManagerWatcher
 {
 public:
     WordDB(const Buffer& buffer);
+    ~WordDB();
     WordDB(const WordDB&) = delete;
-    WordDB(WordDB&&) = default;
+    WordDB(WordDB&&);
 
     RankedMatchList find_matching(StringView str);
 
@@ -27,6 +28,10 @@ private:
     void update_db();
     void add_words(StringView line);
     void remove_words(StringView line);
+
+    void rebuild_db();
+
+    void on_option_changed(const Option& option) override;
 
     struct WordInfo
     {

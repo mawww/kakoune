@@ -899,6 +899,9 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
      where the completion apply in the buffer.
  * `static_words` _str-list_: list of words that are always added to completion
      candidates when completing words in insert mode.
+ * `completions_extra_word_chars` _str_: a string containing all additional character
+     that should be considered as word character for the purpose of insert mode
+     completion.
  * `autoreload` _enum(yes|no|ask)_: auto reload the buffers when an external
    modification is detected.
  * `debug` _flags(hooks|shell|profile)_: dump various debug information in
