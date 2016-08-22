@@ -247,6 +247,10 @@ Selection select_number(const Buffer& buffer, const Selection& selection, Object
 
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last = first;
+
+    if (not is_number(*first) and *first != '-')
+        return selection;
+
     if (flags & ObjectFlags::ToBegin)
     {
         skip_while_reverse(first, buffer.begin(), is_number);
@@ -257,8 +261,11 @@ Selection select_number(const Buffer& buffer, const Selection& selection, Object
 
     if (flags & ObjectFlags::ToEnd)
     {
+        if (*last == '-')
+            ++last;
         skip_while(last, buffer.end(), is_number);
-        --last;
+        if (last != buffer.begin())
+            --last;
     }
 
     return (flags & ObjectFlags::ToEnd) ? Selection{first.coord(), last.coord()}
