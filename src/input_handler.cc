@@ -881,12 +881,10 @@ private:
     static void history_push(History& history, StringView entry)
     {
         if(entry.empty() or is_horizontal_blank(entry[0_byte]))
-        {
             return;
-        }
-        History::iterator it;
-        while ((it = find(history, entry)) != history.end())
-            history.erase(it);
+
+        history.erase(std::remove(history.begin(), history.end(), entry),
+                      history.end());
         history.push_back(entry.str());
     }
 };
