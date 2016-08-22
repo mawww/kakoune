@@ -1627,11 +1627,12 @@ const CommandDesc prompt_cmd = {
                     context, flags, prefix, cursor_pos);
             };
 
-        const bool password = (bool)parser.get_switch("password");
+        const auto flags = parser.get_switch("password") ?
+            PromptFlags::Password : PromptFlags::None;
 
         context.input_handler().prompt(
             parser[0], initstr.str(), get_face("Prompt"),
-            password, std::move(completer),
+            flags, std::move(completer),
             [=](StringView str, PromptEvent event, Context& context)
             {
                 if (event != PromptEvent::Validate)
@@ -1642,7 +1643,7 @@ const CommandDesc prompt_cmd = {
 
                 CommandManager::instance().execute(command, context, shell_context);
 
-                if (password)
+                if (flags & PromptFlags::Password)
                 {
                     const String& str = RegisterManager::instance()[reg].values(context)[0];
                     memset(const_cast<String&>(str).data(), 0, (int)str.length());

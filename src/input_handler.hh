@@ -29,6 +29,15 @@ enum class PromptEvent
     Validate
 };
 using PromptCallback = std::function<void (StringView, PromptEvent, Context&)>;
+enum class PromptFlags
+{
+    None = 0,
+    Password = 1 << 0,
+    DropHistoryEntriesWithBlankPrefix = 1 << 1
+};
+template<> struct WithBitOps<PromptFlags> : std::true_type {};
+
+
 using KeyCallback = std::function<void (Key, Context&)>;
 
 class InputMode;
@@ -53,7 +62,7 @@ public:
     // returns to normal mode after validation if callback does
     // not change the mode itself
     void prompt(StringView prompt, String initstr,
-                Face prompt_face, bool password,
+                Face prompt_face, PromptFlags flags,
                 Completer completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);
 

@@ -621,10 +621,10 @@ class Prompt : public InputMode
 {
 public:
     Prompt(InputHandler& input_handler, StringView prompt,
-           String initstr, Face face, bool password,
+           String initstr, Face face, PromptFlags flags,
            Completer completer, PromptCallback callback)
         : InputMode(input_handler), m_prompt(prompt.str()), m_prompt_face(face),
-          m_password(password), m_completer(completer), m_callback(callback),
+          m_flags(flags), m_completer(completer), m_callback(callback),
           m_autoshowcompl{context().options()["autoshowcompl"].get<bool>()}
     {
         m_history_it = ms_history[m_prompt].end();
@@ -853,7 +853,7 @@ private:
 
         auto width = context().client().dimensions().column - m_prompt.char_length();
         DisplayLine display_line;
-        if (not m_password)
+        if (not (m_flags & PromptFlags::Password))
             display_line = m_line_editor.build_display_line(width);
         display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
         context().print_status(display_line);
@@ -872,15 +872,18 @@ private:
     String         m_prefix;
     LineEditor     m_line_editor;
     bool           m_autoshowcompl;
-    bool           m_password;
+    PromptFlags    m_flags;
+    bool           m_history_drop_blank_prefix;
 
     using History = Vector<String, MemoryDomain::History>;
     static UnorderedMap<String, History, MemoryDomain::History> ms_history;
     History::iterator m_history_it;
 
-    static void history_push(History& history, StringView entry)
+    void history_push(History& history, StringView entry)
     {
-        if(entry.empty() or is_horizontal_blank(entry[0_byte]))
+        if(entry.empty() or
+           (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
+            is_horizontal_blank(entry[0_byte])))
             return;
 
         history.erase(std::remove(history.begin(), history.end(), entry),
@@ -1293,11 +1296,11 @@ void InputHandler::repeat_last_insert()
 }
 
 void InputHandler::prompt(StringView prompt, String initstr,
-                          Face prompt_face, bool password,
+                          Face prompt_face, PromptFlags flags,
                           Completer completer, PromptCallback callback)
 {
     push_mode(new InputModes::Prompt(*this, prompt, initstr, prompt_face,
-                                     password, completer, callback));
+                                     flags, completer, callback));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)
