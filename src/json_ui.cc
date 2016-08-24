@@ -425,7 +425,7 @@ void JsonUI::parse_requests(EventMode mode)
         m_requests += StringView{buf, buf + size};
     }
 
-    if (not m_requests.empty())
+    while (not m_requests.empty())
     {
         const char* pos = nullptr;
         try
@@ -442,8 +442,10 @@ void JsonUI::parse_requests(EventMode mode)
             // try to salvage request by dropping its first line
             pos = std::min(m_requests.end(), find(m_requests, '\n')+1);
         }
-        if (pos)
-            m_requests = String{pos, m_requests.end()};
+        if (not pos)
+            break; // unterminated request ?
+
+        m_requests = String{pos, m_requests.end()};
     }
 
     while (m_input_callback and not m_pending_keys.empty())
