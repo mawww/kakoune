@@ -415,6 +415,7 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
         {
             auto line_end = last_word_end <= line_begin ? line_begin + max_width
                                                         : last_word_end;
+
             lines.emplace_back(line_begin.base(), line_end.base());
 
             while (line_end != end and is_horizontal_blank(*line_end))
@@ -428,7 +429,8 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
         if (cat == CharCategories::Word or cat == CharCategories::Punctuation)
             last_word_end = word_end;
 
-        it = word_end;
+        if (word_end > line_begin)
+            it = word_end;
     }
     if (line_begin != end)
         lines.emplace_back(line_begin.base(), text.end());
