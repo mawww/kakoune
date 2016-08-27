@@ -590,12 +590,12 @@ void paste_all(Context& context, NormalParams params)
 }
 
 template<typename T>
-void regex_prompt(Context& context, const String prompt, T func)
+void regex_prompt(Context& context, String prompt, T func)
 {
     CharCoord position = context.has_window() ? context.window().position() : CharCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(
-        prompt, "", get_face("Prompt"), PromptFlags::None, complete_nothing,
+        std::move(prompt), "", get_face("Prompt"), PromptFlags::None, complete_nothing,
         [=](StringView str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -716,7 +716,9 @@ void select_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     unsigned capture = (unsigned)params.count;
-    regex_prompt(context, "select:", [reg, capture](Regex ex, PromptEvent event, Context& context) {
+    auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
+    regex_prompt(context, std::move(prompt),
+                 [reg, capture](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value(reg)};
         else if (event == PromptEvent::Validate)
@@ -730,7 +732,9 @@ void split_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     unsigned capture = (unsigned)params.count;
-    regex_prompt(context, "split:", [reg, capture](Regex ex, PromptEvent event, Context& context) {
+    auto prompt = capture ? format("split (on capture {}):", capture) :  "split:"_str;
+    regex_prompt(context, std::move(prompt),
+                 [reg, capture](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
             ex = Regex{context.main_sel_register_value(reg)};
         else if (event == PromptEvent::Validate)
