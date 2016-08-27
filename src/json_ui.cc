@@ -205,7 +205,7 @@ void JsonUI::menu_show(ConstArrayView<DisplayLine> items,
 
 void JsonUI::menu_select(int selected)
 {
-    rpc_call("menu_show", selected);
+    rpc_call("menu_select", selected);
 }
 
 void JsonUI::menu_hide()
