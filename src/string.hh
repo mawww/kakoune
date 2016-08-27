@@ -327,6 +327,7 @@ inline Hex hex(size_t val) { return {val}; }
 
 InplaceString<15> to_string(int val);
 InplaceString<23> to_string(long int val);
+InplaceString<15> to_string(unsigned val);
 InplaceString<23> to_string(size_t val);
 InplaceString<23> to_string(Hex val);
 InplaceString<23> to_string(float val);

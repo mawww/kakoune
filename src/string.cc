@@ -307,6 +307,13 @@ InplaceString<15> to_string(int val)
     return res;
 }
 
+InplaceString<15> to_string(unsigned val)
+{
+    InplaceString<15> res;
+    res.m_length = sprintf(res.m_data, "%u", val);
+    return res;
+}
+
 InplaceString<23> to_string(long int val)
 {
     InplaceString<23> res;
