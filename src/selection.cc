@@ -445,6 +445,18 @@ void SelectionList::merge_overlapping()
                                                   m_main, overlaps), end());
 }
 
+void SelectionList::merge_consecutive()
+{
+    if (size() == 1)
+        return;
+
+    auto touches = [this](const Selection& lhs, const Selection& rhs) {
+        return m_buffer->char_next(lhs.max()) >= rhs.min();
+    };
+    m_selections.erase(Kakoune::merge_overlapping(begin(), end(),
+                                                  m_main, touches), end());
+}
+
 void SelectionList::sort_and_merge_overlapping()
 {
     sort();

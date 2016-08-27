@@ -126,6 +126,7 @@ struct SelectionList
 
     void sort();
     void merge_overlapping();
+    void merge_consecutive();
     void sort_and_merge_overlapping();
 
     Buffer& buffer() const { return *m_buffer; }
