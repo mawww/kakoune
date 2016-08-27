@@ -1732,7 +1732,7 @@ static NormalCmdDesc cmds[] =
     { alt('>'), "indent, including empty lines", indent<true> },
     { alt('<'), "deindent, not including incomplete indent", deindent<false> },
 
-    { ctrl('i'), "jump forward in jump list",jump<Forward> },
+    { /*ctrl('i')*/Key::Tab, "jump forward in jump list",jump<Forward> }, // until we can distinguish tab a ctrl('i')
     { ctrl('o'), "jump backward in jump list", jump<Backward> },
     { ctrl('s'), "push current selections in jump list", push_selections },
 
