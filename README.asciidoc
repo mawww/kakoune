@@ -820,9 +820,14 @@ Options are typed, their type can be
  * `{int,str}-list`: a list, elements are separated by a colon (:)
   if an element needs to contain a colon, it can be escaped with a
   backslash.
- * `range-faces`: a list, elements are separated by a colon (:), of
-  a buffer range (<begin line>.<begin column>,<end line>.<end column>)
-  and a face (separated by `|`)
+ * `range-faces`: a `:` separated list of a pairs of a buffer range
+   (`<begin line>.<begin column>,<end line>.<end column>`) and  a face
+   (separated by `|`), except for the first element which is just the
+   timestamp of the buffer.
+ * `completions`: a `:` separated list of `<text>|<docstring>|<menu text>`
+   candidates, except for the first element which follows the
+   `<line>.<column>[+<length>]@<timestamp>` format to define where the
+   completion apply in the buffer.
  * `enum(value1|value2|...)`: an enum, taking on of the given values
  * `flags(value1|value2|...)`: a set of flags, taking a combination
    of the given values joined by `|`.
@@ -893,10 +898,7 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
      (`word=all`) or only the current one (`word=buffer`)
    - `filename` which tries to detect when a filename is being entered and
      provides completion based on local filesystem.
-   - `option=<opt-name>` where <opt-name> is a _completions_ option, which is a `:`
-     separated list of _<text>|<docstring>|<menu text>_ candidates, except for the first
-     element which follows the _<line>.<column>[+<length>]@<timestamp>_ format to define
-     where the completion apply in the buffer.
+   - `option=<opt-name>` where <opt-name> is a _completions_ option.
  * `static_words` _str-list_: list of words that are always added to completion
      candidates when completing words in insert mode.
  * `completions_extra_word_chars` _str_: a string containing all additional character

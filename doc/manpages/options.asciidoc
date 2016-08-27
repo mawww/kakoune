@@ -23,9 +23,15 @@ Types
 	to contain a colon, it can be escaped
 	with a backslash
 *range-faces*::
-	a list, elements are separated by a colon (:), of pairs of buffer
-	range (`<begin line>.<begin column>,<end line>.<end column>`) and
-	face (separated by `|`)
+	a `:` separated list of a pairs of a buffer range
+	(`<begin line>.<begin column>,<end line>.<end column>`) and  a face
+	(separated by `|`), except for the first element which is just the
+	timestamp of the buffer.
+*completions*::
+	a `:` separated list of `<text>|<docstring>|<menu text>`
+	candidates, except for the first element which follows the
+	`<line>.<column>[+<length>]@<timestamp>` format to define where the
+	completion apply in the buffer.
 *enum(value1|value2|...)*::
 	an enum, taking one of the given values
 *flags(value1|value2|...)*::
@@ -116,13 +122,7 @@ Builtin options
 		provides completion based on local filesystem
 
 	*option=<opt-name>*:::
-		where *opt-name* is a 'str-list' option. The first element
-		of the list should follow the format:
-
-			<line>.<column>[+<length>]@<timestamp>
-
-		to define where the completion apply in the buffer, and the
-		other strings are the candidates
+		where *opt-name* is a 'completions' option.
 
 *static_words* 'str-list'::
 	list of words that are always added to completion candidates
