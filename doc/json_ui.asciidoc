@@ -44,4 +44,4 @@ Here are the requests that can be written by the json ui on stdout:
 The requests that the json ui can interpret on stdin are:
 
 * keys(String key1, String key2...): keystrokes
-* resize(int x, int y): notify ui resize
+* resize(int rows, int columns): notify ui resize
