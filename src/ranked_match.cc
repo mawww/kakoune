@@ -146,18 +146,28 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_max_index != other.m_max_index)
         return m_max_index < other.m_max_index;
 
-    Utf8It it1{m_candidate.begin(), m_candidate}, it2{other.m_candidate.begin(), other.m_candidate};
-    for (; it1 != m_candidate.end() and it2 != other.m_candidate.end(); ++it1, ++it2)
+    auto it1 = m_candidate.begin(), it2 = other.m_candidate.begin();
+    const auto end1 = m_candidate.end(), end2 = other.m_candidate.end();
+    while (true)
     {
-        const auto cp1 = *it1, cp2 = *it2;
+        // find next mismatch
+        while (it1 != end1 and it2 != end2 and *it1 == *it2)
+            ++it1, ++it2;
+
+        if (it1 == end1 or it2 == end2)
+            return it1 == end1 and it2 != end2;
+
+        // compare codepoints
+        it1 = utf8::character_start(it1, m_candidate.begin());
+        it2 = utf8::character_start(it2, other.m_candidate.begin());
+        const auto cp1 = utf8::read_codepoint(it1, end1);
+        const auto cp2 = utf8::read_codepoint(it2, end2);;
         if (cp1 != cp2)
         {
             const bool low1 = islower(cp1), low2 = islower(cp2);
             return low1 == low2 ? cp1 < cp2 : low1;
         }
     }
-
-    return it1 == m_candidate.end() and it2 != other.m_candidate.end();
 }
 
 UnitTest test_ranked_match{[] {
