@@ -883,9 +883,6 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 
             if (token != token_to_complete)
             {
-                if (flags & CompletionFlags::Fast) // no shell on fast completion
-                    return Completions{};
-
                 ShellContext shell_context{
                     params,
                     { { "token_to_complete", to_string(token_to_complete) } }
