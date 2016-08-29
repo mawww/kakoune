@@ -70,9 +70,9 @@ static bool smartcase_eq(Codepoint query, Codepoint candidate)
     return query == (islower(query) ? to_lower(candidate) : candidate);
 }
 
-static bool subsequence_match_smart_case(StringView str, StringView subseq, int& out_index_sum)
+static bool subsequence_match_smart_case(StringView str, StringView subseq, int& out_max_index)
 {
-    int index_sum = 0;
+    int max_index = 0;
     auto it = str.begin();
     int index = 0;
     for (auto subseq_it = subseq.begin(); subseq_it != subseq.end();)
@@ -86,9 +86,9 @@ static bool subsequence_match_smart_case(StringView str, StringView subseq, int&
             if (it == str.end())
                 return false;
         }
-        index_sum += index++;
+        max_index = index++;
     }
-    out_index_sum = index_sum;
+    out_max_index = max_index;
     return true;
 }
 
@@ -100,7 +100,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
 
     if (query.empty())
         m_candidate = candidate;
-    else if (func() and  subsequence_match_smart_case(candidate, query, m_match_index_sum))
+    else if (func() and  subsequence_match_smart_case(candidate, query, m_max_index))
     {
         m_candidate = candidate;
 
@@ -143,8 +143,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
 
-    if (m_match_index_sum != other.m_match_index_sum)
-        return m_match_index_sum < other.m_match_index_sum;
+    if (m_max_index != other.m_max_index)
+        return m_max_index < other.m_max_index;
 
     Utf8It it1{m_candidate.begin(), m_candidate}, it2{other.m_candidate.begin(), other.m_candidate};
     for (; it1 != m_candidate.end() and it2 != other.m_candidate.end(); ++it1, ++it2)

@@ -46,7 +46,7 @@ private:
     StringView m_candidate;
     Flags m_flags = Flags::None;
     int m_word_boundary_match_count = 0;
-    int m_match_index_sum = 0;
+    int m_max_index = 0;
 };
 
 template<> struct WithBitOps<RankedMatch::Flags> : std::true_type {};
