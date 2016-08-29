@@ -393,6 +393,7 @@ Changes
  * `alt-j`: join selected lines
  * `alt-J`: join selected lines and select spaces inserted
             in place of line breaks
+ * `alt-m`: merge contiguous selections together (works across lines as well)
 
  * `>`: indent selected lines
  * `alt->`: indent selected lines, including empty lines
