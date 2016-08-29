@@ -37,6 +37,9 @@ struct TestableFlags
     Flags value;
     constexpr operator bool() const { return (UnderlyingType<Flags>)value; }
     constexpr operator Flags() const { return value; }
+
+    bool operator==(const TestableFlags<Flags>& other) const { return value == other.value; }
+    bool operator!=(const TestableFlags<Flags>& other) const { return value != other.value; }
 };
 
 template<typename Flags, typename = EnableIfWithBitOps<Flags>>
@@ -56,6 +59,19 @@ template<typename Flags, typename = EnableIfWithBitOps<Flags>>
 constexpr Flags operator~(Flags lhs)
 {
     return (Flags)(~(UnderlyingType<Flags>)lhs);
+}
+
+template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+constexpr Flags operator^(Flags lhs, Flags rhs)
+{
+    return (Flags)((UnderlyingType<Flags>) lhs ^ (UnderlyingType<Flags>) rhs);
+}
+
+template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+Flags& operator^=(Flags& lhs, Flags rhs)
+{
+    (UnderlyingType<Flags>&) lhs ^= (UnderlyingType<Flags>) rhs;
+    return lhs;
 }
 
 }

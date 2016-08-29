@@ -2,6 +2,7 @@
 #define ranked_match_hh_INCLUDED
 
 #include "string.hh"
+#include "flags.hh"
 
 namespace Kakoune
 {
@@ -32,13 +33,23 @@ private:
     template<typename TestFunc>
     RankedMatch(StringView candidate, StringView query, TestFunc test);
 
+    enum class Flags : int
+    {
+        None = 0,
+        // Order is important, the highest bit has precedence for comparison
+        OnlyWordBoundary = 1 << 0,
+        FirstCharMatch = 1 << 1,
+        Prefix = 1 << 2,
+        FullMatch = 1 << 3,
+    };
+
     StringView m_candidate;
-    bool m_first_char_match = false;
-    bool m_prefix = false;
+    Flags m_flags = Flags::None;
     int m_word_boundary_match_count = 0;
     int m_match_index_sum = 0;
-    bool m_only_word_boundary = false;
 };
+
+template<> struct WithBitOps<RankedMatch::Flags> : std::true_type {};
 
 }
 

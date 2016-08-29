@@ -70,9 +70,9 @@ static bool smartcase_eq(Codepoint query, Codepoint candidate)
     return query == (islower(query) ? to_lower(candidate) : candidate);
 }
 
-static bool subsequence_match_smart_case(StringView str, StringView subseq, int& index_sum)
+static bool subsequence_match_smart_case(StringView str, StringView subseq, int& out_index_sum)
 {
-    index_sum = 0;
+    int index_sum = 0;
     auto it = str.begin();
     int index = 0;
     for (auto subseq_it = subseq.begin(); subseq_it != subseq.end();)
@@ -88,6 +88,7 @@ static bool subsequence_match_smart_case(StringView str, StringView subseq, int&
         }
         index_sum += index++;
     }
+    out_index_sum = index_sum;
     return true;
 }
 
@@ -103,10 +104,17 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
     {
         m_candidate = candidate;
 
-        m_first_char_match = smartcase_eq(query[0], candidate[0]);
+        if (smartcase_eq(query[0], candidate[0]))
+            m_flags |= Flags::FirstCharMatch;
+        if (std::equal(query.begin(), query.end(), candidate.begin()))
+        {
+            m_flags |= Flags::Prefix;
+            if (query.length() == candidate.length())
+                m_flags |= Flags::FullMatch;
+        }
         m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
-        m_only_word_boundary = m_word_boundary_match_count == query.length();
-        m_prefix = std::equal(query.begin(), query.end(), candidate.begin());
+        if (m_word_boundary_match_count == query.length())
+            m_flags |= Flags::OnlyWordBoundary;
     }
 }
 
@@ -127,19 +135,10 @@ bool RankedMatch::operator<(const RankedMatch& other) const
 {
     kak_assert((bool)*this and (bool)other);
 
-    if (m_prefix != other.m_prefix)
-        return m_prefix;
-
-    if (m_first_char_match != other.m_first_char_match)
-        return m_first_char_match;
-
-    if (m_only_word_boundary and other.m_only_word_boundary)
-    {
-        if (m_word_boundary_match_count != other.m_word_boundary_match_count)
-            return m_word_boundary_match_count > other.m_word_boundary_match_count;
-    }
-    else if (m_only_word_boundary or other.m_only_word_boundary)
-        return  m_only_word_boundary;
+    const auto diff = m_flags ^ other.m_flags;
+    // flags are different, use their ordering to return the first match
+    if (diff != Flags::None)
+        return (int)(m_flags & diff) > (int)(other.m_flags & diff);
 
     if (m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
