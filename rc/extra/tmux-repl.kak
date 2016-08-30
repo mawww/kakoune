@@ -3,10 +3,10 @@
 
 hook global KakBegin .* %{
     %sh{
-        VERSION_TMUX=$(tmux -V)
-        VERSION_TMUX=$(expr "${VERSION_TMUX}" : 'tmux \([0-9]*\).*')
-
         if [ -n "$TMUX" ]; then
+            VERSION_TMUX=$(tmux -V)
+            VERSION_TMUX=$(expr "${VERSION_TMUX}" : 'tmux \([0-9]*\).*')
+
             if [ "${VERSION_TMUX}" -gt 1 ]; then
                 echo "
                     alias global repl tmux-repl-horizontal
