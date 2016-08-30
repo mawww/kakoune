@@ -904,11 +904,20 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                 if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
                     matches.push_back(match);
             }
-            std::sort(matches.begin(), matches.end());
-            matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
+
+            constexpr size_t max_count = 100;
+            // Gather best max_count matches
+            auto greater = [](const RankedMatch& lhs,
+                              const RankedMatch& rhs) { return rhs < lhs; };
+            auto first = matches.begin(), last = matches.end();
+            std::make_heap(first, last, greater);
             CandidateList res;
-            for (auto& m : matches)
-                res.push_back(m.candidate().str());
+            while(res.size() < max_count and first != last)
+            {
+                if (res.empty() or res.back() != first->candidate())
+                    res.push_back(first->candidate().str());
+                std::pop_heap(first, last--, greater);
+            }
 
             return Completions{ 0_byte, pos_in_token, std::move(res) };
         };
