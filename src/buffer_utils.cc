@@ -4,9 +4,6 @@
 #include "event_manager.hh"
 #include "file.hh"
 
-#include <unistd.h>
-#include <sys/select.h>
-
 #if defined(__APPLE__)
 #define st_mtim st_mtimespec
 #endif
@@ -120,8 +117,6 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
         size_t loops = 16;
         char data[buffer_size];
         const int fifo = watcher.fd();
-        timeval tv{ 0, 0 };
-        fd_set  rfds;
         ssize_t count = 0;
         do
         {
@@ -142,12 +137,8 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
                 if (data[count-1] == '\n')
                     buffer->insert(buffer->end_coord(), "\n");
             }
-
-            FD_ZERO(&rfds);
-            FD_SET(fifo, &rfds);
         }
-        while (--loops and count > 0 and
-               select(fifo+1, &rfds, nullptr, nullptr, &tv) == 1);
+        while (--loops and count > 0 and fd_readable(fifo));
 
         buffer->run_hook_in_own_context("BufReadFifo", buffer->name());
 

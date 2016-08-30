@@ -399,24 +399,11 @@ void JsonUI::eval_json(const Value& json)
         throw runtime_error("unknown method");
 }
 
-static bool stdin_ready()
-{
-    fd_set  rfds;
-    FD_ZERO(&rfds);
-    FD_SET(0, &rfds);
-
-    timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-
-    return select(1, &rfds, nullptr, nullptr, &tv) == 1;
-}
-
 void JsonUI::parse_requests(EventMode mode)
 {
     constexpr size_t bufsize = 1024;
     char buf[bufsize];
-    while (stdin_ready())
+    while (fd_readable(0))
     {
         ssize_t size = ::read(0, buf, bufsize);
         if (size == -1 or size == 0)

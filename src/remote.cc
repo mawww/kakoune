@@ -372,17 +372,7 @@ void RemoteUI::set_ui_options(const Options& options)
 
 bool RemoteUI::is_key_available()
 {
-    timeval tv;
-    fd_set  rfds;
-
-    int sock = m_socket_watcher.fd();
-    FD_ZERO(&rfds);
-    FD_SET(sock, &rfds);
-
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    int res = select(sock+1, &rfds, nullptr, nullptr, &tv);
-    return res == 1;
+    return fd_readable(m_socket_watcher.fd());
 }
 
 Key RemoteUI::get_key()
@@ -466,15 +456,9 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
 void RemoteClient::process_available_messages()
 {
     int socket = m_socket_watcher->fd();
-    timeval tv{ 0, 0 };
-    fd_set  rfds;
-
     do {
         process_next_message();
-
-        FD_ZERO(&rfds);
-        FD_SET(socket, &rfds);
-    } while (select(socket+1, &rfds, nullptr, nullptr, &tv) == 1);
+    } while (fd_readable(socket));
 }
 
 void RemoteClient::process_next_message()
@@ -573,9 +557,7 @@ public:
 private:
     void handle_available_input()
     {
-        int socket = m_socket_watcher.fd();
-        timeval tv{ 0, 0 };
-        fd_set  rfds;
+        const int socket = m_socket_watcher.fd();
         do
         {
             char c;
@@ -610,11 +592,8 @@ private:
             }
             else
                 m_buffer += c;
-
-            FD_ZERO(&rfds);
-            FD_SET(socket, &rfds);
         }
-        while (select(socket+1, &rfds, nullptr, nullptr, &tv) == 1);
+        while (fd_readable(socket));
     }
 
     String    m_buffer;

@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <sys/select.h>
 
 #if defined(__FreeBSD__)
 #include <sys/sysctl.h>
@@ -121,6 +122,16 @@ String compact_path(StringView filename)
     }
 
     return filename.str();
+}
+
+bool fd_readable(int fd)
+{
+    fd_set  rfds;
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    timeval tv{0,0};
+    return select(fd+1, &rfds, nullptr, nullptr, &tv) == 1;
 }
 
 String read_fd(int fd, bool text)
