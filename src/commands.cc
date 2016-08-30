@@ -912,7 +912,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
             auto first = matches.begin(), last = matches.end();
             std::make_heap(first, last, greater);
             CandidateList res;
-            while(res.size() < max_count and first != last)
+            while (res.size() < max_count and first != last)
             {
                 if (res.empty() or res.back() != first->candidate())
                     res.push_back(first->candidate().str());
