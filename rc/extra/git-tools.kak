@@ -27,14 +27,9 @@ face GitBlame default,magenta
 
 def -params 1.. \
   -docstring %sh{printf '%%{Git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}'} \
-  -shell-completion %{
-    shift $(expr ${kak_token_to_complete})
-    prefix=$(printf %s "${1}" | cut -c1-${kak_pos_in_token} 2>/dev/null)
-    (
-      for cmd in add rm blame commit checkout diff hide-blame log show show-diff status update-diff; do
-          expr "${cmd}" : "^\(${prefix}.*\)$"
-      done
-    ) | grep -v '^$'
+  -shell-candidates %{
+    [ $kak_token_to_complete -eq 0 ] &&
+        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nlog\nshow\nshow-diff\nstatus\nupdate-diff\n"
   } \
   git %{ %sh{
     show_git_cmd_output() {
