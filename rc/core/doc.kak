@@ -29,7 +29,7 @@ def -hidden -params 1..2 _doc-open %{
 }
 
 def -params 1..2 \
-    -shell-completion %{
+    -shell-candidates %{
         find "${kak_runtime}/../doc/kak/manpages/" -type f -iname "*$@*.gz" -printf '%f\n' | while read l; do
             printf %s\\n "${l%.*}"
         done
