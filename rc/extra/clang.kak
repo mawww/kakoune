@@ -63,8 +63,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
                                      docstrings[id]=desc
                             }
                             END {
-                                for (id in docstrings)
-                                {
+                                for (id in docstrings) {
                                     menu=id
                                     gsub(/(^|[^[:alnum:]_])(operator|new|delete)($|[^[:alnum:]_])/, "{keyword}&{}", menu)
                                     gsub(/(^|[[:space:]])(int|size_t|bool|char|unsigned|signed|long)($|[[:space:]])/, "{type}&{}", menu)
@@ -102,7 +101,7 @@ def -hidden clang-show-completion-info %[ try %[
     eval -draft %[
         exec <space>{( <a-k> ^\( <ret> b <a-k> \`\w+\' <ret>
         %sh[
-            desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -ne "{ s/\([^\\]\):/\1\n/g }; /^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; P }; D")
+            desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -e "{ s/\([^\\]\):/\1\n/g }" | sed -ne "/^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; p }")
             if [ -n "$desc" ]; then
                 printf %s\\n "eval -client $kak_client %{info -anchor ${kak_cursor_line}.${kak_cursor_column} -placement above %{${desc}}}"
             fi
