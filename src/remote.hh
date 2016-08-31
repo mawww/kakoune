@@ -32,8 +32,6 @@ public:
                  const EnvVarMap& env_vars, StringView init_command);
 
 private:
-    void process_available_messages();
-    void process_next_message();
     void write_next_key();
 
     std::unique_ptr<UserInterface> m_ui;
