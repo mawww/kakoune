@@ -716,7 +716,7 @@ void select_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     unsigned capture = (unsigned)params.count;
-    auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
+    auto prompt = capture ? format("select (capture {}):", (int)capture) :  "select:"_str;
     regex_prompt(context, std::move(prompt),
                  [reg, capture](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
@@ -732,7 +732,7 @@ void split_regex(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     unsigned capture = (unsigned)params.count;
-    auto prompt = capture ? format("split (on capture {}):", capture) :  "split:"_str;
+    auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
     regex_prompt(context, std::move(prompt),
                  [reg, capture](Regex ex, PromptEvent event, Context& context) {
         if (ex.empty())
