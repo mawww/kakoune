@@ -21,8 +21,10 @@
 namespace Kakoune
 {
 
-enum class RemoteUIMsg
+enum class MessageType
 {
+    Connect,
+    Command,
     MenuShow,
     MenuSelect,
     MenuHide,
@@ -31,7 +33,8 @@ enum class RemoteUIMsg
     Draw,
     DrawStatus,
     Refresh,
-    SetOptions
+    SetOptions,
+    Key
 };
 
 struct socket_error{};
@@ -39,7 +42,11 @@ struct socket_error{};
 class Message
 {
 public:
-    Message(int sock) : m_socket(sock) {}
+    Message(int sock, MessageType type) : m_socket(sock)
+    {
+        write(type);
+    }
+
     ~Message() noexcept(false)
     {
         if (m_stream.size() == 0)
@@ -293,8 +300,7 @@ void RemoteUI::menu_show(ConstArrayView<DisplayLine> choices,
                          CharCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::MenuShow);
+    Message msg{m_socket_watcher.fd(), MessageType::MenuShow};
     msg.write(choices);
     msg.write(anchor);
     msg.write(fg);
@@ -304,23 +310,20 @@ void RemoteUI::menu_show(ConstArrayView<DisplayLine> choices,
 
 void RemoteUI::menu_select(int selected)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::MenuSelect);
+    Message msg{m_socket_watcher.fd(), MessageType::MenuSelect};
     msg.write(selected);
 }
 
 void RemoteUI::menu_hide()
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::MenuHide);
+    Message msg{m_socket_watcher.fd(), MessageType::MenuHide};
 }
 
 void RemoteUI::info_show(StringView title, StringView content,
                          CharCoord anchor, Face face,
                          InfoStyle style)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::InfoShow);
+    Message msg{m_socket_watcher.fd(), MessageType::InfoShow};
     msg.write(title);
     msg.write(content);
     msg.write(anchor);
@@ -330,16 +333,14 @@ void RemoteUI::info_show(StringView title, StringView content,
 
 void RemoteUI::info_hide()
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::InfoHide);
+    Message msg{m_socket_watcher.fd(), MessageType::InfoHide};
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const Face& default_face,
                     const Face& padding_face)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::Draw);
+    Message msg{m_socket_watcher.fd(), MessageType::Draw};
     msg.write(display_buffer);
     msg.write(default_face);
     msg.write(padding_face);
@@ -349,8 +350,7 @@ void RemoteUI::draw_status(const DisplayLine& status_line,
                            const DisplayLine& mode_line,
                            const Face& default_face)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::DrawStatus);
+    Message msg{m_socket_watcher.fd(), MessageType::DrawStatus};
     msg.write(status_line);
     msg.write(mode_line);
     msg.write(default_face);
@@ -358,15 +358,13 @@ void RemoteUI::draw_status(const DisplayLine& status_line,
 
 void RemoteUI::refresh(bool force)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::Refresh);
+    Message msg{m_socket_watcher.fd(), MessageType::Refresh};
     msg.write(force);
 }
 
 void RemoteUI::set_ui_options(const Options& options)
 {
-    Message msg(m_socket_watcher.fd());
-    msg.write(RemoteUIMsg::SetOptions);
+    Message msg{m_socket_watcher.fd(), MessageType::SetOptions};
     msg.write(options);
 }
 
@@ -379,7 +377,12 @@ Key RemoteUI::get_key()
 {
     try
     {
-        Key key = read<Key>(m_socket_watcher.fd());
+        const int sock = m_socket_watcher.fd();
+        const auto msg = read<MessageType>(sock);
+        if (msg != MessageType::Key)
+            throw client_removed{ false };
+
+        Key key = read<Key>(sock);
         if (key.modifiers == Key::Modifiers::Resize)
             m_dimensions = key.coord();
         return key;
@@ -441,9 +444,8 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
     int sock = connect_to(session);
 
     {
-        Message msg(sock);
-        msg.write(init_command.data(), (int)init_command.length());
-        msg.write((char)0);
+        Message msg{sock, MessageType::Connect};
+        msg.write(init_command);
         msg.write(m_ui->dimensions());
         msg.write(env_vars);
     }
@@ -464,10 +466,10 @@ void RemoteClient::process_available_messages()
 void RemoteClient::process_next_message()
 {
     int socket = m_socket_watcher->fd();
-    RemoteUIMsg msg = read<RemoteUIMsg>(socket);
+    const auto msg = read<MessageType>(socket);
     switch (msg)
     {
-    case RemoteUIMsg::MenuShow:
+    case MessageType::MenuShow:
     {
         auto choices = read_vector<DisplayLine>(socket);
         auto anchor = read<CharCoord>(socket);
@@ -477,13 +479,13 @@ void RemoteClient::process_next_message()
         m_ui->menu_show(choices, anchor, fg, bg, style);
         break;
     }
-    case RemoteUIMsg::MenuSelect:
+    case MessageType::MenuSelect:
         m_ui->menu_select(read<int>(socket));
         break;
-    case RemoteUIMsg::MenuHide:
+    case MessageType::MenuHide:
         m_ui->menu_hide();
         break;
-    case RemoteUIMsg::InfoShow:
+    case MessageType::InfoShow:
     {
         auto title = read<String>(socket);
         auto content = read<String>(socket);
@@ -493,10 +495,10 @@ void RemoteClient::process_next_message()
         m_ui->info_show(title, content, anchor, face, style);
         break;
     }
-    case RemoteUIMsg::InfoHide:
+    case MessageType::InfoHide:
         m_ui->info_hide();
         break;
-    case RemoteUIMsg::Draw:
+    case MessageType::Draw:
     {
         auto display_buffer = read<DisplayBuffer>(socket);
         auto default_face = read<Face>(socket);
@@ -504,7 +506,7 @@ void RemoteClient::process_next_message()
         m_ui->draw(display_buffer, default_face, padding_face);
         break;
     }
-    case RemoteUIMsg::DrawStatus:
+    case MessageType::DrawStatus:
     {
         auto status_line = read<DisplayLine>(socket);
         auto mode_line = read<DisplayLine>(socket);
@@ -512,18 +514,20 @@ void RemoteClient::process_next_message()
         m_ui->draw_status(status_line, mode_line, default_face);
         break;
     }
-    case RemoteUIMsg::Refresh:
+    case MessageType::Refresh:
         m_ui->refresh(read<bool>(socket));
         break;
-    case RemoteUIMsg::SetOptions:
+    case MessageType::SetOptions:
         m_ui->set_ui_options(read_idmap<String, MemoryDomain::Options>(socket));
         break;
+    default:
+        kak_assert(false);
     }
 }
 
 void RemoteClient::write_next_key()
 {
-    Message msg(m_socket_watcher->fd());
+    Message msg(m_socket_watcher->fd(), MessageType::Key);
     // do that before checking dimensions as get_key may
     // handle a resize event.
     msg.write(m_ui->get_key());
@@ -533,7 +537,8 @@ void send_command(StringView session, StringView command)
 {
     int sock = connect_to(session);
     auto close_sock = on_scope_end([sock]{ close(sock); });
-    write(sock, command);
+    Message msg{sock, MessageType::Command};
+    msg.write(command);
 }
 
 
@@ -557,46 +562,48 @@ public:
 private:
     void handle_available_input()
     {
-        const int socket = m_socket_watcher.fd();
-        do
+        const int sock = m_socket_watcher.fd();
+        const auto msg = read<MessageType>(sock);
+        switch (msg)
         {
-            char c;
-            int res = ::read(socket, &c, 1);
-            if (res <= 0)
+            case MessageType::Connect:
             {
-                if (not m_buffer.empty()) try
+                auto init_command = read<String>(sock);
+                auto dimensions = read<CharCoord>(sock);
+                auto env_vars = read_idmap<String, MemoryDomain::EnvVars>(sock);
+                std::unique_ptr<UserInterface> ui{new RemoteUI{sock, dimensions}};
+                ClientManager::instance().create_client(std::move(ui),
+                                                        std::move(env_vars),
+                                                        init_command);
+                Server::instance().remove_accepter(this);
+                return;
+            }
+            case MessageType::Command:
+            {
+                auto command = read<String>(sock);
+                if (not command.empty()) try
                 {
                     Context context{Context::EmptyContextFlag{}};
-                    CommandManager::instance().execute(m_buffer, context);
+                    CommandManager::instance().execute(command, context);
                 }
                 catch (runtime_error& e)
                 {
                     write_to_debug_buffer(format("error running command '{}': {}",
-                                       m_buffer, e.what()));
+                                                 command, e.what()));
                 }
                 catch (client_removed&) {}
-                close(socket);
+                close(sock);
                 Server::instance().remove_accepter(this);
                 return;
             }
-            if (c == 0) // end of initial command stream, go to interactive ui
-            {
-                CharCoord dimensions = read<CharCoord>(socket);
-                EnvVarMap env_vars = read_idmap<String, MemoryDomain::EnvVars>(socket);
-                std::unique_ptr<UserInterface> ui{new RemoteUI{socket, dimensions}};
-                ClientManager::instance().create_client(std::move(ui),
-                                                        std::move(env_vars),
-                                                        m_buffer);
+            default:
+                write_to_debug_buffer("Invalid introduction message received");
+                close(sock);
                 Server::instance().remove_accepter(this);
-                return;
-            }
-            else
-                m_buffer += c;
+                break;
         }
-        while (fd_readable(socket));
     }
 
-    String    m_buffer;
     FDWatcher m_socket_watcher;
 };
 
