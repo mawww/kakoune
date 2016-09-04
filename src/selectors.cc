@@ -691,6 +691,9 @@ void split_selections(SelectionList& selections, const Regex& regex, unsigned ca
         if (begin.coord() <= sel.max())
             result.push_back(keep_direction({ begin.coord(), sel.max() }, sel));
     }
+    if (result.empty())
+        throw runtime_error("nothing selected");
+
     selections = std::move(result);
 }
 
