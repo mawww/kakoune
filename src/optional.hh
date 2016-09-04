@@ -80,6 +80,8 @@ public:
     template<typename U>
     T value_or(U&& fallback) const { return m_valid ? m_value : T{fallback}; }
 
+    void reset() { destruct_ifn(); m_valid = false; }
+
 private:
     void destruct_ifn() { if (m_valid) m_value.~T(); }
 

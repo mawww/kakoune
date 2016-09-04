@@ -12,7 +12,12 @@
 namespace Kakoune
 {
 
-struct peer_disconnected {};
+struct remote_error : runtime_error
+{
+    remote_error(String error)
+        : runtime_error{std::move(error)}
+    {}
+};
 
 struct connection_failed : runtime_error
 {

@@ -344,12 +344,12 @@ const CommandDesc force_kill_cmd = {
 };
 
 template<bool force>
-void quit()
+void quit(Context& context)
 {
     if (not force and ClientManager::instance().count() == 1)
         ensure_all_buffers_are_saved();
-    // unwind back to this client event handler.
-    throw client_removed{ true };
+
+    ClientManager::instance().remove_client(context.client(), true);
 }
 
 const CommandDesc quit_cmd = {
@@ -361,7 +361,7 @@ const CommandDesc quit_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context&, const ShellContext&){ quit<false>(); }
+    [](const ParametersParser&, Context& context, const ShellContext&){ quit<false>(context); }
 };
 
 const CommandDesc force_quit_cmd = {
@@ -374,7 +374,7 @@ const CommandDesc force_quit_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser&, Context&, const ShellContext&){ quit<true>(); }
+    [](const ParametersParser&, Context& context, const ShellContext&){ quit<true>(context); }
 };
 
 template<bool force>
@@ -382,7 +382,7 @@ void write_quit(const ParametersParser& parser, Context& context,
                 const ShellContext& shell_context)
 {
     write_buffer(parser, context, shell_context);
-    quit<force>();
+    quit<force>(context);
 }
 
 const CommandDesc write_quit_cmd = {
@@ -419,7 +419,7 @@ const CommandDesc writeall_quit_cmd = {
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         write_all_buffers();
-        quit<false>();
+        quit<false>(context);
     }
 };
 

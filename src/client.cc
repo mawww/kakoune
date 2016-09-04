@@ -74,34 +74,27 @@ void Client::handle_available_input(EventMode mode)
 
     try
     {
-        try
+        while (Optional<Key> key = get_next_key(mode))
         {
-            while (Optional<Key> key = get_next_key(mode))
+            if (*key == ctrl('c'))
+                killpg(getpgrp(), SIGINT);
+            else if (*key == Key::FocusIn)
+                context().hooks().run_hook("FocusIn", context().name(), context());
+            else if (*key == Key::FocusOut)
+                context().hooks().run_hook("FocusOut", context().name(), context());
+            else if (key->modifiers == Key::Modifiers::Resize)
             {
-                if (*key == ctrl('c'))
-                    killpg(getpgrp(), SIGINT);
-                else if (*key == Key::FocusIn)
-                    context().hooks().run_hook("FocusIn", context().name(), context());
-                else if (*key == Key::FocusOut)
-                    context().hooks().run_hook("FocusOut", context().name(), context());
-                else if (key->modifiers == Key::Modifiers::Resize)
-                {
-                    m_window->set_dimensions(m_ui->dimensions());
-                    force_redraw();
-                }
-                else
-                    m_input_handler.handle_key(*key);
+                m_window->set_dimensions(m_ui->dimensions());
+                force_redraw();
             }
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-            context().print_status({ error.what().str(), get_face("Error") });
-            context().hooks().run_hook("RuntimeError", error.what(), context());
+            else
+                m_input_handler.handle_key(*key);
         }
     }
-    catch (Kakoune::client_removed& removed)
+    catch (Kakoune::runtime_error& error)
     {
-        ClientManager::instance().remove_client(*this, removed.graceful);
+        context().print_status({ error.what().str(), get_face("Error") });
+        context().hooks().run_hook("RuntimeError", error.what(), context());
     }
 }
 

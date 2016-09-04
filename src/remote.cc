@@ -54,7 +54,7 @@ public:
         *reinterpret_cast<uint32_t*>(m_stream.data()+1) = (uint32_t)m_stream.size();
         int res = ::write(m_socket, m_stream.data(), m_stream.size());
         if (res == 0)
-            throw peer_disconnected{};
+            throw remote_error{"peer disconnected"};
     }
 
     void write(const char* val, size_t size)
@@ -171,8 +171,8 @@ public:
 
     void read(char* buffer, size_t size)
     {
-        if (m_stream.size() - m_read_pos < size)
-            throw peer_disconnected{};
+        if (m_read_pos + size > m_stream.size())
+            throw remote_error{"tried to read after message end"};
         memcpy(buffer, m_stream.data() + m_read_pos, size);
         m_read_pos += size;
     }
@@ -229,7 +229,7 @@ private:
     {
         int res = ::read(sock, m_stream.data() + m_write_pos, size);
         if (res == 0)
-            throw peer_disconnected{};
+            throw remote_error{"peer disconnected"};
         if (res < 0)
             throw socket_error{};
         m_write_pos += res;
@@ -325,23 +325,51 @@ public:
 
     void set_ui_options(const Options& options) override;
 
+    void set_client(Client* client) { m_client = client; }
+    Client* client() const { return m_client.get(); }
+
 private:
     FDWatcher    m_socket_watcher;
     MsgReader    m_reader;
     CharCoord m_dimensions;
     InputCallback m_input_callback;
+
+    SafePtr<Client> m_client;
+    Optional<Key>   m_pending_key;
 };
 
 
 RemoteUI::RemoteUI(int socket, CharCoord dimensions)
     : m_socket_watcher(socket, [this](FDWatcher& watcher, EventMode mode) {
-                           const int sock = watcher.fd();
-                           while (fd_readable(sock) and not m_reader.ready())
-                               m_reader.read_available(sock);
+          const int sock = watcher.fd();
+          bool disconnect = false;
+          try
+          {
+              while (fd_readable(sock) and not m_reader.ready())
+                  m_reader.read_available(sock);
 
-                           if (m_reader.ready() and m_input_callback)
-                               m_input_callback(mode);
-                       }),
+              if (m_reader.ready() and not m_pending_key)
+              {
+                   if (m_reader.type() == MessageType::Key)
+                   {
+                       m_pending_key = m_reader.read<Key>();
+                       m_reader.reset();
+                   }
+                   else
+                       disconnect = true;
+              }
+          }
+          catch (remote_error& err)
+          {
+              write_to_debug_buffer(format("Error while reading remote message: {}", err.what()));
+              disconnect = true;
+          }
+
+          if (disconnect)
+              ClientManager::instance().remove_client(*m_client, false);
+          else if (m_pending_key and m_input_callback)
+              m_input_callback(mode);
+      }),
       m_dimensions(dimensions)
 {
     write_to_debug_buffer(format("remote client connected: {}", m_socket_watcher.fd()));
@@ -427,32 +455,17 @@ void RemoteUI::set_ui_options(const Options& options)
 
 bool RemoteUI::is_key_available()
 {
-    return m_reader.ready();
+    return (bool)m_pending_key;
 }
 
 Key RemoteUI::get_key()
 {
-    kak_assert(m_reader.ready());
-    try
-    {
-        if (m_reader.type() != MessageType::Key)
-            throw client_removed{ false };
-
-        Key key = m_reader.read<Key>();
-        m_reader.reset();
-        if (key.modifiers == Key::Modifiers::Resize)
-            m_dimensions = key.coord();
-        return key;
-    }
-    catch (peer_disconnected&)
-    {
-        throw client_removed{ false };
-    }
-    catch (socket_error&)
-    {
-        write_to_debug_buffer("ungraceful deconnection detected");
-        throw client_removed{ false };
-    }
+    kak_assert(m_pending_key);
+    auto key = *m_pending_key;
+    m_pending_key.reset();
+    if (key.modifiers == Key::Modifiers::Resize)
+        m_dimensions = key.coord();
+    return key;
 }
 
 CharCoord RemoteUI::dimensions()
@@ -632,10 +645,12 @@ private:
                 auto init_command = m_reader.read<String>();
                 auto dimensions = m_reader.read<CharCoord>();
                 auto env_vars = m_reader.read_idmap<String, MemoryDomain::EnvVars>();
-                std::unique_ptr<UserInterface> ui{new RemoteUI{sock, dimensions}};
-                ClientManager::instance().create_client(std::move(ui),
-                                                        std::move(env_vars),
-                                                        init_command);
+                RemoteUI* ui = new RemoteUI{sock, dimensions};
+                if (auto* client = ClientManager::instance().create_client(
+                                       std::unique_ptr<UserInterface>{ui},
+                                       std::move(env_vars), init_command))
+                    ui->set_client(client);
+
                 Server::instance().remove_accepter(this);
                 return;
             }
@@ -652,7 +667,6 @@ private:
                     write_to_debug_buffer(format("error running command '{}': {}",
                                                  command, e.what()));
                 }
-                catch (client_removed&) {}
                 close(sock);
                 Server::instance().remove_accepter(this);
                 return;

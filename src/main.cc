@@ -451,7 +451,7 @@ int run_client(StringView session, StringView init_command, UIType ui_type)
         while (true)
             event_manager.handle_next_events(EventMode::Normal);
     }
-    catch (peer_disconnected&)
+    catch (remote_error&)
     {
         write_stderr("disconnected from server\n");
         return -1;
@@ -524,11 +524,6 @@ int run_server(StringView session, StringView init_command,
         startup_error = true;
         write_to_debug_buffer(format("error while parsing kakrc:\n    {}", error.what()));
     }
-    catch (Kakoune::client_removed&)
-    {
-        startup_error = true;
-        write_to_debug_buffer("error while parsing kakrc: asked to quit");
-    }
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
@@ -589,6 +584,7 @@ int run_server(StringView session, StringView init_command,
             client_manager.redraw_clients();
             event_manager.handle_next_events(EventMode::Normal);
             client_manager.handle_pending_inputs();
+            client_manager.clear_client_trash();
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
             string_registry.purge_unused();

@@ -7,13 +7,6 @@
 namespace Kakoune
 {
 
-struct client_removed
-{
-    client_removed(bool graceful) : graceful{graceful} {}
-
-    const bool graceful;
-};
-
 struct WindowAndSelections
 {
     std::unique_ptr<Window> window;
@@ -58,10 +51,12 @@ public:
                                        ByteCount cursor_pos = -1) const;
 
     void clear_window_trash();
+    void clear_client_trash();
 private:
     String generate_name() const;
 
     ClientList m_clients;
+    ClientList m_client_trash;
     Vector<WindowAndSelections, MemoryDomain::Client> m_free_windows;
     Vector<std::unique_ptr<Window>> m_window_trash;
 };

@@ -23,6 +23,7 @@ void ClientManager::clear()
     // So that clients destructor find the client manager empty
     // so that local UI does not fork.
     ClientList clients = std::move(m_clients);
+    m_client_trash.clear();
 }
 
 String ClientManager::generate_name() const
@@ -47,24 +48,17 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
     m_clients.emplace_back(client);
     try
     {
-        try
-        {
-            CommandManager::instance().execute(init_commands, client->context());
-        }
-        catch (Kakoune::runtime_error& error)
-        {
-            client->context().print_status({ error.what().str(), get_face("Error") });
-            client->context().hooks().run_hook("RuntimeError", error.what(),
-                                               client->context());
-        }
+        CommandManager::instance().execute(init_commands, client->context());
     }
-    catch (Kakoune::client_removed& removed)
+    catch (Kakoune::runtime_error& error)
     {
-        remove_client(*client, removed.graceful);
-        return nullptr;
+        client->context().print_status({ error.what().str(), get_face("Error") });
+        client->context().hooks().run_hook("RuntimeError", error.what(),
+                                           client->context());
     }
 
-    return client;
+    // Do not return the client if it already got moved to the trash
+    return contains(m_clients, client) ? client : nullptr;
 }
 
 void ClientManager::handle_pending_inputs() const
@@ -75,10 +69,13 @@ void ClientManager::handle_pending_inputs() const
 
 void ClientManager::remove_client(Client& client, bool graceful)
 {
-    auto it = find_if(m_clients,
-                      [&](const std::unique_ptr<Client>& ptr)
-                      { return ptr.get() == &client; });
-    kak_assert(it != m_clients.end());
+    auto it = find(m_clients, &client);
+    if (it == m_clients.end())
+    {
+        kak_assert(contains(m_client_trash, &client));
+        return;
+    }
+    m_client_trash.push_back(std::move(*it));
     m_clients.erase(it);
 
     if (not graceful and m_clients.empty())
@@ -153,6 +150,11 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
 void ClientManager::clear_window_trash()
 {
     m_window_trash.clear();
+}
+
+void ClientManager::clear_client_trash()
+{
+    m_client_trash.clear();
 }
 
 bool ClientManager::validate_client_name(StringView name) const
