@@ -6,18 +6,15 @@ def -params 1.. runtime %{ %sh{
 }}
 
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
-  -shell-completion %{
-    prefix=$(printf %s "$1" | cut -c1-${kak_pos_in_token} 2> /dev/null)
-    (
+  -shell-candidates %{
       localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
       for col in ${kak_runtime}/colors/*.kak ${localconfdir}/colors/*.kak; do
           candidate=$(basename "${col}" .kak)
           case ${candidate} in
              \**) ;;
-             ${prefix}*) echo ${candidate} ;;
+             *) echo ${candidate} ;;
           esac
       done
-    ) | sort -u
   } \
   colorscheme %{ %sh{
     localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
