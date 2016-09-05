@@ -38,8 +38,6 @@ enum class MessageType : char
     Key
 };
 
-struct socket_error{};
-
 class MsgWriter
 {
 public:
@@ -231,7 +229,7 @@ private:
         if (res == 0)
             throw remote_error{"peer disconnected"};
         if (res < 0)
-            throw socket_error{};
+            throw remote_error{format("socket error, read returned {}", res)};
         m_write_pos += res;
     }
 
@@ -359,7 +357,7 @@ RemoteUI::RemoteUI(int socket, CharCoord dimensions)
                        disconnect = true;
               }
           }
-          catch (remote_error& err)
+          catch (const remote_error& err)
           {
               write_to_debug_buffer(format("Error while reading remote message: {}", err.what()));
               disconnect = true;
@@ -629,17 +627,19 @@ private:
     void handle_available_input()
     {
         const int sock = m_socket_watcher.fd();
-        do
+        try
         {
-            m_reader.read_available(sock);
-        }
-        while (fd_readable(sock) and not m_reader.ready());
+            do
+            {
+                m_reader.read_available(sock);
+            }
+            while (fd_readable(sock) and not m_reader.ready());
 
-        if (not m_reader.ready())
-            return;
+            if (not m_reader.ready())
+                return;
 
-        switch (m_reader.type())
-        {
+            switch (m_reader.type())
+            {
             case MessageType::Connect:
             {
                 auto init_command = m_reader.read<String>();
@@ -652,7 +652,7 @@ private:
                     ui->set_client(client);
 
                 Server::instance().remove_accepter(this);
-                return;
+                break;
             }
             case MessageType::Command:
             {
@@ -662,20 +662,26 @@ private:
                     Context context{Context::EmptyContextFlag{}};
                     CommandManager::instance().execute(command, context);
                 }
-                catch (runtime_error& e)
+                catch (const runtime_error& e)
                 {
                     write_to_debug_buffer(format("error running command '{}': {}",
                                                  command, e.what()));
                 }
                 close(sock);
                 Server::instance().remove_accepter(this);
-                return;
+                break;
             }
             default:
                 write_to_debug_buffer("Invalid introduction message received");
                 close(sock);
                 Server::instance().remove_accepter(this);
-                break;
+            }
+        }
+        catch (const remote_error& err)
+        {
+            write_to_debug_buffer(format("accepting connection failed: {}", err.what()));
+            close(sock);
+            Server::instance().remove_accepter(this);
         }
     }
 
