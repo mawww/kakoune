@@ -104,14 +104,28 @@ template<typename It>
 bool regex_match(It begin, It end, const Regex& re)
 {
     using Utf8It = RegexUtf8It<It>;
-    return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+    try
+    {
+        return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+    }
+    catch (std::runtime_error& err)
+    {
+        throw runtime_error{format("Regex matching error: {}", err.what())};
+    }
 }
 
 template<typename It>
 bool regex_match(It begin, It end, MatchResults<It>& res, const Regex& re)
 {
     using Utf8It = RegexUtf8It<It>;
-    return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+    try
+    {
+        return boost::regex_match(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+    }
+    catch (std::runtime_error& err)
+    {
+        throw runtime_error{format("Regex matching error: {}", err.what())};
+    }
 }
 
 template<typename It>
@@ -119,7 +133,14 @@ bool regex_search(It begin, It end, const Regex& re,
                   RegexConstant::match_flag_type flags = RegexConstant::match_default)
 {
     using Utf8It = RegexUtf8It<It>;
-    return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+    try
+    {
+        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, re);
+    }
+    catch (std::runtime_error& err)
+    {
+        throw runtime_error{format("Regex searching error: {}", err.what())};
+    }
 }
 
 template<typename It>
@@ -127,7 +148,14 @@ bool regex_search(It begin, It end, MatchResults<It>& res, const Regex& re,
                   RegexConstant::match_flag_type flags = RegexConstant::match_default)
 {
     using Utf8It = RegexUtf8It<It>;
-    return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+    try
+    {
+        return boost::regex_search(Utf8It{begin, begin, end}, Utf8It{end, begin, end}, res, re);
+    }
+    catch (std::runtime_error& err)
+    {
+        throw runtime_error{format("Regex searching error: {}", err.what())};
+    }
 }
 
 String option_to_string(const Regex& re);
