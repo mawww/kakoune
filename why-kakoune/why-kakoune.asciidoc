@@ -208,3 +208,34 @@ not try to manage windows, and lets the system window manager, or terminal
 multiplexer (as tmux), handle their responsiblity. This is achieved through
 a client/server design: An edition session runs on a server process, and
 multiple clients can connect to that session to display different buffers.
+
+Discoverability
+~~~~~~~~~~~~~~~
+
+Keyboard oriented programs tends to be at a disadvantage compared to GUI
+applications because they are less discoverable, there is no menu bar on
+which to click to see the available options, no tooltips appearing when you
+hover above a button explaining what it does.
+
+Kakoune solves this problem through the use of two mechanism: extensive
+completion support, and auto-information display.
+
+When a command is written in a prompt, Kakoune will automatically open a menu
+providing you with the available completions for the current parameter. It
+will know if the parameter is supposed to be a word against a fixed set
+of word, the name of a buffer, a filename, etc... Actually, as soon as `:`
+is typed, entering command prompt mode, the list of existing command will
+be displayed in the completion menu.
+
+Additionally, Kakoune will display an information box, describing what the
+command does, what optional switches it can take, what they do...
+
+That information box gets displayed in other cases, for example if the `g`
+key is hit, which then waits for another key (`g` is the *goto* commands
+prefix), an information box will display all the recognized keys, informing
+the user that Kakoune is waiting on a keystroke, and listing the available
+options.
+
+To go even further in discoverablility, the auto information system can
+be set to display an information box after each normal mode keystroke,
+explaining what the key pressed just did.
