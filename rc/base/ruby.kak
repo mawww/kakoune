@@ -107,7 +107,7 @@ def ruby-alternative-file -docstring 'Jump to the alternate file (implementation
 }}
 
 def -hidden _ruby_filter_around_selections %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         exec <a-x>
         # remove trailing white spaces
         try %{ exec -draft s \h + $ <ret> d }
@@ -115,7 +115,7 @@ def -hidden _ruby_filter_around_selections %{
 }
 
 def -hidden _ruby_indent_on_char %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         # align middle and end structures to start
         try %{ exec -draft <a-x> <a-k> ^ \h * (else|elsif) $ <ret> <a-\;> <a-?> ^ \h * (if)                                                       <ret> s \A | \Z <ret> \' <a-&> }
         try %{ exec -draft <a-x> <a-k> ^ \h * (when)       $ <ret> <a-\;> <a-?> ^ \h * (case)                                                     <ret> s \A | \Z <ret> \' <a-&> }
@@ -125,7 +125,7 @@ def -hidden _ruby_indent_on_char %{
 }
 
 def -hidden _ruby_indent_on_new_line %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft K <a-&> }
         # filter previous line
@@ -136,7 +136,7 @@ def -hidden _ruby_indent_on_new_line %{
 }
 
 def -hidden _ruby_insert_on_new_line %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         # copy _#_ comment prefix and following white spaces
         try %{ exec -draft k x s ^ \h * \K \# \h * <ret> y j p }
         # wisely add end structure
