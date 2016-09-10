@@ -498,6 +498,8 @@ public:
             if (m_cursor_pos < len)
                 m_line[m_line.byte_count_to(m_cursor_pos)]
                     = to_upper(m_line[m_cursor_pos]);
+
+            to_next_word_end<Word>(m_cursor_pos, m_line);
         }
         else if (key == ctrl('k'))
         {
