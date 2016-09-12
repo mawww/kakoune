@@ -427,9 +427,8 @@ public:
                 if (m_cursor_pos > m_line.char_length() - 2)
                     m_cursor_pos = m_line.char_length() - 2;
 
-                insert(m_line[m_cursor_pos + 1]);
-                m_line = m_line.substr(0, m_cursor_pos + 1)
-                         + m_line.substr(m_cursor_pos + 2);
+                std::swap(m_line[m_line.byte_count_to(m_cursor_pos)],
+                            m_line[m_line.byte_count_to(m_cursor_pos + 1)]);
                 m_cursor_pos = old_cursor_pos;
             }
         }
