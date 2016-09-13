@@ -28,7 +28,13 @@ def -params 0..1 \
                 out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" ENVIRON["tagroot"] $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
             }
             /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
-            END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
+            END {
+                if (length(out) == 0) {
+                    print "echo -color Error no such tag " ENVIRON["tagname"]
+                } else {
+                    print "menu -markup -auto-single " out 
+                }
+            }'
         done
     }}
 
