@@ -62,15 +62,61 @@ Buffer* open_fifo(StringView name, StringView filename, bool scroll)
     return create_fifo_buffer(name.str(), fd, scroll);
 }
 
-const PerArgumentCommandCompleter filename_completer({
-     [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-     { return Completions{ 0_byte, cursor_pos,
-                           complete_filename(prefix,
-                                             context.options()["ignored_files"].get<Regex>(),
-                                             cursor_pos) }; }
-});
+template<typename... Completers> struct PerArgumentCommandCompleter;
 
-static CandidateList complete_buffer_name(StringView query, ByteCount cursor_pos)
+template<> struct PerArgumentCommandCompleter<>
+{
+    Completions operator()(const Context&, CompletionFlags, CommandParameters,
+                           size_t, ByteCount) const { return {}; }
+};
+
+template<typename Completer, typename... Rest>
+struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompleter<Rest...>
+{
+    template<typename C, typename... R,
+             typename = typename std::enable_if<not std::is_base_of<PerArgumentCommandCompleter<>,
+                                                typename std::remove_reference<C>::type>::value>::type>
+    PerArgumentCommandCompleter(C&& completer, R&&... rest)
+      : PerArgumentCommandCompleter<Rest...>(std::forward<R>(rest)...),
+        m_completer(std::forward<C>(completer)) {}
+
+    Completions operator()(const Context& context, CompletionFlags flags,
+                           CommandParameters params, size_t token_to_complete,
+                           ByteCount pos_in_token) const
+    {
+        if (token_to_complete == 0)
+        {
+            const String& arg = token_to_complete < params.size() ?
+                                params[token_to_complete] : String();
+            return m_completer(context, flags, arg, pos_in_token);
+        }
+        return PerArgumentCommandCompleter<Rest...>::operator()(
+            context, flags, params, token_to_complete-1, pos_in_token);
+    }
+
+    Completer m_completer;
+};
+
+
+template<typename... Completers>
+PerArgumentCommandCompleter<
+    typename std::remove_cv<
+        typename std::remove_reference<Completers>::type
+    >::type...>
+make_completer(Completers&&... completers)
+{
+    return {std::forward<Completers>(completers)...};
+}
+
+auto filename_completer = make_completer(
+    [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
+    { return Completions{ 0_byte, cursor_pos,
+                          complete_filename(prefix,
+                                            context.options()["ignored_files"].get<Regex>(),
+                                            cursor_pos) }; });
+
+static Completions complete_buffer_name(const Context& context, CompletionFlags flags,
+                                        StringView prefix, ByteCount cursor_pos)
 {
     struct RankedMatchAndBuffer : RankedMatch
     {
@@ -83,7 +129,7 @@ static CandidateList complete_buffer_name(StringView query, ByteCount cursor_pos
         const Buffer* buffer;
     };
 
-    query = query.substr(0, cursor_pos);
+    StringView query = prefix.substr(0, cursor_pos);
     Vector<RankedMatchAndBuffer> filename_matches;
     Vector<RankedMatchAndBuffer> matches;
     for (const auto& buffer : BufferManager::instance())
@@ -109,13 +155,10 @@ static CandidateList complete_buffer_name(StringView query, ByteCount cursor_pos
     for (auto& match : matches)
         res.push_back(match.buffer->display_name());
 
-    return res;
+    return { 0, cursor_pos, res };
 }
 
-const PerArgumentCommandCompleter buffer_completer({
-    [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
-    { return Completions{ 0_byte, cursor_pos, complete_buffer_name(prefix, cursor_pos) }; }
-});
+auto buffer_completer = make_completer(&complete_buffer_name);
 
 const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
 const ParameterDesc single_name_param{ {}, ParameterDesc::Flags::None, 1, 1 };
@@ -843,9 +886,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
                        CommandParameters params,
                        size_t token_to_complete, ByteCount pos_in_token)
         {
-             const String& prefix = params[token_to_complete];
-             return Completions{ 0_byte, pos_in_token,
-                                 complete_buffer_name(prefix, pos_in_token) };
+             return complete_buffer_name(context, flags, params[token_to_complete], pos_in_token);
         };
     }
     else if (auto shell_cmd_opt = parser.get_switch("shell-completion"))
@@ -985,9 +1026,7 @@ const CommandDesc alias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    PerArgumentCommandCompleter({
-        complete_scope, complete_nothing, complete_command_name
-    }),
+    make_completer(&complete_scope, &complete_nothing, &complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
@@ -1006,10 +1045,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    PerArgumentCommandCompleter({
-        complete_scope, complete_nothing, complete_command_name
-
-    }),
+    make_completer(&complete_scope, &complete_nothing, &complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
@@ -1057,12 +1093,12 @@ const CommandDesc debug_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1},
     CommandFlags::None,
     CommandHelper{},
-    PerArgumentCommandCompleter({
+    make_completer(
         [](const Context& context, CompletionFlags flags,
            const String& prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"info", "buffers", "options", "memory", "shared-strings"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
-    } }),
+    }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (parser[0] == "info")
@@ -1621,11 +1657,7 @@ const CommandDesc prompt_cmd = {
                           ClientManager::instance().complete_client_name(prefix, cursor_pos) };
             };
         else if (parser.get_switch("buffer-completion"))
-            completer = [](const Context& context, CompletionFlags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                 return { 0_byte, cursor_pos,
-                          complete_buffer_name(prefix, cursor_pos) };
-            };
+            completer = complete_buffer_name;
         else if (parser.get_switch("command-completion"))
             completer = [](const Context& context, CompletionFlags flags,
                            StringView prefix, ByteCount cursor_pos) -> Completions {
@@ -1838,7 +1870,7 @@ const CommandDesc face_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
-    PerArgumentCommandCompleter({ complete_face, complete_face }),
+    make_completer(&complete_face, &complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         FaceRegistry::instance().register_alias(parser[0], parser[1], true);
@@ -1900,15 +1932,14 @@ const CommandDesc change_working_directory_cmd = {
     single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},
-    PerArgumentCommandCompleter{{
+    make_completer(
          [](const Context& context, CompletionFlags flags,
             const String& prefix, ByteCount cursor_pos) -> Completions {
              return { 0_byte, cursor_pos,
                       complete_filename(prefix,
                                         context.options()["ignored_files"].get<Regex>(),
                                         cursor_pos, true) };
-        }
-    }},
+        }),
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
         StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";

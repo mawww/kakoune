@@ -38,27 +38,6 @@ enum class CommandFlags
 
 template<> struct WithBitOps<CommandFlags> : std::true_type {};
 
-class PerArgumentCommandCompleter
-{
-public:
-    using ArgumentCompleter = std::function<Completions (const Context&,
-                                            CompletionFlags flags,
-                                            const String&, ByteCount)>;
-    using ArgumentCompleterList = ConstArrayView<ArgumentCompleter>;
-
-    PerArgumentCommandCompleter(ArgumentCompleterList completers)
-        : m_completers(completers.begin(), completers.end()) {}
-
-    Completions operator()(const Context& context,
-                           CompletionFlags flags,
-                           CommandParameters params,
-                           size_t token_to_complete,
-                           ByteCount pos_in_token) const;
-
-private:
-    Vector<ArgumentCompleter, MemoryDomain::Commands> m_completers;
-};
-
 using CommandInfo = std::pair<String, String>;
 
 struct Token

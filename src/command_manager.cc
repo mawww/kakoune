@@ -672,23 +672,4 @@ Completions CommandManager::complete(const Context& context,
     return Completions{};
 }
 
-Completions PerArgumentCommandCompleter::operator()(const Context& context,
-                                                    CompletionFlags flags,
-                                                    CommandParameters params,
-                                                    size_t token_to_complete,
-                                                    ByteCount pos_in_token)
-                                                    const
-{
-    if (token_to_complete >= m_completers.size())
-        return Completions{};
-
-    // it is possible to try to complete a new argument
-    kak_assert(token_to_complete <= params.size());
-
-    const String& argument = token_to_complete < params.size() ?
-                             params[token_to_complete] : String();
-    return m_completers[token_to_complete](context, flags, argument,
-                                           pos_in_token);
-}
-
 }
