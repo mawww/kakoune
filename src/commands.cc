@@ -166,6 +166,21 @@ const ParameterDesc single_optional_name_param{ {}, ParameterDesc::Flags::None, 
 
 static constexpr auto scopes = { "global", "buffer", "window" };
 
+static Completions complete_scope(const Context&, CompletionFlags,
+                                  const String& prefix, ByteCount cursor_pos)
+{
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+}
+
+
+static Completions complete_command_name(const Context& context, CompletionFlags,
+                                         const String& prefix, ByteCount cursor_pos)
+{
+   return CommandManager::instance().complete_command_name(
+       context, prefix.substr(0, cursor_pos), false);
+}
+
+
 Scope* get_scope_ifp(StringView scope, const Context& context)
 {
     if (prefix_match("global", scope))
@@ -740,20 +755,11 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
-    {
-        if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
-        else if (token_to_complete == 3)
-        {
-            auto& cm = CommandManager::instance();
-            return cm.complete(context, flags, params[3], pos_in_token);
-        }
-        return {};
-    },
+    make_completer(&complete_scope, &complete_nothing, &complete_nothing,
+                   [](const Context& context, CompletionFlags flags,
+                      const String& prefix, ByteCount cursor_pos)
+                   { return CommandManager::instance().complete(
+                         context, flags, prefix, cursor_pos); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         Regex regex(parser[2], Regex::optimize | Regex::nosubs | Regex::ECMAScript);
@@ -1003,21 +1009,6 @@ const CommandDesc define_command_cmd = {
     CommandCompleter{},
     define_command
 };
-
-static Completions complete_scope(const Context&, CompletionFlags,
-                                  const String& prefix, ByteCount cursor_pos)
-{
-   auto scopes = {"global", "buffer", "window"};
-   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
-}
-
-
-static Completions complete_command_name(const Context& context, CompletionFlags,
-                                         const String& prefix, ByteCount cursor_pos)
-{
-   return CommandManager::instance().complete_command_name(
-       context, prefix.substr(0, cursor_pos), false);
-}
 
 const CommandDesc alias_cmd = {
     "alias",
