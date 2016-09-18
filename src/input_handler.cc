@@ -56,8 +56,15 @@ private:
 namespace InputModes
 {
 
-static constexpr std::chrono::milliseconds idle_timeout{50};
-static constexpr std::chrono::milliseconds fs_check_timeout{500};
+std::chrono::milliseconds get_idle_timeout(const Context& context)
+{
+    return std::chrono::milliseconds{context.options()["idle_timeout"].get<int>()};
+}
+
+std::chrono::milliseconds get_fs_check_timeout(const Context& context)
+{
+    return std::chrono::milliseconds{context.options()["fs_check_timeout"].get<int>()};
+}
 
 struct MouseHandler
 {
@@ -140,7 +147,7 @@ public:
                             Timer::Callback() : Timer::Callback([this](Timer& timer) {
               if (context().has_client())
                   context().client().check_if_buffer_needs_reloading();
-              timer.set_next_date(Clock::now() + fs_check_timeout);
+              timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
           })},
           m_single_command(single_command)
     {}
@@ -150,8 +157,8 @@ public:
         if (context().has_client())
             context().client().check_if_buffer_needs_reloading();
 
-        m_fs_check_timer.set_next_date(Clock::now() + fs_check_timeout);
-        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+        m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
+        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
 
         context().hooks().run_hook("NormalBegin", "", context());
     }
@@ -178,7 +185,7 @@ public:
         auto cp = key.codepoint();
 
         if (m_mouse_handler.handle_key(key, context()))
-            m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         if (cp and isdigit(*cp))
         {
             int new_val = m_params.count * 10 + *cp - '0';
@@ -241,7 +248,7 @@ public:
         }
 
         context().hooks().run_hook("NormalKey", key_to_str(key), context());
-        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     DisplayLine mode_line() const override
@@ -961,7 +968,7 @@ public:
 
     void on_enabled() override
     {
-        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
     void on_disabled() override
@@ -1099,7 +1106,7 @@ public:
                     {
                         insert(*cp);
                         context().hooks().run_hook("InsertKey", key_to_str(key), context());
-                        m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+                        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
                     }
                 }, "raw insert", "enter key to insert");
             update_completions = false;
@@ -1113,7 +1120,7 @@ public:
         context().hooks().run_hook("InsertKey", key_to_str(key), context());
 
         if (update_completions)
-            m_idle_timer.set_next_date(Clock::now() + idle_timeout);
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         if (moved)
             context().hooks().run_hook("InsertMove", key_to_str(key), context());
     }

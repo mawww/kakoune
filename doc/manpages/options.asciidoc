@@ -138,6 +138,14 @@ Builtin options
 *debug* 'flags(hooks|shell|profile)'::
 	dump various debug information in the '\*debug*' buffer
 
+*idle_timeout* 'int'::
+	timeout, in milliseconds, with no user input that will trigger the
+	*InsertIdle* and *NormalIdle* hooks. 
+
+*fs_checkout_timeout* 'int'::
+	timeout, in milliseconds, between checks in normal mode of modifications
+	of the file associated with the current buffer on the filesystem.
+
 *modelinefmt* 'string'::
 	A format string used to generate the mode line, that string is first
 	expanded as a command line would be (expanding '%...{...}' strings),

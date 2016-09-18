@@ -204,6 +204,12 @@ static void check_scrolloff(const CharCoord& so)
         throw runtime_error{"scroll offset must be positive or zero"};
 }
 
+static void check_timeout(const int& timeout)
+{
+    if (timeout < 50)
+        throw runtime_error{"the minimum acceptable timeout is 50 milliseconds"};
+}
+
 void register_options()
 {
     OptionsRegistry& reg = GlobalScope::instance().option_registry();
@@ -247,6 +253,11 @@ void register_options()
     reg.declare_option("autoreload",
                        "autoreload buffer when a filesystem modification is detected",
                        Autoreload::Ask);
+    reg.declare_option<int, check_timeout>(
+        "idle_timeout", "timeout, in milliseconds, before idle hooks are triggered", 50);
+    reg.declare_option<int, check_timeout>(
+        "fs_check_timeout", "timeout, in milliseconds, between file system buffer modification checks",
+        500);
     reg.declare_option("ui_options",
                        "colon separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"

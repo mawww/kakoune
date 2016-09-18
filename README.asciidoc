@@ -909,6 +909,11 @@ Some options are built in Kakoune, and can be used to control it's behaviour:
    modification is detected.
  * `debug` _flags(hooks|shell|profile)_: dump various debug information in
    the `*debug*` buffer.
+ * `idle_timeout` _int_: timeout, in milliseconds, with no user input that will
+   trigger the `InsertIdle` and `NormalIdle` hooks. 
+ * `fs_checkout_timeout` _int_: timeout, in milliseconds, between checks in
+   normal mode of modifications of the file associated with the current buffer
+   on the filesystem.
  * `modelinefmt` _string_: A format string used to generate the mode line, that
    string is first expanded as a command line would be (expanding `%...{...}`
    strings), then markup tags are applied (see <<Markup strings>>).
