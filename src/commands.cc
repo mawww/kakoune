@@ -97,12 +97,8 @@ struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompl
     Completer m_completer;
 };
 
-
 template<typename... Completers>
-PerArgumentCommandCompleter<
-    typename std::remove_cv<
-        typename std::remove_reference<Completers>::type
-    >::type...>
+PerArgumentCommandCompleter<typename std::decay<Completers>::type...>
 make_completer(Completers&&... completers)
 {
     return {std::forward<Completers>(completers)...};
@@ -158,7 +154,7 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     return { 0, cursor_pos, res };
 }
 
-auto buffer_completer = make_completer(&complete_buffer_name);
+auto buffer_completer = make_completer(complete_buffer_name);
 
 const ParameterDesc no_params{ {}, ParameterDesc::Flags::None, 0, 0 };
 const ParameterDesc single_name_param{ {}, ParameterDesc::Flags::None, 1, 1 };
@@ -755,7 +751,7 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    make_completer(&complete_scope, &complete_nothing, &complete_nothing,
+    make_completer(complete_scope, complete_nothing, complete_nothing,
                    [](const Context& context, CompletionFlags flags,
                       const String& prefix, ByteCount cursor_pos)
                    { return CommandManager::instance().complete(
@@ -1017,7 +1013,7 @@ const CommandDesc alias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(&complete_scope, &complete_nothing, &complete_command_name),
+    make_completer(complete_scope, complete_nothing, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
@@ -1036,7 +1032,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(&complete_scope, &complete_nothing, &complete_command_name),
+    make_completer(complete_scope, complete_nothing, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
@@ -1899,7 +1895,7 @@ const CommandDesc face_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(&complete_face, &complete_face),
+    make_completer(complete_face, complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         FaceRegistry::instance().register_alias(parser[0], parser[1], true);
