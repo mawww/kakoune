@@ -229,8 +229,8 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
     do
     {
         --end;
-        skip_while_reverse(end, buffer.begin(), [c](Codepoint cur) { return cur != c; });
-        if (end == buffer.begin())
+        if (skip_while_reverse(end, buffer.begin(),
+                               [c](Codepoint cur) { return cur != c; }))
             return selection;
     }
     while (--count > 0);
