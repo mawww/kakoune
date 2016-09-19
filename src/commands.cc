@@ -1328,6 +1328,23 @@ KeymapMode parse_keymap_mode(const String& str)
     throw runtime_error(format("unknown keymap mode '{}'", str));
 }
 
+auto map_key_completer =
+    [](const Context& context, CompletionFlags flags,
+       CommandParameters params, size_t token_to_complete,
+       ByteCount pos_in_token) -> Completions
+    {
+        if (token_to_complete == 0)
+            return { 0_byte, params[0].length(),
+                     complete(params[0], pos_in_token, scopes) };
+        if (token_to_complete == 1)
+        {
+            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+            return { 0_byte, params[1].length(),
+                     complete(params[1], pos_in_token, modes) };
+        }
+        return {};
+    };
+
 const CommandDesc map_key_cmd = {
     "map",
     nullptr,
@@ -1344,21 +1361,7 @@ const CommandDesc map_key_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
     CommandFlags::None,
     CommandHelper{},
-    [](const Context& context, CompletionFlags flags,
-       CommandParameters params, size_t token_to_complete,
-       ByteCount pos_in_token) -> Completions
-    {
-        if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
-        if (token_to_complete == 1)
-        {
-            constexpr const char* modes[] = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
-            return { 0_byte, params[1].length(),
-                     complete(params[1], pos_in_token, modes) };
-        }
-        return {};
-    },
+    map_key_completer,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
@@ -1370,6 +1373,41 @@ const CommandDesc map_key_cmd = {
 
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping));
+    }
+};
+
+const CommandDesc unmap_key_cmd = {
+    "unmap",
+    nullptr,
+    "unmap <scope> <mode> <key> [<expected-keys>]: unmap <key> from given mode in <scope>.\n"
+    "If <expected> is specified, remove the mapping only if its value is <expected>\n"
+    "<mode> can be:\n"
+    "    normal\n"
+    "    insert\n"
+    "    menu\n"
+    "    prompt\n"
+    "    goto\n"
+    "    view\n"
+    "    user\n"
+    "    object\n",
+    ParameterDesc{{}, ParameterDesc::Flags::None, 4, 4},
+    CommandFlags::None,
+    CommandHelper{},
+    map_key_completer,
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        KeymapManager& keymaps = get_scope(parser[0], context).keymaps();
+        KeymapMode keymap_mode = parse_keymap_mode(parser[1]);
+
+        KeyList key = parse_keys(parser[2]);
+        if (key.size() != 1)
+            throw runtime_error("only a single key can be mapped");
+
+        if (keymaps.is_mapped(key[0], keymap_mode) and
+            (parser.positional_count() < 4 or
+             (keymaps.get_mapping(key[0], keymap_mode) ==
+              ConstArrayView<Key>{parse_keys(parser[3])})))
+            keymaps.unmap_key(key[0], keymap_mode);
     }
 };
 
@@ -2001,6 +2039,7 @@ void register_commands()
     register_command(unset_option_cmd);
     register_command(declare_option_cmd);
     register_command(map_key_cmd);
+    register_command(unmap_key_cmd);
     register_command(exec_string_cmd);
     register_command(eval_string_cmd);
     register_command(prompt_cmd);

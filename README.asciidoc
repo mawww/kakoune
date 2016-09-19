@@ -1402,6 +1402,15 @@ a single key name and `keys` a list of keys.
 `user` mode allows for user mapping behind the `,` key. Keys will be executed in
 normal mode.
 
+Mappings can be removed with the unmap command
+
+----------------------------------------
+:unmap <scope> <mode> <key> [<expected>]
+----------------------------------------
+
+If `<expected>` is specified, unmapping will only proceed if the current
+mapping matches the expected keys.
+
 Defining Commands
 ~~~~~~~~~~~~~~~~~
 

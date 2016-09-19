@@ -73,6 +73,25 @@ private:
 template<typename T>
 using ConstArrayView = ArrayView<const T>;
 
+template<typename T>
+bool operator==(ArrayView<T> lhs, ArrayView<T> rhs)
+{
+    if (lhs.size() != rhs.size())
+        return false;
+    for (int i = 0; i < lhs.size(); ++i)
+    {
+        if (lhs[i] != rhs[i])
+            return false;
+    }
+    return true;
+}
+
+template<typename T>
+bool operator!=(ArrayView<T> lhs, ArrayView<T> rhs)
+{
+    return not (lhs == rhs);
+}
+
 }
 
 #endif // array_view_hh_INCLUDED

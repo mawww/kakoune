@@ -113,8 +113,17 @@ command *q!* has to be used).
 	define a new command (c.f. the 'Declaring new commands' section below)
 
 *map* <scope> <mode> <key> <keys>::
-	bind a combination of keys to another one (c.f. the 'commands'
-	documentation page)
+	make *key* behave as if *keys* were typed. with *scope*
+	being one of *global*, *buffer* or *window*, *mode* being
+	*insert*, *normal*, *prompt*, *menu* or *user*.
+
+	*user* mode allows for user mapping behind the *,* key. Keys
+	will be executed in normal mode.
+
+*unmap* <scope> <mode> <key> [<expected>]::
+	remove the mapping of *key* in given *scope* and *mode*, if
+	expected is specified, only remove the mapping it if matches
+	the expected keys.
 
 *hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
 	execute a command whenever an event is triggered (c.f. the 'hooks'
