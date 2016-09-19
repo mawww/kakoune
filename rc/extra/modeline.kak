@@ -20,26 +20,19 @@ def -hidden _modeline-parse %{
             local tr=""
 
             case "${key}" in
-                so) ;&
-                scrolloff) tr="scrolloff ${value},${kak_opt_scrolloff##*,}";;
-                siso) ;&
-                sidescrolloff) tr="scrolloff ${kak_opt_scrolloff%%,*},${value}";;
-                ts) ;&
-                tabstop) tr="tabstop ${value}";;
-                sw) ;&
-                shiftwidth) tr="indentwidth ${value}";;
-                tw) ;&
-                textwidth) tr="autowrap_column ${value}";;
-                ff) ;&
-                fileformat)
+                so|scrolloff) tr="scrolloff ${value},${kak_opt_scrolloff##*,}";;
+                siso|sidescrolloff) tr="scrolloff ${kak_opt_scrolloff%%,*},${value}";;
+                ts|tabstop) tr="tabstop ${value}";;
+                sw|shiftwidth) tr="indentwidth ${value}";;
+                tw|textwidth) tr="autowrap_column ${value}";;
+                ff|fileformat)
                     case "${value}" in
                         unix) tr="eolformat lf";;
                         dos) tr="eolformat crlf";;
                         *) printf %s\\n "echo -debug 'Unsupported file format: ${value}'";;
                     esac
                 ;;
-                ft) ;&
-                filetype) tr="filetype ${value}";;
+                ft|filetype) tr="filetype ${value}";;
                 bomb) tr="BOM utf8";;
                 nobomb) tr="BOM none";;
                 *) printf %s\\n "echo -debug 'Unsupported vim variable: ${key}'";;
@@ -77,17 +70,16 @@ def -hidden _modeline-parse %{
         # It will also convert the ':' seperators beween the option=value pairs
         # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
         options=(
-            $(printf %s\\n "${kak_selection}" | sed -r \
-                    -e 's/^(.+\s\w+:\s?(set?)?\s)//' \
-                    -e 's/:?\s[^a-zA-Z0-9_=-]+$//' \
-                    -e 's/:/ /g')
+            $(printf %s\\n "${kak_selection}" | sed \
+                -e 's/^[^:]\{1,\}://'               \
+                -e 's/[ \t]*set\{0,1\}[ \t]//'      \
+                -e 's/:[^a-zA-Z0-9_=-]*$//'         \
+                -e 's/:/ /g')
         )
 
         case "${kak_selection}" in
-            *vi:*) ;&
-            *vim:*) type_selection="vim";;
-            *kak:*) ;&
-            *kakoune:*) type_selection="kakoune";;
+            *vi:*|*vim:*) type_selection="vim";;
+            *kak:*|*kakoune:*) type_selection="kakoune";;
             *) echo "echo -debug Unsupported modeline format";;
         esac
         [ -n "${type_selection}" ] || exit 1
