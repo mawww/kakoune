@@ -346,7 +346,7 @@ InsertCompletion complete_line(const SelectionList& sels, const OptionManager& o
 
 }
 
-InsertCompleter::InsertCompleter(const Context& context)
+InsertCompleter::InsertCompleter(Context& context)
     : m_context(context), m_options(context.options())
 {
     m_options.register_watcher(*this);
@@ -382,7 +382,7 @@ void InsertCompleter::select(int offset, Vector<Key>& keystrokes)
         {
             buffer.replace((pos - prefix_len).coord(),
                            (pos + suffix_len).coord(), candidate.completion);
-            const_cast<SelectionList&>(selections).update();
+            selections.update();
         }
     }
     m_completions.end = cursor_pos;
@@ -423,6 +423,7 @@ void InsertCompleter::reset()
     {
         m_context.client().menu_hide();
         m_context.client().info_hide();
+        m_context.hooks().run_hook("InsertCompletionHide", "", m_context);
     }
 }
 
@@ -468,6 +469,7 @@ void InsertCompleter::menu_show()
     m_context.client().menu_show(std::move(menu_entries), m_completions.begin,
                                  MenuStyle::Inline);
     m_context.client().menu_select(m_current_candidate);
+    m_context.hooks().run_hook("InsertCompletionShow", "", m_context);
 }
 
 void InsertCompleter::on_option_changed(const Option& opt)

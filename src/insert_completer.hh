@@ -75,7 +75,7 @@ struct InsertCompletion
 class InsertCompleter : public OptionManagerWatcher
 {
 public:
-    InsertCompleter(const Context& context);
+    InsertCompleter(Context& context);
     InsertCompleter(const InsertCompleter&) = delete;
     InsertCompleter& operator=(const InsertCompleter&) = delete;
     ~InsertCompleter();
@@ -97,7 +97,7 @@ private:
 
     void menu_show();
 
-    const Context&   m_context;
+    Context&         m_context;
     OptionManager&   m_options;
     InsertCompletion m_completions;
     int              m_current_candidate = -1;

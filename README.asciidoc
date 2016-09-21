@@ -1383,6 +1383,10 @@ existing hooks are:
        the filtering text is the client name.
  * `FocusOut`: On supported clients, triggered when the client gets unfocused.
        the filtering text is the client name.
+ * `InsertCompletionShow`: Triggered when the insert completion menu gets
+       displayed.
+ * `InsertCompletionHide`: Triggered when the insert completion menu gets
+       hidden.
 
 When not specified, the filtering text is an empty string.
 
