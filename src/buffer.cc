@@ -177,9 +177,8 @@ ByteCoord Buffer::clamp(ByteCoord coord) const
 ByteCoord Buffer::offset_coord(ByteCoord coord, CharCount offset)
 {
     StringView line = m_lines[coord.line];
-    auto character = std::max(0_char, std::min(line.char_count_to(coord.column) + offset,
-                                               line.char_length() - 1));
-    return {coord.line, line.byte_count_to(character)};
+    auto target = utf8::advance(&line[coord.column], offset < 0 ? line.begin() : line.end()-1, offset);
+    return {coord.line, (int)(target - line.begin())};
 }
 
 ByteCoordAndTarget Buffer::offset_coord(ByteCoordAndTarget coord, LineCount offset)
