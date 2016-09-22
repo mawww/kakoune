@@ -1,6 +1,14 @@
 Frequently Asked Questions
 --------------------------
 
+How to pronounce the name of the project and what does it mean ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The name of the project is pronounced "Kak-oon", and is a word taken from
+a New Caledonia dialect based on french. It means a hard blow, usually a
+punch, but generally refers to a blow in which all of one's strength went
+into doing.
+
 Is there going to be a Windows port of Kakoune ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -36,19 +44,25 @@ Can I use Kakoune as a pager ?
 Are there any non-console based frontends available ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-No graphical frontend is currently officially maintained, you can however try experimental community-developed ones.
+No graphical frontend is currently officially maintained, you can however
+try experimental community-developed ones.
 
-How do I automatically indent code, as Vim does with `==` ?
+How do I automatically indent code, as Vim does with `=` ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As `Kakoune` doesn't parse the contents of the buffers, there is no
 builtin equivalent for this Vim feature. Use a formatter/prettifier
-dedicated to the language you're using (e.g. `indent` for C).
+dedicated to the language you're using with the help of the `|` key.
+
+Example: `%|indent<ret>` to indent an entire buffer with C code.
+
+Note that some languages have a default formatter set, which you can use
+with the `:format` command.
 
 Can Kakoune automatically complete the parameters of my functions ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As mentioned in the above question about Vim's `==` command, Kakoune
+As mentioned in the above question about Vim's `=` key, Kakoune
 does not parse the contents of a buffer by itself, which makes it
 impossible for the editor to propose candidates upon completion.
 
@@ -56,7 +70,10 @@ However, support for such a feature can be achieved through the
 use of a dedicated tool, as is the case with `clang` and C code:
 you can use the `clang-enable-autocomplete` and `clang-complete`
 builtin commands whenever editing a C/C++ file, and completion will
-work on function parameters
+work on function parameters.
+
+Note that the same features are available for python buffers, with
+the `jedi` script.
 
 Why aren't widely known command line shortcuts such as <c-w> or <c-u> available in Kakoune ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,3 +107,17 @@ Supporting custom scopes would add hard dependencies to the project,
 which is too much of an drawback when balanced against the low cost of
 using an interpreter in a regular shell scope (e.g. `%sh{ python -c
 "..." }`), which has a negligible impact on performance.
+
+Can I disable auto-indentation completely ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All the indentation hooks are conventionally named `<lang>-indent`, which
+allows us to use the `disabled_hooks` variable to disable indentation globally
+with the following command: `set global disabled_hooks '.+-indent'`
+
+Can I disable syntax highligting completely ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Similarly to the indentation hooks, the named format followed by the highligting
+hooks is `<lang>-highlight`. You can thus disable syntax highligting using
+the following command: `set global disabled_hooks '.+-highlight'`
