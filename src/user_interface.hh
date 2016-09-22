@@ -13,7 +13,7 @@ namespace Kakoune
 class String;
 class DisplayBuffer;
 class DisplayLine;
-struct CharCoord;
+struct DisplayCoord;
 struct Face;
 struct Key;
 
@@ -42,13 +42,13 @@ public:
     virtual ~UserInterface() {}
 
     virtual void menu_show(ConstArrayView<DisplayLine> choices,
-                           CharCoord anchor, Face fg, Face bg,
+                           DisplayCoord anchor, Face fg, Face bg,
                            MenuStyle style) = 0;
     virtual void menu_select(int selected) = 0;
     virtual void menu_hide() = 0;
 
     virtual void info_show(StringView title, StringView content,
-                           CharCoord anchor, Face face,
+                           DisplayCoord anchor, Face face,
                            InfoStyle style) = 0;
     virtual void info_hide() = 0;
 
@@ -60,7 +60,7 @@ public:
                              const DisplayLine& mode_line,
                              const Face& default_face) = 0;
 
-    virtual CharCoord dimensions() = 0;
+    virtual DisplayCoord dimensions() = 0;
     virtual bool is_key_available() = 0;
     virtual Key  get_key() = 0;
 

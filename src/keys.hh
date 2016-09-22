@@ -79,7 +79,7 @@ struct Key
     constexpr bool operator!=(Key other) const { return val() != other.val(); }
     constexpr bool operator<(Key other) const { return val() < other.val(); }
 
-    constexpr CharCoord coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
+    constexpr DisplayCoord coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
 
     Optional<Codepoint> codepoint() const;
 };
@@ -98,15 +98,15 @@ constexpr Key alt(Codepoint key) { return { Key::Modifiers::Alt, key }; }
 constexpr Key ctrl(Codepoint key) { return { Key::Modifiers::Control, key }; }
 constexpr Key ctrlalt(Codepoint key) { return { Key::Modifiers::ControlAlt, key }; }
 
-constexpr Codepoint encode_coord(CharCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
+constexpr Codepoint encode_coord(DisplayCoord coord) { return (Codepoint)(((int)coord.line << 16) | ((int)coord.column & 0x0000FFFF)); }
 
-constexpr Key mouse_press(CharCoord pos) { return { Key::Modifiers::MousePress, encode_coord(pos) }; }
-constexpr Key mouse_release(CharCoord pos) { return { Key::Modifiers::MouseRelease, encode_coord(pos) }; }
-constexpr Key mouse_pos(CharCoord pos) { return { Key::Modifiers::MousePos, encode_coord(pos) }; }
-constexpr Key mouse_wheel_down(CharCoord pos) { return { Key::Modifiers::MouseWheelDown, encode_coord(pos) }; }
-constexpr Key mouse_wheel_up(CharCoord pos) { return { Key::Modifiers::MouseWheelUp, encode_coord(pos) }; }
+constexpr Key mouse_press(DisplayCoord pos) { return { Key::Modifiers::MousePress, encode_coord(pos) }; }
+constexpr Key mouse_release(DisplayCoord pos) { return { Key::Modifiers::MouseRelease, encode_coord(pos) }; }
+constexpr Key mouse_pos(DisplayCoord pos) { return { Key::Modifiers::MousePos, encode_coord(pos) }; }
+constexpr Key mouse_wheel_down(DisplayCoord pos) { return { Key::Modifiers::MouseWheelDown, encode_coord(pos) }; }
+constexpr Key mouse_wheel_up(DisplayCoord pos) { return { Key::Modifiers::MouseWheelUp, encode_coord(pos) }; }
 
-constexpr Key resize(CharCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
+constexpr Key resize(DisplayCoord dim) { return { Key::Modifiers::Resize, encode_coord(dim) }; }
 
 inline size_t hash_value(const Key& key) { return hash_values(key.modifiers, key.key); }
 

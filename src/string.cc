@@ -366,7 +366,7 @@ bool subsequence_match(StringView str, StringView subseq)
     return true;
 }
 
-String expand_tabs(StringView line, CharCount tabstop, CharCount col)
+String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col)
 {
     String res;
     res.reserve(line.length());
@@ -374,23 +374,23 @@ String expand_tabs(StringView line, CharCount tabstop, CharCount col)
     {
         if (*it == '\t')
         {
-            CharCount end_col = (col / tabstop + 1) * tabstop;
+            ColumnCount end_col = (col / tabstop + 1) * tabstop;
             res += String{' ', end_col - col};
             col = end_col;
             ++it;
         }
         else
         {
-            auto char_end = utf8::next(it, end);
-            res += {it, char_end};
-            ++col;
-            it = char_end;
+            auto char_beg = it;
+            auto cp = utf8::read_codepoint(it, end);
+            res += {char_beg, it};
+            col += get_width(cp);
         }
     }
     return res;
 }
 
-Vector<StringView> wrap_lines(StringView text, CharCount max_width)
+Vector<StringView> wrap_lines(StringView text, ColumnCount max_width)
 {
     if (max_width <= 0)
         throw runtime_error("Invalid max width");
@@ -416,9 +416,10 @@ Vector<StringView> wrap_lines(StringView text, CharCount max_width)
         while (word_end != end and categorize(*word_end) == cat)
             ++word_end;
 
-        while (word_end > line_begin and word_end - line_begin >= max_width)
+        while (word_end > line_begin and
+               StringView{line_begin.base(), word_end.base()}.column_length() >= max_width)
         {
-            auto line_end = last_word_end <= line_begin ? line_begin + max_width
+            auto line_end = last_word_end <= line_begin ? Utf8It{utf8::advance(line_begin.base(), text.end(), max_width), text}
                                                         : last_word_end;
 
             lines.emplace_back(line_begin.base(), line_end.base());

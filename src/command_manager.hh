@@ -56,20 +56,20 @@ struct Token
     };
     Token() : m_type(Type::Raw) {}
 
-    Token(Type type, ByteCount b, ByteCount e, CharCoord coord, String str = "")
+    Token(Type type, ByteCount b, ByteCount e, DisplayCoord coord, String str = "")
         : m_type(type), m_begin(b), m_end(e), m_coord(coord), m_content(std::move(str)) {}
 
     Type type() const { return m_type; }
     ByteCount begin() const { return m_begin; }
     ByteCount end() const { return m_end; }
-    CharCoord coord() const { return m_coord; }
+    DisplayCoord coord() const { return m_coord; }
     const String& content() const { return m_content; }
 
 private:
     Type   m_type;
     ByteCount m_begin;
     ByteCount m_end;
-    CharCoord m_coord;
+    DisplayCoord m_coord;
     String m_content;
 };
 
@@ -111,7 +111,7 @@ private:
     void execute_single_command(CommandParameters params,
                                 Context& context,
                                 const ShellContext& shell_context,
-                                CharCoord pos) const;
+                                DisplayCoord pos) const;
 
     struct CommandDescriptor
     {

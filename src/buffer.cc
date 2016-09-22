@@ -161,12 +161,12 @@ void Buffer::update_display_name()
         m_display_name = compact_path(m_name);
 }
 
-BufferIterator Buffer::iterator_at(ByteCoord coord) const
+BufferIterator Buffer::iterator_at(BufferCoord coord) const
 {
     return is_end(coord) ? end() : BufferIterator(*this, clamp(coord));
 }
 
-ByteCoord Buffer::clamp(ByteCoord coord) const
+BufferCoord Buffer::clamp(BufferCoord coord) const
 {
     coord.line = Kakoune::clamp(coord.line, 0_line, line_count() - 1);
     ByteCount max_col = std::max(0_byte, m_lines[coord.line].length() - 1);
@@ -174,24 +174,24 @@ ByteCoord Buffer::clamp(ByteCoord coord) const
     return coord;
 }
 
-ByteCoord Buffer::offset_coord(ByteCoord coord, CharCount offset)
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset)
 {
     StringView line = m_lines[coord.line];
     auto target = utf8::advance(&line[coord.column], offset < 0 ? line.begin() : line.end()-1, offset);
     return {coord.line, (int)(target - line.begin())};
 }
 
-ByteCoordAndTarget Buffer::offset_coord(ByteCoordAndTarget coord, LineCount offset)
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset)
 {
-    auto character = coord.target == -1 ? m_lines[coord.line].char_count_to(coord.column) : coord.target;
+    auto column = coord.target == -1 ? m_lines[coord.line].column_count_to(coord.column) : coord.target;
     auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
     StringView content = m_lines[line];
 
-    character = std::max(0_char, std::min(character, content.char_length() - 2));
-    return {line, content.byte_count_to(character), character};
+    column = std::max(0_col, std::min(column, content.column_length() - 2));
+    return {line, content.byte_count_to(column), column};
 }
 
-String Buffer::string(ByteCoord begin, ByteCoord end) const
+String Buffer::string(BufferCoord begin, BufferCoord end) const
 {
     String res;
     for (auto line = begin.line; line <= end.line and line < line_count(); ++line)
@@ -213,10 +213,10 @@ struct Buffer::Modification
     enum Type { Insert, Erase };
 
     Type      type;
-    ByteCoord coord;
+    BufferCoord coord;
     StringDataPtr content;
 
-    Modification(Type type, ByteCoord coord, StringDataPtr content)
+    Modification(Type type, BufferCoord coord, StringDataPtr content)
         : type(type), coord(coord), content(std::move(content)) {}
 
     Modification inverse() const
@@ -441,7 +441,7 @@ void Buffer::check_invariant() const
 #endif
 }
 
-ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
+BufferCoord Buffer::do_insert(BufferCoord pos, StringView content)
 {
     kak_assert(is_valid(pos));
 
@@ -484,13 +484,13 @@ ByteCoord Buffer::do_insert(ByteCoord pos, StringView content)
                    std::make_move_iterator(new_lines.end()));
 
     const LineCount last_line = pos.line + new_lines.size() - 1;
-    const ByteCoord end = ByteCoord{ last_line, m_lines[last_line].length() - suffix.length() };
+    const BufferCoord end = BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
     m_changes.push_back({ Change::Insert, at_end, pos, end });
     return pos;
 }
 
-ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
+BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
 {
     kak_assert(is_valid(begin));
     kak_assert(is_valid(end));
@@ -498,7 +498,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     StringView suffix = m_lines[end.line].substr(end.column);
     String new_line = prefix + suffix;
 
-    ByteCoord next;
+    BufferCoord next;
     if (new_line.length() != 0)
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
@@ -508,7 +508,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
     else
     {
         m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line + 1);
-        next = is_end(begin) ? end_coord() : ByteCoord{begin.line, 0};
+        next = is_end(begin) ? end_coord() : BufferCoord{begin.line, 0};
     }
 
     m_changes.push_back({ Change::Erase, is_end(begin), begin, end });
@@ -518,7 +518,7 @@ ByteCoord Buffer::do_erase(ByteCoord begin, ByteCoord end)
 void Buffer::apply_modification(const Modification& modification)
 {
     StringView content = modification.content->strview();
-    ByteCoord coord = modification.coord;
+    BufferCoord coord = modification.coord;
 
     kak_assert(is_valid(coord));
     switch (modification.type)
@@ -538,7 +538,7 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-ByteCoord Buffer::insert(ByteCoord pos, StringView content)
+BufferCoord Buffer::insert(BufferCoord pos, StringView content)
 {
     kak_assert(is_valid(pos));
     if (content.empty())
@@ -558,13 +558,13 @@ ByteCoord Buffer::insert(ByteCoord pos, StringView content)
     return do_insert(pos, real_content->strview());
 }
 
-ByteCoord Buffer::erase(ByteCoord begin, ByteCoord end)
+BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
 {
     kak_assert(is_valid(begin) and is_valid(end));
     // do not erase last \n except if we erase from the start of a line, and normalize
     // end coord
     if (is_end(end))
-        end = (begin.column != 0 or begin == ByteCoord{0,0}) ? prev(end) : end_coord();
+        end = (begin.column != 0 or begin == BufferCoord{0,0}) ? prev(end) : end_coord();
 
     if (begin >= end) // use >= to handle case where begin is {line_count}
         return begin;
@@ -575,7 +575,7 @@ ByteCoord Buffer::erase(ByteCoord begin, ByteCoord end)
     return do_erase(begin, end);
 }
 
-ByteCoord Buffer::replace(ByteCoord begin, ByteCoord end, StringView content)
+BufferCoord Buffer::replace(BufferCoord begin, BufferCoord end, StringView content)
 {
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.emplace_back(Modification::Erase, begin,
@@ -613,7 +613,7 @@ void Buffer::notify_saved()
     m_fs_timestamp = get_fs_timestamp(m_name);
 }
 
-ByteCoord Buffer::advance(ByteCoord coord, ByteCount count) const
+BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
 {
     if (count > 0)
     {
@@ -642,7 +642,7 @@ ByteCoord Buffer::advance(ByteCoord coord, ByteCount count) const
     return coord;
 }
 
-ByteCoord Buffer::char_next(ByteCoord coord) const
+BufferCoord Buffer::char_next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
     {
@@ -665,7 +665,7 @@ ByteCoord Buffer::char_next(ByteCoord coord) const
     return coord;
 }
 
-ByteCoord Buffer::char_prev(ByteCoord coord) const
+BufferCoord Buffer::char_prev(BufferCoord coord) const
 {
     kak_assert(is_valid(coord));
     if (is_end(coord))
@@ -714,7 +714,7 @@ void Buffer::run_hook_in_own_context(StringView hook_name, StringView param)
     hooks().run_hook(hook_name, param, hook_handler.context());
 }
 
-ByteCoord Buffer::last_modification_coord() const
+BufferCoord Buffer::last_modification_coord() const
 {
     if (m_history_cursor.get() == &m_history)
         return {};
@@ -788,13 +788,13 @@ UnitTest test_buffer{[]()
     BufferIterator pos = buffer.begin();
     kak_assert(*pos == 'a');
     pos += 6;
-    kak_assert(pos.coord() == ByteCoord{0, 6});
+    kak_assert(pos.coord() == BufferCoord{0, 6});
     ++pos;
-    kak_assert(pos.coord() == ByteCoord{1, 0});
+    kak_assert(pos.coord() == BufferCoord{1, 0});
     --pos;
-    kak_assert(pos.coord() == ByteCoord{0, 6});
+    kak_assert(pos.coord() == BufferCoord{0, 6});
     pos += 1;
-    kak_assert(pos.coord() == ByteCoord{1, 0});
+    kak_assert(pos.coord() == BufferCoord{1, 0});
     buffer.insert(pos.coord(), "tchou kanaky\n");
     kak_assert(buffer.line_count() == 5);
     BufferIterator pos2 = buffer.end();

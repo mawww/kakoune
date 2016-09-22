@@ -80,7 +80,7 @@ public:
 
     StringView str;
     ByteCount pos;
-    CharCoord coord;
+    DisplayCoord coord;
 };
 
 bool is_command_separator(char c)
@@ -399,7 +399,7 @@ CommandManager::find_command(const Context& context, const String& name) const
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
                                             const ShellContext& shell_context,
-                                            CharCoord pos) const
+                                            DisplayCoord pos) const
 {
     if (params.empty())
         return;
@@ -429,7 +429,7 @@ void CommandManager::execute(StringView command_line,
     if (tokens.empty())
         return;
 
-    CharCoord command_coord;
+    DisplayCoord command_coord;
     Vector<String> params;
     for (auto it = tokens.begin(); it != tokens.end(); ++it)
     {

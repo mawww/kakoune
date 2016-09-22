@@ -341,7 +341,7 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, int
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
-    if (not (flags & ObjectFlags::ToEnd) and first.coord() > ByteCoord{0,1} and
+    if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
         *(first-1) == '\n' and *(first-2) == '\n')
         --first;
     else if ((flags & ObjectFlags::ToEnd) and
@@ -565,10 +565,10 @@ Selection select_argument(const Buffer& buffer, const Selection& selection,
 
 Selection select_lines(const Buffer& buffer, const Selection& selection)
 {
-    ByteCoord anchor = selection.anchor();
-    ByteCoord cursor  = selection.cursor();
-    ByteCoord& to_line_start = anchor <= cursor ? anchor : cursor;
-    ByteCoord& to_line_end = anchor <= cursor ? cursor : anchor;
+    BufferCoord anchor = selection.anchor();
+    BufferCoord cursor  = selection.cursor();
+    BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
+    BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 
     to_line_start.column = 0;
     to_line_end.column = buffer[to_line_end.line].length()-1;
@@ -578,10 +578,10 @@ Selection select_lines(const Buffer& buffer, const Selection& selection)
 
 Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
 {
-    ByteCoord anchor = selection.anchor();
-    ByteCoord cursor  = selection.cursor();
-    ByteCoord& to_line_start = anchor <= cursor ? anchor : cursor;
-    ByteCoord& to_line_end = anchor <= cursor ? cursor : anchor;
+    BufferCoord anchor = selection.anchor();
+    BufferCoord cursor  = selection.cursor();
+    BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
+    BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 
     if (to_line_start.column != 0)
         to_line_start = to_line_start.line+1;
@@ -591,7 +591,7 @@ Selection trim_partial_lines(const Buffer& buffer, const Selection& selection)
             return selection;
 
         auto prev_line = to_line_end.line-1;
-        to_line_end = ByteCoord{ prev_line, buffer[prev_line].length()-1 };
+        to_line_end = BufferCoord{ prev_line, buffer[prev_line].length()-1 };
     }
 
     if (to_line_start > to_line_end)

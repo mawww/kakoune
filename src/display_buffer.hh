@@ -11,7 +11,7 @@ namespace Kakoune
 {
 
 class Buffer;
-struct BufferRange{ ByteCoord begin, end; };
+struct BufferRange{ BufferCoord begin, end; };
 
 String option_to_string(BufferRange range);
 void option_from_string(StringView str, BufferRange& opt);
@@ -32,7 +32,7 @@ struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 public:
     enum Type { BufferRange, ReplacedBufferRange, Text };
 
-    DisplayAtom(const Buffer& buffer, ByteCoord begin, ByteCoord end)
+    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
         : m_type(BufferRange), m_buffer(&buffer), m_range{begin, end}
      { check_invariant(); }
 
@@ -41,15 +41,15 @@ public:
      { check_invariant(); }
 
     StringView content() const;
-    CharCount length() const;
+    ColumnCount length() const;
 
-    const ByteCoord& begin() const
+    const BufferCoord& begin() const
     {
         kak_assert(has_buffer_range());
         return m_range.begin;
     }
 
-    const ByteCoord& end() const
+    const BufferCoord& end() const
     {
         kak_assert(has_buffer_range());
         return m_range.end;
@@ -71,8 +71,8 @@ public:
 
     Type type() const { return m_type; }
 
-    void trim_begin(CharCount count);
-    void trim_end(CharCount count);
+    void trim_begin(ColumnCount count);
+    void trim_end(ColumnCount count);
 
     void check_invariant() const;
 
@@ -117,24 +117,24 @@ public:
 
     const AtomList& atoms() const { return m_atoms; }
 
-    CharCount length() const;
+    ColumnCount length() const;
     const BufferRange& range() const { return m_range; }
 
     // Split atom pointed by it at buffer coord pos,
     // returns an iterator to the first atom
-    iterator split(iterator it, ByteCoord pos);
+    iterator split(iterator it, BufferCoord pos);
 
-    // Split atom pointed by it at its pos character,
+    // Split atom pointed by it at its pos column,
     // returns an iterator to the first atom
-    iterator split(iterator it, CharCount pos);
+    iterator split(iterator it, ColumnCount pos);
 
     iterator insert(iterator it, DisplayAtom atom);
     iterator erase(iterator beg, iterator end);
     void     push_back(DisplayAtom atom);
 
-    // remove first_char from the begining of the line, and make sure
-    // the line is less that char_count character
-    void trim(CharCount first_char, CharCount char_count, bool only_buffer);
+    // remove first_col from the begining of the line, and make sure
+    // the line is less that col_count character
+    void trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer);
 
     void     optimize();
 private:

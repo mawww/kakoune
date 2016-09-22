@@ -38,7 +38,7 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> s)
 namespace
 {
 
-ByteCoord update_insert(ByteCoord coord, ByteCoord begin, ByteCoord end)
+BufferCoord update_insert(BufferCoord coord, BufferCoord begin, BufferCoord end)
 {
     if (coord < begin)
         return coord;
@@ -50,7 +50,7 @@ ByteCoord update_insert(ByteCoord coord, ByteCoord begin, ByteCoord end)
 }
 
 /* For reference
-ByteCoord update_erase(ByteCoord coord, ByteCoord begin, ByteCoord end)
+BufferCoord update_erase(BufferCoord coord, BufferCoord begin, BufferCoord end)
 {
     if (coord < begin)
         return coord;
@@ -101,8 +101,8 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
 // *after* the previous one.
 struct ForwardChangesTracker
 {
-    ByteCoord cur_pos; // last change position at current modification
-    ByteCoord old_pos; // last change position at start
+    BufferCoord cur_pos; // last change position at current modification
+    BufferCoord old_pos; // last change position at start
 
     void update(const Buffer::Change& change)
     {
@@ -127,7 +127,7 @@ struct ForwardChangesTracker
         timestamp = buffer.timestamp();
     }
 
-    ByteCoord get_old_coord(ByteCoord coord) const
+    BufferCoord get_old_coord(BufferCoord coord) const
     {
         kak_assert(cur_pos <= coord);
         auto pos_change = cur_pos - old_pos;
@@ -141,7 +141,7 @@ struct ForwardChangesTracker
         return coord;
     }
 
-    ByteCoord get_new_coord(ByteCoord coord) const
+    BufferCoord get_new_coord(BufferCoord coord) const
     {
         kak_assert(old_pos <= coord);
         auto pos_change = cur_pos - old_pos;
@@ -155,14 +155,14 @@ struct ForwardChangesTracker
         return coord;
     }
 
-    ByteCoord get_new_coord_tolerant(ByteCoord coord) const
+    BufferCoord get_new_coord_tolerant(BufferCoord coord) const
     {
         if (coord < old_pos)
             return cur_pos;
         return get_new_coord(coord);
     }
 
-    bool relevant(const Buffer::Change& change, ByteCoord old_coord) const
+    bool relevant(const Buffer::Change& change, BufferCoord old_coord) const
     {
         auto new_coord = get_new_coord_tolerant(old_coord);
         return change.type == Buffer::Change::Insert ? change.begin <= new_coord
@@ -202,7 +202,7 @@ void update_forward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& s
     ForwardChangesTracker changes_tracker;
 
     auto change_it = changes.begin();
-    auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
+    auto advance_while_relevant = [&](const BufferCoord& pos) mutable {
         while (change_it != changes.end() and changes_tracker.relevant(*change_it, pos))
             changes_tracker.update(*change_it++);
     };
@@ -227,7 +227,7 @@ void update_backward(ConstArrayView<Buffer::Change> changes, Vector<Selection>& 
     using ReverseIt = std::reverse_iterator<const Buffer::Change*>;
     auto change_it = ReverseIt(changes.end());
     auto change_end = ReverseIt(changes.begin());
-    auto advance_while_relevant = [&](const ByteCoord& pos) mutable {
+    auto advance_while_relevant = [&](const BufferCoord& pos) mutable {
         while (change_it != change_end)
         {
             auto change = *change_it;
@@ -314,7 +314,7 @@ Vector<Selection> compute_modified_ranges(Buffer& buffer, size_t timestamp)
     for (auto& range : ranges)
     {
         range.anchor() = std::min(range.anchor(), end_coord);
-        range.cursor() = std::min<ByteCoord>(range.cursor(), end_coord);
+        range.cursor() = std::min<BufferCoord>(range.cursor(), end_coord);
     }
 
     auto touches = [&](const Selection& lhs, const Selection& rhs) {
@@ -401,7 +401,7 @@ void SelectionList::check_invariant() const
         return;
 
     const auto end_coord = buffer.end_coord();
-    ByteCoord last_min{0,0};
+    BufferCoord last_min{0,0};
     for (auto& sel : m_selections)
     {
         auto& min = sel.min();
@@ -409,11 +409,11 @@ void SelectionList::check_invariant() const
         last_min = min;
 
         const auto anchor = sel.anchor();
-        kak_assert(anchor >= ByteCoord{0,0} and anchor < end_coord);
+        kak_assert(anchor >= BufferCoord{0,0} and anchor < end_coord);
         kak_assert(anchor.column < buffer[anchor.line].length());
 
         const auto cursor = sel.cursor();
-        kak_assert(cursor >= ByteCoord{0,0} and cursor < end_coord);
+        kak_assert(cursor >= BufferCoord{0,0} and cursor < end_coord);
         kak_assert(cursor.column < buffer[cursor.line].length());
     }
 #endif
@@ -463,7 +463,7 @@ void SelectionList::sort_and_merge_overlapping()
     merge_overlapping();
 }
 
-static inline void _avoid_eol(const Buffer& buffer, ByteCoord& coord)
+static inline void _avoid_eol(const Buffer& buffer, BufferCoord& coord)
 {
     auto column = coord.column;
     auto line = buffer[coord.line];
@@ -481,7 +481,7 @@ void SelectionList::avoid_eol()
     }
 }
 
-ByteCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
+BufferCoord prepare_insert(Buffer& buffer, const Selection& sel, InsertMode mode)
 {
     switch (mode)
     {
@@ -588,7 +588,7 @@ void SelectionList::erase()
         changes_tracker.update(*m_buffer, m_timestamp);
     }
 
-    ByteCoord back_coord = m_buffer->back_coord();
+    BufferCoord back_coord = m_buffer->back_coord();
     for (auto& sel : m_selections)
     {
         if (sel.anchor() > back_coord)
@@ -624,10 +624,10 @@ Selection selection_from_string(StringView desc)
     if (comma == desc.end() or dot_anchor == comma or dot_cursor == desc.end())
         throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", desc));
 
-    ByteCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
+    BufferCoord anchor{str_to_int({desc.begin(), dot_anchor}) - 1,
                      str_to_int({dot_anchor+1, comma}) - 1};
 
-    ByteCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
+    BufferCoord cursor{str_to_int({comma+1, dot_cursor}) - 1,
                      str_to_int({dot_cursor+1, desc.end()}) - 1};
 
     return Selection{anchor, cursor};

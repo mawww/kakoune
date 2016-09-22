@@ -14,7 +14,7 @@ namespace Kakoune
 inline Selection keep_direction(Selection res, const Selection& ref)
 {
     if ((res.cursor() < res.anchor()) != (ref.cursor() < ref.anchor()))
-        std::swap<ByteCoord>(res.cursor(), res.anchor());
+        std::swap<BufferCoord>(res.cursor(), res.anchor());
     return res;
 }
 
@@ -117,9 +117,9 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
 template<bool only_move>
 Selection select_to_line_end(const Buffer& buffer, const Selection& selection)
 {
-    ByteCoord begin = selection.cursor();
+    BufferCoord begin = selection.cursor();
     LineCount line = begin.line;
-    ByteCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
+    BufferCoord end = utf8::previous(buffer.iterator_at({line, buffer[line].length() - 1}),
                                    buffer.iterator_at(line)).coord();
     if (end < begin) // Do not go backward when cursor is on eol
         end = begin;
@@ -129,8 +129,8 @@ Selection select_to_line_end(const Buffer& buffer, const Selection& selection)
 template<bool only_move>
 Selection select_to_line_begin(const Buffer& buffer, const Selection& selection)
 {
-    ByteCoord begin = selection.cursor();
-    ByteCoord end = begin.line;
+    BufferCoord begin = selection.cursor();
+    BufferCoord end = begin.line;
     return {only_move ? end : begin, end};
 }
 

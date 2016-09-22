@@ -26,10 +26,10 @@ void option_from_string(StringView str, BufferRange& opt)
     if (comma == str.end() or dot_begin == comma or dot_end == str.end())
         throw runtime_error(format("'{}' does not follow <line>.<column>,<line>.<column> format", str));
 
-    ByteCoord begin{str_to_int({str.begin(), dot_begin}) - 1,
+    BufferCoord begin{str_to_int({str.begin(), dot_begin}) - 1,
                     str_to_int({dot_begin+1, comma}) - 1};
 
-    ByteCoord end{str_to_int({comma+1, dot_end}) - 1,
+    BufferCoord end{str_to_int({comma+1, dot_end}) - 1,
                   str_to_int({dot_end+1, str.end()}) - 1};
 
     opt.begin = begin;
@@ -58,37 +58,39 @@ StringView DisplayAtom::content() const
     return {};
 }
 
-CharCount DisplayAtom::length() const
+ColumnCount DisplayAtom::length() const
 {
     switch (m_type)
     {
         case BufferRange:
-           return char_length(*m_buffer, m_range.begin, m_range.end);
+            return (int)column_length(*m_buffer, m_range.begin, m_range.end);
         case Text:
         case ReplacedBufferRange:
-           return m_text.char_length();
+            return (int)m_text.column_length();
     }
     kak_assert(false);
     return 0;
 }
 
-void DisplayAtom::trim_begin(CharCount count)
+void DisplayAtom::trim_begin(ColumnCount count)
 {
     if (m_type == BufferRange)
         m_range.begin = utf8::advance(m_buffer->iterator_at(m_range.begin),
-                                m_buffer->iterator_at(m_range.end), count).coord();
+                                      m_buffer->iterator_at(m_range.end),
+                                      count).coord();
     else
         m_text = m_text.substr(count).str();
     check_invariant();
 }
 
-void DisplayAtom::trim_end(CharCount count)
+void DisplayAtom::trim_end(ColumnCount count)
 {
     if (m_type == BufferRange)
         m_range.end = utf8::advance(m_buffer->iterator_at(m_range.end),
-                              m_buffer->iterator_at(m_range.begin), -count).coord();
+                                    m_buffer->iterator_at(m_range.begin),
+                                    -count).coord();
     else
-        m_text = m_text.substr(0, m_text.char_length() - count).str();
+        m_text = m_text.substr(0, m_text.column_length() - count).str();
     check_invariant();
 }
 
@@ -109,7 +111,7 @@ DisplayLine::DisplayLine(AtomList atoms)
     compute_range();
 }
 
-DisplayLine::iterator DisplayLine::split(iterator it, ByteCoord pos)
+DisplayLine::iterator DisplayLine::split(iterator it, BufferCoord pos)
 {
     kak_assert(it->type() == DisplayAtom::BufferRange);
     kak_assert(it->begin() < pos);
@@ -123,7 +125,7 @@ DisplayLine::iterator DisplayLine::split(iterator it, ByteCoord pos)
     return m_atoms.insert(it, std::move(atom));
 }
 
-DisplayLine::iterator DisplayLine::split(iterator it, CharCount pos)
+DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount pos)
 {
     kak_assert(it->type() == DisplayAtom::Text);
     kak_assert(pos > 0);
@@ -203,17 +205,17 @@ void DisplayLine::optimize()
     }
 }
 
-CharCount DisplayLine::length() const
+ColumnCount DisplayLine::length() const
 {
-    CharCount len = 0;
+    ColumnCount len = 0;
     for (auto& atom : m_atoms)
         len += atom.length();
     return len;
 }
 
-void DisplayLine::trim(CharCount first_char, CharCount char_count, bool only_buffer)
+void DisplayLine::trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer)
 {
-    for (auto it = begin(); first_char > 0 and it != end(); )
+    for (auto it = begin(); first_col > 0 and it != end(); )
     {
         if (only_buffer and not it->has_buffer_range())
         {
@@ -222,23 +224,23 @@ void DisplayLine::trim(CharCount first_char, CharCount char_count, bool only_buf
         }
 
         auto len = it->length();
-        if (len <= first_char)
+        if (len <= first_col)
         {
             m_atoms.erase(it);
-            first_char -= len;
+            first_col -= len;
         }
         else
         {
-            it->trim_begin(first_char);
-            first_char = 0;
+            it->trim_begin(first_col);
+            first_col = 0;
         }
     }
     auto it = begin();
-    for (; it != end() and char_count > 0; ++it)
-        char_count -= it->length();
+    for (; it != end() and col_count > 0; ++it)
+        col_count -= it->length();
 
-    if (char_count < 0)
-        (it-1)->trim_end(-char_count);
+    if (col_count < 0)
+        (it-1)->trim_end(-col_count);
     m_atoms.erase(it, end());
 
     compute_range();

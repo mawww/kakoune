@@ -65,18 +65,26 @@ public:
     { return utf8::codepoint(utf8::advance(begin(), end(), pos), end()); }
 
     CharCount char_length() const { return utf8::distance(begin(), end()); }
+    ColumnCount column_length() const { return utf8::column_distance(begin(), end()); }
 
     [[gnu::always_inline]]
     bool empty() const { return type().length() == 0_byte; }
 
     ByteCount byte_count_to(CharCount count) const
-    { return utf8::advance(begin(), end(), (int)count) - begin(); }
+    { return utf8::advance(begin(), end(), count) - begin(); }
+
+    ByteCount byte_count_to(ColumnCount count) const
+    { return utf8::advance(begin(), end(), count) - begin(); }
 
     CharCount char_count_to(ByteCount count) const
     { return utf8::distance(begin(), begin() + (int)count); }
 
+    ColumnCount column_count_to(ByteCount count) const
+    { return utf8::column_distance(begin(), begin() + (int)count); }
+
     StringView substr(ByteCount from, ByteCount length = INT_MAX) const;
     StringView substr(CharCount from, CharCount length = INT_MAX) const;
+    StringView substr(ColumnCount from, ColumnCount length = INT_MAX) const;
 
 private:
     [[gnu::always_inline]]
@@ -101,6 +109,14 @@ public:
     {
         reserve(utf8::codepoint_size(cp) * (int)count);
         while (count-- > 0)
+            utf8::dump(std::back_inserter(*this), cp);
+    }
+    explicit String(Codepoint cp, ColumnCount count)
+    {
+        kak_assert(count % get_width(cp) == 0);
+        int cp_count = (int)count / get_width(cp);
+        reserve(utf8::codepoint_size(cp) * cp_count);
+        while (cp_count-- > 0)
             utf8::dump(std::back_inserter(*this), cp);
     }
     String(const char* begin, const char* end) : m_data(begin, end-begin) {}
@@ -251,7 +267,16 @@ inline StringView StringOps<Type, CharType>::substr(CharCount from, CharCount le
 {
     if (length < 0)
         length = INT_MAX;
-    auto beg = utf8::advance(begin(), end(), (int)from);
+    auto beg = utf8::advance(begin(), end(), from);
+    return StringView{ beg, utf8::advance(beg, end(), length) };
+}
+
+template<typename Type, typename CharType>
+inline StringView StringOps<Type, CharType>::substr(ColumnCount from, ColumnCount length) const
+{
+    if (length < 0)
+        length = INT_MAX;
+    auto beg = utf8::advance(begin(), end(), from);
     return StringView{ beg, utf8::advance(beg, end(), length) };
 }
 
@@ -358,9 +383,9 @@ inline bool prefix_match(StringView str, StringView prefix)
 
 bool subsequence_match(StringView str, StringView subseq);
 
-String expand_tabs(StringView line, CharCount tabstop, CharCount col = 0);
+String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col = 0);
 
-Vector<StringView> wrap_lines(StringView text, CharCount max_width);
+Vector<StringView> wrap_lines(StringView text, ColumnCount max_width);
 
 namespace detail
 {

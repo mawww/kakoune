@@ -7,13 +7,13 @@ namespace Kakoune
 {
 
 [[gnu::always_inline]]
-inline const char& Buffer::byte_at(ByteCoord c) const
+inline const char& Buffer::byte_at(BufferCoord c) const
 {
     kak_assert(c.line < line_count() and c.column < m_lines[c.line].length());
     return m_lines[c.line][c.column];
 }
 
-inline ByteCoord Buffer::next(ByteCoord coord) const
+inline BufferCoord Buffer::next(BufferCoord coord) const
 {
     if (coord.column < m_lines[coord.line].length() - 1)
         ++coord.column;
@@ -27,7 +27,7 @@ inline ByteCoord Buffer::next(ByteCoord coord) const
     return coord;
 }
 
-inline ByteCoord Buffer::prev(ByteCoord coord) const
+inline BufferCoord Buffer::prev(BufferCoord coord) const
 {
     if (coord.column == 0)
     {
@@ -39,7 +39,7 @@ inline ByteCoord Buffer::prev(ByteCoord coord) const
     return coord;
 }
 
-inline ByteCount Buffer::distance(ByteCoord begin, ByteCoord end) const
+inline ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
 {
     if (begin > end)
         return -distance(end, begin);
@@ -53,7 +53,7 @@ inline ByteCount Buffer::distance(ByteCoord begin, ByteCoord end) const
     return res;
 }
 
-inline bool Buffer::is_valid(ByteCoord c) const
+inline bool Buffer::is_valid(BufferCoord c) const
 {
     if (c.line < 0 or c.column < 0)
         return false;
@@ -63,7 +63,7 @@ inline bool Buffer::is_valid(ByteCoord c) const
            (c.line == line_count() and c.column == 0);
 }
 
-inline bool Buffer::is_end(ByteCoord c) const
+inline bool Buffer::is_end(BufferCoord c) const
 {
     return c >= end_coord();
 }
@@ -97,18 +97,18 @@ inline ConstArrayView<Buffer::Change> Buffer::changes_since(size_t timestamp) co
     return {};
 }
 
-inline ByteCoord Buffer::back_coord() const
+inline BufferCoord Buffer::back_coord() const
 {
     return { line_count() - 1, m_lines.back().length() - 1 };
 }
 
-inline ByteCoord Buffer::end_coord() const
+inline BufferCoord Buffer::end_coord() const
 {
     return m_lines.empty() ?
-        ByteCoord{0,0} : ByteCoord{ line_count() - 1, m_lines.back().length() };
+        BufferCoord{0,0} : BufferCoord{ line_count() - 1, m_lines.back().length() };
 }
 
-inline BufferIterator::BufferIterator(const Buffer& buffer, ByteCoord coord)
+inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord)
     : m_buffer(&buffer), m_coord(coord),
       m_line((*m_buffer)[coord.line]),
       m_last_line(buffer.line_count()-1)

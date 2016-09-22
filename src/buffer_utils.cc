@@ -12,11 +12,11 @@
 namespace Kakoune
 {
 
-CharCount get_column(const Buffer& buffer,
-                     CharCount tabstop, ByteCoord coord)
+ColumnCount get_column(const Buffer& buffer,
+                       ColumnCount tabstop, BufferCoord coord)
 {
     auto line = buffer[coord.line];
-    auto col = 0_char;
+    auto col = 0_col;
     for (auto it = line.begin();
          it != line.end() and coord.column > (int)(it - line.begin());
          it = utf8::next(it, line.end()))
@@ -29,10 +29,10 @@ CharCount get_column(const Buffer& buffer,
     return col;
 }
 
-ByteCount get_byte_to_column(const Buffer& buffer, CharCount tabstop, CharCoord coord)
+ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayCoord coord)
 {
     auto line = buffer[coord.line];
-    auto col = 0_char;
+    auto col = 0_col;
     auto it = line.begin();
     while (it != line.end() and coord.column > col)
     {
@@ -123,7 +123,7 @@ Buffer* create_fifo_buffer(String name, int fd, bool scroll)
             count = read(fifo, data, buffer_size);
             auto pos = buffer->back_coord();
 
-            const bool prevent_scrolling = pos == ByteCoord{0,0} and not scroll;
+            const bool prevent_scrolling = pos == BufferCoord{0,0} and not scroll;
             if (prevent_scrolling)
                 pos = buffer->next(pos);
 

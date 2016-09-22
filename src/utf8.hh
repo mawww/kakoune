@@ -25,97 +25,6 @@ inline bool is_character_start(char c)
     return (c & 0xC0) != 0x80;
 }
 
-template<typename Iterator>
-void to_next(Iterator& it, const Iterator& end)
-{
-    if (it != end and read(it) & 0x80)
-        while (it != end and (*(it) & 0xC0) == 0x80)
-            ++it;
-}
-
-// returns an iterator to next character first byte
-template<typename Iterator>
-Iterator next(Iterator it, const Iterator& end)
-{
-    to_next(it, end);
-    return it;
-}
-
-// returns it's parameter if it points to a character first byte,
-// or else returns next character first byte
-template<typename Iterator>
-Iterator finish(Iterator it, const Iterator& end)
-{
-    while (it != end and (*(it) & 0xC0) == 0x80)
-        ++it;
-    return it;
-}
-
-template<typename Iterator>
-void to_previous(Iterator& it, const Iterator& begin)
-{
-    while (it != begin and (*(--it) & 0xC0) == 0x80)
-           ;
-}
-// returns an iterator to the previous character first byte
-template<typename Iterator>
-Iterator previous(Iterator it, const Iterator& begin)
-{
-    to_previous(it, begin);
-    return it;
-}
-
-// returns an iterator pointing to the first byte of the
-// dth character after (or before if d < 0) the character
-// pointed by it
-template<typename Iterator>
-Iterator advance(Iterator it, const Iterator& end, CharCount d)
-{
-    if (it == end)
-        return it;
-
-    if (d < 0)
-    {
-        while (it != end and d != 0)
-        {
-            if (is_character_start(*--it))
-                ++d;
-        }
-    }
-    else if (d > 0)
-    {
-        while (it != end and d != 0)
-        {
-            if (is_character_start(*++it))
-                --d;
-        }
-    }
-    return it;
-}
-
-// returns the character count between begin and end
-template<typename Iterator>
-CharCount distance(Iterator begin, const Iterator& end)
-{
-    CharCount dist = 0;
-
-    while (begin != end)
-    {
-        if (is_character_start(read(begin)))
-            ++dist;
-    }
-    return dist;
-}
-
-// returns an iterator to the first byte of the character it is into
-template<typename Iterator>
-Iterator character_start(Iterator it, const Iterator& begin)
-{
-    while (it != begin and not is_character_start(*it))
-        --it;
-    return it;
-}
-
 namespace InvalidPolicy
 {
 
@@ -211,6 +120,139 @@ inline ByteCount codepoint_size(Codepoint cp)
         return 4;
     else
         throw invalid_codepoint{};
+}
+
+template<typename Iterator>
+void to_next(Iterator& it, const Iterator& end)
+{
+    if (it != end and read(it) & 0x80)
+        while (it != end and (*(it) & 0xC0) == 0x80)
+            ++it;
+}
+
+// returns an iterator to next character first byte
+template<typename Iterator>
+Iterator next(Iterator it, const Iterator& end)
+{
+    to_next(it, end);
+    return it;
+}
+
+// returns it's parameter if it points to a character first byte,
+// or else returns next character first byte
+template<typename Iterator>
+Iterator finish(Iterator it, const Iterator& end)
+{
+    while (it != end and (*(it) & 0xC0) == 0x80)
+        ++it;
+    return it;
+}
+
+template<typename Iterator>
+void to_previous(Iterator& it, const Iterator& begin)
+{
+    while (it != begin and (*(--it) & 0xC0) == 0x80)
+           ;
+}
+// returns an iterator to the previous character first byte
+template<typename Iterator>
+Iterator previous(Iterator it, const Iterator& begin)
+{
+    to_previous(it, begin);
+    return it;
+}
+
+// returns an iterator pointing to the first byte of the
+// dth character after (or before if d < 0) the character
+// pointed by it
+template<typename Iterator>
+Iterator advance(Iterator it, const Iterator& end, CharCount d)
+{
+    if (it == end)
+        return it;
+
+    if (d < 0)
+    {
+        while (it != end and d != 0)
+        {
+            if (is_character_start(*--it))
+                ++d;
+        }
+    }
+    else if (d > 0)
+    {
+        while (it != end and d != 0)
+        {
+            if (is_character_start(*++it))
+                --d;
+        }
+    }
+    return it;
+}
+
+// returns an iterator pointing to the first byte of the
+// character at the dth column after (or before if d < 0)
+// the character pointed by it
+template<typename Iterator>
+Iterator advance(Iterator it, const Iterator& end, ColumnCount d)
+{
+    if (it == end)
+        return it;
+
+    if (d < 0)
+    {
+        while (it != end and d < 0)
+        {
+            auto cur = it;
+            to_previous(it, end);
+            d += get_width(codepoint(it, cur));
+        }
+    }
+    else if (d > 0)
+    {
+        auto begin = it;
+        while (it != end and d > 0)
+        {
+            d -= get_width(read_codepoint(it, end));
+            if (it != end and d < 0)
+                to_previous(it, begin);
+        }
+    }
+    return it;
+}
+
+// returns the character count between begin and end
+template<typename Iterator>
+CharCount distance(Iterator begin, const Iterator& end)
+{
+    CharCount dist = 0;
+
+    while (begin != end)
+    {
+        if (is_character_start(read(begin)))
+            ++dist;
+    }
+    return dist;
+}
+
+// returns the column count between begin and end
+template<typename Iterator>
+ColumnCount column_distance(Iterator begin, const Iterator& end)
+{
+    ColumnCount dist = 0;
+
+    while (begin != end)
+        dist += get_width(read_codepoint(begin, end));
+    return dist;
+}
+
+// returns an iterator to the first byte of the character it is into
+template<typename Iterator>
+Iterator character_start(Iterator it, const Iterator& begin)
+{
+    while (it != begin and not is_character_start(*it))
+        --it;
+    return it;
 }
 
 template<typename OutputIterator>

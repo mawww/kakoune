@@ -291,17 +291,17 @@ DisplayBuffer MsgReader::read<DisplayBuffer>()
 class RemoteUI : public UserInterface
 {
 public:
-    RemoteUI(int socket, CharCoord dimensions);
+    RemoteUI(int socket, DisplayCoord dimensions);
     ~RemoteUI();
 
     void menu_show(ConstArrayView<DisplayLine> choices,
-                   CharCoord anchor, Face fg, Face bg,
+                   DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   CharCoord anchor, Face face,
+                   DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
 
@@ -317,7 +317,7 @@ public:
 
     bool is_key_available() override;
     Key  get_key() override;
-    CharCoord dimensions() override;
+    DisplayCoord dimensions() override;
 
     void set_input_callback(InputCallback callback) override;
 
@@ -329,7 +329,7 @@ public:
 private:
     FDWatcher    m_socket_watcher;
     MsgReader    m_reader;
-    CharCoord m_dimensions;
+    DisplayCoord m_dimensions;
     InputCallback m_input_callback;
 
     SafePtr<Client> m_client;
@@ -337,7 +337,7 @@ private:
 };
 
 
-RemoteUI::RemoteUI(int socket, CharCoord dimensions)
+RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
     : m_socket_watcher(socket, [this](FDWatcher& watcher, EventMode mode) {
           const int sock = watcher.fd();
           bool disconnect = false;
@@ -380,7 +380,7 @@ RemoteUI::~RemoteUI()
 }
 
 void RemoteUI::menu_show(ConstArrayView<DisplayLine> choices,
-                         CharCoord anchor, Face fg, Face bg,
+                         DisplayCoord anchor, Face fg, Face bg,
                          MenuStyle style)
 {
     MsgWriter msg{m_socket_watcher.fd(), MessageType::MenuShow};
@@ -403,7 +403,7 @@ void RemoteUI::menu_hide()
 }
 
 void RemoteUI::info_show(StringView title, StringView content,
-                         CharCoord anchor, Face face,
+                         DisplayCoord anchor, Face face,
                          InfoStyle style)
 {
     MsgWriter msg{m_socket_watcher.fd(), MessageType::InfoShow};
@@ -466,7 +466,7 @@ Key RemoteUI::get_key()
     return key;
 }
 
-CharCoord RemoteUI::dimensions()
+DisplayCoord RemoteUI::dimensions()
 {
     return m_dimensions;
 }
@@ -535,7 +535,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         case MessageType::MenuShow:
         {
             auto choices = reader.read_vector<DisplayLine>();
-            auto anchor = reader.read<CharCoord>();
+            auto anchor = reader.read<DisplayCoord>();
             auto fg = reader.read<Face>();
             auto bg = reader.read<Face>();
             auto style = reader.read<MenuStyle>();
@@ -552,7 +552,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         {
             auto title = reader.read<String>();
             auto content = reader.read<String>();
-            auto anchor = reader.read<CharCoord>();
+            auto anchor = reader.read<DisplayCoord>();
             auto face = reader.read<Face>();
             auto style = reader.read<InfoStyle>();
             m_ui->info_show(title, content, anchor, face, style);
@@ -643,7 +643,7 @@ private:
             case MessageType::Connect:
             {
                 auto init_command = m_reader.read<String>();
-                auto dimensions = m_reader.read<CharCoord>();
+                auto dimensions = m_reader.read<DisplayCoord>();
                 auto env_vars = m_reader.read_idmap<String, MemoryDomain::EnvVars>();
                 RemoteUI* ui = new RemoteUI{sock, dimensions};
                 if (auto* client = ClientManager::instance().create_client(

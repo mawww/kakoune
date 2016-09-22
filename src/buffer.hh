@@ -58,7 +58,7 @@ public:
     using iterator_category = std::random_access_iterator_tag;
 
     BufferIterator() : m_buffer(nullptr) {}
-    BufferIterator(const Buffer& buffer, ByteCoord coord);
+    BufferIterator(const Buffer& buffer, BufferCoord coord);
 
     bool operator== (const BufferIterator& iterator) const;
     bool operator!= (const BufferIterator& iterator) const;
@@ -83,12 +83,12 @@ public:
     BufferIterator operator++ (int);
     BufferIterator operator-- (int);
 
-    const ByteCoord& coord() const { return m_coord; }
+    const BufferCoord& coord() const { return m_coord; }
 
 private:
     SafePtr<const Buffer> m_buffer;
     StringView m_line;
-    ByteCoord m_coord;
+    BufferCoord m_coord;
     LineCount m_last_line;
 };
 
@@ -125,9 +125,9 @@ public:
     bool set_name(String name);
     void update_display_name();
 
-    ByteCoord insert(ByteCoord pos, StringView content);
-    ByteCoord erase(ByteCoord begin, ByteCoord end);
-    ByteCoord replace(ByteCoord begin, ByteCoord end, StringView content);
+    BufferCoord insert(BufferCoord pos, StringView content);
+    BufferCoord erase(BufferCoord begin, BufferCoord end);
+    BufferCoord replace(BufferCoord begin, BufferCoord end, StringView content);
 
     size_t         timestamp() const;
     timespec       fs_timestamp() const;
@@ -139,24 +139,24 @@ public:
     bool           move_to(size_t history_id) noexcept;
     size_t         current_history_id() const noexcept;
 
-    String         string(ByteCoord begin, ByteCoord end) const;
+    String         string(BufferCoord begin, BufferCoord end) const;
 
-    const char&    byte_at(ByteCoord c) const;
-    ByteCount      distance(ByteCoord begin, ByteCoord end) const;
-    ByteCoord      advance(ByteCoord coord, ByteCount count) const;
-    ByteCoord      next(ByteCoord coord) const;
-    ByteCoord      prev(ByteCoord coord) const;
+    const char&    byte_at(BufferCoord c) const;
+    ByteCount      distance(BufferCoord begin, BufferCoord end) const;
+    BufferCoord    advance(BufferCoord coord, ByteCount count) const;
+    BufferCoord    next(BufferCoord coord) const;
+    BufferCoord    prev(BufferCoord coord) const;
 
-    ByteCoord      char_next(ByteCoord coord) const;
-    ByteCoord      char_prev(ByteCoord coord) const;
+    BufferCoord    char_next(BufferCoord coord) const;
+    BufferCoord    char_prev(BufferCoord coord) const;
 
-    ByteCoord      back_coord() const;
-    ByteCoord      end_coord() const;
+    BufferCoord    back_coord() const;
+    BufferCoord    end_coord() const;
 
-    bool           is_valid(ByteCoord c) const;
-    bool           is_end(ByteCoord c) const;
+    bool           is_valid(BufferCoord c) const;
+    bool           is_end(BufferCoord c) const;
 
-    ByteCoord      last_modification_coord() const;
+    BufferCoord    last_modification_coord() const;
 
     BufferIterator begin() const;
     BufferIterator end() const;
@@ -169,13 +169,13 @@ public:
     { return m_lines.get_storage(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
-    BufferIterator iterator_at(ByteCoord coord) const;
+    BufferIterator iterator_at(BufferCoord coord) const;
 
     // returns nearest valid coordinates from given ones
-    ByteCoord clamp(ByteCoord coord) const;
+    BufferCoord clamp(BufferCoord coord) const;
 
-    ByteCoord offset_coord(ByteCoord coord, CharCount offset);
-    ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
+    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset);
 
     const String& name() const { return m_name; }
     const String& display_name() const { return m_display_name; }
@@ -200,8 +200,8 @@ public:
         enum Type : char { Insert, Erase };
         Type type;
         bool at_end;
-        ByteCoord begin;
-        ByteCoord end;
+        BufferCoord begin;
+        BufferCoord end;
     };
     ConstArrayView<Change> changes_since(size_t timestamp) const;
 
@@ -214,8 +214,8 @@ private:
 
     void on_option_changed(const Option& option) override;
 
-    ByteCoord do_insert(ByteCoord pos, StringView content);
-    ByteCoord do_erase(ByteCoord begin, ByteCoord end);
+    BufferCoord do_insert(BufferCoord pos, StringView content);
+    BufferCoord do_erase(BufferCoord begin, BufferCoord end);
 
     struct Modification;
 

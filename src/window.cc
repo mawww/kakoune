@@ -58,20 +58,20 @@ void Window::center_line(LineCount buffer_line)
     display_line_at(buffer_line, m_dimensions.line/2_line);
 }
 
-void Window::scroll(CharCount offset)
+void Window::scroll(ColumnCount offset)
 {
-    m_position.column = std::max(0_char, m_position.column + offset);
+    m_position.column = std::max(0_col, m_position.column + offset);
 }
 
-void Window::display_column_at(CharCount buffer_column, CharCount display_column)
+void Window::display_column_at(ColumnCount buffer_column, ColumnCount display_column)
 {
     if (display_column >= 0 or display_column < m_dimensions.column)
-        m_position.column = std::max(0_char, buffer_column - display_column);
+        m_position.column = std::max(0_col, buffer_column - display_column);
 }
 
-void Window::center_column(CharCount buffer_column)
+void Window::center_column(ColumnCount buffer_column)
 {
-    display_column_at(buffer_column, m_dimensions.column/2_char);
+    display_column_at(buffer_column, m_dimensions.column/2_col);
 }
 
 Window::Setup Window::build_setup(const Context& context) const
@@ -117,7 +117,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     DisplayBuffer::LineList& lines = m_display_buffer.lines();
     lines.clear();
 
-    if (m_dimensions == CharCoord{0,0})
+    if (m_dimensions == DisplayCoord{0,0})
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
@@ -154,13 +154,13 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     return m_display_buffer;
 }
 
-void Window::set_position(CharCoord position)
+void Window::set_position(DisplayCoord position)
 {
     m_position.line = std::max(0_line, position.line);
-    m_position.column = std::max(0_char, position.column);
+    m_position.column = std::max(0_col, position.column);
 }
 
-void Window::set_dimensions(CharCoord dimensions)
+void Window::set_dimensions(DisplayCoord dimensions)
 {
     if (m_dimensions != dimensions)
     {
@@ -182,12 +182,12 @@ static LineCount adapt_view_pos(LineCount line, LineCount offset,
     return view_pos;
 }
 
-static CharCount adapt_view_pos(const DisplayBuffer& display_buffer, CharCount offset,
-                                ByteCoord pos, CharCount view_pos, CharCount view_size)
+static ColumnCount adapt_view_pos(const DisplayBuffer& display_buffer, ColumnCount offset,
+                                BufferCoord pos, ColumnCount view_pos, ColumnCount view_size)
 {
     offset = std::min(offset, (view_size + 1) / 2);
-    CharCount buffer_column = 0;
-    CharCount non_buffer_column = 0;
+    ColumnCount buffer_column = 0;
+    ColumnCount non_buffer_column = 0;
     for (auto& line : display_buffer.lines())
     {
         for (auto& atom : line)
@@ -196,12 +196,12 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer, CharCount o
             {
                 if (atom.begin() <= pos and atom.end() > pos)
                 {
-                    CharCount pos_beg, pos_end;
+                    ColumnCount pos_beg, pos_end;
                     if (atom.type() == DisplayAtom::BufferRange)
                     {
                         auto& buf = atom.buffer();
                         pos_beg = buffer_column +
-                            char_length(buf, atom.begin(), pos);
+                            column_length(buf, atom.begin(), pos);
                         pos_end = pos_beg+1;
                     }
                     else
@@ -211,7 +211,7 @@ static CharCount adapt_view_pos(const DisplayBuffer& display_buffer, CharCount o
                     }
 
                     if (pos_beg - offset < view_pos)
-                        return std::max(0_char, pos_beg - offset);
+                        return std::max(0_col, pos_beg - offset);
 
                     if (pos_end + offset >= view_pos + view_size - non_buffer_column)
                         return pos_end + offset - view_size + non_buffer_column;
@@ -231,7 +231,7 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
     const auto& anchor = selection.anchor();
     const auto& cursor  = selection.cursor();
 
-    const CharCoord offset = options()["scrolloff"].get<CharCoord>();
+    const DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
 
     // scroll lines if needed, try to get as much of the selection visible as possible
     m_position.line = adapt_view_pos(anchor.line, offset.line, m_position.line,
@@ -262,17 +262,17 @@ void Window::scroll_to_keep_selection_visible_ifn(const Context& context)
 
 namespace
 {
-CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
-                              ByteCoord coord)
+ColumnCount find_display_column(const DisplayLine& line, const Buffer& buffer,
+                              BufferCoord coord)
 {
-    CharCount column = 0;
+    ColumnCount column = 0;
     for (auto& atom : line)
     {
         if (atom.has_buffer_range() and
             coord >= atom.begin() and coord < atom.end())
         {
             if (atom.type() == DisplayAtom::BufferRange)
-                column += char_length(buffer, atom.begin(), coord);
+                column += column_length(buffer, atom.begin(), coord);
             return column;
         }
         column += atom.length();
@@ -280,20 +280,20 @@ CharCount find_display_column(const DisplayLine& line, const Buffer& buffer,
     return column;
 }
 
-ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
-                            CharCount column)
+BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
+                              ColumnCount column)
 {
     auto& range = line.range();
     for (auto& atom : line)
     {
-        CharCount len = atom.length();
+        ColumnCount len = atom.length();
         if (atom.has_buffer_range() and column < len)
         {
             if (atom.type() == DisplayAtom::BufferRange)
                 return buffer.clamp(
                     utf8::advance(buffer.iterator_at(atom.begin()),
                                   buffer.iterator_at(range.end),
-                                  std::max(0_char, column)).coord());
+                                  std::max(0_col, column)).coord());
              return buffer.clamp(atom.begin());
         }
         column -= len;
@@ -302,7 +302,7 @@ ByteCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 }
 }
 
-CharCoord Window::display_position(ByteCoord coord) const
+DisplayCoord Window::display_position(BufferCoord coord) const
 {
     LineCount l = 0;
     for (auto& line : m_display_buffer.lines())
@@ -315,25 +315,25 @@ CharCoord Window::display_position(ByteCoord coord) const
     return { 0, 0 };
 }
 
-ByteCoord Window::buffer_coord(CharCoord coord) const
+BufferCoord Window::buffer_coord(DisplayCoord coord) const
 {
     if (m_display_buffer.lines().empty())
         return {0,0};
     if (coord <= 0_line)
         coord = {0,0};
     if ((int)coord.line >= m_display_buffer.lines().size())
-        coord = CharCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
+        coord = DisplayCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
 
     return find_buffer_coord(m_display_buffer.lines()[(int)coord.line],
                              buffer(), coord.column);
 }
 
-ByteCoord Window::offset_coord(ByteCoord coord, CharCount offset)
+BufferCoord Window::offset_coord(BufferCoord coord, CharCount offset)
 {
     return buffer().offset_coord(coord, offset);
 }
 
-ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offset)
+BufferCoordAndTarget Window::offset_coord(BufferCoordAndTarget coord, LineCount offset)
 {
     auto line = clamp(coord.line + offset, 0_line, buffer().line_count()-1);
     DisplayBuffer display_buffer;
@@ -349,7 +349,7 @@ ByteCoordAndTarget Window::offset_coord(ByteCoordAndTarget coord, LineCount offs
     m_highlighters.highlight(input_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
     m_builtin_highlighters.highlight(input_handler.context(), HighlightFlags::MoveOnly, display_buffer, range);
 
-    CharCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
+    ColumnCount column = coord.target == -1 ? find_display_column(lines[0], buffer(), coord) : coord.target;
     return { find_buffer_coord(lines[1], buffer(), column), column };
 }
 

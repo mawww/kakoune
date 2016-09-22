@@ -26,7 +26,7 @@ namespace Kakoune
 
 template<typename T>
 void highlight_range(DisplayBuffer& display_buffer,
-                     ByteCoord begin, ByteCoord end,
+                     BufferCoord begin, BufferCoord end,
                      bool skip_replaced, T func)
 {
     if (begin == end or end <= display_buffer.range().begin
@@ -68,7 +68,7 @@ void highlight_range(DisplayBuffer& display_buffer,
 void apply_highlighter(const Context& context,
                        HighlightFlags flags,
                        DisplayBuffer& display_buffer,
-                       ByteCoord begin, ByteCoord end,
+                       BufferCoord begin, BufferCoord end,
                        Highlighter& highlighter)
 {
     if (begin == end)
@@ -335,8 +335,8 @@ private:
             cache.m_regex_version = m_regex_version;
         }
         const LineCount line_offset = 3;
-        BufferRange range{std::max<ByteCoord>(buffer_range.begin, display_range.begin.line - line_offset),
-                          std::min<ByteCoord>(buffer_range.end, display_range.end.line + line_offset)};
+        BufferRange range{std::max<BufferCoord>(buffer_range.begin, display_range.begin.line - line_offset),
+                          std::min<BufferCoord>(buffer_range.end, display_range.end.line + line_offset)};
 
         auto it = std::upper_bound(matches.begin(), matches.end(), range,
                                    [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
@@ -514,7 +514,7 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
             return;
 
         auto face = get_face(facespec);
-        CharCount column = 0;
+        ColumnCount column = 0;
         for (auto atom_it = it->begin(); atom_it != it->end(); ++atom_it)
         {
             column += atom_it->length();
@@ -524,7 +524,7 @@ HighlighterAndId create_line_highlighter(HighlighterParameters params)
             kak_assert(atom_it->begin().line == line);
             apply_face(face)(*atom_it);
         }
-        const CharCount remaining = context.window().dimensions().column - column;
+        const ColumnCount remaining = context.window().dimensions().column - column;
         if (remaining > 0)
             it->push_back({ String{' ', remaining}, face });
     };
@@ -545,7 +545,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
     auto func = [=](const Context& context, HighlightFlags flags,
                     DisplayBuffer& display_buffer, BufferRange)
     {
-        CharCount column = -1;
+        ColumnCount column = -1;
         try
         {
             column = str_to_int_ifp(expand(col_expr, context)).value_or(0) - 1;
@@ -566,7 +566,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
         {
             const LineCount buf_line = line.range().begin.line;
             const ByteCount byte_col = get_byte_to_column(buffer, tabstop, {buf_line, column});
-            const ByteCoord coord{buf_line, byte_col};
+            const BufferCoord coord{buf_line, byte_col};
             bool found = false;
             if (buffer.is_valid(coord) and not buffer.is_end(coord))
             {
@@ -591,8 +591,8 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
             }
             if (not found)
             {
-                CharCount first_buffer_col = -1;
-                CharCount first_display_col = 0;
+                ColumnCount first_buffer_col = -1;
+                ColumnCount first_display_col = 0;
                 for (auto& atom : line)
                 {
                     if (atom.has_buffer_range())
@@ -606,8 +606,8 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
                 if (first_buffer_col == -1)
                     continue;
 
-                CharCount eol_col = line.length();
-                CharCount count = column + first_display_col - first_buffer_col - eol_col;
+                ColumnCount eol_col = line.length();
+                ColumnCount count = column + first_display_col - first_buffer_col - eol_col;
                 if (count >= 0)
                 {
                     if (count > 0)
@@ -620,11 +620,11 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
                     {
                         DisplayAtom& atom = *(atom_it-1);
 
-                        const CharCount len = atom.length();
+                        const ColumnCount len = atom.length();
                         if (atom.type() == DisplayAtom::Text and -count <= len)
                         {
                             auto it = atom_it - 1;
-                            CharCount pos = len + count;
+                            ColumnCount pos = len + count;
                             if (pos > 0)
                             {
                                 it = ++line.split(it, pos);
@@ -709,7 +709,7 @@ void show_whitespaces(const Context& context, HighlightFlags flags, DisplayBuffe
                     {
                         int column = (int)get_column(buffer, tabstop, it.coord());
                         int count = tabstop - (column % tabstop);
-                        atom_it->replace("→" + String(' ', count-1));
+                        atom_it->replace("→" + String(' ', CharCount{count-1}));
                     }
                     else if (c == ' ')
                         atom_it->replace("·");
@@ -855,8 +855,8 @@ void highlight_selections(const Context& context, HighlightFlags flags, DisplayB
     {
         auto& sel = selections[i];
         const bool forward = sel.anchor() <= sel.cursor();
-        ByteCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
-        ByteCoord end   = forward ? (ByteCoord)sel.cursor() : buffer.char_next(sel.anchor());
+        BufferCoord begin = forward ? sel.anchor() : buffer.char_next(sel.cursor());
+        BufferCoord end   = forward ? (BufferCoord)sel.cursor() : buffer.char_next(sel.anchor());
 
         const bool primary = (i == selections.main_index());
         highlight_range(display_buffer, begin, end, false,
@@ -961,7 +961,7 @@ HighlighterAndId create_flag_lines_highlighter(HighlighterParameters params)
                 atom.face = merge_faces(def_face, atom.face);
         }
 
-        CharCount width = 0;
+        ColumnCount width = 0;
         for (auto& l : display_lines)
              width = std::max(width, l.length());
         const DisplayAtom empty{String{' ', width}, def_face};
@@ -1070,8 +1070,8 @@ struct RegexMatch
     ByteCount begin;
     ByteCount end;
 
-    ByteCoord begin_coord() const { return { line, begin }; }
-    ByteCoord end_coord() const { return { line, end }; }
+    BufferCoord begin_coord() const { return { line, begin }; }
+    BufferCoord end_coord() const { return { line, end }; }
 };
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Highlight>;
 
@@ -1147,18 +1147,18 @@ struct RegionMatches
     RegexMatchList end_matches;
     RegexMatchList recurse_matches;
 
-    static bool compare_to_begin(const RegexMatch& lhs, ByteCoord rhs)
+    static bool compare_to_begin(const RegexMatch& lhs, BufferCoord rhs)
     {
         return lhs.begin_coord() < rhs;
     }
 
-    RegexMatchList::const_iterator find_next_begin(ByteCoord pos) const
+    RegexMatchList::const_iterator find_next_begin(BufferCoord pos) const
     {
         return std::lower_bound(begin_matches.begin(), begin_matches.end(),
                                 pos, compare_to_begin);
     }
 
-    RegexMatchList::const_iterator find_matching_end(ByteCoord beg_pos) const
+    RegexMatchList::const_iterator find_matching_end(BufferCoord beg_pos) const
     {
         auto end_it = end_matches.begin();
         auto rec_it = recurse_matches.begin();
@@ -1247,10 +1247,10 @@ public:
         auto& regions = get_regions_for_range(buffer, range);
 
         auto begin = std::lower_bound(regions.begin(), regions.end(), display_range.begin,
-                                      [](const Region& r, ByteCoord c) { return r.end < c; });
+                                      [](const Region& r, BufferCoord c) { return r.end < c; });
         auto end = std::lower_bound(begin, regions.end(), display_range.end,
-                                    [](const Region& r, ByteCoord c) { return r.begin < c; });
-        auto correct = [&](ByteCoord c) -> ByteCoord {
+                                    [](const Region& r, BufferCoord c) { return r.begin < c; });
+        auto correct = [&](BufferCoord c) -> BufferCoord {
             if (not buffer.is_end(c) and buffer[c.line].length() == c.column)
                 return {c.line+1, 0};
             return c;
@@ -1260,7 +1260,7 @@ public:
         const bool apply_default = default_group_it != m_groups.end();
 
         auto last_begin = (begin == regions.begin()) ?
-                             ByteCoord{0,0} : (begin-1)->end;
+                             BufferCoord{0,0} : (begin-1)->end;
         kak_assert(begin <= end);
         for (; begin != end; ++begin)
         {
@@ -1350,8 +1350,8 @@ private:
 
     struct Region
     {
-        ByteCoord begin;
-        ByteCoord end;
+        BufferCoord begin;
+        BufferCoord end;
         StringView group;
     };
     using RegionList = Vector<Region, MemoryDomain::Highlight>;
@@ -1367,7 +1367,7 @@ private:
     using RegionAndMatch = std::pair<size_t, RegexMatchList::const_iterator>;
 
     // find the begin closest to pos in all matches
-    RegionAndMatch find_next_begin(const Cache& cache, ByteCoord pos) const
+    RegionAndMatch find_next_begin(const Cache& cache, BufferCoord pos) const
     {
         RegionAndMatch res{0, cache.matches[0].find_next_begin(pos)};
         for (size_t i = 1; i < cache.matches.size(); ++i)

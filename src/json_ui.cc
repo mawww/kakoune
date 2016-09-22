@@ -112,7 +112,7 @@ String to_json(const DisplayLine& line)
     return to_json(line.atoms());
 }
 
-String to_json(CharCoord coord)
+String to_json(DisplayCoord coord)
 {
     return format(R"(\{ "line": {}, "column": {} })", coord.line, coord.column);
 }
@@ -197,7 +197,7 @@ Key JsonUI::get_key()
 }
 
 void JsonUI::menu_show(ConstArrayView<DisplayLine> items,
-                       CharCoord anchor, Face fg, Face bg,
+                       DisplayCoord anchor, Face fg, Face bg,
                        MenuStyle style)
 {
     rpc_call("menu_show", items, anchor, fg, bg, style);
@@ -214,7 +214,7 @@ void JsonUI::menu_hide()
 }
 
 void JsonUI::info_show(StringView title, StringView content,
-                       CharCoord anchor, Face face,
+                       DisplayCoord anchor, Face face,
                        InfoStyle style)
 {
     rpc_call("info_show", title, content, anchor, face, style);
@@ -240,7 +240,7 @@ void JsonUI::set_ui_options(const Options& options)
     // rpc_call("set_ui_options", options);
 }
 
-CharCoord JsonUI::dimensions()
+DisplayCoord JsonUI::dimensions()
 {
     return m_dimensions;
 }
@@ -391,7 +391,7 @@ void JsonUI::eval_json(const Value& json)
         if (params.size() != 2)
             throw runtime_error("resize expects 2 parameters");
 
-        CharCoord dim{params[0].as<int>(), params[1].as<int>()};
+        DisplayCoord dim{params[0].as<int>(), params[1].as<int>()};
         m_dimensions = dim;
         m_pending_keys.push_back(resize(dim));
     }

@@ -115,7 +115,7 @@ String key_to_str(Key key)
 {
     if (key.modifiers & Key::Modifiers::MouseEvent)
     {
-        const auto coord = key.coord() + CharCoord{1,1};
+        const auto coord = key.coord() + DisplayCoord{1,1};
         switch (key.modifiers)
         {
             case Key::Modifiers::MousePos:
@@ -133,7 +133,7 @@ String key_to_str(Key key)
     }
     else if (key.modifiers == Key::Modifiers::Resize)
     {
-        auto size = key.coord() + CharCoord{1,1};
+        auto size = key.coord() + DisplayCoord{1,1};
         return format("<resize:{}.{}>", size.line, size.column);
     }
 

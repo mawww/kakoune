@@ -205,7 +205,7 @@ void Client::redraw_ifn()
     if (m_ui_pending & MenuShow)
     {
         m_menu.ui_anchor = m_menu.style == MenuStyle::Inline ?
-            window.display_position(m_menu.anchor) : CharCoord{};
+            window.display_position(m_menu.anchor) : DisplayCoord{};
         m_ui->menu_show(m_menu.items, m_menu.ui_anchor,
                         get_face("MenuForeground"), get_face("MenuBackground"),
                         m_menu.style);
@@ -218,7 +218,7 @@ void Client::redraw_ifn()
     if (m_ui_pending & InfoShow)
     {
         m_info.ui_anchor = is_inline(m_info.style) ?
-            window.display_position(m_info.anchor) : CharCoord{};
+            window.display_position(m_info.anchor) : DisplayCoord{};
         m_ui->info_show(m_info.title, m_info.content, m_info.ui_anchor,
                         get_face("Information"), m_info.style);
     }
@@ -330,7 +330,7 @@ void Client::on_option_changed(const Option& option)
     }
 }
 
-void Client::menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style)
+void Client::menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style)
 {
     m_menu = Menu{ std::move(choices), anchor, {}, style, -1 };
     m_ui_pending |= MenuShow;
@@ -351,7 +351,7 @@ void Client::menu_hide()
     m_ui_pending &= ~(MenuShow | MenuSelect);
 }
 
-void Client::info_show(String title, String content, ByteCoord anchor, InfoStyle style)
+void Client::info_show(String title, String content, BufferCoord anchor, InfoStyle style)
 {
     m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
     m_ui_pending |= InfoShow;

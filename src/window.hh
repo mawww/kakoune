@@ -18,24 +18,24 @@ public:
     Window(Buffer& buffer);
     ~Window();
 
-    const CharCoord& position() const { return m_position; }
-    void set_position(CharCoord position);
+    const DisplayCoord& position() const { return m_position; }
+    void set_position(DisplayCoord position);
 
-    const CharCoord& dimensions() const { return m_dimensions; }
-    void set_dimensions(CharCoord dimensions);
+    const DisplayCoord& dimensions() const { return m_dimensions; }
+    void set_dimensions(DisplayCoord dimensions);
 
     void scroll(LineCount offset);
     void center_line(LineCount buffer_line);
     void display_line_at(LineCount buffer_line, LineCount display_line);
 
-    void scroll(CharCount offset);
-    void center_column(CharCount buffer_column);
-    void display_column_at(CharCount buffer_column, CharCount display_column);
+    void scroll(ColumnCount offset);
+    void center_column(ColumnCount buffer_column);
+    void display_column_at(ColumnCount buffer_column, ColumnCount display_column);
 
     const DisplayBuffer& update_display_buffer(const Context& context);
 
-    CharCoord display_position(ByteCoord coord) const;
-    ByteCoord buffer_coord(CharCoord coord) const;
+    DisplayCoord display_position(BufferCoord coord) const;
+    BufferCoord buffer_coord(DisplayCoord coord) const;
 
     Highlighter& highlighters() { return m_highlighters; }
 
@@ -44,8 +44,8 @@ public:
     bool needs_redraw(const Context& context) const;
     void force_redraw() { m_last_setup = Setup{}; }
 
-    ByteCoord offset_coord(ByteCoord coord, CharCount offset);
-    ByteCoordAndTarget offset_coord(ByteCoordAndTarget coord, LineCount offset);
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset);
+    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset);
 
     void set_client(Client* client) { m_client = client; }
 
@@ -61,8 +61,8 @@ private:
     SafePtr<Buffer> m_buffer;
     SafePtr<Client> m_client;
 
-    CharCoord m_position;
-    CharCoord m_dimensions;
+    DisplayCoord m_position;
+    DisplayCoord m_dimensions;
     DisplayBuffer m_display_buffer;
 
     HighlighterGroup m_highlighters;
@@ -70,8 +70,8 @@ private:
 
     struct Setup
     {
-        CharCoord position;
-        CharCoord dimensions;
+        DisplayCoord position;
+        DisplayCoord dimensions;
         size_t timestamp;
         size_t main_selection;
         Vector<BufferRange> selections;

@@ -80,14 +80,14 @@ InsertCompletion complete_word(const SelectionList& sels, const OptionManager& o
     auto is_word_pred = [extra_word_char](Codepoint c) { return is_word(c) or contains(extra_word_char, c); };
 
     const Buffer& buffer = sels.buffer();
-    ByteCoord cursor_pos = sels.main().cursor();
+    BufferCoord cursor_pos = sels.main().cursor();
 
     using Utf8It = utf8::iterator<BufferIterator>;
     Utf8It pos{buffer.iterator_at(cursor_pos), buffer};
     if (pos == buffer.begin() or not is_word_pred(*(pos-1)))
         return {};
 
-    ByteCoord word_begin;
+    BufferCoord word_begin;
     String prefix;
     IdMap<int> sel_word_counts;
     for (int i = 0; i < sels.size(); ++i)
@@ -242,7 +242,7 @@ InsertCompletion complete_option(const SelectionList& sels,
                                  StringView option_name)
 {
     const Buffer& buffer = sels.buffer();
-    ByteCoord cursor_pos = sels.main().cursor();
+    BufferCoord cursor_pos = sels.main().cursor();
 
     const CompletionList& opt = options[option_name].get<CompletionList>();
     if (opt.list.empty())
@@ -253,7 +253,7 @@ InsertCompletion complete_option(const SelectionList& sels,
     MatchResults<String::const_iterator> match;
     if (regex_match(desc.begin(), desc.end(), match, re))
     {
-        ByteCoord coord{ str_to_int({match[1].first, match[1].second}) - 1,
+        BufferCoord coord{ str_to_int({match[1].first, match[1].second}) - 1,
                          str_to_int({match[2].first, match[2].second}) - 1 };
         if (not buffer.is_valid(coord))
             return {};
@@ -274,8 +274,8 @@ InsertCompletion complete_option(const SelectionList& sels,
             StringView query = buffer[coord.line].substr(
                 coord.column, cursor_pos.column - coord.column);
 
-            const CharCount tabstop = options["tabstop"].get<int>();
-            const CharCount column = get_column(buffer, tabstop, cursor_pos);
+            const ColumnCount tabstop = options["tabstop"].get<int>();
+            const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
 
             struct RankedMatchAndInfo : RankedMatch
             {
@@ -318,10 +318,10 @@ InsertCompletion complete_option(const SelectionList& sels,
 InsertCompletion complete_line(const SelectionList& sels, const OptionManager& options)
 {
     const Buffer& buffer = sels.buffer();
-    ByteCoord cursor_pos = sels.main().cursor();
+    BufferCoord cursor_pos = sels.main().cursor();
 
-    const CharCount tabstop = options["tabstop"].get<int>();
-    const CharCount column = get_column(buffer, tabstop, cursor_pos);
+    const ColumnCount tabstop = options["tabstop"].get<int>();
+    const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
 
     StringView prefix = buffer[cursor_pos.line].substr(0_byte, cursor_pos.column);
     InsertCompletion::CandidateList candidates;

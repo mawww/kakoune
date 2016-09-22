@@ -30,13 +30,13 @@ public:
     Key  get_key() override;
 
     void menu_show(ConstArrayView<DisplayLine> items,
-                   CharCoord anchor, Face fg, Face bg,
+                   DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   CharCoord anchor, Face face,
+                   DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
 
@@ -46,7 +46,7 @@ public:
 
     void set_ui_options(const Options& options) override;
 
-    CharCoord dimensions() override;
+    DisplayCoord dimensions() override;
 
 private:
     void parse_requests(EventMode mode);
@@ -55,7 +55,7 @@ private:
     InputCallback m_input_callback;
     FDWatcher m_stdin_watcher;
     Vector<Key> m_pending_keys;
-    CharCoord m_dimensions;
+    DisplayCoord m_dimensions;
     String m_requests;
 };
 

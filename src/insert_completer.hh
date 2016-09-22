@@ -64,8 +64,8 @@ struct InsertCompletion
 
     using CandidateList = Vector<Candidate>;
 
-    ByteCoord begin;
-    ByteCoord end;
+    BufferCoord begin;
+    BufferCoord end;
     CandidateList candidates;
     size_t timestamp;
 

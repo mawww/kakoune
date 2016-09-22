@@ -74,7 +74,7 @@ struct MouseHandler
             return false;
 
         Buffer& buffer = context.buffer();
-        ByteCoord cursor;
+        BufferCoord cursor;
         switch (key.modifiers)
         {
         case Key::Modifiers::MousePress:
@@ -117,7 +117,7 @@ struct MouseHandler
 private:
 
     bool m_dragging = false;
-    ByteCoord m_anchor;
+    BufferCoord m_anchor;
 };
 
 constexpr StringView register_doc =
@@ -371,7 +371,7 @@ public:
         {
             if (m_cursor_pos != 0)
             {
-                m_line = m_line.substr(0, m_cursor_pos - 1)
+                m_line = m_line.substr(0_char, m_cursor_pos - 1)
                        + m_line.substr(m_cursor_pos);
 
                 --m_cursor_pos;
@@ -429,7 +429,7 @@ public:
     const String& line() const { return m_line; }
     CharCount cursor_pos() const { return m_cursor_pos; }
 
-    DisplayLine build_display_line(CharCount width)
+    DisplayLine build_display_line(ColumnCount in_width)
     {
         auto cleanup = [](StringView str) {
             String res;
@@ -448,6 +448,7 @@ public:
             return res;
         };
 
+        CharCount width = (int)in_width; // Todo: proper handling of char/column
         kak_assert(m_cursor_pos <= m_line.char_length());
         if (m_cursor_pos < m_display_pos)
             m_display_pos = m_cursor_pos;
@@ -463,10 +464,10 @@ public:
                                  { cleanup(m_line.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), get_face("StatusLine") } });
     }
 private:
-    CharCount      m_cursor_pos = 0;
-    CharCount      m_display_pos = 0;
+    CharCount m_cursor_pos = 0;
+    CharCount m_display_pos = 0;
 
-    String         m_line;
+    String    m_line;
 };
 
 class Menu : public InputMode
@@ -560,7 +561,7 @@ public:
         if (m_edit_filter and context().has_client())
         {
             auto prompt = "filter:"_str;
-            auto width = context().client().dimensions().column - prompt.char_length();
+            auto width = context().client().dimensions().column - prompt.column_length();
             auto display_line = m_filter_editor.build_display_line(width);
             display_line.insert(display_line.begin(), { prompt, get_face("Prompt") });
             context().print_status(display_line);
@@ -858,7 +859,7 @@ private:
         if (not context().has_client())
             return;
 
-        auto width = context().client().dimensions().column - m_prompt.char_length();
+        auto width = context().client().dimensions().column - m_prompt.column_length();
         DisplayLine display_line;
         if (not (m_flags & PromptFlags::Password))
             display_line = m_line_editor.build_display_line(width);
@@ -998,7 +999,7 @@ public:
             Vector<Selection> sels;
             for (auto& sel : context().selections())
             {
-                if (sel.cursor() == ByteCoord{0,0})
+                if (sel.cursor() == BufferCoord{0,0})
                     continue;
                 auto pos = sel.cursor();
                 sels.push_back({ buffer.char_prev(pos) });
@@ -1037,7 +1038,7 @@ public:
         {
             auto& selections = context().selections();
             for (auto& sel : selections)
-                sel.anchor() = sel.cursor() = ByteCoord{sel.cursor().line, 0};
+                sel.anchor() = sel.cursor() = BufferCoord{sel.cursor().line, 0};
             selections.sort_and_merge_overlapping();
         }
         else if (key == Key::End)
@@ -1186,19 +1187,19 @@ private:
             break;
         case InsertMode::AppendAtLineEnd:
             for (auto& sel : selections)
-                sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                sel = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
             break;
         case InsertMode::OpenLineBelow:
             for (auto& sel : selections)
-                sel = ByteCoord{sel.max().line, buffer[sel.max().line].length() - 1};
+                sel = BufferCoord{sel.max().line, buffer[sel.max().line].length() - 1};
             insert('\n');
             break;
         case InsertMode::OpenLineAbove:
             for (auto& sel : selections)
             {
                 auto line = sel.min().line;
-                sel = line > 0 ? ByteCoord{line - 1, buffer[line-1].length() - 1}
-                               : ByteCoord{0, 0};
+                sel = line > 0 ? BufferCoord{line - 1, buffer[line-1].length() - 1}
+                               : BufferCoord{0, 0};
             }
             insert('\n');
             // fix case where we inserted at begining
@@ -1211,7 +1212,7 @@ private:
         case InsertMode::InsertAtLineBegin:
             for (auto& sel : selections)
             {
-                ByteCoord pos = sel.min().line;
+                BufferCoord pos = sel.min().line;
                 auto pos_non_blank = buffer.iterator_at(pos);
                 while (*pos_non_blank == ' ' or *pos_non_blank == '\t')
                     ++pos_non_blank;
@@ -1446,22 +1447,24 @@ void scroll_window(Context& context, LineCount offset)
     Window& window = context.window();
     Buffer& buffer = context.buffer();
 
-    CharCoord win_pos = window.position();
-    CharCoord win_dim = window.dimensions();
+    DisplayCoord win_pos = window.position();
+    DisplayCoord win_dim = window.dimensions();
 
-    const CharCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
-    const CharCoord scrolloff =
-        std::min(context.options()["scrolloff"].get<CharCoord>(), max_offset);
+    const DisplayCoord max_offset{(win_dim.line - 1)/2, (win_dim.column - 1)/2};
+    const DisplayCoord scrolloff =
+        std::min(context.options()["scrolloff"].get<DisplayCoord>(), max_offset);
 
     const LineCount line_count = buffer.line_count();
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
 
     SelectionList& selections = context.selections();
-    const ByteCoord cursor = selections.main().cursor();
+    const BufferCoord cursor = selections.main().cursor();
 
     auto clamp_line = [&](LineCount line) { return clamp(line, 0_line, line_count-1); };
-    auto min_coord = buffer.offset_coord(clamp_line(win_pos.line + scrolloff.line), win_pos.column);
-    auto max_coord = buffer.offset_coord(clamp_line(win_pos.line + win_dim.line - 1 - scrolloff.line), win_pos.column);
+    auto min_line = clamp_line(win_pos.line + scrolloff.line);
+    auto max_line = clamp_line(win_pos.line + win_dim.line - 1 - scrolloff.line);
+    BufferCoord min_coord{min_line, buffer[min_line].byte_count_to(win_pos.column)};
+    BufferCoord max_coord{max_line, buffer[max_line].byte_count_to(win_pos.column)};
 
     selections = SelectionList{buffer, clamp(cursor, min_coord, max_coord)};
 

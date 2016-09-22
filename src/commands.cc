@@ -1812,14 +1812,14 @@ const CommandDesc info_cmd = {
         if (parser.positional_count() > 0)
         {
             InfoStyle style = InfoStyle::Prompt;
-            ByteCoord pos;
+            BufferCoord pos;
             if (auto anchor = parser.get_switch("anchor"))
             {
                 auto dot = find(*anchor, '.');
                 if (dot == anchor->end())
                     throw runtime_error("expected <line>.<column> for anchor");
 
-                pos = ByteCoord{str_to_int({anchor->begin(), dot})-1,
+                pos = BufferCoord{str_to_int({anchor->begin(), dot})-1,
                                 str_to_int({dot+1, anchor->end()})-1};
                 style = InfoStyle::Inline;
 

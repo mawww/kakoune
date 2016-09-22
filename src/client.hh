@@ -34,16 +34,16 @@ public:
     // handle all the keys currently available in the user interface
     void handle_available_input(EventMode mode);
 
-    void menu_show(Vector<DisplayLine> choices, ByteCoord anchor, MenuStyle style);
+    void menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style);
     void menu_select(int selected);
     void menu_hide();
 
-    void info_show(String title, String content, ByteCoord anchor, InfoStyle style);
+    void info_show(String title, String content, BufferCoord anchor, InfoStyle style);
     void info_hide();
 
     void print_status(DisplayLine status_line);
 
-    CharCoord dimensions() const { return m_ui->dimensions(); }
+    DisplayCoord dimensions() const { return m_ui->dimensions(); }
 
     void force_redraw();
     void redraw_ifn();
@@ -100,8 +100,8 @@ private:
     struct Menu
     {
         Vector<DisplayLine> items;
-        ByteCoord anchor;
-        CharCoord ui_anchor;
+        BufferCoord anchor;
+        DisplayCoord ui_anchor;
         MenuStyle style;
         int selected;
     } m_menu;
@@ -110,8 +110,8 @@ private:
     {
         String title;
         String content;
-        ByteCoord anchor;
-        CharCoord ui_anchor;
+        BufferCoord anchor;
+        DisplayCoord ui_anchor;
         InfoStyle style;
     } m_info;
 

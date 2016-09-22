@@ -34,13 +34,13 @@ public:
     Key  get_key() override;
 
     void menu_show(ConstArrayView<DisplayLine> items,
-                   CharCoord anchor, Face fg, Face bg,
+                   DisplayCoord anchor, Face fg, Face bg,
                    MenuStyle style) override;
     void menu_select(int selected) override;
     void menu_hide() override;
 
     void info_show(StringView title, StringView content,
-                   CharCoord anchor, Face face,
+                   DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
 
@@ -50,14 +50,14 @@ public:
 
     void set_ui_options(const Options& options) override;
 
-    CharCoord dimensions() override;
+    DisplayCoord dimensions() override;
 
     static void abort();
 
     struct Rect
     {
-        CharCoord pos;
-        CharCoord size;
+        DisplayCoord pos;
+        DisplayCoord size;
     };
 private:
     void check_resize(bool force = false);
@@ -67,12 +67,12 @@ private:
     int get_color_pair(const Face& face);
     void set_face(NCursesWin* window, Face face, const Face& default_face);
     void draw_line(NCursesWin* window, const DisplayLine& line,
-                   CharCount col_index, CharCount max_column,
+                   ColumnCount col_index, ColumnCount max_column,
                    const Face& default_face);
 
     NCursesWin* m_window = nullptr;
 
-    CharCoord m_dimensions;
+    DisplayCoord m_dimensions;
 
     using ColorPair = std::pair<Color, Color>;
     UnorderedMap<Color, int, MemoryDomain::Faces> m_colors;
@@ -81,7 +81,7 @@ private:
 
     struct Window : Rect
     {
-        void create(const CharCoord& pos, const CharCoord& size);
+        void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
         void refresh();
 
@@ -97,7 +97,7 @@ private:
         Vector<DisplayLine> items;
         Face fg;
         Face bg;
-        CharCoord anchor;
+        DisplayCoord anchor;
         MenuStyle style;
         int selected_item = 0;
         int columns = 1;
@@ -111,7 +111,7 @@ private:
         String title;
         String content;
         Face face;
-        CharCoord anchor;
+        DisplayCoord anchor;
         InfoStyle style;
     } m_info;
 

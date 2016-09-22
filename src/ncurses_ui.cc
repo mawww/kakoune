@@ -266,7 +266,7 @@ NCursesUI::~NCursesUI()
     set_signal_handler(SIGCONT, SIG_DFL);
 }
 
-void NCursesUI::Window::create(const CharCoord& p, const CharCoord& s)
+void NCursesUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
 {
     pos = p;
     size = s;
@@ -277,8 +277,8 @@ void NCursesUI::Window::destroy()
 {
     delwin(win);
     win = nullptr;
-    pos = CharCoord{};
-    size = CharCoord{};
+    pos = DisplayCoord{};
+    size = DisplayCoord{};
 }
 
 void NCursesUI::Window::refresh()
@@ -286,7 +286,7 @@ void NCursesUI::Window::refresh()
     if (not win)
         return;
 
-    CharCoord max_pos = pos + size - CharCoord{1,1};
+    DisplayCoord max_pos = pos + size - DisplayCoord{1,1};
     pnoutrefresh(win, 0, 0, (int)pos.line, (int)pos.column,
                  (int)max_pos.line, (int)max_pos.column);
 }
@@ -316,7 +316,7 @@ void add_str(WINDOW* win, StringView str)
 }
 
 void NCursesUI::draw_line(NCursesWin* window, const DisplayLine& line,
-                          CharCount col_index, CharCount max_column,
+                          ColumnCount col_index, ColumnCount max_column,
                           const Face& default_face)
 {
     for (const DisplayAtom& atom : line)
@@ -329,16 +329,16 @@ void NCursesUI::draw_line(NCursesWin* window, const DisplayLine& line,
 
         const auto remaining_columns = max_column - col_index;
         if (content.back() == '\n' and
-            content.char_length() - 1 < remaining_columns)
+            content.column_length() - 1 < remaining_columns)
         {
             add_str(window, content.substr(0, content.length()-1));
             waddch(window, ' ');
         }
         else
         {
-            content = content.substr(0_char, remaining_columns);
+            content = content.substr(0_col, remaining_columns);
             add_str(window, content);
-            col_index += content.char_length();
+            col_index += content.column_length();
         }
     }
 }
@@ -391,7 +391,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
     const auto remaining = m_dimensions.column - status_line.length();
     if (mode_len < remaining)
     {
-        CharCount col = m_dimensions.column - mode_len;
+        ColumnCount col = m_dimensions.column - mode_len;
         wmove(m_window, status_line_pos, (int)col);
         draw_line(m_window, mode_line, col, m_dimensions.column, default_face);
     }
@@ -402,7 +402,7 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…" });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
-        CharCount col = m_dimensions.column - remaining + 1;
+        ColumnCount col = m_dimensions.column - remaining + 1;
         wmove(m_window, status_line_pos, (int)col);
         draw_line(m_window, trimmed_mode_line, col, m_dimensions.column, default_face);
     }
@@ -444,7 +444,7 @@ void NCursesUI::check_resize(bool force)
         intrflush(m_window, false);
         keypad(m_window, true);
 
-        m_dimensions = CharCoord{ws.ws_row-1, ws.ws_col};
+        m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
 
         if (char* csr = tigetstr((char*)"csr"))
             putp(tparm(csr, 0, ws.ws_row));
@@ -488,7 +488,7 @@ Key NCursesUI::get_key()
         MEVENT ev;
         if (getmouse(&ev) == OK)
         {
-            CharCoord pos{ ev.y - (m_status_on_top ? 1 : 0), ev.x };
+            DisplayCoord pos{ ev.y - (m_status_on_top ? 1 : 0), ev.x };
             if (BUTTON_PRESS(ev.bstate, 1)) return mouse_press(pos);
             if (BUTTON_RELEASE(ev.bstate, 1)) return mouse_release(pos);
             if (BUTTON_PRESS(ev.bstate, m_wheel_down_button)) return mouse_wheel_down(pos);
@@ -596,7 +596,7 @@ void NCursesUI::draw_menu()
     const LineCount& win_height = m_menu.size.line;
     kak_assert(win_height <= menu_lines);
 
-    const CharCount column_width = (m_menu.size.column - 1) / m_menu.columns;
+    const ColumnCount column_width = (m_menu.size.column - 1) / m_menu.columns;
 
     const LineCount mark_height = min(div_round_up(sq(win_height), menu_lines),
                                       win_height);
@@ -615,7 +615,7 @@ void NCursesUI::draw_menu()
             const DisplayLine& item = m_menu.items[item_idx];
             draw_line(m_menu.win, item, 0, column_width,
                       item_idx == m_menu.selected_item ? m_menu.fg : m_menu.bg);
-            const CharCount pad = column_width - item.length();
+            const ColumnCount pad = column_width - item.length();
             add_str(m_menu.win, String{' ', pad});
         }
         const bool is_mark = line >= mark_line and
@@ -629,7 +629,7 @@ void NCursesUI::draw_menu()
 }
 
 void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
-                          CharCoord anchor, Face fg, Face bg,
+                          DisplayCoord anchor, Face fg, Face bg,
                           MenuStyle style)
 {
     menu_hide();
@@ -640,11 +640,11 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     m_menu.anchor = anchor;
 
     if (style == MenuStyle::Prompt)
-        anchor = CharCoord{m_status_on_top ? 0_line : m_dimensions.line, 0};
+        anchor = DisplayCoord{m_status_on_top ? 0_line : m_dimensions.line, 0};
     else if (m_status_on_top)
         anchor.line += 1;
 
-    CharCoord maxsize = m_dimensions;
+    DisplayCoord maxsize = m_dimensions;
     maxsize.column -= anchor.column;
     if (maxsize.column <= 2)
         return;
@@ -652,14 +652,14 @@ void NCursesUI::menu_show(ConstArrayView<DisplayLine> items,
     const int item_count = items.size();
     m_menu.items.clear(); // make sure it is empty
     m_menu.items.reserve(item_count);
-    CharCount longest = 1;
+    ColumnCount longest = 1;
     for (auto& item : items)
         longest = max(longest, item.length());
 
     const bool is_prompt = style == MenuStyle::Prompt;
     m_menu.columns = is_prompt ? max((int)((maxsize.column-1) / (longest+1)), 1) : 1;
 
-    CharCount maxlen = maxsize.column-1;
+    ColumnCount maxlen = maxsize.column-1;
     if (m_menu.columns > 1 and item_count > 1)
         maxlen = maxlen / m_menu.columns - 1;
 
@@ -720,10 +720,10 @@ void NCursesUI::menu_hide()
     m_dirty = true;
 }
 
-static CharCoord compute_needed_size(StringView str)
+static DisplayCoord compute_needed_size(StringView str)
 {
-    CharCoord res{1,0};
-    CharCount line_len = 0;
+    DisplayCoord res{1,0};
+    ColumnCount line_len = 0;
     for (auto it = str.begin(), end = str.end();
          it != end; it = utf8::next(it, end))
     {
@@ -746,32 +746,32 @@ static CharCoord compute_needed_size(StringView str)
     return res;
 }
 
-static CharCoord compute_pos(CharCoord anchor, CharCoord size,
+static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
                              NCursesUI::Rect rect, NCursesUI::Rect to_avoid,
                              bool prefer_above)
 {
-    CharCoord pos;
+    DisplayCoord pos;
     if (prefer_above)
     {
-        pos = anchor - CharCoord{size.line};
+        pos = anchor - DisplayCoord{size.line};
         if (pos.line < 0)
             prefer_above = false;
     }
     auto rect_end = rect.pos + rect.size;
     if (not prefer_above)
     {
-        pos = anchor + CharCoord{1_line};
+        pos = anchor + DisplayCoord{1_line};
         if (pos.line + size.line > rect_end.line)
             pos.line = max(rect.pos.line, anchor.line - size.line);
     }
     if (pos.column + size.column > rect_end.column)
         pos.column = max(rect.pos.column, rect_end.column - size.column);
 
-    if (to_avoid.size != CharCoord{})
+    if (to_avoid.size != DisplayCoord{})
     {
-        CharCoord to_avoid_end = to_avoid.pos + to_avoid.size;
+        DisplayCoord to_avoid_end = to_avoid.pos + to_avoid.size;
 
-        CharCoord end = pos + size;
+        DisplayCoord end = pos + size;
 
         // check intersection
         if (not (end.line < to_avoid.pos.line or end.column < to_avoid.pos.column or
@@ -787,24 +787,24 @@ static CharCoord compute_pos(CharCoord anchor, CharCoord size,
     return pos;
 }
 
-String make_info_box(StringView title, StringView message, CharCount max_width,
+String make_info_box(StringView title, StringView message, ColumnCount max_width,
                      ConstArrayView<StringView> assistant)
 {
-    CharCoord assistant_size;
+    DisplayCoord assistant_size;
     if (not assistant.empty())
-        assistant_size = { (int)assistant.size(), assistant[0].char_length() };
+        assistant_size = { (int)assistant.size(), assistant[0].column_length() };
 
     String result;
 
-    const CharCount max_bubble_width = max_width - assistant_size.column - 6;
+    const ColumnCount max_bubble_width = max_width - assistant_size.column - 6;
     if (max_bubble_width < 4)
         return result;
 
     Vector<StringView> lines = wrap_lines(message, max_bubble_width);
 
-    CharCount bubble_width = title.char_length() + 2;
+    ColumnCount bubble_width = title.column_length() + 2;
     for (auto& line : lines)
-        bubble_width = max(bubble_width, line.char_length());
+        bubble_width = max(bubble_width, line.column_length());
 
     auto line_count = max(assistant_size.line-1,
                           LineCount{(int)lines.size()} + 2);
@@ -819,7 +819,7 @@ String make_info_box(StringView title, StringView message, CharCount max_width,
                 result += "╭─" + String{dash, bubble_width} + "─╮";
             else
             {
-                auto dash_count = bubble_width - title.char_length() - 2;
+                auto dash_count = bubble_width - title.column_length() - 2;
                 String left{dash, dash_count / 2};
                 String right{dash, dash_count - dash_count / 2};
                 result += "╭─" + left + "┤" + title +"├" + right +"─╮";
@@ -828,7 +828,7 @@ String make_info_box(StringView title, StringView message, CharCount max_width,
         else if (i < lines.size() + 1)
         {
             auto& line = lines[(int)i - 1];
-            const CharCount padding = bubble_width - line.char_length();
+            const ColumnCount padding = bubble_width - line.column_length();
             result += "│ " + line + String{' ', padding} + " │";
         }
         else if (i == lines.size() + 1)
@@ -840,7 +840,7 @@ String make_info_box(StringView title, StringView message, CharCount max_width,
 }
 
 void NCursesUI::info_show(StringView title, StringView content,
-                          CharCoord anchor, Face face, InfoStyle style)
+                          DisplayCoord anchor, Face face, InfoStyle style)
 {
     info_hide();
 
@@ -855,18 +855,18 @@ void NCursesUI::info_show(StringView title, StringView content,
     {
         info_box = make_info_box(m_info.title, m_info.content,
                                  m_dimensions.column, m_assistant);
-        anchor = CharCoord{m_status_on_top ? 0 : m_dimensions.line,
+        anchor = DisplayCoord{m_status_on_top ? 0 : m_dimensions.line,
                            m_dimensions.column-1};
     }
     else
     {
         if (m_status_on_top)
             anchor.line += 1;
-        CharCount col = anchor.column;
+        ColumnCount col = anchor.column;
         if (style == InfoStyle::MenuDoc and m_menu)
             col = m_menu.pos.column + m_menu.size.column;
 
-        const CharCount max_width = m_dimensions.column - col;
+        const ColumnCount max_width = m_dimensions.column - col;
         if (max_width < 4)
             return;
 
@@ -874,10 +874,10 @@ void NCursesUI::info_show(StringView title, StringView content,
             info_box += line + "\n";
     }
 
-    CharCoord size = compute_needed_size(info_box), pos;
+    DisplayCoord size = compute_needed_size(info_box), pos;
     const Rect rect = {m_status_on_top ? 1_line : 0_line, m_dimensions};
     if (style == InfoStyle::MenuDoc and m_menu)
-        pos = m_menu.pos + CharCoord{0_line, m_menu.size.column};
+        pos = m_menu.pos + DisplayCoord{0_line, m_menu.size.column};
     else
         pos = compute_pos(anchor, size, rect, m_menu, style == InfoStyle::InlineAbove);
 
@@ -916,7 +916,7 @@ void NCursesUI::mark_dirty(const Window& win)
     wredrawln(m_window, (int)win.pos.line, (int)win.size.line);
 }
 
-CharCoord NCursesUI::dimensions()
+DisplayCoord NCursesUI::dimensions()
 {
     return m_dimensions;
 }

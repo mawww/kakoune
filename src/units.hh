@@ -158,6 +158,18 @@ inline constexpr CharCount operator"" _char(unsigned long long int value)
     return CharCount(value);
 }
 
+struct ColumnCount : public StronglyTypedNumber<ColumnCount, int>
+{
+    [[gnu::always_inline]]
+    constexpr ColumnCount(int value = 0) : StronglyTypedNumber<ColumnCount>(value) {}
+};
+
+[[gnu::always_inline]]
+inline constexpr ColumnCount operator"" _col(unsigned long long int value)
+{
+    return ColumnCount(value);
+}
+
 }
 
 #endif // units_hh_INCLUDED

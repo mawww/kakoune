@@ -71,7 +71,7 @@ void select(Context& context, NormalParams)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(Buffer& buffer, ByteCoord coord, SelectionList& selections)
+void select_coord(Buffer& buffer, BufferCoord coord, SelectionList& selections)
 {
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
@@ -118,7 +118,7 @@ void goto_commands(Context& context, NormalParams params)
             case 'g':
             case 'k':
                 context.push_jump();
-                select_coord<mode>(buffer, ByteCoord{0,0}, context.selections());
+                select_coord<mode>(buffer, BufferCoord{0,0}, context.selections());
                 break;
             case 'l':
                 select<mode, select_to_line_end<true>>(context, {});
@@ -204,7 +204,7 @@ void goto_commands(Context& context, NormalParams params)
                 if (pos >= buffer.back_coord())
                     pos = buffer.back_coord();
                 else if (buffer[pos.line].length() == pos.column + 1)
-                    pos = ByteCoord{ pos.line+1, 0 };
+                    pos = BufferCoord{ pos.line+1, 0 };
                 select_coord<mode>(buffer, pos, context.selections());
                 break;
             }
@@ -240,7 +240,7 @@ void view_commands(Context& context, NormalParams params)
         if (not cp or not context.has_window())
             return;
 
-        const ByteCoord cursor = context.selections().main().cursor();
+        const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
         switch (to_lower(*cp))
         {
@@ -250,7 +250,7 @@ void view_commands(Context& context, NormalParams params)
             break;
         case 'm':
             context.window().center_column(
-                context.buffer()[cursor.line].char_count_to(cursor.column));
+                context.buffer()[cursor.line].column_count_to(cursor.column));
             break;
         case 't':
             context.window().display_line_at(cursor.line, 0);
@@ -259,7 +259,7 @@ void view_commands(Context& context, NormalParams params)
             context.window().display_line_at(cursor.line, window.dimensions().line-1);
             break;
         case 'h':
-            context.window().scroll(-std::max<CharCount>(1, count));
+            context.window().scroll(-std::max<ColumnCount>(1, count));
             break;
         case 'j':
             context.window().scroll( std::max<LineCount>(1, count));
@@ -268,7 +268,7 @@ void view_commands(Context& context, NormalParams params)
             context.window().scroll(-std::max<LineCount>(1, count));
             break;
         case 'l':
-            context.window().scroll( std::max<CharCount>(1, count));
+            context.window().scroll( std::max<ColumnCount>(1, count));
             break;
         }
     }, "view",
@@ -592,7 +592,7 @@ void paste_all(Context& context, NormalParams params)
 template<typename T>
 void regex_prompt(Context& context, String prompt, T func)
 {
-    CharCoord position = context.has_window() ? context.window().position() : CharCoord{};
+    DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
     context.input_handler().prompt(
         std::move(prompt), "", get_face("Prompt"), PromptFlags::None, complete_nothing,
@@ -875,8 +875,8 @@ void indent(Context& context, NormalParams)
 template<bool deindent_incomplete = true>
 void deindent(Context& context, NormalParams)
 {
-    CharCount tabstop = context.options()["tabstop"].get<int>();
-    CharCount indent_width = context.options()["indentwidth"].get<int>();
+    ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    ColumnCount indent_width = context.options()["indentwidth"].get<int>();
     if (indent_width == 0)
         indent_width = tabstop;
 
@@ -888,7 +888,7 @@ void deindent(Context& context, NormalParams)
         for (auto line = std::max(sel.min().line, last_line);
              line < sel.max().line+1; ++line)
         {
-            CharCount width = 0;
+            ColumnCount width = 0;
             auto content = buffer[line];
             for (auto column = 0_byte; column < content.length(); ++column)
             {
@@ -900,12 +900,12 @@ void deindent(Context& context, NormalParams)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        sels.push_back({ line, ByteCoord{line, column-1} });
+                        sels.push_back({ line, BufferCoord{line, column-1} });
                     break;
                 }
                 if (width == indent_width)
                 {
-                    sels.push_back({ line, ByteCoord{line, column} });
+                    sels.push_back({ line, BufferCoord{line, column} });
                     break;
                 }
             }
@@ -1048,14 +1048,14 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
-    const CharCount tabstop = context.options()["tabstop"].get<int>();
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     Vector<Selection> result;
     for (auto& sel : selections)
     {
         auto anchor = sel.anchor();
         auto cursor = sel.cursor();
-        CharCount cursor_col = get_column(buffer, tabstop, cursor);
-        CharCount anchor_col = get_column(buffer, tabstop, anchor);
+        ColumnCount cursor_col = get_column(buffer, tabstop, cursor);
+        ColumnCount anchor_col = get_column(buffer, tabstop, anchor);
         result.push_back(std::move(sel));
         for (int i = 0; i < std::max(params.count, 1); ++i)
         {
@@ -1073,8 +1073,8 @@ void copy_selections_on_next_lines(Context& context, NormalParams params)
 
             if (anchor_byte != buffer[anchor_line].length() and
                 cursor_byte != buffer[cursor_line].length())
-                result.emplace_back(ByteCoord{anchor_line, anchor_byte},
-                                    ByteCoordAndTarget{cursor_line, cursor_byte, cursor.target});
+                result.emplace_back(BufferCoord{anchor_line, anchor_byte},
+                                    BufferCoordAndTarget{cursor_line, cursor_byte, cursor.target});
         }
     }
     selections = std::move(result);
@@ -1206,7 +1206,7 @@ void align(Context& context, NormalParams)
 {
     auto& selections = context.selections();
     auto& buffer = context.buffer();
-    const CharCount tabstop = context.options()["tabstop"].get<int>();
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
 
     Vector<Vector<const Selection*>> columns;
     LineCount last_line = -1;
@@ -1227,7 +1227,7 @@ void align(Context& context, NormalParams)
     const bool use_tabs = context.options()["aligntab"].get<bool>();
     for (auto& col : columns)
     {
-        CharCount maxcol = 0;
+        ColumnCount maxcol = 0;
         for (auto& sel : col)
             maxcol = std::max(get_column(buffer, tabstop, sel->cursor()), maxcol);
         for (auto& sel : col)
@@ -1292,8 +1292,8 @@ void copy_indent(Context& context, NormalParams params)
 void tabs_to_spaces(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
-    const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
-    const CharCount tabstop = params.count == 0 ? opt_tabstop : params.count;
+    const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
+    const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> tabs;
     Vector<String> spaces;
     for (auto& sel : context.selections())
@@ -1303,8 +1303,8 @@ void tabs_to_spaces(Context& context, NormalParams params)
         {
             if (*it == '\t')
             {
-                CharCount col = get_column(buffer, opt_tabstop, it.coord());
-                CharCount end_col = (col / tabstop + 1) * tabstop;
+                ColumnCount col = get_column(buffer, opt_tabstop, it.coord());
+                ColumnCount end_col = (col / tabstop + 1) * tabstop;
                 tabs.push_back({ it.coord() });
                 spaces.push_back(String{ ' ', end_col - col });
             }
@@ -1317,8 +1317,8 @@ void tabs_to_spaces(Context& context, NormalParams params)
 void spaces_to_tabs(Context& context, NormalParams params)
 {
     auto& buffer = context.buffer();
-    const CharCount opt_tabstop = context.options()["tabstop"].get<int>();
-    const CharCount tabstop = params.count == 0 ? opt_tabstop : params.count;
+    const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
+    const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> spaces;
     for (auto& sel : context.selections())
     {
@@ -1329,7 +1329,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
             {
                 auto spaces_beg = it;
                 auto spaces_end = spaces_beg+1;
-                CharCount col = get_column(buffer, opt_tabstop, spaces_end.coord());
+                ColumnCount col = get_column(buffer, opt_tabstop, spaces_end.coord());
                 while (spaces_end != end and
                        *spaces_end == ' ' and (col % tabstop) != 0)
                 {
@@ -1570,7 +1570,7 @@ void flip_selections(Context& context, NormalParams)
 {
     for (auto& sel : context.selections())
     {
-        const ByteCoord tmp = sel.anchor();
+        const BufferCoord tmp = sel.anchor();
         sel.anchor() = sel.cursor();
         sel.cursor() = tmp;
     }
@@ -1581,7 +1581,7 @@ void ensure_forward(Context& context, NormalParams)
 {
     for (auto& sel : context.selections())
     {
-        const ByteCoord min = sel.min(), max = sel.max();
+        const BufferCoord min = sel.min(), max = sel.max();
         sel.anchor() = min;
         sel.cursor() = max;
     }

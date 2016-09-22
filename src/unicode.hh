@@ -48,6 +48,11 @@ inline bool is_basic_alpha(Codepoint c)
     return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
 }
 
+inline size_t get_width(Codepoint c)
+{
+    return wcwidth((wchar_t)c);
+}
+
 enum class CharCategories
 {
     Blank,

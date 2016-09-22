@@ -14,19 +14,19 @@ struct Selection
     static constexpr MemoryDomain Domain = MemoryDomain::Selections;
 
     Selection() = default;
-    Selection(ByteCoord pos) : Selection(pos,pos) {}
-    Selection(ByteCoord anchor, ByteCoord cursor,
+    Selection(BufferCoord pos) : Selection(pos,pos) {}
+    Selection(BufferCoord anchor, BufferCoord cursor,
               CaptureList captures = {})
         : m_anchor{anchor}, m_cursor{cursor},
           m_captures(std::move(captures)) {}
 
     void merge_with(const Selection& range);
 
-    ByteCoord& anchor() { return m_anchor; }
-    ByteCoordAndTarget& cursor() { return m_cursor; }
+    BufferCoord& anchor() { return m_anchor; }
+    BufferCoordAndTarget& cursor() { return m_cursor; }
 
-    const ByteCoord& anchor() const { return m_anchor; }
-    const ByteCoordAndTarget& cursor() const { return m_cursor; }
+    const BufferCoord& anchor() const { return m_anchor; }
+    const BufferCoordAndTarget& cursor() const { return m_cursor; }
 
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
@@ -36,15 +36,15 @@ struct Selection
         return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
     }
 
-    const ByteCoord& min() const { return m_anchor < m_cursor ? m_anchor : m_cursor; }
-    const ByteCoord& max() const { return m_anchor < m_cursor ? m_cursor : m_anchor; }
+    const BufferCoord& min() const { return m_anchor < m_cursor ? m_anchor : m_cursor; }
+    const BufferCoord& max() const { return m_anchor < m_cursor ? m_cursor : m_anchor; }
 
-    ByteCoord& min() { return m_anchor < m_cursor ? m_anchor : m_cursor; }
-    ByteCoord& max() { return m_anchor < m_cursor ? m_cursor : m_anchor; }
+    BufferCoord& min() { return m_anchor < m_cursor ? m_anchor : m_cursor; }
+    BufferCoord& max() { return m_anchor < m_cursor ? m_cursor : m_anchor; }
 
 private:
-    ByteCoord m_anchor;
-    ByteCoordAndTarget m_cursor;
+    BufferCoord m_anchor;
+    BufferCoordAndTarget m_cursor;
 
     CaptureList m_captures;
 };

@@ -91,36 +91,36 @@ struct LineAndColumn
     }
 };
 
-struct ByteCoord : LineAndColumn<ByteCoord, LineCount, ByteCount>
+struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
 {
     [[gnu::always_inline]]
-    constexpr ByteCoord(LineCount line = 0, ByteCount column = 0)
+    constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
         : LineAndColumn(line, column) {}
 };
 
-struct CharCoord : LineAndColumn<CharCoord, LineCount, CharCount>
+struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
 {
     [[gnu::always_inline]]
-    constexpr CharCoord(LineCount line = 0, CharCount column = 0)
+    constexpr DisplayCoord(LineCount line = 0, ColumnCount column = 0)
         : LineAndColumn(line, column) {}
 
     static constexpr const char* option_type_name = "coord";
 };
 
-struct ByteCoordAndTarget : ByteCoord
+struct BufferCoordAndTarget : BufferCoord
 {
     [[gnu::always_inline]]
-    constexpr ByteCoordAndTarget(LineCount line = 0, ByteCount column = 0, CharCount target = -1)
-        : ByteCoord(line, column), target(target) {}
+    constexpr BufferCoordAndTarget(LineCount line = 0, ByteCount column = 0, ColumnCount target = -1)
+        : BufferCoord(line, column), target(target) {}
 
     [[gnu::always_inline]]
-    constexpr ByteCoordAndTarget(ByteCoord coord, CharCount target = -1)
-        : ByteCoord(coord), target(target) {}
+    constexpr BufferCoordAndTarget(BufferCoord coord, ColumnCount target = -1)
+        : BufferCoord(coord), target(target) {}
 
-    CharCount target;
+    ColumnCount target;
 };
 
-inline size_t hash_value(const ByteCoordAndTarget& val)
+inline size_t hash_value(const BufferCoordAndTarget& val)
 {
     return hash_values(val.line, val.column, val.target);
 }

@@ -198,7 +198,7 @@ static void check_indentwidth(const int& val)
     if (val < 0) throw runtime_error{"indentwidth should be positive or zero"};
 }
 
-static void check_scrolloff(const CharCoord& so)
+static void check_scrolloff(const DisplayCoord& so)
 {
     if (so.line < 0 or so.column < 0)
         throw runtime_error{"scroll offset must be positive or zero"};
@@ -216,7 +216,7 @@ void register_options()
 
     reg.declare_option<int, check_tabstop>("tabstop", "size of a tab character", 8);
     reg.declare_option<int, check_indentwidth>("indentwidth", "indentation width", 4);
-    reg.declare_option<CharCoord, check_scrolloff>(
+    reg.declare_option<DisplayCoord, check_scrolloff>(
         "scrolloff", "number of lines and columns to keep visible main cursor when scrolling",
         {0,0});
     reg.declare_option("eolformat", "end of line format", EolFormat::Lf);
@@ -318,17 +318,17 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
     struct DummyUI : UserInterface
     {
         DummyUI() { set_signal_handler(SIGINT, SIG_DFL); }
-        void menu_show(ConstArrayView<DisplayLine>, CharCoord,
+        void menu_show(ConstArrayView<DisplayLine>, DisplayCoord,
                        Face, Face, MenuStyle) override {}
         void menu_select(int) override {}
         void menu_hide() override {}
 
-        void info_show(StringView, StringView, CharCoord, Face, InfoStyle) override {}
+        void info_show(StringView, StringView, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
 
         void draw(const DisplayBuffer&, const Face&, const Face&) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
-        CharCoord dimensions() override { return {24,80}; }
+        DisplayCoord dimensions() override { return {24,80}; }
         bool is_key_available() override { return false; }
         Key  get_key() override { return Key::Invalid; }
         void refresh(bool) override {}
@@ -477,7 +477,7 @@ int run_client(StringView session, StringView init_command, UIType ui_type)
 
 int run_server(StringView session, StringView init_command,
                bool ignore_kakrc, bool daemon, bool readonly, UIType ui_type,
-               ConstArrayView<StringView> files, ByteCoord target_coord)
+               ConstArrayView<StringView> files, BufferCoord target_coord)
 {
     static bool terminate = false;
     if (daemon)
@@ -839,7 +839,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            ByteCoord target_coord;
+            BufferCoord target_coord;
             Vector<StringView> files;
             for (auto& name : parser)
             {
