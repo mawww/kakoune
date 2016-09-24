@@ -648,7 +648,7 @@ HighlighterAndId create_column_highlighter(HighlighterParameters params)
 
 void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuffer& display_buffer, BufferRange)
 {
-    const int tabstop = context.options()["tabstop"].get<int>();
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
     auto& buffer = context.buffer();
     for (auto& line : display_buffer.lines())
     {
@@ -668,8 +668,8 @@ void expand_tabulations(const Context& context, HighlightFlags flags, DisplayBuf
                     if (it+1 != end)
                         atom_it = line.split(atom_it, (it+1).coord());
 
-                    int column = (int)get_column(buffer, tabstop, it.coord());
-                    int count = tabstop - (column % tabstop);
+                    ColumnCount column = get_column(buffer, tabstop, it.coord());
+                    ColumnCount count = tabstop - (column % tabstop);
                     String padding;
                     for (int i = 0; i < count; ++i)
                         padding += ' ';

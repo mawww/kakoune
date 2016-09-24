@@ -18,13 +18,15 @@ ColumnCount get_column(const Buffer& buffer,
     auto line = buffer[coord.line];
     auto col = 0_col;
     for (auto it = line.begin();
-         it != line.end() and coord.column > (int)(it - line.begin());
-         it = utf8::next(it, line.end()))
+         it != line.end() and coord.column > (int)(it - line.begin()); )
     {
         if (*it == '\t')
+        {
             col = (col / tabstop + 1) * tabstop;
+            ++it;
+        }
         else
-            ++col;
+            col += get_width(utf8::read_codepoint(it, line.end()));
     }
     return col;
 }
@@ -41,10 +43,16 @@ ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayC
             col = (col / tabstop + 1) * tabstop;
             if (col > coord.column) // the target column was in the tab
                 break;
+            ++it;
         }
         else
-            ++col;
-        it = utf8::next(it, line.end());
+        {
+            auto next = it;
+            col += get_width(utf8::read_codepoint(next, line.end()));
+            if (col > coord.column) // the target column was in the char
+                break;
+            it = next;
+        }
     }
     return (int)(it - line.begin());
 }
