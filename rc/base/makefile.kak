@@ -24,7 +24,7 @@ addhl -group /makefile/content regex [+?:]= 0:operator
 
 %sh{
     # Grammar
-    keywords="ifeq|ifneq|else|endif"
+    keywords="ifeq|ifneq|ifdef|ifndef|else|endif|define|endef"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=makefile %{
