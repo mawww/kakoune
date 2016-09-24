@@ -16,18 +16,96 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 addhl -group / regions -default content markdown \
-    sh         ```sh   ```                    '' \
-    fish       ```fish ```                    '' \
-    ruby       ```ruby ```                    '' \
-    code       ```     ```                    '' \
-    code       ``       ``                    '' \
-    code       `         `                    ''
+    c          ```c          ```          '' \
+    cabal      ```cabal      ```          '' \
+    clojure    ```clojure    ```          '' \
+    coffee     ```coffee     ```          '' \
+    cpp        ```cpp        ```          '' \
+    css        ```css        ```          '' \
+    cucumber   ```cucumber   ```          '' \
+    diff       ```diff       ```          '' \
+    dlang      ```dlang      ```          '' \
+    dockerfile ```dockerfile ```          '' \
+    fish       ```fish       ```          '' \
+    gas        ```gas        ```          '' \
+    golang     ```golang     ```          '' \
+    haml       ```haml       ```          '' \
+    haskell    ```haskell    ```          '' \
+    html       ```html       ```          '' \
+    ini        ```ini        ```          '' \
+    java       ```java       ```          '' \
+    javascript ```javascript ```          '' \
+    json       ```json       ```          '' \
+    julia      ```julia      ```          '' \
+    kak        ```kak        ```          '' \
+    kickstart  ```kickstart  ```          '' \
+    latex      ```latex      ```          '' \
+    lisp       ```lisp       ```          '' \
+    lua        ```lua        ```          '' \
+    makefile   ```makefile   ```          '' \
+    moon       ```moon       ```          '' \
+    objc       ```objc       ```          '' \
+    perl       ```perl       ```          '' \
+    pug        ```pug        ```          '' \
+    python     ```python     ```          '' \
+    ragel      ```ragel      ```          '' \
+    ruby       ```ruby       ```          '' \
+    rust       ```rust       ```          '' \
+    sass       ```sass       ```          '' \
+    scala      ```scala      ```          '' \
+    scss       ```scss       ```          '' \
+    sh         ```sh         ```          '' \
+    swift      ```swift      ```          '' \
+    tupfile    ```tupfile    ```          '' \
+    yaml       ```yaml       ```          '' \
+    code       ```           ```          '' \
+    code       ``            ``           '' \
+    code       `             `            ''
 
 addhl -group /markdown/code fill meta
 
-addhl -group /markdown/sh   ref sh
-addhl -group /markdown/fish ref fish
-addhl -group /markdown/ruby ref ruby
+addhl -group /markdown/c          ref c
+addhl -group /markdown/cabal      ref cabal
+addhl -group /markdown/clojure    ref clojure
+addhl -group /markdown/coffee     ref coffee
+addhl -group /markdown/cpp        ref cpp
+addhl -group /markdown/css        ref css
+addhl -group /markdown/cucumber   ref cucumber
+addhl -group /markdown/diff       ref diff
+addhl -group /markdown/dlang      ref dlang
+addhl -group /markdown/dockerfile ref dockerfile
+addhl -group /markdown/fish       ref fish
+addhl -group /markdown/gas        ref gas
+addhl -group /markdown/golang     ref golang
+addhl -group /markdown/haml       ref haml
+addhl -group /markdown/haskell    ref haskell
+addhl -group /markdown/html       ref html
+addhl -group /markdown/ini        ref ini
+addhl -group /markdown/java       ref java
+addhl -group /markdown/javascript ref javascript
+addhl -group /markdown/json       ref json
+addhl -group /markdown/julia      ref julia
+addhl -group /markdown/kak        ref kak
+addhl -group /markdown/kickstart  ref kickstart
+addhl -group /markdown/latex      ref latex
+addhl -group /markdown/lisp       ref lisp
+addhl -group /markdown/lua        ref lua
+addhl -group /markdown/makefile   ref makefile
+addhl -group /markdown/moon       ref moon
+addhl -group /markdown/objc       ref objc
+addhl -group /markdown/perl       ref perl
+addhl -group /markdown/pug        ref pug
+addhl -group /markdown/python     ref python
+addhl -group /markdown/ragel      ref ragel
+addhl -group /markdown/ruby       ref ruby
+addhl -group /markdown/rust       ref rust
+addhl -group /markdown/sass       ref sass
+addhl -group /markdown/scala      ref scala
+addhl -group /markdown/scss       ref scss
+addhl -group /markdown/sh         ref sh
+addhl -group /markdown/swift      ref swift
+addhl -group /markdown/tupfile    ref tupfile
+addhl -group /markdown/yaml       ref yaml
 
 # Setext-style header
 addhl -group /markdown/content regex (\A|\n\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
