@@ -67,15 +67,21 @@ def flake8-diagnostics-next -docstring "Jump to the next line that contains an e
         while read line_content; do
             candidate=${line_content%%,*}
             if [ -n "$candidate" ]; then
-                first_line=$(( first_line == -1 ? candidate : first_line ))
-                line=$((candidate > kak_cursor_line && (candidate < line || line == -1) ? candidate : line ))
+                if [ $first_line -eq -1 ]; then
+                    first_line=$candidate
+                fi
+                if [ $candidate -gt $kak_cursor_line ]; then
+                    if [ $candidate -lt $line ] || [ $line -eq -1 ]; then
+                        line=$candidate
+                    fi
+                fi
             fi
         done
-        line=$((line == -1 ? first_line : line))
-        if [ ${line} -ne -1 ]; then
-            echo "exec ${line} g"
-        else
+        if [ $line -eq -1 ];
+            line=$first_line
             echo 'echo -color Error no next flake8 diagnostic'
+        else
+            echo "exec ${line} g"
         fi
     )
 }}
