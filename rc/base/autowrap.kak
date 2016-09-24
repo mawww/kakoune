@@ -16,18 +16,20 @@ def -hidden autowrap-cursor %{ eval -save-regs '/"|^@m' %{
             reg m "%val{selections_desc}"
 
             ## if we're adding characters past the limit, just wrap them around
-            exec -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\'<ret>c<ret><esc>"
+            exec -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\'<ret>c<ret>"
         } catch %{
             ## if we're adding characters in the middle of a sentence, use
             ## the `fmtcmd` command to wrap the entire paragraph
             %sh{
-                if [[ "${kak_opt_autowrap_format_paragraph}" = true ]] \
-                    && [[ -n "${kak_opt_autowrap_fmtcmd}" ]]; then
+                if [ "${kak_opt_autowrap_format_paragraph}" = true ] \
+                    && [ -n "${kak_opt_autowrap_fmtcmd}" ]; then
                     format_cmd=$(printf %s "${kak_opt_autowrap_fmtcmd}" \
                                  | sed "s/%c/${kak_opt_autowrap_column}/g")
                     printf %s "
-                        exec '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
-                        try %{ exec s\h+$<ret> d }
+                        eval -draft %{
+                            exec '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
+                            try %{ exec s\h+$<ret> d }
+                        }
                         select '${kak_reg_m}'
                     "
                 fi
