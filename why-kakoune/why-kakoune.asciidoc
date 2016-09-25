@@ -239,3 +239,29 @@ options.
 To go even further in discoverablility, the auto information system can
 be set to display an information box after each normal mode keystroke,
 explaining what the key pressed just did.
+
+Extensive completion support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Keyboard oriented programs are much easier to work with when the provide
+extensive completion support. For a long time, completion has been prefix
+based, and that has been working very well.
+
+More recently, we started to see more and more programs using the so called
+fuzzy completion. Fuzzy completion tends to be subsequence based, instead
+of prefix based, which means the typed query needs to be a subsequence of
+a candidate to be considered matching, instead of a prefix. That will generate
+more candidates (all prefix matches are also subsequence matches), so it
+needs a good ranking algorithm to sort the matches and put the best ones first.
+
+Kakoune embrace fuzzy matching for its completion support, which kicks in both
+during insert mode, and prompt mode.
+
+Insert mode completion provides completion suggestions while inserting in the
+buffer, it can complete words from the buffer, or from all buffers, lines,
+filenames, or get completion candidates from an external source, making it
+possible to implement intelligent code completer.
+
+Prompt completion is displayed whenever we enter command mode, and provides
+completion candidates that are adapted to the command being entered, and to
+the current argument being edited.
