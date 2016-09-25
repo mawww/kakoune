@@ -19,7 +19,7 @@ addhl -group / regions -default content makefile \
 addhl -group /makefile/comment fill comment
 addhl -group /makefile/eval fill value
 
-addhl -group /makefile/content regex ^[\w.%]+\h*:\s 0:identifier
+addhl -group /makefile/content regex ^[\w.%-]+\h*:\s 0:identifier
 addhl -group /makefile/content regex [+?:]= 0:operator
 
 %sh{
