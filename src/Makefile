@@ -59,6 +59,7 @@ endif
 
 CXXFLAGS += -std=gnu++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-address
 
+all : kak
 kak : $(objects)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(objects) $(LIBS) -o $@
 
@@ -82,35 +83,51 @@ kak : $(objects)
 	gzip -f $(@:.gz=.1)
 	mv -f $(@:.gz=.1.gz) $@
 
+check: test
 test:
 	cd ../test && ./run
+
+TAGS: tags
 tags:
 	ctags -R
 man: ../doc/kak.1.gz
 doc: $(mandocs)
 
 clean:
-	rm -f .*.o .*.d kak tags
+	rm -f .*.o .*.d
 
-XDG_CONFIG_HOME ?= $(HOME)/.config
+distclean: clean
+	rm -f kak
 
-install: kak man doc
-	mkdir -p $(bindir)
-	install -m 0755 kak $(bindir)
-	mkdir -p $(sharedir)/rc/base
-	mkdir -p $(sharedir)/rc/core
-	mkdir -p $(sharedir)/rc/extra
-	install -m 0644 ../share/kak/kakrc $(sharedir)
-	install -m 0644 ../rc/base/* $(sharedir)/rc/base
-	install -m 0644 ../rc/core/* $(sharedir)/rc/core
-	install -m 0644 ../rc/extra/* $(sharedir)/rc/extra
-	[ -e $(sharedir)/autoload ] || ln -s rc $(sharedir)/autoload
-	mkdir -p $(sharedir)/colors
-	install -m 0644 ../colors/* $(sharedir)/colors
-	mkdir -p $(docdir)/manpages
-	mkdir -p $(mandir)
-	install -m 0644 ../README.asciidoc $(docdir)
-	install -m 0644 ../doc/manpages/*.gz $(docdir)/manpages
-	install -m 0644 ../doc/kak.1.gz $(mandir)
+installdirs:
+	install	-d $(bindir) \
+		$(sharedir)/rc/base	\
+		$(sharedir)/rc/core	\
+		$(sharedir)/rc/extra \
+		$(sharedir)/colors \
+		$(docdir)/manpages \
+		$(mandir)
 
-.PHONY: tags install
+install: kak man doc installdirs
+	install	-m 0755	kak	$(bindir)
+	install	-m 0644	../share/kak/kakrc $(sharedir)
+	install	-m 0644	../rc/base/* $(sharedir)/rc/base
+	install	-m 0644	../rc/core/* $(sharedir)/rc/core
+	install	-m 0644	../rc/extra/* $(sharedir)/rc/extra
+	[ -e $(sharedir)/autoload ]	|| ln -s rc	$(sharedir)/autoload
+	install	-m 0644	../colors/*	$(sharedir)/colors
+	install	-m 0644	../README.asciidoc $(docdir)
+	install	-m 0644	../doc/manpages/*.gz $(docdir)/manpages
+	install	-m 0644	../doc/kak.1.gz	$(mandir)
+
+install-strip: install
+	strip -s $(bindir)/kak
+
+uninstall:
+	rm -rf $(bindir)/kak \
+		$(sharedir)	\
+		$(docdir) \
+		$(mandir)/kak.1.gz
+
+.PHONY: check TAGS clean distclean installdirs install install-strip uninstall
+.PHONY: tags test man doc
