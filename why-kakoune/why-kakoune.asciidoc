@@ -179,36 +179,6 @@ Another example would be parameter swapping, if you had `func(arg2, arg1);`
 you could select the contents of the parenthesis with `<a-i>(`, split the
 selection on comma with `S, <ret>`, and swap selection contents with `<a-'>`.
 
-A better unix citizen
-~~~~~~~~~~~~~~~~~~~~~
-
-Easily making programs cooperate with each others is one of the main strength
-of the Unix environment. Kakoune is designed to integrate nicely with a Posix
-system: various text editing commands give direct access to the power of Posix
-tools, like `|` that prompts for a shell command and pipe selections through
-it, replacing their contents with the command output, or `$` that prompts for
-a command, and keeps selections for which the command returned success.
-
-This is only the tip of the iceberg, Kakoune is very easily controlable from
-the shell, just pipe whatever commands you like to `kak -p <session>`, and the
-target Kakoune session will execute these.
-
-Kakoune command line also support shell expansion, similar to what `$(...)`
-does in a shell. If you type `echo %sh{ echo hello }` in the command prompt,
-"hello" will get displayed in the status line. Various values from Kakoune
-can be accessed in these expand through environment variables, which, along
-with shell scripting forms the basis of Kakoune extension model.
-
-This model, although a bit less familiar than integrating a scripting language,
-is conceptually very simple, relatively simple implementation-wise, and
-expressive enough to implement custom code completer, linters, formatters...
-
-Kakoune also tries to limit its scope to code edition, in particular it does
-not try to manage windows, and lets the system window manager, or terminal
-multiplexer (as tmux), handle their responsiblity. This is achieved through
-a client/server design: An edition session runs on a server process, and
-multiple clients can connect to that session to display different buffers.
-
 Discoverability
 ~~~~~~~~~~~~~~~
 
@@ -265,3 +235,33 @@ possible to implement intelligent code completer.
 Prompt completion is displayed whenever we enter command mode, and provides
 completion candidates that are adapted to the command being entered, and to
 the current argument being edited.
+
+A better unix citizen
+~~~~~~~~~~~~~~~~~~~~~
+
+Easily making programs cooperate with each others is one of the main strength
+of the Unix environment. Kakoune is designed to integrate nicely with a Posix
+system: various text editing commands give direct access to the power of Posix
+tools, like `|` that prompts for a shell command and pipe selections through
+it, replacing their contents with the command output, or `$` that prompts for
+a command, and keeps selections for which the command returned success.
+
+This is only the tip of the iceberg, Kakoune is very easily controlable from
+the shell, just pipe whatever commands you like to `kak -p <session>`, and the
+target Kakoune session will execute these.
+
+Kakoune command line also support shell expansion, similar to what `$(...)`
+does in a shell. If you type `echo %sh{ echo hello }` in the command prompt,
+"hello" will get displayed in the status line. Various values from Kakoune
+can be accessed in these expand through environment variables, which, along
+with shell scripting forms the basis of Kakoune extension model.
+
+This model, although a bit less familiar than integrating a scripting language,
+is conceptually very simple, relatively simple implementation-wise, and
+expressive enough to implement custom code completer, linters, formatters...
+
+Kakoune also tries to limit its scope to code edition, in particular it does
+not try to manage windows, and lets the system window manager, or terminal
+multiplexer (as tmux), handle their responsiblity. This is achieved through
+a client/server design: An edition session runs on a server process, and
+multiple clients can connect to that session to display different buffers.
