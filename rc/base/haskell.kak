@@ -58,9 +58,9 @@ def -hidden _haskell_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=haskell %{
-    addhl ref haskell
+hook -group haskell-highlight global WinSetOption filetype=haskell %{ addhl ref haskell }
 
+hook global WinSetOption filetype=haskell %{
     hook window InsertEnd  .* -group haskell-hooks  _haskell_filter_around_selections
     hook window InsertChar \n -group haskell-indent _haskell_indent_on_new_line
 }
