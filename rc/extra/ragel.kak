@@ -62,9 +62,9 @@ def -hidden _ragel_indent_on_new_line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=ragel %{
-    addhl ref ragel
+hook -group ragel-highlight global WinSetOption filetype=ragel %{ addhl ref ragel }
 
+hook global WinSetOption filetype=ragel %{
     hook window InsertEnd  .* -group ragel-hooks  _ragel_filter_around_selections
     hook window InsertChar .* -group ragel-indent _ragel_indent_on_char
     hook window InsertChar \n -group ragel-indent _ragel_indent_on_new_line

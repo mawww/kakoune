@@ -22,8 +22,9 @@ addhl -group / group make
 addhl -group /make regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 addhl -group /make line %{%opt{_make_current_error_line}} default+b
 
+hook -group make-highlight global WinSetOption filetype=make %{ addhl ref make }
+
 hook global WinSetOption filetype=make %{
-    addhl ref make
     hook buffer -group make-hooks NormalKey <ret> make-jump
 }
 

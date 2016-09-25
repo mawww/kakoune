@@ -31,10 +31,9 @@ def -hidden _clojure_indent_on_new_line       _lisp_indent_on_new_line
 
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+hook -group clojure-highlight global WinSetOption filetype=clojure %{ addhl ref clojure }
 
 hook global WinSetOption filetype=clojure %[
-    addhl ref clojure
-
     hook window InsertEnd  .* -group clojure-hooks  _clojure_filter_around_selections
     hook window InsertChar \n -group clojure-indent _clojure_indent_on_new_line
 ]

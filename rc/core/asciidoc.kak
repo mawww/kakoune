@@ -28,5 +28,5 @@ addhl -group /asciidoc regex ^:[-\w]+: 0:meta
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 #
-hook global WinSetOption filetype=asciidoc %{ addhl ref asciidoc }
+hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{ addhl ref asciidoc }
 hook global WinSetOption filetype=(?!asciidoc).* %{ rmhl asciidoc }

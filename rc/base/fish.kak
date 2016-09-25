@@ -63,9 +63,9 @@ def -hidden _fish_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=fish %{
-    addhl ref fish
+hook -group fish-highlight global WinSetOption filetype=fish %{ addhl ref fish }
 
+hook global WinSetOption filetype=fish %{
     hook window InsertEnd  .* -group fish-hooks  _fish_filter_around_selections
     hook window InsertChar .* -group fish-indent _fish_indent_on_char
     hook window InsertChar \n -group fish-indent _fish_indent_on_new_line

@@ -51,9 +51,9 @@ def -hidden _json_indent_on_new_line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=json %{
-    addhl ref json
+hook -group json-highlight global WinSetOption filetype=json %{ addhl ref json }
 
+hook global WinSetOption filetype=json %{
     hook window InsertEnd  .* -group json-hooks  _json_filter_around_selections
     hook window InsertChar .* -group json-indent _json_indent_on_char
     hook window InsertChar \n -group json-indent _json_indent_on_new_line

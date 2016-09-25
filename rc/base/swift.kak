@@ -23,10 +23,5 @@ addhl -group /swift/code regex "\<(Bool|String|UInt|UInt16|UInt32|UInt64|UInt8)\
 addhl -group /swift/code regex "\<(IBAction|IBOutlet)\>" 0:attribute
 addhl -group /swift/code regex "@\w+\>" 0:attribute
 
-hook global WinSetOption filetype=swift %{
-    addhl ref swift
-}
-
-hook global WinSetOption filetype=(?!swift).* %{
-    rmhl swift
-}
+hook -group swift-highlight global WinSetOption filetype=swift %{ addhl ref swift }
+hook global WinSetOption filetype=(?!swift).* %{ rmhl swift }

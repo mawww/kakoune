@@ -19,10 +19,5 @@ addhl -group /java/code regex "\b(void|int|char|unsigned|float|boolean|double)\b
 addhl -group /java/code regex "\b(while|for|if|else|do|static|switch|case|default|class|interface|goto|break|continue|return|import|try|catch|throw|new|package|extends|implements)\b" 0:keyword
 addhl -group /java/code regex "\b(final|public|protected|private|abstract)\b" 0:attribute
 
-hook global WinSetOption filetype=java %{
-    addhl ref java
-}
-
-hook global WinSetOption filetype=(?!java).* %{
-    rmhl java
-}
+hook -group java-highlight global WinSetOption filetype=java %{ addhl ref java }
+hook global WinSetOption filetype=(?!java).* %{ rmhl java }

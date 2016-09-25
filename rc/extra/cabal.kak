@@ -63,9 +63,9 @@ def -hidden _cabal_indent_on_closing_curly_brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=cabal %[
-    addhl ref cabal
+hook -group cabal-highlight global WinSetOption filetype=cabal %{ addhl ref cabal }
 
+hook global WinSetOption filetype=cabal %[
     hook window InsertEnd  .* -group cabal-hooks  _cabal_filter_around_selections
     hook window InsertChar \n -group cabal-indent _cabal_indent_on_new_line
     hook window InsertChar \{ -group cabal-indent _cabal_indent_on_opening_curly_brace

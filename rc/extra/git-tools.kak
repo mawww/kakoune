@@ -1,6 +1,6 @@
 decl str docsclient
 
-hook global WinSetOption filetype=git-log %{
+hook -group git-log-highlight global WinSetOption filetype=git-log %{
     addhl group git-log-highlight
     addhl -group git-log-highlight regex '^(commit) ([0-9a-f]+)$' 1:yellow 2:red
     addhl -group git-log-highlight regex '^([a-zA-Z_-]+:) (.*?)$' 1:green 2:magenta
@@ -11,7 +11,7 @@ hook global WinSetOption filetype=(?!git-log).* %{
     rmhl git-log-highlight
 }
 
-hook global WinSetOption filetype=git-status %{
+hook -group git-status-highlight global WinSetOption filetype=git-status %{
     addhl group git-status-highlight
     addhl -group git-status-highlight regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }

@@ -10,10 +10,5 @@ addhl -group /ini-highlighter/code regex "^\h*([^\[][^=\n]*=)([^\n]*)" 1:identif
 
 addhl -group /ini-highlighter/comment fill comment
 
-hook global WinSetOption filetype=ini %{
-    addhl ref ini-highlighter
-}
-
-hook global WinSetOption filetype=(?!ini).* %{
-    rmhl ini-highlighter
-}
+hook -group ini-highlight global WinSetOption filetype=ini %{ addhl ref ini-highlighter }
+hook global WinSetOption filetype=(?!ini).* %{ rmhl ini-highlighter }

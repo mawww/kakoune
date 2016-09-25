@@ -34,7 +34,7 @@ addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?[\S]+[\s\t]+=[\s\t]+\[.+?[\s
 addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?(\S+)\s\[\[$ 0:type
 addhl -group /exheres-0-metadata regex ^(?:[\s\t]+)?\]\]$ 0:type
 
-hook global WinSetOption filetype=exheres-0-metadata %{ addhl ref exheres-0-metadata }
+hook -group exheres-0-metadata-highlight global WinSetOption filetype=exheres-0-metadata %{ addhl ref exheres-0-metadata }
 hook global WinSetOption filetype=(?!exheres-0-metadata).* %{ rmhl exheres-0-metadata }
 
 ## exheres-0 options descriptions
@@ -44,7 +44,7 @@ addhl -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?[\S]+[\s\t]+-[\s
 addhl -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?(\S+)\s\[\[$ 0:type
 addhl -group /exheres-0-options-descriptions regex ^(?:[\s\t]+)?\]\]$ 0:type
 
-hook global WinSetOption filetype=exheres-0-options-descriptions %{ addhl ref exheres-0-options-descriptions }
+hook -group exheres-0-options-descriptions-highlight global WinSetOption filetype=exheres-0-options-descriptions %{ addhl ref exheres-0-options-descriptions }
 hook global WinSetOption filetype=(?!exheres-0-options-descriptions).* %{ rmhl exheres-0-options-descriptions }
 
 ## metadata/licence_groups.conf
@@ -53,7 +53,7 @@ addhl -group /exheres-0-licence-groups regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribu
 addhl -group /exheres-0-licence-groups regex ^(\S+) 0:type
 addhl -group /exheres-0-licence-groups regex ^#.*?$ 0:comment
 
-hook global WinSetOption filetype=exheres-0-licence-groups %{ addhl ref exheres-0-licence-groups }
+hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exheres-0-licence-groups %{ addhl ref exheres-0-licence-groups }
 hook global WinSetOption filetype=(?!exheres-0-licence-groups).* %{ rmhl exheres-0-licence-groups }
 
 ## Paludis configurations
@@ -67,7 +67,7 @@ addhl -group /paludis-options-conf regex [\s\t](-\S+)(.*?) 1:red
 addhl -group /paludis-options-conf regex ^(\S+/\S+) 0:type
 addhl -group /paludis-options-conf regex ^#.*?$ 0:comment
 
-hook global WinSetOption filetype=paludis-options-conf %{ addhl ref paludis-options-conf }
+hook -group paludis-options-conf-highlight global WinSetOption filetype=paludis-options-conf %{ addhl ref paludis-options-conf }
 hook global WinSetOption filetype=(?!paludis-options-conf).* %{ rmhl paludis-options-conf }
 
 ## general.conf, repository.template
@@ -75,7 +75,7 @@ addhl -group / group paludis-key-value-conf
 addhl -group /paludis-key-value-conf regex ^[\s\t]?(\S+)[\s\t+]=[\s\t+](.*?)$ 1:attribute 2:value
 addhl -group /paludis-key-value-conf regex ^#.*?$ 0:comment
 
-hook global WinSetOption filetype=paludis-key-value-conf %{ addhl ref paludis-key-value-conf }
+hook -group paludis-key-value-conf-highlight global WinSetOption filetype=paludis-key-value-conf %{ addhl ref paludis-key-value-conf }
 hook global WinSetOption filetype=(?!paludis-key-value-conf).* %{ rmhl paludis-key-value-conf }
 
 ## mirrors.conf
@@ -83,7 +83,7 @@ addhl -group / group paludis-mirrors-conf
 addhl -group /paludis-mirrors-conf regex ^[\s\t+]?(\S+)[\s\t+](.*?)$ 1:type 2:value
 addhl -group /paludis-mirrors-conf regex ^#.*?$ 0:comment
 
-hook global WinSetOption filetype=paludis-mirrors-conf %{ addhl ref paludis-mirrors-conf }
+hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=paludis-mirrors-conf %{ addhl ref paludis-mirrors-conf }
 hook global WinSetOption filetype=(?!paludis-mirrors-conf).* %{ rmhl paludis-mirrors-conf }
 
 ## package_(unmask|mask).conf, platforms.conf
@@ -92,7 +92,7 @@ addhl -group /paludis-specs-conf regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
 addhl -group /paludis-specs-conf regex ^(\S+/\S+) 0:type
 addhl -group /paludis-specs-conf regex ^#.*?$ 0:comment
 
-hook global WinSetOption filetype=paludis-specs-conf %{ addhl ref paludis-specs-conf }
+hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-specs-conf %{ addhl ref paludis-specs-conf }
 hook global WinSetOption filetype=(?!paludis-specs-conf).* %{ rmhl paludis-specs-conf }
 
 ## News items (GLEP42)
@@ -101,5 +101,5 @@ addhl -group /glep42 regex ^(Title|Author|Translator|Content-Type|Posted|Revisio
 addhl -group /glep42 regex <[^@>]+@.*?> 0:string
 addhl -group /glep42 regex ^>.*?$ 0:comment
 
-hook global WinSetOption filetype=glep42 %{ addhl ref glep42 }
+hook -group glep42-highlight global WinSetOption filetype=glep42 %{ addhl ref glep42 }
 hook global WinSetOption filetype=(?!glep42).* %{ rmhl glep42 }

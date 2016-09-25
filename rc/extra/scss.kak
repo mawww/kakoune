@@ -33,9 +33,9 @@ def -hidden _scss_indent_on_closing_curly_brace _css_indent_on_closing_curly_bra
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=scss %[
-    addhl ref scss
+hook -group scss-highlight global WinSetOption filetype=scss %{ addhl ref scss }
 
+hook global WinSetOption filetype=scss %[
     hook window InsertEnd  .* -group scss-hooks  _scss_filter_around_selections
     hook window InsertChar \n -group scss-indent _scss_indent_on_new_line
     hook window InsertChar \} -group scss-indent _scss_indent_on_closing_curly_brace
