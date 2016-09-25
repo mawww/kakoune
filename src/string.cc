@@ -384,7 +384,7 @@ String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col)
             auto char_beg = it;
             auto cp = utf8::read_codepoint(it, end);
             res += {char_beg, it};
-            col += get_width(cp);
+            col += codepoint_width(cp);
         }
     }
     return res;

@@ -26,7 +26,7 @@ ColumnCount get_column(const Buffer& buffer,
             ++it;
         }
         else
-            col += get_width(utf8::read_codepoint(it, line.end()));
+            col += codepoint_width(utf8::read_codepoint(it, line.end()));
     }
     return col;
 }
@@ -48,7 +48,7 @@ ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayC
         else
         {
             auto next = it;
-            col += get_width(utf8::read_codepoint(next, line.end()));
+            col += codepoint_width(utf8::read_codepoint(next, line.end()));
             if (col > coord.column) // the target column was in the char
                 break;
             it = next;

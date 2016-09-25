@@ -205,7 +205,7 @@ Iterator advance(Iterator it, const Iterator& end, ColumnCount d)
         {
             auto cur = it;
             to_previous(it, end);
-            d += get_width(codepoint(it, cur));
+            d += codepoint_width(codepoint(it, cur));
         }
     }
     else if (d > 0)
@@ -213,7 +213,7 @@ Iterator advance(Iterator it, const Iterator& end, ColumnCount d)
         auto begin = it;
         while (it != end and d > 0)
         {
-            d -= get_width(read_codepoint(it, end));
+            d -= codepoint_width(read_codepoint(it, end));
             if (it != end and d < 0)
                 to_previous(it, begin);
         }
@@ -242,7 +242,7 @@ ColumnCount column_distance(Iterator begin, const Iterator& end)
     ColumnCount dist = 0;
 
     while (begin != end)
-        dist += get_width(read_codepoint(begin, end));
+        dist += codepoint_width(read_codepoint(begin, end));
     return dist;
 }
 
