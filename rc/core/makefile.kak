@@ -19,12 +19,12 @@ addhl -group / regions -default content makefile \
 addhl -group /makefile/comment fill comment
 addhl -group /makefile/eval fill value
 
-addhl -group /makefile/content regex ^[\w.%]+\h*:\s 0:identifier
+addhl -group /makefile/content regex ^[\w.%-]+\h*:\s 0:identifier
 addhl -group /makefile/content regex [+?:]= 0:operator
 
 %sh{
     # Grammar
-    keywords="ifeq|ifneq|else|endif"
+    keywords="ifeq|ifneq|ifdef|ifndef|else|endif|define|endef"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=makefile %{
@@ -46,8 +46,8 @@ def -hidden _makefile-indent-on-new-line %{
         try %{ exec -draft Z k<a-x> <a-k>^[^:]+:\s<ret> z i<tab> }
         # cleanup trailing white space son previous line
         try %{ exec -draft k<a-x> s \h+$ <ret>d }
-        # indent after ifeq, ifneq, else
-        try %{ exec -draft Z k<a-x> <a-k> ^\h*(ifeq|ifneq|else)\b<ret> z <a-gt> }
+        # indent after some keywords
+        try %{ exec -draft Z k<a-x> <a-k> ^\h*(ifeq|ifneq|ifdef|ifndef|else|define)\b<ret> z <a-gt> }
     }
 }
 
