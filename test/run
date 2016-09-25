@@ -1,8 +1,12 @@
 #!/bin/sh
 
 # Main ├────────────────────────────────────────────────────────────────────────
-
 main() {
+  if [ "$1" = "-l" ]; then
+    load_kakrc=true
+    shift
+  fi
+
   number_tests=0
   number_failures=0
   dirs="${@:-.}"
@@ -27,7 +31,13 @@ main() {
     else
       number_tests=$(($number_tests + 1))
       touch in; cp in out
+      if [ -z $load_kakrc ]; then
+        load_kakrc_command=""
+      else
+        load_kakrc_command="source $test/../share/kak/kakrc"
+      fi
       kak_commands="
+        $load_kakrc_command
         set global autoreload yes
         set global autoinfo ''
         set global autoshowcompl false
