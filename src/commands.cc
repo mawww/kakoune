@@ -339,7 +339,7 @@ void write_all_buffers()
 }
 
 const CommandDesc writeall_cmd = {
-    "writeall",
+    "write-all",
     "wa",
     "write all buffers that are associated to a file",
     no_params,
@@ -372,8 +372,8 @@ static void ensure_all_buffers_are_saved()
 }
 
 const CommandDesc kill_cmd = {
-    "kill",
-    nullptr,
+    "kill-session",
+    "ks",
     "kill current session, quit all clients and server",
     no_params,
     CommandFlags::None,
@@ -387,8 +387,8 @@ const CommandDesc kill_cmd = {
 
 
 const CommandDesc force_kill_cmd = {
-    "kill!",
-    nullptr,
+    "kill-session!",
+    "ks!",
     "kill current session, quit all clients and server, do not check for unsaved buffers",
     no_params,
     CommandFlags::None,
@@ -440,8 +440,8 @@ void write_quit(const ParametersParser& parser, Context& context,
 }
 
 const CommandDesc write_quit_cmd = {
+    "write-quit",
     "wq",
-    nullptr,
     "write current buffer and quit current client",
     no_params,
     CommandFlags::None,
@@ -451,8 +451,8 @@ const CommandDesc write_quit_cmd = {
 };
 
 const CommandDesc force_write_quit_cmd = {
+    "write-quit!",
     "wq!",
-    nullptr,
     "write current buffer and quit current client, even if other buffers are "
     "not saved",
     no_params,
@@ -463,8 +463,8 @@ const CommandDesc force_write_quit_cmd = {
 };
 
 const CommandDesc writeall_quit_cmd = {
+    "write-all-quit",
     "waq",
-    nullptr,
     "write all buffers associated to a file and quit current client",
     no_params,
     CommandFlags::None,
@@ -478,9 +478,9 @@ const CommandDesc writeall_quit_cmd = {
 };
 
 const CommandDesc buffer_cmd = {
-    "buffer",
+    "change-buffer",
     "b",
-    "buffer <name>: set buffer to edit in current client",
+    "change-buffer <name>: set buffer to edit in current client",
     single_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -528,9 +528,9 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
 }
 
 const CommandDesc buffernext_cmd = {
-    "buffernext",
+    "change-buffer-next",
     "bn",
-    "buffernext: move to the next buffer in the list",
+    "change-buffer-next: move to the next buffer in the list",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -539,9 +539,9 @@ const CommandDesc buffernext_cmd = {
 };
 
 const CommandDesc bufferprev_cmd = {
-    "bufferprev",
+    "change-buffer-prev",
     "bp",
-    "bufferprev: move to the previous buffer in the list",
+    "change-buffer-prev: move to the previous buffer in the list",
     no_params,
     CommandFlags::None,
     CommandHelper{},
@@ -564,9 +564,9 @@ void delete_buffer(const ParametersParser& parser, Context& context, const Shell
 }
 
 const CommandDesc delbuf_cmd = {
-    "delbuf",
+    "delete-buffer",
     "db",
-    "delbuf [name]: delete current buffer or the buffer named <name> if given",
+    "delete-buffer [name]: delete current buffer or the buffer named <name> if given",
     single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -575,9 +575,9 @@ const CommandDesc delbuf_cmd = {
 };
 
 const CommandDesc force_delbuf_cmd = {
-    "delbuf!",
+    "delete-buffer!",
     "db!",
-    "delbuf! [name]: delete current buffer or the buffer named <name> if "
+    "delete-buffer! [name]: delete current buffer or the buffer named <name> if "
     "given, even if the buffer is unsaved",
     single_optional_name_param,
     CommandFlags::None,
@@ -587,9 +587,9 @@ const CommandDesc force_delbuf_cmd = {
 };
 
 const CommandDesc namebuf_cmd = {
-    "namebuf",
+    "rename-buffer",
     nullptr,
-    "namebuf <name>: change current buffer name",
+    "rename-buffer <name>: change current buffer name",
     single_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -667,9 +667,9 @@ Highlighter& get_highlighter(const Context& context, StringView path)
 }
 
 const CommandDesc add_highlighter_cmd = {
+    "add-highlighter",
     "addhl",
-    "ah",
-    "addhl <type> <type params>...: add an highlighter",
+    "add-highlighter <type> <type params>...: add an highlighter",
     ParameterDesc{
         { { "group", { true, "Set the group in which to put the highlighter. "
                              "If starting with /, search in shared highlighters, "
@@ -713,9 +713,9 @@ const CommandDesc add_highlighter_cmd = {
 };
 
 const CommandDesc rm_highlighter_cmd = {
+    "remove-highlighter",
     "rmhl",
-    "rh",
-    "rmhl <path>: remove highlighter <name>",
+    "remove-highlighter <path>: remove highlighter <name>",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 1, 1 },
     CommandFlags::None,
     CommandHelper{},
@@ -736,9 +736,9 @@ const CommandDesc rm_highlighter_cmd = {
 };
 
 const CommandDesc add_hook_cmd = {
-    "hook",
-    nullptr,
-    "hook <switches> <scope> <hook_name> <command>: add <command> in <scope> "
+    "add-hook",
+    "addhk",
+    "add-hook <switches> <scope> <hook_name> <command>: add <command> in <scope> "
     "to be executed on hook <hook_name>\n"
     "scope can be: \n"
     "  * global: hook is executed for any buffer or window\n"
@@ -777,9 +777,9 @@ const CommandDesc add_hook_cmd = {
 };
 
 const CommandDesc rm_hook_cmd = {
-    "rmhooks",
-    nullptr,
-    "rmhooks <scope> <group>: remove all hooks whose group is <group>",
+    "remove-hooks",
+    "rmhk",
+    "remove-hooks <scope> <group>: remove all hooks whose group is <group>",
     ParameterDesc{ {}, ParameterDesc::Flags::None, 2, 2 },
     CommandFlags::None,
     CommandHelper{},
@@ -982,9 +982,9 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 }
 
 const CommandDesc define_command_cmd = {
+    "define",
     "def",
-    nullptr,
-    "def <switches> <name> <cmds>: define a command <name> executing <cmds>",
+    "define <switches> <name> <cmds>: define a command <name> executing <cmds>",
     ParameterDesc{
         { { "params",             { true, "take parameters, accessible to each shell escape as $0..$N\n"
                                           "parameter should take the form <count> or <min>..<max> (both omittable)" } },
@@ -1251,9 +1251,9 @@ const CommandDesc unset_option_cmd = {
 };
 
 const CommandDesc declare_option_cmd = {
+    "declare",
     "decl",
-    nullptr,
-    "decl <type> <name> [value]: declare option <name> of type <type>.\n"
+    "declare <type> <name> [value]: declare option <name> of type <type>.\n"
     "set its initial value to <value> if given and the option did not exist\n"
     "Available types:\n"
     "    int: integer\n"
@@ -1906,9 +1906,9 @@ const CommandDesc face_cmd = {
 };
 
 const CommandDesc set_client_name_cmd = {
-    "nameclient",
-    "nc",
-    "nameclient <name>: set current client name to <name>",
+    "rename-client",
+    nullptr,
+    "rename-client <name>: set current client name to <name>",
     single_name_param,
     CommandFlags::None,
     CommandHelper{},
@@ -1923,9 +1923,9 @@ const CommandDesc set_client_name_cmd = {
 };
 
 const CommandDesc set_register_cmd = {
+    "register",
     "reg",
-    nullptr,
-    "reg <name> <value>: set register <name> to <value>",
+    "register <name> <value>: set register <name> to <value>",
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 2},
     CommandFlags::None,
     CommandHelper{},
@@ -1951,8 +1951,8 @@ const CommandDesc select_cmd = {
 };
 
 const CommandDesc change_working_directory_cmd = {
+    "change-directory",
     "cd",
-    nullptr,
     "cd <dir>: change server working directory to <dir>",
     single_optional_name_param,
     CommandFlags::None,
@@ -1976,9 +1976,9 @@ const CommandDesc change_working_directory_cmd = {
 };
 
 const CommandDesc set_session_name = {
-    "namesession",
+    "rename-session",
     nullptr,
-    "namesession <name>: change remote session name",
+    "rename-session <name>: change remote session name",
     ParameterDesc{{}, ParameterDesc::Flags::None, 1, 1},
     CommandFlags::None,
     CommandHelper{},
