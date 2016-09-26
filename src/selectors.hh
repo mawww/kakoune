@@ -144,9 +144,8 @@ enum class ObjectFlags
 template<> struct WithBitOps<ObjectFlags> : std::true_type {};
 
 template<WordType word_type>
-Selection select_word(const Buffer& buffer,
-                      const Selection& selection,
-                      ObjectFlags flags)
+Selection select_word(const Buffer& buffer, const Selection& selection,
+                      int count, ObjectFlags flags)
 {
     Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator last = first;
@@ -187,28 +186,22 @@ Selection select_word(const Buffer& buffer,
                                         : utf8_range(last, first);
 }
 
-Selection select_number(const Buffer& buffer,
-                        const Selection& selection,
-                        ObjectFlags flags);
+Selection select_number(const Buffer& buffer, const Selection& selection,
+                        int count, ObjectFlags flags);
 
-Selection select_sentence(const Buffer& buffer,
-                          const Selection& selection,
-                          ObjectFlags flags);
+Selection select_sentence(const Buffer& buffer, const Selection& selection,
+                          int count, ObjectFlags flags);
 
-Selection select_paragraph(const Buffer& buffer,
-                           const Selection& selection,
-                           ObjectFlags flags);
+Selection select_paragraph(const Buffer& buffer, const Selection& selection,
+                           int count, ObjectFlags flags);
 
-Selection select_whitespaces(const Buffer& buffer,
-                             const Selection& selection,
-                             ObjectFlags flags);
+Selection select_whitespaces(const Buffer& buffer, const Selection& selection,
+                             int count, ObjectFlags flags);
 
-Selection select_indent(const Buffer& buffer,
-                        const Selection& selection,
-                        ObjectFlags flags);
+Selection select_indent(const Buffer& buffer, const Selection& selection,
+                        int count, ObjectFlags flags);
 
-Selection select_argument(const Buffer& buffer,
-                          const Selection& selection,
+Selection select_argument(const Buffer& buffer, const Selection& selection,
                           int level, ObjectFlags flags);
 
 Selection select_lines(const Buffer& buffer, const Selection& selection);

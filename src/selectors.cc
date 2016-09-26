@@ -238,7 +238,7 @@ Selection select_to_reverse(const Buffer& buffer, const Selection& selection,
     return utf8_range(begin, inclusive ? end : end+1);
 }
 
-Selection select_number(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_number(const Buffer& buffer, const Selection& selection, int count, ObjectFlags flags)
 {
     auto is_number = [&](char c) {
         return (c >= '0' and c <= '9') or
@@ -272,7 +272,7 @@ Selection select_number(const Buffer& buffer, const Selection& selection, Object
                                         : Selection{last.coord(), first.coord()};
 }
 
-Selection select_sentence(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_sentence(const Buffer& buffer, const Selection& selection, int count, ObjectFlags flags)
 {
     auto is_end_of_sentence = [](char c) {
         return c == '.' or c == ';' or c == '!' or c == '?';
@@ -337,7 +337,7 @@ Selection select_sentence(const Buffer& buffer, const Selection& selection, Obje
                                         : Selection{last.coord(), first.coord()};
 }
 
-Selection select_paragraph(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_paragraph(const Buffer& buffer, const Selection& selection, int count, ObjectFlags flags)
 {
     BufferIterator first = buffer.iterator_at(selection.cursor());
 
@@ -390,7 +390,7 @@ Selection select_paragraph(const Buffer& buffer, const Selection& selection, Obj
                                         : Selection{last.coord(), first.coord()};
 }
 
-Selection select_whitespaces(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_whitespaces(const Buffer& buffer, const Selection& selection, int count, ObjectFlags flags)
 {
     auto is_whitespace = [&](char c) {
         return c == ' ' or c == '\t' or
@@ -419,7 +419,7 @@ Selection select_whitespaces(const Buffer& buffer, const Selection& selection, O
                                         : Selection{last.coord(), first.coord()};
 }
 
-Selection select_indent(const Buffer& buffer, const Selection& selection, ObjectFlags flags)
+Selection select_indent(const Buffer& buffer, const Selection& selection, int count, ObjectFlags flags)
 {
     auto get_indent = [](StringView str, int tabstop) {
         CharCount indent = 0;

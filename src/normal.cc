@@ -933,9 +933,9 @@ void select_object(Context& context, NormalParams params)
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
     };
 
-    const int level = params.count <= 0 ? 0 : params.count - 1;
+    const int count = params.count <= 0 ? 0 : params.count - 1;
     on_next_key_with_autoinfo(context, KeymapMode::Object,
-                             [level](Key key, Context& context) {
+                             [count](Key key, Context& context) {
         auto cp = key.codepoint().value_or((Codepoint)-1);
         if (cp == -1)
             return;
@@ -943,7 +943,7 @@ void select_object(Context& context, NormalParams params)
         static constexpr struct
         {
             Codepoint key;
-            Selection (*func)(const Buffer&, const Selection&, ObjectFlags);
+            Selection (*func)(const Buffer&, const Selection&, int, ObjectFlags);
         } selectors[] = {
             { 'w', select_word<Word> },
             { 'W', select_word<WORD> },
@@ -952,15 +952,13 @@ void select_object(Context& context, NormalParams params)
             { ' ', select_whitespaces },
             { 'i', select_indent },
             { 'n', select_number },
+            { 'u', select_argument },
         };
         for (auto& sel : selectors)
         {
             if (cp == sel.key)
-                return select<mode>(context, std::bind(sel.func, _1, _2, flags));
+                return select<mode>(context, std::bind(sel.func, _1, _2, count, flags));
         }
-
-        if (cp == 'u')
-            return select<mode>(context, std::bind(select_argument, _1, _2, level, flags));
 
         if (cp == ':')
         {
@@ -971,7 +969,7 @@ void select_object(Context& context, NormalParams params)
             context.input_handler().prompt(
                 "object desc:", "", get_face("Prompt"),
                 PromptFlags::None, complete_nothing,
-                [level,info](StringView cmdline, PromptEvent event, Context& context) {
+                [count,info](StringView cmdline, PromptEvent event, Context& context) {
                     if (event != PromptEvent::Change)
                         hide_auto_info_ifn(context, info);
                     if (event != PromptEvent::Validate)
@@ -982,7 +980,7 @@ void select_object(Context& context, NormalParams params)
                         throw runtime_error{"desc parsing failed, expected <open>,<close>"};
 
                     return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                           params[0], params[1], level, flags));
+                                                           params[0], params[1], count, flags));
                 });
         }
 
@@ -1007,7 +1005,7 @@ void select_object(Context& context, NormalParams params)
                 (sur.name != 0 and sur.name == cp))
                 return select<mode>(context, std::bind(select_surrounding, _1, _2,
                                                        sur.opening, sur.closing,
-                                                       level, flags));
+                                                       count, flags));
         }
 
         if (is_punctuation(cp))
@@ -1015,7 +1013,7 @@ void select_object(Context& context, NormalParams params)
             auto utf8cp = to_string(cp);
             return select<mode>(context, std::bind(select_surrounding, _1, _2,
                                                    utf8cp, utf8cp,
-                                                   level, flags));
+                                                   count, flags));
         }
     }, get_title(),
     "b,(,):  parenthesis block\n"
