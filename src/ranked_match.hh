@@ -40,7 +40,8 @@ private:
         OnlyWordBoundary = 1 << 0,
         FirstCharMatch = 1 << 1,
         Prefix = 1 << 2,
-        FullMatch = 1 << 3,
+        SingleWord = 1 << 3,
+        FullMatch = 1 << 4,
     };
 
     StringView m_candidate;

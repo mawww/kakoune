@@ -70,26 +70,38 @@ static bool smartcase_eq(Codepoint query, Codepoint candidate)
     return query == (islower(query) ? to_lower(candidate) : candidate);
 }
 
-static bool subsequence_match_smart_case(StringView str, StringView subseq, int& out_max_index)
+struct SubseqRes
 {
-    int max_index = 0;
+    bool matches;
+    int max_index;
+    bool single_word;
+};
+
+static SubseqRes subsequence_match_smart_case(StringView str, StringView subseq)
+{
+    bool single_word = true;
+    int max_index = -1;
     auto it = str.begin();
     int index = 0;
     for (auto subseq_it = subseq.begin(); subseq_it != subseq.end();)
     {
         if (it == str.end())
-            return false;
+            return { false };
         const Codepoint c = utf8::read_codepoint(subseq_it, subseq.end());
-        while (not smartcase_eq(c, utf8::read_codepoint(it, subseq.end())))
+        while (true)
         {
+            auto str_c = utf8::read_codepoint(it, str.end());
+            if (smartcase_eq(c, str_c))
+                break;
+            if (single_word and max_index != -1 and not is_word(str_c))
+                single_word = false;
             ++index;
             if (it == str.end())
-                return false;
+                return { false };
         }
         max_index = index++;
     }
-    out_max_index = max_index;
-    return true;
+    return { true, max_index, single_word };
 }
 
 template<typename TestFunc>
@@ -99,23 +111,34 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         return;
 
     if (query.empty())
-        m_candidate = candidate;
-    else if (func() and  subsequence_match_smart_case(candidate, query, m_max_index))
     {
         m_candidate = candidate;
-
-        if (smartcase_eq(query[0], candidate[0]))
-            m_flags |= Flags::FirstCharMatch;
-        if (std::equal(query.begin(), query.end(), candidate.begin()))
-        {
-            m_flags |= Flags::Prefix;
-            if (query.length() == candidate.length())
-                m_flags |= Flags::FullMatch;
-        }
-        m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
-        if (m_word_boundary_match_count == query.length())
-            m_flags |= Flags::OnlyWordBoundary;
+        return;
     }
+
+    if (not func())
+        return;
+
+    auto res = subsequence_match_smart_case(candidate, query);
+    if (not res.matches)
+        return;
+
+    m_candidate = candidate;
+    m_max_index = res.max_index;
+
+    if (res.single_word)
+        m_flags |= Flags::SingleWord;
+    if (smartcase_eq(query[0], candidate[0]))
+        m_flags |= Flags::FirstCharMatch;
+    if (std::equal(query.begin(), query.end(), candidate.begin()))
+    {
+        m_flags |= Flags::Prefix;
+        if (query.length() == candidate.length())
+            m_flags |= Flags::FullMatch;
+    }
+    m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
+    if (m_word_boundary_match_count == query.length())
+        m_flags |= Flags::OnlyWordBoundary;
 }
 
 RankedMatch::RankedMatch(StringView candidate, UsedLetters candidate_letters,
@@ -179,6 +202,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(RankedMatch{"source", "so"} < RankedMatch{"source_data", "so"});
     kak_assert(not (RankedMatch{"source_data", "so"} < RankedMatch{"source", "so"}));
     kak_assert(not (RankedMatch{"source", "so"} < RankedMatch{"source", "so"}));
+    kak_assert(RankedMatch{"single/word", "wo"} < RankedMatch{"multiw/ord", "wo"});
 }};
 
 UnitTest test_used_letters{[]()
