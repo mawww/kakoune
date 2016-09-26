@@ -115,7 +115,7 @@ void OptionManager::on_option_changed(const Option& option)
 CandidateList OptionsRegistry::complete_option_name(StringView prefix,
                                                     ByteCount cursor_pos) const
 {
-    using OptionPtr = std::unique_ptr<OptionDesc>;
+    using OptionPtr = std::unique_ptr<const OptionDesc>;
     return complete(prefix, cursor_pos, m_descs |
                     filter([](const OptionPtr& desc)
                            { return not (desc->flags() & OptionFlags::Hidden); }) |

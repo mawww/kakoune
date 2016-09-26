@@ -234,7 +234,7 @@ public:
     const OptionDesc* option_desc(StringView name) const
     {
         auto it = find_if(m_descs,
-                          [&name](const std::unique_ptr<OptionDesc>& opt)
+                          [&name](const std::unique_ptr<const OptionDesc>& opt)
                           { return opt->name() == name; });
         return it != m_descs.end() ? it->get() : nullptr;
     }
@@ -244,7 +244,7 @@ public:
     CandidateList complete_option_name(StringView prefix, ByteCount cursor_pos) const;
 private:
     OptionManager& m_global_manager;
-    Vector<std::unique_ptr<OptionDesc>, MemoryDomain::Options> m_descs;
+    Vector<std::unique_ptr<const OptionDesc>, MemoryDomain::Options> m_descs;
 };
 
 }
