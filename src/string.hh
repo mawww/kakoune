@@ -231,7 +231,9 @@ inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount le
 {
     if (length < 0)
         length = INT_MAX;
-    return StringView{ type().data() + (int)from, std::min(type().length() - from, length) };
+    const auto str_len = type().length();
+    kak_assert(from >= 0 and from <= str_len);
+    return StringView{ type().data() + (int)from, std::min(str_len - from, length) };
 }
 
 template<typename Type, typename CharType>
