@@ -11,7 +11,7 @@ hook global KakBegin .* %{ %sh{
 }}
 
 hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
-  directory=$(echo $kak_hook_param | pcregrep --only-matching=1 "\d+:\d+: '\w+' (.*): is a directory")
+  directory=$(expr $kak_hook_param : "[0-9]*:[0-9]*: '[a-z]*' \\(.*\\): is a directory")
   if [ "$kak_opt_file_manager" = ranger ]; then
     echo ranger $directory
   fi
@@ -21,8 +21,22 @@ def ranger -docstring 'ranger file manager' \
            -params ..                       \
            -file-completion %{ %sh{
   if [ -n "$TMUX" ]; then
-    tmux split-window -h ranger $@ --cmd "map <return> eval fm.execute_console('shell echo eval -client $kak_client edit {file} | kak -p $kak_session; tmux select-pane -t $kak_client_env_TMUX_PANE'.format(file=fm.thisfile.path)) if fm.thisfile.is_file else fm.execute_console('move right=1')"
+    tmux split-window -h \
+      ranger $@ --cmd " \
+        map <return> eval \
+          fm.execute_console('shell \
+            echo eval -client $kak_client edit {file} | \
+            kak -p $kak_session; \
+            tmux select-pane -t $kak_client_env_TMUX_PANE'.format(file=fm.thisfile.path)) \
+          if fm.thisfile.is_file else fm.execute_console('move right=1')"
   elif [ -n "$WINDOWID" ]; then
-    setsid $kak_opt_termcmd "ranger $@ --cmd "'"'"map <return> eval fm.execute_console('shell echo eval -client $kak_client edit {file} | kak -p $kak_session; xdotool windowactivate $kak_client_env_WINDOWID'.format(file=fm.thisfile.path)) if fm.thisfile.is_file else fm.execute_console('move right=1')"'"' < /dev/null > /dev/null 2>&1 &
+    setsid $kak_opt_termcmd " \
+      ranger $@ --cmd "'"'" \
+        map <return> eval \
+          fm.execute_console('shell \
+            echo eval -client $kak_client edit {file} | \
+            kak -p $kak_session; \
+            xdotool windowactivate $kak_client_env_WINDOWID'.format(file=fm.thisfile.path)) \
+          if fm.thisfile.is_file else fm.execute_console('move right=1')"'"' < /dev/null > /dev/null 2>&1 &
   fi
 }}
