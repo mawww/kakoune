@@ -148,39 +148,24 @@ Selection select_word(const Buffer& buffer, const Selection& selection,
                       int count, ObjectFlags flags)
 {
     Utf8Iterator first{buffer.iterator_at(selection.cursor()), buffer};
+    if (not is_word<word_type>(*first) and
+        not skip_while(first, buffer.end(), [](Codepoint c)
+                       { return not is_word<word_type>(c); }))
+        return selection;
+
     Utf8Iterator last = first;
-    if (is_word<word_type>(*first))
+    if (flags & ObjectFlags::ToBegin)
     {
-        if (flags & ObjectFlags::ToBegin)
-        {
-            skip_while_reverse(first, buffer.begin(), is_word<word_type>);
-            if (not is_word<word_type>(*first))
-                ++first;
-        }
-        if (flags & ObjectFlags::ToEnd)
-        {
-            skip_while(last, buffer.end(), is_word<word_type>);
-            if (not (flags & ObjectFlags::Inner))
-                skip_while(last, buffer.end(), is_horizontal_blank);
-            --last;
-        }
+        skip_while_reverse(first, buffer.begin(), is_word<word_type>);
+        if (not is_word<word_type>(*first))
+            ++first;
     }
-    else if (not (flags & ObjectFlags::Inner))
+    if (flags & ObjectFlags::ToEnd)
     {
-        if (flags & ObjectFlags::ToBegin)
-        {
-            skip_while_reverse(first, buffer.begin(), is_horizontal_blank);
-            if (not is_word<word_type>(*first))
-                return selection;
-            skip_while_reverse(first, buffer.begin(), is_word<word_type>);
-            if (not is_word<word_type>(*first))
-                ++first;
-        }
-        if (flags & ObjectFlags::ToEnd)
-        {
+        skip_while(last, buffer.end(), is_word<word_type>);
+        if (not (flags & ObjectFlags::Inner))
             skip_while(last, buffer.end(), is_horizontal_blank);
-            --last;
-        }
+        --last;
     }
     return (flags & ObjectFlags::ToEnd) ? utf8_range(first, last)
                                         : utf8_range(last, first);
