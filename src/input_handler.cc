@@ -177,7 +177,7 @@ public:
         auto restore_hooks = on_scope_end([&, this]{
             if (m_hooks_disabled and do_restore_hooks)
             {
-                context().user_hooks_disabled().unset();
+                context().hooks_disabled().unset();
                 m_hooks_disabled = false;
             }
         });
@@ -201,7 +201,7 @@ public:
             if (not m_hooks_disabled)
             {
                 m_hooks_disabled = true;
-                context().user_hooks_disabled().set();
+                context().hooks_disabled().set();
             }
         }
         else if (key == '"')
@@ -939,11 +939,11 @@ public:
                                m_completer.update();
                            context().hooks().run_hook("InsertIdle", "", context());
                        }},
-          m_disable_hooks{context().user_hooks_disabled()}
+          m_disable_hooks{context().hooks_disabled()}
     {
         // Prolongate hook disabling for the whole insert session
         if (m_disable_hooks)
-            context().user_hooks_disabled().set();
+            context().hooks_disabled().set();
 
         last_insert().mode = mode;
         last_insert().keys.clear();
@@ -963,7 +963,7 @@ public:
         selections.avoid_eol();
 
         if (m_disable_hooks)
-            context().user_hooks_disabled().unset();
+            context().hooks_disabled().unset();
     }
 
     void on_enabled() override
@@ -1292,7 +1292,7 @@ void InputHandler::repeat_last_insert()
 
     Vector<Key> keys;
     swap(keys, m_last_insert.keys);
-    ScopedSetBool disable_hooks(context().user_hooks_disabled(),
+    ScopedSetBool disable_hooks(context().hooks_disabled(),
                                 m_last_insert.disable_hooks);
     // context.last_insert will be refilled by the new Insert
     // this is very inefficient.

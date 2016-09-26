@@ -43,6 +43,9 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
 void HookManager::run_hook(StringView hook_name,
                            StringView param, Context& context) const
 {
+    if (context.hooks_disabled())
+        return;
+
     if (m_parent)
         m_parent->run_hook(hook_name, param, context);
 

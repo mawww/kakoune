@@ -127,7 +127,7 @@ DisplayLine Client::generate_mode_line() const
         modeline.push_back({ format("[recording ({})]", m_input_handler.recording_reg()), info_face });
     if (context().buffer().flags() & Buffer::Flags::New)
         modeline.push_back({ "[new file]", info_face });
-    if (context().user_hooks_disabled())
+    if (context().hooks_disabled())
         modeline.push_back({ "[no-hooks]", info_face });
     if (context().buffer().flags() & Buffer::Flags::Fifo)
         modeline.push_back({ "[fifo]", info_face });

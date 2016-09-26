@@ -762,9 +762,6 @@ const CommandDesc add_hook_cmd = {
         const String& command = parser[3];
 
         auto hook_func = [=](StringView param, Context& context) {
-            if (context.user_hooks_disabled())
-                return;
-
             ScopedSetBool disable_history{context.history_disabled()};
 
             if (regex_match(param.begin(), param.end(), regex))
@@ -1478,7 +1475,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
     DisableOption<bool> disable_autoshowcompl(context, "autoshowcompl");
     DisableOption<bool> disable_incsearch(context, "incsearch");
 
-    const bool no_hooks = parser.get_switch("no-hooks") or context.user_hooks_disabled();
+    const bool no_hooks = parser.get_switch("no-hooks") or context.hooks_disabled();
     const bool no_keymaps = not parser.get_switch("with-maps");
 
     Vector<RegisterRestorer> saved_registers;
@@ -1493,7 +1490,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
                                        Context::Flags::Transient};
             Context& c = input_handler.context();
 
-            ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
+            ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
             ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
             ScopedSetBool disable_history(c.history_disabled());
 
@@ -1548,7 +1545,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
 
     Context& c = *effective_context;
 
-    ScopedSetBool disable_hooks(c.user_hooks_disabled(), no_hooks);
+    ScopedSetBool disable_hooks(c.hooks_disabled(), no_hooks);
     ScopedSetBool disable_keymaps(c.keymaps_disabled(), no_keymaps);
     ScopedSetBool disable_history(c.history_disabled());
 

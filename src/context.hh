@@ -136,8 +136,8 @@ public:
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
 
-    NestedBool& user_hooks_disabled() { return m_user_hooks_disabled; }
-    const NestedBool& user_hooks_disabled() const { return m_user_hooks_disabled; }
+    NestedBool& hooks_disabled() { return m_hooks_disabled; }
+    const NestedBool& hooks_disabled() const { return m_hooks_disabled; }
 
     NestedBool& keymaps_disabled() { return m_keymaps_disabled; }
     const NestedBool& keymaps_disabled() const { return m_keymaps_disabled; }
@@ -169,7 +169,7 @@ private:
 
     JumpList m_jump_list;
 
-    NestedBool m_user_hooks_disabled;
+    NestedBool m_hooks_disabled;
     NestedBool m_keymaps_disabled;
     NestedBool m_history_disabled;
 };
