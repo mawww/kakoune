@@ -34,21 +34,21 @@ addhl -group /fish/code regex \b(and|begin|bg|bind|block|break|breakpoint|builti
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _fish_filter_around_selections %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         # remove trailing white spaces
         try %{ exec -draft <a-x>s\h+$<ret>d }
     }
 }
 
 def -hidden _fish_indent_on_char %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         # deindent on (else|end) command insertion
         try %{ exec -draft <space><a-i>w<a-k>(else|end)<ret><a-lt> }
     }
 }
 
 def -hidden _fish_indent_on_new_line %{
-    eval -draft -itersel %{
+    eval -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ exec -draft <space>K<a-&> }
         # filter previous line
