@@ -42,8 +42,10 @@ def -hidden _fish_filter_around_selections %{
 
 def -hidden _fish_indent_on_char %{
     eval -no-hooks -draft -itersel %{
-        # deindent on (else|end) command insertion
-        try %{ exec -draft <space><a-i>w<a-k>(else|end)<ret><a-lt> }
+        # align middle and end structures to start and indent when necessary
+        try %{ exec -draft <a-x><a-k>^\h*(else)$<ret><a-\;><a-?>^\h*(if)<ret>s\A|\Z<ret>'<a-&> }
+        try %{ exec -draft <a-x><a-k>^\h*(end)$<ret><a-\;><a-?>^\h*(begin|for|function|if|switch|while)<ret>s\A|\Z<ret>'<a-&> }
+        try %{ exec -draft <a-x><a-k>^\h*(case)$<ret><a-\;><a-?>^\h*(switch)<ret>s\A|\Z<ret>'<a-&>'<space><a-gt> }
     }
 }
 
@@ -53,12 +55,20 @@ def -hidden _fish_indent_on_new_line %{
         try %{ exec -draft <space>K<a-&> }
         # filter previous line
         try %{ exec -draft k:_fish_filter_around_selections<ret> }
-        # copy '#' comment prefix and following white spaces
+        # indent after start structure
+        try %{ exec -draft kx<a-k>^\h*(begin|case|else|for|function|if|switch|while)\b<ret>j<a-gt> }
+    }
+}
+
+def -hidden _fish_insert_on_new_line %{
+    eval -no-hooks -draft -itersel %{
+        # copy _#_ comment prefix and following white spaces
         try %{ exec -draft kxs^\h*\K#\h*<ret>yjp }
-        # indent after (case|else) commands
-        try %{ exec -draft <space>kx<a-k>(case|else)<ret>j<a-gt> }
-        # indent after (begin|for|function|if|switch|while) commands and add 'end' command
-        try %{ exec -draft <space>kx<a-k>(begin|for|function|(?<!(else)\h+)if|switch|while)<ret>xypjaend<esc>k<a-gt> }
+        # wisely add end structure
+        eval -save-regs x %{
+            try %{ exec -draft kxs^\h+<ret>"xy } catch %{ reg x '' }
+            try %{ exec -draft kx<a-k>^<c-r>x(begin|for|function|if|switch|while)<ret>j<a-a>iX<a-\;>K<a-K>^<c-r>x(begin|for|function|if|switch|while).*\n<c-r>xend$<ret>jxypjaend<esc><a-lt> }
+        }
     }
 }
 
@@ -68,13 +78,13 @@ def -hidden _fish_indent_on_new_line %{
 hook global WinSetOption filetype=fish %{
     addhl ref fish
 
-    hook window InsertEnd  .* -group fish-hooks  _fish_filter_around_selections
     hook window InsertChar .* -group fish-indent _fish_indent_on_char
     hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
+    hook window InsertChar \n -group fish-insert _fish_insert_on_new_line
 }
 
 hook global WinSetOption filetype=(?!fish).* %{
     rmhl fish
     rmhooks window fish-indent
-    rmhooks window fish-hooks
+    rmhooks window fish-insert
 }
