@@ -76,9 +76,9 @@ def -hidden _rust_indent_on_closing_curly_brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=rust %[
-    addhl ref rust
+hook -group rust-highlight global WinSetOption filetype=rust %{ addhl ref rust }
 
+hook global WinSetOption filetype=rust %[
     hook window InsertEnd  .* -group rust-hooks  _rust_filter_around_selections
     hook window InsertChar \n -group rust-indent _rust_indent_on_new_line
     hook window InsertChar \{ -group rust-indent _rust_indent_on_opening_curly_brace

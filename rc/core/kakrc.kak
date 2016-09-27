@@ -37,5 +37,5 @@ addhl -group /kakrc/single_string fill string
 addhl -group /kakrc/comment fill comment
 addhl -group /kakrc/shell ref sh
 
-hook global WinSetOption filetype=kak %{ addhl ref kakrc }
+hook -group kak-highlight global WinSetOption filetype=kak %{ addhl ref kakrc }
 hook global WinSetOption filetype=(?!kak).* %{ rmhl kakrc }

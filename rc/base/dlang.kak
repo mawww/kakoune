@@ -102,9 +102,9 @@ def -hidden _dlang-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=dlang %{
-    addhl ref dlang
+hook -group dlang-highlight global WinSetOption filetype=dlang %{ addhl ref dlang }
 
+hook global WinSetOption filetype=dlang %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group dlang-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group dlang-indent _dlang-indent-on-new-line

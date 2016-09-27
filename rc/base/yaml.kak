@@ -52,9 +52,9 @@ def -hidden _yaml_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=yaml %{
-    addhl ref yaml
+hook -group yaml-highlight global WinSetOption filetype=yaml %{ addhl ref yaml }
 
+hook global WinSetOption filetype=yaml %{
     hook window InsertEnd  .* -group yaml-hooks  _yaml_filter_around_selections
     hook window InsertChar \n -group yaml-indent _yaml_indent_on_new_line
 }
