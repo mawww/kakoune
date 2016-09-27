@@ -34,13 +34,13 @@ Now that we have, hopefully, established that investing time into mastering
 text editing is worth it, lets focus on why I think modal text editors are the
 way to go.
 
-A modal text editor can be, as its name imply, in different modes. Depending on
-the current mode, keys have a different effect: in *insert* mode most keys
+A modal text editor can be, as its name imply, in different modes. Depending
+on the current mode, keys have a different effect: in *insert* mode most keys
 effect would be to insert their character in the buffer, as in non-modal
 editors, but in normal (default) mode keys have a different effect. For
-example, `w` can move the cursor to the next word, `y` can yank (copy) the
-current selection, `u` can undo, `g` followed by `f` can open the filename
-under the cursor...
+example, `w` can move the cursor to the next word, `y` can yank (copy)
+the current selection, `p` can paste, `u` can undo, `g` followed by `f`
+can open the filename under the cursor...
 
 Some commands from *normal* mode would change the mode, for example `i` would
 enter *insert* mode, from which the `<esc>` key would return to *normal* mode.
