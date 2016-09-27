@@ -58,9 +58,9 @@ def -hidden _haml_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=haml %{
-    addhl ref haml
+hook -group haml-highlight global WinSetOption filetype=haml %{ addhl ref haml }
 
+hook global WinSetOption filetype=haml %{
     hook window InsertEnd  .* -group haml-hooks  _haml_filter_around_selections
     hook window InsertChar \n -group haml-indent _haml_indent_on_new_line
 }

@@ -95,9 +95,9 @@ def -hidden _lua_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=lua %{
-    addhl ref lua
+hook -group lua-highlight global WinSetOption filetype=lua %{ addhl ref lua }
 
+hook global WinSetOption filetype=lua %{
     hook window InsertEnd  .* -group lua-hooks  _lua_filter_around_selections
     hook window InsertChar .* -group lua-indent _lua_indent_on_char
     hook window InsertChar \n -group lua-indent _lua_indent_on_new_line

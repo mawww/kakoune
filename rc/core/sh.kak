@@ -39,5 +39,5 @@ addhl -group /sh/code regex ^\h*(\w+)\h*\(\) 1:identifier
 addhl -group /sh/code regex \$(\w+|\{.+?\}|#|@|\?|\$|!|-|\*) 0:identifier
 addhl -group /sh/double_string regex \$(\w+|\{.+?\}) 0:identifier
 
-hook global WinSetOption filetype=sh %{ addhl ref sh }
+hook -group sh-highlight global WinSetOption filetype=sh %{ addhl ref sh }
 hook global WinSetOption filetype=(?!sh).* %{ rmhl sh }

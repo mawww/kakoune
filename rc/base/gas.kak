@@ -85,9 +85,9 @@ def -hidden _gas_indent_on_new_line %~
     >
 ~
 
-hook global WinSetOption filetype=gas %{
-    addhl ref gas
+hook -group gas-highlight global WinSetOption filetype=gas %{ addhl ref gas }
 
+hook global WinSetOption filetype=gas %{
     hook window InsertChar \n -group gas-indent _gas_indent_on_new_line
 }
 

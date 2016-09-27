@@ -75,9 +75,9 @@ def -hidden _coffee_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=coffee %{
-    addhl ref coffee
+hook -group coffee-highlight global WinSetOption filetype=coffee %{ addhl ref coffee }
 
+hook global WinSetOption filetype=coffee %{
     hook window InsertEnd  .* -group coffee-hooks  _coffee_filter_around_selections
     hook window InsertChar \n -group coffee-indent _coffee_indent_on_new_line
 

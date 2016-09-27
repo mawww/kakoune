@@ -66,9 +66,9 @@ def -hidden _scala_indent_on_closing_curly_brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=scala %[
-    addhl ref scala
+hook -group scala-highlight global WinSetOption filetype=scala %{ addhl ref scala }
 
+hook global WinSetOption filetype=scala %[
     hook window InsertEnd  .* -group scala-hooks  _scala_filter_around_selections
     hook window InsertChar \n -group scala-indent _scala_indent_on_new_line
     hook window InsertChar \} -group scala-indent _scala_indent_on_closing_curly_brace

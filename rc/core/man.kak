@@ -2,7 +2,7 @@ decl str docsclient
 
 decl -hidden str _manpage
 
-hook global WinSetOption filetype=man %{
+hook -group man-highlight global WinSetOption filetype=man %{
     addhl group man-highlight
     # Sections
     addhl -group man-highlight regex ^\S.*?$ 0:blue
@@ -12,7 +12,9 @@ hook global WinSetOption filetype=man %{
     addhl -group man-highlight regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:yellow
     # References to other manpages
     addhl -group man-highlight regex [-a-zA-Z0-9_.]+\(\d\) 0:green
+}
 
+hook global WinSetOption filetype=man %{
     hook -group man-hooks window WinResize .* %{
         _man %opt{_manpage}
     }
