@@ -35,28 +35,28 @@ addhl -group /fish/code regex \b(and|begin|bg|bind|block|break|breakpoint|builti
 
 def -hidden _fish_filter_around_selections %{
     # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ exec -draft -itersel <a-x>s\h+$<ret>d }
 }
 
 def -hidden _fish_indent_on_char %{
     eval -draft -itersel %{
         # deindent on (else|end) command insertion
-        try %{ exec -draft <space> <a-i>w <a-k> (else|end) <ret> <a-lt> }
+        try %{ exec -draft <space><a-i>w<a-k>(else|end)<ret><a-lt> }
     }
 }
 
 def -hidden _fish_indent_on_new_line %{
     eval -draft -itersel %{
         # preserve previous line indent
-        try %{ exec -draft <space> K <a-&> }
+        try %{ exec -draft <space>K<a-&> }
         # filter previous line
-        try %{ exec -draft k : _fish_filter_around_selections <ret> }
+        try %{ exec -draft k:_fish_filter_around_selections<ret> }
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k x s ^\h*\K#\h* <ret> y j p }
+        try %{ exec -draft kxs^\h*\K#\h*<ret>yjp }
         # indent after (case|else) commands
-        try %{ exec -draft <space> k x <a-k> (case|else) <ret> j <a-gt> }
+        try %{ exec -draft <space>kx<a-k>(case|else)<ret>j<a-gt> }
         # indent after (begin|for|function|if|switch|while) commands and add 'end' command
-        try %{ exec -draft <space> k x <a-k> (begin|for|function|(?<!(else)\h+)if|switch|while) <ret> x y p j a end <esc> k <a-gt> }
+        try %{ exec -draft <space>kx<a-k>(begin|for|function|(?<!(else)\h+)if|switch|while)<ret>xypjaend<esc>k<a-gt> }
     }
 }
 
