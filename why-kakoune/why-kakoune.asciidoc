@@ -265,3 +265,21 @@ not try to manage windows, and lets the system window manager, or terminal
 multiplexer (as tmux), handle their responsiblity. This is achieved through
 a client/server design: An edition session runs on a server process, and
 multiple clients can connect to that session to display different buffers.
+
+Final Thoughts
+--------------
+
+Kakoune provides an efficient code editing environment, both very predictible,
+hence scriptable, and very interactive. Its learning curve is considerably
+easier than Vim thanks to a more consistent design associated with strong
+discoverability, while still being faster (as in less keystrokes) in most
+use cases. 
+
+Although easier to learn than Vim, the learning curve is still quite steep,
+however we have established that investing time into optimizing the text
+editing workflow is worth it for programmers. Moreover, Kakoune simply makes
+code editing a fun and rewarding experience.
+
+Kakoune is still evolving, getting better as we get more users, and more use
+cases to catter for, its already a very good code editor, and we need you to
+use it so that it can be made even better. 
