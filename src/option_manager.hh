@@ -216,13 +216,22 @@ public:
                            const T& value,
                            OptionFlags flags = OptionFlags::None)
     {
+        auto is_not_identifier = [](char c) {
+            return (c < 'a' or c > 'z') and
+                   (c < 'A' or c > 'Z') and
+                   (c < '0' or c > '9') and c != '_';
+        };
+
+        if (contains_that(name, is_not_identifier))
+            throw runtime_error{format("name '{}' contains char out of [a-zA-Z0-9_]", name)};
+
         auto& opts = m_global_manager.m_options;
         auto it = find_option(opts, name);
         if (it != opts.end())
         {
             if ((*it)->is_of_type<T>() and (*it)->flags() == flags)
                 return **it;
-            throw runtime_error(format("option '{}' already declared with different type or flags", name));
+            throw runtime_error{format("option '{}' already declared with different type or flags", name)};
         }
         String doc =  docstring.empty() ? format("[{}]", option_type_name<T>::name())
                                         : format("[{}] - {}", option_type_name<T>::name(), docstring);
