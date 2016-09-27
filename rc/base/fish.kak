@@ -34,8 +34,10 @@ addhl -group /fish/code regex \b(and|begin|bg|bind|block|break|breakpoint|builti
 # ‾‾‾‾‾‾‾‾
 
 def -hidden _fish_filter_around_selections %{
-    # remove trailing white spaces
-    try %{ exec -draft -itersel <a-x>s\h+$<ret>d }
+    eval -draft -itersel %{
+        # remove trailing white spaces
+        try %{ exec -draft <a-x>s\h+$<ret>d }
+    }
 }
 
 def -hidden _fish_indent_on_char %{
