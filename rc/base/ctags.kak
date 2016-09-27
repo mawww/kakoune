@@ -17,25 +17,36 @@ def -params 0..1 \
     -docstring 'Jump to tag definition' \
     tag \
     %{ %sh{
-        export tagname=${1:-${kak_selection}}
-        for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr ':' '\n'); do
-            export tagroot="$(readlink -f $(dirname "$tags"))/"
-            readtags -t "${tags}" ${tagname} | awk -F '\t|\n' '
-            /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
-                re=$0;
-                sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
-                keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-                out = out " %{" $2 " {MenuInfo}" re "} %{eval -collapse-jumps %{ try %{ edit %{" ENVIRON["tagroot"] $2 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
-            }
-            /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $2 ":" $3 "} %{eval -collapse-jumps %{ edit %{" ENVIRON["tagroot"] $2 "} %{" $3 "}}}" }
-            END {
-                if (length(out) == 0) {
-                    print "echo -color Error no such tag " ENVIRON["tagname"]
-                } else {
-                    print "menu -markup -auto-single " out 
-                }
-            }'
-        done
+        export tagname="${1:-$kak_selection}"
+
+        oldIFS="$IFS"
+        IFS=:
+        # $1=tag1, $2=tag2 ...
+        set -- $kak_opt_ctagsfiles
+        IFS="$oldIFS"
+
+        for tags in "$@"
+        do
+            if [ -f "$tags" ]
+            then
+                tagroot="$(readlink -f "$(dirname "$tags")")"
+                # Avoid reading the same tag twice
+                if [ "$tagroot" = "$PWD" ] || [ "$tagroot" = "$(pwd -P)" ]
+                then
+                    [ "$tags" != tags ] && continue
+                fi
+                echo -n "$tagroot/	"; readtags -t "$tags" "$tagname"
+            fi
+        done | awk -F '\t|\n' '
+        /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
+            tagroot = $1
+            re=$0;
+            sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
+            keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
+            out = out " %{" re " {MenuInfo}" tagroot $3 "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $3 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
+        }
+        /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $3 ":" $4 "} %{eval -collapse-jumps %{ edit %{" tagroot $3 "} %{" $4 "}}}" }
+        END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
     }}
 
 def tag-complete -docstring "Insert completion candidates for the current selection into the buffer's local variables" %{ eval -draft %{
