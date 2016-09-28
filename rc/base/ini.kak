@@ -2,18 +2,18 @@ hook global BufCreate .*\.(repo|service|target|socket|ini|cfg) %{
     set buffer filetype ini
 }
 
-addhl -group / regions -default code ini-highlighter \
+addhl -group / regions -default code ini \
     comment (^|\h)\K\# $ ''
 
-addhl -group /ini-highlighter/code regex "^\h*\[[^\]]*\]" 0:title
-addhl -group /ini-highlighter/code regex "^\h*([^\[][^=\n]*=)([^\n]*)" 1:identifier 2:value
+addhl -group /ini/code regex "^\h*\[[^\]]*\]" 0:title
+addhl -group /ini/code regex "^\h*([^\[][^=\n]*=)([^\n]*)" 1:identifier 2:value
 
-addhl -group /ini-highlighter/comment fill comment
+addhl -group /ini/comment fill comment
 
 hook global WinSetOption filetype=ini %{
-    addhl ref ini-highlighter
+    addhl ref ini
 }
 
 hook global WinSetOption filetype=(?!ini).* %{
-    rmhl ini-highlighter
+    rmhl ini
 }
