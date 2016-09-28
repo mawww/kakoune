@@ -7,13 +7,22 @@ decl str-list ctagsfiles 'tags'
 
 def -params 0..1 \
     -shell-candidates '
-        ( for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr \':\' \'\n\'); do
-              namecache=$(dirname ${tags})/.kak.$(basename ${tags}).namecache
-              if [ -z "$(find ${namecache} -prune -newer ${tags})" ]; then
-                  cat ${tags} | cut -f 1 | uniq > ${namecache}
-              fi
-              cat ${namecache}
-          done )' \
+        {
+        oldIFS="$IFS"
+        IFS=:
+        # $1=tag1, $2=tag2 ...
+        set -- $kak_opt_ctagsfiles
+        IFS="$oldIFS"
+        for tags in "$@"
+        do
+            [ -f "$tags" ] || continue
+            namecache="$(dirname "$tags")"/.kak."$(basename "$tags")".namecache
+            if [ "$namecache" -ot "$tags" ]; then
+                cut -f1 "$tags" | grep -v \'^!_\' | uniq > "$namecache"
+            fi
+            cat "$namecache"
+        done
+        }' \
     -docstring 'Jump to tag definition' \
     tag \
     %{ %sh{
@@ -21,7 +30,6 @@ def -params 0..1 \
 
         oldIFS="$IFS"
         IFS=:
-        # $1=tag1, $2=tag2 ...
         set -- $kak_opt_ctagsfiles
         IFS="$oldIFS"
 
@@ -35,7 +43,7 @@ def -params 0..1 \
                 then
                     [ "$tags" != tags ] && continue
                 fi
-                echo -n "$tagroot/	"; readtags -t "$tags" "$tagname"
+                printf %s "$tagroot/	"; readtags -t "$tags" "$tagname"
             fi
         done | awk -F '\t|\n' '
         /[^\t]+\t[^\t]+\t\/\^.*\$?\// {
@@ -43,7 +51,7 @@ def -params 0..1 \
             re=$0;
             sub(".*\t/\\^", "", re); sub("\\$?/$", "", re); gsub("(\\{|\\}|\\\\E).*$", "", re);
             keys=re; gsub(/</, "<lt>", keys); gsub(/\t/, "<c-v><c-i>", keys);
-            out = out " %{" re " {MenuInfo}" tagroot $3 "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $3 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo %{unable to find tag} } } }"
+            out = out " %{" re " {MenuInfo}" tagroot $3 "} %{eval -collapse-jumps %{ try %{ edit %{" tagroot $3 "}; exec %{/\\Q" keys "<ret>vc} } catch %{ echo -color Error %{unable to find tag} } } }"
         }
         /[^\t]+\t[^\t]+\t[0-9]+/ { out = out " %{" $3 ":" $4 "} %{eval -collapse-jumps %{ edit %{" tagroot $3 "} %{" $4 "}}}" }
         END { print length(out) == 0 ? "echo -color Error no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out }'
