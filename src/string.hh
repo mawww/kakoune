@@ -130,12 +130,22 @@ public:
     static const String ms_empty;
     static constexpr const char* option_type_name = "str";
 
+    // String data storage using small string optimization.
+    //
+    // the LSB of the last byte is used to flag if we are using the small buffer
+    // or an allocated one. On big endian systems that means the allocated
+    // capacity must be pair, on little endian systems that means the allocated
+    // capacity cannot use its most significant byte, so we effectively limit
+    // capacity to 2^24 on 32bit arch, and 2^60 on 64.
     union Data
     {
         using Alloc = Allocator<char, MemoryDomain::String>;
 
         struct Long
         {
+            static constexpr size_t max_capacity =
+                (size_t)1 << 8 * (sizeof(size_t) - 1);
+
             char* ptr;
             size_t size;
             size_t capacity;

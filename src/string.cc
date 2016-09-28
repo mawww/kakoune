@@ -17,6 +17,7 @@ String::Data::Data(const char* data, size_t size, size_t capacity)
         if (capacity & 1)
             ++capacity;
 
+        kak_assert(capacity < Long::max_capacity);
         l.ptr = Alloc{}.allocate(capacity+1);
         l.size = size;
         l.capacity = capacity;
@@ -71,6 +72,10 @@ void String::Data::reserve(size_t new_capacity)
     if (is_long())
         new_capacity = std::max(l.capacity * 2, new_capacity);
 
+    if (new_capacity & 1)
+        ++new_capacity;
+
+    kak_assert(new_capacity < Long::max_capacity);
     char* new_ptr = Alloc{}.allocate(new_capacity+1);
     if (copy)
     {
