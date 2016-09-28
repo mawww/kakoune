@@ -6,4 +6,4 @@ addhl -group /mail regex <[^@>]+@.*?> 0:string
 addhl -group /mail regex ^>.*?$ 0:comment
 
 hook -group mail-highlight global WinSetOption filetype=mail %{ addhl ref mail }
-hook global WinSetOption filetype=(?!mail).* %{ rmhl mail }
+hook -group mail-highlight global WinSetOption filetype=(?!mail).* %{ rmhl mail }

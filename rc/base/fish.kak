@@ -71,8 +71,9 @@ hook global WinSetOption filetype=fish %{
     hook window InsertChar \n -group fish-indent _fish_indent_on_new_line
 }
 
+hool -group fish-highlight global WinSetOption filetype=(?!fish).* %{ rmhl fish }
+
 hook global WinSetOption filetype=(?!fish).* %{
-    rmhl fish
     rmhooks window fish-indent
     rmhooks window fish-hooks
 }

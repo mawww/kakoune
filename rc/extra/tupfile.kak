@@ -30,4 +30,4 @@ addhl -group /tupfile/code regex "\b(\&?[\w_]+)\s*[:+]?=" 1:keyword
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group tupfile-highlight global WinSetOption filetype=tupfile %{ addhl ref tupfile }
-hook global WinSetOption filetype=(?!tupfile).* %{ rmhl tupfile }
+hook -group tupfile-highlight global WinSetOption filetype=(?!tupfile).* %{ rmhl tupfile }

@@ -168,8 +168,9 @@ hook global WinSetOption filetype=ruby %{
     set window formatcmd 'rubocop --auto-correct --stdin - -o /dev/null | sed 1d'
 }
 
+hool -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ rmhl ruby }
+
 hook global WinSetOption filetype=(?!ruby).* %{
-    rmhl ruby
     rmhooks window ruby-indent
     rmhooks window ruby-insert
 

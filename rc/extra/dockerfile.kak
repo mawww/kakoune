@@ -39,4 +39,4 @@ addhl -group /dockerfile/comment fill comment
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{ addhl ref dockerfile }
-hook global WinSetOption filetype=(?!dockerfile).* %{ rmhl dockerfile }
+hook -group dockerfile-highlight global WinSetOption filetype=(?!dockerfile).* %{ rmhl dockerfile }

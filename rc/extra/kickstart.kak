@@ -27,4 +27,4 @@ addhl -group /kickstart/shell ref sh
 
 
 hook -group kickstart-highlight global WinSetOption filetype=kickstart %{ addhl ref kickstart }
-hook global WinSetOption filetype=(?!kickstart).* %{ rmhl kickstart }
+hook -group kickstart-highlight global WinSetOption filetype=(?!kickstart).* %{ rmhl kickstart }

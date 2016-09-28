@@ -28,7 +28,11 @@ hook global WinSetOption filetype=make %{
     hook buffer -group make-hooks NormalKey <ret> make-jump
 }
 
-hook global WinSetOption filetype=(?!make).* %{ rmhl make; rmhooks buffer make-hooks }
+hool -group make-highlight global WinSetOption filetype=(?!make).* %{ rmhl make }
+
+hook global WinSetOption filetype=(?!make).* %{
+    rmhooks buffer make-hooks
+}
 
 decl str jumpclient
 

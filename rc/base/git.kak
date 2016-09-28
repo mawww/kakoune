@@ -11,9 +11,7 @@ hook -group git-commit-highlight global WinSetOption filetype=git-commit %{
     addhl -group git-commit-highlight ref diff # highlight potential diffs from the -v option
 }
 
-hook global WinSetOption filetype=(?!git-commit).* %{
-    rmhl git-commit-highlight
-}
+hook -group git-commit-highlight global WinSetOption filetype=(?!git-commit).* %{ rmhl git-commit-highlight }
 
 hook global BufCreate .*git-rebase-todo %{
     set buffer filetype git-rebase
@@ -25,6 +23,4 @@ hook -group git-rebase-highlight global WinSetOption filetype=git-rebase %{
     addhl -group git-rebase-highlight regex "^(pick|edit|reword|squash|fixup|exec|[persfx]) (\w+)" 1:green 2:magenta
 }
 
-hook global WinSetOption filetype=(?!git-rebase).* %{
-    rmhl git-rebase-highlight
-}
+hook -group git-rebase-highlight global WinSetOption filetype=(?!git-rebase).* %{ rmhl git-rebase-highlight }

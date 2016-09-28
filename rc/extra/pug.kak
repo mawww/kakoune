@@ -76,8 +76,9 @@ hook global WinSetOption filetype=pug %{
     hook window InsertChar \n -group pug-indent _pug_indent_on_new_line
 }
 
+hool -group pug-highlight global WinSetOption filetype=(?!pug).* %{ rmhl pug }
+
 hook global WinSetOption filetype=(?!pug).* %{
-    rmhl pug
     rmhooks window pug-indent
     rmhooks window pug-hooks
 }

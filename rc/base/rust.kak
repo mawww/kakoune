@@ -85,8 +85,9 @@ hook global WinSetOption filetype=rust %[
     hook window InsertChar \} -group rust-indent _rust_indent_on_closing_curly_brace
 ]
 
+hool -group rust-highlight global WinSetOption filetype=(?!rust).* %{ rmhl rust }
+
 hook global WinSetOption filetype=(?!rust).* %{
-    rmhl rust
     rmhooks window rust-indent
     rmhooks window rust-hooks
 }

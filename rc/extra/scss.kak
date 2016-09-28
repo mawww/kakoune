@@ -41,8 +41,9 @@ hook global WinSetOption filetype=scss %[
     hook window InsertChar \} -group scss-indent _scss_indent_on_closing_curly_brace
 ]
 
+hool -group scss-highlight global WinSetOption filetype=(?!scss).* %{ rmhl scss }
+
 hook global WinSetOption filetype=(?!scss).* %{
-    rmhl scss
     rmhooks window scss-indent
     rmhooks window scss-hooks
 }

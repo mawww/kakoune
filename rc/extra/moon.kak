@@ -111,8 +111,9 @@ hook global WinSetOption filetype=moon %{
     set window comment_selection_chars ''
 }
 
+hool -group moon-highlight global WinSetOption filetype=(?!moon).* %{ rmhl moon }
+
 hook global WinSetOption filetype=(?!moon).* %{
-    rmhl moon
     rmhooks window moon-indent
     rmhooks window moon-hooks
 

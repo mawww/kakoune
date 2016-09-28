@@ -38,8 +38,9 @@ hook global WinSetOption filetype=clojure %[
     hook window InsertChar \n -group clojure-indent _clojure_indent_on_new_line
 ]
 
+hook -group clojure-highlight WinSetOption filetype=(?!clojure).* %{ rmhl clojure }
+
 hook global WinSetOption filetype=(?!clojure).* %{
-    rmhl clojure
     rmhooks window clojure-indent
     rmhooks window clojure-hooks
 }

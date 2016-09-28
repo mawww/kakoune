@@ -115,9 +115,9 @@ hook global WinSetOption filetype=dlang %{
     set window comment_selection_chars "/+:+/"
 }
 
-hook global WinSetOption filetype=(?!dlang).* %{
-    rmhl dlang
+hool -group dlang-highlight global WinSetOption filetype=(?!dlang).* %{ rmhl dlang }
 
+hook global WinSetOption filetype=(?!dlang).* %{
     rmhooks window dlang-hooks
     rmhooks window dlang-indent
 }

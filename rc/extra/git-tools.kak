@@ -7,18 +7,14 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
     addhl -group git-log-highlight ref diff # highlight potential diffs from the -p option
 }
 
-hook global WinSetOption filetype=(?!git-log).* %{
-    rmhl git-log-highlight
-}
+hook -group git-log-highlight global WinSetOption filetype=(?!git-log).* %{ rmhl git-log-highlight }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
     addhl group git-status-highlight
     addhl -group git-status-highlight regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 }
 
-hook global WinSetOption filetype=(?!git-status).* %{
-    rmhl git-status-highlight
-}
+hook -group git-status-highlight global WinSetOption filetype=(?!git-status).* %{ rmhl git-status-highlight }
 
 decl line-flags git_blame_flags
 decl line-flags git_diff_flags

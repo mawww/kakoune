@@ -74,8 +74,9 @@ hook global WinSetOption filetype=scala %[
     hook window InsertChar \} -group scala-indent _scala_indent_on_closing_curly_brace
 ]
 
+hool -group scala-highlight global WinSetOption filetype=(?!scala).* %{ rmhl scala }
+
 hook global WinSetOption filetype=(?!scala).* %{
-    rmhl scala
     rmhooks window scala-indent
     rmhooks window scala-hooks
 }

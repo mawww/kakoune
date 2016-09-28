@@ -79,7 +79,8 @@ hook global WinSetOption filetype=python %{
     set window formatcmd "autopep8 -"
 }
 
+hool -group python-highlight global WinSetOption filetype=(?!python).* %{ rmhl python }
+
 hook global WinSetOption filetype=(?!python).* %{
-    rmhl python
     rmhooks window python-indent
 }

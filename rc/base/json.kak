@@ -59,8 +59,9 @@ hook global WinSetOption filetype=json %{
     hook window InsertChar \n -group json-indent _json_indent_on_new_line
 }
 
+hool -group json-highlight global WinSetOption filetype=(?!json).* %{ rmhl json }
+
 hook global WinSetOption filetype=(?!json).* %{
-    rmhl json
     rmhooks window json-indent
     rmhooks window json-hooks
 }

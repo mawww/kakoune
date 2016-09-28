@@ -39,6 +39,4 @@ hook global WinSetOption filetype=latex %{
     set window comment_line_chars '%'
 }
 
-hook global WinSetOption filetype=(?!latex).* %{
-    rmhl latex
-}
+hook -group latex-highlight global WinSetOption filetype=(?!latex).* %{ rmhl latex }

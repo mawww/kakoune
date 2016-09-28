@@ -20,8 +20,9 @@ hook global WinSetOption filetype=man %{
     }
 }
 
+hool -group man-highlight global WinSetOption filetype=(?!man).* %{ rmhl man-highlight }
+
 hook global WinSetOption filetype=(?!man).* %{
-    rmhl man-higlight
     rmhooks window man-hooks
 }
 

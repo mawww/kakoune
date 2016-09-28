@@ -76,8 +76,9 @@ hook global WinSetOption filetype=css %[
     set comment_line_chars ""
 ]
 
+hook -group css-highlight global WinSetOption filetype=(?!css).* %{ rmhl css }
+
 hook global WinSetOption filetype=(?!css).* %{
-    rmhl css
     rmhooks window css-indent
     rmhooks window css-hooks
 }

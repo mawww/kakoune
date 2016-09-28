@@ -96,9 +96,9 @@ hook global WinSetOption filetype=golang %{
     set window formatcmd "gofmt"
 }
 
-hook global WinSetOption filetype=(?!golang).* %{
-    rmhl golang
+hool -group golang-highlight global WinSetOption filetype=(?!golang).* %{ rmhl golang }
 
+hook global WinSetOption filetype=(?!golang).* %{
     rmhooks window golang-hooks
     rmhooks window golang-indent
 }

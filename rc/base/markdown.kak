@@ -68,7 +68,8 @@ hook global WinSetOption filetype=markdown %{
     hook window InsertChar \n -group markdown-indent _markdown_indent_on_new_line
 }
 
+hool -group markdown-highlight global WinSetOption filetype=(?!markdown).* %{ rmhl markdown }
+
 hook global WinSetOption filetype=(?!markdown).* %{
-    rmhl markdown
     rmhooks window markdown-indent
 }
