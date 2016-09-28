@@ -1,21 +1,13 @@
 # http://ranger.nongnu.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# the file manager option is used to decide which one should be used when trying to edit a directory.
-decl str file_manager
-
-hook global KakBegin .* %{ %sh{
-  if [ -z "$kak_opt_file_manager" ]; then
-    echo set global file_manager ranger
-  fi
-}}
-
-hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
-  directory=$(expr $kak_hook_param : "[0-9]*:[0-9]*: '[a-z]*' \\(.*\\): is a directory")
-  if [ "$kak_opt_file_manager" = ranger ]; then
-    echo ranger $directory
-  fi
-}}
+def ranger-open-on-edit-directory \
+    -docstring 'fallback on ranger when trying to open a directory' %{
+        hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
+          directory=$(expr $kak_hook_param : "[0-9]*:[0-9]*: '[a-z]*' \\(.*\\): is a directory")
+          echo ranger $directory
+    }}
+}
 
 def ranger -docstring 'ranger file manager' \
            -params ..                       \
