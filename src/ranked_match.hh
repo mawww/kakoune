@@ -41,7 +41,8 @@ private:
         FirstCharMatch = 1 << 1,
         Prefix = 1 << 2,
         SingleWord = 1 << 3,
-        FullMatch = 1 << 4,
+        Contiguous = 1 << 4,
+        FullMatch = 1 << 5,
     };
 
     StringView m_candidate;

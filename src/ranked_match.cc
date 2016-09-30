@@ -3,6 +3,8 @@
 #include "utf8_iterator.hh"
 #include "unit_tests.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
 
@@ -93,8 +95,10 @@ static SubseqRes subsequence_match_smart_case(StringView str, StringView subseq)
             auto str_c = utf8::read_codepoint(it, str.end());
             if (smartcase_eq(c, str_c))
                 break;
-            if (single_word and max_index != -1 and not is_word(str_c))
+
+            if (max_index != -1 and single_word and  not is_word(str_c))
                 single_word = false;
+
             ++index;
             if (it == str.end())
                 return { false };
@@ -130,12 +134,20 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         m_flags |= Flags::SingleWord;
     if (smartcase_eq(query[0], candidate[0]))
         m_flags |= Flags::FirstCharMatch;
-    if (std::equal(query.begin(), query.end(), candidate.begin()))
+
+    auto it = std::search(candidate.begin(), candidate.end(),
+                          query.begin(), query.end());
+    if (it != candidate.end())
     {
-        m_flags |= Flags::Prefix;
-        if (query.length() == candidate.length())
-            m_flags |= Flags::FullMatch;
+        m_flags |= Flags::Contiguous;
+        if (it == candidate.begin())
+        {
+            m_flags |= Flags::Prefix;
+            if (query.length() == candidate.length())
+                m_flags |= Flags::FullMatch;
+        }
     }
+
     m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
     if (m_word_boundary_match_count == query.length())
         m_flags |= Flags::OnlyWordBoundary;
@@ -203,6 +215,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(not (RankedMatch{"source_data", "so"} < RankedMatch{"source", "so"}));
     kak_assert(not (RankedMatch{"source", "so"} < RankedMatch{"source", "so"}));
     kak_assert(RankedMatch{"single/word", "wo"} < RankedMatch{"multiw/ord", "wo"});
+    kak_assert(RankedMatch{"foo/bar/foobar", "foobar"} < RankedMatch{"foo/bar/baz", "foobar"});
 }};
 
 UnitTest test_used_letters{[]()
