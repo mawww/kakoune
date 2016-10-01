@@ -2,6 +2,7 @@
 #define unicode_hh_INCLUDED
 
 #include <wctype.h>
+#include <wchar.h>
 #include <locale>
 
 namespace Kakoune
