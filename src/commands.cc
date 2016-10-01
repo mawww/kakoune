@@ -313,7 +313,10 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
 
     auto filename = parser.positional_count() == 0 ?
                         buffer.name() : parse_filename(parser[0]);
+
+    context.hooks().run_hook("BufWritePre", filename, context);
     write_buffer_to_file(buffer, filename);
+    context.hooks().run_hook("BufWritePost", filename, context);
 }
 
 const CommandDesc write_cmd = {
@@ -334,7 +337,11 @@ void write_all_buffers()
     {
         if ((buffer->flags() & Buffer::Flags::File) and buffer->is_modified()
             and !(buffer->flags() & Buffer::Flags::ReadOnly))
+        {
+            buffer->run_hook_in_own_context("BufWritePre", buffer->name());
             write_buffer_to_file(*buffer, buffer->name());
+            buffer->run_hook_in_own_context("BufWritePost", buffer->name());
+        }
     }
 }
 
