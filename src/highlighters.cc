@@ -1191,6 +1191,7 @@ struct RegionMatches
 
 struct RegionDesc
 {
+    String m_name;
     Regex m_begin;
     Regex m_end;
     Regex m_recurse;
@@ -1219,9 +1220,9 @@ struct RegionDesc
 struct RegionsHighlighter : public Highlighter
 {
 public:
-    using NamedRegionDescList = Vector<std::pair<String, RegionDesc>, MemoryDomain::Highlight>;
+    using RegionDescList = Vector<RegionDesc, MemoryDomain::Highlight>;
 
-    RegionsHighlighter(NamedRegionDescList regions, String default_group)
+    RegionsHighlighter(RegionDescList regions, String default_group)
         : m_regions{std::move(regions)}, m_default_group{std::move(default_group)}
     {
         if (m_regions.empty())
@@ -1229,8 +1230,8 @@ public:
 
         for (auto& region : m_regions)
         {
-            m_groups.append({region.first, HighlighterGroup{}});
-            if (region.second.m_begin.empty() or region.second.m_end.empty())
+            m_groups.append({region.m_name, HighlighterGroup{}});
+            if (region.m_begin.empty() or region.m_end.empty())
                 throw runtime_error("invalid regex for region highlighter");
         }
         if (not m_default_group.empty())
@@ -1324,7 +1325,7 @@ public:
         if ((parser.positional_count() % 4) != 1)
             throw runtime_error("wrong parameter count, expect <id> (<group name> <begin> <end> <recurse>)+");
 
-        RegionsHighlighter::NamedRegionDescList regions;
+        RegionsHighlighter::RegionDescList regions;
         for (size_t i = 1; i < parser.positional_count(); i += 4)
         {
             if (parser[i].empty() or parser[i+1].empty() or parser[i+2].empty())
@@ -1336,7 +1337,7 @@ public:
             if (not parser[i+3].empty())
                 recurse = Regex{parser[i+3], Regex::nosubs | Regex::optimize };
 
-            regions.push_back({ parser[i], {std::move(begin), std::move(end), std::move(recurse)} });
+            regions.push_back({ parser[i], std::move(begin), std::move(end), std::move(recurse) });
         }
 
         auto default_group = parser.get_switch("default").value_or(StringView{}).str();
@@ -1344,7 +1345,7 @@ public:
     }
 
 private:
-    const NamedRegionDescList m_regions;
+    const RegionDescList m_regions;
     const String m_default_group;
     IdMap<HighlighterGroup, MemoryDomain::Highlight> m_groups;
 
@@ -1392,13 +1393,13 @@ private:
             {
                 cache.matches.resize(m_regions.size());
                 for (size_t i = 0; i < m_regions.size(); ++i)
-                    cache.matches[i] = m_regions[i].second.find_matches(buffer);
+                    cache.matches[i] = m_regions[i].find_matches(buffer);
             }
             else
             {
                 auto modifs = compute_line_modifications(buffer, cache.timestamp);
                 for (size_t i = 0; i < m_regions.size(); ++i)
-                    m_regions[i].second.update_matches(buffer, modifs, cache.matches[i]);
+                    m_regions[i].update_matches(buffer, modifs, cache.matches[i]);
             }
 
             cache.regions.clear();
@@ -1415,7 +1416,7 @@ private:
              begin != end; )
         {
             const RegionMatches& matches = cache.matches[begin.first];
-            auto& named_region = m_regions[begin.first];
+            auto& region = m_regions[begin.first];
             auto beg_it = begin.second;
             auto end_it = matches.find_matching_end(beg_it->end_coord());
 
@@ -1423,14 +1424,14 @@ private:
             {
                 regions.push_back({ {beg_it->line, beg_it->begin},
                                     range.end,
-                                    named_region.first });
+                                    region.m_name });
                 break;
             }
             else
             {
                 regions.push_back({ beg_it->begin_coord(),
                                    end_it->end_coord(),
-                                   named_region.first });
+                                   region.m_name });
                 auto end_coord = end_it->end_coord();
 
                 // With empty begin and end matches (for example if the regexes
