@@ -26,5 +26,5 @@ addhl -group /julia/code regex \b(Number|Real|BigInt|Integer|UInt|UInt8|UInt16|U
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=julia %{ addhl ref julia }
-hook global WinSetOption filetype=(?!julia).* %{ rmhl julia }
+hook -group julia-highlight global WinSetOption filetype=julia %{ addhl ref julia }
+hook -group julia-highlight global WinSetOption filetype=(?!julia).* %{ rmhl julia }

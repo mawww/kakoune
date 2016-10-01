@@ -150,9 +150,9 @@ def -hidden _ruby_insert_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=ruby %{
-    addhl ref ruby
+hook -group ruby-highlight global WinSetOption filetype=ruby %{ addhl ref ruby }
 
+hook global WinSetOption filetype=ruby %{
     hook window InsertChar .* -group ruby-indent _ruby_indent_on_char
     hook window InsertChar \n -group ruby-indent _ruby_indent_on_new_line
     hook window InsertChar \n -group ruby-insert _ruby_insert_on_new_line
@@ -168,8 +168,9 @@ hook global WinSetOption filetype=ruby %{
     set window formatcmd 'rubocop --auto-correct --stdin - -o /dev/null | sed 1d'
 }
 
+hool -group ruby-highlight global WinSetOption filetype=(?!ruby).* %{ rmhl ruby }
+
 hook global WinSetOption filetype=(?!ruby).* %{
-    rmhl ruby
     rmhooks window ruby-indent
     rmhooks window ruby-insert
 

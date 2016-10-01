@@ -252,14 +252,14 @@ hook global WinSetOption filetype=(?!(c|cpp|objc)$).* %[
     unalias window alt c-family-alternative-file
 ]
 
-hook global WinSetOption filetype=c %[ addhl ref c ]
-hook global WinSetOption filetype=(?!c$).* %[ rmhl c ]
+hook -group c-highlight global WinSetOption filetype=c %[ addhl ref c ]
+hook -group c-highlight global WinSetOption filetype=(?!c$).* %[ rmhl c ]
 
-hook global WinSetOption filetype=cpp %[ addhl ref cpp ]
-hook global WinSetOption filetype=(?!cpp$).* %[ rmhl cpp ]
+hook -group cpp-highlight global WinSetOption filetype=cpp %[ addhl ref cpp ]
+hook -group cpp-highlight global WinSetOption filetype=(?!cpp$).* %[ rmhl cpp ]
 
-hook global WinSetOption filetype=objc %[ addhl ref objc ]
-hook global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
+hook -group objc-highlight global WinSetOption filetype=objc %[ addhl ref objc ]
+hook -group objc-highlight global WinSetOption filetype=(?!objc$).* %[ rmhl objc ]
 
 decl str c_include_guard_style "ifdef"
 def -hidden _c-family-insert-include-guards %{

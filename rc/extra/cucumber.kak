@@ -81,15 +81,16 @@ def -hidden _cucumber_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=cucumber %{
-    addhl ref cucumber
+hook -group cucumber-highlight global WinSetOption filetype=cucumber %{ addhl ref cucumber }
 
+hook global WinSetOption filetype=cucumber %{
     hook window InsertEnd  .* -group cucumber-hooks  _cucumber_filter_around_selections
     hook window InsertChar \n -group cucumber-indent _cucumber_indent_on_new_line
 }
 
+hool -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ rmhl cucumber }
+
 hook global WinSetOption filetype=(?!cucumber).* %{
-    rmhl cucumber
     rmhooks window cucumber-indent
     rmhooks window cucumber-hooks
 }

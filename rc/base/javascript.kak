@@ -66,16 +66,17 @@ def -hidden _javascript_indent_on_new_line %<
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=javascript %{
-    addhl ref javascript
+hook -group javascript-highlight global WinSetOption filetype=javascript %{ addhl ref javascript }
 
+hook global WinSetOption filetype=javascript %{
     hook window InsertEnd  .* -group javascript-hooks  _javascript_filter_around_selections
     hook window InsertChar .* -group javascript-indent _javascript_indent_on_char
     hook window InsertChar \n -group javascript-indent _javascript_indent_on_new_line
 }
 
+hool -group javascript-highlight global WinSetOption filetype=(?!javascript).* %{ rmhl javascript }
+
 hook global WinSetOption filetype=(?!javascript).* %{
-    rmhl javascript
     rmhooks window javascript-indent
     rmhooks window javascript-hooks
 }

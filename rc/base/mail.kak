@@ -5,5 +5,5 @@ addhl -group /mail regex ^(From|To|Cc|Bcc|Subject|Reply-To|In-Reply-To):([^\n]*(
 addhl -group /mail regex <[^@>]+@.*?> 0:string
 addhl -group /mail regex ^>.*?$ 0:comment
 
-hook global WinSetOption filetype=mail %{ addhl ref mail }
-hook global WinSetOption filetype=(?!mail).* %{ rmhl mail }
+hook -group mail-highlight global WinSetOption filetype=mail %{ addhl ref mail }
+hook -group mail-highlight global WinSetOption filetype=(?!mail).* %{ rmhl mail }

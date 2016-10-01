@@ -26,10 +26,5 @@ addhl -group /kickstart/shell regex '^\h*%end\b' 0:type
 addhl -group /kickstart/shell ref sh
 
 
-hook global WinSetOption filetype=kickstart %{
-    addhl ref kickstart
-}
-
-hook global WinSetOption filetype=(?!kickstart).* %{
-    rmhl kickstart
-}
+hook -group kickstart-highlight global WinSetOption filetype=kickstart %{ addhl ref kickstart }
+hook -group kickstart-highlight global WinSetOption filetype=(?!kickstart).* %{ rmhl kickstart }

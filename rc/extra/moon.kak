@@ -98,9 +98,9 @@ def -hidden _moon_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=moon %{
-    addhl ref moon
+hook -group moon-highlight global WinSetOption filetype=moon %{ addhl ref moon }
 
+hook global WinSetOption filetype=moon %{
     hook window InsertEnd  .* -group moon-hooks  _moon_filter_around_selections
     hook window InsertChar .* -group moon-indent _moon_indent_on_char
     hook window InsertChar \n -group moon-indent _moon_indent_on_new_line
@@ -111,8 +111,9 @@ hook global WinSetOption filetype=moon %{
     set window comment_selection_chars ''
 }
 
+hool -group moon-highlight global WinSetOption filetype=(?!moon).* %{ rmhl moon }
+
 hook global WinSetOption filetype=(?!moon).* %{
-    rmhl moon
     rmhooks window moon-indent
     rmhooks window moon-hooks
 

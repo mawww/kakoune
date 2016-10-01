@@ -69,15 +69,16 @@ def -hidden _pug_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=pug %{
-    addhl ref pug
+hook -group pug-highlight global WinSetOption filetype=pug %{ addhl ref pug }
 
+hook global WinSetOption filetype=pug %{
     hook window InsertEnd  .* -group pug-hooks  _pug_filter_around_selections
     hook window InsertChar \n -group pug-indent _pug_indent_on_new_line
 }
 
+hool -group pug-highlight global WinSetOption filetype=(?!pug).* %{ rmhl pug }
+
 hook global WinSetOption filetype=(?!pug).* %{
-    rmhl pug
     rmhooks window pug-indent
     rmhooks window pug-hooks
 }

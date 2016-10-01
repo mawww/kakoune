@@ -23,14 +23,21 @@ def -params .. -file-completion \
            }"
 }}
 
-hook global WinSetOption filetype=grep %{
+hook -group grep-highlight global WinSetOption filetype=grep %{
     addhl group grep
     addhl -group grep regex "^((?:\w:)?[^:]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     addhl -group grep line %{%opt{_grep_current_line}} default+b
+}
+
+hook global WinSetOption filetype=grep %{
     hook buffer -group grep-hooks NormalKey <ret> grep-jump
 }
 
-hook global WinSetOption filetype=(?!grep).* %{ rmhl grep; rmhooks buffer grep-hooks }
+hool -group grep-highlight global WinSetOption filetype=(?!grep).* %{ rmhl grep }
+
+hook global WinSetOption filetype=(?!grep).* %{
+    rmhooks buffer grep-hooks
+}
 
 decl str jumpclient
 

@@ -54,15 +54,16 @@ def -hidden _sass_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=sass %{
-    addhl ref sass
+hook -group sass-highlight global WinSetOption filetype=sass %{ addhl ref sass }
 
+hook global WinSetOption filetype=sass %{
     hook window InsertEnd  .* -group sass-hooks  _sass_filter_around_selections
     hook window InsertChar \n -group sass-indent _sass_indent_on_new_line
 }
 
+hool -group sass-highlight global WinSetOption filetype=(?!sass).* %{ rmhl sass }
+
 hook global WinSetOption filetype=(?!sass).* %{
-    rmhl sass
     rmhooks window sass-indent
     rmhooks window sass-hooks
 }

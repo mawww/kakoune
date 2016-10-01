@@ -54,16 +54,17 @@ def -hidden _makefile-indent-on-new-line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=makefile %{
-    addhl ref makefile
+hook -group makefile-highlight global WinSetOption filetype=makefile %{ addhl ref makefile }
 
+hook global WinSetOption filetype=makefile %{
     hook window InsertChar \n -group makefile-indent _makefile-indent-on-new-line
 
     set window comment_selection_chars ""
     set window comment_line_chars "#"
 }
 
+hool -group makefile-highlight global WinSetOption filetype=(?!makefile).* %{ rmhl makefile }
+
 hook global WinSetOption filetype=(?!makefile).* %{
-    rmhl makefile
     rmhooks window makefile-indent
 }

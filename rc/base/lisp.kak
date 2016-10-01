@@ -47,15 +47,16 @@ def -hidden _lisp_indent_on_new_line %{
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=lisp %{
-    addhl ref lisp
+hook -group lisp-highlight global WinSetOption filetype=lisp %{ addhl ref lisp }
 
+hook global WinSetOption filetype=lisp %{
     hook window InsertEnd  .* -group lisp-hooks  _lisp_filter_around_selections
     hook window InsertChar \n -group lisp-indent _lisp_indent_on_new_line
 }
 
+hool -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ rmhl lisp }
+
 hook global WinSetOption filetype=(?!lisp).* %{
-    rmhl lisp
     rmhooks window lisp-indent
     rmhooks window lisp-hooks
 }

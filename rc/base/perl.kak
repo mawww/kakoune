@@ -109,9 +109,9 @@ def -hidden _perl-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=perl %{
-    addhl ref perl
+hook -group perl-highlight global WinSetOption filetype=perl %{ addhl ref perl }
 
+hook global WinSetOption filetype=perl %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group perl-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group perl-indent _perl-indent-on-new-line
@@ -123,9 +123,9 @@ hook global WinSetOption filetype=perl %{
     set window comment_line_chars "#"
 }
 
-hook global WinSetOption filetype=(?!perl).* %{
-    rmhl perl
+hool -group perl-highlight global WinSetOption filetype=(?!perl).* %{ rmhl perl }
 
+hook global WinSetOption filetype=(?!perl).* %{
     rmhooks window perl-hooks
     rmhooks window perl-indent
 }
