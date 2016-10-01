@@ -123,7 +123,7 @@ hook global WinSetOption filetype=perl %{
     set window comment_line_chars "#"
 }
 
-hool -group perl-highlight global WinSetOption filetype=(?!perl).* %{ rmhl perl }
+hook -group perl-highlight global WinSetOption filetype=(?!perl).* %{ rmhl perl }
 
 hook global WinSetOption filetype=(?!perl).* %{
     rmhooks window perl-hooks

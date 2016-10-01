@@ -61,7 +61,7 @@ hook global WinSetOption filetype=sass %{
     hook window InsertChar \n -group sass-indent _sass_indent_on_new_line
 }
 
-hool -group sass-highlight global WinSetOption filetype=(?!sass).* %{ rmhl sass }
+hook -group sass-highlight global WinSetOption filetype=(?!sass).* %{ rmhl sass }
 
 hook global WinSetOption filetype=(?!sass).* %{
     rmhooks window sass-indent

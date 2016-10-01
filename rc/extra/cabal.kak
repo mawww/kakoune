@@ -72,7 +72,7 @@ hook global WinSetOption filetype=cabal %[
     hook window InsertChar \} -group cabal-indent _cabal_indent_on_closing_curly_brace
 ]
 
-hool -group cabal-highlight global WinSetOption filetype=(?!cabal).* %{ rmhl cabal }
+hook -group cabal-highlight global WinSetOption filetype=(?!cabal).* %{ rmhl cabal }
 
 hook global WinSetOption filetype=(?!cabal).* %{
     rmhooks window cabal-indent

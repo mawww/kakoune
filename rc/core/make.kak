@@ -28,7 +28,7 @@ hook global WinSetOption filetype=make %{
     hook buffer -group make-hooks NormalKey <ret> make-jump
 }
 
-hool -group make-highlight global WinSetOption filetype=(?!make).* %{ rmhl make }
+hook -group make-highlight global WinSetOption filetype=(?!make).* %{ rmhl make }
 
 hook global WinSetOption filetype=(?!make).* %{
     rmhooks buffer make-hooks

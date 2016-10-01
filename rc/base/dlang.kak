@@ -115,7 +115,7 @@ hook global WinSetOption filetype=dlang %{
     set window comment_selection_chars "/+:+/"
 }
 
-hool -group dlang-highlight global WinSetOption filetype=(?!dlang).* %{ rmhl dlang }
+hook -group dlang-highlight global WinSetOption filetype=(?!dlang).* %{ rmhl dlang }
 
 hook global WinSetOption filetype=(?!dlang).* %{
     rmhooks window dlang-hooks

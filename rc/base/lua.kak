@@ -108,7 +108,7 @@ hook global WinSetOption filetype=lua %{
     set window comment_selection_chars '\Q--[[:]]'
 }
 
-hool -group lua-highlight global WinSetOption filetype=(?!lua).* %{ rmhl lua }
+hook -group lua-highlight global WinSetOption filetype=(?!lua).* %{ rmhl lua }
 
 hook global WinSetOption filetype=(?!lua).* %{
     rmhooks window lua-indent

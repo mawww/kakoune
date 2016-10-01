@@ -54,7 +54,7 @@ hook global WinSetOption filetype=lisp %{
     hook window InsertChar \n -group lisp-indent _lisp_indent_on_new_line
 }
 
-hool -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ rmhl lisp }
+hook -group lisp-highlight global WinSetOption filetype=(?!lisp).* %{ rmhl lisp }
 
 hook global WinSetOption filetype=(?!lisp).* %{
     rmhooks window lisp-indent

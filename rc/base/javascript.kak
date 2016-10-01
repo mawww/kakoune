@@ -74,7 +74,7 @@ hook global WinSetOption filetype=javascript %{
     hook window InsertChar \n -group javascript-indent _javascript_indent_on_new_line
 }
 
-hool -group javascript-highlight global WinSetOption filetype=(?!javascript).* %{ rmhl javascript }
+hook -group javascript-highlight global WinSetOption filetype=(?!javascript).* %{ rmhl javascript }
 
 hook global WinSetOption filetype=(?!javascript).* %{
     rmhooks window javascript-indent

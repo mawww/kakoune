@@ -85,7 +85,7 @@ hook global WinSetOption filetype=coffee %{
     set window comment_selection_chars '###:###'
 }
 
-hool -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ rmhl coffee }
+hook -group coffee-highlight global WinSetOption filetype=(?!coffee).* %{ rmhl coffee }
 
 hook global WinSetOption filetype=(?!coffee).* %{
     rmhooks window coffee-indent

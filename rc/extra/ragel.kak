@@ -70,7 +70,7 @@ hook global WinSetOption filetype=ragel %{
     hook window InsertChar \n -group ragel-indent _ragel_indent_on_new_line
 }
 
-hool -group ragel-highlight global WinSetOption filetype=(?!ragel).* %{ rmhl ragel }
+hook -group ragel-highlight global WinSetOption filetype=(?!ragel).* %{ rmhl ragel }
 
 hook global WinSetOption filetype=(?!ragel).* %{
     rmhooks window ragel-indent

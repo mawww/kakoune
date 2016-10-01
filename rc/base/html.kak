@@ -73,7 +73,7 @@ hook global WinSetOption filetype=html %{
     set window comment_selection_chars '<!--:-->'
 }
 
-hool -group html-highlight global WinSetOption filetype=(?!html).* %{ rmhl html }
+hook -group html-highlight global WinSetOption filetype=(?!html).* %{ rmhl html }
 
 hook global WinSetOption filetype=(?!html).* %{
     rmhooks window html-indent

@@ -88,7 +88,7 @@ hook global WinSetOption filetype=cucumber %{
     hook window InsertChar \n -group cucumber-indent _cucumber_indent_on_new_line
 }
 
-hool -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ rmhl cucumber }
+hook -group cucumber-highlight global WinSetOption filetype=(?!cucumber).* %{ rmhl cucumber }
 
 hook global WinSetOption filetype=(?!cucumber).* %{
     rmhooks window cucumber-indent

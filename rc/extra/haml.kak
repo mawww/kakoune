@@ -65,7 +65,7 @@ hook global WinSetOption filetype=haml %{
     hook window InsertChar \n -group haml-indent _haml_indent_on_new_line
 }
 
-hool -group haml-highlight global WinSetOption filetype=(?!haml).* %{ rmhl haml }
+hook -group haml-highlight global WinSetOption filetype=(?!haml).* %{ rmhl haml }
 
 hook global WinSetOption filetype=(?!haml).* %{
     rmhooks window haml-indent

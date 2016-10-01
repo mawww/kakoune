@@ -65,7 +65,7 @@ hook global WinSetOption filetype=haskell %{
     hook window InsertChar \n -group haskell-indent _haskell_indent_on_new_line
 }
 
-hool -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ rmhl haskell }
+hook -group haskell-highlight global WinSetOption filetype=(?!haskell).* %{ rmhl haskell }
 
 hook global WinSetOption filetype=(?!haskell).* %{
     rmhooks window haskell-indent

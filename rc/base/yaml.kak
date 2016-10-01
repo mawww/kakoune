@@ -59,7 +59,7 @@ hook global WinSetOption filetype=yaml %{
     hook window InsertChar \n -group yaml-indent _yaml_indent_on_new_line
 }
 
-hool -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ rmhl yaml }
+hook -group yaml-highlight global WinSetOption filetype=(?!yaml).* %{ rmhl yaml }
 
 hook global WinSetOption filetype=(?!yaml).* %{
     rmhooks window yaml-indent

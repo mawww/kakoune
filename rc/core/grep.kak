@@ -33,7 +33,7 @@ hook global WinSetOption filetype=grep %{
     hook buffer -group grep-hooks NormalKey <ret> grep-jump
 }
 
-hool -group grep-highlight global WinSetOption filetype=(?!grep).* %{ rmhl grep }
+hook -group grep-highlight global WinSetOption filetype=(?!grep).* %{ rmhl grep }
 
 hook global WinSetOption filetype=(?!grep).* %{
     rmhooks buffer grep-hooks
