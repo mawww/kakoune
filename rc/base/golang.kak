@@ -84,9 +84,9 @@ def -hidden _golang-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook global WinSetOption filetype=golang %{
-    addhl ref golang
+hook -group golang-highlight global WinSetOption filetype=golang %{ addhl ref golang }
 
+hook global WinSetOption filetype=golang %{
     # cleanup trailing whitespaces when exiting insert mode
     hook window InsertEnd .* -group golang-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
     hook window InsertChar \n -group golang-indent _golang-indent-on-new-line
@@ -96,7 +96,7 @@ hook global WinSetOption filetype=golang %{
     set window formatcmd "gofmt"
 }
 
-hool -group golang-highlight global WinSetOption filetype=(?!golang).* %{ rmhl golang }
+hook -group golang-highlight global WinSetOption filetype=(?!golang).* %{ rmhl golang }
 
 hook global WinSetOption filetype=(?!golang).* %{
     rmhooks window golang-hooks
