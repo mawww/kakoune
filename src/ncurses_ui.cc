@@ -412,7 +412,20 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
         String title = "\033]2;";
         for (auto& atom : mode_line)
             title += atom.content();
+        // Filter out non ascii and non printable characters
+        for (auto c = title.char_length(); c > 4; --c)
+        {
+            auto pos = title.byte_count_to(c);
+            if (utf8::codepoint_size(title[pos]) > 1
+                || title[pos] < 0x20 || title[pos] > 0x7E)
+                title = title.substr(0, c) + title.substr(c + 1);
+        }
         title += " - Kakoune\007";
+        // If the length of the string exceeds the maximum standard length (511),
+        // arbitrarily take the first 500 characters and close the OSC request
+        if (title.length() > 511)
+            title = title.substr(0, (ByteCount)500)
+                    + title.substr(title.length() - 11);
         fputs(title.c_str(), stdout);
         fflush(stdout);
     }
