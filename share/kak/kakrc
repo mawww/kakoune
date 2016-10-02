@@ -5,6 +5,7 @@ def -params 1.. runtime %{ %sh{
     done
 }}
 
+decl str colorscheme "default"
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
   -shell-candidates %{
       localconfdir=${XDG_CONFIG_HOME:-${HOME}/.config}/kak
@@ -24,6 +25,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
         else
             echo "source '${kak_runtime}/colors/$1.kak'"
         fi
+        printf %s\\n "set global colorscheme '$1'"
     else
         echo "echo -color Error 'Usage: colorscheme <scheme name>'"
     fi
