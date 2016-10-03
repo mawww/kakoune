@@ -5,7 +5,7 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
     try %{ addhl ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d -t kak-spell.XXXXXXXX)/buffer
-        printf %s\\n "write ${file}"
+        printf %s\\n "eval -no-hooks write ${file}"
         printf %s\\n "set buffer spell_tmp_file ${file}"
     }
     %sh{

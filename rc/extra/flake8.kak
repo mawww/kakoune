@@ -8,7 +8,7 @@ def flake8-lint -params 0..1 -docstring "Lint the contents of the current buffer
         dir=$(mktemp -d -t kak-flake8.XXXXXXXX)
         mkfifo ${dir}/fifo
         echo "set buffer flake8_tmp_dir ${dir}"
-        echo "write ${dir}/buf"
+        echo "eval -no-hooks write ${dir}/buf"
     }
 
     # end the previous %sh{} so that its output gets interpreted by kakoune

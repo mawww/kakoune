@@ -10,7 +10,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set buffer clang_tmp_dir ${dir}"
-        printf %s\\n "write ${dir}/buf"
+        printf %s\\n "eval -no-hooks write ${dir}/buf"
     }
     # end the previous %sh{} so that its output gets interpreted by kakoune
     # before launching the following as a background task.

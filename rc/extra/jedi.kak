@@ -7,7 +7,7 @@ def jedi-complete -docstring "Complete the current selection with jedi" %{
         dir=$(mktemp -d -t kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo
         printf %s\\n "set buffer jedi_tmp_dir ${dir}"
-        printf %s\\n "write ${dir}/buf"
+        printf %s\\n "eval -no-hooks write ${dir}/buf"
     }
     %sh{
         dir=${kak_opt_jedi_tmp_dir}
