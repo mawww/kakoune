@@ -154,17 +154,27 @@ public:
 
     void on_enabled() override
     {
+        m_enabled = true;
+
         if (context().has_client())
             context().client().check_if_buffer_needs_reloading();
 
         m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
 
+        if (m_hooks_disabled and not m_in_on_key)
+        {
+            context().hooks_disabled().unset();
+            m_hooks_disabled = false;
+        }
+
         context().hooks().run_hook("NormalBegin", "", context());
     }
 
     void on_disabled() override
     {
+        m_enabled = false;
+
         m_idle_timer.set_next_date(TimePoint::max());
         m_fs_check_timer.set_next_date(TimePoint::max());
 
@@ -173,9 +183,12 @@ public:
 
     void on_key(Key key) override
     {
+        m_in_on_key = true;
+        auto unset_in_on_key = on_scope_end([this]{ m_in_on_key = false; });
+
         bool do_restore_hooks = false;
         auto restore_hooks = on_scope_end([&, this]{
-            if (m_hooks_disabled and do_restore_hooks)
+            if (m_hooks_disabled and m_enabled and do_restore_hooks)
             {
                 context().hooks_disabled().unset();
                 m_hooks_disabled = false;
@@ -272,6 +285,8 @@ public:
 private:
     NormalParams m_params = { 0, 0 };
     bool m_hooks_disabled = false;
+    bool m_enabled = false;
+    bool m_in_on_key = false;
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
@@ -939,16 +954,11 @@ public:
                            if (m_autoshowcompl)
                                m_completer.update();
                            context().hooks().run_hook("InsertIdle", "", context());
-                       }},
-          m_disable_hooks{context().hooks_disabled()}
+                       }}
     {
-        // Prolongate hook disabling for the whole insert session
-        if (m_disable_hooks)
-            context().hooks_disabled().set();
-
         last_insert().mode = mode;
         last_insert().keys.clear();
-        last_insert().disable_hooks = m_disable_hooks;
+        last_insert().disable_hooks = context().hooks_disabled();
         context().hooks().run_hook("InsertBegin", "", context());
         prepare(m_insert_mode);
     }
@@ -962,9 +972,6 @@ public:
                 sel.cursor() = context().buffer().char_prev(sel.cursor());
         }
         selections.avoid_eol();
-
-        if (m_disable_hooks)
-            context().hooks_disabled().unset();
     }
 
     void on_enabled() override
@@ -1237,7 +1244,6 @@ private:
     InsertCompleter  m_completer;
     bool             m_autoshowcompl;
     Timer            m_idle_timer;
-    bool             m_disable_hooks;
     bool             m_in_end = false;
 };
 
