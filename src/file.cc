@@ -260,9 +260,11 @@ void write_buffer_to_file(Buffer& buffer, StringView filename)
                   O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
-    auto close_fd = on_scope_end([fd]{ close(fd); });
 
-    write_buffer_to_fd(buffer, fd);
+    {
+        auto close_fd = on_scope_end([fd]{ close(fd); });
+        write_buffer_to_fd(buffer, fd);
+    }
 
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
