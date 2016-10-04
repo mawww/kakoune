@@ -51,7 +51,7 @@ inline bool is_basic_alpha(Codepoint c)
 
 inline size_t codepoint_width(Codepoint c)
 {
-    return wcwidth((wchar_t)c);
+    return c == '\n' ? 1 : wcwidth((wchar_t)c);
 }
 
 enum class CharCategories
