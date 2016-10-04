@@ -643,9 +643,13 @@ void regex_prompt(Context& context, String prompt, T func)
 template<SelectMode mode, Direction direction>
 void search(Context& context, NormalParams params)
 {
+    constexpr StringView prompt = mode == SelectMode::Extend ?
+        (direction == Forward ? "search (extend):" : "reverse search (extend):")
+      : (direction == Forward ? "search:"          : "reverse search:");
+
     const char reg = to_lower(params.reg ? params.reg : '/');
     int count = params.count;
-    regex_prompt(context, direction == Forward ? "search:" : "reverse search:",
+    regex_prompt(context, prompt.str(),
                  [reg, count](Regex ex, PromptEvent event, Context& context) {
                      if (ex.empty())
                          ex = Regex{context.main_sel_register_value(reg)};
