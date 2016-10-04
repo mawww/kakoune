@@ -63,10 +63,10 @@ ColumnCount DisplayAtom::length() const
     switch (m_type)
     {
         case BufferRange:
-            return (int)column_length(*m_buffer, m_range.begin, m_range.end);
+            return column_length(*m_buffer, m_range.begin, m_range.end);
         case Text:
         case ReplacedBufferRange:
-            return (int)m_text.column_length();
+            return m_text.column_length();
     }
     kak_assert(false);
     return 0;
