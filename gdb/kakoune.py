@@ -48,8 +48,8 @@ class LineAndColumn:
                                self.val['column'])
 
 
-class ByteCoordAndTarget:
-    """Print a ByteCoordAndTarget"""
+class BufferCoordAndTarget:
+    """Print a BufferCoordAndTarget"""
 
     def __init__(self, val):
         self.val = val
@@ -150,6 +150,16 @@ class CharCount:
         return self.val["m_value"]
 
 
+class ColumnCount:
+    """Print a ColumnCount"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val["m_value"]
+
+
 class ByteCount:
     """Print a ByteCount"""
 
@@ -188,8 +198,8 @@ class Color:
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
     pp.add_printer('ArrayView', '^Kakoune::(Const)?ArrayView<.*>$', ArrayView)
-    pp.add_printer('LineAndColumn', '^Kakoune::(Byte|Char)Coord$', LineAndColumn)
-    pp.add_printer('ByteCoordAndTarget', '^Kakoune::ByteCoordAndTarget$', ByteCoordAndTarget)
+    pp.add_printer('LineAndColumn', '^Kakoune::(Buffer|Display)Coord$', LineAndColumn)
+    pp.add_printer('BufferCoordAndTarget', '^Kakoune::BufferCoordAndTarget$', BufferCoordAndTarget)
     pp.add_printer('BufferIterator', '^Kakoune::BufferIterator$', BufferIterator)
     pp.add_printer('String', '^Kakoune::String$', String)
     pp.add_printer('StringView', '^Kakoune::(StringView|SharedString)$', StringView)
@@ -199,6 +209,7 @@ def build_pretty_printer():
     pp.add_printer('Option', '^Kakoune::Option$', Option)
     pp.add_printer('LineCount', '^Kakoune::LineCount$', LineCount)
     pp.add_printer('CharCount', '^Kakoune::CharCount$', CharCount)
+    pp.add_printer('ColumnCount', '^Kakoune::ColumnCount$', ColumnCount)
     pp.add_printer('ByteCount', '^Kakoune::ByteCount$', ByteCount)
     pp.add_printer('Color', '^Kakoune::Color$', Color)
     return pp
