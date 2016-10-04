@@ -409,11 +409,21 @@ void NCursesUI::draw_status(const DisplayLine& status_line,
 
     if (m_set_title)
     {
-        String title = "\033]2;";
+        constexpr char suffix[] = " - Kakoune\007";
+        char buf[4 + 511 + 2] = "\033]2;";
+        // Fill title escape sequence buffer, removing non ascii characters
+        auto buf_it = &buf[4], buf_end = &buf[4 + 511 - (sizeof(suffix) - 2)];
         for (auto& atom : mode_line)
-            title += atom.content();
-        title += " - Kakoune\007";
-        fputs(title.c_str(), stdout);
+        {
+            const auto str = atom.content();
+            for (auto it = str.begin(), end = str.end();
+                 it != end and buf_it != buf_end; utf8::to_next(it, end))
+                *buf_it++ = (*it >= 0x20 and *it <= 0x7e) ? *it : '?';
+        }
+        for (auto c : suffix)
+            *buf_it++ = c;
+
+        fputs(buf, stdout);
         fflush(stdout);
     }
 
