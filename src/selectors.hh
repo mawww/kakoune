@@ -94,9 +94,8 @@ Selection select_to_previous_word(const Buffer& buffer, const Selection& selecti
 
     skip_while_reverse(begin, buffer.begin(), [](Codepoint c){ return is_eol(c); });
     Utf8Iterator end = begin;
-    skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
 
-    bool with_end = false;
+    bool with_end = skip_while_reverse(end, buffer.begin(), is_horizontal_blank);
     if (word_type == Word and is_punctuation(*end))
         with_end = skip_while_reverse(end, buffer.begin(), is_punctuation);
 
