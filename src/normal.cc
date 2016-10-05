@@ -986,6 +986,7 @@ void select_object(Context& context, NormalParams params)
                     return select<mode>(context, std::bind(select_surrounding, _1, _2,
                                                            params[0], params[1], count, flags));
                 });
+            return;
         }
 
         static constexpr struct
