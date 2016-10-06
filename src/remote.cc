@@ -518,7 +518,7 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
         msg.write(env_vars);
     }
 
-    m_ui->set_input_callback([this](EventMode){ write_next_key(); });
+    m_ui->set_input_callback([this](EventMode){ send_available_keys(); });
 
     MsgReader reader;
     m_socket_watcher.reset(new FDWatcher{sock, [this, reader](FDWatcher& watcher, EventMode) mutable {
@@ -589,12 +589,13 @@ RemoteClient::RemoteClient(StringView session, std::unique_ptr<UserInterface>&& 
     }});
 }
 
-void RemoteClient::write_next_key()
+void RemoteClient::send_available_keys()
 {
-    MsgWriter msg(m_socket_watcher->fd(), MessageType::Key);
-    // do that before checking dimensions as get_key may
-    // handle a resize event.
-    msg.write(m_ui->get_key());
+    while (m_ui->is_key_available())
+    {
+        MsgWriter msg(m_socket_watcher->fd(), MessageType::Key);
+        msg.write(m_ui->get_key());
+    }
 }
 
 void send_command(StringView session, StringView command)

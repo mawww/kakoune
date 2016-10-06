@@ -37,7 +37,7 @@ public:
                  const EnvVarMap& env_vars, StringView init_command);
 
 private:
-    void write_next_key();
+    void send_available_keys();
 
     std::unique_ptr<UserInterface> m_ui;
     std::unique_ptr<FDWatcher>     m_socket_watcher;
