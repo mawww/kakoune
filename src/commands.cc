@@ -1637,11 +1637,11 @@ const CommandDesc eval_string_cmd = {
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
-        context_wrap(parser, context, [](const ParametersParser& parser, Context& context) {
+        context_wrap(parser, context, [&](const ParametersParser& parser, Context& context) {
             String command = join(parser, ' ', false);
-            CommandManager::instance().execute(command, context);
+            CommandManager::instance().execute(command, context, shell_context);
         });
     }
 };
