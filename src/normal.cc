@@ -273,7 +273,7 @@ void view_commands(Context& context, NormalParams params)
         }
     }, "view",
     "v,c:  center cursor (vertically)\n"
-    "m:    center cursor (horzontally)\n"
+    "m:    center cursor (horizontally)\n"
     "t:    cursor on top   \n"
     "b:    cursor on bottom\n"
     "h:    scroll left     \n"
