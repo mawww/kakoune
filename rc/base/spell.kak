@@ -23,19 +23,19 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
             line_num=1
             regions=$kak_timestamp
             while read line; do
-                case $line in
-                   \&*)
-                       begin=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
-                       ;&
-                   '#'*)
-                       word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
-                       begin=${begin:-$(printf %s\\n "$line" | cut -d ' ' -f 3)}
-                       end=$((begin + ${#word}))
-                       # printf %s\\n "echo -debug -- line: $line_num, word: $word, begin: $begin, end: $end"
-                       regions="$regions:$line_num.$begin,$line_num.$end|Error"
-                       ;;
-                   '') ((++line_num)) ;;
-                   *) ;;
+                case "$line" in
+                    \&*|'#'*)
+                        if expr "$line" : '^&' >/dev/null; then
+                           begin=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
+                        else
+                           begin=$(printf %s\\n "$line" | cut -d ' ' -f 3)
+                        fi
+                        word=$(printf %s\\n "$line" | cut -d ' ' -f 2)
+                        end=$((begin + ${#word}))
+                        regions="$regions:$line_num.$begin,$line_num.$end|Error"
+                        ;;
+                    '') line_num=$((line_num + 1));;
+                    *) printf %s\\n "echo -color Error %{$line}";;
                 esac
             done
             printf %s\\n "set buffer spell_regions %{$regions}"
