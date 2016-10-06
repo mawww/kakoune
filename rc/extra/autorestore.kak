@@ -11,28 +11,28 @@ def autorestore-restore-buffer -docstring "Restore the backup for the current fi
 
         ## Find the name of the latest backup created for the buffer that was open
         ## The backup file has to have been last modified more recently than the file we are editing
-        latest_backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -newer "${kak_bufname}" -name "\.${buffer_basename}\.kak\.*" -printf '%A@/%p\n' 2>/dev/null \
-                             | sort -n -t. -k1 | sed -nr 's/^[^\/]+\///;$p')
-        if [ -z "${latest_backup_path}" ]; then
-            echo 'eval -draft %{ autorestore-purge-backups }'
+        ## Other backups are removed
+        backup_path=$(find "${buffer_dirname}" -maxdepth 1 -type f -readable -name "\.${buffer_basename}\.kak\.*" \
+                           \( \( -newer "${kak_bufname}" -printf '%A@/%p\n' \) -o \( -delete \) \) 2>/dev/null |
+                      sort -n -t. -k1 | sed -nr 's/^[^\/]+\///;$p')
+
+        if [ -z "${backup_path}" ]; then
             exit
         fi
 
-        ## Replace the content of the buffer with the content of the backup file
         printf %s\\n "
-            exec -draft %{ %d!cat<space>${latest_backup_path}<ret>d }
+            ## Replace the content of the buffer with the content of the backup file
+            exec -draft %{ %d!cat<space>${backup_path}<ret>d }
             echo -color Information 'Backup restored'
-        "
 
-        ## If the backup file has to be removed, issue the command once
-        ## the current buffer has been saved
-        ## If the autorestore_purge_restored option has been unset right after the
-        ## buffer was restored, do not remove the backup
-        printf %s\\n "
+            ## If the backup file has to be removed, issue the command once
+            ## the current buffer has been saved
+            ## If the autorestore_purge_restored option has been unset right after the
+            ## buffer was restored, do not remove the backup
             hook -group autorestore global BufWritePost (.+/)?${kak_bufname} %{
                 nop %sh{
                     if [ \"\${kak_opt_autorestore_purge_restored}\" = true ]; then
-                        rm -f '${latest_backup_path}'
+                        rm -f '${backup_path}'
                     fi
                 }
             }
