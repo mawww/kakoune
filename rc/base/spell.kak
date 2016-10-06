@@ -5,8 +5,8 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
     try %{ addhl ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d -t kak-spell.XXXXXXXX)/buffer
-        printf %s\\n "eval -no-hooks write ${file}"
-        printf %s\\n "set buffer spell_tmp_file ${file}"
+        printf 'eval -no-hooks write %s\n' "${file}"
+        printf 'set buffer spell_tmp_file %s\n' "${file}"
     }
     %sh{
         if [ $# -ge 1 ]; then
@@ -18,13 +18,13 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
                 options="-l $1"
             fi
         fi
-        sed -i 's/^/^/' $kak_opt_spell_tmp_file
-        aspell -a $options < $kak_opt_spell_tmp_file 2>&1 | {
+        sed 's/^/^/' < $kak_opt_spell_tmp_file | aspell -a $options 2>&1 | tee /tmp/spell-out | {
             line_num=1
             regions=$kak_timestamp
+            read line # drop the identification message
             while read line; do
                 case "$line" in
-                    \&*|'#'*)
+                    [\#\&]*)
                         if expr "$line" : '^&' >/dev/null; then
                            begin=$(printf %s\\n "$line" | cut -d ' ' -f 4 | sed 's/:$//')
                         else
@@ -35,10 +35,11 @@ def -params ..1 spell -docstring "Check spelling of the current buffer with aspe
                         regions="$regions:$line_num.$begin,$line_num.$end|Error"
                         ;;
                     '') line_num=$((line_num + 1));;
-                    *) printf %s\\n "echo -color Error %{$line}";;
+                    \*) ;;
+                    *) printf 'echo -color Error %%{%s}\n' "${line}";;
                 esac
             done
-            printf %s\\n "set buffer spell_regions %{$regions}"
+            printf 'set buffer spell_regions %%{%s}' "${regions}"
         }
         rm -r $(dirname $kak_opt_spell_tmp_file)
     }
