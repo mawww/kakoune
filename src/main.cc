@@ -606,6 +606,7 @@ int run_server(StringView session, StringView init_command,
                 String selections = selection_list_to_string(local_client->context().selections());
 
                 ClientManager::instance().remove_client(*local_client, true);
+                client_manager.clear_client_trash();
                 convert_to_client_pending = false;
 
                 if (fork_server_to_background())
