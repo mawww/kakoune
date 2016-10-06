@@ -18,21 +18,12 @@ before_install:
 install:
   - if [ $TRAVIS_OS_NAME = linux ]; then
       if [ "$CXX" = "clang++" ]; then
-        export CXX=clang++-3.7;
+        export CXX=clang++-3.5;
       elif [ "$CXX" = "g++" ]; then
         export CXX=g++-5;
       fi;
     elif [ $TRAVIS_OS_NAME = osx ]; then
-      if [ "$CXX" = "clang++" ]; then
-        brew install llvm36 && brew link --force llvm36;
-        export CXX="clang++-3.6 -stdlib=libc++";
-        export CXXFLAGS="$CXXFLAGS -nostdinc++ -I/usr/local/opt/llvm36/lib/llvm-3.6/include/c++/v1";
-        export LDFLAGS="$LDFLAGS -L/usr/local/opt/llvm36/lib/llvm-3.6/lib";
-      elif [ "$CXX" = "g++" ]; then
-        brew outdated gcc || brew upgrade gcc;
-        brew unlink boost; brew install boost --cc=gcc-5;
-        export CXX=g++-5;
-      fi;
+      brew outdated gcc || brew upgrade gcc;
     fi;
 env:
   global:
@@ -43,9 +34,9 @@ addons:
     sources:
       - boost-latest
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.7
+      - llvm-toolchain-precise-3.5
     packages:
-      - clang-3.7
+      - clang-3.5
       - libstdc++-5-dev
       - g++-5
       - libncursesw5-dev
@@ -58,10 +49,5 @@ addons:
     build_command_prepend: "cd src && make clean"
     build_command: "make -j4"
     branch_pattern: coverity-scan
-
-matrix:
-  exclude:
-    - compiler: gcc
-      os: osx
 
 script: cd src && make && make test
