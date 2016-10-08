@@ -6,25 +6,25 @@
 
 hook global BufCreate .*\.go %{
     set buffer mimetype ""
-    set buffer filetype golang
+    set buffer filetype go
 }
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code golang \
+addhl -group / regions -default code go \
     back_string '`' '`' '' \
     double_string '"' (?<!\\)(\\\\)*" '' \
     single_string "'" (?<!\\)(\\\\)*' '' \
     comment /\* \*/ '' \
     comment '//' $ ''
 
-addhl -group /golang/back_string fill string
-addhl -group /golang/double_string fill string
-addhl -group /golang/single_string fill string
-addhl -group /golang/comment fill comment
+addhl -group /go/back_string fill string
+addhl -group /go/double_string fill string
+addhl -group /go/single_string fill string
+addhl -group /go/comment fill comment
 
-addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
+addhl -group /go/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
 
 %sh{
     # Grammar
@@ -36,23 +36,23 @@ addhl -group /golang/code regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-
     values="false|true|nil"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=golang %{
+    printf %s\\n "hook global WinSetOption filetype=go %{
         set window static_words '${keywords}:${attributes}:${types}:${values}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
     printf %s "
-        addhl -group /golang/code regex \b(${keywords})\b 0:keyword
-        addhl -group /golang/code regex \b(${attributes})\b 0:attribute
-        addhl -group /golang/code regex \b(${types})\b 0:type
-        addhl -group /golang/code regex \b(${values})\b 0:value
+        addhl -group /go/code regex \b(${keywords})\b 0:keyword
+        addhl -group /go/code regex \b(${attributes})\b 0:attribute
+        addhl -group /go/code regex \b(${types})\b 0:type
+        addhl -group /go/code regex \b(${values})\b 0:value
     "
 }
 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _golang-indent-on-new-line %~
+def -hidden _go-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -71,12 +71,12 @@ def -hidden _golang-indent-on-new-line %~
     =
 ~
 
-def -hidden _golang-indent-on-opening-curly-brace %[
+def -hidden _go-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden _golang-indent-on-closing-curly-brace %[
+def -hidden _go-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
@@ -84,21 +84,21 @@ def -hidden _golang-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group golang-highlight global WinSetOption filetype=golang %{ addhl ref golang }
+hook -group go-highlight global WinSetOption filetype=go %{ addhl ref go }
 
-hook global WinSetOption filetype=golang %{
+hook global WinSetOption filetype=go %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group golang-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group golang-indent _golang-indent-on-new-line
-    hook window InsertChar \{ -group golang-indent _golang-indent-on-opening-curly-brace
-    hook window InsertChar \} -group golang-indent _golang-indent-on-closing-curly-brace
+    hook window InsertEnd .* -group go-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group go-indent _go-indent-on-new-line
+    hook window InsertChar \{ -group go-indent _go-indent-on-opening-curly-brace
+    hook window InsertChar \} -group go-indent _go-indent-on-closing-curly-brace
 
     set window formatcmd "gofmt"
 }
 
-hook -group golang-highlight global WinSetOption filetype=(?!golang).* %{ rmhl golang }
+hook -group go-highlight global WinSetOption filetype=(?!go).* %{ rmhl go }
 
-hook global WinSetOption filetype=(?!golang).* %{
-    rmhooks window golang-hooks
-    rmhooks window golang-indent
+hook global WinSetOption filetype=(?!go).* %{
+    rmhooks window go-hooks
+    rmhooks window go-indent
 }
