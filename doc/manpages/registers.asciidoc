@@ -20,25 +20,31 @@ Interacting
 *"<c>*::
 	in normal mode, select the *<c>* register (single character)
 
+Alternate names
+---------------
+
+non alphanumeric registers have an alternative name that can be used
+in contexts where only alphanumeric identifiers are possible.
+
 Default registers
 -----------------
 Most commands using a register default to a specific one if not specified:
 
-*"*::
-	default yank, used by yanking and pasting commands like *y*, *p*
+*"* (dquote)::
+	default yank register, used by yanking and pasting commands like *y*, *p*
 	and *R*
 
-*/*::
+*/* (slash)::
 	default search register, used by regex based commands like *s*, ***
 	or */*
 
-*@*::
+*@* (arobase)::
 	default macro register, used by *q* and *Q*
 
-*^*::
+*^* (caret)::
 	default mark register, used by *z* and *Z*
 
-*|*::
+*|* (pipe)::
 	default shell command register, used by command that spawn a subshell such as
 	*|*, *<a-|>*, *!* or *<a-!>*
 
@@ -47,16 +53,16 @@ Special registers
 Some registers are not general purposes, they cannot be written to, but they
 contain some special data
 
-*%*::
+*%* (percent)::
 	current buffer name
 
-*.*::
+*.* (dot)::
 	current selection contents
 
-*#*::
+*#* (dash)::
 	selection indices (first selection has 1, second has 2, ...)
 
-*_*::
+*_* (underscore)::
 	null register, always empty
 
 Integer registers

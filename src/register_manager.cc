@@ -16,7 +16,11 @@ Register& RegisterManager::operator[](StringView reg) const
         { "dquote", '"' },
         { "pipe", '|' },
         { "caret", '^' },
-        { "arobase", '@' }
+        { "arobase", '@' },
+        { "percent", '%' },
+        { "dot", '.' },
+        { "dash", '#' },
+        { "underscore", '_' }
     };
     auto it = reg_names.find(reg);
     if (it == reg_names.end())
