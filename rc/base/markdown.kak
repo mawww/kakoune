@@ -23,8 +23,8 @@ addhl -group / regions -default content markdown \
     cpp        ```cpp        ```          '' \
     css        ```css        ```          '' \
     cucumber   ```cucumber   ```          '' \
+    d          ```d          ```          '' \
     diff       ```diff       ```          '' \
-    dlang      ```dlang      ```          '' \
     dockerfile ```dockerfile ```          '' \
     fish       ```fish       ```          '' \
     gas        ```gas        ```          '' \
@@ -71,8 +71,8 @@ addhl -group /markdown/coffee     ref coffee
 addhl -group /markdown/cpp        ref cpp
 addhl -group /markdown/css        ref css
 addhl -group /markdown/cucumber   ref cucumber
+addhl -group /markdown/d          ref d
 addhl -group /markdown/diff       ref diff
-addhl -group /markdown/dlang      ref dlang
 addhl -group /markdown/dockerfile ref dockerfile
 addhl -group /markdown/fish       ref fish
 addhl -group /markdown/gas        ref gas
