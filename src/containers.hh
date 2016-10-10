@@ -254,7 +254,7 @@ struct ConcatView
 {
     using ContainerIt1 = decltype(begin(std::declval<Container1>()));
     using ContainerIt2 = decltype(begin(std::declval<Container2>()));
-    using ValueType = typename ContainerIt1::value_type;
+    using ValueType = typename std::common_type<typename ContainerIt1::value_type, typename ContainerIt2::value_type>::type;
 
     struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
     {
@@ -265,7 +265,7 @@ struct ConcatView
             : m_it1(std::move(it1)), m_end1(std::move(end1)),
               m_it2(std::move(it2)) {}
 
-        decltype(*std::declval<ContainerIt1>()) operator*() { return is2() ? *m_it2 : *m_it1; }
+        ValueType operator*() { return is2() ? *m_it2 : *m_it1; }
         Iterator& operator++() { if (is2()) ++m_it2; else ++m_it1; return *this; }
         Iterator operator++(int) { auto copy = *this; ++*this; return copy; }
 

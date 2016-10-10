@@ -25,6 +25,8 @@
 #include "string.hh"
 #include "window.hh"
 
+#include <functional>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -1508,8 +1510,7 @@ void context_wrap(const ParametersParser& parser, Context& context, Func func)
             // copy buffer list as we might be mutating the buffer list
             // in the loop.
             auto ptrs = BufferManager::instance() |
-                transform([](const std::unique_ptr<Buffer>& ptr)
-                          { return ptr.get(); });
+                transform(std::mem_fn(&std::unique_ptr<Buffer>::get));
             Vector<SafePtr<Buffer>> buffers{ptrs.begin(), ptrs.end()};
             for (auto buffer : buffers)
                 context_wrap_for_buffer(*buffer);

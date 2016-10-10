@@ -54,7 +54,6 @@ void BufferManager::delete_buffer(Buffer& buffer)
                       { return p.get() == &buffer; });
     kak_assert(it != m_buffers.end());
 
-
     ClientManager::instance().ensure_no_client_uses_buffer(buffer);
 
     m_buffer_trash.emplace_back(std::move(*it));

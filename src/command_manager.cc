@@ -531,16 +531,15 @@ Completions CommandManager::complete_command_name(const Context& context,
 {
     auto commands = m_commands
             | filter([](const CommandMap::value_type& cmd) { return not (cmd.second.flags & CommandFlags::Hidden); })
-            | transform([](const CommandMap::value_type& cmd) { return StringView{cmd.first}; });
+            | transform(std::mem_fn(&CommandMap::value_type::first));
 
     if (not with_aliases)
         return {0, query.length(), Kakoune::complete(query, query.length(), commands)};
 
     auto candidates = Kakoune::complete(query, query.length(),
         concatenated(commands,
-                     context.aliases().flatten_aliases()
-                    | transform([](AliasRegistry::AliasDesc alias)
-                                { return alias.first; })));
+                     context.aliases().flatten_aliases() |
+                     transform(std::mem_fn(&AliasRegistry::AliasDesc::first))));
     return {0, query.length(), std::move(candidates)};
 }
 

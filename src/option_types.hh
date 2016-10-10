@@ -32,7 +32,7 @@ struct option_type_name<Enum, typename std::enable_if<std::is_enum<Enum>::value>
     {
         constexpr StringView type = WithBitOps<Enum>::value ? "flags" : "enum";
         auto name = enum_desc(Enum{});
-        return type + "(" + join(name | transform([](const EnumDesc<Enum>& d) { return d.name; }), '|') + ")";
+        return type + "(" + join(name | transform(std::mem_fn(&EnumDesc<Enum>::name)), '|') + ")";
     }
 };
 
