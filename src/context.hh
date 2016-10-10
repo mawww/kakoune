@@ -66,7 +66,7 @@ struct JumpList
 
 private:
     using Contents = Vector<SelectionList, MemoryDomain::Selections>;
-    Contents           m_jumps;
+    Contents m_jumps;
     size_t m_current = 0;
 };
 
