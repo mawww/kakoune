@@ -610,9 +610,7 @@ String selection_to_string(const Selection& selection)
 
 String selection_list_to_string(const SelectionList& selections)
 {
-    return join(selections | transform([](const Selection& s)
-                                       { return selection_to_string(s); }),
-                ':', false);
+    return join(selections | transform(selection_to_string), ':', false);
 }
 
 Selection selection_from_string(StringView desc)

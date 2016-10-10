@@ -67,8 +67,7 @@ void register_env_vars()
             "buflist", false,
             [](StringView name, const Context& context)
             { return join(BufferManager::instance() |
-                          transform([](const std::unique_ptr<Buffer>& b)
-                                    { return b->display_name(); }), ':'); }
+                          transform(std::mem_fn(&Buffer::display_name)), ':'); }
         }, {
             "timestamp", false,
             [](StringView name, const Context& context) -> String
