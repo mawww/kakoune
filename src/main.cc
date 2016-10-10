@@ -564,29 +564,23 @@ int run_server(StringView session, StringView init_command,
     {
          write_to_debug_buffer(format("error while opening command line files: {}", error.what()));
     }
-    else
-        buffer_manager.create_buffer("*scratch*", Buffer::Flags::None);
 
     try
     {
-        if (not daemon)
+        if (not daemon and
+            (local_client = client_manager.create_client(
+                 create_local_ui(ui_type), get_env_vars(), init_command)))
         {
-            local_client = client_manager.create_client(
-                create_local_ui(ui_type), get_env_vars(), init_command);
+            auto& selections = local_client->context().selections_write_only();
+            auto& buffer = selections.buffer();
+            selections = SelectionList(buffer, buffer.clamp(target_coord));
+            local_client->context().window().center_line(target_coord.line);
 
-            if (local_client)
-            {
-                auto& selections = local_client->context().selections_write_only();
-                auto& buffer = selections.buffer();
-                selections = SelectionList(buffer, buffer.clamp(target_coord));
-                local_client->context().window().center_line(target_coord.line);
-
-                if (startup_error)
-                    local_client->print_status({
-                        "error during startup, see *debug* buffer for details",
-                        get_face("Error")
-                    });
-            }
+            if (startup_error)
+                local_client->print_status({
+                    "error during startup, see *debug* buffer for details",
+                    get_face("Error")
+                });
         }
 
         while (not terminate and (not client_manager.empty() or daemon))

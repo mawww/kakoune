@@ -40,7 +40,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui,
                                      EnvVarMap env_vars,
                                      StringView init_commands)
 {
-    Buffer& buffer = **BufferManager::instance().begin();
+    Buffer& buffer = BufferManager::instance().get_first_buffer();
     WindowAndSelections ws = get_free_window(buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), std::move(env_vars),

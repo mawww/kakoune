@@ -30,6 +30,8 @@ public:
     Buffer* get_buffer_ifp(StringView name);
     Buffer& get_buffer(StringView name);
 
+    Buffer& get_first_buffer();
+
     void backup_modified_buffers();
 
     void clear_buffer_trash();

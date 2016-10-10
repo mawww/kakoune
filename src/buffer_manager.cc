@@ -45,6 +45,9 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
     auto& buffer = *m_buffers.front();
     buffer.on_registered();
 
+    if (contains(m_buffer_trash, &buffer))
+        throw runtime_error("Buffer got removed during its creation");
+
     return &buffer;
 }
 
@@ -80,6 +83,15 @@ Buffer& BufferManager::get_buffer(StringView name)
     if (not res)
         throw runtime_error(format("no such buffer '{}'", name));
     return *res;
+}
+
+Buffer& BufferManager::get_first_buffer()
+{
+    if (not contains_that(m_buffers, [](const std::unique_ptr<Buffer>& p)
+                          { return not (p->flags() & Buffer::Flags::Debug); }))
+        create_buffer("*scratch*", Buffer::Flags::None);
+
+    return *m_buffers.front();
 }
 
 void BufferManager::backup_modified_buffers()
