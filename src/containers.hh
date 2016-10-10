@@ -97,8 +97,8 @@ struct FilterView
         const FilterView& m_view;
     };
 
-    Iterator begin() const { return {*this, m_container.begin(), m_container.end()}; }
-    Iterator end()   const { return {*this, m_container.end(), m_container.end()}; }
+    Iterator begin() const { return {*this, std::begin(m_container), std::end(m_container)}; }
+    Iterator end()   const { return {*this, std::end(m_container), std::end(m_container)}; }
 
     Container m_container;
     Filter m_filter;
@@ -154,8 +154,8 @@ struct TransformView
         const TransformView& m_view;
     };
 
-    Iterator begin() const { return {*this, m_container.begin()}; }
-    Iterator end()   const { return {*this, m_container.end()}; }
+    Iterator begin() const { return {*this, std::begin(m_container)}; }
+    Iterator end()   const { return {*this, std::end(m_container)}; }
 
     Container m_container;
     Transform m_transform;
@@ -225,8 +225,8 @@ struct SplitView
         Separator separator;
     };
 
-    Iterator begin() const { return {m_container.begin(), m_container.end(), m_separator}; }
-    Iterator end()   const { return {m_container.end(), m_container.end(), m_separator}; }
+    Iterator begin() const { return {std::begin(m_container), std::end(m_container), m_separator}; }
+    Iterator end()   const { return {std::end(m_container), std::end(m_container), m_separator}; }
 
     Container m_container;
     Separator m_separator;
