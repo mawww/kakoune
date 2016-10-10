@@ -345,7 +345,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
     throw logic_error{};
 }
 
-std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
+std::unique_ptr<UserInterface> create_local_ui(BufferManager &buffer_manager, UIType ui_type)
 {
     if (ui_type != UIType::NCurses)
         return make_ui(ui_type);
@@ -418,6 +418,8 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
         close(tty);
         create_fifo_buffer("*stdin*", fd);
     }
+    else
+        buffer_manager.create_buffer("*scratch*", Buffer::Flags::None);
 
     return make_unique<LocalUI>();
 }
@@ -565,15 +567,13 @@ int run_server(StringView session, StringView init_command,
     {
          write_to_debug_buffer(format("error while opening command line files: {}", error.what()));
     }
-    else
-        buffer_manager.create_buffer("*scratch*", Buffer::Flags::None);
 
     try
     {
         if (not daemon)
         {
             local_client = client_manager.create_client(
-                create_local_ui(ui_type), get_env_vars(), init_command);
+                create_local_ui(buffer_manager, ui_type), get_env_vars(), init_command);
 
             if (local_client)
             {
