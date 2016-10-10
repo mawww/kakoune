@@ -70,6 +70,14 @@ void select(Context& context, NormalParams)
     select<mode>(context, func);
 }
 
+template<SelectMode mode, typename Func>
+void select_and_set_last(Context& context, Func&& func)
+{
+    context.set_last_select(
+        [func](Context& context){ select<mode>(context, func); });
+    return select<mode>(context, func);
+}
+
 template<SelectMode mode = SelectMode::Replace>
 void select_coord(Buffer& buffer, BufferCoord coord, SelectionList& selections)
 {
@@ -93,6 +101,11 @@ void enter_insert_mode(Context& context, NormalParams)
 void repeat_last_insert(Context& context, NormalParams)
 {
     context.input_handler().repeat_last_insert();
+}
+
+void repeat_last_select(Context& context, NormalParams)
+{
+    context.repeat_last_select();
 }
 
 template<SelectMode mode>
@@ -432,7 +445,7 @@ void insert_output(Context& context, NormalParams)
 {
     const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
     context.input_handler().prompt(
-        prompt, "", get_face("Prompt"), 
+        prompt, "", get_face("Prompt"),
         PromptFlags::DropHistoryEntriesWithBlankPrefix, shell_complete,
         [](StringView cmdline, PromptEvent event, Context& context)
         {
@@ -944,7 +957,7 @@ void select_object(Context& context, NormalParams params)
         if (cp == -1)
             return;
 
-        static constexpr struct
+        static constexpr struct ObjectType
         {
             Codepoint key;
             Selection (*func)(const Buffer&, const Selection&, int, ObjectFlags);
@@ -958,11 +971,10 @@ void select_object(Context& context, NormalParams params)
             { 'n', select_number },
             { 'u', select_argument },
         };
-        for (auto& sel : selectors)
-        {
-            if (cp == sel.key)
-                return select<mode>(context, std::bind(sel.func, _1, _2, count, flags));
-        }
+        auto obj_it = find(selectors | transform(std::mem_fn(&ObjectType::key)), cp).base();
+        if (obj_it != std::end(selectors))
+            return select_and_set_last<mode>(
+                context, std::bind(obj_it->func, _1, _2, count, flags));
 
         if (cp == ':')
         {
@@ -983,13 +995,15 @@ void select_object(Context& context, NormalParams params)
                     if (params.size() != 2)
                         throw runtime_error{"desc parsing failed, expected <open>,<close>"};
 
-                    return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                           params[0], params[1], count, flags));
+                    select_and_set_last<mode>(
+                        context, std::bind(select_surrounding, _1, _2,
+                                           params[0], params[1],
+                                           count, flags));
                 });
             return;
         }
 
-        static constexpr struct
+        static constexpr struct SurroundingPair
         {
             StringView opening;
             StringView closing;
@@ -1003,22 +1017,24 @@ void select_object(Context& context, NormalParams params)
             { "'", "'", 'q' },
             { "`", "`", 'g' },
         };
-        for (auto& sur : surrounding_pairs)
-        {
-            if (sur.opening[0_char] == cp or
-                sur.closing[0_char] == cp or
-                (sur.name != 0 and sur.name == cp))
-                return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                       sur.opening, sur.closing,
-                                                       count, flags));
-        }
+        auto pair_it = find_if(surrounding_pairs,
+                               [cp](const SurroundingPair& s) {
+                                   return s.opening[0_char] == cp or
+                                          s.closing[0_char] == cp or
+                                          (s.name != 0 and s.name == cp);
+                               });
+        if (pair_it != std::end(surrounding_pairs))
+            return select_and_set_last<mode>(
+                context, std::bind(select_surrounding, _1, _2,
+                                   pair_it->opening, pair_it->closing,
+                                   count, flags));
 
         if (is_punctuation(cp))
         {
             auto utf8cp = to_string(cp);
-            return select<mode>(context, std::bind(select_surrounding, _1, _2,
-                                                   utf8cp, utf8cp,
-                                                   count, flags));
+            return select_and_set_last<mode>(
+                context, std::bind(select_surrounding, _1, _2,
+                                   utf8cp, utf8cp, count, flags));
         }
     }, get_title(),
     "b,(,):  parenthesis block\n"
@@ -1133,10 +1149,12 @@ void select_to_next_char(Context& context, NormalParams params)
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
         if (auto cp = key.codepoint())
-            select<new_flags>(
+            select_and_set_last<new_flags>(
                 context,
-                std::bind(flags & SelectFlags::Reverse ? select_to_reverse : select_to,
-                          _1, _2, *cp, params.count, flags & SelectFlags::Inclusive));
+                std::bind(flags & SelectFlags::Reverse ? select_to_reverse
+                                                       : select_to,
+                          _1, _2, *cp, params.count,
+                          flags & SelectFlags::Inclusive));
     }, get_title(),"enter char to select to");
 }
 
@@ -1658,6 +1676,7 @@ static NormalCmdDesc cmds[] =
     { alt('s'), "split selected text on line ends", split_lines },
 
     { '.', "repeat last insert command", repeat_last_insert },
+    { alt('.'), "repeat last object select/character find", repeat_last_select },
 
     { '%', "select whole buffer", select_whole_buffer },
 

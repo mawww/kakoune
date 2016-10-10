@@ -70,6 +70,8 @@ private:
     size_t m_current = 0;
 };
 
+using LastSelectFunc = std::function<void (Context&)>;
+
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
@@ -150,6 +152,11 @@ public:
     JumpList& jump_list() { return m_jump_list; }
     void push_jump() { m_jump_list.push(selections()); }
 
+    template<typename Func>
+    void set_last_select(Func&& last_select) { m_last_select = std::forward<Func>(last_select); }
+
+    void repeat_last_select() { if (m_last_select) m_last_select(*this); }
+
 private:
     void begin_edition();
     void end_edition();
@@ -168,6 +175,8 @@ private:
     String m_name;
 
     JumpList m_jump_list;
+
+    LastSelectFunc m_last_select;
 
     NestedBool m_hooks_disabled;
     NestedBool m_keymaps_disabled;
