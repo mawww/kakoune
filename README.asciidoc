@@ -1031,7 +1031,7 @@ contain some special data:
 
  * `%` (`percent`): current buffer name
  * `.` (`dot`): current selection contents
- * `#` (`dash`): selection indices (first selection has 1, second has 2, ...)
+ * `#` (`hash`): selection indices (first selection has 1, second has 2, ...)
  * `_` (`underscore`): null register, always empty
 
 Default registers
@@ -1039,7 +1039,7 @@ Default registers
 
 Most commands using a register default to a specific one if not specified:
 
- * `"` (`dqoute`): default yank register, used by yanking and pasting commands like `y`, `p` and `R`
+ * `"` (`dquote`): default yank register, used by yanking and pasting commands like `y`, `p` and `R`
  * `/` (`slash`): default search register, used by regex based commands like `s`, `*` or `/`
  * `@` (`arobase`): default macro register, used by `q` and `Q`
  * `^` (`caret`): default mark register, used by `z` and `Z`

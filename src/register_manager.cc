@@ -19,7 +19,7 @@ Register& RegisterManager::operator[](StringView reg) const
         { "arobase", '@' },
         { "percent", '%' },
         { "dot", '.' },
-        { "dash", '#' },
+        { "hash", '#' },
         { "underscore", '_' }
     };
     auto it = reg_names.find(reg);

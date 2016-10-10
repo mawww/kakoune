@@ -59,7 +59,7 @@ contain some special data
 *.* (dot)::
 	current selection contents
 
-*#* (dash)::
+*#* (hash)::
 	selection indices (first selection has 1, second has 2, ...)
 
 *_* (underscore)::
