@@ -46,7 +46,12 @@ report the issue on the bug tracker).
 Can I use Kakoune as a pager ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.
+Kakoune can be used as a pager, either by setting the `EDITOR` environment
+variable to `kak`, or by writing data directly to its standard input using a
+shell pipeline. However, since the program relies on several heavy dynamic
+libraries (`boost` being one of them), it will be slightly less pratical
+than other regular pagers (such as `less` or `more`) which have a minimal
+amount of runtime dependencies.
 
 Are there any non-console based frontends available ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
