@@ -1958,7 +1958,7 @@ const CommandDesc select_cmd = {
 const CommandDesc change_working_directory_cmd = {
     "cd",
     nullptr,
-    "cd <dir>: change server working directory to <dir>",
+    "cd [<directory>]: change the server's working directory to <directory>, or the home directory if unspecified",
     single_optional_name_param,
     CommandFlags::None,
     CommandHelper{},

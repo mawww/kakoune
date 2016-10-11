@@ -620,7 +620,7 @@ Some commands take an exclamation mark (`!`), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
 command `q!` has to be used).
 
- * `cd <directory>`: change the current directory to the one passed
+ * `cd [<directory>]`: change the current directory to `<directory>`, or the home directory is unspecified
  * `e[dit][!] <filename> [<line> [<column>]]`: open buffer on file, go to given
      line and column. If file is already opened, just switch to this file.
      use edit! to force reloading.
