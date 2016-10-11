@@ -2,16 +2,18 @@
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
 def ranger-open-on-edit-directory \
-    -docstring 'fallback on ranger when trying to open a directory' %{
+    -docstring 'Start the ranger file system explorer when trying to edit a directory' %{
         hook global RuntimeError "\d+:\d+: '\w+' (.*): is a directory" %{ %sh{
           directory=$(expr $kak_hook_param : "[0-9]*:[0-9]*: '[a-z]*' \\(.*\\): is a directory")
           echo ranger $directory
     }}
 }
 
-def ranger -docstring 'ranger file manager' \
-           -params ..                       \
-           -file-completion %{ %sh{
+def \
+  -params .. -file-completion \
+  -docstring %{ranger [<arguments>]: open the file system explorer to select buffers to open
+All the optional arguments are forwarded to the ranger utility} \
+  ranger %{ %sh{
   if [ -n "$TMUX" ]; then
     tmux split-window -h \
       ranger $@ --cmd " \

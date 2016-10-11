@@ -3,7 +3,9 @@ decl str toolsclient
 decl -hidden int _grep_current_line 0
 
 def -params .. -file-completion \
-    grep -docstring "Grep utility wrapper" %{ %sh{
+    -docstring %{grep [<arguments>]: grep utility wrapper
+All the optional arguments are forwarded to the grep utility} \
+    grep %{ %sh{
      output=$(mktemp -d -t kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
      if [ $# -gt 0 ]; then
@@ -41,7 +43,7 @@ hook global WinSetOption filetype=(?!grep).* %{
 
 decl str jumpclient
 
-def grep-jump %{
+def -hidden grep-jump %{
     eval -collapse-jumps %{
         try %{
             exec 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
@@ -52,7 +54,7 @@ def grep-jump %{
     }
 }
 
-def grep-next -docstring 'Jump to next grep match' %{
+def grep-next -docstring 'Jump to the next grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         exec "%opt{_grep_current_line}g<a-l>/^[^:]+:\d+:<ret>"
@@ -61,7 +63,7 @@ def grep-next -docstring 'Jump to next grep match' %{
     try %{ eval -client %opt{toolsclient} %{ exec %opt{_grep_current_line}g } }
 }
 
-def grep-prev -docstring 'Jump to previous grep match' %{
+def grep-prev -docstring 'Jump to the previous grep match' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*grep*'
         exec "%opt{_grep_current_line}g<a-/>^[^:]+:\d+:<ret>"

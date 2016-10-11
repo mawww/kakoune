@@ -28,24 +28,23 @@ def -hidden -params 1.. tmux-new-impl %{
     }
 }
 
-def tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane in tmux" %{
+def tmux-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
     tmux-new-impl 'split-window -v' %arg{@}
 }
 
-def tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane in tmux" %{
+def tmux-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
     tmux-new-impl 'split-window -h' %arg{@}
 }
 
-def tmux-new-window -params .. -command-completion -docstring "Create a new window in tmux" %{
+def tmux-new-window -params .. -command-completion -docstring "Create a new window" %{
     tmux-new-impl 'new-window' %arg{@}
 }
 
-def -docstring "focus given client" \
-    -params 0..1 -client-completion \
+def -docstring %{tmux-focus [<client>]: focus the given client
+If no client is passed then the current one is used} \
+    -params ..1 -client-completion \
     tmux-focus %{ %sh{
-    if [ $# -gt 1 ]; then
-        echo "echo -color Error 'too many arguments, use focus [client]'"
-    elif [ $# -eq 1 ]; then
+    if [ $# -eq 1 ]; then
         printf %s\\n "eval -client '$1' focus"
     elif [ -n "${kak_client_env_TMUX}" ]; then
         TMUX="${kak_client_env_TMUX}" tmux select-pane -t "${kak_client_env_TMUX_PANE}" > /dev/null

@@ -47,7 +47,7 @@ def -hidden -params 1..2 _man %{ %sh{
     fi
 } }
 
-def -params .. \
+def -params ..1 \
   -shell-completion %{
     prefix=$(printf %s\\n "$1" | cut -c1-${kak_pos_in_token} 2>/dev/null)
     for page in /usr/share/man/*/${prefix}*.[1-8]*; do
@@ -59,7 +59,10 @@ def -params .. \
         esac
     done
   } \
-  man -docstring "Manpages viewer wrapper" %{ %sh{
+  -docstring %{man [<page>]: manpage viewer wrapper
+If no argument is passed to the command, the selection will be used as page
+The page can be a word, or a word directly followed by a section number between parenthesis, e.g. kak(1)} \
+    man %{ %sh{
     subject=${@-$kak_selection}
 
     ## The completion suggestions display the page number, strip them if present

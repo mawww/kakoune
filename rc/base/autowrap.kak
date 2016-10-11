@@ -38,7 +38,7 @@ def -hidden autowrap-cursor %{ eval -save-regs '/"|^@m' %{
     }
 } }
 
-def autowrap-enable -docstring "Wrap the lines in which characters are inserted" %{
+def autowrap-enable -docstring "Automatically wrap the lines in which characters are inserted" %{
     hook -group autowrap window InsertChar [^\n] autowrap-cursor
 }
 

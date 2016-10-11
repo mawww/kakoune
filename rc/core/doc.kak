@@ -34,7 +34,8 @@ def -params 1..2 \
             printf %s\\n "${l%.*}"
         done
     } \
-    doc -docstring "Open a buffer containing the documentation about a given subject" %{
+    doc -docstring %{doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
+An optional keyword argument can be passed to the function, which will be automatically selected in the documentation} %{
     %sh{
         readonly PATH_DOC="${kak_runtime}/../doc/kak/manpages/${1}.gz"
 

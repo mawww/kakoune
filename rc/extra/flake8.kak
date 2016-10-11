@@ -3,7 +3,7 @@ decl -hidden str flake8_tmp_dir
 decl -hidden line-flags flake8_flags
 decl -hidden str flake8_errors
 
-def flake8-lint -params 0..1 -docstring "Lint the contents of the current buffer with flake8" %{
+def flake8-lint -docstring "Lint the contents of the current buffer" %{
     %sh{
         dir=$(mktemp -d -t kak-flake8.XXXXXXXX)
         mkfifo ${dir}/fifo
@@ -50,7 +50,7 @@ def -hidden flake8-show-error-info %{ %sh{
     fi
 } }
 
-def flake8-enable-diagnostics -docstring "Activate automatic diagnostics of the code by flake8" %{
+def flake8-enable-diagnostics -docstring "Activate automatic diagnostics of the code" %{
     addhl flag_lines default flake8_flags
     hook window -group flake8-diagnostics NormalIdle .* %{ flake8-show-error-info }
 }

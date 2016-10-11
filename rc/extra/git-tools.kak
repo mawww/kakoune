@@ -22,7 +22,9 @@ decl line-flags git_diff_flags
 face GitBlame default,magenta
 
 def -params 1.. \
-  -docstring %sh{printf '%%{Git wrapping helper\navailable commands:\n add\n rm\n blame\n commit\n checkout\n diff\n hide-blame\n log\n show\n show-diff\n status\n update-diff}'} \
+  -docstring %sh{printf '%%{git [<arguments>]: git wrapping helper
+All the optional arguments are forwarded to the git utility
+Available commands:\n-add\n-rm\n-blame\n-commit\n-checkout\n-diff\n-hide-blame\n-log\n-show\n-show-diff\n-status\n-update-diff}'} \
   -shell-candidates %{
     [ $kak_token_to_complete -eq 0 ] &&
         printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nlog\nshow\nshow-diff\nstatus\nupdate-diff\n"

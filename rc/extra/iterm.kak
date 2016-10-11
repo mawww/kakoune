@@ -32,15 +32,18 @@ def -hidden -params 1.. iterm-new-split-impl %{
     }
 }
 
-def iterm-new-vertical -params .. -command-completion -docstring "Create a new vertical pane in iTerm" %{
+def iterm-new-vertical -params .. -command-completion -docstring "Create a new vertical pane" %{
     iterm-new-split-impl 'vertically' %arg{@}
 }
 
-def iterm-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane in iTerm" %{
+def iterm-new-horizontal -params .. -command-completion -docstring "Create a new horizontal pane" %{
     iterm-new-split-impl 'horizontally' %arg{@}
 }
 
-def iterm-new-tab -params .. -command-completion -docstring "Create a new tab in iTerm" %{
+def -params .. -command-completion \
+    -docstring %{iterm-new-tab [<arguments>]: create a new tab
+All optional arguments are forwarded to the new kak client} \
+    iterm-new-tab %{
     %sh{
         if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
         sh_cmd="kak -c ${kak_session} ${kakoune_params}"
@@ -55,7 +58,10 @@ def iterm-new-tab -params .. -command-completion -docstring "Create a new tab in
     }
 }
 
-def iterm-new-window -params .. -command-completion -docstring "Create a new iTerm window" %{
+def -params .. -command-completion \
+    -docstring %{iterm-new-window [<arguments>]: create a new window
+All optional arguments are forwarded to the new kak client} \
+    iterm-new-window %{
     %sh{
         if [ $# -gt 0 ]; then kakoune_params="-e '$@'"; fi
         sh_cmd="kak -c ${kak_session} ${kakoune_params}"
@@ -69,7 +75,10 @@ def iterm-new-window -params .. -command-completion -docstring "Create a new iTe
     }
 }
 
-def iterm-focus -params 0..1 -client-completion -docstring "Focus the given client in iTerm" %{
+def -params ..1 -client-completion \
+    -docstring %{iterm-focus [<client>]: focus the given client
+If no client is passed then the current one is used} \
+    iterm-focus %{
     # Should be possible using ${kak_client_env_ITERM_SESSION_ID}.
      %sh{echo "echo -color Error 'Not implemented yet for iTerm'"}
 }

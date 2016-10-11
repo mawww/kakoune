@@ -1,5 +1,5 @@
 decl str formatcmd ""
-def format -docstring "Format the entire buffer with an external utility" %{
+def format -docstring "Format the contents of the current buffer" %{
     %sh{
         if [ ! -z "${kak_opt_formatcmd}" ]; then
             readonly kak_opt_formatcmd=$(printf '%s' "${kak_opt_formatcmd}" | sed 's/ /<space>/g')

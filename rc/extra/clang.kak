@@ -5,7 +5,10 @@ decl -hidden completions clang_completions
 decl -hidden line-flags clang_flags
 decl -hidden str clang_errors
 
-def clang-parse -params 0..1 -docstring "Parse the contents of the current buffer with clang" %{
+def -params ..1 \
+    -docstring %{Parse the contents of the current buffer
+The syntaxic errors detected during parsing are shown when auto-diagnostics are enabled} \
+    clang-parse %{
     %sh{
         dir=$(mktemp -d -t kak-clang.XXXXXXXX)
         mkfifo ${dir}/fifo
@@ -95,7 +98,7 @@ def clang-parse -params 0..1 -docstring "Parse the contents of the current buffe
     }
 }
 
-def clang-complete -docstring "Complete the current selection with clang" %{ clang-parse -complete }
+def clang-complete -docstring "Complete the current selection" %{ clang-parse -complete }
 
 def -hidden clang-show-completion-info %[ try %[
     eval -draft %[
@@ -108,7 +111,7 @@ def -hidden clang-show-completion-info %[ try %[
     ] ]
 ] ]
 
-def clang-enable-autocomplete -docstring "Enable completion with clang" %{
+def clang-enable-autocomplete -docstring "Enable automatic clang completion" %{
     set window completers "option=clang_completions:%opt{completers}"
     hook window -group clang-autocomplete InsertIdle .* %{
         try %{
@@ -134,13 +137,15 @@ def -hidden clang-show-error-info %{ %sh{
     fi
 } }
 
-def clang-enable-diagnostics -docstring "Activate automatic diagnostics of the code by clang" %{
+def clang-enable-diagnostics -docstring %{Activate automatic error reporting and diagnostics
+Information about the analysis are showned after the buffer has been parsed with the clang-parse function} \
+%{
     addhl flag_lines default clang_flags
     hook window -group clang-diagnostics NormalIdle .* %{ clang-show-error-info }
     hook window -group clang-diagnostics WinSetOption ^clang_errors=.* %{ info; clang-show-error-info }
 }
 
-def clang-disable-diagnostics -docstring "Disable automatic diagnostics of the code" %{
+def clang-disable-diagnostics -docstring "Disable automatic error reporting and diagnostics" %{
     rmhl hlflags_clang_flags
     rmhooks window clang-diagnostics
 }

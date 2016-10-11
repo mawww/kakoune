@@ -100,7 +100,7 @@ def -hidden _modeline-parse %{
 
 # Add the following function to a hook on BufOpen to automatically parse modelines
 # Select the first and last `modelines` lines in the buffer, only keep modelines
-def modeline-parse %{
+def modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ eval -draft %{
         exec \%s\`|.\'<ret> %opt{modelines}k <a-x> %opt{modelines}X \
              s^[^\s]+?\s(vim?|kak(oune)?):\s?[^\n]+<ret>

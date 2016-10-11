@@ -37,19 +37,19 @@ def -hidden -params 1..2 tmux-repl-impl %{
     }
 }
 
-def tmux-repl-vertical -params 0..1 -command-completion -docstring "Create a new vertical pane in tmux for repl interaction" %{
+def tmux-repl-vertical -params 0..1 -command-completion -docstring "Create a new vertical pane for repl interaction" %{
     tmux-repl-impl 'split-window -v' %arg{@}
 }
 
-def tmux-repl-horizontal -params 0..1 -command-completion -docstring "Create a new horizontal pane in tmux for repl interaction" %{
+def tmux-repl-horizontal -params 0..1 -command-completion -docstring "Create a new horizontal pane for repl interaction" %{
     tmux-repl-impl 'split-window -h' %arg{@}
 }
 
-def tmux-repl-window -params 0..1 -command-completion -docstring "Create a new window in tmux for repl interaction" %{
+def tmux-repl-window -params 0..1 -command-completion -docstring "Create a new window for repl interaction" %{
     tmux-repl-impl 'new-window' %arg{@}
 }
 
-def -hidden _tmux-send-text -docstring "Send selected text to the repl pane in tmux" %{
+def -hidden _tmux-send-text -docstring "Send the selected text to the repl pane" %{
     nop %sh{
         tmux set-buffer -b kak_selection "${kak_selection}"
         kak_orig_window=$(tmux display-message -p '#I')

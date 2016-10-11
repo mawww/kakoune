@@ -2,7 +2,7 @@ decl -hidden str jedi_tmp_dir
 decl -hidden completions jedi_completions
 decl str-list jedi_python_path ''
 
-def jedi-complete -docstring "Complete the current selection with jedi" %{
+def jedi-complete -docstring "Complete the current selection" %{
     %sh{
         dir=$(mktemp -d -t kak-jedi.XXXXXXXX)
         mkfifo ${dir}/fifo

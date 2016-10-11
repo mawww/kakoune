@@ -5,7 +5,7 @@
 
 decl str-list ctagsfiles 'tags'
 
-def -params 0..1 \
+def -params ..1 \
     -shell-candidates '
         ( for tags in $(printf %s\\n "${kak_opt_ctagsfiles}" | tr \':\' \'\n\'); do
               namecache=$(dirname ${tags})/.kak.$(basename ${tags}).namecache
@@ -14,7 +14,8 @@ def -params 0..1 \
               fi
               cat ${namecache}
           done )' \
-    -docstring 'Jump to tag definition' \
+    -docstring %{tag [<symbol>]: jump to a symbol's definition
+If no symbol is passed then the current selection is used as symbol name} \
     tag \
     %{ %sh{
         export tagname=${1:-${kak_selection}}

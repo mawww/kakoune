@@ -1,7 +1,13 @@
 decl -hidden range-faces spell_regions
 decl -hidden str spell_tmp_file
 
-def -params ..1 spell -docstring "Check spelling of the current buffer with aspell (the first optional argument is the language against which the check will be performed)" %{
+def -params ..1 \
+    -docstring %{spell [<language>]: spell check the current buffer
+The first optional argument is the language against which the check will be performed
+Formats of language supported:
+ - ISO language code, e.g. 'en'
+ - language code above followed by a dash or underscore with an ISO country code, e.g. 'en-US'} \
+    spell %{
     try %{ addhl ranges 'spell_regions' }
     %sh{
         file=$(mktemp -d -t kak-spell.XXXXXXXX)/buffer

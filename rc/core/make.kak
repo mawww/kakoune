@@ -2,7 +2,10 @@ decl str makecmd make
 decl str toolsclient
 decl -hidden int _make_current_error_line
 
-def -params .. make -docstring "Make utility wrapper" %{ %sh{
+def -params .. \
+    -docstring %{make [<arguments>]: make utility wrapper
+All the optional arguments are forwarded to the make utility} \
+    make %{ %sh{
      output=$(mktemp -d -t kak-make.XXXXXXXX)/fifo
      mkfifo ${output}
      ( eval ${kak_opt_makecmd} "$@" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
@@ -36,7 +39,7 @@ hook global WinSetOption filetype=(?!make).* %{
 
 decl str jumpclient
 
-def make-jump -docstring 'Jump to error location' %{
+def -hidden make-jump %{
     eval -collapse-jumps %{
         try %{
             exec gl<a-?> "Entering directory" <ret>
@@ -53,7 +56,7 @@ def make-jump -docstring 'Jump to error location' %{
     }
 }
 
-def make-next -docstring 'Jump to next error' %{
+def make-next -docstring 'Jump to the next make error' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{_make_current_error_line}g<a-l>/[0-9]+: (?:fatal )?error:<ret>"
@@ -62,7 +65,7 @@ def make-next -docstring 'Jump to next error' %{
     try %{ eval -client %opt{toolsclient} %{ exec %opt{_make_current_error_line}g } }
 }
 
-def make-prev -docstring 'Jump to previous error' %{
+def make-prev -docstring 'Jump to the previous make error' %{
     eval -collapse-jumps -try-client %opt{jumpclient} %{
         buffer '*make*'
         exec "%opt{_make_current_error_line}g<a-h><a-/>[0-9]+: (?:fatal )?error:<ret>"
