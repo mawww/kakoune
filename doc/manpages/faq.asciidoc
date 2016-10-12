@@ -16,7 +16,7 @@ Is there going to be a Windows port of Kakoune ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As many features provided by UNIX systems would be missing, or if anything
-much less performant on a Windows system, the incentive to porting the
+much less efficient on a Windows system, the incentive to porting the
 project to this operating system is pretty low.
 
 Moreover, you can get pretty decent performance by using Kakoune on Cygwin
@@ -49,7 +49,7 @@ Can I use Kakoune as a pager ?
 Kakoune can be used as a pager, either by setting the `EDITOR` environment
 variable to `kak`, or by writing data directly to its standard input using a
 shell pipeline. However, since the program relies on several heavy dynamic
-libraries (`boost` being one of them), it will be slightly less pratical
+libraries (`boost` being one of them), it will be slightly less practical
 than other regular pagers (such as `less` or `more`) which have a minimal
 amount of runtime dependencies.
 
@@ -58,6 +58,19 @@ Are there any non-console based frontends available ?
 
 No graphical frontend is currently officially maintained, you can however
 try experimental community-developed ones.
+
+Why are colors misrendered in my Kakoune clients ?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The most probable cause for that is a very widespread practice that consists
+in setting the `TERM` environment variable in the shell's configuration file.
+This variable should be set by the terminal emulator, and not overridden with
+an arbitrary value, otherwise it might interfere with general UI rendering on
+the terminal's window.
+
+Note that if you're using `tmux`, the proper -official- way to get Kakoune to
+work is to add the following line to your `tmux` configuration file:
+`set -sg default-terminal screen-256color`
 
 How do I automatically indent code, as Vim does with `=` ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
