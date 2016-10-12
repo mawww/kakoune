@@ -77,7 +77,7 @@ def flake8-diagnostics-next -docstring "Jump to the next line that contains an e
                 fi
             fi
         done
-        if [ $line -eq -1 ];
+        if [ $line -eq -1 ]; then
             line=$first_line
             echo 'echo -color Error no next flake8 diagnostic'
         else
