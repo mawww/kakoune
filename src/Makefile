@@ -50,7 +50,7 @@ else ifeq ($(os),DragonFly)
     CPPFLAGS += -I/usr/local/include
     LDFLAGS += -L/usr/local/lib
 else ifneq (,$(findstring CYGWIN,$(os)))
-    CXXFLAGS += -D_XOPEN_SOURCE=700
+    CPPFLAGS += -D_XOPEN_SOURCE=700
     LIBS += -lncursesw -lboost_regex -ldbghelp
 else
     LIBS += -lncursesw -lboost_regex
