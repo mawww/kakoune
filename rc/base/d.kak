@@ -6,13 +6,13 @@
 
 hook global BufCreate .*\.di? %{
     set buffer mimetype ""
-    set buffer filetype dlang
+    set buffer filetype d
 }
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-addhl -group / regions -default code dlang \
+addhl -group / regions -default code d \
     string '"' (?<!\\)(\\\\)*" '' \
     verbatim_string ` ` '' \
     verbatim_string_prefixed 'r"' '"' '' \
@@ -21,17 +21,17 @@ addhl -group / regions -default code dlang \
     comment /\* \*/ '' \
     comment '//' $ ''
 
-addhl -group /dlang/string fill string
-addhl -group /dlang/verbatim_string fill magenta
-addhl -group /dlang/verbatim_string_prefixed fill magenta
-addhl -group /dlang/token fill meta
-addhl -group /dlang/disabled fill rgb:777777
-addhl -group /dlang/comment fill comment
+addhl -group /d/string fill string
+addhl -group /d/verbatim_string fill magenta
+addhl -group /d/verbatim_string_prefixed fill magenta
+addhl -group /d/token fill meta
+addhl -group /d/disabled fill rgb:777777
+addhl -group /d/comment fill comment
 
-addhl -group /dlang/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value
-addhl -group /dlang/code regex %{'((\\.)?|[^'\\])'} 0:value
-addhl -group /dlang/code regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
-addhl -group /dlang/code regex "\b(this)\b\s*[^(]" 1:value
+addhl -group /d/string regex %{\\(x[0-9a-fA-F]{2}|[0-7]{1,3}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})\b} 0:value
+addhl -group /d/code regex %{'((\\.)?|[^'\\])'} 0:value
+addhl -group /d/code regex "-?([0-9_]*\.(?!0[xXbB]))?\b([0-9_]+|0[xX][0-9a-fA-F_]*\.?[0-9a-fA-F_]+|0[bb][01_]+)([ep]-?[0-9_]+)?[fFlLuUi]*\b" 0:value
+addhl -group /d/code regex "\b(this)\b\s*[^(]" 1:value
 
 %sh{
     # Grammar
@@ -53,24 +53,24 @@ addhl -group /dlang/code regex "\b(this)\b\s*[^(]" 1:value
     decorators="disable|property|nogc|safe|trusted|system"
 
     # Add the language's grammar to the static completion list
-    printf %s\\n "hook global WinSetOption filetype=dlang %{
+    printf %s\\n "hook global WinSetOption filetype=d %{
         set window static_words '${keywords}:${attributes}:${types}:${values}:${decorators}'
     }" | sed 's,|,:,g'
 
     # Highlight keywords
     printf %s "
-        addhl -group /dlang/code regex \b(${keywords})\b 0:keyword
-        addhl -group /dlang/code regex \b(${attributes})\b 0:attribute
-        addhl -group /dlang/code regex \b(${types})\b 0:type
-        addhl -group /dlang/code regex \b(${values})\b 0:value
-        addhl -group /dlang/code regex @(${decorators})\b 0:attribute
+        addhl -group /d/code regex \b(${keywords})\b 0:keyword
+        addhl -group /d/code regex \b(${attributes})\b 0:attribute
+        addhl -group /d/code regex \b(${types})\b 0:type
+        addhl -group /d/code regex \b(${values})\b 0:value
+        addhl -group /d/code regex @(${decorators})\b 0:attribute
     "
 }
 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-def -hidden _dlang-indent-on-new-line %~
+def -hidden _d-indent-on-new-line %~
     eval -draft -itersel %=
         # preserve previous line indent
         try %{ exec -draft \;K<a-&> }
@@ -89,12 +89,12 @@ def -hidden _dlang-indent-on-new-line %~
     =
 ~
 
-def -hidden _dlang-indent-on-opening-curly-brace %[
+def -hidden _d-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ exec -draft -itersel h<a-F>)M <a-k> \`\(.*\)\h*\n\h*\{\' <ret> s \`|.\' <ret> 1<a-&> ]
 ]
 
-def -hidden _dlang-indent-on-closing-curly-brace %[
+def -hidden _d-indent-on-closing-curly-brace %[
     # align to opening curly brace when alone on a line
     try %[ exec -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\`|.\'<ret>1<a-&> ]
 ]
@@ -102,22 +102,22 @@ def -hidden _dlang-indent-on-closing-curly-brace %[
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-hook -group dlang-highlight global WinSetOption filetype=dlang %{ addhl ref dlang }
+hook -group d-highlight global WinSetOption filetype=d %{ addhl ref d }
 
-hook global WinSetOption filetype=dlang %{
+hook global WinSetOption filetype=d %{
     # cleanup trailing whitespaces when exiting insert mode
-    hook window InsertEnd .* -group dlang-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
-    hook window InsertChar \n -group dlang-indent _dlang-indent-on-new-line
-    hook window InsertChar \{ -group dlang-indent _dlang-indent-on-opening-curly-brace
-    hook window InsertChar \} -group dlang-indent _dlang-indent-on-closing-curly-brace
+    hook window InsertEnd .* -group d-hooks %{ try %{ exec -draft <a-x>s^\h+$<ret>d } }
+    hook window InsertChar \n -group d-indent _d-indent-on-new-line
+    hook window InsertChar \{ -group d-indent _d-indent-on-opening-curly-brace
+    hook window InsertChar \} -group d-indent _d-indent-on-closing-curly-brace
 
     set window formatcmd "dfmt"
     set window comment_selection_chars "/+:+/"
 }
 
-hook -group dlang-highlight global WinSetOption filetype=(?!dlang).* %{ rmhl dlang }
+hook -group d-highlight global WinSetOption filetype=(?!d).* %{ rmhl d }
 
-hook global WinSetOption filetype=(?!dlang).* %{
-    rmhooks window dlang-hooks
-    rmhooks window dlang-indent
+hook global WinSetOption filetype=(?!d).* %{
+    rmhooks window d-hooks
+    rmhooks window d-indent
 }
